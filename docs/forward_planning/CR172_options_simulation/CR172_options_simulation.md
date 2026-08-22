@@ -937,3 +937,288 @@ structure the sentence names as remaining available is run back through
   NAV/FIFO tail and the dividend/option-marks feeds — all unchanged.
 
 **Acceptance scorecard: 6 of 10.** Criterion 4 is met by this slice.
+
+## Build log — criterion 1: the byte-identical proof (2026-08-22, AT:R73)
+
+Criterion 1 has been PARTIAL since slice 3 part 1: the `derivatives_allowed`
+gate existed and was mutation-proven, but the CR words the criterion
+*"**proven by test, not asserted**"* and the proof itself was never written.
+It is now `backend/tests/unit/test_cr172_no_behaviour_change.py` — 44 tests,
+8/8 mutations killed.
+
+### What makes it a proof rather than another assertion
+
+**The oracle is frozen historical code, not a re-derivation.** `_pre_cr172_total_value`
+is the body of `Portfolio.total_value` copied verbatim from
+`git show 4c072f09^:backend/app/schemas/trade.py` — the commit immediately
+before slice 3 added the option term. A second implementation of *today's*
+rule would be the two-renderers shape DEF098 forbids, and worse, it would
+drift into agreement with whatever the code does; a differential against code
+that cannot move is the only thing that can answer "byte-identical to before".
+The file says so, and says that a future change making the oracle wrong needs
+a CR, never a re-sync.
+
+**`repr`, not `==`, and certainly not `approx`.** CPython's float repr is the
+shortest round-tripping string, so two floats share a repr exactly when they
+share every bit. `==` is wrong in both directions here — it calls `0.0` and
+`-0.0` equal when their bits differ, and calls a NaN unequal to itself.
+"Within a tolerance" is the claim this criterion exists to refuse.
+
+### Coverage, one clause of the criterion at a time
+
+| Clause | Where |
+|---|---|
+| `total_value` | 18 parametrised cases — six books × three mark sets, including a cash figure not representable in binary, fractional shares at an awkward price, a training short, and a book underwater |
+| drawdown | same grid |
+| NAV series 1 of 2 — `portfolio_nav_daily` (the equity curve) | the written row equals `round(oracle, 2)` |
+| NAV series 2 of 2 — `portfolio_value_snapshots` (CR136's series) | total, invested and drawdown all equal the oracle's |
+| TWR | two trading days with a refused option open between them: the second day's NAV is bit-identical to the first, the chain reports exactly `0.0`, and `capital_event` is `["open", None]` |
+| "no behaviour change anywhere" — the book | a refused open leaves no leg row, no trade row, no cash movement and no changed valuation. Asserted on the BOOK, not on the refusal: `test_cr172_option_floor.py` already proves the floor says no; the open question was whether saying no is *enough* |
+| "no behaviour change anywhere" — the wire | the payload's key set is pinned to the pre-CR172 set plus exactly `options`, which must be `[]`. `0.1.0+100` is live on TestFlight and Play against this backend |
+| "no behaviour change anywhere" — the prompt | already owned by `test_cr172_room_structure.py::test_a_mandate_without_derivatives_never_reads_the_option_board`, cross-referenced from the new file so the two halves are findable from each other |
+| §3/§11's "`games_scoring_pass` provably untouched" | a leg is written straight into `sim_option_legs` against a GAME portfolio's id, bypassing every check, and the portfolio still reads empty. Reaching past the write path is deliberate — asserting the write path refuses is the weaker claim, and would still pass if the READ path folded a leg into a game NAV the moment any future code put one there |
+
+### Two test-design notes worth keeping
+
+- **The conftest's `MockWalkProvider` advances one step per elapsed whole
+  second.** Two reads either side of a second boundary return different
+  prices, which would have made "the NAV row equals the oracle" a coin flip on
+  test duration. The file injects a fixed board instead — and sources it
+  `yfinance`, because CR136 M03's tick *refuses* to snapshot a book priced off
+  `mock_walk`, so a mock-sourced provider would have made the second NAV
+  series test pass by writing nothing at all.
+- **A sub-cent mutation is the one that matters.** Drifting the empty-book
+  option term by `+0.005` is invisible in both NAV series (`round(x, 2)` eats
+  it) and invisible to `==` at several call sites, and the arithmetic grid
+  still kills it. A mutation of `-0.0` was tried and is *semantically inert* —
+  `x + (-0.0)` is `x` bit-for-bit — so it is recorded here as a bad mutation,
+  not as a survival.
+
+**Acceptance scorecard: 7 of 10.** Criterion 1 is met by this work; 5 (the
+margin sub-pass in CR170's sweep) and 10 (lesson 316–322 amendments + AR/MS
+flags) remain, alongside the mobile wiring, §11's NAV/FIFO tail, the
+dividend/option-marks feeds and the undecided `risk_budget_usd` split.
+
+## Build log — criterion 5, and the two defects found getting there (2026-08-22, AT:R73)
+
+Criterion 5 was the last unstarted acceptance criterion with code behind it.
+Building it surfaced two defects that were not visible from any test in the
+suite, both filed and both fixed here: **DEF356** (an uncovered short call is
+reachable two ways) and **DEF357** (the entire slice-2 lifecycle has no
+production caller). The three are one piece of work and land together.
+
+### What criterion 5 means under D3
+
+> *A naked short breaching maintenance margin is force-closed during market
+> hours only, reported visibly, and never refused for insufficient
+> `current_cash`.*
+
+§14 forbade naked calls outright and left no Reg-T path, and every short put is
+fully cash-secured at open — so **no position in this product can breach a
+margin ratio, because there is no margin.** The criterion is not moot, though:
+the one thing that can happen is a short call losing the shares that covered
+it. That is what `_check_option_margin` is for, and it is what the criterion
+says once D3 is applied to it.
+
+### DEF356 — the floor's side door, and its front door
+
+Reproduced against the sqlite fixture, four ordinary calls: buy 100 shares,
+open a covered call, sell the 100 shares, and the book holds a lone short call
+with `has_uncovered_short_call=True`, `unbounded_loss=True`. The sale was
+accepted with empty `violations`, empty `advisories` and empty `not_evaluated`.
+
+Then a **second** instance that needs no sale at all: two covered calls written
+against one lot of 100 shares, both accepted, the book short 100. Each
+structure is individually covered because `open_option_structure` passed
+`_held_quantity`, the raw holding, into a check that reasons about one
+`strategy_id` at a time.
+
+One root: **`shares_locked` has been computed since slice 1 and no caller ever
+read it.** §6 specifies the covered call's collateral as "the 100 shares/
+contract, *locked* in `sim_holdings`" — the lock was designed, costed, put on
+the wire and never enforced.
+
+The family is not P11. It is the ledger trio — **DEF311** (a resting sell
+outlived the shares it was selling), **DEF316** (a bracket outlived the shares
+it protected), **DEF318** (a dead lot's bracket fired on a later lot's shares)
+— every one of them a claim on shares outliving the shares. This is the same
+fact one instrument along.
+
+**Three paths reach the state**, which is why a pre-trade check alone cannot
+close it: the ticket sell and a resting sell both enter `check_mandate_compliance`
+(`fill_resting_order` re-runs it deliberately, so a resting order cannot become
+a time-delayed bypass of the floor), but `evaluate_outcomes`' bracket close
+**enters no floor at all, correctly** — a forced exit is not a user action to
+refuse. And a pre-trade refusal is not available regardless: there is no
+user-initiated close path for an option structure, so refusing the share sale
+would trap the user until expiry with no action available to them.
+
+So the fix is split by which door it comes through:
+
+- **Front door, at open** — `shares_held` passed to `check_option_open` is now
+  the holding minus `sim_options.locked_call_cover_shares`. The netting happens
+  at the call site because `check_option_open` sees one structure and cannot
+  see the book.
+- **Side door, in the sweep** — `SimEngine.force_close_uncovered_calls`, the
+  backstop that makes the floor's promise true no matter which path removed the
+  cover.
+
+The cover rule itself was extracted to `trading_math.option_strategy.shares_needed_to_cover_calls`
+and both callers use it, so the per-structure figure and the portfolio-level
+one cannot disagree about what "covered" means (DEF098).
+
+### DEF357 — the lifecycle nobody called
+
+`grep -rn "run_option_lifecycle"` over the repo returns **21 call sites, every
+one in `test_cr172_option_lifecycle.py`**. Zero production callers. On live
+Alpha an option reached its expiry date and nothing happened: the leg stayed
+`open` forever, its collateral stayed posted, the shares it should have
+delivered never moved, and the `LifecycleEvent` that exists so that *every
+automatic close is reported, never silent* was produced by a function nobody
+ran. The function's own docstring says "`settlement_prices` pins the
+underlying's close per ticker (**the sweep supplies it**; tests pin it)" — the
+sweep was designed to be the caller and never was.
+
+**Textbook P18** — a feature proven on the builder, never on the caller that
+must feed it. The builder is thoroughly proven, including a mutation that
+survived its first pass. All of it unreachable.
+
+**Criterion 6 was scored `met` off those builder tests and is not met.** The
+scorecard below corrects it.
+
+### What the sweep gained
+
+Per §7's own table:
+
+| Sub-pass | Gated | Placement |
+|---|---|---|
+| `_sweep_option_lifecycle` (expiry / auto-exercise / assignment / early assignment) | **No** | above the market-hours gate, beside the order-expiry and borrow-accrual passes — an option expires at 16:00 ET on its date whether or not we are polling |
+| `_check_option_margin` | **Yes** | inside the hours gate *and* inside DEF305's kill switch, last — an assignment is one of the three ways a short call loses its cover, so judging coverage before the day's assignments settle would close a call whose cover had just been delivered |
+
+DEF305's suppression log now names the third leg it disables, because a kill
+switch that silently disables one more thing is how the second one was found
+late.
+
+`settlement_prices` is deliberately left unpinned so the engine quotes live and
+runs each price through `_quote_is_fillable`; a leg it cannot trust is left
+open and reported `not_evaluated`. `dividends`/`option_marks` are not supplied
+— those feeds are §11's tail — so the D9 early-assignment pass cannot run and
+says so on every short call it would have judged, rather than reporting them
+safe.
+
+### The force-close itself
+
+- **Lowest strike first** — the most liable and most likely to be assigned.
+  Containment is the purpose, so the harm goes before the convenience.
+- **Closes until covered, never "closes every short call"** — over-closing is
+  the account taking more from the user than the rule requires.
+- **A leg that cannot be priced is left OPEN and reported**, never closed on a
+  guessed number. Forcing a close the user did not ask for, at a price nobody
+  checked, is DEF305's own shape.
+- **Charged whether or not the cash is there.** Cash may go negative. Refusing
+  would leave the unbounded position open, which is the single outcome D3
+  exists to prevent.
+
+**One real finding worth carrying to §11.** The forced close is value-continuous
+*at the leg's own carrying mark*, and today that is only the same as
+market-continuous by accident: with no option-marks feed, `option_leg_value`
+holds a leg at the premium it opened at, so a buy-back at any other price moves
+`total_value` by the difference — correctly, the way selling a share above its
+`avg_cost` does. When §11 wires marks, the carrying value becomes the market
+mark and continuity holds at any price. Until then a margin close at a moved
+market **does** move the total, and that is a real P&L event rather than a bug.
+The test states this rather than assuming it, and opens its leg at the board's
+own mid so the identity being measured is the close and not the gap between two
+prices.
+
+### Tests: 17, 10/10 mutations killed
+
+The mutation that matters most is the one that **passed for the wrong reason
+first.** `test_the_lowest_strike_goes_first` survived a mutation that reversed
+the sort, because the test board used a flat $0.40 spread — 5% at the 45 strike
+and **57% at the 60**, which classifies `unusable`, so the leg the mutation
+should have closed could not be priced at all and the ordering was never
+exercised. Same class as the two survivals in slice 3 part 2: the fixture was
+what made the test observe the wrong surface. The board now uses a 5% spread at
+every strike and the mutation dies on the right test.
+
+A second candidate mutation is recorded as **inert rather than survived**:
+removing the outer covered-book `continue` leaves the inner per-leg `break`
+doing the identical job, so nothing changes. The real mutation removes both,
+and that one dies.
+
+**Acceptance scorecard: 8 of 10** — criterion 5 met, criterion 6 restored to
+met by DEF357's fix (it was scored met and was not). Criterion 10 (lesson
+316–322 amendments + AR/MS flags) is the last one outstanding, alongside the
+mobile wiring, §11's NAV/FIFO/marks tail and the undecided `risk_budget_usd`
+split.
+
+## Build log — criterion 10: the lessons that said this could not be done (2026-08-22, AT:R73)
+
+> *All AR/MS retranslation flagged per-`id` for lessons 316–322 and the new ARB strings.*
+
+Swept all seven EN lessons. **Three carried the claim, four did not.**
+
+| Lesson | Carried it? |
+|---|---|
+| 316 `calls_and_puts` · 317 `payoff_diagrams_intrinsic_time_value` · 318 `the_greeks_delta_theta_vega` · 321 `futures_and_forwards` | No. 321's only near-match is a quiz explanation contrasting a long call's structural floor with a futures obligation — instrument arithmetic, unaffected |
+| 319 `covered_call_and_protective_put` | *"There's no options trading in AMI Trade — this is a thought exercise"* |
+| 320 `implied_vs_realized_volatility` | *"…since AMI Trade has no options trading"* |
+| 322 `why_retail_options_lose_capstone` | *"Remember: AMI Trade has no options trading"* |
+
+Flagging the four clean ones anyway would cost three translators' time to change nothing, so the
+flag file names them as explicitly **not** stale rather than leaving the reader to infer it.
+
+**The amendment states the gate, it does not flip the claim.** For a default user nothing has
+changed: `derivatives_allowed` is False and AMI will not propose or open a structure. A lesson
+rewritten to say "you can trade options here" would be wrong for almost everyone reading it, and
+wrong in the direction that invites someone to go looking for a button that is not there. So 319
+now says both structures are simulated *once you turn on derivatives in your mandate*, and names
+the default-off state as deliberate.
+
+320's fix is the one worth noting. Its clause did real work — it was the reason the
+not-a-signal warning was true — so deleting it would have left a warning resting on nothing.
+The warning is rebuilt on its own terms instead: implied volatility being high is a statement
+about what options *cost*, and a rich option is not automatically one worth selling.
+
+322 gets the upgrade this CR predicted for it at filing. The capstone asks the reader to work out
+what a far out-of-the-money short-dated call would have needed to do to profit, and compare that
+bar to what the stock actually did. That bar is now available *priced*, on a card AMI costed, for
+a user with derivatives on — and watching a simulated OTM call decay to zero on money that was
+never real is the cheapest version of the lesson there is.
+
+Flags: `content/_authoring/cr172_lessons_retranslate.md`, three ids, `ar` + `ms`, in the CR060
+convention. `updated_at` bumped on the three EN files.
+
+**New ARB strings: none.** The mobile ticket ships its own strings and is not wired to a Room
+verdict, so no new option copy has reached the Flutter i18n surface. Its keys get flagged when
+the wiring lands.
+
+**A guard note, because this class is DEF105's exactly.** `locale_staleness_check.py` mechanism 1
+(`source_sha`) would have caught these automatically had the translation pipeline stamped it; it
+does not, so the siblings report UNSTAMPED and fall through to mechanism 2 (anchor divergence),
+which will **not** catch them — the edits change prose, not tickers, numbers, URLs or component
+ids, so the anchor multiset is unchanged. DEF105's own words: *"these parse fine and pass the
+serving-time integrity gate."* That is why the flag file is hand-written. The standing fix is
+CR060 Phase 6's per-`id` `source_sha` stamp.
+
+**Acceptance scorecard: 10 of 10.** Every criterion is met.
+
+## What remains in CR172 after acceptance (2026-08-22)
+
+Acceptance is met; the CR is not empty. Carried forward, in the order they matter:
+
+1. **The mobile wiring.** `option_proposal_ticket.dart` is built and `Verdict.strategy`/`legs`
+   are on the wire; nothing on `room_screen.dart` opens the ticket off a verdict yet. Until it
+   does, a user cannot consent to a structure the Room proposed — only to one reached through
+   `/v1/sim/options/open` directly.
+2. **§11's tail** — option marks into NAV, FIFO keyed on `occ_symbol`, sector allocation keyed
+   on the underlying, portfolio-health delta-adjustment (CR136 territory). The marks feed is the
+   dependency named in criterion 5's build log: without it a leg is carried at its open premium,
+   so a forced close at a moved market moves `total_value` by the difference.
+3. **The dividend feed**, which the D9 early-assignment pass needs. It currently cannot run and
+   says so on every short call it would have judged.
+4. **The `risk_budget_usd` split** — a decision for Saiful, not a bug. `/propose` passes a
+   position-size cap, the Room passes a loss budget, `_size_to_budget` divides by max loss
+   either way, and the two disagree by 28x on the same portfolio. P10's shape. Recorded at
+   DEF354, still unraised.
