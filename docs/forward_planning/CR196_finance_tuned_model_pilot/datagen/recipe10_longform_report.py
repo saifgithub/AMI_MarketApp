@@ -343,8 +343,14 @@ def build_brief(tk):
     L.append("")
 
     hist = yf_backoff(lambda: t.history(period="1y"))
+    # No price => no brief. Section 9 requires scenario targets "anchored to the
+    # current share price given in the data"; a brief that renders MARKET CONTEXT as
+    # n/a still LOOKS fine and would train unanchored price targets. Degrade loudly
+    # (CR040) — drop the ticker rather than emit a brief that is quietly unanswerable.
+    if hist is None or hist.empty or "Close" not in hist or hist["Close"].empty:
+        return {"ticker": tk, "status": "no_price"}
     L.append("MARKET CONTEXT (descriptive background only -- NOT predictive)")
-    if hist is not None and not hist.empty:
+    if True:
         px = hist["Close"]
         last = float(px.iloc[-1])
         L.append(_pad("Last close", f"${last:,.0f}" if last >= 100
@@ -361,9 +367,6 @@ def build_brief(tk):
         if len(px) >= 200:
             ma = float(px.iloc[-200:].mean())
             L.append(_pad("Price vs 200d MA", f"{(last / ma - 1) * 100:.2f}%", W_SUMMARY))
-    else:
-        last = None
-        L.append("  n/a")
 
     brief = "\n".join(L)
     return {"ticker": tk, "status": "ok", "brief": brief,
@@ -459,30 +462,62 @@ def rank_key(target, meta):
 # --- stages -----------------------------------------------------------------
 
 def stage_briefs(args):
+    """Append-as-you-go and resumable. Yahoo rate-limits a sweep this size hard
+    (recipe1's first full run lost 758 of 1,437 tickers to YFRateLimitError), so a
+    build-everything-then-write pass would throw away hours on one late failure."""
     tickers = load_train_universe()
     if args.limit:
         tickers = tickers[args.offset:args.offset + args.limit]
     else:
         tickers = tickers[args.offset:]
-    print(f"[briefs] {len(tickers)} train tickers, {args.workers} workers")
 
-    rows, stats = [], Counter()
+    seen = set()
+    if os.path.exists(args.out_briefs) and not args.restart:
+        failed = 0
+        for line in open(args.out_briefs):
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            # Only a SUCCEEDED ticker is done. Errors are retried, because the
+            # dominant failure here is a transient Yahoo rate limit, not a broken
+            # ticker — recipe1 lost 758/1,437 that way and the retried tail then
+            # completed with 0 errors.
+            if r.get("status") == "ok":
+                seen.add(r["ticker"])
+            else:
+                failed += 1
+        print(f"[resume] {len(seen)} ok on disk, {failed} earlier failures will retry")
+    todo = [t for t in tickers if t not in seen]
+    print(f"[briefs] {len(todo)} to do of {len(tickers)}, {args.workers} workers")
+    if not todo:
+        print("[briefs] nothing missing")
+        return
+
+    stats = Counter()
+    lock = __import__("threading").Lock()
+    os.makedirs(os.path.dirname(args.out_briefs), exist_ok=True)
+    out_f = open(args.out_briefs, "w" if args.restart else "a")
+
     def one(tk):
         try:
-            return build_brief(tk)
+            r = build_brief(tk)
         except Exception as e:
-            return {"ticker": tk, "status": f"error:{type(e).__name__}"}
+            r = {"ticker": tk, "status": f"error:{type(e).__name__}"}
+        with lock:
+            out_f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            out_f.flush()
+            stats[r["status"]] += 1
+            n = sum(stats.values())
+            if n % 25 == 0:
+                print(f"  {n}/{len(todo)}  ok={stats['ok']}", flush=True)
+        return r
 
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        for i, r in enumerate(ex.map(one, tickers), 1):
-            stats[r["status"]] += 1
-            if r["status"] == "ok":
-                rows.append(r)
-            if i % 50 == 0:
-                print(f"  {i}/{len(tickers)}  ok={stats['ok']}", flush=True)
+        rows = [r for r in ex.map(one, todo) if r["status"] == "ok"]
+    out_f.close()
 
-    write_jsonl(args.out_briefs, rows)
-    print(f"[briefs] wrote {len(rows)} -> {args.out_briefs}")
+    print(f"[briefs] appended {len(rows)} ok -> {args.out_briefs}")
     print(f"[briefs] status: {dict(stats)}")
     if rows:
         cl = Counter((r["debt_class"], r["cash_class"]) for r in rows)
@@ -575,6 +610,8 @@ def main():
                                                           "recipe10_completions.jsonl"))
     ap.add_argument("--out", default=os.path.join(HERE, "out", "recipe10.jsonl"))
     ap.add_argument("--teacher", default="fastino-finance-bf16 (vanilla)")
+    ap.add_argument("--restart", action="store_true",
+                    help="discard an existing brief file instead of resuming it")
     args = ap.parse_args()
     (stage_briefs if args.stage == "briefs" else stage_assemble)(args)
 
