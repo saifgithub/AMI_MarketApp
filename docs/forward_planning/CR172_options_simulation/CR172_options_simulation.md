@@ -914,6 +914,18 @@ structure the sentence names as remaining available is run back through
 
 ### Still open after this slice
 
+- **`risk_budget_usd` means two different things to its two callers.** Not
+  fixed, and named here rather than swept: `_size_to_budget` divides that
+  argument by the structure's max loss, but `/propose` passes a **position
+  size** cap (`single_name_cap_pct` of total value — $500 on a $10,000
+  portfolio) while the Room passes a **loss** budget
+  (`drawdown_contribution`, $18 on the same portfolio). Same division, two
+  quantities, a 28x disagreement about what the user's budget is — failure
+  pattern P10, one expression with two obligations, which is the shape DEF149
+  and DEF153 were both filed against. Surfaced only because DEF354 made the
+  figure printable; it was equally wrong before and simply invisible. Needs a
+  decision (which quantity is "the risk budget"?) before it is a fix, so it is
+  recorded, not patched.
 - **The mobile wiring.** The ticket is built and the verdict now carries
   `strategy`/`legs`; nothing on `room_screen.dart` opens one yet.
 - **Realised vol does not reach the strategist.** The Room holds no daily close
