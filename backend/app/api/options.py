@@ -45,6 +45,7 @@ from app.services.ticker_reference import (
     ticker_not_found_detail,
 )
 from app.trading_math.option_strategy import StrategyLeg
+from app.trading_math.risk import drawdown_contribution
 
 router = APIRouter(prefix="/v1/sim/options", tags=["sim-options"])
 
@@ -60,7 +61,9 @@ router = APIRouter(prefix="/v1/sim/options", tags=["sim-options"])
 # The proposal's own risk budget when the caller supplies none: the same
 # single-name cap the equity floor enforces, applied to the portfolio's value.
 # Not a new policy — the cap is read, never re-derived here.
-_DEFAULT_RISK_BUDGET_PCT = 5.0
+# CR172 — a LOSS percentage now, not a position-size percentage. Used only
+# when the mandate carries no `max_open_risk_pct` at all.
+_DEFAULT_MAX_LOSS_PCT = 5.0
 
 
 def _own(current_user: User, user_id: UUID) -> None:
@@ -162,7 +165,12 @@ class ProposeRequest(BaseModel):
     stop: float | None = Field(default=None, gt=0)
     horizon_days: int = Field(default=30, ge=1, le=730)
     expiry: datetime.date | None = None
-    risk_budget_usd: float | None = Field(default=None, gt=0)
+    # CR172 — renamed from `risk_budget_usd`, which two callers read two
+    # different ways: /propose treated it as a position-size cap and the
+    # Room as a loss budget, 28x apart on the same $10k book while both
+    # fed the same divisor. Saiful's ruling (2026-08-22): it means
+    # **lose at most $X**, everywhere, and the name now says so.
+    max_loss_budget_usd: float | None = Field(default=None, gt=0)
     mandate: dict | None = None
 
 
@@ -251,6 +259,55 @@ def _shares_held(portfolio: Portfolio, ticker: str) -> float:
     )
 
 
+def result_spot_for_budget(chain) -> float | None:
+    """The chain's own spot, if it has one. Kept tiny and named so the budget
+    derivation below reads as one idea rather than an attribute walk."""
+    spot = getattr(chain, "spot", None)
+    return float(spot) if spot else None
+
+
+def _default_max_loss_budget(
+    *, mandate, portfolio_value: float, spot: float | None, stop: float | None,
+) -> float:
+    """A **loss** budget, when the caller named none (CR172).
+
+    This used to be `portfolio_value x single_name_cap_pct`, which is a
+    POSITION-SIZE cap — how much to deploy, not how much to lose. It was then
+    handed to `_size_to_budget`, which divides by max loss. On a $10,000 book a
+    20% single-name cap produced $2,000 where the Room, sizing the same trade
+    off the equity leg's own dollar risk, produced ~$70: the same field meaning
+    two things 28x apart, with nothing in the name to catch it.
+
+    Two honest derivations, in order of how much they actually know:
+
+    1. **A stop was supplied.** Then the position cap converts exactly, using
+       the same function the safety floor enforces the drawdown cap with:
+       a position of `single_name_cap_pct` stopped at `stop` costs
+       `contribution_pts` of the portfolio. This is the Room's own derivation,
+       so the two callers now agree by construction rather than by comment.
+    2. **No stop.** A position cap cannot be turned into a loss without one --
+       "spend $2,000" says nothing about the downside. So fall back to a figure
+       that is ALREADY a loss in percentage points: `max_open_risk_pct`, which
+       CR129 derives from the user's own `max_drawdown_pct`. Never
+       `single_name_cap_pct` here; that is the substitution this whole change
+       exists to stop.
+    """
+    if spot and stop:
+        cap = float(getattr(mandate, "single_name_cap_pct", None) or 0.0)
+        if cap > 0:
+            contribution = drawdown_contribution(cap, spot, stop)
+            if contribution is not None:
+                return round(
+                    portfolio_value * contribution.contribution_pts / 100.0, 2
+                )
+
+    loss_pct = float(
+        getattr(mandate, "max_open_risk_pct", None) or _DEFAULT_MAX_LOSS_PCT
+    )
+    return round(portfolio_value * loss_pct / 100.0, 2)
+
+
+
 @router.post("/propose", response_model=ProposeResponse)
 def propose_options(
     req: ProposeRequest,
@@ -283,19 +340,21 @@ def propose_options(
 
     portfolio = sim.ensure_portfolio(req.user_id)
     mandate = resolve_mandate(req.user_id, req.mandate)
-    budget = req.risk_budget_usd
+    budget = req.max_loss_budget_usd
     if budget is None:
-        cap = float(
-            getattr(mandate, "single_name_cap_pct", None) or _DEFAULT_RISK_BUDGET_PCT
+        budget = _default_max_loss_budget(
+            mandate=mandate,
+            portfolio_value=sim.total_value(req.user_id),
+            spot=result_spot_for_budget(chain),
+            stop=req.stop,
         )
-        budget = round(sim.total_value(req.user_id) * cap / 100.0, 2)
 
     result = build_candidates(
         chain,
         underlying=ticker,
         direction=req.direction,
         mandate=mandate,
-        risk_budget_usd=budget,
+        max_loss_budget_usd=budget,
         shares_held=_shares_held(portfolio, ticker),
         target=req.target,
         stop=req.stop,

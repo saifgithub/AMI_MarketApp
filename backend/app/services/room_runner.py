@@ -1215,7 +1215,7 @@ def _build_room_option_candidates(
             underlying=ticker,
             direction=direction,
             mandate=mandate,
-            risk_budget_usd=budget,
+            max_loss_budget_usd=budget,
             shares_held=shares_held,
             target=target,
             stop=stop,

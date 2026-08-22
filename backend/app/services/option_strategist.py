@@ -284,7 +284,7 @@ def build_candidates(
     underlying: str,
     direction: str,
     mandate: Mandate,
-    risk_budget_usd: float,
+    max_loss_budget_usd: float,
     shares_held: float = 0.0,
     target: float | None = None,
     stop: float | None = None,
@@ -442,7 +442,7 @@ def build_candidates(
     built: list[OptionCandidate] = []
     for name, unit_legs, parts, rationale in blueprints:
         contracts, size_reason = _size_to_budget(
-            unit_legs, risk_budget_usd, shares_held
+            unit_legs, max_loss_budget_usd, shares_held
         )
         legs = _scale(unit_legs, contracts)
         metrics = strategy_metrics(legs, shares_held=shares_held)

@@ -85,7 +85,7 @@ def _build(**over):
         "underlying": "AAPL",
         "direction": "bullish",
         "mandate": _mandate(),
-        "risk_budget_usd": 2_000.0,
+        "max_loss_budget_usd": 2_000.0,
         "target": 110.0,
         "stop": 90.0,
         "now": _NOW,
@@ -241,7 +241,7 @@ def test_the_spread_is_long_the_money_short_the_target():
 # ── sizing ──────────────────────────────────────────────────────────────────
 
 def test_size_is_the_budget_divided_by_the_one_contract_loss():
-    result = _build(risk_budget_usd=2_000.0)
+    result = _build(max_loss_budget_usd=2_000.0)
     call = _named(result, "long_call")
     unit = strategy_metrics(
         tuple(leg._replace(quantity=leg.quantity / call.contracts) for leg in call.legs)
@@ -251,19 +251,19 @@ def test_size_is_the_budget_divided_by_the_one_contract_loss():
 
 
 def test_size_never_falls_below_one_contract():
-    result = _build(risk_budget_usd=1.0)
+    result = _build(max_loss_budget_usd=1.0)
     assert all(c.contracts == 1 for c in result.candidates)
 
 
 def test_size_of_a_share_covered_structure_is_one_and_says_why():
-    result = _build(shares_held=1_000.0, risk_budget_usd=100_000.0)
+    result = _build(shares_held=1_000.0, max_loss_budget_usd=100_000.0)
     cc = _named(result, "covered_call")
     assert cc is not None and cc.contracts == 1
     assert any("bounded by shares" in r for r in cc.not_evaluated)
 
 
 def test_size_with_no_budget_is_one_and_says_why():
-    result = _build(risk_budget_usd=0.0)
+    result = _build(max_loss_budget_usd=0.0)
     call = _named(result, "long_call")
     assert call.contracts == 1
     assert any("risk budget" in r for r in call.not_evaluated)
