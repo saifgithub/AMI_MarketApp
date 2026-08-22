@@ -1,0 +1,371 @@
+{
+  "arm": "qwen36",
+  "url": "http://192.168.20.74:8000/v1/chat/completions",
+  "model": "ami-llm",
+  "prompts": "/Volumes/Extreme Pro/AMI_MarketApp/docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/eval/basis/basis_prompts.jsonl",
+  "prompt_run_id": [
+    "20260819T160151-fastino"
+  ],
+  "decoding": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 8000
+  },
+  "transport": "openai-compatible chat/completions",
+  "started_utc": "2026-08-22T12:34:57Z",
+  "results": [
+    {
+      "ticker": "AAPL",
+      "chars": 7500,
+      "completion_tokens": 1823,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 41.5
+    },
+    {
+      "ticker": "AEE",
+      "chars": 7140,
+      "completion_tokens": 1809,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 41.3
+    },
+    {
+      "ticker": "AMCR",
+      "chars": 7066,
+      "completion_tokens": 1931,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 44.2
+    },
+    {
+      "ticker": "AMD",
+      "chars": 6756,
+      "completion_tokens": 1825,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 41.8
+    },
+    {
+      "ticker": "AMZN",
+      "chars": 7085,
+      "completion_tokens": 1817,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 42.1
+    },
+    {
+      "ticker": "APA",
+      "chars": 6620,
+      "completion_tokens": 1754,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 40.2
+    },
+    {
+      "ticker": "ATO",
+      "chars": 8262,
+      "completion_tokens": 2150,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 49.2
+    },
+    {
+      "ticker": "BKR",
+      "chars": 6821,
+      "completion_tokens": 1880,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.0
+    },
+    {
+      "ticker": "CBRE",
+      "chars": 7428,
+      "completion_tokens": 1880,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.1
+    },
+    {
+      "ticker": "CEG",
+      "chars": 7935,
+      "completion_tokens": 2038,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 46.7
+    },
+    {
+      "ticker": "CHD",
+      "chars": 5937,
+      "completion_tokens": 1495,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 36.3
+    },
+    {
+      "ticker": "CMCSA",
+      "chars": 6858,
+      "completion_tokens": 1873,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 54.0
+    },
+    {
+      "ticker": "CPAY",
+      "chars": 7452,
+      "completion_tokens": 1999,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 45.9
+    },
+    {
+      "ticker": "CVX",
+      "chars": 7827,
+      "completion_tokens": 2208,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 50.7
+    },
+    {
+      "ticker": "DECK",
+      "chars": 6207,
+      "completion_tokens": 1550,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 35.7
+    },
+    {
+      "ticker": "DHI",
+      "chars": 6101,
+      "completion_tokens": 1588,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 36.6
+    },
+    {
+      "ticker": "DTE",
+      "chars": 6937,
+      "completion_tokens": 1751,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 40.4
+    },
+    {
+      "ticker": "ECL",
+      "chars": 7102,
+      "completion_tokens": 1848,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 42.5
+    },
+    {
+      "ticker": "EXPE",
+      "chars": 7101,
+      "completion_tokens": 1839,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 42.3
+    },
+    {
+      "ticker": "FANG",
+      "chars": 7302,
+      "completion_tokens": 1904,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.8
+    },
+    {
+      "ticker": "FE",
+      "chars": 7468,
+      "completion_tokens": 1935,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 44.5
+    },
+    {
+      "ticker": "GL",
+      "chars": 7044,
+      "completion_tokens": 1968,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 45.2
+    },
+    {
+      "ticker": "GOOG",
+      "chars": 8937,
+      "completion_tokens": 2506,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 57.5
+    },
+    {
+      "ticker": "GOOGL",
+      "chars": 8127,
+      "completion_tokens": 2100,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 48.2
+    },
+    {
+      "ticker": "HAS",
+      "chars": 7315,
+      "completion_tokens": 1970,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 45.4
+    },
+    {
+      "ticker": "IBKR",
+      "chars": 6966,
+      "completion_tokens": 1856,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 42.7
+    },
+    {
+      "ticker": "KIM",
+      "chars": 6367,
+      "completion_tokens": 1662,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 38.3
+    },
+    {
+      "ticker": "LEN",
+      "chars": 6428,
+      "completion_tokens": 1688,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 38.8
+    },
+    {
+      "ticker": "MOS",
+      "chars": 6387,
+      "completion_tokens": 1589,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 36.6
+    },
+    {
+      "ticker": "MS",
+      "chars": 7148,
+      "completion_tokens": 1922,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 44.2
+    },
+    {
+      "ticker": "OXY",
+      "chars": 7538,
+      "completion_tokens": 2015,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 46.3
+    },
+    {
+      "ticker": "PLTR",
+      "chars": 6840,
+      "completion_tokens": 1895,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.6
+    },
+    {
+      "ticker": "ROL",
+      "chars": 7668,
+      "completion_tokens": 2058,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 47.3
+    },
+    {
+      "ticker": "ROST",
+      "chars": 6542,
+      "completion_tokens": 1737,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 40.0
+    },
+    {
+      "ticker": "SHW",
+      "chars": 6903,
+      "completion_tokens": 1723,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 39.7
+    },
+    {
+      "ticker": "STZ",
+      "chars": 6457,
+      "completion_tokens": 1746,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 40.1
+    },
+    {
+      "ticker": "TFC",
+      "chars": 8169,
+      "completion_tokens": 2212,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 52.0
+    },
+    {
+      "ticker": "TPL",
+      "chars": 6964,
+      "completion_tokens": 1875,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.0
+    },
+    {
+      "ticker": "TSLA",
+      "chars": 6900,
+      "completion_tokens": 1904,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 43.6
+    },
+    {
+      "ticker": "UBER",
+      "chars": 6267,
+      "completion_tokens": 1671,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 38.4
+    },
+    {
+      "ticker": "VZ",
+      "chars": 5999,
+      "completion_tokens": 1561,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 35.8
+    },
+    {
+      "ticker": "WDC",
+      "chars": 6168,
+      "completion_tokens": 1607,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 36.9
+    },
+    {
+      "ticker": "XEL",
+      "chars": 7787,
+      "completion_tokens": 1952,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 44.8
+    },
+    {
+      "ticker": "XYZ",
+      "chars": 8456,
+      "completion_tokens": 2338,
+      "finish_reason": "stop",
+      "truncated": false,
+      "elapsed_s": 53.7
+    }
+  ],
+  "finished_utc": "2026-08-22T13:07:29Z"
+}

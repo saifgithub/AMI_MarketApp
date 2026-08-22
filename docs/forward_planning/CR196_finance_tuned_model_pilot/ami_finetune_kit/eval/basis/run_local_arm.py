@@ -16,6 +16,21 @@
 # `do_sample=False` is passed explicitly and written into the manifest; an arm
 # whose manifest disagrees with its comparator is not a comparison.
 #
+# THINKING IS OFF, AND CHECKED. `chat_template.jinja` defaults `enable_thinking` to
+# True and then emits "<|im_start|>assistant\n<think>\n" — an OPEN reasoning block.
+# The pilot ran through vLLM's chat endpoint, which sends enable_thinking=false per
+# the ami-llm thinking contract, so the template closes it ("<think></think>") and
+# the model answers directly. Left on, this arm's first shakedown returned 84 tokens
+# about a C++ calculator program for the AAPL brief (2026-08-22) — off-distribution
+# text that would have scored as a perfectly ordinary level 0 across all 44 tickers
+# and read as "our fine-tune is terrible". So the rendered prompt is ASSERTED to
+# carry a closed think block before anything is generated: a template that ignores
+# the kwarg fails here rather than 44 scoreable garbage files later.
+#
+# For the same reason a response under --min-new floor aborts the run. A brief that
+# asks for nine numbered sections plus a verdict and scenarios cannot be answered in
+# a few dozen tokens; a run that produces one has broken, not answered.
+#
 # device_map="auto" misjudged its headroom on the GB10 and offloaded part of the
 # model to CPU, leaving meta tensors NemotronH's mixer cannot run through ("Tensor
 # on device meta is not on the expected device cuda:0", CR196 §6). The whole model
@@ -27,6 +42,8 @@
 #   --prompts      : basis_prompts.jsonl
 #   --out-dir      : where responses are written (default responses/<arm>)
 #   --max-new      : generation budget (default 8000, the pilot's fastino budget)
+#   --enable-thinking : render an open <think> block (default off, matching the pilot)
+#   --min-new      : abort if a response comes back shorter than this (default 200)
 #   --limit        : first N prompts only, for a cheap shakedown
 #   --resume       : skip tickers whose .md already exists
 # History:
@@ -48,6 +65,16 @@ def main():
     ap.add_argument("--prompts", default="basis_prompts.jsonl")
     ap.add_argument("--out-dir")
     ap.add_argument("--max-new", type=int, default=8000)
+    ap.add_argument("--enable-thinking", action="store_true")
+    ap.add_argument("--min-new", type=int, default=200)
+    # Diagnostic only. §5a.1 requires pinned decoding for a scored arm, so a
+    # sampled run may be compared with nothing — it exists to tell a decoding
+    # failure apart from a model failure. The manifest records which was used.
+    ap.add_argument("--sample", action="store_true",
+                    help="DIAGNOSTIC: sample per the model's generation_config")
+    ap.add_argument("--temperature", type=float, default=1.0)
+    ap.add_argument("--top-p", type=float, default=0.95)
+    ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--limit", type=int)
     ap.add_argument("--resume", action="store_true")
     args = ap.parse_args()
@@ -71,7 +98,15 @@ def main():
         "model": os.path.abspath(args.model),
         "prompts": os.path.abspath(args.prompts),
         "prompt_run_id": sorted({r["run_id"] for r in recs}),
-        "decoding": {"do_sample": False, "max_new_tokens": args.max_new},
+        "decoding": ({"do_sample": True, "temperature": args.temperature,
+                      "top_p": args.top_p, "seed": args.seed,
+                      "max_new_tokens": args.max_new,
+                      "enable_thinking": args.enable_thinking,
+                      "SCORING": "DIAGNOSTIC ONLY — sampled, not comparable to a "
+                                 "pinned arm (§5a.1)"}
+                     if args.sample else
+                     {"do_sample": False, "max_new_tokens": args.max_new,
+                      "enable_thinking": args.enable_thinking}),
         "dtype": "bfloat16",
         "transport": "transformers.generate (no server)",
         "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -87,7 +122,14 @@ def main():
         text = tok.apply_chat_template(
             [{"role": "system", "content": r["system"]},
              {"role": "user", "content": r["user"]}],
-            tokenize=False, add_generation_prompt=True)
+            tokenize=False, add_generation_prompt=True,
+            enable_thinking=args.enable_thinking)
+        if not args.enable_thinking and "<think></think>" not in text[-200:]:
+            raise AssertionError(
+                "thinking is disabled but the rendered prompt does not end with a "
+                f"closed <think></think> block — tail was {text[-120:]!r}. The "
+                "template ignored enable_thinking; generating now would produce "
+                "reasoning-mode text and score it as analysis.")
         if i == 1:
             # The pilot went through vLLM's chat endpoint, which applies this same
             # template. Dumping the first rendered prompt makes any divergence
@@ -97,14 +139,26 @@ def main():
                 fh.write(text)
 
         enc = tok(text, return_tensors="pt").to(model.device)
+        gen_kwargs = ({"do_sample": True, "temperature": args.temperature,
+                       "top_p": args.top_p} if args.sample
+                      else {"do_sample": False})
+        if args.sample:
+            torch.manual_seed(args.seed + i)
         t0 = time.time()
         with torch.no_grad():
-            out = model.generate(**enc, do_sample=False,
+            out = model.generate(**enc, **gen_kwargs,
                                  max_new_tokens=args.max_new,
-                                 pad_token_id=tok.pad_token_id or tok.eos_token_id)
+                                 pad_token_id=tok.eos_token_id)
         new = out[0][enc["input_ids"].shape[1]:]
         body = tok.decode(new, skip_special_tokens=True).strip()
         dt = time.time() - t0
+
+        if int(new.shape[0]) < args.min_new:
+            raise AssertionError(
+                f"{r['ticker']}: only {int(new.shape[0])} new tokens (floor "
+                f"{args.min_new}). The brief asks for nine sections, a verdict and "
+                f"three scenarios; this run is broken, not terse. First 200 chars: "
+                f"{body[:200]!r}")
 
         with open(path, "w") as fh:
             fh.write(body)
