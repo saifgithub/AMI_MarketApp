@@ -26,9 +26,16 @@ step strips it.
 | 5 | Basis-trap generalization (TTM/FY, EPS bases) | `recipe5_basis_traps.py` | **working** |
 | 6 | As-of-date discipline | `recipe6_asof_discipline.py` | **working** |
 | 7 | Mandate-overlay compliance | `recipe7_mandate_compliance.py` | **working** — renders via the REAL `overlay_generator`, PM `Verdict: APPROVE|PASS` contract |
-| 8 | Room JSON format | `recipe8_room_format.py` | **working** — reads `_PM_VERDICT_FORMAT`/stance constants off the live `room_prompts.py`; parsed by `room_runner._parse_pm_verdict` (:1423) |
-| 9 | Refusal/abstention | `recipe9_refusal.py` | **working** — 25% answerable controls |
-| 10 | **Long-form analyst report** (the deliverable) | `recipe10_longform_report.py` + `distill_teacher.py` | **briefs working** — 3/3 proof-run 2026-08-22, user turns 9.3k chars vs the frozen set's 9.0–9.7k; verifier calibrated on the 44 real reports in `eval/basis/responses/` (37/44 pass). **Targets need a GPU go** — self-distilled from vanilla Fastino, never Claude |
+| 8 | Room JSON format | `recipe8_room_format.py` | **working** — 1,606 (803 prose + 803 PM JSON); reads `_PM_VERDICT_FORMAT`/stance constants off the live `room_prompts.py`; parsed by `room_runner._parse_pm_verdict` (:1423). Was **8 tickers / 22 examples** until 2026-08-23 |
+| 9 | Refusal/abstention | `recipe9_refusal.py` | **working** — 460, 25% answerable controls. Was **capped at 100** by a `--count` default until 2026-08-23 |
+| 10 | **Long-form analyst report** (the deliverable) | `recipe10_longform_report.py` + `distill_teacher.py` | **done** — 1,220 verified targets from 1,329 briefs (95.9% per-ticker yield), self-distilled from vanilla Fastino on alpha-spark, 2,658/2,658 clean stops. Median target 4,114 chars |
+| 12 | Bear critique (`bear_researcher`) | `recipe12_bear_critique.py` | **working** — 509 from cache |
+| 13 | Bull thesis (`bull_researcher`) | `recipe13_bull_thesis.py` | **working** — 874 from cache |
+| 14 | Research-manager synthesis | `recipe14_research_manager.py` | **working** — 874, grounded side 437/437 |
+| 16 | Trader execution block | `recipe16_trader.py` | **working** — 1,364; R:R computed and asserted, 0 over the single-name cap |
+| 17 | Risk-officer JSON | `recipe17_risk_officer.py` | **working** — 1,416; sizes fixed by the contract, key figures asserted quoted from evidence |
+| 18 | Concierge (13th agent) | `recipe18_concierge.py` | **working** — 576; every lesson code checked against the live 365-lesson catalogue |
+| — | Fact-sheet disk cache | `factsheet.py --workers N` | **working** — 1,423 sheets; one sweep, six consumers; failures never cached |
 | — | Tier B fetch + normalize | `tierb_fetch.py` | **done** — 48,502 rows / 5 sources; ConvFinQA skipped (no license tag), Fin-R1 401 (see `tierb_licenses.md`) |
 | — | SA-FDR feature/mixture optimization | `sa_fdr.py` | module ready (trace(Sw⁻¹Sb) criterion, synthetic-tested); mix probes run on the training box |
 | — | Mix + QC gate | `mix_and_qc.py` | ready — runs once all recipe outputs land |

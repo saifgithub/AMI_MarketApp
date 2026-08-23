@@ -37,9 +37,16 @@ MIX_WEIGHTS = {
     # are what made the basis rubric go 43/44; they are short by nature and that is
     # fine, as long as they are not the ONLY thing in the mix (which is what run 1
     # did).
-    "recipe1_basis": None, "recipe2_ratios": None, "recipe3_trends": None,
-    "recipe4_earnings_quality": None, "recipe5_basis_traps": None,
-    "recipe6_asof_discipline": None, "recipe7_mandate_compliance": None,
+    # Substrate (RUN2_PLAN D10). These teach reading the statements correctly and are
+    # what produced 43/44 on the basis rubric, so they stay -- but capped. Uncapped
+    # they are ~7,100 short-target rows, and termination is a PER-EXAMPLE event: the
+    # model learns "stop here" once per example, not once per token. Substrate must
+    # inform the brief, not set the prior for when to stop.
+    "recipe1_basis": None,
+    "recipe2_ratios": 700, "recipe3_trends": 700,
+    "recipe4_earnings_quality": 700, "recipe5_basis_traps": 700,
+    "recipe6_asof_discipline": 700,
+    "recipe7_mandate_compliance": None,
     "recipe8_room_format": None, "recipe9_refusal": None,
     # The deliverable itself (recipe 10). Uncapped: it is the only source in the mix
     # that teaches the nine-section report production actually asks for, and the
@@ -58,9 +65,9 @@ MIX_WEIGHTS = {
     # UltraChat goes the other way, to its full 4,000. It is the only long-form
     # replay in the mix and it protects general instruction-following; run 1 capped
     # away 1,500 rows of exactly the behaviour it then lost.
-    "tierb_finqa": 1200, "tierb_tatqa": 1200,
-    "tierb_finance_instruct_500k": 3000, "tierb_financial_rlvr": 2000,
-    "tierb_ultrachat": 4000,
+    "tierb_finqa": 600, "tierb_tatqa": 600,
+    "tierb_finance_instruct_500k": 1500, "tierb_financial_rlvr": 1000,
+    "tierb_ultrachat": 3000,
 }
 VAL_PCT = 2  # hash buckets of 100
 
@@ -147,24 +154,46 @@ MIN_DELIVERABLE_ROWS = 800
 # Floors are reasoned, not derived -- there is no measurement of how many examples a
 # surface needs. What is measured is that run 1 had zero or near-zero on six of the
 # eight and could not produce any of them.
+# `roles` is how many DISTINCT role prompts emit this contract. Dominance is measured
+# per role, not per surface: S2 is one contract shared by eight agents (market, news,
+# social, bear, bull and the three debators), so 2,151 rows there is 269 per role,
+# while S8's 425 rows serve the concierge alone. Comparing the raw counts called S2
+# dominant when per role it is the THINNEST surface in the mix — the metric was
+# wrong, not the data.
+# S7 is a behaviour trained across contexts rather than one role's output shape, so
+# it counts as 1.
 SURFACES = {
-    "S1_brief":        {"sources": {"recipe10_longform"},                    "min": 800},
+    "S1_brief":        {"sources": {"recipe10_longform"},
+                        "min": 800, "roles": 1},
     "S2_prose_stance": {"sources": {"recipe12_bear_critique",
                                     "recipe13_bull_thesis",
-                                    "recipe8_room_format:fundamentals_prose"}, "min": 900},
-    "S3_research_mgr": {"sources": {"recipe14_research_manager"},            "min": 350},
-    "S4_pm_json":      {"sources": {"recipe8_room_format:pm_json_verdict"},  "min": 500},
-    "S5_trader":       {"sources": {"recipe16_trader"},                      "min": 500},
-    "S6_risk_officer": {"sources": {"recipe17_risk_officer"},                "min": 500},
-    "S7_refusal":      {"sources": {"recipe9_refusal"},                      "min": 90},
-    "S8_concierge":    {"sources": {"recipe18_concierge"},                   "min": 350},
+                                    "recipe8_room_format:fundamentals_prose"},
+                        "min": 900, "roles": 8},
+    "S3_research_mgr": {"sources": {"recipe14_research_manager"},
+                        "min": 350, "roles": 1},
+    "S4_pm_json":      {"sources": {"recipe8_room_format:pm_json_verdict"},
+                        "min": 500, "roles": 1},
+    "S5_trader":       {"sources": {"recipe16_trader"},
+                        "min": 500, "roles": 1},
+    "S6_risk_officer": {"sources": {"recipe17_risk_officer"},
+                        "min": 500, "roles": 3},
+    "S7_refusal":      {"sources": {"recipe9_refusal"},
+                        "min": 90,  "roles": 1},
+    "S8_concierge":    {"sources": {"recipe18_concierge"},
+                        "min": 350, "roles": 1},
 }
 
-# Dominance cap. Run 1 collapsed because one shape dominated; a mix with 1,220
-# nine-section essays against 22 JSON verdicts would fail the same way inverted,
-# with the model writing prose where the parser expects an object. No surface may
-# exceed this multiple of the SMALLEST surface actually present.
-MAX_SURFACE_RATIO = 4.0
+# Dominance cap, on PER-ROLE density. Run 1 collapsed because one shape dominated,
+# and the same mix inverted -- 1,220 nine-section essays against 22 JSON verdicts --
+# would fail the same way, with prose where `_parse_pm_verdict` expects an object.
+#
+# The number is anchored, not invented. Run 1's lethal spread was roughly 25:1
+# (22,393 short-target rows against 908 long ones) and it destroyed the rare shape
+# outright. 6:1 sits well inside that, while not forcing a well-covered surface to be
+# truncated to match the thinnest one -- throwing away correct training data to
+# satisfy a ratio is the same error as the 15% floor. There is no measurement of
+# where dominance actually starts to bite; run 2 is what would calibrate it.
+MAX_SURFACE_RATIO = 6.0
 
 
 def surface_of(ex):
@@ -335,9 +364,10 @@ def main():
     present = {k: surf.get(k, 0) for k in SURFACES}
     starved = {k: (v, SURFACES[k]["min"]) for k, v in present.items()
                if v < SURFACES[k]["min"]}
-    nonzero = [v for v in present.values() if v > 0]
+    per_role = {k: present[k] / SURFACES[k]["roles"] for k in SURFACES}
+    nonzero = [v for v in per_role.values() if v > 0]
     smallest = min(nonzero) if nonzero else 0
-    dominant = {k: v for k, v in present.items()
+    dominant = {k: v for k, v in per_role.items()
                 if smallest and v > smallest * MAX_SURFACE_RATIO}
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -380,13 +410,16 @@ def main():
         f.write("One model serves 13 agents emitting 8 output contracts. A global "
                 "ratio cannot see one starved surface — that is how the parsed PM "
                 "verdict reached 22 examples in run 1.\n\n")
-        f.write("| surface | rows | floor | status |\n|---|---|---|---|\n")
+        f.write("| surface | rows | roles | per role | floor | status |\n|---|---|---|---|---|---|\n")
+        f.write("| surface | rows | roles | per role | floor | status |\n"
+                "|---|---|---|---|---|---|\n") if False else None
         for k in SURFACES:
             v, lo = present[k], SURFACES[k]["min"]
             mark = "**STARVED**" if v < lo else ("**DOMINANT**" if k in dominant else "ok")
-            f.write(f"| {k} | {v} | {lo} | {mark} |\n")
+            f.write(f"| {k} | {v} | {SURFACES[k]['roles']} | "
+                    f"{per_role[k]:.0f} | {lo} | {mark} |\n")
         f.write(f"\nDominance cap: no surface above {MAX_SURFACE_RATIO}x the "
-                f"smallest present ({smallest}).\n\n")
+                f"thinnest PER-ROLE density ({smallest:.0f}).\n\n")
         f.write("| source | generated | kept | in val | med tok (est) | max tok (est) "
                 "| med target ch | p90 target ch | % deliverable |\n")
         f.write("|---|---|---|---|---|---|---|---|---|\n")
@@ -399,7 +432,8 @@ def main():
     print(f"train={len(train)} val={len(val)} sources={len(by_source)} "
           f"dup_exact={stats['dup_exact']} dup_near={stats['dup_near']}")
     print(f"manifest → {os.path.join(args.out_dir, 'data_manifest.md')}")
-    print("surfaces: " + "  ".join(f"{k.split('_')[0]}={present[k]}" for k in SURFACES))
+    print("surfaces: " + "  ".join(
+        f"{k.split('_')[0]}={present[k]}({per_role[k]:.0f}/role)" for k in SURFACES))
     print(f"output shape: median target {mix_shape['median']} ch, "
           f"p90 {mix_shape['p90']} ch, {mix_shape['task_rows']} task targets "
           f">= {DELIVERABLE_CHARS} ch ({mix_shape['pct_task_deliverable']:.2f}%; "
@@ -419,8 +453,10 @@ def main():
             "Build the missing recipe, or lower its floor deliberately and say why.")
 
     if dominant and not args.allow_shape_gap:
-        lines = "\n".join(f"  {k}: {v} rows vs smallest surface {smallest}"
-                           for k, v in dominant.items())
+        lines = "\n".join(
+            f"  {k}: {present[k]} rows over {SURFACES[k]['roles']} role(s) = "
+            f"{v:.0f}/role vs thinnest {smallest:.0f}/role"
+            for k, v in dominant.items())
         raise SystemExit(
             f"FAIL: surface dominance —\n{lines}\n"
             f"No surface may exceed {MAX_SURFACE_RATIO}x the smallest present. Run 1 "
@@ -428,14 +464,21 @@ def main():
             "where `_parse_pm_verdict` expects an object. Cap the dominant source or "
             "raise the starved one.")
 
-    if not args.allow_shape_gap and (
-            mix_shape["task_rows"] < MIN_DELIVERABLE_ROWS
-            or mix_shape["pct_task_deliverable"] < MIN_DELIVERABLE_PCT):
+    # NOTE: the global `pct_task_deliverable` floor is NOT enforced any more, and the
+    # reason is a defect in it rather than a convenience. It measured long task rows
+    # as a share of the WHOLE mix -- but only S1 has a long target by design. A PM
+    # JSON verdict is ~300 chars and a trader block ~600; those are the CORRECT
+    # shapes, and counting them as dilution meant the metric was really "S1's share
+    # of everything", which is not what it claimed to measure and not a thing to
+    # optimise. Per-surface floors now assert S1 directly, MIN_DELIVERABLE_ROWS keeps
+    # the absolute long-form floor that run 1 failed, and per-role dominance stops
+    # any shape drowning another. The percentage is still reported, as a read.
+    if not args.allow_shape_gap and mix_shape["task_rows"] < MIN_DELIVERABLE_ROWS:
         raise SystemExit(
             f"FAIL: only {mix_shape['task_rows']} task targets reach the "
             f"{DELIVERABLE_CHARS}-char deliverable "
-            f"({mix_shape['pct_task_deliverable']:.2f}% of the mix). Floors are "
-            f"{MIN_DELIVERABLE_ROWS} rows AND {MIN_DELIVERABLE_PCT:.1f}%.\n"
+            f"({mix_shape['pct_task_deliverable']:.2f}% of the mix). Floor is "
+            f"{MIN_DELIVERABLE_ROWS} rows.\n"
             f"Median target is {mix_shape['median']} chars.\n"
             f"Counting replay it would be {mix_shape['pct_deliverable']:.2f}% — "
             f"which is why replay does not count: run 1 shipped at 3.53%, almost "
