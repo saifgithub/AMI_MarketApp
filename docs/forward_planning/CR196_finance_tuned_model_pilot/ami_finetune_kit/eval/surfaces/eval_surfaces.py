@@ -72,9 +72,23 @@ P_ENTRY = re.compile(r"Entry:\s*\$?([\d,.]+)")
 P_STOP = re.compile(r"Stop:\s*\$?([\d,.]+)")
 P_TARGET = re.compile(r"Target:\s*\$?([\d,.]+)")
 P_SIZE = re.compile(r"Size:\s*([\d.]+)\s*%")
+# Widened 2026-08-24 (probe3 eval): the original pattern scored our own model's
+# S7 refusals at 0/15 against a manual read of 14/15 genuine, correct declines —
+# the model's house style ("this brief doesn't carry X", "there is no peer
+# basket on this brief", "I can't answer that") never matches the textbook
+# "insufficient data" phrasing the old pattern was written for. Still not
+# exhaustive — free-form refusal phrasing has a long tail — but this closes the
+# specific gap found. A P27-shaped harness bug: it ran green (0% both arms)
+# and read as "no capability gained" when the gap was the regex, not the model.
 P_REFUSE = re.compile(r"(cannot be determined|not (?:enough|sufficient) (?:data|information)|"
-                      r"insufficient|unable to determine|not (?:provided|available) "
-                      r"in the (?:data|sheet|brief))", re.I)
+                      r"insufficient|unable to determine|not (?:provided|available)"
+                      r"(?:\s+here)?\s*(?:in the (?:data|sheet|brief))?|"
+                      r"can.?t (?:answer|be answered|compute|quote|determine)|"
+                      r"cannot answer|(?:doesn.?t|does not) carry|"
+                      r"not a field (?:on|the) (?:this|the)?\s*(?:brief|sheet)|"
+                      r"not something (?:this|the) brief can answer|"
+                      r"no peer[- ](?:average|basket).{0,40}(?:on|in) (?:this|the) brief|"
+                      r"would be estimating rather than reporting)", re.I)
 
 
 def _f(m):

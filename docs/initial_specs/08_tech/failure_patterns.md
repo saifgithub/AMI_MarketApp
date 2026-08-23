@@ -1516,6 +1516,26 @@ teacher, 2026-08-22). Three inside one CR, by three different metrics — and th
 argument that the class is the *gate design*: a guard written specifically to close this pattern was
 itself built with a hole of the same shape. Assume the same of the next one.
 
+**Fourth instance, the inverse direction — a text-match scorer blind to the model's actual phrasing.**
+CR196 probe3 eval (2026-08-24): the free-run harness itself (`eval_surfaces.py`, built specifically to
+close this pattern) ran the model correctly on production-shaped prompts, generated real free text —
+and then scored it with regexes written from the spec, never checked against what the model actually
+wrote. Two failures, opposite signs:
+- `score_basis.py`'s `false_conflict` flag matched "source" + a word starting "disagree" with no
+  negation check, so the model correctly writing *"No material cross-source disagreements are
+  flagged"* — a **correct** no-conflict read — scored as the veto-failing false positive it exists to
+  catch. Read alone: "the fine-tune broke the one thing the whole pilot was built to prove."
+- `eval_surfaces.py`'s `P_REFUSE` pattern was written for textbook phrasing ("insufficient data",
+  "cannot be determined") the training data never taught; the model's actual refusal style — *"this
+  brief doesn't carry X"*, *"there is no peer basket on this brief"* — matched none of it. Scored
+  refusal rate: **0/15**. Manual read of the same 15 completions: **14/15** correct, clearly-worded
+  declines. The harness reported *zero capability gained* on the exact surface that had gained the
+  most.
+Both bugs ran green in the sense that mattered least (no crash, a clean number) and wrong in the sense
+that mattered most (the number was the opposite of the truth). A generation-based gate closes the P27
+gap between "scored" and "generated" — it does not close the gap between "generated" and "graded
+correctly"; that is a second, independent place for the same class of blindness to hide.
+
 Corollary worth stating on its own: **a guard is not done when it fires on the known failure. It is
 done when you have checked what else could satisfy it.** For a ratio, ask what else lands in the
 numerator; for a threshold, check it against the real distribution of the thing being measured rather
@@ -1537,3 +1557,9 @@ than one observation of it.
 - CR196 §5's acceptance gains a shape gate: **no run is accepted on loss alone.** A run must free-run
   the production brief and be compared against the untrained base through the same harness, with the
   base arm run first when a result is surprising.
+- `score_basis.py`'s `false_conflict` and `eval_surfaces.py`'s `P_REFUSE` (fixed 2026-08-24): a
+  regex-based scorer is not done when it was written from the spec — it is done when it has been read
+  against actual free-generated text, both the cases it must catch and the cases it must not. A
+  surprising per-surface number (0% or a sudden miss on the one veto row) is read against the raw
+  completions before it is reported as a model result, the same discipline §5's control arm already
+  applies to "is this the model or the harness."

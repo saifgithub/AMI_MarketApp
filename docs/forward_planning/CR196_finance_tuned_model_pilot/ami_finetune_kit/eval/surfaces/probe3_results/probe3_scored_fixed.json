@@ -1,0 +1,57 @@
+{
+  "arm": "ours-probe-fixed",
+  "surfaces": {
+    "S1": {
+      "n": 44,
+      "l1_plus": 44,
+      "l2_plus": 1,
+      "false_conflict": 0,
+      "long_enough": 44
+    },
+    "S2": {
+      "n": 15,
+      "stance_parses": 15,
+      "within_length_guide": 15
+    },
+    "S3": {
+      "n": 15,
+      "no_short_language": 15,
+      "picked_a_side": 15
+    },
+    "S4": {
+      "n": 15,
+      "parses": 15,
+      "pure_json": 15,
+      "has_action": 15,
+      "has_narration": 15,
+      "approve_complete": 15
+    },
+    "S5": {
+      "n": 15,
+      "has_side": 15,
+      "side_legal": 15,
+      "has_stop": 15,
+      "rr_correct": 5,
+      "size_within_cap": 15
+    },
+    "S6": {
+      "n": 15,
+      "parses": 15,
+      "one_per_size": 15,
+      "no_invented_size": 15,
+      "recommended_on_ladder": 15,
+      "confidence_valid": 15
+    },
+    "S7": {
+      "n": 15,
+      "refused": 14,
+      "correct": 14
+    },
+    "S8": {
+      "n": 15,
+      "no_advice": 15,
+      "gave_code": 1,
+      "gave_code_NA": 4
+    }
+  }
+}

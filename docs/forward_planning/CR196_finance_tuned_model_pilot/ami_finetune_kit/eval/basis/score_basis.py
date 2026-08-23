@@ -126,6 +126,26 @@ def _reconciled(t):
     return not P_NEG.search(t[lo:m.end() + 20])
 
 
+# Negation guard for false_conflict ONLY (our own addition — see the module
+# docstring's "TWO THINGS THIS ADDS"). `source_conflict` itself stays the
+# verbatim-copied raw hit-rate; this does not touch it. Found 2026-08-24
+# (probe3 eval): P_SOURCE_CONFLICT matches "source" + whitespace + a word
+# starting "disagree", which also matches inside "cross-source disagreements
+# are flagged" when the sentence is "No material cross-source disagreements
+# ARE FLAGGED" — a report correctly stating there is NO conflict. Same shape
+# as _reconciled's own P_NEG guard, just applied to the other pattern.
+P_CONFLICT_NEG = re.compile(
+    r"\b(no|none|not|n't|zero)\b[^.]{0,40}$", re.I)
+
+
+def _conflict_claimed(t):
+    m = P_SOURCE_CONFLICT.search(t)
+    if not m:
+        return False
+    lo = max(0, m.start() - 60)
+    return not P_CONFLICT_NEG.search(t[lo:m.start()])
+
+
 # A gap is "explainable" when the fixture says matched periods (and, for cash,
 # matched definitions) close it. Asserting a SOURCE conflict on one of these is
 # the failure §5a vetoes.
@@ -159,7 +179,7 @@ def score_text(t, debt_class=None, cash_class=None):
     # On a genuinely-unexplained ticker, asserting a clean basis resolution is wrong.
     ev["overclaim"] = bool(lvl >= 2 and debt_class == "genuine_or_unknown"
                            and cash_class in ("genuine_or_unknown", "no_conflict"))
-    ev["false_conflict"] = bool(ev["source_conflict"]
+    ev["false_conflict"] = bool(_conflict_claimed(t)
                                 and debt_class in EXPLAINABLE_DEBT
                                 and cash_class in EXPLAINABLE_CASH)
     return ev
