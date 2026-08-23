@@ -107,6 +107,12 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--smoke", action="store_true", help="10 steps on the first 100 examples")
+    ap.add_argument("--probe", type=int, default=0, metavar="STEPS",
+                    help="RUN2_PLAN P6: train STEPS on the FULL shuffled mix, then "
+                         "stop. Run 1 cost 25h to learn something a 3h probe shows — "
+                         "merge this adapter and free-run all eight surfaces before "
+                         "committing the full run. Unlike --smoke this keeps the "
+                         "whole dataset, so the step mix is representative.")
     args = ap.parse_args()
 
     cfg = yaml.safe_load(open(args.config))
@@ -115,6 +121,12 @@ def main():
     from datasets import load_dataset
     data_files = {"train": cfg["train_jsonl"], "validation": cfg["val_jsonl"]}
     ds = load_dataset("json", data_files=data_files)
+    if args.probe:
+        # Shuffle so the probe sees the real mix. The file is written hash-sorted by
+        # mix_and_qc, so the first N rows in file order are one arbitrary slice of the
+        # hash space — a probe on that would report on whatever recipes happened to
+        # land there, not on the mix.
+        ds["train"] = ds["train"].shuffle(seed=cfg["seed"])
     if args.smoke:
         ds["train"] = ds["train"].select(range(min(100, len(ds["train"]))))
         ds["validation"] = ds["validation"].select(range(min(20, len(ds["validation"]))))
@@ -133,7 +145,7 @@ def main():
         gradient_accumulation_steps=cfg["grad_accum"],
         learning_rate=float(cfg["learning_rate"]),
         num_train_epochs=cfg["epochs"],
-        max_steps=10 if args.smoke else -1,
+        max_steps=10 if args.smoke else (args.probe or -1),
         lr_scheduler_type=cfg["lr_scheduler"],
         warmup_ratio=cfg["warmup_ratio"],
         bf16=True,
@@ -159,6 +171,7 @@ def main():
     report = {
         "harness": harness,
         "smoke": args.smoke,
+        "probe_steps": args.probe or None,
         "global_step": int(trainer.state.global_step),
         "train_loss_last": (trainer.state.log_history[-1] if trainer.state.log_history else None),
         "config": cfg,
