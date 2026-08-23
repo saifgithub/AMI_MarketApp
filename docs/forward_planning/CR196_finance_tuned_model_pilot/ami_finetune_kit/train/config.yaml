@@ -46,7 +46,23 @@ warmup_ratio: 0.03
 # 5,120 keeps every recipe-10 row; what still exceeds it is long-PROMPT Tier B whose
 # targets are short, and those are dropped rather than truncated. 8,192 OOM-killed
 # with naive Mamba (measured run 1), so this is the headroom available.
-cutoff_len: 5120
+# REVERTED to 4,096 after the run-2 probe took alpha-spark into memory thrashing:
+# 110 of 121 GB resident, GPU still at 96%, and sshd unable to fork — the kernel
+# answered pings and TCP handshakes while nothing could be scheduled. Run 1 completed
+# 25h at 4,096 and the config's own history records 8,192 being OOM-killed, so this
+# is a clean A/B: 4,096 fits this box, 5,120 does not.
+#
+# The truncation defect that motivated 5,120 is real and still must not be ignored —
+# but the right answer is to DROP the 27 over-length rows, not to raise the ceiling
+# to keep them. 27 of 20,021 is a rounding error, and three recipe-10 reports are a
+# small price for a run that completes. preflight_lengths.py --drop-over does this;
+# never let them truncate.
+#
+# Note this mix is heavier than run 1's at the same cutoff (median 1,462 tokens,
+# p90 2,118, against run 1's 331-char median target), so headroom is thinner even
+# here. If 4,096 also proves tight, cut the longest rows further rather than
+# trimming the cutoff toward the reports we are trying to teach.
+cutoff_len: 4096
 
 logging_steps: 10
 save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke
