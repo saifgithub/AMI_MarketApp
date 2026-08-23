@@ -245,3 +245,58 @@ cannot execute is indistinguishable from a broken one until someone tries it.
 
 P5 per-surface eval harness (§5) · P6 probe run (300–500 steps) · only then P7 the
 full run.
+
+---
+
+## 9. Baseline — vanilla Fastino on all 8 surfaces (2026-08-23)
+
+456 held-out prompts, temperature 0, 455/456 clean stops. **The harness validates
+itself**: S1 reproduces §1 exactly — 43/44 L1, 0/44 L2+, 0 false conflicts — so it is
+measuring what §5a measures.
+
+| Surface | n | Baseline |
+|---|---|---|
+| S1 brief | 44 | L1 98% · **L2+ 0%** · false conflicts 0 · long enough 98% |
+| S2 prose + stance | 63 | stance parses **100%** · within length guide 54% |
+| S3 research manager | 44 | no short-language 86% · picked a side 100% |
+| S4 PM verdict JSON | 60 | parses **100%** · pure JSON **100%** · APPROVE complete **100%** |
+| S5 trader | 68 | has side **26%** · has stop 26% · R:R correct **12%** · size within cap 28% |
+| S6 risk officer | 69 | parses 100% · recommended on ladder 100% · one entry per size **57%** |
+| S7 refusal | 60 | **refused 0/60** · correct 25% (the answerable controls only) |
+| S8 concierge | 48 | no advice 100% · **gave a real lesson code 0/48** |
+
+### What this changes
+
+**S4 is a veto, not a target.** The base already emits a perfect parseable verdict,
+60/60 on every field. The concern that motivated scaling recipe 8 was correct — 22
+examples against 1,220 essays invited prose where the parser expects an object — but
+the job is **not regressing** S4, not improving it. Any run-2 score below 100% here
+is a loss, in exactly §5a's sense.
+
+**S7 is DEF059 sitting in the base model.** Vanilla Fastino refuses **zero** of 60
+unanswerable prompts. It always produces a confident answer, whether or not the data
+supports one — the failure CR040's "degrade loudly" rule exists to prevent, present
+in the checkpoint before we touch it. Run 1 shipped 100 abstention examples against
+this; run 2 has 460.
+
+**S5 and S8 are capability gaps, not regression risks.** The base cannot write the
+trader block (26% emit a parseable `Side:`) and cannot cite a lesson code (0/48,
+because it has never seen the catalogue). Both had ZERO run-1 examples. These are
+where run 2 has the most room, and where a gain is unambiguous.
+
+**L2/L3 remains 0% at baseline**, as §1 found. Anything above zero after run 2 is a
+real gain — and recipe 1 is still the only source teaching it, in a prompt format
+that does not match production. §7's caveat stands.
+
+### Acceptance direction per surface
+
+| Surface | run 2 must |
+|---|---|
+| S1 | hold L1 ≥ 98%, hold false conflicts at 0, **beat L2+ 0%** |
+| S2 | hold stance 100%, **improve length-guide 54%** |
+| S3 | hold |
+| S4 | **hold 100% — veto** |
+| S5 | **beat 26% / 12%** |
+| S6 | hold parse 100%, **improve one-per-size 57%** |
+| S7 | **beat 0% refusal without breaking the controls** |
+| S8 | hold no-advice 100%, **beat 0% code citation** |

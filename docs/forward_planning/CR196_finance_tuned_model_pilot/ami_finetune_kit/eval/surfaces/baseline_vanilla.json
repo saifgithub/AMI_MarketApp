@@ -1,0 +1,58 @@
+{
+  "arm": "vanilla-fastino",
+  "surfaces": {
+    "S1": {
+      "n": 44,
+      "l1_plus": 43,
+      "l2_plus": 0,
+      "false_conflict": 0,
+      "long_enough": 43
+    },
+    "S5": {
+      "n": 68,
+      "has_side": 18,
+      "side_legal": 18,
+      "has_stop": 18,
+      "rr_correct_NA": 50,
+      "size_within_cap": 19,
+      "rr_correct": 8
+    },
+    "S6": {
+      "n": 69,
+      "parses": 69,
+      "one_per_size": 39,
+      "no_invented_size": 69,
+      "recommended_on_ladder": 69,
+      "confidence_valid": 69
+    },
+    "S2": {
+      "n": 63,
+      "stance_parses": 63,
+      "within_length_guide": 34
+    },
+    "S3": {
+      "n": 44,
+      "no_short_language": 38,
+      "picked_a_side": 44
+    },
+    "S4": {
+      "n": 60,
+      "parses": 60,
+      "pure_json": 60,
+      "has_action": 60,
+      "has_narration": 60,
+      "approve_complete": 60
+    },
+    "S8": {
+      "n": 48,
+      "no_advice": 48,
+      "gave_code": 0,
+      "gave_code_NA": 17
+    },
+    "S7": {
+      "n": 60,
+      "refused": 0,
+      "correct": 15
+    }
+  }
+}
