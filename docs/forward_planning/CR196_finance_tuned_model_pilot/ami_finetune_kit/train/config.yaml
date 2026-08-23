@@ -38,7 +38,15 @@ learning_rate: 1.0e-4
 epochs: 2
 lr_scheduler: cosine
 warmup_ratio: 0.03
-cutoff_len: 4096   # data median ~1.5k tok (manifest); 8192 OOM-killed with naive Mamba
+# Measured with the REAL tokenizer on the run-2 mix (preflight_lengths.py, 20,029
+# rows): median 1,462 · p90 2,121 · p99 3,902 · max 7,728. At 4,096, 27 rows would be
+# silently truncated FROM THE RIGHT — and several are recipe-10 reports with 5,000+
+# char targets, i.e. exactly the long-form behaviour run 2 exists to restore. TRL does
+# not warn; the target is simply cut and the model learns to stop mid-sentence.
+# 5,120 keeps every recipe-10 row; what still exceeds it is long-PROMPT Tier B whose
+# targets are short, and those are dropped rather than truncated. 8,192 OOM-killed
+# with naive Mamba (measured run 1), so this is the headroom available.
+cutoff_len: 5120
 
 logging_steps: 10
 save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke
