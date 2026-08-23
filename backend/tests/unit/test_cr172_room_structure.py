@@ -163,7 +163,11 @@ def _menu(mandate: Mandate, **over) -> tuple:
         "horizon_days": 42, "shares_held": 0.0,
     }
     kwargs.update(over)
-    return _build_room_option_candidates(**kwargs)
+    # The builder returns `(candidates, spot, priced_at)`; the third is asserted
+    # on its own in `test_the_menu_stamps_when_it_priced` and dropped here so the
+    # twenty call sites below stay about what they are each testing.
+    candidates, spot, _priced_at = _build_room_option_candidates(**kwargs)
+    return candidates, spot
 
 
 def _verdict_json(**over) -> str:
@@ -304,8 +308,7 @@ def test_an_equity_verdict_carries_no_structure(chain_provider):
     _text, verdict = _parse_pm_verdict(_verdict_json(), ctx)
     assert verdict is not None
     assert verdict.action == VerdictAction.APPROVE
-    assert verdict.strategy is None
-    assert verdict.legs is None
+    assert verdict.structure is None
 
 
 def test_a_valid_index_attaches_that_candidates_legs(chain_provider):
@@ -314,10 +317,10 @@ def test_a_valid_index_attaches_that_candidates_legs(chain_provider):
     _text, verdict = _parse_pm_verdict(_verdict_json(structure_id=0), ctx)
     assert verdict is not None
     assert verdict.action == VerdictAction.APPROVE
-    assert verdict.strategy == candidates[0].strategy_name
-    assert verdict.legs is not None
-    assert len(verdict.legs) == len(candidates[0].legs)
-    for got, want in zip(verdict.legs, candidates[0].legs):
+    assert verdict.structure is not None
+    assert verdict.structure.strategy_name == candidates[0].strategy_name
+    assert len(verdict.structure.legs) == len(candidates[0].legs)
+    for got, want in zip(verdict.structure.legs, candidates[0].legs):
         assert (got.right, got.strike, got.quantity, got.premium) == (
             want.right, want.strike, want.quantity, want.premium
         )
@@ -339,11 +342,11 @@ def test_the_reply_may_not_state_a_single_figure_of_its_own(chain_provider):
         ctx,
     )
     assert verdict is not None
-    assert verdict.strategy == candidates[0].strategy_name != "naked_call"
-    assert verdict.legs is not None
-    assert all(leg.premium > 0.01 for leg in verdict.legs)
-    assert all(leg.strike > 1.0 for leg in verdict.legs)
-    assert sum(abs(leg.quantity) for leg in verdict.legs) < 99.0
+    assert verdict.structure is not None
+    assert verdict.structure.strategy_name == candidates[0].strategy_name != "naked_call"
+    assert all(leg.premium > 0.01 for leg in verdict.structure.legs)
+    assert all(leg.strike > 1.0 for leg in verdict.structure.legs)
+    assert sum(abs(leg.quantity) for leg in verdict.structure.legs) < 99.0
 
 
 def test_an_index_outside_the_issued_set_fails_safe_to_pass(chain_provider):
@@ -356,7 +359,7 @@ def test_an_index_outside_the_issued_set_fails_safe_to_pass(chain_provider):
     assert verdict.action == VerdictAction.PASS
     assert verdict.overridden_from_llm is True
     assert "did not cost" in verdict.reason
-    assert verdict.legs is None
+    assert verdict.structure is None
 
 
 def test_an_index_on_a_run_that_issued_no_menu_fails_safe_to_pass():
@@ -377,7 +380,7 @@ def test_a_forbidden_candidate_may_not_be_chosen(chain_provider):
     assert verdict is not None
     assert verdict.action == VerdictAction.PASS
     assert "does not permit" in verdict.reason
-    assert verdict.legs is None
+    assert verdict.structure is None
 
 
 def test_a_non_numeric_structure_id_fails_safe_to_pass(chain_provider):
@@ -401,7 +404,7 @@ def test_a_stated_absence_is_an_equity_verdict_not_a_refusal(value, chain_provid
     _text, verdict = _parse_pm_verdict(_verdict_json(structure_id=value), ctx)
     assert verdict is not None
     assert verdict.action == VerdictAction.APPROVE
-    assert verdict.strategy is None
+    assert verdict.structure is None
 
 
 def test_a_structure_on_a_pass_changes_nothing(chain_provider):
@@ -416,8 +419,7 @@ def test_a_structure_on_a_pass_changes_nothing(chain_provider):
     )
     assert verdict is not None
     assert verdict.action == VerdictAction.PASS
-    assert verdict.strategy is None
-    assert verdict.legs is None
+    assert verdict.structure is None
 
 
 @pytest.mark.parametrize("value", [1.7, True, "1.7"])
@@ -431,7 +433,7 @@ def test_a_number_that_is_not_an_index_is_refused_not_truncated(value, chain_pro
     _text, verdict = _parse_pm_verdict(_verdict_json(structure_id=value), ctx)
     assert verdict is not None
     assert verdict.action == VerdictAction.PASS
-    assert verdict.legs is None
+    assert verdict.structure is None
 
 
 # ── DEF354 — the caveat has to reach the agent doing the sizing ─────────────

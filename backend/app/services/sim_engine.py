@@ -2948,6 +2948,52 @@ class SimEngine:
                 self._held_quantity(s, p_row, symbol)
                 - sim_options.locked_call_cover_shares(s, p_row.id, symbol),
             )
+            # CR172 — one verdict opens one structure.
+            #
+            # The equity path answers this on the CLIENT: the card looks for a
+            # trade carrying this `verdict_ref` and renders a confirmation pill
+            # instead of a Buy button. Options cannot use that check — they live
+            # in their own tables (CR171's separate-table rule) and no route
+            # lists open structures, so the board genuinely does not know. A
+            # user who opens a structure, navigates away and returns sees the
+            # consent CTA again, and the second tap would open a second
+            # position on a verdict that proposed one.
+            #
+            # So the check lives HERE, where it cannot be forgotten by a caller
+            # and cannot be bypassed by a client that never learned about it.
+            # It is scoped to `status == "open"` deliberately: a structure the
+            # user has since CLOSED is a finished trade, and refusing to let
+            # them re-enter would be this guard overreaching into a decision
+            # that is theirs.
+            if verdict_ref is not None:
+                existing = s.query(SimOptionTradeRow).filter(
+                    SimOptionTradeRow.portfolio_id == p_row.id,
+                    SimOptionTradeRow.verdict_ref == verdict_ref,
+                    SimOptionTradeRow.status == "open",
+                ).first()
+                if existing is not None:
+                    logger.info(
+                        "sim_option_open_duplicate_verdict",
+                        user_id=str(user_id),
+                        underlying=underlying,
+                        strategy=strategy_name,
+                        verdict_ref=str(verdict_ref),
+                        existing=str(existing.strategy_id),
+                    )
+                    return OptionOpenResult(
+                        accepted=False,
+                        compliance=ComplianceResult(
+                            passed=False,
+                            violations=[
+                                "You already have this structure open from "
+                                "this verdict. AMI did not open a second one "
+                                "and nothing was charged."
+                            ],
+                            blocked_by=None,
+                        ),
+                        portfolio_snapshot=portfolio,
+                    )
+
             compliance = check_option_open(
                 leg_list, mandate, shares_held=shares_held,
             )

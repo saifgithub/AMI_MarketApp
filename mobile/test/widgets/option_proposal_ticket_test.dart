@@ -139,9 +139,14 @@ void main() {
 
     testWidgets('absent greeks say so and estimate nothing in their place',
         (tester) async {
+      // DEF363 — the key is `greeks_not_evaluated`, a LIST of per-leg
+      // sentences. This test used to set `greeks_reason`, which no backend
+      // surface has ever emitted at this level, so it proved the fixture
+      // rather than the wire and the reason line was dead on every real
+      // payload.
       final j = bullCallSpreadPayload()
         ..remove('net_greeks')
-        ..['greeks_reason'] = 'no risk-free rate available';
+        ..['greeks_not_evaluated'] = ['no risk-free rate available'];
       await _pump(tester, OptionProposal.fromJson(j));
 
       expect(_saw(tester, 'Greeks not computed — no risk-free rate available'),

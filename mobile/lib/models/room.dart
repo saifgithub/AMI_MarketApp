@@ -2,6 +2,8 @@
 /// Mirrors backend/app/schemas/room.py.
 library;
 
+import 'package:ami_trade/models/option_proposal.dart';
+
 /// CR106 B1 — where one price on a verdict came from.
 ///
 /// `unknown` is a value the wire sent that this build does not recognise, kept
@@ -37,6 +39,7 @@ class RoomVerdict {
     this.timeHorizonDays,
     this.opinionsNotIncluded = const [],
     this.levelProvenance,
+    this.structure,
   });
 
   /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
@@ -67,7 +70,24 @@ class RoomVerdict {
   /// plain metric list with no ribbon and no ratio (T-PROV / T-BACKFILL).
   final Map<String, LevelSource>? levelProvenance;
 
+  /// CR172 — the option structure the Room costed and the CIO chose, if any.
+  ///
+  /// Parsed by [OptionProposal.fromJson], the SAME parser the `/propose`
+  /// surface uses, because the server sends the same shape to both. That is
+  /// the whole point of it being one shape: the ticket renders a structure
+  /// identically however the user arrived at it, and a field cannot exist on
+  /// one route and be missing on the other.
+  ///
+  /// `null` is an equity verdict — or a mandate that does not permit
+  /// derivatives, or a run that predates the field. It is never "a structure
+  /// with no legs"; the server does not emit one.
+  final OptionProposal? structure;
+
   bool get isApprove => action == 'APPROVE';
+
+  /// Whether this verdict is asking the user to consent to an option
+  /// structure. An APPROVE with a structure is the only state that does.
+  bool get isOptionApprove => isApprove && structure != null;
   bool get isReject => action == 'REJECT';
   bool get isPass => action == 'PASS';
 
@@ -96,6 +116,10 @@ class RoomVerdict {
           .whereType<String>()
           .toList(),
       levelProvenance: parseLevelProvenance(j['level_provenance']),
+      structure: j['structure'] is Map
+          ? OptionProposal.fromJson(
+              (j['structure'] as Map).cast<String, dynamic>())
+          : null,
     );
   }
 }

@@ -21,6 +21,7 @@ import 'package:ami_trade/models/room_board_mappers.dart';
 import 'package:ami_trade/models/room_stage.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
+import 'package:ami_trade/widgets/sim/option_verdict_cta.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/celebration.dart';
@@ -1400,6 +1401,17 @@ class _VerdictCard extends ConsumerWidget {
                   ],
                 ),
               )
+            // CR172 — an APPROVE that carries a costed structure asks a
+            // different question than one that carries a size and a stop, so it
+            // gets a different control. The equity ticket cannot express legs,
+            // and offering it here would take the user's yes for a share
+            // position AMI never proposed.
+            else if (verdict.structure != null)
+              OptionVerdictCta(
+                structure: verdict.structure!,
+                ticker: ticker,
+                verdictRef: runId,
+              )
             else
               SizedBox(
                 width: double.infinity,
@@ -1420,14 +1432,18 @@ class _VerdictCard extends ConsumerWidget {
                   ),
                 ),
               ),
-            const SizedBox(height: AmiSpacing.xs),
-            Text(
-              existingTrade != null
-                  ? 'Trade placed · view it in the Journal'
-                  : l.roomTradeTicketCaption,
-              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
-              textAlign: TextAlign.center,
-            ),
+            // The option CTA carries its own caption; a second one below it
+            // would sit under the ticket's caption and read as a contradiction.
+            if (existingTrade != null || verdict.structure == null) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                existingTrade != null
+                    ? 'Trade placed · view it in the Journal'
+                    : l.roomTradeTicketCaption,
+                style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
           // SEE CHART — secondary action; shown in ALL verdict states
           // (approve+no-trade, approve+traded, reject). Lets the user
@@ -1515,6 +1531,16 @@ class _VerdictActions extends ConsumerWidget {
                   ),
                 ],
               ),
+            )
+          else if (verdict.structure != null)
+            // CR172 — same branch as the card footer above, and it has to be
+            // both: the live board and the card each render their own actions,
+            // so a structure wired into one of them is a structure a user can
+            // reach from one screen and not the other.
+            OptionVerdictCta(
+              structure: verdict.structure!,
+              ticker: ticker,
+              verdictRef: runId,
             )
           else
             ElevatedButton.icon(

@@ -7175,6 +7175,108 @@ abstract class AppLocalizations {
   /// **'The consent form could not be opened. Try again later.'**
   String get settingsAdsConsentFailed;
 
+  /// CR172. Heading of the sheet shown after the user accepts a structure and AMI re-prices it live. Shown only when something actually changed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE PRICE MOVED'**
+  String get optionRepriceHeading;
+
+  /// CR172. Heading of the same sheet when the live re-price came back at the same figures. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PRICE CONFIRMED'**
+  String get optionRepriceHeadingUnchanged;
+
+  /// CR172. Sub-heading of the re-price sheet. States plainly that the numbers are fresh, which is the whole reason the step exists. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI re-priced this against the live chain before opening it. Confirm the figures below.'**
+  String get optionRepriceSubheading;
+
+  /// CR172. Column heading over the figures the user was originally shown. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WHEN AMI PROPOSED'**
+  String get optionRepriceThen;
+
+  /// CR172. Column heading over the freshly re-priced figures. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOW'**
+  String get optionRepriceNow;
+
+  /// CR172. How stale the proposal had become. {age} is a humanised duration, e.g. '4 minutes'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The price you were shown was {age} old.'**
+  String optionRepriceAged(String age);
+
+  /// CR172. A duration in whole minutes, for optionRepriceAged. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String optionRepriceAgeMinutes(int count);
+
+  /// CR172. A duration in whole seconds, for optionRepriceAged. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 second} other{{count} seconds}}'**
+  String optionRepriceAgeSeconds(int count);
+
+  /// CR172. Row label for the underlying's price in the drift table. {ticker} is the symbol. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} PRICE'**
+  String optionRepriceSpotLabel(String ticker);
+
+  /// CR172. The confirm button on the re-price sheet. Names the price explicitly, because the whole step exists so the user consents to a figure they have seen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN AT THIS PRICE'**
+  String get optionRepriceConfirmCta;
+
+  /// CR172. The decline button on the re-price sheet. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DON\'T OPEN'**
+  String get optionRepriceCancelCta;
+
+  /// CR172. Heading when the live re-price could not be completed — the chain could not be read, or a leg is not transactable. Nothing was opened and nothing charged. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI CANNOT PRICE THIS RIGHT NOW'**
+  String get optionRepriceFailedHeading;
+
+  /// CR172. Body of the re-price failure state. States the two facts the user needs: no position, no money moved. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was opened and nothing was charged. AMI will not fill a structure it cannot price.'**
+  String get optionRepriceFailedBody;
+
+  /// CR172. Heading when the re-price succeeded but the compliance floor now blocks the structure — the market moved it out of mandate between the proposal and the tap. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE FLOOR NOW REFUSES THIS'**
+  String get optionRepriceRefusedHeading;
+
+  /// CR172. The Room verdict card's call to action when the verdict carries an option structure, replacing the equity trade ticket button. Opens the ticket; it does not open a position. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'REVIEW THE STRUCTURE'**
+  String get optionVerdictAcceptCta;
+
+  /// CR172. Caption under the Room verdict's option CTA. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI costed this structure. You decide yes or no.'**
+  String get optionVerdictCaption;
+
+  /// CR172. Confirmation pill after a structure is opened. {strategy} is the humanised strategy name, {cost} the net debit or credit with currency. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{strategy} opened · {cost}'**
+  String optionOpenedConfirmation(String strategy, String cost);
+
   /// CR172 §10. Mono label at the top of the option proposal ticket. The Room did the structuring — this is not a chain the user browsed — and the heading says so, because a card that looks self-serve invites the user to look for controls that deliberately do not exist. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

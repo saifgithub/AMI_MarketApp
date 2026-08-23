@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass
+from typing import Sequence
 
 from app.core.logging import logger
 from app.schemas.mandate import Mandate
@@ -495,4 +496,79 @@ def build_candidates(
         spot=chain.spot,
         not_evaluated=tuple(reasons),
         volatility_aware=income_first is not None,
+    )
+
+
+def cost_existing_structure(
+    chain: EnrichedChain,
+    *,
+    underlying: str,
+    strategy_name: str,
+    legs: Sequence[StrategyLeg],
+    mandate: Mandate,
+    shares_held: float = 0.0,
+    days_to_expiry: int,
+    rationale: str = "",
+) -> OptionCandidate | None:
+    """Re-cost a structure that already exists, against this chain.
+
+    `build_candidates` answers *"what should we propose?"*. This answers the
+    other question the consent flow asks: *"what does the thing already on the
+    table cost NOW?"* — and it must be answered by the same assembly, or the
+    figures shown at consent are produced by different code than the figures
+    shown at proposal, and any discrepancy between them is unattributable.
+
+    **The premium comes off the chain, never off the caller's legs.** The
+    quantity, right and strike are the caller's — that is the shape of the
+    structure — but every price is re-read here. `POST /reprice` happens to
+    hand in legs it has already priced through `_price_legs`, so today this
+    re-read changes nothing; it stays because this is a public function and the
+    next caller will not necessarily have done that. `net_cost` moves cash, so
+    a caller-supplied premium mints it, and a fence that only holds while an
+    upstream caller remembers is not a fence.
+    `test_cost_existing_structure_ignores_the_premium_it_was_handed` drives
+    this function directly, past `_price_legs`, for exactly that reason.
+
+    Returns `None` when any leg cannot be priced against this chain — a
+    partially-priced structure is not a cheaper answer, it is a wrong one, and
+    the caller must say so rather than show a total that omits a leg.
+    """
+    # Deferred for the same reason `build_candidates` defers it: the safety
+    # floor imports back into this layer, and a module-level import here closes
+    # the cycle at interpreter start.
+    from app.agents.safety_floor import check_option_open
+
+    quotes = {("call", q.quote.strike): q for q in chain.calls}
+    quotes.update({("put", q.quote.strike): q for q in chain.puts})
+
+    parts: list[tuple[EnrichedOptionQuote, float]] = []
+    priced: list[StrategyLeg] = []
+    for leg in legs:
+        quote = quotes.get((leg.right, leg.strike))
+        if quote is None or quote.mid is None or quote.mid <= 0:
+            return None
+        priced.append(leg._replace(premium=float(quote.mid)))
+        parts.append((quote, leg.quantity))
+
+    costed = tuple(priced)
+    metrics = strategy_metrics(costed, shares_held=shares_held)
+    if metrics is None:
+        return None
+    greeks, greeks_missing = _greeks_for(parts)
+    compliance = check_option_open(costed, mandate, shares_held=shares_held)
+    contracts = int(max(abs(leg.quantity) for leg in costed)) if costed else 0
+    return OptionCandidate(
+        strategy_name=strategy_name,
+        legs=costed,
+        metrics=metrics,
+        net_greeks=greeks,
+        greeks_not_evaluated=greeks_missing,
+        contracts=contracts,
+        expiry=costed[0].expiry,
+        days_to_expiry=days_to_expiry,
+        underlying=underlying,
+        mandate_violations=tuple(compliance.violations),
+        advisories=tuple(compliance.advisories or ()),
+        not_evaluated=tuple(compliance.not_evaluated or ()),
+        rationale=rationale,
     )

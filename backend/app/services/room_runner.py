@@ -52,19 +52,19 @@ from app.agents.safety_floor import (
 )
 from app.core.config import settings
 from app.core.logging import logger
-from app.core.time import relative_day_phrase
+from app.core.time import now_utc, relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.models import BacktestRunIndexRow, RoomRunRow
 from app.services.asof_context import AsOfContext, asof_scope
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
+from app.schemas.options import costed_structure
 from app.schemas.room import (
     RoomRun,
     RoomStatus,
     Verdict,
     VerdictAction,
-    VerdictLeg,
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
@@ -352,6 +352,11 @@ class _RoomContext:
     # mandate does not permit derivatives, which is the default.
     option_candidates: tuple = field(default_factory=tuple)
     option_spot: float | None = None
+    # When the chain above was actually read. Not the run's start: a convene
+    # takes minutes and the menu is built partway through, so stamping the
+    # structure with the run's clock would overstate its freshness by exactly
+    # the interval the user is being shown a drift for.
+    option_priced_at: datetime | None = None
 
 
 # CR104 — the numeric fundamentals fields tracked per-field in
@@ -1142,8 +1147,13 @@ def _build_room_option_candidates(
     target: float,
     horizon_days: int,
     shares_held: float,
-) -> tuple[tuple, float | None]:
+) -> tuple[tuple, float | None, datetime | None]:
     """CR172 §10 step 1, on the Room's inputs — the menu the CIO chooses from.
+
+    Returns `(candidates, spot, priced_at)`. The third is the clock the chain
+    was read at, and it is `None` in exactly the cases the first two are empty —
+    a run that built no menu priced nothing, and stamping it with a time would
+    describe a reading that never happened.
 
     Blocking (it reads the option board), so the caller runs it in a thread —
     DEF136's finding, one module along: a yfinance fetch on the loop thread
@@ -1170,7 +1180,7 @@ def _build_room_option_candidates(
     and that is what an APPROVE means here; nothing infers a view from prose.
     """
     if not getattr(mandate.compliance, "derivatives_allowed", False):
-        return (), None
+        return (), None, None
     try:
         from app.services.option_chain import get_enriched_chain, pick_expiry
         from app.services.option_strategist import build_candidates
@@ -1182,7 +1192,7 @@ def _build_room_option_candidates(
                 ticker=ticker,
                 reason="the level triple carries no computable risk to size against",
             )
-            return (), None
+            return (), None, None
         budget = round(portfolio_value * contribution.contribution_pts / 100.0, 2)
         if target > entry:
             direction = "bullish"
@@ -1193,7 +1203,7 @@ def _build_room_option_candidates(
                 "room_option_menu_skipped", ticker=ticker,
                 reason="the target does not sit either side of the entry",
             )
-            return (), None
+            return (), None, None
 
         expiry = pick_expiry(ticker, horizon_days, None)
         if expiry is None:
@@ -1201,14 +1211,14 @@ def _build_room_option_candidates(
                 "room_option_menu_skipped", ticker=ticker,
                 reason="no listed expiry could be read for this underlying",
             )
-            return (), None
+            return (), None, None
         chain = get_enriched_chain(ticker, expiry)
         if chain is None:
             logger.info(
                 "room_option_menu_skipped", ticker=ticker,
                 reason="the chain could not be priced against an honest spot",
             )
-            return (), None
+            return (), None, None
 
         result = build_candidates(
             chain,
@@ -1235,12 +1245,12 @@ def _build_room_option_candidates(
             budget_usd=budget,
             expiry=result.expiry,
         )
-        return tuple(result.candidates), result.spot
+        return tuple(result.candidates), result.spot, now_utc()
     except Exception as exc:  # noqa: BLE001 — no menu is a fine outcome; a dead run is not
         logger.warning(
             "room_option_menu_failed", ticker=ticker, error=str(exc)[:200],
         )
-        return (), None
+        return (), None, None
 
 
 def _build_room_risk_limit_context(
@@ -1821,21 +1831,17 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # CR172 §10 step 2 — every figure read off the candidate, none off the
     # reply. The sentence stays beside the card for CR106's reason: the card is
     # behind a tap, `reason` is the decision the user reads.
-    strategy = None
-    legs = None
+    costed = None
     if structure is not None:
-        strategy = structure.strategy_name
-        legs = [
-            VerdictLeg(
-                right=leg.right,
-                strike=leg.strike,
-                quantity=leg.quantity,
-                premium=leg.premium,
-                multiplier=leg.multiplier,
-                expiry=leg.expiry,
-            )
-            for leg in structure.legs
-        ]
+        # `ctx.option_spot` is the spot the chain was read at when this run
+        # built its menu, and `ctx.started_at` is when that happened. Both
+        # travel WITH the structure so the ticket can show the user what has
+        # moved since — consent off a stale price is the DEF305 shape, and a
+        # structure that cannot say what it was priced on cannot be checked
+        # against a fresher one at all.
+        costed = costed_structure(
+            structure, spot=ctx.option_spot, priced_at=ctx.option_priced_at,
+        )
         reason += (
             f" (Expressed as a {structure.strategy_name.replace('_', ' ')} — "
             f"{structure.contracts} contract"
@@ -1853,8 +1859,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         time_horizon_days=horizon_days,
         reason=reason,
         level_provenance=_prov or None,
-        strategy=strategy,
-        legs=legs,
+        structure=costed,
     )
 
 
@@ -4268,7 +4273,11 @@ class RoomRunner:
         # `to_thread` for DEF136's reason (this reads the option board). Costs
         # nothing on a run whose mandate does not permit derivatives: the gate
         # inside returns before any provider is touched.
-        ctx.option_candidates, ctx.option_spot = await asyncio.to_thread(
+        (
+            ctx.option_candidates,
+            ctx.option_spot,
+            ctx.option_priced_at,
+        ) = await asyncio.to_thread(
             _build_room_option_candidates,
             ticker=ctx.ticker,
             mandate=mandate,

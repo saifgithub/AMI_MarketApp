@@ -78,7 +78,7 @@ Map<String, dynamic> bullCallSpreadPayload() => <String, dynamic>{
         'vega_per_point': 0.1904,
         'rho_per_point': 0.0455,
       },
-      'greeks_reason': null,
+      'greeks_not_evaluated': <String>[],
       'compliance': <String, dynamic>{
         'passed': true,
         'violations': <String>[],

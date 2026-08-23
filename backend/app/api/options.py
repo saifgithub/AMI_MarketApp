@@ -28,23 +28,36 @@ import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.dependencies import get_current_user
 from app.core.logging import logger
+from app.core.time import now_utc
 from app.db.session import get_session
+from app.schemas.options import (
+    ComplianceOut,
+    CostedStructure,
+    as_utc,
+    LegOut,
+    costed_structure,
+    leg_out,
+)
 from app.schemas.trade import Portfolio
 from app.schemas.user import User
 from app.services.mandate_store import resolve_mandate
 from app.services.option_chain import get_enriched_chain, pick_expiry
-from app.services.option_strategist import OptionCandidate, build_candidates
+from app.services.option_strategist import (
+    OptionCandidate,
+    build_candidates,
+    cost_existing_structure,
+)
 from app.services.sim_engine import SimEngine, get_sim_engine
 from app.services.ticker_reference import (
     TickerNotFoundError,
     require_ticker_exists,
     ticker_not_found_detail,
 )
-from app.trading_math.option_strategy import StrategyLeg
+from app.trading_math.option_strategy import StrategyLeg, strategy_metrics
 from app.trading_math.risk import drawdown_contribution
 
 router = APIRouter(prefix="/v1/sim/options", tags=["sim-options"])
@@ -90,69 +103,12 @@ class LegSpec(BaseModel):
     quantity: float = Field(description="SIGNED contracts: + long, − short")
 
 
-class LegOut(BaseModel):
-    """One leg as the SERVER states it, priced."""
-
-    right: str
-    strike: float
-    quantity: float
-    premium: float
-    multiplier: float
-    expiry: str
-    occ_symbol: str | None = None
-
-
-class MetricsOut(BaseModel):
-    """`StrategyMetrics`, key for key — the mobile model mirrors this."""
-
-    net_cost: float
-    max_loss: float | None
-    max_gain: float | None
-    unbounded_loss: bool
-    unbounded_gain: bool
-    break_evens: list[float]
-    collateral_required: float | None
-    has_uncovered_short_call: bool
-    shares_locked: float
-    covered_by_shares: bool
-
-
-class GreeksOut(BaseModel):
-    delta: float
-    gamma: float
-    theta_per_day: float
-    vega_per_point: float
-    rho_per_point: float
-
-
-class ComplianceOut(BaseModel):
-    """`ComplianceResult` as the ticket reads it — `passed` always present.
-
-    The client fails closed on a missing `passed`, so it is never omitted
-    here: a serialiser that drops falsy fields is exactly what that guard was
-    written against.
-    """
-
-    passed: bool
-    violations: list[str] = Field(default_factory=list)
-    advisories: list[str] = Field(default_factory=list)
-    not_evaluated: list[str] = Field(default_factory=list)
-    blocked_by: str | None = None
-
-
-class CandidateOut(BaseModel):
-    strategy_name: str
-    contracts: int
-    expiry: str
-    days_to_expiry: int
-    underlying: str
-    legs: list[LegOut]
-    metrics: MetricsOut
-    net_greeks: GreeksOut | None = None
-    greeks_not_evaluated: list[str] = Field(default_factory=list)
-    compliance: ComplianceOut
-    not_evaluated: list[str] = Field(default_factory=list)
-    rationale: str
+# CR172 — these moved to `app.schemas.options` when the Room verdict and
+# `/reprice` began describing the same thing. `CandidateOut` is kept as a name
+# because it reads correctly at the /propose call site — a menu entry IS a
+# candidate — but it is the identical class, so a field can never exist on one
+# surface and not the other.
+CandidateOut = CostedStructure
 
 
 class ProposeRequest(BaseModel):
@@ -204,52 +160,6 @@ class OpenResponse(BaseModel):
     collateral_posted: float | None = None
     legs: list[LegOut] = Field(default_factory=list)
     portfolio: Portfolio | None = None
-
-
-def _leg_out(leg: StrategyLeg, occ: str | None = None) -> LegOut:
-    return LegOut(
-        right=leg.right, strike=leg.strike, quantity=leg.quantity,
-        premium=leg.premium, multiplier=leg.multiplier, expiry=leg.expiry,
-        occ_symbol=occ,
-    )
-
-
-def _candidate_out(candidate: OptionCandidate) -> CandidateOut:
-    m = candidate.metrics
-    return CandidateOut(
-        strategy_name=candidate.strategy_name,
-        contracts=candidate.contracts,
-        expiry=candidate.expiry,
-        days_to_expiry=candidate.days_to_expiry,
-        underlying=candidate.underlying,
-        legs=[_leg_out(leg) for leg in candidate.legs],
-        metrics=MetricsOut(
-            net_cost=m.net_cost,
-            max_loss=m.max_loss,
-            max_gain=m.max_gain,
-            unbounded_loss=m.unbounded_loss,
-            unbounded_gain=m.unbounded_gain,
-            break_evens=list(m.break_evens),
-            collateral_required=m.collateral_required,
-            has_uncovered_short_call=m.has_uncovered_short_call,
-            shares_locked=m.shares_locked,
-            covered_by_shares=m.covered_by_shares,
-        ),
-        net_greeks=(
-            None if candidate.net_greeks is None
-            else GreeksOut(**candidate.net_greeks._asdict())
-        ),
-        greeks_not_evaluated=list(candidate.greeks_not_evaluated),
-        compliance=ComplianceOut(
-            passed=not candidate.mandate_violations,
-            violations=list(candidate.mandate_violations),
-            advisories=list(candidate.advisories),
-            not_evaluated=list(candidate.not_evaluated),
-            blocked_by="compliance" if candidate.mandate_violations else None,
-        ),
-        not_evaluated=list(candidate.not_evaluated),
-        rationale=candidate.rationale,
-    )
 
 
 def _shares_held(portfolio: Portfolio, ticker: str) -> float:
@@ -308,6 +218,133 @@ def _default_max_loss_budget(
 
 
 
+class LegAsShown(BaseModel):
+    """A leg the client is holding, with the premium it was SHOWN.
+
+    `premium_then` is display-only and is never trusted for money: it exists so
+    the server can compute the drift itself rather than have the client
+    subtract two numbers, keeping the ticket's "computes nothing" fence intact.
+    A client that lies about it flatters its own drift line and changes nothing
+    else — `/open` re-prices regardless, and so does `/reprice`.
+    """
+
+    right: str = Field(pattern="^(call|put)$")
+    strike: float = Field(gt=0)
+    quantity: float = Field(description="SIGNED contracts: + long, - short")
+    premium_then: float | None = Field(default=None, ge=0)
+
+
+class RepriceRequest(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    user_id: UUID
+    ticker: str
+    strategy_name: str
+    expiry: datetime.date
+    legs: list[LegAsShown] = Field(min_length=1, max_length=4)
+    spot_then: float | None = Field(default=None, gt=0)
+    priced_at_then: datetime.datetime | None = None
+    mandate: dict | None = None
+
+    @field_validator("priced_at_then")
+    @classmethod
+    def _utc(cls, v):
+        # An older client — or any client that echoes back a stamp minted before
+        # `CostedStructure` began forcing an offset — sends a naive string. It
+        # means UTC; subtracting it from an aware `now` would raise instead.
+        return as_utc(v)
+
+
+class LegDriftOut(BaseModel):
+    right: str
+    strike: float
+    quantity: float
+    premium_then: float | None
+    premium_now: float
+    change: float | None
+
+
+class DriftOut(BaseModel):
+    """What moved between the price the user was shown and the price now.
+
+    Every field is `None` when its "then" half was not supplied — a drift
+    against an unknown baseline is not zero drift, and rendering it as zero
+    would tell the user nothing moved when the truth is that nobody knows.
+    """
+
+    spot_then: float | None = None
+    spot_now: float | None = None
+    spot_change: float | None = None
+    spot_change_pct: float | None = None
+    net_cost_then: float | None = None
+    net_cost_now: float
+    net_cost_change: float | None = None
+    net_cost_change_pct: float | None = None
+    max_loss_then: float | None = None
+    max_loss_now: float | None = None
+    aged_seconds: float | None = None
+    legs: list[LegDriftOut] = Field(default_factory=list)
+
+
+class RepriceResponse(BaseModel):
+    """The structure, costed again. Nothing was opened and nothing charged.
+
+    `structure` is authoritative and `drift` is narration. They are separate
+    fields rather than one merged object because a client that renders the
+    drift is telling a story about the past, and a client that renders the
+    structure is stating what a tap will cost — conflating them is how a stale
+    figure ends up on the button.
+    """
+
+    repriced: bool
+    structure: CostedStructure | None = None
+    compliance: ComplianceOut
+    drift: DriftOut | None = None
+
+
+def _price_legs(
+    chain, specs: list[LegSpec], expiry: datetime.date,
+) -> tuple[list[StrategyLeg], list[str]]:
+    """Client-stated shape + server-read price. The only place either happens.
+
+    `/open` and `/reprice` must produce the same premium for the same leg on
+    the same chain — otherwise the figure shown at consent is computed by
+    different code than the figure that charges, and any gap between them is
+    unattributable. So there is one pricer and both call it.
+
+    A leg that cannot be transacted becomes a SENTENCE, not a silent omission:
+    a structure priced without one of its legs has a net cost that is simply
+    wrong, and the caller is expected to refuse rather than round down.
+    """
+    quotes = {("call", q.quote.strike): q for q in chain.calls}
+    quotes.update({("put", q.quote.strike): q for q in chain.puts})
+
+    legs: list[StrategyLeg] = []
+    problems: list[str] = []
+    for spec in specs:
+        quote = quotes.get((spec.right, spec.strike))
+        if quote is None:
+            problems.append(
+                f"{spec.right} {spec.strike:g} is not listed on this expiry"
+            )
+            continue
+        if quote.state != "tradeable" or quote.mid is None or quote.mid <= 0:
+            problems.append(
+                f"{spec.right} {spec.strike:g} cannot be transacted right now "
+                f"({quote.state_reason})"
+            )
+            continue
+        legs.append(StrategyLeg(
+            right=spec.right,
+            strike=spec.strike,
+            quantity=spec.quantity,
+            premium=float(quote.mid),
+            multiplier=100.0,
+            expiry=expiry.isoformat(),
+        ))
+    return legs, problems
+
+
 @router.post("/propose", response_model=ProposeResponse)
 def propose_options(
     req: ProposeRequest,
@@ -359,11 +396,19 @@ def propose_options(
         target=req.target,
         stop=req.stop,
     )
+    # The spot and the clock are stamped on every candidate, not only on the
+    # envelope: a structure that a client holds while the user thinks — or that
+    # travels onto a Room verdict — has to be able to answer "what was the
+    # market when you costed me?" without its envelope.
+    priced_at = datetime.datetime.now(datetime.timezone.utc)
     return ProposeResponse(
         underlying=result.underlying,
         expiry=result.expiry or expiry.isoformat(),
         spot=result.spot,
-        candidates=[_candidate_out(c) for c in result.candidates],
+        candidates=[
+            costed_structure(c, spot=result.spot, priced_at=priced_at)
+            for c in result.candidates
+        ],
         not_evaluated=list(result.not_evaluated),
         volatility_aware=result.volatility_aware,
     )
@@ -395,32 +440,7 @@ def open_options(
             portfolio=sim.ensure_portfolio(req.user_id),
         )
 
-    quotes = {("call", q.quote.strike): q for q in chain.calls}
-    quotes.update({("put", q.quote.strike): q for q in chain.puts})
-
-    legs: list[StrategyLeg] = []
-    problems: list[str] = []
-    for spec in req.legs:
-        quote = quotes.get((spec.right, spec.strike))
-        if quote is None:
-            problems.append(
-                f"{spec.right} {spec.strike:g} is not listed on this expiry"
-            )
-            continue
-        if quote.state != "tradeable" or quote.mid is None or quote.mid <= 0:
-            problems.append(
-                f"{spec.right} {spec.strike:g} cannot be transacted right now "
-                f"({quote.state_reason})"
-            )
-            continue
-        legs.append(StrategyLeg(
-            right=spec.right,
-            strike=spec.strike,
-            quantity=spec.quantity,
-            premium=float(quote.mid),
-            multiplier=100.0,
-            expiry=req.expiry.isoformat(),
-        ))
+    legs, problems = _price_legs(chain, req.legs, req.expiry)
     if problems:
         logger.info(
             "sim_option_open_unpriceable",
@@ -462,6 +482,172 @@ def open_options(
         strategy_name=result.strategy_name,
         net_cost=result.net_cost,
         collateral_posted=result.collateral_posted,
-        legs=[_leg_out(leg) for leg in legs],
+        legs=[leg_out(leg) for leg in legs],
         portfolio=result.portfolio_snapshot,
+    )
+
+
+def _pct(change: float | None, base: float | None) -> float | None:
+    """Percent change, or None when the base cannot carry one.
+
+    A zero base has no percent change — it has an undefined one — and printing
+    0.0 there states that nothing moved off a number that could not move.
+    """
+    if change is None or base is None or base == 0:
+        return None
+    return round(change / abs(base) * 100.0, 2)
+
+
+@router.post("/reprice", response_model=RepriceResponse)
+def reprice_options(
+    req: RepriceRequest,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> RepriceResponse:
+    """Cost this structure again, now. Opens nothing, charges nothing.
+
+    **Why this exists as its own route.** `/open` already re-prices — it has to,
+    it is the surface that moves cash — but it re-prices and fills in one
+    motion, so the user never sees the number that charged them until after it
+    charged them. Saiful's ruling on the consent flow (2026-08-23) is that the
+    app re-prices live and shows what moved BEFORE opening, which is the DEF305
+    rule stated as a product requirement: never act off a price nobody checked.
+
+    So the sequence is proposal -> reprice -> the user reads the drift ->
+    `/open`, and `/open` re-prices a third time regardless. That last re-price
+    is not redundant with this one: seconds pass while the user reads, and a
+    route that trusted this response would be trusting a price it did not take.
+    This one informs; that one commits.
+
+    `/propose` cannot serve this purpose. It regenerates the menu from
+    blueprints and there is no guarantee the structure the user is holding is
+    still in the list, let alone at the same strikes and contract count.
+    """
+    _own(current_user, req.user_id)
+    ticker = req.ticker.upper().strip()
+    _require_ticker(ticker)
+
+    chain = get_enriched_chain(ticker, req.expiry)
+    if chain is None:
+        return RepriceResponse(
+            repriced=False,
+            compliance=ComplianceOut(
+                passed=False,
+                violations=[],
+                not_evaluated=[
+                    "the option chain for this expiry could not be read just "
+                    "now, so AMI cannot tell you what this structure costs at "
+                    "this moment"
+                ],
+            ),
+        )
+
+    specs = [
+        LegSpec(right=leg.right, strike=leg.strike, quantity=leg.quantity)
+        for leg in req.legs
+    ]
+    legs, problems = _price_legs(chain, specs, req.expiry)
+    if problems or len(legs) != len(req.legs):
+        return RepriceResponse(
+            repriced=False,
+            compliance=ComplianceOut(
+                passed=False, violations=[], not_evaluated=problems,
+            ),
+        )
+
+    portfolio = sim.ensure_portfolio(req.user_id)
+    mandate = resolve_mandate(req.user_id, req.mandate)
+    candidate = cost_existing_structure(
+        chain,
+        underlying=ticker,
+        strategy_name=req.strategy_name,
+        legs=legs,
+        mandate=mandate,
+        shares_held=_shares_held(portfolio, ticker),
+        days_to_expiry=max((req.expiry - datetime.date.today()).days, 0),
+    )
+    if candidate is None:
+        return RepriceResponse(
+            repriced=False,
+            compliance=ComplianceOut(
+                passed=False,
+                violations=[],
+                not_evaluated=[
+                    "the structure could not be costed against this chain — "
+                    "AMI will not show a total it cannot stand behind"
+                ],
+            ),
+        )
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    structure = costed_structure(candidate, spot=chain.spot, priced_at=now)
+
+    shown = {(leg.right, leg.strike): leg.premium_then for leg in req.legs}
+    leg_drift = [
+        LegDriftOut(
+            right=leg.right,
+            strike=leg.strike,
+            quantity=leg.quantity,
+            premium_then=shown.get((leg.right, leg.strike)),
+            premium_now=leg.premium,
+            change=(
+                None if shown.get((leg.right, leg.strike)) is None
+                else round(leg.premium - float(shown[(leg.right, leg.strike)]), 4)
+            ),
+        )
+        for leg in legs
+    ]
+    # The "then" net cost is recomputed from the premiums the client says it was
+    # shown, rather than taken as a number — same reason the ticket computes
+    # nothing: whoever does the arithmetic owns the mistake, and here that is us.
+    net_then: float | None = None
+    max_loss_then: float | None = None
+    if all(d.premium_then is not None for d in leg_drift):
+        then_legs = [
+            leg._replace(premium=float(shown[(leg.right, leg.strike)]))
+            for leg in legs
+        ]
+        then_metrics = strategy_metrics(
+            then_legs, shares_held=_shares_held(portfolio, ticker),
+        )
+        if then_metrics is not None:
+            net_then = round(then_metrics.net_cost, 2)
+            max_loss_then = then_metrics.max_loss
+    net_now = structure.metrics.net_cost
+    spot_change = (
+        None if req.spot_then is None else round(chain.spot - req.spot_then, 4)
+    )
+    drift = DriftOut(
+        spot_then=req.spot_then,
+        spot_now=chain.spot,
+        spot_change=spot_change,
+        spot_change_pct=_pct(spot_change, req.spot_then),
+        net_cost_then=net_then,
+        net_cost_now=net_now,
+        net_cost_change=(
+            None if net_then is None else round(net_now - net_then, 2)
+        ),
+        net_cost_change_pct=_pct(
+            None if net_then is None else net_now - net_then, net_then
+        ),
+        max_loss_then=max_loss_then,
+        max_loss_now=structure.metrics.max_loss,
+        aged_seconds=(
+            None if req.priced_at_then is None
+            else round((now - req.priced_at_then).total_seconds(), 1)
+        ),
+        legs=leg_drift,
+    )
+    logger.info(
+        "sim_option_repriced",
+        user_id=str(req.user_id), ticker=ticker,
+        strategy=req.strategy_name,
+        net_cost_change=drift.net_cost_change,
+        aged_seconds=drift.aged_seconds,
+    )
+    return RepriceResponse(
+        repriced=True,
+        structure=structure,
+        compliance=structure.compliance,
+        drift=drift,
     )

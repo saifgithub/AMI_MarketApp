@@ -5592,6 +5592,102 @@
   "@settingsAdsConsentFailed": {
     "description": "CR122-COMPLIANCE — snackbar when the UMP privacy-options form fails to open. NEW key. retranslate:[ar,ms]"
   },
+  "optionRepriceHeading": "THE PRICE MOVED",
+  "@optionRepriceHeading": {
+    "description": "CR172. Heading of the sheet shown after the user accepts a structure and AMI re-prices it live. Shown only when something actually changed. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceHeadingUnchanged": "PRICE CONFIRMED",
+  "@optionRepriceHeadingUnchanged": {
+    "description": "CR172. Heading of the same sheet when the live re-price came back at the same figures. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceSubheading": "AMI re-priced this against the live chain before opening it. Confirm the figures below.",
+  "@optionRepriceSubheading": {
+    "description": "CR172. Sub-heading of the re-price sheet. States plainly that the numbers are fresh, which is the whole reason the step exists. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceThen": "WHEN AMI PROPOSED",
+  "@optionRepriceThen": {
+    "description": "CR172. Column heading over the figures the user was originally shown. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceNow": "NOW",
+  "@optionRepriceNow": {
+    "description": "CR172. Column heading over the freshly re-priced figures. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceAged": "The price you were shown was {age} old.",
+  "@optionRepriceAged": {
+    "description": "CR172. How stale the proposal had become. {age} is a humanised duration, e.g. '4 minutes'. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "optionRepriceAgeMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@optionRepriceAgeMinutes": {
+    "description": "CR172. A duration in whole minutes, for optionRepriceAged. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "optionRepriceAgeSeconds": "{count, plural, =1{1 second} other{{count} seconds}}",
+  "@optionRepriceAgeSeconds": {
+    "description": "CR172. A duration in whole seconds, for optionRepriceAged. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "optionRepriceSpotLabel": "{ticker} PRICE",
+  "@optionRepriceSpotLabel": {
+    "description": "CR172. Row label for the underlying's price in the drift table. {ticker} is the symbol. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "ticker": {
+        "type": "String"
+      }
+    }
+  },
+  "optionRepriceConfirmCta": "OPEN AT THIS PRICE",
+  "@optionRepriceConfirmCta": {
+    "description": "CR172. The confirm button on the re-price sheet. Names the price explicitly, because the whole step exists so the user consents to a figure they have seen. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceCancelCta": "DON'T OPEN",
+  "@optionRepriceCancelCta": {
+    "description": "CR172. The decline button on the re-price sheet. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceFailedHeading": "AMI CANNOT PRICE THIS RIGHT NOW",
+  "@optionRepriceFailedHeading": {
+    "description": "CR172. Heading when the live re-price could not be completed — the chain could not be read, or a leg is not transactable. Nothing was opened and nothing charged. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceFailedBody": "Nothing was opened and nothing was charged. AMI will not fill a structure it cannot price.",
+  "@optionRepriceFailedBody": {
+    "description": "CR172. Body of the re-price failure state. States the two facts the user needs: no position, no money moved. NEW key. retranslate:[ar,ms]"
+  },
+  "optionRepriceRefusedHeading": "THE FLOOR NOW REFUSES THIS",
+  "@optionRepriceRefusedHeading": {
+    "description": "CR172. Heading when the re-price succeeded but the compliance floor now blocks the structure — the market moved it out of mandate between the proposal and the tap. NEW key. retranslate:[ar,ms]"
+  },
+  "optionVerdictAcceptCta": "REVIEW THE STRUCTURE",
+  "@optionVerdictAcceptCta": {
+    "description": "CR172. The Room verdict card's call to action when the verdict carries an option structure, replacing the equity trade ticket button. Opens the ticket; it does not open a position. NEW key. retranslate:[ar,ms]"
+  },
+  "optionVerdictCaption": "AMI costed this structure. You decide yes or no.",
+  "@optionVerdictCaption": {
+    "description": "CR172. Caption under the Room verdict's option CTA. NEW key. retranslate:[ar,ms]"
+  },
+  "optionOpenedConfirmation": "{strategy} opened · {cost}",
+  "@optionOpenedConfirmation": {
+    "description": "CR172. Confirmation pill after a structure is opened. {strategy} is the humanised strategy name, {cost} the net debit or credit with currency. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "strategy": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
   "optionTicketHeading": "AMI STRUCTURED THIS TRADE",
   "@optionTicketHeading": {
     "description": "CR172 §10. Mono label at the top of the option proposal ticket. The Room did the structuring — this is not a chain the user browsed — and the heading says so, because a card that looks self-serve invites the user to look for controls that deliberately do not exist. NEW key. retranslate:[ar,ms]"

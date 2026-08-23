@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.agents import AgentMessage
+from app.schemas.options import CostedStructure
 
 
 class VerdictAction(str, Enum):
@@ -28,24 +29,6 @@ class RoomStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-
-
-class VerdictLeg(BaseModel):
-    """One leg of the structure the Portfolio Manager chose (CR172 §10 step 2).
-
-    Every figure here was computed by `option_strategist` and re-read off the
-    candidate the PM indexed — the model states an index and nothing else. A
-    premium or a strike that arrived from the model would be the P5 defect on
-    the surface that moves cash: `net_cost` is what `open_option_structure`
-    charges, so an invented premium on a short leg mints money.
-    """
-
-    right: Literal["call", "put"]
-    strike: float
-    quantity: float  # SIGNED contracts: positive long, negative short
-    premium: float   # per share, as quoted by the chain
-    multiplier: float = 100.0
-    expiry: str      # ISO date; every leg of a structure shares it
 
 
 class Verdict(BaseModel):
@@ -88,8 +71,7 @@ class Verdict(BaseModel):
     level_provenance: dict[str, Literal["pm", "trader", "ami_default"]] | None = None
 
     # CR172 §10 step 2 — the option structure attached to this verdict, if the
-    # PM chose one. `strategy` is the candidate's own `strategy_name`; `legs`
-    # are that candidate's legs verbatim.
+    # PM chose one.
     #
     # `None` means "this run carried no structure" — an equity verdict, a run
     # whose mandate does not permit derivatives, or a run that predates the
@@ -97,8 +79,19 @@ class Verdict(BaseModel):
     # not be costed is not emitted at all (`option_strategist`), so there is no
     # empty-legged structure to represent. Read it the way `level_provenance`
     # above is read — absence is absence, never backfilled or inferred.
-    strategy: str | None = None
-    legs: list[VerdictLeg] | None = None
+    #
+    # **This carried `strategy: str` + `legs: list[VerdictLeg]` until the mobile
+    # wiring landed, and the pair could not answer the question the user is
+    # actually being asked.** Legs and a name describe what would be bought;
+    # consent needs what it costs, what it can lose, where it breaks even, and
+    # whether the floor cleared it — and a client that derives those from legs
+    # is a client computing a max loss, which is the one figure CR172's ticket
+    # exists to never compute (DEF059). So the verdict now carries the whole
+    # costed candidate, in the identical shape `/propose` and `/reprice` use, so
+    # the ticket parses one thing however it was reached. Nothing was migrated:
+    # zero of 2,555 persisted verdicts carried the old pair (measured on Alpha,
+    # 2026-08-23), because the menu is gated on `derivatives_allowed`.
+    structure: CostedStructure | None = None
 
 
 class RoomRun(BaseModel):

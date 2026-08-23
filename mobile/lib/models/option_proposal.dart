@@ -245,6 +245,9 @@ class OptionProposal {
     this.metrics,
     this.greeks,
     this.greeksReason,
+    this.contracts,
+    this.spot,
+    this.pricedAt,
   });
 
   /// The PM's pick as an INDEX into the candidate set AMI built — never a
@@ -278,10 +281,29 @@ class OptionProposal {
 
   final OptionProposalGreeks? greeks;
 
-  /// Set exactly when [greeks] is null — the `EnrichedOptionQuote
-  /// .greeks_reason` convention. Rendered, because a greeks block that simply
-  /// is not there teaches nothing about why (CR040).
+  /// Set exactly when [greeks] is null — the per-leg sentences the server put
+  /// in `greeks_not_evaluated`, joined. Rendered, because a greeks block that
+  /// simply is not there teaches nothing about why (CR040).
+  ///
+  /// **DEF363:** this used to parse `greeks_reason`, a key no server has ever
+  /// sent at this level. `greeks_reason` exists on `EnrichedOptionQuote`, one
+  /// leg down, and never reaches a client; the structure carries
+  /// `greeks_not_evaluated`. Both tests that covered this supplied the wrong
+  /// key themselves, so the parser was proven against a fixture rather than
+  /// against the wire, and the reason line was unreachable on every real
+  /// payload.
   final String? greeksReason;
+
+  /// How many contracts of the structure. Server-sized against the loss
+  /// budget; the ticket never multiplies by it.
+  final int? contracts;
+
+  /// The underlying's price when this was costed, and when that was. Both are
+  /// null when the source could not state them — never defaulted to "now" or
+  /// "today's price", which would invent the provenance the drift line at
+  /// consent is measured against.
+  final double? spot;
+  final DateTime? pricedAt;
 
   final OptionProposalCompliance compliance;
 
@@ -315,6 +337,21 @@ class OptionProposal {
   /// it would be consent to an unknown.
   bool get canAccept => compliance.passed && metrics != null;
 
+  /// The server's per-leg explanations, as one sentence.
+  ///
+  /// Joined rather than rendered as a list because the ARB string takes a
+  /// single `{reason}`, and because a two-leg structure whose greeks both
+  /// failed has one story, not two. Empty stays empty: the ticket has a
+  /// distinct string for "not computed, and the server did not say why", and
+  /// collapsing that into a blank reason would render them the same.
+  static String? _greeksReason(Map<String, dynamic> j) {
+    final raw = j['greeks_not_evaluated'];
+    if (raw is! List) return null;
+    final parts = raw.whereType<String>().map((s) => s.trim())
+        .where((s) => s.isNotEmpty).toList();
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
   factory OptionProposal.fromJson(Map<String, dynamic> j) {
     final metrics = j['metrics'];
     final greeks = j['net_greeks'] ?? j['greeks'];
@@ -336,7 +373,10 @@ class OptionProposal {
       greeks: greeks is Map
           ? OptionProposalGreeks.fromJson(greeks.cast<String, dynamic>())
           : null,
-      greeksReason: j['greeks_reason'] as String?,
+      greeksReason: _greeksReason(j),
+      contracts: (j['contracts'] as num?)?.toInt(),
+      spot: (j['spot'] as num?)?.toDouble(),
+      pricedAt: DateTime.tryParse(j['priced_at'] as String? ?? ''),
       compliance: compliance is Map
           ? OptionProposalCompliance.fromJson(compliance.cast<String, dynamic>())
           : const OptionProposalCompliance(passed: false),

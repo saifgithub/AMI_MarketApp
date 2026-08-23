@@ -4377,6 +4377,82 @@ class AppLocalizationsEn extends AppLocalizations {
       'The consent form could not be opened. Try again later.';
 
   @override
+  String get optionRepriceHeading => 'THE PRICE MOVED';
+
+  @override
+  String get optionRepriceHeadingUnchanged => 'PRICE CONFIRMED';
+
+  @override
+  String get optionRepriceSubheading =>
+      'AMI re-priced this against the live chain before opening it. Confirm the figures below.';
+
+  @override
+  String get optionRepriceThen => 'WHEN AMI PROPOSED';
+
+  @override
+  String get optionRepriceNow => 'NOW';
+
+  @override
+  String optionRepriceAged(String age) {
+    return 'The price you were shown was $age old.';
+  }
+
+  @override
+  String optionRepriceAgeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String optionRepriceAgeSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String optionRepriceSpotLabel(String ticker) {
+    return '$ticker PRICE';
+  }
+
+  @override
+  String get optionRepriceConfirmCta => 'OPEN AT THIS PRICE';
+
+  @override
+  String get optionRepriceCancelCta => 'DON\'T OPEN';
+
+  @override
+  String get optionRepriceFailedHeading => 'AMI CANNOT PRICE THIS RIGHT NOW';
+
+  @override
+  String get optionRepriceFailedBody =>
+      'Nothing was opened and nothing was charged. AMI will not fill a structure it cannot price.';
+
+  @override
+  String get optionRepriceRefusedHeading => 'THE FLOOR NOW REFUSES THIS';
+
+  @override
+  String get optionVerdictAcceptCta => 'REVIEW THE STRUCTURE';
+
+  @override
+  String get optionVerdictCaption =>
+      'AMI costed this structure. You decide yes or no.';
+
+  @override
+  String optionOpenedConfirmation(String strategy, String cost) {
+    return '$strategy opened · $cost';
+  }
+
+  @override
   String get optionTicketHeading => 'AMI STRUCTURED THIS TRADE';
 
   @override

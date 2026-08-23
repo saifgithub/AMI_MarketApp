@@ -18,6 +18,8 @@ import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/billing_identity.dart';
+import 'package:ami_trade/models/option_proposal.dart';
+import 'package:ami_trade/models/option_reprice.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
@@ -2035,5 +2037,91 @@ class ApiClient {
       }));
     }
     return out;
+  }
+
+  // ── CR172 options ─────────────────────────────────────────────────────────
+
+  /// Re-cost a structure the user is holding on screen. Opens nothing.
+  ///
+  /// **This is the step between the proposal and the tap.** `/open` re-prices
+  /// too — it must, it is the surface that moves cash — but it re-prices and
+  /// fills in one motion, so without this call the user never sees the number
+  /// that charged them until after it charged them. Saiful's ruling on the
+  /// consent flow (2026-08-23): the app re-prices live and shows what moved
+  /// BEFORE opening.
+  ///
+  /// `premiumThen` per leg and [spotThen] are what this client was SHOWING.
+  /// They are sent so the SERVER computes the drift rather than this client
+  /// subtracting two numbers — the ticket's "computes nothing" fence covers
+  /// the drift line as much as the max loss.
+  Future<OptionRepriceResult> simOptionReprice({
+    required String userId,
+    required OptionProposal proposal,
+  }) async {
+    final expiry = proposal.expiry;
+    if (expiry == null) {
+      throw ArgumentError(
+        'a structure with no expiry cannot be repriced — the chain is keyed '
+        'on one, and guessing it would price a different board',
+      );
+    }
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/options/reprice',
+      data: {
+        'user_id': userId,
+        'ticker': proposal.underlying,
+        'strategy_name': proposal.strategyName,
+        'expiry': expiry,
+        'legs': [
+          for (final leg in proposal.legs)
+            {
+              'right': leg.right,
+              'strike': leg.strike,
+              'quantity': leg.quantity,
+              if (leg.premium != null) 'premium_then': leg.premium,
+            },
+        ],
+        if (proposal.spot != null) 'spot_then': proposal.spot,
+        if (proposal.pricedAt != null)
+          'priced_at_then': proposal.pricedAt!.toUtc().toIso8601String(),
+      },
+    );
+    return OptionRepriceResult.fromJson(r.data!);
+  }
+
+  /// The yes. The server re-prices every leg again before anything moves.
+  ///
+  /// Legs go up as `(right, strike, quantity)` and deliberately carry NO
+  /// premium: the server does not read one, and sending it would suggest it
+  /// might. A client-supplied premium on a short leg is free money, because
+  /// `net_cost` is what moves cash.
+  Future<OptionOpenResult> simOptionOpen({
+    required String userId,
+    required OptionProposal proposal,
+    String? verdictRef,
+  }) async {
+    final expiry = proposal.expiry;
+    if (expiry == null) {
+      throw ArgumentError('a structure with no expiry cannot be opened');
+    }
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/options/open',
+      data: {
+        'user_id': userId,
+        'ticker': proposal.underlying,
+        'strategy_name': proposal.strategyName,
+        'expiry': expiry,
+        'legs': [
+          for (final leg in proposal.legs)
+            {
+              'right': leg.right,
+              'strike': leg.strike,
+              'quantity': leg.quantity,
+            },
+        ],
+        if (verdictRef != null) 'verdict_ref': verdictRef,
+      },
+    );
+    return OptionOpenResult.fromJson(r.data!);
   }
 }
