@@ -102,7 +102,9 @@ def main():
     assert_not_anthropic(args.base_url, args.model)
 
     briefs = [json.loads(l) for l in open(args.briefs)]
-    briefs = [b for b in briefs if b.get("status") == "ok"]
+    # recipe-10 briefs carry status; the per-surface eval prompts do not (they are
+    # rendered, not fetched). Absent status means "usable".
+    briefs = [b for b in briefs if b.get("status", "ok") == "ok"]
     if args.limit:
         briefs = briefs[:args.limit]
 
@@ -157,6 +159,7 @@ def main():
                 "every one of them trains reasoning text as report prose.")
         usage = resp.get("usage") or {}
         rec = {"ticker": b["ticker"], "candidate": idx, "text": text,
+               **({"surface": b["surface"]} if "surface" in b else {}),
                "finish_reason": ch.get("finish_reason"),
                "completion_tokens": usage.get("completion_tokens"),
                "seconds": round(time.time() - t1, 1), "model": args.model,
