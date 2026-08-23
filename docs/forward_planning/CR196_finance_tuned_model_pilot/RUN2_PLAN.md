@@ -159,3 +159,68 @@ Stated so it is not mistaken for covered:
   probe run (P5) is the cheapest instrument we have for it.
 - **S2 covers 8 roles with one contract.** Whether one model differentiates 8 personas from
   prompt alone is asserted by design, tested only at P7.
+
+---
+
+## 8. Achieved (2026-08-23) — P0/P1/P3 complete, gate green
+
+`mix_and_qc.py` passes: **train 20,029 / val 375**, 993 exact duplicates removed,
+decontamination PASS against all 71 eval exclusions.
+
+| Surface | run 1 | run 2 | roles | per role | floor |
+|---|---|---|---|---|---|
+| S1 nine-section brief | **0** | 1,195 | 1 | 1,195 | 800 |
+| S2 prose + stance | 22 | 2,151 | 8 | 269 | 900 |
+| S3 research manager | 11 | 857 | 1 | 857 | 350 |
+| S4 **PM verdict JSON** | 22 | 779 | 1 | 779 | 500 |
+| S5 trader | **0** | 1,344 | 1 | 1,344 | 500 |
+| S6 risk officer | **0** | 1,389 | 3 | 463 | 500 |
+| S7 refusal | 100 | 453 | 1 | 453 | 90 |
+| S8 concierge | **0** | 425 | 1 | 425 | 350 |
+
+Per-role spread 1,344 / 269 = **5.0×**, inside the 6× cap. **1,215 long-form task
+targets** against run 1's zero.
+
+### What the gate caught that a global ratio could not
+
+1. **Recipe 8 was eight tickers** — `[::173][:8]`, written to demonstrate the two
+   contracts rather than train them. The entire reason the Room's parsed verdict had
+   22 examples.
+2. **Recipe 9 was capped at 100** by a `--count` default nobody had looked at, leaving
+   abstention at 98 rows while every other surface sat 4×+ above.
+
+Both were invisible for a whole training run and both were named in one gate run.
+
+### Corrections made to the gate itself
+
+- **Dominance was comparing incomparable things.** S2 is one contract shared by eight
+  agents; S8 serves one. On raw rows S2 looked dominant at 2,151 vs 425 — per role it
+  is 269 vs 425, the *thinnest* surface in the mix. Now normalised by roles, cap
+  raised 4→6 and anchored to run 1's actual lethal spread (~25:1) rather than a number
+  chosen for feel.
+- **The global deliverable ratio was really "S1's share of everything".** Only S1 has
+  a long target by design — a PM JSON verdict is ~300 chars, a trader block ~600, and
+  those are correct. Retired as a gate; per-surface floors assert S1 directly and
+  `MIN_DELIVERABLE_ROWS` keeps the absolute floor run 1 failed.
+
+### Infrastructure findings worth keeping
+
+- **A cache must never memoize a failure.** Yahoo rate-limits by returning *empty
+  frames* rather than raising, so a blocked pull is indistinguishable from a company
+  with no filings. The first sweep cached 613 `too_few_years`; re-pulling names that
+  had cached fine minutes earlier, including S&P 500 constituents, also returned 0.
+  After the block lifted the same sweep returned **2**. Caching those would have
+  deleted 43% of the train universe from every role recipe, permanently, with no
+  symptom beyond "the counts look low".
+- **Decontamination false-positives on acronyms.** Three-letter tickers collide with
+  ordinary words: `CHD` is coronary heart disease in a biotech's licence agreement,
+  `AES` a segment name, `MGM` a property in VICI's portfolio. The prose scan is a
+  backstop for generators that do not stamp `_meta.ticker`; where the stamp exists it
+  is authoritative.
+- **`mandate_compliance_eval.py` had never executed** — two fatal bugs. No
+  safety-floor claim in CR032 or CR196 was ever backed by a run.
+
+### Still open before training
+
+P4 run the safety-floor eval · P5 per-surface eval harness (§5) · P6 probe run
+(300–500 steps) · only then P7 the full run.

@@ -134,7 +134,7 @@ REPLAY_SOURCES = {"tierb_ultrachat"}
 # 10% is still infinitely more than run 1's 0%, and MIN_DELIVERABLE_ROWS below is
 # the harder safety net -- an absolute count cannot be gamed by shrinking the mix.
 # Run 2's result is what calibrates both.
-MIN_DELIVERABLE_PCT = 10.0
+MIN_DELIVERABLE_PCT = 10.0   # RETIRED as a gate — see the note at the enforcement site; kept only so the manifest can still report a share
 
 # An absolute floor as well as a ratio, because the two fail differently: a ratio
 # can be met by shrinking the mix, and a count can be met by drowning it. Run 1 had
@@ -396,8 +396,9 @@ def main():
         f.write("- token lengths are chars/4 ESTIMATES (no tokenizer on build box)\n")
         f.write(f"- **output shape**: **{mix_shape['task_rows']}** TASK targets reach "
                 f"the {DELIVERABLE_CHARS}-char deliverable "
-                f"(**{mix_shape['pct_task_deliverable']:.2f}%** of the mix; floors: "
-                f"{MIN_DELIVERABLE_ROWS} rows and {MIN_DELIVERABLE_PCT:.1f}%), "
+                f"(**{mix_shape['pct_task_deliverable']:.2f}%** of the mix; "
+                f"enforced floor is {MIN_DELIVERABLE_ROWS} ROWS — the percentage is "
+                f"a read, not a gate, because only S1 has a long target by design), "
                 f"median target {mix_shape['median']} chars, p90 "
                 f"{mix_shape['p90']}\n")
         f.write(f"- counting ALL sources including replay it would be "
