@@ -83,7 +83,19 @@ _MIRRORED_WARNINGS = {
     ),
 }
 
-TICKERS = load_train_universe()[::57][:25]  # a spread sample, decontamination-checked by the loader
+# Sample size is a CLI argument, not a constant. This was `[::57][:25]` -- 25
+# tickers, 100 examples -- and the per-surface gate flagged S7 as starved at 98 rows
+# while every other surface sat 4x+ above it (RUN2_PLAN §4 dominance cap). Abstention
+# is a production surface like any other: a model that never learns to say "cannot be
+# determined" fills the gap with something.
+DEFAULT_TICKERS = 115
+TICKERS = load_train_universe()[:DEFAULT_TICKERS]
+
+
+def set_tickers(n: int) -> None:
+    global TICKERS
+    uni = load_train_universe()
+    TICKERS = uni if n <= 0 or n >= len(uni) else uni[:n]
 
 
 def _facts(ticker: str) -> dict:
@@ -267,9 +279,13 @@ def _validate(rows: list[dict]) -> None:
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--tickers", type=int, default=DEFAULT_TICKERS)
     ap.add_argument("--out", default=os.path.join(HERE, "out", "recipe9.jsonl"))
-    ap.add_argument("--count", type=int, default=100)
+    ap.add_argument("--count", type=int, default=0,
+                    help="0 = no truncation; was 100, which capped S7 below the "
+                         "per-surface dominance floor")
     args = ap.parse_args()
+    set_tickers(getattr(args, 'tickers', DEFAULT_TICKERS))
 
     rows = build_all()
     _validate(rows)
