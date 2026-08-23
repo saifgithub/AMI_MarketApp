@@ -46,23 +46,21 @@ warmup_ratio: 0.03
 # 5,120 keeps every recipe-10 row; what still exceeds it is long-PROMPT Tier B whose
 # targets are short, and those are dropped rather than truncated. 8,192 OOM-killed
 # with naive Mamba (measured run 1), so this is the headroom available.
-# REVERTED to 4,096 after the run-2 probe took alpha-spark into memory thrashing:
-# 110 of 121 GB resident, GPU still at 96%, and sshd unable to fork — the kernel
-# answered pings and TCP handshakes while nothing could be scheduled. Run 1 completed
-# 25h at 4,096 and the config's own history records 8,192 being OOM-killed, so this
-# is a clean A/B: 4,096 fits this box, 5,120 does not.
+# 5,120, restored. The revert to 4,096 was made on a WRONG diagnosis: the run-2
+# probe was OOM-killed, but not by training. It completed 200 steps at 25.4 s/step —
+# FASTER than run 1's 28.2 — with loss falling 0.40 -> 0.22 and token accuracy rising
+# to 0.93. It died entering the step-200 EVAL pass, because Trainer was accumulating
+# eval logits across 47 batches at a 131,072-wide vocabulary (~2 GB per sequence).
+# Fixed at the source with prediction_loss_only=True in train_lora.py.
 #
-# The truncation defect that motivated 5,120 is real and still must not be ignored —
-# but the right answer is to DROP the 27 over-length rows, not to raise the ceiling
-# to keep them. 27 of 20,021 is a rounding error, and three recipe-10 reports are a
-# small price for a run that completes. preflight_lengths.py --drop-over does this;
-# never let them truncate.
+# Training at 5,120 is measured to fit. Cutting it would have given up the three
+# recipe-10 reports the truncation guard exists to protect, to treat a symptom.
 #
-# Note this mix is heavier than run 1's at the same cutoff (median 1,462 tokens,
-# p90 2,118, against run 1's 331-char median target), so headroom is thinner even
-# here. If 4,096 also proves tight, cut the longest rows further rather than
-# trimming the cutoff toward the reports we are trying to teach.
-cutoff_len: 4096
+# Still true and worth knowing: this mix is heavier than run 1's at the same cutoff
+# (median 1,462 tokens, p90 2,118 versus run 1's 331-char median target), and the box
+# ran at 110-114 of 121 GB with page cache collapsing to 1 GB — which is why sshd
+# kept failing to fork. Headroom is thin even with the eval leak closed.
+cutoff_len: 5120
 
 logging_steps: 10
 save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke

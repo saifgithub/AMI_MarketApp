@@ -157,6 +157,21 @@ def main():
         save_steps=cfg["save_steps"],
         save_total_limit=cfg["save_total_limit"],
         eval_strategy="steps" if not args.smoke else "no",
+        # THE run-2 probe killer. Without this, Trainer keeps every eval batch's
+        # LOGITS to hand to compute_metrics — and this vocabulary is 131,072 wide, so
+        # one ~4,000-token sequence is ~2 GB in fp32 and the 47-batch val pass
+        # accumulates ~100 GB. The probe trained 200 steps healthily at 25.4 s/step,
+        # entered the step-200 eval, and was OOM-killed (exit 137, OOMKilled=true)
+        # before it could write its checkpoint.
+        #
+        # Run 1 never hit this because its val rows were short (331-char median
+        # target). Run 2's val carries recipe-10 reports, so the same code path that
+        # was free before now allocates gigabytes per sequence.
+        #
+        # We only ever read eval LOSS. Keeping the logits was pure waste that cost a
+        # run — and note it presents as a memory fault, which sends you looking at
+        # cutoff_len and batch size rather than at an eval flag.
+        prediction_loss_only=True,
         eval_steps=cfg["eval_steps"],
         max_length=cfg["cutoff_len"],
         packing=False,               # Fastino disabled packing; keep the recipe comparable
