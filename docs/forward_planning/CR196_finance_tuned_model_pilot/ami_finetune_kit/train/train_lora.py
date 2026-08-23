@@ -156,7 +156,32 @@ def main():
         logging_steps=cfg["logging_steps"],
         save_steps=cfg["save_steps"],
         save_total_limit=cfg["save_total_limit"],
-        eval_strategy="steps" if not args.smoke else "no",
+        # IN-TRAINING EVAL IS OFF, and that is a methodological decision as much as a
+        # memory one.
+        #
+        # Memory: it OOM-killed the run-2 probe twice, both times at exactly step 200
+        # (eval_steps), exit 137. Trainer keeps eval LOGITS to feed compute_metrics,
+        # and TRL sets compute_metrics itself to report `mean_token_accuracy` — which
+        # silently overrides prediction_loss_only back to False, so setting that flag
+        # did nothing (probe 2 died in the same place with it on). At a 131,072-wide
+        # vocabulary one ~4,000-token sequence is ~2 GB in fp32 and the 47-batch val
+        # pass accumulates ~100 GB. Run 1 escaped it only because its val rows were
+        # short.
+        #
+        # Methodology: we should not be steering on eval loss anyway. Run 1 reached
+        # eval loss 0.2384 and merged held-out 0.2506 from a base of 2.2744 — a real,
+        # correctly-measured 2.02 improvement — and could not produce the deliverable
+        # at all (CR196 §9, guards-register P27). val.jsonl is drawn from the same
+        # generators as train, so it is decorrelated in examples and identical in
+        # shape; it certifies distribution-fit and is blind to distribution-shift by
+        # construction.
+        #
+        # What decides run 2 is eval/surfaces/eval_surfaces.py: free generation on
+        # held-out prompts across all eight production surfaces, scored by the
+        # generators' own programmatic checks, against vanilla Fastino as a behaviour
+        # control. Held-out loss is still measured — once, after the merge, by
+        # eval/quick_eval.py — where it costs one pass instead of one per 200 steps.
+        eval_strategy="no",
         # THE run-2 probe killer. Without this, Trainer keeps every eval batch's
         # LOGITS to hand to compute_metrics — and this vocabulary is 131,072 wide, so
         # one ~4,000-token sequence is ~2 GB in fp32 and the 47-batch val pass
@@ -171,7 +196,9 @@ def main():
         # We only ever read eval LOSS. Keeping the logits was pure waste that cost a
         # run — and note it presents as a memory fault, which sends you looking at
         # cutoff_len and batch size rather than at an eval flag.
-        prediction_loss_only=True,
+        prediction_loss_only=True,   # moot with eval off; kept so re-enabling eval
+                                     # does not silently reintroduce the logit pile-up
+                                     # (TRL's compute_metrics overrides it — see above)
         eval_steps=cfg["eval_steps"],
         max_length=cfg["cutoff_len"],
         packing=False,               # Fastino disabled packing; keep the recipe comparable
