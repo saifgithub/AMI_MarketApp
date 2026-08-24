@@ -41,6 +41,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -366,37 +367,67 @@ def _assert_held_out(rows, eval_tickers):
 
 # ── stage: score ─────────────────────────────────────────────────────────────
 def stage_score(args):
-    prompts = {}
-    for i, line in enumerate(open(args.prompts)):
-        r = json.loads(line)
-        prompts[(r["surface"], r["ticker"], i)] = r
-    by_key = {}
-    for k, v in prompts.items():
-        by_key.setdefault((v["surface"], v["ticker"]), []).append(v)
+    """Pair each prompt with ITS OWN completion, 1:1.
 
-    comps = defaultdict(list)
+    This used to group by (surface, ticker) and score every prompt in a group against
+    `got[0]`. That key is not unique — S7 carries 4 refusal cases per ticker (each with a
+    different `should_refuse` in meta) and S8 uses ticker "-" for all 60 — so 116 of 468
+    prompts were scored against a DIFFERENT prompt's completion, under the wrong meta,
+    and the surplus completions were never scored at all. S8's whole surface score came
+    from one completion counted 60 times.
+
+    Pairing is on `pid` (sha1 of the prompt text) written by run_local_surfaces.py.
+    Completion files predating that field fall back to consuming each (surface, ticker)
+    group in order — still 1:1, never reusing one completion — and say so loudly.
+    """
+    prompts = [json.loads(l) for l in open(args.prompts) if l.strip()]
+
+    by_pid, by_st = {}, defaultdict(list)
     for line in open(args.completions):
+        if not line.strip():
+            continue
         c = json.loads(line)
-        comps[(c.get("surface") or "?", c["ticker"])].append(c)
+        if c.get("pid"):
+            by_pid[c["pid"]] = c
+        by_st[(c.get("surface") or "?", c.get("ticker"))].append(c)
+
+    legacy = not by_pid
+    if legacy:
+        print("[score] WARNING: completions have no `pid` — falling back to positional "
+              "pairing within (surface, ticker). Regenerate for exact pairing.")
 
     agg = defaultdict(Counter)
     n = Counter()
-    for (surface, tk), rs in by_key.items():
-        for r in rs:
-            got = comps.get((surface, tk))
-            if not got:
-                continue
-            text = (got[0].get("text") or "").strip()
-            if not text:
-                agg[surface]["EMPTY"] += 1
-                continue
-            res = SCORERS[surface](text, r["meta"])
-            n[surface] += 1
-            for k, v in res.items():
-                if isinstance(v, bool):
-                    agg[surface][k] += int(v)
-                elif v is None:
-                    agg[surface][k + "_NA"] += 1
+    cursor = Counter()
+    unmatched = Counter()
+    for r in prompts:
+        surface = r["surface"]
+        pid = hashlib.sha1(r["user"].strip().encode()).hexdigest()[:16]
+        c = by_pid.get(pid)
+        if c is None:
+            key = (surface, r["ticker"])
+            grp = by_st.get(key, [])
+            idx = cursor[key]
+            c = grp[idx] if idx < len(grp) else None
+            cursor[key] += 1
+        if c is None:
+            unmatched[surface] += 1
+            continue
+        text = (c.get("text") or "").strip()
+        if not text:
+            agg[surface]["EMPTY"] += 1
+            continue
+        res = SCORERS[surface](text, r["meta"])
+        n[surface] += 1
+        for k, v in res.items():
+            if isinstance(v, bool):
+                agg[surface][k] += int(v)
+            elif v is None:
+                agg[surface][k + "_NA"] += 1
+
+    if unmatched:
+        print(f"[score] NOTE: no completion found for {sum(unmatched.values())} prompts "
+              f"{dict(unmatched)} — expected when an arm was run with --surfaces.")
 
     print(f"\n=== per-surface acceptance — arm: {args.label} ===")
     for s in sorted(agg):

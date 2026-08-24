@@ -25,6 +25,7 @@
 #       --out /runs/probe3_completions.jsonl --label ours-probe
 # ==========================================
 import argparse
+import hashlib
 import json
 import os
 import time
@@ -66,7 +67,7 @@ def main():
         for line in open(args.out):
             try:
                 r = json.loads(line)
-                done.add((r["surface"], r["ticker"], r.get("_idx")))
+                done.add(r.get("pid") or (r["surface"], r["ticker"], r.get("_idx")))
             except Exception:
                 continue
         print(f"[resume] {len(done)} completions already on disk", flush=True)
@@ -81,7 +82,7 @@ def main():
     t0 = time.time()
     n_done = 0
     for i, r in enumerate(rows, 1):
-        key = (r["surface"], r["ticker"], i)
+        key = hashlib.sha1(r["user"].strip().encode()).hexdigest()[:16]
         if key in done:
             continue
         text = tok.apply_chat_template(
@@ -105,7 +106,12 @@ def main():
         body = tok.decode(new, skip_special_tokens=True).strip()
         dt = time.time() - t1
 
+        # pid = identity of the PROMPT, so the scorer can pair 1:1. (surface, ticker) is
+        # NOT unique — S7 has 4 refusal cases per ticker and S8 has ticker "-" for all
+        # 60 — and pairing on it silently scored 116 of 468 prompts against another
+        # prompt's completion, with the wrong `meta` (measured 2026-08-24, AT:R70).
         rec = {"surface": r["surface"], "ticker": r["ticker"], "_idx": i,
+               "pid": hashlib.sha1(r["user"].strip().encode()).hexdigest()[:16],
                "text": body, "new_tokens": int(new.shape[0]),
                "hit_budget": int(new.shape[0]) >= args.max_new,
                "elapsed_s": round(dt, 1)}

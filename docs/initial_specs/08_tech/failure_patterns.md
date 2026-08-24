@@ -1606,3 +1606,10 @@ Enforcing checks:
 - Any eval artifact is checked against the training artifact **by content**, never by declared
   provenance. "Built from the held-out list" is a claim about the builder; the only evidence that
   counts is the two files compared.
+- `eval_surfaces.py::stage_score` pairing (fixed 2026-08-24): a scorer must pair each prompt with
+  **its own** completion. This one grouped by `(surface, ticker)` — not unique, since S7 carries four
+  refusal cases per ticker and S8 uses ticker `"-"` for all 60 — and scored every prompt in a group
+  against `got[0]`, under the wrong `meta`, leaving the surplus completions unscored: 116 of 468
+  prompts, with S8's entire surface score coming from one completion counted 60 times. Pairing is now
+  on `pid` (sha1 of the prompt text) emitted by the generator. Any eval key must be proven unique
+  against the artifact before it is used to join two files — `len(set(keys)) == len(rows)` is the check.
