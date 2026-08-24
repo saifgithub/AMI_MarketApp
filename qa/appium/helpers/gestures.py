@@ -152,11 +152,26 @@ def tap_element(driver: WebDriver, element) -> None:
 
 
 def hide_keyboard_if_shown(driver: WebDriver) -> None:
+    """Best-effort keyboard dismissal — but say so when it fails.
+
+    DEF366: this used to swallow every exception silently. On iOS,
+    `POST /wda/keyboard/dismiss` returns 400 `invalid element state`, and
+    Appium's default dismissal taps outside the keyboard region — a tap
+    outside the app's own bounds is how a simulator ends up at the home
+    screen. That is the leading (not established) explanation for DEF362,
+    and it was invisible because this except branch printed nothing. Still
+    best-effort: a failure here must not take the walk down. It must simply
+    stop being unobservable.
+    """
     try:
-        if driver.is_keyboard_shown():
-            driver.hide_keyboard()
+        if not driver.is_keyboard_shown():
+            return
     except Exception:
-        pass  # not every driver build supports the keyboard-shown query; best-effort only
+        return  # driver build without the query; nothing to dismiss, nothing to say
+    try:
+        driver.hide_keyboard()
+    except Exception as exc:
+        print(f"    [gestures] keyboard dismissal failed: {type(exc).__name__}: {exc}")
 
 
 def screenshot_png(driver: WebDriver) -> bytes:

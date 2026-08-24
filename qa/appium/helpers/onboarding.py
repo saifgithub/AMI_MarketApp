@@ -57,6 +57,12 @@ _TRY_AGAIN = "TRY AGAIN"
 _MAX_BACKEND_RETRIES = 2
 _MAX_ESCAPES = 3
 
+# DEF366 — how many consecutive unanswerable foreground queries before the
+# walk gives up and says so. Higher than _MAX_ESCAPES because a transient
+# WDA hiccup is survivable and common, while a sustained one means the
+# harness is blind and every later observation is worthless.
+_MAX_BLIND = 10
+
 # How long to let the shell appear before concluding the app needs onboarding.
 # Generous on purpose: a cold start on the Android rig renders blank for several
 # seconds, and deciding "not onboarded" too early is what set the walk loose on
@@ -133,21 +139,44 @@ def _app_id(driver) -> str | None:
     return None
 
 
-def _is_app_foreground(driver, app_id: str) -> bool:
-    try:
-        return driver.query_app_state(app_id) == _FOREGROUND
-    except Exception:
-        # Cannot tell. Assume we are still home rather than manufacture an
-        # escape — a false escape would relaunch the app mid-interview and
-        # throw away real progress.
-        return True
+# DEF366 — three states, not two. `UNKNOWN` exists because the previous
+# version returned `True` from its except branch, which made "cannot tell"
+# and "we are fine" the same answer. That is how DEF362 burned two rounds of
+# diagnosis: the simulator sat on the iOS home screen for the full 480s
+# budget, the detector could not see it, reported fine, and the walk blamed
+# the app. `CLAUDE.md`: *if this fires constantly and silently, what does the
+# user end up believing?* Here the operator believed the app could not start,
+# and DEF347 and DEF348 were both aimed at that belief.
+from helpers.foreground import FOREGROUND, NOT_FOREGROUND, UNKNOWN, resolve
+
+
+def app_foreground_state(driver, app_id: str) -> str:
+    """Is the app under test in front? `UNKNOWN` when the query itself fails.
+
+    The old signature returned `bool` and could not express the third answer.
+    Callers must handle `UNKNOWN` explicitly — it is neither safe to treat as
+    an escape (a false escape relaunches mid-interview and discards real
+    progress, which is what the original comment was right about) nor safe to
+    treat as fine (which is what it actually did).
+    """
+    return resolve(lambda: driver.query_app_state(app_id))
 
 
 def _foreground_package(driver) -> str | None:
-    """Only for the diagnostic message — Android-only, best effort. Knowing it
-    was the dialer rather than 'not our app' is the difference between a
-    five-minute diagnosis and an hour of one."""
+    """Only for the diagnostic message. Knowing it was the dialer rather than
+    'not our app' is the difference between a five-minute diagnosis and an
+    hour of one.
+
+    DEF366 — used to be `driver.current_package` unconditionally, which is
+    Android-only by its own admission, so on iOS it raised and every escape
+    could only ever be reported as "an unidentified app". Both the detection
+    and its explanation were shaped for the platform that was not failing.
+    iOS has no equivalent query, so say *that* rather than nothing: naming the
+    limitation is more useful to the next reader than a bare null.
+    """
     try:
+        if is_ios(driver):
+            return "another app (iOS exposes no foreground-app query)"
         return driver.current_package
     except Exception:
         return None
@@ -268,6 +297,7 @@ def ensure_onboarded(
     deadline = time.monotonic() + timeout_s
     backend_error_retries = 0
     escapes = 0
+    blind = 0
     app_id = _app_id(driver)
 
     while time.monotonic() < deadline:
@@ -284,7 +314,33 @@ def ensure_onboarded(
         # naming the intruder once it is clearly not converging. Silently
         # re-entering forever would hide an app that really does launch
         # something external.
-        if app_id and not _is_app_foreground(driver, app_id):
+        state = app_foreground_state(driver, app_id) if app_id else FOREGROUND
+
+        # DEF366 — an unanswerable query is its own outcome and is reported
+        # every single time. It is NOT counted as an escape (we have not
+        # established one) and NOT treated as fine (which is the bug). If it
+        # never resolves, the walk fails saying it could not see the app —
+        # never "onboarding did not reach Floor", which blames the app for
+        # something the harness could not observe.
+        if state == UNKNOWN:
+            blind += 1
+            print(
+                f"    [onboarding] cannot determine whether {app_id} is in "
+                f"front — query_app_state failed (blind {blind}/{_MAX_BLIND})."
+            )
+            if blind > _MAX_BLIND:
+                raise TimeoutError(
+                    f"onboarding could not observe whether the app under test "
+                    f"({app_id}) was in the foreground: query_app_state failed "
+                    f"{blind} times. This says NOTHING about whether onboarding "
+                    f"works — the harness went blind, and a walk that cannot "
+                    f"see the app must not report on the app. Check the Appium "
+                    f"session and the bundle id in the session capabilities."
+                )
+            time.sleep(1.0)
+            continue
+
+        if state == NOT_FOREGROUND:
             escapes += 1
             intruder = _foreground_package(driver) or "an unidentified app"
             print(
