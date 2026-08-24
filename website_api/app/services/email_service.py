@@ -11,6 +11,8 @@ caught and logged — a failed email never breaks the request that triggered it
 
 from __future__ import annotations
 
+from html import escape as html_escape
+
 import httpx
 
 from app.core.config import settings
@@ -132,7 +134,14 @@ async def notify_team(*, subject: str, lines: list[str]) -> bool:
     if not settings.notify_email:
         logger.info("notify_skip", reason="no NOTIFY_EMAIL", subject=subject)
         return False
-    body = "<br>".join(lines)
+    # DEF372 (security review M6) — every line here is USER-AUTHORED (a
+    # contact form's subject and body reach this verbatim), and it was
+    # interpolated raw into an HTML email sent to the operator. A submitted
+    # `<img src=x onerror=...>` or a crafted anchor renders in whoever opens
+    # the notification — a stored XSS whose target is us, delivered by our own
+    # mail. Escaped per line, then joined with the separator, so the <br> we
+    # add stays real markup and nothing the user typed can become markup.
+    body = "<br>".join(html_escape(line) for line in lines)
     return await send_email(
         to=settings.notify_email,
         subject=subject,

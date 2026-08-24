@@ -83,3 +83,11 @@ contact_rate_limit = RateLimiter(name="contact", per_minute=3)
 
 # Data-request form — legal intake, triggers an email. Tight.
 data_request_rate_limit = RateLimiter(name="data_request", per_minute=3)
+
+# DEF372 (security review M7) — the waitlist had NO limiter at all while every
+# neighbouring form had one. It writes a row per call, so unlimited is an
+# unbounded write amplifier and a free way to fill the table with addresses
+# nobody consented for. Looser than contact/data_request (3/min) because a
+# person legitimately retrying a typo'd address should not be told to wait,
+# and this one sends no email.
+waitlist_rate_limit = RateLimiter(name="waitlist", per_minute=10)
