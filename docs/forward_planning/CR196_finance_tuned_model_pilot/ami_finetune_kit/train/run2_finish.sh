@@ -123,6 +123,15 @@ score() {
 score /runs/baseline_s478.jsonl   /runs/baseline_s478_scored.json   vanilla-s478
 score /runs/r2_completions.jsonl  /runs/r2_scored.json              ours-r2
 
+# ── 5. acceptance table ─────────────────────────────────────────────────────
+log "building acceptance table"
+docker run --rm -v "$BASE/kit:/kit" -v "$RUNS:/runs" "$IMG" bash -lc "
+    python3 -u /kit/ami_finetune_kit/eval/surfaces/compare_arms.py \
+      --ours /runs/r2_scored.json \
+      --baseline-new /runs/baseline_s478_scored.json \
+      --out /runs/acceptance_r2.md" 2>&1 | tee -a "$RUNS/acceptance_console.txt"
+
 log "DONE — results:"
+log "  $RUNS/acceptance_r2.md   <- the table"
 log "  $RUNS/r2_scored.json"
 log "  $RUNS/baseline_s478_scored.json"
