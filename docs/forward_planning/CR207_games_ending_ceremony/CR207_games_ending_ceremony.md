@@ -68,3 +68,43 @@ the half that reaches a player who has not opened the app, and therefore the hal
 
 The paid post-mortem slice, CR109's remaining slices (3c house desks, 6 other cadences, 7's league
 deletion), and any change to how `final_rank` is computed.
+
+---
+
+# Closed 2026-08-24 (AT:R74)
+
+Each acceptance criterion checked against a named covering test, not against the prose above.
+
+| # | Criterion | Verdict | Covered by |
+|---|---|---|---|
+| 1 | Ranked entrant's push names position + field size | **met** | `test_the_settled_push_now_carries_the_placement` — asserts the literal body `"You finished 3rd of 8."` and that `"results are ready"` is gone |
+| 2 | Rank 1 uses distinct wording | **met** | `test_the_winner_gets_the_winning_message`, `test_winning_reads_differently_from_placing` (asserts BOTH title and body differ) |
+| 3 | A tied entrant's message reflects the tie | **met** | `test_a_shared_rank_is_told_as_a_tie_not_as_a_clean_position` (pure) + `test_two_players_sharing_a_rank_are_both_told_it_was_a_tie` (DB — proves the GROUP BY feeding it) |
+| 4 | No fabricated position, proven unreachable | **met** | `test_no_input_can_make_a_non_asserting_kind_produce_a_position` — **swept, not sampled**: 54 combinations of the three non-asserting kinds × tie counts × field sizes, asserting no ordinal appears in any body |
+| 5 | `source_ref` unchanged; a re-run sends nothing | **met** | `test_the_new_copy_does_not_re_notify_an_already_notified_player` — two ticks, one row, `source_ref == str(run_id)` |
+| 6 | Exactly one producer, shared with the Close | **met** | `games_placement.resolve` is the sole resolver; `get_close_payload` carries it as `placement`; Dart's `rankedFieldSize` now **prefers `placement.field_size`**. `CR207 — one producer for the placement rule` (4 tests) |
+| 7 | Backend suite green; `flutter analyze` exit 0 | **met** | `VERDICT: PASS` — 5171 passed, 0 failed, 0 errors. 1419 Flutter tests pass; analyze exit 0 |
+| 8 | New ARB keys carry `retranslate:[ar,ms]` | **not applicable, by design** | **No ARB key was added.** Push bodies are server-authored English like every other beat in `games_push`; the tie glyph is `=` rather than `T-3` precisely so no string needs translating |
+
+**12/12 mutations killed** across both halves. One survived its first framing (the unranked-YOU
+ordering guard) and **the test was re-aimed rather than the mutation weakened** — its fixture had no
+`null` neighbour, so the mutation was invisible to it.
+
+## What was found that the CR did not anticipate
+
+**A voided run was never told anything.** `_beat_settled` selected `state == "finished"` only, so the
+one player whose run could not be scored was the one player who received no ceremony at all. Now
+included, with a message that asserts no position.
+
+## Scope actually delivered vs. filed
+
+Filed scope was four items; all four shipped, plus the void-run inclusion above and DEF343's in-app
+half (the tie marker and tie-group ordering), which the CR named as the same fact seen from the app.
+
+## Deliberately not done
+
+Nothing in scope was skipped. The Close screen's *sentence* still renders through the existing
+`gamesCloseBasisRanked` / `gamesCloseBasisThinField` l10n strings — correct today, and now fed by
+the server-resolved `field_size` so the two sides cannot drift. Replacing those strings with a
+server-authored sentence would move a localised surface to unlocalised English and is not an
+improvement.
