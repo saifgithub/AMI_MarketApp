@@ -54,6 +54,7 @@ from app.services.overlay_store import (
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
+from app.services.credit_service import InsufficientCredits, brief_cost, spend
 from app.services.rate_limit import agent_stream_concurrency_limit, brief_message_rate_limit
 
 
@@ -121,6 +122,36 @@ async def brief_message(
     # compute budget regardless of which surface it's spent through.
     concurrency_key = f"user:{current_user.id}"
     agent_stream_concurrency_limit.acquire(concurrency_key)
+
+    # DEF205 — until now a Brief turn spent nothing. `spend()` was reachable
+    # only from `room_runner`, so this surface and 1-on-1 both burned real
+    # vLLM compute for free, bounded only by DEF186's 12/min limit — 720
+    # unpriced turns per user per hour. Charged HERE, before the stream is on
+    # the wire, for one_on_one.py's reason: once the SSE status is sent a
+    # refusal can only be an in-band error event, which the client renders as
+    # a crash rather than a paywall.
+    #
+    # Slot released explicitly on the 402 path — the generator that would
+    # otherwise release it in its `finally` never runs, and a leaked slot
+    # wedges the cap this user shares with 1-on-1 (DEF201's exact shape).
+    cost = brief_cost()
+    try:
+        spend(current_user.id, cost, reason=f"brief:{req.session_id}")
+    except InsufficientCredits as e:
+        agent_stream_concurrency_limit.release(concurrency_key)
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "code": "insufficient_credits",
+                "balance": e.balance,
+                "cost": e.cost,
+                "plan": e.plan.value,
+                "resets_at": e.resets_at.isoformat(),
+            },
+        ) from e
+    except BaseException:
+        agent_stream_concurrency_limit.release(concurrency_key)
+        raise
 
     async def event_stream():
         total = 0

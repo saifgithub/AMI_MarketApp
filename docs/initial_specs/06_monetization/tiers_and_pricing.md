@@ -14,7 +14,7 @@ Three tiers. Same USD list price globally. Promotions adjust regionally and over
 | **Market data** | 15-min delayed | 15-min delayed | Real-time (when phased in, v1.1+) |
 | **Sim portfolios** | 1 ($10K, monthly reset) | 2 ($100K, reset on demand) | 5 ($1M, reset on demand) |
 | **Decision Journal** | Last 30 days | Unlimited + search + tagging | Unlimited + search + tag + export (CSV / PDF) |
-| **Brief Your Agent** | 3 edits per agent, lifetime | Unlimited, 20-version history | Unlimited, infinite history, diff viewer, Raw Mode |
+| **Brief Your Agent** [^brief] | 3 edits per agent, lifetime | Unlimited, 20-version history | Unlimited, infinite history, diff viewer, Raw Mode |
 | **Concierge** | Q&A + lesson routing (unlimited free) | + Assistant tools (schedule, reminders, journal summary, mute) | Same as Trader |
 | **Morning briefing** | Text-only, email | Text + voice TTS, push + email + in-app | Text + premium voice + personalised analyst commentary |
 | **Mandate Drift Alerts** | Weekly digest (email) | Daily (push + email) | Real-time + tunable thresholds |
@@ -112,3 +112,11 @@ RevenueCat unifies subscription state across all three mobile IAPs. Our app code
 - Offer system: [`offers.md`](offers.md)
 - Unit economics: [`unit_economics.md`](unit_economics.md)
 - Ads (Floor Pass): [`ads.md`](ads.md)
+
+[^brief]: **Edits are not turns (DEF205, 2026-08-24).** The counts in this row cap accepted *mandate
+    edits* — how many times a Brief may actually change an agent's standing instructions. The
+    *conversation* that produces an edit is priced separately, at 1 credit per turn on every tier,
+    like a 1-on-1 turn ([`credits.md`](credits.md)). "Unlimited" here therefore means unlimited
+    edits, never unlimited free inference: before DEF205 a Brief turn cost nothing on any tier
+    because `spend()` was reachable only from the Room, and the two readings were never
+    distinguished because neither was enforced.

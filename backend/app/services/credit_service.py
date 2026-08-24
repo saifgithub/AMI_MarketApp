@@ -84,6 +84,16 @@ def one_on_one_cost() -> int:
     return settings.one_on_one_credit_cost
 
 
+# DEF205 — Brief Your Agent's price. Until 2026-08-24 a Brief turn spent
+# nothing at all: `spend()` was reachable only from `room_runner`, so both
+# conversational surfaces burned real vLLM compute for free, bounded only by
+# DEF186's 12/min rate limit — up to 720 unpriced turns per user per hour.
+# Saiful ruled a flat 1/turn for both. Same accessor shape as above so no
+# caller reads `settings` directly.
+def brief_cost() -> int:
+    return settings.brief_credit_cost
+
+
 # CR090 — live-data feed surcharge. The News/Social Analyst live feeds (Alpha
 # Vantage NEWS_SENTIMENT, Adanos Reddit) cost real money per call, so a turn
 # that actually fires one is metered on TOP of the flat Room/1-on-1 price —

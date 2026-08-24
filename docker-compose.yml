@@ -291,11 +291,14 @@ services:
       # infra/alpha.env to arm it on Alpha. Unknown value fails boot by design.
       GTM_FUNNEL: ${GTM_FUNNEL:-none}
       WINZIP_COOLDOWN_MINUTES: ${WINZIP_COOLDOWN_MINUTES:-5}
-      # DEF113 — 1-on-1 chat's credit price. 0 in Alpha on purpose (Saiful
-      # ruled 2026-07-30): the charging spine is wired and exercised, priced
-      # at zero so no existing tester hits a paywall mid-test. Flip to 1 (the
-      # credits.md spec price) via infra/alpha.env when ready.
-      ONE_ON_ONE_CREDIT_COST: ${ONE_ON_ONE_CREDIT_COST:-0}
+      # DEF113/DEF205 — the two conversational surfaces' credit prices, both
+      # the flat 1/turn credits.md specifies. Held at 0 from 2026-07-30 so no
+      # tester met an unfamiliar paywall mid-test; flipped 2026-08-24 on
+      # Saiful's ruling *"1 credit per turn, Brief the same"*, after measuring
+      # that every Alpha account holds 116+ credits and so has 116+ turns
+      # before a 402 is reachable.
+      ONE_ON_ONE_CREDIT_COST: ${ONE_ON_ONE_CREDIT_COST:-1}
+      BRIEF_CREDIT_COST: ${BRIEF_CREDIT_COST:-1}
       # CR035 ablation toggle — hides the Street consensus line from the
       # agents' fundamentals context. Benchmark windows only; keep false.
       SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}

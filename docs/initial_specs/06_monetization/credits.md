@@ -18,7 +18,7 @@ Credits fix this. The base subscription includes a monthly credit allowance size
 | **1-on-1 chat** | 1 | One agent, short context, single LLM call thread |
 | **Basic Room** (Floor Pass / Trader, 1 round) | 8 | 12 agents × short reasoning. ~$0.80 retail. |
 | **Premium Room** (Floor Manager, multi-round) | 25 | 12 agents × 2–3 rounds × premium model. ~$2.50 retail. |
-| **Brief Your Agent session** (Floor Pass overage only) | 2 | Mid-length conversation. Trader+ get unlimited free. |
+| **Brief Your Agent turn** | 1 | **Changed 2026-08-24 (DEF205)** from *2 per session, Floor Pass overage only, Trader+ unlimited free*. Saiful: *"1 credit per turn, Brief the same."* Priced per **turn** like a 1-on-1 and on **every** tier, because it is the same shape of cost — one agent, one LLM call thread. Before this it was priced at nothing anywhere: `spend()` was reachable only from the Room, so a Brief turn was free on all tiers regardless of what this table said. |
 | **Daily Challenge** | 0 | Free, generated once per locale per day, cached |
 | **Lessons + AI-tutor wrapper** | 0 | Cached per (lesson, learning_style, locale, top compliance flags) tuple |
 | **Quizzes + remedial lessons** | 0 | Cheap model, cached. |
@@ -122,18 +122,28 @@ If an operation fails partway (e.g., LLM provider error), credits are refunded a
 
 ## Free 1-on-1 / Free Room mechanics (Floor Pass)
 
-Floor Pass gets a small monthly allowance even with 0 credit balance:
-- **5 free 1-on-1s per month** (worth 5 credits)
-- **1 free Room per month** (worth 8 credits)
+**Corrected 2026-08-24 (DEF205).** This section used to say the free 1-on-1s and the free Room were
+*"tracked separately from the regular credit balance"* — which contradicted the tier table above,
+where Floor Pass's allowance is **13 credits = 5 1-on-1s + 1 Room**. Both cannot be true: either the
+five free turns *are* the allowance, or they sit on top of it. DEF205's ruling (1 credit per turn,
+Brief the same) forced the question, and the answer is the simpler one.
 
-These are tracked separately from the regular credit balance. Reset on the user's monthly anniversary.
+**There is no separate counter.** Floor Pass's monthly 13 credits *are* the free allowance, priced
+through the same ledger as everything else:
 
-UI shows clearly:
+- 5 × 1-on-1 @ 1 credit = 5
+- 1 × Basic Room @ 8 credits = 8
+
+A second counter would be a second source of truth for one fact, and would have to be reconciled
+with the balance on every spend. `credit_service` has always worked the first way — allowance
+granted per period, `spend()` debits it — so this corrects the doc to the shipped behaviour rather
+than the reverse.
+
+UI shows the balance and what it buys:
 ```
 This month:
-• Free 1-on-1s remaining: 2 of 5
-• Free Room remaining:    1 of 1
-• Credit balance:         0
+• Credit balance: 13 of 13
+  ≈ 5 one-on-ones, or 1 Room
 ```
 
 ## Why credits aren't "tokens"

@@ -293,9 +293,14 @@ class _FakeUser:
 
 
 class _FakeBriefEngine:
-    """Mirrors DEF127's `_RaisingEngine` shape — brief_message() never
-    touches credit_service, so this route doesn't need a real DB user the
-    way one_on_one.py's does."""
+    """Mirrors DEF127's `_RaisingEngine` shape.
+
+    DEF205 (2026-08-24) — this used to end *"brief_message() never touches
+    credit_service, so this route doesn't need a real DB user the way
+    one_on_one.py's does."* Pricing Brief turns made that false: `spend()`
+    does `s.get(User, user_id)` and raises LookupError on an unpersisted id,
+    so `_brief_client` persists a real user now, exactly as the 1-on-1 side
+    always had to."""
 
     def __init__(self, sess):
         self._sess = sess
@@ -321,7 +326,7 @@ def _brief_client(uid) -> tuple[TestClient, str]:
 def test_brief_message_is_blocked_at_the_concurrency_cap(monkeypatch):
     monkeypatch.setattr(agent_stream_concurrency_limit, "max_concurrent", 1)
 
-    uid = uuid4()
+    uid, _ = _new_real_user()
     client, session_id = _brief_client(uid)
     agent_stream_concurrency_limit.acquire(f"user:{uid}")
 
@@ -336,7 +341,7 @@ def test_brief_message_is_blocked_at_the_concurrency_cap(monkeypatch):
 def test_brief_message_releases_its_slot_after_streaming(monkeypatch):
     monkeypatch.setattr(agent_stream_concurrency_limit, "max_concurrent", 1)
 
-    uid = uuid4()
+    uid, _ = _new_real_user()
     client, session_id = _brief_client(uid)
     for _ in range(3):
         r = client.post(

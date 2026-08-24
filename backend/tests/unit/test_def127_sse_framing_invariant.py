@@ -240,7 +240,15 @@ def _drive_brief_with(exc: Exception) -> str:
     from app.api.dependencies import get_current_user
     from app.services.brief_engine import get_brief_engine
 
-    uid = uuid4()
+    # DEF205 — a PERSISTED user, not a bare uuid4(). Pricing Brief turns put
+    # `spend()` on this path, and it does `s.get(User, user_id)` and raises
+    # LookupError on an unpersisted id — so a fake user now 500s before the
+    # stream this file exists to inspect is ever opened. The framing
+    # invariant under test is unchanged; only the fixture had to become real.
+    from app.services.auth_service import AuthService
+
+    persisted, _token, _ = AuthService().ensure_anonymous(device_user_id=None)
+    uid = persisted.id
     sess = _Sess(uid)
     app = FastAPI()
     app.include_router(brief_router)

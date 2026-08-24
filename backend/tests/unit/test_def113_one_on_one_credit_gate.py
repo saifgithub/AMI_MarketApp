@@ -153,17 +153,27 @@ def test_402_does_not_stream_or_journal_the_turn(client, monkeypatch):
 
 # ── Acceptance 3: Alpha's price of 0 is a genuine charge-of-zero ─────────
 
-def test_alpha_default_price_is_zero():
+def test_the_default_price_is_the_spec_price():
+    """SUPERSEDED 2026-08-24 (DEF205). This asserted 0 — correct under the
+    2026-07-30 ruling, which held the price at zero so no tester met an
+    unfamiliar paywall mid-test. Saiful re-ruled *"1 credit per turn, Brief
+    the same"* after the risk was measured away: every Alpha account holds
+    116+ credits, i.e. 116+ turns before a 402 is reachable. credits.md:18
+    has priced a 1-on-1 turn at 1 throughout; the default now matches it."""
     from app.core.config import settings
-    assert settings.one_on_one_credit_cost == 0
-    assert one_on_one_cost() == 0
+    assert settings.one_on_one_credit_cost == 1
+    assert one_on_one_cost() == 1
 
 
-def test_zero_price_turn_still_writes_a_ledger_row_and_returns_200(client):
-    """The dangerous part of this lane: a price of 0 must still run spend()'s
-    full path — ledger row written, balance arithmetic executed — a charge
-    of zero, not a skipped charge. Otherwise flipping the price later is a
-    new code path, not a config change."""
+def test_a_zero_price_turn_is_still_a_charge_and_not_a_skipped_charge(client, monkeypatch):
+    """The property this lane actually protects, kept and now pinned
+    independently of the default. A price of 0 must still run spend()'s full
+    path — ledger row written, balance arithmetic executed — so that moving
+    the price is a config change and never a new code path. It survived the
+    flip to 1 precisely because it was never about the number."""
+    from app.core import config as config_mod
+    monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 0)
+
     user_id, headers = _new_user()
     before = balance_for(user_id)[0]
     session_id = _open_session(client, headers)
@@ -176,6 +186,19 @@ def test_zero_price_turn_still_writes_a_ledger_row_and_returns_200(client):
     assert len(spent) == 1, "spend() must be called even at price 0"
     assert spent[0].from_value == spent[0].to_value == str(before)
     assert spent[0].note == "one_on_one:concierge"
+
+
+def test_the_default_price_actually_debits(client):
+    """DEF205 — the flip is only real if a turn at the default price moves
+    the balance. Asserts the charge without monkeypatching anything, which is
+    the one thing the old zero-price test could not do."""
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open_session(client, headers)
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200, r.text
+    assert balance_for(user_id)[0] == before - 1
 
 
 # ── Ownership precedes billing ───────────────────────────────────────────

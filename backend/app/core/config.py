@@ -388,15 +388,28 @@ class Settings(BaseSettings):
     # mid-test. This is a DECLARED setting, not a literal 0 at the call site —
     # flipping to 1 in credits.md's spec is then a one-line env change, already
     # exercised by the 402 test at a non-zero price (test_def113_one_on_one_credit_gate.py).
-    one_on_one_credit_cost: int = 0
+    #
+    # DEF205 (2026-08-24) — flipped 0 -> 1, Saiful's ruling: *"1 credit per
+    # turn, Brief the same."* The 2026-07-30 reason for 0 was that no tester
+    # should meet a paywall they have never seen mid-test; measured before
+    # flipping, that risk is gone — all 39 Floor Pass accounts on Alpha hold
+    # 116-280 credits and both Floor Managers hold 4,400+, so every user has
+    # at least 116 turns before a 402 is reachable.
+    one_on_one_credit_cost: int = 1
 
-    @field_validator("one_on_one_credit_cost")
+    # DEF205 — Brief Your Agent's price, same flat 1/turn. Its own setting
+    # rather than a shared one: credits.md prices the two surfaces separately
+    # (1-on-1 per turn, Brief per session) and a single knob would make the
+    # next divergence require a code change instead of an env change.
+    brief_credit_cost: int = 1
+
+    @field_validator("one_on_one_credit_cost", "brief_credit_cost")
     @classmethod
     def _one_on_one_cost_non_negative(cls, v: int) -> int:
         # CR040 degrade-loudly, same shape as the CR098 pull-back validator: a
         # negative price is nonsensical — fail boot instead of charging garbage.
         if v < 0:
-            raise ValueError("one_on_one_credit_cost must be >= 0")
+            raise ValueError("credit cost must be >= 0")
         return v
 
     # Reputation + weekly leagues (CR004, D-060).
