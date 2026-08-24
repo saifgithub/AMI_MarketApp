@@ -44,9 +44,19 @@ def main():
     ap.add_argument("--max-new", type=int, default=MAX_NEW_TOKENS)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--resume", action="store_true")
+    # Only S4/S7/S8 were rebuilt when the decontamination fix landed; S1/S2/S3/S5/S6
+    # prompts are byte-identical to the ones baseline_vanilla.json was measured on, so
+    # the vanilla arm only needs re-running for the three that changed.
+    ap.add_argument("--surfaces", default="",
+                    help="comma-separated surface filter, e.g. S4,S7,S8 (default: all)")
     args = ap.parse_args()
 
     rows = [json.loads(l) for l in open(args.prompts) if l.strip()]
+    if args.surfaces:
+        want = {s.strip().upper() for s in args.surfaces.split(",") if s.strip()}
+        rows = [r for r in rows if r["surface"] in want]
+        if not rows:
+            raise SystemExit(f"--surfaces {args.surfaces} matched no prompts")
     if args.limit:
         rows = rows[:args.limit]
     print(f"[{args.label}] {len(rows)} prompts -> {args.out}", flush=True)
