@@ -36,6 +36,7 @@ floor does not know about.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import NamedTuple
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
@@ -302,3 +303,97 @@ def locked_call_cover_shares(session, portfolio_id: UUID, underlying: str) -> fl
     return shares_needed_to_cover_calls(
         open_call_legs_on(session, portfolio_id, underlying)
     )
+
+
+# ── §11 — the marks feed ────────────────────────────────────────────────────
+
+
+class OptionMarks(NamedTuple):
+    """What one sweep of the chain could honestly say about a set of legs.
+
+    Three fields rather than a bare dict, because "no mark" and "mark of zero"
+    must never collapse. An option that cannot be priced is held at the premium
+    it was opened at by `Portfolio.total_value`'s `option_marks.get(...,
+    o.avg_premium)` fallback — a real number, just not a current one — and
+    `unmarked` is what lets the caller say so instead of implying the figure was
+    confirmed.
+    """
+
+    marks: dict[str, float]
+    """`occ_symbol` → mid. Only legs that could be honestly priced appear."""
+
+    source: str
+    """The leaf provider that served the chains, or `unavailable` when any leg
+    went unmarked. Feeds the same `live`/`mock`/`stale` normalisation
+    `portfolio_nav_daily` already applies to equity, so an incompletely priced
+    day is visible in the NAV series rather than silently averaged in."""
+
+    unmarked: tuple[str, ...]
+    """`occ_symbol`s with no honest mark, so a caller can name them."""
+
+
+def _strike_key(strike: float) -> int:
+    """Strikes as integer tenths-of-a-cent, for dict lookup.
+
+    Provider strikes arrive as floats and ours round-trip through `Numeric`.
+    `195.0 == 195.00000000000003` is false, and a mark missed on a float
+    comparison would look exactly like a strike the chain does not list — the
+    position would silently hold at cost with no indication why.
+    """
+    return round(strike * 10_000)
+
+
+def option_marks_for(legs: Sequence[OptionLeg]) -> OptionMarks:
+    """Mark every open leg off the live chain — one fetch per (underlying, expiry).
+
+    **A mark is a mid or it is nothing.** `mid` is `None` on a strike with no
+    two-sided quote, and inventing a value there (last trade, intrinsic, the
+    other side's price) would put a number on the portfolio that no market
+    would transact at. The leg goes to `unmarked` and holds at its premium.
+
+    **Synthetic spots cannot reach here.** `get_enriched_chain` refuses a chain
+    whose spot came from `mock_walk`/`unavailable` outright, so an option mark
+    derived from a fabricated underlying is structurally impossible rather than
+    merely discouraged — which is why this function's failure mode is *unmarked*
+    and never *mocked*. That is the §11 guard, inherited rather than restated.
+    """
+    if not legs:
+        return OptionMarks(marks={}, source="", unmarked=())
+
+    from app.services.option_chain import get_enriched_chain
+
+    groups: dict[tuple[str, date], list[OptionLeg]] = {}
+    for leg in legs:
+        groups.setdefault((leg.underlying.upper().strip(), leg.expiry), []).append(leg)
+
+    marks: dict[str, float] = {}
+    unmarked: list[str] = []
+    sources: list[str] = []
+
+    for (underlying, expiry), group in groups.items():
+        chain = get_enriched_chain(underlying, expiry)
+        if chain is None:
+            # Already logged loudly by `get_enriched_chain` with its reason.
+            unmarked.extend(leg.occ_symbol for leg in group)
+            continue
+        sources.append(chain.spot_source)
+        by_right: dict[str, dict[int, float]] = {"call": {}, "put": {}}
+        for right, quotes in (("call", chain.calls), ("put", chain.puts)):
+            for q in quotes:
+                if q.mid is not None and q.mid > 0:
+                    by_right[right][_strike_key(q.quote.strike)] = float(q.mid)
+        for leg in group:
+            mid = by_right.get(leg.right, {}).get(_strike_key(leg.strike))
+            if mid is None:
+                unmarked.append(leg.occ_symbol)
+            else:
+                marks[leg.occ_symbol] = mid
+
+    if unmarked:
+        # Not the chains' source, even when some legs priced: the set as a whole
+        # was not confirmed, and reporting a live source for a partially priced
+        # book is the silent average this field exists to prevent.
+        source = "unavailable"
+    else:
+        source = sources[0] if sources else ""
+    return OptionMarks(marks=marks, source=source, unmarked=tuple(unmarked))

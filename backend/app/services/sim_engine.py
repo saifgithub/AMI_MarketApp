@@ -569,6 +569,41 @@ def _marked_tickers(p: Portfolio) -> list[str]:
     return [h.ticker for h in p.holdings] + [s.ticker for s in p.shorts]
 
 
+def _option_marks_for_portfolio(p: Portfolio):
+    """Marks for every open option leg, or an empty set when there are none.
+
+    Split out so the common case — a portfolio with no options, which today is
+    every portfolio — costs one attribute check and reaches no network at all.
+    """
+    from app.services.sim_options import OptionMarks, option_marks_for
+
+    if not p.options:
+        return OptionMarks(marks={}, source="", unmarked=())
+    return option_marks_for(p.options)
+
+
+def _blend_option_source(equity_source: str, option_marks) -> str:
+    """One label for a book priced from two feeds, taking the WORSE of them.
+
+    A portfolio whose equities marked live and whose options did not is not a
+    live-priced portfolio, and `portfolio_nav_daily` collapses this string onto
+    `live`/`mock`/`stale` for exactly one downstream purpose: knowing whether a
+    day's NAV can be trusted. Reporting the equity source alone would answer
+    that question about half the book.
+
+    `unavailable` is the right degradation and `mock_walk` is not: an option
+    mark is *missing*, never fabricated, because `get_enriched_chain` refuses a
+    synthetic spot before a chain is ever built. Missing normalises to `stale`
+    — some price served, just not one this round confirmed — which is true, and
+    leaves the `mock` verdict to mean what it has always meant.
+    """
+    if option_marks.unmarked:
+        return "unavailable"
+    if not equity_source:
+        return option_marks.source
+    return equity_source
+
+
 def training_trade_scope(user_id: UUID):
     """A WHERE clause pinning a `sim_trades` query to a user's TRAINING
     ledger — DEF269.
@@ -940,12 +975,24 @@ class SimEngine:
         tickers = _marked_tickers(p)
         quotes = self._marks_with_quotes(tickers)
         marks = {t: q.price for t, q in quotes.items()}
+        # CR172 §11 — the option third term. Folded in HERE rather than bolted
+        # onto each consumer, because this is the one place that already
+        # derives value, drawdown AND the price-source label from a single
+        # fetch: an option marked in `total_value` but absent from the source
+        # label would put a live figure on a day the NAV series calls fully
+        # priced. `option_marks_for` returns no mark at all for a leg it cannot
+        # honestly price, and `total_value` then holds that leg at its opening
+        # premium — a real number, not a zero.
+        option_marks = _option_marks_for_portfolio(p)
+        source = self._aggregate_source_from_quotes(quotes)
+        if p.options:
+            source = _blend_option_source(source, option_marks)
         return (
             p,
             marks,
-            p.total_value(marks),
-            p.total_drawdown_pct(marks),
-            self._aggregate_source_from_quotes(quotes),
+            p.total_value(marks, option_marks.marks),
+            p.total_drawdown_pct(marks, option_marks.marks),
+            source,
         )
 
     def valuation_snapshot(self, user_id: UUID) -> tuple[float, float]:

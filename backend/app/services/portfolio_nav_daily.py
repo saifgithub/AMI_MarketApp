@@ -43,7 +43,21 @@ from app.trading_math.twr import NavPoint, time_weighted_return
 _MOCK_MARKER = "mock"
 
 
-def _price_source_for_snapshot(raw: str, *, holding_count: int) -> str:
+def _priced_position_count(portfolio) -> int:
+    """How many positions on this book have a value a price can move.
+
+    DEF364 — deliberately derived from `_marked_tickers`, the same function
+    `portfolio_marks_snapshot` uses to decide what to fetch, plus the option
+    legs it marks separately. Hand-listing the position types here is exactly
+    how this went wrong once: `holdings` was the whole list when it was written
+    and stayed the whole list through two position types being added.
+    """
+    from app.services.sim_engine import _marked_tickers
+
+    return len(_marked_tickers(portfolio)) + len(portfolio.options)
+
+
+def _price_source_for_snapshot(raw: str, *, priced_position_count: int) -> str:
     """`_normalize_price_source`, except a book with NO holdings reads `cash`.
 
     A zero-holding day needs no price at all: NAV is cash, and cash is exactly
@@ -63,8 +77,16 @@ def _price_source_for_snapshot(raw: str, *, holding_count: int) -> str:
     suite: every scoring fixture already had holdings, so nothing exercised the
     empty book. `cash` states what actually happened, which is what CR040 asks
     for — the day is not a fabricated price and must not be scored as one.
+    DEF364 — the parameter counts every PRICED position, not just holdings. It
+    used to take `holding_count=len(portfolio.holdings)`, and `_marked_tickers`
+    has included `p.shorts` since CR171 while CR172 §11 adds options. So a book
+    with no holdings and one open short had a NAV that moved with a real price
+    and reported no price at all; `games_scoring_pass` voids a run on `mock` and
+    nothing else, so that run was SCORED on a fabricated price rather than
+    voided. The override's question is "did any price affect this NAV?", so it
+    has to count everything that can answer yes.
     """
-    if holding_count == 0:
+    if priced_position_count == 0:
         return "cash"
     return _normalize_price_source(raw)
 
@@ -203,7 +225,10 @@ def run_portfolio_nav_snapshot_tick(
                         nav=round(float(total_value), 2),
                         cash=round(float(portfolio.current_cash), 2),
                         price_source=_price_source_for_snapshot(
-                            source, holding_count=len(portfolio.holdings),
+                            source,
+                            priced_position_count=_priced_position_count(
+                                portfolio,
+                            ),
                         ),
                         capital_event=capital_event,
                         created_at=now,
@@ -372,7 +397,10 @@ def run_game_nav_snapshot_tick(
                         nav=round(nav, 2),
                         cash=round(float(portfolio.current_cash), 2),
                         price_source=_price_source_for_snapshot(
-                            source, holding_count=len(portfolio.holdings),
+                            source,
+                            priced_position_count=_priced_position_count(
+                                portfolio,
+                            ),
                         ),
                         capital_event=capital_event,
                         created_at=now,
