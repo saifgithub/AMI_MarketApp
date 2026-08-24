@@ -1,0 +1,547 @@
+[
+  {
+    "verb": "POST",
+    "url_template": "/v1/onboarding/start",
+    "url_regex": "^/v1/onboarding/start$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/onboarding/answer",
+    "url_regex": "^/v1/onboarding/answer$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/onboarding/readback/confirm",
+    "url_regex": "^/v1/onboarding/readback/confirm$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/health",
+    "url_regex": "^/v1/health$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/client/release-floor",
+    "url_regex": "^/v1/client/release\\-floor$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/agents/one_on_one/start",
+    "url_regex": "^/v1/agents/one_on_one/start$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/brief/start",
+    "url_regex": "^/v1/brief/start$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/brief/propose",
+    "url_regex": "^/v1/brief/propose$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/brief/accept",
+    "url_regex": "^/v1/brief/accept$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/brief/reject",
+    "url_regex": "^/v1/brief/reject$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/brief/rollback",
+    "url_regex": "^/v1/brief/rollback$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/brief/history/$userId/$agentId",
+    "url_regex": "^/v1/brief/history/[^/]+/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/journal/$userId",
+    "url_regex": "^/v1/journal/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/journal/$userId/entry/$entryId",
+    "url_regex": "^/v1/journal/[^/]+/entry/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/journal/$userId/entry/$entryId/note",
+    "url_regex": "^/v1/journal/[^/]+/entry/[^/]+/note$"
+  },
+  {
+    "verb": "DELETE",
+    "url_template": "/v1/journal/$userId/entry/$entryId",
+    "url_regex": "^/v1/journal/[^/]+/entry/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/journal/$userId/entry/$entryId/restore",
+    "url_regex": "^/v1/journal/[^/]+/entry/[^/]+/restore$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/journal/$userId/trash",
+    "url_regex": "^/v1/journal/[^/]+/trash$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons",
+    "url_regex": "^/v1/lessons$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons/$lessonId",
+    "url_regex": "^/v1/lessons/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/lessons/start",
+    "url_regex": "^/v1/lessons/start$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/lessons/quiz",
+    "url_regex": "^/v1/lessons/quiz$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons/progress/$userId",
+    "url_regex": "^/v1/lessons/progress/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/quotes",
+    "url_regex": "^/v1/sim/quotes$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons/progress/$userId/by_lesson",
+    "url_regex": "^/v1/lessons/progress/[^/]+/by_lesson$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons/requirements/$userId",
+    "url_regex": "^/v1/lessons/requirements/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/lessons/activations/$userId",
+    "url_regex": "^/v1/lessons/activations/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/room/$runId",
+    "url_regex": "^/v1/room/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/room/user/$userId",
+    "url_regex": "^/v1/room/user/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/portfolio/$userId",
+    "url_regex": "^/v1/sim/portfolio/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/portfolio/$userId/reset",
+    "url_regex": "^/v1/sim/portfolio/[^/]+/reset$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/submit",
+    "url_regex": "^/v1/sim/submit$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/orders/$userId",
+    "url_regex": "^/v1/sim/orders/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/orders/$userId/$orderId/cancel",
+    "url_regex": "^/v1/sim/orders/[^/]+/[^/]+/cancel$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/trades/$userId",
+    "url_regex": "^/v1/sim/trades/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/trades/$userId/evaluate",
+    "url_regex": "^/v1/sim/trades/[^/]+/evaluate$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/trades/$userId/close",
+    "url_regex": "^/v1/sim/trades/[^/]+/close$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/quote/$ticker",
+    "url_regex": "^/v1/sim/quote/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/quote/$ticker",
+    "url_regex": "^/v1/sim/quote/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/history/$ticker",
+    "url_regex": "^/v1/sim/history/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/portfolio/$userId/history",
+    "url_regex": "^/v1/sim/portfolio/[^/]+/history$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/news/$ticker",
+    "url_regex": "^/v1/sim/news/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sector-watch/$userId",
+    "url_regex": "^/v1/sector\\-watch/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/earnings/$ticker",
+    "url_regex": "^/v1/sim/earnings/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/sim/lots/$userId/$ticker",
+    "url_regex": "^/v1/sim/lots/[^/]+/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/portfolio/sector-allocation/$userId",
+    "url_regex": "^/v1/portfolio/sector\\-allocation/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/portfolio/health/$userId",
+    "url_regex": "^/v1/portfolio/health/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/portfolio/health/$userId/finding",
+    "url_regex": "^/v1/portfolio/health/[^/]+/finding$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/tickers/validate",
+    "url_regex": "^/v1/tickers/validate$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/watchlist/$userId",
+    "url_regex": "^/v1/watchlist/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/watchlist/$userId",
+    "url_regex": "^/v1/watchlist/[^/]+$"
+  },
+  {
+    "verb": "DELETE",
+    "url_template": "/v1/watchlist/$userId/$ticker",
+    "url_regex": "^/v1/watchlist/[^/]+/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/price_alerts/$userId",
+    "url_regex": "^/v1/price_alerts/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/price_alerts/$userId",
+    "url_regex": "^/v1/price_alerts/[^/]+$"
+  },
+  {
+    "verb": "DELETE",
+    "url_template": "/v1/price_alerts/$userId/$alertId",
+    "url_regex": "^/v1/price_alerts/[^/]+/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/mandate/$userId",
+    "url_regex": "^/v1/mandate/[^/]+$"
+  },
+  {
+    "verb": "PATCH",
+    "url_template": "/v1/mandate/$userId",
+    "url_regex": "^/v1/mandate/[^/]+$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/mandate/$userId/audit",
+    "url_regex": "^/v1/mandate/[^/]+/audit$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/billing/identity",
+    "url_regex": "^/v1/billing/identity$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/anon",
+    "url_regex": "^/v1/auth/anon$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/magic_link/start",
+    "url_regex": "^/v1/auth/magic_link/start$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/magic_link/verify",
+    "url_regex": "^/v1/auth/magic_link/verify$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/apple",
+    "url_regex": "^/v1/auth/apple$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/google",
+    "url_regex": "^/v1/auth/google$"
+  },
+  {
+    "verb": "DELETE",
+    "url_template": "/v1/auth/session",
+    "url_regex": "^/v1/auth/session$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/auth/merge/preview/$fromUserId",
+    "url_regex": "^/v1/auth/merge/preview/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/auth/merge",
+    "url_regex": "^/v1/auth/merge$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/auth/me",
+    "url_regex": "^/v1/auth/me$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/ai_coach/search",
+    "url_regex": "^/v1/ai_coach/search$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/ai_coach/categories",
+    "url_regex": "^/v1/ai_coach/categories$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/daily_challenge/today",
+    "url_regex": "^/v1/daily_challenge/today$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/daily_challenge/$challengeId/attempt",
+    "url_regex": "^/v1/daily_challenge/[^/]+/attempt$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/league/me",
+    "url_regex": "^/v1/league/me$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/league/standings",
+    "url_regex": "^/v1/league/standings$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/league/history",
+    "url_regex": "^/v1/league/history$"
+  },
+  {
+    "verb": "PATCH",
+    "url_template": "/v1/league/handle",
+    "url_regex": "^/v1/league/handle$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/feedback/bug",
+    "url_regex": "^/v1/feedback/bug$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/feedback/updates",
+    "url_regex": "^/v1/feedback/updates$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/feedback/$reportId/ack",
+    "url_regex": "^/v1/feedback/[^/]+/ack$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/messages",
+    "url_regex": "^/v1/messages$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/messages/$messageId/read",
+    "url_regex": "^/v1/messages/[^/]+/read$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/messages/$messageId/reply",
+    "url_regex": "^/v1/messages/[^/]+/reply$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/messages/$messageId/toasted",
+    "url_regex": "^/v1/messages/[^/]+/toasted$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/notifications/$userId",
+    "url_regex": "^/v1/notifications/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/notifications/$userId/$notificationId/read",
+    "url_regex": "^/v1/notifications/[^/]+/[^/]+/read$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/notifications/$userId/read_all",
+    "url_regex": "^/v1/notifications/[^/]+/read_all$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/notifications/$userId/unread_count",
+    "url_regex": "^/v1/notifications/[^/]+/unread_count$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/notifications/$userId/preferences",
+    "url_regex": "^/v1/notifications/[^/]+/preferences$"
+  },
+  {
+    "verb": "PATCH",
+    "url_template": "/v1/notifications/$userId/preferences",
+    "url_regex": "^/v1/notifications/[^/]+/preferences$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/telemetry/events",
+    "url_regex": "^/v1/telemetry/events$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/alpaca/link_state",
+    "url_regex": "^/v1/alpaca/link_state$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/alpaca/link",
+    "url_regex": "^/v1/alpaca/link$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/cadences",
+    "url_regex": "^/v1/games/cadences$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/games/enter",
+    "url_regex": "^/v1/games/enter$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs",
+    "url_regex": "^/v1/games/runs$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs/$runId",
+    "url_regex": "^/v1/games/runs/[^/]+$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/games/runs/$runId/trade/quote",
+    "url_regex": "^/v1/games/runs/[^/]+/trade/quote$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/games/runs/$runId/trade",
+    "url_regex": "^/v1/games/runs/[^/]+/trade$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs/$runId/orders",
+    "url_regex": "^/v1/games/runs/[^/]+/orders$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/games/runs/$runId/orders/$orderId/cancel",
+    "url_regex": "^/v1/games/runs/[^/]+/orders/[^/]+/cancel$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/games/runs/$runId/restart",
+    "url_regex": "^/v1/games/runs/[^/]+/restart$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs/$runId/close",
+    "url_regex": "^/v1/games/runs/[^/]+/close$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs/$runId/board",
+    "url_regex": "^/v1/games/runs/[^/]+/board$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/runs/$runId/arc",
+    "url_regex": "^/v1/games/runs/[^/]+/arc$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/desks",
+    "url_regex": "^/v1/games/desks$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/record",
+    "url_regex": "^/v1/games/record$"
+  },
+  {
+    "verb": "GET",
+    "url_template": "/v1/games/record/prs",
+    "url_regex": "^/v1/games/record/prs$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/options/reprice",
+    "url_regex": "^/v1/sim/options/reprice$"
+  },
+  {
+    "verb": "POST",
+    "url_template": "/v1/sim/options/open",
+    "url_regex": "^/v1/sim/options/open$"
+  }
+]

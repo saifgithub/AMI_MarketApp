@@ -1,0 +1,770 @@
+{
+  "count": 85,
+  "pairs": [
+    {
+      "dart_method": "startOnboarding",
+      "verb": "POST",
+      "url_template": "/v1/onboarding/start",
+      "url_regex": "^/v1/onboarding/start$",
+      "dart_class": "StartOnboardingResponse",
+      "is_list": false,
+      "nav_snippet": " {'locale': locale, 'timezone': timezone},     );     return"
+    },
+    {
+      "dart_method": "submitAnswer",
+      "verb": "POST",
+      "url_template": "/v1/onboarding/answer",
+      "url_regex": "^/v1/onboarding/answer$",
+      "dart_class": "AnswerResponse",
+      "is_list": false,
+      "nav_snippet": "essionId, 'step': step, 'answer': answer},     );     return"
+    },
+    {
+      "dart_method": "confirmReadback",
+      "verb": "POST",
+      "url_template": "/v1/onboarding/readback/confirm",
+      "url_regex": "^/v1/onboarding/readback/confirm$",
+      "dart_class": "ReadbackConfirmResponse",
+      "is_list": false,
+      "nav_snippet": "c>{},         'restart': restart,       },     );     return"
+    },
+    {
+      "dart_method": "getReleaseFloor",
+      "verb": "GET",
+      "url_template": "/v1/client/release-floor",
+      "url_regex": "^/v1/client/release\\-floor$",
+      "dart_class": "ReleaseFloorResponse",
+      "is_list": false,
+      "nav_snippet": "le,         'platform': platform,       },     );     return"
+    },
+    {
+      "dart_method": "startOneOnOne",
+      "verb": "POST",
+      "url_template": "/v1/agents/one_on_one/start",
+      "url_regex": "^/v1/agents/one_on_one/start$",
+      "dart_class": "OneOnOneSession",
+      "is_list": false,
+      "nav_snippet": "gentId,         'locale': locale,       },     );     return"
+    },
+    {
+      "dart_method": "startBrief",
+      "verb": "POST",
+      "url_template": "/v1/brief/start",
+      "url_regex": "^/v1/brief/start$",
+      "dart_class": "BriefStartResponse",
+      "is_list": false,
+      "nav_snippet": ": mode,         'locale': locale,       },     );     return"
+    },
+    {
+      "dart_method": "proposeBriefChange",
+      "verb": "POST",
+      "url_template": "/v1/brief/propose",
+      "url_regex": "^/v1/brief/propose$",
+      "dart_class": "BriefProposal",
+      "is_list": false,
+      "nav_snippet": "options: Options(extra: kAmiWaitsOnModel),     );     return"
+    },
+    {
+      "dart_method": "rollbackBrief",
+      "verb": "POST",
+      "url_template": "/v1/brief/rollback",
+      "url_regex": "^/v1/brief/rollback$",
+      "dart_class": "UserOverlay",
+      "is_list": false,
+      "nav_snippet": "         'to_version': toVersion,       },     );     return"
+    },
+    {
+      "dart_method": "briefHistory",
+      "verb": "GET",
+      "url_template": "/v1/brief/history/$userId/$agentId",
+      "url_regex": "^/v1/brief/history/[^/]+/[^/]+$",
+      "dart_class": "BriefHistory",
+      "is_list": false,
+      "nav_snippet": "d',       queryParameters: {'plan': plan},     );     return"
+    },
+    {
+      "dart_method": "listJournal",
+      "verb": "GET",
+      "url_template": "/v1/journal/$userId",
+      "url_regex": "^/v1/journal/[^/]+$",
+      "dart_class": "JournalListResponse",
+      "is_list": false,
+      "nav_snippet": ") 'q': q,         'limit': limit,       },     );     return"
+    },
+    {
+      "dart_method": "getJournalEntry",
+      "verb": "GET",
+      "url_template": "/v1/journal/$userId/entry/$entryId",
+      "url_regex": "^/v1/journal/[^/]+/entry/[^/]+$",
+      "dart_class": "JournalEntry",
+      "is_list": false,
+      "nav_snippet": "     '/v1/journal/$userId/entry/$entryId',     );     return"
+    },
+    {
+      "dart_method": "annotateJournalEntry",
+      "verb": "POST",
+      "url_template": "/v1/journal/$userId/entry/$entryId/note",
+      "url_regex": "^/v1/journal/[^/]+/entry/[^/]+/note$",
+      "dart_class": "JournalEntry",
+      "is_list": false,
+      "nav_snippet": "come != null) 'outcome': outcome,       },     );     return"
+    },
+    {
+      "dart_method": "listJournalTrash",
+      "verb": "GET",
+      "url_template": "/v1/journal/$userId/trash",
+      "url_regex": "^/v1/journal/[^/]+/trash$",
+      "dart_class": "JournalListResponse",
+      "is_list": false,
+      "nav_snippet": ",       queryParameters: {'limit': limit},     );     return"
+    },
+    {
+      "dart_method": "lessonCatalogue",
+      "verb": "GET",
+      "url_template": "/v1/lessons",
+      "url_regex": "^/v1/lessons$",
+      "dart_class": "LessonCatalogue",
+      "is_list": false,
+      "nav_snippet": "      queryParameters: {'locale': locale},     );     return"
+    },
+    {
+      "dart_method": "getLesson",
+      "verb": "GET",
+      "url_template": "/v1/lessons/$lessonId",
+      "url_regex": "^/v1/lessons/[^/]+$",
+      "dart_class": "Lesson",
+      "is_list": false,
+      "nav_snippet": "      queryParameters: {'locale': locale},     );     return"
+    },
+    {
+      "dart_method": "submitQuiz",
+      "verb": "POST",
+      "url_template": "/v1/lessons/quiz",
+      "url_regex": "^/v1/lessons/quiz$",
+      "dart_class": "QuizResult",
+      "is_list": false,
+      "nav_snippet": "onId,         'answers': answers,       },     );     return"
+    },
+    {
+      "dart_method": "lessonsProgress",
+      "verb": "GET",
+      "url_template": "/v1/lessons/progress/$userId",
+      "url_regex": "^/v1/lessons/progress/[^/]+$",
+      "dart_class": "ProgressSummary",
+      "is_list": false,
+      "nav_snippet": "c>>(       '/v1/lessons/progress/$userId',     );     return"
+    },
+    {
+      "dart_method": "lessonStatusByLesson",
+      "verb": "GET",
+      "url_template": "/v1/lessons/progress/$userId/by_lesson",
+      "url_regex": "^/v1/lessons/progress/[^/]+/by_lesson$",
+      "dart_class": "LessonStatus",
+      "is_list": false,
+      "nav_snippet": "         (e as Map<String, dynamic>)['lesson_id'] as String:"
+    },
+    {
+      "dart_method": "unlockRequirements",
+      "verb": "GET",
+      "url_template": "/v1/lessons/requirements/$userId",
+      "url_regex": "^/v1/lessons/requirements/[^/]+$",
+      "dart_class": "AgentUnlockRequirement",
+      "is_list": false,
+      "nav_snippet": ")         (e as Map<String, dynamic>)['agent_id'] as String:"
+    },
+    {
+      "dart_method": "agentActivations",
+      "verb": "GET",
+      "url_template": "/v1/lessons/activations/$userId",
+      "url_regex": "^/v1/lessons/activations/[^/]+$",
+      "dart_class": "AgentActivationRecord",
+      "is_list": true,
+      "nav_snippet": ",     );     return (r.data ?? const [])         .map((e) =>"
+    },
+    {
+      "dart_method": "getRoom",
+      "verb": "GET",
+      "url_template": "/v1/room/$runId",
+      "url_regex": "^/v1/room/[^/]+$",
+      "dart_class": "RoomRunSnapshot",
+      "is_list": false,
+      "nav_snippet": "dio.get<Map<String, dynamic>>('/v1/room/$runId');     return"
+    },
+    {
+      "dart_method": "listUserRooms",
+      "verb": "GET",
+      "url_template": "/v1/room/user/$userId",
+      "url_regex": "^/v1/room/user/[^/]+$",
+      "dart_class": "RoomRunSnapshot",
+      "is_list": true,
+      "nav_snippet": ",     );     return (r.data ?? const [])         .map((e) =>"
+    },
+    {
+      "dart_method": "simPortfolio",
+      "verb": "GET",
+      "url_template": "/v1/sim/portfolio/$userId",
+      "url_regex": "^/v1/sim/portfolio/[^/]+$",
+      "dart_class": "SimPortfolio",
+      "is_list": false,
+      "nav_snippet": "p<String, dynamic>>('/v1/sim/portfolio/$userId');     return"
+    },
+    {
+      "dart_method": "simResetPortfolio",
+      "verb": "POST",
+      "url_template": "/v1/sim/portfolio/$userId/reset",
+      "url_regex": "^/v1/sim/portfolio/[^/]+/reset$",
+      "dart_class": "SimPortfolio",
+      "is_list": false,
+      "nav_snippet": "(       '/v1/sim/portfolio/$userId/reset',     );     return"
+    },
+    {
+      "dart_method": "simSubmit",
+      "verb": "POST",
+      "url_template": "/v1/sim/submit",
+      "url_regex": "^/v1/sim/submit$",
+      "dart_class": "SimSubmitResult",
+      "is_list": false,
+      "nav_snippet": " null) 'verdict_ref': verdictRef,       },     );     return"
+    },
+    {
+      "dart_method": "simRestingOrders",
+      "verb": "GET",
+      "url_template": "/v1/sim/orders/$userId",
+      "url_regex": "^/v1/sim/orders/[^/]+$",
+      "dart_class": "SimRestingOrder",
+      "is_list": true,
+      "nav_snippet": "] as List?) ?? const [];     return list         .map((o) =>"
+    },
+    {
+      "dart_method": "simCancelRestingOrder",
+      "verb": "POST",
+      "url_template": "/v1/sim/orders/$userId/$orderId/cancel",
+      "url_regex": "^/v1/sim/orders/[^/]+/[^/]+/cancel$",
+      "dart_class": "RestingOrderCancelResult",
+      "is_list": false,
+      "nav_snippet": " '/v1/sim/orders/$userId/$orderId/cancel',     );     return"
+    },
+    {
+      "dart_method": "simListTrades",
+      "verb": "GET",
+      "url_template": "/v1/sim/trades/$userId",
+      "url_regex": "^/v1/sim/trades/[^/]+$",
+      "dart_class": "SimTrade",
+      "is_list": true,
+      "nav_snippet": " as List?) ?? const []);     return list         .map((t) =>"
+    },
+    {
+      "dart_method": "simCloseTrade",
+      "verb": "POST",
+      "url_template": "/v1/sim/trades/$userId/close",
+      "url_regex": "^/v1/sim/trades/[^/]+/close$",
+      "dart_class": "SimTrade",
+      "is_list": false,
+      "nav_snippet": "close',       data: {'trade_id': tradeId},     );     return"
+    },
+    {
+      "dart_method": "simHistory",
+      "verb": "GET",
+      "url_template": "/v1/sim/history/$ticker",
+      "url_regex": "^/v1/sim/history/[^/]+$",
+      "dart_class": "SimHistory",
+      "is_list": false,
+      "nav_snippet": ": {'period': period.trim().toLowerCase()},     );     return"
+    },
+    {
+      "dart_method": "simPortfolioHistory",
+      "verb": "GET",
+      "url_template": "/v1/sim/portfolio/$userId/history",
+      "url_regex": "^/v1/sim/portfolio/[^/]+/history$",
+      "dart_class": "SimPortfolioHistory",
+      "is_list": false,
+      "nav_snippet": ", dynamic>>('/v1/sim/portfolio/$userId/history');     return"
+    },
+    {
+      "dart_method": "simNews",
+      "verb": "GET",
+      "url_template": "/v1/sim/news/$ticker",
+      "url_regex": "^/v1/sim/news/[^/]+$",
+      "dart_class": "SimNews",
+      "is_list": false,
+      "nav_snippet": "et<Map<String, dynamic>>('/v1/sim/news/$ticker');     return"
+    },
+    {
+      "dart_method": "sectorWatch",
+      "verb": "GET",
+      "url_template": "/v1/sector-watch/$userId",
+      "url_regex": "^/v1/sector\\-watch/[^/]+$",
+      "dart_class": "SectorWatch",
+      "is_list": false,
+      "nav_snippet": "ap<String, dynamic>>('/v1/sector-watch/$userId');     return"
+    },
+    {
+      "dart_method": "simEarnings",
+      "verb": "GET",
+      "url_template": "/v1/sim/earnings/$ticker",
+      "url_regex": "^/v1/sim/earnings/[^/]+$",
+      "dart_class": "SimEarnings",
+      "is_list": false,
+      "nav_snippet": "ap<String, dynamic>>('/v1/sim/earnings/$ticker');     return"
+    },
+    {
+      "dart_method": "simHoldingLots",
+      "verb": "GET",
+      "url_template": "/v1/sim/lots/$userId/$ticker",
+      "url_regex": "^/v1/sim/lots/[^/]+/[^/]+$",
+      "dart_class": "HoldingLots",
+      "is_list": false,
+      "nav_snippet": "tring, dynamic>>('/v1/sim/lots/$userId/$ticker');     return"
+    },
+    {
+      "dart_method": "sectorAllocation",
+      "verb": "GET",
+      "url_template": "/v1/portfolio/sector-allocation/$userId",
+      "url_regex": "^/v1/portfolio/sector\\-allocation/[^/]+$",
+      "dart_class": "SectorAllocation",
+      "is_list": false,
+      "nav_snippet": "mic>>('/v1/portfolio/sector-allocation/$userId');     return"
+    },
+    {
+      "dart_method": "portfolioHealth",
+      "verb": "GET",
+      "url_template": "/v1/portfolio/health/$userId",
+      "url_regex": "^/v1/portfolio/health/[^/]+$",
+      "dart_class": "PortfolioHealth",
+      "is_list": false,
+      "nav_snippet": "tring, dynamic>>('/v1/portfolio/health/$userId');     return"
+    },
+    {
+      "dart_method": "generateHealthFinding",
+      "verb": "POST",
+      "url_template": "/v1/portfolio/health/$userId/finding",
+      "url_regex": "^/v1/portfolio/health/[^/]+/finding$",
+      "dart_class": "HealthFinding",
+      "is_list": false,
+      "nav_snippet": "options: Options(extra: kAmiWaitsOnModel),     );     return"
+    },
+    {
+      "dart_method": "validateTicker",
+      "verb": "GET",
+      "url_template": "/v1/tickers/validate",
+      "url_regex": "^/v1/tickers/validate$",
+      "dart_class": "TickerValidation",
+      "is_list": false,
+      "nav_snippet": "      queryParameters: {'ticker': ticker},     );     return"
+    },
+    {
+      "dart_method": "watchlistList",
+      "verb": "GET",
+      "url_template": "/v1/watchlist/$userId",
+      "url_regex": "^/v1/watchlist/[^/]+$",
+      "dart_class": "WatchlistEntry",
+      "is_list": true,
+      "nav_snippet": "as List?) ?? const []);     return items         .map((j) =>"
+    },
+    {
+      "dart_method": "watchlistAdd",
+      "verb": "POST",
+      "url_template": "/v1/watchlist/$userId",
+      "url_regex": "^/v1/watchlist/[^/]+$",
+      "dart_class": "WatchlistEntry",
+      "is_list": false,
+      "nav_snippet": "f (notes != null) 'notes': notes,       },     );     return"
+    },
+    {
+      "dart_method": "priceAlerts",
+      "verb": "GET",
+      "url_template": "/v1/price_alerts/$userId",
+      "url_regex": "^/v1/price_alerts/[^/]+$",
+      "dart_class": "PriceAlert",
+      "is_list": true,
+      "nav_snippet": "as List?) ?? const []);     return items         .map((j) =>"
+    },
+    {
+      "dart_method": "createPriceAlert",
+      "verb": "POST",
+      "url_template": "/v1/price_alerts/$userId",
+      "url_regex": "^/v1/price_alerts/[^/]+$",
+      "dart_class": "PriceAlert",
+      "is_list": false,
+      "nav_snippet": "f != null) 'trade_ref': tradeRef,       },     );     return"
+    },
+    {
+      "dart_method": "cancelPriceAlert",
+      "verb": "DELETE",
+      "url_template": "/v1/price_alerts/$userId/$alertId",
+      "url_regex": "^/v1/price_alerts/[^/]+/[^/]+$",
+      "dart_class": "PriceAlert",
+      "is_list": false,
+      "nav_snippet": ", dynamic>>('/v1/price_alerts/$userId/$alertId');     return"
+    },
+    {
+      "dart_method": "getMandate",
+      "verb": "GET",
+      "url_template": "/v1/mandate/$userId",
+      "url_regex": "^/v1/mandate/[^/]+$",
+      "dart_class": "UserMandate",
+      "is_list": false,
+      "nav_snippet": "get<Map<String, dynamic>>('/v1/mandate/$userId');     return"
+    },
+    {
+      "dart_method": "patchMandate",
+      "verb": "PATCH",
+      "url_template": "/v1/mandate/$userId",
+      "url_regex": "^/v1/mandate/[^/]+$",
+      "dart_class": "UserMandate",
+      "is_list": false,
+      "nav_snippet": "/v1/mandate/$userId',       data: updates,     );     return"
+    },
+    {
+      "dart_method": "auditMandateHoldings",
+      "verb": "GET",
+      "url_template": "/v1/mandate/$userId/audit",
+      "url_regex": "^/v1/mandate/[^/]+/audit$",
+      "dart_class": "HoldingsAuditResult",
+      "is_list": false,
+      "nav_snippet": "p<String, dynamic>>('/v1/mandate/$userId/audit');     return"
+    },
+    {
+      "dart_method": "getBillingIdentity",
+      "verb": "GET",
+      "url_template": "/v1/billing/identity",
+      "url_regex": "^/v1/billing/identity$",
+      "dart_class": "BillingIdentity",
+      "is_list": false,
+      "nav_snippet": "et<Map<String, dynamic>>('/v1/billing/identity');     return"
+    },
+    {
+      "dart_method": "bootstrapAnon",
+      "verb": "POST",
+      "url_template": "/v1/auth/anon",
+      "url_regex": "^/v1/auth/anon$",
+      "dart_class": "AnonSessionResponse",
+      "is_list": false,
+      "nav_snippet": "ice_install_id': deviceInstallId,       },     );     return"
+    },
+    {
+      "dart_method": "startMagicLink",
+      "verb": "POST",
+      "url_template": "/v1/auth/magic_link/start",
+      "url_regex": "^/v1/auth/magic_link/start$",
+      "dart_class": "MagicLinkStartResponse",
+      "is_list": false,
+      "nav_snippet": "link/start',       data: {'email': email},     );     return"
+    },
+    {
+      "dart_method": "verifyMagicLink",
+      "verb": "POST",
+      "url_template": "/v1/auth/magic_link/verify",
+      "url_regex": "^/v1/auth/magic_link/verify$",
+      "dart_class": "AuthVerifyResponse",
+      "is_list": false,
+      "nav_snippet": "session_id': onboardingSessionId,       },     );     return"
+    },
+    {
+      "dart_method": "signInWithApple",
+      "verb": "POST",
+      "url_template": "/v1/auth/apple",
+      "url_regex": "^/v1/auth/apple$",
+      "dart_class": "AuthVerifyResponse",
+      "is_list": false,
+      "nav_snippet": "session_id': onboardingSessionId,       },     );     return"
+    },
+    {
+      "dart_method": "signInWithGoogle",
+      "verb": "POST",
+      "url_template": "/v1/auth/google",
+      "url_regex": "^/v1/auth/google$",
+      "dart_class": "AuthVerifyResponse",
+      "is_list": false,
+      "nav_snippet": "session_id': onboardingSessionId,       },     );     return"
+    },
+    {
+      "dart_method": "previewMerge",
+      "verb": "GET",
+      "url_template": "/v1/auth/merge/preview/$fromUserId",
+      "url_regex": "^/v1/auth/merge/preview/[^/]+$",
+      "dart_class": "MergePreview",
+      "is_list": false,
+      "nav_snippet": "     '/v1/auth/merge/preview/$fromUserId',     );     return"
+    },
+    {
+      "dart_method": "executeMerge",
+      "verb": "POST",
+      "url_template": "/v1/auth/merge",
+      "url_regex": "^/v1/auth/merge$",
+      "dart_class": "MergeResult",
+      "is_list": false,
+      "nav_snippet": "       data: {'from_user_id': fromUserId},     );     return"
+    },
+    {
+      "dart_method": "me",
+      "verb": "GET",
+      "url_template": "/v1/auth/me",
+      "url_regex": "^/v1/auth/me$",
+      "dart_class": "AuthUser",
+      "is_list": false,
+      "nav_snippet": "ders: {'Authorization': 'Bearer $token'}),     );     return"
+    },
+    {
+      "dart_method": "aiCoachSearch",
+      "verb": "GET",
+      "url_template": "/v1/ai_coach/search",
+      "url_regex": "^/v1/ai_coach/search$",
+      "dart_class": "CoachSearchHit",
+      "is_list": true,
+      "nav_snippet": "  final hits = (r.data!['hits'] as List)         .map((h) =>"
+    },
+    {
+      "dart_method": "dailyChallengeToday",
+      "verb": "GET",
+      "url_template": "/v1/daily_challenge/today",
+      "url_regex": "^/v1/daily_challenge/today$",
+      "dart_class": "DailyChallengeWithDate",
+      "is_list": false,
+      "nav_snippet": "String, dynamic>>('/v1/daily_challenge/today');       return"
+    },
+    {
+      "dart_method": "dailyChallengeAttempt",
+      "verb": "POST",
+      "url_template": "/v1/daily_challenge/$challengeId/attempt",
+      "url_regex": "^/v1/daily_challenge/[^/]+/attempt$",
+      "dart_class": "DailyChallengeAttemptResult",
+      "is_list": false,
+      "nav_snippet": "data: {'selected_option': selectedOption},     );     return"
+    },
+    {
+      "dart_method": "leagueMe",
+      "verb": "GET",
+      "url_template": "/v1/league/me",
+      "url_regex": "^/v1/league/me$",
+      "dart_class": "LeagueMe",
+      "is_list": false,
+      "nav_snippet": " _dio.get<Map<String, dynamic>>('/v1/league/me');     return"
+    },
+    {
+      "dart_method": "leagueStandings",
+      "verb": "GET",
+      "url_template": "/v1/league/standings",
+      "url_regex": "^/v1/league/standings$",
+      "dart_class": "LeagueStandings",
+      "is_list": false,
+      "nav_snippet": "<Map<String, dynamic>>('/v1/league/standings');       return"
+    },
+    {
+      "dart_method": "leagueHistory",
+      "verb": "GET",
+      "url_template": "/v1/league/history",
+      "url_regex": "^/v1/league/history$",
+      "dart_class": "LeagueHistoryEntry",
+      "is_list": true,
+      "nav_snippet": "story');     return (r.data ?? const [])         .map((e) =>"
+    },
+    {
+      "dart_method": "feedbackUpdates",
+      "verb": "GET",
+      "url_template": "/v1/feedback/updates",
+      "url_regex": "^/v1/feedback/updates$",
+      "dart_class": "BugResolutionUpdate",
+      "is_list": true,
+      "nav_snippet": "ack/updates');     return (r.data ?? [])         .map((e) =>"
+    },
+    {
+      "dart_method": "inboxMessages",
+      "verb": "GET",
+      "url_template": "/v1/messages",
+      "url_regex": "^/v1/messages$",
+      "dart_class": "InboxMessage",
+      "is_list": true,
+      "nav_snippet": "v1/messages');     return (r.data ?? [])         .map((e) =>"
+    },
+    {
+      "dart_method": "replyToMessage",
+      "verb": "POST",
+      "url_template": "/v1/messages/$messageId/reply",
+      "url_regex": "^/v1/messages/[^/]+/reply$",
+      "dart_class": "InboxReply",
+      "is_list": false,
+      "nav_snippet": "sageId/reply',       data: {'body': body},     );     return"
+    },
+    {
+      "dart_method": "notifications",
+      "verb": "GET",
+      "url_template": "/v1/notifications/$userId",
+      "url_regex": "^/v1/notifications/[^/]+$",
+      "dart_class": "NotificationPage",
+      "is_list": false,
+      "nav_snippet": "eters: {'limit': limit, 'offset': offset},     );     return"
+    },
+    {
+      "dart_method": "notificationPreferences",
+      "verb": "GET",
+      "url_template": "/v1/notifications/$userId/preferences",
+      "url_regex": "^/v1/notifications/[^/]+/preferences$",
+      "dart_class": "NotificationPreference",
+      "is_list": true,
+      "nav_snippet": "(r.data?['items'] as List?) ?? const [])         .map((e) =>"
+    },
+    {
+      "dart_method": "patchNotificationPreferences",
+      "verb": "PATCH",
+      "url_template": "/v1/notifications/$userId/preferences",
+      "url_regex": "^/v1/notifications/[^/]+/preferences$",
+      "dart_class": "NotificationPreference",
+      "is_list": true,
+      "nav_snippet": "(r.data?['items'] as List?) ?? const [])         .map((e) =>"
+    },
+    {
+      "dart_method": "gamesCadences",
+      "verb": "GET",
+      "url_template": "/v1/games/cadences",
+      "url_regex": "^/v1/games/cadences$",
+      "dart_class": "GameCadenceInfo",
+      "is_list": true,
+      "nav_snippet": "    return _listBody(r.data, 'cadences')         .map((e) =>"
+    },
+    {
+      "dart_method": "gamesEnter",
+      "verb": "POST",
+      "url_template": "/v1/games/enter",
+      "url_regex": "^/v1/games/enter$",
+      "dart_class": "GameEntry",
+      "is_list": false,
+      "nav_snippet": "/enter',       data: {'cadence': cadence},     );     return"
+    },
+    {
+      "dart_method": "gamesRuns",
+      "verb": "GET",
+      "url_template": "/v1/games/runs",
+      "url_regex": "^/v1/games/runs$",
+      "dart_class": "GameRunSummary",
+      "is_list": true,
+      "nav_snippet": "');     return _listBody(r.data, 'runs')         .map((e) =>"
+    },
+    {
+      "dart_method": "gamesRunDetail",
+      "verb": "GET",
+      "url_template": "/v1/games/runs/$runId",
+      "url_regex": "^/v1/games/runs/[^/]+$",
+      "dart_class": "GameRunDetail",
+      "is_list": false,
+      "nav_snippet": "t<Map<String, dynamic>>('/v1/games/runs/$runId');     return"
+    },
+    {
+      "dart_method": "gamesTradeQuote",
+      "verb": "POST",
+      "url_template": "/v1/games/runs/$runId/trade/quote",
+      "url_regex": "^/v1/games/runs/[^/]+/trade/quote$",
+      "dart_class": "GameTradeQuote",
+      "is_list": false,
+      "nav_snippet": "ty != null) 'quantity': quantity,       },     );     return"
+    },
+    {
+      "dart_method": "gamesTrade",
+      "verb": "POST",
+      "url_template": "/v1/games/runs/$runId/trade",
+      "url_regex": "^/v1/games/runs/[^/]+/trade$",
+      "dart_class": "GameTradeResult",
+      "is_list": false,
+      "nav_snippet": "cker, 'side': side, 'quantity': quantity},     );     return"
+    },
+    {
+      "dart_method": "gamesQueuedOrders",
+      "verb": "GET",
+      "url_template": "/v1/games/runs/$runId/orders",
+      "url_regex": "^/v1/games/runs/[^/]+/orders$",
+      "dart_class": "GameQueuedOrder",
+      "is_list": true,
+      "nav_snippet": ";     return _listBody(r.data, 'orders')         .map((e) =>"
+    },
+    {
+      "dart_method": "gamesRestart",
+      "verb": "POST",
+      "url_template": "/v1/games/runs/$runId/restart",
+      "url_regex": "^/v1/games/runs/[^/]+/restart$",
+      "dart_class": "GameRestartPreview",
+      "is_list": false,
+      "nav_snippet": "estart',       data: {'confirm': confirm},     );     return"
+    },
+    {
+      "dart_method": "gamesClose",
+      "verb": "GET",
+      "url_template": "/v1/games/runs/$runId/close",
+      "url_regex": "^/v1/games/runs/[^/]+/close$",
+      "dart_class": "GameCloseResult",
+      "is_list": false,
+      "nav_snippet": "String, dynamic>>('/v1/games/runs/$runId/close');     return"
+    },
+    {
+      "dart_method": "gamesBoard",
+      "verb": "GET",
+      "url_template": "/v1/games/runs/$runId/board",
+      "url_regex": "^/v1/games/runs/[^/]+/board$",
+      "dart_class": "GameBoard",
+      "is_list": false,
+      "nav_snippet": "String, dynamic>>('/v1/games/runs/$runId/board');     return"
+    },
+    {
+      "dart_method": "gamesArc",
+      "verb": "GET",
+      "url_template": "/v1/games/runs/$runId/arc",
+      "url_regex": "^/v1/games/runs/[^/]+/arc$",
+      "dart_class": "GameArc",
+      "is_list": false,
+      "nav_snippet": "p<String, dynamic>>('/v1/games/runs/$runId/arc');     return"
+    },
+    {
+      "dart_method": "gamesDesks",
+      "verb": "GET",
+      "url_template": "/v1/games/desks",
+      "url_regex": "^/v1/games/desks$",
+      "dart_class": "GameDeskProfile",
+      "is_list": true,
+      "nav_snippet": ");     return _listBody(r.data, 'desks')         .map((e) =>"
+    },
+    {
+      "dart_method": "gamesRecord",
+      "verb": "GET",
+      "url_template": "/v1/games/record",
+      "url_regex": "^/v1/games/record$",
+      "dart_class": "GameRecord",
+      "is_list": false,
+      "nav_snippet": "io.get<Map<String, dynamic>>('/v1/games/record');     return"
+    },
+    {
+      "dart_method": "gamesRecordPrs",
+      "verb": "GET",
+      "url_template": "/v1/games/record/prs",
+      "url_regex": "^/v1/games/record/prs$",
+      "dart_class": "GamePersonalRecord",
+      "is_list": true,
+      "nav_snippet": "tList is List) {       return flatList           .map((e) =>"
+    },
+    {
+      "dart_method": "gamesRecordPrs",
+      "verb": "GET",
+      "url_template": "/v1/games/record/prs",
+      "url_regex": "^/v1/games/record/prs$",
+      "dart_class": "GamePersonalRecord",
+      "is_list": false,
+      "nav_snippet": "t_hold_days' ? 'longest_hold' : category.key;       out.add("
+    },
+    {
+      "dart_method": "simOptionReprice",
+      "verb": "POST",
+      "url_template": "/v1/sim/options/reprice",
+      "url_regex": "^/v1/sim/options/reprice$",
+      "dart_class": "OptionRepriceResult",
+      "is_list": false,
+      "nav_snippet": "cedAt!.toUtc().toIso8601String(),       },     );     return"
+    },
+    {
+      "dart_method": "simOptionOpen",
+      "verb": "POST",
+      "url_template": "/v1/sim/options/open",
+      "url_regex": "^/v1/sim/options/open$",
+      "dart_class": "OptionOpenResult",
+      "is_list": false,
+      "nav_snippet": " null) 'verdict_ref': verdictRef,       },     );     return"
+    }
+  ]
+}

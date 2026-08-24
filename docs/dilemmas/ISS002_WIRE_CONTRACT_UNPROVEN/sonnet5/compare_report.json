@@ -1,0 +1,781 @@
+[
+  {
+    "class": "StartOnboardingResponse",
+    "endpoint": "/v1/onboarding/start",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "AnswerResponse",
+    "endpoint": "/v1/onboarding/answer",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "ReadbackConfirmResponse",
+    "endpoint": "/v1/onboarding/readback/confirm",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "ReleaseFloorResponse",
+    "endpoint": "/v1/client/release-floor",
+    "status": "PASS",
+    "observations": 6,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "OneOnOneSession",
+    "endpoint": "/v1/agents/one_on_one/start",
+    "status": "PASS",
+    "observations": 15,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "BriefStartResponse",
+    "endpoint": "/v1/brief/start",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "BriefProposal",
+    "endpoint": "/v1/brief/propose",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "UserOverlay",
+    "endpoint": "/v1/brief/rollback",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "BriefHistory",
+    "endpoint": "/v1/brief/history/$userId/$agentId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "JournalListResponse",
+    "endpoint": "/v1/journal/$userId",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "JournalEntry",
+        "via": "JournalListResponse.entries",
+        "status": "PASS",
+        "observations": 2,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "JournalEntry",
+    "endpoint": "/v1/journal/$userId/entry/$entryId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "JournalEntry",
+    "endpoint": "/v1/journal/$userId/entry/$entryId/note",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "JournalListResponse",
+    "endpoint": "/v1/journal/$userId/trash",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "LessonCatalogue",
+    "endpoint": "/v1/lessons",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "TrackCatalogue",
+        "via": "LessonCatalogue.tracks",
+        "status": "PASS",
+        "observations": 39,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "Lesson",
+    "endpoint": "/v1/lessons/$lessonId",
+    "status": "PASS",
+    "observations": 369,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "LessonBlock",
+        "via": "Lesson.blocks",
+        "status": "PASS",
+        "observations": 2298,
+        "missing_required_keys": []
+      },
+      {
+        "class": "QuizQuestion",
+        "via": "Lesson.quizzes",
+        "status": "PASS",
+        "observations": 807,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "QuizResult",
+    "endpoint": "/v1/lessons/quiz",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "ProgressSummary",
+    "endpoint": "/v1/lessons/progress/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "LessonStatus",
+    "endpoint": "/v1/lessons/progress/$userId/by_lesson",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "AgentUnlockRequirement",
+    "endpoint": "/v1/lessons/requirements/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "AgentActivationRecord",
+    "endpoint": "/v1/lessons/activations/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "RoomRunSnapshot",
+    "endpoint": "/v1/room/$runId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "RoomRunSnapshot",
+    "endpoint": "/v1/room/user/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "SimPortfolio",
+    "endpoint": "/v1/sim/portfolio/$userId",
+    "status": "PASS",
+    "observations": 23,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "SimHolding",
+        "via": "SimPortfolio.holdings",
+        "status": "PASS",
+        "observations": 1,
+        "missing_required_keys": []
+      },
+      {
+        "class": "SimShort",
+        "via": "SimPortfolio.shorts",
+        "status": "PASS",
+        "observations": 8,
+        "missing_required_keys": []
+      },
+      {
+        "class": "SimClosedShort",
+        "via": "SimPortfolio.closed_shorts",
+        "status": "PASS",
+        "observations": 4,
+        "missing_required_keys": []
+      },
+      {
+        "class": "SimOptionLeg",
+        "via": "SimPortfolio.options",
+        "status": "UNVERIFIED",
+        "reason": "'options' was always empty in 23 observation(s) \u2014 the nested class was never actually populated on the wire"
+      }
+    ]
+  },
+  {
+    "class": "SimPortfolio",
+    "endpoint": "/v1/sim/portfolio/$userId/reset",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "SimHolding",
+        "via": "SimPortfolio.holdings",
+        "status": "UNVERIFIED",
+        "reason": "'holdings' was always empty in 1 observation(s) \u2014 the nested class was never actually populated on the wire"
+      },
+      {
+        "class": "SimShort",
+        "via": "SimPortfolio.shorts",
+        "status": "UNVERIFIED",
+        "reason": "'shorts' was always empty in 1 observation(s) \u2014 the nested class was never actually populated on the wire"
+      },
+      {
+        "class": "SimClosedShort",
+        "via": "SimPortfolio.closed_shorts",
+        "status": "UNVERIFIED",
+        "reason": "'closed_shorts' was always empty in 1 observation(s) \u2014 the nested class was never actually populated on the wire"
+      },
+      {
+        "class": "SimOptionLeg",
+        "via": "SimPortfolio.options",
+        "status": "UNVERIFIED",
+        "reason": "'options' was always empty in 1 observation(s) \u2014 the nested class was never actually populated on the wire"
+      }
+    ]
+  },
+  {
+    "class": "SimSubmitResult",
+    "endpoint": "/v1/sim/submit",
+    "status": "FAIL",
+    "observations": 21,
+    "missing_required_keys": [
+      "order"
+    ],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "SimRestingOrder",
+    "endpoint": "/v1/sim/orders/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "RestingOrderCancelResult",
+    "endpoint": "/v1/sim/orders/$userId/$orderId/cancel",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "SimTrade",
+    "endpoint": "/v1/sim/trades/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "SimTrade",
+    "endpoint": "/v1/sim/trades/$userId/close",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "SimHistory",
+    "endpoint": "/v1/sim/history/$ticker",
+    "status": "PASS",
+    "observations": 18,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "SimCandle",
+        "via": "SimHistory.candles",
+        "status": "PASS",
+        "observations": 1298,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "SimPortfolioHistory",
+    "endpoint": "/v1/sim/portfolio/$userId/history",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "SimPortfolioHistoryPoint",
+        "via": "SimPortfolioHistory.points",
+        "status": "PASS",
+        "observations": 1,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "SimNews",
+    "endpoint": "/v1/sim/news/$ticker",
+    "status": "PASS",
+    "observations": 5,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "SimNewsArticle",
+        "via": "SimNews.articles",
+        "status": "PASS",
+        "observations": 8,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "SectorWatch",
+    "endpoint": "/v1/sector-watch/$userId",
+    "status": "PASS",
+    "observations": 6,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "SimEarnings",
+    "endpoint": "/v1/sim/earnings/$ticker",
+    "status": "PASS",
+    "observations": 5,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "HoldingLots",
+    "endpoint": "/v1/sim/lots/$userId/$ticker",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "Lot",
+        "via": "HoldingLots.lots",
+        "status": "PASS",
+        "observations": 1,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "SectorAllocation",
+    "endpoint": "/v1/portfolio/sector-allocation/$userId",
+    "status": "PASS",
+    "observations": 5,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "PortfolioHealth",
+    "endpoint": "/v1/portfolio/health/$userId",
+    "status": "PASS",
+    "observations": 7,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "HealthFinding",
+    "endpoint": "/v1/portfolio/health/$userId/finding",
+    "status": "PASS",
+    "observations": 30,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "TickerValidation",
+    "endpoint": "/v1/tickers/validate",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "WatchlistEntry",
+    "endpoint": "/v1/watchlist/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "WatchlistEntry",
+    "endpoint": "/v1/watchlist/$userId",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "PriceAlert",
+    "endpoint": "/v1/price_alerts/$userId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "PriceAlert",
+    "endpoint": "/v1/price_alerts/$userId",
+    "status": "PASS",
+    "observations": 6,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "PriceAlert",
+    "endpoint": "/v1/price_alerts/$userId/$alertId",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "UserMandate",
+    "endpoint": "/v1/mandate/$userId",
+    "status": "PASS",
+    "observations": 21,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "UserMandate",
+    "endpoint": "/v1/mandate/$userId",
+    "status": "PASS",
+    "observations": 28,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "HoldingsAuditResult",
+    "endpoint": "/v1/mandate/$userId/audit",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "BillingIdentity",
+    "endpoint": "/v1/billing/identity",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "AnonSessionResponse",
+    "endpoint": "/v1/auth/anon",
+    "status": "PASS",
+    "observations": 32,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "MagicLinkStartResponse",
+    "endpoint": "/v1/auth/magic_link/start",
+    "status": "PASS",
+    "observations": 14,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "AuthVerifyResponse",
+    "endpoint": "/v1/auth/magic_link/verify",
+    "status": "PASS",
+    "observations": 10,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "AuthVerifyResponse",
+    "endpoint": "/v1/auth/apple",
+    "status": "PASS",
+    "observations": 5,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "AuthVerifyResponse",
+    "endpoint": "/v1/auth/google",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "MergePreview",
+    "endpoint": "/v1/auth/merge/preview/$fromUserId",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "MergeResult",
+    "endpoint": "/v1/auth/merge",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "AuthUser",
+    "endpoint": "/v1/auth/me",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "CoachSearchHit",
+    "endpoint": "/v1/ai_coach/search",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "DailyChallengeWithDate",
+    "endpoint": "/v1/daily_challenge/today",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "DailyChallengeAttemptResult",
+    "endpoint": "/v1/daily_challenge/$challengeId/attempt",
+    "status": "PASS",
+    "observations": 9,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "LeagueMe",
+    "endpoint": "/v1/league/me",
+    "status": "PASS",
+    "observations": 2,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "LeagueStandings",
+    "endpoint": "/v1/league/standings",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "LeagueMemberRow",
+        "via": "LeagueStandings.members",
+        "status": "PASS",
+        "observations": 2,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "LeagueHistoryEntry",
+    "endpoint": "/v1/league/history",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "BugResolutionUpdate",
+    "endpoint": "/v1/feedback/updates",
+    "status": "PASS",
+    "observations": 4,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "InboxMessage",
+    "endpoint": "/v1/messages",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "InboxReply",
+    "endpoint": "/v1/messages/$messageId/reply",
+    "status": "PASS",
+    "observations": 1,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "NotificationPage",
+    "endpoint": "/v1/notifications/$userId",
+    "status": "PASS",
+    "observations": 3,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": [
+      {
+        "class": "AppNotification",
+        "via": "NotificationPage.items",
+        "status": "PASS",
+        "observations": 5,
+        "missing_required_keys": []
+      }
+    ]
+  },
+  {
+    "class": "NotificationPreference",
+    "endpoint": "/v1/notifications/$userId/preferences",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "NotificationPreference",
+    "endpoint": "/v1/notifications/$userId/preferences",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameCadenceInfo",
+    "endpoint": "/v1/games/cadences",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameEntry",
+    "endpoint": "/v1/games/enter",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameRunSummary",
+    "endpoint": "/v1/games/runs",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameRunDetail",
+    "endpoint": "/v1/games/runs/$runId",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameTradeQuote",
+    "endpoint": "/v1/games/runs/$runId/trade/quote",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameTradeResult",
+    "endpoint": "/v1/games/runs/$runId/trade",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameQueuedOrder",
+    "endpoint": "/v1/games/runs/$runId/orders",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameRestartPreview",
+    "endpoint": "/v1/games/runs/$runId/restart",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameCloseResult",
+    "endpoint": "/v1/games/runs/$runId/close",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameBoard",
+    "endpoint": "/v1/games/runs/$runId/board",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameArc",
+    "endpoint": "/v1/games/runs/$runId/arc",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameDeskProfile",
+    "endpoint": "/v1/games/desks",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GameRecord",
+    "endpoint": "/v1/games/record",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GamePersonalRecord",
+    "endpoint": "/v1/games/record/prs",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "GamePersonalRecord",
+    "endpoint": "/v1/games/record/prs",
+    "status": "UNVERIFIED",
+    "reason": "endpoint never observed with a 2xx JSON body during this run \u2014 cannot confirm or deny wire agreement"
+  },
+  {
+    "class": "OptionRepriceResult",
+    "endpoint": "/v1/sim/options/reprice",
+    "status": "PASS",
+    "observations": 9,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  },
+  {
+    "class": "OptionOpenResult",
+    "endpoint": "/v1/sim/options/open",
+    "status": "PASS",
+    "observations": 10,
+    "missing_required_keys": [],
+    "unsatisfied_alt_groups": [],
+    "nested": []
+  }
+]

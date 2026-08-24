@@ -1,0 +1,138 @@
+[
+  {
+    "method": "GET",
+    "path": "/v1/agents/one_on_one/{session_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/ai_coach/by_category/{category}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/ai_coach/by_id/{qa_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/coach/history/{user_id}/{agent_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/daily_challenge/all"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/daily_challenge/by_date/{ymd}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/daily_challenge/by_id/{challenge_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/glossary/{locale}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/glossary/{locale}/{term_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/league/badges"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/llm/cache_rate"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/llm/status"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/mandate/{user_id}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/mandate/{user_id}/versions/{version}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/onboarding/{session_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/portfolio/day-trader-outcomes/{user_id}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/ready"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/telemetry/segments"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/agents/one_on_one/message"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/brief/message"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/accept"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/message"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/propose"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/coach/start"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/journal"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/league/streak/freeze"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/llm/translate"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/mandate/{user_id}/rollback/{version}"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/room/stream"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/sim/options/propose"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/sim/preview"
+  },
+  {
+    "method": "PUT",
+    "path": "/v1/daily_challenge/reminder"
+  }
+]

@@ -11,9 +11,9 @@ occurred three times inside CR172 alone (`OptionProposalTicket`, DEF363, DEF365)
 |---|---|
 | Problem statement written, solution-free | **done** — `ISS002_problem_statement.md` |
 | Invite prompt | **done** — `INVITE_PROMPT.md` |
-| Convening agent's own solution (protocol step 4, must be first) | pending |
-| Contributors invited | pending |
-| Judging → `VERDICT.md` | pending |
+| Convening agent's own solution (protocol step 4, must be first) | **done** — `opus5.0/SOLUTION.md`, written before either invite |
+| Contributors invited | **done** — `sonnet5`, `haiku4.5`, both blind |
+| Judging → `VERDICT.md` | **done** — `sonnet5` wins, one required correction + one graft from `haiku4.5`. Implementation is a normal CR. |
 
 ## Independently verified before writing the brief
 
