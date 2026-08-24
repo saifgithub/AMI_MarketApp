@@ -32,11 +32,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow
-from app.services import career_ledger, games_duels, games_markers, games_scoring
+from app.services import career_ledger, games_duels, games_markers, games_placement, games_scoring
 from app.services import games_service as games
 from app.services.portfolio_nav_daily import nav_history
 from app.trading_math.returns import max_drawdown_pct
@@ -125,6 +125,27 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
                 f"run {run_id} is {entry.state}, not closed"
             )
         private = _entry_private_fields(entry)
+        # CR207 — how many entries share this rank in this field. Standard
+        # competition ranking (1, 1, 3) makes a shared rank a real state, and
+        # the client cannot count it: it is only ever sent its own entry.
+        tie_count = 1
+        if entry.final_rank is not None:
+            tie_count = int(s.execute(
+                select(func.count(GameEntryRow.id)).where(
+                    GameEntryRow.field_id == entry.field_id,
+                    GameEntryRow.final_rank == entry.final_rank,
+                )
+            ).scalar_one() or 1)
+        # Resolved HERE, from stored columns, for the same reason
+        # `_wind_up_block` is: the settlement push and this screen must not
+        # answer "where did they end up, and may we say so" in two languages.
+        # See `games_placement`.
+        placement = games_placement.resolve(
+            state=entry.state, scoring_basis=field.scoring_basis,
+            final_rank=entry.final_rank,
+            scored_entrant_count=entry.scored_entrant_count,
+            entrant_count=field.entrant_count, tie_count=tie_count,
+        )
         payload_entry = {
             "run_id": str(run_id),
             "field_id": str(field.id),
@@ -134,6 +155,13 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             "entrant_count": field.entrant_count,
             "void_reason": entry.void_reason,
             "rank": entry.final_rank,
+            "placement": {
+                "kind": placement.kind,
+                "rank": placement.rank,
+                "field_size": placement.field_size,
+                "tie_count": placement.tie_count,
+                "asserts_position": placement.asserts_position,
+            },
             "final_twr_pct": (
                 float(entry.final_twr_pct) if entry.final_twr_pct is not None else None
             ),

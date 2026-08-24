@@ -94,7 +94,10 @@ class GamesBoardScreen extends ConsumerWidget {
                 if (board.rows.isEmpty)
                   Text(l.gamesBoardEmpty, style: AmiTypography.body)
                 else
-                  ...board.rows.map((r) => _BoardRow(row: r)),
+                  ...orderedRows(board.rows).map((r) => _BoardRow(
+                        row: r,
+                        tied: isTiedRank(board.rows, r.rank),
+                      )),
                 const SizedBox(height: AmiSpacing.m),
                 // Said out loud rather than left to be inferred: this board is
                 // stale by design between closes, and a player who does not
@@ -274,9 +277,48 @@ class _ChampionLine extends StatelessWidget {
   }
 }
 
+/// DEF343 — is this rank shared by more than one entrant?
+///
+/// Competition ranking (1, 1, 3) makes a shared rank arithmetically correct
+/// and visually confusing: the field screenshot showed two entrants tied at
+/// +0.05%, both rank 3 of 4, with the YOU row rendered *below* its tied peer
+/// and nothing saying "tied" — so the player read the listing as "I am 4th"
+/// while the hero said "#3 of 4". Counted from the rows themselves, which the
+/// client already has in full; nothing hidden is being re-derived here.
+bool isTiedRank(List<GameBoardRow> rows, int? rank) {
+  if (rank == null) return false;
+  return rows.where((r) => r.rank == rank).length > 1;
+}
+
+/// The YOU row sorts FIRST inside its tie group, and nothing else moves.
+///
+/// The other half of DEF343: a marker alone still leaves the player reading
+/// their own row last among equals. Stable within every other group, so the
+/// board's order is otherwise exactly the server's.
+List<GameBoardRow> orderedRows(List<GameBoardRow> rows) {
+  final out = List<GameBoardRow>.from(rows);
+  for (var i = 0; i < out.length; i++) {
+    if (!out[i].isYou || out[i].rank == null) continue;
+    var first = i;
+    while (first > 0 && out[first - 1].rank == out[i].rank) {
+      first--;
+    }
+    if (first != i) {
+      final me = out.removeAt(i);
+      out.insert(first, me);
+    }
+    break;
+  }
+  return out;
+}
+
 class _BoardRow extends StatelessWidget {
-  const _BoardRow({required this.row});
+  const _BoardRow({required this.row, this.tied = false});
   final GameBoardRow row;
+
+  /// Renders the rank as `T3` rather than `3`. Presentation only — the rank
+  /// itself is the server's and is not recomputed.
+  final bool tied;
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +349,9 @@ class _BoardRow extends StatelessWidget {
                 SizedBox(
                   width: 34,
                   child: Text(
-                    row.rank == null ? '—' : '${row.rank}',
+                    row.rank == null
+                        ? '—'
+                        : (tied ? 'T${row.rank}' : '${row.rank}'),
                     style: AmiTypography.dataMd.copyWith(
                       color: row.rank == null
                           ? AmiColors.textLow

@@ -79,12 +79,12 @@ from datetime import date, datetime, time, timedelta, timezone
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import GameEntryRow, GameFieldRow, NotificationRow, User
-from app.services import games_board
+from app.services import games_board, games_placement
 from app.services.games_arc import FINAL_STRETCH_DAYS
 from app.services.notification_service import notify
 
@@ -341,23 +341,55 @@ def _beat_settled(now: datetime) -> int:
     today = now.astimezone(timezone.utc).date()
     sent = 0
     with get_session() as s:
+        # CR207 — `state == "void"` joins `"finished"` here. A voided run is
+        # still a closed run whose player is owed the ceremony; it was
+        # previously excluded, so the one player whose run could not be
+        # scored was also the one player never told anything. The message for
+        # it asserts no position (see `games_placement.push_copy`).
         rows = s.execute(
             select(GameEntryRow.user_id, GameEntryRow.run_id, User.timezone,
-                   GameFieldRow.cadence)
+                   GameFieldRow.cadence, GameEntryRow.state,
+                   GameFieldRow.scoring_basis, GameEntryRow.final_rank,
+                   GameEntryRow.scored_entrant_count,
+                   GameFieldRow.entrant_count, GameEntryRow.field_id)
             .join(GameFieldRow, GameEntryRow.field_id == GameFieldRow.id)
             .join(User, GameEntryRow.user_id == User.id)
             .where(
-                GameEntryRow.state == "finished",
+                GameEntryRow.state.in_(("finished", "void")),
                 User.is_desk.is_(False),
                 GameFieldRow.ends_on >= today - SETTLED_LOOKBACK,
             )
         ).all()
-    for user_id, run_id, tz_name, cadence in rows:
+        # How many entries share each (field, rank). `games_scoring_pass`
+        # writes STANDARD COMPETITION RANKING (1, 1, 3), so a shared rank is
+        # a real state and not a defensive branch — the live 2026-08-14 field
+        # has two entrants at rank 3 of 4. Counted over ALL entries in the
+        # field, desks included: a desk you tied with is still a tie, and
+        # dropping it would tell the player they finished alone at a rank
+        # they did not finish alone at.
+        tie_rows = s.execute(
+            select(GameEntryRow.field_id, GameEntryRow.final_rank,
+                   func.count(GameEntryRow.id))
+            .where(GameEntryRow.final_rank.is_not(None))
+            .group_by(GameEntryRow.field_id, GameEntryRow.final_rank)
+        ).all()
+    ties = {(f, r): int(c) for f, r, c in tie_rows}
+
+    for (user_id, run_id, tz_name, cadence, state, basis, final_rank,
+         scored_n, entrants, field_id) in rows:
+        placement = games_placement.resolve(
+            state=state, scoring_basis=basis, final_rank=final_rank,
+            scored_entrant_count=scored_n, entrant_count=entrants,
+            tie_count=ties.get((field_id, final_rank), 1),
+        )
+        title, body = games_placement.push_copy(placement, cadence=cadence)
         if _send(
             user_id=user_id, tz_name=tz_name, beat_type=TYPE_SETTLED,
-            title="Your run has settled",
-            body=f"Your {cadence} results are ready.",
+            title=title, body=body,
             deep_link={"screen": "games_close", "run_id": str(run_id)},
+            # UNCHANGED, and it must stay unchanged: `source_ref` is the
+            # dedupe key, so re-keying it on anything the new copy depends on
+            # would re-notify every player already told.
             source_ref=str(run_id), now=now,
         ):
             sent += 1
