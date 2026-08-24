@@ -761,3 +761,46 @@ in progress with **E5 the sole open item** and no device pass logged since yeste
 Beta (B1–B14) and MVP (M1–M12) unchanged at 0% started. No movement in the phase itself.
 
 No status flipped through this log — rows are the truth.
+
+## 2026-08-24
+
+Session-start check (CLAUDE.md step 2) — last section was 08-22, so 08-23 and today were both
+owed. Registers verified clean first (`gen_registers.py verify all`: DEF 365 rows, CR 201 rows,
+content identical to live — no drift to self-heal). Working list: **17 open Defects + 8 proposed
+CRs**. Per step 5, items carrying a standing disposition from the 08-20 classification sweep or the
+08-21 check-in were **not re-asked** — they were carried forward with their blocker named:
+
+- **DEF100 / DEF344 / CR084 / CR198** — `[PAYMENTS TRACK PARKED — 2026-08-21]`, unpark trigger is
+  DEF100's provisioning. Unchanged.
+- **CR022** — deferred-to-GTM ruling. Unchanged.
+- **CR159** — needed CR160 first; **CR160 is now `done`**, so the only remaining gate is Saiful's
+  go-ahead on whether the Floor re-band gets built at all ("may or may not be built", 08-09).
+- **CR161** (Tier-1 prospect trigger), **CR191** (horizontal-scale event) — both wait on an external
+  event, not on work. Unchanged.
+
+**Register correction made in this run (not a status flip through the log — the rows were edited by
+their domain owner and regenerated, per CLAUDE.md governance):** DEF340, DEF341 and DEF342 all
+carried landed, guarded fixes from 2026-08-20 and still read `open`. Verified by running their
+guards green (`finding_sections_test.dart::DEF340`, `def341_ticker_one_line_test.dart`,
+`def342_brief_bottom_inset_test.dart` — 12 tests, all passing) before touching the rows. Flipped to
+`fixed` in `eb8bf49e`. Same class as the CR136 sweep: the register had stopped describing reality.
+**DEF343 and DEF339 were checked the same way and are genuinely unfixed** — only their filing
+commits exist.
+
+Asked and answered:
+
+- **DEF204** (two divergent support-email processors on melehost, one auto-sending to real customers
+  off an unidentified trigger, each with its own plaintext credential) — asked: kill it now /
+  investigate first / you handle the mailbox / leave it? → Saiful: **"Leave it — it's working"**
+  → DEF204 closes as **by-design**; the auto-replies are intended.
+- **DEF178** (live Adanos key in git history — CR123's last hard blocker; rotation is a vendor
+  action) — asked: rotate now / rotate later and work the rest / drop the integration?
+  → Saiful: **"Rotate later — I'll work the rest"** → CR123's 11 Medium/Low items are mine to
+  work now; the umbrella stays open on DEF178 alone, with Saiful named as its sole blocker.
+- **The P18/DEF357 Dilemma** (DEF365 was the third instance inside CR172 alone; CLAUDE.md's
+  third-occurrence rule fired) — asked: convene / guard is enough / write the brief only?
+  → Saiful: **"Convene it — you may spawn agents"** → agents authorised for this Dilemma.
+- **DEF362 / CR162** (iOS onboarding walk failed a second time after both its named blockers were
+  fixed; a third failure is itself a Dilemma trigger) — asked: re-run once more / diagnose first /
+  park CR162? → Saiful: **"Diagnose before re-running"** → read the failure artifacts and find the
+  actual stopping point before spending a third run.
