@@ -804,3 +804,29 @@ Asked and answered:
   fixed; a third failure is itself a Dilemma trigger) — asked: re-run once more / diagnose first /
   park CR162? → Saiful: **"Diagnose before re-running"** → read the failure artifacts and find the
   actual stopping point before spending a third run.
+- **DEF205** (1-on-1 + Brief turns are unpriced — the row flags it as a product decision, not code)
+  — asked: 1 credit both / 1-on-1 cheaper than Brief / keep free / free monthly allowance then
+  charge? → Saiful: **"1 credit per turn, Brief the same"** → one flat rule for both surfaces.
+  Carries a reconciliation I must do rather than assume: `credits.md`'s Floor Pass **3-edit lifetime
+  cap** and DEF113's residual **"5 free 1-on-1s/month"** counter currently contradict each other and
+  now also contradict a flat per-turn price. Ruling covers the price; the counter reconciliation is
+  mine to resolve and to surface if it needs a second ruling.
+- **CR204 / CR205 / CR206** (CR172's tail — the two greek caps, per-`occ_symbol` FIFO lots, the
+  dividend feed) — asked: leave proposed / CR206 only / build all three? → Saiful: **"Build all
+  three now"** → all three move to `in_progress`. Note the standing caveat is unchanged: **0 of 42
+  mandates permit derivatives**, so none of this is exercised until Saiful enables it for someone.
+- **DEF144** (translation model code-switches CJK/Cyrillic into AR/MS, 11/288 = 3.8% measured, open
+  since 07-28, 4th ask) — asked: detector then re-run / detector only / discard and wait for the
+  external pass? → Saiful: **"Build the detector, then re-run"** → a script-range content guard
+  first, then re-translation through it.
+- **DEF200** (sync I/O on the event loop across ~93 async handlers — DEF183 closed only the OIDC
+  pair) — asked: keep the ratchet only / hot paths only / full sweep? → Saiful: **"Full sweep
+  now"** → all 93, before Beta puts real concurrency on the box.
+
+**Not asked, and why it still needs him.** DEF104's plaintext credential cannot be safely
+de-hardcoded while DEF204's ruling stands. The two are coupled: the fix moves the password out of
+source into an environment file, but **the thing that invokes the script has never been
+identified** — that is exactly what DEF204 recorded, and "leave it, it's working" means it stays
+unidentified. If the unknown trigger does not carry that environment, the processor breaks
+**silently** against real customer email, which is the CR040 failure class verbatim. Flagged to
+Saiful rather than attempted; DEF104 stays open with this as its named blocker.
