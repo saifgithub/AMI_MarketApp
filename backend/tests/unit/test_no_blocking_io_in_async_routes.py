@@ -87,6 +87,11 @@ _BLOCKING_LEAF_METHOD_NAMES = {
     # sub-passes) — declaring it a leaf NOW means the first caller must arrive
     # already wrapped, instead of the guard turning red on someone else's lane.
     "run_option_lifecycle",
+    # CR172 §12: options_snapshot fetches the option CHAIN for every open
+    # (underlying, expiry) to mark the legs. Ordinarily a cache hit behind
+    # portfolio_marks_snapshot on the same request, but a cold cache is a real
+    # network pass and the route must to_thread it either way.
+    "options_snapshot",
 }
 _BLOCKING_LEAF_FUNC_NAMES = {
     "build_live_data_block",

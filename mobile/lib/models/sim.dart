@@ -250,6 +250,9 @@ class SimOptionLeg {
     required this.strategyName,
     required this.daysToExpiry,
     this.openedAt,
+    this.mark,
+    this.unrealisedPnl,
+    this.markUnavailable = false,
   });
 
   final String id;
@@ -281,6 +284,25 @@ class SimOptionLeg {
 
   final DateTime? openedAt;
 
+  /// The live mid, or null when nobody is quoting this strike.
+  ///
+  /// **Null and 0.0 are different facts and must stay different.** A leg with
+  /// no two-sided quote has not gone to zero — it is unquoted. Server-supplied
+  /// (CR172 §11's marks feed); never derived here.
+  final double? mark;
+
+  /// `(mark − avgPremium) × quantity × multiplier`, signed by contract
+  /// direction so a short leg whose mark FELL shows a gain.
+  ///
+  /// Null exactly when [mark] is null. A 0.0 here would read as *flat* — a
+  /// measurement — when the truth is *not measured* (DEF059).
+  final double? unrealisedPnl;
+
+  /// The server's own statement that this leg could not be priced, so the card
+  /// never has to infer an absence from a null it might also get from an old
+  /// backend.
+  final bool markUnavailable;
+
   bool get isLong => quantity > 0;
   bool get isShort => quantity < 0;
 
@@ -311,6 +333,9 @@ class SimOptionLeg {
       // that visible as EXPIRED rather than silently plausible.
       daysToExpiry: (j['days_to_expiry'] as num?)?.toInt() ?? -99999,
       openedAt: DateTime.tryParse(j['opened_at'] as String? ?? ''),
+      mark: (j['mark'] as num?)?.toDouble(),
+      unrealisedPnl: (j['unrealised_pnl'] as num?)?.toDouble(),
+      markUnavailable: j['mark_unavailable'] as bool? ?? false,
     );
   }
 }
@@ -340,6 +365,20 @@ class SimOptionStructure {
 
   /// Net debit (positive) or credit (negative) at open.
   double get netCostBasis => legs.fold<double>(0, (a, l) => a + l.costBasis);
+
+  /// True only when EVERY leg carries a mark.
+  ///
+  /// All-or-nothing on purpose: a spread with one leg priced and one unquoted
+  /// has no meaningful structure P&L, and adding the priced half to the other
+  /// half's cost would produce a number that looks like a result and is not
+  /// one. One unmarked leg makes the whole structure unmarked.
+  bool get isFullyMarked =>
+      legs.isNotEmpty && legs.every((l) => l.unrealisedPnl != null);
+
+  /// The structure's unrealised P&L, or null when any leg is unmarked.
+  double? get unrealisedPnl => isFullyMarked
+      ? legs.fold<double>(0, (a, l) => a + l.unrealisedPnl!)
+      : null;
 
   /// Groups legs into structures, preserving server order (oldest first) and
   /// keeping each structure's legs in the order they arrived.

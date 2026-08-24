@@ -93,16 +93,6 @@ class OptionPositionsSection extends ConsumerWidget {
               Text(l.portfolioOptionsHeading, style: AmiTypography.labelMono),
         ),
         for (final s in structures) OptionStructureCard(structure: s),
-        // Stated once for the group, not once per card: it is a property of
-        // the missing feed, not of any one position.
-        Padding(
-          padding: const EdgeInsets.only(
-              bottom: AmiSpacing.s, left: AmiSpacing.xs, right: AmiSpacing.xs),
-          child: Text(
-            l.optionMarkUnavailable,
-            style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
-          ),
-        ),
       ],
     );
   }
@@ -135,6 +125,7 @@ class OptionStructureCard extends StatelessWidget {
       borderColor = AmiColors.slate700;
     }
     final net = structure.netCostBasis;
+    final pnl = structure.unrealisedPnl;
     final collateral = structure.collateralPosted;
 
     return Container(
@@ -214,6 +205,25 @@ class OptionStructureCard extends StatelessWidget {
           if (collateral > 0)
             Text(
               l.optionCollateralHeld(_money.format(collateral)),
+              style:
+                  AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            ),
+          const SizedBox(height: AmiSpacing.xs),
+          // The P&L, or the reason there isn't one. Never both, and never a
+          // zero standing in for the second: CR172 §11's feed returns no mark
+          // at all for a strike nobody is quoting, and `isFullyMarked` is
+          // all-or-nothing so a half-priced spread cannot show a figure that
+          // looks like a result.
+          if (pnl != null)
+            Text(
+              (pnl >= 0 ? '+\$' : '−\$') + _money.format(pnl.abs()),
+              style: AmiTypography.dataMd.copyWith(
+                color: pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed,
+              ),
+            )
+          else
+            Text(
+              l.optionMarkUnavailable,
               style:
                   AmiTypography.caption.copyWith(color: AmiColors.textLow),
             ),

@@ -6762,10 +6762,10 @@ abstract class AppLocalizations {
   /// **'Collateral held: \${amount}'**
   String optionCollateralHeld(String amount);
 
-  /// CR172 §12. Sits at the foot of the option group. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]
+  /// CR172 §12. Sits on the ONE structure card whose legs could not all be marked — scoped per structure, not per screen, because the rest of the book may well be priced. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'No live mark yet — this shows what the structure cost, not what it is worth today.'**
+  /// **'No live mark for this structure — showing what it cost, not what it is worth today.'**
   String get optionMarkUnavailable;
 
   /// CR171. Mono uppercase heading above the list of open short positions on the Portfolio screen. Separate from HOLDINGS because a short is not a holding — the user owes the shares rather than owning them. NEW key. retranslate:[ar,ms]

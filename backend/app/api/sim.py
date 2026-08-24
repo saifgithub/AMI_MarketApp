@@ -212,6 +212,40 @@ class ClosedShortOut(BaseModel):
     closed_at: datetime | None = None
 
 
+class OptionLegOut(BaseModel):
+    """CR172 §12 — one open option leg, as the Portfolio screen needs it.
+
+    Mirrors `schemas.trade.OptionLeg` and adds the two figures only a marks
+    pass can supply. **Both are nullable and that is the contract**: an option
+    on a strike with no two-sided quote has no honest mark, and a zero in
+    either field would report a total loss on a position that has merely gone
+    unquoted (DEF059). `mark_unavailable` says which case the client is in, so
+    the card can state the absence rather than render it as a number.
+
+    `days_to_expiry` is server-computed for the reason its own field note on
+    `OptionLeg` gives: `expiry` is a bare date, and two devices in different
+    zones would disagree about the count on the day it matters most.
+    """
+
+    id: UUID
+    occ_symbol: str
+    underlying: str
+    right: str
+    strike: float
+    expiry: date
+    quantity: float
+    avg_premium: float
+    multiplier: float
+    collateral_posted: float
+    strategy_id: UUID
+    strategy_name: str
+    days_to_expiry: int
+    opened_at: datetime
+    mark: float | None = None
+    unrealised_pnl: float | None = None
+    mark_unavailable: bool = False
+
+
 class PortfolioSnapshot(BaseModel):
     user_id: UUID
     portfolio_id: UUID
@@ -260,6 +294,18 @@ class PortfolioSnapshot(BaseModel):
     # history surface, not on a polled snapshot.
     shorts: list[ShortPositionOut] = Field(default_factory=list)
     closed_shorts: list[ClosedShortOut] = Field(default_factory=list)
+
+    # CR172 §12. Empty on every portfolio that has never opened a structure,
+    # which today is all of them (the path is gated on
+    # `mandate.compliance.derivatives_allowed`, which no current mandate sets).
+    #
+    # This field's ABSENCE was a defect (DEF365): the Flutter model and its
+    # whole card were built reading `options`, and this route never emitted it,
+    # so the feature could not have rendered on a device. Both sides' tests
+    # passed because both built their own fixtures. P18/DEF357, third instance
+    # inside CR172 — see `test_wire_contract_parity.py`, which now fails the
+    # build if a Dart model reads a key no route sends.
+    options: list[OptionLegOut] = Field(default_factory=list)
 
 
 class NavPointOut(BaseModel):
@@ -376,6 +422,35 @@ def _closed_short_out(row) -> ClosedShortOut:
     )
 
 
+def _option_leg_out(leg, option_marks) -> OptionLegOut:
+    """One open leg plus its mark, or plus an explicit statement of no mark.
+
+    **`unrealised_pnl` is None whenever `mark` is None**, never 0.0. The two
+    together are the whole point: a leg nobody is quoting has not gone to zero,
+    and a card that renders 0.00 in a P&L slot says *flat*, which is a
+    measurement, when the truth is *not measured* (DEF059). On a position that
+    decays by construction that is the most expensive false reading available.
+
+    The P&L is signed by contract direction, so a short leg whose mark has
+    FALLEN shows a gain: `(3 - 8) * -1 * 100 = +500` on a call written at 8 and
+    now worth 3.
+    """
+    mark = option_marks.marks.get(leg.occ_symbol)
+    if mark is None:
+        return OptionLegOut(
+            **leg.model_dump(), mark=None, unrealised_pnl=None,
+            mark_unavailable=True,
+        )
+    return OptionLegOut(
+        **leg.model_dump(),
+        mark=round(float(mark), 4),
+        unrealised_pnl=round(
+            (float(mark) - leg.avg_premium) * leg.quantity * leg.multiplier, 2,
+        ),
+        mark_unavailable=False,
+    )
+
+
 @router.get("/portfolio/{user_id}", response_model=PortfolioSnapshot)
 async def get_portfolio(
     user_id: UUID,
@@ -404,6 +479,14 @@ async def get_portfolio(
     # nothing fires at is the defect this CR exists to remove, so they cannot be
     # two derivations.
     brackets = await asyncio.to_thread(sim.position_brackets, user_id)
+    # CR172 §12 — the option book. Its own hop for the DEF120 reason every hop
+    # above has: `options_snapshot` reaches the chain, and on a cold cache that
+    # is a real network pass. Ordinarily a cache hit, since
+    # `portfolio_marks_snapshot` above has just warmed the same
+    # (underlying, expiry) pairs.
+    option_legs, option_marks = await asyncio.to_thread(
+        sim.options_snapshot, user_id,
+    )
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -434,6 +517,7 @@ async def get_portfolio(
         shares_committed=commitment.shares_committed,
         shorts=[_short_out(r, marks.get(r.ticker)) for r in open_shorts],
         closed_shorts=[_closed_short_out(r) for r in closed_shorts],
+        options=[_option_leg_out(o, option_marks) for o in option_legs],
     )
 
 

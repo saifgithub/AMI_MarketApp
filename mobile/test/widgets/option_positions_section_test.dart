@@ -32,6 +32,7 @@ Map<String, dynamic> _leg({
   String strategyId = 's1',
   String strategyName = 'long_call',
   double collateral = 0,
+  double? mark,
 }) =>
     {
       'id': 'leg-$right-$strike-$strategyId',
@@ -48,6 +49,10 @@ Map<String, dynamic> _leg({
       'strategy_name': strategyName,
       'days_to_expiry': dte,
       'opened_at': '2026-08-23T02:14:07Z',
+      if (mark != null) 'mark': mark,
+      if (mark != null)
+        'unrealised_pnl': (mark - premium) * quantity * 100.0,
+      'mark_unavailable': mark == null,
     };
 
 List<SimOptionLeg> _legs(List<Map<String, dynamic>> raw) =>
@@ -165,8 +170,16 @@ void main() {
       expect(find.textContaining('@'), findsNothing);
     });
 
-    testWidgets('no profit or loss is shown anywhere', (tester) async {
+    testWidgets('an unmarked structure shows no P&L, and says why',
+        (tester) async {
       await _pump(tester, _legs([_leg()]));
+      expect(
+        find.text(
+          'No live mark for this structure — showing what it cost, not what '
+          'it is worth today.',
+        ),
+        findsOneWidget,
+      );
       // Not a zero, not a percentage, not a signed figure. There is no marks
       // feed, so any of those would be manufactured.
       expect(find.textContaining('%'), findsNothing);
@@ -175,6 +188,53 @@ void main() {
       expect(find.textContaining('−\$'), findsNothing);
       // What it DOES say is what it cost.
       expect(find.text('Paid \$910.00 at open'), findsOneWidget);
+    });
+
+    testWidgets('a marked structure shows its P&L instead of the disclaimer',
+        (tester) async {
+      // Bought at 9.10, now 11.40 → +$230 on one contract.
+      await _pump(tester, _legs([_leg(mark: 11.40)]));
+      expect(find.text('+\$230.00'), findsOneWidget);
+      expect(find.textContaining('No live mark'), findsNothing);
+      // The cost is still stated: a P&L without its basis is half a fact.
+      expect(find.text('Paid \$910.00 at open'), findsOneWidget);
+    });
+
+    testWidgets('a loss is signed as one', (tester) async {
+      await _pump(tester, _legs([_leg(mark: 4.10)]));
+      expect(find.text('−\$500.00'), findsOneWidget);
+    });
+
+    testWidgets('a short leg whose mark FELL shows a gain', (tester) async {
+      // Wrote at 8.00, now 3.00. The naive (mark − cost) reading would call
+      // this a $500 loss; the position made $500.
+      await _pump(
+        tester,
+        _legs([
+          _leg(
+              strategyId: 'w', strategyName: 'naked_put', right: 'put',
+              strike: 180, quantity: -1, premium: 8.0, mark: 3.0),
+        ]),
+      );
+      expect(find.text('+\$500.00'), findsOneWidget);
+    });
+
+    testWidgets('a half-marked spread shows NO figure at all', (tester) async {
+      // THE case the all-or-nothing rule exists for: adding a priced leg to an
+      // unpriced leg's cost yields a number that looks like a result and is
+      // not one.
+      await _pump(
+        tester,
+        _legs([
+          _leg(strategyId: 'b', strategyName: 'bull_call_spread',
+              strike: 200, premium: 8.0, mark: 9.5),
+          _leg(strategyId: 'b', strategyName: 'bull_call_spread',
+              strike: 210, premium: 3.0, quantity: -1),
+        ]),
+      );
+      expect(find.textContaining('No live mark'), findsOneWidget);
+      expect(find.textContaining('+\$'), findsNothing);
+      expect(find.textContaining('−\$'), findsNothing);
     });
 
     testWidgets('a spread renders as one structure, not two loose legs',

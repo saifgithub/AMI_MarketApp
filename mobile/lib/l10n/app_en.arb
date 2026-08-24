@@ -5220,9 +5220,9 @@
       "amount": { "type": "String" }
     }
   },
-  "optionMarkUnavailable": "No live mark yet — this shows what the structure cost, not what it is worth today.",
+  "optionMarkUnavailable": "No live mark for this structure \u2014 showing what it cost, not what it is worth today.",
   "@optionMarkUnavailable": {
-    "description": "CR172 §12. Sits at the foot of the option group. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]"
+    "description": "CR172 §12. Sits on the ONE structure card whose legs could not all be marked — scoped per structure, not per screen, because the rest of the book may well be priced. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]"
   },
   "portfolioShortsHeading": "SHORT POSITIONS",
   "@portfolioShortsHeading": {

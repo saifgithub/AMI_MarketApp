@@ -995,6 +995,24 @@ class SimEngine:
             source,
         )
 
+    def options_snapshot(self, user_id: UUID):
+        """(open option legs, their marks) — CR172 §11/§12.
+
+        Its own hop, like `shorts_snapshot`, rather than a sixth element on
+        `portfolio_marks_snapshot`'s tuple: 44 call sites unpack that tuple and
+        none of the other 43 want this. The re-fetch is a **chain cache hit** in
+        the ordinary case — `OPTION_CHAIN_TTL_SECONDS` is 300s and
+        `portfolio_marks_snapshot` has just warmed exactly these
+        (underlying, expiry) pairs on the same request.
+
+        Declared in the DEF120 D9 guard because it reaches the network. A
+        route calling this without `asyncio.to_thread` parks the event loop.
+        """
+        from app.services.sim_options import option_marks_for
+
+        p = self.ensure_portfolio(user_id)
+        return p.options, _option_marks_for_portfolio(p)
+
     def valuation_snapshot(self, user_id: UUID) -> tuple[float, float]:
         """(total_value, drawdown_pct) from a single marks fetch — see
         `portfolio_marks_snapshot`. Used where only the two numbers are

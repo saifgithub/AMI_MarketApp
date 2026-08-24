@@ -4120,7 +4120,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionMarkUnavailable =>
-      'No live mark yet — this shows what the structure cost, not what it is worth today.';
+      'No live mark for this structure — showing what it cost, not what it is worth today.';
 
   @override
   String get portfolioShortsHeading => 'SHORT POSITIONS';
