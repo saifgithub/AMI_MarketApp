@@ -108,3 +108,23 @@ Nothing in scope was skipped. The Close screen's *sentence* still renders throug
 the server-resolved `field_size` so the two sides cannot drift. Replacing those strings with a
 server-authored sentence would move a localised surface to unlocalised English and is not an
 improvement.
+
+## Live verification on the promoted build (`alpha-2026-08-25-1`)
+
+Postflight 5/5. `get_close_payload` called inside the running container against the two real closed
+fields, which surfaced a fact worth recording:
+
+```
+rank 1 -> {'kind': 'thin_field', 'rank': 1, 'field_size': 4, 'tie_count': 1, 'asserts_position': False}
+rank 3 -> {'kind': 'thin_field', 'rank': 3, 'field_size': 4, 'tie_count': 2, 'asserts_position': False}
+rank 3 -> {'kind': 'ranked',     'rank': 3, 'field_size': 8, 'tie_count': 1, 'asserts_position': True}
+```
+
+**The 4-entrant field was scored against the benchmark, not as a field.** So its rank-1 entrant is
+`thin_field`, `asserts_position: False` — and is *not* told "You won your field", because the
+scoring never ranked them as a field. The naive version of this feature would have announced a win
+that the scoring did not produce. §Scope's decision that **`thin_field` outranks `champion`** is the
+rule that prevents it, and this is live evidence of it firing on real data rather than on a fixture.
+
+The tie is also detected on live data (`tie_count: 2` at rank 3 of the 08-14 field), which is
+DEF343's original screenshot, now resolved server-side.
