@@ -10,6 +10,7 @@ class ComplianceFlags {
     this.noFossilFuels = false,
     this.longOnly = true,
     this.liquidOnly = true,
+    this.derivativesAllowed = false,
     this.tickerBlocklist = const [],
     this.tickerAllowlist,
     this.customConstraints = const [],
@@ -21,6 +22,13 @@ class ComplianceFlags {
   final bool noFossilFuels;
   final bool longOnly;
   final bool liquidOnly;
+
+  /// CR172 §9 — the options gate. False unless the user's mandate explicitly
+  /// permits derivatives, which no mandate does by default. The client needs
+  /// it to decide whether the option limits are worth showing at all: four
+  /// controls for a capability you do not have is noise, not disclosure.
+  final bool derivativesAllowed;
+
   final List<String> tickerBlocklist;
   final List<String>? tickerAllowlist;
   final List<String> customConstraints;
@@ -32,6 +40,7 @@ class ComplianceFlags {
     bool? noFossilFuels,
     bool? longOnly,
     bool? liquidOnly,
+    bool? derivativesAllowed,
     List<String>? tickerBlocklist,
     List<String>? tickerAllowlist,
     bool clearAllowlist = false,
@@ -43,6 +52,7 @@ class ComplianceFlags {
           noTobaccoAlcoholGambling ?? this.noTobaccoAlcoholGambling,
       noFossilFuels: noFossilFuels ?? this.noFossilFuels,
       longOnly: longOnly ?? this.longOnly,
+      derivativesAllowed: derivativesAllowed ?? this.derivativesAllowed,
       liquidOnly: liquidOnly ?? this.liquidOnly,
       tickerBlocklist: tickerBlocklist ?? this.tickerBlocklist,
       tickerAllowlist: clearAllowlist ? null : (tickerAllowlist ?? this.tickerAllowlist),
@@ -57,6 +67,7 @@ class ComplianceFlags {
         'no_fossil_fuels': noFossilFuels,
         'long_only': longOnly,
         'liquid_only': liquidOnly,
+        'derivatives_allowed': derivativesAllowed,
         'ticker_blocklist': tickerBlocklist,
         if (tickerAllowlist != null) 'ticker_allowlist': tickerAllowlist,
       };
@@ -69,6 +80,7 @@ class ComplianceFlags {
       noFossilFuels: (j['no_fossil_fuels'] as bool?) ?? false,
       longOnly: (j['long_only'] as bool?) ?? true,
       liquidOnly: (j['liquid_only'] as bool?) ?? true,
+      derivativesAllowed: (j['derivatives_allowed'] as bool?) ?? false,
       tickerBlocklist: ((j['ticker_blocklist'] as List?) ?? const []).cast<String>(),
       tickerAllowlist: (j['ticker_allowlist'] as List?)?.cast<String>(),
     );
@@ -289,6 +301,10 @@ class UserMandate {
     this.maxTradesPerDay,
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
+    this.maxOptionPremiumPct,
+    this.maxOptionNotionalPct,
+    this.maxAssignmentExposurePct,
+    this.minDaysToExpiry,
     this.resolved,
     this.dayTraderPreset,
   });
@@ -329,6 +345,15 @@ class UserMandate {
   final DayTraderPresetInfo? dayTraderPreset;
   final String learningStyle;
   final ComplianceFlags compliance;
+
+  // CR172 §9 (D5) — the four option limits. Null means NO CAP, not "follow
+  // your risk profile": unlike the CR129 seven these do not resolve from
+  // `risk_score`, because no validated preset table for option limits exists
+  // and inventing one would show the user a number nobody derived.
+  final double? maxOptionPremiumPct;
+  final double? maxOptionNotionalPct;
+  final double? maxAssignmentExposurePct;
+  final int? minDaysToExpiry;
   final String plan;
   final DateTime? trialExpiresAt;
   final int creditBalance;
@@ -375,6 +400,13 @@ class UserMandate {
       maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
       maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
+      maxOptionPremiumPct:
+          (j['max_option_premium_pct'] as num?)?.toDouble(),
+      maxOptionNotionalPct:
+          (j['max_option_notional_pct'] as num?)?.toDouble(),
+      maxAssignmentExposurePct:
+          (j['max_assignment_exposure_pct'] as num?)?.toDouble(),
+      minDaysToExpiry: (j['min_days_to_expiry'] as num?)?.toInt(),
       resolved: j['resolved'] != null
           ? ResolvedCaps.fromJson((j['resolved'] as Map).cast<String, dynamic>())
           : null,

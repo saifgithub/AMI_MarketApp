@@ -4067,6 +4067,34 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get settingsOptionPremiumCapLabel => 'Option premium at risk';
+
+  @override
+  String get settingsOptionPremiumCapExplain =>
+      'The most you can have paid for options at once, across every open structure. Options lose value as they age, so this caps what time alone can take.';
+
+  @override
+  String get settingsOptionNotionalCapLabel => 'Option contract size';
+
+  @override
+  String get settingsOptionNotionalCapExplain =>
+      'How much stock your options control, as a share of your portfolio. One contract usually controls 100 shares, so a small premium can stand behind a very large position.';
+
+  @override
+  String get settingsAssignmentCapLabel => 'Assignment exposure';
+
+  @override
+  String get settingsAssignmentCapExplain =>
+      'The cash you would need if every option you sold were exercised against you today. It is not money set aside — it is money you could be asked for.';
+
+  @override
+  String get settingsMinDteLabel => 'Shortest time to expiry';
+
+  @override
+  String get settingsMinDteExplain =>
+      'AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right.';
+
+  @override
   String get portfolioOptionsHeading => 'OPTION POSITIONS';
 
   @override

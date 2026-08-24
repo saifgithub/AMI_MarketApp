@@ -35,7 +35,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-enum LimitKind { percent, count, hours }
+enum LimitKind { percent, count, hours, days }
 
 /// One settable limit's shape — key names and directionality only, never a
 /// numeric cap value (that would be exactly the client-side literal CR046's
@@ -72,6 +72,26 @@ const List<LimitFieldConfig> kRiskLimitFields = [
   LimitFieldConfig(key: 'max_trades_per_day', kind: LimitKind.count, presetLinked: true, higherIsLooser: true),
   LimitFieldConfig(key: 'max_trades_per_week', kind: LimitKind.count, presetLinked: true, higherIsLooser: true),
   LimitFieldConfig(key: 'max_open_risk_pct', kind: LimitKind.percent, presetLinked: true, higherIsLooser: true),
+];
+
+/// CR172 §9 (D5) — the four option limits, kept in their OWN list.
+///
+/// Separate from `kRiskLimitFields` for two reasons, both structural rather
+/// than cosmetic. They are the first fields with `presetLinked: false` — unset
+/// means NO CAP, not "following your risk profile" — so folding them into the
+/// seven would make every "Custom" and preset-match computation over that list
+/// answer a different question. And they only render for a mandate that
+/// permits derivatives, which today is none: four controls for a capability
+/// the user does not have is noise, not disclosure.
+///
+/// `min_days_to_expiry` is the one field here where a LOWER number is the
+/// looser setting — a shorter minimum admits shorter-dated options, which is
+/// the whole risk it exists to bound.
+const List<LimitFieldConfig> kOptionLimitFields = [
+  LimitFieldConfig(key: 'max_option_premium_pct', kind: LimitKind.percent, presetLinked: false, higherIsLooser: true),
+  LimitFieldConfig(key: 'max_option_notional_pct', kind: LimitKind.percent, presetLinked: false, higherIsLooser: true),
+  LimitFieldConfig(key: 'max_assignment_exposure_pct', kind: LimitKind.percent, presetLinked: false, higherIsLooser: true),
+  LimitFieldConfig(key: 'min_days_to_expiry', kind: LimitKind.days, presetLinked: false, higherIsLooser: false),
 ];
 
 /// Disclosure classes a pending edit can fall into. `none` renders nothing.
@@ -123,6 +143,14 @@ num? riskLimitServerValue(UserMandate m, String key) {
       return m.maxTradesPerWeek;
     case 'max_open_risk_pct':
       return m.maxOpenRiskPct;
+    case 'max_option_premium_pct':
+      return m.maxOptionPremiumPct;
+    case 'max_option_notional_pct':
+      return m.maxOptionNotionalPct;
+    case 'max_assignment_exposure_pct':
+      return m.maxAssignmentExposurePct;
+    case 'min_days_to_expiry':
+      return m.minDaysToExpiry;
     default:
       return null;
   }
@@ -241,7 +269,11 @@ class RiskLimitsSection extends StatelessWidget {
           ),
         ),
         if (expanded)
-          for (final cfg in kRiskLimitFields) ...[
+          for (final cfg in [
+            ...kRiskLimitFields,
+            // Only for a mandate that actually permits derivatives.
+            if (mandate.compliance.derivativesAllowed) ...kOptionLimitFields,
+          ]) ...[
             _LimitFieldRow(
               config: cfg,
               label: _labelFor(l, cfg.key),
@@ -273,6 +305,14 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxTradesPerWeekLabel;
       case 'max_open_risk_pct':
         return l.settingsRiskLimitsMaxOpenRiskLabel;
+      case 'min_days_to_expiry':
+        return l.settingsMinDteLabel;
+      case 'max_assignment_exposure_pct':
+        return l.settingsAssignmentCapLabel;
+      case 'max_option_notional_pct':
+        return l.settingsOptionNotionalCapLabel;
+      case 'max_option_premium_pct':
+        return l.settingsOptionPremiumCapLabel;
       default:
         return key;
     }
@@ -294,6 +334,14 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxTradesPerWeekExplain;
       case 'max_open_risk_pct':
         return l.settingsRiskLimitsMaxOpenRiskExplain;
+      case 'max_option_premium_pct':
+        return l.settingsOptionPremiumCapExplain;
+      case 'max_option_notional_pct':
+        return l.settingsOptionNotionalCapExplain;
+      case 'max_assignment_exposure_pct':
+        return l.settingsAssignmentCapExplain;
+      case 'min_days_to_expiry':
+        return l.settingsMinDteExplain;
       default:
         return '';
     }
@@ -350,7 +398,10 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
 
   String _formatForEdit(num? v) {
     if (v == null) return '';
-    if (widget.config.kind == LimitKind.count) return v.toInt().toString();
+    if (widget.config.kind == LimitKind.count ||
+        widget.config.kind == LimitKind.days) {
+      return v.toInt().toString();
+    }
     final d = v.toDouble();
     return d == d.roundToDouble() ? d.toInt().toString() : d.toString();
   }
@@ -363,6 +414,8 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
         return 'h';
       case LimitKind.count:
         return '';
+      case LimitKind.days:
+        return 'd';
     }
   }
 

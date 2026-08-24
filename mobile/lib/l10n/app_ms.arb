@@ -2987,7 +2987,15 @@
         "optionPaidAtOpen": "0de73b2a7741",
         "optionCollectedAtOpen": "8a1c6cb4c9b7",
         "optionCollateralHeld": "a5b23902bd61",
-        "optionMarkUnavailable": "d24a83e5e6d6"
+        "optionMarkUnavailable": "d24a83e5e6d6",
+        "settingsOptionPremiumCapLabel": "610595847e61",
+        "settingsOptionPremiumCapExplain": "9a053a41c704",
+        "settingsOptionNotionalCapLabel": "831d00a1dea8",
+        "settingsOptionNotionalCapExplain": "05cc1dbafa2c",
+        "settingsAssignmentCapLabel": "32dd3eaab858",
+        "settingsAssignmentCapExplain": "2cfbf81260e1",
+        "settingsMinDteLabel": "7bdac8d0d9dd",
+        "settingsMinDteExplain": "d8d048b00110"
     },
     "inboxTitle": "MESSAGES",
     "inboxBellSemantics": "{count, plural, =0{Messages} =1{1 unread message} other{{count} unread messages}}",
@@ -3128,5 +3136,13 @@
     "optionPaidAtOpen": "Paid ${amount} at open",
     "optionCollectedAtOpen": "Collected ${amount} at open",
     "optionCollateralHeld": "Collateral held: ${amount}",
-    "optionMarkUnavailable": "No live mark for this structure — showing what it cost, not what it is worth today."
+    "optionMarkUnavailable": "No live mark for this structure — showing what it cost, not what it is worth today.",
+    "settingsOptionPremiumCapLabel": "Option premium at risk",
+    "settingsOptionPremiumCapExplain": "The most you can have paid for options at once, across every open structure. Options lose value as they age, so this caps what time alone can take.",
+    "settingsOptionNotionalCapLabel": "Option contract size",
+    "settingsOptionNotionalCapExplain": "How much stock your options control, as a share of your portfolio. One contract usually controls 100 shares, so a small premium can stand behind a very large position.",
+    "settingsAssignmentCapLabel": "Assignment exposure",
+    "settingsAssignmentCapExplain": "The cash you would need if every option you sold were exercised against you today. It is not money set aside — it is money you could be asked for.",
+    "settingsMinDteLabel": "Shortest time to expiry",
+    "settingsMinDteExplain": "AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right."
 }

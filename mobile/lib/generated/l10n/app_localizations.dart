@@ -6676,6 +6676,54 @@ abstract class AppLocalizations {
   /// **'Covered {quantity} {ticker} — realised {pnl}'**
   String tradeTicketShortCovered(String quantity, String ticker, String pnl);
 
+  /// CR172 §9. Settings control label for max_option_premium_pct, a percentage of portfolio. Shown ONLY to a user whose mandate permits derivatives. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Option premium at risk'**
+  String get settingsOptionPremiumCapLabel;
+
+  /// CR172 §9. Plain-English explanation under the option premium cap control. TRANSLATOR NOTE: 'lose value as they age' is deliberately not the word 'theta' — this is the setting where a beginner most needs the idea rather than the term. Keep it concrete. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The most you can have paid for options at once, across every open structure. Options lose value as they age, so this caps what time alone can take.'**
+  String get settingsOptionPremiumCapExplain;
+
+  /// CR172 §9. Settings control label for max_option_notional_pct, a percentage of portfolio. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Option contract size'**
+  String get settingsOptionNotionalCapLabel;
+
+  /// CR172 §9. Explanation under the option notional cap. TRANSLATOR NOTE: the second sentence is the whole point of the control — the gap between what an option COSTS and what it CONTROLS. Do not compress it away. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'How much stock your options control, as a share of your portfolio. One contract usually controls 100 shares, so a small premium can stand behind a very large position.'**
+  String get settingsOptionNotionalCapExplain;
+
+  /// CR172 §9. Settings control label for max_assignment_exposure_pct, a percentage of portfolio. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Assignment exposure'**
+  String get settingsAssignmentCapLabel;
+
+  /// CR172 §9. Explanation under the assignment exposure cap. TRANSLATOR NOTE: the final clause distinguishes this from collateral, which IS set aside. A user who reads this as 'money held' will misjudge the risk in the safer direction, which is the dangerous one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The cash you would need if every option you sold were exercised against you today. It is not money set aside — it is money you could be asked for.'**
+  String get settingsAssignmentCapExplain;
+
+  /// CR172 §9. Settings control label for min_days_to_expiry, in days. The one option limit where a LOWER number is the riskier setting. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Shortest time to expiry'**
+  String get settingsMinDteLabel;
+
+  /// CR172 §9. Explanation under the minimum-days-to-expiry control. TRANSLATOR NOTE: 'no time to be right' is the intended meaning — the position can be correct about direction and still expire worthless. Keep that sense rather than a literal rendering about speed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right.'**
+  String get settingsMinDteExplain;
+
   /// CR172 §12. Mono uppercase heading above the list of open option structures on the Portfolio screen. Its own group, separate from HOLDINGS and SHORT POSITIONS, because an option is neither: it expires. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
