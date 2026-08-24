@@ -27,13 +27,53 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const _clientId = String.fromEnvironment('ALPACA_CLIENT_ID', defaultValue: '');
 const _redirectUri = 'amitrade://alpaca/callback';
 
-String _buildAuthUrl() => Uri(
+/// DEF373 (security review M12) — hosts this WebView may navigate to.
+///
+/// The delegate used to return `NavigationDecision.navigate` for ANY url, and
+/// JavaScript is unrestricted in here. A redirect off Alpaca therefore
+/// rendered attacker-controlled content inside a WebView the user has been
+/// told is their broker's login — a credential-phishing surface we built and
+/// pointed at ourselves.
+///
+/// Allowlisted by registrable domain rather than exact host, because Alpaca
+/// moves between `app.` and `api.` during the flow. Anything else is blocked
+/// and NAMED: if Alpaca ever routes through a third-party identity provider,
+/// this fails visibly with the host printed rather than mysteriously, which is
+/// the tradeable difference between a strict allowlist and a broken login.
+const allowedAuthHosts = {'alpaca.markets'};
+
+bool isAllowedAuthHost(Uri uri) {
+  if (uri.scheme != 'https') return false;
+  final host = uri.host.toLowerCase();
+  return allowedAuthHosts.any((d) => host == d || host.endsWith('.$d'));
+}
+
+/// DEF373 — a per-attempt CSRF nonce for the OAuth `state` parameter.
+///
+/// Without it, `_handleNavigation` exchanged ANY `code` that arrived on the
+/// callback url. An attacker who can get the victim's app to open a crafted
+/// callback links the victim's AMI install to the ATTACKER's Alpaca account —
+/// the victim then trades, and the attacker sees it. `state` is the standard
+/// answer: mint a nonce, send it, and refuse a callback that does not echo it.
+///
+/// `Random.secure()` explicitly — the default `Random()` is seeded
+/// predictably and a guessable nonce is not a nonce.
+String newOauthState() {
+  final r = Random.secure();
+  final bytes = List<int>.generate(32, (_) => r.nextInt(256));
+  return base64Url.encode(bytes).replaceAll('=', '');
+}
+
+String buildAuthUrl(String state) => Uri(
       scheme: 'https',
       host: 'app.alpaca.markets',
       path: '/oauth/authorize',
@@ -42,6 +82,7 @@ String _buildAuthUrl() => Uri(
         'client_id': _clientId,
         'redirect_uri': _redirectUri,
         'scope': 'account:write trading',
+        'state': state,
       },
     ).toString();
 
@@ -320,6 +361,9 @@ class _OAuthTab extends ConsumerStatefulWidget {
 
 class _OAuthTabState extends ConsumerState<_OAuthTab> {
   late final WebViewController _controller;
+
+  /// DEF373 — the nonce for the in-flight attempt; null when none is open.
+  String? _oauthState;
   bool _loading = true;
   bool _linking = false;
   String? _error;
@@ -342,17 +386,35 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
             onNavigationRequest: (req) => _handleNavigation(req),
           ),
         )
-        ..loadRequest(Uri.parse(_buildAuthUrl()));
+        ..loadRequest(Uri.parse(buildAuthUrl(_oauthState = newOauthState())));
     }
   }
 
   NavigationDecision _handleNavigation(NavigationRequest req) {
     final uri = Uri.tryParse(req.url);
-    if (uri == null) return NavigationDecision.navigate;
+    // DEF373 — an unparseable url used to be ALLOWED. Default to refusing
+    // what we cannot inspect; a navigation we cannot reason about is exactly
+    // the one to stop.
+    if (uri == null) return NavigationDecision.prevent;
 
     if (uri.scheme == 'amitrade' && uri.host == 'alpaca' && uri.path == '/callback') {
       final code = uri.queryParameters['code'];
       final error = uri.queryParameters['error'];
+      final returned = uri.queryParameters['state'];
+
+      // DEF373 — the CSRF check. A callback that does not echo the nonce we
+      // minted for THIS attempt is not the result of this attempt, whatever
+      // else it carries. Compared before the code is read, so a forged code
+      // is never handled at all.
+      if (returned == null || returned != _oauthState || _oauthState == null) {
+        setState(() => _error =
+            'That sign-in response did not match this attempt, so it was '
+            'ignored. Start the connection again.');
+        return NavigationDecision.prevent;
+      }
+      // One nonce, one use — a replayed callback must not work twice.
+      _oauthState = null;
+
       if (code != null) {
         _exchangeCode(code);
       } else {
@@ -360,7 +422,13 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
       }
       return NavigationDecision.prevent;
     }
-    return NavigationDecision.navigate;
+
+    if (isAllowedAuthHost(uri)) return NavigationDecision.navigate;
+
+    // Named, not silent — see `allowedAuthHosts`.
+    setState(() => _error =
+        'Sign-in tried to leave Alpaca (${uri.host}), so it was stopped.');
+    return NavigationDecision.prevent;
   }
 
   Future<void> _exchangeCode(String code) async {
