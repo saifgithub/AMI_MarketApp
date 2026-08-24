@@ -111,7 +111,7 @@ tickers held concurrently; adding to an existing holding doesn't count against i
 {_max_trades_per_week_text(mandate)} per week (UTC calendar day / Monday-start ISO week).
 - Total open-risk cap: {_max_open_risk_pct_text(mandate)} — the sum of (position \
 size % × stop distance %)/100 across all open positions, including this one.
-
+{_option_limits_block(mandate)}
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker, classification_universe=classification_universe, locale_allowed_universe=locale_allowed_universe, locale=mandate.locale)}
 
@@ -841,6 +841,49 @@ def _max_trades_per_day_text(m: Mandate) -> str:
 
 def _max_trades_per_week_text(m: Mandate) -> str:
     return f"{resolved_max_trades_per_week(m.risk_score, m.max_trades_per_week)}"
+
+
+def _option_limits_block(m: Mandate) -> str:
+    """CR172 §9 — the four option caps, rendered ONLY when at least one is set.
+
+    Silent on every mandate that sets none, which today is all of them: a list
+    of "not set" lines on every prompt is tokens spent teaching the agent about
+    limits nobody has. When one IS set, all set ones render together so the
+    agent reads the option regime in one place rather than inferring it.
+
+    Each line names the limit in its OWN units and says what it is measured
+    against — the book after the structure, not the structure alone. An agent
+    told "5% premium cap" without the book part will happily propose five 5%
+    structures.
+    """
+    lines: list[str] = []
+    if m.max_option_premium_pct is not None:
+        lines.append(
+            f"- Option premium-at-risk cap: {m.max_option_premium_pct}% of "
+            "portfolio — the net debit across ALL open structures plus this "
+            "one. A credit structure contributes 0, never a negative offset."
+        )
+    if m.max_option_notional_pct is not None:
+        lines.append(
+            f"- Option gross-notional cap: {m.max_option_notional_pct}% of "
+            "portfolio — Σ |contracts| × strike × 100 across the whole option "
+            "book, gross, so a long and a short leg do not cancel."
+        )
+    if m.max_assignment_exposure_pct is not None:
+        lines.append(
+            f"- Assignment-exposure cap: {m.max_assignment_exposure_pct}% of "
+            "portfolio — the cash required if every short put on the book were "
+            "assigned today."
+        )
+    if m.min_days_to_expiry is not None:
+        lines.append(
+            f"- Minimum days to expiry: {m.min_days_to_expiry} — measured "
+            "against the SOONEST-expiring leg. Structures dated shorter than "
+            "this are refused by the safety floor, not merely discouraged."
+        )
+    if not lines:
+        return ""
+    return "\n" + "\n".join(lines)
 
 
 def _max_open_risk_pct_text(m: Mandate) -> str:

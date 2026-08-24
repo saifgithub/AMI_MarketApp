@@ -244,6 +244,39 @@ class Mandate(BaseModel):
     # UTC basis, not `Mandate.timezone` — see `agents/safety_floor.py` for why.
     max_trades_per_day: int | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
     max_trades_per_week: int | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
+    # ── CR172 §9, D5 (ruled 2026-08-24): four of the six proposed option
+    # limits. Every one is a BOOK-level cap measured after the proposed
+    # structure is added — a cap applied one structure at a time is not a cap,
+    # because a user refused one 5%-of-NAV position simply opens five.
+    #
+    # `None` means "no explicit cap", and unlike the CR129 limits these do NOT
+    # resolve from `risk_score`: no preset table for option limits has been
+    # validated, and inventing one would put a number in front of a user that
+    # nobody derived (DEF059). The floor treats `None` as unlimited, which is
+    # safe here ONLY because `derivatives_allowed` is False by default — an
+    # uncapped option book requires deliberately turning derivatives on first.
+    #
+    # `max_portfolio_delta` and `max_portfolio_vega` are deliberately ABSENT.
+    # They need full-portfolio greek aggregation that does not exist, and D5
+    # defers them to their own CR rather than adding two fields that cannot be
+    # computed. Per the comment on `derivatives_allowed` above, a §9 field
+    # arrives with its four legs or it does not arrive.
+    #
+    # Percentage points of NAV (40.0 = 40%), matching `max_drawdown_pct`.
+    max_option_premium_pct: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
+    max_option_notional_pct: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
+    max_assignment_exposure_pct: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
+    # Days. Blocks 0DTE — the single most effective anti-gambling limit
+    # available, per §9. Measured against the SOONEST-expiring leg.
+    min_days_to_expiry: int | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
     # Sum of (position size % of portfolio) x (stop distance % below entry) /
     # 100 across open positions, in percentage points. Caps the portfolio's
     # total capital-at-risk-to-stops, not any single position. Requires a

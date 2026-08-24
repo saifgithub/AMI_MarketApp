@@ -547,6 +547,15 @@ def hydrate_brief_mandate(overrides: dict[str, Any] | None) -> Mandate:
         max_trades_per_day=o.get("max_trades_per_day"),
         max_trades_per_week=o.get("max_trades_per_week"),
         max_open_risk_pct=o.get("max_open_risk_pct"),
+        # CR172 §9 (D5) — the four option limits. `None` when omitted means
+        # "no explicit cap"; unlike the CR129 seven above, these do NOT resolve
+        # through a risk-tier preset, because no validated preset table for
+        # option limits exists and inventing one would put a number in front of
+        # a user that nobody derived.
+        max_option_premium_pct=o.get("max_option_premium_pct"),
+        max_option_notional_pct=o.get("max_option_notional_pct"),
+        max_assignment_exposure_pct=o.get("max_assignment_exposure_pct"),
+        min_days_to_expiry=o.get("min_days_to_expiry"),
         compliance=Compliance(**(o.get("compliance") or {})),
         learning_style=LearningStyle(o.get("learning_style", "quick")),
         plan=Plan(o.get("plan", "trial_trader")),

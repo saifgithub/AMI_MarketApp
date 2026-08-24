@@ -7,8 +7,8 @@ Two defences:
 See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 """
 
-from datetime import datetime, timezone
-from typing import Any
+from datetime import date, datetime, timezone
+from typing import Any, Sequence
 
 from pydantic import BaseModel, Field
 
@@ -902,6 +902,9 @@ def check_option_open(
     mandate: Mandate,
     *,
     shares_held: float = 0.0,
+    portfolio_value: float | None,
+    existing_structures: Sequence[Sequence[object]],
+    today: date | None = None,
 ) -> ComplianceResult:
     """The floor on OPENING an option structure — CR172 §8, §14 D3/D4.
 
@@ -926,6 +929,19 @@ def check_option_open(
       options sell-to-open on 2026-08-20. An advisory, so the trade proceeds
       and the user decides; it travels on the wire because an advisory that
       only reaches a log informs nobody (CR040).
+
+    **§9's four book-level caps** (D5, ruled 2026-08-24) are enforced against
+    `portfolio_value` and `existing_structures` — the book AFTER this structure
+    is added, never this structure alone, because a cap applied one structure
+    at a time is not a cap: a user refused one 5%-of-NAV position opens five.
+    `existing_structures` is a sequence of structures, not a flat leg list,
+    because premium-at-risk only nets WITHIN a structure (see `book_exposure`).
+
+    `portfolio_value=None` sends the three percentage caps to `not_evaluated`
+    rather than passing them: a cap measured against an unknown denominator is
+    not a cap that passed, which is the rule `check_exercise_outcome` already
+    states one function down. It does not BLOCK on that unknown, per DEF169 —
+    the exception to DEF169 here is the bounded-loss question below, not these.
 
     A structure that cannot be costed is REFUSED, and the reason is recorded
     in `not_evaluated` as well as in `violations`. That asymmetry is
@@ -996,6 +1012,55 @@ def check_option_open(
 
     if c.halal and sell_to_open:
         advisories.append(_HALAL_OPTION_ADVISORY)
+
+    # ── CR172 §9 — the four book-level caps ────────────────────────────────
+    from app.trading_math.option_strategy import book_exposure
+    from app.trading_math.option_strategy import (
+        min_days_to_expiry as _min_dte,
+    )
+
+    if mandate.min_days_to_expiry is not None:
+        dte = _min_dte(leg_list, today or datetime.now(timezone.utc).date())
+        if dte is None:
+            not_evaluated.append(
+                "no leg carried a readable expiry, so the minimum-days-to-expiry "
+                "limit could not be checked"
+            )
+        elif dte < mandate.min_days_to_expiry:
+            violations.append(
+                f"this structure expires in {dte} day(s) and your mandate sets a "
+                f"minimum of {mandate.min_days_to_expiry}. Short-dated options "
+                f"lose value fastest and leave no time to be right."
+            )
+            blocked_by = blocked_by or "compliance"
+
+    nav = float(portfolio_value) if portfolio_value is not None else 0.0
+    pct_caps = (
+        ("max_option_premium_pct", "premium_at_risk", "premium at risk"),
+        ("max_option_notional_pct", "gross_notional", "gross option notional"),
+        ("max_assignment_exposure_pct", "assignment_exposure",
+         "assignment exposure"),
+    )
+    wanted = [(f, a, lbl) for f, a, lbl in pct_caps
+              if getattr(mandate, f) is not None]
+    if wanted and nav <= 0:
+        # Not a pass and not a block: DEF169's rule, with the denominator named
+        # so the reason is legible rather than a silent skip.
+        not_evaluated.append(
+            "portfolio value was not available, so the option premium, notional "
+            "and assignment caps could not be measured against it"
+        )
+    elif wanted:
+        exposure = book_exposure(leg_list, [list(s) for s in existing_structures])
+        for field, attr, label in wanted:
+            cap = float(getattr(mandate, field))
+            used_pct = 100.0 * getattr(exposure, attr) / nav
+            if used_pct > cap:
+                violations.append(
+                    f"this would take your {label} to {used_pct:.1f}% of your "
+                    f"portfolio, over your {cap:.1f}% limit."
+                )
+                blocked_by = blocked_by or "concentration"
 
     return ComplianceResult(
         passed=len(violations) == 0,

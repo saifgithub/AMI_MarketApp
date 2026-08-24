@@ -25,7 +25,7 @@ from app.agents.safety_floor import (
     DERIVATIVES_NOT_PERMITTED,
     NAKED_CALL_REFUSAL,
     check_exercise_outcome,
-    check_option_open,
+    check_option_open as _check_option_open,
 )
 from app.schemas import Mandate
 from app.schemas.trade import Holding
@@ -401,3 +401,17 @@ def test_the_long_only_refusal_does_not_name_a_debit_spread_as_permitted():
             f"the refusal names {name} as remaining available, so the floor "
             f"must actually permit it"
         )
+
+
+# CR172 §9 — these tests predate the four book-level caps and ask about the
+# STRUCTURE rules (the gate, D3's naked call, D4's long_only, the halal
+# advisory). `check_option_open` now requires the book context so no production
+# caller can silently skip a cap; supplying none here is the explicit
+# "caps not under test in this file" choice. The caps have their own coverage
+# in test_cr172_option_caps.py and the four-leg probes.
+def check_option_open(legs, mandate, **kw):
+    kw.setdefault("portfolio_value", None)
+    kw.setdefault("existing_structures", ())
+    return _check_option_open(legs, mandate, **kw)
+
+

@@ -178,6 +178,13 @@ async def patch_mandate(
             ("max_trades_per_day", "max trades/day", ""),
             ("max_trades_per_week", "max trades/week", ""),
             ("max_open_risk_pct", "total open-risk cap", "%"),
+            # CR172 §9 (D5) — leg (b): a PATCH to any of these must read back
+            # in its OWN units, or it falls through to the bare "Mandate
+            # updated." that DEF197 filed against the CR101-BE1 pair.
+            ("max_option_premium_pct", "option premium-at-risk cap", "%"),
+            ("max_option_notional_pct", "option gross-notional cap", "%"),
+            ("max_assignment_exposure_pct", "assignment-exposure cap", "%"),
+            ("min_days_to_expiry", "minimum days to expiry", "d"),
         ):
             if field in updates and updates[field] != getattr(before, field):
                 old = getattr(before, field)

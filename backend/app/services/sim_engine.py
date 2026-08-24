@@ -3059,8 +3059,27 @@ class SimEngine:
                         portfolio_snapshot=portfolio,
                     )
 
+            # CR172 §9 — the four book-level caps need the book, not just this
+            # structure. Same reasoning as `shares_held` above: the floor
+            # reasons about one structure and cannot see the others, so
+            # whatever spans the book has to be assembled here.
+            #
+            # `portfolio.total_value()` with no marks holds every position at
+            # cost, which is the RIGHT denominator here and not a shortcut: a
+            # cap that moved with the market would refuse a structure at 10:31
+            # that it permitted at 10:30, and the user could not tell which
+            # rule had changed. The equity caps use the marked value because
+            # they gate a purchase priced at the mark; these gate the SIZE of
+            # an option book against the account, and CR129's caps are
+            # likewise measured against a stable base.
+            existing_structures = sim_options.open_structures_for_floor(s, p_row.id)
             compliance = check_option_open(
-                leg_list, mandate, shares_held=shares_held,
+                leg_list, mandate,
+                shares_held=shares_held,
+                portfolio_value=sim_options.portfolio_value_for_option_caps(
+                    portfolio,
+                ),
+                existing_structures=existing_structures,
             )
             if not compliance.passed:
                 logger.info(

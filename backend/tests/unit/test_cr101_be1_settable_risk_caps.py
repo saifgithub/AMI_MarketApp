@@ -21,6 +21,7 @@ fix + DEF062 survival) live in test_mandate_store.py next to the store they patc
 
 from __future__ import annotations
 
+import datetime as _dt
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone as _tz
@@ -30,7 +31,11 @@ from uuid import uuid4
 import pytest
 
 from app.agents.overlay_generator import _max_position_pct, _sector_cap_pct, generate_overlay
-from app.agents.safety_floor import check_mandate_compliance, single_name_cap_pct
+from app.agents.safety_floor import (
+    check_mandate_compliance,
+    check_option_open,
+    single_name_cap_pct,
+)
 from app.schemas import AgentId, Mandate, RiskComponents
 from app.schemas.mandate import enforced_limit_field_names
 from app.schemas.trade import Holding, OrderType, ProposedTrade, Side
@@ -331,6 +336,105 @@ def _probe_max_open_risk_pct(base_mandate: Mandate, store: MandateStore) -> None
     assert store.patch(uuid4(), {"max_open_risk_pct": 4.0}).max_open_risk_pct == 4.0  # (d)
 
 
+# ── CR172 §9 (D5) — the four option limits ─────────────────────────────────
+#
+# Each probe drives the REAL floor entry point, `check_option_open`, rather
+# than asserting on the arithmetic underneath it. That is deliberate and it is
+# DEF190's rule: assert at the fence, not on the layer in front of it. A probe
+# that called `book_exposure` directly would stay green if the floor stopped
+# calling it at all — which is exactly the state these fields were in before
+# they existed, and exactly what this invariant is here to prevent.
+
+_OPT_EXPIRY = "2027-03-19"
+_OPT_TODAY = _dt.date(2026, 8, 24)
+
+
+def _opt_leg(right, strike, qty, premium, expiry=_OPT_EXPIRY):
+    from app.trading_math.option_strategy import StrategyLeg
+
+    return StrategyLeg(
+        right=right, strike=strike, quantity=qty, premium=premium,
+        multiplier=100.0, expiry=expiry,
+    )
+
+
+def _derivatives_mandate(base_mandate: Mandate, **limits) -> Mandate:
+    """The base mandate with derivatives permitted — otherwise the gate
+    returns first and every probe below would pass for the wrong reason."""
+    # `long_only=False` too: the base mandate is long-only, and a short-put
+    # probe would otherwise be refused by THAT rule and never reach the cap
+    # under test — passing for the wrong reason, which is the whole failure
+    # mode this invariant exists to catch.
+    compliance = base_mandate.compliance.model_copy(
+        update={"derivatives_allowed": True, "long_only": False}
+    )
+    return base_mandate.model_copy(update={"compliance": compliance, **limits})
+
+
+def _probe_max_option_premium_pct(base_mandate: Mandate, store: MandateStore) -> None:
+    m = _derivatives_mandate(base_mandate, max_option_premium_pct=5.0)
+    # $910 of premium on a $10,000 book is 9.1%, over the 5% cap.
+    result = check_option_open(
+        [_opt_leg("call", 195.0, 1.0, 9.10)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+    )
+    assert not result.passed and result.blocked_by == "concentration"  # (a)
+    assert any("9.1%" in v and "5.0%" in v for v in result.violations)  # (b) own units
+    assert m.max_option_premium_pct == 5.0
+    assert "5.0%" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"max_option_premium_pct": 12.0}
+    ).max_option_premium_pct == 12.0  # (d)
+
+
+def _probe_max_option_notional_pct(base_mandate: Mandate, store: MandateStore) -> None:
+    m = _derivatives_mandate(base_mandate, max_option_notional_pct=100.0)
+    # 1 contract at strike 195 controls $19,500 of stock — 195% of a $10k book.
+    result = check_option_open(
+        [_opt_leg("call", 195.0, 1.0, 9.10)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+    )
+    assert not result.passed and result.blocked_by == "concentration"  # (a)
+    assert any("195.0%" in v for v in result.violations)  # (b)
+    assert "100.0%" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"max_option_notional_pct": 50.0}
+    ).max_option_notional_pct == 50.0  # (d)
+
+
+def _probe_max_assignment_exposure_pct(
+    base_mandate: Mandate, store: MandateStore,
+) -> None:
+    m = _derivatives_mandate(base_mandate, max_assignment_exposure_pct=25.0)
+    # A short put at 180 would need $18,000 if assigned — 180% of a $10k book.
+    result = check_option_open(
+        [_opt_leg("put", 180.0, -1.0, 4.50)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+    )
+    assert not result.passed and result.blocked_by == "concentration"  # (a)
+    assert any("180.0%" in v for v in result.violations)  # (b)
+    assert "25.0%" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"max_assignment_exposure_pct": 40.0}
+    ).max_assignment_exposure_pct == 40.0  # (d)
+
+
+def _probe_min_days_to_expiry(base_mandate: Mandate, store: MandateStore) -> None:
+    m = _derivatives_mandate(base_mandate, min_days_to_expiry=30)
+    # Expires in 2 days against a 30-day floor.
+    soon = (_OPT_TODAY + _dt.timedelta(days=2)).isoformat()
+    result = check_option_open(
+        [_opt_leg("call", 195.0, 1.0, 9.10, expiry=soon)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+    )
+    assert not result.passed  # (a)
+    assert any("2 day(s)" in v and "30" in v for v in result.violations)  # (b) days
+    assert "30" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"min_days_to_expiry": 7}
+    ).min_days_to_expiry == 7  # (d)
+
+
 # Every derived enforced-limit field must have a probe. This dict, not the
 # schema markers, is what a developer edits to add coverage for a new field —
 # but the NEXT test proves the two are kept in lockstep.
@@ -343,6 +447,10 @@ _FOUR_LEG_PROBES = {
     "max_trades_per_day": _probe_max_trades_per_day,
     "max_trades_per_week": _probe_max_trades_per_week,
     "max_open_risk_pct": _probe_max_open_risk_pct,
+    "max_option_premium_pct": _probe_max_option_premium_pct,
+    "max_option_notional_pct": _probe_max_option_notional_pct,
+    "max_assignment_exposure_pct": _probe_max_assignment_exposure_pct,
+    "min_days_to_expiry": _probe_min_days_to_expiry,
 }
 
 

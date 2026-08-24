@@ -397,3 +397,58 @@ def option_marks_for(legs: Sequence[OptionLeg]) -> OptionMarks:
     else:
         source = sources[0] if sources else ""
     return OptionMarks(marks=marks, source=source, unmarked=tuple(unmarked))
+
+
+def open_structures_for_floor(session, portfolio_id: UUID) -> list[list[StrategyLeg]]:
+    """Every open structure as floor-shaped legs, grouped by structure.
+
+    Grouped rather than flat because `book_exposure`'s premium-at-risk term
+    only nets WITHIN a structure — a flat list would let an open credit spread
+    offset the debit of a new long position, which is precisely what a
+    premium cap exists to stop.
+
+    Premium is `avg_premium`, the price the leg was actually opened at, not a
+    live mark. That is deliberate: these caps gate the size of the book against
+    the account, and a cap that moved with the chain would refuse at 10:31 what
+    it permitted at 10:30 with nothing the user did in between.
+    """
+    rows = session.execute(
+        select(SimOptionLegRow).where(
+            SimOptionLegRow.portfolio_id == portfolio_id,
+            SimOptionLegRow.state == "open",
+        )
+    ).scalars().all()
+    grouped: dict[UUID, list[StrategyLeg]] = {}
+    for r in rows:
+        grouped.setdefault(r.strategy_id, []).append(
+            StrategyLeg(
+                right=r.right,
+                strike=float(r.strike),
+                quantity=float(r.quantity),
+                premium=float(r.avg_premium),
+                multiplier=float(r.multiplier),
+                expiry=r.expiry.isoformat(),
+            )
+        )
+    return list(grouped.values())
+
+
+def portfolio_value_for_option_caps(portfolio) -> float:
+    """The denominator CR172 §9's percentage caps measure against.
+
+    Lives here rather than being called inline in `sim_engine` for a specific,
+    already-paid-for reason: `Portfolio.total_value` and `SimEngine.total_value`
+    are **the same name to a static reader**, and the DEF120 D9 guard walks
+    `SimEngine`'s methods by attribute reference. Calling `portfolio.total_value()`
+    inside `open_option_structure` therefore reads to the guard as the engine's
+    network-fanning method and marks the whole open path undeclared-unsafe.
+    `api/portfolio.py` records the same collision and the same conclusion: the
+    guard is right to be name-based, and the answer is to stop making the call
+    where it can be misread, not to waive it.
+
+    Marks are deliberately omitted, so every position is held at cost. A cap
+    that moved with the market would refuse at 10:31 what it permitted at
+    10:30 with nothing the user did in between, and the user could not tell
+    which rule had changed.
+    """
+    return portfolio.total_value()

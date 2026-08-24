@@ -40,6 +40,7 @@ break-evens are underlying prices, 2 dp.
 from __future__ import annotations
 
 import math
+from datetime import date
 from typing import Iterable, NamedTuple, Sequence
 
 from .greeks import Greeks
@@ -390,3 +391,109 @@ def option_legs_value(
 ) -> float:
     """Σ `option_leg_value` over (collateral, quantity, multiplier, mark)."""
     return sum(option_leg_value(c, q, m, k) for c, q, m, k in legs)
+
+
+# ── CR172 §9 — the portfolio-level option caps (D5: four of six) ────────────
+#
+# Each is a BOOK-level figure: the proposed structure plus everything already
+# open. A cap applied to one structure at a time is not a cap — a user refused
+# one 5%-of-NAV position opens five of them.
+#
+# `max_portfolio_delta` and `max_portfolio_vega` are deliberately NOT here.
+# They need full-portfolio greek aggregation, which does not exist, and D5
+# (ruled 2026-08-24) defers them to their own CR rather than shipping two caps
+# that cannot be computed beside four that can.
+
+
+class OptionBookExposure(NamedTuple):
+    """The three dollar figures the §9 percentage caps are measured against.
+
+    Dollars, not percentages: the cap compares them to NAV, and keeping the
+    division at the comparison site means there is exactly one place a zero or
+    negative NAV has to be handled.
+    """
+
+    premium_at_risk: float
+    """Net debit paid across the book. A credit structure contributes 0 rather
+    than a negative: premium *received* is not premium *at risk*, and letting
+    it offset a debit elsewhere would let a user fund an unlimited long book by
+    writing options — which is the opposite of what a theta cap is for."""
+
+    gross_notional: float
+    """`Σ |quantity| × strike × multiplier` — the §9 formula verbatim. Gross,
+    so a long and a short leg on the same strike do not cancel: both can be
+    assigned or exercised, and the cap asks how much contract the user is
+    standing behind, not what nets out on paper."""
+
+    assignment_exposure: float
+    """Cash required if every SHORT PUT were assigned today.
+
+    Short calls are excluded, and that is not an omission: an uncovered short
+    call is refused outright by D3, and a covered one needs no cash — the
+    shares are already posted. So the only assignment that can demand money is
+    a short put, at `strike × multiplier × |contracts|`."""
+
+
+def _leg_notional(leg: StrategyLeg) -> float:
+    return abs(float(leg.quantity)) * float(leg.strike) * float(leg.multiplier)
+
+
+def book_exposure(
+    proposed: Sequence[StrategyLeg],
+    existing: Sequence[Sequence[StrategyLeg]] = (),
+) -> OptionBookExposure:
+    """The book's option exposure if `proposed` were opened on top of `existing`.
+
+    `existing` is a sequence of STRUCTURES (each a sequence of legs), not a
+    flat leg list, because `premium_at_risk` is only meaningful per structure.
+    Netting debit against credit across the whole book would let a user fund a
+    long position by writing options elsewhere — the exact thing a theta cap
+    exists to stop — while netting *within* a structure is simply correct: a
+    bull call spread's premium at risk IS its net debit, not its long leg's
+    full premium.
+
+    Pure. Takes legs rather than a portfolio so the floor, the strategist's
+    candidate marking and any test ask the same question of the same
+    arithmetic — one derivation, per CR046.
+    """
+    structures: list[Sequence[StrategyLeg]] = [*existing, proposed]
+    all_legs = [leg for s in structures for leg in s]
+
+    def _net_debit(legs: Sequence[StrategyLeg]) -> float:
+        return math.fsum(
+            float(l.quantity) * float(l.premium) * float(l.multiplier) for l in legs
+        )
+
+    return OptionBookExposure(
+        # Each structure floored at zero INDEPENDENTLY, then summed.
+        premium_at_risk=math.fsum(max(0.0, _net_debit(s)) for s in structures),
+        gross_notional=math.fsum(_leg_notional(l) for l in all_legs),
+        assignment_exposure=math.fsum(
+            _leg_notional(l)
+            for l in all_legs
+            if l.right == "put" and float(l.quantity) < 0
+        ),
+    )
+
+
+def min_days_to_expiry(
+    legs: Sequence[StrategyLeg], today: date,
+) -> int | None:
+    """Days to the SOONEST expiry among `legs`, or None if none parses.
+
+    The soonest, because that is the leg that stops existing first — judging a
+    calendar spread by its far leg would wave through a structure half of which
+    expires tomorrow. None (not 0) when no leg carries a readable expiry, so a
+    caller cannot mistake "unknown" for "expires today"; the 0DTE cap then has
+    to say it could not evaluate rather than refuse or permit on a guess.
+    """
+    days: list[int] = []
+    for leg in legs:
+        raw = (leg.expiry or "").strip()
+        if not raw:
+            continue
+        try:
+            days.append((date.fromisoformat(raw) - today).days)
+        except ValueError:
+            continue
+    return min(days) if days else None

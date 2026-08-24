@@ -159,8 +159,6 @@ def test_marked_not_hidden_permitted_structures_carry_no_violation():
 
 def test_the_violation_text_is_the_floors_own():
     """One renderer of each rule (DEF098) — not a second copy in this module."""
-    from app.agents.safety_floor import check_option_open
-
     result = _build(mandate=_mandate(long_only=True))
     csp = _named(result, "cash_secured_put")
     floor = check_option_open(csp.legs, _mandate(long_only=True), shares_held=0.0)
@@ -358,6 +356,23 @@ def test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget():
         StrategyLeg(right="put", strike=95.0, quantity=-1.0, premium=4.7,
                     expiry="2026-10-16"),
     )
+
+
+# CR172 §9 — these tests predate the four book-level caps and ask about the
+# STRUCTURE rules (the gate, D3's naked call, D4's long_only, the halal
+# advisory). `check_option_open` now requires the book context so no production
+# caller can silently skip a cap; supplying none here is the explicit
+# "caps not under test in this file" choice. The caps have their own coverage
+# in test_cr172_option_caps.py and the four-leg probes.
+def check_option_open(legs, mandate, **kw):
+    from app.agents.safety_floor import check_option_open as _check_option_open
+
+
+    kw.setdefault("portfolio_value", None)
+    kw.setdefault("existing_structures", ())
+    return _check_option_open(legs, mandate, **kw)
+
+
     _c, near = st._size_to_budget(legs, budget_usd=9_000.0, shares_held=0.0)
     assert near is not None and "1.0x" in near
 
