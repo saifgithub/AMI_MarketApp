@@ -74,6 +74,8 @@ from app.db.models import (
     RevenueCatEventRow,
     RoomRunRow,
     SimHoldingRow,
+    SimOptionLegRow,
+    SimOptionTradeRow,
     SimPortfolioRow,
     SimTradeRow,
     SimWatchlistRow,
@@ -201,6 +203,7 @@ class MergeService:
             ).scalar_one_or_none()
             sim_trades_moved = 0
             sim_holdings_moved = 0
+            sim_options_moved = 0
             if source_portfolio is not None and target_portfolio is None:
                 # Adopter has no portfolio — move orphan's wholesale.
                 s.execute(
@@ -214,6 +217,13 @@ class MergeService:
                     .values(user_id=to_user_id)
                 )
                 sim_trades_moved = int(trades_moved.rowcount or 0)
+                # DEF368 — the option rows carry their own `user_id` and were
+                # never re-keyed here. The legs survived this branch (reads go
+                # by `portfolio_id`, which does not change) but every
+                # user_id-scoped option query was then pointing at the orphan.
+                sim_options_moved = _rekey_options(
+                    s, source_portfolio.id, to_user_id,
+                )
                 sim_holdings_moved = s.execute(
                     select(func.count()).select_from(SimHoldingRow).where(
                         SimHoldingRow.portfolio_id == source_portfolio.id
@@ -235,6 +245,17 @@ class MergeService:
                     .values(user_id=to_user_id, portfolio_id=target_portfolio.id)
                 )
                 sim_trades_moved = int(trades_moved.rowcount or 0)
+                # DEF368 — THE DESTRUCTIVE BRANCH. Equity trades are re-keyed
+                # to the adopter's portfolio just above; option legs were not,
+                # and `sim_option_legs.portfolio_id` is ondelete=CASCADE, so
+                # the delete below removed every one of them. The user
+                # consented to a structure, saw it on the portfolio card,
+                # claimed their account, and it was gone — silently, because a
+                # CASCADE is not a failure. Re-key BEFORE the delete.
+                sim_options_moved = _rekey_options(
+                    s, source_portfolio.id, to_user_id,
+                    portfolio_id=target_portfolio.id,
+                )
                 # CASCADE on sim_holdings.portfolio_id wipes the orphan's
                 # holdings when we delete the orphan portfolio.
                 s.execute(
@@ -243,6 +264,10 @@ class MergeService:
                 )
             counts["sim_trades"] = sim_trades_moved
             counts["sim_holdings"] = sim_holdings_moved
+            # DEF368 — reported, not just moved. A merge that names what it
+            # carried while silently dropping a table is the same class of
+            # failure one layer up.
+            counts["sim_option_legs"] = sim_options_moved
 
             # ── Game portfolios + trades (CR109 slice 2) ─────────────
             # Every game portfolio is its own row keyed by run_id — unlike
@@ -518,6 +543,38 @@ def _has_mandate(s, user_id: UUID) -> bool:
     return s.execute(
         select(MandateRow.id).where(MandateRow.user_id == user_id).limit(1)
     ).scalar_one_or_none() is not None
+
+
+def _rekey_options(s, source_portfolio_id, to_user_id, *, portfolio_id=None) -> int:
+    """DEF368 — move an orphan's option legs and structures to the adopter.
+
+    Both tables carry `user_id` AND `portfolio_id`, so both must move: the
+    first keeps user-scoped queries correct, the second is what keeps the rows
+    alive when the orphan portfolio is deleted (`ondelete="CASCADE"`).
+
+    `portfolio_id` is passed only in the both-have-portfolios branch, where
+    the orphan portfolio is about to be deleted and the rows must be adopted
+    into the target. In the other branch the portfolio row itself changes
+    owner, so its id is still correct and only `user_id` moves.
+
+    Returns the number of LEGS moved — the unit a user would recognise as
+    "my positions". Structures move with them and are not double-counted.
+    """
+    values = {"user_id": to_user_id}
+    if portfolio_id is not None:
+        values["portfolio_id"] = portfolio_id
+
+    legs = s.execute(
+        update(SimOptionLegRow)
+        .where(SimOptionLegRow.portfolio_id == source_portfolio_id)
+        .values(**values)
+    )
+    s.execute(
+        update(SimOptionTradeRow)
+        .where(SimOptionTradeRow.portfolio_id == source_portfolio_id)
+        .values(**values)
+    )
+    return int(legs.rowcount or 0)
 
 
 def _rekey_career_events(s, from_user_id: UUID, to_user_id: UUID) -> int:

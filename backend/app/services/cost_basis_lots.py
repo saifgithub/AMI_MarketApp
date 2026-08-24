@@ -284,3 +284,112 @@ def open_quantity(trades: Iterable[object]) -> float:
     (DEF098), and "it is only a sum" is exactly how the last one looked too.
     """
     return sum(lot.quantity_open for lot in compute_lots_fifo(trades))
+
+
+# ── CR205 — option lots, keyed per `occ_symbol` ───────────────────────────
+
+
+class OptionLot(NamedTuple):
+    """One option position's lot picture, in the units options are quoted in.
+
+    Separate from `Lot` rather than reusing it, because two of its fields
+    would silently mean something else. `entry_price` on an equity lot is
+    dollars per share; on an option it is the **premium per share**, and the
+    dollars that moved are `premium × multiplier × contracts`. Reusing `Lot`
+    would put a $9.10 premium next to a $195 share price in the same column
+    and invite the reader to add them.
+
+    `quantity` is SIGNED contracts, matching `SimOptionLegRow.quantity`: a
+    short leg is negative, and a lot picture that dropped the sign could not
+    distinguish a long call from the short call written against it.
+    """
+
+    occ_symbol: str
+    underlying: str
+    right: str
+    strike: float
+    expiry: object
+    entry_date: object
+    premium_per_share: float
+    multiplier: float
+    quantity: float
+    quantity_open: float
+    quantity_closed: float
+    cost_basis_total: float
+    realised_pnl: float
+    close_reason: str | None
+
+    @property
+    def is_open(self) -> bool:
+        return abs(self.quantity_open) > _EPS
+
+
+def compute_option_lots(legs: Iterable[object]) -> list[OptionLot]:
+    """One lot per option leg, oldest first.
+
+    **Why this is not `compute_lots_fifo` with a different key.** FIFO matches
+    a *sell* against earlier *buys* of the same fungible thing. Option legs in
+    this schema are not accumulated into a running position the way shares
+    are: each leg row IS one position, opened once and closed once, carrying
+    its own `state` / `close_price` / `realised_pnl`. There is nothing to
+    match — running FIFO over them would invent a queue the ledger does not
+    have, and the result would disagree with `realised_pnl` the moment two
+    legs on the same `occ_symbol` overlapped.
+
+    So this reports what the ledger says, per leg, keyed by `occ_symbol`. The
+    honest shape of the data, rather than the shape the equity path happens
+    to use.
+
+    `cost_basis_total` is signed the way the money moved: positive dollars
+    paid for a long leg, negative dollars received for a short one. Summing it
+    across a structure gives that structure's net debit, which is the same
+    figure `option_strategy` prices — one rule, not two.
+    """
+    out: list[OptionLot] = []
+    for leg in legs:
+        try:
+            qty = float(getattr(leg, "quantity", 0.0) or 0.0)
+            premium = float(getattr(leg, "avg_premium", 0.0) or 0.0)
+            mult = float(getattr(leg, "multiplier", 100.0) or 100.0)
+        except (TypeError, ValueError):
+            logger.warn(
+                "option_lot_malformed_leg",
+                occ_symbol=str(getattr(leg, "occ_symbol", "")),
+            )
+            continue
+
+        closed = str(getattr(leg, "state", "")) != "open"
+        realised = getattr(leg, "realised_pnl", None)
+        out.append(OptionLot(
+            occ_symbol=str(getattr(leg, "occ_symbol", "")),
+            underlying=str(getattr(leg, "underlying", "")),
+            right=str(getattr(leg, "right", "")),
+            strike=float(getattr(leg, "strike", 0.0) or 0.0),
+            expiry=getattr(leg, "expiry", None),
+            entry_date=getattr(leg, "opened_at", None),
+            premium_per_share=round(premium, 4),
+            multiplier=mult,
+            quantity=qty,
+            quantity_open=0.0 if closed else qty,
+            quantity_closed=qty if closed else 0.0,
+            cost_basis_total=round(premium * mult * qty, 2),
+            # None stays None. A leg the ledger has not settled has no
+            # realised figure, and 0.0 would read as "closed flat".
+            realised_pnl=(
+                round(float(realised), 2) if realised is not None else 0.0
+            ),
+            close_reason=getattr(leg, "close_reason", None),
+        ))
+
+    out.sort(key=lambda lot: (_ts(lot.entry_date), lot.occ_symbol))
+    return out
+
+
+def option_lots_by_symbol(legs: Iterable[object]) -> dict[str, list[OptionLot]]:
+    """`occ_symbol` → its lots, oldest first — the per-symbol view CR205 asks
+    for. Two legs on one contract (opened, closed, reopened) are two lots on
+    one key, which is exactly the history the holding screen needs."""
+    grouped: dict[str, list[OptionLot]] = {}
+    for lot in compute_option_lots(legs):
+        grouped.setdefault(lot.occ_symbol, []).append(lot)
+    return grouped

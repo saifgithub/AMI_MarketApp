@@ -1225,6 +1225,33 @@ class SimEngine:
             trades = [SimTrade.from_row(r) for r in rows]
         return compute_lots_fifo(trades, current_price=current_price)
 
+    def option_lots(self, user_id: UUID, underlying: str | None = None) -> dict:
+        """CR205 — the option half of `holding_lots`, keyed by `occ_symbol`.
+
+        Read-only over `sim_option_legs`, the same shape `holding_lots` is
+        over `sim_trades`. Optionally narrowed to one underlying, because the
+        holding-detail screen asks about one name at a time.
+
+        Not network-reaching (no marks fetch), so it needs no DEF120 D9
+        declaration — unlike `options_snapshot`, which does reach out and
+        carries one.
+        """
+        from app.db.models import SimOptionLegRow
+        from app.services.cost_basis_lots import option_lots_by_symbol
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return {}
+            q = select(SimOptionLegRow).where(
+                SimOptionLegRow.portfolio_id == p_row.id,
+            )
+            if underlying:
+                q = q.where(SimOptionLegRow.underlying == underlying.upper().strip())
+            legs = list(s.execute(q.order_by(SimOptionLegRow.opened_at.asc()))
+                        .scalars().all())
+            return option_lots_by_symbol(legs)
+
     # ── Trading ────────────────────────────────────────────────────────
 
     def submit(
