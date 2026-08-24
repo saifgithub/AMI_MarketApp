@@ -264,26 +264,43 @@ def stage_prompts(args):
                          "meta": {"sizes": ex["_meta"]["sizes"]}})
             stats["S6"] += 1
 
-    # S4 — PM verdict JSON, and S8 — concierge: neither is ticker-bound
+    # S4 — PM verdict JSON, and S8 — concierge.
+    # The comment here used to read "neither is ticker-bound". That was wrong for S4,
+    # and it is why these two surfaces were scored on training data: both recipes'
+    # set_tickers() hardcoded load_train_universe(), and their facts are
+    # sha256(salt|ticker)-deterministic, so every prompt came back byte-identical to a
+    # training row. Pass the held-out universe explicitly. The guard at the end of this
+    # stage now measures the overlap instead of asserting its absence in a print().
     import recipe8_room_format as r8
-    r8.set_tickers(0)
+    r8.set_tickers(0, universe=tks)
     for ex in r8.build_pm_examples()[:60]:
         rows.append({"surface": "S4", "ticker": ex["_meta"].get("ticker", "-"),
                      "system": ex["messages"][0]["content"],
                      "user": ex["messages"][1]["content"], "meta": {}})
         stats["S4"] += 1
 
+    # S8 — concierge. Only the cases that are genuinely held out.
+    # A lesson_case prompt is generated FROM a lesson, and every lesson is in the
+    # training mix, so those prompts are training rows no matter which tickers we
+    # pass — 41/48 of them were byte-identical before this filter. The advice_case /
+    # invented_case prompts are ticker- or template-driven and are held out once
+    # `tickers=tks` is threaded through. Take those, and let the guard below prove it.
+    # Restoring lesson_case coverage needs a lesson-level split in the TRAINING mix
+    # (open item; cannot be done for a run already in flight).
     lessons = r18.load_lessons()
-    cc, _ = r18.build(load_role_prompt("concierge"), lessons, 0)
-    for ex in cc[::12][:50]:
+    cc, _ = r18.build(load_role_prompt("concierge"), lessons, 0, tickers=tks)
+    held_out = [ex for ex in cc if not ex.get("_meta", {}).get("lesson_code")]
+    for ex in held_out[:60]:
         rows.append({"surface": "S8", "ticker": "-",
                      "system": ex["messages"][0]["content"],
                      "user": ex["messages"][1]["content"],
-                     "meta": {"lesson_code": ex["_meta"].get("lesson_code")}})
+                     "meta": {"lesson_code": None}})
         stats["S8"] += 1
+    print(f"[prompts] S8: {len(held_out)} held-out concierge cases available "
+          f"(of {len(cc)} total; lesson-driven cases excluded as trained-on)")
 
     import recipe9_refusal as r9
-    r9.set_tickers(20)
+    r9.set_tickers(20, universe=tks)
     for ex in r9.build_all()[:60]:
         m = ex.get("_meta", {})
         rows.append({"surface": "S7", "ticker": m.get("ticker", "-"),
@@ -292,13 +309,59 @@ def stage_prompts(args):
                      "meta": {"should_refuse": m.get("case") != "answerable_control"}})
         stats["S7"] += 1
 
+    _assert_held_out(rows, tks)
+
     with open(args.out, "w") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     print(f"[prompts] {len(rows)} held-out prompts -> {args.out}")
     print(f"[prompts] by surface: {dict(sorted(stats.items()))}")
-    print(f"[prompts] every ticker drawn from eval_tickers.txt "
-          f"({len(load_eval_tickers())} exclusions) and factsheets_eval/")
+
+
+def _assert_held_out(rows, eval_tickers):
+    """Fail the build if the eval set is not actually held out.
+
+    This replaces a print() that stated "every ticker drawn from eval_tickers.txt"
+    without checking it. It was false: S4 (60/60), S7 (59/60) and S8 (48/48) were
+    byte-identical to training rows — 167 of 456 prompts, 37% of the instrument —
+    because the recipes' set_tickers() hardcoded the TRAIN universe. The measured
+    "0% -> 93% refusal" win was a memorisation readout.
+
+    House rule (failure_patterns.md): an assurance that is printed rather than
+    enforced is not a guard. Two checks, both on the artifact, not the contract:
+      1. every ticker is from the held-out universe;
+      2. no prompt STRING appears in train.jsonl.
+    (2) is the one that matters — (1) alone would still pass a prompt whose text was
+    reproduced from a shared generator.
+    """
+    ok = set(eval_tickers) | {"-"}
+    stray = sorted({r["ticker"] for r in rows} - ok)
+    if stray:
+        raise SystemExit(f"DECONTAMINATION VIOLATION: {len(stray)} eval tickers are not "
+                         f"in eval_tickers.txt: {stray[:15]}")
+
+    train_path = os.path.join(KIT, "data", "train.jsonl")
+    if not os.path.exists(train_path):
+        print(f"[prompts] WARNING: {train_path} absent — verbatim-overlap check SKIPPED")
+        return
+    seen = set()
+    with open(train_path) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            for m in json.loads(line)["messages"]:
+                if m.get("role") == "user":
+                    seen.add(m["content"].strip())
+    dup = Counter(r["surface"] for r in rows if r["user"].strip() in seen)
+    if dup:
+        detail = ", ".join(f"{s}:{n}/{sum(1 for r in rows if r['surface'] == s)}"
+                           for s, n in sorted(dup.items()))
+        raise SystemExit(
+            f"DECONTAMINATION VIOLATION: {sum(dup.values())} of {len(rows)} eval prompts "
+            f"appear VERBATIM in train.jsonl ({detail}). These surfaces would measure "
+            f"memorisation, not generalisation. Fix the recipe's ticker universe (or "
+            f"hold lessons out of training) before scoring anything on this file.")
+    print(f"[prompts] decontamination OK: 0/{len(rows)} prompts appear in train.jsonl")
 
 
 # ── stage: score ─────────────────────────────────────────────────────────────

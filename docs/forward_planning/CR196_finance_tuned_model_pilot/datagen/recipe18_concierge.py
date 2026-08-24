@@ -160,13 +160,20 @@ def agent_case(agent_id: str, i: int) -> dict:
     return {"q": q, "a": a, "case": "agent_explain", "code": None}
 
 
-def build(system_prompt: str, lessons: list[dict], n_target: int) -> list[dict]:
+def build(system_prompt: str, lessons: list[dict], n_target: int,
+          tickers: list[str] | None = None) -> list[dict]:
     # Train universe only. The first version hardcoded AAPL/MSFT/JPM/TSLA and the
     # decontamination gate caught it: AAPL and TSLA are in the frozen 44 that measure
     # this model. A ticker named in an "should I buy X?" prompt is still eval text in
     # the training data.
+    #
+    # `tickers` lets the EVAL harness pass the held-out set. NOTE this only
+    # de-duplicates the ticker-bearing advice_case prompts: the lesson_case prompts are
+    # driven by lesson CONTENT, and every lesson is in the training mix, so S8 cannot be
+    # fully held out without a lesson-level split in the training data itself. The
+    # verbatim-overlap guard in eval_surfaces.py reports exactly how much remains.
     from common import load_train_universe
-    tickers = load_train_universe()[::97][:10]
+    tickers = list(tickers) if tickers else load_train_universe()[::97][:10]
     agent_ids = [a for a in load_agent_ids() if a in AGENT_DISPLAY]
     codes = {l["code"] for l in lessons}
     rows, stats = [], Counter()

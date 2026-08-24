@@ -134,10 +134,17 @@ DEFAULT_TICKERS = 800
 TICKERS = load_train_universe()[:DEFAULT_TICKERS]
 
 
-def set_tickers(n: int) -> None:
-    """Rebind the sample the build functions iterate over."""
+def set_tickers(n: int, universe: list[str] | None = None) -> None:
+    """Rebind the sample the build functions iterate over.
+
+    `universe` defaults to the train universe — the training-data path is unchanged.
+    The EVAL harness must pass the held-out set explicitly: this recipe's facts are
+    sha256(salt|ticker)-deterministic, so a shared ticker yields a byte-identical
+    prompt in both files. Hardcoding load_train_universe() here is what made 60/60
+    of S4's eval prompts verbatim training examples (measured 2026-08-24, AT:R70).
+    """
     global TICKERS
-    uni = load_train_universe()
+    uni = list(universe) if universe else load_train_universe()
     TICKERS = uni if n <= 0 or n >= len(uni) else uni[:n]
 
 

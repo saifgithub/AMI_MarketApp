@@ -92,9 +92,13 @@ DEFAULT_TICKERS = 115
 TICKERS = load_train_universe()[:DEFAULT_TICKERS]
 
 
-def set_tickers(n: int) -> None:
+def set_tickers(n: int, universe: list[str] | None = None) -> None:
+    """`universe` defaults to the train universe; the EVAL harness must pass the
+    held-out set. See recipe8_room_format.set_tickers — the same hardcoded
+    load_train_universe() made 59/60 of S7's eval prompts verbatim training
+    examples, which is what produced the bogus 0% -> 93% refusal result."""
     global TICKERS
-    uni = load_train_universe()
+    uni = list(universe) if universe else load_train_universe()
     TICKERS = uni if n <= 0 or n >= len(uni) else uni[:n]
 
 
