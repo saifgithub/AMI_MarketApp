@@ -291,6 +291,8 @@ def build_candidates(
     stop: float | None = None,
     realised_vol: float | None = None,
     now: datetime.datetime | None = None,
+    portfolio_value: float | None = None,
+    existing_structures: Sequence[Sequence[StrategyLeg]] = (),
 ) -> CandidateSet:
     """Every structure this chain supports for this direction, fully costed.
 
@@ -456,7 +458,16 @@ def build_candidates(
         greeks, greeks_missing = _greeks_for(
             [(q, qty * contracts) for q, qty in parts]
         )
-        compliance = check_option_open(legs, mandate, shares_held=shares_held)
+        # CR172 §9 — marked with the SAME book context the open path enforces
+        # with, so a candidate the floor will refuse is never offered as though
+        # it would be accepted. Without this the user would meet the cap only
+        # after saying yes, which is the late-refusal shape DEF305 is about.
+        compliance = check_option_open(
+            legs, mandate,
+            shares_held=shares_held,
+            portfolio_value=portfolio_value,
+            existing_structures=existing_structures,
+        )
         per_candidate: list[str] = []
         if size_reason:
             per_candidate.append(f"sized at one contract — {size_reason}")
@@ -509,6 +520,8 @@ def cost_existing_structure(
     shares_held: float = 0.0,
     days_to_expiry: int,
     rationale: str = "",
+    portfolio_value: float | None = None,
+    existing_structures: Sequence[Sequence[StrategyLeg]] = (),
 ) -> OptionCandidate | None:
     """Re-cost a structure that already exists, against this chain.
 
@@ -555,7 +568,12 @@ def cost_existing_structure(
     if metrics is None:
         return None
     greeks, greeks_missing = _greeks_for(parts)
-    compliance = check_option_open(costed, mandate, shares_held=shares_held)
+    compliance = check_option_open(
+        costed, mandate,
+        shares_held=shares_held,
+        portfolio_value=portfolio_value,
+        existing_structures=existing_structures,
+    )
     contracts = int(max(abs(leg.quantity) for leg in costed)) if costed else 0
     return OptionCandidate(
         strategy_name=strategy_name,
