@@ -259,7 +259,23 @@ def spend(user_id: UUID, amount: int | None, *, reason: str) -> tuple[int, int]:
     cost = 0
 
     with get_session() as s:
-        user = s.get(User, user_id)
+        # DEF369 (security review M3) — SELECT ... FOR UPDATE. Everything below
+        # is a read-modify-write on `credit_balance`: read the balance, compare
+        # it to the cost, write the difference. Two concurrent spends that both
+        # read the same starting balance both pass the check and the second
+        # write clobbers the first, so a user with 1 credit can buy two Rooms.
+        #
+        # It was latent, not theoretical, and the review said why: masked by a
+        # single worker plus await-free callers. **DEF205 removed that mask** —
+        # 1-on-1 and Brief now spend through here too, both are SSE streams,
+        # and both are reachable 12x/minute per user with a shared concurrency
+        # cap of more than one. The window is now real.
+        #
+        # `with_for_update` is a no-op on SQLite (the test fixture), which is
+        # why the guard for this asserts the compiled Postgres SQL rather than
+        # trying to race two sessions — see
+        # `test_def369_spend_takes_a_row_lock.py`.
+        user = s.get(User, user_id, with_for_update=True)
         if user is None:
             raise LookupError(f"user {user_id} not found")
         eff = _ensure_period(s, user)

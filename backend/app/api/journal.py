@@ -4,7 +4,7 @@ GET    /v1/journal/{user_id}                 list entries (filter + search + pag
 GET    /v1/journal/{user_id}/entry/{id}      single entry detail
 POST   /v1/journal/{user_id}/entry/{id}/note attach a user note + tags + outcome
 DELETE /v1/journal/{user_id}/entry/{id}      soft-delete (sets deleted_at; not destroyed)
-POST   /v1/journal                           append (used by internal capture
+POST   /v1/journal                           DELETED (DEF371) — see the note below
                                               hooks and free-form notes)
 """
 
@@ -15,6 +15,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
+from app.api.admin import get_admin
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import SimTradeRow, User
@@ -215,12 +216,33 @@ async def restore_entry(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
 
 
-@router.post("", response_model=JournalEntry, status_code=status.HTTP_201_CREATED)
-async def append_entry(
-    draft: JournalEntryCreate,
-    current_user: User = Depends(get_current_user),
-    store: JournalStore = Depends(get_journal_store),
-) -> JournalEntry:
-    if current_user.id != draft.user_id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    return store.append(draft)
+# DEF371 (security review M11) — `POST /v1/journal` was DELETED, not gated.
+#
+# The finding: `_activity_days` counts `JournalEntryRow.created_at` from any
+# source, and this route accepted an arbitrary entry from any authenticated
+# user. One throwaway POST a day walked the 7/30/100/365 streak ladder for
+# **630 real credits** while doing nothing the streak exists to reward.
+#
+# The review's suggested fix was "only system-generated entry types qualify".
+# That does not work as stated: EVERY value of `EntryType` is
+# system-generated — room_run, sim_trade, lesson_complete, all of them are
+# written by internal capture. There is no user-authored type to exclude, so a
+# type filter excludes nothing. The vector was the route.
+#
+# Gating it behind `get_admin` was tried first and does not work either: this
+# router already carries `dependencies=[Depends(get_current_user)]`, and both
+# gates read the same `Authorization` header, so a caller presenting the admin
+# secret cannot also present a user bearer. The route would have been
+# satisfiable by nobody — an outage with good intentions.
+#
+# Deleting it costs nothing, which is why it is the right answer:
+#   * the app never called it — `api_client.dart` uses `/v1/journal/{user}`
+#     (read), `/entry/{id}`, `/note`, `/restore`, `/trash`, never the bare POST;
+#   * internal capture (`sim_trade_effects`, `room_runner`, `daily_challenge`,
+#     …) calls `get_journal_store().append(...)` in Python and never crosses
+#     HTTP;
+#   * a repo-wide search for callers returned only this defect's own test.
+#
+# No caller, one abuser — the same shape as C2's unauthenticated LLM proxy.
+# If an operator path is ever genuinely needed, it belongs on the admin router
+# with its own auth, not on the user-facing journal router.

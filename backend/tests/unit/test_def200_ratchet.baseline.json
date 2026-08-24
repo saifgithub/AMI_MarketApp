@@ -27,7 +27,6 @@
     "feedback.py::list_resolution_updates",
     "feedback.py::submit_bug_report",
     "journal.py::annotate_entry",
-    "journal.py::append_entry",
     "journal.py::delete_entry",
     "journal.py::get_entry",
     "journal.py::list_entries",

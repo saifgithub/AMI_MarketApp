@@ -43,6 +43,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.services.prompt_safety import sanitize_for_prompt
 # `_relative_age` is the same concept on both feeds — how old is the artifact we
 # just handed the agent — and news_context already owns the renderer this module
 # depends on for its liveness markers. A second copy would be one more number
@@ -685,7 +686,16 @@ def build_social_context_block(ticker: str) -> str | None:
         lines.append(caveat)
     if s.sample_snippets:
         lines.append("Sample community reactions (context only — do NOT quote verbatim or attribute to a user):")
-        lines += [f"- {snippet[:200]}" for snippet in s.sample_snippets]
+        # DEF370 (M10) — a Reddit snippet is attacker-authorable text going
+        # verbatim into a prompt. `[:200]` bounded its LENGTH and nothing
+        # about its STRUCTURE: a newline plus a box-drawing run let a post
+        # impersonate one of our own section headers. Sanitised, then capped.
+        lines += [
+            f"- {clean}" for clean in (
+                sanitize_for_prompt(snippet, limit=200)
+                for snippet in s.sample_snippets
+            ) if clean
+        ]
     lines.append(
         "(Real Reddit-only aggregate for this ticker. No Twitter/X, StockTwits, "
         "Google Trends, or Discord data exists. Synthesize the vibe in your own "

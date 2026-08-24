@@ -42,6 +42,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.services.prompt_safety import sanitize_for_prompt
 from app.services.market_data import get_market_data_provider
 
 # CR147 B.2 / CR179 Leg 3 — 3 → 5. Three headlines was the News Analyst's
@@ -426,11 +427,14 @@ def format_headline(item: LiveHeadline) -> str:
     measured, the biggest real assembled prompt is ~12% of this model's window,
     and the observed summary maximum is 500 chars.
     """
-    title = (item.title or "").replace("\n", " ").strip()
+    # DEF370 (M10) — was `.replace("\n", " ")`, which handled the newline and
+    # not the box-drawing glyphs our own section headers are made of. One rule
+    # for both feeds now; a headline is as attacker-authorable as a Reddit post.
+    title = sanitize_for_prompt(item.title)
     line = f"\"{title}\" ({item.publisher or 'unknown publisher'}, {_relative_age(item.published_at)})"
     if item.sentiment:
         line += f" — sentiment: {item.sentiment}"
-    summary = (getattr(item, "summary", "") or "").replace("\n", " ").strip()
+    summary = sanitize_for_prompt(getattr(item, "summary", ""))
     if summary:
         line += f" — {summary}"
     return line
