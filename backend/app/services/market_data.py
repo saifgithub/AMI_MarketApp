@@ -159,6 +159,13 @@ OPTION_MAX_SPREAD_PCT = 0.25
 # CR172 §4 — chain-specific cache TTLs (the 60s quote TTL is wrong here: a
 # chain is a bigger, slower-moving payload; the expiry list changes daily).
 OPTION_CHAIN_TTL_SECONDS = 300.0
+
+# CR206 — dividend history's cache TTL. Far longer than the chain's 300s
+# because the underlying fact moves on a different clock: a chain reprices
+# every tick, while a dividend is declared once a quarter and its ex-date is
+# known weeks ahead. Re-fetching it per lifecycle sweep would be a per-ticker
+# network call a day for a number that changed last quarter.
+DIVIDEND_HISTORY_TTL_SECONDS = 6 * 60 * 60.0
 OPTION_EXPIRIES_TTL_SECONDS = 3600.0
 
 
@@ -249,6 +256,25 @@ _PERIOD_MAP: dict[str, tuple[str, str, int, int]] = {
 VALID_PERIODS: tuple[str, ...] = tuple(_PERIOD_MAP.keys())
 
 
+@dataclass(frozen=True)
+class DividendPayment:
+    """One dividend that was ACTUALLY paid, with the date it went ex.
+
+    CR206 exists because the obvious source is wrong. `EarningsInfo` already
+    carries `dividend_rate`, but that is the **annual** per-share figure, and
+    D9's early-assignment rule needs the amount of the **next single
+    payment**. Dividing by four assumes a quarterly payer: US large caps
+    mostly are, monthly REITs and semi-annual ADRs are not, and the number
+    decides whether a real user's position is taken away early. An assumed
+    per-payment amount is DEF059's shape on a rule with a consequence, so
+    this carries a measured payment instead.
+    """
+
+    ex_date: datetime.date
+    amount_per_share: float
+    source: str
+
+
 class MarketDataProvider(Protocol):
     name: str
 
@@ -299,6 +325,20 @@ class MarketDataProvider(Protocol):
         `OptionChain.source` MUST identify the leaf provider that served
         it — wrappers forward the inner's chain untouched, exactly as
         `quote()` forwards `Quote.source`.
+        """
+        ...
+
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        """Dividends actually paid on `underlying`, oldest first, or None.
+
+        CR206. **None and `[]` are different answers and must stay so.** None
+        is "this provider could not tell you" — the feed errored, or does not
+        carry dividends — and the early-assignment rule must then report
+        `not_evaluated` rather than deciding. `[]` is a measurement: this
+        company pays no dividend, so there is no early-assignment trigger and
+        the rule can say so with confidence. Collapsing them would turn an
+        outage into a confident "your short call is safe", which is DEF059
+        pointed at a position that can be taken away.
         """
         ...
 
@@ -450,6 +490,15 @@ class MockWalkProvider:
         )
         return None
 
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        # CR206 — None, never []. The mock invents prices; inventing a
+        # dividend would let D9 decide a real assignment off a fabricated
+        # number, and returning [] would assert "this company pays nothing",
+        # which is a measurement this provider has not made. Same posture as
+        # `expiries` above: dark, and loudly so.
+        logger.warn("mock_walk_dividends_unavailable", underlying=underlying)
+        return None
+
 
 # ── Yahoo Finance ────────────────────────────────────────────────────────
 
@@ -545,6 +594,13 @@ class YahooQuoteProvider:
         )
         return None
 
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        # CR206 — the keyless endpoint carries no dividend series. Not wired,
+        # said out loud, and None rather than [] for the reason in the
+        # protocol docstring.
+        logger.warn("yahoo_keyless_dividends_not_wired", underlying=underlying)
+        return None
+
     def close(self) -> None:
         self._client.close()
 
@@ -572,6 +628,9 @@ class CachingProvider:
         # expiry LIST changes at most daily.
         self._expiries_cache: dict[str, tuple[list[datetime.date], float]] = {}  # underlying → (dates, expires_at)
         self._chain_cache: dict[str, tuple[OptionChain, float]] = {}  # f"{underlying}:{expiry}" → (chain, expires_at)
+        # CR206 — underlying → (payments, expires_at). Its own TTL, because a
+        # dividend is declared once a quarter while a chain reprices per tick.
+        self._dividend_cache: dict[str, tuple[list[DividendPayment], float]] = {}
         self._lock = RLock()
         self.name = f"cache({inner.name})"
 
@@ -672,6 +731,26 @@ class CachingProvider:
                 self._chain_cache[key] = (chain, now + OPTION_CHAIN_TTL_SECONDS)
         return chain
 
+
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        """CR206 — cached for `DIVIDEND_HISTORY_TTL_SECONDS`.
+
+        **An empty list is cached; a None is not.** `[]` is a measurement
+        ("pays no dividend") and is as cacheable as any other. `None` is a
+        failure, and caching a failure for six hours would turn one bad
+        request into six hours of `not_evaluated` on every short call.
+        """
+        key = underlying.upper().strip()
+        now = time.time()
+        with self._lock:
+            hit = self._dividend_cache.get(key)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        paid = self._inner.dividend_history(underlying)
+        if paid is not None:
+            with self._lock:
+                self._dividend_cache[key] = (paid, now + DIVIDEND_HISTORY_TTL_SECONDS)
+        return paid
     def invalidate(self, ticker: str | None = None) -> None:
         with self._lock:
             if ticker is None:
@@ -696,6 +775,10 @@ class CachingProvider:
                 self._chain_cache = {
                     k: v for k, v in self._chain_cache.items() if not k.startswith(f"{t}:")
                 }
+                # CR206 — keyed by bare underlying, so an exact-key drop, not
+                # a prefix one. A `startswith` here would also evict AAPLD's
+                # entry when AAPL is invalidated.
+                self._dividend_cache.pop(t, None)
 
 
 # ── yfinance (preferred over raw Yahoo HTTP) ─────────────────────────────
@@ -997,6 +1080,52 @@ class YfinanceProvider:
             source=self.name,
         )
 
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        """CR206 — the ACTUAL payments, from `Ticker.dividends`.
+
+        This is the whole point of the CR. `EarningsInfo.dividend_rate` is
+        already on hand and is the annual figure; deriving a per-payment
+        amount from it means assuming a payment frequency, and the assumption
+        is wrong for monthly REITs and semi-annual ADRs. `Ticker.dividends`
+        is a series of payments that really happened, indexed by ex-date, so
+        the most recent entry is a measured number.
+
+        An empty series is returned as `[]`, not None: yfinance answered, and
+        the answer is that this company has never paid one.
+        """
+        t = underlying.upper().strip()
+        try:
+            series = self._yf.Ticker(t).dividends
+        except Exception as exc:
+            logger.warn("yfinance_dividends_error", underlying=t, error=str(exc))
+            return None
+        if series is None:
+            return None
+
+        out: list[DividendPayment] = []
+        try:
+            for idx, amount in series.items():
+                ex = getattr(idx, "date", None)
+                ex = ex() if callable(ex) else idx
+                if not isinstance(ex, datetime.date):
+                    continue
+                if isinstance(ex, datetime.datetime):
+                    ex = ex.date()
+                value = float(amount)
+                # A zero or negative payment is not a payment. Dropped rather
+                # than carried, so "most recent" cannot land on a placeholder
+                # row and report a $0.00 dividend as this quarter's.
+                if not math.isfinite(value) or value <= 0:
+                    continue
+                out.append(DividendPayment(ex_date=ex, amount_per_share=value,
+                                           source=self.name))
+        except Exception as exc:
+            logger.warn("yfinance_dividends_parse_error", underlying=t, error=str(exc))
+            return None
+
+        out.sort(key=lambda d: d.ex_date)
+        return out
+
 
 # ── Fallback chain ───────────────────────────────────────────────────────
 
@@ -1065,6 +1194,16 @@ class FallbackProvider:
         if chain is not None:
             return chain
         return self._secondary.option_chain(underlying, expiry)
+
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        # CR206 — falls through only on None ("could not tell"), NEVER on an
+        # empty list. `[]` is a real measurement meaning "pays no dividend",
+        # and falling through it would let a secondary that knows nothing
+        # overwrite a primary that knows something.
+        paid = self._primary.dividend_history(underlying)
+        if paid is not None:
+            return paid
+        return self._secondary.dividend_history(underlying)
 
 
 # ── History provenance ───────────────────────────────────────────────────
@@ -1205,6 +1344,15 @@ class AsOfStoreProvider:
             "asof_store_no_options_history",
             underlying=underlying, expiry=expiry.isoformat(),
             as_of=self._as_of.isoformat(),
+        )
+        return None
+
+    def dividend_history(self, underlying: str) -> list[DividendPayment] | None:
+        # CR206 — a historical replay must not be handed today's dividends;
+        # that is the look-ahead this provider exists to prevent.
+        logger.warn(
+            "asof_store_no_dividend_history",
+            underlying=underlying, as_of=self._as_of.isoformat(),
         )
         return None
 

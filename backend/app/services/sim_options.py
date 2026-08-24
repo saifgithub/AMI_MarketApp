@@ -45,6 +45,7 @@ from sqlalchemy import select
 from app.db.models import SimOptionLegRow, SimOptionTradeRow, SimPortfolioRow
 from app.schemas.trade import OptionLeg
 from app.services.option_instruments import format_occ_symbol
+from app.services.option_lifecycle import DividendEvent
 from app.trading_math.option_strategy import (
     StrategyLeg,
     shares_needed_to_cover_calls,
@@ -331,6 +332,30 @@ class OptionMarks(NamedTuple):
     unmarked: tuple[str, ...]
     """`occ_symbol`s with no honest mark, so a caller can name them."""
 
+    greeks: dict[str, object] = {}
+    """CR204 — `occ_symbol` → per-SHARE `Greeks`, from the same fetch.
+
+    The chain this function already pulls carries computed greeks on every
+    enriched quote and this function used to discard them, which is why the
+    two greek-level caps of §9 could not be built. Kept per share, in M15's
+    conventions, exactly as `EnrichedOptionQuote.greeks` supplies them: the
+    contract-level scaling (`x multiplier x contracts`) is the aggregator's
+    job, and doing it here would bake a position size into a per-strike fact.
+
+    Only legs whose greeks were actually computed appear. A leg with no usable
+    IV has no entry — never a zero, because `0.0 delta` is a confident claim
+    that the position has no directional exposure."""
+
+    ungreeked: tuple[str, ...] = ()
+    """`occ_symbol`s whose greeks could not be computed.
+
+    Separate from `unmarked` because they are different failures: a leg can
+    have a perfectly good mid and no greeks (no usable IV, or no risk-free
+    rate — `EnrichedChain.rate is None` makes EVERY greek unevaluable while
+    leaving mids intact). A portfolio delta summed over only the legs that
+    HAD greeks is a number presented as complete that is not — CR040's case,
+    and the reason this list exists rather than a silent subset."""
+
 
 def _strike_key(strike: float) -> int:
     """Strikes as integer tenths-of-a-cent, for dict lookup.
@@ -358,7 +383,7 @@ def option_marks_for(legs: Sequence[OptionLeg]) -> OptionMarks:
     and never *mocked*. That is the §11 guard, inherited rather than restated.
     """
     if not legs:
-        return OptionMarks(marks={}, source="", unmarked=())
+        return OptionMarks(marks={}, source="", unmarked=(), greeks={}, ungreeked=())
 
     from app.services.option_chain import get_enriched_chain
 
@@ -369,25 +394,40 @@ def option_marks_for(legs: Sequence[OptionLeg]) -> OptionMarks:
     marks: dict[str, float] = {}
     unmarked: list[str] = []
     sources: list[str] = []
+    greeks: dict[str, object] = {}
+    ungreeked: list[str] = []
 
     for (underlying, expiry), group in groups.items():
         chain = get_enriched_chain(underlying, expiry)
         if chain is None:
             # Already logged loudly by `get_enriched_chain` with its reason.
             unmarked.extend(leg.occ_symbol for leg in group)
+            ungreeked.extend(leg.occ_symbol for leg in group)
             continue
         sources.append(chain.spot_source)
         by_right: dict[str, dict[int, float]] = {"call": {}, "put": {}}
+        greeks_by_right: dict[str, dict[int, object]] = {"call": {}, "put": {}}
         for right, quotes in (("call", chain.calls), ("put", chain.puts)):
             for q in quotes:
                 if q.mid is not None and q.mid > 0:
                     by_right[right][_strike_key(q.quote.strike)] = float(q.mid)
+                # CR204 — kept independently of the mid. A strike can carry
+                # usable greeks with no two-sided quote, and vice versa; tying
+                # them together would drop one on the other's failure.
+                if q.greeks is not None:
+                    greeks_by_right[right][_strike_key(q.quote.strike)] = q.greeks
         for leg in group:
-            mid = by_right.get(leg.right, {}).get(_strike_key(leg.strike))
+            key = _strike_key(leg.strike)
+            mid = by_right.get(leg.right, {}).get(key)
             if mid is None:
                 unmarked.append(leg.occ_symbol)
             else:
                 marks[leg.occ_symbol] = mid
+            g = greeks_by_right.get(leg.right, {}).get(key)
+            if g is None:
+                ungreeked.append(leg.occ_symbol)
+            else:
+                greeks[leg.occ_symbol] = g
 
     if unmarked:
         # Not the chains' source, even when some legs priced: the set as a whole
@@ -396,7 +436,8 @@ def option_marks_for(legs: Sequence[OptionLeg]) -> OptionMarks:
         source = "unavailable"
     else:
         source = sources[0] if sources else ""
-    return OptionMarks(marks=marks, source=source, unmarked=tuple(unmarked))
+    return OptionMarks(marks=marks, source=source, unmarked=tuple(unmarked),
+                       greeks=greeks, ungreeked=tuple(ungreeked))
 
 
 def open_structures_for_floor(session, portfolio_id: UUID) -> list[list[StrategyLeg]]:
@@ -452,3 +493,93 @@ def portfolio_value_for_option_caps(portfolio) -> float:
     which rule had changed.
     """
     return portfolio.total_value()
+
+
+# ── CR206 — the dividend feed D9's early-assignment rule needs ────────────
+
+
+class DividendFeed(NamedTuple):
+    """Per-underlying next-dividend events, plus what could not be resolved.
+
+    `unresolved` is not decoration. `early_assignment_due` returns False when
+    it has no dividend, and False here means *"no early assignment"* — which
+    is indistinguishable, on the leg's own event, from *"we checked and it is
+    safe"*. §7 already reports an unjudgeable leg as `not_evaluated`; this is
+    the list that lets it keep doing so once a feed exists but a particular
+    ticker is missing from it.
+    """
+
+    events: dict[str, object]
+    unresolved: tuple[str, ...]
+
+
+def next_dividend_for(underlyings: Sequence[str], *, today: date | None = None) -> DividendFeed:
+    """The next cash dividend per underlying — measured amount, known ex-date.
+
+    **Why the amount comes from payment history and not from
+    `EarningsInfo.dividend_rate`.** That field is on hand and is the *annual*
+    per-share figure. D9 needs the *next single payment*, and turning one into
+    the other means assuming a payment frequency: `rate / 4` is right for the
+    quarterly payers that dominate US large caps and wrong for monthly REITs
+    and semi-annual ADRs. The number decides whether a real user's short call
+    is assigned early and their shares called away, so an assumed value here
+    is DEF059's shape pointed at a position that can be taken away. The most
+    recent ACTUAL payment is a measurement.
+
+    **The ex-date comes from `EarningsInfo`, the amount from the series.**
+    They answer different questions — *when is the next one* and *how big are
+    they* — and no single source gives both reliably: the payment series is
+    historical by construction (it cannot name a future ex-date), while the
+    annual rate cannot size one payment.
+
+    A ticker resolves to **no event** — not a zero — when it has never paid
+    (`[]` from the provider), when its dividend is suspended (payments exist
+    but no upcoming ex-date), or when the ex-date has already passed. Those
+    are all *measurements* and belong in `events` as an absence. A ticker
+    whose feed could not answer at all goes to `unresolved`, and the leg's
+    event keeps saying `not_evaluated`.
+    """
+    from app.services.market_data import get_market_data_provider
+
+    today = today or datetime.now(timezone.utc).date()
+    provider = get_market_data_provider()
+    events: dict[str, object] = {}
+    unresolved: list[str] = []
+
+    for raw in dict.fromkeys(u.upper().strip() for u in underlyings if u):
+        payments = provider.dividend_history(raw)
+        if payments is None:
+            unresolved.append(raw)
+            continue
+        if not payments:
+            continue  # measured: pays no dividend, so no trigger exists
+
+        ex = _upcoming_ex_date(provider, raw, today)
+        if ex is None:
+            # Payments exist but no upcoming ex-date is published — a
+            # suspended or as-yet-undeclared dividend. Measured absence.
+            continue
+
+        latest = max(payments, key=lambda d: d.ex_date)
+        events[raw] = DividendEvent(ex_date=ex, amount_per_share=latest.amount_per_share)
+
+    return DividendFeed(events=events, unresolved=tuple(unresolved))
+
+
+def _upcoming_ex_date(provider, ticker: str, today: date):
+    """The next ex-dividend date, or None. `EarningsInfo` carries it as ISO."""
+    try:
+        info = provider.earnings(ticker)
+    except Exception:
+        return None
+    raw = getattr(info, "ex_dividend_date", None) if info is not None else None
+    if not raw:
+        return None
+    try:
+        ex = date.fromisoformat(str(raw)[:10])
+    except ValueError:
+        return None
+    # yfinance's `exDividendDate` is often the LAST one rather than the next.
+    # A past ex-date cannot trigger a future assignment, and treating it as
+    # one would assign against a dividend already paid.
+    return ex if ex > today else None

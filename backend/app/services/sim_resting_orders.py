@@ -79,6 +79,7 @@ from app.db.models import (
     SimTradeRow,
 )
 from app.services.market_data import Quote
+from app.services import sim_options
 from app.services.mandate_store import resolve_mandate
 from app.services.sim_engine import (
     LIVE_RESTING_STATES,
@@ -471,20 +472,75 @@ def _sweep_option_lifecycle(engine: SimEngine, user_id: UUID | None) -> int:
     `_quote_is_fillable` — a leg it cannot trust is left open and reported
     `not_evaluated`, never settled on a number nobody checked.
 
-    `dividends` / `option_marks` are not supplied: the feeds do not exist yet
-    (§11's tail), so the D9 early-assignment pass cannot run and says so on
-    every short call it would have judged, rather than reporting them safe.
+    **CR206 — `dividends` and `option_marks` are supplied now.** They were
+    not, for CR172's whole life: this docstring used to end *"the feeds do not
+    exist yet (§11's tail), so the D9 early-assignment pass cannot run"*, and
+    so every open short call was reported `not_evaluated` every single day.
+    Honest, and completely inert — the rule was written, correct, and had
+    never once run. `option_marks` came from `sim_options.option_marks_for`
+    (CR172 §11); the dividend half is CR206's.
+
+    Both are resolved PER USER rather than once for the sweep, because the
+    marks are per-leg and a user with no open legs must not pay for a fetch.
+    A ticker the dividend feed cannot answer for stays out of the dict, so
+    that leg keeps saying `not_evaluated` — the absence is preserved rather
+    than filled in with a zero.
     """
     users = [user_id] if user_id is not None else _users_with_open_option_legs()
     events = 0
     for uid in users:
         try:
+            dividends, option_marks = _option_lifecycle_feeds(engine, uid)
             events += len(
-                engine.run_option_lifecycle(uid, mandate=resolve_mandate(uid, None))
+                engine.run_option_lifecycle(
+                    uid, mandate=resolve_mandate(uid, None),
+                    dividends=dividends, option_marks=option_marks,
+                )
             )
         except Exception:  # pragma: no cover — one user must not stop the sweep
             logger.exception("sim_option_lifecycle_sweep_failed", user_id=str(uid))
     return events
+
+
+def _option_lifecycle_feeds(engine: SimEngine, user_id: UUID) -> tuple[dict, dict]:
+    """CR206 — the two feeds D9 needs, or empty dicts.
+
+    Deliberately total: any failure yields empty dicts, which is exactly the
+    pre-CR206 behaviour (the pass cannot run and says `not_evaluated`). A
+    dividend feed that breaks must degrade to the honest silence it replaced,
+    never take the whole lifecycle sweep down with it — expiry and assignment
+    matter more than early assignment, and they run in the same pass.
+    """
+    # `options_snapshot` rather than a fresh fetch: it already returns
+    # (legs, marks) in one hop, is declared in the DEF120 D9 guard because it
+    # reaches the network, and its chain fetch is a cache hit in the ordinary
+    # case. A second path to the same two facts is how two ledgers drift.
+    legs: list = []
+    marks: dict = {}
+    try:
+        legs, option_marks = engine.options_snapshot(user_id)
+        marks = dict(option_marks.marks)
+    except Exception:
+        logger.exception("option_lifecycle_marks_failed", user_id=str(user_id))
+    if not legs:
+        return {}, {}
+
+    dividends: dict = {}
+    try:
+        feed = sim_options.next_dividend_for([leg.underlying for leg in legs])
+        dividends = feed.events
+        if feed.unresolved:
+            # Said out loud, once per sweep per user. A short call on one of
+            # these keeps reporting `not_evaluated`, and this is the line that
+            # explains why rather than leaving it looking like a bug.
+            logger.warn(
+                "option_dividend_feed_unresolved",
+                user_id=str(user_id), underlyings=list(feed.unresolved),
+            )
+    except Exception:
+        logger.exception("option_lifecycle_dividends_failed", user_id=str(user_id))
+
+    return dividends, marks
 
 
 def _check_option_margin(engine: SimEngine, user_id: UUID | None) -> int:
