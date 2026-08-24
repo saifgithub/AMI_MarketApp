@@ -30,9 +30,32 @@ Lesson-authored example parameters (strike, premium, expiry prices) — pedagogi
 market data.
 
 ## Consumed by
-**No production caller yet — by design.** Wave-1 lesson authoring (M15 lessons + their quizzes)
-routes every payoff/break-even figure through these. Simulation-only constraint unchanged: options
-are taught as literacy, never tradable in-app.
+**The constraint moved on 2026-08-24 (AT:R74, CR172 §13), and this entry moved with it.**
+
+It used to read: *"No production caller yet — by design… options are taught as literacy, never
+tradable in-app."* Both halves are now false, and the second was a **policy** statement rather than
+a fact about the code — which is exactly why it had to be rewritten here rather than left as
+harmless staleness. A ledger entry that records a constraint the product no longer holds is worse
+than no entry: it is the file a future session would consult to find out whether options are
+tradable, and it would answer wrongly.
+
+**What changed:** Saiful cleared the derivatives gate on 2026-08-20, re-opening the 2026-05-23
+rejection, and CR172 built the simulation. Options are tradable **in simulation only** — the
+`D-004` simulation-only-forever constraint is untouched and always was the load-bearing one; what
+lapsed is the narrower "not even simulated" rule.
+
+**Production callers, as of 2026-08-24:**
+
+- `trading_math.option_strategy.payoff_curve` → `schemas/options.py::costed_structure` →
+  `CostedStructure.payoff_curve` on the wire → `widgets/sim/option_payoff_chart.dart`. The Room's
+  verdict ticket draws its payoff diagram from these functions, so the picture the user consents
+  against and the lesson that taught them to read it come from one implementation.
+- `option_lifecycle.early_assignment_due` uses `option_intrinsic_value` for the D9 moneyness test.
+- `option_strategy.strategy_metrics` uses the same intrinsic for break-evens and max-loss.
+
+Wave-1 lesson authoring (M15 lessons + their quizzes) still routes every payoff/break-even figure
+through these — that half was always true and is unchanged. The win is that it is now the *same*
+derivation as the traded surface rather than a parallel one.
 
 ## Computed in
 `app/trading_math/option.py::option_intrinsic_value` / `option_payoff` / `option_break_even`.

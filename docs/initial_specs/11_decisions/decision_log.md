@@ -480,3 +480,30 @@ When you (Claude in a future session) lock a new decision with Saiful:
 4. If the decision changes a prior one, also add `Supersedes: D-YYY` and update D-YYY to `Status: superseded by D-XXX`
 
 Keep this log honest. The "why" matters more than the "what."
+
+### D-070 — Options are simulated: the 2026-05-23 derivatives rejection is reversed, narrowly
+
+- **Decided** (approved 2026-08-20, built 2026-08-24, CR172): AMI **simulates option
+  structures**. The rejection recorded on 2026-05-23 in
+  [`rejected_features_register.md`](rejected_features_register.md) is lifted, and that row
+  now records the reversal rather than being deleted.
+- **Source**: Saiful cleared the gate on 2026-08-20 after CR172's design was filed on
+  2026-08-12. D5 (2026-08-24) then scoped §9's enforced limits to four of six.
+- **What did NOT change, and this is the point of writing it down.** **D-004 stands
+  untouched**: simulation-only, forever, no brokerage integration, no order ever routed.
+  **No leverage, ever** — unchanged. **Naked calls are forbidden outright** (CR172 D3), not
+  sized down and not collateralised. What lapsed is the much narrower rule that options
+  could not even be *simulated* — a teaching-scope decision, not a licensing one.
+- **Rationale**: The original rejection's own stated reason was expiring on its own. It
+  read *"long-only mandate flag blocks most users at Alpha"* — and CR171 removed exactly
+  that. A rejection whose premise has gone is a rejection to re-examine, which is what the
+  register's "what would change our mind" column exists for.
+- **Shape of the feature, because it is what keeps this consistent with D-004's spirit
+  rather than merely its letter**: AMI prices the structure and the user says **yes or no**.
+  There is no manual chain browser, deliberately (CR172 §12 documents it as deferred and
+  explicitly not what was asked for). That is the same analyst-to-CEO loop as an equity
+  verdict, not a trading terminal bolted on.
+- **Off by default, and measured**: `mandate.compliance.derivatives_allowed` defaults
+  `False`, so every mandate stored before the field existed reads as not-permitted and no
+  user acquired options through a deploy. On 2026-08-24 the count of current mandates
+  permitting derivatives was **0 of 42**.

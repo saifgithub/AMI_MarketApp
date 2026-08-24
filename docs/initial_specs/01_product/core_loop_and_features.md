@@ -221,7 +221,8 @@ Status legend:
 | Tadawul (Saudi) | ⚪ Phase 2 |
 | Bursa Malaysia | ⚪ Phase 2 |
 | Indonesian markets | ⚪ Phase 2 |
-| Crypto / forex / derivatives | ⚫ Far horizon |
+| Crypto / forex | ⚫ Far horizon |
+| Derivatives (options) | 🟢 **Built, simulation-only — CR172, 2026-08-24.** AMI structures the trade and the user consents; there is no manual chain browser by design. Gated on `derivatives_allowed`, off by default. |
 
 ### Community (all Phase 2 or later)
 

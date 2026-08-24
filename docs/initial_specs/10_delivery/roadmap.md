@@ -130,7 +130,8 @@ Things to consider only if AMI Trade hits ≥250K MAU:
 | Feature | Why not |
 |---|---|
 | **Real-money trade execution** | Regulatory firewall — never |
-| **Margin / leverage / derivatives** | Out of educational scope |
+| **Margin / leverage** | Out of educational scope. **No leverage, ever** — unchanged. |
+| **Derivatives (options)** | **In scope, simulation-only, since CR172 (built 2026-08-24).** Off by default: `mandate.compliance.derivatives_allowed` is `False` on every mandate unless the user turns it on. Naked calls are forbidden outright (D3). D-004 — simulation-only, no brokerage, forever — is untouched and always was the load-bearing constraint; what lapsed was the narrower "not even simulated" rule. |
 | **Margin lending / brokerage credit** | Out of scope |
 | **Tax reporting integration** | Out of scope |
 | **Rewarded video ads** | Brand decision — not a game |

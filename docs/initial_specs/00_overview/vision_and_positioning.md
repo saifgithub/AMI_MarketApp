@@ -95,5 +95,6 @@ This is the metric that captures the unique product behaviour. Lessons can be le
 | **Markets** | US equities at MVP; GCC/Tadawul + Bursa later |
 | **Real-time data** | 15-min delayed at MVP — it's a sim, real-time isn't material |
 | **B2B / white-label to brokerages** | In scope as a second motion ([D-069](../11_decisions/decision_log.md#d-069--brokerages-become-customers-white-label-b2b2c--partial-amendment-of-d-004), 2026-08-09). A brokerage is a customer; the product stays simulation-only under whatever brand it wears. Consumer remains the primary motion. |
-| **Crypto / forex / derivatives** | Out of scope at MVP, may revisit |
+| **Crypto / forex** | Out of scope at MVP, may revisit |
+| **Derivatives (options)** | **In scope as of CR172 (2026-08-24), simulation-only and opt-in.** Positioning is unchanged by it: AMI prices the structure and the user says yes or no, which is the same analyst-to-CEO loop as an equity verdict — not a trading terminal. |
 | **Real-money brokerage integration** | Never — regulatory firewall. Unchanged by D-069: selling *to* a broker is not connecting *to* their order flow. |
