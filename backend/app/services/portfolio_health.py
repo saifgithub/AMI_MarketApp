@@ -225,6 +225,7 @@ def compute_health(
     etf_tickers: frozenset[str],
     as_of: str,
     feed_failed: frozenset[str] = frozenset(),
+    options_excluded: int = 0,
 ) -> dict:
     """The whole Tier-1 evaluation, pure and deterministic.
 
@@ -234,6 +235,18 @@ def compute_health(
     this holding" when the truth is "our feed is down" — the CR040 question
     answered the wrong way, and the same mis-statement M01's own audit caught
     one layer down.
+
+    `options_excluded` is CR172 §11's *loud* half. An option has no per-ticker
+    daily close series, so it cannot enter the EWMA vol/beta/correlation
+    machinery this report is built on — and its risk is delta and gamma, not σ.
+    Excluding it is correct; excluding it SILENTLY is not, because a risk
+    report that omits a position without saying so reads as a risk report that
+    covered it. CR136's own finding was that a consumer needs the uncertainty,
+    not just the point estimate. Full delta-adjustment into the underlying's
+    exposure is deliberately deferred, on the DEF313 precedent: that decision
+    declined to restructure the sector ring for a position type with zero live
+    instances, and today `derivatives_allowed` is set on 0 of 42 mandates.
+    Revisit when an option position actually exists.
 
     No I/O, no clock beyond `generated_at`, JSON-serialisable return — so the
     thing under test is the thing that ships.
@@ -256,6 +269,11 @@ def compute_health(
             "as_of": as_of,
             "generated_at": generated_at,
             "engine_version": ENGINE_VERSION,
+            # A book of nothing but option structures lands HERE, and without
+            # this it would read as "you hold nothing" to a user holding
+            # something. "No equity holdings to analyse" and "no positions" are
+            # different sentences and the client needs to tell them apart.
+            "options_not_evaluated": options_excluded,
         }
 
     cash = float(cash)
@@ -729,6 +747,11 @@ def compute_health(
         "engine_version": ENGINE_VERSION,
         "benchmark": BENCHMARK_TICKER,
         "contains_etfs": contains_etfs,
+        # CR172 §11 — how many open option legs this report did NOT evaluate.
+        # Zero on every portfolio without options, so nothing renders for the
+        # overwhelming majority; non-zero is a disclosure the card must show,
+        # never a footnote to drop.
+        "options_not_evaluated": options_excluded,
         "partial": partial,
         "dropped_holdings": dropped,
         "holdings": holdings_rows,
@@ -829,6 +852,7 @@ def _gather_inputs(user_id: UUID, sim) -> tuple[UUID, dict] | None:
         "etf_tickers": _etf_ticker_set(tickers),
         "as_of": date.today().isoformat(),
         "feed_failed": frozenset(feed_failed),
+        "options_excluded": len(portfolio.options),
     }
 
 
