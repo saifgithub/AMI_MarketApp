@@ -205,8 +205,30 @@ def main():
         seed=cfg["seed"],
         report_to=[],
     )
+    # run-2 died OOMKilled (exit 137) at step 185/2504, zero checkpoints saved — no
+    # CUDA OOM exception, no traceback, just an external kernel kill. This box is a
+    # DGX Spark GB10: Grace CPU + Blackwell GPU share ONE 121GB unified LPDDR5X pool
+    # (nvidia-smi reports FB Memory as N/A — there's no separate framebuffer), and
+    # cutoff_len=5120 with no gradient checkpointing (NemotronH doesn't support it)
+    # already measured 110-114/121GB in use during clean training. ~185 steps of
+    # gradual growth (allocator fragmentation across many distinct-shaped
+    # allocations, or page-cache pressure) is enough to walk that thin margin to
+    # zero — a 400-step probe wasn't long enough to hit it, a 2,504-step run was.
+    # This periodic clear is cheap insurance against exactly that mechanism.
+    from transformers import TrainerCallback
+    import gc as _gc
+
+    class MemoryHygieneCallback(TrainerCallback):
+        def on_step_end(self, args, state, control, **kwargs):
+            if state.global_step % 20 == 0:
+                import torch as _torch
+                _gc.collect()
+                if _torch.cuda.is_available():
+                    _torch.cuda.empty_cache()
+
     trainer = SFTTrainer(model=model, processing_class=tok, args=sft_args,
-                         train_dataset=ds["train"], eval_dataset=ds["validation"])
+                         train_dataset=ds["train"], eval_dataset=ds["validation"],
+                         callbacks=[MemoryHygieneCallback()])
     trainer.train(resume_from_checkpoint=args.resume)
     trainer.save_model(os.path.join(args.out, "adapter_final"))
 

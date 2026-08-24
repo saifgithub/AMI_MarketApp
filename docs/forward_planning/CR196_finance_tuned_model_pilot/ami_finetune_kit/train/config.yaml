@@ -63,7 +63,11 @@ warmup_ratio: 0.03
 cutoff_len: 5120
 
 logging_steps: 10
-save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke
+# 200 -> 75 (2026-08-24, AT:R70 CR196): run 2's first launch was OOMKilled at step
+# 185/2504 with ZERO checkpoints saved (save_steps=200) — 1h43m of GPU time lost
+# with nothing to resume from. This box's headroom is thin enough (see cutoff_len's
+# note above) that a repeat kill is plausible; 75 bounds the loss to ~30min instead.
+save_steps: 75
 save_total_limit: 3
 eval_steps: 200
 seed: 42
