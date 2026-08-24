@@ -41,6 +41,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/widgets/sim/resting_orders_section.dart';
+import 'package:ami_trade/widgets/sim/option_positions_section.dart';
 import 'package:ami_trade/widgets/sim/short_positions_section.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
@@ -247,11 +248,14 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             watchlistTabKey: _watchlistTabKey,
             selected: _selectedTab,
             onSelect: (i) => setState(() => _selectedTab = i),
-            positionsCount: p.holdings.length + p.shorts.length,
+            positionsCount: p.holdings.length +
+                p.shorts.length +
+                p.optionStructures.length,
             watchlistCount: restingOrderCount(state),
             historyCount: transactions.length,
             hasOpenTrade: p.holdings.isNotEmpty ||
                 p.shorts.isNotEmpty ||
+                p.options.isNotEmpty ||
                 hasAnyRestingOrders(state),
           ),
           Expanded(
@@ -271,6 +275,10 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                   // the Orders tab beside it.
                   hasRestingOrders: hasAnyRestingOrders(state),
                   hasShorts: p.shorts.isNotEmpty,
+                  // Same reasoning as hasRestingOrders above: a user holding
+                  // an option structure has traded, and the new-trader hint
+                  // would contradict the option card sitting right above it.
+                  hasOptions: p.options.isNotEmpty,
                   sharesCommitted: p.sharesCommitted,
                   onTradeTicket: () => TradeTicketSheet.show(context),
                 ),
@@ -869,6 +877,7 @@ class _PositionsTab extends StatelessWidget {
     required this.holdings,
     required this.hasRestingOrders,
     required this.hasShorts,
+    required this.hasOptions,
     required this.sharesCommitted,
     required this.onTradeTicket,
   });
@@ -880,6 +889,9 @@ class _PositionsTab extends StatelessWidget {
   /// than in [holdings]. Without this the new-trader hint would tell a user
   /// with a live short that they have not traded yet.
   final bool hasShorts;
+
+  /// CR172 §12 — true when the portfolio holds at least one open option leg.
+  final bool hasOptions;
 
   /// CR170 §6 — per-ticker shares committed to resting sells, as the server
   /// computed them. Threaded down rather than watched per row: one read of
@@ -909,7 +921,15 @@ class _PositionsTab extends StatelessWidget {
                 // shares — so it gets its own group rather than a row inside
                 // HOLDINGS with a badge on it.
                 const ShortPositionsSection(),
-                if (holdings.isEmpty && !hasRestingOrders && !hasShorts) ...[
+                // Options sit after shorts and before holdings for the same
+                // reason shorts sit there: an option is not a holding — it
+                // expires, and the thing a user must see about it is how long
+                // it has left, not what it is worth per share.
+                const OptionPositionsSection(),
+                if (holdings.isEmpty &&
+                    !hasRestingOrders &&
+                    !hasShorts &&
+                    !hasOptions) ...[
                   _NewTraderHint(onTradeTicket: onTradeTicket),
                   // CR122 — Sim Portfolio empty state (no positions) is an
                   // approved ad placement (ads.md:42). Self-gating slot.

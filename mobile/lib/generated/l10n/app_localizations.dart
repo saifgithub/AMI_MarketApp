@@ -6676,6 +6676,98 @@ abstract class AppLocalizations {
   /// **'Covered {quantity} {ticker} — realised {pnl}'**
   String tradeTicketShortCovered(String quantity, String ticker, String pnl);
 
+  /// CR172 §12. Mono uppercase heading above the list of open option structures on the Portfolio screen. Its own group, separate from HOLDINGS and SHORT POSITIONS, because an option is neither: it expires. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OPTION POSITIONS'**
+  String get portfolioOptionsHeading;
+
+  /// CR172 §12. The word for a bought option leg, shown at the start of a leg line. Uppercase. TRANSLATOR NOTE: this is the finance sense of long (a position the user owns), never the sense of physical length. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LONG'**
+  String get optionSideLong;
+
+  /// CR172 §12. The word for a sold/written option leg. Uppercase. TRANSLATOR NOTE: finance sense (a position the user owes), never the sense of small in size. Should match the existing shortPositionBadge translation for consistency across the screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT'**
+  String get optionSideShort;
+
+  /// CR172 §12. The option right giving the holder the ability to BUY the underlying. Uppercase, shown in a leg line. TRANSLATOR NOTE: this is a specific derivatives term; most markets keep the English word or use the established local term of art — do not translate as a telephone call. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CALL'**
+  String get optionRightCall;
+
+  /// CR172 §12. The option right giving the holder the ability to SELL the underlying. Uppercase. TRANSLATOR NOTE: a specific derivatives term — do not translate as the verb to place or to put something down. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PUT'**
+  String get optionRightPut;
+
+  /// CR172 §12. One leg of an open option structure, e.g. 'LONG 1 CALL $195'. Deliberately NOT 'qty @ avgCost' like an equity holding — a strike and a right are what identify an option, and the cost is stated once for the whole structure below. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{side} {contracts} {right} \${strike}'**
+  String optionLegLine(
+      String side, String contracts, String right, String strike);
+
+  /// CR172 §12. Same as optionLegLine but with the leg's own expiry appended, used ONLY when a structure's legs expire on different dates (a calendar spread). Without the date those two legs would render identically. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{side} {contracts} {right} \${strike} · {expiry}'**
+  String optionLegLineDated(String side, String contracts, String right,
+      String strike, String expiry);
+
+  /// CR172 §12. How long the structure has left, on its own line under the legs. Only used for 2 or more days; today and tomorrow have their own keys because an option's last two days behave differently from every day before them. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days to expiry'**
+  String optionDaysToExpiry(String days);
+
+  /// CR172 §12. Replaces the day count on the final day. Its own key rather than '0 days to expiry', which reads as though nothing is happening on the one day the user most needs to act. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EXPIRES TODAY'**
+  String get optionExpiresToday;
+
+  /// CR172 §12. Replaces the day count at 1 day left, avoiding the awkward '1 days'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EXPIRES TOMORROW'**
+  String get optionExpiresTomorrow;
+
+  /// CR172 §12. Shown when a leg is past its expiry but still open on the book, i.e. settlement has not processed it. TRANSLATOR NOTE: must NOT read as 'this position is closed' or as an error — the position is genuinely still there and the user is owed an explanation of why. This is a degrade-loudly state (CR040), not a failure message. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EXPIRED — AWAITING SETTLEMENT'**
+  String get optionExpiredSettling;
+
+  /// CR172 §12. The net debit the structure cost when it was opened. Stated once per structure, not per leg. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Paid \${amount} at open'**
+  String optionPaidAtOpen(String amount);
+
+  /// CR172 §12. Used instead of optionPaidAtOpen when the structure was opened for a net CREDIT — the user received cash. TRANSLATOR NOTE: must not read as a profit; it is money received up front against an obligation still outstanding. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Collected \${amount} at open'**
+  String optionCollectedAtOpen(String amount);
+
+  /// CR172 §12. Cash set aside against a short leg, shown only when non-zero. This is not a loss and not spent — it comes back when the structure closes. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Collateral held: \${amount}'**
+  String optionCollateralHeld(String amount);
+
+  /// CR172 §12. Sits at the foot of the option group. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No live mark yet — this shows what the structure cost, not what it is worth today.'**
+  String get optionMarkUnavailable;
+
   /// CR171. Mono uppercase heading above the list of open short positions on the Portfolio screen. Separate from HOLDINGS because a short is not a holding — the user owes the shares rather than owning them. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

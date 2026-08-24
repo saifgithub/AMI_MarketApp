@@ -210,7 +210,13 @@ def open_structure(
 
 
 def open_legs_for_portfolio(session, portfolio_id: UUID) -> list[OptionLeg]:
-    """Every still-open option leg, oldest first — the portfolio's own view."""
+    """Every still-open option leg, oldest first — the portfolio's own view.
+
+    Stamps `days_to_expiry` from the server's clock. See the field's own note
+    on `OptionLeg` for why the client is not allowed to compute it and why the
+    value is signed rather than clamped at zero.
+    """
+    today = datetime.now(timezone.utc).date()
     rows = session.execute(
         select(SimOptionLegRow)
         .where(
@@ -234,6 +240,7 @@ def open_legs_for_portfolio(session, portfolio_id: UUID) -> list[OptionLeg]:
             strategy_id=r.strategy_id,
             strategy_name=r.strategy_name,
             opened_at=r.opened_at,
+            days_to_expiry=(r.expiry - today).days,
         )
         for r in rows
     ]

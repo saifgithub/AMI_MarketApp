@@ -219,6 +219,146 @@ class SimClosedShort {
   }
 }
 
+/// CR172 §12 — one OPEN option leg on the training portfolio. Mirrors
+/// `OptionLeg` in `backend/app/schemas/trade.py`.
+///
+/// **Carries no P&L, and that is the point.** There is no option marks feed
+/// yet (CR172 §11 is unbuilt), so no unrealised figure is computable — and a
+/// `0.00` in a P&L slot does not read as "unknown", it reads as "flat". That
+/// is the DEF059 shape: a number nobody measured, presented as a measurement.
+/// The card says the mark is unavailable instead. When §11 lands, the field
+/// arrives from the server the way [SimShort.unrealisedPnl] does — never
+/// derived here.
+///
+/// [quantity] is SIGNED contracts and [avgPremium] is per SHARE, both exactly
+/// as `sim_option_legs` stores them, so no second unit exists to drift
+/// (DEF098). [daysToExpiry] is server-computed and signed — negative means a
+/// leg past expiry that settlement has not processed yet.
+class SimOptionLeg {
+  const SimOptionLeg({
+    required this.id,
+    required this.occSymbol,
+    required this.underlying,
+    required this.right,
+    required this.strike,
+    required this.expiry,
+    required this.quantity,
+    required this.avgPremium,
+    required this.multiplier,
+    required this.collateralPosted,
+    required this.strategyId,
+    required this.strategyName,
+    required this.daysToExpiry,
+    this.openedAt,
+  });
+
+  final String id;
+  final String occSymbol;
+  final String underlying;
+
+  /// `call` | `put`
+  final String right;
+  final double strike;
+  final DateTime expiry;
+
+  /// SIGNED contracts: positive long, negative short.
+  final double quantity;
+
+  /// Per SHARE, not per contract.
+  final double avgPremium;
+  final double multiplier;
+  final double collateralPosted;
+
+  /// The structure this leg belongs to. Legs are grouped by this for display:
+  /// the user consented to a *structure*, so rendering a vertical spread as
+  /// two loose legs would show them something they never agreed to.
+  final String strategyId;
+  final String strategyName;
+
+  /// Server-computed. Never derived on the device — a phone's clock is the
+  /// user's, not the settlement calendar's.
+  final int daysToExpiry;
+
+  final DateTime? openedAt;
+
+  bool get isLong => quantity > 0;
+  bool get isShort => quantity < 0;
+
+  /// Past expiry and still open — settlement has not processed it.
+  bool get isExpired => daysToExpiry < 0;
+
+  /// What the position cost (long) or collected (short) at open, in dollars.
+  double get costBasis => quantity * avgPremium * multiplier;
+
+  factory SimOptionLeg.fromJson(Map<String, dynamic> j) {
+    return SimOptionLeg(
+      id: j['id'] as String? ?? '',
+      occSymbol: j['occ_symbol'] as String? ?? '',
+      underlying: (j['underlying'] as String? ?? '').toUpperCase(),
+      right: (j['right'] as String? ?? '').toLowerCase(),
+      strike: (j['strike'] as num?)?.toDouble() ?? 0,
+      expiry: DateTime.tryParse(j['expiry'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
+      avgPremium: (j['avg_premium'] as num?)?.toDouble() ?? 0,
+      multiplier: (j['multiplier'] as num?)?.toDouble() ?? 100,
+      collateralPosted: (j['collateral_posted'] as num?)?.toDouble() ?? 0,
+      strategyId: j['strategy_id'] as String? ?? '',
+      strategyName: j['strategy_name'] as String? ?? '',
+      // No `?? 0` fallback that could pass for "expires today": the server
+      // always sends this (the field is required on `OptionLeg`), so absence
+      // means a backend older than CR172, and a very negative sentinel makes
+      // that visible as EXPIRED rather than silently plausible.
+      daysToExpiry: (j['days_to_expiry'] as num?)?.toInt() ?? -99999,
+      openedAt: DateTime.tryParse(j['opened_at'] as String? ?? ''),
+    );
+  }
+}
+
+/// CR172 §12 — the legs of one structure, grouped for display.
+class SimOptionStructure {
+  const SimOptionStructure({required this.legs});
+
+  final List<SimOptionLeg> legs;
+
+  String get strategyId => legs.first.strategyId;
+  String get strategyName => legs.first.strategyName;
+  String get underlying => legs.first.underlying;
+
+  /// The soonest expiry in the structure — what a calendar spread should be
+  /// judged by, because that is the leg that stops existing first.
+  int get daysToExpiry =>
+      legs.map((l) => l.daysToExpiry).reduce((a, b) => a < b ? a : b);
+
+  bool get isExpired => daysToExpiry < 0;
+
+  int get contracts =>
+      legs.fold<double>(0, (a, l) => a + l.quantity.abs()).round();
+
+  double get collateralPosted =>
+      legs.fold<double>(0, (a, l) => a + l.collateralPosted);
+
+  /// Net debit (positive) or credit (negative) at open.
+  double get netCostBasis => legs.fold<double>(0, (a, l) => a + l.costBasis);
+
+  /// Groups legs into structures, preserving server order (oldest first) and
+  /// keeping each structure's legs in the order they arrived.
+  static List<SimOptionStructure> group(List<SimOptionLeg> legs) {
+    final order = <String>[];
+    final byId = <String, List<SimOptionLeg>>{};
+    for (final l in legs) {
+      if (!byId.containsKey(l.strategyId)) {
+        order.add(l.strategyId);
+        byId[l.strategyId] = <SimOptionLeg>[];
+      }
+      byId[l.strategyId]!.add(l);
+    }
+    return [
+      for (final id in order) SimOptionStructure(legs: byId[id]!),
+    ];
+  }
+}
+
 class SimPortfolio {
   const SimPortfolio({
     required this.userId,
@@ -235,6 +375,7 @@ class SimPortfolio {
     this.sharesCommitted = const {},
     this.shorts = const [],
     this.closedShorts = const [],
+    this.options = const [],
   }) : _cashAvailable = cashAvailable;
 
   final String userId;
@@ -280,6 +421,22 @@ class SimPortfolio {
 
   /// CR171 §7 — shorts that closed inside the server's window, newest first.
   final List<SimClosedShort> closedShorts;
+
+  /// CR172 §12 — open option legs. Empty on every portfolio that has never
+  /// opened a structure, which today is all of them: the option path is gated
+  /// on `mandate.compliance.derivatives_allowed` and no current mandate sets
+  /// it.
+  ///
+  /// This field existing at all is the gate CR172 was held on. The backend
+  /// `Portfolio` schema has carried `options` since §3 and `sim_engine`
+  /// populates it, so before this the app could accept a structure and then
+  /// not show it anywhere — a position the user consented to, invisible on
+  /// their own portfolio.
+  final List<SimOptionLeg> options;
+
+  /// [options] grouped into the structures the user actually agreed to.
+  List<SimOptionStructure> get optionStructures =>
+      SimOptionStructure.group(options);
 
   /// Shares of [ticker] a resting sell has already spoken for.
   double sharesCommittedFor(String ticker) =>
@@ -337,6 +494,9 @@ class SimPortfolio {
           .toList(),
       closedShorts: ((j['closed_shorts'] as List?) ?? const [])
           .map((s) => SimClosedShort.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      options: ((j['options'] as List?) ?? const [])
+          .map((o) => SimOptionLeg.fromJson(o as Map<String, dynamic>))
           .toList(),
     );
   }

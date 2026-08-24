@@ -95,6 +95,24 @@ class OptionLeg(BaseModel):
     strategy_name: str
     opened_at: datetime
 
+    # Days until expiry, computed server-side at read time.
+    #
+    # The client must not derive this. A phone's clock is the user's, not the
+    # settlement calendar's, and `expiry` is a bare date with no timezone — so
+    # a device in UTC+8 and one in UTC-5 would disagree about DTE on the day
+    # that matters most. `CostedStructure.days_to_expiry` is already
+    # server-sent for the same reason; this keeps the open leg on the same
+    # footing as the proposal it came from.
+    #
+    # **Deliberately SIGNED, unlike `option_strategist`'s
+    # `max(0, ...)` at line 313.** That clamp is right there: you cannot
+    # propose a structure off an expired chain, so negative is unreachable.
+    # Here it is reachable and it means something — a leg still `state="open"`
+    # past its expiry is one settlement has not processed. Clamping would
+    # render that identically to "expires today", which is the one reading that
+    # would stop a user asking why it is still on their book.
+    days_to_expiry: int
+
 
 class Portfolio(BaseModel):
     """Sim portfolio snapshot."""

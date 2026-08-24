@@ -4063,6 +4063,66 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get portfolioOptionsHeading => 'OPTION POSITIONS';
+
+  @override
+  String get optionSideLong => 'LONG';
+
+  @override
+  String get optionSideShort => 'SHORT';
+
+  @override
+  String get optionRightCall => 'CALL';
+
+  @override
+  String get optionRightPut => 'PUT';
+
+  @override
+  String optionLegLine(
+      String side, String contracts, String right, String strike) {
+    return '$side $contracts $right \$$strike';
+  }
+
+  @override
+  String optionLegLineDated(String side, String contracts, String right,
+      String strike, String expiry) {
+    return '$side $contracts $right \$$strike · $expiry';
+  }
+
+  @override
+  String optionDaysToExpiry(String days) {
+    return '$days days to expiry';
+  }
+
+  @override
+  String get optionExpiresToday => 'EXPIRES TODAY';
+
+  @override
+  String get optionExpiresTomorrow => 'EXPIRES TOMORROW';
+
+  @override
+  String get optionExpiredSettling => 'EXPIRED — AWAITING SETTLEMENT';
+
+  @override
+  String optionPaidAtOpen(String amount) {
+    return 'Paid \$$amount at open';
+  }
+
+  @override
+  String optionCollectedAtOpen(String amount) {
+    return 'Collected \$$amount at open';
+  }
+
+  @override
+  String optionCollateralHeld(String amount) {
+    return 'Collateral held: \$$amount';
+  }
+
+  @override
+  String get optionMarkUnavailable =>
+      'No live mark yet — this shows what the structure cost, not what it is worth today.';
+
+  @override
   String get portfolioShortsHeading => 'SHORT POSITIONS';
 
   @override
