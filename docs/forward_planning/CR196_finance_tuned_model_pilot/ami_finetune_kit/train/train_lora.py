@@ -138,6 +138,55 @@ def main():
     except AttributeError:
         pass
 
+    # DROP over-long rows; do NOT truncate them (2026-08-24, AT:R70 CR196).
+    #
+    # Peak memory here is set by the LONGEST SINGLE SEQUENCE, not the average:
+    # batch_size=1, and NemotronH cannot gradient-checkpoint, so the activations
+    # for the longest row in the whole run must fit in the same 121GB unified pool
+    # that already holds the 62GB frozen base. Measured on the run-2 mix (20,029
+    # rows) there is a cliff, not a slope:
+    #     >3,584 tok: 1,031 rows | >4,096 tok: 32 rows | >5,120 tok: 10 rows
+    # Only 10 rows need cutoff_len=5120 at all, yet those 10 set the high-water
+    # mark for all 2,504 steps. That is why probe 3 ran 400 steps clean and the
+    # full run was OOM-killed at step 185 on the IDENTICAL config, then reached
+    # 375 on a second attempt: it is a dice roll on when a max-length row is
+    # drawn, not a gradual leak. Capping the tail removes the roll entirely.
+    #
+    # Truncation is deliberately NOT the tool: cutting a target from the right is
+    # what teaches mid-sentence stopping — run 1's actual failure. 13 of the 32
+    # dropped rows are long-prompt/short-target anyway (worst: 29,479 chars in,
+    # 14 chars out), whose target right-truncation would destroy completely.
+    # Of the 1,127 long-form-target rows this run exists to teach, 14 are lost (1.2%).
+    max_tok = int(cfg.get("max_train_tokens", cfg["cutoff_len"]))
+
+    # Measure explicitly, then select — do NOT use .filter() with a length predicate.
+    # First attempt did, via len(apply_chat_template(m, tokenize=True)), which returns a
+    # BatchEncoding: len() is the KEY COUNT (2), always <= any cap, so the filter
+    # silently kept every row and reported "dropped 0" in one second. A filter that
+    # passes everything looks exactly like a filter with nothing to do. Hence the
+    # postcondition below: the kept set's true max length is logged and asserted, so a
+    # no-op filter cannot be mistaken for a clean corpus again.
+    for _split in ("train", "validation"):
+        _msgs = ds[_split]["messages"]
+        _lens = [len(tok(tok.apply_chat_template(m, tokenize=False))["input_ids"])
+                 for m in _msgs]
+        _keep = [i for i, n in enumerate(_lens) if n <= max_tok]
+        _dropped = len(_lens) - len(_keep)
+        ds[_split] = ds[_split].select(_keep)
+        _max_kept = max((_lens[i] for i in _keep), default=0)
+        log(f"length filter [{_split}]: {len(_lens)} -> {len(_keep)} rows "
+            f"(dropped {_dropped} over {max_tok} tokens; "
+            f"max kept = {_max_kept}, corpus max was {max(_lens, default=0)})")
+        # Postcondition: this is the number that bounds peak activation memory.
+        if _max_kept > max_tok:
+            raise SystemExit(f"length filter is a no-op: kept a {_max_kept}-token row "
+                             f"with max_train_tokens={max_tok}")
+        if len(_keep) < 0.9 * len(_lens):
+            raise SystemExit(
+                f"length filter dropped {100 * _dropped / len(_lens):.1f}% of {_split} "
+                f"at max_train_tokens={max_tok} — expected ~0.2%. Check the cap "
+                f"against preflight_lengths.py before training on this.")
+
     from trl import SFTConfig, SFTTrainer
     sft_args = SFTConfig(
         output_dir=args.out,

@@ -60,7 +60,22 @@ warmup_ratio: 0.03
 # (median 1,462 tokens, p90 2,118 versus run 1's 331-char median target), and the box
 # ran at 110-114 of 121 GB with page cache collapsing to 1 GB — which is why sshd
 # kept failing to fork. Headroom is thin even with the eval leak closed.
-cutoff_len: 5120
+# 5,120 -> 4,096 (2026-08-24, AT:R70 CR196). The reasoning above is sound about
+# TRUNCATION but had the memory model wrong: with batch_size=1 and no gradient
+# checkpointing, peak memory is set by the LONGEST SINGLE ROW, and the mix has a
+# cliff — >4,096 tok: 32 rows, >5,120 tok: 10 rows, out of 20,029. Those 10 rows
+# set the high-water mark for all 2,504 steps, which is a 17h run gambled on ten
+# examples. Run 2 was OOM-killed twice at 5,120 (step 185, then step 375) on the
+# same config probe 3 had survived for 400 steps — a dice roll on drawing a
+# max-length row, not a leak.
+# The truncation concern is answered properly instead, by train_lora.py's length
+# filter, which DROPS the 32 over-long rows rather than cutting their targets.
+# See that filter's comment for the full measurement.
+cutoff_len: 4096
+# Rows longer than this are dropped outright (never truncated). Kept equal to
+# cutoff_len so the cutoff never actually binds — it is the second guard, so a
+# regression in the filter still caps activation memory instead of OOM-killing.
+max_train_tokens: 4096
 
 logging_steps: 10
 # 200 -> 75 (2026-08-24, AT:R70 CR196): run 2's first launch was OOMKilled at step
