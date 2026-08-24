@@ -22,6 +22,7 @@ claim of no exposure at all (DEF169).
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from .black_scholes import _kind, bs_d1_d2, norm_cdf, norm_pdf
@@ -90,3 +91,93 @@ def per_contract(greeks: Greeks, multiplier: float = 100.0) -> Greeks | None:
             and multiplier > 0):
         return None
     return Greeks(*(g * multiplier for g in greeks))
+
+
+# ── CR204 — book-level aggregation ───────────────────────────────────────
+
+
+class GreekLeg(NamedTuple):
+    """One option position, in the units aggregation needs.
+
+    `greeks` are PER SHARE (this module's convention throughout). `contracts`
+    is signed — negative for a short leg — and `multiplier` is shares per
+    contract, so the contract-level exposure is
+    `greek x multiplier x contracts` and the sign falls out of the position
+    rather than being applied by the caller.
+    """
+
+    occ_symbol: str
+    greeks: Greeks | None
+    contracts: float
+    multiplier: float
+
+
+class BookGreeks(NamedTuple):
+    """A whole book's directional and volatility exposure, or an honest gap.
+
+    `share_equivalent_delta` combines options and equity into ONE number, and
+    the unit is deliberately *shares of the underlying*: an option's delta is
+    per share, a share's own delta is 1.0, and the two only add after the
+    option's is multiplied through `multiplier x contracts`. Anything else is
+    adding a per-share figure to a position count.
+
+    `unevaluable` is the point of the type. A delta summed over only the legs
+    that HAD greeks is a number that reads as the whole book and is not — the
+    CR040 case, on the figure a risk cap would be enforced against. When it is
+    non-empty the totals describe a SUBSET and the caller must say so rather
+    than compare them to a limit.
+    """
+
+    share_equivalent_delta: float
+    vega_per_point: float
+    unevaluable: tuple[str, ...]
+
+    @property
+    def is_complete(self) -> bool:
+        return not self.unevaluable
+
+
+def aggregate_book_greeks(
+    legs: Sequence[GreekLeg] = (), *, equity_shares: float = 0.0,
+) -> BookGreeks:
+    """Total delta (in share equivalents) and vega across options and equity.
+
+    **Vega is summed, not weighted.** `vega_per_point` is already a dollar
+    change per one-point move in implied volatility, so summing gives the
+    book's dollar sensitivity to a parallel one-point shift. A weighted
+    average would answer a different question (the book's *typical* vega) and
+    could not be compared against a dollar cap at all. The parallel-shift
+    assumption is a real simplification — vol does not move uniformly across
+    strikes and expiries — and it is stated here rather than hidden, because
+    the alternative is a per-tenor surface this product does not have.
+
+    Equity contributes 1.0 delta per share and no vega, which is what makes
+    the combined number meaningful: a covered call's short delta genuinely
+    offsets the shares behind it.
+    """
+    delta = float(equity_shares)
+    vega = 0.0
+    unevaluable: list[str] = []
+
+    for leg in legs:
+        if leg.greeks is None:
+            unevaluable.append(leg.occ_symbol)
+            continue
+        if not all(math.isfinite(v) for v in (
+            leg.greeks.delta, leg.greeks.vega_per_point,
+            leg.contracts, leg.multiplier,
+        )):
+            # A non-finite input is not a measurement either. Silently
+            # summing it would make the whole total NaN, which reads as a
+            # broken screen rather than as one leg we could not price.
+            unevaluable.append(leg.occ_symbol)
+            continue
+        scale = leg.multiplier * leg.contracts
+        delta += leg.greeks.delta * scale
+        vega += leg.greeks.vega_per_point * scale
+
+    return BookGreeks(
+        share_equivalent_delta=delta,
+        vega_per_point=vega,
+        unevaluable=tuple(unevaluable),
+    )

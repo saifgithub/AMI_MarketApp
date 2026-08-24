@@ -387,6 +387,55 @@ def _probe_max_option_premium_pct(base_mandate: Mandate, store: MandateStore) ->
     ).max_option_premium_pct == 12.0  # (d)
 
 
+def _greek_leg(delta: float, vega: float, contracts: float, sym: str = "X"):
+    from app.trading_math.greeks import GreekLeg, Greeks
+    return GreekLeg(
+        occ_symbol=sym,
+        greeks=Greeks(delta=delta, gamma=0.0, theta_per_day=0.0,
+                      vega_per_point=vega, rho_per_point=0.0),
+        contracts=contracts, multiplier=100.0,
+    )
+
+
+def _probe_max_portfolio_delta(base_mandate: Mandate, store: MandateStore) -> None:
+    from app.trading_math.greeks import aggregate_book_greeks
+
+    m = _derivatives_mandate(base_mandate, max_portfolio_delta=200.0)
+    # 1 contract at 0.60 delta x 100 = 60 share equivalents, plus 500 shares
+    # held = 560, over the 200 cap.
+    book = aggregate_book_greeks([_greek_leg(0.60, 0.0, 1.0)], equity_shares=500.0)
+    result = check_option_open(
+        [_opt_leg("call", 195.0, 1.0, 9.10)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+        book_greeks=book,
+    )
+    assert not result.passed and result.blocked_by == "concentration"  # (a)
+    assert any("560" in v and "200" in v for v in result.violations)  # (b) own units
+    assert "200" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"max_portfolio_delta": 900.0}
+    ).max_portfolio_delta == 900.0  # (d)
+
+
+def _probe_max_portfolio_vega(base_mandate: Mandate, store: MandateStore) -> None:
+    from app.trading_math.greeks import aggregate_book_greeks
+
+    m = _derivatives_mandate(base_mandate, max_portfolio_vega=100.0)
+    # 1 contract at 12.0 vega/point x 100 = $1,200 per point, over the $100 cap.
+    book = aggregate_book_greeks([_greek_leg(0.0, 12.0, 1.0)])
+    result = check_option_open(
+        [_opt_leg("call", 195.0, 1.0, 9.10)], m,
+        portfolio_value=10_000.0, existing_structures=(), today=_OPT_TODAY,
+        book_greeks=book,
+    )
+    assert not result.passed and result.blocked_by == "concentration"  # (a)
+    assert any("1,200" in v and "100" in v for v in result.violations)  # (b)
+    assert "100" in generate_overlay(AgentId.PORTFOLIO_MANAGER, m)  # (c)
+    assert store.patch(
+        uuid4(), {"max_portfolio_vega": 250.0}
+    ).max_portfolio_vega == 250.0  # (d)
+
+
 def _probe_max_option_notional_pct(base_mandate: Mandate, store: MandateStore) -> None:
     m = _derivatives_mandate(base_mandate, max_option_notional_pct=100.0)
     # 1 contract at strike 195 controls $19,500 of stock — 195% of a $10k book.
@@ -447,6 +496,8 @@ _FOUR_LEG_PROBES = {
     "max_trades_per_day": _probe_max_trades_per_day,
     "max_trades_per_week": _probe_max_trades_per_week,
     "max_open_risk_pct": _probe_max_open_risk_pct,
+    "max_portfolio_delta": _probe_max_portfolio_delta,
+    "max_portfolio_vega": _probe_max_portfolio_vega,
     "max_option_premium_pct": _probe_max_option_premium_pct,
     "max_option_notional_pct": _probe_max_option_notional_pct,
     "max_assignment_exposure_pct": _probe_max_assignment_exposure_pct,

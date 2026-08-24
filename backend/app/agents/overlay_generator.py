@@ -881,6 +881,21 @@ def _option_limits_block(m: Mandate) -> str:
             "against the SOONEST-expiring leg. Structures dated shorter than "
             "this are refused by the safety floor, not merely discouraged."
         )
+    if m.max_portfolio_delta is not None:
+        lines.append(
+            f"- Portfolio delta cap: {m.max_portfolio_delta:,.0f} share "
+            "equivalents — options AND equity combined, since an option's "
+            "delta is per share and a holding's is 1.0. The cap is on the "
+            "ABSOLUTE value, so a large short book is limited exactly as a "
+            "large long one is."
+        )
+    if m.max_portfolio_vega is not None:
+        lines.append(
+            f"- Portfolio vega cap: ${m.max_portfolio_vega:,.0f} per vol point "
+            "— the book's dollar move for a one-point parallel shift in "
+            "implied volatility, summed across every leg. Also on the "
+            "ABSOLUTE value: short vol is the side that gaps."
+        )
     if not lines:
         return ""
     return "\n" + "\n".join(lines)

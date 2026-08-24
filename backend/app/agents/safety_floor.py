@@ -905,6 +905,7 @@ def check_option_open(
     portfolio_value: float | None,
     existing_structures: Sequence[Sequence[object]],
     today: date | None = None,
+    book_greeks: object | None = None,
 ) -> ComplianceResult:
     """The floor on OPENING an option structure — CR172 §8, §14 D3/D4.
 
@@ -1061,6 +1062,62 @@ def check_option_open(
                     f"portfolio, over your {cap:.1f}% limit."
                 )
                 blocked_by = blocked_by or "concentration"
+
+    # ── CR204 — the two greek-level caps of §9 ─────────────────────────────
+    #
+    # Deferred out of CR172 by D5 because full-portfolio greek aggregation did
+    # not exist. It does now: the marks fetch keeps the greeks it used to
+    # discard (`OptionMarks.greeks`) and `aggregate_book_greeks` combines them
+    # with equity into one share-equivalent number.
+    #
+    # `book_greeks` is supplied by the caller because only the caller knows the
+    # rest of the book. Absent, the caps are `not_evaluated` — never passed:
+    # a delta cap that silently skips when greeks are missing is a cap that is
+    # off exactly when the book is hardest to price.
+    greek_caps = [
+        (f, getattr(mandate, f)) for f in
+        ("max_portfolio_delta", "max_portfolio_vega")
+        if getattr(mandate, f, None) is not None
+    ]
+    if greek_caps:
+        if book_greeks is None:
+            not_evaluated.append(
+                "portfolio greeks were not supplied, so the delta and vega "
+                "limits could not be measured"
+            )
+        elif not book_greeks.is_complete:
+            # THE CR040 case this CR was written around. A total summed over
+            # only the legs that had greeks reads as the whole book and is
+            # not, and comparing that subset to a cap would report a pass the
+            # book never earned. Name the legs so the gap is legible.
+            not_evaluated.append(
+                "delta and vega could not be computed for "
+                f"{len(book_greeks.unevaluable)} leg(s) "
+                f"({', '.join(book_greeks.unevaluable[:3])}"
+                f"{'…' if len(book_greeks.unevaluable) > 3 else ''}), so the "
+                "portfolio delta and vega limits describe an incomplete book "
+                "and were not enforced"
+            )
+        else:
+            for field, cap in greek_caps:
+                if field == "max_portfolio_delta":
+                    used, label, unit = (
+                        book_greeks.share_equivalent_delta,
+                        "portfolio delta", "share equivalents",
+                    )
+                else:
+                    used, label, unit = (
+                        book_greeks.vega_per_point,
+                        "portfolio vega", "per vol point",
+                    )
+                # |used| — the cap constrains a large short book exactly as it
+                # constrains a large long one. Short vol is the side that gaps.
+                if abs(used) > float(cap):
+                    violations.append(
+                        f"this would take your {label} to {used:,.0f} {unit}, "
+                        f"over your limit of {float(cap):,.0f}."
+                    )
+                    blocked_by = blocked_by or "concentration"
 
     return ComplianceResult(
         passed=len(violations) == 0,

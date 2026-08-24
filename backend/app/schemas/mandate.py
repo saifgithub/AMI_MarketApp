@@ -256,11 +256,15 @@ class Mandate(BaseModel):
     # safe here ONLY because `derivatives_allowed` is False by default — an
     # uncapped option book requires deliberately turning derivatives on first.
     #
-    # `max_portfolio_delta` and `max_portfolio_vega` are deliberately ABSENT.
-    # They need full-portfolio greek aggregation that does not exist, and D5
-    # defers them to their own CR rather than adding two fields that cannot be
-    # computed. Per the comment on `derivatives_allowed` above, a §9 field
-    # arrives with its four legs or it does not arrive.
+    # `max_portfolio_delta` and `max_portfolio_vega` ARRIVED IN CR204. They
+    # were absent through CR172 because they need full-portfolio greek
+    # aggregation, which did not exist: the marks fetch pulled an enriched
+    # chain carrying greeks and discarded them. It keeps them now
+    # (`OptionMarks.greeks`), `trading_math.aggregate_book_greeks` combines
+    # them with equity into one share-equivalent figure, and
+    # `check_option_open` enforces both — so all four DEF191 legs exist and
+    # the fields may arrive. Per the comment on `derivatives_allowed` above, a
+    # §9 field arrives with its four legs or it does not arrive.
     #
     # Percentage points of NAV (40.0 = 40%), matching `max_drawdown_pct`.
     max_option_premium_pct: float | None = Field(
@@ -283,6 +287,27 @@ class Mandate(BaseModel):
     # stop on the proposed trade to price its own contribution; an open
     # position with no stop contributes 0 (nothing to sum).
     max_open_risk_pct: float | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
+
+    # CR204 — the two greek-level caps of §9.
+    #
+    # SHARE EQUIVALENTS, not a percentage and not a ratio: an option's delta
+    # is per share, a holding's is 1.0, and the combined figure is "how many
+    # shares of the underlying is this book effectively long or short". A cap
+    # of 500 means the whole book may not be more directionally exposed than
+    # 500 shares. Signed on purpose — the cap is on |delta|, so it constrains
+    # a large short book exactly as it constrains a large long one.
+    max_portfolio_delta: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
+    # DOLLARS per one-point move in implied volatility, summed across the
+    # book. Summed rather than averaged because the question a cap asks is
+    # "how much money moves if vol shifts a point", which is additive; an
+    # average would answer "how vol-sensitive is a typical leg" and could not
+    # be compared to a dollar limit. Also on |vega|: short vol is the side
+    # that gaps.
+    max_portfolio_vega: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
 
     # Constraints — hard rules
     compliance: Compliance = Field(default_factory=Compliance)
