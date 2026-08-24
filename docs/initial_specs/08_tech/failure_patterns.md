@@ -1060,6 +1060,54 @@ parameter no default so the compiler finds the callers for you.
 
 ---
 
+## P18 — third, fourth and fifth instances, and the Dilemma they triggered (AT:R74, 2026-08-24)
+
+The rule above is a **discipline**, and disciplines are what this class defeats. It happened three
+more times **inside CR172 alone**, each found by a human reading code, each after the covering tests
+were green:
+
+| | Proven | Never exercised | What the user got |
+|---|---|---|---|
+| **`OptionProposalTicket`** | a fully defined, fully tested response model | a repo-wide search returned exactly one referencing file: its own test. No service ever called the options API | a live, green, unreachable surface |
+| **DEF363** | the Dart model read `greeks_reason`; the server sends `greeks_not_evaluated` | **both** covering tests supplied the wrong key themselves, so both were correct about their own half and neither compared the halves | the reason a greek was unavailable never rendered |
+| **DEF365** | `SimPortfolio.fromJson` read `options` and a whole portfolio card rendered from it | `PortfolioSnapshot` had **no `options` field at all**. 4 backend tests drove the builder; 13 Flutter tests built their own fixture maps; **17 tests, none consuming the other side's output** | a user could consent to an option structure and then not see it |
+
+`CLAUDE.md`'s third-occurrence rule fired. **Dilemma [`ISS002_WIRE_CONTRACT_UNPROVEN`](../../dilemmas/ISS002_WIRE_CONTRACT_UNPROVEN/)**
+was convened on Saiful's ruling, three contributors answered blind, and the
+[verdict](../../dilemmas/ISS002_WIRE_CONTRACT_UNPROVEN/VERDICT.md) is implemented as **CR208**.
+
+**The deeper reading, from the Dilemma.** The suite cannot see across the wire because **every test
+in this repository asserts against an input it authored itself** — a Python test builds a Python
+object and checks the builder; a Dart test builds a map and checks the parser. Both are testing a
+function against its own imagination. The wire is the only place one side's *output* is the other
+side's *input*, so it is the only place this style of testing structurally cannot reach. Anything
+that compares two *descriptions* of the contract (schemas, declared pairs, an IDL) is still two
+imaginations and will drift the same way.
+
+**Interim executable check.** `backend/tests/unit/test_wire_contract_parity.py` — asserts a
+**declared pair** of one Dart class and one Pydantic model agree on key names. Proven to catch both
+DEF363 and DEF365. Its measured limit is why it is interim: an undeclared sweep reported **~250
+orphans, almost all false**, because this codebase serialises heavily through untyped `list[dict]`
+that no schema-based check can see inside. Growing it requires a human to declare each pair — the
+same manual act that failed three times.
+
+**The check that replaces it (CR208).** Auto-discover (endpoint → Dart class) pairs by parsing
+`mobile/lib/services/api/api_client.dart`, the single file every wire call passes through; capture
+real responses during the existing pytest run; diff each class's read keys against the bodies
+actually observed. Measured in the winning prototype: **85 pairs with zero hand-declared, 1,280
+responses captured, 44 PASS / 40 UNVERIFIED**. The 40 are [DEF367](../../defect/def_list.md) —
+**47% of wire surfaces have no route-level test**, which is the precondition for every instance
+above.
+
+**Rule for new code, amended.** A key read on one side of the wire and written on the other is a
+silent contract with no home in either suite. `UNVERIFIED` — *no test exercises this route* — must
+be a hard failure, never a silent pass (DEF169/DEF190). And observation proves presence, never
+absence: a key missing from every captured response is a `FAIL` only when the server source shows no
+branch that emits it. The winning prototype's single reported failure was exactly this mistake —
+`SimSubmitResult` reads `order`, and `sim.py:726` does send it, on the `resting: True` branch only.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
