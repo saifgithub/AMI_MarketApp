@@ -316,8 +316,10 @@ class _BoardRow extends StatelessWidget {
   const _BoardRow({required this.row, this.tied = false});
   final GameBoardRow row;
 
-  /// Renders the rank as `T3` rather than `3`. Presentation only — the rank
-  /// itself is the server's and is not recomputed.
+  /// Renders the rank as `=3` rather than `3`. `=` rather than DEF343's other
+  /// suggestion `T-3`: "T" abbreviates the English "tied" and would need its
+  /// own translated form in AR and MS, where a bare glyph does not. One less
+  /// string to retranslate, for the same meaning.
   final bool tied;
 
   @override
@@ -351,7 +353,7 @@ class _BoardRow extends StatelessWidget {
                   child: Text(
                     row.rank == null
                         ? '—'
-                        : (tied ? 'T${row.rank}' : '${row.rank}'),
+                        : (tied ? '=${row.rank}' : '${row.rank}'),
                     style: AmiTypography.dataMd.copyWith(
                       color: row.rank == null
                           ? AmiColors.textLow

@@ -892,6 +892,9 @@ class GameCloseResult {
     this.scoringBasis = 'placement',
     this.entrantCount = 0,
     this.scoredEntrantCount,
+    this.placementFieldSize,
+    this.placementTieCount,
+    this.placementAssertsPosition,
     this.rank,
     this.voidReason,
     this.careerPointsDelta = 0,
@@ -933,6 +936,22 @@ class GameCloseResult {
   /// about a contest that did not happen. Null on a run scored before
   /// slice 4, where [rankedFieldSize] falls back.
   final int? scoredEntrantCount;
+
+  /// CR207 — the `n` the server itself resolved the rank over, from
+  /// `placement.field_size`. Null on a payload predating that block.
+  final int? placementFieldSize;
+
+  /// CR207 — how many entries share this rank, resolved server-side because
+  /// the client is only ever sent its own entry and cannot count them.
+  final int? placementTieCount;
+
+  /// CR207 — whether the server considers a position assertable at all.
+  /// False for a void run, an unmeasured rank, and a thin field scored
+  /// against the index; null on a payload predating the block.
+  final bool? placementAssertsPosition;
+
+  /// Did this run share its rank with someone? Server-resolved.
+  bool get isTiedFinish => (placementTieCount ?? 1) > 1;
   final int? rank;
   final String? voidReason;
   final int careerPointsDelta;
@@ -1022,10 +1041,16 @@ class GameCloseResult {
   /// falls back to the field's own total for pre-slice-4 rows — never to
   /// zero, because "1st of 0" is the one rendering that is worse than
   /// showing the wider number.
+  /// CR207 — the server now resolves this and sends it as
+  /// `placement.field_size`, so prefer it and stop deriving the rule twice.
+  /// The local fallback stays for a payload predating that block, and ONLY
+  /// for that: two live derivations of one rule disagree the first time
+  /// either moves, which is the whole reason `games_placement` exists.
   int get rankedFieldSize =>
-      (scoredEntrantCount != null && scoredEntrantCount! > 0)
+      placementFieldSize ??
+      ((scoredEntrantCount != null && scoredEntrantCount! > 0)
           ? scoredEntrantCount!
-          : entrantCount;
+          : entrantCount);
   bool get hasNearMiss => nearMissLabel != null && nearMissGapPct != null;
 
   /// Wire keys are read with fallbacks across the plan-doc's prose names
@@ -1041,6 +1066,14 @@ class GameCloseResult {
         scoringBasis: j['scoring_basis'] as String? ?? 'placement',
         entrantCount: (j['entrant_count'] as num?)?.toInt() ?? 0,
         scoredEntrantCount: (j['scored_entrant_count'] as num?)?.toInt(),
+        placementFieldSize:
+            ((j['placement'] as Map<String, dynamic>?)?['field_size'] as num?)
+                ?.toInt(),
+        placementTieCount:
+            ((j['placement'] as Map<String, dynamic>?)?['tie_count'] as num?)
+                ?.toInt(),
+        placementAssertsPosition: (j['placement']
+            as Map<String, dynamic>?)?['asserts_position'] as bool?,
         rank: ((j['final_rank'] ?? j['rank']) as num?)?.toInt(),
         voidReason: j['void_reason'] as String?,
         careerPointsDelta:

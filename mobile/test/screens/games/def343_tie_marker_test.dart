@@ -92,4 +92,66 @@ void main() {
       expect(orderedRows(rows).map((r) => r.handle), ['a', 'b']);
     });
   });
+
+  group('CR207 — one producer for the placement rule', _cr207Tests);
+}
+
+// ── CR207 — the Close reads the server's resolved placement ────────────────
+//
+// Criterion 6: the placement rule gets exactly ONE producer. Before this the
+// client re-derived `rankedFieldSize` from `scored_entrant_count` /
+// `entrant_count` with its own never-zero rule, while `games_placement.py`
+// resolved the same thing server-side for the settlement push. Two live
+// derivations of one rule disagree the first time either moves.
+
+GameCloseResult _close(Map<String, dynamic> extra) => GameCloseResult.fromJson({
+      'run_id': 'r',
+      'field_id': 'f',
+      'cadence': 'week',
+      'state': 'finished',
+      'scoring_basis': 'placement',
+      'entrant_count': 9,
+      'scored_entrant_count': 7,
+      'rank': 3,
+      'career_points_delta': 0,
+      'trade_count': 0,
+      ...extra,
+    });
+
+void _cr207Tests() {
+  test('the server-resolved field size wins over the local derivation', () {
+    final r = _close({
+      'placement': {'field_size': 4, 'tie_count': 1, 'asserts_position': true},
+    });
+    expect(r.rankedFieldSize, 4);
+  });
+
+  test('a payload with no placement block still renders, from the old rule', () {
+    // Not a fallback for convenience — a payload predating the block must not
+    // render "of 0" or throw. The scored count still beats the raw entrant
+    // count here, for the reason it always did: entries that voided were
+    // never comparable.
+    expect(_close({}).rankedFieldSize, 7);
+  });
+
+  test('a shared rank is carried from the server, not counted by the client', () {
+    // The client is only ever sent its OWN entry, so it cannot count a tie.
+    final r = _close({
+      'placement': {'field_size': 4, 'tie_count': 2, 'asserts_position': true},
+    });
+    expect(r.isTiedFinish, isTrue);
+    expect(_close({}).isTiedFinish, isFalse);
+  });
+
+  test('a non-asserting placement is carried through as such', () {
+    final r = _close({
+      'state': 'void',
+      'placement': {
+        'field_size': 4,
+        'tie_count': 0,
+        'asserts_position': false,
+      },
+    });
+    expect(r.placementAssertsPosition, isFalse);
+  });
 }
