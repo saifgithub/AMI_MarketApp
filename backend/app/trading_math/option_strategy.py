@@ -497,3 +497,45 @@ def min_days_to_expiry(
         except ValueError:
             continue
     return min(days) if days else None
+
+
+def payoff_curve(
+    legs: Sequence[StrategyLeg], *, spot: float | None = None,
+) -> tuple[tuple[float, float], ...]:
+    """The expiry P&L curve as (price, pnl) vertices — CR172 §12's diagram.
+
+    **Vertices, not samples, and that is exact rather than a shortcut.** An
+    option structure's expiry payoff is piecewise-linear with kinks only at the
+    strikes, so a point at every strike plus one either side describes the whole
+    function losslessly: any renderer can interpolate between two vertices and
+    be exactly right, at any zoom, without the server guessing a resolution.
+    Sampling on a fixed grid would be strictly worse — larger, and wrong
+    precisely at the kinks a payoff diagram exists to show.
+
+    Computed here rather than on the client so the curve and the figures beside
+    it (`max_loss`, `break_evens`, `net_cost`) come from ONE derivation. A
+    diagram that disagrees with the number printed under it is DEF098's shape,
+    and on this surface the diagram is what the user actually reads.
+
+    `0.0` is always the first vertex: the bankruptcy case is where a put pays
+    and a covered call hurts most, and a curve that starts at the lowest strike
+    hides it. Returns `()` for legs that cannot be valued.
+    """
+    if not _legs_valid(legs):
+        return ()
+    strikes = sorted({float(l.strike) for l in legs})
+    if not strikes:
+        return ()
+    top = max(strikes)
+    # Far enough right that the terminal slope is unmistakable, and past spot
+    # when spot sits above every strike (a deep-ITM call would otherwise render
+    # as a flat line at the edge of its own diagram).
+    upper = max(top * 1.5, (spot or 0.0) * 1.5)
+    prices = [0.0, *strikes, upper]
+    out: list[tuple[float, float]] = []
+    for p in prices:
+        pnl = payoff_at_expiry(legs, p)
+        if pnl is None:
+            return ()
+        out.append((round(p, 4), round(pnl, 2)))
+    return tuple(out)

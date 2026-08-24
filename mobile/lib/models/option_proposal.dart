@@ -248,6 +248,7 @@ class OptionProposal {
     this.contracts,
     this.spot,
     this.pricedAt,
+    this.payoffCurve = const [],
   });
 
   /// The PM's pick as an INDEX into the candidate set AMI built — never a
@@ -272,6 +273,15 @@ class OptionProposal {
 
   /// The PM's prose. Why this structure, in AMI's voice.
   final String? narration;
+
+  /// CR172 §12 — the expiry payoff as (price, pnl) VERTICES, server-computed.
+  ///
+  /// Not samples: the payoff is piecewise-linear with kinks only at the
+  /// strikes, so these describe it losslessly and the painter interpolates
+  /// between them. Empty when the server sent none — the diagram then draws
+  /// nothing rather than a curve this client invented, which would be a second
+  /// derivation able to disagree with the max-loss figure printed beside it.
+  final List<({double price, double pnl})> payoffCurve;
 
   final List<OptionProposalLeg> legs;
 
@@ -352,11 +362,26 @@ class OptionProposal {
     return parts.isEmpty ? null : parts.join('; ');
   }
 
+  static List<({double price, double pnl})> _payoffCurve(
+      Map<String, dynamic> j) {
+    final raw = j['payoff_curve'];
+    if (raw is! List) return const [];
+    final out = <({double price, double pnl})>[];
+    for (final pt in raw) {
+      if (pt is! List || pt.length < 2) continue;
+      final p = pt[0], v = pt[1];
+      if (p is! num || v is! num) continue;
+      out.add((price: p.toDouble(), pnl: v.toDouble()));
+    }
+    return out;
+  }
+
   factory OptionProposal.fromJson(Map<String, dynamic> j) {
     final metrics = j['metrics'];
     final greeks = j['net_greeks'] ?? j['greeks'];
     final compliance = j['compliance'];
     return OptionProposal(
+      payoffCurve: _payoffCurve(j),
       structureId: (j['structure_id'] as num?)?.toInt(),
       strategyName: j['strategy_name'] as String? ?? '',
       underlying: j['underlying'] as String? ?? '',

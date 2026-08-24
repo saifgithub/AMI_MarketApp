@@ -49,6 +49,7 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/option_proposal.dart';
+import 'package:ami_trade/widgets/sim/option_payoff_chart.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/sim/option_disclosure_dialog.dart';
 import 'package:flutter/material.dart';
@@ -158,6 +159,20 @@ class _OptionProposalTicketState extends State<OptionProposalTicket> {
                 const SizedBox(height: AmiSpacing.m),
               ],
               _legsBlock(l),
+              // CR172 §12 — the payoff diagram sits between the legs and the
+              // figures, because it is the thing that makes the figures mean
+              // something: max loss and break-even are abstractions until you
+              // see the shape they describe. Draws nothing when the server
+              // sent no curve (CR040 — an empty axis is a failed chart
+              // rendered as an empty one).
+              if (_p.payoffCurve.length >= 2) ...[
+                const SizedBox(height: AmiSpacing.m),
+                OptionPayoffChart(
+                  curve: _p.payoffCurve,
+                  spot: _p.spot,
+                  breakEvens: _p.metrics?.breakEvens ?? const [],
+                ),
+              ],
               const SizedBox(height: AmiSpacing.m),
               _metricsBlock(l),
               const SizedBox(height: AmiSpacing.m),

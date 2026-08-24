@@ -109,6 +109,15 @@ class CostedStructure(BaseModel):
 
     # What the market was when this was costed. `None` means the source could
     # not state it — never "assume today's".
+    # CR172 §12 — the expiry payoff as (price, pnl) VERTICES, not samples.
+    # A structure's payoff is piecewise-linear with kinks only at the strikes,
+    # so these describe the whole curve losslessly and the client interpolates.
+    # Server-computed so the drawing and the `max_loss` / `break_evens` printed
+    # beside it come from one derivation — a diagram that disagrees with its own
+    # caption is DEF098's shape, and on this surface the diagram is what the
+    # user actually reads.
+    payoff_curve: list[tuple[float, float]] = Field(default_factory=list)
+
     spot: float | None = None
     priced_at: datetime.datetime | None = None
 
@@ -155,6 +164,12 @@ def leg_out(leg: StrategyLeg, occ: str | None = None) -> LegOut:
     )
 
 
+def _payoff_curve(legs, *, spot):
+    from app.trading_math.option_strategy import payoff_curve
+
+    return payoff_curve(legs, spot=spot)
+
+
 def costed_structure(
     candidate, *, spot: float | None = None,
     priced_at: datetime.datetime | None = None,
@@ -175,6 +190,9 @@ def costed_structure(
         days_to_expiry=candidate.days_to_expiry,
         underlying=candidate.underlying,
         legs=[leg_out(leg) for leg in candidate.legs],
+        payoff_curve=[
+            list(pt) for pt in _payoff_curve(candidate.legs, spot=spot)
+        ],
         metrics=MetricsOut(
             net_cost=m.net_cost,
             max_loss=m.max_loss,
