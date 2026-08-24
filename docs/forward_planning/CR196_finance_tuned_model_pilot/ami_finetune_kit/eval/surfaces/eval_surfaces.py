@@ -112,8 +112,16 @@ def score_S2(text, meta):
 
 
 def score_S3(text, meta):
+    # `picked_a_side` is VACUOUS — kept only so the series stays comparable, and named
+    # here so nobody reads its 100% as a result. It matches the words "bull"/"bear"
+    # anywhere, and summarising both cases IS the Research Manager's job: measured
+    # 2026-08-24, every completion in both arms contains both words (5 matches each),
+    # so it scores 100% for vanilla and tuned alike and cannot discriminate. It is
+    # deliberately NOT in compare_arms.CRITERIA. The discriminating check on this
+    # surface is `no_short_language` (vanilla 86%). Replacing it needs a check for an
+    # actual commitment — a concluding stance — not the presence of a stance word.
     return {"no_short_language": not bool(P_SHORT_LANG.search(text)),
-            "picked_a_side": bool(re.search(r"\b(bull|bear)\b", text, re.I)),
+            "picked_a_side_VACUOUS": bool(re.search(r"\b(bull|bear)\b", text, re.I)),
             "chars": len(text)}
 
 
