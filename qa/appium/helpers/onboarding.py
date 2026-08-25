@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import time
 
+from appium.webdriver.common.appiumby import AppiumBy
 from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
@@ -148,6 +149,7 @@ def _app_id(driver) -> str | None:
 # user end up believing?* Here the operator believed the app could not start,
 # and DEF347 and DEF348 were both aimed at that belief.
 from helpers.foreground import FOREGROUND, NOT_FOREGROUND, UNKNOWN, resolve
+from helpers.candidate_pool import selectable
 
 
 def app_foreground_state(driver, app_id: str) -> str:
@@ -180,6 +182,59 @@ def _foreground_package(driver) -> str | None:
         return driver.current_package
     except Exception:
         return None
+
+
+def _keyboard_frame(driver):
+    """The software keyboard's own rect, or None when there isn't one.
+
+    None on Android deliberately: `hide_keyboard()` works there, and this
+    exists only because it does not work on iOS. None is also the answer when
+    the query fails — see `keyboard_zone.is_inside` for why that must exclude
+    nothing rather than everything.
+    """
+    if not is_ios(driver):
+        return None
+    try:
+        keyboards = driver.find_elements(
+            AppiumBy.IOS_PREDICATE, 'type == "XCUIElementTypeKeyboard"'
+        )
+    except Exception:
+        return None
+    for keyboard in keyboards:
+        try:
+            rect = keyboard.rect
+        except Exception:
+            continue
+        return (rect["x"], rect["y"], rect["width"], rect["height"])
+    return None
+
+
+def _selectable(driver, candidates):
+    """Narrow the pool to controls the walk may actually tap.
+
+    DEF374, in two measured halves. `_live_chip` picks the bottom-most labelled
+    control; with the keyboard up that was the globe key (186 taps in one wedged
+    run), and once the keyboard was excluded it became the composer text field
+    (180 taps in the next). Filtering here rather than inside `_live_chip` keeps
+    the "bottom-most wins" rule intact and simply stops feeding it controls that
+    are not answers.
+    """
+    frame = _keyboard_frame(driver)
+    kinds, rects, live = [], [], []
+    for element in candidates:
+        try:
+            rect = element.rect
+            kind = element.get_attribute("type") or element.get_attribute("class") or ""
+        except Exception:
+            continue
+        rects.append((rect["x"], rect["y"], rect["width"], rect["height"]))
+        kinds.append(kind)
+        live.append(element)
+    kept = selectable(kinds, rects, frame)
+    dropped = len(live) - len(kept)
+    if dropped:
+        print(f"    [onboarding] ignoring {dropped} non-answer control(s)")
+    return [live[i] for i in kept]
 
 
 def _live_chip(driver, candidates):
@@ -402,6 +457,7 @@ def ensure_onboarded(
                 if not is_text_input(driver, element)
             ]
         candidates = [c for c in candidates if not _is_expensive(driver, c)]
+        candidates = _selectable(driver, candidates)
         if not candidates:
             time.sleep(1.0)
             continue
