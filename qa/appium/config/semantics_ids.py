@@ -64,3 +64,10 @@ SHEET_CONVENE = "ami.sheet.convene"
 SHEET_CONVENE_CTA = "ami.sheet.convene.cta"
 SHEET_MERGE = "ami.sheet.merge"
 SHEET_MERGE_CTA = "ami.sheet.merge.cta"
+
+# CR209 — the Concierge interview. See `OnboardingIds` in the Dart mirror for
+# why the chips share one identifier rather than carrying an index.
+ONBOARDING_ANSWER_CHIP = "ami.onboarding.answer_chip"
+ONBOARDING_COMPOSER = "ami.onboarding.composer"
+ONBOARDING_SEND = "ami.onboarding.send"
+

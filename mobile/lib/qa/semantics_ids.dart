@@ -92,3 +92,38 @@ class SheetIds {
   static const String merge = 'ami.sheet.merge';
   static const String mergeCta = 'ami.sheet.merge.cta';
 }
+
+/// CR209 — the Concierge interview, the one surface the onboarding walk must
+/// drive and the only one it had no identifier for.
+///
+/// The walk used to select an answer by geometry: "the bottom-most labelled
+/// control". On iOS the bottom of the screen never belongs to the chips, and
+/// three different controls were measured occupying that slot in three
+/// consecutive runs — the keyboard's globe key (186 taps), the composer text
+/// field (180), the send arrow (579). Excluding them one at a time cannot
+/// converge, because the pool is the platform's, not ours.
+///
+/// [DEF346] is the sharp edge: giving the send button a VoiceOver label — a
+/// correct accessibility fix — is what made the harness's `labelled_only`
+/// filter stop excluding it, and `_live_chip`'s docstring still asserts the
+/// arrow "has none". An accessibility improvement silently invalidated a test
+/// heuristic. An identifier cannot rot that way: it is addressed by name, and
+/// `mobile/test/qa/semantics_ids_test.dart` fails locally if it is dropped.
+///
+/// [answerChip] is deliberately NOT unique per chip. The harness needs "an
+/// answer for the current turn", and `onboarding_screen.dart` renders only the
+/// live turn's chips (`state.currentChips`), so every node carrying this id is
+/// a valid answer. Numbering them would invent an ordering the interview does
+/// not have — the chips are backend-authored and their count varies by turn.
+class OnboardingIds {
+  const OnboardingIds._();
+
+  /// Every tappable answer chip of the current interview turn.
+  static const String answerChip = 'ami.onboarding.answer_chip';
+
+  /// The free-text composer and its send button. Named so the walk can exclude
+  /// them **by name** rather than by guessing at geometry — the walk answers
+  /// with chips and never types.
+  static const String composer = 'ami.onboarding.composer';
+  static const String send = 'ami.onboarding.send';
+}

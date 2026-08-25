@@ -40,8 +40,10 @@ from selenium.common.exceptions import (
 )
 
 from config.locales import LOCALES
+from config.semantics_ids import ONBOARDING_ANSWER_CHIP
 from helpers.gestures import hide_keyboard_if_shown, tap_element
 from helpers.locators import (
+    all_by_id,
     exists_id,
     exists_text,
     interactive_elements,
@@ -436,6 +438,30 @@ def ensure_onboarded(
 
         if exists_text(driver, _LOOKS_RIGHT_CONTINUE, retry=False):
             wait_visible_text(driver, _LOOKS_RIGHT_CONTINUE, timeout_s=3).click()
+            time.sleep(1.5)
+            continue
+
+        # CR209 — address the answer, do not deduce it.
+        #
+        # Everything below this block is a fallback that guesses "the
+        # bottom-most labelled control", and DEF362 is what that guess costs:
+        # the keyboard's globe key (186 taps), the composer (180) and the send
+        # arrow (579) each took that slot in turn, and excluding them one at a
+        # time cannot converge because the pool belongs to the platform. The
+        # chips now carry `OnboardingIds.answerChip`, so ask for them by name.
+        #
+        # The fallback is kept, not deleted: this walk also has to clear turns
+        # that are not chip questions at all (the "Skip for now" and "Looks
+        # right, continue" branches above handle the named ones, but the
+        # interview is backend-authored and may offer a control neither branch
+        # knows). It runs only when no chip resolves, so it can no longer be
+        # the reason a chip question wedges.
+        chips = all_by_id(driver, ONBOARDING_ANSWER_CHIP, retry=False)
+        if chips:
+            try:
+                tap_element(driver, chips[0])
+            except StaleElementReferenceException:
+                print("    [onboarding] the chip went stale before the tap — re-observing")
             time.sleep(1.5)
             continue
 

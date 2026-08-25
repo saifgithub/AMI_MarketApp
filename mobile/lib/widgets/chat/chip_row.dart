@@ -1,3 +1,4 @@
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:flutter/material.dart';
@@ -45,8 +46,14 @@ class _Chip extends StatelessWidget {
     // was driven on iOS, where a node is a button only if Flutter says so.
     // No `label:` here — the child Text already supplies one, and setting both
     // concatenates them, so VoiceOver announces the chip twice.
+    // CR209: the identifier is what the UAT walk selects on. Without it the
+    // walk had to guess "bottom-most labelled control", which on iOS is the
+    // keyboard, the composer or the send arrow — never this. `identifier` is
+    // not a label and is never spoken, so it does not disturb DEF249's
+    // announcement above.
     return Semantics(
       button: true,
+      identifier: OnboardingIds.answerChip,
       child: GestureDetector(
         onTap: onTap,
         child: ClipPath(

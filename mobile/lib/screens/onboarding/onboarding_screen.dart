@@ -12,6 +12,7 @@ import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/widgets/chat/chip_row.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             _HeaderBar(state: state),
             Expanded(child: _body(state)),
             if (state.phase == OnboardingPhase.readback) _readbackControls(),
-            if (state.phase == OnboardingPhase.completed) _completedControls(state),
+            if (state.phase == OnboardingPhase.completed)
+              _completedControls(state),
             if (state.phase == OnboardingPhase.inConversation ||
                 state.phase == OnboardingPhase.starting)
               _inputArea(state),
@@ -157,30 +159,41 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _textCtrl,
-                    style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
-                    minLines: 1,
-                    maxLines: 4,
-                    onSubmitted: _handleSubmit,
-                    decoration: InputDecoration(
-                      hintText: state.submitting
-                          ? AppLocalizations.of(context).onboardingHintSending
-                          : AppLocalizations.of(context).onboardingHintAnswer,
-                      hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
-                      filled: true,
-                      fillColor: AmiColors.slate800,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AmiSpacing.m,
-                        vertical: 12,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AmiRadii.card),
-                        borderSide: const BorderSide(color: AmiColors.slate700),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AmiRadii.card),
-                        borderSide: const BorderSide(color: AmiColors.hexBlue),
+                  // CR209: named so the walk can exclude it explicitly. It was
+                  // tapped 180 times in one wedged run once the keyboard was
+                  // filtered out — it carries a label (the hint), so the
+                  // harness's `labelled_only` filter kept it.
+                  child: Semantics(
+                    identifier: OnboardingIds.composer,
+                    child: TextField(
+                      controller: _textCtrl,
+                      style: AmiTypography.body
+                          .copyWith(color: AmiColors.textHigh),
+                      minLines: 1,
+                      maxLines: 4,
+                      onSubmitted: _handleSubmit,
+                      decoration: InputDecoration(
+                        hintText: state.submitting
+                            ? AppLocalizations.of(context).onboardingHintSending
+                            : AppLocalizations.of(context).onboardingHintAnswer,
+                        hintStyle: AmiTypography.body
+                            .copyWith(color: AmiColors.textLow),
+                        filled: true,
+                        fillColor: AmiColors.slate800,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AmiSpacing.m,
+                          vertical: 12,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          borderSide:
+                              const BorderSide(color: AmiColors.slate700),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          borderSide:
+                              const BorderSide(color: AmiColors.hexBlue),
+                        ),
                       ),
                     ),
                   ),
@@ -192,17 +205,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 // surfaces it as the semantics *tooltip* attribute, not the
                 // label — so the same l10n key feeds both.
                 Semantics(
-                  label: AppLocalizations.of(context).onboardingSendAnswerTooltip,
+                  label:
+                      AppLocalizations.of(context).onboardingSendAnswerTooltip,
+                  identifier: OnboardingIds.send,
                   child: IconButton(
-                    tooltip:
-                        AppLocalizations.of(context).onboardingSendAnswerTooltip,
-                    onPressed:
-                        state.submitting ? null : () => _handleSubmit(_textCtrl.text),
-                    icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
+                    tooltip: AppLocalizations.of(context)
+                        .onboardingSendAnswerTooltip,
+                    onPressed: state.submitting
+                        ? null
+                        : () => _handleSubmit(_textCtrl.text),
+                    icon: const Icon(Icons.arrow_upward,
+                        color: AmiColors.hexBlue),
                     style: IconButton.styleFrom(
                       backgroundColor: AmiColors.slate800,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(AmiRadii.card)),
+                        borderRadius:
+                            BorderRadius.all(Radius.circular(AmiRadii.card)),
                       ),
                     ),
                   ),
@@ -276,7 +294,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-
 class _HeaderBar extends StatelessWidget {
   const _HeaderBar({required this.state});
   final OnboardingState state;
@@ -292,7 +309,8 @@ class _HeaderBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('⬢', style: TextStyle(fontSize: 22, color: AmiColors.hexBlue)),
+          const Text('⬢',
+              style: TextStyle(fontSize: 22, color: AmiColors.hexBlue)),
           const SizedBox(width: AmiSpacing.s),
           Text(AppLocalizations.of(context).onboardingHeader,
               style: AmiTypography.labelMono),
@@ -310,7 +328,6 @@ class _HeaderBar extends StatelessWidget {
     );
   }
 }
-
 
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});
