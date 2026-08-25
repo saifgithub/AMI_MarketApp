@@ -38,7 +38,7 @@ def _own(current_user: User, user_id: UUID) -> None:
 
 
 @router.get("/{user_id}", response_model=WatchlistListResponse)
-async def list_watchlist(
+def list_watchlist(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> WatchlistListResponse:
@@ -65,7 +65,7 @@ async def list_watchlist(
     response_model=WatchlistEntryWithQuote,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_to_watchlist(
+def add_to_watchlist(
     user_id: UUID,
     req: WatchlistAddRequest,
     current_user: User = Depends(get_current_user),
@@ -93,7 +93,7 @@ async def add_to_watchlist(
 
 
 @router.delete("/{user_id}/{ticker}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_from_watchlist(
+def remove_from_watchlist(
     user_id: UUID,
     ticker: str,
     current_user: User = Depends(get_current_user),

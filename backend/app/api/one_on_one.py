@@ -65,7 +65,7 @@ def _agent_id_str(session: OneOnOneSession) -> str:
     response_model=OneOnOneSession,
     status_code=status.HTTP_201_CREATED,
 )
-async def start_one_on_one(
+def start_one_on_one(
     req: OneOnOneStartRequest,
     current_user: User = Depends(get_current_user),
     runner: AgentRunner = Depends(get_agent_runner),
@@ -231,7 +231,7 @@ async def send_message(
 
 
 @router.get("/one_on_one/{session_id}", response_model=OneOnOneSession)
-async def get_one_on_one(
+def get_one_on_one(
     session_id: UUID,
     current_user: User = Depends(get_current_user),
     runner: AgentRunner = Depends(get_agent_runner),

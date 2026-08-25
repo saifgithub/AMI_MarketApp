@@ -38,7 +38,7 @@ def _own(current_user: User, user_id: UUID) -> None:
 
 
 @router.post("/{user_id}", response_model=PriceAlertOut, status_code=status.HTTP_201_CREATED)
-async def create_price_alert(
+def create_price_alert(
     user_id: UUID,
     req: PriceAlertCreate,
     current_user: User = Depends(get_current_user),
@@ -55,7 +55,7 @@ async def create_price_alert(
 
 
 @router.get("/{user_id}", response_model=PriceAlertListResponse)
-async def list_price_alerts(
+def list_price_alerts(
     user_id: UUID,
     status_filter: str | None = Query(default=None, alias="status"),
     current_user: User = Depends(get_current_user),
@@ -66,7 +66,7 @@ async def list_price_alerts(
 
 
 @router.delete("/{user_id}/{alert_id}", response_model=PriceAlertOut)
-async def cancel_price_alert(
+def cancel_price_alert(
     user_id: UUID,
     alert_id: UUID,
     current_user: User = Depends(get_current_user),

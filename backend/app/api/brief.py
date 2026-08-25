@@ -80,7 +80,7 @@ def _own_session(current_user: User, session) -> None:
 
 
 @router.post("/start", response_model=BriefStartResponse, status_code=status.HTTP_201_CREATED)
-async def brief_start(
+def brief_start(
     req: BriefStartRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
@@ -200,7 +200,7 @@ async def brief_propose(
 
 
 @router.post("/accept")
-async def brief_accept(
+def brief_accept(
     req: BriefAcceptRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
@@ -235,7 +235,7 @@ async def brief_accept(
 
 
 @router.post("/reject")
-async def brief_reject(
+def brief_reject(
     req: BriefRejectRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
@@ -247,7 +247,7 @@ async def brief_reject(
 
 
 @router.post("/rollback", response_model=UserOverlay)
-async def brief_rollback(
+def brief_rollback(
     req: BriefRollbackRequest,
     current_user: User = Depends(get_current_user),
     store: OverlayStore = Depends(get_overlay_store),
@@ -263,7 +263,7 @@ async def brief_rollback(
     "/history/{user_id}/{agent_id}",
     response_model=BriefHistoryResponse,
 )
-async def brief_history(
+def brief_history(
     user_id: UUID,
     agent_id: AgentId,
     plan: str = "trial_trader",

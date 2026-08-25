@@ -59,7 +59,7 @@ class AnnotateRequest(BaseModel):
 
 
 @router.get("/{user_id}", response_model=JournalListResponse)
-async def list_entries(
+def list_entries(
     user_id: UUID,
     entry_type: str | None = None,
     ticker: str | None = None,
@@ -94,7 +94,7 @@ async def list_entries(
 
 
 @router.get("/{user_id}/trash", response_model=JournalListResponse)
-async def list_trash(
+def list_trash(
     user_id: UUID,
     limit: int = 100,
     current_user: User = Depends(get_current_user),
@@ -112,7 +112,7 @@ async def list_trash(
 
 
 @router.get("/{user_id}/entry/{entry_id}", response_model=JournalEntry)
-async def get_entry(
+def get_entry(
     user_id: UUID,
     entry_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -126,7 +126,7 @@ async def get_entry(
 
 
 @router.post("/{user_id}/entry/{entry_id}/note", response_model=JournalEntry)
-async def annotate_entry(
+def annotate_entry(
     user_id: UUID,
     entry_id: UUID,
     req: AnnotateRequest,
@@ -168,7 +168,7 @@ async def annotate_entry(
     "/{user_id}/entry/{entry_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_entry(
+def delete_entry(
     user_id: UUID,
     entry_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -184,7 +184,7 @@ async def delete_entry(
     "/{user_id}/entry/{entry_id}/restore",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def restore_entry(
+def restore_entry(
     user_id: UUID,
     entry_id: UUID,
     current_user: User = Depends(get_current_user),

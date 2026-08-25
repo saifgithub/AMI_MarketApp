@@ -28,6 +28,28 @@ Two directions, deliberately asymmetric:
 
 Removing an entry from the baseline is the celebration, not the chore. Adding
 one is a decision that needs a reason in the commit message.
+
+SWEPT 2026-08-25 (AT:R74), 86 -> 38, and what the sweep MEASURED matters more
+than the number. 48 of the 86 flagged handlers never awaited anything at all,
+so they were converted to plain `def` — Starlette runs those in a threadpool,
+which is fix (1) below and the cheapest correct answer. The full suite passed
+5282 with those 48 converted, so the conversion is behaviour-neutral.
+
+THE REMAINING 38 ARE NOT 38 HANDLERS BLOCKING THE LOOP, and reading the count
+that way would be the DEF059 mistake in a new place. Section C flags a handler
+when its body REFERENCES A NAME imported from a module that does sync I/O
+somewhere — it cannot tell a blocking call from a type annotation, a
+`Depends()` factory or an exception class in an `except` clause. Checked by
+hand: `sim.py::quote` is flagged for `SimEngine` (its parameter annotation) and
+`get_sim_engine` (its `Depends`), while the only real work it does is already
+inside `asyncio.to_thread`. sim.py's handlers were disciplined into that shape
+by DEF120's D9 guard long before this ratchet existed.
+
+So the honest reading of 38 is "38 async handlers the census cannot clear",
+not "38 handlers still blocking". Clearing them needs either a per-handler
+judgement recorded somewhere durable, or a census that distinguishes a call
+from an annotation. Both are real work; neither is done here, and the number
+is left standing rather than quietly re-defined to make it look smaller.
 """
 
 from __future__ import annotations
@@ -98,12 +120,35 @@ def test_the_baseline_shrinks_when_a_handler_is_fixed():
 def test_the_ratchet_is_not_vacuous():
     """If the census ever resolved nothing — a moved API dir, a rename, a broken
     import registry — both tests above would pass over an empty set and this
-    guard would be silently inert (P21)."""
-    current = _flagged()
-    assert len(current) >= 50, (
-        f"the census flagged only {len(current)} handlers; it flagged 87 when this "
-        "baseline was taken. A collapse that large means the census is broken, not "
-        "that the debt was paid."
+    guard would be silently inert (P21).
+
+    **This watches the POPULATION, not the flagged subset, and that correction
+    is the point.** It used to assert `len(_flagged()) >= 50`, which made the
+    guard fail the moment the work it protects actually got done: the 2026-08-25
+    sweep took the flagged set from 86 to 38 and turned this red. A vacuity
+    check aimed at the number that is supposed to reach zero is a check that
+    punishes success — the same shape as a gate whose failing state is its
+    normal state, which this project has paid for three times over.
+
+    So it asserts the census still *sees* something to judge: a plausible number
+    of `async def` handlers scanned, and a populated sync-I/O module registry.
+    Those are the two things that collapse when the census breaks, and neither
+    is supposed to trend to zero."""
+    result = census()
+    scanned = result["total_async_handlers"]
+    registry = result["section_b_registry"]
+
+    assert scanned >= 40, (
+        f"the census scanned only {scanned} async handlers; it scanned 71 after "
+        "the 2026-08-25 sweep and 119 before it. A collapse that large means the "
+        "census stopped finding the API package, not that every handler became "
+        "synchronous."
+    )
+    assert len(registry) >= 30, (
+        f"the sync-I/O module registry resolved only {len(registry)} modules; it "
+        "resolved 51 on 2026-08-25. The registry is re-derived by grep each run, "
+        "so an empty one means the derivation broke — and every handler would "
+        "then look clean for the worst possible reason."
     )
 
 
@@ -111,8 +156,9 @@ def test_the_baseline_only_ever_shrinks_from_here():
     """Pins the size the baseline was frozen at, so growing it is a visible,
     deliberate edit to this number rather than a quiet append."""
     baseline = json.loads(_BASELINE.read_text(encoding="utf-8"))["flagged"]
-    assert len(baseline) <= 87, (
+    assert len(baseline) <= 38, (
         f"the DEF200 baseline has grown to {len(baseline)}. It was frozen at 87 on "
-        "2026-08-18 and is meant to go down. If a new blocking handler was genuinely "
-        "unavoidable, say why in the commit and lower this bound in the same edit."
+        "2026-08-18, swept to 38 on 2026-08-25, and is meant to keep going down. If "
+        "a new blocking handler was genuinely unavoidable, say why in the commit and "
+        "lower this bound in the same edit."
     )

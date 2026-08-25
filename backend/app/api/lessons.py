@@ -42,7 +42,7 @@ router = APIRouter(prefix="/v1/lessons", tags=["lessons"])
 
 
 @router.get("", response_model=LessonCatalogue)
-async def catalogue(
+def catalogue(
     locale: str = "en",
     svc: LessonsService = Depends(get_lessons_service),
 ) -> LessonCatalogue:
@@ -50,7 +50,7 @@ async def catalogue(
 
 
 @router.get("/progress/{user_id}", response_model=ProgressSummary)
-async def progress(
+def progress(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -61,7 +61,7 @@ async def progress(
 
 
 @router.get("/progress/{user_id}/by_lesson", response_model=list[LessonStatus])
-async def progress_by_lesson(
+def progress_by_lesson(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -72,7 +72,7 @@ async def progress_by_lesson(
 
 
 @router.get("/requirements/{user_id}", response_model=list[AgentUnlockRequirement])
-async def unlock_requirements(
+def unlock_requirements(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -89,7 +89,7 @@ async def unlock_requirements(
 
 
 @router.get("/activations/{user_id}", response_model=list[AgentActivationRecord])
-async def activations(
+def activations(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -107,7 +107,7 @@ async def activations(
 
 
 @router.post("/start", response_model=LessonStatus)
-async def start_lesson(
+def start_lesson(
     req: StartLessonRequest,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -120,7 +120,7 @@ async def start_lesson(
 
 
 @router.post("/quiz", response_model=QuizSubmitResponse)
-async def submit_quiz(
+def submit_quiz(
     req: QuizSubmitRequest,
     current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
@@ -185,7 +185,7 @@ async def submit_quiz(
 # it leaving the process. Changing this back to `Lesson` re-opens the leak, and
 # `test_def294_lesson_quiz_answer_key.py` fails if anyone does.
 @router.get("/{lesson_id}", response_model=LessonPublic)
-async def get_lesson(
+def get_lesson(
     lesson_id: str,
     locale: str = "en",
     svc: LessonsService = Depends(get_lessons_service),

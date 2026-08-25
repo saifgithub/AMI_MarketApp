@@ -20,7 +20,7 @@ router = APIRouter(prefix="/v1/tickers", tags=["tickers"])
 
 
 @router.get("/validate", response_model=TickerValidateResponse)
-async def validate_ticker(ticker: str = Query(..., min_length=1)) -> TickerValidateResponse:
+def validate_ticker(ticker: str = Query(..., min_length=1)) -> TickerValidateResponse:
     normalized = ticker.upper().strip()
     with get_session() as session:
         row = lookup_ticker(session, normalized)

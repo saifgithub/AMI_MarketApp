@@ -50,7 +50,7 @@ def _stored_attempt(session, user_id, challenge_id) -> DailyChallengeAttemptRow 
 
 
 @router.get("/today", response_model=DailyChallengeResponse)
-async def today(
+def today(
     current_user: User | None = Depends(get_current_user_optional),
     svc: DailyChallengeService = Depends(get_daily_challenge_service),
 ) -> DailyChallengeResponse:
@@ -144,7 +144,7 @@ class DailyChallengeAttemptResponse(BaseModel):
 
 
 @router.post("/{cid}/attempt", response_model=DailyChallengeAttemptResponse)
-async def attempt(
+def attempt(
     cid: str,
     req: DailyChallengeAttemptRequest,
     current_user: User = Depends(get_current_user),
@@ -269,7 +269,7 @@ class ReminderPreference(BaseModel):
 
 
 @router.put("/reminder", response_model=ReminderPreference)
-async def set_reminder_preference(
+def set_reminder_preference(
     req: ReminderPreference,
     current_user: User = Depends(get_current_user),
 ) -> ReminderPreference:

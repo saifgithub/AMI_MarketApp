@@ -41,7 +41,7 @@ def _attached_user(session, user_id) -> User:
 
 
 @router.get("/standings")
-async def standings(current_user: User = Depends(get_current_user)) -> dict:
+def standings(current_user: User = Depends(get_current_user)) -> dict:
     svc = get_league_service()
     with get_session() as s:
         board = svc.standings(s, current_user.id)
@@ -51,7 +51,7 @@ async def standings(current_user: User = Depends(get_current_user)) -> dict:
 
 
 @router.get("/me")
-async def me(current_user: User = Depends(get_current_user)) -> dict:
+def me(current_user: User = Depends(get_current_user)) -> dict:
     league = get_league_service()
     rep = get_reputation_service()
     with get_session() as s:
@@ -86,13 +86,13 @@ async def me(current_user: User = Depends(get_current_user)) -> dict:
 
 
 @router.get("/history")
-async def history(current_user: User = Depends(get_current_user)) -> list[dict]:
+def history(current_user: User = Depends(get_current_user)) -> list[dict]:
     with get_session() as s:
         return get_league_service().history(s, current_user.id)
 
 
 @router.patch("/handle")
-async def regenerate_handle(
+def regenerate_handle(
     current_user: User = Depends(get_current_user),
 ) -> dict:
     svc = get_league_service()
@@ -106,7 +106,7 @@ async def regenerate_handle(
 
 
 @router.get("/badges")
-async def badges(current_user: User = Depends(get_current_user)) -> list[dict]:
+def badges(current_user: User = Depends(get_current_user)) -> list[dict]:
     """CR091 read endpoint + CR092 flair exposure. Mobile display of these
     is a separate, unlaned surface (backend contract only)."""
     rep = get_reputation_service()
@@ -133,7 +133,7 @@ _FREEZE_REASON_STATUS = {
 
 
 @router.post("/streak/freeze")
-async def freeze_streak(
+def freeze_streak(
     req: StreakFreezeRequest,
     current_user: User = Depends(get_current_user),
 ) -> dict:

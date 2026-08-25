@@ -146,7 +146,7 @@ def _require_user_id(authorization: str | None) -> UUID:
 
 
 @router.get("/updates", response_model=list[BugResolutionUpdate])
-async def list_resolution_updates(
+def list_resolution_updates(
     authorization: str | None = Header(default=None),
 ) -> list[BugResolutionUpdate]:
     """Resolved reports the caller filed and hasn't been shown yet.
@@ -158,7 +158,7 @@ async def list_resolution_updates(
 
 
 @router.post("/{report_id}/ack", status_code=status.HTTP_204_NO_CONTENT)
-async def acknowledge_resolution(
+def acknowledge_resolution(
     report_id: UUID,
     authorization: str | None = Header(default=None),
 ) -> None:

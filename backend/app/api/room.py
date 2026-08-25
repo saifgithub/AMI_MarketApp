@@ -368,7 +368,7 @@ async def stream_room(
 
 
 @router.get("/{run_id}", response_model=RoomRun)
-async def get_room(
+def get_room(
     run_id: UUID,
     current_user: User = Depends(get_current_user),
     runner: RoomRunner = Depends(get_room_runner),
@@ -384,7 +384,7 @@ async def get_room(
 
 
 @router.get("/user/{user_id}", response_model=list[RoomRun])
-async def list_user_rooms(
+def list_user_rooms(
     user_id: UUID,
     limit: int = 50,
     current_user: User = Depends(get_current_user),

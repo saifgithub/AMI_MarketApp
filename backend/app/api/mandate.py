@@ -133,7 +133,7 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
 
 
 @router.get("/{user_id}", response_model=Mandate)
-async def get_mandate(
+def get_mandate(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     store: MandateStore = Depends(get_mandate_store),
@@ -143,7 +143,7 @@ async def get_mandate(
 
 
 @router.patch("/{user_id}", response_model=Mandate)
-async def patch_mandate(
+def patch_mandate(
     user_id: UUID,
     updates: dict[str, Any],
     current_user: User = Depends(get_current_user),
@@ -235,7 +235,7 @@ class MandateVersionsResponse(BaseModel):
 
 
 @router.get("/{user_id}/versions", response_model=MandateVersionsResponse)
-async def list_mandate_versions(
+def list_mandate_versions(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     store: MandateStore = Depends(get_mandate_store),
@@ -276,7 +276,7 @@ async def list_mandate_versions(
 
 
 @router.get("/{user_id}/versions/{version}", response_model=Mandate)
-async def get_mandate_version(
+def get_mandate_version(
     user_id: UUID,
     version: int,
     current_user: User = Depends(get_current_user),
@@ -294,7 +294,7 @@ async def get_mandate_version(
 
 
 @router.post("/{user_id}/rollback/{version}", response_model=Mandate)
-async def rollback_mandate(
+def rollback_mandate(
     user_id: UUID,
     version: int,
     current_user: User = Depends(get_current_user),

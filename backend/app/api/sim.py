@@ -522,7 +522,7 @@ async def get_portfolio(
 
 
 @router.get("/portfolio/{user_id}/history", response_model=PortfolioHistoryResponse)
-async def get_portfolio_history(
+def get_portfolio_history(
     user_id: UUID,
     # Bounded, not bare: a negative `limit` is a silent no-op in SQLite (the
     # test fixture) and an error in Postgres (Alpha), so an unvalidated one
@@ -839,7 +839,7 @@ def _compliance_json(compliance) -> dict:
 
 
 @router.get("/trades/{user_id}", response_model=TradeListResponse)
-async def list_trades(
+def list_trades(
     user_id: UUID,
     status_filter: str | None = None,
     # CR120 Phase 3 — opt-in, bounded like get_portfolio_history's: a negative
