@@ -37,7 +37,7 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from lmformatenforcer import JsonSchemaParser, TokenEnforcer
+from lmformatenforcer import JsonSchemaParser, RegexParser, TokenEnforcer
 from lmformatenforcer.tokenenforcer import TokenEnforcerTokenizerData
 
 
@@ -110,6 +110,42 @@ def schema_S4(meta):
 SCHEMAS = {"S4": schema_S4, "S6": schema_S6}
 
 
+def regex_S5(meta):
+    r"""The Trader money block, as a regex grammar.
+
+    S5 is the other large run-2 win (`has_side` 26% -> 100%) and it is NOT JSON, so a
+    JsonSchemaParser cannot express it. The scorer reads five fields out of free text
+    (P_MONEY_BLOCK / P_ENTRY / P_STOP / P_TARGET / P_SIZE in eval_surfaces.py), so the
+    grammar must produce exactly those lines and then get out of the way.
+
+    Two deliberate choices:
+      * `Side` is an enum of BUY|HOLD|WAIT only. SELL and SHORT are representable in
+        the SCORER pattern but are not legal answers (the app is buy-side; see
+        trading_math/trade.py "Long setups only"), and `side_legal` is a separate
+        check. Excluding them is the grammar doing the job the fine-tune was supposed
+        to learn — which is exactly the comparison being made.
+      * The trailing free-text tail lets the model write its rationale prose freely
+        once the block is closed. Constraining the prose too would measure the
+        grammar author, not the model.
+    """
+    return (
+        r"\[STANCE: (?:for|against) \| CONVICTION: (?:low|medium|high) \| "
+        r"HEADLINE: [^\]\n]{1,90}\]\n"
+        r"Instrument: +[A-Z.]{1,6}\n"
+        r"Side: +(?:BUY|HOLD|WAIT)\n"
+        r"Size: +\d{1,2}\.\d{1,2}% of portfolio\n"
+        r"Entry: +\$\d{1,6}\.\d{2}\n"
+        r"Target: +\$\d{1,6}\.\d{2}\n"
+        r"Stop: +\$\d{1,6}\.\d{2}\n"
+        r"Time horizon: +[^\n]{1,24}\n"
+        r"R:R: +\d{1,2}\.\d{1,2}\n"
+        r"[\s\S]*"
+    )
+
+
+REGEXES = {"S5": regex_S5}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
@@ -122,10 +158,10 @@ def main():
     args = ap.parse_args()
 
     want = {s.strip().upper() for s in args.surfaces.split(",") if s.strip()}
-    unsupported = want - set(SCHEMAS)
+    unsupported = want - set(SCHEMAS) - set(REGEXES)
     if unsupported:
         raise SystemExit(f"no grammar defined for {sorted(unsupported)} — "
-                         f"only {sorted(SCHEMAS)} are JSON-shaped surfaces")
+                         f"JSON: {sorted(SCHEMAS)}, regex: {sorted(REGEXES)}")
 
     rows = [json.loads(l) for l in open(args.prompts) if l.strip()]
     rows = [r for r in rows if r["surface"] in want]
@@ -154,13 +190,19 @@ def main():
 
         enc = tok(text, return_tensors="pt").to(model.device)
         prompt_len = enc["input_ids"].shape[1]
-        enforcer = TokenEnforcer(tdata, JsonSchemaParser(SCHEMAS[r["surface"]](r["meta"])))
+        surf = r["surface"]
+        parser = (JsonSchemaParser(SCHEMAS[surf](r["meta"])) if surf in SCHEMAS
+                  else RegexParser(REGEXES[surf](r["meta"])))
+        enforcer = TokenEnforcer(tdata, parser)
 
         def allowed(batch_id, sent):
             # Only the GENERATED suffix is the grammar's business; the prompt is not.
-            # list(): the enforcer hands back its own TokenList, and transformers'
-            # PrefixConstrainedLogitsProcessor calls len() on it.
-            return list(enforcer.get_allowed_tokens(sent[prompt_len:].tolist()))
+            # `.allowed_tokens` is the plain list inside the enforcer's TokenList — it
+            # is neither len()-able nor iterable itself, and transformers'
+            # PrefixConstrainedLogitsProcessor needs a real sequence. Valid only
+            # because we build the tokenizer data with use_bitmask=False; with a
+            # bitmask this attribute is a torch tensor instead.
+            return enforcer.get_allowed_tokens(sent[prompt_len:].tolist()).allowed_tokens
 
         t1 = time.time()
         with torch.no_grad():
