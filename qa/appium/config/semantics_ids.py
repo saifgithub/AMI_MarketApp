@@ -71,3 +71,5 @@ ONBOARDING_ANSWER_CHIP = "ami.onboarding.answer_chip"
 ONBOARDING_COMPOSER = "ami.onboarding.composer"
 ONBOARDING_SEND = "ami.onboarding.send"
 
+# DEF375 — the shared coach-mark card's Skip control, on all five tours.
+TOUR_SKIP = "ami.tour.skip"

@@ -9,13 +9,16 @@ The old text path is kept as a loud fallback, not as an equal option — see
 
 from __future__ import annotations
 
+import time
+
 from config.locales import LOCALES
-from config.semantics_ids import NAV_IDS, YOU_SEGMENT_IDS
+from config.semantics_ids import NAV_IDS, TOUR_SKIP, YOU_SEGMENT_IDS
 from helpers.gestures import Band, tap_element
 from helpers.locators import (
+    all_by_id,
     exists_text,
-    scrollable_bounds,
     exists_text_contains,
+    scrollable_bounds,
     wait_visible_id,
     wait_visible_text,
 )
@@ -41,6 +44,53 @@ BOTTOM_NAV_PX = 160
 # report. Bias toward the loud failure.
 TOP_CHROME_PT = 150
 BOTTOM_NAV_PT = 100
+
+
+def dismiss_tour_if_present(driver, *, timeout_s: float = 1.5) -> bool:
+    """Close a first-run coach-mark tour if one is up. Returns whether it was.
+
+    DEF375. The five tours (floor, portfolio, lessons, journal, you) all render
+    through one `TourCard` and are **modal** — until one is dismissed the tab
+    behind it is unreachable. On a fresh install that is every tab, and it cost
+    the iOS gate 7 of 19 tests: `test_portfolio_renders_heading` failed with the
+    app parked on YOU behind the *YOU* tour, having never reached Portfolio.
+
+    Skip rather than Next, deliberately: `Next` walks a tour one step at a time,
+    so dismissing that way would depend on how many steps each tour happens to
+    have — a number no test here is asserting on. Skip is one tap regardless.
+
+    **NOT WIRED INTO `open_tab` YET, and that is deliberate.** Calling it after
+    every tab tap was tried on 2026-08-25 and made the gate WORSE, not better:
+    the run went from 12 passed / 7 failed to a cascade of fixture ERRORs, with
+    `ami.you.journal` no longer resolving by identifier at all. The harness code
+    was not at fault — the import block and `time` import were both verified
+    intact — so the cause is behavioural and is not yet understood. Shipping it
+    anyway would have replaced a gate that reports 7 real failures with one that
+    reports nothing usable, which is the trade this project keeps refusing.
+
+    Kept here, unwired, because the app-side half (`TourIds.skip`, guarded by
+    `mobile/test/qa/tour_ids_test.dart`) is correct and proven, and the missing
+    piece is when to call this, not whether the control is addressable.
+    """
+    # Bounded poll, not a single probe: the card animates in after the tab it
+    # covers has already rendered, so checking once immediately after the tap
+    # reliably misses it and the tour then blocks the assertion that follows.
+    deadline = time.monotonic() + timeout_s
+    cards = []
+    while time.monotonic() < deadline:
+        cards = all_by_id(driver, TOUR_SKIP, retry=False)
+        if cards:
+            break
+        time.sleep(0.25)
+    if not cards:
+        return False
+    try:
+        tap_element(driver, cards[0])
+    except Exception as exc:
+        print(f"WARNING: a coach-mark tour is up and Skip did not tap: {exc}")
+        return False
+    time.sleep(0.6)
+    return True
 
 
 def open_tab(driver, tab_label: str, *, locale: str = "en") -> None:

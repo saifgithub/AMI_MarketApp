@@ -1,6 +1,7 @@
 /// AMI-styled tooltip card used in every coach-mark step.
 library;
 
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -53,16 +54,23 @@ class TourCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: Size.zero,
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: controller.skip,
-                child: Text(
-                  skipLabel,
-                  style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+              // DEF375: the UAT harness dismisses tours by this id. One card
+              // serves all five tours, so this is the only place it is needed.
+              Semantics(
+                identifier: TourIds.skip,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: controller.skip,
+                  child: Text(
+                    skipLabel,
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textLow),
+                  ),
                 ),
               ),
               Row(
@@ -72,7 +80,8 @@ class TourCard extends StatelessWidget {
                     TextButton(
                       style: TextButton.styleFrom(
                         minimumSize: Size.zero,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: () {
@@ -90,7 +99,8 @@ class TourCard extends StatelessWidget {
                   TextButton(
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     onPressed: controller.next,

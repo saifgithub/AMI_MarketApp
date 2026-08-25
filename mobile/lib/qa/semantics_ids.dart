@@ -127,3 +127,21 @@ class OnboardingIds {
   static const String composer = 'ami.onboarding.composer';
   static const String send = 'ami.onboarding.send';
 }
+
+/// DEF375 — the first-run coach-mark tours.
+///
+/// Five tours (floor, portfolio, lessons, journal, you) all render through the
+/// single `TourCard`, so one identifier addresses every one of them. They are
+/// modal: until one is dismissed the tab behind it is unreachable, which on a
+/// fresh install is every tab. That cost the iOS gate 7 of its 19 tests —
+/// `test_portfolio_renders_heading` failed with the app parked on YOU behind
+/// the *YOU* tour, never having reached Portfolio at all.
+///
+/// Only [skip] is named. `Next` walks the tour a step at a time and would make
+/// dismissal depend on how many steps a tour happens to have; skip is one tap
+/// whatever the tour, and the harness is not testing the tour's pagination.
+class TourIds {
+  const TourIds._();
+
+  static const String skip = 'ami.tour.skip';
+}
