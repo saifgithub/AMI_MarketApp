@@ -99,6 +99,7 @@ from app.services.sim_trade_effects import (
 )
 from app.schemas.trade import OrderType, Side
 from app.trading_math.market_hours import is_us_market_open
+from app.trading_math.quote_fillability import is_fillable
 from app.trading_math.order_pricing import is_triggered
 
 #: A claim older than this is assumed dead. Ten minutes is two ticks at the
@@ -114,22 +115,13 @@ _UNFILLABLE_ABORT_RATIO = 0.5
 def _quote_is_fillable(q: Quote | None) -> bool:
     """Whether this quote may move a real user's ledger.
 
-    `source == "unavailable"` is `current_quote`'s $0.01 sentinel and would fire
-    every buy limit and every sell stop in the book at once.
-
-    A `mock_walk` price is a deterministic random walk with no relationship to
-    reality. Booking a user's ledger off one is a fiction that never comes off
-    the books. Under `USE_REAL_MARKET_DATA` a mock_walk source means Yahoo fell
-    through — a degraded state, not the intended provider — so it is refused.
-    With real data off, mock_walk IS the intended provider and is fine.
+    DEF305 moved the rule itself to `app.trading_math.quote_fillability` so the
+    exit book could share it. This name is kept because the entry book's call
+    sites read well with it, but it is now a delegation, not a second copy —
+    two derivations of one rule disagree the first time either moves (DEF098),
+    and this rule's two halves disagreeing is precisely what DEF305 was.
     """
-    if q is None:
-        return False
-    if q.source == "unavailable" or q.price <= 0:
-        return False
-    if settings.use_real_market_data and q.source == "mock_walk":
-        return False
-    return True
+    return is_fillable(q)
 
 
 def bracket_closing_enabled() -> bool:

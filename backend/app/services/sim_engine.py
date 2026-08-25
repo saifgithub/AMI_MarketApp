@@ -84,6 +84,7 @@ from app.services.market_data import (
 from app.services.classification_universe import default_classification_universe
 from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
+from app.trading_math.quote_fillability import is_fillable, refusal_reason
 from app.trading_math.market_hours import session_close_on_or_after
 from app.trading_math.order_pricing import (
     LotBracket,
@@ -399,6 +400,21 @@ class OptionOpenResult:
     strategy_name: str | None = None
     net_cost: float | None = None
     collateral_posted: float | None = None
+
+
+class UnpriceableError(RuntimeError):
+    """DEF305 — a user-initiated action could not be priced.
+
+    Distinct from a compliance rejection on purpose: nothing about the user's
+    mandate stopped this, the market-data feed did. Routes map it to 503 so the
+    client can say "try again" rather than showing a mandate explanation for a
+    problem the user cannot fix by changing their settings.
+    """
+
+    def __init__(self, ticker: str, reason: str) -> None:
+        self.ticker = ticker
+        self.reason = reason
+        super().__init__(f"{ticker} could not be priced — {reason}")
 
 
 @dataclass
@@ -1307,6 +1323,34 @@ class SimEngine:
         # CR194 — the quote, not just its number: the leaf provider that
         # served this fill travels with it into the trade row.
         open_quote = self.current_quote(ticker)
+
+        # DEF305 — refuse a fill we cannot price, and SAY SO.
+        #
+        # The stop-gap switch deliberately left this path alone on the grounds
+        # that "a user tapping buy is asking for a fill now and gets today's
+        # answer, right or wrong". Right or wrong is the problem: a fill booked
+        # off the mock walk's `50 + rng.uniform(0, 400)` draw is a real holding
+        # bought with real cash at a price that never existed, and it never
+        # comes off the books. Silence is not the alternative — doing nothing
+        # when someone taps a button is its own defect — so this refuses
+        # loudly, on its own `blocked_by` member, and the reason names the feed
+        # rather than the user's mandate.
+        if not is_fillable(open_quote):
+            reason = refusal_reason(open_quote) or "the price could not be verified"
+            logger.warning(
+                "sim_trade_refused_unpriceable",
+                user_id=str(user_id), ticker=ticker, source=open_quote.source,
+            )
+            return SubmitResult(
+                accepted=False, trade=None,
+                compliance=ComplianceResult(
+                    passed=False,
+                    violations=[f"{ticker} could not be priced — {reason}."],
+                    blocked_by="unpriceable",
+                ),
+                portfolio_snapshot=None,
+            )
+
         mark = open_quote.price
         # CR170 §3 — the P10/DEF153 ternary is GONE. It read
         # `mark if order_type == MARKET else (limit_price or mark)`, which made
@@ -2621,6 +2665,8 @@ class SimEngine:
         from app.services import sim_shorts
 
         closed: list[str] = []
+        # DEF305 — tickers this pass declined to price (see `evaluate_outcomes`).
+        unpriced: list[str] = []
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             if p_row is None:
@@ -2632,7 +2678,15 @@ class SimEngine:
                 )
             ).scalars().all()
             for row in rows:
-                mark = self.current_price(row.ticker)
+                # DEF305 — same rule as the long book's sweep, same reason. A
+                # short stopped out on a mock-walk draw is force-covered at a
+                # fabricated price, which is worse than the long case: the
+                # user is billed the difference.
+                short_quote = self.current_quote(row.ticker)
+                if not is_fillable(short_quote):
+                    unpriced.append(row.ticker)
+                    continue
+                mark = short_quote.price
                 hit = bracket_hit(
                     is_short=True,
                     mark=mark,
@@ -2650,6 +2704,13 @@ class SimEngine:
                 )
                 closed.append(row.ticker)
             s.flush()
+        if unpriced:
+            logger.warning(
+                "sim_short_skipped_unpriced",
+                function='evaluate_short_brackets',
+                tickers=sorted(set(unpriced)),
+                count=len(set(unpriced)),
+            )
         return closed
 
     def accrue_short_borrow(
@@ -2672,6 +2733,8 @@ class SimEngine:
         from app.services.short_borrow_rate import daily_borrow_fee
 
         charged = 0.0
+        # DEF305 — tickers this pass declined to price (see `evaluate_outcomes`).
+        unpriced: list[str] = []
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             if p_row is None:
@@ -2685,8 +2748,17 @@ class SimEngine:
             for row in rows:
                 if row.last_borrow_accrual_date == on_date:
                     continue
+                borrow_quote = self.current_quote(row.ticker)
+                if not is_fillable(borrow_quote):
+                    # DEF305 — the fee is charged to `current_cash`. A borrow
+                    # fee sized off a mock-walk mark is a real debit computed
+                    # from a fiction. Skipping defers it; `last_borrow_accrual_date`
+                    # is untouched, so the next successful pass still charges
+                    # this day rather than losing it.
+                    unpriced.append(row.ticker)
+                    continue
                 fee = daily_borrow_fee(
-                    mark=self.current_price(row.ticker),
+                    mark=borrow_quote.price,
                     quantity=float(row.quantity),
                     rate_pct=float(row.borrow_rate_pct),
                 )
@@ -2699,6 +2771,13 @@ class SimEngine:
                 p_row.current_cash = round(float(p_row.current_cash) - fee, 2)
                 charged = round(charged + fee, 2)
             s.flush()
+        if unpriced:
+            logger.warning(
+                "sim_short_skipped_unpriced",
+                function='accrue_short_borrow',
+                tickers=sorted(set(unpriced)),
+                count=len(set(unpriced)),
+            )
         return charged
 
     def force_close_uncovered_calls(self, user_id: UUID) -> list:
@@ -2906,6 +2985,8 @@ class SimEngine:
         from app.services import sim_shorts
 
         closed: list[str] = []
+        # DEF305 — tickers this pass declined to price (see `evaluate_outcomes`).
+        unpriced: list[str] = []
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             if p_row is None:
@@ -2917,7 +2998,14 @@ class SimEngine:
                 )
             ).scalars().all()
             for row in rows:
-                mark = self.current_price(row.ticker)
+                # DEF305 — a margin call computed off a `[50, 450]` draw is a
+                # forced liquidation on a fiction. Skipping leaves the position
+                # open for one more tick; closing it is irreversible.
+                breach_quote = self.current_quote(row.ticker)
+                if not is_fillable(breach_quote):
+                    unpriced.append(row.ticker)
+                    continue
+                mark = breach_quote.price
                 if not sim_shorts.is_margin_breached(row, mark):
                     continue
                 realised = sim_shorts.cover_short(
@@ -2937,6 +3025,13 @@ class SimEngine:
                     realised_pnl=realised,
                 )
             s.flush()
+        if unpriced:
+            logger.warning(
+                "sim_short_skipped_unpriced",
+                function='force_close_breached_shorts',
+                tickers=sorted(set(unpriced)),
+                count=len(set(unpriced)),
+            )
         return closed
 
     def cover_short(
@@ -2955,7 +3050,14 @@ class SimEngine:
         """
         from app.services import sim_shorts
 
-        close_price = mark if mark is not None else self.current_price(ticker)
+        if mark is None:
+            # DEF305 — a cover moves real cash and stamps `realised_pnl`.
+            cover_quote = self.current_quote(ticker)
+            if not is_fillable(cover_quote):
+                raise UnpriceableError(ticker, refusal_reason(cover_quote) or "")
+            close_price = cover_quote.price
+        else:
+            close_price = mark
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             if p_row is None:
@@ -3693,6 +3795,12 @@ class SimEngine:
         the sector concentration `check_mandate_compliance` hard-REJECTs on.
         """
         updates: list[OutcomeUpdate] = []
+        # DEF305 — tickers this pass declined to price. Collected rather than
+        # logged per ticker: the upstream yfinance fault fired 23 times in 24
+        # hours, so this is a routine event and one line per sweep is the
+        # volume that stays readable. A silent skip would be the original
+        # defect wearing the fix's clothes (CR040 — degrade loudly).
+        unpriced: list[str] = []
         with get_session() as s:
             # DEF318 — the FULL ledger, not just the open rows, because a
             # bracket belongs to the shares its own lot still has behind it and
@@ -3771,6 +3879,28 @@ class SimEngine:
                 # After the gates, so an unprotected or fully-exited position
                 # never costs a quote.
                 close_quote = self.current_quote(ticker)
+
+                # DEF305 — the fix, on the path that actually moved the money.
+                #
+                # This used to take `close_quote.price` straight to
+                # `bracket_hit`. On 2026-08-14 the live feed fell through to the
+                # deterministic mock walk, whose prices are drawn from
+                # `50 + rng.uniform(0, 400)`; a draw from that band breaches one
+                # side of any real bracket with near-certainty, so the sweep did
+                # not close *some* positions, it closed **all** of them — 8 of 8
+                # across two portfolios, in one tick, crediting $6,882.22 of
+                # invented proceeds that reconciled to the cent and so tripped
+                # nothing else.
+                #
+                # A position left open because we could not price it is a
+                # recoverable state: the next tick prices it again. A position
+                # closed at a fabricated price is not — the shares are gone, the
+                # cash is booked, and `realised_pnl` has stamped the fiction
+                # onto the ledger.
+                if not is_fillable(close_quote):
+                    unpriced.append(ticker)
+                    continue
+
                 price = close_quote.price
                 new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
                     is_short=False, mark=price, stop=stop, target=target,
@@ -3788,6 +3918,13 @@ class SimEngine:
                         price_source=close_quote.source,
                     )
             s.flush()
+        if unpriced:
+            logger.warning(
+                "sim_bracket_skipped_unpriced",
+                user_id=str(user_id),
+                tickers=sorted(set(unpriced)),
+                count=len(set(unpriced)),
+            )
         return updates
 
     def _close_lot(
@@ -3850,6 +3987,13 @@ class SimEngine:
             if p_row is not None and self._held_quantity(s, p_row, row.ticker) <= 1e-6:
                 return None
             manual_quote = self.current_quote(row.ticker)
+            # DEF305 — the user asked to close, so refusing is a real cost to
+            # them; booking the close at a fabricated price is a larger one and
+            # is irreversible. `UnpriceableError` reaches the route as a 503
+            # naming the feed, so the user is told the market data is down
+            # rather than being shown a fill that never happened.
+            if not is_fillable(manual_quote):
+                raise UnpriceableError(row.ticker, refusal_reason(manual_quote) or "")
             price = manual_quote.price
             row.status = "closed"
             row.closed_at = datetime.now(timezone.utc)

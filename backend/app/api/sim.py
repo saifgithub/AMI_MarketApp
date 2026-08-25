@@ -43,6 +43,7 @@ from app.services.sim_engine import (
     RESTING_ORDER_TIFS,
     SimEngine,
     SimTrade,
+    UnpriceableError,
     get_sim_engine,
 )
 from app.services.sim_resting_orders import (
@@ -958,9 +959,20 @@ async def close_trade(
     _own(current_user, user_id)
     # DEF120 D1: manual_close() calls current_price and opens its own
     # get_session() — same thread-hop shape as submit() above.
-    closed: SimTrade | None = await asyncio.to_thread(
-        sim.manual_close, user_id, req.trade_id,
-    )
+    try:
+        closed: SimTrade | None = await asyncio.to_thread(
+            sim.manual_close, user_id, req.trade_id,
+        )
+    except UnpriceableError as exc:
+        # DEF305 — 503, not 400 or 500. Nothing the user did is wrong and
+        # nothing about their account needs changing; the market-data feed is
+        # down and the honest answer is "try again shortly". A 4xx would tell
+        # them to fix something they cannot see.
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            f"{exc.ticker} could not be priced — {exc.reason}. "
+            "Your position is unchanged; try again shortly.",
+        ) from exc
     if closed is None:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,

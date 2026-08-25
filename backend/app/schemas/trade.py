@@ -209,6 +209,12 @@ class ComplianceResult(BaseModel):
         "compliance", "drawdown", "concentration", "long_only", "blocklist",
         "allowlist", "locale", "duplicate_verdict",
         "cooldown", "max_open_positions", "over_trading", "open_risk",
+        # DEF305 — NOT a mandate decision, and deliberately its own member.
+        # Folding "we could not price this" into `compliance` would tell a user
+        # their own risk rules blocked a trade when the market-data feed was
+        # down: a confident, wrong explanation of the user's own settings,
+        # which is the CR038/DEF059 class on a surface they act on.
+        "unpriceable",
         None,
     ] = None
     # CR069: the sourced Sharia verdict (with provenance) when the halal flag is
