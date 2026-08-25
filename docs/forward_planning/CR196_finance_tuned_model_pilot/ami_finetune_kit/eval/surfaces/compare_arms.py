@@ -61,8 +61,20 @@ INFORMATIONAL = [("S5", "rr_correct")]
 
 
 def rate(d, key):
-    n = d.get("n", 0)
-    return (d.get(key, 0), n, (d.get(key, 0) / n if n else 0.0))
+    """(hits, applicable_n, proportion) — applicable_n EXCLUDES rows the scorer
+    returned None for.
+
+    A scorer returns None when the check does not apply to that row, and stage_score
+    records those as `<key>_NA` rather than as failures. Reading a missing counter as
+    zero is how S8 came back "gave_code 0/60 (0%) — NO GAIN" when the true state was
+    `gave_code_NA: 60`: the check was inapplicable on every row (its prompts carry no
+    lesson_code since the decontamination fix dropped the lesson-driven cases), and
+    the table reported a result for something never measured. Not-applicable and
+    failed-every-time are opposite claims; only one of them is evidence.
+    """
+    n = d.get("n", 0) - d.get(key + "_NA", 0)
+    k = d.get(key, 0)
+    return (k, n, (k / n if n else 0.0))
 
 
 def band(k, n):
@@ -114,6 +126,13 @@ def main():
             continue
         bk, bn, bp = rate(b, key)
         ok, on, op = rate(o, key)
+        if bn == 0 or on == 0:
+            # Every row was N/A for this check on at least one arm. Say so; do not
+            # let an unmeasured check occupy a verdict cell.
+            lines.append(f"| {surf} | {key} | n/a ({b.get('n', 0)} rows) | "
+                         f"n/a ({o.get('n', 0)} rows) | — | NOT MEASURED |")
+            verdicts.append((surf, key, "NOT MEASURED"))
+            continue
         # Unpaired counts only — the per-item pairing needed for a true McNemar is not
         # in the aggregate JSON, so this is the conservative discordant approximation.
         p = mcnemar_exact(max(0, bk - ok), max(0, ok - bk)) if bn and on else 1.0

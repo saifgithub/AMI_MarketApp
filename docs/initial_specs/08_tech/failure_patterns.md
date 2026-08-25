@@ -1690,3 +1690,12 @@ Enforcing checks:
   prompts, with S8's entire surface score coming from one completion counted 60 times. Pairing is now
   on `pid` (sha1 of the prompt text) emitted by the generator. Any eval key must be proven unique
   against the artifact before it is used to join two files — `len(set(keys)) == len(rows)` is the check.
+- `compare_arms.py::rate` (fixed 2026-08-25): a check a scorer skipped is NOT a check the model
+  failed. `stage_score` records an inapplicable row as `<key>_NA`, and reading the missing counter as
+  zero reported S8's `gave_code` as "0/60 (0%) — NO GAIN" when the truth was `gave_code_NA: 60` —
+  the check never ran on a single row. The same bug inverted a second result: vanilla's `rr_correct`
+  read 8/68 (12%) counting 50 unparseable rows as wrong answers, against a true 8/18 (44%) among rows
+  where it actually stated levels — turning a LOSS into an apparent 12%->34% win. Denominators are
+  now applicable-rows-only, and a check that is N/A on either arm renders as NOT MEASURED rather than
+  occupying a verdict cell. Rule: before comparing two rates, confirm both denominators count the
+  same population.

@@ -158,7 +158,9 @@ def main():
 
         def allowed(batch_id, sent):
             # Only the GENERATED suffix is the grammar's business; the prompt is not.
-            return enforcer.get_allowed_tokens(sent[prompt_len:].tolist())
+            # list(): the enforcer hands back its own TokenList, and transformers'
+            # PrefixConstrainedLogitsProcessor calls len() on it.
+            return list(enforcer.get_allowed_tokens(sent[prompt_len:].tolist()))
 
         t1 = time.time()
         with torch.no_grad():
