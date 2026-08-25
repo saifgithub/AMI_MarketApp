@@ -1,0 +1,23 @@
+{
+  "arm": "vanilla-s478",
+  "surfaces": {
+    "S4": {
+      "n": 60,
+      "parses": 60,
+      "pure_json": 60,
+      "has_action": 60,
+      "has_narration": 60,
+      "approve_complete": 60
+    },
+    "S8": {
+      "n": 60,
+      "no_advice": 60,
+      "gave_code_NA": 60
+    },
+    "S7": {
+      "n": 60,
+      "refused": 27,
+      "correct": 38
+    }
+  }
+}
