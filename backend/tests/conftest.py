@@ -5,8 +5,18 @@ The `_isolated_db` autouse fixture gives every test a fresh sqlite database
 store/service singletons so a store doesn't accidentally carry rows or
 caches across test cases. Tests that exercise persistence get clean tables;
 tests that don't touch persistence pay almost no cost.
+
+ISS002/CR208 also hooks in here: every JSON response any test's `TestClient`
+receives is recorded to `backend/tests/_wire_capture.jsonl` and compared, after
+the run, against the keys the Flutter client actually reads
+(`backend/scripts/wire_contract/`). Starlette funnels every verb through
+`TestClient.request`, so one patch catches all ~92 test files that use it with
+zero changes to any of them — which is the point: the check must not need a
+human to declare anything per-surface, because per-surface declaration is the
+mechanism that already failed three times (DEF357, DEF363, DEF365).
 """
 
+import json
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -389,3 +399,59 @@ def _ledger_invariant(request, _isolated_db):
             "condition `def110_backfill.py` detects on production, reached here "
             "by code rather than by data:\n" + lines
         )
+
+
+# --------------------------------------------------------------------------
+# ISS002/CR208 — wire capture.
+#
+# Deliberately a session hook rather than a fixture: it must be installed
+# before the first test module builds its own `TestClient(app)`, and it must
+# observe every test, including those that never ask for a fixture. Writing at
+# session finish rather than per-test keeps the cost to one file write.
+#
+# It records, and never asserts. A capture that failed an assertion mid-suite
+# would turn an unrelated test red for a contract problem, which is how a
+# useful signal gets deleted by whoever is trying to ship something else.
+# `scripts/promotion/preflight_suite.sh` runs the comparison afterwards.
+# --------------------------------------------------------------------------
+
+_WIRE_CAPTURE_PATH = _Path(__file__).resolve().parent / "_wire_capture.jsonl"
+_wire_records: list[dict] = []
+
+
+def pytest_configure(config):
+    from starlette.testclient import TestClient
+
+    original_request = TestClient.request
+
+    def _capturing_request(self, method, url, *args, **kwargs):
+        response = original_request(self, method, url, *args, **kwargs)
+        try:
+            path = response.request.url.path
+            ctype = response.headers.get("content-type", "")
+            body = response.json() if "application/json" in ctype else None
+        except Exception:
+            # A body we cannot read is recorded as unreadable, not skipped:
+            # the request still happened, and dropping it would quietly shrink
+            # the denominator the coverage number is computed from.
+            body, path = None, str(url)
+        _wire_records.append(
+            {"method": str(method).upper(), "path": path,
+             "status": response.status_code, "body": body}
+        )
+        return response
+
+    TestClient.request = _capturing_request
+    config._wire_capture_original_request = original_request
+
+
+def pytest_sessionfinish(session, exitstatus):
+    try:
+        with _WIRE_CAPTURE_PATH.open("w", encoding="utf-8") as fh:
+            for record in _wire_records:
+                fh.write(json.dumps(record) + "\n")
+    except OSError:
+        # Never fail a green suite because an artefact could not be written —
+        # but say so, because a silently absent capture makes every surface
+        # look UNVERIFIED for the wrong reason.
+        print("\n[wire_capture] could not write", _WIRE_CAPTURE_PATH)

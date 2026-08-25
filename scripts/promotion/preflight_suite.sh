@@ -72,5 +72,32 @@ if [ "$SUITE_EXIT" -ne 0 ]; then
 fi
 
 rm -f "$LOG"
+
+# ── ISS002/CR208 — wire contract ──────────────────────────────────────────
+# Runs HERE, not as a unit test, because it reads the capture the suite above
+# just wrote: every JSON response any test's TestClient received, compared
+# against the keys the Flutter client actually parses. Nothing is declared by
+# hand — pairs are recovered from api_client.dart — because per-surface
+# declaration is the mechanism that failed three times (DEF357, DEF363,
+# DEF365).
+#
+# Its own logic is guarded by backend/tests/unit/test_cr208_wire_contract.py,
+# which the suite above already ran; this step is the live check.
+WIRE="$REPO_ROOT/backend/scripts/wire_contract/verify.py"
+if [ -f "$WIRE" ]; then
+  echo
+  if ! "$REPO_ROOT/backend/.venv/bin/python" "$WIRE"; then
+    echo
+    echo "VERDICT: FAIL — the backend suite passed but the wire contract did not."
+    echo "         A green suite proves the server agrees with itself. This"
+    echo "         checks it against what the app actually reads."
+    exit 1
+  fi
+else
+  echo "WIRE CONTRACT: verify.py missing — cannot check. Aborting rather than"
+  echo "               reporting a pass nothing verified."
+  exit 1
+fi
+
 echo "VERDICT: PASS — the suite exited 0."
 exit 0

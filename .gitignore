@@ -127,3 +127,4 @@ qa/appium/_runs/
 # while the shipped tarball was fine. A clean checkout must rebuild a WORKING kit.
 !docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/
 !docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/**
+_wire_capture.jsonl

@@ -1091,13 +1091,42 @@ orphans, almost all false**, because this codebase serialises heavily through un
 that no schema-based check can see inside. Growing it requires a human to declare each pair — the
 same manual act that failed three times.
 
-**The check that replaces it (CR208).** Auto-discover (endpoint → Dart class) pairs by parsing
-`mobile/lib/services/api/api_client.dart`, the single file every wire call passes through; capture
-real responses during the existing pytest run; diff each class's read keys against the bodies
-actually observed. Measured in the winning prototype: **85 pairs with zero hand-declared, 1,280
-responses captured, 44 PASS / 40 UNVERIFIED**. The 40 are [DEF367](../../defect/def_list.md) —
-**47% of wire surfaces have no route-level test**, which is the precondition for every instance
-above.
+**The check that replaces it — SHIPPED as CR208 (AT:R74, 2026-08-25).** This is P18's enforcing
+check, and the house rule says an entry without one is not done.
+
+`backend/scripts/wire_contract/` + the capture hook in `backend/tests/conftest.py`, run by
+`scripts/promotion/preflight_suite.sh` immediately after the suite it reads from. It auto-discovers
+(endpoint → Dart class) pairs by parsing `mobile/lib/services/api/api_client.dart` — the single file
+every wire call passes through — captures every JSON response any test's `TestClient` receives via
+one patch on `TestClient.request`, and diffs each class's read keys against the bodies actually
+observed. **Nothing is declared by hand**, which is the whole point: manual declaration is the
+mechanism that failed three times.
+
+Measured on the shipped version: **85 surfaces, 1,311 responses captured across 5,303 tests,
+45 PASS / 0 FAIL / 40 UNVERIFIED**.
+
+Three things about it are worth knowing before trusting it:
+
+- **A branch-conditional key is not a missing one.** Observation proves presence, never absence. The
+  prototype's single reported FAIL (`SimSubmitResult` reading `order`) was a **false positive** —
+  `sim.py` emits `order` on the `resting: True` branch only, and none of the 21 captured submissions
+  rested. A key absent from every capture is a FAIL only when the server source shows no branch that
+  could emit it; otherwise it is `UNVERIFIED`. Without this the guard's first output is a false
+  alarm, and a guard that cries wolf gets ignored.
+- **`UNVERIFIED` is ratcheted, not failed outright.** 40 of 85 surfaces are unverified today
+  (DEF367). Failing on all of them would ship a gate that is red on day one, and a gate whose
+  failing state is its normal state teaches the operator that firing does not mean stop — paid for
+  three times already (DEF277, the tree gate, DEF200's own vacuity guard). So today's set is
+  enumerated by name in `unverified_baseline.json`, a **new** unverified surface fails, and the
+  baseline may only shrink. Nothing passes silently; the debt has names attached. A **FAIL is never
+  ratcheted** — that is a live disagreement, not coverage debt.
+- **Layer 3 finds nothing today, and that is recorded rather than hidden.** All 132 Dart classes
+  with a `fromJson` have a caller. The verdict claims this layer catches `OptionProposalTicket` "by
+  construction"; it cannot — that is a Flutter *Widget* with no `fromJson`, so no wire-model scan
+  could reach it. The layer is still cheap and covers a real class, but not for the stated reason.
+
+The 40 unverified are [DEF367](../../defect/def_list.md) — **47% of wire surfaces have no
+route-level test**, which is the precondition for every instance above.
 
 **Rule for new code, amended.** A key read on one side of the wire and written on the other is a
 silent contract with no home in either suite. `UNVERIFIED` — *no test exercises this route* — must
