@@ -449,3 +449,47 @@ def test_a_correctly_bracketed_short_is_still_covered(_no_borrow_socket):
     prov.price = 106.0
     assert sim.evaluate_short_brackets(user_id) == ["AAPL"]
     assert _short_row(user_id)[0].close_reason == "stop"
+
+
+# ── The census gate must not fail on rows nobody can act on ────────────────
+
+def test_the_census_only_fails_on_a_bracket_a_sweep_can_still_read():
+    """The first run of the census against the promoted build exited 1 on three
+    rows that had already been remediated: their `status` was corrected but the
+    levels they were entered with are still on the row, as history.
+
+    A gate whose failing state is its normal state teaches the operator to
+    reason past it — DEF277's shape, and `/promote-to-alpha` carries three
+    separate scars from it (the tree gate, the audit gate, the `/v1/llm/status`
+    403). So the exit code is ACTIVE only.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "def377_census",
+        Path(__file__).resolve().parents[2] / "scripts"
+        / "def377_wrong_side_census.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    assert mod.is_actionable("open") is True
+    for terminal in ("won", "lost", "closed"):
+        assert mod.is_actionable(terminal) is False, (
+            f"a {terminal!r} row's levels are a record, not an instruction"
+        )
+    assert mod.is_actionable(None) is False
+
+
+def test_the_census_actionable_set_matches_what_the_sweeps_actually_filter():
+    """Non-vacuity, and the reason the set is not just a literal in the script.
+
+    `evaluate_outcomes` keeps rows on `status == "open"` and
+    `evaluate_short_brackets` queries `state == "open"`. If either filter
+    changes, the census silently stops covering a state that CAN act — which is
+    the vacuity DEF200's ratchet exists to catch, one gate over.
+    """
+    long_src = ast.unparse(_functions()["evaluate_outcomes"])
+    short_src = ast.unparse(_functions()["evaluate_short_brackets"])
+    assert "r.status == 'open'" in long_src or 'r.status == "open"' in long_src
+    assert "state == 'open'" in short_src or 'state == "open"' in short_src

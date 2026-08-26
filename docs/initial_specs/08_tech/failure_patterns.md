@@ -1735,9 +1735,12 @@ live at the write door, a **read-time census** must exist for the rows that got 
   handles *and logs* the refusal. Adding a third fire site without handling it fails the suite.
 - The corresponding DEF305 check, `test_every_money_moving_path_consults_fillability`, is the same
   shape over `MONEY_MOVING`. Both lists are explicit so extending them is a deliberate edit.
-- `backend/scripts/def377_wrong_side_census.py` — read-only, exits 1 on any finding, and imports the
-  rule rather than restating it. Run against Alpha after any promotion touching the bracket path and
-  after any backfill that writes `stop`/`target`.
+- `backend/scripts/def377_wrong_side_census.py` — read-only, imports the rule rather than restating
+  it, and exits 1 **only on rows a sweep can still read**. Run against Alpha after any promotion
+  touching the bracket path and after any backfill that writes `stop`/`target`. Its first live run
+  exited 1 on three already-remediated rows whose entered levels survive as history — a gate that
+  would then have failed on every run forever, which is P25/DEF277 and would have taught the operator
+  to scroll past it. ACTIVE and HISTORICAL are now separate buckets and only ACTIVE is the exit code.
 
 **A separate lesson from the same fix, worth its own line.** The two tests asserting that the refusal
 is *logged* were written against `capsys`. They passed in isolation and failed 5,349 tests into the
