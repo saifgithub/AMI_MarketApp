@@ -603,3 +603,116 @@ def test_every_capstone_ends_on_a_synthesis_quiz(lessons):
                 (l.meta.id, 'tags missing "synthesis" — declare the synthesis quiz')
             )
     assert not offenders, f"capstones without a declared synthesis quiz: {offenders}"
+
+
+# ── CR054 §4.4 — the knowledge graph's integrity ──────────────────────────
+#
+# §4.4 asks for the corpus to be maintained as a real graph: every lesson a
+# node, `prerequisites` an edge, with "acyclic prerequisites, no dangling refs,
+# every concept reachable" enforced rather than assumed.
+#
+# The body's `<Lesson id="…">` tokens were already guarded (see
+# `test_every_lesson_token_resolves_to_a_real_lesson_id` above). The FRONTMATTER
+# edge was not, and the two had drifted apart into exactly the DEF098 shape:
+# two records of "what does this lesson build on", one rendered and one not, and
+# the unrendered one rotted. Measured 2026-08-27, before these guards:
+#
+#   * **7 dangling edges**, all in `fundamentals_analysis` module 6, pointing at
+#     slugs that never existed (`149_gross_margin_…`, `150_operating_margin_…`,
+#     `152_interest_coverage_…`, `153_free_cash_flow_…`) — while those lesson
+#     NUMBERS are occupied by entirely different lessons, so the ids looked
+#     plausible and resolved to nothing.
+#   * **3 inverted edges**, where a lesson required one that comes later in its
+#     own track — including `032_revenue_the_top_line`, which is **FUND 1**, the
+#     first lesson of the track, requiring **FUND 66**.
+#   * 0 cycles.
+#
+# A user walking prerequisites hit a dead end; nothing anywhere said so.
+
+
+def _code_key(code: str) -> tuple[str, int]:
+    """`"FUND 64"` -> `("FUND", 64)`. The track prefix plus its ordinal, which
+    is the corpus's own reading order (guarded contiguous by CR044 above)."""
+    m = re.match(r"^([A-Z ]+?)\s*(\d+)$", (code or "").strip())
+    return (m.group(1).strip(), int(m.group(2))) if m else ((code or "").strip(), 0)
+
+
+@pytest.fixture(scope="module")
+def by_id(lessons):
+    return {l.meta.id: l for l in lessons}
+
+
+def test_every_prerequisite_resolves_to_a_real_lesson(lessons, by_id):
+    """A dangling edge is a dead end for a user walking the graph, and it is
+    invisible: the id is a plausible slug that simply matches nothing."""
+    assert len(by_id) >= LESSON_COUNT_FLOOR, "vacuity guard — the corpus did not load"
+    dangling = [
+        (l.meta.id, p)
+        for l in lessons
+        for p in (l.meta.prerequisites or [])
+        if p not in by_id
+    ]
+    assert not dangling, (
+        f"{len(dangling)} prerequisite(s) name a lesson id that does not exist. "
+        "The lesson NUMBER may well be taken by an unrelated lesson, which is "
+        "why these read as plausible. Offenders (lesson -> missing prerequisite): "
+        f"{dangling}"
+    )
+
+
+def test_the_prerequisite_graph_is_acyclic(lessons, by_id):
+    """Two lessons that require each other can never both be reached, and a
+    cycle is unwalkable rather than merely wrong."""
+    assert len(by_id) >= LESSON_COUNT_FLOOR, "vacuity guard — the corpus did not load"
+    graph = {
+        l.meta.id: [p for p in (l.meta.prerequisites or []) if p in by_id]
+        for l in lessons
+    }
+    WHITE, GREY, BLACK = 0, 1, 2
+    color: dict[str, int] = {n: WHITE for n in graph}
+    cycles: list[list[str]] = []
+
+    def walk(node: str, stack: list[str]) -> None:
+        color[node] = GREY
+        stack.append(node)
+        for nxt in graph[node]:
+            if color[nxt] == GREY:
+                cycles.append(stack[stack.index(nxt):] + [nxt])
+            elif color[nxt] == WHITE:
+                walk(nxt, stack)
+        stack.pop()
+        color[node] = BLACK
+
+    for node in graph:
+        if color[node] == WHITE:
+            walk(node, [])
+    assert not cycles, f"prerequisite cycle(s): {cycles}"
+
+
+def test_no_prerequisite_comes_later_in_its_own_track(lessons, by_id):
+    """A prerequisite must be *reachable before* the lesson that needs it.
+
+    Only compared WITHIN a track prefix: cross-track prerequisites are ordinary
+    (a FUND lesson may rest on a CORE one) and those tracks have no shared
+    ordinal to compare. Within one track the code ordinal IS the reading order,
+    guarded contiguous by `test_lesson_codes_are_contiguous_within_each_track`.
+
+    `>=` not `>`: a lesson listing itself is its own dead end.
+    """
+    assert len(by_id) >= LESSON_COUNT_FLOOR, "vacuity guard — the corpus did not load"
+    inverted = []
+    for l in lessons:
+        mine = _code_key(l.meta.code)
+        for p in (l.meta.prerequisites or []):
+            if p not in by_id:
+                continue  # its own test above
+            theirs = _code_key(by_id[p].meta.code)
+            if theirs[0] == mine[0] and theirs[1] >= mine[1]:
+                inverted.append(
+                    f"{l.meta.code} ({l.meta.id}) requires "
+                    f"{by_id[p].meta.code} ({p})"
+                )
+    assert not inverted, (
+        f"{len(inverted)} prerequisite(s) sit at or after the lesson that needs "
+        f"them, so a reader meets the requirement after the requirer: {inverted}"
+    )
