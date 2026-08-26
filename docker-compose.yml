@@ -552,7 +552,15 @@ services:
       RESEND_FROM: ${WEBSITE_RESEND_FROM:-AMI <support.ai@agenticmarketintel.ai>}
       # Where contact escalations + data requests are forwarded (set to Saiful's inbox).
       NOTIFY_EMAIL: ${WEBSITE_NOTIFY_EMAIL:-}
-      # Cloudflare Turnstile secret — unset → bot-check bypassed (see turnstile.py).
+      # Cloudflare Turnstile secret. DEF361 made this FAIL CLOSED outside
+      # `local`: unset means /contact, /data-request and /concierge/message
+      # all return 403 `verification_failed` and log `turnstile_not_configured`
+      # at ERROR. That is deliberate — the public POSTs must not become
+      # reachable before their bot protection does. It is unset today, so
+      # those three routes are refusing traffic right now, by design.
+      # (This comment said "unset → bot-check bypassed" until 2026-08-26,
+      # which was the behaviour DEF361 removed: a comment that tells the next
+      # reader an unset secret is a soft bypass invites them to leave it unset.)
       TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
     ports:
       # CR124/C3: loopback only. Cloudflare reaches the marketing API through
