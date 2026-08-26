@@ -830,3 +830,25 @@ identified** — that is exactly what DEF204 recorded, and "leave it, it's worki
 unidentified. If the unknown trigger does not carry that environment, the processor breaks
 **silently** against real customer email, which is the CR040 failure class verbatim. Flagged to
 Saiful rather than attempted; DEF104 stays open with this as its named blocker.
+
+---
+
+## 2026-08-26
+
+**Skipped by ruling, not by omission.** Asked at 14:5x Asia/Riyadh, mid-session, with 6 `proposed`
+CRs and 13 `open` Defects on the board (DEF100, DEF104, DEF144, DEF178, DEF200, DEF321, DEF335,
+DEF339, DEF344, DEF362, DEF367, DEF374, DEF375). Saiful: **"Skip today"** — the standing
+close-every-CR assignment already drives the same backlog, and 19 sequential asks would displace the
+work he had just directed in the same session.
+
+Recorded here rather than left blank so tomorrow's check reads a decision instead of a gap — a
+missing section and a deliberate skip must not look identical (CR040's rule applied to this log).
+
+**Also ruled today, outside the review:**
+
+- **P29 / the DEF377 Dilemma threshold.** DEF377 is the third instance of *the validation guards the
+  write door; the money moves through the read path* (after DEF190 and DEF305), which
+  `CLAUDE.md` makes a Dilemma trigger. Asked: convene / let the shipped fix stand / file it as a CR?
+  → Saiful: **"Don't convene — the fix stands."** The structural fix (a required `entry` on
+  `bracket_hit` plus a raised refusal) and P29's registered enforcing checks are the answer; a fourth
+  instance re-raises it. Recorded in `failure_patterns.md` under P29.

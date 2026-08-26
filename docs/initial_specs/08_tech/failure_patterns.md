@@ -1753,9 +1753,9 @@ verified. The other five `capsys` users in `backend/tests/unit/` were checked at
 (2026-08-26): every one asserts on a script's own `print()`, which is what `capsys` is for. No second
 instance.
 
-**This is the third instance, which is the [Dilemma](../../dilemmas/DILEMMA_PROTOCOL.md) threshold.**
-The point fix above is shipped and mutation-proved, and it is deliberately structural rather than
-another call-site check — but the framing question it does not answer is the one worth putting to
-several independent agents: *should stored trading state be validated on LOAD, as a row invariant,
-rather than by each acting function remembering to ask?* Raised with Saiful 2026-08-26 rather than
-convened unilaterally, because convening one spawns an agent fleet.
+**This is the third instance, which is the [Dilemma](../../dilemmas/DILEMMA_PROTOCOL.md) threshold —
+and it was put to Saiful rather than convened.** The open framing question was *should stored trading
+state be validated on LOAD, as a row invariant, rather than by each acting function remembering to
+ask?* Saiful, 2026-08-26: **"Don't convene — the fix stands."** The required-`entry`-plus-raise shape
+above is deliberately structural rather than another call-site check, and the enforcing checks listed
+here are the answer. **A fourth instance re-raises it** — that is what this paragraph is for.
