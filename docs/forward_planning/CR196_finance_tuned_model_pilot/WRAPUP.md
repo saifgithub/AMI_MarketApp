@@ -51,29 +51,59 @@ in that observation, and it is now [CR210](../CR210_grammar_constrained_room_out
 
 ## Where the artifacts are now
 
-Everything irreplaceable is off alpha-spark and on the local drive. **242 MB, 301 files**, at
-`/Volumes/Extreme Pro/AMI_run2_adapter/`:
+Everything irreplaceable is off alpha-spark and on the local drive. **427 MB, 303 files**, at
+`/Volumes/Extreme Pro/AMI_run2_adapter/`, with per-file checksums in
+`MANIFEST.md` there — verify integrity without needing SSH.
 
-| Path | What | Verified |
-|---|---|---|
-| `adapter_final/` | the run-2 LoRA adapter, 103 MB | `adapter_model.safetensors` md5 `57b39fa2d0ee7556512b5751c732c285`, byte-identical to the copy on alpha-spark |
-| `run_report.json` | run-2 config + final metrics | — |
-| `alpha_spark_archive/kit/…/data/train.jsonl` | **the corpus that actually trained run 2** — 20,021 rows | md5 `ccdfade3df04501f5ea252bb36f0def3` |
-| `alpha_spark_archive/kit/…/data/val.jsonl` | 375 rows | md5 `5f2ff9136fe21bbbd9e136635ec03ff1` |
-| `alpha_spark_archive/runs/*/trainer_state.json` | full per-step loss curves, every run | 13 files |
-| `alpha_spark_archive/logs/` | every training/eval/setup log, incl. `dockerlog_ami_train_r2.log` (the 18h run's stdout) | 32 files |
-| `alpha_spark_archive/eval/` | basis-rubric outputs, adapter/merge verification JSON | — |
+**Trained weights — the final adapter of every real run**, each md5-verified against the box and
+each byte-identical to its run's final checkpoint:
 
-Scored results and raw completions are in the repo under
+| run | steps | wall | path | md5 |
+|---|---|---|---|---|
+| **run 2** (the run of record) | 2,504 | 18.39h | `adapter_final/` | `57b39fa2d0ee7556512b5751c732c285` |
+| run 1 (failed) | 3,212 | 25.17h | `alpha_spark_archive/runs/ami-lora-r1/adapter_final/` | `6228c7eba58c46d702319da2598f6ec6` |
+| probe 3 | 400 | 2.79h | `alpha_spark_archive/runs/ami-lora-probe3/adapter_final/` | `ee1296aa843039ddee2e4305c28a7d60` |
+
+**Everything else:**
+
+| Path | What |
+|---|---|
+| `alpha_spark_archive/kit/…/data/train.jsonl` | **the corpus that actually trained run 2** — 20,021 rows, md5 `ccdfade3df04501f5ea252bb36f0def3` |
+| `alpha_spark_archive/kit/…/data/val.jsonl` | 375 rows, md5 `5f2ff9136fe21bbbd9e136635ec03ff1` |
+| `alpha_spark_archive/runs/*/trainer_state.json` | full per-step loss curves — 13 files, every run |
+| `alpha_spark_archive/runs/*.jsonl`, `*.json`, `finish.log` | every completion set and scored result, incl. the probe-3 arms |
+| `alpha_spark_archive/logs/` | 32 logs — training, eval, setup, plus `dockerlog_ami_train_r2.log` (the 18h run's stdout) |
+| `alpha_spark_archive/eval/` | basis-rubric outputs, adapter/merge verification JSON |
+| `run_report.json` | run-2 config + final metrics |
+
+Scored results and raw completions are also in the repo under
 [`ami_finetune_kit/eval/surfaces/run2_results/`](ami_finetune_kit/eval/surfaces/run2_results/)
-(including `control_arm/`, which holds the three constrained-decoding JSONLs).
+(including `control_arm/`) — all ten files verified byte-identical to the copies on the box.
 
-**One near-miss worth recording.** The `data/train.jsonl` sitting in the repo working tree is
-the **unfiltered** 20,029-row file (md5 `3520e53227…`). The filtered 20,021-row corpus that run 2
-actually consumed existed *only* on alpha-spark until this wrap-up pulled it back. Purging the
-box on the earlier assumption that "everything irreplaceable is already local" would have
-destroyed the training corpus of record — the same file the decontamination guard was verified
-against. Checked before deleting; it was not true.
+**Completeness was verified by difference, not by assertion.** Every one of the 2,699 files on
+alpha-spark was enumerated and matched against the local copy; the 2,409 that are remote-only
+were each classified into a deliberate exclude bucket, with **zero unclassified**. What remains
+on the box and nowhere else is: intermediate training checkpoints (resume-only, and useless
+without the optimizer state we are also not keeping), the aborted run-2 attempt's three
+checkpoints, and 10-step smoke adapters.
+
+### Two things that check caught
+
+**The training corpus was nearly lost.** The `data/train.jsonl` sitting in the repo working tree
+is the **unfiltered** 20,029-row file (md5 `3520e53227…`). The filtered 20,021-row corpus that
+run 2 actually consumed existed *only* on alpha-spark. Purging the box on the standing assumption
+that "everything irreplaceable is already local" would have destroyed the training corpus of
+record — the same file the decontamination guard was verified against.
+
+**The run-1 and probe-3 adapters were nearly lost too.** The first recovery pass excluded
+`*.safetensors` wholesale to skip the 246 GB of base weights, which silently also skipped those
+two adapters — 46 GPU-hours of the 46.6 reduced to logs. They were caught only by enumerating
+remote-only files rather than trusting the exclude list. They are root-owned mode 600 (Docker
+wrote them), so they had to be read out through a container. **Gotcha:** the NGC image prints a
+banner on stdout, which prepends 1,859 bytes to any streamed binary — the first pull produced
+files that were the right shape and the wrong bytes. `--entrypoint /bin/cat` bypasses it. The
+mismatch was visible only because the md5 was checked against the source; a size-only or
+"it downloaded fine" check would have passed a corrupt adapter into the archive.
 
 ## What is still on alpha-spark, and why
 
@@ -85,7 +115,8 @@ at 0% and 4/121 GB memory, so nothing we left is in his way.
 |---|---|---|
 | `models/fastino-finance-bf16` | 62 G | re-downloadable from HF, SHA256 manifest in the kit |
 | `models/ami-finance-{r1,r2,probe3}-bf16` | 62 G each | re-derivable: base + the adapter we hold |
-| `runs/*/optimizer.pt`, `*.safetensors` | ~5 G | only needed to *resume* a run we are not resuming |
+| `runs/*/checkpoint-*/` (optimizer + intermediate adapters) | ~5 G | resume-only; every run's **final** adapter is local and md5-verified |
+| `runs/smoke*/` adapters | ~270 M | 10-step harness shakedowns |
 | `runs/.hf/` arrow cache | ~1 G | regenerated on load |
 | `venv/`, `.hf_cache/`, kit tarball | ~330 M | reinstallable |
 
