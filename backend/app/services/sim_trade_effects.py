@@ -43,21 +43,19 @@ from app.db import get_session
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.trade import Side
 from app.services.journal_store import get_journal_store
-from app.services.reputation_service import get_reputation_service
 from app.services.sim_engine import SimTrade
 from app.services.watchlist_store import get_watchlist_store
 
 
 def apply_post_fill_effects(*, user_id: UUID, trade: SimTrade) -> None:
-    """Watchlist, journal and reputation for one filled training trade.
+    """Watchlist and journal for one filled training trade.
 
     Reads the **trade**, never a request: `trade.stop`/`trade.target` are the
-    values `_execute_fill` actually wrote, so a resting order that carried its
-    bracket from placement earns the same award as one typed at the ticket.
+    values `_execute_fill` actually wrote. CR109 slice 7 removed the third
+    effect, the `trade_disciplined` reputation award.
     """
     _add_to_watchlist(user_id, trade)
     _append_journal(user_id, trade)
-    _award_disciplined(user_id, trade)
 
 
 def _add_to_watchlist(user_id: UUID, trade: SimTrade) -> None:
@@ -193,18 +191,8 @@ def record_compliance_block(
         )
 
 
-def _award_disciplined(user_id: UUID, trade: SimTrade) -> None:
-    """Reputation (CR004): a buy with both stop AND target that cleared the
-    mandate check is a disciplined trade. Trade-id ref dedup + the ≤3/day
-    per-type limit keep it un-farmable."""
-    side = trade.side if isinstance(trade.side, Side) else Side(trade.side)
-    if side != Side.BUY or trade.stop is None or trade.target is None:
-        return
-    try:
-        with get_session() as s:
-            get_reputation_service().award(
-                s, user_id=user_id,
-                event_type="trade_disciplined", ref_id=str(trade.id),
-            )
-    except Exception:  # pragma: no cover
-        pass
+# CR109 slice 7 — `_award_disciplined` stood here: a buy carrying both a stop
+# and a target, having cleared the mandate check, scored `trade_disciplined`.
+# It scored for the league Amendment A retired, so it is gone with it. The
+# discipline it rewarded is still enforced — the mandate check and the bracket
+# rules are unchanged; only the points are gone.

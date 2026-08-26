@@ -3348,17 +3348,13 @@
   "@leagueOutcomeStay": {
     "description": "League history outcome — the user stayed in the same tier."
   },
-  "settingsSectionLeague": "LEAGUE",
-  "@settingsSectionLeague": {
-    "description": "Settings section title for the league profile block."
+  "settingsSectionIdentity": "IDENTITY",
+  "@settingsSectionIdentity": {
+    "description": "CR109 slice 7 — Settings section title for the handle row + its one-shot regenerate. Replaces settingsSectionLeague (\"LEAGUE\"), which became wrong copy when the reputation league was retired: the section now holds the player's public name only, which is what the games board renders. Not titled \"HANDLE\" because that is the row label directly beneath it. NEW key, needs ar/ms translation. retranslate:[ar,ms]"
   },
   "leagueHandle": "HANDLE",
   "@leagueHandle": {
     "description": "Label for the user's pseudonymous league handle in Settings."
-  },
-  "leagueReputation": "REPUTATION",
-  "@leagueReputation": {
-    "description": "Label for the user's all-time reputation total in Settings."
   },
   "leagueRegenerate": "REGENERATE HANDLE",
   "@leagueRegenerate": {
@@ -5195,28 +5191,48 @@
   "@optionLegLine": {
     "description": "CR172 §12. One leg of an open option structure, e.g. 'LONG 1 CALL $195'. Deliberately NOT 'qty @ avgCost' like an equity holding — a strike and a right are what identify an option, and the cost is stated once for the whole structure below. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "side": { "type": "String" },
-      "contracts": { "type": "String" },
-      "right": { "type": "String" },
-      "strike": { "type": "String" }
+      "side": {
+        "type": "String"
+      },
+      "contracts": {
+        "type": "String"
+      },
+      "right": {
+        "type": "String"
+      },
+      "strike": {
+        "type": "String"
+      }
     }
   },
   "optionLegLineDated": "{side} {contracts} {right} ${strike} · {expiry}",
   "@optionLegLineDated": {
     "description": "CR172 §12. Same as optionLegLine but with the leg's own expiry appended, used ONLY when a structure's legs expire on different dates (a calendar spread). Without the date those two legs would render identically. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "side": { "type": "String" },
-      "contracts": { "type": "String" },
-      "right": { "type": "String" },
-      "strike": { "type": "String" },
-      "expiry": { "type": "String" }
+      "side": {
+        "type": "String"
+      },
+      "contracts": {
+        "type": "String"
+      },
+      "right": {
+        "type": "String"
+      },
+      "strike": {
+        "type": "String"
+      },
+      "expiry": {
+        "type": "String"
+      }
     }
   },
   "optionDaysToExpiry": "{days} days to expiry",
   "@optionDaysToExpiry": {
     "description": "CR172 §12. How long the structure has left, on its own line under the legs. Only used for 2 or more days; today and tomorrow have their own keys because an option's last two days behave differently from every day before them. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "days": { "type": "String" }
+      "days": {
+        "type": "String"
+      }
     }
   },
   "optionExpiresToday": "EXPIRES TODAY",
@@ -5235,24 +5251,30 @@
   "@optionPaidAtOpen": {
     "description": "CR172 §12. The net debit the structure cost when it was opened. Stated once per structure, not per leg. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "amount": { "type": "String" }
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "optionCollectedAtOpen": "Collected ${amount} at open",
   "@optionCollectedAtOpen": {
     "description": "CR172 §12. Used instead of optionPaidAtOpen when the structure was opened for a net CREDIT — the user received cash. TRANSLATOR NOTE: must not read as a profit; it is money received up front against an obligation still outstanding. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "amount": { "type": "String" }
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "optionCollateralHeld": "Collateral held: ${amount}",
   "@optionCollateralHeld": {
     "description": "CR172 §12. Cash set aside against a short leg, shown only when non-zero. This is not a loss and not spent — it comes back when the structure closes. NEW key. retranslate:[ar,ms]",
     "placeholders": {
-      "amount": { "type": "String" }
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "optionMarkUnavailable": "No live mark for this structure \u2014 showing what it cost, not what it is worth today.",
+  "optionMarkUnavailable": "No live mark for this structure — showing what it cost, not what it is worth today.",
   "@optionMarkUnavailable": {
     "description": "CR172 §12. Sits on the ONE structure card whose legs could not all be marked — scoped per structure, not per screen, because the rest of the book may well be priced. The option marks feed (§11) is not built, so no profit or loss is computable for these positions. TRANSLATOR NOTE: this sentence exists specifically so the absence of a P&L is stated rather than shown as $0.00, which would read as 'flat' when the truth is 'not measured'. Keep the distinction between cost and current worth explicit. NEW key. retranslate:[ar,ms]"
   },

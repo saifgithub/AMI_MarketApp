@@ -61,7 +61,6 @@ from app.schemas.alpaca import AlpacaSnapshotIn
 from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
-from app.services.reputation_service import get_reputation_service
 from app.services.sim_engine import SimEngine, get_sim_engine
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -158,17 +157,9 @@ async def stream_room(
                     action=run.verdict.action if run.verdict else "no_verdict",
                     note="TODO B1: fire APNs push notification here",
                 )
-                # Reputation (CR004): run-id ref dedup + the ROOM_DEDUP_*
-                # windows prevent farming verdicts for points.
-                if run.verdict is not None:
-                    try:
-                        with get_session() as s:
-                            get_reputation_service().award(
-                                s, user_id=req.user_id,
-                                event_type="room_verdict", ref_id=str(run_id),
-                            )
-                    except Exception:  # pragma: no cover
-                        pass
+                # CR109 slice 7 — a `room_verdict` reputation award stood here,
+                # farm-proofed by run-id dedup and the ROOM_DEDUP_* windows. It
+                # scored for the league Amendment A retired.
                 return
             except Exception as exc:
                 if attempt == 2:

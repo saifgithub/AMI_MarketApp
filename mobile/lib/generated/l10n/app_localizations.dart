@@ -4924,23 +4924,17 @@ abstract class AppLocalizations {
   /// **'Held'**
   String get leagueOutcomeStay;
 
-  /// Settings section title for the league profile block.
+  /// CR109 slice 7 — Settings section title for the handle row + its one-shot regenerate. Replaces settingsSectionLeague ("LEAGUE"), which became wrong copy when the reputation league was retired: the section now holds the player's public name only, which is what the games board renders. Not titled "HANDLE" because that is the row label directly beneath it. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'LEAGUE'**
-  String get settingsSectionLeague;
+  /// **'IDENTITY'**
+  String get settingsSectionIdentity;
 
   /// Label for the user's pseudonymous league handle in Settings.
   ///
   /// In en, this message translates to:
   /// **'HANDLE'**
   String get leagueHandle;
-
-  /// Label for the user's all-time reputation total in Settings.
-  ///
-  /// In en, this message translates to:
-  /// **'REPUTATION'**
-  String get leagueReputation;
 
   /// Button to regenerate the pseudonymous handle (allowed once).
   ///

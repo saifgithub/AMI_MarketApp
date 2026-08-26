@@ -19,7 +19,7 @@ import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/services/api/api_client.dart';
 import 'package:ami_trade/state/auth_providers.dart';
-import 'package:ami_trade/state/league_providers.dart';
+import 'package:ami_trade/state/me_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
@@ -135,7 +135,7 @@ Future<_ScriptedMandateNotifier> _pump(
         }),
         simNotifierProvider.overrideWith((ref) => _NoopSimNotifier(ref)),
         authNotifierProvider.overrideWith((ref) => _FixedAuthNotifier(ref)),
-        leagueMeProvider.overrideWith((ref) async => throw Exception('no network in test')),
+        myHandleProvider.overrideWith((ref) async => throw Exception('no network in test')),
         apiClientProvider.overrideWithValue(_FakeApiClient()),
       ],
       child: MaterialApp(

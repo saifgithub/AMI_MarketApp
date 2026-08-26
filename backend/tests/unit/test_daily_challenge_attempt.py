@@ -160,29 +160,6 @@ def test_second_attempt_returns_stored_result(client: TestClient) -> None:
     assert body["selected_option"] == 0
 
 
-def test_attempt_awards_reputation(client: TestClient) -> None:
-    from sqlalchemy import select
-
-    from app.db import get_session
-    from app.db.models import ReputationEventRow
-
-    user_id, token = _make_user_and_token()
-    r = client.post(
-        "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
-        json={"selected_option": 1},
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert r.status_code == 200
-    with get_session() as s:
-        types = sorted(
-            e.event_type for e in s.execute(
-                select(ReputationEventRow).where(
-                    ReputationEventRow.user_id == user_id
-                )
-            ).scalars().all()
-        )
-    assert types == ["challenge_correct"]
-
 
 def test_second_attempt_journals_once(client: TestClient) -> None:
     user_id, token = _make_user_and_token()

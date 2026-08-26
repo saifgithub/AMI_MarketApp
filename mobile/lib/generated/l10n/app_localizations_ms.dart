@@ -2927,13 +2927,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get leagueOutcomeStay => 'Ditahan';
 
   @override
-  String get settingsSectionLeague => 'LEAGUE';
+  String get settingsSectionIdentity => 'IDENTITY';
 
   @override
   String get leagueHandle => 'HANDLE';
-
-  @override
-  String get leagueReputation => 'REPUTASI';
 
   @override
   String get leagueRegenerate => 'JANA SEMULA HANDLE';

@@ -2924,13 +2924,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leagueOutcomeStay => 'بقي';
 
   @override
-  String get settingsSectionLeague => 'LEAGUE';
+  String get settingsSectionIdentity => 'IDENTITY';
 
   @override
   String get leagueHandle => 'HANDLE';
-
-  @override
-  String get leagueReputation => 'REPUTATION';
 
   @override
   String get leagueRegenerate => 'إعادة إنشاء HANDLE';

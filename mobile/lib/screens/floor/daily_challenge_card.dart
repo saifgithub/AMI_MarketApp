@@ -10,19 +10,16 @@ import 'dart:async';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
-import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
-import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
-import 'package:ami_trade/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,7 +34,6 @@ class DailyChallengeCard extends ConsumerWidget {
       error: (e, _) => const SizedBox.shrink(),
       data: (data) {
         if (data == null) return const SizedBox.shrink();
-        final me = ref.watch(leagueMeProvider).valueOrNull;
         return AccentCard(
           accent: AmiColors.hexAmber,
           onTap: () => Navigator.of(context).push(
@@ -45,7 +41,7 @@ class DailyChallengeCard extends ConsumerWidget {
               builder: (_) => DailyChallengeScreen(data: data),
             ),
           ),
-          child: _Body(data: data, streak: me?.streak),
+          child: _Body(data: data),
         );
       },
     );
@@ -69,9 +65,8 @@ class DailyChallengeCard extends ConsumerWidget {
 
 
 class _Body extends StatelessWidget {
-  const _Body({required this.data, this.streak});
+  const _Body({required this.data});
   final DailyChallengeWithDate data;
-  final StreakInfo? streak;
 
   @override
   Widget build(BuildContext context) {
@@ -122,8 +117,6 @@ class _Body extends StatelessWidget {
                 style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
               ),
             const Spacer(),
-            if (streak != null && streak!.current > 0)
-              StreakChip(count: streak!.current, todayFilled: answered),
           ],
         ),
       ],
@@ -244,8 +237,6 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       if (result.correct) {
         Celebrate.micro(context, accent: AmiColors.hexGreen);
       }
-      // Streak/points moved — refresh so the chip + card reflect it.
-      ref.invalidate(leagueMeProvider);
       ref.invalidate(dailyChallengeTodayProvider);
     } catch (_) {
       if (!mounted) return;

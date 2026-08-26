@@ -17,10 +17,11 @@
 /// **The twelve are intact** (D-012). They moved from the doorway to the depth
 /// layer: `your_firm_screen.dart` carries the whole shipped wall, so 1-on-1,
 /// Brief Your Agent and the unlock path all survive the move (acceptance #8).
-/// Nothing else was orphaned either — the league card is gone by CR109
-/// Amendment A's standing scope, the streak chip stays until CR109 re-homes it,
-/// and `restart onboarding` moved into Settings, which is where the capability
-/// map says it belongs now that CR133 put Settings inside YOU.
+/// Nothing else was orphaned either — the league card and the streak chip are
+/// both gone by CR109 Amendment A's standing scope (slice 7 took the chip with
+/// the reputation streak that fed it), and `restart onboarding` moved into
+/// Settings, which is where the capability map says it belongs now that CR133
+/// put Settings inside YOU.
 library;
 
 import 'package:ami_trade/features/nav/ami_tab.dart';
@@ -38,11 +39,9 @@ import 'package:ami_trade/screens/floor/team_calls_screen.dart';
 import 'package:ami_trade/screens/floor/your_firm_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
-import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
-import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
@@ -53,7 +52,6 @@ import 'package:ami_trade/widgets/floor/floor_reaction_card.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
-import 'package:ami_trade/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -188,9 +186,6 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     });
 
     final l = AppLocalizations.of(context);
-    final me = ref.watch(leagueMeProvider).valueOrNull;
-    final todayFilled =
-        ref.watch(dailyChallengeTodayProvider).valueOrNull?.myAttempt != null;
     final unlocked = ref.watch(lessonsNotifierProvider).unlockedAgentIds;
     // CR184 — the NOT ACTIONED card collapses (is omitted, not blanked) when
     // nothing is outstanding: loading, error and empty all read as "no card",
@@ -225,18 +220,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       // absent on load error (the badge may be absent, the
                       // inbox screen may not lie).
                       const _InboxBell(),
-                      // Stays until CR109 re-homes it (§3). Its "keep your
-                      // streak" copy is re-cut there too, not here.
-                      if (me != null && me.streak.current > 0)
-                        StreakChip(
-                          count: me.streak.current,
-                          todayFilled: todayFilled,
-                          onTap: () => ShareService.shareStreak(
-                            context,
-                            days: me.streak.current,
-                            accent: AmiColors.hexGreen,
-                          ),
-                        ),
+                      // CR109 slice 7 — the streak chip stood here, pending a
+                      // re-homing that was never specified. The streak it drew
+                      // was the reputation game's, retired by Amendment A, and
+                      // its only feed was `GET /v1/league/me`. It goes with them
+                      // rather than being re-homed onto nothing.
                     ],
                   ),
                   const SizedBox(height: AmiSpacing.s),

@@ -2922,13 +2922,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leagueOutcomeStay => 'Held';
 
   @override
-  String get settingsSectionLeague => 'LEAGUE';
+  String get settingsSectionIdentity => 'IDENTITY';
 
   @override
   String get leagueHandle => 'HANDLE';
-
-  @override
-  String get leagueReputation => 'REPUTATION';
 
   @override
   String get leagueRegenerate => 'REGENERATE HANDLE';

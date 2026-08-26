@@ -32,7 +32,6 @@ from app.services.journal_store import (
     RestoreOutcome,
     get_journal_store,
 )
-from app.services.reputation_service import get_reputation_service
 from pydantic import BaseModel, Field
 
 
@@ -149,18 +148,12 @@ def annotate_entry(
         and (req.outcome is not None or req.note)
         and updated.reference_id is not None
     ):
-        try:
-            with get_session() as s:
-                trade = s.execute(
-                    select(SimTradeRow).where(SimTradeRow.id == updated.reference_id)
-                ).scalar_one_or_none()
-                if trade is not None and trade.status != "open":
-                    get_reputation_service().award(
-                        s, user_id=user_id,
-                        event_type="trade_reviewed", ref_id=str(entry_id),
-                    )
-        except Exception:  # pragma: no cover
-            pass
+        # CR109 slice 7 — a `trade_reviewed` reputation award stood here. It
+        # scored for the league Amendment A retired, so it is gone with it. The
+        # surrounding condition (a journal entry referencing a CLOSED trade) had
+        # no other consumer, so it goes too rather than being left computing a
+        # value nobody reads.
+        pass
     return updated
 
 

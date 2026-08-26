@@ -31,7 +31,12 @@ _MAIN = Path(__file__).resolve().parents[2] / "app" / "main.py"
 # fails by producing NOTHING, which is why the suite cannot see it.
 _TICKS = {
     "_nightly_audit_trim": "audit tables grow without bound",
-    "_league_roll_tick": "leagues never roll to the next period",
+    # CR109 slice 7 removed `_league_roll_tick` — the reputation league it
+    # rolled is retired (Amendment A). Deleted from this list deliberately,
+    # which is the only correct way to leave it: the guard reads main.py, so a
+    # tick that is defined-but-unregistered fails here, and a tick that is
+    # gone entirely must leave with its entry or the guard fails forever on a
+    # name nothing defines.
     "_sharia_universe_refresh": "the Sharia universe silently goes stale",
     "_classification_universe_refresh": "sector classifications go stale",
     "_ticker_reference_refresh": "the ticker existence table goes stale",

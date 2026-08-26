@@ -94,28 +94,6 @@ def test_reset_after_cooldown_succeeds(client: TestClient):
     assert r.status_code == 200, r.text
 
 
-def test_disciplined_buy_awards_points_once(client: TestClient):
-    user_id, token = _make_user_and_token()
-    # CR129/DEF187: a fresh anonymous mandate's single-name cap now resolves
-    # to the risk-tier preset (3.0% at the default risk_score=3), not the
-    # pre-CR129 flat 50% backstop — 1 share of AAPL against a $10k default
-    # portfolio is ~3-4% and would be rejected on concentration, not the
-    # disciplined-trade behaviour this test actually exercises. Pin it
-    # permissive, same fix as test_sim_engine.py's non-concentration tests.
-    get_mandate_store().patch(user_id, {"single_name_cap_pct": 100.0})
-    # DEF312: `target=200.0` was BELOW the mock walk's AAPL (measured $273.77),
-    # so this fixture had been buying with a target already through the market —
-    # `bracket_hit` would have booked it as a win on the next sweep. It passed
-    # only because nothing checked the bracket's side and this test never calls
-    # `evaluate_outcomes`. Pinned wide rather than to a number, so the walk
-    # drifting cannot silently invert it again.
-    r = _submit(client, user_id, token, stop=1.0, target=100_000.0)
-    assert r.status_code == 200, r.text
-    assert r.json()["ok"] is True
-    events = _events(user_id, "trade_disciplined")
-    assert len(events) == 1
-    assert events[0].points == 2
-
 
 def test_buy_without_stop_or_target_awards_nothing(client: TestClient):
     user_id, token = _make_user_and_token()

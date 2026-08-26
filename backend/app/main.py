@@ -27,10 +27,10 @@ from app.api.daily_challenge import router as daily_challenge_router
 from app.api.games import router as games_router  # CR109 slice 2 — dark-launched
 from app.api.glossary import router as glossary_router
 from app.api.journal import router as journal_router
-from app.api.league import router as league_router
 from app.api.lessons import router as lessons_router
 from app.api.llm import router as llm_router
 from app.api.mandate import router as mandate_router
+from app.api.me import legacy_handle_router, router as me_router
 from app.api.messages import router as messages_router
 from app.api.notifications import router as notifications_router
 from app.api.telemetry import router as telemetry_router
@@ -96,7 +96,6 @@ def check_secret_key_boot(env: str, secret_key: str) -> None:
 check_secret_key_boot(settings.env, settings.secret_key)
 
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
-_LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent
 _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
 _CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors drift slowly
 _TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR128
@@ -108,7 +107,7 @@ _GAME_QUEUE_FILL_INTERVAL_SECONDS = 5 * 60  # CR109 slice 2 — matches CR027's 
 # three so boot does not put four yfinance fan-outs on the same second (the
 # 60s CachingProvider TTL means they would not share a cache across it).
 _SIM_RESTING_ORDER_TICK_OFFSET_SECONDS = 90
-_GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent, like the league roll
+_GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent
 # CR109 slice 3c — desks fill a field during its 30-minute `locked` window, so
 # this must divide that window several times over: a single missed tick would
 # cost a whole field its opponents.
@@ -130,25 +129,16 @@ async def _nightly_audit_trim() -> None:
             logger.exception("audit_trim_failed")
 
 
-async def _league_roll_tick() -> None:
-    """Background task: hourly league roll (CR004). weekly_roll() no-ops
-    within an already-assembled ISO week, so restarts can't miss the
-    Monday 00:00 UTC boundary — the next tick catches up."""
-    from app.db import get_session
-    from app.services.league_service import get_league_service
-
-    while True:
-        try:
-            with get_session() as s:
-                get_league_service().weekly_roll(s)
-        except Exception:
-            logger.exception("league_roll_failed")
-        await asyncio.sleep(_LEAGUE_ROLL_INTERVAL_SECONDS)
+# CR109 slice 7 — `_league_roll_tick` was here. The reputation league it rolled
+# is gone (Amendment A: "remove the current (boring!) reputation game"), so the
+# tick that assembled its weekly standings has nothing to assemble. The TABLES
+# stay by that amendment's own ruling — no migration, no deletion — which is why
+# this is a removed tick and not a dropped schema.
 
 
 async def _sharia_universe_refresh() -> None:
     """Background task: fetch the sourced Sharia universe once a day and store a
-    snapshot row (CR075). Idempotent like `_league_roll_tick` — a tick that finds
+    snapshot row (CR075). Idempotent — a tick that finds
     a fresh stored row does nothing, so a restart can't miss a boundary. The
     network fetch happens HERE (the only socket this feature opens), off the
     request path and off the event loop (`to_thread`, since it does two ~15s httpx
@@ -324,7 +314,7 @@ async def _sim_resting_order_tick() -> None:
 
 async def _game_scoring_pass_tick() -> None:
     """Background task: the SETTLING -> CLOSED scoring pass (CR109 slice 3),
-    every 30 min. Idempotent like `_league_roll_tick` — `game_entries.
+    every 30 min. Idempotent — `game_entries.
     scored_at` is the guard, so a tick that finds nothing left to score for
     an already-closed field does nothing, and a container restart mid-pass
     cannot double-post a career-points event (see `games_scoring_pass.py`'s
@@ -441,7 +431,7 @@ async def _daily_reminder_tick() -> None:
     a user's reminder back by a full interval. Idempotency is DB-derived and
     ultimately enforced by `uq_notifications_dedupe`, not by this task being
     the only thing running (see `daily_reminder`'s own docstring for all
-    three legs) — so unlike the league/sharia/etc ticks above this one is
+    three legs) — so unlike the sharia/etc ticks above this one is
     safe to run on a MUCH shorter interval, and safe against a second copy of
     itself: overlapping sweeps, a `--scale`d container, or a promotion window
     where the outgoing container's in-flight sweep hasn't finished. The
@@ -494,7 +484,6 @@ async def lifespan(app: FastAPI):
 
     tasks = [
         asyncio.create_task(_nightly_audit_trim()),
-        asyncio.create_task(_league_roll_tick()),
         asyncio.create_task(_sharia_universe_refresh()),
         asyncio.create_task(_classification_universe_refresh()),
         asyncio.create_task(_ticker_reference_refresh()),
@@ -567,10 +556,11 @@ app.include_router(daily_challenge_router)
 app.include_router(games_router)  # CR109 slice 2 — dark-launched, include_in_schema=False
 app.include_router(glossary_router)
 app.include_router(journal_router)
-app.include_router(league_router)
 app.include_router(lessons_router)
 app.include_router(llm_router)
 app.include_router(mandate_router)
+app.include_router(me_router)
+app.include_router(legacy_handle_router)
 app.include_router(messages_router)
 app.include_router(notifications_router)
 app.include_router(telemetry_router)

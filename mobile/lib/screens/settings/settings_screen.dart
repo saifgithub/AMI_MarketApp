@@ -28,7 +28,7 @@ import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:ami_trade/screens/settings/day_trader_disclosure_dialog.dart';
 import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
-import 'package:ami_trade/state/league_providers.dart';
+import 'package:ami_trade/state/me_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
@@ -341,7 +341,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // placement (ads.md:44). Self-gating slot.
                   const AdSlot(placement: AdPlacement.walletAndPlan),
                   const SizedBox(height: AmiSpacing.l),
-                  const _LeagueSection(),
+                  const _HandleSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _LanguageSection(),
                   const SizedBox(height: AmiSpacing.l),
@@ -903,22 +903,22 @@ class _MembershipSection extends ConsumerWidget {
 }
 
 
-/// CR011 (C3) — "LEAGUE": pseudonymous handle + reputation total + a one-shot
-/// handle regenerate. (The "show my real name" toggle is deferred — no backend
-/// route to persist `show_display_name` yet; tracked as a follow-up.)
-class _LeagueSection extends ConsumerWidget {
-  const _LeagueSection();
+/// CR011 (C3), narrowed by CR109 slice 7 — the pseudonymous handle and its
+/// one-shot regenerate. The reputation total that sat beside it is gone with
+/// the league Amendment A retired; the handle stayed, because it is the name
+/// the games board renders and sorts the field by.
+class _HandleSection extends ConsumerWidget {
+  const _HandleSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final me = ref.watch(leagueMeProvider).valueOrNull;
-    if (me == null) return const SizedBox.shrink();
+    final handle = ref.watch(myHandleProvider).valueOrNull;
+    if (handle == null) return const SizedBox.shrink();
     return _Section(
-      title: l.settingsSectionLeague,
+      title: l.settingsSectionIdentity,
       children: [
-        _ReadOnlyRow(label: l.leagueHandle, value: me.handle),
-        _ReadOnlyRow(label: l.leagueReputation, value: '${me.reputation}'),
+        _ReadOnlyRow(label: l.leagueHandle, value: handle),
         const SizedBox(height: AmiSpacing.s),
         SizedBox(
           height: 40,
@@ -937,7 +937,7 @@ class _LeagueSection extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final handle = await ref.read(apiClientProvider).regenerateHandle();
-      ref.invalidate(leagueMeProvider);
+      ref.invalidate(myHandleProvider);
       messenger
           .showSnackBar(SnackBar(content: Text('${l.leagueHandle}: $handle')));
     } catch (_) {

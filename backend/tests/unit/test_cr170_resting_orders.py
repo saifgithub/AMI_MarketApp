@@ -630,32 +630,34 @@ def test_a10_the_unscoped_tick_reaches_a_user_it_was_not_told_about():
 # ── Acceptance 11 — post-fill effects reach the sweep's fills ──────────────
 
 
-def test_a11_a_resting_buy_with_a_bracket_earns_trade_disciplined():
-    """The §7 extraction's whole purpose: the sweep's fill gets the same
-    watchlist / journal / reputation treatment the ticket's fill gets."""
-    from sqlalchemy import select as _select
-    from app.db.models import ReputationEventRow
+def test_a11_a_resting_fill_gets_the_same_post_fill_effects_as_a_ticket_fill():
+    """Acceptance 11 — the §7 extraction's whole purpose: the sweep's fill gets
+    the same post-fill treatment the ticket's fill gets.
+
+    **Re-aimed, not deleted (CR109 slice 7).** This probed that shared path via
+    the `trade_disciplined` reputation award, which is gone with the league it
+    scored for. The acceptance criterion is that the two fill paths run the SAME
+    effects, not that reputation is one of them — so the probe moves to the
+    watchlist, which is the surviving observable effect of
+    `apply_post_fill_effects`. Deleting the test would have retired CR170's
+    acceptance 11 because the probe it happened to use went away.
+    """
     from app.services.auth_service import AuthService
+    from app.services.watchlist_store import get_watchlist_store
 
     prov = _Pinned({"AAPL": 100.0})
     sim = SimEngine(provider=prov)
-    # A REAL user row, not a bare uuid4: `_award_disciplined` swallows its own
-    # exception (correctly — the money has already moved by then), so an FK
-    # failure on `reputation_events.user_id` is indistinguishable from "the
-    # award was never attempted". Every other test here is unaffected because
-    # nothing else writes a user-scoped row outside the sim tables.
+    # A REAL user row, not a bare uuid4: the post-fill effects each swallow
+    # their own exception (correctly — the money has already moved by then), so
+    # an FK failure is indistinguishable from "the effect never ran".
     user, _, _ = AuthService().ensure_anonymous(device_user_id=None)
     user_id = user.id
     order_id = _rest_a_buy_limit(sim, user_id, limit=90.0, stop=80.0, target=120.0)
     prov.set("AAPL", 89.0)
     sweep_resting_orders(user_id=user_id, now=_session_now(order_id), engine=sim)
 
-    with get_session() as s:
-        awards = s.execute(_select(ReputationEventRow).where(
-            ReputationEventRow.user_id == user_id,
-            ReputationEventRow.event_type == "trade_disciplined",
-        )).scalars().all()
-    assert len(awards) == 1
+    tickers = {w.ticker for w in get_watchlist_store().list_for_user(user_id)}
+    assert "AAPL" in tickers
 
 
 def test_a4_the_claim_itself_is_the_duplicate_guard_not_the_query():

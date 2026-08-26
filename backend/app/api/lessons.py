@@ -32,7 +32,6 @@ from app.schemas.lessons import (
 )
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import LessonsService, get_lessons_service
-from app.services.reputation_service import get_reputation_service
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import User
@@ -161,22 +160,10 @@ def submit_quiz(
                 ))
             except Exception:  # pragma: no cover
                 pass
-        # Reputation (CR004): ref dedup makes re-passes free — only the
-        # first pass of a lesson / first unlock of an agent grants.
-        try:
-            with get_session() as s:
-                rep = get_reputation_service()
-                rep.award(
-                    s, user_id=req.user_id,
-                    event_type="lesson_passed", ref_id=req.lesson_id,
-                )
-                for agent_id in result.unlocked_agents:
-                    rep.award(
-                        s, user_id=req.user_id,
-                        event_type="agent_unlocked", ref_id=agent_id,
-                    )
-        except Exception:  # pragma: no cover
-            pass
+        # CR109 slice 7 — `lesson_passed` and `agent_unlocked` reputation
+        # awards stood here. Both scored for the league Amendment A retired.
+        # Agent unlocking itself is unaffected: it is `result.unlocked_agents`
+        # above, which is the earn path, not the score.
     return result
 
 

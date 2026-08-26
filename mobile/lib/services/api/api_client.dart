@@ -26,7 +26,6 @@ import 'package:ami_trade/models/feedback.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/models/inbox_message.dart';
 import 'package:ami_trade/models/journal.dart';
-import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/models/merge.dart';
@@ -1530,30 +1529,19 @@ class ApiClient {
 
   // ── League (CR010) ──────────────────────────────────────────────────
 
-  Future<LeagueMe> leagueMe() async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/league/me');
-    return LeagueMe.fromJson(r.data!);
-  }
+  // ── Me ───────────────────────────────────────────────────────────────
+  // CR109 slice 7 — `leagueMe`, `leagueStandings` and `leagueHistory` stood
+  // here and are gone with the reputation league. `regenerateHandle` moved
+  // from `PATCH /v1/league/handle` to `PATCH /v1/me/handle`: the handle is the
+  // player's public name on the games board, not a league artifact.
 
-  Future<LeagueStandings?> leagueStandings() async {
-    try {
-      final r = await _dio.get<Map<String, dynamic>>('/v1/league/standings');
-      return LeagueStandings.fromJson(r.data!);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null; // not_in_league yet
-      rethrow;
-    }
-  }
-
-  Future<List<LeagueHistoryEntry>> leagueHistory() async {
-    final r = await _dio.get<List<dynamic>>('/v1/league/history');
-    return (r.data ?? const [])
-        .map((e) => LeagueHistoryEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
+  Future<String?> myHandle() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/me');
+    return r.data?['handle'] as String?;
   }
 
   Future<String> regenerateHandle() async {
-    final r = await _dio.patch<Map<String, dynamic>>('/v1/league/handle');
+    final r = await _dio.patch<Map<String, dynamic>>('/v1/me/handle');
     return r.data!['handle'] as String;
   }
 
@@ -1778,7 +1766,7 @@ class ApiClient {
   // never behind a runtime flag — see `features/games/games_gate.dart`). So
   // these methods are ordinary and unconditional; nothing calls them unless
   // a gated build's `/games` route is reached, and no store binary reaches it.
-  // No `{user_id}` in any path — like `/v1/league/me`, the caller is derived
+  // No `{user_id}` in any path — like `/v1/me`, the caller is derived
   // from the Bearer token `_AuthInterceptor` already attaches.
 
   /// CR109. `/v1/games/cadences` and `/v1/games/runs` return a BARE JSON

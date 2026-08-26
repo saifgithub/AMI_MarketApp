@@ -34,7 +34,6 @@ from app.services.daily_challenge_service import (
     get_daily_challenge_service,
 )
 from app.services.journal_store import get_journal_store
-from app.services.reputation_service import get_reputation_service
 
 
 router = APIRouter(prefix="/v1/daily_challenge", tags=["daily_challenge"])
@@ -205,17 +204,10 @@ def attempt(
                     selected_option=existing.selected_option,
                 )
             raise
-        # CR096: one award per attempt, spec's 3-outcome table (right +5 /
-        # close +2 / wrong-but-tried +1). Every shipped challenge type is
-        # strict single-correct multiple-choice with no graded partial-credit
-        # answer space, so "close" isn't reachable from today's content —
-        # it's wired into POINTS for a challenge type that defines it later.
-        rep = get_reputation_service()
-        rep.award(
-            s, user_id=current_user.id,
-            event_type="challenge_correct" if correct else "challenge_wrong_tried",
-            ref_id=cid,
-        )
+        # CR109 slice 7 — CR096's per-attempt reputation award stood here
+        # (right +5 / close +2 / wrong-but-tried +1). It scored for the league
+        # Amendment A retired. The attempt row itself is still written above;
+        # only the score is gone.
 
     # Journal capture — best-effort, never fail the request on a journal error.
     try:
