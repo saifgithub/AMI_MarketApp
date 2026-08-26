@@ -852,3 +852,63 @@ missing section and a deliberate skip must not look identical (CR040's rule appl
   → Saiful: **"Don't convene — the fix stands."** The structural fix (a required `entry` on
   `bracket_hit` plus a raised refusal) and P29's registered enforcing checks are the answer; a fourth
   instance re-raises it. Recorded in `failure_patterns.md` under P29.
+
+## 2026-08-26
+
+Session-start check (CLAUDE.md step 2), run as the 0900 daily check-in. Last section was 08-24;
+08-25 was an autonomous AFK run with no check-in, so this covers both days. Working list:
+**13 open Defects + 4 proposed CRs + 10 in_progress CRs**.
+
+**Carried forward with their blocker named, not re-asked** (standing dispositions from the 08-20
+classification sweep, the 08-21 check-in and the 08-24 review):
+
+- **DEF100 / DEF344 / CR084 / CR198** — `[PAYMENTS TRACK PARKED — 2026-08-21]`; unpark trigger is
+  DEF100's provisioning. Unchanged.
+- **CR022** — deferred-to-pre-release ruling. **CR161** — waits on a Tier-1 prospect trigger, an
+  external event rather than work. Unchanged.
+- **DEF178** — "rotate later, I'll work the rest" (08-24). Still CR123's sole remaining blocker;
+  seven of nine Mediums closed on 08-25 (`bd35554c`).
+- **DEF104** — blocked by the DEF204 "leave it, it's working" ruling: the invoking trigger is
+  still unidentified, so de-hardcoding the credential risks a silent break against real customer
+  email (CR040 class). Unchanged.
+- **DEF144 / DEF200** — already approved on 08-24 and in the build queue; DEF200's sweep took the
+  ratchet 86 → 38 handlers on 08-25 (`0a58be75`). No new decision owed.
+- **DEF362 / DEF367 / DEF375** — in flight, not decisions. The iOS gate now *runs* (12 passed /
+  7 failed in 4m12s, was a 43-minute hang; `093ab0bf`).
+
+Asked and answered:
+
+- **CR196** (finance-tuned model pilot) — run 2's acceptance is **4 clean / 2 weak-or-absent /
+  1 hard failure**. Both BEATS are output structure (S5 `has_side` 26% → 100%, S6 `one_per_size`
+  57% → 100%, McNemar p=0.000), and the control arm proved structure needs **no training at all**:
+  vanilla + a JSON-schema grammar reached **93%** on `one_per_size` untrained, the residual being a
+  harness token cap. Against that, S1 `false_conflict` **regressed** 0/44 → 2/44 against a control
+  of zero, S8 `gave_code` gained nothing (0/60 both arms), S7 `refused` 45% → 50% with overlapping
+  CIs. Asked: close it / one more run at the non-structural surfaces / park until CR210 lands?
+  → Saiful: **"Close it — verdict reached"** → CR196 closes **`done` with a negative result**.
+  ~42 GPU-hours bought one real finding: *buy the structure at inference, not in the weights.*
+  **No further GPU spend authorised.** The `ami_finetune_kit` is kept — datagen, decontamination,
+  the 468-prompt held-out instrument, the Wilson+McNemar scorer and `run_constrained.py` are the
+  measurement rig, and CR210's before/after runs through it.
+- **CR210** (grammar-constrained Room output) — asked: build all three surfaces / the two proven
+  JSON ones only / queue it behind the approved backlog? → Saiful: **"Build all three now"**
+  → CR210 moves to `in_progress`. Two conditions carried from the CR doc, unrelaxed by the
+  approval: (1) the Trader money block is **regex**, not JSON, so that path must be **verified
+  against the live vLLM 0.23.1 before being committed to** — `guided_json` is silently ignored by
+  this version, which is the precedent for never assuming a knob exists; (2) CR143's tolerant
+  parser is **not** deleted, since it remains the fallback for every non-enforcing provider.
+  **Laned to the build team, not done in this session** — `_parse_pm_verdict` is safety-floor
+  adjacent, which is the reversibility test that routes work off the Architect's own hands.
+
+**Not asked, and why.** DEF203 (register status column is unvalidated free text), DEF321
+(promotion-gate suite fails intermittently and failed on a promotion), DEF335 (retroactive bar
+adjustment), DEF339 (ESG-lite sheet describes a screen AMI does not run) are all **work, not
+decisions** — they need a build slot, not a ruling, and none has an option Saiful has to choose
+between. They stay open and unasked.
+
+**GTM pulse (CR036 §1).** Phase **Stealth Alpha distribution — active**. Movement since the last
+check-in is on the graduation gate's automated half only: CR162's iOS gate went from a 43-minute
+hang to a 4m12s run (12/19 passing) after DEF375 made the coach-mark Skip control addressable and
+CR209 gave the walk identifier-addressed answers. **The gate itself has not moved: E5
+(device-matrix verification) is still open and still needs Saiful's device time.** That is the
+single concrete blocker on widening recruitment past the initial 10–20 personal invites.
