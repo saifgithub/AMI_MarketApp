@@ -91,7 +91,7 @@ def _row(trade_id) -> SimTradeRow:
 
 
 def test_two_bracketed_lots_blend_by_open_quantity():
-    stop, target = blended_bracket([
+    stop, target, _ = blended_bracket([
         LotBracket(quantity_open=10, stop=95.0, target=120.0),
         LotBracket(quantity_open=10, stop=99.0, target=130.0),
     ])
@@ -100,7 +100,7 @@ def test_two_bracketed_lots_blend_by_open_quantity():
 
 def test_the_weighting_is_by_shares_not_by_lot_count():
     """30 shares at $99 must pull harder than 10 at $95."""
-    stop, _ = blended_bracket([
+    stop, _, _ = blended_bracket([
         LotBracket(quantity_open=10, stop=95.0, target=None),
         LotBracket(quantity_open=30, stop=99.0, target=None),
     ])
@@ -110,7 +110,7 @@ def test_the_weighting_is_by_shares_not_by_lot_count():
 def test_a_lot_without_a_stop_is_excluded_not_zeroed():
     """The case with no obviously-right answer. Zeroing gives $47.50, which
     protects nothing; this carries the user's own $95 across all 20 shares."""
-    stop, _ = blended_bracket([
+    stop, _, _ = blended_bracket([
         LotBracket(quantity_open=10, stop=95.0, target=None),
         LotBracket(quantity_open=10, stop=None, target=None),
     ])
@@ -120,7 +120,7 @@ def test_a_lot_without_a_stop_is_excluded_not_zeroed():
 def test_stop_and_target_are_averaged_over_their_own_contributors():
     """One lot set only a stop, the other only a target. Both survive, each over
     the shares that actually named it — a shared denominator would halve both."""
-    stop, target = blended_bracket([
+    stop, target, _ = blended_bracket([
         LotBracket(quantity_open=10, stop=95.0, target=None),
         LotBracket(quantity_open=10, stop=None, target=130.0),
     ])
@@ -131,7 +131,7 @@ def test_a_sold_out_lot_weighs_nothing():
     """DEF318 restated as arithmetic. The dead lot's $95 must not pull the live
     lot's $99 down — that is the defect where a re-entered position was stopped
     out at a price the user never named."""
-    stop, _ = blended_bracket([
+    stop, _, _ = blended_bracket([
         LotBracket(quantity_open=0.0, stop=95.0, target=None),
         LotBracket(quantity_open=10, stop=99.0, target=None),
     ])
@@ -139,13 +139,13 @@ def test_a_sold_out_lot_weighs_nothing():
 
 
 def test_an_unprotected_position_has_no_bracket():
-    assert blended_bracket([
+    assert tuple(blended_bracket([
         LotBracket(quantity_open=10, stop=None, target=None),
-    ]) == (None, None)
+    ]))[:2] == (None, None)
 
 
 def test_no_lots_at_all_is_not_a_crash():
-    assert blended_bracket([]) == (None, None)
+    assert tuple(blended_bracket([]))[:2] == (None, None)
 
 
 # ── The rule, through the sweep ────────────────────────────────────────────

@@ -1699,3 +1699,60 @@ Enforcing checks:
   now applicable-rows-only, and a check that is N/A on either arm renders as NOT MEASURED rather than
   occupying a verdict cell. Rule: before comparing two rates, confirm both denominators count the
   same population.
+
+---
+
+## P29 — The validation guards the write door; the money moves through the read path
+
+A rule is enforced where a value is *accepted* and then trusted everywhere it is *used*. Every
+input that arrives by some other route — a row written before the guard existed, a backfill, a
+migration, a second provider — reaches the acting code unchecked, and the acting code has no
+argument with which to ask.
+
+| | Guard that existed | Path that moved the money |
+|---|---|---|
+| **DEF190** (2026-08-06) | the compliance check | the fill path it did not sit on |
+| **DEF305** (2026-08-14) | `_quote_is_fillable`, on the ENTRY book | `evaluate_outcomes` took a bare `float` and closed 8 positions at mock-walk prices, crediting **$6,882.22** of invented proceeds that reconciled to the cent |
+| **DEF377** (2026-08-26) | `bracket_is_wrong_side` at `_execute_fill` (DEF312) + CR189 acceptance 6 on the blend — **both submit-time** | `evaluate_outcomes` read `stop`/`target` off the stored row and fired: 4 wrong-side rows on Alpha, 3 already carrying a won/lost verdict the market never delivered |
+
+**Why the previous fixes did not generalise.** DEF190's and DEF305's fixes were each *correct and
+local* — add the check to this one other call site. Neither changed the shape that produced them:
+the acting function still accepted exactly the fields it needed to act and none of the fields it
+would need to refuse. `bracket_hit(is_short, mark, stop, target)` could not have validated its own
+inputs if it had wanted to, because `entry` was not among them. A guard that is *possible to omit*
+gets omitted the next time somebody adds a caller.
+
+**The invariant.** *An acting function must take the arguments it needs to REFUSE, not only the
+ones it needs to act — and refusal must be raised, not returned.* A required parameter cannot be
+forgotten by a new call site; an exception cannot be dropped by accident. Where the check can only
+live at the write door, a **read-time census** must exist for the rows that got in before it.
+
+**Enforcing checks (DEF377).**
+- `bracket_hit` takes a **required** `entry` and raises `WrongSideBracketError`. Mutation M3 —
+  giving `entry` a default — is killed by `test_entry_is_a_required_argument`.
+- `test_def377_stored_wrong_side_bracket.py::test_every_bracket_firing_path_handles_the_refusal`
+  asserts, over a named list of every bracket-firing function in `sim_engine`, that each one both
+  handles *and logs* the refusal. Adding a third fire site without handling it fails the suite.
+- The corresponding DEF305 check, `test_every_money_moving_path_consults_fillability`, is the same
+  shape over `MONEY_MOVING`. Both lists are explicit so extending them is a deliberate edit.
+- `backend/scripts/def377_wrong_side_census.py` — read-only, exits 1 on any finding, and imports the
+  rule rather than restating it. Run against Alpha after any promotion touching the bracket path and
+  after any backfill that writes `stop`/`target`.
+
+**A separate lesson from the same fix, worth its own line.** The two tests asserting that the refusal
+is *logged* were written against `capsys`. They passed in isolation and failed 5,349 tests into the
+full suite: structlog's renderer holds the `sys.stdout` it captured when logging was configured, so
+whether a line reaches pytest's capture depends on which test configured logging first. They are now
+on `structlog.testing.capture_logs`, which is order-independent and asserts the event name, the
+`log_level` and the fields rather than their rendering. **Any assertion about a log line belongs on
+`capture_logs`, never on captured stdout** — and a guard verified only by running its own file is not
+verified. The other five `capsys` users in `backend/tests/unit/` were checked at the same time
+(2026-08-26): every one asserts on a script's own `print()`, which is what `capsys` is for. No second
+instance.
+
+**This is the third instance, which is the [Dilemma](../../dilemmas/DILEMMA_PROTOCOL.md) threshold.**
+The point fix above is shipped and mutation-proved, and it is deliberately structural rather than
+another call-site check — but the framing question it does not answer is the one worth putting to
+several independent agents: *should stored trading state be validated on LOAD, as a row invariant,
+rather than by each acting function remembering to ask?* Raised with Saiful 2026-08-26 rather than
+convened unilaterally, because convening one spawns an agent fleet.

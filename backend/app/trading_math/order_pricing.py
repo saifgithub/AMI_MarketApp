@@ -166,11 +166,36 @@ def stop_limit_becomes_limit(order_type: OrderType | str) -> bool:
 # ── CR171 §5 — the bracket inverts on a short ──────────────────────────────
 
 
+class WrongSideBracketError(ValueError):
+    """A STORED bracket sits on the wrong side of its own entry (DEF377).
+
+    Raised by `bracket_hit`, not returned, and that is the whole design. The
+    submit-time refusal (`bracket_is_wrong_side`, below) has guarded the door
+    since DEF312 — but a row already in the table has not been through it, and
+    `evaluate_outcomes` read `stop`/`target` straight off that row and fired.
+    Four such rows were found live on Alpha on 2026-08-26; three had already
+    booked a won/lost verdict the position never earned. DEF190's shape: the
+    guard was real, it was just not on the path that moves the money.
+
+    A `return` here would be ignorable — the sweep would have to remember to
+    check, which is exactly the remembering that failed. An exception cannot be
+    dropped by accident, and `entry` is a REQUIRED keyword, so a future third
+    fire site cannot silently opt out of the rule either.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
 def bracket_hit(
-    *, is_short: bool, mark: float,
+    *, is_short: bool, mark: float, entry: float,
     stop: float | None, target: float | None,
 ) -> str | None:
     """Which side of an exit bracket the mark has crossed: "lost", "won", None.
+
+    Raises `WrongSideBracketError` when the bracket could not fire honestly in
+    either direction — see that class. `entry` is required for exactly that.
 
     | | Long | Short |
     |---|---|---|
@@ -190,6 +215,11 @@ def bracket_hit(
     given the loss, never the win. A simulator that resolves an ambiguous bar
     in the user's favour teaches that gaps are free.
     """
+    wrong = bracket_is_wrong_side(
+        is_short=is_short, entry=entry, stop=stop, target=target,
+    )
+    if wrong is not None:
+        raise WrongSideBracketError(wrong)
     if is_short:
         if stop is not None and mark >= stop:
             return "lost"
@@ -262,16 +292,38 @@ def bracket_is_wrong_side(
 
 
 class LotBracket(NamedTuple):
-    """One live buy lot's contribution to its position's bracket (CR189)."""
+    """One live buy lot's contribution to its position's bracket (CR189).
+
+    `entry` is DEF377's addition: the blended bracket has to be judged against
+    the blended entry before the sweep may fire on it, and a weighted mean
+    computed anywhere but here would be a second derivation of the CR189
+    weighting — DEF098's shape, one layer in.
+    """
 
     quantity_open: float
     stop: float | None
     target: float | None
+    entry: float = 0.0
+
+
+class PositionBracket(NamedTuple):
+    """CR189's one level per position, plus the entry DEF377 judges it against.
+
+    `entry` is the share-weighted mean over every lot still holding shares —
+    the position's average cost, which is what a trader means by "is my stop
+    below my entry". It is averaged over ALL live lots, not only the ones
+    contributing a level, because a lot with no stop still holds shares the
+    blended stop would liquidate.
+    """
+
+    stop: float | None
+    target: float | None
+    entry: float | None
 
 
 def blended_bracket(
     lots: Iterable[LotBracket],
-) -> tuple[float | None, float | None]:
+) -> PositionBracket:
     """CR189 — a position's single stop/target, weighted by shares still open.
 
     A bracket is stored per trade row; a position is per ticker. Buy the same
@@ -302,10 +354,13 @@ def blended_bracket(
     """
     stop_num = stop_den = 0.0
     target_num = target_den = 0.0
+    entry_num = entry_den = 0.0
     for lot in lots:
         qty = float(lot.quantity_open)
         if qty <= _EPS:
             continue
+        entry_num += float(lot.entry) * qty
+        entry_den += qty
         if lot.stop is not None:
             stop_num += float(lot.stop) * qty
             stop_den += qty
@@ -314,4 +369,5 @@ def blended_bracket(
             target_den += qty
     stop = round(stop_num / stop_den, 2) if stop_den > _EPS else None
     target = round(target_num / target_den, 2) if target_den > _EPS else None
-    return stop, target
+    entry = round(entry_num / entry_den, 2) if entry_den > _EPS else None
+    return PositionBracket(stop, target, entry)

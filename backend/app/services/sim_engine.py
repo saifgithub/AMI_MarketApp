@@ -89,6 +89,7 @@ from app.trading_math.market_hours import session_close_on_or_after
 from app.trading_math.order_pricing import (
     LotBracket,
     blended_bracket,
+    WrongSideBracketError,
     bracket_hit,
     bracket_is_wrong_side,
     can_rest,
@@ -679,6 +680,35 @@ def _open_quantity_by_lot(rows: Iterable[SimTradeRow]) -> dict[str, float]:
     return open_by_lot
 
 
+def _log_wrong_side(
+    entries: list[tuple[str, str]], *, function: str, user_id: UUID,
+) -> None:
+    """DEF377 — name every position the sweep refused to fire on, at ERROR.
+
+    Separate from `sim_bracket_skipped_unpriced`'s WARNING, and one level up,
+    because the two say different things about the future. An unpriced ticker
+    is a feed that will be back: the next tick evaluates it and the log line is
+    routine (23 in 24 hours the day DEF305 was found). A wrong-side bracket is a
+    ROW that is wrong. It will be refused again on every sweep, for as long as
+    it exists, and no amount of waiting fixes it — so the line is an ERROR, it
+    carries the trade's own refusal text, and it names the ticker an operator
+    has to go and correct. Silence here would be the DEF377 defect wearing the
+    DEF377 fix's clothes: the position stops being liquidated and nobody ever
+    learns why it also stopped being protected.
+    """
+    if not entries:
+        return
+    logger.error(
+        "sim_bracket_wrong_side",
+        function=function,
+        user_id=str(user_id),
+        count=len(entries),
+        positions=[
+            {"ticker": t, "reason": r} for t, r in sorted(set(entries))
+        ],
+    )
+
+
 def _lot_brackets(
     rows: Iterable[SimTradeRow], lot_open: dict[str, float],
 ) -> list[LotBracket]:
@@ -696,6 +726,7 @@ def _lot_brackets(
             quantity_open=lot_open.get(str(r.id), 0.0),
             stop=float(r.stop) if r.stop is not None else None,
             target=float(r.target) if r.target is not None else None,
+            entry=float(r.entry_price),
         )
         for r in rows
         if r.status == "open"
@@ -1191,7 +1222,8 @@ class SimEngine:
         out: dict[str, tuple[float | None, float | None]] = {}
         for ticker, trades in by_ticker.items():
             lot_open = _open_quantity_by_lot(trades)
-            out[ticker] = blended_bracket(_lot_brackets(trades, lot_open))
+            blend = blended_bracket(_lot_brackets(trades, lot_open))
+            out[ticker] = (blend.stop, blend.target)
         return out
 
     def position_bracket(
@@ -1219,7 +1251,8 @@ class SimEngine:
         lots = _lot_brackets(rows, lot_open)
         if extra is not None:
             lots.append(extra)
-        return blended_bracket(lots)
+        blend = blended_bracket(lots)
+        return (blend.stop, blend.target)
 
     def holding_lots(
         self, user_id: UUID, ticker: str, *, current_price: float | None = None,
@@ -1542,7 +1575,10 @@ class SimEngine:
         if side == Side.BUY and kind == "training" and held_now is not None:
             blend_stop, blend_target = self.position_bracket(
                 user_id, ticker,
-                extra=LotBracket(quantity_open=quantity, stop=stop, target=target),
+                extra=LotBracket(
+                    quantity_open=quantity, stop=stop, target=target,
+                    entry=fill_price,
+                ),
             )
             blend_wrong = bracket_is_wrong_side(
                 is_short=False, entry=fill_price,
@@ -2667,6 +2703,8 @@ class SimEngine:
         closed: list[str] = []
         # DEF305 — tickers this pass declined to price (see `evaluate_outcomes`).
         unpriced: list[str] = []
+        # DEF377 — tickers whose STORED bracket cannot fire honestly.
+        wrong_side: list[tuple[str, str]] = []
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             if p_row is None:
@@ -2687,12 +2725,23 @@ class SimEngine:
                     unpriced.append(row.ticker)
                     continue
                 mark = short_quote.price
-                hit = bracket_hit(
-                    is_short=True,
-                    mark=mark,
-                    stop=float(row.stop) if row.stop is not None else None,
-                    target=float(row.target) if row.target is not None else None,
-                )
+                # DEF377 — same refusal as the long book's sweep. A stored
+                # bracket on the wrong side of its own entry is already through
+                # one leg at the moment it is read, so firing on it force-covers
+                # at market and bills the user for a move that never happened.
+                try:
+                    hit = bracket_hit(
+                        is_short=True,
+                        mark=mark,
+                        entry=float(row.entry_price),
+                        stop=float(row.stop) if row.stop is not None else None,
+                        target=(
+                            float(row.target) if row.target is not None else None
+                        ),
+                    )
+                except WrongSideBracketError as exc:
+                    wrong_side.append((row.ticker, exc.reason))
+                    continue
                 if hit is None:
                     continue
                 sim_shorts.cover_short(
@@ -2711,6 +2760,8 @@ class SimEngine:
                 tickers=sorted(set(unpriced)),
                 count=len(set(unpriced)),
             )
+        _log_wrong_side(wrong_side, function="evaluate_short_brackets",
+                        user_id=user_id)
         return closed
 
     def accrue_short_borrow(
@@ -3801,6 +3852,11 @@ class SimEngine:
         # volume that stays readable. A silent skip would be the original
         # defect wearing the fix's clothes (CR040 — degrade loudly).
         unpriced: list[str] = []
+        # DEF377 — positions whose STORED bracket is on the wrong side of its
+        # own entry. Never fired on, always named. Unlike `unpriced` this does
+        # NOT self-heal on the next tick — the row is wrong, not the feed — so
+        # it is logged at ERROR.
+        wrong_side: list[tuple[str, str]] = []
         with get_session() as s:
             # DEF318 — the FULL ledger, not just the open rows, because a
             # bracket belongs to the shares its own lot still has behind it and
@@ -3871,9 +3927,10 @@ class SimEngine:
             for ticker, entries in live_lots.items():
                 if p_row is not None and self._held_quantity(s, p_row, ticker) <= 1e-6:
                     continue
-                stop, target = blended_bracket(
+                blend = blended_bracket(
                     _lot_brackets((t for t, _ in entries), lot_open),
                 )
+                stop, target = blend.stop, blend.target
                 if stop is None and target is None:
                     continue
                 # After the gates, so an unprotected or fully-exited position
@@ -3902,9 +3959,29 @@ class SimEngine:
                     continue
 
                 price = close_quote.price
-                new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
-                    is_short=False, mark=price, stop=stop, target=target,
-                )
+                # DEF377 — the same fix DEF305 got, for the other half of the
+                # inputs. DEF305 stopped the sweep acting on a price nobody
+                # measured; this stops it acting on a LEVEL that cannot fire
+                # honestly. A long whose stored stop sits at or above its own
+                # entry is through that stop the moment it is read, at any
+                # price, so the sweep liquidates at market and books a stop-out
+                # the market never delivered — and trips the post-stop-out
+                # cooldown that blocks the user's next buy on top.
+                #
+                # DEF312 refuses this at submit and CR189 acceptance 6 refuses
+                # the blend that produces it. Neither can reach a row already in
+                # the table: four were found live on Alpha on 2026-08-26, three
+                # already carrying a won/lost verdict at $0.00 realised. The
+                # guard was real; it was just not on the path that moves the
+                # money (DEF190).
+                try:
+                    new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
+                        is_short=False, mark=price, entry=blend.entry or 0.0,
+                        stop=stop, target=target,
+                    )
+                except WrongSideBracketError as exc:
+                    wrong_side.append((ticker, exc.reason))
+                    continue
                 if new_status is None:
                     continue
                 # The trigger is shared; the P&L is not. Every live lot closes,
@@ -3925,6 +4002,7 @@ class SimEngine:
                 tickers=sorted(set(unpriced)),
                 count=len(set(unpriced)),
             )
+        _log_wrong_side(wrong_side, function="evaluate_outcomes", user_id=user_id)
         return updates
 
     def _close_lot(
