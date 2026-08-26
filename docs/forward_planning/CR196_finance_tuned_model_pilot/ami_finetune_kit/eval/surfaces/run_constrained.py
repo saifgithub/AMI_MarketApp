@@ -76,16 +76,24 @@ def schema_S6(meta):
                     "type": "object",
                     "properties": {
                         "size_pct": {"type": "number", "enum": sizes},
-                        "case_for": {"type": "string"},
-                        "case_against": {"type": "string"},
-                        "key_number": {"type": "string"},
+                        # maxLength is LOAD-BEARING, not tidiness. An unbounded string
+                        # is a state the grammar can always extend, so the model can
+                        # write prose inside "case_for" forever and never emit the
+                        # closing quote: measured 2026-08-25, 3 of the first 11 rows
+                        # ran to a 2,400-token cap mid-sentence inside this field, and
+                        # RAISING the cap from 1,200 did not fix it — it only made each
+                        # failure twice as expensive. Bounding every free-text field is
+                        # what actually terminates generation.
+                        "case_for": {"type": "string", "maxLength": 400},
+                        "case_against": {"type": "string", "maxLength": 400},
+                        "key_number": {"type": "string", "maxLength": 60},
                     },
                     "required": ["size_pct", "case_for", "case_against", "key_number"],
                 },
             },
             "recommended": {"type": "number", "enum": sizes},
             "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
-            "decisive_number": {"type": "string"},
+            "decisive_number": {"type": "string", "maxLength": 60},
         },
         "required": ["options", "recommended", "confidence", "decisive_number"],
     }
@@ -101,7 +109,7 @@ def schema_S4(meta):
             "stop": {"type": "number"},
             "target": {"type": "number"},
             "horizon_days": {"type": "integer"},
-            "narration": {"type": "string"},
+            "narration": {"type": "string", "maxLength": 1200},
         },
         "required": ["action", "narration"],
     }
