@@ -1,0 +1,90 @@
+---
+id: "392_herding_and_the_information_cascade"
+title: "Herding — when everyone is copying, nobody is measuring"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+code: "SENT 13"
+topic: "herding"
+prerequisites: ["288_sentiment_and_the_crowd", "212_bias_inventory"]
+tags: ["psychology", "herding", "information_cascade", "crowd", "consensus"]
+sources: ["Shiller — Irrational Exuberance, feedback loops and socially amplified price movements"]
+agent_callouts: ["social_media_analyst", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Herding — when everyone is copying, nobody is measuring
+
+Herding is not people being stupid together. It is what happens when each person rationally treats other people's actions as information. If you have a weak private view and you can see that forty others have bought, updating towards them is defensible — their actions might encode something you do not know. The failure is structural: once enough people substitute the crowd's signal for their own, the crowd stops containing any private information at all. It becomes a chain of people copying a copy, and the price is a measurement of nothing.
+
+## How this plays out in real markets
+
+A hypothetical small-cap runs 40% in a week on no filing, no earnings, no guidance change.
+
+Trader 1 has done real work and buys on a genuine view. Trader 2 sees the move, has no view, and reasons that Trader 1 might know something — buys. Trader 3 sees two buyers and infers stronger evidence. By Trader 40, the visible signal is "thirty-nine people bought", which feels like overwhelming confirmation and contains exactly **one** person's actual research.
+
+Now the fragility. Suppose Trader 1's thesis is wrong and they exit. Nothing visible changes — the other thirty-nine are still holding, still citing each other. The cascade persists after its only informational input has been withdrawn, which is why these moves can run far longer than the underlying justifies, and why they reverse without a headline. Nothing broke. The chain simply ran out of people willing to be the next link.
+
+## The trap
+
+The trap is reading volume and participation as evidence. "Everyone is in this name" is the sentence that feels like confirmation and is nearly the opposite: the more universal the position, the fewer independent measurements it contains, and the smaller the pool of remaining buyers.
+
+The mirror-image trap is contrarianism as a reflex — selling *because* something is popular. Consensus is not a signal in either direction. Crowds are frequently right, and "everyone owns it" describes most large, excellent businesses. What you actually want to know is whether the people in the trade did independent work, and the honest answer is usually that you cannot tell from the outside. Which means the crowd's size should not be an input at all.
+
+## Steelman
+
+The strongest defence of following the crowd is that price is a genuine aggregator, and refusing to update on other people's actions is its own arrogance — most of the time, most participants know something you do not, and the market's consensus beats an individual's private view. That case is real. It is also exactly why cascades form: the behaviour is individually rational at every step. The distinction worth holding is between updating on other people's *evidence* and updating on their *positions*. The first is analysis. The second is counting, and forty people counting each other produce a large number and no information.
+
+<ChatWith agent="social_media_analyst" />
+
+## Quiz
+
+<Quiz
+  question="In an information cascade, forty traders have bought a stock. How much independent research does that visible signal actually contain?"
+  options={[
+    "Forty independent views, which is why the signal is strong",
+    "Roughly one, because each later trader inferred from the earlier ones rather than measuring",
+    "Twenty, since about half of any crowd does its own work",
+    "None, because cascades only form when nobody has a view"
+  ]}
+  answer={1}
+  explanation="The first trader supplies the only private information; everyone after treats prior actions as evidence. The 'none' answer overstates it — a cascade needs a genuine initial signal to form around, which is precisely what makes it look credible. The size of the crowd is the least informative thing about it."
+/>
+
+<Quiz
+  question="A cascade-driven move reverses sharply with no news. What is the most likely explanation?"
+  options={[
+    "New negative information arrived but was not published",
+    "The chain simply ran out of new participants, which requires no news at all",
+    "A large holder manipulated the price",
+    "The original thesis was proven false publicly"
+  ]}
+  answer={1}
+  explanation="A cascade is sustained by a supply of people willing to be the next link, not by information. When that supply is exhausted the move stops and reverses with nothing to report — which is why the absence of a headline is characteristic of these reversals rather than suspicious. Looking for hidden news assumes the move was information-driven, which is the thing that was never true."
+/>
+
+<Quiz
+  question="Which question best distinguishes useful crowd information from a cascade?"
+  options={[
+    "How many participants are in the trade?",
+    "How fast has the price moved?",
+    "Did the participants update on each other's EVIDENCE, or on each other's POSITIONS?",
+    "Is the consensus bullish or bearish?"
+  ]}
+  answer={2}
+  explanation="Updating on evidence aggregates independent measurements and makes a crowd smart; updating on positions is counting, and produces a large number containing one measurement. Participant count and speed describe the cascade's size, not its information content — and asking whether consensus is bullish or bearish treats the crowd's direction as the signal, which is the contrarian reflex this lesson also warns against."
+/>
+
+## Try it
+
+Open 1-on-1 with the Social Media Analyst and ask it for the current retail sentiment on a ticker you are considering. Then ask a second question: *what specific evidence are people citing, as opposed to how many are positioned?* Note which of the two answers it can actually give you. That gap is the whole lesson.
+
+## Takeaway
+
+The size of a crowd tells you how many people are counting each other, not how many have measured anything — so ask what evidence they are citing, and treat "everyone is in this" as a description of the remaining buyer pool rather than as confirmation.
+
+*Where this comes from: the socially amplified feedback loops described in Shiller's Irrational Exuberance, in which price movements propagate through participants' observation of each other rather than through new information.*

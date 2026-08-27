@@ -1,0 +1,92 @@
+---
+id: "394_reflexivity_when_price_changes_the_fundamentals"
+title: "Reflexivity — when the price changes the thing it is pricing"
+duration_min: 6
+level: 4
+module: 8
+difficulty: 5
+track: "sentiment_behaviour"
+code: "SENT 15"
+topic: "reflexivity"
+prerequisites: ["393_narrative_economics_stories_that_move_prices", "034_debt_and_the_balance_sheet"]
+tags: ["psychology", "reflexivity", "feedback_loop", "self_fulfilling", "financing"]
+sources: ["Shiller — Irrational Exuberance, price-to-price feedback loops in which market movements alter the conditions being priced"]
+agent_callouts: ["conservative_debator", "fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Reflexivity — when the price changes the thing it is pricing
+
+Most valuation assumes a one-way street: the business generates cash, and the price reflects it. Reflexivity is the case where the arrow also runs backwards — the price itself changes the business's ability to generate cash. When that loop is live, "is the stock overvalued?" stops being a well-formed question, because the fundamentals you would measure it against are partly a product of the price. This is not a curiosity. It is the ordinary condition of any company whose cost of capital depends on its share price, which is most companies that are still raising money.
+
+## How this plays out in real markets
+
+A hypothetical growth company burns cash and funds itself by issuing shares.
+
+**Loop running up.** The share price rises. Raising **$200m** now costs **4%** dilution instead of the **10%** it would have cost at the lower price. The company raises, hires, and expands faster. Growth accelerates — genuinely, in the reported numbers. Investors observe the acceleration and buy, and the price rises again. Every step is real. Nobody is lying. The growth that justifies the price was *funded by* the price.
+
+**Loop running down.** The price falls by half. The same $200m now costs **8%** dilution instead of 4%, so the board delays the raise. Hiring pauses. Growth slows — genuinely. Investors observe the slowdown and sell. The deceleration that justifies the lower price was *caused by* the lower price.
+
+The same mechanism ran both ways, and at no point did anyone behave irrationally or dishonestly. A company with net cash and no financing need has a much weaker loop; one that must raise within twelve months has a very strong one. That dependency is the variable to look for, and it is disclosed.
+
+## The trap
+
+The trap is applying a static valuation to a reflexive situation and treating the gap as an opportunity. "It is worth $30 and trades at $60" quietly assumes the $30 survives the price going to $60 — but if the company's expansion is financed by that $60 price, the $30 was computed on a company that no longer exists.
+
+The reverse is the more expensive version. A company that looks cheap on trailing numbers may be cheap *because* its price has already impaired its financing, and buying the gap means buying into a loop that is running against you. The question is not "what is it worth?" but "does the value I computed depend on the price staying where it is?"
+
+## Steelman
+
+Reflexivity has an unfalsifiability problem at least as serious as narrative's: any price move can be relabelled a feedback loop afterwards, and the concept explains everything, which is a warning sign. The discipline that rescues it is that the loop's strength is **observable in advance and not a matter of opinion** — cash runway, upcoming maturities, covenant headroom, whether compensation is equity-heavy, whether the business model requires continuous financing. A company with three years of cash and no debt maturing has essentially no loop, whatever its price does. If you cannot point to the specific channel through which price reaches fundamentals, you are not describing reflexivity; you are describing volatility and giving it a better name.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Which company has the STRONGEST reflexive loop between its share price and its fundamentals?"
+  options={[
+    "A profitable utility with stable regulated revenue and no near-term maturities",
+    "A cash-burning company that must issue equity within twelve months to fund operations",
+    "A large-cap holding two years of cash with no financing need",
+    "A company whose share price is volatile but which is self-funding"
+  ]}
+  answer={1}
+  explanation="The loop needs a channel through which price reaches fundamentals, and equity issuance is the most direct one: a higher price means less dilution per dollar raised, which funds real expansion. Volatility alone is not reflexivity — the self-funding company has no channel, however much its price moves, which is exactly the distinction that keeps the concept falsifiable."
+/>
+
+<Quiz
+  question="An analyst values a cash-burning growth company at $30 while it trades at $60, and shorts the gap. What has the $30 estimate quietly assumed?"
+  options={[
+    "That the market will eventually agree with the analyst",
+    "That the company's growth rate is independent of the price at which it can raise capital",
+    "That the discount rate used was too low",
+    "That the company will not issue more shares"
+  ]}
+  answer={1}
+  explanation="If expansion is funded by issuing stock at $60, the growth in the model was financed by the price the model calls wrong — so the $30 describes a company that only exists after the price falls. The assumption is not about issuance happening or not; it is about growth being independent of financing cost, which for a cash-burning issuer it is not."
+/>
+
+<Quiz
+  question="A company's price halves; six months later its growth has genuinely slowed. Which reading is best supported, and what would distinguish it from the alternative?"
+  options={[
+    "The market correctly anticipated the slowdown — distinguished by whether the slowdown was already visible in orders before the price fell",
+    "The price fall caused the slowdown by raising the cost of capital — distinguished by whether the company delayed a planned raise or cut hiring after the fall",
+    "The two are unrelated and the timing is coincidence",
+    "It cannot be distinguished, which is why reflexivity is not a useful concept"
+  ]}
+  answer={1}
+  explanation="Both readings are genuinely available, which is the honest difficulty, and the way to separate them is the channel: a documented delayed raise or hiring freeze after the fall is evidence the price reached the fundamentals, whereas order weakness predating the fall points to anticipation. The 'cannot be distinguished' answer is the unfalsifiability objection, and it is answered by naming the channel in advance rather than abandoning the concept."
+/>
+
+## Try it
+
+Take one holding and find two numbers in its filings: cash on hand, and whether it has debt maturing or a stated need to raise within the next year. Write in your Decision Journal whether its price could plausibly change its fundamentals, and through which specific channel. For most mature holdings the honest answer is "no channel" — and knowing which of your positions are the exceptions is the point.
+
+## Takeaway
+
+Before you trade a gap between price and value, ask whether the value you computed depends on the price staying where it is — and if you cannot name the specific channel from price to fundamentals, what you are looking at is volatility, not reflexivity.
+
+*Where this comes from: the price-to-price feedback loops described in Shiller's Irrational Exuberance, in which market movements alter the conditions subsequently being priced.*

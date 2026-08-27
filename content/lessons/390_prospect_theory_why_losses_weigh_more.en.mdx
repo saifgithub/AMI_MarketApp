@@ -1,0 +1,94 @@
+---
+id: "390_prospect_theory_why_losses_weigh_more"
+title: "Prospect theory — why a loss weighs more than the same-sized gain"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+code: "SENT 11"
+topic: "prospect_theory"
+prerequisites: ["046_fear_and_capitulation", "212_bias_inventory"]
+tags: ["psychology", "prospect_theory", "loss_aversion", "reference_point", "risk_seeking"]
+sources: ["Kahneman & Tversky — behavioral works, prospect theory and the value function's asymmetry around a reference point"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Prospect theory — why a loss weighs more than the same-sized gain
+
+Classical finance assumes you value outcomes by where they leave your wealth. Prospect theory says you do something else entirely: you value **changes**, measured from a reference point — usually the price you paid — and losses below that point hurt roughly twice as much as equivalent gains please. That asymmetry is not a flaw you can talk yourself out of. It is the shape of the machinery, and it explains two behaviours that otherwise look contradictory: refusing small risks when you are ahead, and taking large ones when you are behind.
+
+## How this plays out in real markets
+
+Two hypothetical positions, both bought at **$100**, both now at a different place.
+
+**Position A is at $120.** Offered a coin flip that takes it to $140 or back to $100, most people decline. A sure $20 gain beats an even chance at $40.
+
+**Position B is at $80.** Offered the mirror flip — $100 or $60 — most people *take* it. The certain $20 loss feels worse than a gamble that might erase it.
+
+Same person, same coin, opposite choices. The difference is not risk appetite; it is which side of $100 they are standing on. Above the reference point the value curve is concave and you become risk-averse. Below it the curve is convex and you become risk-seeking, which is the technical description of *doubling down*.
+
+Now notice the reference point itself is arbitrary. If Position B had been bought at $60 rather than $100, $80 would be a gain and the same flip would look unattractive. The identical asset, at the identical price, flips your risk preference depending on a historical number that no longer has anything to do with what it is worth.
+
+## The trap
+
+The trap is believing awareness fixes it. Knowing about loss aversion does not stop the loss hurting twice as much — the asymmetry is in how the outcome is valued, not in whether you have read about it.
+
+What awareness *can* change is the reference point you present yourself with. A trader who thinks in "I am down $400 on this name" is standing below a reference point and is therefore, predictably, risk-seeking at the worst moment. The same trader thinking in "this position is 2% of my capital and my mandate caps single-name risk at 5%" has no reference point to be below. Do not try to feel differently about the loss. Change the number you are looking at.
+
+## Steelman
+
+Prospect theory is descriptive, not normative — it says what people do, not what is correct — and the honest objection is that risk-seeking below the reference point is sometimes *right*. A position down 20% on noise, with the thesis intact, may genuinely deserve more capital, and refusing to add because you have read about loss aversion is its own error. The distinguishing question is not how you feel but what changed: if the reason you owned it is still true and the price is lower, adding is analysis. If the only new fact is the loss, adding is the value function talking.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="A trader holds two positions, both bought at $50. One now trades at $65, the other at $35. Prospect theory predicts which behaviour?"
+  options={[
+    "Risk-seeking on both, since both are volatile",
+    "Risk-averse on the winner and risk-seeking on the loser",
+    "Risk-averse on both, since the reference point is the same",
+    "Risk-seeking on the winner and risk-averse on the loser"
+  ]}
+  answer={1}
+  explanation="Above the reference point the value function is concave, so a certain gain is preferred to a fair gamble; below it the function is convex and the fair gamble is preferred to a certain loss. The mirror-image answer inverts the curve and is the intuition most people report having before they measure their own behaviour."
+/>
+
+<Quiz
+  question="The same stock trades at $80. Trader A bought at $100; Trader B bought at $60. What does prospect theory say about how each will treat an even-odds bet on the next move?"
+  options={[
+    "Both will decline it, because the current price is identical",
+    "Both will take it, because the expected value is identical",
+    "A is likely to take it and B to decline it, because A is below their reference point and B is above theirs",
+    "B is likely to take it, because a profitable position can afford more risk"
+  ]}
+  answer={2}
+  explanation="The asset, the price and the odds are the same for both; only the purchase price differs. That is the uncomfortable core of the theory — a historical number with no bearing on future value flips the risk preference. The answer about a profitable position affording more risk is a wealth-based argument, which is exactly the classical view prospect theory contradicts."
+/>
+
+<Quiz
+  question="A trader who understands loss aversion wants to stop doubling down on losers. Which change actually addresses the mechanism?"
+  options={[
+    "Reminding themselves before each trade that losses hurt twice as much",
+    "Sizing every position identically so no single loss feels large",
+    "Reframing the position as a percentage of total capital against a mandate limit, removing the entry price as the reference point",
+    "Waiting 24 hours before adding to any losing position"
+  ]}
+  answer={2}
+  explanation="Awareness does not flatten the value function — the asymmetry is in how the outcome is valued, not in whether you have read about it. The other options are useful habits but leave the entry price as the anchor, so the trader is still standing below a reference point and still, predictably, risk-seeking. Replacing the reference point is the structural fix; feeling differently about it is not available."
+/>
+
+## Try it
+
+Open your Decision Journal and find a position you added to while it was underwater. Write down what you were measuring at the moment you added: the entry price, or the position's share of your capital. Then open Settings → Mandate and read your single-name cap. That number is a reference point that does not move when the price does.
+
+## Takeaway
+
+You do not judge outcomes by where they leave you, you judge them by distance from what you paid — so when you catch yourself getting braver as a position falls, change the number you are looking at rather than trying to feel differently about it.
+
+*Where this comes from: prospect theory's value function, defined over gains and losses from a reference point rather than over final wealth, and its asymmetric treatment of the two — Kahneman & Tversky's behavioral work.*

@@ -1,0 +1,99 @@
+---
+id: "391_the_disposition_effect"
+title: "The disposition effect — selling winners early, holding losers late"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+code: "SENT 12"
+topic: "disposition_effect"
+prerequisites: ["390_prospect_theory_why_losses_weigh_more"]
+tags: ["psychology", "disposition_effect", "realisation", "loss_aversion", "selling"]
+sources: ["Kahneman & Tversky — behavioral works, the reference-dependent value function that produces asymmetric realisation behaviour"]
+agent_callouts: ["conservative_debator", "risk_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# The disposition effect — selling winners early, holding losers late
+
+The previous lesson gave you a value function that is concave above your entry price and convex below it. Run a portfolio through that shape and one specific behaviour falls out: you realise gains too readily and defer losses too long. It is not a preference you chose. Selling a winner books a certain gain, which the concave side prefers to an uncertain larger one. Selling a loser books a certain loss, which the convex side refuses in favour of the chance of getting back to even. The result is a portfolio that quietly sorts itself into your worst holdings.
+
+## How this plays out in real markets
+
+A hypothetical trader holds four positions, each bought with **$10,000**:
+
+| position | now worth | unrealised |
+|---|---|---|
+| A | $12,000 | +$2,000 |
+| B | $11,000 | +$1,000 |
+| C | $8,500 | −$1,500 |
+| D | $7,000 | −$3,000 |
+
+They need to raise about **$22,000** in cash — two of the four. Which two?
+
+The disposition effect predicts A and B — the two that book gains and leave the account statement pleasant. The portfolio that remains is C and D: the two positions their own analysis has been losing on. Repeat that a few times and the book is composed entirely of the ideas that did not work, held at the sizes they were originally bought at, while every idea that did work has been cut short.
+
+Note what makes this so hard to see from the inside: **every individual decision felt disciplined.** Taking profits is prudent. Not panic-selling is prudent. The damage is only visible in the composition of what is left.
+
+## The trap
+
+The trap is the phrase "it's not a loss until I sell it". Treated as tax mechanics, that is simply true. Treated as a decision rule, it is the disposition effect wearing a reasonable sentence — because the same logic makes a gain not a gain until you sell, and nobody applies it that way.
+
+The market does not know or care what you paid. A position down 30% and a position up 30% are both, right now, a sum of money you have chosen to keep invested in that specific thing. The only honest question is whether you would buy this position today at this price, in this size. If the answer is no, you are not holding it — you are refusing to sell it, and those are different acts.
+
+## Steelman
+
+There is a real case for holding losers that has nothing to do with this effect: transaction costs, short-term price noise, and the well-documented tendency of retail traders to over-trade all argue for doing less, not more. A trader who sells every underwater position on sight will underperform one who does nothing. The distinction is *which* positions survive the inaction. Deliberate inaction applies to the whole book. The disposition effect applies asymmetrically — patient with losers, impatient with winners — and it is the asymmetry, not the patience, that costs money.
+
+<ChatWith agent="risk_manager" />
+
+## Quiz
+
+<Quiz
+  question="A trader needs to raise cash and holds two positions of equal size: one up 15%, one down 15%. Both theses are equally intact. Which sale does the disposition effect predict, and is it justified?"
+  options={[
+    "The loser, because cutting losses is standard discipline",
+    "The winner, and it is not justified — the choice is driven by which side of the entry price each sits on",
+    "The winner, and it is justified because locking in gains reduces risk",
+    "Neither — the trader will sell half of each"
+  ]}
+  answer={1}
+  explanation="Realising the gain is certain and pleasant; realising the loss is certain and painful, so the convex side of the value function prefers to wait. With both theses equally intact, nothing about the two positions justifies different treatment — only the entry price differs, and the market does not know it. The 'locking in gains reduces risk' answer is the rationalisation this effect usually arrives wearing."
+/>
+
+<Quiz
+  question="Which reframing most directly defuses the disposition effect on a specific holding?"
+  options={[
+    "Calculating the tax consequence of realising the loss",
+    "Setting a stop-loss below the current price",
+    "Asking whether you would open this position today, at this price, in this size",
+    "Waiting until the position returns to break-even before deciding"
+  ]}
+  answer={2}
+  explanation="The effect runs on the entry price, so the fix is a question the entry price cannot answer. A stop-loss is useful but is set relative to the current price and does nothing about the winners being cut short; waiting for break-even IS the effect, stated as a plan. The tax answer is real but is a separate consideration, and it applies to gains as much as losses."
+/>
+
+<Quiz
+  question="Over several cash-raising cycles, what happens to a portfolio run by a trader with a strong disposition effect — and why is it hard to notice?"
+  options={[
+    "It becomes more concentrated in winners, because those are held longest",
+    "It becomes more diversified, because losers are spread across more names",
+    "It converges on the trader's worst ideas, and it is hard to see because every individual sale looked disciplined",
+    "It stays balanced, because the effect applies equally to both sides"
+  ]}
+  answer={2}
+  explanation="Each cycle removes the positions that worked and retains those that did not, so the surviving book is selected FOR having disappointed. The reason it evades detection is that no single decision was obviously wrong — taking profits and avoiding panic-selling are both defensible in isolation. The damage lives in the composition of what remains, which is a view of the portfolio most traders never take."
+/>
+
+## Try it
+
+Open your portfolio and list every open position with its unrealised P&L. For each one, answer a single question in your Decision Journal: *would I open this today, at this price, in this size?* Count how many "no" answers sit on losing positions versus winning ones. That ratio is your disposition effect, measured on your own book rather than read about.
+
+## Takeaway
+
+Holding a position and refusing to sell it are different acts — and if you cannot say you would buy it today at this price, you are doing the second one.
+
+*Where this comes from: the reference-dependent value function of Kahneman & Tversky's behavioral work, whose concavity in gains and convexity in losses produces the asymmetric realisation behaviour described here.*
