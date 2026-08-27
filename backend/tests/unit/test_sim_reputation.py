@@ -95,10 +95,28 @@ def test_reset_after_cooldown_succeeds(client: TestClient):
 
 
 
-def test_buy_without_stop_or_target_awards_nothing(client: TestClient):
+def test_a_patched_mandate_reaches_the_submit_path(client: TestClient):
+    """DEF321's canary, re-aimed — and the reason it needed re-aiming matters.
+
+    This test was `test_buy_without_stop_or_target_awards_nothing`, and its
+    final line asserted `_events(user_id, "trade_disciplined") == []`. CR109
+    slice 7 deleted every `reputation_service.award()` call site, so nothing
+    can write that event any more and the assertion became **vacuous** — it
+    would have passed forever, on any build, proving nothing.
+
+    That mattered more than a normally-dead assertion, because this is the test
+    DEF321 tracks. Its intermittent failure was never the reputation line: it
+    was `status_code == 200` failing with *"position size 68.8% exceeds
+    single-name cap 3.0%"* — the route resolving a DIFFERENT mandate from the
+    one patched immediately above, where `3.0` is a risk-tier preset. That
+    assertion is still live and is what the run log is counting, so the canary
+    is kept and narrowed to exactly it rather than deleted with the awards.
+    """
     user_id, token = _make_user_and_token()
     get_mandate_store().patch(user_id, {"single_name_cap_pct": 100.0})
+    assert get_mandate_store().get(user_id).single_name_cap_pct == 100.0, (
+        "the store did not take the patch — the flake is upstream of the route"
+    )
     r = _submit(client, user_id, token, stop=90.0)  # no target
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True
-    assert _events(user_id, "trade_disciplined") == []

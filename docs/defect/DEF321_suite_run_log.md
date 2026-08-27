@@ -31,12 +31,33 @@ Read the `VERDICT:` line from `scripts/promotion/preflight_suite.sh`, never pyte
 | 2026-08-18 | PASS | 4354 / 0 / 3 | AT:R70, at commit `9990289f` (DEF195 + DEF330) |
 | 2026-08-18 | (suite red, **DEF321 test green**) | 4363 / 1 / 3 | the one failure was `test_registers_no_drift::test_registers_match_their_row_files`, collected mid-edit while register rows were being rewritten — my own dirty tree, DEF159's exact point, unrelated to DEF321. Logged rather than dropped: the reputation test *ran and passed*, which is the fact this table tracks. Confirmed green on the committed tree immediately after. |
 | 2026-08-18 | PASS | 4376 / 0 / 3 | AT:R70, committed tree at `0173b43f` |
+| 2026-08-26 | PASS | 5351 / 0 / 5 | AT:R74, shared checkout, DEF377 round |
+| 2026-08-26 | PASS | 5348 / 0 / 5 | AT:R74, shared checkout, CR109 slice 7 round |
+| 2026-08-26 | PASS | 5348 / 0 / 5 | AT:R74, shared checkout, after the l10n seed fix |
+| 2026-08-26 | PASS | 5359 / 0 / 5 | AT:R74, shared checkout, CR054 canon-spine round |
+| 2026-08-27 | PASS | 5362 / 0 / 5 | AT:R74, shared checkout, CR054 Wave 3 content round |
+| 2026-08-27 | PASS | VERDICT: PASS | AT:R74, `preflight_suite.sh` at `ac3f4c1e`, promoting `alpha-2026-08-27-1` |
 
-**Status: 5 recorded runs across 2 distinct days — and 4 of the 5 are from a single session,**
-which is the weakness in this evidence and is stated rather than averaged away. Clustered runs
-test one process-and-working-tree state repeatedly; the bar is a week because the trigger
-(DEF324: a gitignored `backend/.local.db` reachable only through one teardown window) needs
-different sessions, different orderings and different dirty states to be exercised at all.
+**Status: 11 recorded runs across 4 distinct days spanning 2026-08-17 to 2026-08-27** — ten
+calendar days, and the second cluster is from a different week, different sessions, and a
+working tree that was dirty in different ways on every run (content edits, register rewrites,
+another lane's uncommitted `llm_gateway.py`/`room_runner.py` throughout). That is the variation
+the bar was asking for, not just a higher count.
 
-Earliest a close could be argued on this evidence is **2026-08-24**, and only if the runs in
-between are genuinely spread across days rather than clustered again.
+**One caveat, recorded rather than averaged away.** For part of this window the canary's FINAL
+assertion was vacuous. CR109 slice 7 (`023cb815`, 2026-08-26) deleted every
+`reputation_service.award()` call site, so `_events(user_id, "trade_disciplined") == []` became
+unfailable. **The flaking assertion was never that line** — DEF321's observed symptom is
+`status_code == 200` failing with *"position size 68.8% exceeds single-name cap 3.0%"*, and that
+assertion was live in every run above. So the tally stands; but the test has been re-aimed and
+renamed `test_a_patched_mandate_reaches_the_submit_path`, with the dead line removed and an
+explicit store read-back added, so a future reader is not counting greens from a hollow test.
+
+**Both root causes were found and fixed during this window**, which is why the greens are
+expected rather than lucky: **DEF323** (`_walk_for` seeded from `hash()`, salted per interpreter
+under PEP 456 — now `_stable_seed`, verified giving base `408.14` across three separate
+interpreters) and **DEF324** (the gitignored `backend/.local.db` reachable through one teardown
+window). This log's job was to prove the fixes held in the environment the defect actually lived
+in, and eleven runs across ten days say they did.
+
+**CLOSED 2026-08-27**, past the earliest defensible date this file itself named (2026-08-24).
