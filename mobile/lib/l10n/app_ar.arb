@@ -2832,6 +2832,8 @@
         "settingsAssignmentCapExplain": "2cfbf81260e1",
         "settingsAssignmentCapLabel": "32dd3eaab858",
         "settingsComplianceEsgLite": "b7a9f56d0bf4",
+        "settingsComplianceEsgLiteExplainBody": "10f51ef70d05",
+        "settingsComplianceEsgLiteExplainTitle": "56cd0f9ace13",
         "settingsComplianceHalal": "91b330e7077b",
         "settingsComplianceHalalExplainBody": "b9da271eda2a",
         "settingsComplianceHalalExplainTitle": "fce7e915167e",
@@ -3127,5 +3129,7 @@
     "settingsAssignmentCapExplain": "The cash you would need if every option you sold were exercised against you today. It is not money set aside — it is money you could be asked for.",
     "settingsMinDteLabel": "Shortest time to expiry",
     "settingsMinDteExplain": "AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right.",
-    "settingsSectionIdentity": "IDENTITY"
+    "settingsSectionIdentity": "IDENTITY",
+    "settingsComplianceEsgLiteExplainTitle": "ESG-lite (curated exclusions)",
+    "settingsComplianceEsgLiteExplainBody": "A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted."
 }

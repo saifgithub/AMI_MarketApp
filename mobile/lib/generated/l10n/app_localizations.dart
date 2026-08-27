@@ -2902,6 +2902,18 @@ abstract class AppLocalizations {
   /// **'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.'**
   String get settingsComplianceHalalExplainBody;
 
+  /// DEF339. Title of the tap-through explanation sheet for the ESG-lite compliance toggle. Moved out of the hardcoded Dart map for the same reason halal was (CR069 Phase 1b): a values-sensitive control must not ship English to every reader. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ESG-lite (curated exclusions)'**
+  String get settingsComplianceEsgLiteExplainTitle;
+
+  /// DEF339. Tap-through explanation body for ESG-lite. EVERY CATEGORY NAMED HERE IS DERIVED FROM backend/app/services/classification_universe.py AND IS GUARDED BY backend/tests/unit/test_def339_esg_lite_copy_matches_the_screen.py — the previous copy claimed a 'severe governance flags' check that does not exist anywhere in the codebase, and omitted the tobacco/alcohol/gambling exclusion that does. Do not soften 'It does NOT screen governance' in translation: it is the correction. 'Coverage is the ~503 S&P 500 names' and the UNKNOWN-permits rule are load-bearing — a user outside that set is not screened at all. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted.'**
+  String get settingsComplianceEsgLiteExplainBody;
+
   /// CR069 Phase 1b. Shown on a SUCCESSFUL trade when the halal flag is on and the ticker is in the compliant set. States the standard, source and as-of date, per CR069 design constraint 1. OBSERVANCE-SENSITIVE. Translator note: 'passes the screen' is a statement about a published list, not a religious endorsement by AMI — avoid wording like 'AMI declares this halal'. {standard} and {source} are backend-supplied proper names (e.g. 'AAOIFI', 'S&P 500 Sharia Industry Exclusions Index (via SPUS)') and arrive untranslated.
   ///
   /// In en, this message translates to:

@@ -534,12 +534,12 @@ class _DrawdownPicker extends StatelessWidget {
 /// screen") described the 7-ticker allowlist and is now false in the other
 /// direction — the flag enforces a real sourced AAOIFI screen.
 const Map<String, _ComplianceExplanation> _complianceExplanations = {
-  'esgLite': _ComplianceExplanation(
-    title: 'ESG-lite',
-    body: 'A light-touch screen for the most-controversial categories: '
-        'thermal coal, oil sands, controversial weapons, and severe '
-        'governance flags. Not a full ESG rating — just a floor.',
-  ),
+  // DEF339: the `esgLite` entry is NOT in this map. Its copy is localized and
+  // lives in the ARB, for the same reason halal's does — and because the copy
+  // that stood here described a screen AMI does not run: it claimed "severe
+  // governance flags" (there is no governance check anywhere in the codebase)
+  // and omitted tobacco/alcohol/gambling, which IS enforced. See
+  // `_explanationFor` below and test_def339_esg_lite_copy_matches_the_screen.py.
   'tag': _ComplianceExplanation(
     title: 'No tobacco / alcohol / gambling',
     body: 'Filters out tickers whose primary revenue comes from '
@@ -778,16 +778,22 @@ class _ComplianceToggles extends StatelessWidget {
     );
   }
 
-  /// Localized override first, then the hardcoded map. Only `halal` is
-  /// localized (CR069 Phase 1b) — it is the observance-sensitive one, and its
-  /// copy has to be able to differ per locale rather than shipping EN to every
-  /// reader.
+  /// Localized override first, then the hardcoded map. `halal` (CR069 Phase 1b)
+  /// and `esgLite` (DEF339) are localized — both are values-sensitive controls
+  /// whose copy has to be able to differ per locale rather than shipping EN to
+  /// every reader.
   _ComplianceExplanation? _explanationFor(BuildContext context, String key) {
+    final l = AppLocalizations.of(context);
     if (key == 'halal') {
-      final l = AppLocalizations.of(context);
       return _ComplianceExplanation(
         title: l.settingsComplianceHalalExplainTitle,
         body: l.settingsComplianceHalalExplainBody,
+      );
+    }
+    if (key == 'esgLite') {
+      return _ComplianceExplanation(
+        title: l.settingsComplianceEsgLiteExplainTitle,
+        body: l.settingsComplianceEsgLiteExplainBody,
       );
     }
     return _complianceExplanations[key];

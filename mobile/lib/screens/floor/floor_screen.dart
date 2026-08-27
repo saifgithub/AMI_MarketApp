@@ -40,7 +40,6 @@ import 'package:ami_trade/screens/floor/your_firm_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
-import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';

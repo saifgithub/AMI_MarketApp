@@ -1689,6 +1689,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.';
 
   @override
+  String get settingsComplianceEsgLiteExplainTitle =>
+      'ESG-lite (curated exclusions)';
+
+  @override
+  String get settingsComplianceEsgLiteExplainBody =>
+      'A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted.';
+
+  @override
   String shariaVerdictPass(
       String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
