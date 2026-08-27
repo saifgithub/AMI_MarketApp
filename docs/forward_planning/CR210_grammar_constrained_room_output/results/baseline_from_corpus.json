@@ -1,0 +1,36 @@
+{
+ "source": "../docs/forward_planning/CR143_agent_prompt_audit/corpus",
+ "n_rows": 1634,
+ "pm": {
+  "n": 136,
+  "strict_parse": 136,
+  "actions": {
+   "PASS": 113,
+   "MODIFY": 1,
+   "APPROVE": 19,
+   "MODIFY-AND-APPROVE": 3
+  },
+  "off_contract_actions": {
+   "MODIFY": 1,
+   "MODIFY-AND-APPROVE": 3
+  },
+  "approve_missing_size_pct": 0,
+  "reformat_calls": 2,
+  "constraint_status": {
+   "null": 136
+  }
+ },
+ "risk_officer": {
+  "n": 0,
+  "strict_parse": 0,
+  "constraint_status": {}
+ },
+ "trader": {
+  "n": 136,
+  "has_side_frozen_pattern": 99,
+  "has_side_bold_tolerant": 119,
+  "constraint_status": {
+   "null": 136
+  }
+ }
+}
