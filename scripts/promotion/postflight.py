@@ -142,7 +142,19 @@ def _populated_keys(env_path: Path) -> dict[str, str]:
 
 
 def _admin_secret(env_path: Path) -> str:
-    for raw in env_path.read_text().splitlines():
+    # DEF381 — a missing file is COULD-NOT-RUN, not a failed promotion. This
+    # read was unguarded, so promoting from a checkout without a local
+    # `infra/alpha.env` ended in an unhandled FileNotFoundError and exit 1 —
+    # the exact conflation this script's own docstring says must never happen,
+    # committed by the script itself.
+    try:
+        lines = env_path.read_text().splitlines()
+    except OSError as exc:
+        raise CannotRun(
+            f"cannot read {env_path} ({exc.strerror}) — so the config check did "
+            f"not run. That is not a passing promotion and not a failing one."
+        ) from exc
+    for raw in lines:
         if raw.startswith("ADMIN_SECRET="):
             secret = raw.split("=", 1)[1].strip().strip("'\"")
             if secret:
@@ -288,6 +300,14 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
         # DEF276 — bind-mounted `rw` into api-alpha, written by the container,
         # absent from the Mac. The rule: any `rw` bind mount is host-generated.
         "backtest_results/",
+        # DEF381 — the canonical Alpha credentials. `.env` above does NOT match
+        # this: rsync's pattern is a filename, and the file that actually holds
+        # the secrets is `infra/alpha.env`. Step 4 scps it to `~/ami_trade/.env`,
+        # which is the ONE mechanism for moving env values; a second copy on the
+        # box under `infra/` is credentials at rest that nothing reads. Excluded
+        # here as well as in step 3 so the tree check does not then report its
+        # correct absence as drift — which is how this was found.
+        "infra/alpha.env",
     ]
     cmd = ["rsync", "-az", "--delete", "--dry-run", "--itemize-changes"]
     cmd += [f"--exclude={p}" for p in excludes]

@@ -200,6 +200,7 @@ or similar.
 ```bash
 rsync -az --delete \
   --exclude='.env' \
+  --exclude='infra/alpha.env' \
   --exclude='.venv' \
   --exclude='__pycache__' \
   --exclude='.dart_tool' \
@@ -240,6 +241,16 @@ named volumes (`bug_attachments`) live outside the rsync path and are unaffected
 exclusion. Without `--exclude='.env'`, the rsync would overwrite the
 deployed env file — see step 4 for the canonical mechanism that
 replaces this footgun.
+
+**`infra/alpha.env` MUST be excluded too, and for years it was not (DEF381).**
+`--exclude='.env'` is a *filename* pattern; it does not match `infra/alpha.env`,
+which is the file that actually holds the live Alpha credentials. So the rsync
+that exists to avoid clobbering secrets was itself copying them to a second
+location on the box — `~/ami_trade/infra/alpha.env` — where nothing reads them.
+Step 4 scps the same file to `~/ami_trade/.env`, and that is the ONE mechanism
+for moving env values. Found 2026-08-28 when a promotion ran from a worktree
+that did not yet hold the file, and `postflight.py`'s tree check reported its
+correct absence as drift.
 
 ### 4. Ship the canonical env file (Mac → melehost)
 

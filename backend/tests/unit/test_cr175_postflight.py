@@ -262,6 +262,43 @@ def test_tree_check_excludes_match_the_promotion_command() -> None:
         )
 
 
+# ── DEF381: the secrets file ships nowhere, and a missing one is CANNOT-RUN ───
+
+def test_the_alpha_credentials_are_excluded_from_both_rsyncs() -> None:
+    """`--exclude='.env'` is a FILENAME pattern and does not match
+    `infra/alpha.env`, which is the file that actually holds the live Alpha
+    credentials. So the rsync whose stated purpose is "do not clobber the
+    deployed env file" was copying the secrets to a second location on the box,
+    where nothing reads them. Both lists, because the tree check compares the
+    two trees: excluding it from only one makes its correct absence read as
+    drift, which is how DEF381 was found."""
+    cmd = (Path(__file__).resolve().parents[3]
+           / ".claude" / "commands" / "promote-to-alpha.md").read_text()
+    assert "--exclude='infra/alpha.env'" in cmd, (
+        "the promotion rsync would ship infra/alpha.env to melehost — "
+        "credentials at rest in a second place, read by nothing (DEF381)"
+    )
+
+    source = (Path(__file__).resolve().parents[3]
+              / "scripts" / "promotion" / "postflight.py").read_text()
+    assert '"infra/alpha.env"' in source, (
+        "postflight's tree check omits infra/alpha.env, so it reports the "
+        "file's correct absence from melehost as promotion drift (DEF381)"
+    )
+
+
+def test_an_unreadable_env_file_is_cannot_run_not_a_failed_promotion() -> None:
+    """The script's own contract: exit 1 means "the promotion is broken", exit 2
+    means "I could not tell", and conflating them is most of CR175's incident
+    record. `_admin_secret` read the file unguarded, so a checkout without a
+    local `infra/alpha.env` produced an unhandled FileNotFoundError — reported
+    as 1. The script committed the exact error it was written to prevent."""
+    missing = Path(__file__).resolve().parent / "no_such_alpha_env_file.env"
+    assert not missing.exists()
+    with pytest.raises(pf.CannotRun):
+        pf._admin_secret(missing)
+
+
 # ── DEF280: a directory mtime is not promotion drift ──────────────────────────
 
 # The three lines the live failure actually produced, promoting
