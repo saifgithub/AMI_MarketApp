@@ -1,0 +1,44 @@
+{
+  "ami_trade_release": [
+    "DEF157"
+  ],
+  "apns_key_id": [
+    "DEF209"
+  ],
+  "apns_team_id": [
+    "DEF209"
+  ],
+  "fcm_fallback_notification_channel": [
+    "DEF333"
+  ],
+  "get_language_instruction": [
+    "CR167"
+  ],
+  "get_verified_market_snapshot": [
+    "CR167"
+  ],
+  "id_ed25519_nvidia": [
+    "DEF224"
+  ],
+  "journal_retention_days": [
+    "CR120"
+  ],
+  "maintenance_margin_requirement": [
+    "CR171"
+  ],
+  "path_provider_foundation": [
+    "DEF223"
+  ],
+  "project_hermes_uat_operator": [
+    "DEF204"
+  ],
+  "resolve_instrument_identity": [
+    "CR168"
+  ],
+  "send_reply_via_smtp": [
+    "DEF204"
+  ],
+  "test_long_only_off_allows_shorts_in_bear": [
+    "CR150"
+  ]
+}

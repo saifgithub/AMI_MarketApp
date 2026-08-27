@@ -1759,3 +1759,62 @@ state be validated on LOAD, as a row invariant, rather than by each acting funct
 ask?* Saiful, 2026-08-26: **"Don't convene — the fix stands."** The required-`entry`-plus-raise shape
 above is deliberately structural rather than another call-site check, and the enforcing checks listed
 here are the answer. **A fourth instance re-raises it** — that is what this paragraph is for.
+
+---
+
+## P30 — A control recorded as existing, that does not exist
+
+Three findings on 2026-08-27, all the same shape and none of them P29's:
+
+| | The claim, in the file's own words | The reality |
+|---|---|---|
+| **DEF379** | `source_registry.md`: *"the corpus-integrity test (CR060) checks each cited source against this file; a `sources` value that doesn't map to a Tier below **fails the build** (degrade loudly)"* | `grep -rl source_registry backend/ scripts/` returned **nothing**. No test, no script, no app code. The allowlist had been maintained for months against an enforcement that was never built. |
+| **DEF335** | *"Interim mitigation, **applied now**: the 8 affected tickers are excluded from the backtest universe… recorded in `backtest_universe_membership` with reason `split_after_as_of`… 142 of 150 names remain"* | All **150** rows carried a NULL `exclusion_reason`. `audit_ticker` had three conditions and none was a split. A **141.5% FCF yield** — this defect's own 25× error — reached a published PM verdict, which rationalised it as *"a valuation artifact of the depressed price."* |
+| **DEF321** | A canary test tracking an intermittent promotion-gate failure, with a run log counting its greens toward a close | CR109 had deleted every `award()` call site, making the canary's assertion `_events(…) == []` unfailable. It would have gone green forever while the log tallied evidence. |
+
+**Why this is worse than an unguarded gap, which is the whole point.** An absent
+control is merely missing, and the next person to look finds nothing and builds
+it. A control *documented as present* stops them looking. Every reader after the
+sentence is written inherits a false belief, and because the sentence is cheap
+to write and expensive to falsify, it survives longer than the code would have.
+DEF379's row called it *"P21 written in prose"*; three instances in one day
+earns it an entry.
+
+Note the direction of the error is always the same: the document is more
+confident than the repository. Nobody writes *"this is guarded"* about something
+they know is not — these were written by someone who intended to build it, or
+who had built something adjacent, and the tense was never corrected.
+
+**The invariant.** *A document may describe the past freely, but any claim in
+the PRESENT tense — "is enforced", "is excluded", "fails the build" — must name
+something a reader can open. If it names nothing openable, it is a plan, and it
+must be written in the future tense.*
+
+**Enforcing checks.**
+
+- `backend/tests/unit/test_p30_registers_name_things_that_exist.py` — every file
+  a register row claims in its **FILES column** must exist (368 claims today; 6
+  were broken link paths and are fixed), and every backticked snake_case
+  identifier cited anywhere in a row must appear somewhere in the non-`docs/`
+  tree. That second check is DEF335's shape exactly: `split_after_as_of` existed
+  in no file and was mechanically detectable for months. A ratchet — 14
+  identifiers are legitimately absent (gitignored infra names, a memory
+  filename, symbols in the read-only TradingAgents upstream) and are frozen with
+  the rows that owe them; a NEW one fails, and the baseline only shrinks.
+  `docs/` is excluded from the haystack deliberately: a row citing a symbol that
+  appears only in another row is the circular evidence this refuses.
+- **What that guard does NOT catch, stated rather than implied.** It cannot see
+  DEF379 (the claim named no symbol at all) or DEF321 (a real test whose
+  assertion had gone hollow). Those are the existing house rules doing their
+  job: *an entry without an enforcing check is not done*, and *every guard must
+  be mutation-proved*. The mechanical half is not the whole pattern, and
+  presenting it as such would itself be P30.
+- **The reviewer's question**, which is the cheapest of the three: when a row
+  says a thing *is* guarded, open the guard. All three of these were found that
+  way inside a day, by someone who happened to be working nearby.
+
+**A related trap met while building this guard**, recorded because it is P24
+inverted: a mutation was reported as SURVIVING when its anchor string did not
+exist in the target file, so nothing was ever mutated. A survival claim needs
+the same proof as a kill — confirm the mutation actually landed before reading
+the result.
