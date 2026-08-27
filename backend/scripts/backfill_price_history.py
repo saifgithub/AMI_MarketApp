@@ -124,6 +124,36 @@ def fetch_bars(ticker: str, start: date, end: date) -> tuple[list[tuple], int]:
     return bars, bad_close
 
 
+def splits_in_window(ticker: str, window_start: date, window_end: date) -> list[date]:
+    """Split dates for `ticker` inside the window. DEF335.
+
+    Bars are downloaded with `auto_adjust=True`, so a bar stored for date X has
+    been adjusted for **every split between X and the download**. The share
+    count `edgar_pit` pairs it with is the dei cover-page figure **as filed on
+    X** — pre-split. The two bases disagree, so `market_cap = adj_close ×
+    shares` is wrong by the product of those splits, and with it every ratio
+    built on it (`price_to_sales`, `fcf_yield`, `ev_to_ebitda`,
+    `dividend_yield`, `buyback_yield`, `pe`).
+
+    Derived from the provider, never hand-listed (CR175 F3): a hardcoded ticker
+    list is correct on the day it is written and silently wrong at the next
+    corporate action.
+
+    Returns [] on a provider failure rather than raising — but the CALLER must
+    treat that as unknown-not-clean; see `audit_ticker`.
+    """
+    try:
+        raw = yf.Ticker(ticker).splits
+    except Exception:  # pragma: no cover — provider/network
+        return []
+    if raw is None or len(raw) == 0:
+        return []
+    return sorted(
+        d.date() for d in raw.index
+        if window_start <= d.date() <= window_end
+    )
+
+
 def stored_backfilled_count(session, ticker: str, start: date, end: date) -> int:
     """Real rows in [start, end] that carry OHLCV (open IS NOT NULL) — i.e.
     rows a prior run of THIS script (not the close-only live path) wrote."""
@@ -148,6 +178,7 @@ def audit_ticker(
     end: date,
     window_start: date,
     window_end: date,
+    split_dates: list[date] | None = None,
 ) -> str | None:
     """Upsert this ticker's `backtest_universe_membership` row from the STORED
     real bars in [start, end] and return the exclusion reason (None = clean)."""
@@ -167,7 +198,22 @@ def audit_ticker(
     eligible_from = first
     eligible_to = last if (last is not None and last < end - timedelta(days=DELIST_EDGE_DAYS)) else None
 
-    if len(dates) < MIN_CANDLES:
+    # DEF335 — the split rule, and it is checked BEFORE the coverage rules
+    # because a ticker can have complete, contiguous bars and still be unusable:
+    # nothing about candle count reveals that the price basis and the share
+    # basis disagree. This exclusion was recorded as "applied" for months and
+    # was never implemented — measured 2026-08-27, all 150 membership rows
+    # carried a NULL exclusion_reason and BKNG sat eligible across the whole
+    # window, which is how a 141.5% FCF yield reached a published verdict.
+    #
+    # The cutoff is the LAST split in the window, not the first: a bar is
+    # adjusted for every split after it, so a name that split twice (HON:
+    # 2025-10-30 and 2026-06-29) stays mismatched until the later one.
+    splits = split_dates if split_dates is not None else []
+    if splits:
+        eligible_from = max(splits)
+        reason = "split_after_as_of"
+    elif len(dates) < MIN_CANDLES:
         reason = "insufficient_candles"
     elif first > window_start:
         reason = "listed_after_asof"
@@ -283,10 +329,22 @@ def main() -> None:
                 print(f"{prefix}: EMPTY — yfinance returned no bars; auditing from store", flush=True)
 
         if ticker in universe:
+            # DEF335 — asked once per ticker, outside the session, because it is
+            # a network call and the audit must not hold a transaction open for
+            # it. A provider failure returns [], which reads as "no split": that
+            # is the one direction this can be wrong, and it is stated here
+            # rather than discovered later. The audit is re-runnable, so a
+            # ticker mis-cleared by a transient failure is corrected by the next
+            # pass; a ticker wrongly excluded would not self-correct, which is
+            # why the bias is this way round.
+            ticker_splits = splits_in_window(
+                ticker, args.window_start, args.window_end,
+            )
             with get_session() as session:
                 reason = audit_ticker(
                     session, args.universe_id, ticker,
                     args.start, args.end, args.window_start, args.window_end,
+                    split_dates=ticker_splits,
                 )
             reasons[reason or "clean"] = reasons.get(reason or "clean", 0) + 1
             if reason:
