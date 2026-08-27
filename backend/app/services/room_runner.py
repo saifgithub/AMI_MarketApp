@@ -97,14 +97,22 @@ from app.services.social_context import (
     format_subreddit_split,
     resolve_social_feed,
 )
-from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
+from app.services.llm_gateway import (
+    ChatMessage,
+    LLMGateway,
+    OutputConstraint,
+    get_llm_gateway,
+)
 from app.services.llm_json import extract_json_object
-from app.services.risk_officer import render_officer_turns
+from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
 from app.services.room_prompts import (
+    PM_NARRATION_MAX_CHARS,
     STANCE_HEADLINE_MAX_CHARS,
     build_risk_officer_messages,
     build_room_messages,
     max_tokens_for,
+    pm_verdict_schema,
+    trader_block_regex,
 )
 from app.services.credit_service import (
     balance_for,
@@ -1700,6 +1708,28 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
 
     narration = _pm_narration(parsed)
     if truncated and narration:
+        narration += _PM_TRUNCATED_NARRATION
+    elif narration and len(narration) == PM_NARRATION_MAX_CHARS:
+        # CR210 — a `maxLength` stop is a SILENT truncation, and silent is the
+        # whole problem. The grammar closes the JSON validly, `finish_reason` is
+        # "stop", `extract_json_object` succeeds, and NONE of the three existing
+        # disclosure paths fire — not `llm_call_length_stop`, not
+        # `room_pm_truncated`, not the DEF258 branch above. Verified 2026-08-25
+        # that the backend chops MID-WORD at the bound. Without this, the grammar
+        # would take a clipped narration from marked to unmarked on the one string
+        # CR106 renders as the decision's justification: a net LOSS of honesty
+        # introduced by constraining the decoder.
+        #
+        # `==` and not `>=`: the bound is the only length a maxLength stop can
+        # produce, so this is a measurement rather than a guess. The mark is
+        # DEF258's, reused deliberately — the user-facing fact is identical ("the
+        # explanation is cut short, the decision and its numbers are complete");
+        # only the mechanism differs, and the mechanism is the log line's business.
+        logger.warning(
+            "room_pm_narration_at_bound",
+            bound=PM_NARRATION_MAX_CHARS,
+            ticker=ctx.ticker,
+        )
         narration += _PM_TRUNCATED_NARRATION
     # DEF261 — pick the absence sentence from the CAUSE, not from the emptiness.
     # `_PM_NO_RATIONALE` is a statement about the PM's conduct and is only true
@@ -4764,6 +4794,36 @@ class RoomRunner:
             s.execute(_delete(RoomRunRow))
 
 
+# CR210 — which decoding grammar, if any, a given call carries.
+#
+# Selectors rather than inline conditionals at the four call sites, because the
+# one thing that must stay obvious is that TEN of the eleven prose agents get
+# nothing. A grammar guarantees form and says nothing about content, so
+# constraining an analyst report or a Bull/Bear turn would measure the schema
+# author rather than the model — vanilla already scores 43/44 on the S1 basis
+# rubric. `test_cr210_prose_is_never_constrained` pins that.
+
+
+def _agent_constraint(agent_id: AgentId, ticker: str) -> OutputConstraint | None:
+    """The Execution Desk's money block, and nothing else on the prose path."""
+    if agent_id is not AgentId.TRADER or not settings.room_trader_regex_enabled:
+        return None
+    return OutputConstraint(
+        name="trader_money_block", regex=trader_block_regex(ticker=ticker),
+    )
+
+
+def _pm_verdict_constraint(ctx: _RoomContext) -> OutputConstraint | None:
+    """The CIO verdict. `option_candidates` decides whether `structure_id` is
+    representable at all, exactly as it decides whether the prompt mentions it."""
+    if not settings.room_json_constraints_enabled:
+        return None
+    return OutputConstraint(
+        name="pm_verdict",
+        json_schema=pm_verdict_schema(ctx.option_candidates),
+    )
+
+
 async def _collect_agent_stream(gen) -> list[str]:
     """Drain an async-generator into a list of string chunks."""
     buf: list[str] = []
@@ -4895,6 +4955,7 @@ async def _compute_agent_text(
                     audit_agent_id=agent_id.value,
                     audit_flow="room",
                     meta=stream_meta,
+                    constraint=_agent_constraint(agent_id, ctx.ticker),
                 )),
                 timeout=agent_timeout_s,
             )
@@ -5119,6 +5180,18 @@ async def _run_risk_officer(
                 audit_agent_id=AgentId.RISK_OFFICER.value,
                 audit_flow="room_risk_officer",
                 meta=stream_meta,
+                # CR210 — the enum is built from the SAME `rows` the prompt's
+                # instruction prints its sizes from, one call apart, so an
+                # off-ladder size is unrepresentable rather than discouraged.
+                # CR196 measured this check at 57% on an untuned model.
+                constraint=(
+                    OutputConstraint(
+                        name="risk_officer_ladder",
+                        json_schema=build_risk_officer_schema(rows),
+                    )
+                    if settings.room_json_constraints_enabled
+                    else None
+                ),
             )),
             timeout=agent_timeout_s,
         )
@@ -5325,6 +5398,7 @@ async def _stream_pm_response(
                 audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
                 audit_flow="room_pm",
                 meta=pm_meta,
+                constraint=_pm_verdict_constraint(ctx),
             )),
             timeout=agent_timeout_s,
         )
@@ -5423,6 +5497,18 @@ async def _reformat_pm_response(
                 audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
                 audit_flow="room_pm_reformat",
                 meta=reformat_meta,
+                # CR210 — the reformatter gets the SAME schema. It exists to
+                # recover a PM reply that failed to parse, and a recovery path
+                # weaker than the thing it recovers is not a recovery path. It is
+                # never handed a menu, so `structure_id` stays unrepresentable
+                # here (`_PM_REFORMAT_SYSTEM` does not mention it either).
+                constraint=(
+                    OutputConstraint(
+                        name="pm_verdict_reformat", json_schema=pm_verdict_schema(),
+                    )
+                    if settings.room_json_constraints_enabled
+                    else None
+                ),
             )),
             timeout=agent_timeout_s,
         )

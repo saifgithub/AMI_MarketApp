@@ -92,6 +92,7 @@ def record_llm_call(
     cache_read_tokens: Optional[int] = None,
     cache_write_tokens: Optional[int] = None,
     prompt_version: Optional[str] = None,
+    constraint_status: Optional[str] = None,
 ) -> None:
     """Persist one LLM gateway call. Safe to call from any code path.
 
@@ -103,6 +104,12 @@ def record_llm_call(
 
     CR158: `prompt_version` is the same shape of contract — passed through
     verbatim, NULL when the caller could not determine it, never a placeholder.
+
+    CR210: `constraint_status` likewise. NULL means no decoding grammar was
+    REQUESTED on this call, which is a different fact from 'unsupported' (one was
+    requested and this provider could not enforce it, so the reply ran on the
+    tolerant parser). Collapsing them would make "the verdict parsed" mean two
+    things depending on which provider answered — the thing CR210 exists to stop.
     """
     try:
         with get_session() as session:
@@ -125,6 +132,9 @@ def record_llm_call(
                 # CR158: None is a real value here — "which prompt generation" is
                 # unknown for a non-agent flow and for an assembly failure alike.
                 prompt_version=prompt_version,
+                # CR210: None is a real value here — "no grammar was asked for" is
+                # not "a grammar was asked for and dropped".
+                constraint_status=constraint_status,
             )
             session.add(row)
             session.commit()

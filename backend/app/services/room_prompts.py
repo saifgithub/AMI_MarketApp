@@ -18,6 +18,7 @@ demo working when the LAN vLLM box is unreachable.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from datetime import date, datetime, timezone
 from typing import Any
@@ -490,6 +491,103 @@ _PM_STRUCTURE_FORMAT = (
     "argued for. Say in your narration why the structure you picked fits.\n"
 )
 
+# CR210 — the bound on the PM's `narration`, and it is USER-VISIBLE text.
+#
+# `narration` is what `_pm_narration` returns as the displayed verdict and as
+# `Verdict.reason` — the string rendered as the decision's justification. A
+# `maxLength` hit chops MID-WORD on this backend (verified 2026-08-25) while
+# still closing the JSON validly, so it is a SILENT truncation: `finish_reason`
+# is "stop" and none of the three existing disclosure paths fire. Hence both a
+# generous bound and the exact detector in `_parse_pm_verdict`.
+#
+# 3600, not CR196's 1200, and the two derivations agree:
+#   * From the ask. `_LENGTH_GUIDE[PORTFOLIO_MANAGER]` is "one decision sentence,
+#     then up to 6 short bullets" — roughly 1,300-1,400 chars. CR179's
+#     censored-observation factor of 1.5 on top of a 2x margin lands near 3,500.
+#   * From the measurement. The PM's recorded censored maximum is 3,456 chars for
+#     the whole envelope, of which scaffolding and numbers are ~120.
+# And it stays under the budget, which is the property the bound exists for:
+# 3600 + ~140 scaffolding = 3,740 < 1700 * 3.14 = 5,338. The grammar terminates
+# before the decode budget does.
+PM_NARRATION_MAX_CHARS = 3600
+
+
+def pm_verdict_schema(option_candidates: Sequence[Any] | None = None) -> dict[str, Any]:
+    """CR210 — the machine half of `_PM_VERDICT_FORMAT`, as a decoding grammar.
+
+    Mirrors that instruction key for key, and the mirror is TESTED
+    (`test_cr210_pm_schema_matches_the_prompt`): two descriptions of one contract
+    in two languages is exactly how DEF236 shipped, a length guide counting
+    sentences beside a format asking for bullets.
+
+    `action` is exactly `["APPROVE", "PASS"]`. `_normalize_pm_action`'s
+    REJECT/MODIFY coercion stays for the providers that cannot enforce a grammar,
+    and becomes unreachable on vLLM — which is the point. CR156 B's user-visible
+    defect (a card marked PASS whose narration opens "REJECT:") and the four
+    off-contract actions measured in production (`MODIFY-AND-APPROVE` x3,
+    `MODIFY` x1 over 136 convenes) both become structurally impossible rather
+    than discouraged in three places.
+
+    EVERY property is in `required`, with nullable unions for the ones that only
+    apply to an APPROVE. Two concrete reasons, not style:
+      * `strict: true` on the OpenAI json_schema wrapper is specified to require
+        exactly that, and a schema this server will not compile returns an
+        in-band error frame (DEF376), not a helpful message.
+      * `if/then/allOf` — the natural way to say "size_pct required when action
+        is APPROVE" — has UNVERIFIED support on this backend. That rule already
+        lives, tested, in `_parse_pm_verdict`, which refuses an APPROVE with no
+        usable size. Trading a tested rule for an untested one buys nothing.
+
+    The alternative — `required: ["action", "narration"]` with the rest genuinely
+    optional — was TRIED against the live model on 2026-08-27 and is worse. On a
+    PASS-shaped prompt it returned `{"action": "APPROVE", "target": null,
+    "narration": …}`: a haphazard subset, one nulled field and no size, where the
+    all-required schema on the same prompt shape filled every field coherently.
+    Making a key optional does not make the model consider it.
+
+    Worth stating because it bounds what this buys: that same reply narrated a
+    WAIT while emitting `action: "APPROVE"`. A grammar guarantees FORM. It has
+    nothing to say about a verdict whose action contradicts its own prose — what
+    catches that is `_parse_pm_verdict` refusing an APPROVE with no usable
+    `size_pct` and failing safe to PASS, which is unchanged and still load-bearing.
+
+    `structure_id` exists ONLY when the run issued a menu, exactly as
+    `_PM_STRUCTURE_FORMAT` is appended only then. On a run with no menu the key
+    is not merely discouraged but unrepresentable; when there IS a menu,
+    `minimum`/`maximum` bound it to the issued set, making the first of
+    `_resolve_pm_structure`'s three rejections impossible. The other two (a
+    FORBIDDEN candidate, a structure with no legs) stay in Python, where the
+    knowledge lives.
+    """
+    properties: dict[str, Any] = {
+        "action": {"type": "string", "enum": ["APPROVE", "PASS"]},
+        "size_pct": {"type": ["number", "null"]},
+        "entry": {"type": ["number", "null"]},
+        "stop": {"type": ["number", "null"]},
+        "target": {"type": ["number", "null"]},
+        "horizon_days": {"type": ["integer", "null"]},
+        # minLength alongside maxLength: `score_S4.has_narration` is
+        # `bool(obj.get("narration"))`, and a maxLength-only string admits "".
+        # A grammar that permits an empty rationale would satisfy every
+        # structural check while removing the only thing the user reads.
+        "narration": {
+            "type": "string", "minLength": 1, "maxLength": PM_NARRATION_MAX_CHARS,
+        },
+    }
+    if option_candidates:
+        properties["structure_id"] = {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": len(option_candidates) - 1,
+        }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": list(properties),
+        "properties": properties,
+    }
+
+
 # DEF236 — STYLE only. The shape (a thesis sentence, then how many bullets) is
 # stated once, in `_LENGTH_GUIDE`, and no longer restated here in a different
 # unit. See that dict for what the contradiction cost.
@@ -592,6 +690,85 @@ def _build_stance_format(*, with_size: bool) -> str:
 
 
 _STANCE_FORMAT = _build_stance_format(with_size=False)
+
+
+def trader_block_regex(*, ticker: str) -> str:
+    r"""CR210 — the Execution Desk's turn as a decoding grammar.
+
+    The money block is the surface with a real measured production failure:
+    over 136 recorded convenes on `ami-llm`, only 99 (73%) carried a `Side:` line
+    the frozen CR196 pattern could read, 119 (88%) allowing for the markdown
+    bolding `_PROSE_FORMAT` asks every prose agent for. So ~12% of Execution Desk
+    turns render with no labelled block at all.
+
+    Derived from CR196's `regex_S5` and deliberately DIFFERENT in five places.
+    That regex was written against the eval harness; this one has to be read back
+    by production parsers, and shipping it verbatim would have the grammar
+    manufacture defects:
+
+      1. **`R:R` is forced to `N.NN:1`.** CR196 emits a bare `R:R: 2.50`, and
+         `_extract_stated_rr("R:R: 2.50")` returns None (measured) because
+         `_rr_ratio` needs a trailing `:N` / ` to N` / `x`. With no stated ratio
+         `_annotate_rr_against_levels` prints "the proposal stated no R:R, so AMI
+         rendered it" under "These are the figures of record" — DEF288's exact
+         false claim about a proposal that did state one. `:1` makes both
+         `_extract_stated_rr` and `_RR_CLAIM_RE` fire.
+      2. **HEADLINE is bounded at STANCE_HEADLINE_MAX_CHARS**, not CR196's 90. At
+         90 the grammar would legalise headlines the envelope parser then nulls —
+         manufacturing gutter entries by construction.
+      3. **STANCE allows all four values** `_build_stance_format` offers. CR196
+         allowed `for|against` only, which would force the model to claim a side
+         on every turn it genuinely lands in the middle.
+      4. **A no-position side gets its own branch, with no Size/Entry/Target/
+         Stop/R:R.** CR196 has one branch with every field mandatory, so a Desk
+         that wants to WAIT is FORCED to state a price triple it does not believe
+         in — the grammar manufacturing the fabrication class this codebase
+         exists to refuse. Nothing downstream needs those levels:
+         `ctx.trader_entry/stop/target/size_pct` are seeded deterministically from
+         the profile before the Desk speaks, and are never parsed back out of its
+         prose (DEF235). HOLD rides with WAIT because `recipe16_trader` already
+         sizes both at 0.0 — neither opens a position.
+      5. **The instrument is pinned to THIS run's ticker** (`re.escape`, because
+         BRK.B has a dot), not `[A-Z.]{1,6}`. A proposal for a name the run is not
+         about becomes unrepresentable, for free.
+
+    `Entry: market` is ALLOWED, matching `content/agents/trader.md` verbatim.
+    Forbidding it would tighten the parse — `_match_level` would always find an
+    entry — at the price of pressuring the model to invent a price when it means a
+    market order. That is buying a parser guarantee with a fabricated number. If
+    the option should go, it goes from `trader.md` first and this follows; the
+    drift guard enforces that direction.
+
+    Thousand separators are forbidden inside the block. DEF234/DEF242 exist
+    because the model writes `$1,507.00`; both parsers now cope, and forbidding it
+    here removes the class from this surface at no cost.
+
+    The trailing `[\s\S]*` is unbounded, and that is safe — unlike an unbounded
+    JSON string. `*` matches empty, so EOS is legal the instant the block closes
+    and the model stops where it naturally would. In JSON, EOS is illegal
+    mid-string, which is what makes an unbounded string a state the grammar can
+    always extend forever.
+    """
+    money = r"\$\d{1,6}\.\d{2}"
+    return (
+        r"\[STANCE: (?:for|against|neutral|none) \| "
+        r"CONVICTION: (?:low|medium|high) \| "
+        rf"HEADLINE: [^\]\n]{{1,{STANCE_HEADLINE_MAX_CHARS}}}\]\n"
+        rf"Instrument: +{re.escape(ticker.upper())}\n"
+        r"(?:"
+        r"Side: +BUY\n"
+        r"Size: +\d{1,2}\.\d{1,2}% of portfolio\n"
+        rf"Entry: +(?:{money}|market)\n"
+        rf"Target: +{money}\n"
+        rf"Stop: +{money}\n"
+        r"Time horizon: +[^\n]{1,24}\n"
+        r"R:R: +\d{1,2}\.\d{1,2}:1\n"
+        r"|"
+        r"Side: +(?:HOLD|WAIT)\n"
+        r"Time horizon: +[^\n]{1,24}\n"
+        r")"
+        r"[\s\S]*"
+    )
 
 # CR197 — the RISK phase's variant. The three debators are the only agents whose
 # job is to advocate a SIZE, and until now nothing read one back: the spread they

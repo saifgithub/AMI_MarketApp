@@ -93,6 +93,88 @@ def build_risk_officer_instruction(rows: list[LadderOption]) -> str:
     )
 
 
+# CR210 — bounds for every free-text field in the officer schema.
+#
+# maxLength is LOAD-BEARING, not tidiness. An unbounded string is a state the
+# grammar can always extend, so the model can write prose inside `case_for`
+# forever and never emit the closing quote — measured on the CR196 kit, 3 of the
+# first 11 rows ran to the token cap mid-sentence inside that field, and RAISING
+# the cap did not fix it. Bounding every free-text field is what terminates
+# generation.
+#
+# Sized to the ASK, generously. `case_for` is "one sentence"; 400 chars is about
+# two. The floor matters as much as the ceiling: a hit chops MID-WORD on this
+# backend (verified 2026-08-25), so a bound near the observed length would
+# guillotine real answers. Worst case here is
+# 3 x (400 + 400 + 60) + 60 + scaffolding ~= 3,040 chars, comfortably inside the
+# officer's 1800-token budget at `_CHARS_PER_TOKEN_WORST_CASE` — the grammar
+# terminates before the budget does, which is the whole point.
+RISK_CASE_MAX_CHARS = 400
+RISK_KEY_NUMBER_MAX_CHARS = 60
+
+# The `confidence` enum, in semantic rather than alphabetical order so the
+# grammar offers the model a ladder rather than a shuffled set. Kept as its own
+# constant and pinned against `_CONFIDENCE_VALUES` by
+# `test_cr210_risk_officer_schema_matches_the_ladder`, so the schema and the
+# validator below cannot drift apart.
+RISK_CONFIDENCE_ENUM = ("low", "medium", "high")
+
+
+def build_risk_officer_schema(rows: list[LadderOption]) -> dict[str, Any]:
+    """CR210 — the grammar half of `build_risk_officer_instruction(rows)`.
+
+    Same argument, same module, a few lines apart, so the enum the decoder
+    enforces and the sizes the instruction prints cannot come from different
+    places. That instruction says "for these sizes and no others"; this makes it
+    true rather than requested — `failure_patterns` P2 measures "asking nicely"
+    at ~30%, and CR196 measured this exact check at 57% on an untuned model.
+
+    The enum is `round(r.size_pct, 1)` — the value `_options_by_size` and
+    `render_officer_turns` both key on — never the raw float. An enum of
+    2.6666 against a renderer looking up 2.7 would make every option
+    un-renderable while every structural check reported success.
+
+    Deduped, because JSON Schema requires enum uniqueness and the ladder CAN
+    collapse (a trader size at the backstop makes press == reference).
+    `minItems`/`maxItems` follow the DEDUPED count, so the model is never asked
+    for a rung that does not exist.
+
+    `additionalProperties: false` plus a full `required` list is what
+    `strict: true` on the OpenAI json_schema wrapper is specified to want, and a
+    schema this server will not compile comes back as an in-band error frame
+    (DEF376), not a helpful message.
+    """
+    sizes = sorted({round(r.size_pct, 1) for r in rows})
+    text = {"type": "string", "minLength": 1, "maxLength": RISK_CASE_MAX_CHARS}
+    number = {"type": "string", "minLength": 1, "maxLength": RISK_KEY_NUMBER_MAX_CHARS}
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["options", "recommended", "confidence", "decisive_number"],
+        "properties": {
+            "options": {
+                "type": "array",
+                "minItems": len(sizes),
+                "maxItems": len(sizes),
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["size_pct", "case_for", "case_against", "key_number"],
+                    "properties": {
+                        "size_pct": {"type": "number", "enum": sizes},
+                        "case_for": dict(text),
+                        "case_against": dict(text),
+                        "key_number": dict(number),
+                    },
+                },
+            },
+            "recommended": {"type": "number", "enum": sizes},
+            "confidence": {"type": "string", "enum": list(RISK_CONFIDENCE_ENUM)},
+            "decisive_number": dict(number),
+        },
+    }
+
+
 def _options_by_size(payload: dict[str, Any]) -> dict[float, dict[str, Any]]:
     """The payload's options keyed by their claimed size, one decimal.
 

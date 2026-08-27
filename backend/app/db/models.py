@@ -939,6 +939,27 @@ class LLMAuditRow(Base):
     # entire point of the column is that a measurement can trust which prompt it is
     # measuring.
     prompt_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR210 — whether a decoding grammar was in force on this call, and how it
+    # ended. Written by the gateway from the DEF125 `meta` channel.
+    #   'enforced'    — a grammar was on the wire and the stream ended normally
+    #   'truncated'   — on the wire, and `max_tokens` ended it: the shape the
+    #                   grammar guaranteed was made unreachable by the budget
+    #   'rejected'    — the server refused the grammar (DEF376's in-band error
+    #                   frame). A code defect, not a runtime condition.
+    #   'unsupported' — a grammar was REQUESTED and this provider cannot enforce
+    #                   it, so it was not sent; the reply ran on CR143's tolerant
+    #                   parser alone
+    #
+    # NULL means no constraint was REQUESTED — every pre-CR210 row, every
+    # unconstrained flow — and never "requested and dropped", which is
+    # 'unsupported'. The two must not render identically or "the PM verdict
+    # parsed" means two different things depending on who answered, which is the
+    # same CR040 distinction the four `*_tokens` columns above draw.
+    #
+    # Deliberately carries no PARSE outcome: this row is written by the gateway
+    # before any caller has parsed anything, and a row that is UPDATEd after the
+    # fact is a row whose meaning depends on when you read it.
+    constraint_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
 
 class HTTPAuditRow(Base):

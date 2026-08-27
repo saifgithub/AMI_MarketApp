@@ -420,7 +420,7 @@ async def test_the_gateway_warns_on_a_length_stop_for_every_flow():
 
         async def stream_chat(
             self, *, system_prompt, messages, model_tier="cheap",
-            max_tokens=1024, meta=None,
+            max_tokens=1024, meta=None, constraint=None,
         ):
             yield "half a sen"
             if meta is not None:

@@ -59,6 +59,7 @@ class _CapturingProvider(MockProvider):
         model_tier="cheap",
         max_tokens: int = 1024,
         meta: dict | None = None,  # DEF125 — the gateway's stop-reason channel
+        constraint=None,  # CR210 — forwarded unconditionally by the gateway
     ) -> AsyncIterator[str]:
         self.seen_system_prompt = system_prompt
         yield "ok"

@@ -74,6 +74,80 @@ class ChatMessage:
     content: str
 
 
+@dataclass(frozen=True)
+class OutputConstraint:
+    """CR210 — a decoding grammar for ONE call, which the provider either
+    enforces on the wire or the gateway refuses to send.
+
+    A typed object rather than a dict, and rather than separate
+    `response_format=` / `structured_outputs=` kwargs, for three reasons:
+
+    1. **The wire vocabulary is not the caller's business.** `guided_json` is
+       not a field on this server's `ChatCompletionRequest`, and because that
+       model declares `additionalProperties: true` it is accepted with HTTP 200
+       and silently dropped (verified 2026-08-25 against ami-llm). A dict
+       channel lets a call site ship that key; this object makes the spelling
+       `_constraint_request_fields`' decision, in one place, tested once.
+    2. **"Exactly one grammar" is enforceable here and nowhere else.** Two
+       kwargs cannot express it; `__post_init__` can.
+    3. **`name` is mandatory.** The audit column and every log line have to say
+       WHICH grammar was in force, or the guard cannot distinguish the states it
+       exists to distinguish.
+
+    Frozen because providers are shared singletons serving concurrent runs —
+    the same reason DEF125's `meta` is per-call rather than provider state.
+    """
+
+    name: str
+    json_schema: dict[str, Any] | None = None
+    regex: str | None = None
+
+    def __post_init__(self) -> None:
+        if (self.json_schema is None) == (self.regex is None):
+            raise ValueError(
+                "OutputConstraint takes exactly one of json_schema / regex"
+            )
+        if not self.name:
+            raise ValueError("OutputConstraint needs a name — it is the audit label")
+
+    @property
+    def kind(self) -> Literal["json_schema", "regex"]:
+        return "json_schema" if self.json_schema is not None else "regex"
+
+
+def _constraint_request_fields(constraint: OutputConstraint) -> dict[str, Any]:
+    """The outbound request fields for one constraint, on an OpenAI-compatible
+    endpoint.
+
+    JSON → the OpenAI-standard `response_format`, because it is the only spelling
+    a non-vLLM endpoint might also honour. Regex → vLLM's `structured_outputs`,
+    which has no OpenAI-standard equivalent — which is why the regex path is
+    vLLM-only and says so in `VLLMProvider.supported_constraints`.
+
+    NEVER `guided_json` / `guided_regex`. They are not fields on this server's
+    `ChatCompletionRequest`, and `additionalProperties: true` means they come
+    back HTTP 200 with a prose answer instead of an error (verified 2026-08-25:
+    the model ignored the schema entirely). A constraint that cannot fail loudly
+    is worse than no constraint, because every layer above reads it as enforced.
+
+    `disable_any_whitespace` is deliberately not sent: measured on this build to
+    have no visible effect, and shipping a field that does nothing is how the
+    next reader concludes it does something.
+    """
+    if constraint.json_schema is not None:
+        return {
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": constraint.name,
+                    "schema": constraint.json_schema,
+                    "strict": True,
+                },
+            }
+        }
+    return {"structured_outputs": {"regex": constraint.regex}}
+
+
 # ── CR056: universal grounding directive (no assumed data) ───────────────
 #
 # Prepended to the system prompt of EVERY call routed through
@@ -123,6 +197,14 @@ def prepend_grounding_directive(system_prompt: str) -> str:
 
 class LLMProvider:
     name: str = "base"
+    # CR210 — which decoding grammars this provider can actually ENFORCE.
+    # Empty is the safe default: the gateway then refuses to put a constraint on
+    # the wire and records the call `unsupported`, rather than sending a field
+    # the server accepts and drops. A class attribute rather than `isinstance`
+    # because capability is not a class question — `OpenAICompatibleProvider`
+    # instances named "gemini" and "deepseek" are the same class with different
+    # capabilities, so isinstance would force a class per endpoint.
+    supported_constraints: frozenset[str] = frozenset()
 
     async def stream_chat(
         self,
@@ -132,8 +214,16 @@ class LLMProvider:
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
         meta: dict[str, Any] | None = None,
+        constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
         """Yield content chunks as they arrive from the provider.
+
+        CR210: [constraint] is a decoding grammar the provider is expected to put
+        on the wire. The gateway NEVER passes one whose `kind` is absent from
+        this provider's `supported_constraints` — see `LLMGateway.stream_chat`'s
+        capability gate — so an implementation may assume any constraint it
+        receives is one it declared it can enforce. A provider that declares none
+        may ignore the parameter; it will never be non-None.
 
         DEF125: [meta] is a per-call, caller-owned dict the provider writes the
         terminal `finish_reason` into (normalised across providers: `"length"`
@@ -219,7 +309,14 @@ class MockProvider(LLMProvider):
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
         meta: dict[str, Any] | None = None,
+        constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
+        # CR210 — accepted to satisfy the provider contract and never non-None
+        # in practice: `supported_constraints` is empty for this provider, so the
+        # gateway strips any constraint before calling here and records the call
+        # `unsupported`. Deliberately NOT a raise — the capability gate lives in
+        # exactly one place, and a second gate here would mean two places can
+        # disagree about what "unsupported" means.
         # Pick canned response based on which agent's prompt this is
         text = self._DEFAULT
         sp = system_prompt.lower()
@@ -313,7 +410,14 @@ class AnthropicProvider(LLMProvider):
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
         meta: dict[str, Any] | None = None,
+        constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
+        # CR210 — accepted to satisfy the provider contract and never non-None
+        # in practice: `supported_constraints` is empty for this provider, so the
+        # gateway strips any constraint before calling here and records the call
+        # `unsupported`. Deliberately NOT a raise — the capability gate lives in
+        # exactly one place, and a second gate here would mean two places can
+        # disagree about what "unsupported" means.
         model = TIER_TO_MODEL[model_tier]
         # Anthropic separates `system` from `messages`; user/assistant only in messages
         body = {
@@ -463,8 +567,16 @@ class OpenAICompatibleProvider(LLMProvider):
         timeout_seconds: float = 60.0,
         extra_body: dict[str, Any] | None = None,
         max_tokens_floor: int | None = None,
+        supported_constraints: frozenset[str] | None = None,
     ) -> None:
         self.name = name
+        # CR210 — instance override of the class default, the same idiom as
+        # `self.name` on the line above. Set it ONLY for an endpoint whose
+        # enforcement has actually been verified against that server; an
+        # unverified value here is the `guided_json` silent-drop with our own
+        # name on it.
+        if supported_constraints is not None:
+            self.supported_constraints = supported_constraints
         self._model_name = model_name
         self._extra_body = extra_body or {}
         # CR130: reasoning-style providers (Kimi) spend `max_tokens` on
@@ -491,6 +603,7 @@ class OpenAICompatibleProvider(LLMProvider):
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
         meta: dict[str, Any] | None = None,
+        constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
         # OpenAI-style puts the system message as the first entry of `messages`.
         openai_messages: list[dict[str, str]] = [
@@ -513,6 +626,16 @@ class OpenAICompatibleProvider(LLMProvider):
             "stream_options": {"include_usage": True},
             **self._extra_body,
         }
+        # CR210 — applied AFTER the `**self._extra_body` spread, deliberately.
+        # `extra_body` is a constructor-time, per-PROVIDER dict (Qwen's
+        # `enable_thinking`); a constraint is per-CALL and per-prompt, and a
+        # provider-level default must never be able to silence one call's
+        # grammar. The reverse order would let a stray
+        # `extra_body={"response_format": {"type": "text"}}` disable every schema
+        # on that provider, with no error anywhere — this CR's own failure mode,
+        # self-inflicted.
+        if constraint is not None:
+            body.update(_constraint_request_fields(constraint))
 
         async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
             if resp.status_code != 200:
@@ -655,6 +778,15 @@ class VLLMProvider(OpenAICompatibleProvider):
             model_name=model_name,
             api_key=api_key,
             timeout_seconds=timeout_seconds,
+            # CR210 — both verified live against `ami-llm` on vLLM
+            # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
+            # `response_format` json_schema held a float enum against a direct
+            # user instruction to leave it, and `structured_outputs.regex`
+            # produced a conforming Trader money block. This set is a claim about
+            # a SERVER, not about a class, so it moves only when the server is
+            # re-verified — see `_constraint_request_fields` for why an
+            # unverified claim here is worse than no claim.
+            supported_constraints=frozenset({"json_schema", "regex"}),
         )
 
     async def log_prefix_cache_status(self) -> None:
@@ -940,6 +1072,7 @@ class LLMGateway:
         meta: dict[str, Any] | None = None,
         plan: Plan | None = None,
         agent_id: AgentId | None = None,
+        constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
         import time
         from app.services.audit import record_llm_call
@@ -948,6 +1081,48 @@ class LLMGateway:
         from app.services.prompt_version import prompt_version_for
 
         provider = self._pick_provider(locale, model_tier, plan=plan, agent_id=agent_id)
+        # DEF125: always give the provider somewhere to report the stop reason,
+        # even when the caller did not ask for it — the length-stop warning below
+        # is what makes a silent truncation visible on EVERY flow (room,
+        # one-on-one, brief, Concierge), not only the ones that opted in.
+        call_meta: dict[str, Any] = meta if meta is not None else {}
+
+        # CR210 — the capability gate. A decoding grammar is either put on the
+        # wire by a provider that enforces it, or it is DROPPED and said so out
+        # loud. It is never sent to a provider that would ignore it: `guided_json`
+        # proved that a field this server does not implement comes back HTTP 200
+        # with a prose answer, which is indistinguishable from enforcement at
+        # every layer above. There is no runtime fallback in this gateway — one
+        # provider is picked per call — so "cannot enforce" cannot mean "try
+        # someone else"; it means run unconstrained and record that fact.
+        #
+        # ABSENCE of the `constraint` key in `call_meta` means no grammar was
+        # REQUESTED, never "requested and dropped". That is 'unsupported', and the
+        # two must not read alike or "the PM verdict parsed" means two different
+        # things depending on who answered.
+        effective_constraint = constraint
+        if constraint is not None:
+            enforced = constraint.kind in provider.supported_constraints
+            call_meta["constraint"] = {
+                "name": constraint.name,
+                "kind": constraint.kind,
+                "provider": provider.name,
+                "status": "enforced" if enforced else "unsupported",
+            }
+            if not enforced:
+                effective_constraint = None
+                logger.warning(
+                    "llm_constraint_unsupported",
+                    provider=provider.name,
+                    constraint=constraint.name,
+                    kind=constraint.kind,
+                    agent_id=audit_agent_id,
+                    flow=audit_flow,
+                    detail=(
+                        "the reply is UNCONSTRAINED; CR143's tolerant parser is "
+                        "the only contract on this call"
+                    ),
+                )
         # CR056: every call gets the no-assumed-data directive prepended, so it is
         # both applied (handed to the provider) AND auditable (recorded to
         # llm_audit) on this one shared path — agents, Concierge, reformatter alike.
@@ -964,11 +1139,6 @@ class LLMGateway:
         started = time.perf_counter()
         buf: list[str] = []
         error_str: str | None = None
-        # DEF125: always give the provider somewhere to report the stop reason,
-        # even when the caller did not ask for it — the length-stop warning
-        # below is what makes a silent truncation visible on EVERY flow
-        # (room, one-on-one, brief, Concierge), not only the ones that opted in.
-        call_meta: dict[str, Any] = meta if meta is not None else {}
         try:
             async for chunk in provider.stream_chat(
                 system_prompt=effective_system_prompt,
@@ -976,6 +1146,7 @@ class LLMGateway:
                 model_tier=model_tier,
                 max_tokens=max_tokens,
                 meta=call_meta,
+                constraint=effective_constraint,
             ):
                 buf.append(chunk)
                 yield chunk
@@ -997,7 +1168,52 @@ class LLMGateway:
                     flow=audit_flow,
                     max_tokens=max_tokens,
                     chars=sum(len(c) for c in buf),
+                    # CR210 — a CONSTRAINED call that hits the ceiling is a schema
+                    # failure, not a slow success: the grammar guaranteed a shape
+                    # the budget then made unreachable, so the reply is
+                    # unparseable rather than merely short. Fields rather than a
+                    # sibling event because it is the SAME physical event, and two
+                    # names for one event makes "how often do we truncate" a
+                    # two-query question with one of the two forgotten. The
+                    # aggregate lives in llm_audit.constraint_status='truncated'.
+                    constrained=effective_constraint is not None,
+                    constraint=(
+                        effective_constraint.name if effective_constraint else None
+                    ),
                 )
+            # CR210 — settle the TRANSPORT half of the outcome taxonomy. The
+            # gateway knows what happened on the wire; whether the reply also
+            # satisfied the parser it was written for is only knowable at the call
+            # site, and is logged there. Deliberately not written back to this row
+            # afterwards: an audit row UPDATEd after the fact is a row whose
+            # meaning depends on when you read it.
+            constraint_meta = call_meta.get("constraint") or {}
+            constraint_status = constraint_meta.get("status")
+            if constraint_status == "enforced":
+                if call_meta.get("stream_error"):
+                    # DEF376's frame, on a call that carried a grammar. NOT
+                    # sniffed out of the message text: "we sent a grammar AND the
+                    # server refused in-band" is the whole signal, and the raw
+                    # message reaches `error` below either way. String-matching
+                    # "Grammar error:" would be a contract with a log line, which
+                    # is not a contract.
+                    constraint_status = "rejected"
+                    logger.error(
+                        "llm_constraint_rejected",
+                        provider=provider.name,
+                        constraint=constraint_meta.get("name"),
+                        kind=constraint_meta.get("kind"),
+                        agent_id=audit_agent_id,
+                        flow=audit_flow,
+                        error=str(call_meta.get("stream_error"))[:300],
+                        detail=(
+                            "the server refused the grammar and returned no "
+                            "content — a code defect, not a runtime condition"
+                        ),
+                    )
+                elif call_meta.get("finish_reason") == "length":
+                    constraint_status = "truncated"
+                constraint_meta["status"] = constraint_status
             # DEF376 — an in-band SSE error frame IS an error. Until this line it
             # reached `record_llm_call` as `error=None` with an empty response,
             # i.e. recorded as a clean answer the model simply had nothing to add
@@ -1035,6 +1251,7 @@ class LLMGateway:
                 output_tokens=usage.get("output_tokens"),
                 cache_read_tokens=usage.get("cache_read_tokens"),
                 cache_write_tokens=usage.get("cache_write_tokens"),
+                constraint_status=constraint_status,
             )
 
 

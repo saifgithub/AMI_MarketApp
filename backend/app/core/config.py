@@ -642,6 +642,43 @@ class Settings(BaseSettings):
     # attributable. Rollback is this flag; no migration.
     room_risk_officer_enabled: bool = False
 
+    # CR210 — JSON decoding grammars on the machine-read Room surfaces: the CIO
+    # verdict, its DEF058 reformatter, and the CR201 Risk Officer. The model is
+    # not asked to comply with a shape, it is prevented from emitting any other
+    # one, so an off-ladder size and an off-contract action stop being unlikely
+    # and become unrepresentable.
+    #
+    # OFF by default because a grammar changes what the model CAN say, which
+    # makes this a measured behaviour change rather than a pure fix — the
+    # before/after is CR196's held-out instrument through the same
+    # `eval_surfaces.py --stage score`. Flip it after that has run, not before.
+    #
+    # The verdict and its reformatter move together, deliberately: the
+    # reformatter exists to recover a PM reply that failed to parse, and a
+    # recovery path weaker than the thing it recovers is not one. The Risk
+    # Officer rides along and is itself gated by ROOM_RISK_OFFICER_ENABLED, so
+    # this flag reaches it only when that one is also on — a flag on a flag would
+    # be a third knob with no third decision behind it.
+    #
+    # Only the on-prem vLLM enforces these (verified against that server, not
+    # assumed from the endpoint being OpenAI-compatible). Every other provider
+    # records `constraint_status='unsupported'` in llm_audit, logs it, and runs
+    # on CR143's tolerant parser — a degraded path that says so.
+    room_json_constraints_enabled: bool = False
+
+    # CR210 — the Execution Desk's money block as a regex grammar. Separate from
+    # the flag above on purpose, for the reason the two flags above give about
+    # not moving two things in one window: this one changes USER-VISIBLE prose
+    # shape, feeds `_LEVEL_PATTERNS` / `_RR_CLAIM_RE` / `parse_stance_envelope`,
+    # and takes `_verify_and_annotate_geometry` from firing rarely to firing on
+    # every BUY turn. An incident on the Desk must not force the CIO's schema off
+    # with it.
+    #
+    # This is the surface with the measured production gap: 99/136 recorded
+    # convenes (73%) carried a readable `Side:` line, 119/136 (88%) allowing for
+    # markdown bolding — so ~12% of Desk turns render with no labelled block.
+    room_trader_regex_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
