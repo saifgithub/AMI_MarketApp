@@ -1,0 +1,49 @@
+{
+ "probe": "badgrammar",
+ "results": [
+  {
+   "case": "bad_schema",
+   "stream": false,
+   "status": 400,
+   "frames": [
+    "{\"_raw\": \"{\\\"error\\\":{\\\"message\\\":\\\"Grammar error: Invalid type: obDJECT\\\",\\\"type\\\":\\\"BadRequestError\\\",\\\"param\\\":null,\\\"code\\\":400}}\"}"
+   ]
+  },
+  {
+   "case": "bad_schema",
+   "stream": true,
+   "status": 200,
+   "frames": [
+    "data: {\"error\": {\"message\": \"Grammar error: Invalid type: obDJECT\", \"type\": \"BadRequestError\", \"param\": null, \"code\": 400}}",
+    "data: [DONE]"
+   ]
+  },
+  {
+   "case": "bad_regex",
+   "stream": false,
+   "status": 400,
+   "frames": [
+    "{\"_raw\": \"{\\\"error\\\":{\\\"message\\\":\\\"Grammar error: at 1(8): invalid regex \\\\\\\"([unclosed\\\\\\\" (in regex): regex parse error:\\\\n    ([unclosed\\\\n     ^\\\\nerror: unclosed character class\\\\n   1 | start: /([unclosed/\\\\n              ^\\\\n\\\",\\\"type\\\":\\\"BadRequestError\\\",\\\"param\\\":null,\\\"code\\\":400}}\"}"
+   ]
+  },
+  {
+   "case": "bad_regex",
+   "stream": true,
+   "status": 200,
+   "frames": [
+    "data: {\"error\": {\"message\": \"Grammar error: at 1(8): invalid regex \\\"([unclosed\\\" (in regex): regex parse error:\\n    ([unclosed\\n     ^\\nerror: unclosed character class\\n   1 | start: /([unclosed/\\n              ^\\n\", \"type\": \"BadRequestError\", \"param\": null, \"code\": 400}}",
+    "data: [DONE]"
+   ]
+  }
+ ],
+ "meta": {
+  "url": "http://192.168.20.74:8000/v1/chat/completions",
+  "model": "ami-llm",
+  "started_utc": "2026-08-27T17:19:06Z",
+  "finished_utc": "2026-08-27T17:19:06Z",
+  "decoding": {
+   "temperature": 0,
+   "top_p": 1
+  }
+ }
+}
