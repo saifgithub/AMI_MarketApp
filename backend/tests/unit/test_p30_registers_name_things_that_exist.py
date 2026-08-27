@@ -80,6 +80,14 @@ def haystack(tracked):
     for rel in tracked:
         if not rel.endswith(_CODE_EXT) or rel.startswith("docs/"):
             continue
+        # The baseline must not be part of the haystack it is checked against.
+        # It lists the absent identifiers by name, so including it makes every
+        # baselined entry "exist" — which passed while the file was untracked
+        # and broke the moment it was committed. Left in, it would hollow the
+        # ratchet completely: any identifier added to the baseline would
+        # justify its own presence there.
+        if rel.endswith(_BASELINE.name):
+            continue
         try:
             parts.append((_ROOT / rel).read_text(encoding="utf-8", errors="ignore"))
         except OSError:

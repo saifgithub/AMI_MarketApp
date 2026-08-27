@@ -1813,6 +1813,15 @@ must be written in the future tense.*
   says a thing *is* guarded, open the guard. All three of these were found that
   way inside a day, by someone who happened to be working nearby.
 
+**The guard's own self-reference, found by the guard**, and worth the line: the
+baseline file lists the absent identifiers by name and lives under
+`backend/tests/unit/`, so once committed it entered the haystack it is checked
+against and every baselined entry read as present. It passed while the file was
+untracked and failed on the first run after the commit. Left in, it would have
+hollowed the ratchet entirely — any identifier added to the baseline would
+justify its own presence there. The baseline is now excluded from its own
+haystack, and that exclusion is itself mutation-proved.
+
 **A related trap met while building this guard**, recorded because it is P24
 inverted: a mutation was reported as SURVIVING when its anchor string did not
 exist in the target file, so nothing was ever mutated. A survival claim needs
