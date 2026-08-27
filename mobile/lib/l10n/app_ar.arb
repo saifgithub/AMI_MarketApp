@@ -2201,6 +2201,8 @@
         "adInterstitialSkip": "28d03596d24e",
         "adInterstitialSkipIn": "7ce41b4c70bc",
         "aiCoachEmptyStateHint": "32bfb3df8fde",
+        "bootstrapFailedTitle": "32d33a125490",
+        "bootstrapRetry": "d31d3eb7fcba",
         "briefProposeChange": "3c2d5939471d",
         "findingScreenTitle": "9e63080a23d5",
         "findingSectionF1": "ea57ee1bfdc2",
@@ -3131,5 +3133,7 @@
     "settingsMinDteExplain": "AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right.",
     "settingsSectionIdentity": "IDENTITY",
     "settingsComplianceEsgLiteExplainTitle": "ESG-lite (curated exclusions)",
-    "settingsComplianceEsgLiteExplainBody": "A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted."
+    "settingsComplianceEsgLiteExplainBody": "A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted.",
+    "bootstrapFailedTitle": "AMI couldn't be reached",
+    "bootstrapRetry": "TRY AGAIN"
 }

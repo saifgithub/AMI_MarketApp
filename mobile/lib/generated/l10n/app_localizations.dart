@@ -7003,6 +7003,18 @@ abstract class AppLocalizations {
   /// **'TRY AGAIN'**
   String get inboxRetry;
 
+  /// DEF380. Heading of the screen shown when the app's very first request — the anonymous bootstrap that mints a session — fails. Until DEF380 this state rendered the brand splash loader forever, which reads as a slow network to the user and as a crash to us; CR040 requires a failure to be visible. Paired with bootstrapRetry. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI couldn\'t be reached'**
+  String get bootstrapFailedTitle;
+
+  /// DEF380. Retry CTA under bootstrapFailedTitle; re-runs the anonymous bootstrap. Rendered as-is, already upper-case, same per-screen convention as portfolioRetry, inboxRetry and roomRetry. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN'**
+  String get bootstrapRetry;
+
   /// CR102 — small amber chip on a priority=high broadcast card. Rendered as-is, already upper-case. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

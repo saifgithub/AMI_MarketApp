@@ -33,6 +33,7 @@ import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/version_gate_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -165,9 +166,21 @@ class _AuthGate extends ConsumerWidget {
     });
     final auth = ref.watch(authNotifierProvider);
     if (auth.token == null) {
-      // Bootstrap is in flight (or never started, or errored). Show the
-      // brand splash and let `Future.microtask(n.bootstrap)` in
-      // authNotifierProvider's factory do the work.
+      // DEF380. This branch used to render the brand splash unconditionally,
+      // with a comment that said "in flight (or never started, **or errored**)"
+      // — the failure was named and then shown as a loading spinner, forever.
+      // `bootstrapAnon` sets `error` and clears `loading` on its catch
+      // (auth_providers.dart), and nothing here read either field, so a 502 on
+      // the very first request left every user on an animating hexagon with no
+      // message, no retry and no way forward. Measured in the iOS simulator:
+      // `ServerUnavailableException(status: 502)` in the log, 60s+ on the logo.
+      // CR040 — a feature gated on a call that can fail must fail visibly.
+      if (!auth.loading && auth.error != null) {
+        return _BootstrapFailed(
+          message: auth.error!,
+          onRetry: () => ref.read(authNotifierProvider.notifier).bootstrap(),
+        );
+      }
       return const Scaffold(
         backgroundColor: AmiColors.slate900,
         body: Center(child: HexPulseLoader()),
@@ -181,5 +194,60 @@ class _AuthGate extends ConsumerWidget {
             child: BugResolutionToasts(child: HomeShell()),
           )
         : const OnboardingScreen();
+  }
+}
+
+/// DEF380 — what the app shows when the anonymous bootstrap cannot reach the
+/// backend.
+///
+/// Deliberately a real screen and not a longer spinner. The bootstrap is the
+/// first request the app makes; if it fails there is no session, so every
+/// screen behind this one would be empty anyway. The alternative that shipped
+/// until now — keep animating the brand loader — is indistinguishable from a
+/// slow network on the user's side and indistinguishable from a crash on ours.
+///
+/// The message is `AuthState.error`, which `friendlyError(e, action: 'reach
+/// AMI')` already wrote; this widget adds the way out rather than a second
+/// wording of the same failure.
+class _BootstrapFailed extends StatelessWidget {
+  const _BootstrapFailed({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: AmiColors.slate900,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AmiSpacing.l),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_outlined,
+                    size: 32, color: AmiColors.hexAmber),
+                const SizedBox(height: AmiSpacing.m),
+                Text(
+                  l.bootstrapFailedTitle,
+                  style: AmiTypography.h2,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AmiSpacing.s),
+                Text(
+                  message,
+                  style: AmiTypography.body,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AmiSpacing.l),
+                HexButton(label: l.bootstrapRetry, onPressed: onRetry),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

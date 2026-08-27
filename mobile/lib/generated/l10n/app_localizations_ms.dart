@@ -4283,6 +4283,12 @@ class AppLocalizationsMs extends AppLocalizations {
   String get inboxRetry => 'TRY AGAIN';
 
   @override
+  String get bootstrapFailedTitle => 'AMI couldn\'t be reached';
+
+  @override
+  String get bootstrapRetry => 'TRY AGAIN';
+
+  @override
   String get inboxHighPriorityChip => 'PRIORITY';
 
   @override
