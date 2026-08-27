@@ -1,9 +1,25 @@
 # BOK source registry — the reputable-source allowlist (CR060)
 
 **Owner:** Claude (BOK content-quality lane). **Purpose:** the authoritative allowlist that every
-lesson/question/glossary/challenge `sources` entry must resolve to. The corpus-integrity test
-(CR060) checks each cited source against this file; a `sources` value that doesn't map to a Tier
-below fails the build (degrade loudly). AI-generated text is **never** a source of fact.
+lesson/question/glossary/challenge `sources` entry must resolve to. AI-generated text is **never**
+a source of fact.
+
+**The enforcing test is `backend/tests/unit/test_cr054_canon_sourcing_spine.py` (CR054 §4.3, added
+2026-08-27).** This paragraph previously asserted that "the corpus-integrity test (CR060) checks
+each cited source against this file; a `sources` value that doesn't map to a Tier below fails the
+build (degrade loudly)" — and **no such test existed**. Nothing under `backend/` or `scripts/`
+referenced this file at all: not a test, not a script, not app code. A registry that describes its
+own enforcement in the present tense, with nothing behind it, is P21 written in prose instead of
+code, and it is more dangerous than an unguarded file because it stops anyone looking.
+
+What the test actually does, so this stays honest: resolution is by **surname set**, so
+`Blaise Pascal & Pierre de Fermat` resolves to `Pascal & Fermat` — which also means a new source
+sharing a surname with an admitted one would pass. **29 cited authorities do not resolve today**
+and are frozen in `cr054_unadmitted_sources_baseline.json` as a ratchet: a NEW unadmitted source
+fails the build, the baseline may only shrink, and an entry that stops being cited must leave it.
+The 29 are the "not yet admitted to the allowlist" set this file already describes below, now
+enumerated with the lessons that owe each debt. Nine further lessons carry `sources: []` — the key
+present, the list empty — and are ceilinged so that count cannot grow.
 
 **Internal-only (Saiful, AT:R63):** provenance is owner-facing QA — users never see sources in the
 app. This registry and the `sources`/`verified` fields exist so *we* are certain the content is

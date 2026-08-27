@@ -1,0 +1,107 @@
+{
+  "ami backend": [
+    "355_how_amis_halal_flag_maps_to_real_screening"
+  ],
+  "andrew w. lo & a. craig mackinlay": [
+    "342_overfitting_and_curve_fitting"
+  ],
+  "barber & odean": [
+    "365_your_risk_limits_in_ami",
+    "367_why_activity_costs_you_before_costs",
+    "368_overconfidence_is_the_mechanism"
+  ],
+  "barber, lee, liu & odean": [
+    "365_your_risk_limits_in_ami",
+    "366_what_the_data_actually_says_about_day_trading",
+    "370_what_the_surviving_one_percent_do_differently"
+  ],
+  "cboe 0dte options volume research and aggregate retail options p&l studies": [
+    "322_why_retail_options_lose_capstone"
+  ],
+  "chiarella v. united states, 445 u.s. 222 (1980): no general duty to disclose or abstain absent a relationship of trust; equal-access theory rejected": [
+    "294_insider_trading"
+  ],
+  "coates & herbert": [
+    "369_the_tilt_spiral_measured"
+  ],
+  "daniel kahneman": [
+    "358_what_a_confidence_number_means",
+    "359_keeping_a_decision_journal",
+    "360_steelmanning_the_other_side",
+    "361_the_pre_mortem"
+  ],
+  "dirks v. sec, 463 u.s. 646 (1983): tippee liability derives from the tipper's breach for personal benefit": [
+    "294_insider_trading"
+  ],
+  "dow jones islamic market index methodology": [
+    "348_the_business_activity_screen",
+    "349_the_three_financial_ratio_screens",
+    "350_standards_differ_why_the_same_stock_flips",
+    "354_islamic_indices_etfs_and_funds",
+    "356_capstone_screen_a_company_end_to_end"
+  ],
+  "el-gamal": [
+    "347_the_four_prohibitions",
+    "353_islamic_contracts_and_instruments"
+  ],
+  "federal reserve act (as amended, 1977)": [
+    "329_the_fed_and_the_dual_mandate"
+  ],
+  "ftse shariah global equity index series methodology": [
+    "350_standards_differ_why_the_same_stock_flips",
+    "354_islamic_indices_etfs_and_funds"
+  ],
+  "huang & chan": [
+    "369_the_tilt_spiral_measured"
+  ],
+  "kandasamy et al.": [
+    "369_the_tilt_spiral_measured"
+  ],
+  "msci islamic index series methodology": [
+    "350_standards_differ_why_the_same_stock_flips",
+    "354_islamic_indices_etfs_and_funds"
+  ],
+  "odean": [
+    "368_overconfidence_is_the_mechanism"
+  ],
+  "raju, r.": [
+    "365_your_risk_limits_in_ami"
+  ],
+  "s&p 500 sharia industry exclusions index": [
+    "355_how_amis_halal_flag_maps_to_real_screening"
+  ],
+  "s&p shariah indices methodology": [
+    "350_standards_differ_why_the_same_stock_flips",
+    "354_islamic_indices_etfs_and_funds"
+  ],
+  "securities commission malaysia's sac": [
+    "350_standards_differ_why_the_same_stock_flips"
+  ],
+  "securities commission malaysia's shariah advisory council (sac)": [
+    "348_the_business_activity_screen"
+  ],
+  "standard option payoff decomposition": [
+    "317_payoff_diagrams_intrinsic_time_value"
+  ],
+  "statman, m.": [
+    "365_your_risk_limits_in_ami"
+  ],
+  "stephen j. brown, william n. goetzmann, roger g. ibbotson & stephen a. ross": [
+    "345_data_mining_and_survivorship_bias"
+  ],
+  "thomas bayes": [
+    "340_capstone_thinking_in_probabilities_bayesian_updating"
+  ],
+  "united states v. o'hagan, 521 u.s. 642 (1997): misappropriation theory": [
+    "294_insider_trading"
+  ],
+  "usmani": [
+    "347_the_four_prohibitions",
+    "351_purification_tazkiyah",
+    "352_sukuk_vs_conventional_bonds",
+    "353_islamic_contracts_and_instruments"
+  ],
+  "volatility risk premium": [
+    "320_implied_vs_realized_volatility"
+  ]
+}
