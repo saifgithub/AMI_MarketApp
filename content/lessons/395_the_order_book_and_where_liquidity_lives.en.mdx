@@ -1,0 +1,102 @@
+---
+id: "395_the_order_book_and_where_liquidity_lives"
+title: "The order book — what you are actually trading against"
+duration_min: 5
+level: 2
+module: 2
+difficulty: 3
+track: "foundations"
+code: "CORE 17"
+topic: "order_book"
+prerequisites: ["003_what_is_a_stock_exchange", "283_market_order_vs_limit"]
+tags: ["mechanics", "order_book", "liquidity", "spread", "depth"]
+sources: ["U.S. SEC — Regulation NMS, the national best bid and offer and the order protection rule"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# The order book — what you are actually trading against
+
+A quoted price is a summary, not a thing you can buy. Behind it sits an order book: a queue of resting limit orders at each price, bids below and offers above, and the "price" you see is simply the best of each. When you send a market order you are not paying that price — you are consuming the book from the top down until your quantity is filled. For small orders in liquid names the distinction is invisible. For anything else it is the difference between the price you expected and the price you got.
+
+## How this plays out in real markets
+
+A hypothetical mid-cap shows a quote of **$50.00 / $50.04**. That looks like a four-cent spread. Here is the offer side of the book:
+
+| price | shares available |
+|---|---|
+| $50.04 | 300 |
+| $50.06 | 500 |
+| $50.11 | 1,200 |
+
+Buy **300** shares at market and you pay $50.04 — exactly the screen price.
+
+Buy **1,000** at market and you take all 300 at $50.04, all 500 at $50.06, and 200 at $50.11:
+
+    (300 × 50.04) + (500 × 50.06) + (200 × 50.11) = 15,012 + 25,030 + 10,022 = $50,064
+
+That is an average of **$50.064**, or 2.4 cents worse than the screen. Nothing went wrong and nobody front-ran you. You simply bought more than the top of the book contained.
+
+The number that matters is therefore not the spread but the **depth**: how many shares sit within a tolerable distance of the top. Two stocks can quote identical spreads and behave completely differently the moment your order is larger than the first line.
+
+## The trap
+
+The trap is sizing a position from the quoted price and discovering the book on the way out. Entry is usually the forgiving direction — you can be patient, work a limit, wait. Exits are where this bites, because the reason you are leaving is often the same reason everyone else is, and depth is thinnest exactly when it is being tested.
+
+The related error is reading a tight spread as "liquid". A spread is what the best-priced participant will do for a small size. Depth is what the market will do for yours. Ask the second question, particularly for anything outside the largest names.
+
+## Steelman
+
+For most retail-sized orders in large-cap names, none of this matters and obsessing over it is its own mistake — the book is deep enough that a market order fills at the screen price, and the trader who works limit orders to save half a cent regularly misses the move that was the entire point of the trade. The honest rule is proportional: the smaller your order is relative to the visible depth, the less the book matters, and for many traders that is always. Knowing where the threshold sits for the names *you* trade is the useful version of this lesson, not treating every order as an execution problem.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock quotes $20.00 / $20.02 with 200 shares offered at $20.02, 400 at $20.05, and 1,000 at $20.10. What is the average fill on a 1,000-share market buy?"
+  options={[
+    "$20.02, the quoted offer",
+    "$20.064",
+    "$20.10, the deepest level touched",
+    "$20.05, the middle level"
+  ]}
+  answer={1}
+  explanation="200 at $20.02 is $4,004; 400 at $20.05 is $8,020; the remaining 400 at $20.10 is $8,040. The total is $20,064 for 1,000 shares, so $20.064 on average. Paying the quoted offer assumes the top of the book holds your whole order, which is the specific assumption that breaks."
+/>
+
+<Quiz
+  question="Two stocks both quote a two-cent spread. One shows 5,000 shares within a cent of the top; the other shows 200. What does the equal spread tell you about trading a 3,000-share order in each?"
+  options={[
+    "That both will fill at similar average prices, since the spread is the cost of trading",
+    "That the second is riskier only if it is more volatile",
+    "Nothing useful — spread describes the best price for a small size, not what your order will meet",
+    "That the first will fill worse, because more resting shares mean more competition"
+  ]}
+  answer={2}
+  explanation="Spread is a property of the top of the book; depth is what a real order consumes. The 200-share name will walk several levels to fill 3,000 shares while the 5,000-share name fills near the top, despite identical quotes. The answer about more resting shares meaning competition inverts the mechanic — resting offers are what you buy FROM, so more of them is better for a buyer."
+/>
+
+<Quiz
+  question="A trader sizes a position using the quoted price, and plans to exit if the thesis breaks. Why is the exit the more dangerous side of this, and what follows for sizing?"
+  options={[
+    "Exits are dangerous because spreads widen overnight, so trade only in the first hour",
+    "Because market orders are not allowed on exits, so the fill is uncertain",
+    "It is not more dangerous — entry and exit consume the book identically",
+    "Because the reason to exit is often shared, so depth thins exactly when tested — which means size should be set against depth in a stressed market, not a calm one"
+  ]}
+  answer={3}
+  explanation="Entry can be worked patiently; an exit driven by broken news competes with everyone else reacting to the same news, and the resting orders you were counting on are withdrawn precisely then. The claim that entry and exit consume the book identically is true in isolation, but it ignores that the two sides are not equally urgent or equally crowded, which is the whole point."
+/>
+
+## Try it
+
+Open the trade ticket for a name you follow and note the quoted price. Then ask the Technical Strategist in 1-on-1 how much of that name typically trades in a day, and compare it to the position size you were considering. If your order is a meaningful fraction of a normal day's volume, you are not a price-taker — you are part of the price.
+
+## Takeaway
+
+The quote is the price of the first few shares, not of your order — so before you size a position, ask how deep the book is, and remember that depth is thinnest on the day you most want to leave.
+
+*Where this comes from: the national best bid and offer, and the order-protection framework that defines how a marketable order interacts with resting liquidity — U.S. SEC Regulation NMS.*

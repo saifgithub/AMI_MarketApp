@@ -11,7 +11,7 @@ topic: "disposition_effect"
 prerequisites: ["390_prospect_theory_why_losses_weigh_more"]
 tags: ["psychology", "disposition_effect", "realisation", "loss_aversion", "selling"]
 sources: ["Kahneman & Tversky — behavioral works, the reference-dependent value function that produces asymmetric realisation behaviour"]
-agent_callouts: ["conservative_debator", "risk_manager"]
+agent_callouts: ["conservative_debator", "portfolio_manager"]
 locale_versions: ["en"]
 created_at: "2026-08-27"
 updated_at: "2026-08-27"
@@ -48,7 +48,7 @@ The market does not know or care what you paid. A position down 30% and a positi
 
 There is a real case for holding losers that has nothing to do with this effect: transaction costs, short-term price noise, and the well-documented tendency of retail traders to over-trade all argue for doing less, not more. A trader who sells every underwater position on sight will underperform one who does nothing. The distinction is *which* positions survive the inaction. Deliberate inaction applies to the whole book. The disposition effect applies asymmetrically — patient with losers, impatient with winners — and it is the asymmetry, not the patience, that costs money.
 
-<ChatWith agent="risk_manager" />
+<ChatWith agent="conservative_debator" />
 
 ## Quiz
 
@@ -81,10 +81,10 @@ There is a real case for holding losers that has nothing to do with this effect:
   options={[
     "It becomes more concentrated in winners, because those are held longest",
     "It becomes more diversified, because losers are spread across more names",
-    "It converges on the trader's worst ideas, and it is hard to see because every individual sale looked disciplined",
-    "It stays balanced, because the effect applies equally to both sides"
+    "It stays balanced, because the effect applies equally to both sides",
+    "It converges on the trader's worst ideas, and it is hard to see because every individual sale looked disciplined"
   ]}
-  answer={2}
+  answer={3}
   explanation="Each cycle removes the positions that worked and retains those that did not, so the surviving book is selected FOR having disappointed. The reason it evades detection is that no single decision was obviously wrong — taking profits and avoiding panic-selling are both defensible in isolation. The damage lives in the composition of what remains, which is a view of the portfolio most traders never take."
 />
 

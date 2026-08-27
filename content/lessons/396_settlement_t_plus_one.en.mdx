@@ -1,0 +1,92 @@
+---
+id: "396_settlement_t_plus_one"
+title: "Settlement — the trade is not finished when the fill prints"
+duration_min: 4
+level: 2
+module: 2
+difficulty: 3
+track: "foundations"
+code: "CORE 18"
+topic: "settlement"
+prerequisites: ["282_what_is_a_brokerage", "395_the_order_book_and_where_liquidity_lives"]
+tags: ["mechanics", "settlement", "t_plus_one", "clearing", "record_date"]
+sources: ["U.S. SEC — Rule 15c6-1, the shortening of the standard settlement cycle to T+1 effective May 2024"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Settlement — the trade is not finished when the fill prints
+
+Execution and settlement are two different events. When your order fills you have a binding obligation; the actual exchange of shares for cash happens later, through a clearing system, on a defined cycle. US equities settle on **T+1** — one business day after the trade — following the SEC's shortening of the standard cycle in May 2024. Most of the time you will never notice. The cases where you do notice are specific, predictable, and involve either a deadline or a date that determines who owns something.
+
+## How this plays out in real markets
+
+Two places the cycle becomes visible.
+
+**Dividends.** A dividend goes to whoever is the holder of record on the **record date**. Because ownership transfers at settlement rather than at execution, exchanges set an **ex-dividend date** so that buyers on or after it are not yet holders of record when the record date arrives. Buy on the ex-date and the dividend belongs to the seller — and the price typically opens lower by roughly the dividend amount, because the buyer is getting a company with that cash already committed out the door. A $0.50 dividend on a $40 stock is not a $0.50 gift to a buyer on the ex-date; it is a $0.50 adjustment they are on the wrong side of.
+
+**Business days, not calendar days.** T+1 counts trading days. A Friday trade settles Monday. A trade on the day before a market holiday settles on the next open session, which can be three calendar days later. Anyone planning around a cash deadline counts sessions, not dates on a wall calendar.
+
+**Where AMI Trade differs, deliberately:** the simulator settles instantly, because a training environment that made you wait a day to reuse capital would teach patience with the mechanics rather than with the market. Do not carry that assumption to a real brokerage — the real cycle is the one described above, and the app is the simplification.
+
+## The trap
+
+The trap is the dividend capture idea: buy the day before the ex-date, collect the dividend, sell after. The price adjustment on the ex-date is not a bug the strategy exploits; it is the market pricing the same cash you are about to receive. Before costs the trade is roughly a wash, and after spread, commission and the tax treatment of the dividend it is usually a small reliable loss dressed as free money.
+
+The second trap is calendar arithmetic. "It settles in a day" quietly becomes "the money is there tomorrow", which is wrong across weekends and holidays, and that is precisely when someone is counting on it.
+
+## Steelman
+
+There is a genuine case that settlement mechanics are a distraction for a long-term investor: if you hold for years, you will encounter the cycle roughly never, and the mental budget is better spent on what you own. That is fair. The reason it is still worth one lesson is that the two moments it *does* matter — a dividend date and a cash deadline — are both moments where being wrong is concrete rather than abstract, and both are entirely avoidable with five minutes of knowing the rule exists.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock trading at $40 declares a $0.50 dividend. A trader buys on the ex-dividend date expecting to collect it. What actually happens?"
+  options={[
+    "They do not receive it, and the price has typically already adjusted down by roughly the dividend",
+    "They receive the $0.50 and the price is unaffected",
+    "They receive it but must hold through the record date to keep it",
+    "They receive half of it, prorated by holding period"
+  ]}
+  answer={0}
+  explanation="Buyers on or after the ex-date are not holders of record when the record date arrives, so the dividend belongs to the seller — and the price opens lower by roughly the dividend because the company is handing that cash out. The prorated answer describes bond accrued interest, which works that way; equity dividends do not."
+/>
+
+<Quiz
+  question="A trader sells shares on a Friday under a T+1 cycle and needs the cash for a payment. When does settlement occur?"
+  options={[
+    "Saturday, one calendar day later",
+    "The following Monday, because the cycle counts business days",
+    "The following Friday, one week later",
+    "Immediately, since T+1 means same-day for sales"
+  ]}
+  answer={1}
+  explanation="T+1 counts trading days, so a Friday trade settles on the next session — Monday, or later if a holiday intervenes. Reading the '+1' as a calendar day is the specific error, and it surfaces exactly when someone is counting on the money."
+/>
+
+<Quiz
+  question="Why is 'buy before the ex-date, collect the dividend, sell after' not free money — and what would have to be true for it to work?"
+  options={[
+    "It fails only because of taxes; in a tax-free account it works reliably",
+    "It fails because dividends are paid months after the record date",
+    "It fails because the ex-date price adjustment prices the same cash you receive, so it would need the adjustment to be reliably smaller than the dividend",
+    "It works, but the position size required makes it impractical"
+  ]}
+  answer={2}
+  explanation="The strategy assumes the dividend is additive when the market has already subtracted it from the price. For it to be profitable the price would have to drop by reliably LESS than the dividend, consistently, after costs — which is a claim about a persistent mispricing rather than a mechanic. Taxes and payment timing make it worse but are not the reason it fails."
+/>
+
+## Try it
+
+Find a dividend-paying holding and look up its next ex-dividend date. Then check whether your own plan for that position has you buying or selling near it. If you were about to buy the day before to "catch" the dividend, write in your Decision Journal what price change you would expect on the ex-date — and what would have to be true for the trade to make money.
+
+## Takeaway
+
+A fill creates an obligation, not a transfer — and the two places that gap becomes real money are a dividend's ex-date and a cash deadline counted in sessions rather than calendar days.
+
+*Where this comes from: the standard settlement cycle for US equities, shortened to T+1 by U.S. SEC Rule 15c6-1 effective May 2024.*

@@ -1,0 +1,97 @@
+---
+id: "398_margin_mechanics_and_the_maintenance_call"
+title: "Margin — borrowing to buy, and the call that arrives at the worst time"
+duration_min: 6
+level: 2
+module: 2
+difficulty: 4
+track: "foundations"
+code: "CORE 20"
+topic: "margin_mechanics"
+prerequisites: ["397_short_selling_mechanics_borrow_and_recall"]
+tags: ["mechanics", "margin", "leverage", "maintenance_call", "regulation_t"]
+sources: ["Federal Reserve — Regulation T, the initial margin requirement for purchasing securities on credit"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Margin — borrowing to buy, and the call that arrives at the worst time
+
+Buying on margin means borrowing from your broker against the securities you hold. Two separate rules govern it: an **initial** requirement set by the Federal Reserve's Regulation T, historically 50% of the purchase, and a **maintenance** requirement set by the exchange and usually raised further by the broker, which is the equity percentage you must keep at all times. The initial rule decides how much you can borrow. The maintenance rule decides when you are forced to sell — and only the second one has teeth, because it is enforced continuously, against a price you do not control.
+
+## How this plays out in real markets
+
+You have **$10,000** cash and buy **$20,000** of stock on margin — the Reg T maximum. You have borrowed $10,000, and your equity is $10,000, which is 50% of the position.
+
+Now the stock falls **20%**. The position is worth **$16,000**. The loan does not shrink, so:
+
+    equity = 16,000 − 10,000 = $6,000
+    equity % = 6,000 / 16,000 = 37.5%
+
+Still above a typical 25–30% maintenance level. Continue: a **30%** fall puts the position at $14,000 and equity at $4,000, or **28.6%**. At a 30% house requirement you are now short of it, and a maintenance call arrives — deposit cash or the broker sells enough to restore the ratio, at their discretion and on their timetable.
+
+Two things to notice. First, the loss is amplified: a 30% fall in the stock is a **60%** loss of your capital, because you lost $6,000 of a $10,000 stake. Second — the part people miss — the *percentage* deteriorates faster than the price, because the debt is fixed while the asset shrinks. Every dollar the position falls comes entirely out of your equity.
+
+**AMI Trade does not offer leverage, and that is a permanent design decision rather than a missing feature.** This lesson is here so you understand a real brokerage's mechanics, not so you can look for the setting.
+
+## The trap
+
+The trap is planning around the initial requirement and forgetting the maintenance one. Traders size a position at "50% down is my limit" and are stopped out at 30%, because the maintenance test is a ratio, not a price, and the broker may raise the house requirement on a name at any time — often on the volatile names, often after they become volatile.
+
+The second trap is treating a margin call as a request. It is not a negotiation and it does not wait for your thesis. If you do not meet it, the broker liquidates positions of their choosing at market, which typically means the most liquid holdings rather than the ones you would have picked.
+
+## Steelman
+
+Margin is not automatically reckless. Used at a fraction of the permitted amount it is simply a cheap source of capital, and there are respectable uses — bridging a settlement gap, or holding a position through a known short-term cash need rather than selling and re-buying with the costs and tax consequences that involves. What makes leverage dangerous is not its existence but its interaction with forced selling: it converts a temporary price move into a permanent realised loss at the worst available price. A trader who uses a quarter of their available margin and keeps cash aside for a call is running a different instrument from one who is fully extended, even though both are "on margin".
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="You buy $20,000 of stock with $10,000 of your own cash and a $10,000 margin loan. The stock falls 25%. What is your equity percentage?"
+  options={[
+    "50%, unchanged, because the loan and the position fell together",
+    "25%, matching the fall",
+    "33.3%",
+    "75%"
+  ]}
+  answer={2}
+  explanation="The position is worth $15,000 and the loan is still $10,000, so equity is $5,000 — which is 33.3% of $15,000. The 'unchanged' answer is the core misunderstanding: the debt is fixed, so the entire decline comes out of your equity and the ratio deteriorates faster than the price."
+/>
+
+<Quiz
+  question="A trader is fully extended on margin and receives a maintenance call they cannot meet in cash. What happens next?"
+  options={[
+    "The position is frozen until the trader deposits funds",
+    "The broker converts the loan to a longer-term facility",
+    "The trader has until the end of the quarter to restore the ratio",
+    "The broker liquidates positions of their own choosing at market"
+  ]}
+  answer={3}
+  explanation="A maintenance call is an obligation, not a negotiation, and an unmet call is met by the broker selling — typically the most liquid holdings rather than the ones the trader would have chosen. The freeze and grace-period answers describe a courtesy that the maintenance rule specifically does not provide."
+/>
+
+<Quiz
+  question="Two traders each hold $20,000 of the same stock. One used $10,000 cash plus $10,000 margin; the other paid $20,000 cash. The stock falls 40% and then fully recovers over the following year. What is the difference in outcome?"
+  options={[
+    "The margin trader may have been forced out near the bottom, turning a temporary move into a realised loss they never recovered",
+    "None — both held the same stock through the same round trip",
+    "The margin trader does better, because leverage amplifies the recovery too",
+    "The cash trader does worse, having tied up more capital"
+  ]}
+  answer={0}
+  explanation="The synthesis of this lesson: a 40% fall takes equity to $2,000 on a $12,000 position, or 16.7% — comfortably below any maintenance requirement, so that is a call. If it is not met, the position is sold at the bottom and there is nothing left to participate in the recovery. Leverage does amplify the recovery, but only for a position you were still holding, which is precisely what forced selling removes."
+/>
+
+## Try it
+
+You cannot use leverage in AMI Trade, so do this on paper instead. Take your largest current position and compute what your equity percentage would be after a 25% fall if half of it had been borrowed. Then look up your broker's actual maintenance requirement if you have a real account. Write both numbers in your Decision Journal — the point is to know the ratio, not the price, at which someone else starts making your decisions.
+
+## Takeaway
+
+The initial requirement decides how much you can borrow; the maintenance requirement decides when you are sold — and because the debt is fixed while the asset falls, the ratio breaks faster than the price does.
+
+*Where this comes from: the initial margin requirement for purchasing securities on credit, set under the Federal Reserve's Regulation T, and the separate continuously-tested maintenance requirement applied by exchanges and brokers.*

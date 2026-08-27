@@ -716,3 +716,66 @@ def test_no_prerequisite_comes_later_in_its_own_track(lessons, by_id):
         f"{len(inverted)} prerequisite(s) sit at or after the lesson that needs "
         f"them, so a reader meets the requirement after the requirer: {inverted}"
     )
+
+
+# ── CR054 §4.4 — the agent half of the graph ──────────────────────────────
+#
+# §4.4 makes agents nodes and `agent_callouts` edges, on the same footing as
+# lessons and prerequisites. Nothing validated either the frontmatter list or
+# the `<ChatWith agent="…">` component against the agent roster.
+#
+# It went unnoticed because the corpus was clean: measured 2026-08-27, all 365
+# lessons then shipped named only real agents. The first dangling references
+# ever to exist were introduced the same day, by CR054 Wave 3's own lessons,
+# citing `risk_manager` and `technical_strategist` — neither of which is an
+# agent id. The second is the more instructive error: `technical_strategist`
+# IS a real desk, but it is the DISPLAY NAME of the agent whose id is
+# `market_analyst` (CR160 renamed the labels and left the ids alone), so the
+# prose was correct and the callout pointed at nothing.
+#
+# A `<ChatWith>` naming an unknown agent renders a callout to a desk that does
+# not exist; a bad `agent_callouts` entry silently drops the lesson out of that
+# agent's curated set, which is how DEF068's gateway lessons went invisible.
+
+
+def _agent_ids() -> set[str]:
+    d = CONTENT_LESSONS_DIR.parent / "agents"
+    return {p.stem for p in d.glob("*.md") if p.stem != "README"}
+
+
+def test_the_agent_roster_is_readable():
+    """Vacuity: every assertion below passes trivially against an empty roster,
+    which is precisely the state that would make them useless."""
+    ids = _agent_ids()
+    assert len(ids) >= 12, f"only {len(ids)} agents found — the roster path moved"
+
+
+def test_every_agent_callout_names_a_real_agent(lessons):
+    ids = _agent_ids()
+    offenders = [
+        (l.meta.id, a)
+        for l in lessons
+        for a in (l.meta.agent_callouts or [])
+        if a not in ids
+    ]
+    assert not offenders, (
+        "agent_callouts naming an unknown agent — the lesson silently drops out "
+        "of that agent's curated set (DEF068's shape). Note the ids are NOT the "
+        "display names: CR160 renamed the labels and left the ids alone, so "
+        f"'Technical Strategist' is the agent `market_analyst`. Offenders: {offenders}"
+    )
+
+
+def test_every_chatwith_component_names_a_real_agent():
+    ids = _agent_ids()
+    offenders = []
+    for path in _lesson_paths():
+        for agent in re.findall(
+            r'<ChatWith\s+agent="([^"]+)"', path.read_text(encoding="utf-8")
+        ):
+            if agent not in ids:
+                offenders.append((path.name, agent))
+    assert not offenders, (
+        f"<ChatWith> naming an unknown agent renders a callout to a desk that "
+        f"does not exist: {offenders}"
+    )

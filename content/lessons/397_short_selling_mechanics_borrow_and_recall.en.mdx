@@ -1,0 +1,96 @@
+---
+id: "397_short_selling_mechanics_borrow_and_recall"
+title: "Short selling — the borrow is the trade's hidden second position"
+duration_min: 6
+level: 2
+module: 2
+difficulty: 4
+track: "foundations"
+code: "CORE 19"
+topic: "short_selling_mechanics"
+prerequisites: ["396_settlement_t_plus_one"]
+tags: ["mechanics", "short_selling", "borrow", "recall", "buy_in", "locate"]
+sources: ["U.S. SEC — Regulation SHO, the locate requirement and close-out obligations for short sales"]
+agent_callouts: ["conservative_debator", "portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Short selling — the borrow is the trade's hidden second position
+
+Selling a stock you do not own means delivering shares you must first borrow. That borrow is not paperwork around the trade — it is a second position, with its own price and its own termination risk, sitting alongside your view on the company. You can be completely right about the business and still lose, because the lender wanted their shares back, or because the cost of keeping them rose faster than your thesis played out. Understanding a short means understanding both positions.
+
+## How this plays out in real markets
+
+Three things attach to the borrow, and none of them appear on a price chart.
+
+**A locate.** Before selling short, a broker must have reasonable grounds to believe the shares can be borrowed and delivered — the locate requirement under Regulation SHO. For a large, widely-held stock this is invisible. For a small float with heavy short interest it can simply be unavailable, which means the trade you designed cannot be entered at any price.
+
+**A borrow fee.** You pay a rate to hold the borrow, quoted annualised and accrued daily. On a **$10,000** short at a **3%** borrow rate, that is about **$300** a year, or roughly **$0.82** a day — irrelevant over a week, material over a year. The rate is not fixed: it is set by supply and demand for the shares themselves, so on a heavily-shorted name it can move from 3% to 30% or beyond precisely when your thesis is becoming popular. Your carrying cost rises as your idea gets crowded.
+
+**A recall.** The lender can demand the shares back. If your broker cannot re-borrow elsewhere, your position is bought in — closed at market, at their timing, not yours. A recall does not care whether you were right.
+
+Together these mean a short has a clock on it that a long does not. A long position can be held through being wrong for a while. A short can be ended for you.
+
+**Where AMI Trade differs:** the simulator charges a daily borrow accrual so the carrying cost is real in your P&L, but it does not model locate failures or recalls. Treat those two as risks the training environment cannot show you.
+
+## The trap
+
+The trap is sizing a short as though the maximum loss were comparable to a long's. A long can go to zero: you lose what you put in. A short's loss is unbounded, because the price above you has no ceiling — and worse, the position *grows* as it moves against you, so the exposure you sized is not the exposure you end up carrying.
+
+The second trap is treating a high borrow fee as merely a cost. It is also information: an expensive borrow means many people already want this trade. That is not a reason to avoid it, but it does mean the crowded-trade risk and the recall risk are both elevated at exactly the moment the idea feels most obvious.
+
+## Steelman
+
+Shorting is not simply a riskier version of going long, and dismissing it on the unbounded-loss argument alone misses why it exists. Short sellers are one of the few participants with an economic incentive to investigate and publish what is wrong with a company, and markets in which shorting is restricted have historically been slower to price bad news, not safer. The costs described above are the price of a genuinely useful function. The honest conclusion is not "never short" — it is that a short carries three risks a long does not, and any position sized as though it carried one is mis-sized.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="A trader shorts $20,000 of a stock at an annualised borrow rate of 6%. Roughly what does the borrow cost over 30 days?"
+  options={[
+    "$1,200",
+    "$600",
+    "$20",
+    "$99"
+  ]}
+  answer={3}
+  explanation="$20,000 × 6% is $1,200 a year, and 30 days is about 1/12 of that — roughly $99. The $1,200 answer is the full annual figure, which is the most common way this gets mis-stated; $600 halves it for no reason; $20 is roughly a single day."
+/>
+
+<Quiz
+  question="A short seller's thesis is correct and the stock is falling, but the lender recalls the shares and the broker cannot re-borrow. What happens?"
+  options={[
+    "The position is bought in and closed at market, on the lender's timing rather than the trader's",
+    "The position is protected because the thesis is working",
+    "The borrow rate rises but the position continues",
+    "The trader is given a grace period to find their own lender"
+  ]}
+  answer={0}
+  explanation="A recall terminates the borrow, and without a replacement the position is closed regardless of whether it was working. This is the specific risk that has no equivalent on the long side: a long can be held through anything, a short can be ended for you."
+/>
+
+<Quiz
+  question="Two shorts are both down 20%. One is on a large-cap at a 0.5% borrow; the other on a small float at 40%. Beyond the fee, what does the borrow rate difference tell you about the risks now facing each?"
+  options={[
+    "Nothing — the borrow rate is purely a cost and carries no other information",
+    "The expensive borrow signals crowding, so it carries higher recall and squeeze risk exactly where the trade is already going wrong",
+    "The expensive borrow is safer, since a high fee deters other short sellers",
+    "The cheap borrow is riskier, since low fees indicate no institutional interest"
+  ]}
+  answer={1}
+  explanation="Borrow rates are set by demand for the shares themselves, so 40% means many participants already want this position — which raises both the chance of a recall and the fuel available for a squeeze against a position that is already moving against you. Treating the rate purely as a cost misses that it is also the market's count of who else is here."
+/>
+
+## Try it
+
+Open the trade ticket for a name you might short and look at the borrow rate AMI shows. Then ask the Risk Officer in 1-on-1 what annual carrying cost that implies on the size you were considering, and how many months your thesis has before the borrow alone consumes a meaningful part of the expected gain. That number is the clock on the trade.
+
+## Takeaway
+
+A short is two positions — your view, and a borrow that has a price and can be taken away — so size it for a loss with no ceiling and a clock you do not control.
+
+*Where this comes from: the locate requirement and close-out obligations governing short sales under U.S. SEC Regulation SHO.*

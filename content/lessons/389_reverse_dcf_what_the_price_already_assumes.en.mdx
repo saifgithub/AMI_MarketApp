@@ -54,24 +54,24 @@ The strongest case against reverse DCF is that it launders one arbitrary input i
 <Quiz
   question="A company generates $200m in free cash flow. At a 10% discount rate and 5% perpetual growth, what does a forward perpetual-growth DCF value it at?"
   options={[
-    "$4.2bn",
     "$2.0bn",
     "$4.0bn",
-    "$1.4bn"
+    "$1.4bn",
+    "$4.2bn"
   ]}
-  answer={0}
+  answer={3}
   explanation="200m × 1.05 / (0.10 − 0.05) = 210m / 0.05 = $4.2bn. The $4.0bn answer forgets to grow the first year's cash flow before discounting; the $2.0bn answer divides by the discount rate alone; the $1.4bn answer adds the rates instead of subtracting."
 />
 
 <Quiz
   question="A reverse DCF on a stock you own returns an implied perpetual growth rate of 9%, against a long-run economy growing 2.5%. What is the correct conclusion?"
   options={[
+    "The price assumes this company outgrows its economy by 6.5 points permanently — a claim to judge, not a verdict",
     "The stock is overvalued and should be sold",
     "The discount rate must be wrong, since no company grows at 9% forever",
-    "The price assumes this company outgrows its economy by 6.5 points permanently — a claim to judge, not a verdict",
     "Nothing can be concluded without a peer-group comparison"
   ]}
-  answer={2}
+  answer={0}
   explanation="A reverse DCF converts a price into a testable claim; it does not settle the claim. The tempting answer is treating a demanding implied rate as a sell signal, which skips the only work that matters — deciding whether this particular business can defend that gap. Note also that the implied rate is meaningless unless you quote the discount rate it was solved at."
 />
 

@@ -1,0 +1,92 @@
+---
+id: "399_index_construction_what_you_own_in_an_index"
+title: "Index construction — a committee's rules, not a photograph of the market"
+duration_min: 5
+level: 2
+module: 2
+difficulty: 3
+track: "foundations"
+code: "CORE 21"
+topic: "index_construction"
+prerequisites: ["398_margin_mechanics_and_the_maintenance_call"]
+tags: ["mechanics", "index", "weighting", "float_adjusted", "rebalance", "passive"]
+sources: ["Bogle — Common Sense on Mutual Funds (1999), index construction and the case for owning the market by rule"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Index construction — a committee's rules, not a photograph of the market
+
+"The market was up today" almost always means an index was up, and an index is a rulebook: which companies are eligible, how their weights are set, when membership changes, and what counts as a share. Those choices are neither obvious nor neutral, and two indices covering the same market can disagree meaningfully about what it did. Owning an index fund means owning the output of a specific rulebook — which is an excellent decision, made better by knowing which rulebook.
+
+## How this plays out in real markets
+
+**Weighting is the biggest choice.** Most broad indices are capitalisation-weighted: each company's weight is its market value as a share of the total. A consequence follows immediately and surprises people — as a company's price rises, its weight rises, so a cap-weighted index automatically holds more of what has already gone up. That is not a flaw; it is what makes the index self-maintaining and nearly costless to track. But it does mean concentration is an outcome of the rule, not a decision anyone took.
+
+A price-weighted index instead weights by share price, so a $400 stock moves it four times as much as a $100 stock regardless of company size — a convention that made sense when indices were computed by hand and survives by inertia.
+
+**Float adjustment.** Most cap-weighted indices count only shares actually available to trade, excluding blocks held by founders, governments or cross-holdings. A company with a $100bn market value but only 40% free float carries roughly the weight of a $40bn company, because that is what an index fund could actually buy.
+
+**Membership is a decision.** Additions and removals are made by a committee or by published rules on a schedule. Because index funds must hold what the index holds, an addition creates real forced buying — which is why the announcement itself moves the price, before any fund has traded.
+
+## The trap
+
+The trap is treating "I bought the index, so I am diversified" as the end of the analysis. A cap-weighted index of 500 companies can have a third of its value in a handful of names, because the rule that built it concentrates by design. You own 500 companies and a much smaller number of *bets*.
+
+The second trap is comparing performance across indices without checking construction. A cap-weighted and an equal-weighted version of the identical 500 companies can differ by several percentage points in a year, and neither is wrong — they are answering different questions. If you are comparing your portfolio to "the market", know which rulebook you are being graded against.
+
+## Steelman
+
+None of this is an argument against index investing, and it would be a serious misreading to take it as one. The rules described here are exactly what makes a low-cost fund possible: a mechanical, published, self-rebalancing definition that requires no judgment and therefore no fee for judgment. The case for owning the market by rule rests on costs and on the difficulty of persistent selection, and nothing above touches either. The point is narrower and worth holding anyway — "the index" is a specific construction with specific consequences, and knowing them is the difference between owning it deliberately and owning it by default.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="In a capitalisation-weighted index, what happens to a company's weight as its share price rises, and what follows?"
+  options={[
+    "It falls, because the index rebalances away from winners",
+    "It rises, so the index automatically holds more of what has already appreciated",
+    "It stays fixed until the next scheduled rebalance",
+    "It depends on the company's revenue growth"
+  ]}
+  answer={1}
+  explanation="Weight is market value as a share of the total, so appreciation raises weight mechanically and continuously — no trade required, which is exactly why cap-weighting is cheap to track. The 'rebalances away from winners' answer describes equal-weighting, which must sell appreciated names to restore equal weights and therefore costs more to run."
+/>
+
+<Quiz
+  question="A company has a $100bn market capitalisation but only 40% of its shares are freely tradable. In a float-adjusted cap-weighted index, its weight corresponds to roughly what value?"
+  options={[
+    "$100bn, since the index tracks the whole company",
+    "$60bn, the portion held by insiders",
+    "$40bn, since only the tradable shares are counted",
+    "$140bn, adjusted upward for scarcity"
+  ]}
+  answer={2}
+  explanation="Float adjustment counts only shares an index fund could actually buy, so 40% of $100bn is the basis for the weight. Using the full capitalisation would require funds to buy shares that are not for sale — which is the practical problem float adjustment exists to solve."
+/>
+
+<Quiz
+  question="Two funds hold the identical 500 companies; one is cap-weighted and one equal-weighted. They differ by several points over a year. What does that tell you?"
+  options={[
+    "One of the funds has a tracking error problem",
+    "The equal-weighted fund is riskier by construction",
+    "The cap-weighted fund must have higher fees",
+    "Nothing is wrong — weighting is a rule, and the two rules answer different questions about the same companies"
+  ]}
+  answer={3}
+  explanation="Same constituents, different rulebooks, different results — that is construction working as designed rather than either fund failing. The synthesis for a trader is that 'beating the market' is meaningless until you name the rulebook you are being graded against, since the choice of benchmark can be worth more than the choice of stocks."
+/>
+
+## Try it
+
+Find out which index your main benchmark actually is, and look up two things: how many constituents it has, and what share of its value sits in its ten largest. Write both numbers in your Decision Journal next to your own portfolio's top-ten concentration. Most people are surprised in one direction or the other, and the comparison is the only honest way to say whether you are more or less concentrated than "the market".
+
+## Takeaway
+
+An index is a rulebook, not a photograph — so when you own one, know how it weights, what it counts as a share, and how much of it sits in its largest handful of names.
+
+*Where this comes from: the construction and rationale of broad market indices, and the cost-based case for owning the market by rule, as set out in Bogle's Common Sense on Mutual Funds.*
