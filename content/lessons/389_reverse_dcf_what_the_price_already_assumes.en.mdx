@@ -1,0 +1,98 @@
+---
+id: "389_reverse_dcf_what_the_price_already_assumes"
+title: "Reverse DCF — reading the assumptions already inside the price"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 68"
+topic: "reverse_dcf"
+prerequisites: ["167_dcf_basics_why_terminal_value_eats_everything", "388_dividend_discount_model"]
+tags: ["valuation", "dcf", "reverse-dcf", "implied-growth", "expectations"]
+sources: ["Damodaran — valuation works, solving a discounted-cash-flow model for implied growth rather than for value"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# Reverse DCF — reading the assumptions already inside the price
+
+A normal discounted-cash-flow model takes your assumptions and produces a value, which you then compare to the price. A reverse DCF runs the same machinery backwards: it takes the price as given and solves for the assumption that would justify it. You stop producing an opinion and start auditing one. The question changes from *"what is this worth?"* — which invites you to pick inputs until the answer flatters your position — to *"what would have to be true?"*, which you can actually judge.
+
+## How this plays out in real markets
+
+Take a hypothetical listed software company. It trades at a **$12 billion** market capitalisation and generated **$300 million** of free cash flow last year. You use a **10%** discount rate and, to keep the arithmetic legible, the perpetual-growth form from the previous lesson.
+
+Run it forwards at a modest 3% perpetual growth:
+
+    value = 300m × 1.03 / (0.10 − 0.03) = 309m / 0.07 = $4.4bn
+
+The market says $12bn. So instead of arguing, solve for the growth rate that closes the gap:
+
+    12,000m = 300m × (1 + g) / (0.10 − g)
+
+Rearranged, that lands at **g ≈ 7.3%**. Free cash flow must compound at roughly 7.3% **forever** for today's price to be fair — not for five years, not until the product matures, but in perpetuity, against a long-run economy growing perhaps 2–3%.
+
+That is now a question you can hold an opinion about. Is this company's moat wide enough to outgrow its economy by four points, permanently? Maybe. But you are judging a claim instead of manufacturing one, and you can say precisely which claim.
+
+## The trap
+
+The trap is treating the implied number as a verdict — announcing that 7.3% is "too high" and shorting the stock. A reverse DCF prices *expectations*, not correctness. A company can carry a demanding implied growth rate for years and deserve it, and one carrying a low implied rate can be cheap for an excellent reason nobody has written down yet.
+
+The subtler version of the same mistake is running the reverse DCF only on positions you already dislike. Run it on your favourite holding and you will often find that the price already assumes everything you were about to argue for — which is the single most useful thing this technique does, and the reason it is uncomfortable.
+
+## Steelman
+
+The strongest case against reverse DCF is that it launders one arbitrary input into another: you still chose the discount rate, and a point of discount rate moves the implied growth almost as much as a point of growth moves value. That is true, and it is why the output is a sentence and not a number — *"at a 10% required return, this price assumes 7.3% forever."* Both halves travel together. State the discount rate every time you quote an implied growth rate, and the technique stays honest; drop it, and you have invented a precise-sounding number with a hidden assumption inside, which is exactly the disease it was meant to cure.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company generates $200m in free cash flow. At a 10% discount rate and 5% perpetual growth, what does a forward perpetual-growth DCF value it at?"
+  options={[
+    "$4.2bn",
+    "$2.0bn",
+    "$4.0bn",
+    "$1.4bn"
+  ]}
+  answer={0}
+  explanation="200m × 1.05 / (0.10 − 0.05) = 210m / 0.05 = $4.2bn. The $4.0bn answer forgets to grow the first year's cash flow before discounting; the $2.0bn answer divides by the discount rate alone; the $1.4bn answer adds the rates instead of subtracting."
+/>
+
+<Quiz
+  question="A reverse DCF on a stock you own returns an implied perpetual growth rate of 9%, against a long-run economy growing 2.5%. What is the correct conclusion?"
+  options={[
+    "The stock is overvalued and should be sold",
+    "The discount rate must be wrong, since no company grows at 9% forever",
+    "The price assumes this company outgrows its economy by 6.5 points permanently — a claim to judge, not a verdict",
+    "Nothing can be concluded without a peer-group comparison"
+  ]}
+  answer={2}
+  explanation="A reverse DCF converts a price into a testable claim; it does not settle the claim. The tempting answer is treating a demanding implied rate as a sell signal, which skips the only work that matters — deciding whether this particular business can defend that gap. Note also that the implied rate is meaningless unless you quote the discount rate it was solved at."
+/>
+
+<Quiz
+  question="Two analysts reverse-DCF the same company at the same price. One uses an 8% discount rate, the other 11%. Which implied growth rate is higher, and why does it matter?"
+  options={[
+    "The 8% analyst's, because a lower discount rate requires MORE growth to justify the price",
+    "The 11% analyst's, because a higher discount rate requires MORE growth to justify the same price",
+    "They are identical, because the price is the same in both cases",
+    "Neither — implied growth does not depend on the discount rate"
+  ]}
+  answer={1}
+  explanation="Price depends on the gap between the discount rate and growth, so raising the discount rate forces implied growth up by roughly as much to keep the same gap and the same price. That is the synthesis of this lesson and the previous one: both models read a spread, not a level. It is also why an implied growth rate quoted without its discount rate is not a number — it is half of one."
+/>
+
+## Try it
+
+Pick one holding in your simulated portfolio and open 1-on-1 with the Fundamentals Analyst. Ask what perpetual free-cash-flow growth its current price implies at a 10% discount rate, then ask the same question at 8%. Write both answers, with their discount rates, into your Decision Journal entry for that position. You now have the claim the price is making, in the form you can check against next quarter's results.
+
+## Takeaway
+
+Do not ask what a company is worth — ask what the price already assumes, and say the discount rate out loud when you do, because an implied growth rate without its discount rate is half a number.
+
+*Where this comes from: solving a discounted-cash-flow model for implied growth rather than for value, as set out in Damodaran's valuation work.*

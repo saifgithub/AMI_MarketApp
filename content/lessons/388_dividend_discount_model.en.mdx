@@ -1,0 +1,100 @@
+---
+id: "388_dividend_discount_model"
+title: "The dividend discount model — and the one input that breaks it"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 67"
+topic: "dividend_discount_model"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "192_payout_ratio_on_fcf"]
+tags: ["valuation", "dividends", "ddm", "gordon-growth", "discount-rate"]
+sources: ["Damodaran — valuation works, the dividend discount model and the perpetual-growth constraint"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-27"
+updated_at: "2026-08-27"
+---
+
+# The dividend discount model — and the one input that breaks it
+
+A share is a claim on the cash a company hands its owners. The dividend discount model takes that literally: a stock is worth the present value of every dividend it will ever pay. In its standard form that collapses to one line of arithmetic — next year's dividend divided by the gap between your required return and the dividend's perpetual growth rate. The arithmetic is trivial. The judgment is not, because the whole valuation hangs on a denominator that can be a very small number, and small numbers move violently.
+
+## Example
+
+Take a hypothetical regulated water utility. It will pay **$2.00** per share over the next year. You want a **8%** annual return to hold it, and you believe the dividend can grow **3%** a year forever — roughly the pace of the economy it serves.
+
+    value = 2.00 / (0.08 − 0.03) = 2.00 / 0.05 = $40.00
+
+Now change only the growth assumption, and watch what the denominator does:
+
+| perpetual growth | denominator | value | change |
+|---|---|---|---|
+| 3% | 0.05 | $40.00 | — |
+| 4% | 0.04 | $50.00 | +25% |
+| 5% | 0.03 | $66.67 | +67% |
+
+One percentage point of assumed growth — a number nobody can observe — moved the valuation 25%. A second point moved it 67%. Now hold growth at 3% and raise your required return to 9% instead: the denominator becomes 0.06 and the value falls to **$33.33**, down 17%.
+
+Nothing about the company changed in any of those rows. Only your two opinions did.
+
+## The trap
+
+The trap is running the model on a company it does not describe, because the arithmetic never complains. Plug a fast-growing software firm into this formula and you meet the failure immediately: if you set growth at 12% and your required return at 9%, the denominator goes negative and the model returns a negative price. Set growth to 8.9% against a 9% return and it returns a value larger than the company's entire market. Neither output is a signal — both mean *this model does not apply here*.
+
+The perpetual growth rate is not a forecast of the next few years. It is what you believe the dividend will do **forever**, which is why it cannot exceed the long-run growth of the economy for long. A company growing faster than its economy indefinitely eventually becomes the economy.
+
+## Steelman
+
+The DDM's reputation as a toy is unearned, and the reason is the same as its weakness. Because the model has only three inputs, you cannot hide behind it. A discounted-cash-flow model with a fifteen-row projection lets you bury an aggressive assumption in row nine. Here there is nowhere to put it: you must say out loud what return you demand and what you believe about growth forever, and the sensitivity table above shows the reader exactly what those opinions are worth. For a mature dividend payer — a utility, a regulated telecom, a large consumer staple — that honesty is a feature.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A hypothetical utility pays a $3.00 dividend next year. You require a 9% return and assume 4% perpetual growth. What is the DDM value per share?"
+  options={[
+    "$33.33",
+    "$75.00",
+    "$23.08",
+    "$60.00"
+  ]}
+  answer={3}
+  explanation="3.00 / (0.09 − 0.04) = 3.00 / 0.05 = $60.00. The $33.33 answer divides by the required return alone and forgets growth entirely; the $75.00 answer uses a 4% denominator, which is the growth rate rather than the gap; the $23.08 answer adds the two rates instead of subtracting."
+/>
+
+<Quiz
+  question="An analyst values a company whose dividend she expects to grow 11% a year forever, using a 10% required return. The model returns a negative number. What has actually gone wrong?"
+  options={[
+    "The required return is too low and should be raised above 11%",
+    "The growth assumption is impossible as a PERPETUAL rate, so the model does not apply",
+    "The dividend should be discounted for one extra year first",
+    "Nothing — a negative value means the stock is overpriced"
+  ]}
+  answer={1}
+  explanation="A negative output is the model refusing the inputs, not a verdict on the stock. Perpetual growth above the required return implies a dividend stream whose present value never converges — and a company outgrowing its economy forever eventually becomes that economy. The tempting answer is raising the required return until the arithmetic behaves, which fixes the symptom by inventing a return you do not actually demand."
+/>
+
+<Quiz
+  question="Two analysts value the same mature utility. Both use a $2.00 forward dividend. One assumes 8% required return with 3% growth; the other assumes 9% with 4%. Whose valuation is higher, and what does the comparison show?"
+  options={[
+    "The first, because a lower required return always dominates the growth assumption",
+    "The second, because the higher growth rate always dominates",
+    "They are identical at $40.00, which shows the model depends on the GAP between the two rates rather than on either one alone",
+    "It cannot be determined without knowing the payout ratio"
+  ]}
+  answer={2}
+  explanation="Both denominators are 0.05, so both values are $2.00 / 0.05 = $40.00. That is the synthesis: the DDM never reads the required return or the growth rate on its own, only the spread between them. Two analysts who disagree sharply about both inputs can agree exactly on price — and two who differ by one point in the gap will not."
+/>
+
+## Try it
+
+Open 1-on-1 with the Fundamentals Analyst and name a dividend-paying company you already hold or follow. Ask what perpetual growth rate its current price implies at a 9% required return, then ask whether that rate is above or below the long-run growth of the economy it operates in. The answer is the whole lesson: you are no longer asking "is it cheap", you are asking "is this assumption believable".
+
+## Takeaway
+
+The dividend discount model is one division, and the denominator is a gap between two opinions — so before you trust the price it prints, move the growth rate by one point and see how much of your answer was arithmetic and how much was you.
+
+*Where this comes from: the perpetual-growth form of the dividend discount model, and the constraint that perpetual growth cannot exceed the discount rate, as set out in Damodaran's valuation work.*
