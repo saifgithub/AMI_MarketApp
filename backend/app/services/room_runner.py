@@ -4899,6 +4899,14 @@ async def _compute_agent_text(
                 timeout=agent_timeout_s,
             )
             text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
+            # DEF376: the provider refused the request mid-stream and yielded an
+            # `[AMI error: …]` sentinel. That string is NON-empty, so the `or`
+            # above does not fire and the sentinel would reach the transcript,
+            # every downstream agent, and the user — in place of the scripted
+            # contribution designed for exactly this case. Keyed on `meta`, never
+            # on sniffing the text for its own sentinel.
+            if stream_meta.get("stream_error"):
+                text = _scripted_for(agent_id, formatter)
             # CR106 B2: strip the stance envelope FIRST. It must come off before
             # the `[AMI …]` marks below — which would otherwise sit between the
             # prose and a trailing envelope and break its end-anchor — and before
@@ -5121,7 +5129,13 @@ async def _run_risk_officer(
         )
         if payload is None:
             fallback_reason = (
-                "the reply was cut at the token ceiling"
+                # DEF376: a refusal is a THIRD cause, and naming it matters —
+                # "could not be parsed" blames the model for a request the
+                # server never ran. Checked first: a refused call also has no
+                # `finish_reason`, so the ceiling branch cannot claim it.
+                "the provider refused the request"
+                if stream_meta.get("stream_error")
+                else "the reply was cut at the token ceiling"
                 if stream_meta.get("finish_reason") == "length"
                 else "the reply could not be parsed"
             )
@@ -5323,6 +5337,14 @@ async def _stream_pm_response(
                 "room_pm_truncated",
                 max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
             )
+        # DEF376: on a mid-stream refusal the only content is the `[AMI error: …]`
+        # sentinel. Returning it would hand DEF058's reformatter an error string
+        # to "re-express as the schema" — a wasted call whose most likely output
+        # is a confident verdict shaped out of a transport failure. Empty is the
+        # honest answer and lands on the same fail-safe PASS as a timeout.
+        if pm_meta.get("stream_error"):
+            logger.warning("room_pm_refused", error=str(pm_meta["stream_error"])[:200])
+            return ""
         return "".join(chunks).strip()
     except asyncio.TimeoutError:
         logger.warning("room_pm_timeout", timeout_s=agent_timeout_s)
@@ -5409,6 +5431,14 @@ async def _reformat_pm_response(
                 "room_pm_reformat_truncated",
                 max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
             )
+        # DEF376: same as the PM path — the sentinel is not a reformatted verdict,
+        # and `_parse_pm_verdict` must not be asked to read one out of it.
+        if reformat_meta.get("stream_error"):
+            logger.warning(
+                "room_pm_reformat_refused",
+                error=str(reformat_meta["stream_error"])[:200],
+            )
+            return ""
         return "".join(chunks).strip()
     except asyncio.TimeoutError:
         logger.warning("room_pm_reformat_timeout", timeout_s=agent_timeout_s)

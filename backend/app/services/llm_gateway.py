@@ -351,6 +351,30 @@ class AnthropicProvider(LLMProvider):
 
                     obj = json.loads(data)
                     obj_type = obj.get("type")
+                    if obj_type == "error":
+                        # DEF376 — the Anthropic half of the same hole. This
+                        # loop branches on `type`, and an `{"type": "error",
+                        # "error": {…}}` frame matched NO branch, so it was
+                        # silently skipped exactly like the OpenAI-compatible
+                        # path's `{"error": …}`. Fixing one provider and not the
+                        # other would leave the defect half-open: the statement
+                        # is "in-band error frames are swallowed", not "vLLM's
+                        # are". `finish_reason` stays unwritten here too.
+                        err = obj.get("error") or {}
+                        detail = err.get("message") if isinstance(err, dict) else err
+                        detail = str(detail or obj)[:500]
+                        logger.error(
+                            "anthropic_stream_error",
+                            error=detail,
+                            channel="in-band SSE error frame (HTTP 200)",
+                        )
+                        if meta is not None:
+                            meta["stream_error"] = detail
+                        yield (
+                            "\n\n[AMI error: the upstream provider (anthropic) "
+                            "refused this request mid-stream. Check backend logs.]"
+                        )
+                        return
                     if obj_type == "content_block_delta":
                         delta = obj.get("delta") or {}
                         if delta.get("type") == "text_delta":
@@ -519,6 +543,51 @@ class OpenAICompatibleProvider(LLMProvider):
                         f"{self.name}_chunk_parse_failed", error=str(e), line=line[:200]
                     )
                     continue
+
+                # DEF376 — an IN-BAND error frame.
+                #
+                # This server answers a REFUSED request mid-stream with HTTP 200
+                # and a single SSE frame `{"error": {"message": …, "code": 400}}`
+                # followed by `[DONE]`. A malformed decoding grammar is the
+                # reproducible case (verified 2026-08-25 against ami-llm on vLLM
+                # 0.23.1; the NON-streaming path returns a real HTTP 400, and we
+                # always stream — so the status-code guard above never fires).
+                #
+                # The frame carries no `choices`, so before this it fell straight
+                # through the `if not choices: continue` guard below and the whole
+                # call presented as a clean, empty answer: nothing yielded, no
+                # `finish_reason`, and `record_llm_call` handed `response_text=
+                # None, error=None`. A refusal was byte-for-byte indistinguishable
+                # from a model with nothing to say, and `_parse_pm_verdict` would
+                # fail safe to PASS with nothing anywhere to grep for. Pre-existing
+                # for EVERY in-band error, not only grammar ones — which is why
+                # this is a defect and not a line of CR210.
+                #
+                # Checked before the CR141 `usage` block for the same reason that
+                # block runs before the `choices` guard: an error frame has no
+                # usage and no choices, and nothing else in it is meaningful.
+                err = obj.get("error")
+                if err:
+                    detail = err.get("message") if isinstance(err, dict) else err
+                    detail = str(detail or err)[:500]
+                    logger.error(
+                        f"{self.name}_stream_error",
+                        error=detail,
+                        channel="in-band SSE error frame (HTTP 200)",
+                    )
+                    if meta is not None:
+                        # DEF125's `finish_reason` is deliberately NOT written.
+                        # It means "how the MODEL stopped", normalised across
+                        # providers; here the model never ran. A sixth value in
+                        # that channel would reach four call sites that test it
+                        # with `== "length"`. `stream_error` present and
+                        # `finish_reason` absent is already unambiguous.
+                        meta["stream_error"] = detail
+                    yield (
+                        f"\n\n[AMI error: the upstream provider ({self.name}) "
+                        f"refused this request mid-stream. Check backend logs.]"
+                    )
+                    return
 
                 # CR141: the terminal usage frame's `choices` is EMPTY — this
                 # must run before the `if not choices: continue` guard below,
@@ -929,6 +998,13 @@ class LLMGateway:
                     max_tokens=max_tokens,
                     chars=sum(len(c) for c in buf),
                 )
+            # DEF376 — an in-band SSE error frame IS an error. Until this line it
+            # reached `record_llm_call` as `error=None` with an empty response,
+            # i.e. recorded as a clean answer the model simply had nothing to add
+            # to. `error_str` is only overwritten when the call did not already
+            # raise: a real exception is the more specific fact and keeps priority.
+            if error_str is None and call_meta.get("stream_error"):
+                error_str = f"stream_error: {str(call_meta['stream_error'])[:400]}"
             # CR141: whatever the provider wrote into call_meta["usage"] (see
             # AnthropicProvider / OpenAICompatibleProvider above). `.get()`
             # on a missing/partial dict yields None per field, never 0 — a
