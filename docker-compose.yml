@@ -176,6 +176,11 @@ services:
       # compose backend reaches the on-prem LLM server.
       VLLM_BASE_URL: ${VLLM_BASE_URL:-}
       VLLM_MODEL: ${VLLM_MODEL:-ami-llm}
+      # CR211 — decode-budget floor, needed only when the server behind
+      # VLLM_BASE_URL is a REASONING model that spends the Room's per-agent
+      # budget on invisible chain-of-thought. 0 = off. See config.py for the
+      # measured 800-fails/1200-works curve on qwen3.8-flash-next.
+      VLLM_MAX_TOKENS_FLOOR: ${VLLM_MAX_TOKENS_FLOOR:-0}
       # CR192 — prefix-cache counter sampling interval. Forwarded because
       # test_config_compose_parity.py fails the build otherwise (P1: DEF038
       # and DEF063 were both a setting that existed locally and never

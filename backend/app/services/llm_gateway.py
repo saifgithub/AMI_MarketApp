@@ -771,6 +771,7 @@ class VLLMProvider(OpenAICompatibleProvider):
         model_name: str,
         api_key: str | None = None,
         timeout_seconds: float = 60.0,
+        max_tokens_floor: int | None = None,
     ) -> None:
         super().__init__(
             name="vllm",
@@ -778,6 +779,10 @@ class VLLMProvider(OpenAICompatibleProvider):
             model_name=model_name,
             api_key=api_key,
             timeout_seconds=timeout_seconds,
+            # CR211 — see `Settings.vllm_max_tokens_floor`. None when the
+            # setting is 0, so a non-reasoning server carries no floor at all
+            # rather than a floor of zero that reads as one.
+            max_tokens_floor=max_tokens_floor,
             # CR210 — both verified live against `ami-llm` on vLLM
             # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
             # `response_format` json_schema held a float enum against a direct
@@ -877,12 +882,17 @@ class LLMGateway:
                 base_url=settings.vllm_base_url,
                 model_name=settings.vllm_model,
                 api_key=settings.vllm_api_key or None,
+                max_tokens_floor=settings.vllm_max_tokens_floor or None,
             )
             logger.info(
                 "llm_gateway_provider_registered",
                 provider="vllm",
                 base_url=settings.vllm_base_url,
                 model=settings.vllm_model,
+                # CR211 — logged for the same reason Kimi's is: the floor
+                # silently rewrites every caller's max_tokens, so which value
+                # was in force has to be recoverable from the boot log.
+                max_tokens_floor=settings.vllm_max_tokens_floor,
             )
         else:
             logger.info(

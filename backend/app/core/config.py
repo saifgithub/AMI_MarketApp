@@ -84,6 +84,29 @@ class Settings(BaseSettings):
     vllm_model: str = "ami-llm"
     vllm_api_key: str = ""  # optional bearer auth — leave empty for unauth LAN servers
 
+    # CR211 — decode-budget floor for the on-prem vLLM server, the same knob
+    # `kimi_max_tokens_floor` is for Kimi and for the same reason: a REASONING
+    # model spends the budget on invisible chain-of-thought before it writes a
+    # visible word, and the Room's per-agent caps (800-1600, derived in
+    # room_prompts.py from measured VISIBLE output against the old
+    # non-reasoning `ami-llm`) do not budget for it.
+    #
+    # Measured 2026-08-28 against `qwen3.8-flash-next` on :8048, one realistic
+    # Fundamentals Analyst turn:
+    #     budget  finish  tokens  reasoning_chars  content_chars
+    #        800  length     800             2771              0   <- Alpha, live
+    #       1200    stop    1075             2954            728
+    #       3200    stop    1075             2954            728
+    # Above 1200 nothing changes — max_tokens is a CEILING and the model
+    # self-terminates. So the cost of a generous floor is bounded by what the
+    # model actually wants to say, not by the floor itself.
+    #
+    # 0 = off (the default, and the correct value for a non-reasoning server:
+    # a floor that never binds is still a floor the next reader has to reason
+    # about). Env-driven so the value can be retuned on melehost without a
+    # promotion — that is the whole point of the knob.
+    vllm_max_tokens_floor: int = 0
+
     # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
     # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
     # already generalized the vLLM provider class specifically so a new
