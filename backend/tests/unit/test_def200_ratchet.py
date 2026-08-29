@@ -156,9 +156,9 @@ def test_the_baseline_only_ever_shrinks_from_here():
     """Pins the size the baseline was frozen at, so growing it is a visible,
     deliberate edit to this number rather than a quiet append."""
     baseline = json.loads(_BASELINE.read_text(encoding="utf-8"))["flagged"]
-    assert len(baseline) <= 38, (
+    assert len(baseline) <= 21, (
         f"the DEF200 baseline has grown to {len(baseline)}. It was frozen at 87 on "
-        "2026-08-18, swept to 38 on 2026-08-25, and is meant to keep going down. If "
-        "a new blocking handler was genuinely unavoidable, say why in the commit and "
-        "lower this bound in the same edit."
+        "2026-08-18, swept to 38 on 2026-08-25, narrowed to 21 on 2026-08-28, and is "
+        "meant to keep going down. If a new blocking handler was genuinely unavoidable, "
+        "say why in the commit and lower this bound in the same edit."
     )

@@ -18,7 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from def200_sync_io_census import (  # noqa: E402
     _already_threadpooled,
     _calls_get_session,
-    _fn_referenced_names,
+    _fn_called_names,
+    _param_bindings,
     _names_imported_from,
     census,
 )
@@ -74,9 +75,78 @@ def test_names_imported_from_ignores_modules_outside_the_target_set():
     assert bindings == {}
 
 
-def test_fn_referenced_names_includes_attribute_receivers():
+def test_called_names_includes_attribute_receivers():
     fn = _parse_fn("async def h():\n    mandate_store.get(x)\n")
-    assert "mandate_store" in _fn_referenced_names(fn)
+    assert "mandate_store" in _fn_called_names(fn)
+
+
+# ── a CALL is not a MENTION (DEF200, 2026-08-28) ──────────────────────────────
+#
+# Section C used to collect every Name anywhere in a handler, so a parameter
+# annotation, a `Depends()` factory and an `except` clause all read as blocking
+# I/O. That is what kept 38 handlers on a list a hand-audit then cleared. The
+# first attempt at the fix skipped annotations outright and silently dropped two
+# genuinely blocking handlers, so both directions are pinned here.
+
+def test_a_reference_handed_to_a_threadpool_is_not_a_call():
+    """`asyncio.to_thread(sim.current_quote, t)` calls `asyncio`, not `sim` —
+    this is `sim.py::quote`, the worked false positive in DEF200's own row."""
+    fn = _parse_fn(
+        "async def h(sim: SimEngine = Depends(get_sim_engine)):\n"
+        "    return await asyncio.to_thread(sim.current_quote, 'AAPL')\n"
+    )
+    assert "sim" not in _fn_called_names(fn)
+
+
+def test_a_call_on_a_threadpooled_object_still_counts():
+    """`sim.py::get_holding_lots` awaits a threadpooled quote and THEN calls
+    `sim.holding_lots(...)` straight on the loop. Being partly correct does not
+    clear a handler."""
+    fn = _parse_fn(
+        "async def h(sim: SimEngine = Depends(get_sim_engine)):\n"
+        "    q = await asyncio.to_thread(sim.current_quote, 'AAPL')\n"
+        "    return sim.holding_lots(u, 't', current_price=q.price)\n"
+    )
+    assert "sim" in _fn_called_names(fn)
+
+
+def test_an_annotation_types_the_parameter_rather_than_being_ignored():
+    """The annotation is the only thing that says what `sim` IS. Dropping
+    annotations wholesale is what lost the two handlers above."""
+    fn = _parse_fn(
+        "async def h(sim: SimEngine = Depends(get_sim_engine)):\n"
+        "    return sim.holding_lots(u)\n"
+    )
+    assert _param_bindings(fn, {"SimEngine": "sim_engine"}) == {"sim": "sim_engine"}
+
+
+def test_an_exception_class_is_not_io():
+    """Naming a class is not calling it, so this needs no skip-list entry —
+    which is why the skip list does not have one. Pinned so a future "be
+    thorough" edit does not re-add inert entries."""
+    fn = _parse_fn(
+        "async def h():\n"
+        "    try:\n        pass\n"
+        "    except MandateStoreError:\n        raise\n"
+    )
+    assert "MandateStoreError" not in _fn_called_names(fn)
+
+
+def test_a_call_in_a_parameter_default_runs_at_import_not_per_request():
+    """`Depends(...)` and friends are evaluated once when the module loads. A
+    blocking dependency is the dependency's row on this census, not the
+    handler's."""
+    fn = _parse_fn(
+        "async def h(x = mandate_store.default_for(user)):\n    return x\n"
+    )
+    assert "mandate_store" not in _fn_called_names(fn)
+
+
+def test_a_call_in_a_decorator_runs_at_import_not_per_request():
+    fn = _parse_fn(
+        "@journal_store.cached()\nasync def h():\n    return 1\n"
+    )
+    assert "journal_store" not in _fn_called_names(fn)
 
 
 def test_census_vacuity_guard_against_the_real_codebase():

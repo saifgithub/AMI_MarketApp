@@ -139,13 +139,88 @@ def _names_imported_from(tree: ast.Module, target_modules: set[str]) -> dict[str
     return bindings
 
 
-def _fn_referenced_names(fn: ast.AsyncFunctionDef) -> set[str]:
-    names = set()
-    for node in ast.walk(fn):
-        if isinstance(node, ast.Name):
-            names.add(node.id)
-        elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-            names.add(node.value.id)  # the `X` in `X.something(...)`
+def _call_root(node: ast.expr) -> str | None:
+    """The root name of a call target: `f(...)` -> f, `a.b.c(...)` -> a."""
+    while isinstance(node, ast.Attribute):
+        node = node.value
+    return node.id if isinstance(node, ast.Name) else None
+
+
+def _skipped_subtrees(fn: ast.AsyncFunctionDef) -> list[ast.AST]:
+    """The parts of a handler that can hold a CALL which does not run per request.
+
+    Only two exist, and the list is deliberately not longer than that. Since
+    [_fn_called_names] collects call *targets* rather than every name, an
+    annotation or an `except` clause cannot contribute one — naming a class is
+    not calling it — so skipping them would be inert code dressed as a guard.
+    Measured: adding them changes nothing against this codebase.
+
+    - **Decorators** (`@router.get(...)`) are the route registration, run once
+      at import.
+    - **Parameter defaults**, including `Depends(...)`, are evaluated once at
+      import. If the dependency itself blocks, that is the DEPENDENCY's row on
+      this census, not the handler's.
+
+    Annotations are NOT skipped here — [_param_bindings] reads them, because the
+    annotation is the only thing that says what a parameter is.
+    """
+    args = fn.args
+    skip: list[ast.AST] = list(fn.decorator_list)
+    skip.extend(d for d in [*args.defaults, *args.kw_defaults] if d is not None)
+    return skip
+
+
+def _param_bindings(fn: ast.AsyncFunctionDef, bindings: dict[str, str]) -> dict[str, str]:
+    """{param_name: sync_io_module} for parameters TYPED as a sync-I/O class.
+
+    `sim: SimEngine = Depends(get_sim_engine)` is how a service object reaches
+    a handler, so the annotation is not noise — it is the only thing that says
+    what `sim` is. Skipping annotations wholesale (the first attempt at this
+    fix) silently dropped real blocking calls: `sim.py::get_holding_lots` awaits
+    a threadpooled quote and then calls `sim.holding_lots(...)` straight on the
+    loop, and `auth.py::magic_link_verify` calls `auth.verify_magic_link(...)`
+    the same way. Both went unflagged.
+
+    So the annotation is used to TYPE the parameter, and the body decides:
+    calling `sim.holding_lots(...)` counts, handing `sim.current_quote` to
+    `asyncio.to_thread(...)` does not. That is the distinction the census was
+    missing in both directions.
+    """
+    out: dict[str, str] = {}
+    args = fn.args
+    for a in [*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg]:
+        if a is None or a.annotation is None:
+            continue
+        root = _call_root(a.annotation)
+        if root is not None and root in bindings:
+            out[a.arg] = bindings[root]
+    return out
+
+
+def _fn_called_names(fn: ast.AsyncFunctionDef) -> set[str]:
+    """Names this handler actually CALLS. See [_skipped_subtrees] for what is
+    excluded and why.
+
+    A name counts when it is the root of a call target — `store.get(...)` ->
+    `store` — because that is how every service object on this census is used.
+    It does not count when it is merely mentioned, passed as a reference, or
+    named in an annotation.
+    """
+    skip_ids = {id(n) for n in _skipped_subtrees(fn)}
+    names: set[str] = set()
+
+    def visit(node: ast.AST) -> None:
+        if id(node) in skip_ids:
+            return
+        if isinstance(node, ast.Call):
+            root = _call_root(node.func)
+            if root is not None:
+                names.add(root)
+        for child in ast.iter_child_nodes(node):
+            visit(child)
+
+    for child in ast.iter_child_nodes(fn):
+        visit(child)
     return names
 
 
@@ -177,8 +252,9 @@ def census() -> dict:
 
             if mitigated:
                 continue
-            referenced = _fn_referenced_names(fn)
-            hit_modules = {bindings[n] for n in referenced if n in bindings}
+            resolvable = {**bindings, **_param_bindings(fn, bindings)}
+            called = _fn_called_names(fn)
+            hit_modules = {resolvable[n] for n in called if n in resolvable}
             if hit_modules:
                 section_c.append(f"{site} (via: {', '.join(sorted(hit_modules))})")
 
