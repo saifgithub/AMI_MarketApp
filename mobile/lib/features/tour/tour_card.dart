@@ -56,20 +56,35 @@ class TourCard extends StatelessWidget {
             children: [
               // DEF375: the UAT harness dismisses tours by this id. One card
               // serves all five tours, so this is the only place it is needed.
-              Semantics(
-                identifier: TourIds.skip,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize: Size.zero,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: controller.skip,
-                  child: Text(
-                    skipLabel,
-                    style: AmiTypography.caption
-                        .copyWith(color: AmiColors.textLow),
+              //
+              // `MergeSemantics` is load-bearing, not decoration. Without it a
+              // bare `Semantics(identifier:)` around a `TextButton` produces TWO
+              // nodes: the identifier lands on a parent with `tap=false,
+              // isButton=false`, and the real button node underneath carries no
+              // identifier at all. Measured in the rendered semantics tree, not
+              // reasoned about. On iOS the addressable element is the button, so
+              // `ami.tour.skip` resolved to nothing on device and three rounds of
+              // harness work chased a control that was never addressable.
+              // Merging collapses both into one element that has the identifier,
+              // the label and the tap action — the shape `hex_bottom_nav.dart`
+              // and `ami_segment_bar.dart` already get by wrapping a bare
+              // GestureDetector.
+              MergeSemantics(
+                child: Semantics(
+                  identifier: TourIds.skip,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      minimumSize: Size.zero,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 4),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: controller.skip,
+                    child: Text(
+                      skipLabel,
+                      style: AmiTypography.caption
+                          .copyWith(color: AmiColors.textLow),
+                    ),
                   ),
                 ),
               ),

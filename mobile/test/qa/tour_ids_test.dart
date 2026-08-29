@@ -6,15 +6,27 @@
 /// phase1 gate 7 of 19 tests — `test_portfolio_renders_heading` failed with the
 /// app parked on YOU behind the *YOU* tour, having never reached Portfolio.
 ///
-/// This asserts against the rendered semantics tree, not the source. A test
-/// that greps `tour_card.dart` for the identifier would pass on a file that
-/// mentions it in a comment, which is a mistake this project has already made
-/// once (DEF370).
+/// This asserts against the rendered SEMANTICS NODE, not the widget and not the
+/// source. The distinction is the whole defect. The first version of this file
+/// carried this same sentence while asserting `find.byWidgetPredicate((w) => w
+/// is Semantics && w.properties.identifier == ...)` — which is the WIDGET tree.
+/// It passed for weeks over a build where `ami.tour.skip` was not addressable on
+/// device at all: a bare `Semantics(identifier:)` around a `TextButton` renders
+/// TWO nodes, the identifier landing on a parent with `tap=false,
+/// isButton=false` while the real button underneath carries no identifier. On
+/// iOS the addressable element is the button, so the harness asked for an id
+/// nothing answered to, and three rounds of harness work chased it.
+///
+/// P18's shape exactly — proven on the builder, never on the caller that has to
+/// consume it — and P30's, since the docstring recorded a check that was not
+/// being performed. So the assertions below read the node: identifier AND tap
+/// action AND button flag, on ONE node.
 library;
 
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -44,27 +56,56 @@ Future<_FakeController> _pump(WidgetTester t, {String skipLabel = 'Skip tour'}) 
   return controller;
 }
 
+/// The rendered node carrying [identifier], or null. Walks the real semantics
+/// tree — the thing the iOS engine turns into `UIAccessibilityElement`s — rather
+/// than the widget tree, which says nothing about addressability.
+SemanticsData? _nodeWithIdentifier(WidgetTester t, String identifier) {
+  SemanticsData? found;
+  void walk(SemanticsNode n) {
+    final d = n.getSemanticsData();
+    if (d.identifier == identifier && !n.isMergedIntoParent) found = d;
+    n.visitChildren((c) {
+      walk(c);
+      return true;
+    });
+  }
+
+  t.binding.rootPipelineOwner.visitChildren((owner) {
+    final root = owner.semanticsOwner?.rootSemanticsNode;
+    if (root != null) walk(root);
+  });
+  return found;
+}
+
 void main() {
-  testWidgets('the Skip control carries the identifier', (t) async {
+  testWidgets('the identifier lands on a node that is actually addressable',
+      (t) async {
     final semantics = t.ensureSemantics();
     await _pump(t);
-    expect(
-      find.byWidgetPredicate(
-          (w) => w is Semantics && w.properties.identifier == TourIds.skip),
-      findsOneWidget,
-    );
+
+    final node = _nodeWithIdentifier(t, TourIds.skip);
+    expect(node, isNotNull,
+        reason: 'no rendered semantics node carries ${TourIds.skip}');
+    // The three properties that make it an element XCUITest can find and tap.
+    // Asserting the identifier alone is what let the broken build ship.
+    expect(node!.hasAction(SemanticsAction.tap), isTrue,
+        reason: 'the identified node cannot be tapped, so the harness would '
+            'resolve it and then tap nothing — the DEF362 failure again');
+    expect(node.flagsCollection.isButton, isTrue,
+        reason: 'the identified node is not a button, so it is a container and '
+            'the real control is a separate node with no identifier');
+    expect(node.label, isNotEmpty,
+        reason: 'an element with no label is the container, not the control');
     semantics.dispose();
   });
 
   testWidgets('the identifier survives translation', (t) async {
     final semantics = t.ensureSemantics();
     await _pump(t, skipLabel: 'تخطي الجولة');
-    expect(
-      find.byWidgetPredicate(
-          (w) => w is Semantics && w.properties.identifier == TourIds.skip),
-      findsOneWidget,
-      reason: 'the harness must not need the translated label to escape a tour',
-    );
+    final node = _nodeWithIdentifier(t, TourIds.skip);
+    expect(node, isNotNull,
+        reason: 'the harness must not need the translated label to escape a tour');
+    expect(node!.hasAction(SemanticsAction.tap), isTrue);
     semantics.dispose();
   });
 
