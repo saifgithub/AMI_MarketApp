@@ -54,10 +54,33 @@ def _bodies_for(pair: dict, captured: list[dict]) -> list:
     return out
 
 
-def _objects(body, is_list: bool) -> list[dict]:
-    """The objects actually handed to `.fromJson` for this endpoint."""
+def _objects(body, is_list: bool, envelope_key: str | None = None) -> list[dict]:
+    """The objects actually handed to `.fromJson` for this endpoint.
+
+    DEF367 — `envelope_key` is how the CLIENT reaches the list, lifted from its
+    own navigation by `discover_pairs`. Without it this function dereferenced
+    the response body as a JSON array, so every list endpoint that answers
+    `{"items": [...], "total": n}` produced zero objects and stayed UNVERIFIED
+    no matter how often it was called. Five surfaces sat in the baseline that
+    way while the suite exercised their routes 1-9 times each: they read as
+    coverage debt someone could pay off, and no test could ever have closed
+    them. That is worse than an uncovered surface, because the entry stops the
+    next reader looking.
+
+    An envelope key that is absent from the body, or does not hold a list, is
+    NOT silently ignored — it falls through to zero objects and the surface
+    stays UNVERIFIED. The client would have read `?? const []` there and
+    rendered an empty list, so "the key is gone" is a real disagreement and
+    must not read as a pass.
+    """
     if is_list:
-        return [o for o in body if isinstance(o, dict)] if isinstance(body, list) else []
+        if isinstance(body, list):
+            return [o for o in body if isinstance(o, dict)]
+        if envelope_key and isinstance(body, dict):
+            inner = body.get(envelope_key)
+            if isinstance(inner, list):
+                return [o for o in inner if isinstance(o, dict)]
+        return []
     return [body] if isinstance(body, dict) else []
 
 
@@ -71,7 +94,7 @@ def check_pair(pair: dict, captured: list[dict], idx) -> dict:
 
     objs: list[dict] = []
     for b in _bodies_for(pair, captured):
-        objs.extend(_objects(b, pair["is_list"]))
+        objs.extend(_objects(b, pair["is_list"], pair.get("envelope_key")))
 
     if not objs:
         # Degrade loudly: a pair with zero observations cannot be evaluated and
@@ -145,6 +168,7 @@ def run(capture_path: Path) -> list[dict]:
             "dart_method": p.dart_method, "verb": p.verb,
             "url_template": p.url_template, "url_regex": _url_to_regex(p.url_template),
             "dart_class": p.dart_class, "is_list": p.is_list,
+            "envelope_key": p.envelope_key,
         }
         for p in discover()
     ]

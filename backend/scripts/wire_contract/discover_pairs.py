@@ -36,6 +36,18 @@ _VERB_CALL = re.compile(
 )
 _FROMJSON = re.compile(r"([A-Z]\w*)\.fromJson\(")
 
+# DEF367 — the envelope key a LIST endpoint's items live under.
+#
+# Five surfaces sat in the unverified baseline while their routes were being
+# exercised 1–9 times each by the suite: the client reads `r.data['items']` and
+# the comparator was dereferencing the response BODY as a list, which for
+# `{"items": [...], "total": n}` yields nothing. They were not coverage debt and
+# no test could ever have closed them. The key is taken from the client's own
+# navigation rather than from a guessed list of common names, because the
+# navigation IS the contract under test — if the client stops reading `items`,
+# this stops finding `items`, which is the correct failure.
+_ENVELOPE = re.compile(r"""\bdata\s*\??\s*\[\s*['"](\w+)['"]\s*\]""")
+
 
 @dataclass
 class Pair:
@@ -45,6 +57,7 @@ class Pair:
     dart_class: str
     nav_snippet: str
     is_list: bool
+    envelope_key: str | None = None
 
 
 def _method_bodies(text: str) -> list[tuple[str, str, str]]:
@@ -96,6 +109,14 @@ def discover() -> list[Pair]:
             start = max(0, fm.start() - 80)
             nav = body[start : fm.start()]
             is_list = ".map(" in nav or ".map(" in body[fm.start() : fm.start() + 5]
+            # The envelope lookback is deliberately much wider than the nav
+            # snippet: `final items = ((r.data?['items'] as List?) ?? const []);`
+            # can sit several statements above the `.map((j) => X.fromJson(j))`
+            # that names the class, and at 80 chars three of the five affected
+            # call sites had the key cut off. Last match wins — the nearest
+            # `data[...]` above the parse is the one being parsed.
+            env_matches = _ENVELOPE.findall(body[max(0, fm.start() - 400): fm.start()])
+            envelope_key = env_matches[-1] if (is_list and env_matches) else None
             pairs.append(
                 Pair(
                     dart_method=name,
@@ -104,6 +125,7 @@ def discover() -> list[Pair]:
                     dart_class=cls,
                     nav_snippet=nav.strip().replace("\n", " ")[-60:],
                     is_list=is_list,
+                    envelope_key=envelope_key,
                 )
             )
     return pairs
@@ -126,6 +148,7 @@ if __name__ == "__main__":
                 "url_regex": _url_to_regex(p.url_template),
                 "dart_class": p.dart_class,
                 "is_list": p.is_list,
+                "envelope_key": p.envelope_key,
                 "nav_snippet": p.nav_snippet,
             }
             for p in pairs

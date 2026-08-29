@@ -1,6 +1,6 @@
 {
-  "_comment": "ISS002/CR208 \u2014 surfaces with no observable response during the backend suite. DEF367. This list is meant to SHRINK: a new entry fails the gate, and removing one is the celebration. Do not add an entry to get a build past the gate.",
-  "count": 40,
+  "_comment": "ISS002/CR208 \u2014 surfaces with no observable response during the backend suite. DEF367. This list is meant to SHRINK: a new entry fails the gate, and removing one is the celebration. Do not add an entry to get a build past the gate \u2014 verify.py now refuses an --update-baseline that adds. count is the MULTISET size: 'GET /v1/games/record/prs -> GamePersonalRecord' is listed twice because api_client.dart parses that endpoint twice, once as a list and once as a scalar, and they are two checks that happen to share a surface_id.",
+  "count": 35,
   "unverified": [
     "GET /v1/ai_coach/search -> CoachSearchHit",
     "GET /v1/brief/history/$userId/$agentId -> BriefHistory",
@@ -21,14 +21,9 @@
     "GET /v1/lessons/progress/$userId -> ProgressSummary",
     "GET /v1/lessons/progress/$userId/by_lesson -> LessonStatus",
     "GET /v1/lessons/requirements/$userId -> AgentUnlockRequirement",
-    "GET /v1/notifications/$userId/preferences -> NotificationPreference",
-    "GET /v1/price_alerts/$userId -> PriceAlert",
     "GET /v1/room/$runId -> RoomRunSnapshot",
     "GET /v1/room/user/$userId -> RoomRunSnapshot",
     "GET /v1/sim/orders/$userId -> SimRestingOrder",
-    "GET /v1/sim/trades/$userId -> SimTrade",
-    "GET /v1/watchlist/$userId -> WatchlistEntry",
-    "PATCH /v1/notifications/$userId/preferences -> NotificationPreference",
     "POST /v1/brief/propose -> BriefProposal",
     "POST /v1/brief/rollback -> UserOverlay",
     "POST /v1/games/enter -> GameEntry",
