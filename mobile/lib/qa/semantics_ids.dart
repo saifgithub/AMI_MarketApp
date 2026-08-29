@@ -137,11 +137,21 @@ class OnboardingIds {
 /// `test_portfolio_renders_heading` failed with the app parked on YOU behind
 /// the *YOU* tour, never having reached Portfolio at all.
 ///
-/// Only [skip] is named. `Next` walks the tour a step at a time and would make
-/// dismissal depend on how many steps a tour happens to have; skip is one tap
-/// whatever the tour, and the harness is not testing the tour's pagination.
+/// `Next` used to be deliberately unnamed, on the reasoning that skip is one
+/// tap whatever the tour while Next depends on the step count. That reasoning
+/// was overturned by measurement (DEF382): tapping Skip on iOS tears the
+/// coach-mark overlay down mid-animation and takes the app's whole
+/// accessibility tree with it — the page source collapses to an empty 1519-byte
+/// shell and never recovers, with the app still alive and in the foreground.
+/// Walking the same tour to "Got it" ends it with the tree intact. So the
+/// harness walks; [next] is what it walks with, and the step count is
+/// discovered by looping until the control is gone rather than assumed.
+///
+/// One identifier covers both faces of that control: the same `TextButton`
+/// renders "Next" mid-tour and "Got it" on the last step.
 class TourIds {
   const TourIds._();
 
   static const String skip = 'ami.tour.skip';
+  static const String next = 'ami.tour.next';
 }

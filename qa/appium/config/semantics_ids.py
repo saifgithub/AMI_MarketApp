@@ -71,5 +71,15 @@ ONBOARDING_ANSWER_CHIP = "ami.onboarding.answer_chip"
 ONBOARDING_COMPOSER = "ami.onboarding.composer"
 ONBOARDING_SEND = "ami.onboarding.send"
 
-# DEF375 — the shared coach-mark card's Skip control, on all five tours.
+# DEF375 — the shared coach-mark card's controls, on all five tours.
+#
+# TOUR_SKIP is the PRESENCE probe, not the dismissal control. DEF382: tapping
+# Skip on iOS removes the coach-mark overlay mid-animation and the app's whole
+# accessibility tree goes with it — the page source collapses to an empty
+# 1519-byte shell and never recovers, with the app still alive and in the
+# foreground. Tours are dismissed by walking TOUR_NEXT to the end instead,
+# which was measured to leave all four nav ids resolving.
 TOUR_SKIP = "ami.tour.skip"
+# One id for both faces of one button: "Next" mid-tour, "Got it" on the last
+# step. The step count is discovered by tapping until it is gone.
+TOUR_NEXT = "ami.tour.next"

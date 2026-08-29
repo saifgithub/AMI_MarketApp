@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 
 from config.locales import LOCALES
-from config.semantics_ids import NAV_IDS, TOUR_SKIP, YOU_SEGMENT_IDS
+from config.semantics_ids import NAV_IDS, TOUR_NEXT, TOUR_SKIP, YOU_SEGMENT_IDS
 from helpers.gestures import Band, tap_element
 from helpers.locators import (
     all_by_id,
@@ -46,50 +46,70 @@ TOP_CHROME_PT = 150
 BOTTOM_NAV_PT = 100
 
 
-def dismiss_tour_if_present(driver, *, timeout_s: float = 1.5) -> bool:
-    """Close a first-run coach-mark tour if one is up. Returns whether it was.
+def dismiss_tour_if_present(driver, *, timeout_s: float = 12.0) -> bool:
+    """Walk a first-run coach-mark tour to its end if one is up. Returns whether
+    one was.
 
-    DEF375. The five tours (floor, portfolio, lessons, journal, you) all render
-    through one `TourCard` and are **modal** — until one is dismissed the tab
-    behind it is unreachable. On a fresh install that is every tab, and it cost
-    the iOS gate 7 of 19 tests: `test_portfolio_renders_heading` failed with the
-    app parked on YOU behind the *YOU* tour, having never reached Portfolio.
+    **NOT WIRED, and after DEF382 the reason is no longer "we have not found the
+    right trigger yet".** It is that no trigger exists: interacting with the
+    coach-mark overlay collapses the app's entire iOS accessibility tree, and
+    which interaction does it varies by tour. Measured 2026-08-29, one variable
+    at a time, on a booted iPhone 17 Pro with a fresh install each arm —
+    `driver.page_source` in bytes, and how many of the four bottom-nav
+    identifiers still resolve:
 
-    Skip rather than Next, deliberately: `Next` walks a tour one step at a time,
-    so dismissing that way would depend on how many steps each tour happens to
-    have — a number no test here is asserting on. Skip is one tap regardless.
+        Portfolio  Skip                    1 tap    ->  1519b, 0/4 nav  DEAD
+        Portfolio  Next..Got it (1.2s gap) 3 taps   -> 11.5KB, 4/4 nav  alive
+        Portfolio  Next          (0.5s gap) 1 tap   -> 13.3KB, 4/4 nav  alive
+        Lessons    Next          (1.4s gap) 1 tap   ->  1519b, 0/4 nav  DEAD
 
-    **NOT WIRED INTO `open_tab` YET, and that is deliberate.** Calling it after
-    every tab tap was tried on 2026-08-25 and made the gate WORSE, not better:
-    the run went from 12 passed / 7 failed to a cascade of fixture ERRORs, with
-    `ami.you.journal` no longer resolving by identifier at all. The harness code
-    was not at fault — the import block and `time` import were both verified
-    intact — so the cause is behavioural and is not yet understood. Shipping it
-    anyway would have replaced a gate that reports 7 real failures with one that
-    reports nothing usable, which is the trade this project keeps refusing.
+    So it is not Skip-versus-Next and it is not tap cadence — two hypotheses
+    this file carried in turn, both refuted by the rows above. When the tree
+    dies it does not come back: `processId` is unchanged, `query_app_state`
+    still reports 4 (running, foreground), no crash report is written, and a
+    10s wait for on-screen text finds a 1519-byte tree with nothing in it.
 
-    Kept here, unwired, because the app-side half (`TourIds.skip`, guarded by
-    `mobile/test/qa/tour_ids_test.dart`) is correct and proven, and the missing
-    piece is when to call this, not whether the control is addressable.
+    That is what every previous wiring of this helper was actually hitting. It
+    was wired for real on 2026-08-29 against a build where the identifiers
+    finally resolved, and the gate went from **7 failed / 12 passed / 4 skipped
+    in 4m20s** to **2 failed / 7 passed / 4 skipped / 10 ERRORS in 37m08s** —
+    every error `TimeoutError: onboarding did not reach Floor within 480.0s`,
+    because a dead tree reads as "not onboarded" and the fixture burns its full
+    budget. The captured page source for the first failure is 1519 bytes.
+
+    So this stays unwired until DEF382 is fixed app-side. The helper is correct
+    and the identifiers it uses are proven addressable on device; what is not
+    safe is touching the overlay at all.
     """
-    # Bounded poll, not a single probe: the card animates in after the tab it
-    # covers has already rendered, so checking once immediately after the tap
-    # reliably misses it and the tour then blocks the assertion that follows.
     deadline = time.monotonic() + timeout_s
-    cards = []
-    while time.monotonic() < deadline:
-        cards = all_by_id(driver, TOUR_SKIP, retry=False)
-        if cards:
+    while True:
+        if all_by_id(driver, TOUR_SKIP, retry=False):
             break
+        if time.monotonic() >= deadline:
+            return False
         time.sleep(0.25)
-    if not cards:
-        return False
-    try:
-        tap_element(driver, cards[0])
-    except Exception as exc:
-        print(f"WARNING: a coach-mark tour is up and Skip did not tap: {exc}")
-        return False
-    time.sleep(0.6)
+
+    # Tap Next until the control is gone. Never Skip — see DEF382. The cap is a
+    # runaway guard, not a step count: nothing here asserts how many steps a
+    # tour has, so a tour gaining one must not silently half-dismiss.
+    for _ in range(12):
+        nxt = all_by_id(driver, TOUR_NEXT, retry=False)
+        if not nxt:
+            break
+        try:
+            tap_element(driver, nxt[0])
+        except Exception as exc:
+            print(f"WARNING: a coach-mark tour is up and Next did not tap: {exc}")
+            return False
+        time.sleep(0.5)
+    else:
+        print(
+            "WARNING: a coach-mark tour did not end after 12 Next taps. It is "
+            "probably still up and covering the tab under test. NOT falling "
+            "back to Skip — see DEF382."
+        )
+
+    time.sleep(0.4)
     return True
 
 

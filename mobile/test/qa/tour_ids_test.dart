@@ -1,4 +1,4 @@
-/// DEF375 — the coach-mark tours' Skip control is addressable.
+/// DEF375 / DEF382 — the coach-mark tours' dismissal controls are addressable.
 ///
 /// Five tours (floor, portfolio, lessons, journal, you) render through the one
 /// `TourCard`, and they are **modal**: until one is dismissed the tab behind it
@@ -32,15 +32,17 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class _FakeController implements TutorialCoachMarkController {
   int skips = 0;
+  int nexts = 0;
   @override
-  void next() {}
+  void next() => nexts++;
   @override
   void previous() {}
   @override
   void skip() => skips++;
 }
 
-Future<_FakeController> _pump(WidgetTester t, {String skipLabel = 'Skip tour'}) async {
+Future<_FakeController> _pump(WidgetTester t,
+    {String skipLabel = 'Skip tour', String nextLabel = 'Next'}) async {
   final controller = _FakeController();
   await t.pumpWidget(MaterialApp(
     home: Scaffold(
@@ -49,7 +51,7 @@ Future<_FakeController> _pump(WidgetTester t, {String skipLabel = 'Skip tour'}) 
         body: 'Settings, your Decision Journal and your Insights.',
         controller: controller,
         skipLabel: skipLabel,
-        nextLabel: 'Next',
+        nextLabel: nextLabel,
       ),
     ),
   ));
@@ -121,6 +123,48 @@ void main() {
             'an identifier on a control that does not dismiss the tour would '
             'leave the harness tapping something harmless forever — which is '
             'exactly the DEF362 failure this pattern exists to end');
+    semantics.dispose();
+  });
+
+  // DEF382 — Next is what the harness actually walks tours with, because Skip
+  // takes the iOS accessibility tree down with the overlay. It therefore needs
+  // every property Skip needs, not fewer.
+  testWidgets('the Next control is addressable on the same terms as Skip',
+      (t) async {
+    final semantics = t.ensureSemantics();
+    await _pump(t);
+
+    final node = _nodeWithIdentifier(t, TourIds.next);
+    expect(node, isNotNull,
+        reason: 'no rendered semantics node carries ${TourIds.next}');
+    expect(node!.hasAction(SemanticsAction.tap), isTrue,
+        reason: 'the harness would resolve it and then tap nothing');
+    expect(node.flagsCollection.isButton, isTrue);
+    expect(node.label, isNotEmpty);
+    semantics.dispose();
+  });
+
+  testWidgets('the two controls are different nodes and do different things',
+      (t) async {
+    final semantics = t.ensureSemantics();
+    final controller = await _pump(t);
+    await t.tap(find.byWidgetPredicate(
+        (w) => w is Semantics && w.properties.identifier == TourIds.next));
+    await t.pump();
+    expect(controller.nexts, 1,
+        reason: 'ami.tour.next must advance the tour');
+    expect(controller.skips, 0,
+        reason: 'if Next reached skip() the harness would take the whole iOS '
+            'accessibility tree down on its first tour — DEF382');
+    semantics.dispose();
+  });
+
+  testWidgets('the Next identifier survives translation', (t) async {
+    final semantics = t.ensureSemantics();
+    await _pump(t, nextLabel: 'التالي');
+    final node = _nodeWithIdentifier(t, TourIds.next);
+    expect(node, isNotNull);
+    expect(node!.hasAction(SemanticsAction.tap), isTrue);
     semantics.dispose();
   });
 }

@@ -111,18 +111,30 @@ class TourCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                   ],
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: controller.next,
-                    child: Text(
-                      nextLabel,
-                      style: AmiTypography.labelMono
-                          .copyWith(color: AmiColors.hexCyan),
+                  // DEF382: this is the control the UAT harness dismisses
+                  // tours WITH. Skip cannot be used — it removes the overlay
+                  // mid-animation and the iOS accessibility tree does not
+                  // survive it. Same `MergeSemantics` reason as Skip above:
+                  // without it the identifier lands on a node with no tap
+                  // action. One id for both labels — this button reads "Next"
+                  // mid-tour and "Got it" on the last step.
+                  MergeSemantics(
+                    child: Semantics(
+                      identifier: TourIds.next,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: controller.next,
+                        child: Text(
+                          nextLabel,
+                          style: AmiTypography.labelMono
+                              .copyWith(color: AmiColors.hexCyan),
+                        ),
+                      ),
                     ),
                   ),
                 ],
