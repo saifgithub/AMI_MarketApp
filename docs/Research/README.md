@@ -33,8 +33,9 @@ become one.
 | ID | Topic | Status |
 |:---|:---|:---|
 | [RES001](RES001_finrl_x_review/) | FinRL-X (AI4Finance) — is it a usable basis for anything? | done |
-| [RES002](RES002_orderflow_gamma_videos/) | Orderflow + gamma-exposure practitioner claims (2 videos) | done |
+| [RES002](RES002_orderflow_gamma_videos/) | Orderflow + gamma-exposure practitioner claims (3 videos) | done |
 | [RES003](RES003_volatility_regime_sizing/) | Does volatility regime modulate risk but not direction? | done — mechanism real, trophy is not evidence |
+| [RES004](RES004_gamma_transition_and_dispersion/) | Gamma-flip transition + dispersion rotation | done — transition unsupported, dispersion holds |
 
 ## Pre-existing folders
 
