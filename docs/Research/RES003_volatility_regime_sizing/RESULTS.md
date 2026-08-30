@@ -109,13 +109,24 @@ The vol at which **+100% is the *expected maximum*** across N traders:
 | 300 | 25.0% | 4.58× |
 | 500 | 23.6% | 4.32× |
 
-A few hundred entrants running 4–6× SPY's volatility is unremarkable for leveraged micro
-futures day trading — that is roughly 85–115% annualised vol, ordinary for the instrument and
-the style. **So a +100% month as the winning entry in a contest of that size is what the
-contest produces by construction, with no skill required anywhere in the field.**
+**This is a conditional, and the antecedents are not verified.** *If* the field is a few
+hundred and *if* entrants run 4–6× SPY's volatility, then +100% is simply the expected maximum
+and requires no skill anywhere in the field. Robbins publishes no entrant counts (checked
+2026-08-30), and we did not measure contestant volatility. An earlier draft of this file called
+those figures "unremarkable" for leveraged micro futures; that adjective was unsupported and
+has been struck.
 
-This does not say the champion has no method. It says the trophy carries no information about
-whether he does — and Test C is where the actual evidence lives.
+**"Consistent with luck" is not "was luck."** E is a null-model check: it shows the observation
+does not *require* skill to explain it. It cannot show skill was absent, and someone had to
+win — plausibly the best trader in the field. What E licenses is narrow: *a championship
+return, on its own, carries little information about skill.* It does not license a claim about
+any particular champion.
+
+Two facts cut in opposite directions. The contest is audited on real broker statements with a
+funded-account minimum — a far higher bar than a screenshot. But divisions are scored monthly
+and quarterly as well as annually, so the selection surface is wider than a single annual title.
+
+The actual evidence about this champion is in Test C, not in the trophy.
 
 ## What this implies for AMI Trade
 
