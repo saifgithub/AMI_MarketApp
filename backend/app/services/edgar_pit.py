@@ -87,15 +87,21 @@ def load_facts(ticker: str, tags: Sequence[str], as_of: date) -> list[_FactView]
 # ── Pure resolvers ──────────────────────────────────────────────────────────
 
 
-def resolve_instant(
+def resolve_instant_dated(
     facts: Sequence[_FactView], tags: Sequence[str], as_of: date,
     *, max_age_days: int = MAX_INSTANT_AGE_DAYS,
-) -> float | None:
-    """Latest balance-sheet point for the FIRST tag that resolves.
+) -> tuple[float, date] | None:
+    """`(value, period_end)` for the latest balance-sheet point of the FIRST
+    tag that resolves.
 
     Within a tag: newest `period_end` wins, ties broken by newest `filed` —
     so a 10-K/A amendment naturally supersedes the original without any
     amendment-specific handling.
+
+    The date half exists for DEF335: a share count has to be restated onto the
+    price store's split basis, and the anchor for that is the date the count
+    was STATED, not the as-of date — a split between the filing and `as_of`
+    already makes the filed count stale at `as_of`.
     """
     for tag in tags:
         candidates = [f for f in facts if f.tag == tag]
@@ -104,8 +110,18 @@ def resolve_instant(
         best = max(candidates, key=lambda f: (f.period_end, f.filed))
         if (as_of - best.period_end).days > max_age_days:
             return None
-        return best.value
+        return best.value, best.period_end
     return None
+
+
+def resolve_instant(
+    facts: Sequence[_FactView], tags: Sequence[str], as_of: date,
+    *, max_age_days: int = MAX_INSTANT_AGE_DAYS,
+) -> float | None:
+    """The value half of `resolve_instant_dated` — every caller that does not
+    need the basis anchor."""
+    hit = resolve_instant_dated(facts, tags, as_of, max_age_days=max_age_days)
+    return hit[0] if hit is not None else None
 
 
 def quarterly_series(
@@ -304,6 +320,7 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
     the same "unknown ticker, caller falls through" contract as the live path.
     """
     from app.services.price_history import get_asof_daily_rows
+    from app.services.ticker_splits import get_asof_bars_basis_date, split_factor
     from app.trading_math.valuation import (
         fcf_yield_pct,
         net_cash_millions,
@@ -345,14 +362,52 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
     # dividend yield). The us-gaap weighted-average diluted count is the
     # honest fallback: a period average rather than a point count, so it is
     # tried second, never blended.
-    shares = resolve_instant(facts, edgar_tags.SHARES_OUTSTANDING_DEI, as_of)
+    dei = resolve_instant_dated(facts, edgar_tags.SHARES_OUTSTANDING_DEI, as_of)
     shares_basis = "dei_cover_page"
+    shares: float | None = None
+    shares_stated_at: date | None = None
+    if dei is not None:
+        shares, shares_stated_at = dei
     if not shares or shares <= 0:
         diluted = quarterly_series(facts, edgar_tags.DILUTED_SHARES)
-        eligible = [v for _, e, v in diluted if e <= as_of]
+        eligible = [(e, v) for _, e, v in diluted if e <= as_of]
         if eligible:
-            shares = eligible[-1]
+            shares_stated_at, shares = eligible[-1]
             shares_basis = "weighted_average_diluted"
+
+    # DEF335 — restate the filed count onto the PRICE's basis before anything
+    # is multiplied by it.
+    #
+    # `price` above is `adj_close`, and the store's bars are split-adjusted
+    # through the day they were downloaded; the count resolved just now is the
+    # figure as STATED on its filing, which predates every split since. The two
+    # are different units, and `price * shares` silently produced a number in
+    # neither — off by the product of the intervening splits. For BKNG (25:1)
+    # at a 2025 as-of date that is a market cap 25x too small, and with it
+    # `price_to_sales`, `fcf_yield`, `ev_to_ebitda`, `dividend_yield`,
+    # `buyback_yield` and `pe`. It is how a 141.5% FCF yield reached a
+    # published verdict in `runs_r70-paired-1.jsonl` with the PM explaining it
+    # away as "a valuation artifact of the depressed price".
+    #
+    # The correction is applied ONCE, here, rather than per-field: every
+    # consumer below (`market_cap`, `shares_outstanding`, `trailing_eps`,
+    # `revenue_per_share`, `pe`) then reads one basis, so the sheet stays
+    # self-reconciling — `base_price * shares_outstanding` equals `market_cap`
+    # and `base_price / trailing_eps` equals `pe`, which is the DEF302
+    # contradiction class.
+    #
+    # An empty `ticker_splits` table yields 1.0, i.e. exactly today's numbers:
+    # this cannot change a ticker that has not split, and cannot fire at all
+    # until the backfill has recorded some splits.
+    split_adj = 1.0
+    if shares and shares > 0 and shares_stated_at is not None:
+        basis_date = get_asof_bars_basis_date(ticker, as_of)
+        if basis_date is not None:
+            split_adj = split_factor(ticker, after=shares_stated_at, until=basis_date)
+            if split_adj != 1.0:
+                shares = shares * split_adj
+                shares_basis = f"{shares_basis}+split_adj_{split_adj:g}"
+
     market_cap = price * shares if shares and shares > 0 else None
 
     if market_cap is not None:

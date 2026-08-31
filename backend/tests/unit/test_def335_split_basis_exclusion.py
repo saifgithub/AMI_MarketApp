@@ -141,11 +141,26 @@ def test_a_ticker_with_no_split_is_left_clean(bf):
     assert reason is None, f"a split-free, fully-covered ticker was excluded as {reason!r}"
 
 
-def test_splits_outside_the_window_do_not_exclude(bf):
+def test_splits_outside_the_window_do_not_exclude(bf, monkeypatch):
     """`splits_in_window` filters by the window; a split before it has already
-    been applied to both bases and cancels."""
-    got = bf.splits_in_window.__doc__
-    assert got and "hand-listed" in got
+    been applied to both bases and cancels.
+
+    Asserted against the function's OUTPUT, not its docstring. This used to
+    read `splits_in_window.__doc__` for the phrase "hand-listed" — which is a
+    test of prose: it passes on any implementation that keeps the sentence and
+    fails on any refactor that moves it, in neither case having looked at what
+    the function returns.
+    """
+    monkeypatch.setattr(
+        bf, "fetch_splits",
+        lambda ticker: [
+            (WINDOW_START - timedelta(days=30), 2.0),   # before the window
+            (date(2026, 4, 6), 25.0),                   # inside it
+            (WINDOW_END + timedelta(days=30), 3.0),     # after it
+        ],
+    )
+    assert bf.splits_in_window("DEF335D", WINDOW_START, WINDOW_END) == [date(2026, 4, 6)]
+
     _store_full_coverage("DEF335D")
     reason, _ = _reason_for(bf, "DEF335D", [])
     assert reason is None

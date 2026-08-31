@@ -8,6 +8,16 @@ is the only thing that fills the store for the backtest window — full OHLCV
 ticker in `tickers_150.txt` plus SPY (the benchmark leg; loaded, not audited —
 it is not a universe member).
 
+**Do not "fix" the split basis by flipping this to `auto_adjust=False`.** DEF335
+prescribed exactly that for months and it does not work: yfinance splits-adjusts
+the OHLC series in BOTH modes and `auto_adjust` withholds only the DIVIDEND
+adjustment. Measured 2026-08-31 (yfinance 1.3.0), the unadjusted close across
+BKNG's 25:1 split moves 167.77 -> 176.19 — a ratio of 0.95, not 25; NFLX 10:1
+gives 1.008 and NOW 5:1 gives 1.020. The flip would rewrite 119,311 rows, move
+`close` by the ~0.7% dividend factor, and leave the market-cap mismatch exactly
+in place while reporting success. The basis is corrected on the SHARE side
+instead — see `app/services/ticker_splits.py`, populated by this script.
+
 The audit is the survivorship control: `tickers_150.txt` was screened 2026-07
 from live names, so using it at earlier as-of dates embeds survivorship bias
 unless per-ticker membership over the sweep window is recorded and the
@@ -47,6 +57,7 @@ from sqlalchemy import func, select
 from app.db import get_session, init_schema
 from app.db.models import BacktestUniverseMembershipRow, PriceHistoryDailyRow
 from app.services.price_history import _MOCK_SOURCE, upsert_daily_bars
+from app.services.ticker_splits import upsert_splits
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_TICKERS_FILE = REPO_ROOT / "docs/forward_planning/CR035_room_benchmark/tickers_150.txt"
@@ -124,34 +135,52 @@ def fetch_bars(ticker: str, start: date, end: date) -> tuple[list[tuple], int]:
     return bars, bad_close
 
 
-def splits_in_window(ticker: str, window_start: date, window_end: date) -> list[date]:
-    """Split dates for `ticker` inside the window. DEF335.
-
-    Bars are downloaded with `auto_adjust=True`, so a bar stored for date X has
-    been adjusted for **every split between X and the download**. The share
-    count `edgar_pit` pairs it with is the dei cover-page figure **as filed on
-    X** — pre-split. The two bases disagree, so `market_cap = adj_close ×
-    shares` is wrong by the product of those splits, and with it every ratio
-    built on it (`price_to_sales`, `fcf_yield`, `ev_to_ebitda`,
-    `dividend_yield`, `buyback_yield`, `pe`).
+def fetch_splits(ticker: str) -> list[tuple[date, float]] | None:
+    """Every split the provider knows for `ticker`, as `(ex_date, ratio)`
+    ascending. None on a provider failure — which is NOT the same fact as an
+    empty list, and the two must not be conflated (DEF335).
 
     Derived from the provider, never hand-listed (CR175 F3): a hardcoded ticker
     list is correct on the day it is written and silently wrong at the next
     corporate action.
 
-    Returns [] on a provider failure rather than raising — but the CALLER must
-    treat that as unknown-not-clean; see `audit_ticker`.
+    The whole history is returned, not just the audit window, because the
+    fact-sheet restatement in `edgar_pit` needs every split between a filing
+    and the bars' download date — a range the audit window does not bound.
     """
     try:
         raw = yf.Ticker(ticker).splits
     except Exception:  # pragma: no cover — provider/network
+        return None
+    if raw is None:
+        return None
+    if len(raw) == 0:
         return []
-    if raw is None or len(raw) == 0:
+    out: list[tuple[date, float]] = []
+    for stamp, value in raw.items():
+        try:
+            ratio = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(ratio) and ratio > 0.0:
+            out.append((stamp.date(), ratio))
+    return sorted(out)
+
+
+def splits_in_window(ticker: str, window_start: date, window_end: date) -> list[date]:
+    """Split dates for `ticker` inside the window — the audit's exclusion rule.
+
+    Bars are downloaded split-adjusted, so a bar stored for date X has been
+    adjusted for **every split between X and the download**, while the share
+    count `edgar_pit` pairs it with is the figure **as filed** — pre-split.
+
+    Returns [] on a provider failure rather than raising — but the CALLER must
+    treat that as unknown-not-clean; see `audit_ticker`.
+    """
+    fetched = fetch_splits(ticker)
+    if not fetched:
         return []
-    return sorted(
-        d.date() for d in raw.index
-        if window_start <= d.date() <= window_end
-    )
+    return sorted(d for d, _ in fetched if window_start <= d <= window_end)
 
 
 def stored_backfilled_count(session, ticker: str, start: date, end: date) -> int:
@@ -337,8 +366,24 @@ def main() -> None:
             # ticker mis-cleared by a transient failure is corrected by the next
             # pass; a ticker wrongly excluded would not self-correct, which is
             # why the bias is this way round.
-            ticker_splits = splits_in_window(
-                ticker, args.window_start, args.window_end,
+            all_splits = fetch_splits(ticker)
+            if all_splits is None:
+                print(f"{prefix}: SPLITS UNAVAILABLE — provider failed; "
+                      f"audit reads clean and edgar_pit will not restate shares", flush=True)
+                all_splits = []
+            elif all_splits:
+                # DEF335 — persisted for the fact-sheet restatement, which
+                # cannot fetch: `get_asof_daily_rows` is contractually a pure
+                # read so an as-of Room run is deterministic given the store.
+                with get_session() as session:
+                    st = upsert_splits(
+                        session, ticker, all_splits, source=SOURCE,
+                    )
+                print(f"{prefix}: splits → inserted={st['inserted']} "
+                      f"updated={st['updated']} rejected={st['rejected']}", flush=True)
+            ticker_splits = sorted(
+                d for d, _ in all_splits
+                if args.window_start <= d <= args.window_end
             )
             with get_session() as session:
                 reason = audit_ticker(

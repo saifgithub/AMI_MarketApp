@@ -1403,6 +1403,14 @@ class PriceHistoryDailyRow(Base):
     can diverge honestly rather than silently redefining what the stored number
     means. `source` records the leaf provider that produced the row, so
     fabricated mock bars can never be read as real market data.
+
+    **yfinance is not that future provider, and cannot be made into one.**
+    Setting `auto_adjust=False` withholds the DIVIDEND adjustment only; the OHLC
+    series stays split-adjusted in both modes (measured 2026-08-31: BKNG's
+    unadjusted close across its 25:1 split moves 167.77 -> 176.19, ratio 0.95).
+    So every row here is on a split-adjusted basis that moves with each new
+    corporate action, and anything pairing a stored price with an as-filed share
+    count has to restate the count — `app/services/ticker_splits.py` (DEF335).
     """
 
     __tablename__ = "price_history_daily"
@@ -1427,6 +1435,53 @@ class PriceHistoryDailyRow(Base):
     high: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     low: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     volume: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class TickerSplitRow(Base):
+    """One recorded stock split per (ticker, ex-date) — DEF335.
+
+    Exists because the price store cannot be un-adjusted. `price_history_daily`
+    holds yfinance bars, and yfinance splits-adjusts the whole OHLC series in
+    BOTH `auto_adjust` modes — `auto_adjust=False` only withholds the DIVIDEND
+    adjustment (measured 2026-08-31: BKNG's unadjusted close across its 25:1
+    split moves 167.77 -> 176.19, a ratio of 0.95, not 25). So there is no
+    provider setting that recovers an as-traded price, and the fix DEF335
+    originally prescribed — re-backfill with `auto_adjust=False` — would have
+    rewritten 119,311 rows, moved `close` by the ~0.7% dividend factor, and
+    left the market-cap error untouched.
+
+    The price basis therefore cannot move, so the SHARE basis moves to meet it:
+    `edgar_pit` restates the as-filed dei cover-page count onto the bars' own
+    split-adjusted basis before computing anything, using the ratios stored
+    here. That keeps `market_cap`, `pe`, `price_to_sales`, `fcf_yield`,
+    `ev_to_ebitda`, `dividend_yield` and `buyback_yield` on one basis.
+
+    Splits are STORED rather than fetched at fact-sheet time because
+    `get_asof_daily_rows` is contractually a pure read — "an as-of Room run
+    must be deterministic given the store" — and a yfinance call inside
+    `fetch_pit_fundamentals` would make a replayed backtest depend on when it
+    was replayed.
+
+    `ratio` is the new-shares-per-old figure the provider reports: 25.0 for a
+    25:1 forward split, 0.1 for a 1:10 reverse. `fetched_at` is when the
+    provider was asked, which is what tells a reader whether a very recent
+    corporate action can be in here at all.
+    """
+
+    __tablename__ = "ticker_splits"
+    __table_args__ = (
+        UniqueConstraint("ticker", "ex_date", name="uq_ticker_splits_ticker_ex_date"),
+        Index("ix_ticker_splits_ticker_ex_date", "ticker", "ex_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    ex_date: Mapped[date] = mapped_column(Date, nullable=False)
+    ratio: Mapped[float] = mapped_column(Numeric(18, 8), nullable=False)
     source: Mapped[str] = mapped_column(String, nullable=False)
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,

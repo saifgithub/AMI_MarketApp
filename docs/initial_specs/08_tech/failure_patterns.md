@@ -1428,6 +1428,59 @@ that gate **alone** is reverted, verified by running it —
 formula, separately). The scenario tests beside them now say in their own docstrings that they are
 scenario pins and not guards, so the next reader does not re-derive the same wrong attribution.
 
+## P24 — second surface: a claim about a THIRD-PARTY mechanism, written from its docs
+
+**Instance, 2026-08-31 (DEF335).** The row prescribed its own proper fix, twice, in the present
+tense of a settled decision: *"re-backfill with `auto_adjust=False` so `close` carries the raw quote
+and `adj_close` the adjusted series — precisely the divergence the column pair was created to
+express."* `PriceHistoryDailyRow`'s docstring carried the same belief (*"the pair exists so a future
+provider serving raw closes can diverge honestly"*), and so did `backfill_price_history.py`'s.
+
+**yfinance does not do that.** `auto_adjust` toggles the DIVIDEND adjustment only; the OHLC series
+is split-adjusted in both modes. Measured on the defect's own tickers — BKNG 25:1 gives an
+unadjusted close ratio across the split of **0.952**, NFLX 10:1 gives **1.008**, NOW 5:1 gives
+**1.020**; all ~1, none the split factor. Running the prescription would have rewritten **119,311
+live rows across 201 tickers**, moved `close` by the ~0.7% cumulative dividend factor, left the 25×
+market-cap error exactly in place, and printed a success summary.
+
+**Why it survives review, and why it is P24 and not P30.** P30 is a *control* claimed to exist that
+does not; the tense is the tell, and `test_p30_registers_name_things_that_exist.py` can sometimes
+catch it mechanically. This row was scrupulously honest about status — it said **deferred**, it
+scoped the blast radius, it named the regression surface. What was never checked was whether the
+*mechanism* does what its documentation implies. Nothing in a read distinguishes that: the flag
+exists, its name says what you want, the docs describe an "Adj Close" column, and the reasoning from
+there is sound. Only running it on a ticker that actually split separates the two.
+
+The cost profile is what makes this worth its own line. A P24 mutation claim is wrong in a document.
+This one was a **queued 119K-row migration against live data**, three files deep, that would have
+executed on the next session to read the row as an instruction — and would have looked like it
+worked, because rows really do change.
+
+**The invariant, extended.** *A claim about what a tool, flag, or library does is a measurement, not
+a reading. Before a prescribed remedy is recorded as THE remedy — especially a deferred one, which
+by construction nobody runs before someone acts on it — run the mechanism once on one real case and
+paste the numbers into the row.* One `history(..., auto_adjust=False)` call on BKNG, at any point in
+the twelve days this row stood, would have refuted it.
+
+**Enforcing check.** No mechanical check finds this class; saying otherwise would itself be P30. The
+three that apply are procedural and are stated as such:
+
+- The measurement now lives in the code that would be tempted again — `ticker_splits.py`'s module
+  docstring, `PriceHistoryDailyRow`'s, and a **"Do not fix this by flipping `auto_adjust`"** block in
+  `backfill_price_history.py`'s header, each carrying the three measured ratios. The next reader
+  meets the refutation at the same moment they meet the idea.
+- `backend/tests/unit/test_def335_share_basis_restatement.py` pins the replacement mechanism, 20
+  tests, 10 mutations, 10 killed — including the two bound errors (anchoring on `as_of` rather than
+  the share fact's date; bounding on `date.today()` rather than the bars' download stamp) that each
+  produce a plausible wrong market cap rather than an error.
+- Worth recording beside this entry: the replacement was itself measured before being believed. A
+  read-only dry run over the real 150-ticker universe returned 0 provider failures and exactly the 8
+  named tickers, with HON's two splits compounding to 1.0117 where the last split alone (0.9535)
+  would have erred the other way. The rule this pattern exists for applies to the fix as much as to
+  the thing it replaces.
+- **The reviewer's question**, the cheap one: when a row prescribes a fix nobody has run, ask what
+  the one command is that would demonstrate it, and whether anyone has typed it.
+
 ## P25 — satisfying one guard makes another guard's failing state look like its passing state
 
 **Instances.** DEF295, 2026-08-13: DEF137's parity guard fails the build if `app_ar.arb` /
