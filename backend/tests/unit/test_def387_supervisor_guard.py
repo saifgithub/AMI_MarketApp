@@ -95,3 +95,40 @@ def test_ancestry_is_not_how_this_is_detected():
 
     src = inspect.getsource(fn)
     assert "getppid" not in src and "/proc" not in src
+
+
+# --- the guard's two halves must ship together ------------------------------
+
+SUPERVISOR_DIR = Path(__file__).resolve().parents[2] / "scripts" / "supervisors"
+
+
+def test_the_supervisors_are_version_controlled():
+    """They used to live only in melehost's rsync-excluded backtest_results/.
+
+    The sweep refuses to run without the marker these scripts set, so a guard
+    whose enabling half exists on one unversioned disk is not a guard.
+    """
+    assert SUPERVISOR_DIR.is_dir()
+    assert list(SUPERVISOR_DIR.glob("*.sh")), "no supervisor scripts checked in"
+
+
+@pytest.mark.parametrize("script", sorted(SUPERVISOR_DIR.glob("*.sh")), ids=lambda p: p.name)
+def test_every_supervisor_that_launches_a_sweep_sets_the_marker(script):
+    # Comment lines stripped first: `run_sequential.sh` *mentions* the sweep in
+    # its header while only ever calling other supervisors, and matching prose
+    # would demand a marker from a script that launches nothing.
+    body = "\n".join(
+        ln for ln in script.read_text().splitlines()
+        if not ln.lstrip().startswith("#")
+    )
+    if "backtest_sweep.py" not in body:
+        pytest.skip(f"{script.name} does not launch a sweep directly")
+    assert SUPERVISOR_ENV in body, (
+        f"{script.name} invokes backtest_sweep.py without passing "
+        f"{SUPERVISOR_ENV} — the sweep will refuse and the supervisor will "
+        "retry the refusal 200 times"
+    )
+    assert f"-e {SUPERVISOR_ENV}=1" in body, (
+        f"{script.name} must pass the marker through `docker compose exec -e`; "
+        "setting it in the host shell does not cross the container boundary"
+    )
