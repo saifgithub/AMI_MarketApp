@@ -16,7 +16,7 @@ was disowned. Twenty-five names per date gives the null a real pool.
 | | |
 |---|---|
 | Batch | `r70-outcome-2` |
-| Predecessor | `r70-outcome-1` — **VOID**, all 450 verdicts were the DEF059 outage fail-safe |
+| Predecessor | `r70-outcome-1` — **VOID**, all 450 verdicts were the DEF059 outage fail-safe. **CORRECTION 2026-08-31 (DEF386):** the outage did NOT begin "in the 11 minutes between batches" as stated below — Phase A (`r70-paired-1`, 15:13→19:54 UTC) is itself **53% outage fail-safes** and is [withdrawn](PHASE_A_PAIRED_2026-08-19.md). The provider was already failing hours earlier; only its total failure in `r70-outcome-1` was obvious enough to notice. **Phase B itself is unaffected — 0 of 450.** |
 | Provider | on-prem vLLM `ami-llm`, snapshot `e850c696e6d75f965367e816c16bc7dacd955ffa` — unchanged since the cutoff probe, so the 2025-02-28 window start still holds |
 | Window | 2025-02-28 .. 2026-07-16 |
 | Prices | `price_history_daily` to 2026-08-18, 161 tickers — every date scoreable at +5d and +20d |

@@ -1,5 +1,51 @@
 # CR164 Phase A — the rebuilt Room against the pilot, same 126 pairs
 
+> ## ⛔ WITHDRAWN 2026-08-31 — this batch is 53% LLM-outage fail-safes (DEF386)
+>
+> **Every measured claim below is withdrawn.** Re-running `r70-paired-1` through DEF336's
+> `is_llm_outage_verdict` recogniser finds **67 of its 126 verdicts (53%)** carrying the DEF059
+> sentinel reason verbatim — the provider was dead and no agent ruled. `backtest_report.py`
+> now refuses the batch outright (exit 4). The recogniser returns **0%** on `pit-pilot-2`
+> (n=130) and **0%** on `r70-outcome-2` (n=450), and it is an exact match against a
+> module-level constant, so this is not over-matching.
+>
+> **The timeline recorded in §"Phase B is VOID" below is wrong.** It says the provider *"went
+> down at 20:05 UTC and stayed down"*, and `PHASE_B_OUTCOME_2026-08-20.md:19` says the vLLM
+> *"died in the 11 minutes between batches"*. Measured `finished_at` says Phase A ran
+> **15:13:53 → 19:54:41 UTC** and was already half-dead inside that window. **The outage began
+> during THIS batch, at least four hours before 20:05.** It was diagnosed from its effect on
+> `r70-outcome-1` — 450 of 450, impossible to miss — and the batch it was already corrupting at
+> 53% was never re-examined, because a partial outage produces a plausible mixture rather than
+> an absurd one.
+>
+> **Why the numbers cannot be salvaged by simply noting the caveat.** The damage is not
+> uniform. The 67 outage rows all land in the PASS bucket, so the PASS leg stops being a
+> *rejection* set and becomes approximately a random-name average — which silently converts
+> `APPROVE − PASS` from "approved vs rejected" into "approved vs roughly the market", and
+> flatters it. And the verdict-stability comparison against the pilot (112/126, 88.9%) — **the
+> entire reason this batch exists** — was matching up to half its pairs against runs with no
+> model in them.
+>
+> Specifically withdrawn: APPROVE 9/126 (7.1%) · 4w excess APPROVE **+6.13%** vs PASS +0.71% ·
+> spread **+5.43%**, CI −1.48…+13.69 · P&L **+4.44%**, win rate 5/9 · stability **88.9%** ·
+> and the conclusion *"the rebuilt Room is better on every measure taken"*, which the data does
+> not support.
+>
+> **The 59 clean runs are not a smaller Phase A.** The outage did not fall randomly across the
+> pair plan, and a 59-run subset of a 126-pair *paired* design is no longer paired. Treat this
+> batch as withdrawn, not as a reduced version of itself.
+>
+> **`pit-pilot-2` (0% outage) and `r70-outcome-2` (0% outage) are unaffected** and remain valid
+> for the model they measured — see [DEF385](../../defect/_registry/DEF385.row.md) on which
+> model that was.
+>
+> **The lesson worth keeping:** DEF336's recogniser was written on 2026-08-20, the day *after*
+> this batch was measured and written up, and nothing re-ran the older batches through it. **A
+> detector built in response to an incident must be run backwards over the data that predates
+> it** — the incident is evidence the failure was already happening, and the batch nearest in
+> time is the likeliest other victim.
+
+
 Batch `r70-paired-1`, 2026-08-19, tag `alpha-2026-08-19-2`. Replays every pair
 `pit-pilot-2` completed, so sampling is held constant and nothing here turns on
 which names were drawn. **126/126 completed, zero failures.**
