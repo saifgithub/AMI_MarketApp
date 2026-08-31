@@ -82,7 +82,23 @@ baseline was computed on.
 
 ## Run it
 
-**Always under the supervisor.** The sweep runs as `docker compose exec`, so any lane recreating
+**Always under the supervisor — and `nohup` is not a substitute (DEF387).**
+
+> A bare `nohup docker compose exec -T … &` over ssh **will die when the ssh channel closes**.
+> `nohup` blocks SIGHUP; it does not keep `docker compose exec`'s daemon pipes open. On
+> 2026-08-31 that killed a sweep at convene 5 of 52 and it sat undetected for **2h49m** — the
+> DEF345 signature exactly, no traceback, no non-zero exit, the log simply ending after a
+> normal completion line. The reasoning that skipped the supervisor ("nothing is recreating the
+> container") was wrong: recreation is *one* cause of exec death, not the class. Use `setsid`
+> and the supervisor, always.
+>
+> **And watch for staleness, not progress.** A monitor filtered on progress lines and error
+> strings cannot see death, because death emits neither — it will stay quiet and read as
+> healthy. Poll for: log unwritten > 900 s (against a ~250 s convene), supervisor process
+> absent, completion sentinel present. The cheap arithmetic tell is the same one that caught
+> DEF345: divide elapsed by convenes completed and compare against the convene time.
+
+ The sweep runs as `docker compose exec`, so any lane recreating
 `ami_api_alpha` kills it mid-batch with no traceback — that is how `r70-outcome-2` lost 2.5 h after
 17 runs. The sweep is resumable; the supervisor relaunches it.
 
