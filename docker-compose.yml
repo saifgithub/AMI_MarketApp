@@ -387,7 +387,7 @@ services:
       # CR197 — independent CIO samples per verdict; 1 = today's single call.
       # Raising it costs that multiple of the run's most expensive call, and buys
       # back the 19.7% of verdicts measured to be non-unanimous on identical prompts.
-      PM_SELF_CONSISTENCY_SAMPLES: ${PM_SELF_CONSISTENCY_SAMPLES:-1}
+      PM_SELF_CONSISTENCY_SAMPLES: ${PM_SELF_CONSISTENCY_SAMPLES:-5}
       # CR197 — computed sized-option ladder in the CIO's prompt. Off: it is a
       # measured behaviour change (approvals 16.3% → 21.1% over 136 replayed
       # convenes), not a pure fix. See Settings.pm_option_ladder_enabled.

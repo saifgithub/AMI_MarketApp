@@ -136,10 +136,31 @@ def test_agreement_is_reported_as_a_fraction_of_all_samples():
 # ── the default must not change today's behaviour ────────────────────────────
 
 
-def test_the_default_is_one_sample():
-    """Anything above 1 multiplies the most expensive call in the run, so the knob
-    ships off. Raising it is an operator decision, not a silent upgrade."""
-    assert Settings().pm_self_consistency_samples == 1
+def test_the_default_is_five_samples():
+    """CR214 raised this from 1. It was shipped off because each extra sample
+    multiplies the run's costliest call; it is on now because the noise it removes
+    was costing more than the calls do. At 1 sample roughly one verdict in five is
+    settled by the sampler, and that dilution is indistinguishable from having no
+    signal at all in any outcome test the 71-date backtest window can afford."""
+    assert Settings().pm_self_consistency_samples == 5
+
+
+def test_the_compose_default_matches_the_code_default():
+    """CR040 — a code default the deployment overrides is a feature that is dark in
+    the only environment that matters. `PM_SELF_CONSISTENCY_SAMPLES:-1` in compose
+    would have pinned Alpha at one sample however this file reads."""
+    import re
+    from pathlib import Path
+
+    compose = (
+        Path(__file__).resolve().parents[3] / "docker-compose.yml"
+    ).read_text()
+    m = re.search(
+        r"PM_SELF_CONSISTENCY_SAMPLES:\s*\$\{PM_SELF_CONSISTENCY_SAMPLES:-(\d+)\}",
+        compose,
+    )
+    assert m, "PM_SELF_CONSISTENCY_SAMPLES is not forwarded to api-alpha"
+    assert int(m.group(1)) == Settings().pm_self_consistency_samples
 
 
 def test_the_setting_is_bounded():

@@ -152,6 +152,9 @@ class _ConcurrencyProbeGateway:
     def __init__(self):
         self.in_flight = 0
         self.max_in_flight = 0
+        self.analyst_in_flight = 0
+        self.max_analyst_in_flight = 0
+        self.pm_calls = 0
         self.completion_order: list[str] = []
         self.prompts: dict[str, str] = {}
 
@@ -171,6 +174,18 @@ class _ConcurrencyProbeGateway:
         self.prompts[key] = system_prompt
         self.in_flight += 1
         self.max_in_flight = max(self.max_in_flight, self.in_flight)
+        # CR214 — the PM is now sampled N times through one `asyncio.gather`, so
+        # the GLOBAL peak no longer isolates the analysts phase. Track the two
+        # separately: bumping the global assertion to N would have left a guard
+        # that passes even if the analysts ran strictly serially, which is the
+        # only thing this test exists to catch.
+        self.analyst_in_flight += 1 if key in _AGENT_DELAYS else 0
+        if key in _AGENT_DELAYS:
+            self.max_analyst_in_flight = max(
+                self.max_analyst_in_flight, self.analyst_in_flight
+            )
+        else:
+            self.pm_calls += 1 if key == "portfolio_manager" else 0
         try:
             await asyncio.sleep(_AGENT_DELAYS.get(key, 0.0))
             text = _REPLIES.get(key, "AMI agent live reply.")
@@ -180,6 +195,8 @@ class _ConcurrencyProbeGateway:
         finally:
             self.completion_order.append(key)
             self.in_flight -= 1
+            if key in _AGENT_DELAYS:
+                self.analyst_in_flight -= 1
 
 
 def _run(runner, **kw) -> list:
@@ -202,7 +219,17 @@ def test_analysts_run_concurrently_but_emit_in_fixed_order():
 
     # Concurrency actually happened: all four analysts were in-flight at once.
     # (A sequential loop would top out at 1.)
-    assert gw.max_in_flight == 4
+    #
+    # CR214 — asserted over ANALYST calls specifically. The PM is sampled
+    # `pm_self_consistency_samples` times in one gather, so the global peak is
+    # max(4, N) and no longer says anything about this phase.
+    assert gw.max_analyst_in_flight == 4
+
+    # And the PM's own fan-out is the sample count — pinned here so a change that
+    # silently stopped sampling still trips a test in this file.
+    from app.core.config import settings
+    assert gw.pm_calls == max(1, int(settings.pm_self_consistency_samples))
+    assert gw.max_in_flight == max(4, gw.pm_calls)
 
     # Completion order was the REVERSE of the emit order (social finished first).
     analyst_completions = [k for k in gw.completion_order if k in _AGENT_DELAYS]

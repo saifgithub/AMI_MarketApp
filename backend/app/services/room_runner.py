@@ -4545,23 +4545,57 @@ class RoomRunner:
                                 formatter=formatter, run=run, gateway=gateway,
                                 agent_timeout_s=agent_timeout_s,
                             )
+                        # DEF384 — `parsed` and the outage flag are declared here because the
+                        # three branches below all feed ONE decision tail. They used to feed
+                        # three: the self-consistency branch assigned `verdict` directly and
+                        # returned, so it never reached `enforce_safety_floor` — every mandate
+                        # check (post-loss cooldown, over-trading brake, open-risk cap, sector
+                        # cap, halal + locale universes, drawdown cap) was skipped the moment
+                        # pm_self_consistency_samples went above 1. The floor is uncoachable by
+                        # design; a sampling knob must not be able to switch it off.
+                        parsed: Verdict | None = None
+                        _pm_outage = False
                         if _voted is not None:
-                            pm_text, verdict, _agreement = _voted
+                            pm_text, parsed, _agreement = _voted
+                            # CR214 — how many of the independent reads wanted in,
+                            # regardless of which side won. The agreement string
+                            # counts the WINNER ("3/5" on a PASS), so it cannot be
+                            # read as conviction: 2-of-5-approve and 0-of-5-approve
+                            # are both a PASS, and only this field tells them apart.
+                            # Persisted so a backtest can rank on it instead of on a
+                            # binary that spends 90% of its convenes in one bucket.
+                            _approve_votes = sum(
+                                1 for _n, _v in _cands
+                                if _v.action in (
+                                    VerdictAction.APPROVE, VerdictAction.MODIFY
+                                )
+                            )
+                            parsed = parsed.model_copy(update={
+                                "approve_votes": _approve_votes,
+                                "samples": len(_cands),
+                            })
                             logger.info(
                                 "room_pm_self_consistency",
                                 run_id=str(run_id),
                                 agreement=_agreement,
                                 samples=_pm_samples,
-                                action=verdict.action.value,
+                                approve_votes=_approve_votes,
+                                # DEF383: Verdict sets use_enum_values=True, so
+                                # `action` is already a plain str here. `.value`
+                                # raised AttributeError and took the whole convene
+                                # down — latent since CR197 because the branch only
+                                # runs when pm_self_consistency_samples > 1, and the
+                                # default was 1 until CR214 raised it.
+                                action=str(parsed.action),
                             )
                             if not _agreement.startswith(f"{len(_cands)}/"):
                                 # CR040 — a split team is a real finding about how
                                 # marginal this call is, and hiding it behind
                                 # confident prose is the failure mode the whole CR
                                 # is about. Said in the verdict the user reads.
-                                verdict = verdict.model_copy(update={
+                                parsed = parsed.model_copy(update={
                                     "reason": (
-                                        f"{verdict.reason} (Your team was split on "
+                                        f"{parsed.reason} (Your team was split on "
                                         f"this — {_agreement} of the independent "
                                         f"reads landed here.)"
                                     )
@@ -4571,6 +4605,7 @@ class RoomRunner:
                             # The scripted _assemble_verdict APPROVE belongs
                             # to the non-live demo path only; an outage must
                             # never mint a confident buy verdict.
+                            _pm_outage = True
                             verdict = Verdict(
                                 action=VerdictAction.PASS,
                                 reason=PM_LLM_UNAVAILABLE_REASON,
@@ -4611,6 +4646,13 @@ class RoomRunner:
                                             "room_pm_reformat_downgrade_rejected",
                                             run_id=str(run_id),
                                         )
+
+                        # DEF384 — ONE decision tail for every branch above. The vote arrives
+                        # here as `parsed` exactly like a single draw does, so an APPROVE meets
+                        # the same floor with the same kwargs. Do not re-inline this per branch:
+                        # CR101-BE2 round 1 shipped a call site missing five of them, and a
+                        # second copy is how that happens again.
+                        if not _pm_outage:
                             if parsed is None:
                                 verdict = Verdict(
                                     action=VerdictAction.PASS,

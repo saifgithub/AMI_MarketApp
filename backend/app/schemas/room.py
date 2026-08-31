@@ -51,6 +51,26 @@ class Verdict(BaseModel):
     # closing disclosure is always accurate even when the model says nothing.
     opinions_not_included: list[str] = Field(default_factory=list)
 
+    # CR214 — how many of the N independent CIO samples wanted in, and how many
+    # samples were actually parseable. Both None when self-consistency is off
+    # (`pm_self_consistency_samples == 1`) or on a run that predates the field —
+    # absence is absence, never backfilled or inferred, exactly as
+    # `level_provenance` below is read.
+    #
+    # This is NOT the agreement string the user may see in `reason`. That one
+    # counts the WINNING action ("3/5" on a PASS), so it collapses 2-of-5-approve
+    # and 0-of-5-approve into the same number. `approve_votes` separates them,
+    # which is the whole point: it turns a binary verdict into a 0..N score.
+    #
+    # Why that matters: every Room outcome measurement to date has been a
+    # two-bucket mean difference where ~90% of convenes land in PASS and carry no
+    # signal, leaving 1-4 approved names per as-of date against a measured 13.0%
+    # per-name 4-week excess-return SD. A graded score lets every convene enter a
+    # rank statistic instead, which is the only version of the test that fits
+    # inside the 71 as-of dates the model-cutoff window allows.
+    approve_votes: int | None = None
+    samples: int | None = None
+
     # CR106 B1 — where each price on this verdict actually came from.
     #
     #   "pm"          the Portfolio Manager stated this price

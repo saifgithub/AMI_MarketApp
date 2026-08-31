@@ -619,7 +619,12 @@ class Settings(BaseSettings):
     # Set to an odd number ≥3 to vote instead: majority on the action, median size
     # among the winners. Even numbers are allowed but waste a call, since ties fall
     # back to the safe side.
-    pm_self_consistency_samples: int = Field(default=1, ge=1, le=9)
+    # CR214 — raised 1 -> 5. The measurement above is the reason: roughly one
+    # verdict in five was being settled by the sampler, and a diluted signal is
+    # indistinguishable from no signal in any outcome test we can afford to run.
+    # Five also yields `Verdict.approve_votes` in 0..5, the graded score the Room
+    # backtest ranks on. Cost is 4 extra premium-tier PM calls per convene.
+    pm_self_consistency_samples: int = Field(default=5, ge=1, le=9)
 
     # CR197 — hand the CIO a computed ladder of sized options (trim / reference /
     # press) with each rung's drawdown contribution, remaining headroom and

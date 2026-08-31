@@ -240,8 +240,20 @@ def test_room_uses_gateway_for_every_agent_when_live():
         char_delay_min=0.0, char_delay_max=0.0,
     ))
 
-    # Gateway invoked once per agent (12 total).
-    assert len(fake.calls) == 12
+    # Gateway invoked once per agent, EXCEPT the PM, which is sampled
+    # `pm_self_consistency_samples` times and voted (CR197; raised to 5 by
+    # CR214). Asserted as the invariant rather than as a total, so tuning the
+    # knob does not require editing an arithmetic constant here — and so a
+    # regression that stopped sampling the PM still fails.
+    from app.core.config import settings
+    _pm_samples = max(1, int(settings.pm_self_consistency_samples))
+    _pm_calls = [c for c in fake.calls
+                 if c["matched_agent"] == "portfolio_manager"]
+    _other = [c for c in fake.calls
+              if c["matched_agent"] != "portfolio_manager"]
+    assert len(_pm_calls) == _pm_samples
+    assert len(_other) == 11
+    assert len(fake.calls) == 11 + _pm_samples
 
     # Transcript contains 12 agent messages, all from the fake replies.
     spoke = {e.agent_id for e in events if e.kind == "agent_done"}

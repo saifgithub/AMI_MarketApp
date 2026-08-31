@@ -67,6 +67,16 @@ DEFAULT_OUT_DIR = REPO_ROOT / "docs/forward_planning/CR164_room_backtest/results
 BENCHMARK = "SPY"
 ACTIONS = ("APPROVE", "PASS", "REJECT", "MODIFY")
 HIT_WINDOW = 20
+
+# CR214 — a third scoring horizon. The 5/20 pair grades NAME SELECTION over a
+# window the Room never claimed: PHASE_B_OUTCOME's own closing caveat is that
+# stated horizons run to a median of 90 CALENDAR days while scoring stopped at
+# 20 trading days, so "the four-week numbers grade name selection, not whether
+# these theses worked". 62 trading rows is ~90 calendar days at 4.83 rows/week.
+# It does not replace 20d — a longer window is not strictly better, it is a
+# different question with fewer scoreable rows near the end of the sample — so
+# both ship and the report says which is which.
+H_LONG = 62
 EDGAR_FIELDS = (
     "pe", "rev_growth", "profit_margin", "net_cash",
     "price_to_sales", "fcf_yield", "ev_to_ebitda", "dividend_yield",
@@ -107,6 +117,16 @@ class Scored:
     target_hit: bool | None = None
     stop_hit: bool | None = None
     first_touch: str | None = None
+    # CR214 — the ~90-calendar-day horizon (see H_LONG).
+    r62: float | None = None
+    spy62: float | None = None
+    excess62: float | None = None
+    # CR214 — how many of the N independent CIO draws wanted in, and how many
+    # draws were parseable. None on any run made before self-consistency was
+    # raised above 1 sample; absence is absence and is never read as 0, which
+    # would be a real "nobody approved" score.
+    approve_votes: int | None = None
+    samples: int | None = None
 
 
 def load_series(session, ticker: str) -> list[tuple[date, float, float | None, float | None]]:
@@ -162,6 +182,47 @@ def percentile(sorted_vals: list[float], p: float) -> float:
     hi = min(lo + 1, n - 1)
     frac = rank - lo
     return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
+
+
+def _avg_ranks(vals: list[float]) -> list[float]:
+    """1-based ranks with ties averaged. Ties are the normal case here, not the
+    edge case: `approve_votes` takes at most N+1 distinct values over ~100 names,
+    so a rank statistic that broke on ties would be unusable on this data."""
+    order = sorted(range(len(vals)), key=lambda i: vals[i])
+    ranks = [0.0] * len(vals)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and vals[order[j + 1]] == vals[order[i]]:
+            j += 1
+        r = (i + j) / 2.0 + 1.0
+        for k in range(i, j + 1):
+            ranks[order[k]] = r
+        i = j + 1
+    return ranks
+
+
+def spearman(xs: list[float], ys: list[float]) -> float | None:
+    """Tie-aware Spearman rank correlation, or None where it is undefined.
+
+    None on fewer than 3 pairs (a 2-point rank correlation is always exactly ±1
+    and carries no information) and None when either side has zero dispersion —
+    a date on which every run scored the same `approve_votes` expresses no
+    ranking, and folding that in as 0.0 would dilute the average toward a null
+    the data never asserted. Undefined dates are counted and reported, not
+    silently dropped (CR040)."""
+    if len(xs) != len(ys):
+        raise ValueError("spearman: length mismatch")
+    if len(xs) < 3:
+        return None
+    rx, ry = _avg_ranks(xs), _avg_ranks(ys)
+    mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    dx = math.sqrt(sum((a - mx) ** 2 for a in rx))
+    dy = math.sqrt(sum((b - my) ** 2 for b in ry))
+    if dx == 0.0 or dy == 0.0:
+        return None
+    return num / (dx * dy)
 
 
 def scan_hits(fwd: list, target: float | None, stop: float | None):
@@ -399,7 +460,12 @@ def main() -> int:
                   "all excess returns will be unscoreable", flush=True)
 
         unscoreable = {"no_entry": 0, "no_r5": 0, "no_r20": 0,
-                       "no_spy5": 0, "no_spy20": 0}
+                       "no_spy5": 0, "no_spy20": 0,
+                       # CR214 — expected to be NON-ZERO near the end of any
+                       # sample: a run needs 62 forward rows and the newest
+                       # as-of dates do not have them yet. That is a smaller
+                       # scoreable population at 62d, not a broken batch.
+                       "no_r62": 0, "no_spy62": 0}
         scored: list[Scored] = []
         hit_stats = {
             "eligible": 0, "prov_excluded_target": 0, "prov_excluded_stop": 0,
@@ -416,8 +482,10 @@ def main() -> int:
             spy_entry, spy_fwd = entry_and_forward(spy, idx.as_of)
             r5 = ret_at(entry, fwd, 5)
             r20 = ret_at(entry, fwd, 20)
+            r62 = ret_at(entry, fwd, H_LONG)
             spy5 = ret_at(spy_entry, spy_fwd, 5)
             spy20 = ret_at(spy_entry, spy_fwd, 20)
+            spy62 = ret_at(spy_entry, spy_fwd, H_LONG)
             if entry is None:
                 unscoreable["no_entry"] += 1
             else:
@@ -429,12 +497,20 @@ def main() -> int:
                 unscoreable["no_spy5"] += 1
             if spy20 is None:
                 unscoreable["no_spy20"] += 1
+            if r62 is None and entry is not None:
+                unscoreable["no_r62"] += 1
+            if spy62 is None:
+                unscoreable["no_spy62"] += 1
 
             s = Scored(
                 ticker=idx.ticker, as_of=idx.as_of, action=v["action"],
                 entry=entry, r5=r5, r20=r20, spy5=spy5, spy20=spy20,
                 excess5=None if (r5 is None or spy5 is None) else r5 - spy5,
                 excess20=None if (r20 is None or spy20 is None) else r20 - spy20,
+                r62=r62, spy62=spy62,
+                excess62=None if (r62 is None or spy62 is None) else r62 - spy62,
+                approve_votes=v.get("approve_votes"),
+                samples=v.get("samples"),
             )
 
             # Target/stop-hit: APPROVE/MODIFY with all three levels present,
@@ -607,6 +683,136 @@ def main() -> int:
                 f"- **Effective n = {len(ci_dates)} distinct as-of dates** "
                 f"(not {len(app_all) + len(pass_all)} runs — date clustering).",
             ]
+
+    # ---- CR214: within-date paired spread --------------------------------
+    # The pooled difference above mixes dates: a bucket that happens to be
+    # over-weighted on a good market day inherits that day's return. Averaging
+    # the WITHIN-date spread cancels the common factor exactly, because both
+    # legs of every term were exposed to the same market. Only dates carrying
+    # both buckets contribute; the rest are counted and named, not dropped.
+    def _by_date(attr: str, actions: tuple[str, ...]) -> dict:
+        out: dict = {}
+        for sc in scored:
+            if sc.action in actions and getattr(sc, attr) is not None:
+                out.setdefault(sc.as_of, []).append(getattr(sc, attr))
+        return out
+
+    def _clustered_ci(per_date: dict[date, float]) -> list[str]:
+        """Block bootstrap over dates on a per-date statistic."""
+        ds = sorted(per_date)
+        if len(ds) < 2:
+            return [f"SKIPPED — {len(ds)} usable date(s); an interval over "
+                    "one date would be fabricated."]
+        actual = sum(per_date[d] for d in ds) / len(ds)
+        reps = []
+        for _ in range(args.bootstrap):
+            draw = [per_date[rng.choice(ds)] for _ in range(len(ds))]
+            reps.append(sum(draw) / len(draw))
+        reps.sort()
+        return [
+            f"- Actual: **{fnum(actual)}**",
+            f"- Block bootstrap over dates ({args.bootstrap} replicates):",
+            f"  - 2.5th pct: {fnum(percentile(reps, 2.5))}",
+            f"  - 50th pct: {fnum(percentile(reps, 50))}",
+            f"  - 97.5th pct: {fnum(percentile(reps, 97.5))}",
+            f"- **Effective n = {len(ds)} dates.**",
+        ]
+
+    paired_lines: list[str] = []
+    for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
+        a_d = _by_date(ex_attr, ("APPROVE", "MODIFY"))
+        p_d = _by_date(ex_attr, ("PASS", "REJECT"))
+        both = sorted(set(a_d) & set(p_d))
+        paired_lines.append(f"**{label}** — dates with both buckets: "
+                            f"{len(both)} of {len(sorted(set(a_d) | set(p_d)))}")
+        if not both:
+            paired_lines += ["", "SKIPPED — no date carries both buckets.", ""]
+            continue
+        per_date = {d: mean(a_d[d]) - mean(p_d[d]) for d in both}
+        paired_lines += _clustered_ci(per_date) + [""]
+
+    # ---- CR214: placebo-adjusted selection effect -------------------------
+    # RES001's binding rule: any selector looks good if it merely selects fewer,
+    # so the Room is measured against a matched-random pick of the SAME COUNT
+    # from the SAME per-date pool, not against zero.
+    #
+    # The expectation of a uniform random same-size subset mean is exactly the
+    # pool mean, so the placebo leg is analytic — no RNG, no sampling noise, and
+    # byte-stable by construction. The pool retains the Room's own picks (the
+    # construction the existing random-pick null uses), which attenuates the
+    # measured effect toward zero. That is the conservative direction.
+    placebo_lines: list[str] = []
+    for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
+        pool_d = _by_date(ex_attr, ACTIONS)
+        room_d = _by_date(ex_attr, ("APPROVE", "MODIFY"))
+        usable = sorted(d for d in room_d if len(pool_d.get(d, [])) >= 2)
+        placebo_lines.append(
+            f"**{label}** — dates with a scoreable pick and a pool of ≥2: "
+            f"{len(usable)} of {len(room_d)}"
+        )
+        if not usable:
+            placebo_lines += ["", "SKIPPED — no date has both.", ""]
+            continue
+        per_date = {d: mean(room_d[d]) - mean(pool_d[d]) for d in usable}
+        placebo_lines += _clustered_ci(per_date) + [""]
+
+    # ---- CR214: rank IC on the graded verdict -----------------------------
+    # The bucket tests above spend ~90% of the batch in PASS, where a binary
+    # verdict carries no ordering. `approve_votes` (CR214) is 0..N over the
+    # independent CIO draws, so every convene enters the statistic and the
+    # per-date estimate rests on the full cross-section instead of on the 1-4
+    # names that happened to approve.
+    #
+    # A date is undefined, NOT zero, when every run on it scored the same vote
+    # count — that date expresses no ranking, and averaging in a 0.0 would
+    # assert a null the data never made. Undefined dates are counted below.
+    ic_lines: list[str] = []
+    graded = [sc for sc in scored if sc.approve_votes is not None]
+    if not graded:
+        ic_lines.append(
+            "SKIPPED — no run in this batch carries `approve_votes`. The batch "
+            "predates CR214, or ran with `pm_self_consistency_samples = 1` "
+            "(one draw is a verdict, not a score). Not a failure; the bucket "
+            "tests above are the whole read for such a batch."
+        )
+    else:
+        ic_lines.append(
+            f"Graded runs: **{len(graded)}** of {len(scored)}"
+            + (f" — **{len(scored) - len(graded)} ungraded and excluded**"
+               if len(graded) != len(scored) else "")
+        )
+        for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
+            by_date: dict[date, list[tuple[float, float]]] = {}
+            for sc in graded:
+                if getattr(sc, ex_attr) is not None:
+                    by_date.setdefault(sc.as_of, []).append(
+                        (float(sc.approve_votes), getattr(sc, ex_attr))
+                    )
+            per_date: dict[date, float] = {}
+            undefined = 0
+            for d in sorted(by_date):
+                rows = sorted(by_date[d])
+                ic = spearman([r[0] for r in rows], [r[1] for r in rows])
+                if ic is None:
+                    undefined += 1
+                else:
+                    per_date[d] = ic
+            ic_lines.append("")
+            ic_lines.append(
+                f"**{label}** — dates with a defined IC: {len(per_date)}"
+                f" (undefined: {undefined} — fewer than 3 runs, or no "
+                "dispersion in votes or returns)"
+            )
+            ic_lines += _clustered_ci(per_date) if per_date else [
+                "SKIPPED — no date has a defined IC."
+            ]
+        ic_lines += [
+            "",
+            "> Read the magnitude against published cross-sectional ICs of "
+            "**0.02-0.05**, not against 0.5. An interval that spans zero AND "
+            "is wider than that band is a NON-MEASUREMENT, not a null — say "
+            "which one it is.",
+        ]
 
     # ---- render ----------------------------------------------------------
     L: list[str] = [

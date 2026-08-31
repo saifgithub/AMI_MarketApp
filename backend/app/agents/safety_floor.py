@@ -841,6 +841,14 @@ def enforce_safety_floor(
         reason=f"Mandate violation (safety floor override): {'; '.join(result.violations)}",
         violations=result.violations,
         overridden_from_llm=True,
+        # CR214 — carry the vote through the override. This branch builds a fresh
+        # Verdict rather than copying, so every field not named here is dropped;
+        # `approve_votes` dropped here would be lost on exactly the rows that carry
+        # the most information, since a floor-overridden REJECT is a run the Room
+        # wanted in on. The floor's DECISION is untouched — this is provenance,
+        # travelling the same way `violations` and `overridden_from_llm` do.
+        approve_votes=llm_verdict.approve_votes,
+        samples=llm_verdict.samples,
     )
 
 
