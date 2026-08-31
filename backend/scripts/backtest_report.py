@@ -886,6 +886,38 @@ def main() -> int:
         print("WARNING: random-pick null skipped — no scoreable APPROVEs at 4w",
               flush=True)
     L += ["", "## Date-clustered CI — APPROVE − PASS, 4w excess", "", *ci_lines]
+
+    # CR214 — the three estimators added because the two-bucket pooled difference
+    # above spends ~90% of a sweep in a bucket that carries no ordering.
+    L += [
+        "",
+        "## CR214 — within-date paired spread (market factor cancelled)",
+        "",
+        "Mean of the per-date (APPROVE − PASS) spread, rather than the difference "
+        "of pooled means. Both legs of every term saw the same market, so the "
+        "common factor drops out exactly; the pooled estimator above leaves it in.",
+        "",
+        *paired_lines,
+        "",
+        "## CR214 — placebo-adjusted selection effect",
+        "",
+        "Room picks minus a matched-random pick of the SAME COUNT from the SAME "
+        "per-date pool. RES001's rule: any selector looks good if it merely "
+        "selects fewer. The placebo leg is analytic — the expectation of a "
+        "uniform same-size subset mean IS the pool mean — so there is no sampling "
+        "noise and no RNG. The pool retains the Room's own picks, which attenuates "
+        "the effect toward zero; that is the conservative direction.",
+        "",
+        *placebo_lines,
+        "",
+        "## CR214 — rank IC on the graded verdict",
+        "",
+        "Per-date Spearman between `approve_votes` (0..N over the independent CIO "
+        "draws) and forward excess return, averaged over dates. Every convene "
+        "enters this statistic, not just the minority that approved.",
+        "",
+        *ic_lines,
+    ]
     L += [
         "",
         "## Target/stop-hit (20 trading days after as-of, provenance-gated)",
