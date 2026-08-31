@@ -86,11 +86,11 @@ Saiful asked how we identify bad trades and eliminate them. Across 24 pre-regist
    rule-bending [43:09] — and decisively, **a rule-bent trade that wins is still bad**
    [43:40]. That is a property of the decision, unavailable from any price series.
 4. **We already compute it.** `ComplianceResult.violations`
-   ([schemas/trade.py:203](../../backend/app/schemas/trade.py#L203)) runs a deterministic
+   ([schemas/trade.py:203](../../../../backend/app/schemas/trade.py#L203)) runs a deterministic
    mandate check on every proposed trade. Nothing aggregates it into a behavioural read.
 
 The elimination target is process violations, not market conditions — which is
-[RES005](../RES005_trainable_skill/README.md)'s instrumentation CR, now supported by a test
+[RES005](../05_trainable_skill.md)'s instrumentation CR, now supported by a test
 built to be able to refute it.
 
 ## Caveats
