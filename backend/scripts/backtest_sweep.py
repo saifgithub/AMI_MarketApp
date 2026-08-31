@@ -221,6 +221,44 @@ def write_completion_sentinel(
     return path
 
 
+SUPERVISOR_ENV = "AMI_SWEEP_SUPERVISOR"
+
+
+def _require_supervisor(args) -> None:
+    """DEF387 — refuse an unsupervised sweep, because the prose guard lost twice.
+
+    A sweep is a multi-hour unattended job whose failure mode is silence: the
+    `docker compose exec` under it dies with no traceback, no non-zero exit and
+    no final log line, so the log simply stops after a normal completion line.
+    DEF345 sat undetected 2h54m that way; DEF387 sat 2h49m in the same shape
+    three weeks later, launched by an operator who had read
+    `RETEST_RECIPE.md`'s bold "Always under the supervisor" and reasoned past
+    it. CR038's rule applied to operators: an optional guard that must be
+    remembered is not a guard.
+
+    **Why an env var rather than a process-ancestry check** (which is what the
+    DEF387 write-up first proposed): the supervisor runs on the HOST and reaches
+    the sweep through `docker compose exec`, so inside the container the sweep's
+    ancestor is the container's init, never the supervisor. An ancestry check
+    would refuse every legitimate supervised run and admit every bare one —
+    exactly backwards. The env var crosses the container boundary; nothing else
+    about the relationship does.
+    """
+    if args.plan_only or args.no_supervisor:
+        return
+    if os.environ.get(SUPERVISOR_ENV):
+        return
+    raise SystemExit(
+        f"REFUSING: no supervisor.\n"
+        f"  A bare launch dies with its ssh channel or its exec pipe, silently —\n"
+        f"  that is DEF345 and DEF387, 2h54m and 2h49m of undetected idle GPU.\n"
+        f"  Launch under the supervisor, which must export {SUPERVISOR_ENV}=1 and\n"
+        f"  pass it through:  docker compose exec -e {SUPERVISOR_ENV}=1 -T api-alpha …\n"
+        f"  and start the supervisor itself detached:  setsid nohup bash <supervisor> &\n"
+        f"  Attended short run you will watch to the end: pass --no-supervisor."
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CR164 Room backtest sweep driver.")
     parser.add_argument("--batch-id", required=True)
@@ -271,7 +309,17 @@ def main() -> int:
     )
     parser.add_argument("--plan-only", action="store_true",
                         help="Print the deterministic pair plan and exit; no network.")
+    parser.add_argument(
+        "--no-supervisor", action="store_true",
+        help=(
+            "DEF387 escape hatch: run a real sweep with no supervisor. Only for "
+            "a short attended run you will watch to completion. The recipe never "
+            "uses it."
+        ),
+    )
     args = parser.parse_args()
+
+    _require_supervisor(args)
 
     window_end = args.window_end or (date.today() - timedelta(days=35))
     if window_end < args.window_start:
