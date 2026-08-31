@@ -46,8 +46,9 @@ Three power leaks, all fixable inside the existing budget:
    large share of APPROVEs are sampler noise, which dilutes a true effect toward zero.
 2. **91% of compute lands in the PASS bucket.** The verdict is binary, so only the approving
    minority carries signal; 406 of Phase B's 446 convenes bought almost nothing.
-3. **18 of 71 available Fridays used.** The window (2025-02-28 → 2026-07-03, fixed by the
-   cutoff probe) holds 71. 53 are unspent — enough for a real holdout.
+3. **18 of the available Fridays used.** The window is fixed by the cutoff probe, and Phase B
+   spent 25 convenes each on only 18 dates. Effective n *is* dates, so the rest were left on
+   the table.
 
 ## What
 
@@ -90,11 +91,21 @@ if it merely selects fewer); a 90-day cell beside the 20-day one, since stated h
 a median of 90 days and *"the four-week numbers grade name selection, not whether these
 theses worked"*. Fold in CR213's distance-normalised geometry while the file is open.
 
-**Step 3 — pre-register, then sweep** (~3,000 convenes, ~8–9 weeks at ~325/week). Pinned
-`--pairs-file`, `tickers_142_no_splits.txt`, ~100 names × ~30 Fridays, definition/holdout
-split with the holdout **disjoint from the 18 dates in `pairs_r70-outcome-1.jsonl`**. One
-shot. Interim read at ~15 dates is **descriptive only** — achieved CI width, no verdict;
-optional stopping on the point estimate would burn the test.
+**Step 3 — pre-register, then sweep.** Pinned `--pairs-file`, `tickers_142_no_splits.txt`,
+~100 names × the available Fridays, definition/holdout split with the holdout **disjoint from
+the 18 dates in `pairs_r70-outcome-1.jsonl`**. One shot. Interim read at ~half the dates is
+**descriptive only** — achieved CI width, no verdict; optional stopping on the point estimate
+would burn the test.
+
+> **Window corrected 2026-08-31 — see [DEF385](../../defect/_registry/DEF385.row.md).** The
+> served model changed under this CR (CR211: Qwen3.6 → `qwen3.8-flash-next`, the alias
+> `ami-llm` reused across the swap). A fresh cutoff probe moves `window_start`
+> **2025-02-28 → 2025-08-01**: price-collapse 2024-08 → 2025-01, last recalled event
+> 2025-01 → 2025-06. **Usable Fridays: 52** (2025-08-01 → 2026-07-27) at the 20-day horizon,
+> **~43** at the ~90-day one — the sweep planner confirms 52. Had this not been caught, ~3,000
+> convenes would have run with every date before 2025-08-01 inside the model's own memory.
+> The power arithmetic survives: 100 names × 52 dates resolves a rank IC of **≈0.028**,
+> slightly better than the 100 × 30 projection above.
 
 **Step 4 — track forward.** `weekly_room_retro.py` is already on melehost cron and accrues
 ~150 live runs/week at zero marginal cost during the sweep; what is missing is **pooling** —
@@ -127,7 +138,9 @@ After the sweep the budget rolls into a pinned weekly live slate via `room_bench
 
 - **Tested Room ≠ shipped Room** — news, social and analyst consensus are `UNAVAILABLE`
   under as-of, which is why the backtest approves ~10% against the live Room's 24–37%.
-- **71 Fridays is the ceiling**, fixed by the cutoff probe. Not extendable.
+- **52 Fridays is the ceiling** on the current model, fixed by the cutoff probe and shrinking
+  as the model gets newer. Not extendable. Re-probe whenever the serve changes — nothing ties
+  `--window-start` to the model actually answering (DEF385).
 - `tickers_142_no_splits.txt` excludes 8 names *because they split*, and splits correlate
   with appreciation. It hits both buckets, so the spread should be near-unbiased — but say it.
   DEF335's root fix (`auto_adjust=False` re-backfill, 119,311 rows / 201 tickers) stays deferred.
