@@ -354,6 +354,96 @@ def _sentinel_line(sentinel: dict) -> str:
     )
 
 
+SIGNAL_ACTIONS = ("APPROVE", "MODIFY")
+HORIZONS = (("4w", "excess20"), ("~13w (62d)", "excess62"))
+
+
+def by_date(rows, attr: str, actions: tuple[str, ...]) -> dict:
+    """Group one scored attribute by as-of date, for the given verdict bucket."""
+    out: dict = {}
+    for sc in rows:
+        if sc.action in actions and getattr(sc, attr) is not None:
+            out.setdefault(sc.as_of, []).append(getattr(sc, attr))
+    return out
+
+
+def clustered_ci(per_date: dict, *, bootstrap: int, rng) -> list[str]:
+    """Block bootstrap over dates on a per-date statistic.
+
+    Resampling DATES, not runs, is the whole point: two names convened on the
+    same day share that day's market move, so treating them as independent
+    draws understates the interval by roughly the square root of the names per
+    date. Every null this project has published was bounded this way.
+    """
+    ds = sorted(per_date)
+    if len(ds) < 2:
+        return [f"SKIPPED — {len(ds)} usable date(s); an interval over "
+                "one date would be fabricated."]
+    actual = sum(per_date[d] for d in ds) / len(ds)
+    reps = []
+    for _ in range(bootstrap):
+        draw = [per_date[rng.choice(ds)] for _ in range(len(ds))]
+        reps.append(sum(draw) / len(draw))
+    reps.sort()
+    return [
+        f"- Actual: **{fnum(actual)}**",
+        f"- Block bootstrap over dates ({bootstrap} replicates):",
+        f"  - 2.5th pct: {fnum(percentile(reps, 2.5))}",
+        f"  - 50th pct: {fnum(percentile(reps, 50))}",
+        f"  - 97.5th pct: {fnum(percentile(reps, 97.5))}",
+        f"- **Effective n = {len(ds)} dates.**",
+    ]
+
+
+def paired_spread(rows, *, bootstrap: int, rng, horizons=HORIZONS) -> list[str]:
+    """Mean of the per-date (signal - rest) spread.
+
+    The pooled difference mixes dates: a bucket over-weighted on a good market
+    day inherits that day's return. Both legs of a within-date term saw the
+    same market, so the common factor drops out exactly. Only dates carrying
+    both buckets contribute; the rest are counted and named, not dropped.
+    """
+    lines: list[str] = []
+    for label, ex_attr in horizons:
+        a_d = by_date(rows, ex_attr, SIGNAL_ACTIONS)
+        p_d = by_date(rows, ex_attr, ("PASS", "REJECT"))
+        both = sorted(set(a_d) & set(p_d))
+        lines.append(f"**{label}** — dates with both buckets: "
+                     f"{len(both)} of {len(sorted(set(a_d) | set(p_d)))}")
+        if not both:
+            lines += ["", "SKIPPED — no date carries both buckets.", ""]
+            continue
+        per_date = {d: mean(a_d[d]) - mean(p_d[d]) for d in both}
+        lines += clustered_ci(per_date, bootstrap=bootstrap, rng=rng) + [""]
+    return lines
+
+
+def placebo_effect(rows, *, bootstrap: int, rng, horizons=HORIZONS) -> list[str]:
+    """Room picks minus a matched-random pick of the same count from the same pool.
+
+    RES001's binding rule: any selector looks good if it merely selects fewer.
+    The expectation of a uniform same-size subset mean IS the pool mean, so the
+    placebo leg is analytic — no RNG, no sampling noise, byte-stable. The pool
+    retains the Room's own picks, which attenuates the effect toward zero; that
+    is the conservative direction.
+    """
+    lines: list[str] = []
+    for label, ex_attr in horizons:
+        pool_d = by_date(rows, ex_attr, ACTIONS)
+        room_d = by_date(rows, ex_attr, SIGNAL_ACTIONS)
+        usable = sorted(d for d in room_d if len(pool_d.get(d, [])) >= 2)
+        lines.append(
+            f"**{label}** — dates with a scoreable pick and a pool of ≥2: "
+            f"{len(usable)} of {len(room_d)}"
+        )
+        if not usable:
+            lines += ["", "SKIPPED — no date has both.", ""]
+            continue
+        per_date = {d: mean(room_d[d]) - mean(pool_d[d]) for d in usable}
+        lines += clustered_ci(per_date, bootstrap=bootstrap, rng=rng) + [""]
+    return lines
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--batch-id", required=True)
@@ -710,45 +800,12 @@ def main() -> int:
     # legs of every term were exposed to the same market. Only dates carrying
     # both buckets contribute; the rest are counted and named, not dropped.
     def _by_date(attr: str, actions: tuple[str, ...]) -> dict:
-        out: dict = {}
-        for sc in scored:
-            if sc.action in actions and getattr(sc, attr) is not None:
-                out.setdefault(sc.as_of, []).append(getattr(sc, attr))
-        return out
+        return by_date(scored, attr, actions)
 
     def _clustered_ci(per_date: dict[date, float]) -> list[str]:
-        """Block bootstrap over dates on a per-date statistic."""
-        ds = sorted(per_date)
-        if len(ds) < 2:
-            return [f"SKIPPED — {len(ds)} usable date(s); an interval over "
-                    "one date would be fabricated."]
-        actual = sum(per_date[d] for d in ds) / len(ds)
-        reps = []
-        for _ in range(args.bootstrap):
-            draw = [per_date[rng.choice(ds)] for _ in range(len(ds))]
-            reps.append(sum(draw) / len(draw))
-        reps.sort()
-        return [
-            f"- Actual: **{fnum(actual)}**",
-            f"- Block bootstrap over dates ({args.bootstrap} replicates):",
-            f"  - 2.5th pct: {fnum(percentile(reps, 2.5))}",
-            f"  - 50th pct: {fnum(percentile(reps, 50))}",
-            f"  - 97.5th pct: {fnum(percentile(reps, 97.5))}",
-            f"- **Effective n = {len(ds)} dates.**",
-        ]
+        return clustered_ci(per_date, bootstrap=args.bootstrap, rng=rng)
 
-    paired_lines: list[str] = []
-    for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
-        a_d = _by_date(ex_attr, ("APPROVE", "MODIFY"))
-        p_d = _by_date(ex_attr, ("PASS", "REJECT"))
-        both = sorted(set(a_d) & set(p_d))
-        paired_lines.append(f"**{label}** — dates with both buckets: "
-                            f"{len(both)} of {len(sorted(set(a_d) | set(p_d)))}")
-        if not both:
-            paired_lines += ["", "SKIPPED — no date carries both buckets.", ""]
-            continue
-        per_date = {d: mean(a_d[d]) - mean(p_d[d]) for d in both}
-        paired_lines += _clustered_ci(per_date) + [""]
+    paired_lines = paired_spread(scored, bootstrap=args.bootstrap, rng=rng)
 
     # ---- CR214: placebo-adjusted selection effect -------------------------
     # RES001's binding rule: any selector looks good if it merely selects fewer,
@@ -760,20 +817,7 @@ def main() -> int:
     # byte-stable by construction. The pool retains the Room's own picks (the
     # construction the existing random-pick null uses), which attenuates the
     # measured effect toward zero. That is the conservative direction.
-    placebo_lines: list[str] = []
-    for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
-        pool_d = _by_date(ex_attr, ACTIONS)
-        room_d = _by_date(ex_attr, ("APPROVE", "MODIFY"))
-        usable = sorted(d for d in room_d if len(pool_d.get(d, [])) >= 2)
-        placebo_lines.append(
-            f"**{label}** — dates with a scoreable pick and a pool of ≥2: "
-            f"{len(usable)} of {len(room_d)}"
-        )
-        if not usable:
-            placebo_lines += ["", "SKIPPED — no date has both.", ""]
-            continue
-        per_date = {d: mean(room_d[d]) - mean(pool_d[d]) for d in usable}
-        placebo_lines += _clustered_ci(per_date) + [""]
+    placebo_lines = placebo_effect(scored, bootstrap=args.bootstrap, rng=rng)
 
     # ---- CR214: rank IC on the graded verdict -----------------------------
     # The bucket tests above spend ~90% of the batch in PASS, where a binary
