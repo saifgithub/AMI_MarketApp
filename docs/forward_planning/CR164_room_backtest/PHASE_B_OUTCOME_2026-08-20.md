@@ -147,9 +147,45 @@ Phase A; three sweeps running, the aggregate is carried by one or two names.
 
 **Stops are hit more often than targets.** Target hit 10/40 (25.0%), stop hit
 15/40 (37.5%); on first touch, 9 target-first against **13 stop-first**, 18
-neither. The Room's level-setting places stops closer to harm than targets to
-gain. That is the one finding here pointing at a specific, fixable mechanism,
-and it is invisible in the return means.
+neither.
+
+> **CORRECTION 2026-08-31 (AT:R74).** This paragraph originally continued: *"The
+> Room's level-setting places stops closer to harm than targets to gain. That is
+> the one finding here pointing at a specific, fixable mechanism, and it is
+> invisible in the return means."* **That reading does not survive arithmetic and
+> is withdrawn.** Hit counts cannot show a level is misplaced without normalising
+> for how far it sits, and this section never measured the distances — though they
+> were recoverable the whole time from `results/trade_pnl_r70-outcome-2.md`, which
+> shipped in the same batch. On the realized market-fill exits there, mean stop
+> distance is **5.12%** (median 4.65%, n=17) against mean target distance
+> **13.17%** (median 9.55%, n=17): the Room sets roughly **2.6 : 1** reward-to-risk
+> (2.05 : 1 on medians). For a driftless random walk the near level is touched
+> first with probability `target/(stop+target)` — **72.0%** on means, **67.3%** on
+> medians. **Observed stop-first is 13/22 = 59.1%** (z = −1.35 and −0.82), i.e.
+> *below* the random-walk expectation, not above it, and well inside noise either
+> way on 22 first-touches. Two harness conventions push the observed figure up
+> rather than down — a same-bar stop+target counts as a STOP because daily bars
+> cannot order two intraday touches, and a gap through a level fills at the open —
+> so 59.1% is an upper bound. **A 37.5%/25.0% split is what a 2.6:1 R:R produces
+> mechanically. There is no mechanism here to fix, and no defect was filed.**
+>
+> Two caveats on the correction itself. The distances come from the **hit-only**
+> subsample (17 stops, 17 targets), which is biased toward close levels on both
+> legs; the ratio is more robust than either leg, but it is not the full-40
+> geometry, and the stated levels for all 40 live in `room_runs` on melehost
+> rather than in this folder. And the target/stop counts above are measured over a
+> fixed **20-trading-day** window, while the P&L table walks each trade to its own
+> stated horizon (median 90 days) — the two are not the same population, which is
+> part of why they were not read against each other in the first place.
+>
+> **What this leaves as a real gap:** `backtest_report.py`'s target/stop section
+> prints raw hit counts with no distance normalisation, so the next sweep can
+> reproduce the same misreading. Printing mean/median R:R and the random-walk
+> first-touch expectation beside the counts is a code change and needs its own ID.
+
+So Phase B leaves **no** finding pointing at a specific, fixable mechanism in the
+Room. The actionable output of this batch is the instrumentation work it forced
+(DEF336, DEF345, DEF358) and the quantified noise floor in `RETEST_RECIPE.md`.
 
 **APPROVE underperforms PASS at one week** (+0.47% vs +0.94%) before leading at
 four. On 40 trades this is well inside noise, but it is the second sweep to show
