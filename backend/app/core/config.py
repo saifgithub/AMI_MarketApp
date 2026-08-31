@@ -107,6 +107,25 @@ class Settings(BaseSettings):
     # promotion — that is the whole point of the knob.
     vllm_max_tokens_floor: int = 0
 
+    # DEF389 — the HTTP read timeout for a vLLM completion. This is the
+    # TRANSPORT budget and it must sit OUTSIDE the Room's orchestration budget
+    # (`room_runner._AGENT_LLM_TIMEOUT_S`, 90s), not inside it. It used to be a
+    # hardcoded 60.0, i.e. 30s shorter, which made the orchestration guard
+    # unreachable: every slow call died in httpx first and surfaced as
+    # `room_pm_llm_failed error=""` — a bare `httpx.ReadTimeout` stringifies to
+    # the empty string — instead of the `room_pm_timeout` the code was written
+    # to emit. The Room then fell back to its DEF059 PASS, which is a completed
+    # run carrying a verdict and is indistinguishable from a decision.
+    #
+    # Measured 2026-08-31 against qwen3.8-flash-next on an otherwise idle
+    # server, at a 3,809-token prompt (PM-shaped): 14.0s for one stream at
+    # 20.7 tok/s, and 45.9s for the slowest of the five concurrent draws that
+    # `pm_self_consistency_samples=5` issues. 46s against the old 60s ceiling
+    # is a 1.3x margin on an IDLE box, so any second convene or live user
+    # pushed the PM phase over it — which is exactly what the CR214 sweep hit.
+    # `test_def389_transport_timeout.py` pins the ordering.
+    vllm_request_timeout_s: float = Field(default=180.0, ge=30.0, le=900.0)
+
     # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
     # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
     # already generalized the vLLM provider class specifically so a new

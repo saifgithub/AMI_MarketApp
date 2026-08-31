@@ -883,6 +883,7 @@ class LLMGateway:
                 model_name=settings.vllm_model,
                 api_key=settings.vllm_api_key or None,
                 max_tokens_floor=settings.vllm_max_tokens_floor or None,
+                timeout_seconds=settings.vllm_request_timeout_s,
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -893,6 +894,10 @@ class LLMGateway:
                 # silently rewrites every caller's max_tokens, so which value
                 # was in force has to be recoverable from the boot log.
                 max_tokens_floor=settings.vllm_max_tokens_floor,
+                # DEF389 — same reason as the floor: which transport budget
+                # was in force has to be recoverable from the boot log, since
+                # exceeding it is silent at the call site.
+                request_timeout_s=settings.vllm_request_timeout_s,
             )
         else:
             logger.info(

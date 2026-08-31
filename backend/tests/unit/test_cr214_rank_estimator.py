@@ -23,7 +23,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from scripts.backtest_report import H_LONG, _avg_ranks, spearman
+from scripts.backtest_report import H_LONG, _avg_ranks, graded_score, spearman
 
 
 # ── ranks ────────────────────────────────────────────────────────────────────
@@ -111,3 +111,46 @@ def test_the_long_horizon_is_about_ninety_calendar_days():
     ~90 calendar days at 4.83 rows/week."""
     assert H_LONG == 62
     assert 85 <= H_LONG * 7 / 4.83 <= 95
+
+
+# --- DEF388: the graded score is a fraction, not a vote count ---------------
+#
+# `samples` is what the provider actually returned, not what was configured.
+# The very first convenes of the CR214 sweep came back 1-of-1 and 3-of-5 in the
+# same batch, so the two scales coexist in real data.
+
+
+class _Row:
+    def __init__(self, approve_votes, samples):
+        self.approve_votes = approve_votes
+        self.samples = samples
+
+
+def test_score_is_the_approval_fraction():
+    assert graded_score(_Row(3, 5)) == pytest.approx(0.6)
+    assert graded_score(_Row(5, 5)) == pytest.approx(1.0)
+    assert graded_score(_Row(0, 5)) == pytest.approx(0.0)
+
+
+def test_a_unanimous_short_sample_outranks_a_split_full_sample():
+    """1-of-1 is a stronger approval than 3-of-5 and must rank above it.
+
+    On the raw count the order inverts (1 < 3), which is the whole defect.
+    """
+    assert graded_score(_Row(1, 1)) > graded_score(_Row(3, 5))
+
+
+def test_missing_denominator_is_none_not_zero():
+    assert graded_score(_Row(0, None)) is None
+    assert graded_score(_Row(3, 0)) is None
+    assert graded_score(_Row(None, 5)) is None
+
+
+def test_the_defect_would_have_reordered_the_cross_section():
+    """Same date, same returns: counts and fractions give opposite ICs."""
+    rows = [_Row(1, 1), _Row(2, 5), _Row(3, 5)]
+    returns = [0.10, -0.05, 0.02]
+    counts = [float(r.approve_votes) for r in rows]
+    fractions = [graded_score(r) for r in rows]
+    assert spearman(counts, returns) == pytest.approx(-0.5)
+    assert spearman(fractions, returns) == pytest.approx(1.0)

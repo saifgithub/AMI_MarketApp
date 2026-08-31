@@ -202,6 +202,25 @@ def _avg_ranks(vals: list[float]) -> list[float]:
     return ranks
 
 
+def graded_score(sc) -> float | None:
+    """The convene's approval FRACTION, or None when it carries no score.
+
+    DEF388 — rank on `approve_votes / samples`, never on the raw count.
+    `samples` records how many independent CIO draws actually came back, and a
+    degrading provider returns fewer than the configured N: 1-of-5 was observed
+    on the first convenes of the CR214 sweep. On a count-based score a 1-of-1
+    approval (score 1) ranks BELOW a 3-of-5 approval (score 3) while meaning
+    the opposite, so a provider wobble reorders the cross-section.
+
+    None, not 0.0, when there is no usable denominator — a run that never
+    reached the vote path expresses no view, and folding it in as the weakest
+    possible score asserts a rejection the Room never made.
+    """
+    if sc.approve_votes is None or not sc.samples:
+        return None
+    return sc.approve_votes / sc.samples
+
+
 def spearman(xs: list[float], ys: list[float]) -> float | None:
     """Tie-aware Spearman rank correlation, or None where it is undefined.
 
@@ -767,7 +786,7 @@ def main() -> int:
     # count — that date expresses no ranking, and averaging in a 0.0 would
     # assert a null the data never made. Undefined dates are counted below.
     ic_lines: list[str] = []
-    graded = [sc for sc in scored if sc.approve_votes is not None]
+    graded = [sc for sc in scored if graded_score(sc) is not None]
     if not graded:
         ic_lines.append(
             "SKIPPED — no run in this batch carries `approve_votes`. The batch "
@@ -781,12 +800,25 @@ def main() -> int:
             + (f" — **{len(scored) - len(graded)} ungraded and excluded**"
                if len(graded) != len(scored) else "")
         )
+        _samp: dict[int, int] = {}
+        for sc in graded:
+            _samp[sc.samples] = _samp.get(sc.samples, 0) + 1
+        if len(_samp) > 1:
+            _full = max(_samp)
+            ic_lines.append(
+                "Achieved CIO draws per convene: "
+                + ", ".join(f"{k}x{v}" for k, v in sorted(_samp.items()))
+                + f" — **{len(graded) - _samp[_full]} convene(s) returned fewer "
+                f"than {_full} draws**, so their score sits on a coarser grid. "
+                "The fraction keeps them comparable, but a large tail here means "
+                "the provider was degrading, not that the Room was undecided."
+            )
         for label, ex_attr in (("4w", "excess20"), ("~13w (62d)", "excess62")):
             by_date: dict[date, list[tuple[float, float]]] = {}
             for sc in graded:
                 if getattr(sc, ex_attr) is not None:
                     by_date.setdefault(sc.as_of, []).append(
-                        (float(sc.approve_votes), getattr(sc, ex_attr))
+                        (graded_score(sc), getattr(sc, ex_attr))
                     )
             per_date: dict[date, float] = {}
             undefined = 0
@@ -912,9 +944,12 @@ def main() -> int:
         "",
         "## CR214 — rank IC on the graded verdict",
         "",
-        "Per-date Spearman between `approve_votes` (0..N over the independent CIO "
-        "draws) and forward excess return, averaged over dates. Every convene "
-        "enters this statistic, not just the minority that approved.",
+        "Per-date Spearman between the approval FRACTION "
+        "(`approve_votes` / `samples`, over the independent CIO draws) and "
+        "forward excess return, averaged over dates. Every convene enters this "
+        "statistic, not just the minority that approved. DEF388: the fraction, "
+        "not the raw count — a convene whose provider returned 1 draw of 5 "
+        "would otherwise outrank a 3-of-5 approval.",
         "",
         *ic_lines,
     ]

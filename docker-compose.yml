@@ -186,6 +186,10 @@ services:
       # and DEF063 were both a setting that existed locally and never
       # reached the container).
       VLLM_METRICS_SAMPLE_INTERVAL_SECONDS: ${VLLM_METRICS_SAMPLE_INTERVAL_SECONDS:-3600}
+      # DEF389 — HTTP read budget for one completion. Must stay ABOVE the
+      # Room's own 90s per-agent guard, or that guard is unreachable and a
+      # slow model surfaces as a fail-safe PASS rather than a timeout.
+      VLLM_REQUEST_TIMEOUT_S: ${VLLM_REQUEST_TIMEOUT_S:-180.0}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
       # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
       # .env to flip on real prices (with a mock-walk fallback). The

@@ -5033,7 +5033,9 @@ async def _compute_agent_text(
             logger.warning(
                 "room_agent_llm_failed",
                 agent_id=agent_id.value,
-                error=str(exc)[:200],
+                # DEF389 — see the PM site: a bare transport timeout has an
+                # empty str(), so the error field named nothing.
+                error=(str(exc) or repr(exc))[:200],
             )
             text = _scripted_for(agent_id, formatter)
     else:
@@ -5466,7 +5468,9 @@ async def _stream_pm_response(
         logger.warning("room_pm_timeout", timeout_s=agent_timeout_s)
         return ""
     except Exception as exc:
-        logger.warning("room_pm_llm_failed", error=str(exc)[:200])
+        # DEF389: `str(httpx.ReadTimeout())` is the empty string, so the one
+        # field that names the failure was blank on every transport timeout.
+        logger.warning("room_pm_llm_failed", error=(str(exc) or repr(exc))[:200])
         return ""
 
 
