@@ -1,5 +1,47 @@
 # CR164 — the pinned regression re-test recipe
 
+> ## ⚠️ SUSPENDED 2026-08-31 — the baseline below is no longer a comparator (DEF385)
+>
+> **Do not run this recipe as a regression check.** The recipe's whole promise is *"did we
+> change the Room?"* — measured by replaying a pinned plan and diffing against
+> `r70-outcome-2`. That promise requires everything except the change under test to hold
+> still. **The model did not hold still.**
+>
+> CR211 (2026-08-28) records the on-prem serve moving: `Qwen3.6-35B-A3B-NVFP4` on `:8000`
+> died and **`qwen3.8-flash-next`** came up on `:8048`. `:8000` answers again today serving
+> that same Qwen3.8 build, and **the alias `ami-llm` was reused across the swap** — so the
+> provenance line in `PHASE_B_OUTCOME_2026-08-20.md:20` ("snapshot `e850c696…` — unchanged
+> since the cutoff probe, so the 2025-02-28 window start still holds") now names a model
+> that is no longer being served, while reading as though nothing moved.
+>
+> Two independent things break as a result:
+>
+> 1. **A replay would change the model AND the code**, so any diff is uninterpretable — the
+>    one failure mode the pinned plan exists to prevent.
+> 2. **Five of the plan's 18 as-of dates are no longer post-cutoff.** A fresh probe
+>    ([`results/cutoff_probe_2026-08-31.md`](results/cutoff_probe_2026-08-31.md)) moves
+>    `window_start` **2025-02-28 → 2025-08-01** (price-collapse 2024-08 → 2025-01; last
+>    recalled event 2025-01 → 2025-06). `2025-02-28`, `2025-04-11`, `2025-05-09`,
+>    `2025-06-13` and `2025-07-11` now sit **inside the model's own knowledge**. Replaying
+>    them would produce a batch the prompt scanner still calls clean, because the scanner
+>    checks prompts against `as_of` — never `as_of` against the model.
+>
+> **`r70-outcome-2` is not retracted.** It ran on Qwen3.6, where every one of its dates was
+> genuinely post-cutoff, and it remains valid for the model it measured. What is dead is its
+> use as a *baseline for future runs*.
+>
+> **To restore a regression instrument**, a new pinned plan must be cut on `window_start =
+> 2025-08-01` (52 usable Fridays at the 20-trading-day horizon, ~43 at ~90 days) and a fresh
+> baseline measured on the current serve. That is CR214's sweep; this recipe should be
+> rewritten against it rather than patched.
+>
+> **The durable lesson, which is why DEF385 is filed against code and not just this file:**
+> `--window-start` is an *input*. CR164 is rightly proud that the leakage refusal is "code,
+> not convention" — but the number that refusal enforces was a convention all along, and it
+> went stale silently. Until the sweep refuses to start unless the probe backing its window
+> was measured against the model currently answering, this can recur without a symptom.
+
+
 **Acceptance criterion 5.** *"A pinned regression batch spec is committed and documented as the
 post-infra-CR re-test recipe."*
 
