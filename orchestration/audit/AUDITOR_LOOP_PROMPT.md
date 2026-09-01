@@ -79,6 +79,16 @@ repo layout, and do not proceed on an unresolved token.
      physical hardware can confirm it and the stakeholder's acceptance test is expected to cover it.
    - Run a blind adversarial pass on the item's riskiest dimension (write your own probe/pin
      test; auditor-authored pins live under `<AUDIT_ROOT>/regression/`).
+   - **Fold in the foreign pass, if one ran** (CR215, mandatory on Tier A). You and the builder are
+     the same model family, so there is a class of defect neither of you can see. A decorrelated
+     auditor may already have looked: `git show foreign/<ITEM>.r<N>:orchestration/audit/foreign/<ITEM>.r<N>.foreign.md`.
+     **Read it from the branch; never transcribe it** — that is what keeps an inconvenient finding
+     from being one edit away from never existing. Disposition EVERY finding in your own lane file as
+     `real` / `false-divergence` / `noise`, verifying each at `file:line` yourself rather than taking
+     it on trust, and record the counts in `orchestration/audit/foreign_trail.md`. Its
+     `FOREIGN-VERDICT:` is advisory and binds nothing; yours is the gate. If the pass did not run,
+     say so — `FOREIGN: unavailable` is a result, not a clean bill (DEF059). Protocol:
+     `orchestration/audit/FOREIGN_AUDIT.md`.
    - If the item introduces or touches a stateful construct — a cache, singleton, connection pool,
      background task, or anything that persists across more than one call — verify it across its
      FULL lifecycle, not just first-construction correctness: does it ever refresh, expire, or get

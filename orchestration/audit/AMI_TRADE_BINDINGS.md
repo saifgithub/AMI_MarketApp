@@ -105,6 +105,29 @@ where both define a term, they agree.
    This tiering is a *spend* rule, not a *rigour* rule: nothing here relaxes DEF159 worktree
    measurement, DEF141 pin registration, or Saiful's own acceptance test (gap-fill 4).
 
+9. **Foreign (decorrelated) audit pass (CR215, 2026-09-01).** Every audit before this one was Claude
+   auditing Claude, which cannot see a **correlated error** — a defect the builder and the auditor
+   both miss because they share a model family. Protocol:
+   [`FOREIGN_AUDIT.md`](FOREIGN_AUDIT.md).
+
+   - **Tier A items get a foreign pass automatically**; any tier can have one on request.
+     `sh orchestration/audit/dispatch_foreign_audit.sh <ITEM> <sha> <round> "<criteria>"` runs
+     `kimi-code/k3` (Moonshot) over the committed SHA in an isolated worktree.
+   - **It is advisory and cannot move the gate.** Different token (`FOREIGN-VERDICT:`), different
+     file (`audit/foreign/`, which no watcher reads), different branch (`foreign/<ITEM>.r<N>`, which
+     never reaches main). Your `VERDICT:` remains the only thing the board honours.
+   - **This does not disturb "one auditor per lane per round" above.** The foreign pass is an
+     instrument the round uses, not a second auditor competing for the lane file — it writes nothing
+     the board reads, so the double-audit hazard that produced the CR121 r2 / CR095 r2 sweep
+     incidents does not arise.
+   - **You must disposition every finding** `real` / `false-divergence` / `noise` in your own lane
+     file, and record the counts in `foreign_trail.md`. Read the findings with `git show`; never
+     transcribe them.
+   - **`FOREIGN: unavailable` is a result, not a gap.** The tier not running must never be read as
+     the foreign auditor having been satisfied (DEF059).
+   - First run (DEF389 r1, `94a86e77`) returned a real correlated-error catch: the fix covered two of
+     three PM-path exception handlers, and the enforcing test's `count(...) == 2` pinned the gap in.
+
 ## Relationship to existing governance
 
 - Handshake COMPLETE does not replace the CR/Defect registers or their existing close-out

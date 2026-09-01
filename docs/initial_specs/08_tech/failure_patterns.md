@@ -1880,3 +1880,43 @@ inverted: a mutation was reported as SURVIVING when its anchor string did not
 exist in the target file, so nothing was ever mutated. A survival claim needs
 the same proof as a kill — confirm the mutation actually landed before reading
 the result.
+
+---
+
+## P31 — an advisory signal parked where the gate can parse it
+
+**Class:** a second opinion written into a namespace the enforcement layer reads,
+so an opinion nobody meant to be binding becomes binding by regex.
+
+**How it arises.** CR215 added a foreign, non-Claude auditor as *advisory*
+insurance under the existing Claude gate. The obvious implementation — have it
+write findings into the audit lane like any other reviewer — would have put a
+model we neither control nor trained one string away from ruling the board.
+`dispatch.sh:62` derives lane state from the last line matching
+`TOK='^(#{1,6} )?\*{0,2}'` + `VERDICT: *(COMPLETE|AWAITING_FIXES)`. Any writer
+into that namespace votes, whether or not anyone intended it to.
+
+The tempting mitigation is to instruct the model not to emit the token. That is
+exactly the mitigation CLAUDE.md rules out: **prompt instructions are not
+controls** — CR038 measured ~70% non-compliance on emphatic instructions, and
+this one is a token the model has every reason to reach for, since it is
+producing something verdict-shaped.
+
+**What generalises.** When adding an advisory producer alongside an enforcing
+one, separation has to be structural and layered, not asserted:
+
+- a **different token** the parser does not recognise;
+- a **different file** the parser does not read;
+- a **different branch** that never reaches the shared one;
+- and a **post-hoc check** that the produced artifact does not carry the
+  enforcing token anyway, run by the launcher rather than requested in a prompt.
+
+Any one of these can be undone by a later refactor; together they fail safe.
+
+**Enforcing check:**
+`backend/tests/unit/test_cr215_foreign_harness_guard.py`. Beyond scanning
+produced artifacts, it **pins the launcher's quarantine regex to `dispatch.sh`'s
+own `TOK` verbatim** — so widening the board's token without widening the guard
+fails the build, rather than silently leaving the guard covering a pattern the
+board no longer uses. Same shape as `test_config_compose_parity.py`: two places
+that must agree, made to prove they still do.

@@ -1,0 +1,48 @@
+{
+  "ami-vllm": {
+    "id": "ami-vllm",
+    "name": "AMI on-prem vLLM (LAN)",
+    "api": "http://192.168.20.74:8048/v1",
+    "npm": "@ai-sdk/openai-compatible",
+    "env": [],
+    "models": {
+      "qwen3.8-flash-next": {
+        "id": "qwen3.8-flash-next",
+        "name": "Qwen3.8-Flash-Next (NVFP4)",
+        "family": "Qwen",
+        "description": "On-prem vLLM serve of /models/qwen38-flash-next-nvfp4. Reasoning model; chain-of-thought shares the output budget (CR130). Verified tool-calling 2026-09-01.",
+        "attachment": false,
+        "reasoning": true,
+        "tool_call": true,
+        "structured_output": true,
+        "temperature": true,
+        "open_weights": true,
+        "release_date": "2026-08-28",
+        "last_updated": "2026-09-01",
+        "modalities": {
+          "input": [
+            "text"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "limit": {
+          "context": 262144,
+          "output": 16000
+        },
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "support_efforts": [
+          "low",
+          "medium",
+          "xhigh"
+        ],
+        "default_effort": "medium"
+      }
+    },
+    "type": "openai"
+  }
+}

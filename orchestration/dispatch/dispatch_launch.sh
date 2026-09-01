@@ -39,17 +39,38 @@ set -u
 REPO="/Volumes/Extreme Pro/AMI_MarketApp"
 
 if [ $# -lt 5 ]; then
-  echo "usage: dispatch_launch.sh <instance-id> <lane> <tier:economy|standard|premium> <fanout:solo|ultra> \"<task body>\"" >&2
+  echo "usage: dispatch_launch.sh <instance-id> <lane> <tier:local|economy|standard|premium> <fanout:solo|ultra> \"<task body>\"" >&2
   exit 2
 fi
 INSTANCE=$1; LANE=$2; TIER=$3; FANOUT=$4; shift 4; BODY=$*
 
+# `local` (CR215) is a FOREIGN harness, not a Claude model: Qwen3.8-Flash-Next on the on-prem vLLM,
+# driven by Kimi Code against its own config home. It sits BELOW economy on the ladder — free (local
+# GPU), so it costs nothing to try first, and `local` fail -> standard, never retry the same tier.
+HARNESS=claude
 case "$TIER" in
+  local)    HARNESS=kimi; MODEL="ami-vllm/qwen3.8-flash-next"; EFFORT="medium"; BUDGET=0 ;;
   economy)  MODEL="claude-haiku-4-5-20251001"; EFFORT="low";    BUDGET=2 ;;
   standard) MODEL="claude-sonnet-5";           EFFORT="medium"; BUDGET=5 ;;
   premium)  MODEL="claude-opus-4-8";           EFFORT="high";   BUDGET=10 ;;
-  *) echo "tier must be economy|standard|premium (got: '$TIER')" >&2; exit 2 ;;
+  *) echo "tier must be local|economy|standard|premium (got: '$TIER')" >&2; exit 2 ;;
 esac
+
+if [ "$HARNESS" = "kimi" ]; then
+  # NEVER a cheap gate. BINDINGS.md:73 "Never economy tier for an auditor", and DEF059 is what a
+  # gate that can fail open actually costs: LLM down -> confident fake APPROVE -> shipped. `local`
+  # is a BUILD tier only; the foreign AUDIT path is dispatch_foreign_audit.sh, on a different family.
+  case "$INSTANCE" in
+    *auditor*|*audit*) echo "refusing TIER=local for auditor-shaped instance '$INSTANCE' — local is a build tier only (CR215)" >&2; exit 2 ;;
+  esac
+  # kimi has no Workflow/Agent tools, so `ultra` cannot mean anything here. Failing loud beats
+  # silently handing back a solo worker the caller believes is fanned out.
+  [ "$FANOUT" = "ultra" ] && { echo "fanout=ultra is not available on TIER=local (kimi has no Workflow/Agent tools)" >&2; exit 2; }
+  KIMI_BIN="${AMI_KIMI_BIN:-$HOME/.kimi-code/bin/kimi}"
+  KIMI_HOME="${AMI_KIMI_CODER_HOME:-$HOME/.kimi-code-ami-coder}"
+  [ -x "$KIMI_BIN" ] || { echo "TIER=local UNAVAILABLE: no kimi at $KIMI_BIN" >&2; exit 3; }
+  [ -f "$KIMI_HOME/config.toml" ] || { echo "TIER=local UNAVAILABLE: coder home not registered at $KIMI_HOME — run orchestration/harness/register_ami_vllm.sh" >&2; exit 3; }
+fi
 
 # BUDGET OVERRIDE — size the cap to the LANE, not just to the tier.
 # Budget used to be derived from tier alone, so the only way to buy more headroom was to buy a
@@ -98,11 +119,22 @@ PROMPT="AMI-TRADE · $INSTANCE · $LANE — ${BODY}${ULTRA_CLAUSE}${FINISH_CLAUS
 # modified-uncommitted every launch; a disjoint per-lane handle file avoids both. Non-fatal.
 HANDLES="$REPO/orchestration/dispatch/handles"
 mkdir -p "$HANDLES" 2>/dev/null || true
-printf '%s\t%s\t%s/%s\t$%s cap\tclaude --resume %s\n' "$SID" "$INSTANCE" "$TIER" "$FANOUT" "$BUDGET" "$SID" \
-  > "$HANDLES/$LANE.handle" 2>/dev/null || echo "warn: handle file not written for $LANE" >&2
+if [ "$HARNESS" = "kimi" ]; then
+  # kimi mints its own session id and prints it on exit, so there is no id to pre-record here.
+  printf '%s\t%s\t%s/%s\tfree\tkimi -r <id printed at exit>\n' "$MODEL" "$INSTANCE" "$TIER" "$FANOUT" \
+    > "$HANDLES/$LANE.handle" 2>/dev/null || echo "warn: handle file not written for $LANE" >&2
+else
+  printf '%s\t%s\t%s/%s\t$%s cap\tclaude --resume %s\n' "$SID" "$INSTANCE" "$TIER" "$FANOUT" "$BUDGET" "$SID" \
+    > "$HANDLES/$LANE.handle" 2>/dev/null || echo "warn: handle file not written for $LANE" >&2
+fi
 
-echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=\$$BUDGET  session=$SID"
-echo "resume  claude --resume $SID"
+if [ "$HARNESS" = "kimi" ]; then
+  echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=free(local GPU)"
+  echo "resume  kimi -r <session id printed when the run ends>"
+else
+  echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=\$$BUDGET  session=$SID"
+  echo "resume  claude --resume $SID"
+fi
 
 cd "$REPO" || { echo "cannot cd $REPO" >&2; exit 1; }
 
@@ -110,8 +142,25 @@ cd "$REPO" || { echo "cannot cd $REPO" >&2; exit 1; }
 # spending a worker or touching the roster's meaning — the exec line is the single source of truth.
 if [ "${DISPATCH_DRY_RUN:-0}" = "1" ]; then
   echo "DRY-RUN — would exec:"
-  echo "claude -p --permission-mode acceptEdits --allowedTools \"$TOOLS\" --add-dir \"$REPO\" --model $MODEL --effort $EFFORT --max-budget-usd $BUDGET --session-id $SID \"<prompt: ${#PROMPT} chars>\""
+  if [ "$HARNESS" = "kimi" ]; then
+    echo "KIMI_CODE_HOME=$KIMI_HOME $KIMI_BIN -p \"<prompt: ${#PROMPT} chars>\" -m $MODEL"
+  else
+    echo "claude -p --permission-mode acceptEdits --allowedTools \"$TOOLS\" --add-dir \"$REPO\" --model $MODEL --effort $EFFORT --max-budget-usd $BUDGET --session-id $SID \"<prompt: ${#PROMPT} chars>\""
+  fi
   exit 0
+fi
+
+if [ "$HARNESS" = "kimi" ]; then
+  # Pre-register the run: a `local` lane that dies must still be visible in the ledger, because
+  # exec replaces this process and nothing here runs afterwards to record it (MHBP 9/10).
+  printf '| %s | %s | — | — | coder | %s | — | lane %s launched |\n' \
+    "$(date -u +%Y-%m-%d)" "$LANE" "$MODEL" "$LANE" >> "$REPO/orchestration/audit/foreign_trail.md" 2>/dev/null || true
+  # No --session-id (kimi mints its own), no --max-budget-usd (local GPU is free), no
+  # --permission-mode (verified 2026-09-01: `-p` rejects both --auto and --yolo, and uses tools
+  # under default permissions anyway). The watchdog is here because `kimi -p` does not reliably
+  # exit once the model has stopped working.
+  exec env KIMI_CODE_HOME="$KIMI_HOME" python3 "$REPO/orchestration/harness/run_timeout.py" \
+    "${LOCAL_TIMEOUT_S:-1800}" "$KIMI_BIN" -p "$PROMPT" -m "$MODEL"
 fi
 
 exec claude -p --permission-mode acceptEdits \
