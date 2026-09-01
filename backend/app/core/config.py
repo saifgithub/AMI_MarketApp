@@ -3,7 +3,7 @@
 import json
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # list[str] env vars accept bare CSV ("a,b"), a single bare value, an empty
@@ -149,6 +149,31 @@ class Settings(BaseSettings):
     # fires and logs `room_agent_timeout` / `room_pm_timeout`; DEF389 is what
     # the inverted ordering costs. `test_def389_transport_timeout.py` pins it.
     room_agent_timeout_s: float = Field(default=180.0, ge=15.0, le=900.0)
+
+    @model_validator(mode="after")
+    def _transport_budget_outside_the_guard(self) -> "Settings":
+        # DEF392 — CR040 degrade-loudly. The per-field bounds above are each
+        # satisfiable while the PAIR is inverted: `ROOM_AGENT_TIMEOUT_S=800` with
+        # `VLLM_REQUEST_TIMEOUT_S=45` boots clean today, and what boots is a Room
+        # whose timeout guard can never fire. Every slow call then dies in httpx
+        # first, and a bare `httpx.ReadTimeout` stringifies to the empty string,
+        # so the failure lands as `room_pm_llm_failed error=""` and the Room
+        # falls back to its DEF059 fail-safe PASS — a completed run carrying a
+        # verdict indistinguishable from a decision (DEF389). An inverted pair is
+        # never a legitimate operator choice, so this refuses boot outright
+        # rather than logging a warning nobody reads at 3am.
+        if self.vllm_request_timeout_s <= self.room_agent_timeout_s:
+            raise ValueError(
+                "vllm_request_timeout_s "
+                f"({self.vllm_request_timeout_s}s) must be strictly greater than "
+                f"room_agent_timeout_s ({self.room_agent_timeout_s}s): the HTTP "
+                "transport budget has to sit OUTSIDE the Room's per-agent guard, "
+                "or the guard can never fire and slow completions surface as "
+                "empty-string transport errors feeding a fail-safe PASS verdict "
+                "(DEF389/DEF392). Raise VLLM_REQUEST_TIMEOUT_S or lower "
+                "ROOM_AGENT_TIMEOUT_S."
+            )
+        return self
 
     # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
     # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
