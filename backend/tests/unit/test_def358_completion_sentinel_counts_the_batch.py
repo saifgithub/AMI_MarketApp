@@ -165,6 +165,11 @@ def test_the_call_site_counts_pairs_it_skipped(tmp_path, monkeypatch):
         )
     )
 
+    # DEF387 — the sweep refuses an unsupervised launch. This is an in-process
+    # call exercising the sentinel's pair counting, not a bare multi-hour
+    # launch, so it declares itself supervised rather than the guard being
+    # weakened to admit it.
+    monkeypatch.setenv(sweep.SUPERVISOR_ENV, "1")
     monkeypatch.setattr(sweep, "_admin_secret", lambda: "secret")
     monkeypatch.setattr(sweep.httpx, "Client", _Client)
     monkeypatch.setattr(
