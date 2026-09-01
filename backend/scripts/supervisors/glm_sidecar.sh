@@ -91,15 +91,32 @@ case "$1" in
     "
     ;;
   check)
-    # The whole point of the sidecar. If this does not say glm, every number the
+    # The whole point of the sidecar. If :$PORT does not say glm, every number the
     # run produces is the INCUMBENT scored against itself — `_active_provider_name`
     # falls through silently when a forced provider is unregistered.
-    echo "--- :$PORT (benchmark arm) must be glm ---"
-    docker exec "$CONTAINER" curl -s "http://127.0.0.1:$PORT/v1/llm/status"
-    echo
-    echo "--- :8000 (live Alpha) must be UNCHANGED ---"
-    docker exec "$CONTAINER" curl -s "http://127.0.0.1:8000/v1/llm/status"
-    echo
+    #
+    # /v1/llm/status is admin-gated, and an unauthenticated call returns a JSON
+    # body ({"detail":"invalid admin credentials"}) with no provider in it. Read
+    # casually that is indistinguishable from "not glm", and read carelessly it is
+    # indistinguishable from a pass — so the secret is taken from the container's
+    # own env and the result is asserted, not printed for a human to interpret.
+    docker exec "$CONTAINER" sh -c '
+      S=$(printenv ADMIN_SECRET)
+      fail=0
+      for spec in "'"$PORT"':glm:benchmark arm" "8000:vllm:live Alpha"; do
+        port=${spec%%:*}; rest=${spec#*:}; want=${rest%%:*}; label=${rest#*:}
+        body=$(curl -s -H "Authorization: Bearer $S" "http://127.0.0.1:$port/v1/llm/status")
+        got=$(printf "%s" "$body" | sed -n "s/.*\"active_provider\":\"\([^\"]*\)\".*/\1/p")
+        if [ -z "$got" ]; then
+          echo ":$port ($label) UNREADABLE — $body"; fail=1
+        elif [ "$got" != "$want" ]; then
+          echo ":$port ($label) WRONG PROVIDER — want $want, got $got"; fail=1
+        else
+          echo ":$port ($label) ok — $got"
+        fi
+      done
+      exit $fail
+    '
     ;;
   *) usage ;;
 esac
