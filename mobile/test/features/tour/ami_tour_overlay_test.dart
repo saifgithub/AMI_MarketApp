@@ -462,7 +462,83 @@ void main() {
 
     expect(finishes, 0,
         reason: 'the user never reached the end — a target died under them, '
-            'and a partly-seen tour must not be marked complete');
+            'so the completion toast must not fire');
+    // r3 finding 3: both fall-through tests pinned the TOAST and not the
+    // TEARDOWN, so a no-op fall-through — which leaks a full-screen barrier —
+    // passed them. On the one file whose header calls teardown the primary
+    // assertion.
+    expect(find.text('s1'), findsNothing);
+    expect(find.text('s2'), findsNothing,
+        reason: 'not finishing is not the same as not tearing down — a '
+            'retained entry here is a full-screen dim');
+  });
+
+  testWidgets(
+      'DEF395 stale watcher chains do not drain a later step\'s settle budget',
+      (t) async {
+    // r3 finding 4 — the foreign auditor supplied this recipe after I disclosed
+    // that I could not pin the drain behaviourally. My disclosure fixated on
+    // "context without layout", which flutter_test lays out synchronously; the
+    // settle budget ALSO engages on `currentContext == null` mid-display, and
+    // that reproduces fine. Three steps, kill step two's target while it shows,
+    // restore it inside the 8-frame budget: guarded, one chain burns 5 frames
+    // and the step survives; unguarded, three chains burn ~15 and it is
+    // declared dead.
+    final k1 = GlobalKey();
+    final k2 = GlobalKey();
+    final k3 = GlobalKey();
+    var twoAlive = true;
+    late StateSetter setOuter;
+
+    await t.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: StatefulBuilder(builder: (context, setState) {
+          setOuter = setState;
+          return Column(children: [
+            SizedBox(key: k1, height: 30, child: const Text('a')),
+            if (twoAlive)
+              SizedBox(key: k2, height: 30, child: const Text('b')),
+            SizedBox(key: k3, height: 30, child: const Text('c')),
+            TextButton(
+              onPressed: () => showAmiTour(
+                context: context,
+                steps: [
+                  AmiTourStep(
+                      identify: 'y1',
+                      target: k1,
+                      builder: (c, ctl) => _TestCard(tag: 'y1', controller: ctl)),
+                  AmiTourStep(
+                      identify: 'y2',
+                      target: k2,
+                      builder: (c, ctl) => _TestCard(tag: 'y2', controller: ctl)),
+                  AmiTourStep(
+                      identify: 'y3',
+                      target: k3,
+                      builder: (c, ctl) => _TestCard(tag: 'y3', controller: ctl)),
+                ],
+              ),
+              child: const Text('START'),
+            ),
+          ]);
+        }),
+      ),
+    ));
+
+    await start(t);
+    await t.tap(find.text('NEXT'));
+    await t.pumpAndSettle();
+    expect(find.text('y2'), findsOneWidget, reason: 'precondition');
+
+    setOuter(() => twoAlive = false);
+    for (var i = 0; i < 5; i++) {
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    setOuter(() => twoAlive = true);
+    await t.pumpAndSettle();
+
+    expect(find.text('y2'), findsOneWidget,
+        reason: 'the target came back inside the 8-frame budget; only stale '
+            'chains from steps one and two could have exhausted it early');
   });
 
   test('DEF395 the rect-watch chain is generation-guarded', () {

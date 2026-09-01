@@ -225,14 +225,17 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
   /// swallows every tap, so the user cannot scroll underneath; the rect moves
   /// only from our own `ensureVisible` or a late first layout.
   ///
-  /// DEF395 — this re-arms itself ONLY while still waiting for a rect, so it
-  /// stops once the target has settled. An earlier version of this comment
-  /// claimed it re-ran on "an orientation change" too; it does not, and the
-  /// cutout would keep stale coordinates across a rotation. That is currently
-  /// unreachable rather than fixed: `main.dart:69` locks the app to
-  /// `portraitUp` for the alpha. If that lock is ever lifted, this needs a
-  /// `WidgetsBindingObserver.didChangeMetrics` re-arm — do not assume the
-  /// post-frame callback covers it.
+  /// DEF395 — this re-arms for the LIFE OF THE TOUR, not only while waiting
+  /// for a first rect, so the rect is re-read on every frame the app produces.
+  /// Rotation is therefore covered by construction and needs no
+  /// `didChangeMetrics` hook (an earlier revision of this comment prescribed
+  /// one; it is unnecessary, and `main.dart:69` locks the alpha to portraitUp
+  /// anyway). Each step arms exactly one live chain — see `_watchGeneration`.
+  ///
+  /// Two revisions of this docstring have now described behaviour the function
+  /// did not have, both caught by the foreign auditor rather than by a test.
+  /// A comment on this function is load-bearing: change the function, change
+  /// this.
   void _scheduleRectRefresh() {
     final generation = ++_watchGeneration;
     _rearmRectRefresh(generation);
@@ -260,7 +263,13 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
       }
       if (next != _rect || waiting) {
         setState(() {
-          _settleFrames = next == null ? _settleFrames + 1 : _settleFrames;
+          // DEF395 r3 — RESET on settle, do not merely hold. The budget is
+          // "how long to wait for THIS disappearance to resolve"; carrying
+          // frames burned on a slow first layout into a later mid-display
+          // vanish permanently shrinks it, and repeated flickers accumulate
+          // toward the cap until a recovered target is declared dead. Only
+          // meaningful because the chain now outlives settle.
+          _settleFrames = next == null ? _settleFrames + 1 : 0;
           _rect = next;
         });
       }
