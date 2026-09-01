@@ -34,16 +34,27 @@ PORT="${GLM_SIDECAR_PORT:-8001}"
 # to deliberately measure the voting effect, never for the head-to-head.
 SAMPLES="${PM_SELF_CONSISTENCY_SAMPLES:-1}"
 
+# In-container path. /tmp is per-container and wiped on recreate, which is the
+# right lifetime: a PID from a previous container is never valid here.
+PIDFILE="/tmp/glm_sidecar_${PORT}.pid"
+
 usage() { echo "usage: $0 {start|stop|status|check}" >&2; exit 64; }
 [ $# -ge 1 ] || usage
 
 case "$1" in
   start)
+    # `exec` after writing $$ so the PID file names the uvicorn process itself,
+    # not a shell that has already exited. The container image carries no `ps`,
+    # `pgrep` or `pkill` (verified 2026-09-01), so a pattern-matching stop would
+    # silently fail and leave a second API serving GLM after the run finished —
+    # a stray process holding the benchmark's provider override is exactly the
+    # kind of thing that quietly contaminates the NEXT measurement.
     docker exec -d \
       -e LLM_FORCE_PROVIDER=glm \
       -e PM_SELF_CONSISTENCY_SAMPLES="$SAMPLES" \
       "$CONTAINER" \
-      uvicorn app.main:app --host 127.0.0.1 --port "$PORT" --log-level warning
+      sh -c "echo \$\$ > $PIDFILE; exec uvicorn app.main:app \
+             --host 127.0.0.1 --port $PORT --log-level warning"
     echo "started (provider=glm, pm_samples=$SAMPLES); waiting for health…"
     for _ in $(seq 1 30); do
       if docker exec "$CONTAINER" curl -sf "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1; then
@@ -56,12 +67,28 @@ case "$1" in
     exit 1
     ;;
   stop)
-    # Match on the port so the live :8000 uvicorn is never a candidate.
-    docker exec "$CONTAINER" pkill -f "uvicorn app.main:app.*--port $PORT" || true
-    echo "stopped (port $PORT)"
+    # `kill` is a shell builtin, so this works in an image with no process tools.
+    # PID 1 is the LIVE :8000 uvicorn — refuse to signal it under any
+    # circumstances, including a truncated or clobbered PID file.
+    docker exec "$CONTAINER" sh -c "
+      pid=\$(cat $PIDFILE 2>/dev/null)
+      case \"\$pid\" in
+        ''|*[!0-9]*) echo 'no valid pid file — nothing to stop'; exit 0 ;;
+        1) echo 'REFUSING: pid file says 1, which is the live :8000 API' >&2; exit 1 ;;
+      esac
+      kill \"\$pid\" 2>/dev/null && echo \"signalled \$pid\" || echo \"pid \$pid not running\"
+      rm -f $PIDFILE
+    "
     ;;
   status)
-    docker exec "$CONTAINER" sh -c "ps aux | grep -c '[u]vicorn.*--port $PORT'" || true
+    docker exec "$CONTAINER" sh -c "
+      pid=\$(cat $PIDFILE 2>/dev/null)
+      if [ -n \"\$pid\" ] && [ -d /proc/\$pid ]; then
+        echo \"sidecar RUNNING pid=\$pid: \$(tr '\\0' ' ' < /proc/\$pid/cmdline)\"
+      else
+        echo 'sidecar NOT running'
+      fi
+    "
     ;;
   check)
     # The whole point of the sidecar. If this does not say glm, every number the
