@@ -912,3 +912,59 @@ hang to a 4m12s run (12/19 passing) after DEF375 made the coach-mark Skip contro
 CR209 gave the walk identifier-addressed answers. **The gate itself has not moved: E5
 (device-matrix verification) is still open and still needs Saiful's device time.** That is the
 single concrete blocker on widening recruitment past the initial 10–20 personal invites.
+
+## 2026-09-01
+
+Run as the 0900 automated check-in (LaunchAgent), read-only sweep first. Board, counted from the
+row files by `gen_registers.py verify` rather than by eye: **12 open Defects + 6 proposed CRs +
+15 in_progress CRs**. Only **two** items were genuinely new decisions since the 08-26 section;
+everything else carries a standing disposition and was not re-asked.
+
+**Carried forward with their blocker named, not re-asked:**
+
+- **DEF100 / DEF344 / CR084 / CR198** — `[PAYMENTS TRACK PARKED — 2026-08-21]`; unpark trigger is
+  DEF100's provisioning. Unchanged.
+- **CR004** — ledger only; blocked on payments-active + both-stores-live, both Saiful's. Unchanged.
+- **CR022** — deferred-to-pre-release. **CR161** — waits on a Tier-1 prospect trigger, an external
+  event rather than work. Unchanged.
+- **DEF178** — "rotate later, I'll work the rest" (08-24); still CR123's sole remaining blocker.
+- **DEF104** — blocked by the DEF204 "leave it, it's working" ruling. Unchanged.
+- **DEF144 / DEF200 / DEF367 / DEF375 / DEF392 / DEF385 / DEF386** — in flight or already approved;
+  no decision owed.
+- **CR159** — filed as a design of record at Saiful's own "may or may not be built"; the ruling is
+  the row. **CR191** — gated on horizontal scale, an infra condition we do not meet, not a date.
+  Neither owes a decision.
+- **CR213** (distance-normalised target/stop reporting) — not asked: it exists to make the CR214
+  sweep's output interpretable, and the sweep is now parked. Re-raise it if CR214 unparks.
+
+**Asked and answered:**
+
+- **CR214 — the sweep is halted on GPU contention, not on our code.** Stopped itself at pair
+  54/700 when `--max-consecutive-outages 3` tripped (the guard working; the opposite of
+  `r70-outcome-1`, which recorded 450 outages as decisions). Two causes, one ours: DEF390's
+  hardcoded 90s agent budget, fixed. The blocker is not ours — `192.168.20.74` runs two vLLM serves
+  of the same model, and a 2-token call measured **114.0s on `:8000` vs 0.4s on `:8048`** while
+  `:8048`'s own scheduler sat idle (`kv_cache_usage_perc` 0.12-0.19, 0 waiting, 0 preemptions). PM
+  calls went 14.0s → 277.4s, a ~15x collapse no timeout survives. Asked: investigate/stop `:8000` /
+  schedule around it / park / take the box yourself? → Saiful: **"Park CR214's sweep."** Recorded in
+  the row and in `BLOCKER_2026-09-01_vllm_contention.md`. Unpark trigger is a host change, not a
+  work item. Everything measured stands: 13-week **+5.09%**, the corrected 52-Friday window, and the
+  two withdrawals.
+- **DEF382 — the coach-mark tours take the iOS accessibility tree down.** Touching a first-run tour
+  can permanently kill the tree (1,519 bytes, 0/4 nav) with the app alive and foregrounded — same
+  PID, `query_app_state` 4, no crash report — until force-quit. A VoiceOver user who dismisses any
+  of the five tours loses the app to VoiceOver. It also strands 7 of the iOS gate's 19 tests, which
+  is the **E5** gate on Stealth Alpha graduation. Two confident explanations (Skip-kills, cadence)
+  were formed and refuted on controlled arms; nothing observed predicts when it fires. Asked:
+  replace `TutorialCoachMark` / gate tours off / keep debugging / wire the harness workaround?
+  → Saiful: **"Replace TutorialCoachMark."** The five tours get rebuilt on our own overlay
+  primitive. **Laned to the build team, not started here** — a status check-in does not open a
+  mobile refactor. Acceptance is a tree-size + nav-count assertion across every tour × dismissal
+  path already measured, not a green suite (a harness that stops noticing is the DEF362 shape).
+
+**Flagged, no decision asked:**
+
+- **`/bug-monitor` has never committed a cycle.** `git log --grep='docs(bug-monitor)'` returns
+  nothing, so CLAUDE.md step 2b's 6h watermark has no evidence it has ever run since CR185 landed
+  the mechanism (`331c71fe`). Not run here because this check-in is read-only by construction and
+  `/bug-monitor` writes (files DEFs, flips report status). Surfaced for Saiful to arm or run.

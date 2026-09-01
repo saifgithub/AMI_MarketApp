@@ -90,3 +90,21 @@ ssh -f melehost 'cd ~/ami_trade && setsid nohup bash backend/scripts/supervisors
 Before resuming, confirm the host is actually serving: a PM-shaped call
 (~3-4k prompt, ~300 completion tokens) against `:8048` should return in **under
 20s**. At 200s+ the sweep will only manufacture fail-safes again.
+
+---
+
+## Ruling (2026-09-01, daily check-in)
+
+Asked: investigate/stop `:8000` · both coexist, schedule around it · park the sweep · Saiful takes
+the box himself. → **"Park CR214's sweep."**
+
+No further sweep pairs run. This is the same line as the CR196 close — *no further GPU spend
+authorised* — applied to a blocker that is on the host rather than in our code, and it costs us
+nothing already measured: the 13-week **+5.09%** result, the corrected **52-Friday** window
+(DEF385) and the two withdrawals (DEF386 Phase A, Phase B's stop/target finding) are all on record
+and independent of the 646 unrun pairs.
+
+**Unpark trigger:** the `:8000` serve is gone, or the box is otherwise free. That is a host change,
+not a work item — nobody here can queue it, and no one should re-open the sweep on a guess about
+the GPU. Re-measure the 2-token probe on both ports before resuming; the discriminator is the port,
+and 0.4s on `:8048` while `:8000` is busy is a request slipping through a gap, not a clear box.
