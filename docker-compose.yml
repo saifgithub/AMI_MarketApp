@@ -189,7 +189,10 @@ services:
       # DEF389 — HTTP read budget for one completion. Must stay ABOVE the
       # Room's own 90s per-agent guard, or that guard is unreachable and a
       # slow model surfaces as a fail-safe PASS rather than a timeout.
-      VLLM_REQUEST_TIMEOUT_S: ${VLLM_REQUEST_TIMEOUT_S:-180.0}
+      VLLM_REQUEST_TIMEOUT_S: ${VLLM_REQUEST_TIMEOUT_S:-360.0}
+      # DEF390 — the Room's per-agent budget. Must stay BELOW the transport
+      # budget above, or the guard that names the failure never fires.
+      ROOM_AGENT_TIMEOUT_S: ${ROOM_AGENT_TIMEOUT_S:-180.0}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
       # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
       # .env to flip on real prices (with a mock-walk fallback). The

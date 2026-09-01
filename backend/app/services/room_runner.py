@@ -3230,7 +3230,10 @@ _PHASE_GAP_S = 0.25
 # upstream model hangs (network stall, vLLM queue backup), the agent
 # falls back to its scripted template so the room run can still finish
 # and produce a verdict rather than stalling forever.
-_AGENT_LLM_TIMEOUT_S = 90.0
+# DEF390 — configurable, not a constant. It was hardcoded at 90.0 across a
+# model swap that made it too tight; see config.py for the measured
+# distribution that sized the replacement.
+_AGENT_LLM_TIMEOUT_S = settings.room_agent_timeout_s
 
 
 @dataclass
@@ -5576,7 +5579,7 @@ async def _reformat_pm_response(
         logger.warning("room_pm_reformat_timeout", timeout_s=agent_timeout_s)
         return ""
     except Exception as exc:
-        logger.warning("room_pm_reformat_failed", error=str(exc)[:200])
+        logger.warning("room_pm_reformat_failed", error=(str(exc) or repr(exc))[:200])
         return ""
 
 

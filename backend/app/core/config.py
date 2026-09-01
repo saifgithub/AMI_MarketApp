@@ -124,7 +124,31 @@ class Settings(BaseSettings):
     # is a 1.3x margin on an IDLE box, so any second convene or live user
     # pushed the PM phase over it — which is exactly what the CR214 sweep hit.
     # `test_def389_transport_timeout.py` pins the ordering.
-    vllm_request_timeout_s: float = Field(default=180.0, ge=30.0, le=900.0)
+    vllm_request_timeout_s: float = Field(default=360.0, ge=30.0, le=1800.0)
+
+    # DEF390 — the Room's per-agent orchestration budget. Was a hardcoded
+    # `room_runner._AGENT_LLM_TIMEOUT_S = 90.0`, which is why nobody re-checked
+    # it when CR211 swapped the served model underneath it: same class as the
+    # 60s transport constant DEF389 fixed, one layer up.
+    #
+    # Sized from `llm_audit`, 2026-09-01, 6h of real convenes on
+    # qwen3.8-flash-next. The portfolio_manager is the binding agent — 290 calls
+    # at 7,041 input / 277 output tokens, mean 42.4s, mode 35-40s, visible tail
+    # to 85s, and **21 calls stacked in the 90-95s bucket**, which is the old cap
+    # clipping the distribution rather than any natural mode. ~7% of PM calls
+    # were being killed. `pm_self_consistency_samples=5` issues those draws
+    # concurrently, so when the host is contended all five cross together and the
+    # convene degrades to a DEF059 fail-safe PASS.
+    #
+    # 180s is ~4.5x the mode. Raising it does NOT make users wait longer in the
+    # typical case (the mode is unchanged); it changes what a slow convene
+    # RETURNS — today they wait 90s for a fail-safe PASS carrying no narrative,
+    # which is a worse outcome than waiting for the real verdict.
+    #
+    # Must stay BELOW `vllm_request_timeout_s` so this guard is the one that
+    # fires and logs `room_agent_timeout` / `room_pm_timeout`; DEF389 is what
+    # the inverted ordering costs. `test_def389_transport_timeout.py` pins it.
+    room_agent_timeout_s: float = Field(default=180.0, ge=15.0, le=900.0)
 
     # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
     # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017

@@ -16,6 +16,7 @@ budget is fine, inverting them is not.
 from __future__ import annotations
 
 import inspect
+import re
 
 import httpx
 import pytest
@@ -62,14 +63,40 @@ def test_the_log_expression_always_names_the_failure(exc):
     assert type(exc).__name__ in rendered
 
 
-def test_both_call_sites_use_the_fallback_expression():
+def test_every_pm_path_call_site_uses_the_fallback_expression():
+    """DEF390: this pin said 2, and there were 3.
+
+    DEF389 fixed `room_agent_llm_failed` and `room_pm_llm_failed` and described them as "both log
+    sites". `room_pm_reformat_failed` is a third handler on the same PM path, catching the same bare
+    transport timeout, and it kept `str(exc)[:200]` — so the reformat recovery call still logged
+    `error=""` into the same DEF059 fail-safe PASS. An `== 2` pin does not merely miss the third
+    site, it actively locks it out: fixing it would have failed this test.
+
+    Counting every `except Exception as exc` handler is what makes the pin grow with the file
+    instead of pinning it to the day it was written (failure_patterns P6 — a guard on growing data
+    is a floor, not a pin).
+    """
     import app.services.room_runner as rr
 
     src = inspect.getsource(rr)
-    assert src.count("(str(exc) or repr(exc))[:200]") == 2, (
-        "room_agent_llm_failed and room_pm_llm_failed must both name the "
-        "exception type when str() is empty"
+    guarded = re.findall(r"error=\(str\(exc\) or repr\(exc\)\)\[:200\]", src)
+    assert len(guarded) >= 3, (
+        f"expected at least 3 guarded PM-path call sites, found {len(guarded)}"
     )
+    for name in ("room_agent_llm_failed", "room_pm_llm_failed", "room_pm_reformat_failed"):
+        idx = src.index(name)
+        # Anchor on that event's own `error=` kwarg, however far the intervening comments push it,
+        # rather than on a fixed-width window that a later comment would silently slide out of.
+        err = src.index("error=", idx)
+        rendered = src[err:err + 60]
+        assert "(str(exc) or repr(exc))" in rendered, (
+            f"{name} must name the exception type when str() is empty; "
+            f"a bare httpx.ReadTimeout has an empty str(). Found: {rendered.splitlines()[0]!r}"
+        )
+    # Scope note: room_runner has other `error=str(exc)[:200]` handlers (earnings, sector context,
+    # option menu...). They are not in scope here — they do not wrap a streaming LLM call, so the
+    # empty-str() transport exception this pin exists for cannot reach them. Widen the tuple above
+    # if one ever does.
 
 
 def test_the_configured_budget_covers_the_measured_five_way_fan_out():
@@ -81,3 +108,32 @@ def test_the_configured_budget_covers_the_measured_five_way_fan_out():
     """
     measured_worst_case_s = 45.9
     assert settings.vllm_request_timeout_s >= 2 * measured_worst_case_s
+
+
+def test_the_agent_budget_clears_the_measured_pm_tail():
+    """DEF390 — sized from llm_audit, not from a round number.
+
+    290 real portfolio_manager calls on qwen3.8-flash-next: mean 42.4s, mode
+    35-40s, tail visible to 85s. The old 90s cap sat at ~2.3x the mode and
+    clipped ~7% of calls into a fail-safe PASS.
+    """
+    observed_pm_mean_s = 42.4
+    assert settings.room_agent_timeout_s >= 4 * observed_pm_mean_s / 1.5, (
+        "the agent budget is back inside the measured PM tail"
+    )
+
+
+def test_the_agent_budget_is_configurable_not_hardcoded():
+    """The whole DEF389/DEF390 class: a latency constant nobody revisits.
+
+    Both budgets were module-level literals when the served model changed under
+    them (CR211), and neither was re-checked because neither was a setting.
+    """
+    import app.services.room_runner as rr
+
+    assert rr._AGENT_LLM_TIMEOUT_S == settings.room_agent_timeout_s
+
+    src = inspect.getsource(rr)
+    assert "_AGENT_LLM_TIMEOUT_S = settings.room_agent_timeout_s" in src, (
+        "the Room's agent budget is hardcoded again"
+    )
