@@ -243,6 +243,14 @@ _FEATURE_GATES: list[tuple[str, str, str]] = [
      "gateway falls back to anthropic/mock"),
     ("kimi_api_key", "LLM — Kimi (Moonshot) provider, candidate B7 (CR126)",
      "LLM_FORCE_PROVIDER=kimi silently falls through to vllm/anthropic/mock"),
+    # CR217 — same silent-fallthrough shape as Kimi's, and it matters more here:
+    # the whole point of the GLM provider is a head-to-head backtest against the
+    # incumbent vLLM model. If GLM_BASE_URL is absent, LLM_FORCE_PROVIDER=glm
+    # falls through to vllm and the "comparison" scores the incumbent against
+    # itself — a null result that looks like a real one.
+    ("glm_base_url", "LLM — GLM-5.3-Flash provider, candidate Room model (CR217)",
+     "LLM_FORCE_PROVIDER=glm silently falls through to vllm and the "
+     "head-to-head scores the incumbent against itself"),
     ("use_real_market_data", "Market data — real Yahoo quotes",
      "deterministic mock random-walk prices"),
     ("admin_secret", "Admin back-office auth",

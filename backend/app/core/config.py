@@ -223,6 +223,31 @@ class Settings(BaseSettings):
     # value yet.
     kimi_max_tokens_floor: int = 8000
 
+    # CR217 — GLM-5.3-Flash-NVFP4, a candidate Room model served by vLLM on a
+    # host reached over Tailscale (100.64.0.0/10), NOT the LAN box that serves
+    # `vllm_base_url`. Registered as its own provider rather than by repointing
+    # VLLM_BASE_URL, because the whole point is to run it head-to-head against
+    # the incumbent: repointing would make the comparison unrunnable and would
+    # swap the live Room's model as a side effect.
+    #
+    # base_url deliberately excludes the trailing `/v1` — OpenAICompatibleProvider
+    # appends `/v1/chat/completions` itself (llm_gateway.py:685), so the `/v1/`
+    # form this endpoint is usually quoted with ("http://100.94.223.38:8008/v1/")
+    # would resolve to `/v1/v1/chat/completions` and 404. Same convention as
+    # vllm_base_url and kimi_base_url above.
+    #
+    # Presence of the URL turns it on, matching vllm_base_url; the endpoint
+    # needs no key today (verified live: a bare unauthenticated GET /v1/models
+    # returns 200), so gating on a key would leave it permanently dark.
+    glm_base_url: str = ""
+    glm_model: str = "LibertAIDAI/GLM-5.3-Flash-NVFP4"
+    glm_api_key: str = ""
+    # Measured 2026-09-01 on a PM-shaped prompt (3,311 input tokens): the model
+    # emits no `reasoning_content` and answered in 284-333 visible tokens, so
+    # it does NOT need Kimi's reasoning-budget floor. 0 = leave every caller's
+    # max_tokens exactly as room_prompts.py tuned it.
+    glm_max_tokens_floor: int = 0
+
     # Manual provider-selection override for testing (e.g. exercising Kimi
     # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty
     # = normal preference order. An unregistered/typo'd name falls through

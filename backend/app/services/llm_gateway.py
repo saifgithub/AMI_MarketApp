@@ -917,7 +917,14 @@ class LLMGateway:
     # Single-model providers: every tier resolves to the one hosted/selected
     # model rather than TIER_TO_MODEL's cheap/mid/premium Anthropic aliases.
     # Keyed by provider name -> the Settings attribute holding its model id.
-    _SINGLE_MODEL_SETTING: dict[str, str] = {"vllm": "vllm_model", "kimi": "kimi_model"}
+    _SINGLE_MODEL_SETTING: dict[str, str] = {
+        "vllm": "vllm_model",
+        "kimi": "kimi_model",
+        # CR217 — a single self-hosted model, like vllm: every tier must resolve
+        # to it, or status() would advertise Anthropic's tier aliases for a
+        # provider that has never heard of them.
+        "glm": "glm_model",
+    }
 
     def __init__(self) -> None:
         self._providers: dict[str, LLMProvider] = {"mock": MockProvider()}
@@ -1019,6 +1026,34 @@ class LLMGateway:
                 "llm_gateway_provider_skipped",
                 provider="qwen",
                 reason="no DASHSCOPE_API_KEY in env",
+            )
+
+        # CR217 — GLM-5.3-Flash-NVFP4, candidate Room model under head-to-head
+        # evaluation against the incumbent vLLM model. Deliberately absent from
+        # `_PREFERENCE`: registering it must not change which provider serves
+        # live traffic. It is reached only via `LLM_FORCE_PROVIDER=glm` (the
+        # mechanism `_active_provider_name` documents for exactly this) or
+        # `provider_policy.pick_provider`.
+        if settings.glm_base_url:
+            self._providers["glm"] = OpenAICompatibleProvider(
+                name="glm",
+                base_url=settings.glm_base_url,
+                model_name=settings.glm_model,
+                api_key=settings.glm_api_key or None,
+                max_tokens_floor=settings.glm_max_tokens_floor or None,
+            )
+            logger.info(
+                "llm_gateway_provider_registered",
+                provider="glm",
+                base_url=settings.glm_base_url,
+                model=settings.glm_model,
+                max_tokens_floor=settings.glm_max_tokens_floor,
+            )
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="glm",
+                reason="no GLM_BASE_URL in env",
             )
 
         if settings.google_ai_api_key:

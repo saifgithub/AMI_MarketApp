@@ -268,6 +268,16 @@ services:
       # never starves the visible answer. See config.py for the measured
       # 900-fails/4000-works curl finding.
       KIMI_MAX_TOKENS_FLOOR: ${KIMI_MAX_TOKENS_FLOOR:-8000}
+      # CR217 — candidate Room model on a Tailscale-reached vLLM host, under
+      # head-to-head evaluation against VLLM_MODEL. No default URL on purpose:
+      # empty means the provider is not registered, and registering it changes
+      # nothing on its own (it is not in LLMGateway._PREFERENCE) — it serves
+      # traffic only under LLM_FORCE_PROVIDER=glm.
+      # NOTE the missing /v1 — the provider appends /v1/chat/completions itself.
+      GLM_BASE_URL: ${GLM_BASE_URL:-}
+      GLM_MODEL: ${GLM_MODEL:-LibertAIDAI/GLM-5.3-Flash-NVFP4}
+      GLM_API_KEY: ${GLM_API_KEY:-}
+      GLM_MAX_TOKENS_FLOOR: ${GLM_MAX_TOKENS_FLOOR:-0}
       LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
