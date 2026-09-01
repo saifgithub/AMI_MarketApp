@@ -41,7 +41,6 @@ def gateway(monkeypatch):
         base = {
             "glm_base_url": "",
             "glm_api_key": "",
-            "glm_max_tokens_floor": 0,
             "vllm_base_url": "",
             "anthropic_api_key": "",
             "kimi_api_key": "",
@@ -137,12 +136,34 @@ def test_glm_gets_a_transport_budget_outside_the_rooms_own_guard(gateway):
     )
 
 
-def test_no_token_floor_is_imposed_on_glm(gateway):
-    """Kimi needs a floor because reasoning eats its budget; GLM measurably does not.
+def test_glm_gets_a_decode_floor_because_it_is_a_reasoning_model(gateway):
+    """Without it the four analysts emit nothing at all — measured, not assumed.
 
-    Measured 2026-09-01 on a 3,311-token PM-shaped prompt: `reasoning_content` was
-    empty and the answer arrived in 284-333 visible tokens. Silently raising
-    max_tokens for one arm of a head-to-head would change what is being compared.
+    GLM spends its `max_tokens` budget on chain-of-thought before any visible
+    content, exactly as Kimi (CR130) and the post-swap vLLM model (CR211) do.
+    Measured 2026-09-01 against the Room's real per-agent caps:
+
+        analyst @800  -> finish_reason='length', 800 tokens, 0 visible chars
+        bull    @1600 -> finish_reason='stop',   723 tokens, 782 visible chars
+        PM      @900  -> finish_reason='stop',   778 tokens, 290 visible chars
+
+    The 800 cap that `_AGENT_MAX_TOKENS` gives all four analysts is below GLM's
+    ~470-490 token thinking preamble outright, so every analyst turn would come
+    back empty. In a backtest an empty turn becomes a DEF059 fail-safe PASS,
+    which reads as the model declining to trade rather than as a decode-budget
+    defect — the single most misleading way this comparison could fail.
+
+    Note the field name: GLM returns its thinking in `reasoning`, NOT in
+    `reasoning_content`. A probe checking only the latter reports "no reasoning"
+    and concludes no floor is needed. That conclusion was made, and was wrong.
     """
     gw = gateway(glm_base_url="http://host:8008")
-    assert gw._providers["glm"]._max_tokens_floor is None
+    floor = gw._providers["glm"]._max_tokens_floor
+    assert floor is not None, "a reasoning model with no floor starves every analyst"
+
+    from app.services.room_prompts import _AGENT_MAX_TOKENS
+
+    assert floor > max(_AGENT_MAX_TOKENS.values()), (
+        f"floor {floor} must clear the largest per-agent cap "
+        f"{max(_AGENT_MAX_TOKENS.values())}, or the agents at that cap still starve"
+    )

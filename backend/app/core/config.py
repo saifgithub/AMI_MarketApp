@@ -242,11 +242,42 @@ class Settings(BaseSettings):
     glm_base_url: str = ""
     glm_model: str = "LibertAIDAI/GLM-5.3-Flash-NVFP4"
     glm_api_key: str = ""
-    # Measured 2026-09-01 on a PM-shaped prompt (3,311 input tokens): the model
-    # emits no `reasoning_content` and answered in 284-333 visible tokens, so
-    # it does NOT need Kimi's reasoning-budget floor. 0 = leave every caller's
-    # max_tokens exactly as room_prompts.py tuned it.
-    glm_max_tokens_floor: int = 0
+    # GLM is a REASONING model and needs the same floor Kimi and vLLM got, for
+    # the same reason (CR130, CR211): chain-of-thought shares the `max_tokens`
+    # budget with the visible answer, so the Room's per-agent caps — 800 for the
+    # four analysts (`room_prompts.py:_AGENT_MAX_TOKENS`) — are consumed before
+    # any content is emitted, and the turn arrives empty.
+    #
+    # Measured 2026-09-01 against the Room's real caps:
+    #   analyst @800  -> finish_reason='length', 800 tokens spent, **0 visible chars**
+    #   bull     @1600 -> finish_reason='stop',  723 tokens,  782 visible chars
+    #   PM       @900  -> finish_reason='stop',  778 tokens,  290 visible chars
+    # i.e. ~470-490 tokens of invisible thinking on every call, and the 800 cap
+    # is below that floor outright.
+    #
+    # **The reasoning is NOT in `reasoning_content`.** GLM returns it in a field
+    # named `reasoning`, which is why a first probe that checked only
+    # `reasoning_content` reported "no reasoning, no floor needed" and was wrong.
+    # An empty-looking turn from this model is a starved turn, not a refusal —
+    # and in a backtest a starved turn is a DEF059 fail-safe PASS, i.e. it reads
+    # as the model declining to trade.
+    #
+    # 12000 per Saiful (2026-09-01). The 2,985 reasoning chars above are a LOWER
+    # BOUND, not the requirement: that turn was cut off mid-thought at the 800
+    # cap, so it says only that GLM wanted at least that much, never how much.
+    # Sizing the floor to a truncated observation is how CR211's first attempt
+    # would have failed.
+    #
+    # A ceiling, not a target — the model self-terminates (723-778 tokens
+    # observed at caps of 1600 and 900), so a generous floor costs what the
+    # model chooses to say, not what the floor permits.
+    #
+    # The real backstop is not this number. At ~14-22 tok/s a genuine 12000-token
+    # generation would take ~9-14 minutes and hit `room_agent_timeout_s` (180s)
+    # first — loudly, via the Room's own guard, which is what DEF389/DEF390 put
+    # there. That is the intended failure: a visible timeout, not a silently
+    # starved turn.
+    glm_max_tokens_floor: int = 12000
 
     # Manual provider-selection override for testing (e.g. exercising Kimi
     # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty

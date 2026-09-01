@@ -131,19 +131,51 @@ def month_end_closes(ticker: str, months: list[tuple[int, int]]) -> dict[tuple[i
 
 def ask(
     client: httpx.Client, prompt: str, disable_thinking: bool,
-    model: str, base_url: str,
+    model: str, base_url: str, max_tokens: int = 900,
 ) -> str:
     body = {
         "model": model,
         "temperature": 0,
-        "max_tokens": 900,
+        # CR217 — 900 was sized for a NON-reasoning server and silently breaks
+        # on a reasoning one. GLM-5.3 spends ~1,000 tokens on an invisible
+        # preamble before its first visible character, so at 900 every probe
+        # returns empty content, `parse_estimate` reads empty as UNKNOWN, and
+        # UNKNOWN is scored as a refusal — the probe would report that the model
+        # knows nothing about any month, and hand back a "collapse" at the very
+        # first one. A cutoff probe that cannot see the model's answers cannot
+        # measure its cutoff.
+        "max_tokens": max_tokens,
         "messages": [{"role": "user", "content": prompt}],
     }
     if disable_thinking:
         body["chat_template_kwargs"] = {"enable_thinking": False}
-    r = client.post(f"{base_url}/v1/chat/completions", json=body, timeout=180)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"] or ""
+    # CR217 — retry, because one timeout used to lose the whole probe. This is
+    # 200+ sequential calls and the previous version raised out of the loop on
+    # the first `httpx.ReadTimeout`, discarding every measurement taken so far.
+    # A reasoning model also makes the old 180s budget tight: it spends its
+    # decode budget on invisible thinking before the answer, so a probe call
+    # costs far more wall-clock than its short reply suggests.
+    last: Exception | None = None
+    for attempt in range(3):
+        try:
+            r = client.post(f"{base_url}/v1/chat/completions", json=body, timeout=420)
+            r.raise_for_status()
+            msg = r.json()["choices"][0]["message"]
+            # A reasoning model may put its chain-of-thought in `reasoning` or
+            # `reasoning_content` depending on the server build; neither is the
+            # answer. GLM-5.3 uses `reasoning`, which is why a probe reading only
+            # `reasoning_content` sees an empty turn and calls it a refusal.
+            return msg.get("content") or ""
+        except Exception as exc:  # noqa: BLE001 — any transport fault is retryable here
+            last = exc
+            if attempt < 2:
+                time.sleep(5 * (attempt + 1))
+    # Exhausted: report it as an unanswered probe rather than killing the run.
+    # An UNKNOWN is scored as a refusal, which is the conservative direction —
+    # it can only pull the collapse month EARLIER, never later, so it cannot
+    # manufacture a wider valid window than the model has earned.
+    print(f"  !! probe failed after 3 attempts ({type(last).__name__}); scoring UNKNOWN")
+    return "UNKNOWN"
 
 
 def parse_estimate(text: str) -> float | None:
@@ -165,6 +197,10 @@ def main() -> None:
                     help="OpenAI-compatible host to probe (no trailing /v1).")
     ap.add_argument("--model", default=DEFAULT_MODEL,
                     help="Model id to request. See --stamp-suffix for report naming.")
+    ap.add_argument("--max-tokens", type=int, default=900,
+                    help="Decode budget per probe. Raise well above the model's "
+                         "thinking preamble for a REASONING model, or every "
+                         "answer comes back empty and scores as a refusal.")
     ap.add_argument("--stamp-suffix", default="",
                     help="Appended to the report filename, so probing a second "
                          "model does not overwrite the first one's report.")
@@ -200,12 +236,14 @@ def main() -> None:
                 continue
             prompt = PROMPT.format(name=name, ticker=ticker, month_name=month_name, year=y)
             try:
-                text = ask(client, prompt, disable_thinking, args.model, base_url)
+                text = ask(client, prompt, disable_thinking, args.model, base_url,
+                           args.max_tokens)
             except httpx.HTTPStatusError as e:
                 if disable_thinking and e.response.status_code == 400:
                     # server rejects chat_template_kwargs — fall back for the whole run
                     disable_thinking = False
-                    text = ask(client, prompt, disable_thinking, args.model, base_url)
+                    text = ask(client, prompt, disable_thinking, args.model, base_url,
+                           args.max_tokens)
                 else:
                     raise
             est = parse_estimate(text)
@@ -250,7 +288,7 @@ def main() -> None:
     event_results = []
     for key, event, truth_month, category in EVENT_PROBES:
         text = ask(client, EVENT_PROMPT.format(event=event), disable_thinking,
-                   args.model, base_url)
+                   args.model, base_url, args.max_tokens)
         cleaned = _THINK_RE.sub("", text).strip()
         m = _MONTH_RE.search(cleaned)
         answered = None if "UNKNOWN" in cleaned.upper() or not m else f"{int(m.group(1))}-{int(m.group(2)):02d}"
