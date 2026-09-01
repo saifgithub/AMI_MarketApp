@@ -13,6 +13,8 @@
 /// tour immediately, and both identifiers actually render.
 library;
 
+import 'dart:io';
+
 import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -396,6 +398,145 @@ void main() {
         reason: 'the overlay must not survive its target vanishing — a '
             'retained entry with a null rect is a full-screen dim, which is '
             'this defect\'s own shape');
+  });
+
+  testWidgets(
+      'DEF395 onFinish does NOT fire when a target dies PART WAY through',
+      (t) async {
+    // Round 2 of the foreign audit. The first fix gated the `_focus`
+    // fall-through on "was any step ever shown", which is true here — the user
+    // saw step one — so a mid-tour death fired the completion toast and marked
+    // a partly-seen tour complete, on zero user action. `next()` on the LAST
+    // step calls `_close(finished: true)` itself and never routes through
+    // `_focus`, so the fall-through is never a user completion.
+    var finishes = 0;
+    final first = GlobalKey();
+    final second = GlobalKey();
+    var secondAlive = true;
+    late StateSetter setOuter;
+
+    await t.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: StatefulBuilder(builder: (context, setState) {
+          setOuter = setState;
+          return Column(
+            children: [
+              SizedBox(key: first, height: 40, child: const Text('t1')),
+              if (secondAlive)
+                SizedBox(key: second, height: 40, child: const Text('t2')),
+              TextButton(
+                onPressed: () => showAmiTour(
+                  context: context,
+                  steps: [
+                    AmiTourStep(
+                      identify: 's1',
+                      target: first,
+                      builder: (ctx, ctrl) =>
+                          _TestCard(tag: 's1', controller: ctrl),
+                    ),
+                    AmiTourStep(
+                      identify: 's2',
+                      target: second,
+                      builder: (ctx, ctrl) =>
+                          _TestCard(tag: 's2', controller: ctrl),
+                    ),
+                  ],
+                  onFinish: () => finishes++,
+                ),
+                child: const Text('START'),
+              ),
+            ],
+          );
+        }),
+      ),
+    ));
+
+    await start(t);
+    expect(find.text('s1'), findsOneWidget);
+
+    // Kill step two's target, then advance onto it.
+    setOuter(() => secondAlive = false);
+    await t.pumpAndSettle();
+    await t.tap(find.text('NEXT'));
+    await t.pumpAndSettle();
+
+    expect(finishes, 0,
+        reason: 'the user never reached the end — a target died under them, '
+            'and a partly-seen tour must not be marked complete');
+  });
+
+  test('DEF395 the rect-watch chain is generation-guarded', () {
+    // HONEST LIMIT, stated rather than papered over. Round 2 of the foreign
+    // audit found that every step arms a rect-watch chain and, once the chain
+    // re-armed for the life of the tour, none ever retired: N+1 concurrent
+    // chains each burn a settle frame per frame, so the 8-frame budget drains
+    // N+1x too fast and a merely SLOW target is skipped as dead.
+    //
+    // The behavioural case is NOT reproducible in a widget test: `_focus`
+    // skips a step whose `currentContext` is null outright, so the settle
+    // budget only engages for a target that HAS a context but has not laid
+    // out, which `flutter_test` lays out synchronously. A behavioural test was
+    // written first, and removing the guard did not fail it — a passing test
+    // that proved nothing. This source pin replaces it and is deliberately
+    // narrower than the defect: it stops the guard being deleted, and does not
+    // claim to prove the frame accounting.
+    final src = File('lib/features/tour/ami_tour_overlay.dart').readAsStringSync();
+    expect(src.contains('generation != _watchGeneration'), isTrue,
+        reason: 'the stale-chain guard is gone; every step will leave an '
+            'immortal watcher behind and drain the settle budget');
+    expect(src.contains('final generation = ++_watchGeneration;'), isTrue,
+        reason: 'chains must be issued a generation when armed');
+  });
+
+  testWidgets(
+      'DEF395 a three-step tour still walks to its last step',
+      (t) async {
+    // Smoke cover for the navigation path the generation guard sits on.
+    final k1 = GlobalKey();
+    final k2 = GlobalKey();
+    final k3 = GlobalKey();
+    await t.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(builder: (context) {
+          return Column(
+            children: [
+              SizedBox(key: k1, height: 30, child: const Text('a')),
+              SizedBox(key: k2, height: 30, child: const Text('b')),
+              SizedBox(key: k3, height: 30, child: const Text('c')),
+              TextButton(
+                onPressed: () => showAmiTour(
+                  context: context,
+                  steps: [
+                    AmiTourStep(
+                        identify: 'x1',
+                        target: k1,
+                        builder: (ctx, c) => _TestCard(tag: 'x1', controller: c)),
+                    AmiTourStep(
+                        identify: 'x2',
+                        target: k2,
+                        builder: (ctx, c) => _TestCard(tag: 'x2', controller: c)),
+                    AmiTourStep(
+                        identify: 'x3',
+                        target: k3,
+                        builder: (ctx, c) => _TestCard(tag: 'x3', controller: c)),
+                  ],
+                ),
+                child: const Text('START'),
+              ),
+            ],
+          );
+        }),
+      ),
+    ));
+
+    await start(t);
+    await t.tap(find.text('NEXT'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('NEXT'));
+    await t.pumpAndSettle();
+    expect(find.text('x3'), findsOneWidget,
+        reason: 'the third step must still render — stale watcher chains from '
+            'steps one and two must not have consumed its settle budget');
   });
 
   testWidgets('DEF395 onFinish does NOT fire for a tour nobody saw',

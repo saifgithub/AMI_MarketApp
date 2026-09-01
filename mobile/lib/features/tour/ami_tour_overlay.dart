@@ -139,12 +139,13 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
   int _settleFrames = 0;
   static const _maxSettleFrames = 8;
 
-  /// DEF395 — whether any step was ever actually put on screen. `_focus`
-  /// steps OVER a target that is already gone, so a tour whose targets are all
-  /// unmounted walks straight off the end and reaches the same `_close` the
-  /// last "Got it" tap does. Firing `onFinish` there shows the completion
-  /// toast, and marks the tour seen, for a tour the user was never shown.
-  bool _shownAny = false;
+  /// DEF395 — generation token for the rect-watch chain. `_focus` arms a new
+  /// chain per step and the chain now re-arms for the life of the tour, so
+  /// without this every step leaves an immortal watcher behind: after N steps,
+  /// N+1 chains each burn a settle frame per frame and the 8-frame budget
+  /// drains N+1x too fast, declaring a merely SLOW target dead. A callback
+  /// whose generation is stale simply returns.
+  int _watchGeneration = 0;
 
   AmiTourStep? get _step => _index < 0 ? null : widget.steps[_index];
 
@@ -205,15 +206,19 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
           _index = index;
           _rect = null;
           _settleFrames = 0;
-          _shownAny = true;
         });
         _scheduleRectRefresh();
         return;
       }
       index++;
     }
-    // DEF395 — `finished` means "the user reached the end", not "the loop did".
-    _close(finished: _shownAny);
+    // DEF395 — reaching here is ALWAYS "ran out of live targets", never a user
+    // completion: `next()` on the last step calls `_close(finished: true)`
+    // itself and never routes through `_focus`. An earlier fix gated this on
+    // "was any step ever shown", which fired `onFinish` when a target died
+    // PART WAY through — marking a partly-seen tour complete forever, with its
+    // toast, on zero user action.
+    _close(finished: false);
   }
 
   /// Reads the target's rect after layout and repaints if it moved. The barrier
@@ -229,8 +234,16 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
   /// `WidgetsBindingObserver.didChangeMetrics` re-arm — do not assume the
   /// post-frame callback covers it.
   void _scheduleRectRefresh() {
+    final generation = ++_watchGeneration;
+    _rearmRectRefresh(generation);
+  }
+
+  void _rearmRectRefresh(int generation) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _closed) return;
+      // DEF395 — a chain armed by an earlier step is stale the moment a new
+      // step arms its own. Without this every step leaves a live watcher.
+      if (generation != _watchGeneration) return;
       final step = _step;
       if (step == null) return;
       final next = _rectFor(step);
@@ -258,7 +271,7 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
       // fire because no callback was ever scheduled again. This does NOT force
       // frames: `addPostFrameCallback` runs after the next frame the app
       // produces anyway, and a vanishing target always produces one.
-      _scheduleRectRefresh();
+      _rearmRectRefresh(generation);
     });
   }
 
