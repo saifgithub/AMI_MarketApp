@@ -20,3 +20,9 @@ must never be read as the foreign auditor having been satisfied (DEF059).
 |---|---|---|---|---|---|---|---|
 | 2026-09-01 | DEF389 | 94a86e77 | r1 | auditor | — | — | UNAVAILABLE: kimi exited 1 without committing |
 | 2026-09-01 | DEF389 | 94a86e77 | r1 | auditor | kimi-code/k3 | ADVISORY-CONCERNS | 4 findings: **4 real, 0 false-divergence, 0 noise**. 1 correlated-error catch -> DEF391 (fixed, mutation-proved). 2 latent -> DEF392 (open). 1 accurate framing nit, no action. |
+| 2026-09-01 | DEF392 | — | — | coder | ami-vllm/qwen3.8-flash-next | — | lane DEF392 launched |
+| 2026-09-01 | DEF367-LESSONS | — | — | coder | ami-vllm/qwen3.8-flash-next | — | lane DEF367-LESSONS launched |
+| 2026-09-01 | DEF382 | — | — | coder | ami-vllm/qwen3.8-flash-next | — | lane DEF382 launched |
+| 2026-09-01 | BATCH-R75 | f8be15e2 | r1 | auditor | kimi-code/k3 | ADVISORY-CONCERNS | 3 findings, dispositions pending |
+| 2026-09-01 | BATCH-R75 | 383e60f16a2f83f91432f83d63ffb60ac2c14c60 | r2 | auditor | kimi-code/k3 | ADVISORY-CONCERNS | 4 findings, dispositions pending |
+| 2026-09-01 | BATCH-R75 | 6127c6e4570f406d0bf3e8cd2a4d2b1c5d811467 | r3 | auditor | kimi-code/k3 | ADVISORY-CONCERNS | 5 findings, dispositions pending |
