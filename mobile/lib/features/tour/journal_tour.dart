@@ -1,12 +1,12 @@
 /// Coach-mark step definitions for the Journal tab tour (3 steps).
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-List<TargetFocus> buildJournalTargets({
+List<AmiTourStep> buildJournalTargets({
   required AppLocalizations l,
   required GlobalKey filterRowKey,
   required GlobalKey searchKey,
@@ -14,69 +14,57 @@ List<TargetFocus> buildJournalTargets({
 }) {
   return [
     // Step 1 — Filter chips
-    TargetFocus(
+    AmiTourStep(
       identify: 'journal_filter_row',
-      keyTarget: filterRowKey,
-      shape: ShapeLightFocus.RRect,
+      target: filterRowKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourJournal1Title,
-            body: l.tourJournal1Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourJournal1Title,
+        body: l.tourJournal1Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
 
     // Step 2 — Search bar
-    TargetFocus(
+    AmiTourStep(
       identify: 'journal_search',
-      keyTarget: searchKey,
-      shape: ShapeLightFocus.RRect,
+      target: searchKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourJournal2Title,
-            body: l.tourJournal2Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourJournal2Title,
+        body: l.tourJournal2Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
 
     // Step 3 — Entry list area. The target fills most of the screen, so
-    // ContentAlign.top would push the tooltip off the top edge. Anchor the
-    // tooltip with custom positioning instead, near the top of the list.
-    TargetFocus(
+    // AmiTourAlign.top would push the card off the top edge. Pin it with
+    // `absoluteTop` instead, near the top of the list.
+    AmiTourStep(
       identify: 'journal_list',
-      keyTarget: listKey,
-      shape: ShapeLightFocus.RRect,
+      target: listKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 4,
-      contents: [
-        TargetContent(
-          align: ContentAlign.custom,
-          customPosition: CustomTargetContentPosition(top: 180),
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourJournal3Title,
-            body: l.tourJournal3Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourDone,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      absoluteTop: 180,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourJournal3Title,
+        body: l.tourJournal3Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourDone,
+      ),
     ),
   ];
 }

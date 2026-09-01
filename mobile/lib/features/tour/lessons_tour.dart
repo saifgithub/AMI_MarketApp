@@ -1,12 +1,12 @@
 /// Coach-mark step definitions for the Lessons tab tour (3 steps).
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-List<TargetFocus> buildLessonsTargets({
+List<AmiTourStep> buildLessonsTargets({
   required AppLocalizations l,
   required GlobalKey headerKey,
   required GlobalKey progressKey,
@@ -14,67 +14,55 @@ List<TargetFocus> buildLessonsTargets({
 }) {
   return [
     // Step 1 — Header
-    TargetFocus(
+    AmiTourStep(
       identify: 'lessons_header',
-      keyTarget: headerKey,
-      shape: ShapeLightFocus.RRect,
+      target: headerKey,
+      shape: AmiTourShape.roundedRect,
       radius: 0,
       paddingFocus: 4,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourLessons1Title,
-            body: l.tourLessons1Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourLessons1Title,
+        body: l.tourLessons1Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
 
     // Step 2 — Slim progress bar
-    TargetFocus(
+    AmiTourStep(
       identify: 'lessons_progress',
-      keyTarget: progressKey,
-      shape: ShapeLightFocus.RRect,
+      target: progressKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 8,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourLessons2Title,
-            body: l.tourLessons2Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourLessons2Title,
+        body: l.tourLessons2Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
 
     // Step 3 — Hex cluster. Cluster sits in the upper-middle of the screen,
     // so position the tooltip BELOW it (the area beneath is empty space).
-    TargetFocus(
+    AmiTourStep(
       identify: 'lessons_hex_cluster',
-      keyTarget: hexClusterKey,
-      shape: ShapeLightFocus.RRect,
+      target: hexClusterKey,
+      shape: AmiTourShape.roundedRect,
       radius: 12,
       paddingFocus: 12,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourLessons3Title,
-            body: l.tourLessons3Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourDone,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourLessons3Title,
+        body: l.tourLessons3Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourDone,
+      ),
     ),
   ];
 }

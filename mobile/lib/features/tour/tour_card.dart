@@ -1,10 +1,10 @@
 /// AMI-styled tooltip card used in every coach-mark step.
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class TourCard extends StatelessWidget {
   const TourCard({
@@ -20,7 +20,7 @@ class TourCard extends StatelessWidget {
 
   final String title;
   final String body;
-  final TutorialCoachMarkController controller;
+  final AmiTourController controller;
   final String skipLabel;
   final String nextLabel;
 

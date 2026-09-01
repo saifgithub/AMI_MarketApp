@@ -8,6 +8,7 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/journal_tour.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
@@ -26,7 +27,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class JournalScreen extends ConsumerStatefulWidget {
   const JournalScreen({super.key, this.embedded = false});
@@ -69,29 +69,17 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
 
   void _runTour() {
     final l = AppLocalizations.of(context);
-    TutorialCoachMark(
-      targets: buildJournalTargets(
+    // DEF382 — the old `beforeFocus` + `Scrollable.ensureVisible` lives in
+    // `showAmiTour` now, unchanged: 350ms, alignment 0.85 when the card sits
+    // above the target and 0.15 when below.
+    showAmiTour(
+      context: context,
+      steps: buildJournalTargets(
         l: l,
         filterRowKey: _filterRowKey,
         searchKey: _searchKey,
         listKey: _listKey,
       ),
-      hideSkip: true,
-      colorShadow: Colors.black,
-      opacityShadow: 0.88,
-      pulseEnable: false,
-      beforeFocus: (target) async {
-        final ctx = target.keyTarget?.currentContext;
-        if (ctx == null) return;
-        final contents = target.contents ?? const [];
-        final tooltipAbove = contents.isNotEmpty &&
-            contents.first.align == ContentAlign.top;
-        await Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 350),
-          alignment: tooltipAbove ? 0.85 : 0.15,
-        );
-      },
       onFinish: () {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -100,7 +88,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
           behavior: SnackBarBehavior.floating,
         ));
       },
-    ).show(context: context);
+    );
   }
 
   @override

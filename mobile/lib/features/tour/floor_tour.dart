@@ -18,74 +18,62 @@
 /// walkthrough spends a credit the user did not decide to spend.
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-List<TargetFocus> buildFloorTargets({
+List<AmiTourStep> buildFloorTargets({
   required AppLocalizations l,
   required GlobalKey carouselKey,
   required GlobalKey omniboxKey,
   required GlobalKey firmKey,
 }) {
   return [
-    TargetFocus(
+    AmiTourStep(
       identify: 'floor_carousel',
-      keyTarget: carouselKey,
-      shape: ShapeLightFocus.RRect,
+      target: carouselKey,
+      shape: AmiTourShape.roundedRect,
       radius: 12,
       paddingFocus: 8,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourFloor1Title,
-            body: l.tourFloor1Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourFloor1Title,
+        body: l.tourFloor1Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
-    TargetFocus(
+    AmiTourStep(
       identify: 'floor_omnibox',
-      keyTarget: omniboxKey,
-      shape: ShapeLightFocus.RRect,
+      target: omniboxKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourFloor2Title,
-            body: l.tourFloor2Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourFloor2Title,
+        body: l.tourFloor2Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
-    TargetFocus(
+    AmiTourStep(
       identify: 'floor_firm',
-      keyTarget: firmKey,
-      shape: ShapeLightFocus.RRect,
+      target: firmKey,
+      shape: AmiTourShape.roundedRect,
       radius: 8,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.top,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourFloor3Title,
-            body: l.tourFloor3Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourDone,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.top,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourFloor3Title,
+        body: l.tourFloor3Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourDone,
+      ),
     ),
   ];
 }

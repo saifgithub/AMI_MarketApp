@@ -390,7 +390,9 @@ def _capture_anthropic_message_delta_usage(obj: dict, meta: dict[str, Any]) -> N
 class AnthropicProvider(LLMProvider):
     name = "anthropic"
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(
+        self, api_key: str, timeout_seconds: float | None = None
+    ) -> None:
         self._key = api_key
         self._client = httpx.AsyncClient(
             base_url="https://api.anthropic.com",
@@ -399,7 +401,17 @@ class AnthropicProvider(LLMProvider):
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json",
             },
-            timeout=60.0,
+            # DEF394 — derived from the Room's guard, never a literal. This class
+            # is NOT an `OpenAICompatibleProvider`, so DEF392's fix did not reach
+            # it, and `anthropic` is the FIRST fallback in `_PREFERENCE`. A 60s
+            # transport inside the 180s guard means the guard can never fire and a
+            # slow completion degrades into the DEF059 fail-safe PASS — on the very
+            # path taken when vLLM is down, i.e. exactly when it is being relied on.
+            timeout=(
+                _default_transport_timeout_s()
+                if timeout_seconds is None
+                else timeout_seconds
+            ),
         )
 
     async def stream_chat(
@@ -538,6 +550,34 @@ def _parse_openai_compatible_usage(usage: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# DEF392 — the TRANSPORT budget for any OpenAI-compatible provider is derived
+# from the Room's orchestration guard, never written as a literal. A fixed
+# default is what made this a defect twice: `timeout_seconds: float = 60.0` sat
+# below the guard (DEF389 for vLLM, and — unfixed until now — for kimi,
+# deepseek, qwen and gemini, whose registrations pass no timeout at all and so
+# all inherited the 60s default inside a 180s guard). Derived from
+# `settings.room_agent_timeout_s` instead, the ordering invariant holds for
+# every provider and moves with the guard when it is retuned.
+#
+# The margin is the guard's own size, i.e. transport >= 2x the guard. At the
+# shipped defaults that is 180 + 180 = 360s, the value DEF389 measured as
+# needing >= 2x the 45.9s five-way `pm_self_consistency_samples` fan-out, so all
+# five providers now carry the same shape of headroom rather than one provider
+# and four defaults.
+_TRANSPORT_TIMEOUT_MARGIN_S: float = 180.0
+
+
+def _default_transport_timeout_s() -> float:
+    """The transport budget a provider gets when the caller names none.
+
+    Resolved at CONSTRUCTION, not at import: `Settings` is instantiated per
+    process from env, and tests retune `settings.room_agent_timeout_s` between
+    cases. A module-level constant computed from the setting would freeze the
+    import-time value and stop tracking the guard.
+    """
+    return settings.room_agent_timeout_s + _TRANSPORT_TIMEOUT_MARGIN_S
+
+
 class OpenAICompatibleProvider(LLMProvider):
     """Streams completions from any OpenAI `/v1/chat/completions`-shaped API.
 
@@ -564,11 +604,16 @@ class OpenAICompatibleProvider(LLMProvider):
         base_url: str,
         model_name: str,
         api_key: str | None = None,
-        timeout_seconds: float = 60.0,
+        timeout_seconds: float | None = None,
         extra_body: dict[str, Any] | None = None,
         max_tokens_floor: int | None = None,
         supported_constraints: frozenset[str] | None = None,
     ) -> None:
+        # DEF392 — `None` is "derive it from the guard", not "use a default
+        # number". Explicit callers are unchanged; what changes is that an
+        # Omitted argument can no longer land the client inside the guard.
+        if timeout_seconds is None:
+            timeout_seconds = _default_transport_timeout_s()
         self.name = name
         # CR210 — instance override of the class default, the same idiom as
         # `self.name` on the line above. Set it ONLY for an endpoint whose
@@ -770,7 +815,7 @@ class VLLMProvider(OpenAICompatibleProvider):
         base_url: str,
         model_name: str,
         api_key: str | None = None,
-        timeout_seconds: float = 60.0,
+        timeout_seconds: float | None = None,
         max_tokens_floor: int | None = None,
     ) -> None:
         super().__init__(
