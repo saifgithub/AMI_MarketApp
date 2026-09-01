@@ -338,4 +338,112 @@ void main() {
     expect(find.text('dead'), findsNothing);
     expect(find.text('live'), findsOneWidget);
   });
+
+  // -------------------------------------------------------------------------
+  // DEF395 — both found by the CR215 foreign auditor (kimi-code/k3) on the
+  // batch SHA, AFTER the same-family gate returned COMPLETE with zero findings
+  // and asserted the entry was "removed on every exit path".
+  // -------------------------------------------------------------------------
+
+  testWidgets(
+      'DEF395 a target that vanishes MID-DISPLAY closes the tour, '
+      'it does not leave a full-screen dim', (t) async {
+    // The existing sibling test covers a target already gone when the step is
+    // REACHED. This is the other case: the step is on screen and its target
+    // then leaves the tree. `_focus`'s skip only ran at step transitions, so
+    // `_rect` went null, the settle counter ran out, and the barrier was left
+    // painting with no hole over a step pointing at nothing.
+    final key = GlobalKey();
+    var alive = true;
+    late StateSetter setOuter;
+
+    await t.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: StatefulBuilder(builder: (context, setState) {
+          setOuter = setState;
+          return Column(
+            children: [
+              if (alive)
+                SizedBox(key: key, height: 60, child: const Text('target')),
+              TextButton(
+                onPressed: () => showAmiTour(
+                  context: context,
+                  steps: [
+                    AmiTourStep(
+                      identify: 'only',
+                      target: key,
+                      builder: (ctx, ctrl) =>
+                          _TestCard(tag: 'only', controller: ctrl),
+                    ),
+                  ],
+                ),
+                child: const Text('START'),
+              ),
+            ],
+          );
+        }),
+      ),
+    ));
+
+    await start(t);
+    expect(find.text('only'), findsOneWidget,
+        reason: 'precondition: the step is on screen');
+
+    setOuter(() => alive = false);
+    await t.pumpAndSettle();
+
+    expect(find.text('only'), findsNothing,
+        reason: 'the overlay must not survive its target vanishing — a '
+            'retained entry with a null rect is a full-screen dim, which is '
+            'this defect\'s own shape');
+  });
+
+  testWidgets('DEF395 onFinish does NOT fire for a tour nobody saw',
+      (t) async {
+    // Every target unmounted: `_focus` walks the whole list, falls off the end,
+    // and reaches the same `_close` the last "Got it" tap does. Firing onFinish
+    // there shows the completion toast, and marks the tour seen, for a tour
+    // that was never displayed.
+    var finishes = 0;
+    final dead1 = GlobalKey();
+    final dead2 = GlobalKey();
+
+    await t.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(builder: (context) {
+          return TextButton(
+            onPressed: () => showAmiTour(
+              context: context,
+              steps: [
+                AmiTourStep(
+                  identify: 'd1',
+                  target: dead1,
+                  builder: (ctx, ctrl) =>
+                      _TestCard(tag: 'd1', controller: ctrl),
+                ),
+                AmiTourStep(
+                  identify: 'd2',
+                  target: dead2,
+                  builder: (ctx, ctrl) =>
+                      _TestCard(tag: 'd2', controller: ctrl),
+                ),
+              ],
+              onFinish: () => finishes++,
+            ),
+            child: const Text('START'),
+          );
+        }),
+      ),
+    ));
+
+    await start(t);
+
+    expect(finishes, 0,
+        reason: '"finished" must mean the USER reached the end, not that the '
+            'loop did');
+    expect(find.text('d1'), findsNothing);
+    expect(find.text('d2'), findsNothing,
+        reason: 'the entry must still be torn down — not finishing is not the '
+            'same as leaking');
+  });
 }

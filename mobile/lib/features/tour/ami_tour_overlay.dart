@@ -20,6 +20,9 @@
 /// `BlendMode.clear` inside a `saveLayer`, so the hole is a real hole and not a
 /// faked lighter rectangle. The entry is removed on finish AND on skip AND when
 /// a step's target has vanished — a leaked entry is the shape of this defect.
+/// "Vanished" covers both cases (DEF395): a target already gone when the step
+/// is reached, and one that disappears while its step is on screen. The second
+/// was missed on the first pass and left a full-screen dim with no hole.
 library;
 
 import 'package:flutter/material.dart';
@@ -136,6 +139,13 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
   int _settleFrames = 0;
   static const _maxSettleFrames = 8;
 
+  /// DEF395 — whether any step was ever actually put on screen. `_focus`
+  /// steps OVER a target that is already gone, so a tour whose targets are all
+  /// unmounted walks straight off the end and reaches the same `_close` the
+  /// last "Got it" tap does. Firing `onFinish` there shows the completion
+  /// toast, and marks the tour seen, for a tour the user was never shown.
+  bool _shownAny = false;
+
   AmiTourStep? get _step => _index < 0 ? null : widget.steps[_index];
 
   @override
@@ -195,19 +205,29 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
           _index = index;
           _rect = null;
           _settleFrames = 0;
+          _shownAny = true;
         });
         _scheduleRectRefresh();
         return;
       }
       index++;
     }
-    _close(finished: true);
+    // DEF395 — `finished` means "the user reached the end", not "the loop did".
+    _close(finished: _shownAny);
   }
 
   /// Reads the target's rect after layout and repaints if it moved. The barrier
-  /// swallows every tap, so the user cannot scroll underneath; the rect only
-  /// moves from our own `ensureVisible`, an orientation change, or a late first
-  /// layout — all of which produce frames, and this re-runs on each.
+  /// swallows every tap, so the user cannot scroll underneath; the rect moves
+  /// only from our own `ensureVisible` or a late first layout.
+  ///
+  /// DEF395 — this re-arms itself ONLY while still waiting for a rect, so it
+  /// stops once the target has settled. An earlier version of this comment
+  /// claimed it re-ran on "an orientation change" too; it does not, and the
+  /// cutout would keep stale coordinates across a rotation. That is currently
+  /// unreachable rather than fixed: `main.dart:69` locks the app to
+  /// `portraitUp` for the alpha. If that lock is ever lifted, this needs a
+  /// `WidgetsBindingObserver.didChangeMetrics` re-arm — do not assume the
+  /// post-frame callback covers it.
   void _scheduleRectRefresh() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _closed) return;
@@ -215,12 +235,30 @@ class _AmiTourOverlayState extends State<AmiTourOverlay>
       if (step == null) return;
       final next = _rectFor(step);
       final waiting = next == null && _settleFrames < _maxSettleFrames;
-      if (next == _rect && !waiting) return;
-      setState(() {
-        _settleFrames = next == null ? _settleFrames + 1 : _settleFrames;
-        _rect = next;
-      });
-      if (waiting) _scheduleRectRefresh();
+      if (next == null && !waiting) {
+        // DEF395 — the target is gone and we have stopped waiting for it.
+        // Leaving `_rect` null here paints the barrier with NO hole: a
+        // full-screen dim over a step pointing at nothing. `_focus` already
+        // knows how to step over a dead target, so hand back to it; it closes
+        // the tour if none remain. Found by the CR215 foreign auditor —
+        // `_focus`'s skip only ran at step TRANSITIONS, never mid-display.
+        _focus(_index + 1);
+        return;
+      }
+      if (next != _rect || waiting) {
+        setState(() {
+          _settleFrames = next == null ? _settleFrames + 1 : _settleFrames;
+          _rect = next;
+        });
+      }
+      // DEF395 — re-arm for as long as the tour is open, not only while still
+      // waiting for a first rect. The old version stopped the chain the moment
+      // a target settled, so NOTHING was watching afterwards and a target that
+      // left the tree mid-step was never noticed — the branch above could not
+      // fire because no callback was ever scheduled again. This does NOT force
+      // frames: `addPostFrameCallback` runs after the next frame the app
+      // produces anyway, and a vanishing target always produces one.
+      _scheduleRectRefresh();
     });
   }
 
