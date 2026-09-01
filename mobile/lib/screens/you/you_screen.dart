@@ -32,6 +32,7 @@
 library;
 
 import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/features/tour/you_tour.dart';
@@ -49,7 +50,6 @@ import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class YouScreen extends ConsumerStatefulWidget {
   const YouScreen({super.key});
@@ -89,18 +89,18 @@ class _YouScreenState extends ConsumerState<YouScreen> {
 
   void _runTour() {
     final l = AppLocalizations.of(context);
-    TutorialCoachMark(
-      targets: buildYouTargets(
+    // DEF382 — `YOU` is the one tour that never carried a `beforeFocus`, and it
+    // still needs none: `showAmiTour` scrolls a target into view only when the
+    // target sits inside a Scrollable, and the segment bar does not.
+    showAmiTour(
+      context: context,
+      steps: buildYouTargets(
         l: l,
         segmentBarKey: _segmentBarKey,
         settingsSegmentKey: _settingsSegmentKey,
         journalSegmentKey: _journalSegmentKey,
         insightsSegmentKey: _insightsSegmentKey,
       ),
-      hideSkip: true,
-      colorShadow: Colors.black,
-      opacityShadow: 0.88,
-      pulseEnable: false,
       onFinish: () {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -109,7 +109,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           behavior: SnackBarBehavior.floating,
         ));
       },
-    ).show(context: context);
+    );
   }
 
   Future<void> _select(
