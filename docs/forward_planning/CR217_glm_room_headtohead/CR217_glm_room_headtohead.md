@@ -1,6 +1,6 @@
 # CR217 — GLM-5.3-Flash as a candidate Room model, scored head-to-head against ami-llm
 
-**Filed:** 2026-09-01 · **Track:** R · **Status:** in progress
+**Filed:** 2026-09-01 · **Track:** R · **Status:** in_progress
 
 ## Why
 
