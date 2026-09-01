@@ -23,20 +23,18 @@
 /// action AND button flag, on ONE node.
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class _FakeController implements TutorialCoachMarkController {
+class _FakeController implements AmiTourController {
   int skips = 0;
   int nexts = 0;
   @override
   void next() => nexts++;
-  @override
-  void previous() {}
   @override
   void skip() => skips++;
 }

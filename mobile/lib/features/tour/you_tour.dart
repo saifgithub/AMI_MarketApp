@@ -16,12 +16,12 @@
 /// INSIGHTS.
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-List<TargetFocus> buildYouTargets({
+List<AmiTourStep> buildYouTargets({
   required AppLocalizations l,
   required GlobalKey segmentBarKey,
   required GlobalKey settingsSegmentKey,
@@ -29,81 +29,65 @@ List<TargetFocus> buildYouTargets({
   required GlobalKey insightsSegmentKey,
 }) {
   return [
-    TargetFocus(
+    AmiTourStep(
       identify: 'you_segments',
-      keyTarget: segmentBarKey,
-      shape: ShapeLightFocus.RRect,
+      target: segmentBarKey,
+      shape: AmiTourShape.roundedRect,
       radius: 4,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourYou1Title,
-            body: l.tourYou1Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourYou1Title,
+        body: l.tourYou1Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
-    TargetFocus(
+    AmiTourStep(
       identify: 'you_settings',
-      keyTarget: settingsSegmentKey,
-      shape: ShapeLightFocus.RRect,
+      target: settingsSegmentKey,
+      shape: AmiTourShape.roundedRect,
       radius: 4,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourYou2Title,
-            body: l.tourYou2Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourYou2Title,
+        body: l.tourYou2Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
-    TargetFocus(
+    AmiTourStep(
       identify: 'you_journal',
-      keyTarget: journalSegmentKey,
-      shape: ShapeLightFocus.RRect,
+      target: journalSegmentKey,
+      shape: AmiTourShape.roundedRect,
       radius: 4,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourYouJournalTitle,
-            body: l.tourYouJournalBody,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourNext,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourYouJournalTitle,
+        body: l.tourYouJournalBody,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourNext,
+      ),
     ),
-    TargetFocus(
+    AmiTourStep(
       identify: 'you_insights',
-      keyTarget: insightsSegmentKey,
-      shape: ShapeLightFocus.RRect,
+      target: insightsSegmentKey,
+      shape: AmiTourShape.roundedRect,
       radius: 4,
       paddingFocus: 6,
-      contents: [
-        TargetContent(
-          align: ContentAlign.bottom,
-          builder: (ctx, ctrl) => TourCard(
-            title: l.tourYou3Title,
-            body: l.tourYou3Body,
-            controller: ctrl,
-            skipLabel: l.tourSkip,
-            nextLabel: l.tourDone,
-          ),
-        ),
-      ],
+      align: AmiTourAlign.bottom,
+      builder: (ctx, ctrl) => TourCard(
+        title: l.tourYou3Title,
+        body: l.tourYou3Body,
+        controller: ctrl,
+        skipLabel: l.tourSkip,
+        nextLabel: l.tourDone,
+      ),
     ),
   ];
 }

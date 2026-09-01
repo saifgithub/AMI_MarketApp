@@ -16,20 +16,18 @@
 ///      should fail here, on purpose.
 library;
 
+import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/tour_card.dart';
 import 'package:ami_trade/features/tour/you_tour.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 /// The content builders only use the controller for button taps, which these
 /// tests never perform — a no-op satisfies the interface.
-class _NoopController implements TutorialCoachMarkController {
+class _NoopController implements AmiTourController {
   @override
   void next() {}
-  @override
-  void previous() {}
   @override
   void skip() {}
 }
@@ -55,7 +53,7 @@ void main() {
     return (AppLocalizations.of(ctx), ctx);
   }
 
-  List<TargetFocus> targets(AppLocalizations l) => buildYouTargets(
+  List<AmiTourStep> targets(AppLocalizations l) => buildYouTargets(
         l: l,
         segmentBarKey: segmentBarKey,
         settingsSegmentKey: settingsKey,
@@ -64,8 +62,8 @@ void main() {
       );
 
   Future<TourCard> renderStep(
-      WidgetTester t, BuildContext ctx, TargetFocus step) async {
-    final built = step.contents!.first.builder!(ctx, _NoopController());
+      WidgetTester t, BuildContext ctx, AmiTourStep step) async {
+    final built = step.builder(ctx, _NoopController());
     await t.pumpWidget(MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -85,7 +83,7 @@ void main() {
             'only ever told about it here; the step order is the bar order');
 
     final journal = steps.firstWhere((s) => s.identify == 'you_journal');
-    expect(journal.keyTarget, same(journalKey),
+    expect(journal.target, same(journalKey),
         reason: 'the step must spotlight the JOURNAL segment cell itself');
   });
 
