@@ -1920,3 +1920,48 @@ own `TOK` verbatim** — so widening the board's token without widening the guar
 fails the build, rather than silently leaving the guard covering a pattern the
 board no longer uses. Same shape as `test_config_compose_parity.py`: two places
 that must agree, made to prove they still do.
+
+---
+
+## P32 — a targeted test run that cannot reach the tests it would break
+
+**Class:** narrowing a test run by *name* when the thing you changed is
+connected to its callers by *import*. The two are unrelated, so the subset can
+be green and the suite red, and nothing about running it more carefully helps.
+
+**How it arises.** DEF387 added `_require_supervisor()` to
+`backend/scripts/backtest_sweep.py`. Checking it, the author ran a subset
+filtered on the obvious terms — `sweep`, `backtest`. Green. Promoted. It had
+broken `test_def358_completion_sentinel_counts_the_batch.py`, which calls
+`sweep.main()` in-process and so hit the new refusal. That file matches neither
+term, because **tests here are named after the defect they pin, not the module
+they exercise** — `test_def358_…`, `test_def389_…`, `test_cr215_…`. The
+convention is a good one for traceability and it makes `-k <module>` structurally
+blind. The full ~900s suite found it hours later.
+
+The same shape bit twice in one day from the other side: a session running the
+full suite caught this, while every targeted run it had done could not have.
+
+**What generalises.** Test *selection* must follow the same edges the code does.
+A name filter encodes a guess about what a file is called; an import graph
+encodes what actually depends on it. When those disagree, the filter is silently
+wrong and reports success.
+
+Two corollaries worth stating, because both are ways of re-introducing the bug:
+
+- **Selection is a floor, never a proof.** A static import graph cannot see a
+  subprocess call, an `importlib` import by computed name, a fixture reading a
+  data file, or a config value. A selector that returns an empty list for a
+  `docker-compose.yml` change and exits 0 has manufactured exactly the false
+  confidence of DEF059.
+- **Do not widen the guard to recognise the caller.** DEF387's fix was to have
+  the test declare itself supervised, not to teach the refusal to sniff out
+  tests. A guard that admits things resembling tests is not a guard.
+
+**Enforcing check:** `backend/scripts/tests_for_changed.py` walks the reverse
+import closure under `backend/` and prints the test files that reach the changed
+modules; a non-Python change exits 3 and demands the full suite rather than
+reporting clean. `backend/tests/unit/test_cr216_test_selection.py` pins **both
+halves** — that the selector finds `test_def358_…` from a change to
+`backtest_sweep.py`, *and* that a name filter genuinely does not, so the
+motivating gap is asserted rather than assumed.
