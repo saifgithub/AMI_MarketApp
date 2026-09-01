@@ -23,6 +23,17 @@ set -euo pipefail
 CONTAINER="${CONTAINER:-ami_api_alpha}"
 PORT="${GLM_SIDECAR_PORT:-8001}"
 
+# Matched to the BASELINE, not to production. The banked ami-llm batch
+# (`r70-outcome-2`, 2026-08-20/21) ran before CR214 raised
+# `pm_self_consistency_samples` to 5 — its report's rank-IC section reads
+# "SKIPPED — no run in this batch carries approve_votes". Alpha runs 5 today.
+# Five independent CIO draws with a majority vote cut the verdict flip rate from
+# ~19.7% to ~6.6% (`risk_officer.py`), so running the candidate at 5 against a
+# baseline at 1 would hand GLM a noise reduction that is a property of the
+# VOTING, not of the model, and it would show up as apparent edge. Override only
+# to deliberately measure the voting effect, never for the head-to-head.
+SAMPLES="${PM_SELF_CONSISTENCY_SAMPLES:-1}"
+
 usage() { echo "usage: $0 {start|stop|status|check}" >&2; exit 64; }
 [ $# -ge 1 ] || usage
 
@@ -30,9 +41,10 @@ case "$1" in
   start)
     docker exec -d \
       -e LLM_FORCE_PROVIDER=glm \
+      -e PM_SELF_CONSISTENCY_SAMPLES="$SAMPLES" \
       "$CONTAINER" \
       uvicorn app.main:app --host 127.0.0.1 --port "$PORT" --log-level warning
-    echo "started; waiting for health…"
+    echo "started (provider=glm, pm_samples=$SAMPLES); waiting for health…"
     for _ in $(seq 1 30); do
       if docker exec "$CONTAINER" curl -sf "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1; then
         echo "healthy on :$PORT"

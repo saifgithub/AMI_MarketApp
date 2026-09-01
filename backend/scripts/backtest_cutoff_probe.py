@@ -32,8 +32,15 @@ from pathlib import Path
 import httpx
 import yfinance as yf
 
-VLLM_BASE_URL = "http://192.168.20.74:8000"
-MODEL = "ami-llm"
+# CR217 — defaults, not constants. The probe measures a MODEL's knowledge
+# cutoff, and the served model is no longer fixed: CR211 swapped the on-prem
+# serve, and CR217 evaluates a second host entirely. A hardcoded endpoint made
+# the probe silently un-runnable against any candidate, which matters because
+# an as-of backtest is only valid over dates the model cannot remember — swap
+# the model without re-probing and a later cutoff turns recall into apparent
+# edge.
+DEFAULT_VLLM_BASE_URL = "http://192.168.20.74:8000"
+DEFAULT_MODEL = "ami-llm"
 
 ANCHORS = {
     "SPY": "the SPDR S&P 500 ETF",
@@ -122,16 +129,19 @@ def month_end_closes(ticker: str, months: list[tuple[int, int]]) -> dict[tuple[i
     return closes
 
 
-def ask(client: httpx.Client, prompt: str, disable_thinking: bool) -> str:
+def ask(
+    client: httpx.Client, prompt: str, disable_thinking: bool,
+    model: str, base_url: str,
+) -> str:
     body = {
-        "model": MODEL,
+        "model": model,
         "temperature": 0,
         "max_tokens": 900,
         "messages": [{"role": "user", "content": prompt}],
     }
     if disable_thinking:
         body["chat_template_kwargs"] = {"enable_thinking": False}
-    r = client.post(f"{VLLM_BASE_URL}/v1/chat/completions", json=body, timeout=180)
+    r = client.post(f"{base_url}/v1/chat/completions", json=body, timeout=180)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"] or ""
 
@@ -151,7 +161,25 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, help="directory for the probe report")
     ap.add_argument("--sleep", type=float, default=0.5)
+    ap.add_argument("--base-url", default=DEFAULT_VLLM_BASE_URL,
+                    help="OpenAI-compatible host to probe (no trailing /v1).")
+    ap.add_argument("--model", default=DEFAULT_MODEL,
+                    help="Model id to request. See --stamp-suffix for report naming.")
+    ap.add_argument("--stamp-suffix", default="",
+                    help="Appended to the report filename, so probing a second "
+                         "model does not overwrite the first one's report.")
     args = ap.parse_args()
+    base_url = args.base_url.rstrip("/")
+
+    # CLAUDE.md: the `ami-llm` alias was REUSED across the CR211 model swap and
+    # now names a different model than it did before 2026-08-28, so a report
+    # keyed to the requested id can silently mis-attribute a measurement to the
+    # wrong model. Record what the server says it is actually serving.
+    try:
+        served_root = httpx.get(f"{base_url}/v1/models", timeout=15).json()["data"][0]
+        served_identity = served_root.get("root") or served_root.get("id")
+    except Exception as exc:  # noqa: BLE001 — an unidentifiable server is reportable, not fatal
+        served_identity = f"UNIDENTIFIED ({type(exc).__name__})"
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -172,12 +200,12 @@ def main() -> None:
                 continue
             prompt = PROMPT.format(name=name, ticker=ticker, month_name=month_name, year=y)
             try:
-                text = ask(client, prompt, disable_thinking)
+                text = ask(client, prompt, disable_thinking, args.model, base_url)
             except httpx.HTTPStatusError as e:
                 if disable_thinking and e.response.status_code == 400:
                     # server rejects chat_template_kwargs — fall back for the whole run
                     disable_thinking = False
-                    text = ask(client, prompt, disable_thinking)
+                    text = ask(client, prompt, disable_thinking, args.model, base_url)
                 else:
                     raise
             est = parse_estimate(text)
@@ -221,7 +249,8 @@ def main() -> None:
 
     event_results = []
     for key, event, truth_month, category in EVENT_PROBES:
-        text = ask(client, EVENT_PROMPT.format(event=event), disable_thinking)
+        text = ask(client, EVENT_PROMPT.format(event=event), disable_thinking,
+                   args.model, base_url)
         cleaned = _THINK_RE.sub("", text).strip()
         m = _MONTH_RE.search(cleaned)
         answered = None if "UNKNOWN" in cleaned.upper() or not m else f"{int(m.group(1))}-{int(m.group(2)):02d}"
@@ -277,8 +306,9 @@ def main() -> None:
     stamp = dt.date.today().isoformat()
     result = {
         "probed_at": stamp,
-        "model": MODEL,
-        "vllm_base_url": VLLM_BASE_URL,
+        "model": args.model,
+        "served_identity": served_identity,
+        "vllm_base_url": base_url,
         "criteria": {
             "err_threshold": ERR_THRESHOLD,
             "refusal_threshold": REFUSAL_THRESHOLD,
@@ -292,12 +322,14 @@ def main() -> None:
         "events": event_results,
         "records": records,
     }
-    (out_dir / f"cutoff_probe_{stamp}.json").write_text(json.dumps(result, indent=2))
+    name = f"cutoff_probe_{stamp}{args.stamp_suffix}"
+    (out_dir / f"{name}.json").write_text(json.dumps(result, indent=2))
 
     lines = [
         f"# CR164 model-cutoff probe — {stamp}",
         "",
-        f"Model `{MODEL}` at `{VLLM_BASE_URL}`. {len(records)} probes over "
+        f"Model `{args.model}` (server reports `{served_identity}`) at "
+        f"`{base_url}`. {len(records)} probes over "
         f"{len(per_month)} months × {len(ANCHORS)} anchors, temperature 0.",
         "",
         f"**Price-collapse month: {collapse}** · baseline event recall {baseline_recall:.0%} · "
@@ -316,7 +348,7 @@ def main() -> None:
     for pm in per_month:
         err = f"{pm['median_rel_err']:.1%}" if pm["median_rel_err"] is not None else "—"
         lines.append(f"| {pm['month']} | {err} | {pm['refusal_rate']:.0%} | {'YES' if pm['failing'] else ''} |")
-    (out_dir / f"cutoff_probe_{stamp}.md").write_text("\n".join(lines) + "\n")
+    (out_dir / f"{name}.md").write_text("\n".join(lines) + "\n")
     print(f"\n[done] collapse={collapse} window_start={window_start} → {out_dir}", flush=True)
 
 
