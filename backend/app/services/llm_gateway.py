@@ -390,7 +390,9 @@ def _capture_anthropic_message_delta_usage(obj: dict, meta: dict[str, Any]) -> N
 class AnthropicProvider(LLMProvider):
     name = "anthropic"
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(
+        self, api_key: str, timeout_seconds: float | None = None
+    ) -> None:
         self._key = api_key
         self._client = httpx.AsyncClient(
             base_url="https://api.anthropic.com",
@@ -399,7 +401,17 @@ class AnthropicProvider(LLMProvider):
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json",
             },
-            timeout=60.0,
+            # DEF394 — derived from the Room's guard, never a literal. This class
+            # is NOT an `OpenAICompatibleProvider`, so DEF392's fix did not reach
+            # it, and `anthropic` is the FIRST fallback in `_PREFERENCE`. A 60s
+            # transport inside the 180s guard means the guard can never fire and a
+            # slow completion degrades into the DEF059 fail-safe PASS — on the very
+            # path taken when vLLM is down, i.e. exactly when it is being relied on.
+            timeout=(
+                _default_transport_timeout_s()
+                if timeout_seconds is None
+                else timeout_seconds
+            ),
         )
 
     async def stream_chat(

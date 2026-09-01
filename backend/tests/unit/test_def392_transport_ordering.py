@@ -31,6 +31,7 @@ from pydantic import ValidationError
 from app.core.config import Settings, settings
 from app.services import llm_gateway
 from app.services.llm_gateway import (
+    AnthropicProvider,
     LLMGateway,
     OpenAICompatibleProvider,
     VLLMProvider,
@@ -165,3 +166,67 @@ def test_no_timeout_literal_is_left_in_the_provider_constructors():
         if re.match(r"timeout_seconds:\s*float(?! \| None)", line.strip())
     ]
     assert not stray, f"non-derived timeout default(s) reintroduced: {stray}"
+
+
+# ---------------------------------------------------------------------------
+# DEF394 — the same invariant, asserted WITHOUT naming a class.
+#
+# DEF392 was written, implemented, tested, mutation-proved and audited as "the
+# OpenAI-compatible default". Every one of those artifacts inherited the same
+# framing, and `AnthropicProvider` — a SIBLING of `LLMProvider`, not a subclass
+# of `OpenAICompatibleProvider` — kept a hardcoded `timeout=60.0` straight
+# through all of it. It is second in `_PREFERENCE`, so the inversion armed
+# itself on the fallback path: live exactly when vLLM is down, which is the one
+# moment the fallback matters.
+#
+# Found by the CR215 foreign auditor (kimi-code/k3) on the batch SHA, after the
+# same-family gate returned COMPLETE with zero findings and the explicit claim
+# "no production path constructs a client inside the guard". That is what a
+# correlated error looks like, and it is why the assertion below enumerates
+# EVERY provider carrying an httpx client rather than a named class. A guard
+# that names the class it was written for can only ever re-find its own bug.
+# ---------------------------------------------------------------------------
+
+
+def test_every_provider_with_a_client_sits_outside_the_guard(monkeypatch):
+    """Class-agnostic. A new provider class inherits this pin for free."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://192.0.2.1:8000")
+    monkeypatch.setattr(cfg.settings, "anthropic_api_key", "anthropic-fake")
+    monkeypatch.setattr(cfg.settings, "kimi_api_key", "kimi-fake")
+    monkeypatch.setattr(cfg.settings, "deepseek_api_key", "deepseek-fake")
+    monkeypatch.setattr(cfg.settings, "dashscope_api_key", "qwen-fake")
+    monkeypatch.setattr(cfg.settings, "google_ai_api_key", "gemini-fake")
+    gateway = LLMGateway()
+
+    withclient = {
+        name: prov
+        for name, prov in gateway._providers.items()
+        if getattr(prov, "_client", None) is not None
+    }
+    assert "anthropic" in withclient, (
+        "the anthropic provider did not register, so this pin would pass "
+        "vacuously — the exact shape DEF200's guard was written against"
+    )
+    for name, prov in withclient.items():
+        transport_s = prov._client.timeout.read
+        assert transport_s > settings.room_agent_timeout_s, (
+            f"{name}: transport {transport_s}s <= guard "
+            f"{settings.room_agent_timeout_s}s. DEF394 — the Room's guard cannot "
+            "fire on this provider, so a slow completion becomes a DEF059 "
+            "fail-safe PASS carrying a verdict nobody decided."
+        )
+
+
+def test_the_anthropic_provider_has_no_hardcoded_transport_literal():
+    """The defect's shape was a literal in a constructor, so ban the shape."""
+    import inspect
+
+    src = inspect.getsource(AnthropicProvider.__init__)
+    stray = [
+        line.strip()
+        for line in src.splitlines()
+        if re.search(r"timeout\s*=\s*\d", line) and not line.strip().startswith("#")
+    ]
+    assert not stray, f"hardcoded transport literal reintroduced: {stray}"
