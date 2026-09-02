@@ -968,3 +968,66 @@ everything else carries a standing disposition and was not re-asked.
   nothing, so CLAUDE.md step 2b's 6h watermark has no evidence it has ever run since CR185 landed
   the mechanism (`331c71fe`). Not run here because this check-in is read-only by construction and
   `/bug-monitor` writes (files DEFs, flips report status). Surfaced for Saiful to arm or run.
+
+## 2026-09-02
+
+Run as the 0900 automated check-in (LaunchAgent), read-only sweep first. Board, counted from the
+row files: **12 open Defects + 6 proposed CRs + 16 in_progress CRs** at open of session; **11 open
+Defects** at close (DEF396 fixed). Exactly **one** item was a genuinely new decision since the
+09-01 section.
+
+**Carried forward with their blocker named, not re-asked:** DEF100 / DEF344 / CR084 / CR198
+(payments parked 2026-08-21); CR004 (ledger, blocked on payments-active + both-stores-live);
+CR022 (deferred to pre-release); CR161 (waits on a Tier-1 prospect trigger); DEF178 ("rotate
+later"); DEF104 (blocked by the DEF204 ruling); DEF144 / DEF200 / DEF367 / DEF375 / DEF385 /
+DEF386 (in flight or already approved); CR159 / CR191 (the ruling is the row); CR213 (re-raise
+only if CR214 unparks); CR109 (queued, and its milestone-gating question is not actionable until
+it builds); CR214 (parked 09-01, unpark trigger is a host change); CR217 (Saiful's own directive,
+in flight — 12 commits since 09-01 evening, no decision owed).
+
+**Asked and answered:**
+
+- **DEF396 — Google Play refuses every AAB we can build.** `targetSdk = 35`; from **2026-08-31**
+  new apps *and updates* must target **API 36**. **Policy verified against Google's page, not
+  inferred** — the row had flagged the 31-August reading as unverified. Apps left on 35 stay
+  installable for existing users but cannot ship updates; an extension to **2026-11-01** is
+  available via a Play Console form. Saiful asked how we missed it; answered in four parts —
+  (1) `5b946811` (2026-05-23) replaced `targetSdk = flutter.targetSdkVersion` with the frozen
+  literal `35`, (2) five docs recorded 35 as a standing fact with **no expiry**, (3) nothing
+  watched the deadline (0 grep hits for target-API/deadline language outside those five), and
+  (4) **the only detector we own is Play's upload endpoint** — no local gate can stand in for it,
+  so we caught it on the first publish after the deadline, which is that detector's expected
+  behaviour rather than bad luck. Options put: file the extension and do it properly / raise now
+  with a full pass / bump-and-ship / park Android. → Saiful: **"Bump the number, ship, fix
+  fallout."** Done and verified live: `flutter test` 1446 exit 0, `bundleRelease` clean, AAB
+  rebuilt 09:35 (timestamp confirmed off the refused 09-01 20:22 artifact), `fastlane internal`
+  → *"Successfully finished the upload to Google Play"* 09:37, shipped `--no-bump` at
+  **0.1.0+102** so iOS and Android are back in parity at one build number. The row's own "not a
+  one-liner" warning was **wrong about why**: `compileSdk` is already 36 via
+  `flutter.compileSdkVersion`, so the app was compiling against API 36 all along and only
+  `targetSdk` was pinned back. **API 36 runtime behaviour is NOT measured** — no behaviour pass,
+  no Galaxy A17 run — by the chosen path; fallout surfaces on testers' devices. Commit `20cd1fe9`.
+
+**Flagged, no decision asked:**
+
+- **The automated-tester rig on melehost is dead.** `publish_playstore.sh` exited 0 but its APK
+  push failed: `/home/saiful/hermes_folder/` **does not exist on melehost at all** — not just the
+  `apk/` leaf. The rig cannot receive a build, so CR079's Android automation is not running against
+  anything current. Not caused by DEF396; surfaced by it. Not touched — that is Hermes's directory
+  on a shared host. **Unfiled; owed a DEF.**
+- **`/bug-monitor` still has zero cycles ever** (`git log --grep='docs(bug-monitor)'` empty),
+  unchanged from the 09-01 flag. Lower urgency than it reads: **no new bug report since
+  2026-08-15**, 18 days — the queue is 22 `in_progress` + 10 `investigating`, 0 unprocessed.
+- **DEF396's guard was deliberately not built.** CR048's existing `fastlane validate` lane on the
+  release path would move discovery from publish-time to build-time, but still stays silent until
+  the deadline passes. Only a dated assertion tied to the pinned constant fires early. First
+  instance of the class (*a constant pinned to a moving external requirement, expiry unrecorded*),
+  so no `failure_patterns.md` entry is owed yet; nearest shape is P22. A second earns P33.
+
+**GTM pulse (CR036 §1).** Active phase: **Stealth Alpha distribution**; Engagement close-out is
+in progress with **E5 pending**. Movement since 09-01: DEF382's tour-overlay replacement landed
+(`bebfe3ab`), Android distribution went blocked→restored inside 24h (DEF396), CR215's foreign
+auditor landed. **Single concrete item blocking the next gate: E5 — the iOS Appium gate has not
+been re-run since DEF382 replaced `TutorialCoachMark`.** DEF382 was verified on `flutter test`
+only (1446 unit tests); the tour rewrite is exactly what DEF375's 7 stranded tests were blocked
+on, and nobody has re-measured. Last real baseline: 8 failed / 11 passed / 4 skipped.
