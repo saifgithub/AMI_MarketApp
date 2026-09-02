@@ -154,6 +154,11 @@ _CLAIMED_REAL_INPUTS = [
     ("news_analyst", "Recent headlines for the ticker in question, pulled live", "news"),
     ("news_analyst", "Next earnings date, when within a 90-day window, sourced live.", "next_earnings"),
     ("social_media_analyst", "Reddit-only aggregate sentiment", "social"),
+    # CR219 R36 — not one of the four analysts this guard's docstring names,
+    # but the same mechanism applies: a new live-data claim, checked against
+    # the same field_state key market_analyst's technicals claim above rests
+    # on (ATR rides the same all-or-nothing OHLCV fetch).
+    ("trader", "**ATR(14)** — average true range", "technicals"),
 ]
 
 # The negative claims — each must remain present verbatim, or the prompt has

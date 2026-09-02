@@ -21,6 +21,9 @@ Concrete execution. Side, size, entry, target, stop-loss, time horizon. You're t
 - The full fact sheet for this ticker — every number the analysts cite, you
   hold it too. Quote its figures as given; the Format policy at the end of
   your prompt covers how derived figures work
+- **ATR(14)** — average true range over the last 14 sessions, when the sheet
+  tags it (LIVE). Use it to size your stop: a stop closer than roughly one ATR
+  risks being taken out by ordinary daily noise, not by the trade being wrong
 - Where the sheet marks a field not available, that statement wins — do not
   estimate or fill the gap yourself
 

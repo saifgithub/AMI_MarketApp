@@ -2082,6 +2082,19 @@ _DOMAIN_LABELS = {
     "social": "retail sentiment and community activity",
 }
 
+# CR219 R36 — ATR(14) is a technicals-domain fact, but a NARROWER gate than
+# `_AGENT_LANES`/`_in_lane("technicals")`: every full-sheet agent (Trader,
+# Risk Officer, PM, researchers, debators — anyone absent from
+# `_AGENT_LANES` above) AND the Market Analyst all satisfy
+# `_in_lane("technicals")`, but only the two roles with an actual
+# stop-sizing job — the Execution Desk and the Risk Officer — get ATR. Kept
+# as its own set rather than folded into `_AGENT_LANES` because it is not a
+# DOMAIN firewall (it does not withhold the rest of the technicals block
+# from anyone), it is a single-field allowlist one level narrower.
+_ATR_LANE_AGENTS: frozenset[AgentId] = frozenset({
+    AgentId.TRADER, AgentId.RISK_OFFICER,
+})
+
 
 def _lane_for(agent_id: AgentId | None) -> frozenset[str]:
     if agent_id is None:
@@ -2544,6 +2557,14 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # is arithmetic on two numbers already on the sheet — it asserts
         # nothing new. DEF229(b): "breakout" is a 50-day high, named as one.
         lines.append(_range_line(profile))
+        # CR219 R36 — narrower than `_in_lane("technicals")` on purpose: the
+        # Market Analyst already sees this whole range/trend/volume block but
+        # has no stop-sizing job, so ATR is gated to the two roles that do
+        # (`_ATR_LANE_AGENTS`), not the technicals domain generally.
+        if agent_id in _ATR_LANE_AGENTS:
+            atr_line = _atr_line(profile)
+            if atr_line:
+                lines.append(atr_line)
         lines.append(_moving_average_line(profile))
         lines.append(_period_trend_line(profile))
         lines.append(_volume_line(profile))
@@ -2756,6 +2777,27 @@ def _range_line(profile: dict[str, Any]) -> str:
     if pct is None:
         return f"{line}, last close ${last_close}"
     return f"{line}, last close ${last_close} ({pct}% of that range)"
+
+
+def _atr_line(profile: dict[str, Any]) -> str | None:
+    """CR219 R36 — ATR(14), the volatility measure the Execution Desk
+    currently sizes stops with none of. Rides the SAME
+    `field_state["technicals"]` gate as `_range_line` beside it (the whole
+    OHLCV computation is one all-or-nothing fetch); this function is None
+    only when `compute_technicals` itself did not produce an ATR value on an
+    otherwise-live technicals fetch, which does not happen in practice for
+    any ticker that clears the 50-bar minimum this desk already requires,
+    but the honest-absent shape costs nothing to keep.
+
+    Called from a narrower gate than `_in_lane("technicals")` — see the call
+    site: Execution/Risk lanes only, not the Market Analyst, which already
+    sees the range/trend/volume block this sits beside but has no stop-sizing
+    job to use a volatility figure for.
+    """
+    atr14 = profile.get("atr14")
+    if atr14 is None:
+        return None
+    return f"ATR(14): ${atr14} (average true range, simple 14-session average)"
 
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:

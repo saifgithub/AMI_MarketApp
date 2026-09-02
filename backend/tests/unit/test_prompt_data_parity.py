@@ -338,6 +338,24 @@ INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
     ("fundamentals", "one_on_one", "week52_range_live"): (
         "boolean render-control flag, not a data value."
     ),
+    # ── technicals ──
+    ("technicals", "room", "atr14"): (
+        "CR219 R36 — genuinely, permanently agent-gated, not a rendering gap: "
+        "`_atr_line` only fires for `agent_id in _ATR_LANE_AGENTS` (Trader, "
+        "Risk Officer), and this env's `room_text` is rendered with "
+        "`agent_id=None` (the ungated/union-of-lanes baseline every other "
+        "field here is checked against), which correctly falls outside that "
+        "lane. Covered instead by test_cr219_r36_atr.py's own per-agent "
+        "render assertions — Trader/Risk Officer see it, Market Analyst/PM/"
+        "None do not — which this generic ungated check cannot express."
+    ),
+    ("technicals", "one_on_one", "atr14"): (
+        "CR219 R36 — `build_technicals_context_block` (the 1-on-1 technicals "
+        "surface) is Market-Analyst-only by its own docstring and its "
+        "`agent_runner.py` call site; there is no Trader/Risk-Officer 1-on-1 "
+        "path to real technicals at all, so ATR is correctly absent from "
+        "this surface for every caller, not just this fixture's."
+    ),
     # ── social ──
     ("social", "room", "ticker"): (
         "the lookup symbol, carried on the fetch result but rendered from the "

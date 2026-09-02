@@ -13,6 +13,7 @@ import pytest
 from app.trading_math import (
     DEFAULT_RISK_TIER_CAPS,
     SINGLE_NAME_ABSOLUTE_CAP_PCT,
+    atr,
     clamp_size,
     drawdown_contribution,
     drawdown_pct,
@@ -66,6 +67,47 @@ def test_rsi_tone_bands():
 def test_sma_window():
     assert sma([10.0, 20.0, 30.0], 3) == 20.0
     assert sma([10.0, 20.0], 3) is None
+
+
+# ── indicators.atr (CR219 R36) ───────────────────────────────────────────────
+
+
+def test_atr_flat_range_is_the_constant_high_low_spread():
+    """Every bar's high-low is 3.0 and closes never gap between bars, so True
+    Range collapses to the plain range every session — the simplest case
+    where the formula's max-of-three never needs the two gap terms."""
+    closes = [100.0] * 15
+    highs = [103.0] * 15
+    lows = [100.0] * 15
+    assert atr(highs, lows, closes, period=14) == 3.0
+
+
+def test_atr_a_gap_day_widens_true_range_past_the_days_own_range():
+    """One day gaps up to 110 (own high-low still only 2.0), but the gap
+    against the PRIOR close (100.0) is 11.0 — the widest of the three terms,
+    which a plain high-low range would miss entirely. Hand-verified:
+    13 flat TR days at 2.0 + 1 gap TR day at 11.0, over 14 = 37/14."""
+    closes = [100.0] * 15 + [110.0]
+    highs = [c + 1 for c in closes]
+    lows = [c - 1 for c in closes]
+    got = atr(highs, lows, closes, period=14)
+    assert got is not None
+    assert got == pytest.approx(37 / 14)
+
+
+def test_atr_needs_period_plus_one_bars():
+    """`period` True Range VALUES need `period + 1` price points to diff
+    against — the same `period + 1` gate `rsi` uses, for the same reason."""
+    assert atr([1.0] * 14, [1.0] * 14, [1.0] * 14, period=14) is None
+    # Exactly at the boundary (15 bars) is sufficient — proven by the flat
+    # and gap cases above, both built on exactly 15/16 bars.
+
+
+def test_atr_mismatched_list_lengths_return_none():
+    """A caller error (three series that disagree in length), not a data
+    gap — the same shape a malformed statement frame elsewhere in this
+    codebase is refused rather than partially trusted."""
+    assert atr([1.0, 2.0], [1.0], [1.0, 2.0], period=1) is None
 
 
 # ── risk.drawdown_contribution ───────────────────────────────────────────────

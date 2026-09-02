@@ -178,6 +178,29 @@ def test_none_when_a_volume_is_nan(monkeypatch):
     assert compute_technicals("AAPL") is None
 
 
+def test_atr14_computed_alongside_the_rest_of_the_block(monkeypatch):
+    """CR219 R36. `_candles()`'s default high/low spread (close ± 1) on flat
+    closes gives a constant 2.0-wide True Range every session — hand-verified
+    against `atr()`'s own formula before relying on it, matching
+    `test_rsi_computed_from_real_price_deltas`'s own 'hand-verified, not
+    fabricated' discipline above."""
+    closes = [100.0] * 65
+    monkeypatch.setattr(technicals, "get_market_data_provider", lambda: _FakeProvider(_candles(closes)))
+
+    t = compute_technicals("AAPL")
+    assert t is not None
+    assert t.atr14 == 2.0
+
+
+def test_atr14_none_when_the_whole_block_is_none(monkeypatch):
+    """ATR rides the SAME all-or-nothing OHLCV fetch as RSI/trend/volume —
+    when the block degrades to None (history too short), there is no
+    partial result carrying an ATR value with nothing else."""
+    closes = [100.0] * 30  # below the 50-candle minimum
+    monkeypatch.setattr(technicals, "get_market_data_provider", lambda: _FakeProvider(_candles(closes)))
+    assert compute_technicals("AAPL") is None
+
+
 def test_none_when_a_low_is_nan(monkeypatch):
     """The auditor's own note: a NaN low alone doesn't reliably raise (min()
     skips it) but would silently yield a wrong support — the isfinite guard

@@ -15,7 +15,7 @@ Design contract, deliberately kept true so the package is reusable elsewhere:
 Because it depends on nothing but the stdlib, the folder is copy-portable: drop
 `trading_math/` into another project and adjust the one import path.
 
-Scope today: `indicators` (RSI/SMA/tone), `risk` (position-level drawdown
+Scope today: `indicators` (RSI/SMA/ATR/tone), `risk` (position-level drawdown
 contribution), `sizing` (per-risk-tier caps + the Risk-Debator spread), `trade`
 (risk/reward + asymmetry from entry/stop/target), `valuation` (P/E-compression
 downside + fundamentals unit conversions), `portfolio` (value, drawdown,
@@ -42,7 +42,7 @@ Cutler's, not Wilder's (Decision D1, library_survey.md).
 
 from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
 from .cost_basis import FifoSellResult, LotClose, OpenLot, fifo_sell
-from .indicators import DEFAULT_RSI_PERIOD, rsi, rsi_tone, sma
+from .indicators import DEFAULT_RSI_PERIOD, atr, rsi, rsi_tone, sma
 from .option import option_break_even, option_intrinsic_value, option_payoff
 
 # CR172 options pricing family (M14–M17). `greeks.CALENDAR_DAYS_PER_YEAR` is
@@ -134,6 +134,7 @@ __all__ = [
     "rsi",
     "rsi_tone",
     "sma",
+    "atr",
     "DrawdownContribution",
     "drawdown_contribution",
     "DEFAULT_RISK_TIER_CAPS",

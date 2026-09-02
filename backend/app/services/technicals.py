@@ -35,6 +35,7 @@ from app.services.market_data import (
 # RSI/SMA math now lives in the portable trading_math library (CR046 M01).
 # Re-exported under the original private names so this module's internals and
 # any importers are unchanged; the computation is identical (Cutler's RSI).
+from app.trading_math.indicators import atr as _atr
 from app.trading_math.indicators import rsi as _rsi
 from app.trading_math.indicators import rsi_tone as _rsi_tone
 from app.trading_math.indicators import sma as _sma
@@ -45,6 +46,7 @@ _SMA_SHORT = 20
 _SMA_LONG = 50
 _RECENT_VOLUME_WINDOW = 5
 _VOLUME_BASELINE_WINDOW = 20
+_ATR_PERIOD = 14  # CR219 R36
 
 
 class Technicals(NamedTuple):
@@ -88,6 +90,15 @@ class Technicals(NamedTuple):
     # quarter across no data.
     return_period_pct: float = 0.0
     period_candles: int = 0
+    # CR219 R36 — ATR(14), Execution/Risk lanes only (the volatility measure
+    # the Execution Desk currently sets stops with none of). Appended at the
+    # END with a default for the same positional-fixture-safety reason as the
+    # two fields above it, not inserted where it would read more naturally
+    # beside `support`/`breakout`. `None` (not `0.0`) is the honest default:
+    # zero volatility is a real, if implausible, ATR value, so it cannot also
+    # mean "not computed" the way `period_candles: int = 0` safely can for a
+    # count.
+    atr14: float | None = None
 
 
 def window_trend_phrase(return_pct: float, candles: int) -> str:
@@ -213,6 +224,14 @@ def compute_technicals(ticker: str) -> Technicals | None:
         support = min(lows[-_SMA_LONG:])
         breakout = max(highs[-_SMA_LONG:])
 
+        # CR219 R36 — ATR(14). `_ATR_PERIOD + 1` bars are needed (`atr`'s own
+        # `period + 1` gate); the `_SMA_LONG` (50-bar) minimum already
+        # enforced above this point covers that with room to spare, so this
+        # can never be the reason a real fetch degrades to None — confirmed
+        # against `_HISTORY_PERIOD`'s own comment (~65 candles) before
+        # relying on it, not assumed.
+        atr14 = _atr(highs, lows, closes, period=_ATR_PERIOD)
+
         return Technicals(
             rsi=round(rsi),
             rsi_tone=_rsi_tone(rsi),
@@ -226,6 +245,7 @@ def compute_technicals(ticker: str) -> Technicals | None:
             sma_short=round(sma_short, 2),
             sma_long=round(sma_long, 2),
             volume_ratio=volume_ratio,
+            atr14=round(atr14, 2) if atr14 is not None else None,
         )
     except Exception as exc:
         logger.warn("technicals_compute_error", ticker=ticker, error=str(exc)[:200])

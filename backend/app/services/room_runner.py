@@ -763,6 +763,12 @@ def _profile_for_ticker(
                 # prompts to emphasise, from the series that was always fetched.
                 profile["return_period_pct"] = technicals.return_period_pct
                 profile["period_candles"] = technicals.period_candles
+                # CR219 R36 — ATR(14), the Execution/Risk stop-sizing figure.
+                # Rides the same `field_state["technicals"]` gate as every
+                # field above it (one OHLCV fetch, one liveness state); the
+                # render side (`_format_profile`) narrows WHO sees it, this
+                # line only carries the value into the profile at all.
+                profile["atr14"] = technicals.atr14
                 field_state["technicals"] = LiveDataState.LIVE.value
             else:
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value
