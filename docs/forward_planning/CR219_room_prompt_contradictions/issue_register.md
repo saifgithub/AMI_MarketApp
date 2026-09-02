@@ -89,8 +89,8 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R25 | Wire it, or delete the printed line? | **RULED** | Wire it, as weighted guidance — not hard PM filter gates. GLM's R2 and QWEN's own ruling converge (QWEN sequences it as Phase 3b) | K,A,F,G,Q | ☐ |
-| R26 | If wired, by what mechanism? | RULED / CONVERGENT | Weighted guidance per goal value; PM keeps holistic gatekeeping. QWEN adds: exhaustive `match` over every enum arm, no silent default on an unhandled value | K,A,F,G,Q | ☐ |
+| R25 | Wire it, or delete the printed line? | **RULED** | Wire it, as weighted guidance — not hard PM filter gates. GLM's R2 and QWEN's own ruling converge (QWEN sequences it as Phase 3b). Done `2f70cc5d` (`_goal_block`, all 6 arms distinct) | K,A,F,G,Q | ☑ |
+| R26 | If wired, by what mechanism? | RULED / CONVERGENT | Weighted guidance per goal value; PM keeps holistic gatekeeping. QWEN adds: exhaustive `match` over every enum arm, no silent default on an unhandled value. Done `2f70cc5d` (`case _:` raises — load-bearing, since Pydantic `model_copy` skips re-validation) | K,A,F,G,Q | ☑ |
 
 ## Factual corrections to the base CR doc
 
@@ -150,7 +150,7 @@ ruling than "everything rides CR219" (R40) and applies only to this group.
 | R53 | Permanent DATA GAPS telemetry tail on analyst turns | **RULED 2026-09-02** | Parked to a future CR — `dev_instructions/PARKING_LOT.md` | F | ☐ |
 | R54 | Standing replay eval harness across prompt CRs | **RULED 2026-09-02** | Stays inside CR219 — AC4 and several experiments (R31, R48) depend on it. Satisfied by `harness/` (2c75f1c8) | F | ☑ |
 | R55 | Verdict-outcome ledger (internal calibration floor) | **RULED 2026-09-02** | Splits into its **own future CR**, minted at the combine step, internal-only (no user-facing calibration stats; revisit at v1.0) — the one item explicitly ruled *out* of CR219 | F | ☐ |
-| R56 | Mandate-utilization guard — `drawdown_response`/`regret_asymmetry` are also dead fields | RULED (Fable's scoping) | Rides CR219's umbrella; fold into the R25/R26 (`primary_goal`) work while that's open | F | ☐ |
+| R56 | Mandate-utilization guard — `drawdown_response`/`regret_asymmetry` are also dead fields | RULED (Fable's scoping) | Rides CR219's umbrella; fold into the R25/R26 (`primary_goal`) work while that's open. Done `2f70cc5d` — both wired (debator stress-emphasis line; researcher/debator regret-framing line), neither stopped-printing | F | ☑ |
 | R57 | Stance-envelope grammar tension (force emission vs. keep it a measurement channel) | **RULED 2026-09-02** | Parked to a future CR — revisit once R50's scoreboard shows parse rates. `dev_instructions/PARKING_LOT.md` | F | ☐ |
 | R58 | Debate-order randomization (Bull always speaks before Bear) | **RULED 2026-09-02** | Parked to a future CR — `dev_instructions/PARKING_LOT.md` | F | ☐ |
 | R59 | Audit: every number the user reads is computed or checked in code | **RULED 2026-09-02** | Parked — R20 already ships the RO-precompute half inside CR219; the general audit waits. `dev_instructions/PARKING_LOT.md` | F,Q | ☐ |
