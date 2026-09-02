@@ -19,7 +19,7 @@ The build/signing half already exists. What's new: (1) the one-time bootstrap to
 - `scripts/build_playstore.sh` — builds a signed `--release` AAB, auto-bumps the shared `+N` build number, prints manual-upload steps.
 - Gradle release signing in `mobile/android/app/build.gradle.kts` (reads `~/.android-keys/keystore.properties`).
 - Upload keystore **present and valid** — `~/.android-keys/ami-trade-upload.keystore` + `keystore.properties` both exist (verified R64). The earlier handover note calling this unwritten was stale; corrected in `HANDOVER_R.md`.
-- Play Console account registered (individual, D-057). `applicationId = ai.agenticmarketintel.ami_trade`, `minSdk 28` / `targetSdk 35`.
+- Play Console account registered (individual, D-057). `applicationId = ai.agenticmarketintel.ami_trade`, `minSdk 28` / `targetSdk 36` (raised from 35 by DEF396 — Play enforces a new floor every 31 August).
 
 ## Scope
 

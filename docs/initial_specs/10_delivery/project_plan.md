@@ -112,7 +112,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 - No Supabase yet — local Postgres + the W8 auth scaffold serves Alpha. Supabase swap is the headline Beta item.
 - No payments. No RevenueCat. Floor Pass for everyone during alpha.
 - Cloud LLM stays Beta. On-prem vLLM Gemma 4 keeps serving Alpha.
-- ~~No Android.~~ **Android-GMS pulled into Alpha — formalized AT:R36 as [D-057](../11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha).** Internal-track testers join the Alpha cohort via Google Sign-In + Play Console internal testing. iOS still on TestFlight. Locked sub-decisions in D-057: individual Play Console registration, Play App Signing, `minSdk 28` / `targetSdk 35`, Samsung Galaxy A17 as test device, push + payments stay deferred (same as iOS). See A6b.
+- ~~No Android.~~ **Android-GMS pulled into Alpha — formalized AT:R36 as [D-057](../11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha).** Internal-track testers join the Alpha cohort via Google Sign-In + Play Console internal testing. iOS still on TestFlight. Locked sub-decisions in D-057: individual Play Console registration, Play App Signing, `minSdk 28` / `targetSdk 36` (raised from 35 by DEF396 on 2026-09-02 — Play enforces a new target-API floor every 31 August), Samsung Galaxy A17 as test device, push + payments stay deferred (same as iOS). See A6b.
 - No App Store production release (that's MVP).
 - No marketing / public launch.
 

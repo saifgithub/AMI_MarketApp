@@ -56,7 +56,7 @@ AMI_MarketApp/
 │   │   ├── state/                ← Riverpod providers
 │   │   └── models/               ← Dart models, mirror backend Pydantic
 │   ├── ios/                      ← TestFlight build artefacts
-│   ├── android/                  ← Play Console internal-track build (minSdk 28, targetSdk 35, Play App Signing)
+│   ├── android/                  ← Play Console internal-track build (minSdk 28, targetSdk 36, Play App Signing)
 │   ├── assets/
 │   └── pubspec.yaml
 ├── backend/                      ← FastAPI service (runs on melehost in Alpha)

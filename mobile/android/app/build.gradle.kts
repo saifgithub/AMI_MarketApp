@@ -37,7 +37,11 @@ android {
     defaultConfig {
         applicationId = "ai.agenticmarketintel.ami_trade"
         minSdk = 28
-        targetSdk = 35
+        // Play raises its target-API floor every year and enforces it on 31 August;
+        // API 36 became mandatory 2026-08-31. Pinned rather than tracking
+        // flutter.targetSdkVersion so the value matches what we test on. That pin is
+        // why DEF396 happened - it went stale silently. Re-check before each August.
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
