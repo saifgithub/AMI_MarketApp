@@ -127,6 +127,10 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "Gross\n  debt, market cap and TTM free cash flow in dollars", "total_debt"),
     ("fundamentals_analyst", "Sector/industry classification", "sector"),
     ("fundamentals_analyst", "Sector/industry classification", "industry"),
+    # CR219 R37 — both halves of the own-history claim, each independently
+    # gated (a filer can carry one series without the other).
+    ("fundamentals_analyst", "**Multiples vs. own history**", "historical_pe_median"),
+    ("fundamentals_analyst", "**Multiples vs. own history**", "historical_ev_ebitda_median"),
     # CR166 Tier B — the dividend claim grew the half that makes a yield mean
     # something (cover + ex-date), and the consensus claim grew its dispersion.
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_yield"),

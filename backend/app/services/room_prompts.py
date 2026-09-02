@@ -38,6 +38,7 @@ from app.services.fundamentals import (
     capex_line,
     capital_return_line,
     day_move_line,
+    historical_multiples_line,
     interest_coverage_line,
     liquidity_line,
     margin_structure_line,
@@ -2435,6 +2436,25 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("forward_pe") if _is("forward_pe", "live") else None,
             )
         )
+        # CR219 R37 — today's price/EV against each of the last several FYs'
+        # own EPS/EBITDA, median'd. Six field_state keys, each gated
+        # separately (per-field CR104 discipline) — a partial fetch (say,
+        # EBITDA history without a resolvable EV) renders only the half that
+        # is real rather than pairing a live median with a stale window
+        # label.
+        hist_line = historical_multiples_line(
+            profile.get("historical_pe_median") if _is("historical_pe_median", "live") else None,
+            profile.get("historical_pe_years") if _is("historical_pe_years", "live") else None,
+            profile.get("historical_pe_window") if _is("historical_pe_window", "live") else None,
+            profile.get("historical_ev_ebitda_median")
+            if _is("historical_ev_ebitda_median", "live") else None,
+            profile.get("historical_ev_ebitda_years")
+            if _is("historical_ev_ebitda_years", "live") else None,
+            profile.get("historical_ev_ebitda_window")
+            if _is("historical_ev_ebitda_window", "live") else None,
+        )
+        if hist_line:
+            lines.append(hist_line)
         # CR166 Tier B — the net margin moved OFF this line and onto
         # `Margin structure` below, which states it as the third term of
         # gross → operating → net. Stating one figure twice is the defect

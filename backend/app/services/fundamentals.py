@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 import re
+import statistics
 import time
 from datetime import date, datetime, timezone
 from threading import RLock
@@ -386,6 +387,51 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
     if ebit_series and interest_series and ebit_series[0] is not None and interest_series[0]:
         out["interest_coverage"] = round(ebit_series[0] / abs(interest_series[0]), 1)
         out["interest_coverage_quarter"] = periods[0] if periods else None
+
+    # ── Own-history annual EPS/EBITDA, for R37's median multiples ─────────
+    # A SEPARATE try/except from the quarterly fetch above: `tk.income_stmt`
+    # (annual — distinct from `tk.quarterly_income_stmt`, already held as
+    # `income`) is a different yfinance property that can fail independently,
+    # and a failure here must not cost the quarterly-derived fields above it
+    # (margin trend, buybacks, capex, interest coverage) — same "one outage
+    # degrades only its own lines" contract `fetch_statement_facts`'s own
+    # docstring states for the module as a whole.
+    #
+    # Verified against real yfinance (CAT/NVDA/KTOS/SNOA, 2026-09-03) before
+    # writing this: `income_stmt` carries a literal "EBITDA" row (no
+    # Operating-Income-plus-D&A reconstruction needed, unlike the PIT/
+    # backtest path in edgar_pit.py, which has no such row and must build
+    # it) and a "Diluted EPS" row, both keyed to fiscal-year-end columns.
+    # Every ticker tested returned exactly 5 columns, but the OLDEST column
+    # was NaN for CAT specifically — so "5 columns" and "5 USABLE years" are
+    # different claims, and only the second is safe to state. The window is
+    # measured per-ticker below (`len(usable)`), never assumed to be 4 or 5.
+    try:
+        annual_income = tk.income_stmt
+        annual_periods = [str(c)[:10] for c in annual_income.columns]
+    except Exception as exc:
+        logger.warn("yfinance_annual_statement_error", ticker=ticker, error=str(exc)[:200])
+        annual_income = None
+        annual_periods = []
+    if annual_income is not None and annual_periods:
+        ebitda_series = _stmt_series(annual_income, "EBITDA")
+        eps_series = _stmt_series(annual_income, "Diluted EPS")
+        if ebitda_series is not None:
+            usable = [
+                (period, v) for period, v in zip(annual_periods, ebitda_series)
+                if v is not None and v > 0
+            ]
+            if usable:
+                out["ebitda_history"] = [v for _, v in usable]
+                out["ebitda_history_years"] = [p[:4] for p, _ in usable]
+        if eps_series is not None:
+            usable = [
+                (period, v) for period, v in zip(annual_periods, eps_series)
+                if v is not None and v > 0
+            ]
+            if usable:
+                out["eps_history"] = [v for _, v in usable]
+                out["eps_history_years"] = [p[:4] for p, _ in usable]
 
     return out or None
 
@@ -793,6 +839,57 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
                     total * 1_000_000 / free_cash_flow * 100
                 )
 
+        # CR219 R37 — historical median multiples: TODAY's price/EV against
+        # each of the last several fiscal years' own EPS/EBITDA, median'd.
+        #
+        # This is NOT a historical-price-based P/E series (that would need a
+        # separate multi-year price-history fetch this rule forbids —
+        # "everything derives from statements/bars/estimates yfinance
+        # already returns via the existing fetch paths"). It answers a
+        # related, narrower, and still useful question the evidence corpus
+        # actually raised: the PM's own gap report said *"if I had proof
+        # that 24.5x was a normal mid-cycle baseline rather than an extreme
+        # cyclical peak, I might have approved"* — i.e., is TODAY's
+        # denominator (EBITDA/EPS) itself elevated or depressed relative to
+        # the company's own recent history. Pricing every past year's
+        # earnings at TODAY's price/EV isolates exactly that: if the spread
+        # of implied multiples is wide and skewed, the denominator has moved
+        # a lot: a genuine "mid-cycle vs. peak" signal, cheaply available
+        # from data already on the sheet, worded to make plain it is NOT a
+        # reconstructed historical multiple.
+        #
+        # Window labelled per-ticker from what `_fetch_statement_facts_uncached`
+        # actually returned (already filtered to positive, usable years there)
+        # — never assumed to be 4 or 5.
+        #
+        # `ebitda_history`/`ebitda_history_years`/`eps_history`/
+        # `eps_history_years` are raw INTERMEDIATE arrays — computation
+        # inputs, never a rendered field. `out.update(statements)` above
+        # already merged them in with the rest of `statements`' keys;
+        # popped here, explicitly, at the point they're consumed, rather
+        # than left to leak into `out` as four keys with no render site and
+        # no field_state registration — exactly the shape
+        # `test_prompt_data_parity.py`'s guard-on-the-guard exists to catch
+        # (and did, on the first real run of this code: caught here, not
+        # discovered later).
+        ebitda_hist = out.pop("ebitda_history", None)
+        ebitda_years = out.pop("ebitda_history_years", None)
+        eps_hist = out.pop("eps_history", None)
+        eps_years = out.pop("eps_history_years", None)
+        if ebitda_hist and ebitda_years and market_cap and total_debt is not None and total_cash is not None:
+            ev = market_cap + total_debt - total_cash
+            if ev > 0:
+                implied = [round(ev / e, 1) for e in ebitda_hist]
+                out["historical_ev_ebitda_median"] = round(statistics.median(implied), 1)
+                out["historical_ev_ebitda_years"] = len(ebitda_hist)
+                out["historical_ev_ebitda_window"] = f"{ebitda_years[-1]}-{ebitda_years[0]}"
+
+        if eps_hist and eps_years and price:
+            implied = [round(price / e, 1) for e in eps_hist]
+            out["historical_pe_median"] = round(statistics.median(implied), 1)
+            out["historical_pe_years"] = len(eps_hist)
+            out["historical_pe_window"] = f"{eps_years[-1]}-{eps_years[0]}"
+
     # Real sector/industry classification replaces the old always-fake
     # numeric `sector_pe` — a category, not a fabricated peer-average P/E
     # (yfinance has no peer-basket P/E; computing one would need a peer
@@ -977,6 +1074,54 @@ def pe_line(trailing: str | None, forward: str | None) -> str:
     if not trailing and not forward:
         return "P/E: not available"
     return f"P/E: {trailing_part} · {forward_part}. Say which basis you mean whenever you cite a P/E."
+
+
+def historical_multiples_line(
+    pe_median: float | None, pe_years: int | None, pe_window: str | None,
+    ev_ebitda_median: float | None, ev_ebitda_years: int | None, ev_ebitda_window: str | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR219 R37 — is today's multiple against a normal or an extreme year of
+    this company's OWN earnings/EBITDA?
+
+    Explicitly NOT a historical-price-based multiple series — this module
+    fetches no multi-year price history (that would be a new network call
+    the house rule forbids; "everything derives from statements/bars/
+    estimates yfinance already returns via the existing fetch paths"). It is
+    TODAY's price/EV divided by EACH of the last several fiscal years' own
+    EPS/EBITDA, then the MEDIAN of those implied multiples — which answers a
+    narrower, related question from data already on the sheet: is the
+    denominator (this year's earnings/EBITDA) itself elevated or depressed
+    relative to the company's own recent history. The wording below says so
+    explicitly, every time, so the figure can never be mistaken for a
+    reconstructed historical P/E series it structurally is not.
+
+    The window is stated per-ticker (`Nyr, {window}`) — yfinance returns
+    ~4-5 fiscal years of annual statements, not 10, and not every year
+    clears the positive-earnings/EBITDA filter (`_fetch_statement_facts_
+    uncached` drops non-positive years before this ever runs), so the
+    number of years actually used is a measured fact, never assumed.
+    """
+    parts = []
+    if pe_median is not None and pe_years and pe_window:
+        parts.append(
+            f"P/E: today's price against each of the last {pe_years} FYs' own "
+            f"diluted EPS ({pe_window}), median {pe_median}x"
+        )
+    if ev_ebitda_median is not None and ev_ebitda_years and ev_ebitda_window:
+        parts.append(
+            f"EV/EBITDA: today's EV against each of the last {ev_ebitda_years} "
+            f"FYs' own EBITDA ({ev_ebitda_window}), median {ev_ebitda_median}x"
+        )
+    if not parts:
+        return None
+    line = _labelled("Multiples vs. own history", live, parts)
+    return (
+        f"{line}. NOT a historical price-based multiple series — today's "
+        "price/EV priced against past years' own fundamentals, to show "
+        "whether this year's earnings/EBITDA is itself high or low versus "
+        "the company's recent history. No peer-basket comparison exists."
+    )
 
 
 # ── CR166 Tier B shared fact-sheet lines ────────────────────────────────────
@@ -1708,6 +1853,17 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
     if _in_lane("fundamentals"):
         if "pe" in data or "forward_pe" in data:
             lines.append(pe_line(data.get("pe"), data.get("forward_pe")))
+        # CR219 R37 — same builder, same order, same wording as the Room
+        # sheet (parity rule above).
+        hist_line = historical_multiples_line(
+            data.get("historical_pe_median"), data.get("historical_pe_years"),
+            data.get("historical_pe_window"),
+            data.get("historical_ev_ebitda_median"), data.get("historical_ev_ebitda_years"),
+            data.get("historical_ev_ebitda_window"),
+            live=False,
+        )
+        if hist_line:
+            lines.append(hist_line)
         if "rev_growth" in data:
             lines.append(f"TTM revenue growth: {data['rev_growth']}%")
         # Net margin is no longer stated here — it is the third term of the

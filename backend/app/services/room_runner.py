@@ -475,6 +475,20 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # same as the buyback/dividend rows above) has no coverage figure, and
     # that absence is normal, not an outage.
     "interest_coverage", "interest_coverage_quarter",
+    # CR219 R37 — today's price/EV against each of the last several FYs' own
+    # EPS/EBITDA, median'd — NOT a reconstructed historical-price multiple
+    # series (no new price-history fetch; see `historical_multiples_line`'s
+    # own docstring). From `tk.income_stmt` (annual — a sibling of the
+    # already-fetched `.quarterly_income_stmt`/`.quarterly_cashflow`, same
+    # `yf.Ticker` object) plus the already-fetched `market_cap`/`total_debt`/
+    # `total_cash`/`price`. Six keys, not two: the P/E half and the
+    # EV/EBITDA half can each independently be present or absent (a filer
+    # can carry Diluted EPS with no EBITDA row, or vice versa), and each
+    # median needs its own year-count and window label riding beside it so a
+    # partial fetch can never pair a live figure with a stale label.
+    "historical_pe_median", "historical_pe_years", "historical_pe_window",
+    "historical_ev_ebitda_median", "historical_ev_ebitda_years",
+    "historical_ev_ebitda_window",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
     # shipped without it (gross debt renders, gross cash did not).
     "total_cash",

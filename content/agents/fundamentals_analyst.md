@@ -47,6 +47,12 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   debt, market cap and TTM free cash flow in dollars are stated beside it
 - Sector/industry classification — real, but a category, not a numeric peer-average
   P/E (no peer-basket comparison is computed)
+- **Multiples vs. own history** — today's price/EV against each of the last several
+  fiscal years' own diluted EPS/EBITDA, median'd, when the sheet tags it (LIVE). This
+  is NOT a reconstructed historical P/E series (no multi-year price history is
+  fetched) — it prices past years' earnings/EBITDA at TODAY's price/EV to show
+  whether THIS year's number is itself elevated or depressed versus the company's own
+  recent history. Still no peer-basket or sector-average comparison of any kind
 - **Ownership** — institutional and insider percentages, shares outstanding and free
   float. Market cap alone does not settle liquidity: a large company with a small
   float, or one where insiders hold a third of the shares, is a different instrument

@@ -421,6 +421,34 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         ),
     },
     {
+        "persona": "fundamentals_analyst",
+        "anchor": "is NOT a reconstructed historical P/E series (no multi-year price history is",
+        "category": "scope-true",
+        "why": (
+            "CR219 R37: the own-history multiples line genuinely does not fetch a "
+            "multi-year price history — the house rule against a new network fetch "
+            "is why the field is built the way it is (today's price/EV against past "
+            "years' own EPS/EBITDA, not a reconstructed historical multiple series). "
+            "This sentence describes what the FIELD structurally is not, not an "
+            "absence of data — the field itself ships and is fully covered by the "
+            "guard mapping below (R11-adjacent, historical_pe_median/"
+            "historical_ev_ebitda_median)."
+        ),
+    },
+    {
+        "persona": "fundamentals_analyst",
+        "anchor": "recent history. Still no peer-basket or sector-average comparison of any kind",
+        "category": "scope-true",
+        "why": (
+            "TRUE and unaffected by R37: own-history multiples (today vs. this "
+            "company's own past years) and a peer/sector-average comparison "
+            "(this company vs. OTHER companies) are different claims. R37 ships "
+            "the first; the second still has no yfinance peer-basket P/E to build "
+            "from and stays denied — the R7 known-absent entry below is the one "
+            "that tracks THAT claim's truth, with its own collision markers."
+        ),
+    },
+    {
         "persona": "market_analyst",
         "anchor": "where it marks a field not available, or names a set as not reconstructable",
         "category": "runtime-deference",

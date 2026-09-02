@@ -155,6 +155,15 @@ _FUND_SENTINEL: dict = {
     # CR219 R34 — capital expenditure, from the same `.quarterly_cashflow`
     # call the buyback/dividend rows above already read.
     "capex_ttm": 6543,
+    # CR219 R37 — today's price/EV against each of the last several FYs' own
+    # EPS/EBITDA, median'd. Values chosen not to collide with any other
+    # fingerprint here; window strings distinct per direction.
+    "historical_pe_median": 15.7,
+    "historical_pe_years": 4,
+    "historical_pe_window": "PEWINDOWSENT",
+    "historical_ev_ebitda_median": 11.3,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "EVWINDOWSENT",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
     # without it. Neither guard could see the gap: the census counts `totalCash`
     # as consumed (it IS read, into `net_cash`) and parity can only ask about a
@@ -542,6 +551,32 @@ def _fake_statement_frames():
     return income, cashflow
 
 
+def _fake_annual_income_stmt():
+    """CR219 R37 — `tk.income_stmt` (ANNUAL — distinct from `quarterly_income_stmt`
+    above), for the own-history median multiples.
+
+    5 fiscal-year columns, matching what real yfinance returned for every
+    ticker checked (CAT/NVDA/KTOS/SNOA, 2026-09-03) — and, matching CAT
+    specifically, the OLDEST column is NaN for both rows, so exactly 4 of 5
+    years are usable. This is deliberate, not an oversight: it exercises the
+    "label the window honestly" behaviour end to end (4 usable years, not 5
+    columns) through the same real fetcher the discovery pass drives, the
+    same reason `_fake_statement_frames`' oldest quarterly column above is
+    excluded from the buyback/dividend/capex 4-quarter sums.
+    """
+    import pandas as pd
+
+    fy_periods = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31"]
+    return pd.DataFrame(
+        [
+            [14305.0, 16038.0, 15705.0, 11414.0, float("nan")],  # EBITDA
+            [18.81, 22.05, 20.12, 12.64, float("nan")],          # Diluted EPS
+        ],
+        index=["EBITDA", "Diluted EPS"],
+        columns=fy_periods,
+    )
+
+
 def _fake_yfinance_module() -> types.SimpleNamespace:
     income, cashflow = _fake_statement_frames()
     return types.SimpleNamespace(
@@ -550,6 +585,9 @@ def _fake_yfinance_module() -> types.SimpleNamespace:
             info=_AllKeysInfo(),
             quarterly_income_stmt=income,
             quarterly_cashflow=cashflow,
+            # CR219 R37 — the annual sibling, real yfinance's actual property
+            # name (distinct from `quarterly_income_stmt` above).
+            income_stmt=_fake_annual_income_stmt(),
         ),
     )
 
@@ -692,6 +730,16 @@ def env(monkeypatch):
             "interest_coverage_quarter": "COVQUARTERSENT",
             # CR219 R34.
             "capex_ttm": "$6,543M (trailing 4 quarters)",
+            # CR219 R37 — three keys per half (median, year-count, window
+            # string), each fingerprinted separately so a mix-up between the
+            # P/E half and the EV/EBITDA half — or a live median paired with
+            # a stale year-count or window — would still be caught.
+            "historical_pe_median": "median 15.7x",
+            "historical_pe_years": "the last 4 FYs' own diluted EPS",
+            "historical_pe_window": "PEWINDOWSENT",
+            "historical_ev_ebitda_median": "median 11.3x",
+            "historical_ev_ebitda_years": "the last 4 FYs' own EBITDA",
+            "historical_ev_ebitda_window": "EVWINDOWSENT",
             # CR179 Leg 3.
             "total_cash": "gross cash $55,221M",
             "day_change_pct": "-1.77% today",
