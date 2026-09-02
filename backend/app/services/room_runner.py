@@ -449,6 +449,14 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # computed and then dropped unlabelled at the render site — CR104's rule is
     # that a field with no recorded provenance renders as nothing.
     "dividends_paid_ttm", "capital_return_ttm", "capital_return_pct_fcf",
+    # CR219 R34 — capital expenditure, trailing 4 quarters, from the same
+    # `.quarterly_cashflow` call the buyback/dividend rows above already read.
+    # Explicit so nobody reverse-engineers it from `free_cash_flow` — R20 now
+    # forbids that arithmetic on sheet figures, and it was unsound before R20
+    # named the rule too (FCF moves for reasons that have nothing to do with
+    # capex). Optional-live-only for the same absent-row reason as the two
+    # rows above it.
+    "capex_ttm",
     # CR219 R33 — interest coverage (EBIT / interest expense), the single
     # most-requested figure in the CR219 arm measurement (21 mentions, 9/12
     # agents). From the same `.quarterly_income_stmt` the margin-trend block

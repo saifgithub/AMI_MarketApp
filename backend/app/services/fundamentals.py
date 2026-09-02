@@ -278,6 +278,27 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
         if len(recent) == 4:
             out["dividends_paid_ttm"] = round(abs(sum(recent)) / 1_000_000)
 
+    # ── Capital expenditure, trailing four quarters (CR219 R34) ──────────
+    # The sheet already renders `free_cash_flow` (from `.info`'s
+    # `freeCashflow`, a single pre-computed figure — not derived here from
+    # operating cash flow minus capex), so capex was only ever IMPLICIT: an
+    # agent could see FCF move and infer capex changed without ever being
+    # told by how much, which is exactly the arithmetic R20's global
+    # derivation policy now forbids doing on sheet figures. This makes the
+    # number explicit instead of inferable. Same signed-outflow and
+    # absent-is-not-zero rules as the buyback/dividend rows above; row-label
+    # variants matched the same way `edgar_tags.CAPEX`'s PIT resolver already
+    # has to (measured there: filers spell this several ways).
+    capex = _stmt_series(
+        cashflow,
+        "Capital Expenditure", "Purchase Of PPE",
+        "Payments To Acquire Property Plant And Equipment",
+    )
+    if capex is not None:
+        recent = [v for v in capex[:4] if v is not None]
+        if len(recent) == 4:
+            out["capex_ttm"] = round(abs(sum(recent)) / 1_000_000)
+
     # ── Interest coverage, latest quarter (CR219 R33) ────────────────────
     # The #1 arm request across the CR219 measurement — 21 mentions from 9 of
     # 12 agents — and the CAT insolvency-risk narrative that motivated it was
@@ -1068,6 +1089,28 @@ def capital_return_line(
     return _labelled("Capital returned", live, [part])
 
 
+def capex_line(ttm_millions: int | None, *, live: bool = True) -> str | None:
+    """CR219 R34 — capital expenditure, stated explicitly rather than left
+    implicit inside the already-rendered free cash flow figure.
+
+    The sheet renders `free_cash_flow` (a single pre-computed yfinance
+    figure, not `operating_cash_flow - capex` computed here), so before this
+    line an agent could see FCF and infer capex only by ALSO knowing
+    operating cash flow — a number the sheet never stated either — which is
+    exactly the sheet-figure arithmetic R20's global derivation policy now
+    forbids. Reverse-engineering capex from FCF alone was already unsound
+    even before R20 named the rule: FCF moves for revenue, margin and
+    working-capital reasons that have nothing to do with capex, so the
+    inference was never safe, only unexamined.
+    """
+    if ttm_millions is None:
+        return None
+    return _labelled(
+        "Capital expenditure", live,
+        [f"${ttm_millions:,}M (trailing 4 quarters)"],
+    )
+
+
 def day_move_line(
     change_pct: float | None, market_state: str | None, *, live: bool = True
 ) -> str | None:
@@ -1604,6 +1647,9 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
                 data.get("dividends_paid_ttm"), data.get("capital_return_pct_fcf"),
                 live=False,
             ),
+            # CR219 R34 — same builder, same order, same wording as the Room
+            # sheet (parity rule above).
+            capex_line(data.get("capex_ttm"), live=False),
             # CR219 R33 — same builder, same order, same wording as the Room
             # sheet (parity rule above).
             interest_coverage_line(

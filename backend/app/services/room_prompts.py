@@ -34,6 +34,7 @@ from app.services.fundamentals import (
     earnings_power_line,
     identity_line,
     buyback_line,
+    capex_line,
     capital_return_line,
     day_move_line,
     interest_coverage_line,
@@ -2467,6 +2468,11 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 if _is("dividends_paid_ttm", "live") else None,
                 profile.get("capital_return_pct_fcf")
                 if _is("capital_return_pct_fcf", "live") else None,
+            ),
+            # CR219 R34 — explicit, so nobody reverse-engineers it from the
+            # FCF line above (R20 now forbids that arithmetic on this sheet).
+            capex_line(
+                profile.get("capex_ttm") if _is("capex_ttm", "live") else None,
             ),
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
             # mentions, 9/12 agents) in the CR219 measurement. Ratio and

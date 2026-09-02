@@ -105,6 +105,9 @@ _CLAIMED_REAL_INPUTS = [
     # claim rests on, ratio and the quarter it is stated against.
     ("fundamentals_analyst", "**Interest coverage**", "interest_coverage"),
     ("fundamentals_analyst", "**Interest coverage**", "interest_coverage_quarter"),
+    # CR219 R34 — explicit capex, so the claim never has to be inferred from
+    # a change in the free-cash-flow figure R20 forbids doing arithmetic on.
+    ("fundamentals_analyst", "**Capital expenditure**", "capex_ttm"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_institutions"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_insiders"),
     ("fundamentals_analyst", "**Ownership**", "shares_outstanding"),

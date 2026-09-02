@@ -20,11 +20,13 @@ CITATIONS = [
     # to a sentence that no longer exists.
     ("content/agents/fundamentals_analyst.md", (30, 36), "may **not** extend that direction past the second date"),
     # CR219 WP06 R33 (2026-09-03) inserted a 4-line "Interest coverage" bullet
-    # after "Returns and balance sheet" — everything below in this file shifted
-    # down by 4.
-    ("content/agents/fundamentals_analyst.md", (64, 65), "**M&A history is not available**"),
-    ("content/agents/fundamentals_analyst.md", (77, 88), "Six figures on the sheet span more than one"),
-    ("content/agents/fundamentals_analyst.md", (93, 93), "the direction stops at the second date"),
+    # after "Returns and balance sheet", then R34 (same day) inserted a
+    # further 4-line "Capital expenditure" bullet after "Capital returned" —
+    # everything below both shifted down by 4 then another 4 (total +8 from
+    # the pre-R33 baseline for anything below both insertion points).
+    ("content/agents/fundamentals_analyst.md", (68, 69), "**M&A history is not available**"),
+    ("content/agents/fundamentals_analyst.md", (81, 92), "Six figures on the sheet span more than one"),
+    ("content/agents/fundamentals_analyst.md", (97, 97), "the direction stops at the second date"),
     # CR219 WP01 R4 — the blanket "no series" premise was false (window trend,
     # primary trend, 52w RS and the SMA-alignment read are all measured across
     # the history). Both citations now point at the narrowed claim that replaced
@@ -46,9 +48,10 @@ CITATIONS = [
     ("backend/app/agents/overlay_generator.py", (531, 531), "Emphasise momentum in fundamentals"),
     ("backend/app/agents/overlay_generator.py", (94, 94), "Primary goal: {mandate.primary_goal}"),
     ("backend/app/agents/overlay_generator.py", (521, 521), "long_horizon = m.horizon in"),
-    # CR219 WP06 R33 (2026-09-03) added one import line to room_prompts.py's
-    # fundamentals import block, shifting everything below it down by 1.
-    ("backend/app/services/room_prompts.py",   (1604, 1604), "_format_profile(profile, agent_id)"),
+    # CR219 WP06 R33 then R34 (2026-09-03) each added one import line to
+    # room_prompts.py's fundamentals import block (`interest_coverage_line,`
+    # then `capex_line,`), shifting everything below down by 1, then 1 more.
+    ("backend/app/services/room_prompts.py",   (1605, 1605), "_format_profile(profile, agent_id)"),
     # The three denials that are TRUE and must survive any fix.
     ("content/agents/market_analyst.md",       (39, 41), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),

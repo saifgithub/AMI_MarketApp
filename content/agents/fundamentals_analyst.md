@@ -61,6 +61,10 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   and that total as a share of TTM free cash flow. This is **AMI's own sum of the two
   components beside it**, not a line item off a filing — say so when you cite it, and
   never present it as a reported figure
+- **Capital expenditure** — dollars spent over the trailing 4 quarters, when the sheet
+  tags it (LIVE). Stated explicitly so you never have to infer it from a change in
+  free cash flow — FCF moves for reasons that have nothing to do with capex, and the
+  sheet's own rule is you quote figures, never derive one
 - **M&A history is not available** — nothing fetches it. Never claim a number, a
   count, or a deal for it
 - Analyst consensus — the rating, the mean recommendation score (1 = strong buy …

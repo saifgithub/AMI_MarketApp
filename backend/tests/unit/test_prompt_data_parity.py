@@ -145,6 +145,9 @@ _FUND_SENTINEL: dict = {
     # above. Fingerprint chosen not to collide with any figure here.
     "interest_coverage": 9.4,
     "interest_coverage_quarter": "COVQUARTERSENT",
+    # CR219 R34 — capital expenditure, from the same `.quarterly_cashflow`
+    # call the buyback/dividend rows above already read.
+    "capex_ttm": 6543,
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
     # without it. Neither guard could see the gap: the census counts `totalCash`
     # as consumed (it IS read, into `net_cash`) and parity can only ask about a
@@ -498,8 +501,17 @@ def _fake_statement_frames():
             # exercises the capital-return derivation end to end rather than
             # only its buyback half.
             [-8e8, -8e8, -8e8, -8.17e8, -5e8],           # Dividends  → 3,217M
+            # CR219 R34 — capex, same signed-outflow convention, same
+            # trailing-4-quarters sum as buybacks/dividends above. Oldest
+            # (index 4) column deliberately excluded from the sum, matching
+            # how the fetcher only reads `[:4]` — proves the slice, not just
+            # the arithmetic, if it ever regressed to summing all five.
+            [-2e9, -1.5e9, -1.8e9, -1.243e9, -9e8],      # Capex      → 6,543M
         ],
-        index=["Repurchase Of Capital Stock", "Cash Dividends Paid"],
+        index=[
+            "Repurchase Of Capital Stock", "Cash Dividends Paid",
+            "Capital Expenditure",
+        ],
         columns=periods,
     )
     return income, cashflow
@@ -648,6 +660,8 @@ def env(monkeypatch):
             # one line must each leave their own provable mark.
             "interest_coverage": "9.4x",
             "interest_coverage_quarter": "COVQUARTERSENT",
+            # CR219 R34.
+            "capex_ttm": "$6,543M (trailing 4 quarters)",
             # CR179 Leg 3.
             "total_cash": "gross cash $55,221M",
             "day_change_pct": "-1.77% today",
