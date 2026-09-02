@@ -43,18 +43,39 @@ _CONTENT = Path(__file__).resolve().parents[3] / "content" / "agents"
 
 
 def test_the_bull_no_longer_concludes_with_a_position_size():
-    """RED before: the file contained the sizing-suggestion instruction."""
+    """RED before: the file contained the sizing-suggestion instruction.
+
+    CR219 R16 (2026-09-02): the literal anchor this test pinned, "End with your
+    CONVICTION", was itself a collision — that word is the machine-parsed stance
+    envelope's own field name (`room_prompts.py:679/:756`,
+    `room_runner.py:_CONVICTION_FIELD_RE`), and the persona's OWN "end with your
+    CONVICTION" instruction told the model to repeat it at the end, contradicting
+    the envelope format's "write it ONCE, at the top only." Register ruling:
+    disambiguate the persona's own term (renamed to "case strength"), leave the
+    envelope's CONVICTION alone — this test's anchor updates to match, and the
+    load-bearing assertion (no sizing demand at RESEARCHERS phase) is unchanged.
+    """
     text = (_CONTENT / "bull_researcher.md").read_text(encoding="utf-8")
     assert "sizing suggestion" not in text
-    assert "End with your CONVICTION" in text
+    assert "End with your case strength" in text
+    assert "CONVICTION" not in text, (
+        "CR219 R16: the persona must not use the envelope's own field name for "
+        "its own case-strength instruction — that is the collision this row fixed"
+    )
 
 
 def test_the_bull_is_told_where_sizing_actually_belongs():
     """Cutting a demand without naming its owner invites the model to fill the
-    gap anyway. The replacement names the four stages that follow."""
+    gap anyway. The replacement names the four stages that follow.
+
+    CR219 R16 rewrapped the paragraph this line lives in (shortening "your
+    CONVICTION" to "your case strength" shifted every wrap point after it), so
+    the check now looks for "Chief Investment Officer" as a plain substring
+    rather than pinning the specific line break the old wrap happened to put
+    inside it — the wrap point was never the thing being verified."""
     text = (_CONTENT / "bull_researcher.md").read_text(encoding="utf-8")
-    for owner in ("Execution Desk", "Risk Officers", "Chief\n  Investment Officer"):
-        assert owner in text, f"the replacement does not name the {owner}"
+    for owner in ("Execution Desk", "Risk Officers", "Chief Investment Officer"):
+        assert owner in " ".join(text.split()), f"the replacement does not name the {owner}"
 
 
 def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
@@ -119,8 +140,35 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # RESEARCHERS-phase agent to output a position size? **No** — labels moved,
     # demands did not. bull 7518a15c30d1 → 8ae050f9662e, bear 1eef572f0cdc →
     # aea7af1e0f8e.
+    #
+    # CR219 R16 review (2026-09-02, WP03): one word changed in bull_researcher.md
+    # — the "end with your CONVICTION" bullet's own term, renamed to "case
+    # strength" (the "## Voice" section's "Conviction without hyperbole" opener
+    # renamed the same way, for the same reason). Ruled disambiguation, not a
+    # sizing change: CONVICTION is the machine-parsed stance envelope's field
+    # name (`room_prompts.py`, `room_runner.py:_CONVICTION_FIELD_RE`); the
+    # persona instructing the model to write it again at the end of its own
+    # prose collided with the envelope's "write it ONCE, at the top only." The
+    # guard's question, answered by reading the diff: does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? **No** — the
+    # not-a-position-size bullet naming the four downstream stages is unchanged
+    # in substance, only its own label moved. bear_researcher.md is untouched
+    # this round (it never carried the collision — grepped, zero hits) and its
+    # hash is unchanged. bull 8ae050f9662e → fbc32f36b800.
+    #
+    # CR219 R17 review (2026-09-02, WP03, same commit): the "You DO NOT
+    # Speculate beyond the data" bullet is reworded to scope the ban to
+    # FACTUAL claims (a number, level or date the data does not support) and
+    # explicitly exempt dating your own inference — which the "Frame upside
+    # numerically" bullet two above it explicitly asks for ("if you pair it
+    # with a date, the date is yours and you must say so"). Before this reword
+    # the two bullets contradicted each other on exactly that instruction. The
+    # guard's question, answered by reading the diff: does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? **No** — the edit is
+    # entirely inside the speculation ban's own scope, not the sizing bullet.
+    # bull fbc32f36b800 → 275a868123c5.
     expected = {
-        "bull_researcher.md": "8ae050f9662e",
+        "bull_researcher.md": "275a868123c5",
         "bear_researcher.md": "aea7af1e0f8e",
     }
     actual = {
