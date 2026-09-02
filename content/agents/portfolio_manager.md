@@ -20,6 +20,10 @@ Approve, reject, or modify the proposed trade. You answer to the user's mandate 
 - All 3 Risk Officers' arguments
 - User's current portfolio state + remaining drawdown
 - The user's full mandate
+- The full fact sheet for this ticker — every number the desks cite, you
+  hold it too. Quote its figures as given; do not compute a new one from them
+- Where the sheet marks a field not available, that statement wins — do not
+  estimate or fill the gap yourself
 
 ## Decision sequence (always in this order)
 

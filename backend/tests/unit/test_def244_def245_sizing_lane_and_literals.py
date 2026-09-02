@@ -167,9 +167,24 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # RESEARCHERS-phase agent to output a position size? **No** — the edit is
     # entirely inside the speculation ban's own scope, not the sizing bullet.
     # bull fbc32f36b800 → 275a868123c5.
+    #
+    # CR219 R23 review (2026-09-02, WP04): both files' "## Inputs" section
+    # gains two lines — the fact sheet is named explicitly ("every number the
+    # analysts cite, you hold it too. Quote its figures as given...") plus the
+    # per-field CR040 deference line ("Where the sheet marks a field not
+    # available, that statement wins..."). Neither line is in "## Output
+    # style" or anywhere near it; the set this pin covers is the WHOLE FILE
+    # (ROUND-3 MINOR 1, above) precisely so an Inputs-section change is not
+    # invisible to it. The guard's question, answered by reading the diff:
+    # does any bullet ask a RESEARCHERS-phase agent to output a position
+    # size? **No** — the two added lines name a data source and a deference
+    # rule; neither mentions size, sizing, allocation or a percentage, and
+    # the existing "not a position size" Output-style bullet is untouched.
+    # bull bf7a85ccd267, bear f1fca8c61b22 (both files edited this round —
+    # identical mechanical insertion per WP04_surfaces.md R23).
     expected = {
-        "bull_researcher.md": "275a868123c5",
-        "bear_researcher.md": "aea7af1e0f8e",
+        "bull_researcher.md": "bf7a85ccd267",
+        "bear_researcher.md": "f1fca8c61b22",
     }
     actual = {
         name: hashlib.sha256(

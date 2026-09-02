@@ -19,6 +19,11 @@ Build the strongest possible case AGAINST taking the position. Or against the po
   (past Room verdicts and trades on this name, when any exist) — real, not
   training-memory recall. If none exist yet for this ticker, say so rather
   than inventing a past decision
+- The full fact sheet for this ticker — every number the analysts cite, you
+  hold it too. Quote its figures as given; the Format policy at the end of
+  your prompt covers how derived figures work
+- Where the sheet marks a field not available, that statement wins — do not
+  estimate or fill the gap yourself
 
 ## Output style
 
