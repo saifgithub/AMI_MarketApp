@@ -994,6 +994,29 @@ _OVERLAY_DEMANDS: list[dict[str, Any]] = [
         "backing_marker": "Margin structure (LIVE)",
         "why": "The long-horizon branch's demands rest on the margin + balance-sheet lines.",
     },
+    {
+        "row": "R21",
+        "agent": AgentId.FUNDAMENTALS_ANALYST,
+        "demand": "consensus EPS estimate revisions",
+        "backing_marker": "Earnings revisions",
+        "why": (
+            "R21 ALIGNMENT (2026-09-03): the short/medium branch's demand, "
+            "rewritten in the same vocabulary as the sheet's own "
+            "eps_revisions_line label once WP06 R21-DATA shipped the field. "
+            "Closes R21 mechanically — the R22 carry-list this phrase used to "
+            "need is deleted in the same commit."
+        ),
+    },
+    {
+        "row": "R21",
+        "agent": AgentId.FUNDAMENTALS_ANALYST,
+        "demand": "surprise history",
+        "backing_marker": "Surprise history",
+        "why": (
+            "R21 ALIGNMENT: the second half of the same demand, matching "
+            "surprise_history_line's own label exactly."
+        ),
+    },
 ]
 
 
@@ -1057,8 +1080,11 @@ _NON_DATA_ROLE_GUIDANCE: dict[str, str] = {
         "demands the PORTFOLIO block, which is a different injection than the fact "
         "sheet this guard renders — out of scope here, in scope for WP03/WP04"
     ),
-    # The R22 violation, carried separately below.
-    "Emphasise momentum in fundamentals": "the R22 violation — see KNOWN_R22_VIOLATIONS_PENDING_WP04_R21",
+    # "Emphasise momentum in fundamentals" REMOVED (2026-09-03, R21 ALIGNMENT):
+    # it used to be the R22 violation, carried in the now-deleted
+    # `KNOWN_R22_VIOLATIONS_PENDING_WP04_R21`. It is a REAL, backed data demand
+    # now — see the two new `_OVERLAY_DEMANDS` entries above (row "R21"),
+    # which is where a genuine demand belongs, not this non-data dict.
 }
 
 
@@ -1135,59 +1161,27 @@ def _forbidden_hits(corpus: dict[AgentId, set[str]]) -> list[tuple[str, str, str
     return hits
 
 
-# R22's ONE known violation, live on HEAD right now. The fix is a one-line
-# deletion in `overlay_generator.py:447` — which belongs to WP04 (R21's ruled
-# sequencing: the earnings-revisions/surprise-history demand is only touched
-# AFTER WP06 ships the real fetches backing it, DECISIONS_2026-09-02.md §1), not
-# to WP03, so the violation is carried here EXPLICITLY (same doctrine as
-# KNOWN_FALSE_PENDING_WP01) instead of being hidden by weakening the scanner.
-#
-# What the agent is told today, on every non-long-horizon mandate:
-#   "- Emphasise momentum in fundamentals (earnings revisions, surprise history),
-#    guidance."
-# All three of those are absent. The sheet has no revisions history, no surprise
-# history, and its consensus line says in as many words "Street view — NOT
-# company guidance". WP04 deletes/rewrites the line once WP06's field lands;
-# this entry then goes too, and `test_r22_...` starts failing on it, which is
-# the point.
-KNOWN_R22_VIOLATIONS_PENDING_WP04_R21: list[tuple[str, str, str]] = [
-    (
-        "fundamentals_analyst",
-        "guidance",
-        "- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.",
-    ),
-]
-
-
+# R22's ONE known violation is CLOSED (2026-09-03, R21 ALIGNMENT commit).
+# `KNOWN_R22_VIOLATIONS_PENDING_WP04_R21` (the doctrine `KNOWN_FALSE_PENDING_WP01`
+# established: a live violation carried EXPLICITLY rather than hidden by
+# weakening the scanner) is now DELETED, not left at length zero — an empty
+# escape hatch is still an escape hatch, the same rule R7's WP01 commit
+# applied to `KNOWN_FALSE_PENDING_WP01`. `overlay_generator.py`'s
+# `_fundamentals_block` short/medium branch was rewritten in the same commit
+# (WP06 R21-DATA landed the earnings-revisions/surprise-history fields first,
+# per DECISIONS_2026-09-02.md §1's ruled sequencing) to demand exactly the
+# sheet's own two field labels and drop "guidance" permanently. R22 now
+# enforces with zero exemptions, by construction — any future overlay branch
+# that demands "guidance" (or anything else the sheet's disclosure denies)
+# fails immediately, with no carry-list to hide behind.
 def test_r22_no_overlay_branch_demands_a_thing_the_sheet_says_it_does_not_supply(overlay_corpus):
     """R22 — kept as its own assertion so the failure message names the exact
-    branch and line, which is what a fixer needs.
-
-    The one known violation is carried in `KNOWN_R22_VIOLATIONS_PENDING_WP04_R21`
-    because its fix is sequenced behind WP06's data field (R21's ruling). Any
-    NEW violation is red immediately."""
-    hits = [
-        h for h in _forbidden_hits(overlay_corpus)
-        if h not in KNOWN_R22_VIOLATIONS_PENDING_WP04_R21
-    ]
+    branch and line, which is what a fixer needs. No exemptions of any kind."""
+    hits = _forbidden_hits(overlay_corpus)
     assert not hits, (
         "CR219 R22: an overlay branch demands data the sheet's own disclosure says "
         "is not supplied. Delete the demand (or ship the field, and update "
         f"_FORBIDDEN_OVERLAY_DEMANDS): {hits}"
-    )
-
-
-def test_r22_the_carried_violation_is_still_real(overlay_corpus):
-    """Vacuity guard on the carry-list: an entry the overlay no longer emits is
-    stale and must be deleted, which is how WP04 closes R22 for good. If this
-    goes red saying the violation is GONE — delete the entry and R22 is fully
-    closed."""
-    live = _forbidden_hits(overlay_corpus)
-    stale = [entry for entry in KNOWN_R22_VIOLATIONS_PENDING_WP04_R21 if entry not in live]
-    assert not stale, (
-        "CR219 R22: these carried violations are no longer emitted by any overlay "
-        "branch — WP04 fixed them. Delete them from "
-        f"KNOWN_R22_VIOLATIONS_PENDING_WP04_R21 so the guard enforces R22 fully: {stale}"
     )
 
 

@@ -528,7 +528,29 @@ def _fundamentals_block(m: Mandate) -> str:
             "- Prioritise durable margins, FCF consistency, balance sheet strength, capital allocation."
         )
     else:
-        parts.append("- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.")
+        # CR219 R21 ALIGNMENT (2026-09-03). The prior line demanded
+        # "earnings revisions, surprise history), guidance" when nothing
+        # fetched any of the three — DECISIONS_2026-09-02.md §1's ruling was
+        # to back the demand with real data (WP06 R21-DATA) rather than
+        # delete it, then rewrite the demand text once the field landed.
+        # "Guidance" is dropped PERMANENTLY, not narrowed: R22 forbids it —
+        # the sheet's own disclaimer states no forward guidance is supplied
+        # (`next_earnings_eps_estimate` is the Street's consensus estimate,
+        # never the company's own guide), and this WP's guard enforces the
+        # phrase never reappears in any overlay demand.
+        #
+        # The two remaining nouns are now named in the sheet's OWN
+        # vocabulary — "consensus EPS estimate revisions" and "surprise
+        # history", matching `eps_revisions_line`'s and
+        # `surprise_history_line`'s own labels
+        # (`fundamentals.py`) exactly, so the R11 demand↔field mapping
+        # resolves mechanically rather than by loose paraphrase.
+        parts.append(
+            "- Emphasise momentum in fundamentals: the consensus EPS estimate "
+            "revisions (direction and size over the stated window) and the "
+            "surprise history (reported vs. estimate, per quarter), when the "
+            "sheet tags them (LIVE)."
+        )
     if m.compliance.halal:
         parts.append(
             "- Halal user: restrict candidates to names on the published compliant list named in "

@@ -55,7 +55,14 @@ CITATIONS = [
     # the file (the "Primary goal:" line itself did not move; the other two
     # shifted because the new block landed above them). Re-pinned to the new
     # line numbers; the cited substrings are unchanged.
-    ("backend/app/agents/overlay_generator.py", (531, 531), "Emphasise momentum in fundamentals"),
+    #
+    # WP06 R21 ALIGNMENT (2026-09-03) then REWROTE this branch's content —
+    # the citation's job was always "locate the R21 branch line", not assert
+    # the old (now-fixed) text, so the same leading substring still resolves
+    # it, re-pinned to its new line (531 -> 549: the rewrite replaced one
+    # `.append(...)` line with a longer commented block + multi-line
+    # `.append(...)`, net +18).
+    ("backend/app/agents/overlay_generator.py", (549, 549), "Emphasise momentum in fundamentals"),
     ("backend/app/agents/overlay_generator.py", (94, 94), "Primary goal: {mandate.primary_goal}"),
     ("backend/app/agents/overlay_generator.py", (521, 521), "long_horizon = m.horizon in"),
     # CR219 WP06 R33/R34/R35/R37 each added one import line to
