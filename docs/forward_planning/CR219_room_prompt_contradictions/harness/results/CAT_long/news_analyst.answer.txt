@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: Q4 Earnings 57d, FOMC 14d]
+
+Structural power demand from AI data centers is driving CAT’s Power & Energy segment, but near-term macro volatility from the FOMC decision in **14 days** requires caution.
+
+- **Data Center Demand**: Recent headlines confirm rapid scaling in Power & Energy driven by data centers/AI, supporting backlog growth and capacity expansion.
+- **Regulatory/Tech Catalyst**: New collaboration with FieldAI on industrial robotics/AI digital twins signals ongoing operational efficiency upgrades, distinct from pure demand cycles.
+- **Event Risk Window**: Two critical dates anchor risk/reward: **FOMC decision in 14 days** (macro sentiment) and **Q4 earnings on 2026-10-29** (57 days out, consensus EPS **$6.91717**). Avoid position additions until the FOMC clears.

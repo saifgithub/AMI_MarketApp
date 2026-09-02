@@ -178,7 +178,7 @@ Ranked by how many agents independently asked, unprompted:
 2. The guard scans the whole file, not `## Inputs` alone — proven by a fixture placing a false denial in `## Voice`.
 3. `pytest backend/tests/unit/ -q` green, including `test_cr105_*`, `test_prompt_data_parity.py`, `test_config_compose_parity.py`.
 4. Re-run the corpus citation count on post-fix Alpha traffic; margin-trend and buyback citation rates move toward their undenied neighbours. The banked corpus is the before-arm and already exists.
-5. `evidence/` regenerates from the committed scripts.
+5. The evidence scripts run clean against a freshly built profile — exit 0, all turns complete. **Not** byte-identical output (register R46): the market data behind a profile moves between fetches, so "`evidence/` regenerates" as originally worded set an acceptance bar nothing could ever clear.
 
 ---
 

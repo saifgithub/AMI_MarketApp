@@ -1,0 +1,7 @@
+# Cached profiles are local fixtures, rebuilt by build_profile.py.
+# Never commit a pickle: it cannot be reviewed in a diff and loading one
+# executes code. The market data behind it moves anyway (R46), which is
+# exactly why a comparison must share ONE cached profile rather than
+# refetch per arm.
+*.pkl
+profiles/

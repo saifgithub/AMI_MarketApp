@@ -1,0 +1,5 @@
+[STANCE: neutral | CONVICTION: low | SIZE: 0.0% | HEADLINE: RSI 30 vs 200-day SMA $769.48]
+The 24% TTM revenue growth and +434bps net margin expansion justify long-term accumulation, but the -11.0% gap to the 50-day SMA and 0.78 quick ratio prevent an immediate long entry until macro risk clears.
+- Aggressive correctly values the +24.5% upside to consensus and the $7.3B buyback floor; I concede this is a structurally high-quality compounder but reject immediate deployment due to the 14-day FOMC event and the RSI of 30 showing exhaustion, not reversal.
+- Conservative correctly demands a reclaim of the $827.54 20-day SMA and flags the 200% payout-to-FCF ratio as a tail risk; the inconsistency is that the 1.57% short interest shows zero pricing of a credit squeeze, which I weight slightly to reduce immediate tail risk severity, though not enough to justify capital today.
+- Size: 0.0% today. Upon a daily close above $827.54 and post-FOMC clarity, initiate at 1.5% of portfolio (a middle between zero and the 3.0% cap) using a $769.48 hard stop to control a 2.33x D/E balance sheet and 1.6 beta.

@@ -1,0 +1,5 @@
+[STANCE: against | CONVICTION: medium | SIZE: 0.0% | HEADLINE: 1.6 beta vs 14d FOMC]
+Do not initiate a position now; the high leverage and beta create unacceptable tail risk ahead of the macro event.
+- **Liquidity Buffer**: With a **0.78** quick ratio and **$39.2B** net debt, a hawkish FOMC surprise in **14 days** could spike yields, crushing the **24.2** forward P/E before the price tests the **$769.48** 200-day SMA, leaving no margin for error on a high-beta industrial.
+- **Beta Amplification**: A **1.6** beta means a market dip post-FOMC could breach support on volume, triggering a gap-down that renders the **$705.47** stop useless and pushing the portfolio drawdown past comfortable distance.
+- **Capital Preservation**: Wait for the FOMC clarity and a close above the **$827.54** 20-day SMA to reclaim technical validity and protect against further multiple compression from high-debt cyclicals.

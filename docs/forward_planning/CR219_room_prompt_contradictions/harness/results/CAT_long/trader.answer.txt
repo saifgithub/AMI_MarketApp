@@ -1,0 +1,14 @@
+[STANCE: neutral | CONVICTION: high | HEADLINE: Wait for FOMC and $769.48 hold]
+
+Instrument:     CAT
+Side:           WAIT
+Size:           0.0% of portfolio (pre-position)
+Entry:          Conditional. Trigger on daily close >$827.54 AND RSI >45. Post-FOMC only.
+Target:         $975.61 (mean analyst target)
+Stop:           $769.48 (200-day SMA). Hard exit on daily close <769.48.
+Time horizon:   6–12 months (post-FOMC and pre-earnings)
+R:R:            11.4:1 (at trigger entry)
+
+The Research Manager’s neutral stance is correct: initiating now exposes a 1.6-beta industrial to immediate FOMC gap risk without technical confirmation. The RSI of 30 suggests exhaustion, but the -11.0% gap to the 50-day SMA and the downtrend mandate a reclaim of the 20-day SMA ($827.54) before capital is deployed.
+
+Wait for the FOMC decision (14 days) to clear the macro overhang. Monitor the 200-day SMA ($769.48) as the critical invalidation level. Only if the price closes above $827.54 with rising volume and RSI recovering above 45 should a 3.0% position be sized.

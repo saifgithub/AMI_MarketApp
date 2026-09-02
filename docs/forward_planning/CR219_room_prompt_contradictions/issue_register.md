@@ -130,7 +130,7 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 | R43 | PM breaks its JSON-only contract under instruction pressure | OPEN | File its own DEF — DEF067 precedent (~13% parser loss from similar fragility) | K,G | ☐ |
 | R44 | Sweep the 26 unswept prompts (concierge, Brief Your Agent) | CONVERGENT | Extend `dump_sheets.py`/`assemble_room.py` rather than writing new scripts. Becomes automatic if R13 (exhaustive guard) is adopted | K,F,G,Q | ☐ |
 | R45 | A named target architecture — what does "done" look like? | CONVERGENT (independently duplicated) | GLM and QWEN each wrote one, unprompted, landing on near-identical 5-property / 6-layer framings. Worth reconciling into one canonical statement for the final CR doc rather than keeping both | G,Q | ☐ |
-| R46 | Acceptance #5 "evidence/ regenerates" implies byte-identical output | OPEN | Reword to "scripts run clean against a freshly built profile" — the cached profile is gitignored and market data moves | Q | ☐ |
+| R46 | Acceptance #5 "evidence/ regenerates" implies byte-identical output | OPEN | Reword to "scripts run clean against a freshly built profile" — the cached profile is gitignored and market data moves | Q | ☑ |
 
 ## Beyond CR219 — further Room-result levers
 

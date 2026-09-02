@@ -1,0 +1,8 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: 14d FOMC vs 200SMA test]
+
+Wait for the FOMC decision and a confirmed technical reclaim of the **$827.54** 20-day SMA before initiating a position; the current setup lacks risk-adjusted certainty despite strong fundamentals.
+
+*   **Asymmetry is poor**: Upside to consensus mean is **+24.5%** (**$975.61**), but downside to the 200-day SMA (**$769.48**) is only **1.9%**, creating a thin margin of safety against a **1.6** beta name in a downtrend.
+*   **Leverage risk dominates**: **$39,201M** net debt and **2.33x** D/E are vulnerable if the FOMC holds rates high, compressing the **24.2** forward P/E before the **$6.91717** EPS consensus is tested in 57 days.
+*   **Technical invalidation**: The close is **-5.3%** below the 20-day SMA and RSI is at **30**; a long-only mandate requires a reclaim of **$771.39** and rising volume to confirm the **$769.48** support holds, not just a passive hold.
+*   **Sizing implication**: No position today. If the reclaim occurs post-FOMC, cap entry at **3.0%** of portfolio (~1 share) to respect the single-name ceiling and preserve dry powder for the **2026-10-29** earnings gap risk.

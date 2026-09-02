@@ -1,0 +1,7 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: RSI 30 vs 200SMA $769]
+
+Price is pressing against the 200-day SMA for a trend-continuation bounce, but momentum has no clean confirmation yet.
+
+* **Setup** is mean-reversion off the long-term trend line: last close **$783.85** sits **+1.9%** above the **$769.48** 200-day average, while RSI reads **30** and volume runs **0.90×** its 20-day average — selling pressure is fading, but this is a single reading, not a reversal signal.
+* **Levels** are extreme: the close is at the bottom **4%** of the **50-day range ($771.39–$1071.47)**, and **−5.3%** vs the 20-day SMA of **$827.54** with the trend flagged as a **downtrend**.
+* **Confirm** the setup only on a daily close back above **$771.39** and a reclaim of **$827.54** on rising volume; **invalidate** if the 200-day SMA at **$769.48** is breached — a long-only mandate must wait for that reclaim rather than anticipate it.
