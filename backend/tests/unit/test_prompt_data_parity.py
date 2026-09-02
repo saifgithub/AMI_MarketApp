@@ -147,8 +147,13 @@ _FUND_SENTINEL: dict = {
     # invisible to both. Leg 0's perturbation probe is what found it.
     "total_cash": 55221,
     # CR179 Leg 3 — the technicals-lane keys `.info` always returned. They are
-    # lane-gated to the technicals desk in the Room and ungated on the 1-on-1
-    # surface, which has no firewall to protect.
+    # lane-gated to the technicals desk in the Room and, since CR219 R24, on
+    # the 1-on-1 surface too (`build_live_data_block(ticker, agent_id)`) —
+    # but this fixture calls it with no `agent_id` (see `fund_block` below),
+    # which is the parity guard's own un-laned baseline: "is this field
+    # rendered ANYWHERE at all" must not change answer under the lane split,
+    # same contract `_format_profile(profile, agent_id=None)` keeps for the
+    # Room. So these keys are still expected ungated here.
     "day_change_pct": -1.77,
     "market_state": "REGULAR",
     "sma_200": 188.44,
