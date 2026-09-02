@@ -36,6 +36,7 @@ from app.services.fundamentals import (
     buyback_line,
     capital_return_line,
     day_move_line,
+    interest_coverage_line,
     liquidity_line,
     margin_structure_line,
     margin_trend_line,
@@ -2466,6 +2467,20 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 if _is("dividends_paid_ttm", "live") else None,
                 profile.get("capital_return_pct_fcf")
                 if _is("capital_return_pct_fcf", "live") else None,
+            ),
+            # CR219 R33 — EBIT / interest expense, the #1 arm request (21
+            # mentions, 9/12 agents) in the CR219 measurement. Ratio and
+            # quarter are gated on separate field_state keys — the same
+            # per-field discipline `margin_trend_basis` follows beside its
+            # own trend fields — even though the fetcher always sets both
+            # together today; a future partial-fetch cannot silently pair a
+            # live ratio with a stale quarter label if the two never share
+            # one gate.
+            interest_coverage_line(
+                profile.get("interest_coverage")
+                if _is("interest_coverage", "live") else None,
+                profile.get("interest_coverage_quarter")
+                if _is("interest_coverage_quarter", "live") else None,
             ),
             earnings_power_line(
                 profile.get("trailing_eps") if _is("trailing_eps", "live") else None,

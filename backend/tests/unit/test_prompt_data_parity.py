@@ -140,6 +140,11 @@ _FUND_SENTINEL: dict = {
     "dividends_paid_ttm": 3217,
     "capital_return_ttm": 10871,
     "capital_return_pct_fcf": 63,
+    # CR219 R33 — interest coverage (EBIT / interest expense), from the same
+    # `.quarterly_income_stmt` behind the same 6h TTL cache as the fields
+    # above. Fingerprint chosen not to collide with any figure here.
+    "interest_coverage": 9.4,
+    "interest_coverage_quarter": "COVQUARTERSENT",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
     # without it. Neither guard could see the gap: the census counts `totalCash`
     # as consumed (it IS read, into `net_cash`) and parity can only ask about a
@@ -472,8 +477,17 @@ def _fake_statement_frames():
             [623.4, 600.0, 570.0, 540.0, 500.0],        # Gross Profit    → +1234 bps
             [734.5, 700.0, 650.0, 600.0, 500.0],        # Operating Income→ +2345 bps
             [845.6, 800.0, 720.0, 640.0, 500.0],        # Net Income      → +3456 bps
+            # CR219 R33 — latest-quarter Operating Income (734.5) / this row's
+            # |latest| (78.1) = 9.404... → rounds to the 9.4 sentinel above.
+            # Negative-signed on purpose: yfinance reports this row as a cost
+            # in some filers' statements, and `interest_coverage` must `abs()`
+            # it rather than propagate the sign into a negative ratio.
+            [-78.1, -75.0, -71.0, -68.0, -60.0],        # Interest Expense
         ],
-        index=["Total Revenue", "Gross Profit", "Operating Income", "Net Income"],
+        index=[
+            "Total Revenue", "Gross Profit", "Operating Income", "Net Income",
+            "Interest Expense",
+        ],
         columns=periods,
     )
     cashflow = pd.DataFrame(
@@ -629,6 +643,11 @@ def env(monkeypatch):
             "dividends_paid_ttm": "dividends $3,217M",
             "capital_return_ttm": "$10,871M (trailing 4 quarters)",
             "capital_return_pct_fcf": "63% of TTM FCF",
+            # CR219 R33 — ratio and quarter fingerprint separately, the same
+            # `margin_trend_basis` precedent above: two different claims on
+            # one line must each leave their own provable mark.
+            "interest_coverage": "9.4x",
+            "interest_coverage_quarter": "COVQUARTERSENT",
             # CR179 Leg 3.
             "total_cash": "gross cash $55,221M",
             "day_change_pct": "-1.77% today",

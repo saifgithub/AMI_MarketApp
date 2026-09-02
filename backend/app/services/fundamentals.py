@@ -278,6 +278,35 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
         if len(recent) == 4:
             out["dividends_paid_ttm"] = round(abs(sum(recent)) / 1_000_000)
 
+    # ── Interest coverage, latest quarter (CR219 R33) ────────────────────
+    # The #1 arm request across the CR219 measurement — 21 mentions from 9 of
+    # 12 agents — and the CAT insolvency-risk narrative that motivated it was
+    # built with no coverage figure on the sheet at all. EBIT is Operating
+    # Income: this module already fetches it for the margin-trend delta above,
+    # and it is the standard EBIT proxy (income before interest and tax) —
+    # reusing it costs nothing and keeps one number meaning one thing across
+    # the sheet rather than a second, slightly different "EBIT" appearing here.
+    #
+    # Interest expense is signed as a cost in some filers' statements and as a
+    # magnitude in others (measured across yfinance's own row-label variants);
+    # `abs()` at the point of division is deliberate — a coverage ratio is
+    # never negative because the borrower paid interest, only because EBIT
+    # itself is negative, and that sign must survive.
+    #
+    # Quarterly, not TTM: `.quarterly_income_stmt`'s newest column IS the
+    # latest reported quarter, and stating which one is the label rule this
+    # whole module follows (`margin_trend_basis`, `next_earnings_quarter`) —
+    # never a number with no date attached.
+    ebit_series = _stmt_series(
+        income, "Operating Income", "Total Operating Income As Reported"
+    )
+    interest_series = _stmt_series(
+        income, "Interest Expense", "Interest Expense Non Operating"
+    )
+    if ebit_series and interest_series and ebit_series[0] is not None and interest_series[0]:
+        out["interest_coverage"] = round(ebit_series[0] / abs(interest_series[0]), 1)
+        out["interest_coverage_quarter"] = periods[0] if periods else None
+
     return out or None
 
 
@@ -975,6 +1004,27 @@ def buyback_line(
     return _labelled("Buybacks", live, [part])
 
 
+def interest_coverage_line(
+    ratio: float | None, quarter: str | None, *, live: bool = True
+) -> str | None:
+    """CR219 R33 — EBIT / interest expense, the #1 arm request in the CR219
+    measurement (21 mentions from 9 of 12 agents) and the figure the CAT
+    insolvency-risk narrative was reasoned about without.
+
+    The quarter is stated in the line itself, the same discipline
+    `margin_trend_line` and `next_earnings_quarter` already follow: a bare
+    ratio with no date invites a reader to treat it as TTM or as "current"
+    when it is one reported quarter's EBIT against that same quarter's
+    interest expense.
+    """
+    if ratio is None or not quarter:
+        return None
+    return _labelled(
+        "Interest coverage (EBIT / interest expense)", live,
+        [f"{ratio}x — quarter ending {quarter}"],
+    )
+
+
 def capital_return_line(
     total_millions: int | None,
     buyback_millions: int | None,
@@ -1552,6 +1602,12 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
             capital_return_line(
                 data.get("capital_return_ttm"), data.get("buyback_ttm"),
                 data.get("dividends_paid_ttm"), data.get("capital_return_pct_fcf"),
+                live=False,
+            ),
+            # CR219 R33 — same builder, same order, same wording as the Room
+            # sheet (parity rule above).
+            interest_coverage_line(
+                data.get("interest_coverage"), data.get("interest_coverage_quarter"),
                 live=False,
             ),
             earnings_power_line(

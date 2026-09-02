@@ -19,9 +19,12 @@ CITATIONS = [
     # REPLACED it, so the CR doc's file:line refs resolve to the fix rather than
     # to a sentence that no longer exists.
     ("content/agents/fundamentals_analyst.md", (30, 36), "may **not** extend that direction past the second date"),
-    ("content/agents/fundamentals_analyst.md", (60, 61), "**M&A history is not available**"),
-    ("content/agents/fundamentals_analyst.md", (73, 84), "Six figures on the sheet span more than one"),
-    ("content/agents/fundamentals_analyst.md", (89, 89), "the direction stops at the second date"),
+    # CR219 WP06 R33 (2026-09-03) inserted a 4-line "Interest coverage" bullet
+    # after "Returns and balance sheet" — everything below in this file shifted
+    # down by 4.
+    ("content/agents/fundamentals_analyst.md", (64, 65), "**M&A history is not available**"),
+    ("content/agents/fundamentals_analyst.md", (77, 88), "Six figures on the sheet span more than one"),
+    ("content/agents/fundamentals_analyst.md", (93, 93), "the direction stops at the second date"),
     # CR219 WP01 R4 — the blanket "no series" premise was false (window trend,
     # primary trend, 52w RS and the SMA-alignment read are all measured across
     # the history). Both citations now point at the narrowed claim that replaced
@@ -43,11 +46,13 @@ CITATIONS = [
     ("backend/app/agents/overlay_generator.py", (531, 531), "Emphasise momentum in fundamentals"),
     ("backend/app/agents/overlay_generator.py", (94, 94), "Primary goal: {mandate.primary_goal}"),
     ("backend/app/agents/overlay_generator.py", (521, 521), "long_horizon = m.horizon in"),
-    ("backend/app/services/room_prompts.py",   (1603, 1603), "_format_profile(profile, agent_id)"),
+    # CR219 WP06 R33 (2026-09-03) added one import line to room_prompts.py's
+    # fundamentals import block, shifting everything below it down by 1.
+    ("backend/app/services/room_prompts.py",   (1604, 1604), "_format_profile(profile, agent_id)"),
     # The three denials that are TRUE and must survive any fix.
     ("content/agents/market_analyst.md",       (39, 41), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),
-    ("content/agents/fundamentals_analyst.md", (44, 45), "not a numeric peer-average"),
+    ("content/agents/fundamentals_analyst.md", (48, 49), "not a numeric peer-average"),
     ("backend/app/services/room_prompts.py",   (1, 999), "trader_block_regex"),
 ]
 

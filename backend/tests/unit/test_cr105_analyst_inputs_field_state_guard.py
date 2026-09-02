@@ -101,6 +101,10 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "**Returns and balance sheet**", "current_ratio"),
     ("fundamentals_analyst", "**Returns and balance sheet**", "quick_ratio"),
     ("fundamentals_analyst", "**Returns and balance sheet**", "debt_to_equity"),
+    # CR219 R33 — the #1 arm request (21 mentions, 9/12 agents); both keys the
+    # claim rests on, ratio and the quarter it is stated against.
+    ("fundamentals_analyst", "**Interest coverage**", "interest_coverage"),
+    ("fundamentals_analyst", "**Interest coverage**", "interest_coverage_quarter"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_institutions"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_insiders"),
     ("fundamentals_analyst", "**Ownership**", "shares_outstanding"),

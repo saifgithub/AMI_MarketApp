@@ -449,6 +449,14 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # computed and then dropped unlabelled at the render site — CR104's rule is
     # that a field with no recorded provenance renders as nothing.
     "dividends_paid_ttm", "capital_return_ttm", "capital_return_pct_fcf",
+    # CR219 R33 — interest coverage (EBIT / interest expense), the single
+    # most-requested figure in the CR219 arm measurement (21 mentions, 9/12
+    # agents). From the same `.quarterly_income_stmt` the margin-trend block
+    # above already reads; optional-live-only because a filer with no
+    # separately-broken-out interest-expense row (measured row-label variance
+    # same as the buyback/dividend rows above) has no coverage figure, and
+    # that absence is normal, not an outage.
+    "interest_coverage", "interest_coverage_quarter",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
     # shipped without it (gross debt renders, gross cash did not).
     "total_cash",

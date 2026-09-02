@@ -39,6 +39,10 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **Returns and balance sheet** — ROE (against book equity, which buybacks shrink, so
   a high figure is not automatically a quality signal), ROA, current and quick ratios,
   and debt/equity as a ratio
+- **Interest coverage** — EBIT divided by interest expense, for the reported quarter
+  the sheet names, when the filing separates out interest expense as its own line
+  (LIVE). It is one quarter against that same quarter's interest cost, not a trailing
+  or trend figure — say which quarter you are citing
 - Net cash **or net debt** — the sheet states whichever the sign says, in $M. Gross
   debt, market cap and TTM free cash flow in dollars are stated beside it
 - Sector/industry classification — real, but a category, not a numeric peer-average
