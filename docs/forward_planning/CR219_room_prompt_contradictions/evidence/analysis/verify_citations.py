@@ -35,10 +35,15 @@ CITATIONS = [
     # CR219 WP01 R6 — narrowed, not deleted: the mention trend baselines VOLUME,
     # not SENTIMENT, and the persona now says which is which.
     ("content/agents/social_media_analyst.md", (28, 39), "Mention volume is baselined; sentiment is not"),
-    ("backend/app/agents/overlay_generator.py", (447, 447), "Emphasise momentum in fundamentals"),
-    ("backend/app/agents/overlay_generator.py", (93, 93), "Primary goal: {mandate.primary_goal}"),
-    ("backend/app/agents/overlay_generator.py", (437, 437), "long_horizon = m.horizon in"),
-    ("backend/app/services/room_prompts.py",   (1355, 1355), "_format_profile(profile, agent_id)"),
+    # CR219 WP05 (R25/R26/R56, 2026-09-03) shifted these three lines down by
+    # inserting `_goal_block`'s call site + its ~80-line definition earlier in
+    # the file (the "Primary goal:" line itself did not move; the other two
+    # shifted because the new block landed above them). Re-pinned to the new
+    # line numbers; the cited substrings are unchanged.
+    ("backend/app/agents/overlay_generator.py", (531, 531), "Emphasise momentum in fundamentals"),
+    ("backend/app/agents/overlay_generator.py", (94, 94), "Primary goal: {mandate.primary_goal}"),
+    ("backend/app/agents/overlay_generator.py", (521, 521), "long_horizon = m.horizon in"),
+    ("backend/app/services/room_prompts.py",   (1603, 1603), "_format_profile(profile, agent_id)"),
     # The three denials that are TRUE and must survive any fix.
     ("content/agents/market_analyst.md",       (39, 41), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),
