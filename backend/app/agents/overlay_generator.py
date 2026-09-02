@@ -497,6 +497,21 @@ def _market_analyst_block(m: Mandate) -> str:
         )
     else:
         parts.append("- Emphasise monthly/quarterly trend. Skip noise-level intraday signals.")
+    # R15 (CR219, finding #9) — mostly resolved by R4's persona rewrite, which
+    # already names these three as the measured trends the sheet actually
+    # carries. What was still missing on the overlay side is naming THEM, by
+    # the sheet's own vocabulary, as the trends to use — so "emphasise
+    # monthly/quarterly trend" cannot be read as a demand for an indicator
+    # trajectory ("RSI is clearing") the persona correctly still forbids.
+    # Phrased to match the sheet's rendered field names exactly (`window
+    # trend`, `primary trend`, `52-week relative strength`), which is what
+    # lets the guard's R11 mapping resolve this demand against the real sheet.
+    parts.append(
+        "- The trends you may cite by name are the sheet's own: the window "
+        "trend (across the trading days of the fetched history), the primary "
+        "trend (last close vs. the 200-day average), and 52-week relative "
+        "strength vs. the index. Use these, not an indicator's path over time."
+    )
     if m.risk_score <= 2:
         parts.append("- Prefer mean-reversion setups and clearly stated levels.")
     elif m.risk_score >= 4:

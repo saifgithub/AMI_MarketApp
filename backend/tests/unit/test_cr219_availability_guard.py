@@ -794,6 +794,19 @@ _OVERLAY_DEMANDS: list[dict[str, Any]] = [
         "why": "The 50-day range low/high are the levels.",
     },
     {
+        "row": "R15",
+        "agent": AgentId.MARKET_ANALYST,
+        "demand": "52-week relative strength vs. the index",
+        "backing_marker": "Relative strength",
+        "why": (
+            "R15's added clause names the three trends the overlay may demand "
+            "in the sheet's own vocabulary. Window trend and primary trend "
+            "already had entries above; this is the third — relative strength "
+            "vs. the S&P had no R11 mapping of its own until this clause named "
+            "it, even though the persona (R4) already listed it as citable."
+        ),
+    },
+    {
         "row": "R11",
         "agent": AgentId.NEWS_ANALYST,
         "demand": "FOMC countdown",
@@ -878,7 +891,7 @@ _NON_DATA_ROLE_GUIDANCE: dict[str, str] = {
         "sheet this guard renders — out of scope here, in scope for WP03/WP04"
     ),
     # The R22 violation, carried separately below.
-    "Emphasise momentum in fundamentals": "the R22 violation — see KNOWN_R22_VIOLATIONS_PENDING_WP03",
+    "Emphasise momentum in fundamentals": "the R22 violation — see KNOWN_R22_VIOLATIONS_PENDING_WP04_R21",
 }
 
 
@@ -956,8 +969,10 @@ def _forbidden_hits(corpus: dict[AgentId, set[str]]) -> list[tuple[str, str, str
 
 
 # R22's ONE known violation, live on HEAD right now. The fix is a one-line
-# deletion in `overlay_generator.py:447` — which belongs to WP03/WP04, not to
-# this lane, so the violation is carried here EXPLICITLY (same doctrine as
+# deletion in `overlay_generator.py:447` — which belongs to WP04 (R21's ruled
+# sequencing: the earnings-revisions/surprise-history demand is only touched
+# AFTER WP06 ships the real fetches backing it, DECISIONS_2026-09-02.md §1), not
+# to WP03, so the violation is carried here EXPLICITLY (same doctrine as
 # KNOWN_FALSE_PENDING_WP01) instead of being hidden by weakening the scanner.
 #
 # What the agent is told today, on every non-long-horizon mandate:
@@ -965,9 +980,10 @@ def _forbidden_hits(corpus: dict[AgentId, set[str]]) -> list[tuple[str, str, str
 #    guidance."
 # All three of those are absent. The sheet has no revisions history, no surprise
 # history, and its consensus line says in as many words "Street view — NOT
-# company guidance". WP03/WP04 deletes the line; this entry then goes too, and
-# `test_r22_...` starts failing on it, which is the point.
-KNOWN_R22_VIOLATIONS_PENDING_WP03: list[tuple[str, str, str]] = [
+# company guidance". WP04 deletes/rewrites the line once WP06's field lands;
+# this entry then goes too, and `test_r22_...` starts failing on it, which is
+# the point.
+KNOWN_R22_VIOLATIONS_PENDING_WP04_R21: list[tuple[str, str, str]] = [
     (
         "fundamentals_analyst",
         "guidance",
@@ -980,10 +996,13 @@ def test_r22_no_overlay_branch_demands_a_thing_the_sheet_says_it_does_not_supply
     """R22 — kept as its own assertion so the failure message names the exact
     branch and line, which is what a fixer needs.
 
-    The one known violation is carried in `KNOWN_R22_VIOLATIONS_PENDING_WP03`
-    because its fix is in another work package's file. Any NEW violation is red
-    immediately."""
-    hits = [h for h in _forbidden_hits(overlay_corpus) if h not in KNOWN_R22_VIOLATIONS_PENDING_WP03]
+    The one known violation is carried in `KNOWN_R22_VIOLATIONS_PENDING_WP04_R21`
+    because its fix is sequenced behind WP06's data field (R21's ruling). Any
+    NEW violation is red immediately."""
+    hits = [
+        h for h in _forbidden_hits(overlay_corpus)
+        if h not in KNOWN_R22_VIOLATIONS_PENDING_WP04_R21
+    ]
     assert not hits, (
         "CR219 R22: an overlay branch demands data the sheet's own disclosure says "
         "is not supplied. Delete the demand (or ship the field, and update "
@@ -993,15 +1012,15 @@ def test_r22_no_overlay_branch_demands_a_thing_the_sheet_says_it_does_not_supply
 
 def test_r22_the_carried_violation_is_still_real(overlay_corpus):
     """Vacuity guard on the carry-list: an entry the overlay no longer emits is
-    stale and must be deleted, which is how WP03's fix closes R22 for good. If
-    this goes red saying the violation is GONE — delete the entry and R22 is
-    fully closed."""
+    stale and must be deleted, which is how WP04 closes R22 for good. If this
+    goes red saying the violation is GONE — delete the entry and R22 is fully
+    closed."""
     live = _forbidden_hits(overlay_corpus)
-    stale = [entry for entry in KNOWN_R22_VIOLATIONS_PENDING_WP03 if entry not in live]
+    stale = [entry for entry in KNOWN_R22_VIOLATIONS_PENDING_WP04_R21 if entry not in live]
     assert not stale, (
         "CR219 R22: these carried violations are no longer emitted by any overlay "
-        "branch — WP03 fixed them. Delete them from "
-        f"KNOWN_R22_VIOLATIONS_PENDING_WP03 so the guard enforces R22 fully: {stale}"
+        "branch — WP04 fixed them. Delete them from "
+        f"KNOWN_R22_VIOLATIONS_PENDING_WP04_R21 so the guard enforces R22 fully: {stale}"
     )
 
 
