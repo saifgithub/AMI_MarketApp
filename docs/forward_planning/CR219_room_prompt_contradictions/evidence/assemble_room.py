@@ -4,7 +4,12 @@ Not the persona file (10-18% of it) and not the sheet alone -- the concatenation
 the model actually receives, which is the only place a contradiction exists.
 """
 import sys, os, json
-sys.path.insert(0, os.path.abspath("backend")); os.chdir("backend")
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.abspath(os.path.join(_HERE, "..", "..", "..", ".."))
+_OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_HERE, "rendered")
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
+sys.path.insert(0, os.path.join(_ROOT, "backend", "tests", "unit"))
+os.chdir(os.path.join(_ROOT, "backend"))
 sys.path.insert(0, os.path.abspath("tests/unit")); sys.path.insert(0, os.path.abspath("tests"))
 from unittest import mock
 from app.core.config import settings
@@ -46,7 +51,7 @@ m = Mandate(
     learning_style=LearningStyle.QUICK, plan=Plan.TRADER, trial_expires_at=None,
     credit_balance=150, created_at=datetime(2026,5,11), updated_at=datetime(2026,5,11))
 ROOM = [a for a in AgentId if a.value not in ("concierge", "risk_officer")]
-dest = "/private/tmp/claude-501/-Volumes-Extreme-Pro-AMI-MarketApp/c250f020-b640-4a94-aab8-dcd81573eb5f/scratchpad/assembled_head"
+dest = _OUT
 os.makedirs(dest, exist_ok=True)
 for a in ROOM:
     kw = {}

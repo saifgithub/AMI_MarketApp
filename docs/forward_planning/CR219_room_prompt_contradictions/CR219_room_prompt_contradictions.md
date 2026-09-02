@@ -2,6 +2,29 @@
 
 **Status:** in_progress · **Opened:** 2026-09-02 · **Tag:** `AT:R75 CR219`
 
+> **For an external reviewer.** This CR is an investigation. **No code, prompt or persona has
+> been changed** — it documents 17 findings and proposes a fix that has not been built.
+>
+> Everything rests on primary evidence in [`evidence/`](evidence/), which stores **84 complete
+> LLM turns** — for each, the exact system prompt sent, the user message, the model's full
+> reasoning trace and its answer. Start with [`evidence/README.md`](evidence/README.md); it
+> lists what is here, how to regenerate it, and — under *"Two things the record does NOT
+> support"* — the two places where the data is weaker than it might first appear.
+>
+> Three claims worth checking first, because the argument stands or falls on them:
+> 1. `evidence/analysis/verify_citations.py` — every `file:line` this doc cites still points
+>    at the text it claims (exit 0).
+> 2. `evidence/analysis/citation_rates.py` — the suppression measurement, from the banked
+>    corpus, independent of anything Gemini said.
+> 3. `evidence/rendered/fundamentals_analyst.txt` — the assembled prompt with both halves of
+>    the contradiction in one file. Search it for `never describe a margin` and for
+>    `Margin trend, YoY (LIVE)`.
+>
+> The convene model is **Gemini 3.1 Pro**, not the incumbent. It was chosen because it emits a
+> visible reasoning trace; the production model emits none, which is why these contradictions
+> went unseen. Gemini's replies are used as *evidence of what the prompt does to a reader*,
+> never as ground truth about CAT.
+
 ---
 
 ## Why this exists
@@ -29,11 +52,11 @@ Found by rendering each agent's real sheet through `_format_profile` and diffing
 
 | # | Where | Claim | Contradicted by |
 |---|---|---|---|
-| 1 | `fundamentals_analyst.md:29` | "never describe a margin as rising, falling, expanding or compressing" | `Margin trend, YoY (LIVE): …bps` |
+| 1 | `fundamentals_analyst.md:29-31` | "never describe a margin as rising, falling, expanding or compressing" | `Margin trend, YoY (LIVE): …bps` |
 | 2 | `fundamentals_analyst.md:66` | "There is still no margin *trend* on the sheet — quote the levels, never a direction" | same |
-| 3 | `fundamentals_analyst.md:48` | "Buybacks and M&A history are **not available** — never claim a number for either" | `Buybacks (LIVE)` + `Capital returned (LIVE)` (CR218) |
-| 4 | `fundamentals_analyst.md:58` | "no *history* for any of them: every figure is a single point in time" | 6 multi-period figures |
-| 5 | `market_analyst.md:20` | "any claim that needs a *series* … is not one this data can support" | `Window trend`, `Primary trend`, `Relative strength 52w` |
+| 3 | `fundamentals_analyst.md:48-49` | "Buybacks and M&A history are **not available** — never claim a number for either" | `Buybacks (LIVE)` + `Capital returned (LIVE)` (CR218) |
+| 4 | `fundamentals_analyst.md:56-60` | "no *history* for any of them: every figure is a single point in time" | 6 multi-period figures |
+| 5 | `market_analyst.md:19-22` | "any claim that needs a *series* … is not one this data can support" | `Window trend`, `Primary trend`, `Relative strength 52w` |
 | 6 | `market_analyst.md:54` | "you do not have a series, so you cannot say an indicator is *clearing*, *rolling over*" | same |
 | 7 | `news_analyst.md:25` | "You are **not supplied consensus estimates**" | `consensus EPS est. $X` on the same sheet line as the earnings date |
 | 8 | `social_media_analyst.md:28` | "You have no historical baseline for this ticker" | `Mentions: … over 33d, trend: …` — weaker; it restricts *sentiment* elevation, the sheet gives a *mention* trend |
@@ -63,7 +86,7 @@ Not availability claims, so a persona-text scan cannot see them. Every one was r
 
 | # | Where | Problem |
 |---|---|---|
-| 15 | `overlay_generator.py:445` | On a **short or medium** horizon the Fundamentals overlay flips to *"Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance."* **None of the three exists.** Neither `earnings revisions` nor `surprise history` is fetched anywhere in the backend; the only `guidance` on the sheet is the disclaimer *"the Street's view, never the company's own guidance."* CR146 deleted four such demands from the **market analyst** block for exactly this reason and left the fundamentals one standing. Live for every short- and medium-horizon user. |
+| 15 | `overlay_generator.py:447` | On a **short or medium** horizon the Fundamentals overlay flips to *"Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance."* **None of the three exists.** Neither `earnings revisions` nor `surprise history` is fetched anywhere in the backend; the only `guidance` on the sheet is the disclaimer *"the Street's view, never the company's own guidance."* CR146 deleted four such demands from the **market analyst** block for exactly this reason and left the fundamentals one standing. Live for every short- and medium-horizon user. |
 
 ### Class D — the sheet reaches agents whose brief never mentions it
 

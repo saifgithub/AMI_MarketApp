@@ -1,9 +1,16 @@
 """Thin Gemini client for the Room replay. Key is read from infra/alpha.env, never printed."""
 import json, os, urllib.request, urllib.error, pathlib
 
-ENV = pathlib.Path("/Volumes/Extreme Pro/AMI_MarketApp/infra/alpha.env")
+# Repo root is four levels up from this file
+# (docs/forward_planning/CR219_.../evidence/gem.py). Derived, never hardcoded:
+# an absolute path to one machine's mount makes this unrunnable for a reviewer.
+# AMI_ALPHA_ENV overrides it for anyone whose env file lives elsewhere.
+_ROOT = pathlib.Path(__file__).resolve().parents[4]
+ENV = pathlib.Path(os.environ.get("AMI_ALPHA_ENV", _ROOT / "infra" / "alpha.env"))
 
 def key():
+    if not ENV.exists():
+        raise SystemExit(f"{ENV} not found -- set AMI_ALPHA_ENV to your env file")
     for line in ENV.read_text().splitlines():
         if line.startswith("GOOGLE_AI_API_KEY="):
             return line.split("=", 1)[1].strip().strip('"').strip("'")

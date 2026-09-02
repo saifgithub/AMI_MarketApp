@@ -4,9 +4,13 @@ Reuses test_prompt_data_parity's sentinel injection so the sheet comes out of th
 REAL renderers, not a hand-built approximation.
 """
 import sys, os, json
-sys.path.insert(0, os.path.abspath("backend"))
-os.chdir("backend")
-sys.path.insert(0, os.path.abspath("tests/unit"))
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.abspath(os.path.join(_HERE, "..", "..", "..", ".."))
+_OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_HERE, "rendered", "sheets")
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
+sys.path.insert(0, os.path.join(_ROOT, "backend", "tests", "unit"))
+os.chdir(os.path.join(_ROOT, "backend"))
 
 from unittest import mock
 from uuid import uuid4
@@ -49,7 +53,7 @@ def go():
     return out
 
 res = go()
-dest = "/private/tmp/claude-501/-Volumes-Extreme-Pro-AMI-MarketApp/c250f020-b640-4a94-aab8-dcd81573eb5f/scratchpad/sheets"
+dest = _OUT
 os.makedirs(dest, exist_ok=True)
 for k, v in res.items():
     with open(f"{dest}/{k}.txt", "w") as f:

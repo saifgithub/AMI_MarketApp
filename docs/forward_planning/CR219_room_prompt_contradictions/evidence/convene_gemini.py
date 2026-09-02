@@ -11,8 +11,14 @@ prompt contradicted itself. That question is the instrument: GLM surfaced the
 margin-trend contradiction by accident inside its reasoning; this asks for it.
 """
 import sys, os, json, time, pickle, datetime as dt
-sys.path.insert(0, os.path.abspath("backend")); os.chdir("backend")
-sys.path.insert(0, "/private/tmp/claude-501/-Volumes-Extreme-Pro-AMI-MarketApp/c250f020-b640-4a94-aab8-dcd81573eb5f/scratchpad")
+# Resolve everything from THIS file before any chdir, so the script runs from
+# any working directory and on any checkout.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.abspath(os.path.join(_HERE, "..", "..", "..", ".."))
+sys.path.insert(0, _HERE)                                    # gem.py
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
+sys.path.insert(0, os.path.join(_ROOT, "backend", "tests", "unit"))  # parity sentinels
+os.chdir(os.path.join(_ROOT, "backend"))
 
 from datetime import datetime
 from uuid import uuid4

@@ -34,7 +34,23 @@ Totals: **1.96M chars of prompts sent, 226k chars of reasoning, 190k chars of an
 
 ## The scripts
 
-Run from the repo root with `backend/.venv/bin/python`.
+**Every script runs from any working directory** — paths are derived from the script's own
+location, never hardcoded. Verified by running each one from `/tmp`. Use the repo's venv:
+
+```bash
+V=backend/.venv/bin/python
+D=docs/forward_planning/CR219_room_prompt_contradictions/evidence
+
+$V $D/analysis/verify_citations.py          # start here: do the doc's citations hold?
+$V $D/analysis/citation_rates.py            # the suppression measurement
+$V $D/analysis/aggregate_arms.py            # verdicts, contradictions, data gaps
+$V $D/analysis/extract_reports.py $D/arms/h_short/convene.json contradictions
+$V $D/dump_sheets.py    /tmp/sheets         # optional out-dir; defaults beside the script
+$V $D/assemble_room.py  /tmp/assembled
+```
+
+`gem.py` finds `infra/alpha.env` by walking up from itself; override with `AMI_ALPHA_ENV`.
+It never prints or stores the key — no credential appears anywhere in this folder.
 
 | Script | What it does |
 |---|---|
@@ -45,6 +61,7 @@ Run from the repo root with `backend/.venv/bin/python`.
 | `analysis/citation_rates.py` | The suppression measurement over the banked `llm_audit` corpus |
 | `analysis/extract_reports.py` | Pulls each agent's two self-report sections out of any convene |
 | `analysis/aggregate_arms.py` | Cross-arm rollup: verdicts, contradiction reproduction, clustered data gaps |
+| `analysis/verify_citations.py` | Checks every `file:line` the CR doc cites still points at the text it claims. **Exit 0 = all resolve.** Run it after anyone edits a persona — line numbers rot, and a citation that lands on the wrong line costs the reader their trust in the rest of the document |
 
 ### Reproducing a convene
 
