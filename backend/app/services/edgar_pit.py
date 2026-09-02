@@ -550,6 +550,31 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
         # yield = payments / market cap, rendered percent like the live field.
         out["dividend_yield"] = ratio_to_pct(ttm_divs / market_cap, decimals=2)
 
+    # CR218 — total capital returned, and what share of free cash flow it took.
+    # Added on THIS path first, because the as-of sheet is the one the backtest
+    # renders and the one the observation came from: a Fundamentals Analyst
+    # given "Buybacks $5,910M" and "Dividend yield 1.4%" has to convert the
+    # yield back to dollars against market cap and divide by FCF to reach the
+    # capital-allocation read its own role brief asks for. Here both operands
+    # are already resolved exactly from EDGAR, so the conversion is neither
+    # approximate nor the model's job.
+    if ttm_divs is not None and ttm_divs > 0:
+        out["dividends_paid_ttm"] = round(ttm_divs / 1_000_000)
+    components = [
+        v for v in (out.get("buyback_ttm"), out.get("dividends_paid_ttm"))
+        if v is not None
+    ]
+    if components:
+        total = sum(components)
+        out["capital_return_ttm"] = total
+        fcf_m = out.get("free_cash_flow")
+        # Positive FCF only. A company returning capital while burning cash is
+        # funding it from the balance sheet or new debt, and a percentage of a
+        # small or negative denominator asserts a precision the ratio does not
+        # have. The dollars still render; only the ratio is withheld.
+        if fcf_m and fcf_m > 0:
+            out["capital_return_pct_fcf"] = round(total / fcf_m * 100)
+
     out.update(_price_derived(ticker, as_of, price_rows))
 
     logger.info(

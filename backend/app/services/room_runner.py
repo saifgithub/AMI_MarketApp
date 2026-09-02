@@ -422,6 +422,14 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "gross_margin_trend_bps", "operating_margin_trend_bps",
     "net_margin_trend_bps", "margin_trend_basis",
     "buyback_ttm", "buyback_yield",
+    # CR218 — dividends paid in dollars, the total returned, and that total as a
+    # share of FCF. Optional-live-only for exactly the reason the buyback line
+    # above is: a non-payer has no dividend row and a company with no repurchase
+    # line is not one that repurchased zero, so absence here is normal and
+    # meaningful rather than an outage. Without these three names the fields are
+    # computed and then dropped unlabelled at the render site — CR104's rule is
+    # that a field with no recorded provenance renders as nothing.
+    "dividends_paid_ttm", "capital_return_ttm", "capital_return_pct_fcf",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
     # shipped without it (gross debt renders, gross cash did not).
     "total_cash",

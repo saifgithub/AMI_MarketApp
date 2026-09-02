@@ -34,6 +34,7 @@ from app.services.fundamentals import (
     earnings_power_line,
     identity_line,
     buyback_line,
+    capital_return_line,
     day_move_line,
     liquidity_line,
     margin_structure_line,
@@ -2147,6 +2148,15 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             buyback_line(
                 profile.get("buyback_ttm") if _is("buyback_ttm", "live") else None,
                 profile.get("buyback_yield") if _is("buyback_yield", "live") else None,
+            ),
+            capital_return_line(
+                profile.get("capital_return_ttm")
+                if _is("capital_return_ttm", "live") else None,
+                profile.get("buyback_ttm") if _is("buyback_ttm", "live") else None,
+                profile.get("dividends_paid_ttm")
+                if _is("dividends_paid_ttm", "live") else None,
+                profile.get("capital_return_pct_fcf")
+                if _is("capital_return_pct_fcf", "live") else None,
             ),
             earnings_power_line(
                 profile.get("trailing_eps") if _is("trailing_eps", "live") else None,

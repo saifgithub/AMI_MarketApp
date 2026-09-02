@@ -1062,7 +1062,7 @@ def test_format_profile_omits_sector_line_when_present_but_not_live():
     assert "Sector/industry (LIVE)" not in block
 
 
-def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
+def test_format_profile_includes_dividend_line_and_disclaims_only_m_and_a():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
@@ -1073,7 +1073,13 @@ def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
     # now carries its basis. A payer with ONLY a yield live still renders, and
     # the parts with no provenance stay off it entirely (DEF053).
     assert "Dividend (LIVE): yield 0.34% (trailing)" in block
-    assert "buybacks/M&A: not available" in block
+    # CR218 — the disclaimer used to read "buybacks/M&A: not available" and had
+    # been wrong since CR145 Tier D added the cash-flow call that backs
+    # buybacks. The Room sheet states `Buybacks (LIVE): $X repurchased` two
+    # lines above, so declaring them unavailable told an agent to suppress a
+    # real number it had been handed. M&A has no field and stays disclaimed.
+    assert "M&A: not available" in block
+    assert "buybacks" not in block.lower().split("dividend (live)")[-1][:200]
     assert "payout" not in block
     assert "ex-date" not in block
 

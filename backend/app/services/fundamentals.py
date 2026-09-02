@@ -258,6 +258,25 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
         if len(recent) == 4:
             out["buyback_ttm"] = round(abs(sum(recent)) / 1_000_000)
 
+    # ── Dividends paid, trailing four quarters ───────────────────────────
+    # CR218. The sheet already carried a dividend YIELD, and an analyst that
+    # wants the capital-allocation picture has to turn that back into dollars
+    # against the market cap to add it to buybacks. Observed GLM-5.3 doing
+    # exactly that arithmetic in its reasoning, and landing on $2,707M for CAT
+    # against the statement's actual $2,812M — a 3.9% error, because a TRAILING
+    # yield times a CURRENT market cap is not the trailing payment.
+    #
+    # The exact figure is on the cash-flow statement this function already
+    # fetches for buybacks, so it costs no additional call. Same signed-outflow
+    # and absent-is-not-zero rules as the repurchase row above.
+    dividends = _stmt_series(
+        cashflow, "Cash Dividends Paid", "Common Stock Dividend Paid"
+    )
+    if dividends is not None:
+        recent = [v for v in dividends[:4] if v is not None]
+        if len(recent) == 4:
+            out["dividends_paid_ttm"] = round(abs(sum(recent)) / 1_000_000)
+
     return out or None
 
 
@@ -638,6 +657,32 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         if buyback is not None and market_cap:
             out["buyback_yield"] = round(buyback * 1_000_000 / market_cap * 100, 1)
 
+        # CR218 — total capital returned, and what share of free cash flow it
+        # consumed. Same Leg 4 rule as the buyback yield beside it: hand over
+        # the derived figure, not the operands and an instruction.
+        #
+        # This is the fact the two components do not carry separately. CAT
+        # returned $8,617M against $8,961M of TTM FCF — 96% — while revenue
+        # shrank 1% and operating margin fell 360bps. "Buybacks $5,910M" and
+        # "yield 1.4%" are both benign on their own; together against FCF they
+        # are the capital-allocation finding the role brief asks for, and the
+        # incumbent model read the buyback line and never made the connection.
+        dividends_paid = statements.get("dividends_paid_ttm")
+        components = [v for v in (buyback, dividends_paid) if v is not None]
+        if components:
+            total = sum(components)
+            out["capital_return_ttm"] = total
+            # Guarded on POSITIVE free cash flow, not merely present. A payer
+            # burning cash returns capital out of the balance sheet or new
+            # borrowing, and "213% of FCF" against a small positive number, or
+            # a negative percentage against a negative one, both read as
+            # precision the figure does not have. The dollars still render; only
+            # the ratio is withheld.
+            if free_cash_flow and free_cash_flow > 0:
+                out["capital_return_pct_fcf"] = round(
+                    total * 1_000_000 / free_cash_flow * 100
+                )
+
     # Real sector/industry classification replaces the old always-fake
     # numeric `sector_pe` — a category, not a fabricated peer-average P/E
     # (yfinance has no peer-basket P/E; computing one would need a peer
@@ -929,6 +974,49 @@ def buyback_line(
     return _labelled("Buybacks", live, [part])
 
 
+def capital_return_line(
+    total_millions: int | None,
+    buyback_millions: int | None,
+    dividends_millions: int | None,
+    pct_fcf: int | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR218 — what the company returned, and what share of FCF that consumed.
+
+    The sheet already stated buybacks in dollars and dividends as a yield. An
+    analyst wanting the capital-allocation picture the role brief asks for had
+    to convert the yield to dollars against market cap, add it to buybacks, and
+    divide by FCF — three steps, none of them in the sheet. GLM-5.3 was observed
+    doing precisely that in its reasoning; the incumbent model read the buyback
+    line and never made the connection at all. Precomputing it hands both the
+    finding for free, which is a better trade than adopting a slower model to
+    get it.
+
+    Both components are named beside the total rather than folded into it. A
+    company returning $8B entirely through buybacks and one splitting it evenly
+    with a dividend are different capital-allocation stories, and the total
+    alone cannot tell them apart.
+
+    `pct_fcf` is withheld rather than fabricated when free cash flow is not
+    positive — see the fetcher. A line with the dollars and no ratio is the
+    honest shape there, not a hole.
+    """
+    if total_millions is None:
+        return None
+    split = [
+        f"{label} ${v:,}M"
+        for label, v in (("buybacks", buyback_millions), ("dividends", dividends_millions))
+        if v is not None
+    ]
+    part = f"${total_millions:,}M (trailing 4 quarters)"
+    if split:
+        part += " — " + " + ".join(split)
+    if pct_fcf is not None:
+        part += f", {pct_fcf}% of TTM FCF"
+    return _labelled("Capital returned", live, [part])
+
+
 def day_move_line(
     change_pct: float | None, market_state: str | None, *, live: bool = True
 ) -> str | None:
@@ -1190,8 +1278,10 @@ def dividend_line(
     yfinance's trailing number, the rate is its forward indicated one (AAPL:
     0.34% trailing against $1.08 indicated). Merging them would be DEF233's
     defect one field over, so both are labelled and neither is derived from the
-    other. Buybacks and M&A stay absent and stay disclaimed — no yfinance field
-    backs them, and CR145 Tier D owns the `.cashflow` call that would.
+    other. M&A stays absent and stays disclaimed — no yfinance field backs it.
+    Buybacks USED to be disclaimed here and are not any more: CR145 Tier D added
+    the `.cashflow` call this docstring anticipated, and CR218 removed the
+    disclaimer it left stranded (see the return statement).
 
     A NON-PAYER gets no line at all. `payoutRatio` is 0.0 for companies that pay
     nothing, so gating on "any part present" rendered *"Dividend: payout 0% of
@@ -1223,7 +1313,19 @@ def dividend_line(
     line = _labelled("Dividend", live, parts)
     if line is None:
         return None
-    return f"{line} (buybacks/M&A: not available, not claimed)"
+    # CR218 — the disclaimer used to read "(buybacks/M&A: not available, not
+    # claimed)" and had been wrong since CR145 Tier D, which added the
+    # `.quarterly_cashflow` call that backs buybacks. The docstring above even
+    # anticipated it ("CR145 Tier D owns the `.cashflow` call that would") and
+    # the disclaimer was never updated when Tier D shipped.
+    #
+    # It mattered because of how hard the rest of this sheet works to police
+    # available-vs-not: two lines above, "Buybacks (LIVE): $5,910M repurchased"
+    # states the figure, and this line then declared it unavailable. An agent
+    # that believed the disclaimer would suppress a real number it had been
+    # given — the mirror image of the fabrication the disclaimer exists to stop.
+    # M&A genuinely has no yfinance field and stays disclaimed.
+    return f"{line} (M&A: not available, not claimed)"
 
 
 def analyst_consensus_line(
@@ -1397,6 +1499,11 @@ def build_live_data_block(ticker: str) -> str | None:
         ),
         buyback_line(
             data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
+        ),
+        capital_return_line(
+            data.get("capital_return_ttm"), data.get("buyback_ttm"),
+            data.get("dividends_paid_ttm"), data.get("capital_return_pct_fcf"),
+            live=False,
         ),
         # CR179 Leg 3 — same builders, same order, same wording as the Room
         # sheet. The Room lane-gates these to the technicals desk; the 1-on-1

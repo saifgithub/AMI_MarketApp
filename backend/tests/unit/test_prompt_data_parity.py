@@ -133,6 +133,13 @@ _FUND_SENTINEL: dict = {
     "margin_trend_basis": "TRENDBASISSENT vs TRENDPRIORSENT",
     "buyback_ttm": 7654,
     "buyback_yield": 8.9,
+    # CR218 — the capital-allocation arithmetic the sheet used to leave to the
+    # model: dividends in dollars (the sheet gave only a yield), the total
+    # returned, and that total against FCF. Values chosen not to collide with
+    # any other fingerprint here.
+    "dividends_paid_ttm": 3217,
+    "capital_return_ttm": 10871,
+    "capital_return_pct_fcf": 63,
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
     # without it. Neither guard could see the gap: the census counts `totalCash`
     # as consumed (it IS read, into `net_cash`) and parity can only ask about a
@@ -465,8 +472,15 @@ def _fake_statement_frames():
         columns=periods,
     )
     cashflow = pd.DataFrame(
-        [[-1e9, -2e9, -3e9, -1.654e9, -5e8]],
-        index=["Repurchase Of Capital Stock"],
+        [
+            [-1e9, -2e9, -3e9, -1.654e9, -5e8],          # Repurchase → 7,654M
+            # CR218 — dividends paid, on the same statement and the same
+            # signed-outflow convention. Present here so the parity guard
+            # exercises the capital-return derivation end to end rather than
+            # only its buyback half.
+            [-8e8, -8e8, -8e8, -8.17e8, -5e8],           # Dividends  → 3,217M
+        ],
+        index=["Repurchase Of Capital Stock", "Cash Dividends Paid"],
         columns=periods,
     )
     return income, cashflow
@@ -606,6 +620,10 @@ def env(monkeypatch):
             "margin_trend_basis": "TRENDBASISSENT",
             "buyback_ttm": "$7,654M repurchased",
             "buyback_yield": "8.9% of market cap",
+            # CR218.
+            "dividends_paid_ttm": "dividends $3,217M",
+            "capital_return_ttm": "$10,871M (trailing 4 quarters)",
+            "capital_return_pct_fcf": "63% of TTM FCF",
             # CR179 Leg 3.
             "total_cash": "gross cash $55,221M",
             "day_change_pct": "-1.77% today",
