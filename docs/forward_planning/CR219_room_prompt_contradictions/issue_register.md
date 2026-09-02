@@ -96,8 +96,8 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R27 | `pm_self_consistency_samples` "defaults to 1" | CORRECTION | Stale — actual default is 5 since CR214 (`config.py:751`). Fix the CR doc's arms section. **Fable's own `05` doc still repeats the stale figure** — its Tier-1 item 1 (R47 below) needs re-reading in light of this | K,G,Q | ☐ |
-| R28 | "An uncommitted `trader_block_regex` hunk" | CORRECTION | Stale — landed via CR210 commit `49380813`. Re-point the citation, add to `verify_citations.py`'s tracked list | G,Q | ☐ |
+| R27 | `pm_self_consistency_samples` "defaults to 1" | CORRECTION | Stale — actual default is 5 since CR214 (`config.py:751`). Fix the CR doc's arms section. **Fable's own `05` doc still repeats the stale figure** — its Tier-1 item 1 (R47 below) needs re-reading in light of this | K,G,Q | ☑ |
+| R28 | "An uncommitted `trader_block_regex` hunk" | CORRECTION | Stale — landed via CR210 commit `49380813`. Re-point the citation, add to `verify_citations.py`'s tracked list | G,Q | ☑ |
 
 ## Measurement & the acceptance instrument
 
@@ -125,7 +125,7 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R41 | Undisclosed harness artifact — `convene_gemini.py` hardcodes `LONG_HORIZON` while `--horizon` varies | OPEN (half done) | README caveat DONE (commit `38a9e85f`); REMAINING: extend `aggregate_arms.py`'s artifact filter to the 4 affected `h_short` reports — `dev_instructions/WP09_docs_corrections.md` | F | ☐ |
+| R41 | Undisclosed harness artifact — `convene_gemini.py` hardcodes `LONG_HORIZON` while `--horizon` varies | OPEN (half done) | README caveat DONE (commit `38a9e85f`); REMAINING: extend `aggregate_arms.py`'s artifact filter to the 4 affected `h_short` reports — `dev_instructions/WP09_docs_corrections.md` | F | ☑ |
 | R42 | CR210 measurements (50/69, 47/68) exist only in code comments, no results artifact | DONE 2026-09-02 | Committed as `49380813` with a results note (`CR210_.../results/acceptance3_wrong_constraint_regressions.md`); CR210's post-fix arm re-run stays open in that note | F | ☑ |
 | R43 | PM breaks its JSON-only contract under instruction pressure | OPEN | File its own DEF — DEF067 precedent (~13% parser loss from similar fragility) | K,G | ☐ |
 | R44 | Sweep the 26 unswept prompts (concierge, Brief Your Agent) | CONVERGENT | Extend `dump_sheets.py`/`assemble_room.py` rather than writing new scripts. Becomes automatic if R13 (exhaustive guard) is adopted | K,F,G,Q | ☐ |
