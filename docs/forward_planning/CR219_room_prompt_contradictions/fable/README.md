@@ -13,6 +13,7 @@ by a Claude Fable 5 session against the parent folder's evidence and the live so
 | [`02_generated_availability_design.md`](02_generated_availability_design.md) | The core structural recommendation: a generated, registry-backed "data boundary" block that cannot drift. |
 | [`03_scope_recommendations.md`](03_scope_recommendations.md) | Per-finding resolutions and what else rides in CR219 (free fields, ATR, `primary_goal`). |
 | [`04_acceptance_and_measurement.md`](04_acceptance_and_measurement.md) | Revised acceptance criteria and the trailing measurement. |
+| [`05_further_improvements.md`](05_further_improvements.md) | Second pass beyond the contradictions: decision variance and decision inputs — 15 ranked items, incl. two live-verified findings (PM verdicts ~19.7% sampling noise at n=1; thinking mode off on the live model). |
 
 ## Decisions Saiful made during this review (treat as resolved, not open)
 
