@@ -348,6 +348,13 @@ def test_a_refused_run_never_shows_the_sentinel_and_fails_safe_to_pass():
         assert "[AMI error:" not in (getattr(e, "text", None) or "")
 
     # And the decision fails safe, never a fabricated APPROVE (DEF059).
+    # CR219 R51 (2026-09-03) moved the fail-safe target: a run where every
+    # desk fell back to scripted turns now DISCARDS the decision — an explicit
+    # NO_VERDICT with the outage disclosed — instead of dressing up as a
+    # confident PASS. Same direction (no trade), more honest shape; the
+    # sentinel half of this test is unchanged.
     v = next(e.verdict for e in events if e.kind == "verdict")
-    assert v.action == VerdictAction.PASS.value
+    assert v.action == VerdictAction.NO_VERDICT.value
     assert v.overridden_from_llm is True
+    assert v.scripted_turns == 11 and len(v.scripted_agents) == 11
+    assert v.size_pct is None and v.entry is None and v.stop is None
