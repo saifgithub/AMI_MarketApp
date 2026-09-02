@@ -270,6 +270,20 @@ _COMPUTED_NOT_RENDERED: dict[str, str] = {
     "earnings_date": "rendered via the `next_earnings` domain key",
     "quarter": "rendered via the `next_earnings` domain key",
     "eps_estimate": "rendered via the `next_earnings` domain key",
+    # CR219 R36 — same shape as `rsi`/`trend`/`support`/`breakout` above: rides
+    # `field_state["technicals"]` as a GROUP (`_profile_for_ticker` sets
+    # `profile["atr14"] = technicals.atr14` inside that same block), so it is
+    # genuinely reachable and this script's Direction-2 check simply doesn't
+    # look at the group-gate mechanism its own siblings already use this
+    # dict to describe. Narrower than its siblings in WHO can read it
+    # (`_ATR_LANE_AGENTS` = Trader + Risk Officer only, not every
+    # technicals-lane agent) — that gate lives in `_format_profile`, is
+    # covered by `test_cr219_r36_atr.py`, and is a downstream concern this
+    # census (which only asks "can ANY roster render this at all") does not
+    # need to model.
+    "atr14": "rendered on its own ATR(14) line, gated narrower than the rest of "
+             "the technicals block (Trader/Risk Officer only — see "
+             "`_ATR_LANE_AGENTS`, room_prompts.py)",
 }
 
 
