@@ -57,7 +57,24 @@ from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 # DEF263 — the SAME window helpers `enforce_safety_floor` counts with. A second
 # implementation of "today" is how the prompt and the brake come to disagree.
-from app.trading_math.risk_limits import trades_since, utc_day_start, utc_week_start
+#
+# CR219 R49 extends that list to the RESOLVERS and the cooldown predicate, for
+# the same reason: `_floor_state_preview` states what the floor will DECIDE, and
+# a second implementation of "in cooldown" or "the day cap is N" is how the
+# preview comes to promise one thing while `enforce_safety_floor` does another.
+# These are the identical symbols `safety_floor.py` imports (its aliases are
+# `_`-prefixed; same functions).
+from app.trading_math.risk_limits import (
+    cooldown_lifts_at,
+    in_cooldown,
+    resolved_max_open_risk_pct,
+    resolved_max_trades_per_day,
+    resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours,
+    trades_since,
+    utc_day_start,
+    utc_week_start,
+)
 from app.trading_math.sizing import resolved_single_name_cap_pct
 from app.trading_math.valuation import net_position_phrase
 
@@ -934,6 +951,179 @@ def _risk_state_block(
     )
 
 
+# CR219 R49 — the VERDICT-phase floor-state preview.
+#
+# `enforce_safety_floor` deterministically overrides the CIO's verdict on three
+# limits the CIO could not see: the post-loss cooldown (safety_floor.py 6c), the
+# over-trading brake (6e) and the total open-risk cap (6f). `_risk_state_block`
+# above hands every agent the raw INPUTS to those checks — the last stop-out
+# timestamp, the two windowed trade counts, the committed open risk — but never
+# the floor's own resolved LIMITS, and never the verdict those inputs produce.
+# So the CIO could read "Last losing trade closed: <t>" and still have no way to
+# know a BUY is already blocked, argue for one, and be overridden after the fact.
+# The user then reads a transcript that approves against a verdict that blocks.
+#
+# What this is NOT: a second enforcement site. It decides nothing, blocks
+# nothing, and returns a string. `enforce_safety_floor` remains the sole vetoer
+# (DEF059), unchanged. This only stops the CIO being blind to it.
+#
+# Every number here comes from the SAME `trading_math.risk_limits` functions the
+# floor calls — imported, never reimplemented. That is DEF263's lesson applied
+# one layer up: DEF263 was a prompt counting trades over a different window than
+# the brake, and the fix was to import the brake's own helpers rather than to
+# match its arithmetic by eye. A resolver has three inputs (an explicit mandate
+# override, a risk-tier preset table, and CR129's per-user drawdown derivation
+# for open risk); restating any of them here would drift on the next tier-table
+# edit, silently, in the direction of promising headroom the floor will refuse.
+#
+# Scoped to the VERDICT phase because it is a statement about a decision only
+# the CIO makes. The eleven arguing agents already get the consumption figures
+# from `_risk_state_block` at every phase, which is the half that is theirs.
+def _floor_state_preview(
+    mandate: Mandate,
+    existing_open_risk_pct: Any,
+    last_loss_closed_at: Any,
+    trade_open_timestamps: Any,
+    *,
+    now: datetime | None = None,
+) -> str:
+    """What the deterministic safety floor will decide about a BUY, right now.
+
+    Three absences kept distinct, exactly as `_risk_state_block` keeps them
+    (CR040 / DEF059): `CONTEXT_NOT_SUPPLIED` means the computation FAILED and
+    the floor hard-blocks on it, so the preview says so; `None` means this
+    caller never supplied it (non-Room surfaces, older tests) and renders
+    nothing rather than claiming a state; a real value is stated as fact.
+
+    Returns "" for a caller that supplied NO risk context at all — every one of
+    the three arguments left at its `None` default. That gate is load-bearing
+    and is the same one `_risk_state_block`'s DEF263 note records: on the floor's
+    own contract `trade_open_timestamps=None` means "the caller did not supply
+    trade history, so hard-block" (safety_floor.py 6e), which is TRUE for the
+    Room and FALSE for `prompt_version.py` and every non-Room caller that never
+    passes these kwargs. Without the gate those callers would render a preview
+    announcing that the floor is blocking a BUY nobody proposed — a fabricated
+    alarm, the same class of harm as silence, pointed the other way. Exactly the
+    wrong fix that was tried first on `_risk_state_block`.
+
+    Note the asymmetry, which is the floor's and not this function's:
+    `last_loss_closed_at=None` is a REAL value ("this user has never had a
+    loss"), which is why the sentinel exists for the absent case at all.
+    """
+    if (
+        existing_open_risk_pct is None
+        and last_loss_closed_at is None
+        and trade_open_timestamps is None
+    ):
+        return ""
+
+    now_ = now if now is not None else datetime.now(timezone.utc)
+    lines: list[str] = []
+
+    # 6c — post-loss cooldown. CR129: an unset mandate field resolves to the
+    # risk-tier preset (always > 0), so this check is ALWAYS active; "off" is
+    # expressible only as an explicit 0 override (the Day Trader preset).
+    cooldown_hours = resolved_post_loss_cooldown_hours(
+        mandate.risk_score, mandate.post_loss_cooldown_hours
+    )
+    if cooldown_hours > 0:
+        if last_loss_closed_at is CONTEXT_NOT_SUPPLIED:
+            lines.append(
+                f"- Post-loss cooldown ({cooldown_hours:g}h): loss history COULD NOT BE "
+                f"READ this run, so the floor will BLOCK any BUY rather than skip the "
+                f"check. Treat an entry as unavailable and say so."
+            )
+        elif last_loss_closed_at is not None and in_cooldown(
+            now_, last_loss_closed_at, cooldown_hours
+        ):
+            lifts_at = cooldown_lifts_at(last_loss_closed_at, cooldown_hours)
+            lines.append(
+                f"- IN POST-LOSS COOLDOWN until {lifts_at.isoformat()} "
+                f"({cooldown_hours:g}h after the last stop-out). The floor will BLOCK "
+                f"any BUY until then. An APPROVE here will be overridden to PASS."
+            )
+        elif last_loss_closed_at is not None:
+            lifts_at = cooldown_lifts_at(last_loss_closed_at, cooldown_hours)
+            lines.append(
+                f"- Post-loss cooldown ({cooldown_hours:g}h): CLEAR — it lifted at "
+                f"{lifts_at.isoformat()}."
+            )
+        else:
+            lines.append(
+                f"- Post-loss cooldown ({cooldown_hours:g}h): CLEAR — no losing trade "
+                f"on record."
+            )
+
+    # 6e — the over-trading brake. Both windows are independent; either at its
+    # cap blocks. `>=` matches the floor's own comparison: the cap is reached,
+    # not exceeded, because THIS proposal would be the one over.
+    per_day = resolved_max_trades_per_day(mandate.risk_score, mandate.max_trades_per_day)
+    per_week = resolved_max_trades_per_week(mandate.risk_score, mandate.max_trades_per_week)
+    if trade_open_timestamps is None:
+        lines.append(
+            f"- Over-trading brake ({per_day}/day, {per_week}/ISO week): trade history "
+            f"COULD NOT BE READ this run, so the floor will BLOCK any BUY rather than "
+            f"skip the check."
+        )
+    elif isinstance(trade_open_timestamps, list):
+        today = trades_since(trade_open_timestamps, utc_day_start(now_))
+        week = trades_since(trade_open_timestamps, utc_week_start(now_))
+        blocked = [
+            label for label, count, cap in (
+                ("day", today, per_day), ("ISO week", week, per_week),
+            ) if count >= cap
+        ]
+        if blocked:
+            lines.append(
+                f"- OVER-TRADING BRAKE ALREADY AT ITS CAP for the {' and '.join(blocked)} "
+                f"({today}/{per_day} today, {week}/{per_week} this ISO week). The floor "
+                f"will BLOCK any BUY. An APPROVE here will be overridden to PASS."
+            )
+        else:
+            lines.append(
+                f"- Over-trading brake: {today}/{per_day} trades today, "
+                f"{week}/{per_week} this ISO week — room for {per_day - today} more "
+                f"today, {per_week - week} more this week."
+            )
+
+    # 6f — the total open-risk cap. CR129 derives the unset case from THIS
+    # mandate's own `max_drawdown_pct`, so the cap is per-user, not a constant.
+    open_risk_cap = resolved_max_open_risk_pct(
+        mandate.risk_score, mandate.max_drawdown_pct, mandate.max_open_risk_pct
+    )
+    if existing_open_risk_pct is CONTEXT_NOT_SUPPLIED:
+        lines.append(
+            f"- Open-risk cap ({open_risk_cap:g}%): committed open risk COULD NOT BE "
+            f"COMPUTED this run, so the floor will BLOCK any BUY rather than skip the "
+            f"check."
+        )
+    elif existing_open_risk_pct is not None:
+        headroom = open_risk_cap - float(existing_open_risk_pct)
+        if headroom <= 0:
+            lines.append(
+                f"- OPEN-RISK CAP ALREADY EXCEEDED: {float(existing_open_risk_pct):.2f}% "
+                f"committed against a {open_risk_cap:g}% cap. Any BUY carrying a stop "
+                f"adds to that sum, so the floor will BLOCK it."
+            )
+        else:
+            lines.append(
+                f"- Open-risk headroom: {headroom:.2f} pt "
+                f"({float(existing_open_risk_pct):.2f}% committed of a "
+                f"{open_risk_cap:g}% cap). A BUY's own contribution is its size% x "
+                f"stop-distance% / 100; that sum must stay under the cap."
+            )
+
+    if not lines:
+        return ""
+    return (
+        "\nSafety-floor pre-check — what the deterministic floor will do with a BUY, "
+        "computed by AMI from the same functions the floor itself calls. This is not "
+        "advice and not a vote; it is the arithmetic of your own verdict, already "
+        "settled. Do not argue for an entry a line below says is blocked — say plainly "
+        "that it is blocked and why.\n" + "\n".join(lines) + "\n"
+    )
+
+
 def _share_of_cap_phrase(contribution_pts: float, cap: float) -> str:
     """What share of the drawdown cap a contribution consumes, said so that two
     different contributions cannot read as the same number (DEF292).
@@ -1470,6 +1660,18 @@ def build_room_messages(
         trade_open_timestamps,
     )
 
+    # CR219 R49 — VERDICT phase only: the floor's own resolved limits and the
+    # verdict they already imply. See `_floor_state_preview` for why this is
+    # scoped to the one agent whose verdict the floor overrides.
+    floor_preview_block = ""
+    if phase == "VERDICT":
+        floor_preview_block = _floor_state_preview(
+            mandate,
+            existing_open_risk_pct,
+            last_loss_closed_at,
+            trade_open_timestamps,
+        )
+
     # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
     # as forbidding a second entry in a name already held — long_only only bars shorts.
     long_only_line = ""
@@ -1555,6 +1757,11 @@ def build_room_messages(
         f"{long_only_line}"
         f"- locale: {mandate.locale}\n"
         f"{risk_state_block}"
+        # CR219 R49 — directly under the consumption figures it is the verdict
+        # of, and above the transcript for CR197's reason: this is AMI's
+        # arithmetic about the mandate, and computed figures placed after eleven
+        # turns of prose read as one more voice's claim.
+        f"{floor_preview_block}"
         f"{sector_line}"
         f"{researcher_cap_note}"
         f"\n"
