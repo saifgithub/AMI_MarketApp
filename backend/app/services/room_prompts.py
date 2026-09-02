@@ -766,6 +766,21 @@ def trader_block_regex(*, ticker: str) -> str:
         r"R:R: +\d{1,2}\.\d{1,2}:1\n"
         r"|"
         r"Side: +(?:HOLD|WAIT)\n"
+        # MEASURED. This branch originally dropped the Size line too, on the
+        # reasoning that a no-position turn should not be forced to state
+        # numbers. Run over the 68 held-out S5 prompts on 2026-08-27 that scored
+        # `size_within_cap` **47/68 (69%)** against an UNCONSTRAINED baseline of
+        # **68/68 (100%)** — and NEITHER arm ever exceeded the cap. All 21
+        # failures were rows with no Size line at all, which the check reads as
+        # a failure rather than as not-applicable. The grammar had converted a
+        # perfect score into a 31% failure rate without the model doing anything
+        # differently.
+        #
+        # `Size: 0.00% of portfolio` is not a fabricated number — it is the
+        # honest statement that no position is opened, and `recipe16_trader.py`
+        # renders exactly that for HOLD/WAIT. Entry/Target/Stop on a WAIT WOULD
+        # be fabrication, which is why those stay out.
+        r"Size: +0\.0{1,2}% of portfolio\n"
         r"Time horizon: +[^\n]{1,24}\n"
         r")"
         r"[\s\S]*"

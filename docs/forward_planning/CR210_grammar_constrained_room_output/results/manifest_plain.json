@@ -1,0 +1,26 @@
+{
+ "arm": "plain",
+ "url": "http://192.168.20.74:8000/v1/chat/completions",
+ "model": "ami-llm",
+ "surfaces": [
+  "S4",
+  "S5",
+  "S6"
+ ],
+ "budgets": {
+  "S4": 1700,
+  "S5": 800,
+  "S6": 1800
+ },
+ "prompts_sha256": "e7b5f6f0f6f2be55a8bb41048bae37bc6b73cafb520650d3ed35a77ff4cfa04b",
+ "decoding": {
+  "temperature": 0,
+  "top_p": 1,
+  "stream": false
+ },
+ "concurrency": 4,
+ "n": 197,
+ "hit_budget": 0,
+ "elapsed_min": 7.0,
+ "finished_utc": "2026-08-27T18:09:00Z"
+}

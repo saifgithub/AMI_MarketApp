@@ -159,15 +159,22 @@ def test_an_off_ladder_size_is_absent_from_the_request_the_officer_receives(monk
     schema = build_risk_officer_schema(rows)
     ladder = sorted({round(r.size_pct, 1) for r in rows})
 
-    for path in (schema["properties"]["recommended"],
-                 schema["properties"]["options"]["items"]["properties"]["size_pct"]):
-        assert path["enum"] == ladder
-        for off in (7.5, 0.0, -1.0, 2.25, 100.0):
-            assert off not in path["enum"]
+    assert schema["properties"]["recommended"]["enum"] == ladder
+    for off in (7.5, 0.0, -1.0, 2.25, 100.0):
+        assert off not in schema["properties"]["recommended"]["enum"]
+
+    # Each array POSITION is pinned to exactly one rung, so the ladder is covered
+    # once and only once. The earlier shape — one shared enum across three slots —
+    # left `[0.5, 1.5, 1.5]` representable and the model emitted it in 19 of 69
+    # held-out prompts, scoring WORSE than unconstrained. Measured, then fixed.
+    positions = schema["properties"]["options"]["prefixItems"]
+    assert [p["properties"]["size_pct"]["enum"] for p in positions] == [[v] for v in ladder]
+    assert schema["properties"]["options"]["minItems"] == len(ladder)
+    assert schema["properties"]["options"]["maxItems"] == len(ladder)
 
     # and there is no escape hatch: no extra key, no free-form size field
     assert schema["additionalProperties"] is False
-    assert schema["properties"]["options"]["items"]["additionalProperties"] is False
+    assert all(p["additionalProperties"] is False for p in positions)
 
 
 # ── the silent guillotine ─────────────────────────────────────────────────

@@ -80,8 +80,10 @@ def test_the_enum_is_exactly_the_sizes_the_instruction_prints():
         {float(x) for x in re.findall(r"\d+\.\d", printed.split("Do not invent")[0])}
     )
     assert printed_sizes == enum
-    # the per-option enum is the same set, not a second opinion
-    assert schema["properties"]["options"]["items"]["properties"]["size_pct"]["enum"] == enum
+    # each POSITION is pinned to one rung, so the set is covered exactly once
+    positions = [p["properties"]["size_pct"]["enum"]
+                 for p in schema["properties"]["options"]["prefixItems"]]
+    assert positions == [[v] for v in enum]
 
 
 def test_the_enum_uses_the_rounded_value_the_renderers_key_on():
@@ -121,7 +123,7 @@ def test_every_free_text_field_is_bounded_at_both_ends():
     with "" — which would pass every structural check while removing the only
     content the field exists to carry."""
     props = build_risk_officer_schema(_ladder())["properties"]
-    item = props["options"]["items"]["properties"]
+    item = props["options"]["prefixItems"][0]["properties"]
     for field, bound in (
         (item["case_for"], RISK_CASE_MAX_CHARS),
         (item["case_against"], RISK_CASE_MAX_CHARS),
@@ -197,12 +199,14 @@ def _worst_case_chars(schema: dict) -> int:
         if prop.get("type") == "string":
             total += prop.get("maxLength", 0)
         elif prop.get("type") == "array":
-            item = prop["items"]
-            per = sum(
-                len(k) + 8 + (v.get("maxLength", 24) if v.get("type") == "string" else 24)
-                for k, v in item["properties"].items()
-            )
-            total += per * prop["maxItems"]
+            # prefixItems: one schema per position, so sum them rather than
+            # multiplying a shared `items` by maxItems.
+            for item in prop.get("prefixItems") or [prop.get("items", {})]:
+                total += sum(
+                    len(k) + 8
+                    + (v.get("maxLength", 24) if v.get("type") == "string" else 24)
+                    for k, v in item.get("properties", {}).items()
+                )
         else:
             total += 24
     return total
@@ -243,6 +247,7 @@ AI capex remains intact and earnings momentum supports the multiple."""
 WAIT = """[STANCE: neutral | CONVICTION: low | HEADLINE: No setup yet]
 Instrument:     NVDA
 Side:           WAIT
+Size:           0.00% of portfolio
 Time horizon:   2 weeks
 Waiting for a pullback to the 50-day before committing capital."""
 

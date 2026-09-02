@@ -147,6 +147,21 @@ def build_risk_officer_schema(rows: list[LadderOption]) -> dict[str, Any]:
     sizes = sorted({round(r.size_pct, 1) for r in rows})
     text = {"type": "string", "minLength": 1, "maxLength": RISK_CASE_MAX_CHARS}
     number = {"type": "string", "minLength": 1, "maxLength": RISK_KEY_NUMBER_MAX_CHARS}
+
+    def _rung(size: float) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["size_pct", "case_for", "case_against", "key_number"],
+            "properties": {
+                # Pinned to ONE value, per position — see the prefixItems note.
+                "size_pct": {"type": "number", "enum": [size]},
+                "case_for": dict(text),
+                "case_against": dict(text),
+                "key_number": dict(number),
+            },
+        }
+
     return {
         "type": "object",
         "additionalProperties": False,
@@ -156,17 +171,28 @@ def build_risk_officer_schema(rows: list[LadderOption]) -> dict[str, Any]:
                 "type": "array",
                 "minItems": len(sizes),
                 "maxItems": len(sizes),
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "required": ["size_pct", "case_for", "case_against", "key_number"],
-                    "properties": {
-                        "size_pct": {"type": "number", "enum": sizes},
-                        "case_for": dict(text),
-                        "case_against": dict(text),
-                        "key_number": dict(number),
-                    },
-                },
+                # `prefixItems` — one position per rung, each pinned to a single
+                # size — rather than one shared `enum` across a 3-slot array.
+                #
+                # MEASURED, and it is the whole reason this is not the obvious
+                # shape. The shared-enum version was run over the 69 held-out S6
+                # prompts on 2026-08-27 and scored `one_per_size` **50/69 (72%)**
+                # against an UNCONSTRAINED baseline of **69/69 (100%)**: the
+                # grammar pinned the count and the vocabulary but nothing forbade
+                # repeating a value, and the model emitted `[0.5, 1.5, 1.5]` in 19
+                # of 69. Constraining the decoder had REMOVED an inductive bias
+                # the model already had and given nothing back — a grammar that
+                # made the surface worse.
+                #
+                # Per-position pinning makes one-entry-per-size structural rather
+                # than requested, which is what `build_risk_officer_instruction`'s
+                # "exactly one entry per size, for these sizes and no others" has
+                # been asking for in prose all along.
+                #
+                # `prefixItems` (draft 2020-12) verified working on this build.
+                # The draft-07 tuple form (`"items": [ … ]`) is NOT a fallback:
+                # it returns HTTP 500 "EngineCore encountered an issue".
+                "prefixItems": [_rung(s) for s in sizes],
             },
             "recommended": {"type": "number", "enum": sizes},
             "confidence": {"type": "string", "enum": list(RISK_CONFIDENCE_ENUM)},

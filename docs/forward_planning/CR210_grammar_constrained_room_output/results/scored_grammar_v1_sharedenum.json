@@ -1,0 +1,30 @@
+{
+  "arm": "ami-llm-grammar",
+  "surfaces": {
+    "S5": {
+      "n": 68,
+      "has_side": 68,
+      "side_legal": 68,
+      "has_stop": 44,
+      "rr_correct": 15,
+      "size_within_cap": 47,
+      "rr_correct_NA": 26
+    },
+    "S6": {
+      "n": 69,
+      "parses": 69,
+      "one_per_size": 50,
+      "no_invented_size": 69,
+      "recommended_on_ladder": 69,
+      "confidence_valid": 69
+    },
+    "S4": {
+      "n": 60,
+      "parses": 60,
+      "pure_json": 60,
+      "has_action": 60,
+      "has_narration": 60,
+      "approve_complete": 60
+    }
+  }
+}
