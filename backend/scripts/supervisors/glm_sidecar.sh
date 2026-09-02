@@ -34,6 +34,27 @@ PORT="${GLM_SIDECAR_PORT:-8001}"
 # to deliberately measure the voting effect, never for the head-to-head.
 SAMPLES="${PM_SELF_CONSISTENCY_SAMPLES:-1}"
 
+# Per-agent orchestration budget for the benchmark arm ONLY. Production stays at
+# 180s; this process gets its own because at 180s GLM does not finish.
+#
+# Measured 2026-09-01 on the first real convene (batch cr217-glm-1, killed): of
+# the first seven agent calls, FOUR hit exactly 180.0s with an empty response —
+# the guard firing, not a decision. The three that completed took 77.2s, 128.7s
+# and 156.5s and produced 1,354-2,983 output tokens against 2,197-3,782 input
+# tokens. The Room's real prompts are far larger than a synthetic probe's, GLM's
+# reasoning scales with them, and the four analysts run CONCURRENTLY — which is
+# the regime the concurrency measurement already flagged as pushing past 180s.
+#
+# Raising this does NOT make GLM viable in production; it makes the arm
+# MEASURABLE. Those two questions are separate and both get reported: "what does
+# GLM decide" needs a budget it can finish in, "can GLM serve the Room" is
+# already answered by the 180s result above, and it is no.
+#
+# The transport budget follows automatically (DEF394 derives it from this at
+# construction) and DEF392's boot validator refuses an inverted pair, so there is
+# no second knob to keep in sync. Settings caps this at 900.
+AGENT_TIMEOUT="${ROOM_AGENT_TIMEOUT_S:-900}"
+
 # In-container path. /tmp is per-container and wiped on recreate, which is the
 # right lifetime: a PID from a previous container is never valid here.
 PIDFILE="/tmp/glm_sidecar_${PORT}.pid"
@@ -52,10 +73,11 @@ case "$1" in
     docker exec -d \
       -e LLM_FORCE_PROVIDER=glm \
       -e PM_SELF_CONSISTENCY_SAMPLES="$SAMPLES" \
+      -e ROOM_AGENT_TIMEOUT_S="$AGENT_TIMEOUT" \
       "$CONTAINER" \
       sh -c "echo \$\$ > $PIDFILE; exec uvicorn app.main:app \
              --host 127.0.0.1 --port $PORT --log-level warning"
-    echo "started (provider=glm, pm_samples=$SAMPLES); waiting for health…"
+    echo "started (provider=glm, pm_samples=$SAMPLES, agent_timeout=${AGENT_TIMEOUT}s); waiting for health…"
     for _ in $(seq 1 30); do
       if docker exec "$CONTAINER" curl -sf "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1; then
         echo "healthy on :$PORT"
