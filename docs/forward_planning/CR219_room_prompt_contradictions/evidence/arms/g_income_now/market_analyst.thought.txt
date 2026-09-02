@@ -1,0 +1,28 @@
+**Technical Analysis Process for CAT (Caterpillar Inc.)**
+
+Okay, here's the deal. I need to give this CAT analysis a once-over using *only* the data I've been given. The goal is to provide a stance line, a thesis, a few bullets, and then point out what I'm missing and any conflicts in the instructions.
+
+First, I need to understand the data. The price is at **$779.16**. RSI is showing **28**, which screams oversold. The trend is down, no surprise there. Looking at the range, the price is practically at the bottom of the 50-day range of **$774.55–$1071.47**, right at the 2% mark. Moving averages tell the story: the price is below the 20-day SMA at **$831.90** and the 50-day SMA at **$884.64** but above the 200-day SMA at **$768.45**. Over the last 64 days, the trend has been a clear downtrend of **14.2%**. Volume is in line with the average. Interestingly, relative strength is impressive, up **91.7%** vs the S&P 500's **19.8%** over the past year. Looks like a mean reversion/pullback to major support (the 200-day SMA). Beta is **1.6**, and short interest is **1.57%**.
+
+So, how do I put this all together? The time frame is daily/quarterly, emphasizing the quarterly trend like the instructions said. This looks like a mean reversion/support test situation. The price is oversold, testing major long-term support after a sharp pullback. Key levels: 50-day range is **$774.55–$1071.47**. The close is near the bottom. Support is at the 200-day SMA at **$768.45**. Confirmation would be a hold of the 200-day SMA and clearing the 20-day SMA at **$831.90**. Invalidation is breaking below the 200-day SMA and the 50-day low at **$774.55**.
+
+What's my stance? Well, oversold at major support is classic, but the trend is down. I'll go with "neutral" or a cautious "for" (mean reversion). I'll lean neutral, since it’s catching a falling knife unless the support at the 200-day holds. I'll frame it as neutral pending a bounce off the 200-day.
+
+Now, let's put it into the format the way they want it:
+
+*   **[STANCE: neutral | CONVICTION: medium | HEADLINE: Oversold at 200-day support]**
+*   Daily and quarterly timeframe analysis shows a mean reversion setup, with the price deeply oversold and testing major primary support after a steep pullback.
+*   The last close at **$779.16** sits in the bottom **2%** of the 50-day range (**$774.55–$1071.47**), pushing RSI to an oversold **28** within a distinct short-term downtrend (down **14.2%** over 64 days).
+*   Despite the recent weakness, price remains **1.4%** above the primary 200-day moving average of **$768.45**, preserving the broader uptrend that drove a +**91.7%** 52-week relative return vs the S&P 500.
+*   Holding the **$768.45** level and clearing the 20-day SMA (**$831.90**) confirms the mean reversion; a breakdown below the 50-day low (**$774.55**) invalidates the setup.
+
+Next, I need to highlight what's missing and any contradictions.
+
+**DATA I LACKED:**
+
+*   (a) Support/Resistance levels below the 200-day SMA or 52-week low/high volume nodes.
+*   (b) A deeper volume profile is needed to specify a potential next support if the 200-day SMA breaks.
+*   (c) (absent)
+*   (a) Intraday price action/candlestick patterns on the daily chart.
+*   (b) I could confirm if
+

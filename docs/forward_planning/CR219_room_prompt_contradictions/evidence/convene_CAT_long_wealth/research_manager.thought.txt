@@ -1,0 +1,25 @@
+**[STANCE: against | CONVICTION: high | HEADLINE: 1.4% FCF yield unfit for long]**
+
+Alright, let's break this down. As the Research Manager, I need to make a call on Caterpillar Inc. (CAT), and the mandate is clear: long-term wealth accumulation (3-10 years), moderate risk, and a LONG-ONLY approach. Given the provided data and analyst viewpoints, I'm leaning *against* CAT right now. My reasoning is rooted in the mandate's focus on long-term wealth preservation. Buying a cyclical industrial at its current valuation just doesn't fit the bill.
+
+Here's my rationale:
+
+*   **Points of agreement:** Both sides recognize the immediate technical pivot at the **$768.45** 200-day moving average, with the stock heavily oversold (RSI **28**) but carrying a heavily levered balance sheet (**$39.2B** net debt).
+*   **Points of dispute:** The Bull sees the **$10.1B** capital return as an accretive bridge targeting the **$975.61** consensus, while the Bear correctly identifies a **24.5x** EV/EBITDA multiple as a dangerous cyclical peak vulnerable to severe multiple contraction.
+*   **Recommended stance:** Pass. A long-horizon (3–10 years) mandate seeking wealth preservation cannot justify buying a heavy machinery cyclical trading at **34.4x** trailing earnings with a severely compressed **1.4%** FCF yield.
+*   **Sizing implication:** Allocate **0%**; wait for the FOMC decision in **14 days** and Q4 earnings in **57 days** to potentially reset multiples closer to historical norms before risking any portion of the **3.0%** single-name cap.
+
+***
+
+`DATA I LACKED:`
+
+*   (a) Historical 10-year P/E and EV/EBITDA ranges for CAT.
+*   (b) If I had proof that 24.5x EV/EBITDA is indeed the 99th percentile for CAT's valuation over a full business cycle, it would upgrade my conviction to 'maximum' to pass.
+*   (c) ABSENT.
+*   (a) Revenue segmentation (Agriculture vs. Construction/Mining).
+*   (b) I would have used this to adjudicate the Bull's reliance on the Deere/AGCO agricultural macro read-through.
+*   (c) ABSENT.
+
+`PROMPT CONTRADICTIONS: none`
+
+

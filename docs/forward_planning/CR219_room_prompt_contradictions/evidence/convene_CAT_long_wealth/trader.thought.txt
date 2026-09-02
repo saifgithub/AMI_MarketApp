@@ -1,0 +1,33 @@
+**Execution Desk Plan for CAT (Caterpillar Inc.)**
+
+Okay, here's the game plan for CAT. My primary objective is to craft an execution strategy based on the information I've been given, following a specific structure and meeting the criteria. The Research Manager is strongly against the stock, citing a low FCF yield and high valuation, which is a major factor I need to consider, especially given the long-term wealth preservation mandate.
+
+I need to analyze the current stock data – price, RSI, and the 200-day MA. The mandate is long-term, with a risk score of 3/5, a max portfolio drawdown of 30%, and a position size of 3%. The task is clear: define the side (BUY, HOLD, WAIT), size, entry, target, stop, time horizon, and R:R. The RM clearly says to allocate 0%.
+
+Given the negative recommendation and the long-only constraint, "WAIT" is the most logical choice. It's a risk management decision to sit this one out. The Research Manager recommends allocating 0%. The current price is $779.16, and the 200-day MA is $768.45, so if I must provide a stop I can hypothetically look at that level. I could technically present a conditional entry/exit plan, but the 0% allocation negates that, and I have to fill in all the values. Since I must provide a stop-loss, I'm going to note this. But since it's a 0% position, the stop is meaningless.
+
+The final output is:
+Instrument: CAT
+Side: WAIT
+Size: 0% of portfolio
+Entry: N/A (Current price: $779.16)
+Target: N/A
+Stop: N/A (0% position size)
+Time horizon: 57 days
+R:R: N/A
+
+I'm taking a **WAIT** stance to align with the RM's warning, the stretched valuation, and the mandate's wealth preservation objective. The rationale highlights the unsustainable FCF yield. Capital preservation is key.
+
+**Evaluation - Data Lacked**
+
+*   (a) I did lack specific historical entry triggers for CAT.
+*   (b) Without that historical data, I would normally use limit orders, scaling-in.
+*   (c) ABSENT.
+
+**Evaluation - Liquidity**
+
+*   (a) Absent data is order book depth at the 200-day moving average.
+*   (b) If I had that data, I would have warned that a breakdown could gap.
+*   (c) ABSENT.
+
+

@@ -1,0 +1,20 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: Typical bullish baseline]
+
+Retail positioning shows moderate optimism without the euphoric extremes required for a contrarian reversion signal.
+
+- Aggregate sentiment is currently **moderately bullish**, aligning with baseline retail participation.
+- Mention intensity is flagged as **typical**, indicating no immediate crowd momentum or panic around the **$779.16** reference price.
+- The absence of a lopsided bullish/bearish split removes any immediate contrarian catalyst to fade.
+
+DATA I LACKED:
+- (a) Exact bullish/bearish split ratios, raw mention counts, and buzz scores. 
+  (b) If I had a heavily lopsided ratio (e.g., >85% bullish on massive volume), my stance would have shifted to 'against' as a contrarian fade. 
+  (c) WITHHELD (The data block explicitly stated these were alpha simulation scaffolding and omitted raw numbers).
+- (a) Institutional flow, dark pool metrics, or options positioning.
+  (b) If I had institutional flow data, I would have cross-referenced retail sentiment against smart-money positioning to gauge trap potential.
+  (c) FORBIDDEN (My inputs are strictly defined as "Reddit-only aggregate sentiment").
+
+PROMPT CONTRADICTIONS:
+- Prompt constraint: "You have no historical baseline for this ticker (the cache keeps one row and overwrites it), so do not say sentiment is 'elevated' or 'extreme' *relative to normal*"
+- Fact sheet data: "Retail sentiment: moderately bullish (typical intensity (illustrative))"
+- Resolution: I obeyed the fact sheet. I described the sentiment intensity as "typical" because the injected data explicitly provided that baseline characterization, overriding the general instruction that I lack a baseline.

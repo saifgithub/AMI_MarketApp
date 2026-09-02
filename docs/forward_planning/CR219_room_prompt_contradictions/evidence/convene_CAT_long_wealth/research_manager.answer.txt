@@ -1,0 +1,19 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 1.4% FCF yield unfit for long]
+While both analysts acknowledge Caterpillar's exceptional trailing margins and its critical technical test at the 200-day moving average, the extreme cyclical valuation and unsustainable cash payout profile make it an inappropriate long-term wealth accumulation vehicle for this mandate.
+
+* **Points of agreement:** Both sides recognize the immediate technical pivot at the **$768.45** 200-day moving average, with the stock heavily oversold (RSI **28**) but carrying a highly levered balance sheet with **$39.2B** in net debt.
+* **Points of dispute:** The Bull views the **$10.1B** capital return as an accretive bridge targeting the **$975.61** consensus target (**+25.2%** upside), while the Bear correctly identifies a **24.5x** EV/EBITDA multiple as a dangerous cyclical peak vulnerable to severe multiple contraction.
+* **Recommended stance:** Pass. A long-horizon (**3–10 years**) mandate seeking steady wealth preservation cannot justify buying a heavy machinery cyclical trading at **34.4x** trailing earnings with a severely compressed **1.4%** FCF yield that fails to cover its payout.
+* **Sizing implication:** Allocate **0%**; wait for the FOMC decision in **14** days and Q4 earnings in **57** days to potentially reset multiples closer to historical norms before risking any portion of the **3.0%** single-name cap.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) Historical 10-year median valuation multiples (P/E, EV/EBITDA) for Caterpillar.
+  (b) If I had quantifiable proof that the current **24.5x** EV/EBITDA is indeed the 95th+ percentile for CAT's valuation over a full business cycle, it would have mathematically cemented my conviction that this is a cyclical top rather than a structural re-rating.
+  (c) ABSENT.
+* (a) Caterpillar's revenue segmentation breakdown by end-market (Agriculture vs. Construction vs. Mining).
+  (b) I would have used this to definitively adjudicate the Bull's reliance on the Deere/AGCO agricultural macro read-through. If agriculture is only a minor fraction of CAT's top line, I would have dismissed the Bull's catalyst entirely.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none.

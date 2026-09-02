@@ -1,0 +1,20 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day SMA support]
+
+The daily chart presents a mean reversion setup as severe near-term selling drives the stock directly into a critical long-term support level.
+
+* Price sits at **$779.16**, resting in the bottom **2%** of its 50-day range (**$774.55**–**$1071.47**) and hovering just **1.4%** above the primary trend 200-day moving average at **$768.45**.
+* Short-term momentum is heavily stretched to the downside, with RSI deeply oversold at **28** and the last close **11.9%** below the 50-day SMA (**$884.64**).
+* Confirmation of support requires a definitive bounce off the **$768.45** level; a daily close below this 200-day average invalidates the mean reversion setup and signals a breakdown of the primary trend.
+
+DATA I LACKED:
+* (a) Volume-by-price or volume profile nodes near the 200-day SMA.
+* (b) If I knew a massive volume shelf existed at $768, I would have upgraded my stance to 'for' as a high-probability bounce setup rather than remaining 'neutral' awaiting confirmation.
+* (c) ABSENT.
+* (a) MACD and moving-average crossover signals.
+* (b) I would have used them to identify if downside momentum is accelerating or beginning to decelerate before the bounce. 
+* (c) FORBIDDEN.
+
+PROMPT CONTRADICTIONS:
+* Quote 1: `"Primary goal: long_term_wealth"` AND `"Path: long_horizon"`
+* Quote 2: `"Horizon: short (<1 year)"`
+* I obeyed the `"Horizon: short (<1 year)"` instruction, as technical analysis on daily charts (50-day, 200-day levels) naturally aligns with swing trading and short-to-medium-term horizons, regardless of the overarching "long_horizon" path label.

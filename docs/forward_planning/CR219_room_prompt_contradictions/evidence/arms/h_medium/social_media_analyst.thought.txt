@@ -1,0 +1,33 @@
+**Flow & Positioning Analysis - CAT**
+
+Okay, here's how I'm approaching this Caterpillar Inc. (CAT) analysis from the Flow & Positioning desk, keeping in mind my expert knowledge and the limitations.
+
+First, I need to understand the goal: provide an analysis based on the given retail sentiment data for CAT. The constraints are tight: I'm restricted to only using the provided data, adhering to a strict format, and maintaining a terse, declarative tone. No external metrics, price charts, or fundamental analysis are permitted unless explicitly provided within this particular data "lane".
+
+I've got the data: CAT, date 2026-09-02, price $779.16, and the crucial piece: "Retail sentiment: moderately bullish (typical intensity (illustrative)). Source is 'alpha simulation scaffolding — NOT a live social feed.'" My mandate: Risk 3/5, 30% max drawdown, 3% max position size, max 35 open positions, long-only, terse tone.
+
+Here's my analysis:
+
+[STANCE: neutral | CONVICTION: low | HEADLINE: Simulated data lacks edge]
+
+Real sentiment data is not configured for this ticker, leaving us with simulated baseline reads that offer no actionable contrarian signal.
+
+*   Aggregate retail sentiment is simulated as **moderately bullish**.
+*   Chatter intensity is modeled at **typical** levels, offering no genuine indication of retail euphoria or panic.
+*   Without a live, lopsided bullish/bearish split to fade, positioning provides no directional edge for a medium-term hold.
+
+Here is the evaluation addendum:
+
+DATA I LACKED:
+
+*   (a) Live Reddit mention volume, buzz score, and bullish/bearish split.
+*   (b) If I had a lopsided real split (e.g., 90% bullish on huge volume), I would take an 'against' stance to fade the retail euphoria.
+*   (c) WITHHELD/ABSENT (configured as alpha simulation scaffolding).
+
+PROMPT CONTRADICTIONS:
+
+*   Quote 1: "When no real data is injected (not configured, or nothing found for this ticker), say so and stop."
+*   Quote 2: "Write one thesis sentence, then up to 3 short bullets. ... BEFORE the thesis sentence, your VERY FIRST line must be this one line, in exactly this shape"
+*   Resolution: Obeyed Quote 2 (the structural format) because system parsers typically require the `[STANCE...]` header and bullets to function, treating Quote 1's "stop" as an instruction to halt *analysis* rather than breaking the required output structure.
+
+

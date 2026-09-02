@@ -1,0 +1,35 @@
+**Technical Strategy Formulation: CAT Analysis**
+
+Okay, here's my thought process on this CAT analysis. First, I need to understand the constraints and the goal. The mandate is clear: short-term horizon, long-term wealth, risk score 3/5, long-only, 3% max position, and terse. I am a technical strategist, so it's all about interpreting the indicators and price action provided. I need to make sure I *only* use the numbers given; no inventing data, no forbidden indicators.
+
+Let's dive into the CAT data. The reference price is $779.16. RSI is oversold at 28, and the trend is clearly down. The price is currently near the very bottom of the 50-day range ($774.55 - $1071.47). The stock is well below its 20 and 50-day SMAs. The window trend over 64 days is down 14.2%, and the day's move is down 2.3% pre-market. However, here's the crucial point: the 200-day average is at $768.45, and the price is just 1.4% above that – a critical support level. The 52-week relative strength is strong, +91.7% vs SPX at +19.8%, so it has been outperforming.
+
+So, the setup looks like a mean reversion play, a test of major support. My stance is neutral *for now*, leaning towards "wait and see." The price is crashing into the 200-day SMA, and RSI is oversold, but I need confirmation. I need to see if it bounces off the $768.45 level or breaks down. My conviction is medium because I am at a key inflection point.
+
+Here's my draft response:
+
+`[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day SMA support]`
+
+Thesis: The daily chart presents a mean reversion setup as sharp near-term selling drives the price into a critical long-term support level.
+
+Bullets:
+
+*   Price sits at **$779.16**, perched just **1.4%** above the 200-day moving average of **$768.45**, while resting in the bottom **2%** of its 50-day range (**$774.55**–**$1071.47**).
+*   Short-term momentum is stretched to the downside with RSI at an oversold **28** and the stock trading **11.9%** below its 50-day SMA.
+*   Confirmation requires a daily close bouncing off the **$768.45** level on elevated volume; a breakdown below this line invalidates the primary long-term trend.
+
+Now, the evaluation.
+
+`DATA I LACKED:`
+
+*   Volume profile at specific price nodes (e.g., VWAP or volume-by-price near the 200-day SMA). (Would change conviction if significant volume shelf existed at $768). Absent.
+*   MACD or moving average crossover signals. (Would add momentum context). Forbidden.
+
+`PROMPT CONTRADICTIONS:`
+
+*   "Horizon: short (<1 year)" vs "Path: long_horizon". I am using the shorter horizon in my technical approach. The technicals are relevant to the shorter timeline.
+*   "Primary goal: long_term_wealth" vs "Horizon: short (<1 year)". I am using the shorter horizon in my technical approach. The technicals are relevant to the shorter timeline.
+
+I've ensured I stuck to the format, the tone, and used only the given data. No intraday signals, no forbidden indicators. The thesis is punchy, and the `DATA I LACKED` and `PROMPT CONTRADICTIONS` sections are precise. I'm ready to submit.
+
+

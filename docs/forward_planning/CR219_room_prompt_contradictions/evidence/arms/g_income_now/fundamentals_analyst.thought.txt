@@ -1,0 +1,29 @@
+**Caterpillar (CAT) Analysis**
+
+Okay, here's the deal. I'm looking at CAT with an income-focused mandate.
+
+1.  **Stance and Conviction:** [STANCE: against | CONVICTION: medium | HEADLINE: Capital return exceeds FCF 2x]
+
+2.  Caterpillar delivers strong top-line revenue and operating margins, but its sub-1% dividend yield and cash outlays at twice its generated free cash flow contradict an income-focused mandate.
+
+3.  *   The trailing dividend yield provides only **0.82%** (indicated annual rate **$6.52**), and while the earnings payout ratio is conservative at **26%**, the **1.4%** FCF yield strictly limits organic income generation.
+
+4.  *   Capital returns outpace cash generation, with **$10,114M** distributed over the trailing four quarters representing **200%** of the **$5,049M** TTM FCF; this is driven heavily by **$7,302M** in share repurchases, inflating ROE to **57%** alongside a debt-to-equity ratio of **2.33x** and **$39,201M** in net debt.
+
+5.  *   Valuation multiples sit high for a heavy machinery asset, pricing the equity at a trailing P/E of **34.4** (forward consensus **24.1**) and EV/EBITDA of **24.5x**, despite robust TTM revenue of **$74,729M** growing at **24%** with a **22%** operating margin.
+
+**DATA I LACKED:**
+*   (a) Debt maturity schedule. (b) It would tell me if the $39.2B net debt is an immediate liquidity risk or locked in long-term. (c) ABSENT.
+*   (a) History of dividend growth (CAGR). (b) It would tell me if the 0.82% yield is rapidly compounding to fit a long-horizon income goal despite the low starting point. (c) WITHHELD (prompt explicitly stated no history).
+
+**PROMPT CONTRADICTIONS:**
+
+*   Quote 1: "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing" AND "There is still no margin *trend* on the sheet — quote the levels, never a direction"
+*   Quote 2: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps"
+*   Resolution: I obeyed the negative constraint forbidding the description of margin trends ("never describe a margin as rising..."). I omitted the YoY bps entirely to avoid violating the strict stylistic instruction, despite the data sheet explicitly providing it.
+
+*   Quote 3: "Buybacks and M&A history are **not available** — never claim a number for either"
+*   Quote 4: "Buybacks (LIVE): $7,302M repurchased (trailing 4 quarters), 2.0% of market cap"
+*   Resolution: I obeyed the fact sheet provision ("The sheet itself states what it holds for this run... that statement wins over this list") and used the **$7,302M** buyback figure, ignoring the general instruction that buybacks are not available.
+
+

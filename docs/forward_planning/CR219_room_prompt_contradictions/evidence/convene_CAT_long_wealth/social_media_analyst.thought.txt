@@ -1,0 +1,32 @@
+**Caterpillar Inc. (CAT) Analysis - Flow & Positioning Desk Perspective**
+
+Okay, here's the breakdown. My objective is to analyze Caterpillar (CAT) from a flow and positioning angle, using the provided simulated data. My mandate is long-only, 3% max position, 3-10 year horizon, with a terse, detached tone, and focusing solely on retail sentiment. I need to synthesize, not quote, and avoid referencing external data or other analysts.
+
+First, I see the **reference price is $779.16**. My task is to assess crowd mood and retail positioning, given the data at hand. The prompt outlines I'm working with an "alpha simulation scaffolding," not a live social feed, which is important to remember.
+
+Based on this input, I'm going to formulate a stance. The data says retail sentiment is **moderately bullish** with **typical intensity**. This points me towards a neutral stance, due to the lack of extremes. My conviction is low, as the data is limited to a baseline sentiment reading.
+
+Here's my analysis:
+[STANCE: neutral | CONVICTION: low | HEADLINE: Typical bullish baseline]
+Retail positioning shows moderate optimism without the euphoric extremes required for a contrarian reversion signal.
+- Aggregate sentiment is currently **moderately bullish**, aligning with baseline retail participation.
+- Mention intensity is flagged as **typical**, indicating no immediate crowd momentum or panic around the **$779.16** reference price.
+- The absence of a lopsided bullish/bearish split removes any immediate contrarian catalyst to fade.
+
+Now, let's address the information I'm missing:
+
+`DATA I LACKED:`
+*   I'm missing volume metrics (raw counts, changes, buzz scores, bull/bear split ratios).
+*   If data was lopsided and high volume (e.g., 90% bullish on high volume) it would shift me to a 'fade' stance.
+*   I don't have Options flow or institutional positioning data.
+*   I can't balance the retail sentiment against smart money positioning, but was explicitly not permitted to access this.
+
+`PROMPT CONTRADICTIONS:`
+*   There's tension between "Use specific numbers wherever possible" vs. "never present a specific number... as if it were measured from a real source unless it was actually injected." I adhered to the latter, since I was not given any numbers beyond the "moderately bullish" description.
+*   Another contradiction is that I'm told "You have no historical baseline for this ticker... do not say sentiment is 'elevated' or 'extreme' *relative to normal*." However, the data *explicitly* labels the intensity as "typical." I used the word "typical" because it was provided in the data.
+*   The fact sheet contradicts the instructions on baseline:
+    *   Prompt says: "You have no historical baseline for this ticker (the cache keeps one row and overwrites it), so do not say sentiment is "elevated" or "extreme" relative to normal"
+    *   Fact sheet says: "Retail sentiment: moderately bullish (typical intensity (illustrative))"
+    *   Action: I obeyed the fact sheet and used the word "typical" because it was explicitly provided in the data block.
+
+

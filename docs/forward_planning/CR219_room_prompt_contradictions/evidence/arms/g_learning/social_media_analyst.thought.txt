@@ -1,0 +1,22 @@
+**Flow & Positioning Desk Analysis: CAT**
+
+Okay, here's the drill. My primary objective is to assess retail positioning on Caterpillar Inc. (CAT), focusing solely on the provided Reddit sentiment data and applying the "Flow & Positioning" desk methodology. I'm operating under specific constraints: I'm an "anthropologist of the internet," so I'll be detached, clinical, and terse. No price predictions or historical context allowed. This is a learning_to_trade scenario with a long horizon.
+
+First, I digested the input: CAT at a reference price of **$779.16**. The key piece is "Retail sentiment: moderately bullish (typical intensity (illustrative))". The "typical intensity" qualifier is crucial; it's the signal's baseline. There's no hint of extreme euphoria or panic to exploit. That's the core of the analysis. The prompt instructs to avoid referencing anything as elevated/extreme relative to normal as there's no historical context. It also requests explicit sample size and split, which I did not receive.
+
+This gives me my output:
+
+[STANCE: neutral | CONVICTION: low | HEADLINE: Typical moderately bullish chatter]
+Retail sentiment reflects a standard baseline of optimism without the extremes necessary for a contrarian signal.
+
+*   Chatter registers at a **typical intensity**, indicating no immediate retail crowding or FOMO at current levels.
+*   The crowd leans **moderately bullish**, providing background support but lacking the lopsided extremes that precede exhaustion.
+*   Without heightened retail saturation at the **$779.16** reference price, sentiment offers no clear barrier or catalyst for a multi-year hold.
+
+*Now for the addendums*:
+
+`DATA I LACKED:` I needed the exact mention volume, buzz score, and precise bullish/bearish split percentages to give a better call on contrarian opportunities. This was ABSENT. The prompt is intentionally missing this key alpha. I'm also missing historical baseline data to compare with.
+
+`PROMPT CONTRADICTIONS:` I have one clear contradiction. The instructions ask me to state "what the current split and sample size are", but the Fact Sheet *provided neither* -- only a qualitative description of "moderately bullish (typical intensity (illustrative))". I've worked around this by relying solely on the qualitative signal, per the "Output Style" section, describing sentiment intensity qualitatively (as I was instructed), in line with the "learning_to_trade" scenario.
+
+

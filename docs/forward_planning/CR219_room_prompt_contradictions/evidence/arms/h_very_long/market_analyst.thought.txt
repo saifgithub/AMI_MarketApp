@@ -1,0 +1,28 @@
+**Technical Analysis Process: CAT**
+
+Okay, here's the game plan. The user, an expert, wants a technical analysis of Caterpillar Inc. (CAT). I need to be a technical strategist, sticking to the data provided, using only specified numbers, and avoiding any fundamental or macro-economic analysis. No guessing missing data, strict adherence to the output format, and a monotone delivery.
+
+First, I need to understand the constraints. The goal is to provide a concise technical view. I'll need to analyze the data provided: the ticker is CAT, the current price is $779.16, and the RSI is oversold at 28. The trend is down. The 50-day range is $774.55 to $1071.47, with the current price at 2% of the range. The simple moving averages (SMAs) are: 20-day at $831.9, 50-day at $884.64, and 200-day at $768.45. The price is down -6.3% versus the 20-day SMA, -11.9% versus the 50-day SMA, and +1.4% versus the 200-day SMA. The window trend is down 14.2% over 64 trading days. Volume is 0.91x the 20-day average, with live volume at 2.94M compared to a 3-month average of 3.19M. The day's pre-market move is -2.30%. The 52-week relative strength is +91.7% versus the S&P's +19.8%, and the 52-week range is $410.52 to $1073.46. The user has given a long-term, long-only mandate with a 30% max drawdown and a risk rating of 3/5.
+
+Based on this, I'll formulate my technical view. The setup is mean reversion or a test of support. The timeframe is daily and quarterly to emphasize the long-term trend, which matches the mandate. The context is strong 52-week outperformance, followed by a sharp quarterly pullback. Levels to focus on are the 200-day SMA ($768.45), current price ($779.16, 1.4% above), the 50-day low ($774.55), and the oversold RSI of 28. Confirmation would be a bounce off the 200-day SMA on increasing volume, and invalidation would be a breakdown below $768.45 and $774.55.
+
+My stance needs to be neutral because the price is testing a major support level, but falling momentum calls for confirmation. With the long-only and 30% max drawdown constraints, I must be careful about buying before the bounce is confirmed. Now I will formulate a response in the correct format. I'll need a header, thesis, and concise bullets using specific numbers, sticking to a monotone style.
+
+Here's the response I'll draft:
+
+`[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day SMA support]`
+
+The daily and quarterly timeframes indicate a mean reversion setup as the price approaches long-term moving average support following a sharp 64-day pullback.
+
+*   The last close at **$779.16** sits in the bottom **2%** of the 50-day range (**$774.55**–**$1071.47**), driving the RSI to an oversold reading of **28**.
+*   Despite trailing the 50-day average by **-11.9%** and dropping **14.2%** over the last 64 trading days, the price remains **1.4%** above the primary 200-day trendline at **$768.45**.
+*   A defense of the **$768.45** to **$774.55** zone would confirm the mean reversion setup, while a close below the 200-day average invalidates it.
+
+I've made sure to adhere to all persona constraints: terse, declarative, and monotone. I've avoided any mention of intraday analysis, and I've only used the numbers specified. I've used the data about the 64-day pullback.
+
+Now I need to add the evaluation addendum.
+
+`DATA I LACKED:`
+
+(
+

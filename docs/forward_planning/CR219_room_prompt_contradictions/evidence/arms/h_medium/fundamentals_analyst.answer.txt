@@ -1,0 +1,21 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: 24% revenue growth & +434bp net]
+Strong fundamental momentum through double-digit top-line growth and wide profitability metrics supports taking a position despite elevated valuation multiples.
+
+- Revenue reached **$74.7B** over the trailing twelve months, marking a robust growth rate of **24%**.
+- Profitability sits at a **30%** gross margin, **22%** operating margin, and **15%** net margin, reflecting positive year-over-year differences of **+327bps**, **+365bps**, and **+434bps** respectively.
+- Valuation multiples run high at a trailing P/E of **34.4x** and EV/EBITDA of **24.5x**, while the consensus forward P/E estimate sits at **24.1x** alongside analyst price targets spanning a wide **$575.00–$1225.00** range.
+- Capital return relies on balance sheet leverage; trailing shareholder returns totaled **$10.1B** (including **$7.3B** in buybacks), representing **200%** of the **$5.0B** TTM free cash flow against a **$39.2B** net debt position.
+
+DATA I LACKED:
+- (a) Earnings surprise history and consensus estimate revisions.
+- (b) I would have increased my conviction level if I could verify that fundamental momentum was supported by a history of beats and upward revisions, as requested by the user mandate.
+- (c) ABSENT.
+
+- (a) Company guidance for future quarters.
+- (b) I would have used it to validate the forward P/E consensus and assess the sustainability of the 24% trailing revenue growth.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+The prompt instructions state: "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing". 
+However, the data sheet explicitly provided a trend line: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps". 
+I obeyed both by quoting the factual basis-point differences provided in the data sheet but deliberately avoiding the forbidden descriptive verbs (rising, falling, expanding, compressing) in my prose.

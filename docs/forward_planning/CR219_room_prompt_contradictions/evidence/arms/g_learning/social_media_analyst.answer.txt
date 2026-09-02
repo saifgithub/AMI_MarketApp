@@ -1,0 +1,14 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: Typical moderately bullish chatter]
+
+Retail sentiment reflects a standard baseline of optimism without the extremes necessary for a contrarian signal.
+
+- Chatter registers at a **typical intensity**, indicating no immediate retail crowding or FOMO at current levels.
+- The crowd leans **moderately bullish**, providing background support but lacking the lopsided extremes that precede structural exhaustion.
+- Without heightened retail saturation at the **$779.16** reference price, positioning offers neither a contrarian barrier nor a forced-buying catalyst for a multi-year hold.
+
+DATA I LACKED:
+- Exact bullish/bearish split percentages and raw mention volume counts. If I had precise ratios showing extreme lopsidedness (e.g., >85% bullish), I would have shifted to an 'against/wait' stance based on contrarian reversion. This was ABSENT (replaced by alpha simulation scaffolding).
+- Sentiment sample size. If I knew the mention volume was too thin to be statistically relevant, I would have flagged the data as noise. This was ABSENT.
+
+PROMPT CONTRADICTIONS:
+- The instructions command: "say what the current split and sample size are, and what that supports" BUT the provided fact sheet contained neither a numerical split nor a sample size, supplying only the qualitative string "moderately bullish (typical intensity (illustrative))". I obeyed the fact sheet and the competing instruction to "reason qualitatively" when no real data is injected, omitting the missing split and sample size.

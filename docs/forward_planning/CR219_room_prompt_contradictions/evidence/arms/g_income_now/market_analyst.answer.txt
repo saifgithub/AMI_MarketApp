@@ -1,0 +1,19 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Oversold testing 200-day support]
+Daily and quarterly timeframe analysis shows a mean reversion setup, with the price deeply oversold and testing major primary support after a steep pullback.
+
+* The last close at **$779.16** sits in the bottom **2%** of the 50-day range (**$774.55–$1071.47**), pushing RSI to an oversold **28** within a distinct short-term downtrend (down **14.2%** over 64 days).
+* Despite recent weakness, the price remains **1.4%** above the 200-day moving average of **$768.45**, preserving the broader long-term trend that drove a +**91.7%** 52-week relative outperformance versus the S&P 500.
+* Holding the **$768.45** level and reclaiming the 20-day SMA (**$831.90**) confirms the mean reversion setup; a breakdown below the 50-day low (**$774.55**) invalidates it.
+
+DATA I LACKED:
+* (a) Next historic support levels below the 200-day moving average.
+* (b) If I had them, I could specify the next downside price floor if the $768.45 support fails.
+* (c) ABSENT from the provided data fields.
+* (a) Daily candlestick shapes or sequences (e.g., doji, hammer) near the 200-day SMA.
+* (b) If I had them, I could assess the immediate buying pressure and shift my conviction from medium to high if a reversal pattern was present.
+* (c) WITHHELD / FORBIDDEN ("You do not receive the bars themselves... any claim that needs a series... is not one this data can support").
+
+PROMPT CONTRADICTIONS:
+* Quote 1: "USER MANDATE... Total open-risk cap: 10.5% — the sum of (position size % × stop distance %)/100 across all open positions" and "Single-name position-size cap: 3.0%"
+* Quote 2: "You DO NOT... Recommend final position sizing. That's the Execution Desk."
+* Resolution: I obeyed Quote 2 and completely ignored the user mandate limits regarding position sizing and stop distance budgets, as they explicitly belong to another agent's domain.

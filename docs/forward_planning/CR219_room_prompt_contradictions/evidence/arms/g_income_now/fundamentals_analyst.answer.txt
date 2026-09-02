@@ -1,0 +1,25 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: Capital return outpaces FCF 2x]
+Caterpillar delivers strong top-line growth and operating efficiency, but its sub-1% dividend yield and aggressive, debt-reliant share repurchases make it a poor fit for a primary income mandate.
+
+* The trailing dividend yield provides only **0.82%** (indicated annual rate **$6.52**), and while the payout ratio is conservative at **26%** of earnings, a weak **1.4%** FCF yield limits organic income expansion.
+* Capital returns exceed generated cash, with **$10,114M** distributed over the trailing four quarters representing **200%** of the **$5,049M** TTM FCF; this outlay is driven primarily by **$7,302M** in buybacks rather than dividends.
+* The balance sheet carries high leverage to support these payouts, showing a debt-to-equity ratio of **2.33x** and **$39,201M** in net debt against a quick ratio of **0.78**.
+* The equity trades at a steep premium for an industrial, pricing at a trailing P/E of **34.4** (forward consensus **24.1**) and an EV/EBITDA of **24.5x**, despite generating robust TTM revenue of **$74,729M** (up **24%**) with a **22%** operating margin.
+
+DATA I LACKED:
+* (a) Debt maturity schedule and average interest rate.
+* (b) It would have clarified whether the **$39,201M** in net debt and **2.33x** D/E ratio pose an immediate liquidity threat to the dividend, or if the debt is locked in long-term at low rates.
+* (c) ABSENT.
+
+* (a) Historical dividend growth rate (CAGR).
+* (b) It would have indicated whether the low **0.82%** starting yield was rapidly compounding fast enough to satisfy the long-horizon income mandate.
+* (c) WITHHELD (the prompt strictly forbade multi-period history).
+
+PROMPT CONTRADICTIONS:
+* Side A: "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing" and "There is still no margin *trend* on the sheet — quote the levels, never a direction"
+* Side B: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps"
+* Resolution: I obeyed Side A. Despite the data sheet explicitly providing YoY bps trend data, I omitted the trend figures entirely to avoid violating the strict negative constraint forbidding margin directionality.
+
+* Side A: "Buybacks and M&A history are **not available** — never claim a number for either"
+* Side B: "Buybacks (LIVE): $7,302M repurchased (trailing 4 quarters), 2.0% of market cap"
+* Resolution: I obeyed Side B. I cited the **$7,302M** buyback figure because the prompt's input rules state: "The sheet itself states what it holds for this run — where it marks a field not available, or names a set as not reconstructable, that statement wins over this list."

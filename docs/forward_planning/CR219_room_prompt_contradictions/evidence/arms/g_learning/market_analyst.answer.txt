@@ -1,0 +1,12 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day support]
+Daily structures indicate a mean-reversion setup as a severe medium-term downtrend nears a test of major primary support.
+- Price at **$779.16** occupies the extreme bottom **2%** of the 50-day range (**$774.55–$1071.47**), sitting **-6.3%** below the 20-day SMA and **-11.9%** below the 50-day SMA.
+- Momentum is heavily oversold with RSI at **28**, while volume remains in-line at **0.91x** the 20-day average, signaling downside exhaustion.
+- A confirmed bounce off the 200-day SMA at **$768.45** (just **1.4%** below current price) with expanding volume confirms the setup; a daily close below this level invalidates it and signals a structural breakdown.
+
+DATA I LACKED:
+- (a) Weekly or monthly RSI and moving averages.
+- (b) I would have contextualized the 3-10 year long-term trend health, rather than relying exclusively on the 200-day SMA to define primary support.
+- (c) ABSENT (the prompt explicitly limits inputs to scalars derived from daily history).
+
+PROMPT CONTRADICTIONS: none

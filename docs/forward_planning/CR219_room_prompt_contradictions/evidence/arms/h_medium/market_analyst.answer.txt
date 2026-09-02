@@ -1,0 +1,18 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: Oversold at 200-day support]
+On the daily timeframe, CAT presents a mean reversion setup as price tests primary long-term support following a steep multi-week downtrend.
+
+* Daily RSI reads an oversold **28**, with the last close of **$779.16** sitting at the absolute floor (**2%**) of the **$774.55–$1071.47** 50-day range.
+* Price is stretched **-11.9%** below the 50-day SMA (**$884.64**), dropping directly into the primary trend support just **1.4%** above the 200-day average (**$768.45**).
+* A daily close defending the **$768.45** level confirms the setup; breaking below this 200-day support invalidates it and signals further trend breakdown.
+
+DATA I LACKED:
+* (a) A time-series of past RSI troughs and price reactions for this ticker.
+* (b) I would have used this to determine if an RSI of 28 is historically deep enough to trigger a high-probability bounce in CAT, which would raise or lower my conviction.
+* (c) FORBIDDEN (The prompt explicitly states "history is consumed to compute the figures below and is not passed on, so any claim that needs a series... is not one this data can support").
+* (a) Volume-at-price / Volume Profile data.
+* (b) I would have identified structural support nodes below the 200-day average to set a precise invalidation/stop level.
+* (c) ABSENT (Not provided in the technical scalar list).
+
+PROMPT CONTRADICTIONS:
+* Contradiction: The Output Style mandates "Plain text otherwise — no headings, no tables." However, the Evaluation Addendum mandates "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`".
+* Resolution: I obeyed the Evaluation Addendum and included the specific headings, treating the Addendum as a meta-instruction overriding the primary persona formatting rules for the sake of developer feedback.

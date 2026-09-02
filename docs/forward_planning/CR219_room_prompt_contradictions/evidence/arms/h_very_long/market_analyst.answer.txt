@@ -1,0 +1,17 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day SMA support]
+The daily and quarterly timeframes indicate a mean reversion setup as the price approaches primary trendline support following a sharp 64-day pullback.
+
+- The last close at **$779.16** sits in the bottom **2%** of the 50-day range (**$774.55**–**$1071.47**), driving the RSI to a deeply oversold reading of **28**.
+- Despite trailing the 50-day average by **-11.9%** and dropping **14.2%** over the last 64 trading days, the price remains **1.4%** above the primary 200-day average at **$768.45**.
+- A defense of the **$768.45** to **$774.55** support zone confirms the setup, while a close below the 200-day average invalidates it.
+
+DATA I LACKED:
+- (a) Historical support and resistance levels below the 200-day moving average.
+- (b) If I had them, I could define the next downside target if the 200-day SMA breaks, which would dictate whether to establish a hard stop or avoid the name entirely due to risk asymmetry. 
+- (c) ABSENT/FORBIDDEN (The prompt restricts me exclusively to the 50-day range and specific SMAs provided in the data block).
+
+- (a) Momentum divergence indicators like MACD or stochastic oscillators.
+- (b) If I had them, I could assess if the downward momentum is decelerating into the support zone, which would increase my conviction from 'neutral' to 'for' a bounce.
+- (c) FORBIDDEN ("No MACD... computed anywhere in this app").
+
+PROMPT CONTRADICTIONS: none

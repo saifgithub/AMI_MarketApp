@@ -1,0 +1,23 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day MA support]
+
+The daily chart presents a severe intermediate breakdown that is now setting up a critical mean-reversion test at the primary long-term trendline.
+
+*   The last close of **$779.16** sits at the absolute bottom (**2%**) of the 50-day range (**$774.55**–**$1071.47**), trading deep below both the 20-day SMA (**$831.90**) and the 50-day SMA (**$884.64**).
+*   Recent downward momentum (**-14.2%** over a 64-day window) has driven the RSI to an oversold reading of **28**, pushing the price to within **1.4%** of the 200-day moving average at **$768.45**.
+*   A bounce off the **$768.45** level on expanding volume (currently muted at **0.91×** the 20-day average) would confirm a mean-reversion setup, while a daily close below the 200-day would invalidate the setup and signal a broader structural trend failure.
+
+DATA I LACKED:
+*   (a) Moving Average Crossovers / MACD.
+    (b) Having momentum oscillators would allow me to see if downside momentum is decelerating as it approaches the 200-day moving average, which would increase my conviction on a mean-reversion bounce.
+    (c) FORBIDDEN ("No MACD, moving-average crossover signal... are computed anywhere in this app").
+*   (a) Actual time-series price bars / chart patterns.
+    (b) Knowing the exact sequence of lower highs or whether the drop from **$1071.47** formed a specific distribution pattern (e.g., head and shoulders) would change whether I view this as a simple pullback or a major topping structure.
+    (c) ABSENT / FORBIDDEN ("any claim that needs a series (a crossover, an indicator's direction over time, a pattern read off the chart) is not one this data can support").
+*   (a) Weekly or Monthly price indicators.
+    (b) The user mandate is a "long (3–10 years)" horizon; weekly or monthly RSI and moving averages would provide a much more accurate technical picture for this timeframe than daily scalars.
+    (c) ABSENT ("only the daily bars actually fetched").
+
+PROMPT CONTRADICTIONS:
+*   Quote 1: "Emphasise monthly/quarterly trend."
+*   Quote 2: "Derived scalars computed from daily price history... only the daily bars actually fetched" and "any claim that needs a series... is not one this data can support"
+*   Resolution: I obeyed Quote 2. I cannot explicitly read a monthly/quarterly chart trend because I lack the series data and higher timeframe bars. To compromise, I used the 64-day window trend and the 200-day moving average to proxy the "quarterly" and "primary" trends based strictly on the daily scalars provided.

@@ -1,0 +1,18 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.0% | HEADLINE: Trade the 200-day MA setup with a 2.0% size]
+By sizing this at **2.0%**, we capture the immediate upside of the oversold mean-reversion setup while using a tightened stop to mitigate the undeniable structural valuation risks.
+
+* The Aggressive case correctly identifies that an RSI of **28** sitting just **1.4%** above the **$768.45** 200-day moving average offers a highly asymmetric technical entry, and massive pricing power—proven by a **57%** ROE alongside **24%** trailing revenue growth—justifies buying the dip.
+* The Conservative case correctly flags the severe fundamental tail risks; paying a **24.5x** EV/EBITDA multiple for a heavy cyclical generating only a **1.4%** FCF yield leaves zero margin of error if macroeconomic conditions deteriorate ahead of the FOMC decision in **14** days.
+* The data completely fails to resolve whether the **$39.2B** net debt is standard matched-book customer financing or a toxic operational liability. To navigate this inconsistency, allocate **2.0%** at the **$779.16** entry with a **5.0%** stop distance, providing more breathing room than the Conservative's strict **$765.00** limit while ensuring the total exposure safely undercuts the reference position's **0.25** point drawdown allowance.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) Debt breakdown distinguishing Caterpillar's core industrial debt from Caterpillar Financial Services debt.
+  (b) If I had proof that the **$39.2B** net debt was primarily collateralized customer equipment leasing (standard for CAT) rather than core operational leverage, I would have fully rejected the Conservative's insolvency thesis and raised my conviction to 'high' for a larger allocation.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+* Quote 1: "The mandate snapshot above states YOUR position's contribution to that cap — quote it, do not recompute it."
+* Quote 2: "Propose a specific compromise in the terms this simulator actually has: size as a % of portfolio, entry, and stop distance."
+* Resolution: I obeyed both. I proposed a specific new position size (**2.0%**) and a new stop distance (**5.0%**) per Quote 2, but intentionally abstained from multiplying them together to calculate my actual new drawdown contribution, instead strictly comparing my position's relative safety against the mandated **0.25** point reference figure to obey Quote 1.

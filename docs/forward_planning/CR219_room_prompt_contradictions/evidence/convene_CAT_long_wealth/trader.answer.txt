@@ -1,0 +1,27 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 1.4% FCF yield dictates zero exposure]
+
+Instrument: CAT
+Side: WAIT
+Size: 0% of portfolio
+Entry: N/A (Current price: $779.16)
+Target: N/A
+Stop: N/A (0% position size)
+Time horizon: 57 days (Reassess at Q4 earnings)
+R:R: N/A
+
+Per the Research Manager's synthesis, Caterpillar's structurally compressed **1.4%** FCF yield and stretched **24.5x** EV/EBITDA multiple present an unacceptable cyclical risk for a long-horizon portfolio. We will not allocate against the mandate's **3.0%** single-name cap, completely avoiding the immediate technical risk of the stock sitting a precarious **1.4%** above its 200-day moving average support of **$768.45**. We remain on the sidelines pending the FOMC decision in **14** days and the upcoming Q4 earnings report in **57** days to see if multiples reset.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) Level 2 order book depth and volume-at-price metrics around the **$768.45** 200-day moving average.
+  (b) If I had visibility that liquidity was extremely thin directly below this level, I would have warned the Risk Officers of severe gap-down potential, increasing our desk's conviction to remain entirely out of the name.
+  (c) ABSENT.
+* (a) Historical median multiples (P/E, EV/EBITDA) specifically tied to prior Caterpillar business cycle troughs.
+  (b) I would have used these to compute a precise "buy-below" limit order entry price rather than broadly passing and setting Entry to N/A.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+* Quote 1: "Side: BUY | HOLD | WAIT"
+* Quote 2: "You DO NOT... Skip the stop-loss"
+* Resolution: I obeyed both. A "WAIT" order inherently commands a 0% position size, rendering an active stop-loss mathematically impossible and non-sensical to execute. I satisfied the rigid structural requirement of Quote 2 by explicitly printing the `Stop:` field, but filled it with "N/A (0% position size)" to reflect the logical reality of Quote 1.

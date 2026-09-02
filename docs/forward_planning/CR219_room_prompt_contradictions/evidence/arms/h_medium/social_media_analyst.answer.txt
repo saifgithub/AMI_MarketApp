@@ -1,0 +1,16 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: Simulated data lacks edge]
+Real sentiment data is not configured for this ticker, leaving us with simulated baseline reads that offer no actionable contrarian signal.
+
+* Aggregate retail sentiment is simulated as **moderately bullish**.
+* Chatter intensity is modeled at **typical** levels, offering no genuine indication of retail euphoria or panic.
+* Without a live, lopsided bullish/bearish split to fade, positioning provides no directional edge for a medium-term hold.
+
+DATA I LACKED:
+* (a) Live Reddit mention volume, buzz score, and a concrete bullish/bearish split ratio.
+* (b) If I had real data showing an extreme lopsided split (e.g., 90% bullish on record volume), my stance would have shifted to 'against' with 'high' conviction to fade the retail euphoria.
+* (c) ABSENT (the fact sheet explicitly states the feed is "alpha simulation scaffolding — NOT a live social feed").
+
+PROMPT CONTRADICTIONS:
+* Quote 1: "When no real data is injected (not configured, or nothing found for this ticker), say so and stop."
+* Quote 2: "Write one thesis sentence, then up to 3 short bullets. [...] BEFORE the thesis sentence, your VERY FIRST line must be this one line, in exactly this shape"
+* Resolution: I obeyed Quote 2 to maintain the strict formatting requirements (Stance header, thesis, bullets). I interpreted Quote 1's "stop" as a mandate to halt deep analysis and admit the lack of data, rather than breaking the required syntax of the turn, which would likely cause a parser failure.

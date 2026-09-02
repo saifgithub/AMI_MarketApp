@@ -1,0 +1,16 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: Typical retail sentiment]
+Retail sentiment for Caterpillar reflects baseline optimism based on illustrative scaffolding, lacking the extremes necessary to trigger a contrarian signal.
+
+*   Crowd mood registers as moderately bullish, indicating steady confidence rather than speculative chasing.
+*   Mention intensity remains at a typical level, offering no lopsided retail positioning or saturation to fade on a multi-month horizon.
+*   Absent live volume metrics or an extreme divergence in the bullish/bearish split, social flows present no friction against long-term accumulation.
+
+DATA I LACKED:
+*   (a) Exact Reddit mention volume, buzz score, and precise bullish/bearish split percentages.
+*   (b) If I had quantifiable ratios, I could assess exactly how close the crowd is to a reversion threshold (e.g., a 90/10 split on high volume) and potentially upgrade conviction or shift my stance.
+*   (c) ABSENT (The fact sheet explicitly noted the data was alpha simulation scaffolding, providing only qualitative descriptors without specific metrics).
+
+PROMPT CONTRADICTIONS:
+*   Side A: "When no real data is injected (not configured, or nothing found for this ticker), say so and stop."
+*   Side B: "When reasoning illustratively, describe sentiment intensity qualitatively..." AND "Write one thesis sentence, then up to 3 short bullets."
+*   Resolution: I obeyed Side B. The fact sheet explicitly stated the provided sentiment was "alpha simulation scaffolding — NOT a live social feed." Technically, this means "no real data" was injected. However, because the system deliberately provided an illustrative placeholder ("moderately bullish (typical intensity)"), I reasoned illustratively to fulfill the mandatory formatting constraints rather than abruptly stopping and leaving the analysis blank.

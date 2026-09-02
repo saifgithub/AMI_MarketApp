@@ -1,0 +1,21 @@
+[STANCE: for | CONVICTION: medium | SIZE: 3.0% | HEADLINE: 57% ROE beats FCF yield fears]
+The desk's retreat to the sidelines over cyclical multiple fears surrenders a prime technical entry point and completely ignores Caterpillar's profound **57%** ROE.
+
+* Size this to the absolute **3.0%** single-name mandate ceiling; the reference **2.5%** position only consumes **0.25** points of our **30%** drawdown allowance, leaving us immense structural risk budget to aggressively buy the dip while RSI is heavily oversold at **28**.
+* While I concede the **1.4%** FCF yield presents a weak fundamental hand today, the Conservative case panicking over **$39.2B** in net debt is misplaced; a **2.33x** debt-to-equity ratio is entirely standard for a heavy machinery financing book, and **24%** trailing revenue growth proves that leverage is generating massive top-line scale. 
+* Timidity here guarantees a massive opportunity cost; waiting on the sidelines for the FOMC decision in **14** days risks missing the immediate reversion bounce off the **$768.45** 200-day average and leaves the **+25.2%** runway to the **$975.61** consensus target entirely unclaimed.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) Debt breakdown distinguishing core industrial debt from Caterpillar Financial Services (leasing) debt.
+  (b) If I had proof that the vast majority of the **$39.2B** net debt was simply matched-book customer financing rather than operational leverage, I would have upgraded my conviction to 'high' and aggressively discredited the Bear's insolvency narrative.
+  (c) ABSENT.
+* (a) Historical free cash flow conversion rates (FCF as a percentage of Net Income over time).
+  (b) If I could see that the current **1.4%** FCF yield was merely a temporary working capital anomaly (e.g., a short-term inventory build) rather than structural deterioration, I would not have had to concede that the yield was a weak hand.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+* Quote 1: "Push for full mandate-allowed sizing" (User single-name cap is **3.0%**).
+* Quote 2: "HARD CONSTRAINT: the drawdown contribution stated for YOUR position in the mandate snapshot above, plus existing drawdown, cannot exceed 30%. Use that figure as written — do not recompute it." (The mandate snapshot strictly defines a **0.25** pt contribution for a **2.5%** size).
+* Resolution: I obeyed both by manually separating them in the text. I advocated for the full **3.0%** size cap per Quote 1, but to obey Quote 2's strict prohibition on recomputing the drawdown metric, I explicitly quoted the **0.25** pt consumption as belonging strictly to the "reference **2.5%** position" rather than calculating a new decimal for my 3.0% recommendation.

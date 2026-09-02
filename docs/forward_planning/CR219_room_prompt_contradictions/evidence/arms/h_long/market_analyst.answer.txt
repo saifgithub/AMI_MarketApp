@@ -1,0 +1,13 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day SMA support]
+The daily timeframe reveals a mean reversion setup as the stock pulls back sharply into primary long-term support.
+
+- Price at **$779.16** sits in the bottom **2%** of its 50-day range (**$774.55**–**$1071.47**) with RSI heavily oversold at **28** and the short-term window trend down **14.2%**.
+- The stock remains in a strong primary uptrend, hovering just **1.4%** above the 200-day moving average (**$768.45**) after outperforming the S&P 500 by **71.9 percentage points** over the last 52 weeks.
+- A bounce holding the **$768.45** level on average volume confirms the mean reversion setup; a daily close below the 200-day average invalidates the setup and signals a broader structural breakdown.
+
+DATA I LACKED:
+- Candlestick pattern data (e.g., presence of a hammer or doji at the 200-day SMA). If present, I would have changed my stance from 'neutral' to 'for', as it would confirm support is holding. (ABSENT / FORBIDDEN by the instruction that bars themselves are not passed).
+- Bullish/bearish divergence on a secondary momentum oscillator like MACD. If bullish divergence was present at this low, I would have had higher conviction in a reversal. (FORBIDDEN by "No MACD... do not cite them").
+- Immediate horizontal support and resistance levels outside the strict 50-day range. If historical support existed slightly below the 200-day SMA, I would have widened the invalidation level. (ABSENT).
+
+PROMPT CONTRADICTIONS: none

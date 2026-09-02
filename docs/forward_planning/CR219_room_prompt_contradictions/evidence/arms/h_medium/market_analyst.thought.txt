@@ -1,0 +1,27 @@
+**Analysis of CAT (Caterpillar Inc.) at $779.16**
+
+Okay, let's break this down. As a technical strategist, I'm looking at CAT with a medium-term horizon, a risk score of 3, and a long-only mandate, so the goal is to identify a solid entry point. The terse tone is requested, so I'll keep the output concise. The key here is mean reversion within a downtrend, potentially at a significant support level.
+
+First, I see the RSI is heavily oversold at **28**, which is a signal. The stock is currently trading at **$779.16**, right near the bottom of its 50-day range (**$774.55 – $1071.47**, at only **2%** from the lower bound). The price is significantly below the 20-day and 50-day SMAs. The 200-day moving average (**$768.45**) is acting as the primary support, and we're just **1.4%** above it. This is interesting. Despite the recent drop of **-14.2%** over 64 days and a **-27.4%** drawdown from the 52-week high, the stock has shown **+91.7%** relative strength versus the S&P 500 over the past year.
+
+So, for mean reversion play, I need to make a call. I'm leaning "for" with "medium" conviction. The RSI at **28** combined with the 200-day MA creates a strong confluence, but the downward momentum warrants caution. My setup is "mean reversion at the 200-day MA".
+
+Here's the final output:
+
+[STANCE: for | CONVICTION: medium | HEADLINE: Oversold at 200-day support]
+
+On the daily timeframe, CAT presents a mean reversion setup at primary long-term support following a severe downtrend.
+
+-   Daily RSI reads an oversold **28**, with the last close of **$779.16** sitting at the absolute floor (**2%**) of the **$774.55–$1071.47** 50-day range.
+-   Price is stretched **-11.9%** below the 50-day SMA (**$884.64**), dropping directly into primary trend support just **1.4%** above the 200-day average (**$768.45**).
+-   A daily close defending the **$768.45** level confirms the setup; a daily close below this 200-day support invalidates the mean reversion and signals trend failure.
+
+Now, let's consider what data I'm missing:
+
+**DATA I LACKED:**
+
+*   (a) Volume profile (VPVR) data to assess high-volume nodes for additional structural support near the 200-day MA.
+*   (b) Historical RSI data or levels to help determine whether **28** is historically sufficient to trigger a bounce for this specific stock.
+*   (c) I could have assessed where price might find support should it breach the 200-day MA.
+
+

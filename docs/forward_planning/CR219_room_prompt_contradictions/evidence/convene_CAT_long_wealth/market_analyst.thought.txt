@@ -1,0 +1,21 @@
+**Technical Analysis of CAT: Daily Chart Mean Reversion Play**
+
+Okay, here's the deal. I need to give a technical take on CAT, purely based on this data. My job here is to generate a terse, declarative summary for a long-term (3-10 year) horizon. Given the task at hand, I'm going with a `neutral` stance with `medium` conviction. The headline has to be concise, so I'll go with: `Testing 200-day MA support`.
+
+Here's the breakdown: The daily chart paints a picture of a severe breakdown, but we're approaching a critical test of the long-term 200-day trendline – a classic mean-reversion setup.
+
+*   The last close of **$779.16** is scraping the bottom, only in the bottom **2%** of the 50-day range (**$774.55**–**$1071.47**), and well below the 20-day (**$831.90**) and 50-day (**$884.64**) moving averages.
+*   Momentum has clearly taken a bearish turn, pushing the RSI into oversold territory at **28**, while the price is sitting right on top of the 200-day moving average, which is at **$768.45**, only **1.4%** below the last close.
+*   To confirm this is setting up a reversion, I'd need to see the price hold at **$768.45** and get some bounce with above-average volume (currently at **0.91x** the 20-day average). A close below that 200-day MA invalidates this.
+
+**DATA I LACKED:**
+
+*   (a) Moving Average Crossovers / MACD. (b) Would have helped confirm if momentum is decelerating on the downside before testing the 200-day. (c) Forbidden ("No MACD, moving-average crossover signal...").
+*   (a) Weekly or Monthly price bars/indicators. (b) Would provide better context for the "long horizon (3-10 years)" mandate, as daily bars are noisy for that timeframe. (c) Absent / Withheld ("only the daily bars actually fetched").
+*   (a) Chart patterns (e.g., head and shoulders, double top). (b) Would allow me to define the exact geometry of the breakdown from $1073. (c) Absent/Forbidden ("any claim that needs a series... is not one this data can support").
+
+**PROMPT CONTRADICTIONS:**
+
+*   The instructions direct me to "Emphasise monthly/quarterly trend" while simultaneously restricting the available data to *only* the daily bar, which makes the explicit instructions contradictory. I was given a daily price history. The instructions state "Emphasise monthly/quarterly trend. Skip noise-level intraday signals" but also state "only the daily bars actually fetched" and "any claim that needs a series... is not one this data can support". I had to use the "Window trend... across the 64 trading days" (quarter-scale move) and the 200-day MA to proxy the quarterly/primary trend, given the data restrictions.
+
+

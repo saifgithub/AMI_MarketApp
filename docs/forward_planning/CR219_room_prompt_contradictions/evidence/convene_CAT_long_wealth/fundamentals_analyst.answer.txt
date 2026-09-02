@@ -1,0 +1,22 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: Capital return is 200% of FCF]
+
+Caterpillar displays exceptional trailing revenue growth and high margins, but the stock's rich valuation and aggressive, cash-burning capital return program present structural risks for a long-term hold.
+
+* Trailing revenue grew **24%** to **$74.7B**, supporting robust margins at **30%** gross (**+327bps** YoY), **22%** operating (**+365bps** YoY), and **15%** net (**+434bps** YoY).
+* Valuation multiples are highly stretched for heavy machinery, trading at a **34.4x** trailing P/E, a **24.1x** forward consensus P/E, and an EV/EBITDA of **24.5x**, which leaves an exceptionally thin FCF yield of just **1.4%**.
+* Capital return heavily outpaces actual cash generation: the **$10.1B** spent on dividends and buybacks over the trailing four quarters consumes **200%** of the **$5.05B** TTM free cash flow, a deficit funded against a balance sheet already carrying **$39.2B** in net debt and a **2.33x** debt-to-equity ratio.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) Historical multi-year averages for free cash flow and capital expenditure.
+  (b) I would have contextualized if the current **$5.05B** TTM FCF is a cyclical trough due to temporary heavy capex or inventory build. If normalized FCF actually covers the **$10.1B** capital return, my stance would shift toward neutral.
+  (c) WITHHELD (the prompt explicitly stated: "no history for any of them: every figure is a single point in time").
+* (a) Debt maturity schedule and interest coverage ratio (EBIT/Interest Expense).
+  (b) I could have assessed the immediate solvency threat of the **$39.2B** net debt. If the debt is locked in long-term at low rates with high interest coverage, the **200%** payout ratio is less dangerous in the short term.
+  (c) ABSENT (not included in the provided metrics list).
+
+PROMPT CONTRADICTIONS:
+* Quote 1 (from Inputs): "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing"
+* Quote 2 (from Fact sheet): "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps"
+* Resolution: I obeyed both by citing the YoY basis-point differentials provided in the fact sheet, while strictly avoiding the forbidden active verbs (rising, falling, expanding, compressing) to describe them, treating the YoY deltas as point-in-time measurements rather than a continuous trend.

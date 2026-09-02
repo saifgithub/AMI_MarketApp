@@ -1,0 +1,18 @@
+**Technical Analysis for CAT (Caterpillar Inc.)**
+
+Okay, here's what I'm seeing. Analyzing this request, I'm taking the role of a technical strategist looking at CAT, adhering to a long-term horizon (3-10 years) with a moderate risk profile. The mandate is long-only, with a maximum 3% position size and a 30% drawdown. The user wants a terse, declarative analysis. I've got to make my call based on a single point in time, right now.
+
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Testing 200-day support] Daily structures indicate a steep mean-reversion setup as a severe medium-term downtrend meets major long-term support.
+
+*   Price at **$779.16** occupies the extreme bottom **2%** of the 50-day range (**$774.55–$1071.47**) and trades **-11.9%** below the 50-day SMA.
+*   Momentum is heavily oversold with RSI at **28**, while volume remains muted at **0.91x** the 20-day average.
+*   The setup requires price to hold the 200-day SMA at **$768.45** (just **1.4%** below current levels); a confirmed bounce triggers entry, while a daily close below invalidates the long-term trend.
+
+DATA I LACKED:
+
+*   (a) Weekly or monthly RSI / moving averages (b) I could evaluate the true primary multi-year trend for a 3-10 year horizon, rather than relying solely on the 200-day SMA. (c) ABSENT (data explicitly states derived from daily history).
+*   (a) Support/resistance volume profiles or pivot points (b) I could identify secondary demand zones below the 200-day SMA in case of a breakdown. (c) ABSENT/WITHHELD.
+
+PROMPT CONTRADICTIONS: none
+
+

@@ -1,0 +1,18 @@
+[STANCE: against | CONVICTION: high | SIZE: 1.0% | HEADLINE: 57% ROE masks fragile 2.33x leverage]
+The Aggressive Risk Officer’s reliance on a synthetically boosted **57%** ROE completely ignores the precarious balance sheet funding it.
+
+* The risk-on case correctly notes the reference **2.5%** position size only consumes **0.25** points of our **30%** portfolio drawdown cap, but entirely dismisses the severe liquidity risk of sustaining a **200%** FCF payout ratio on top of a **2.33x** debt-to-equity load and **$39.2B** in net debt. 
+* The specific downside scenario is a technical failure of the **$768.45** 200-day moving average just ahead of the FOMC decision in **14** days; a breakdown here signals a macroeconomic tightening cycle that could plunge the already thin **1.4%** FCF yield into the negative, forcing heavy multiple contraction toward the **$410.52** 52-week low.
+* To preserve capital, override the Aggressive's **3.0%** request and cap this position at **1.0%**. Furthermore, raise the loose **$701.24** reference stop to a strict **$765.00** limit—we must exit immediately if the primary trendline breaks, rather than holding a leveraged cyclical into a structural decline.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) A fixed-versus-floating rate breakdown and debt maturity schedule for the **$39.2B** net debt.
+  (b) If I had proof that the vast majority of this debt was locked at low fixed rates for 5+ years, the immediate solvency threat posed by the FOMC decision in **14** days would be neutralized, prompting me to lower my conviction on the immediate downside risk.
+  (c) ABSENT.
+* (a) Historical median quick ratios for Caterpillar during previous late-cycle environments.
+  (b) The current quick ratio is **0.78**. If I knew this was actually a healthy, standard level for CAT's working capital structure at this phase of the cycle rather than a dangerous anomaly, I would not have framed liquidity as a severe short-term risk.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none.
