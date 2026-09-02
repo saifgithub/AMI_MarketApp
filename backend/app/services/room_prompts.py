@@ -473,9 +473,14 @@ _PM_VERDICT_FORMAT = (
     "would reverse this call. It MUST name a quantity from the data block above "
     "— a price level, a moving average, a margin or growth rate, a multiple, a "
     "short-interest or ownership figure — and state the direction and the "
-    "threshold that would flip you. \"A second consecutive quarter of operating "
-    "margin below 11.2%\" and \"a daily close under the 200-day SMA at $769.48\" "
-    "are criteria; \"deteriorating fundamentals\" and \"if sentiment worsens\" are "
+    # Single quotes in the examples, deliberately: this sentence sits INSIDE a
+    # JSON string in a shape the model is copying, and a literal double quote
+    # here reads as the end of that string. The CIO already loses whole verdicts
+    # to JSON it broke itself (a raw newline in narration, warned about two
+    # lines below) — an escaping trap in our own template would be ours.
+    "threshold that would flip you. 'A second consecutive quarter of operating "
+    "margin below 11.2%' and 'a daily close under the 200-day SMA at $769.48' "
+    "are criteria; 'deteriorating fundamentals' and 'if sentiment worsens' are "
     "not, because nothing on your sheet can ever settle them. Write one for a "
     'PASS too — say what would make you buy>"}\n'
     "Write any line break inside narration as the two characters \\n, never as a "
