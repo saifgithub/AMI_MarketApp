@@ -1,6 +1,6 @@
 """Roll the six mandate arms up: verdicts, contradiction reproduction, data gaps.
 
-Two things this deliberately does NOT do:
+Three things this deliberately does NOT do:
 
   * It does not attribute a VERDICT to a mandate. `pm_self_consistency_samples`
     defaults to 1 and the measured flip rate at n=1 is ~19.7% (risk_officer.py),
@@ -10,6 +10,9 @@ Two things this deliberately does NOT do:
     prompt says "your ENTIRE reply must be one single JSON object"; this
     harness's own addendum asks for two appended sections. That collision is
     OURS, not production's, and counting it would inflate the finding.
+  * It does not count contradictions from four agents in `h_short`: the market,
+    social, bull, and trader agents reported incoherence from a harness artifact
+    (hardcoded LONG_HORIZON while horizon=short), not production's mandate.
 """
 import json, re, sys, os, collections
 
@@ -46,7 +49,8 @@ for a in ARMS:
         if m:
             body = m.group(1).strip()
             real = body[:12].lower() != "none" and not (
-                t["agent"] == "portfolio_manager" and HARNESS_ARTIFACT.search(body))
+                t["agent"] == "portfolio_manager" and HARNESS_ARTIFACT.search(body)) and not (
+                a == "h_short" and t["agent"] in {"market_analyst", "social_media_analyst", "bull_researcher", "trader"})
             if real:
                 by_agent[t["agent"]].add(a)
         g = re.search(r'DATA I LACKED:(.*?)(?=PROMPT CONTRADICTIONS:|$)', ans, re.S)
