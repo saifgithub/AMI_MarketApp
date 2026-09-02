@@ -405,6 +405,11 @@ services:
       # Raising it costs that multiple of the run's most expensive call, and buys
       # back the 19.7% of verdicts measured to be non-unanimous on identical prompts.
       PM_SELF_CONSISTENCY_SAMPLES: ${PM_SELF_CONSISTENCY_SAMPLES:-5}
+      # CR219 R51 — how many desks may fall back to a scripted turn before the
+      # verdict degrades to an explicit incomplete state. Extends DEF059's rule
+      # from "no AMI" to "not enough AMI"; 0 disables the degrade (the
+      # disclosure still renders). See Settings.room_max_scripted_turns.
+      ROOM_MAX_SCRIPTED_TURNS: ${ROOM_MAX_SCRIPTED_TURNS:-4}
       # CR197 — computed sized-option ladder in the CIO's prompt. Off: it is a
       # measured behaviour change (approvals 16.3% → 21.1% over 136 replayed
       # convenes), not a pure fix. See Settings.pm_option_ladder_enabled.

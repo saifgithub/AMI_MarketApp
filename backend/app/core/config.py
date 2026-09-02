@@ -750,6 +750,32 @@ class Settings(BaseSettings):
     # backtest ranks on. Cost is 4 extra premium-tier PM calls per convene.
     pm_self_consistency_samples: int = Field(default=5, ge=1, le=9)
 
+    # CR219 R51 — how many desks may fall back to a scripted turn before the
+    # verdict stops being a confident call.
+    #
+    # DEF059 fixed the TOTAL outage (provider unreachable -> PASS, never a fake
+    # APPROVE). The PARTIAL case was silent: `_compute_agent_text` substitutes a
+    # scripted `_TEMPLATES` sentence per agent on timeout, error or empty
+    # response — a complete, confident sentence populated with real computed
+    # figures and carrying no mark — so a convene where most desks timed out
+    # still produced a full transcript and a confident verdict. DEF397 measured
+    # exactly that: 6 of 10 agent calls returning 0 chars on batch `cr217-glm-1`
+    # while the run banked as COMPLETED with `error_message=None`.
+    #
+    # At or above this many scripted turns the verdict degrades to an explicit
+    # incomplete state (NO_VERDICT) instead of an APPROVE or a reasoned PASS.
+    # This extends DEF059's rule from "no AMI" to "not enough AMI".
+    #
+    # The default of 4 is WP08's proposal (">3 of 12") and is a threshold, not a
+    # measurement: no production distribution of scripted-turn counts exists yet
+    # to size it from, which is precisely because nothing counted them until this
+    # CR. Treat it as an operator knob to be re-set once the counter has run on
+    # Alpha for a while, not as a derived number.
+    #
+    # Set to 0 to disable the degrade entirely (the disclosure still renders —
+    # counting and telling the user are not the part that needs an off switch).
+    room_max_scripted_turns: int = Field(default=4, ge=0, le=12)
+
     # CR197 — hand the CIO a computed ladder of sized options (trim / reference /
     # press) with each rung's drawdown contribution, remaining headroom and
     # reward:risk, instead of leaving that arithmetic to the risk officers' prose.

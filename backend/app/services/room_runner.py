@@ -56,7 +56,7 @@ from app.core.time import now_utc, relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.models import BacktestRunIndexRow, RoomRunRow
 from app.services.asof_context import AsOfContext, asof_scope
-from app.schemas import AgentId, AgentMessage, Mandate
+from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
 from app.schemas.options import costed_structure
@@ -351,6 +351,23 @@ class _RoomContext:
     # CR098 — the analysts withheld this run (tenure pull-back), by AgentId.
     # Empty for every plan except FLOOR_PASS past a threshold.
     withheld: tuple[AgentId, ...] = field(default_factory=tuple)
+    # CR219 R51 — the desks whose turn this run is a scripted `_TEMPLATES`
+    # fallback rather than a real AMI contribution, by AgentId, in the order
+    # they fell back.
+    #
+    # There was no run-level accounting of this before (re-verified at HEAD
+    # 2026-09-02: `_scripted_for` had six call sites and no caller counted
+    # them; `_pm_outage` covers only the CIO's OWN total outage, DEF384). A
+    # convene where six desks timed out therefore banked as COMPLETED with a
+    # full 12-entry transcript and a confident verdict — DEF397's measurement.
+    #
+    # A LIST, not an int, deliberately: WHICH desk was scripted changes what
+    # the number means. A scripted Execution Desk means the proposal the whole
+    # RISK phase and the CIO argue over is itself canned, which is a different
+    # (worse) run than a scripted News Analyst. The threshold in
+    # `settings.room_max_scripted_turns` reads the length; the disclosure reads
+    # the names.
+    scripted_turns: list[AgentId] = field(default_factory=list)
     roster_next_step: tuple[AgentId, int] | None = None
     # CR172 §10 — the costed option structures this run issued to the CIO, in
     # the order they were issued. `structure_id` in the PM's reply is an INDEX
@@ -479,6 +496,48 @@ PM_LLM_UNAVAILABLE_REASON = (
     "AMI's analyst room lost its model connection before the Portfolio "
     "Manager could rule. No trade — reconvene the room in a little while."
 )
+
+
+# CR219 R51 — the PARTIAL-outage counterpart to the sentinel above, and named
+# for the same DEF336 reason: a consumer must be able to tell a thin Room from a
+# full one without matching prose. `is_llm_outage_verdict` is a CIO-liveness
+# test (it needs `reason == PM_LLM_UNAVAILABLE_REASON`, set at exactly one site
+# reached only when the CIO's OWN stream is empty), so it answers nothing about
+# the eleven desks — which is precisely the seam DEF397 documents.
+PM_ROOM_INCOMPLETE_REASON = (
+    "Too much of your analyst room was unreachable this convene for AMI to "
+    "stand behind a call. No verdict — reconvene when the desks are back."
+)
+
+
+def _scripted_disclosure(scripted: list[AgentId], roster: int) -> str:
+    """The user-visible sentence naming how thin this Room was.
+
+    Says AMI, never "the AI" or "the LLM" (house rule). States the count as
+    "N of <roster>" because a bare "3 desks were unavailable" gives the user no
+    denominator to judge it against, and names the desks because a scripted
+    Execution Desk means the proposal the rest of the Room argued over was
+    itself canned.
+    """
+    names = ", ".join(agent_display_name(a) for a in scripted)
+    responded = roster - len(scripted)
+    return (
+        f"{responded} of {roster} desks responded; AMI filled the rest with "
+        f"standing guidance ({names})."
+    )
+
+
+def room_verdict_is_incomplete(verdict: dict | None) -> bool:
+    """CR219 R51 — did this convene degrade for want of enough live desks?
+
+    The partial-outage sibling of `is_llm_outage_verdict`, and keyed the same
+    way: on the sentinel reason, never on prose or on the action alone
+    (NO_VERDICT is also CR098's withheld-analyst state, which is a different
+    thing and must stay distinguishable).
+    """
+    if not verdict:
+        return False
+    return verdict.get("reason", "").startswith(PM_ROOM_INCOMPLETE_REASON)
 
 
 def is_llm_outage_verdict(verdict: dict | None) -> bool:
@@ -4760,6 +4819,63 @@ class RoomRunner:
                     verdict = verdict.model_copy(
                         update={"opinions_not_included": [a.value for a in ctx.withheld]}
                     )
+                    # CR219 R51 — the same insertion point, for the same reason
+                    # CR098 chose it: this applies to EVERY path above
+                    # (APPROVE / PASS / NO_VERDICT / fail-safe), and a check
+                    # hung off one branch would miss the others. A thin Room can
+                    # produce any of them.
+                    #
+                    # `live` gates it: on the scripted demo path every turn is
+                    # scripted by design and nothing degraded, so the field stays
+                    # None (absence, not a zero — see the schema note).
+                    if live:
+                        _scripted = list(ctx.scripted_turns)
+                        # The denominator is the roster that actually ran, not a
+                        # hardcoded 12: CR098's tenure pull-back withholds
+                        # analysts on FLOOR_PASS, and counting a withheld desk
+                        # as "did not respond" would blame a provider for a
+                        # product decision the user was already told about.
+                        _roster = len(run.transcript)
+                        verdict = verdict.model_copy(update={
+                            "scripted_turns": len(_scripted),
+                            "scripted_agents": [a.value for a in _scripted],
+                        })
+                        if _scripted:
+                            _disclosure = _scripted_disclosure(_scripted, _roster)
+                            logger.warning(
+                                "room_partial_outage",
+                                run_id=str(run_id),
+                                ticker=ctx.ticker,
+                                scripted=len(_scripted),
+                                roster=_roster,
+                                threshold=settings.room_max_scripted_turns,
+                                agents=[a.value for a in _scripted],
+                            )
+                            _cap = settings.room_max_scripted_turns
+                            if _cap and len(_scripted) >= _cap:
+                                # DEF059's rule, extended from "no AMI" to "not
+                                # enough AMI". The decision is DISCARDED, not
+                                # annotated: a verdict argued from N canned turns
+                                # is not a call AMI can stand behind, and leaving
+                                # an APPROVE in place with a caveat appended is
+                                # exactly the confident-prose-plus-disclaimer
+                                # shape CR040 forbids.
+                                verdict = verdict.model_copy(update={
+                                    "action": VerdictAction.NO_VERDICT,
+                                    "reason": (
+                                        f"{PM_ROOM_INCOMPLETE_REASON} {_disclosure}"
+                                    ),
+                                    "overridden_from_llm": True,
+                                    "size_pct": None, "entry": None,
+                                    "stop": None, "target": None,
+                                    "time_horizon_days": None,
+                                })
+                            else:
+                                # Below the threshold the call stands, but the
+                                # user is told what it was argued from.
+                                verdict = verdict.model_copy(update={
+                                    "reason": f"{verdict.reason} ({_disclosure})"
+                                })
                     # DEF231 — the same insertion point, for the same reason:
                     # BOTH live instances were PASS verdicts, so a check hung
                     # off the APPROVE branch (where the R:R coherence check
@@ -4944,6 +5060,27 @@ async def _compute_agent_text(
     # a scripted fallback, a timeout and an LLM failure all reach the comb's
     # gutter rather than borrowing a stance from somewhere.
     envelope = _StanceEnvelope()
+
+    def _fall_back_to_script(reason: str) -> str:
+        """CR219 R51 — one recording point for every way a live turn becomes a
+        scripted one, so the run-level count cannot miss a path the way DEF376's
+        stream-error branch was added without one.
+
+        Recorded once per agent even if two branches fire for the same turn
+        (an empty stream that is ALSO a stream error): the count is of DESKS
+        that did not contribute, not of internal branch hits, and the
+        disclosure the user reads is "N of 12 desks".
+        """
+        if agent_id not in ctx.scripted_turns:
+            ctx.scripted_turns.append(agent_id)
+            logger.warning(
+                "room_agent_scripted_fallback",
+                agent_id=agent_id.value,
+                reason=reason,
+                scripted_so_far=len(ctx.scripted_turns),
+            )
+        return _scripted_for(agent_id, formatter)
+
     if live:
         # Pass ctx.user_id so build_agent_prompt picks up the user's
         # active Brief overlay (was user_id=None — AT:R27 bugfix).
@@ -5012,7 +5149,7 @@ async def _compute_agent_text(
                 )),
                 timeout=agent_timeout_s,
             )
-            text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
+            text = "".join(chunks).strip() or _fall_back_to_script("empty_stream")
             # DEF376: the provider refused the request mid-stream and yielded an
             # `[AMI error: …]` sentinel. That string is NON-empty, so the `or`
             # above does not fire and the sentinel would reach the transcript,
@@ -5020,7 +5157,7 @@ async def _compute_agent_text(
             # contribution designed for exactly this case. Keyed on `meta`, never
             # on sniffing the text for its own sentinel.
             if stream_meta.get("stream_error"):
-                text = _scripted_for(agent_id, formatter)
+                text = _fall_back_to_script("stream_error")
             # CR106 B2: strip the stance envelope FIRST. It must come off before
             # the `[AMI …]` marks below — which would otherwise sit between the
             # prose and a trailing envelope and break its end-anchor — and before
@@ -5031,7 +5168,7 @@ async def _compute_agent_text(
             # stopped right after it leaves no prose at all. Same destination as
             # an empty stream two lines up, rather than a blank contribution.
             # The stance itself parsed and is kept — it is what the agent said.
-            text = text or _scripted_for(agent_id, formatter)
+            text = text or _fall_back_to_script("envelope_only_no_prose")
             text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
         except asyncio.TimeoutError:
             logger.warning(
@@ -5039,7 +5176,7 @@ async def _compute_agent_text(
                 agent_id=agent_id.value,
                 timeout_s=agent_timeout_s,
             )
-            text = _scripted_for(agent_id, formatter)
+            text = _fall_back_to_script("timeout")
         except Exception as exc:
             logger.warning(
                 "room_agent_llm_failed",
@@ -5048,8 +5185,12 @@ async def _compute_agent_text(
                 # empty str(), so the error field named nothing.
                 error=(str(exc) or repr(exc))[:200],
             )
-            text = _scripted_for(agent_id, formatter)
+            text = _fall_back_to_script("llm_failed")
     else:
+        # NOT counted: this is the non-live scripted demo path, where every turn
+        # is scripted by design and nothing degraded. Counting it would make
+        # "N of 12 desks did not respond" fire on a run with no provider
+        # configured at all, which is a different (already-disclosed) state.
         text = _scripted_for(agent_id, formatter)
 
     # DEF095: before this contribution is streamed or enters the transcript the rest

@@ -71,6 +71,28 @@ class Verdict(BaseModel):
     approve_votes: int | None = None
     samples: int | None = None
 
+    # CR219 R51 — how many of the Room's desks did NOT actually contribute this
+    # run, because the provider timed out / errored / returned nothing and
+    # `room_runner._compute_agent_text` substituted a scripted `_TEMPLATES`
+    # sentence.
+    #
+    # DEF059 fixed the total outage. The partial case was silent, and silently
+    # in the worst direction: the scripted sentence is complete, confident and
+    # populated with real computed figures, so a convene where six desks timed
+    # out banked as COMPLETED with a full transcript and a confident verdict
+    # (DEF397, measured 6 of 10 on batch `cr217-glm-1`).
+    #
+    # `None` means the run predates this field or was the non-live scripted demo
+    # path — never "zero desks were scripted", which is a real value and is
+    # recorded as `0`. Not backfilled and not inferred, the same rule
+    # `level_provenance` below is read under (T-BACKFILL).
+    scripted_turns: int | None = None
+    # The desks in question, by AgentId value. WHICH desk changes what the count
+    # means — a scripted Execution Desk makes the proposal itself canned, which
+    # is a worse run than a scripted News Analyst — so the names travel with the
+    # number rather than being recoverable only from container logs.
+    scripted_agents: list[str] = Field(default_factory=list)
+
     # CR106 B1 — where each price on this verdict actually came from.
     #
     #   "pm"          the Portfolio Manager stated this price
