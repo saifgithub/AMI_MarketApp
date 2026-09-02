@@ -1,0 +1,9 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: 16x EV/EBITDA, margins -360bps]
+
+Thesis: CAT is a strong franchise priced near its high while measured fundamentals point the wrong way — revenue shrinking, operating margin compressing, and real leverage — so I'd wait rather than initiate here.
+
+- **Margins**: operating margin **18%**, down **-360bps** YoY (quarter ending 2025-06-30 vs 2024-06-30) — that compression is measured, not my read. Revenue **-1%** TTM.
+- **Balance sheet**: net debt **$26,302M**, D/E **1.70x**, quick ratio **0.81** — leveraged with thin near-term liquidity. FCF of **$8,961M** TTM does cover the **$5,910M** of buybacks (3.1% of market cap) plus the dividend, so capital return is internally funded.
+- **Price vs value**: **16.0x** EV/EBITDA and **3.1x** P/S on a **-1%** growth print, **4.6%** FCF yield, stock **-4.9%** off the 52-week high ($434.11) and **+53.3%** off the low ($269.21). P/E is not on the sheet — no earnings-multiple cross-check available.
+
+Inference, flagged as such: for a 3–10 year holder at your risk level, the multiple is tolerable only if margins stabilize — and I have one YoY print showing they haven't yet.

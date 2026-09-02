@@ -1,0 +1,10 @@
+Fact sheet as of 2026-09-02 (UTC) — every other date in this sheet is anchored to this one; do not estimate how far away a date is from your own sense of the current date.
+Data source disclosure — every fact below is tagged with where it came from. A field with no live source is marked not available below, never silently filled in — do NOT estimate, recall from training memory, or invent a number for it:
+- Recent catalyst/headline: LIVE, real news published within the last 7 days (publisher + per-item age shown below; anything older was dropped, not shown). Some headlines may carry a sentiment tag; treat it as one input, not a verdict.
+- Forward catalyst: the FOMC decision countdown below is REAL, from the Fed's published calendar.
+Not in your lane this call: company fundamentals and valuation; market technicals (RSI, trend, ranges, volume); retail sentiment and community activity. Another analyst on this desk holds each of those and will speak to it — this is a division of labour, NOT missing data. Do not estimate or infer them, do not ask for them, and do not tell the Room they are unavailable.
+
+Instrument: LONGNAMESENT (ZQXA) — EXCHNAMESENT
+Reference price: $271.83
+Catalysts — recent: "HEADLINESENT" (PUBSENT, 10d ago) — sentiment: SENTIMENTSENT — SUMMARYSENT — NOTE: no headline in this feed names this company, so this item is recent market coverage, NOT a catalyst for this ticker. Do not attribute it to the company or treat it as company news.; forward (REAL, Fed's published calendar): FOMC decision in 14 days
+Next earnings (LIVE): 2026-09-30 (Q3) — in 28 days, consensus EPS est. $4.44

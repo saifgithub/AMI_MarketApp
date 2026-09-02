@@ -99,7 +99,7 @@ The guard covers *"claims data it does not have."* Nothing covers *"denies data 
 | Margin **TREND** | **24.2%** | denies it exists |
 | Buybacks | 13.3% (4/30) | denies it exists |
 
-Honest limits: **0 of 66** replies ever *stated* the trend was unavailable, and undenied Dividend also sits low (16.7%, n=18). This is suppression by omission — the structure-vs-trend pair is the strong datum, buybacks corroborates.
+Honest limits: only **1 of 66** replies ever *stated* the trend was unavailable, and undenied Dividend also sits low (16.7%, n=18). This is suppression by omission, not refusal — the structure-vs-trend pair is the strong datum, buybacks corroborates. Reproduce with `evidence/analysis/citation_rates.py`, which is the artifact of record for these numbers.
 
 **The mechanism, caught directly.** In the Gemini convene the Fundamentals Analyst's *thinking* reads *"margins are up significantly YoY — gross 30% (+327bps), operating +365bps, net +434bps"*; its *answer* cites the numbers but states it *"strictly avoided the forbidden active verbs (rising, falling, expanding, compressing)."* It reasoned with the trend and sanitised it out of the output.
 
@@ -222,27 +222,39 @@ on it.** Only `horizon` does (`:437`). Six goal values are collected at onboardi
 into every prompt, and never change a single instruction. The two goal arms differ from the
 `long` baseline in no prompt text but the one printed line.
 
-**Contradictions are Room-wide, not analyst-only.** 11 of 12 agents reported at least one, in
-at least 3 of 6 arms; the Fundamentals Analyst in **6/6**. (The Portfolio Manager's 6/6 is an
-artifact of this harness's own addendum colliding with its JSON-only rule and is excluded.)
+**Contradictions are Room-wide, not analyst-only.** 11 of 12 agents reported at least one in
+at least 3 of 6 arms; the Fundamentals Analyst in **6/6**.
+
+The Portfolio Manager is the twelfth and is **excluded**: its prompt requires the entire reply
+to be one JSON object, this harness's addendum asks for two appended sections, and that
+collision is ours rather than production's. Excluding it drops the PM from 6/6 arms to 1/6 —
+counting it would have inflated the headline by a whole agent. `aggregate_arms.py` does the
+exclusion in code, not by hand.
 
 ### What the Room says it needs — 102 requests over 72 turns
 
 | Requested | × | agents |
 |---|---|---|
-| **Debt maturity schedule / fixed-vs-floating / interest coverage** | **21** | **9 of 12** |
+| **Debt: maturity schedule / fixed-vs-floating / interest coverage** | **21** | **9 of 12** |
 | Historical valuation multiples (5–10y median P/E, EV/EBITDA) | 11 | 6 |
+| Capex / cash-flow statement detail | 9 | 4 |
+| Order book / institutional & options flow | 8 | 3 |
+| Price series, higher timeframe, MACD / volume-at-price | 7 | market analyst |
+| News depth / catalyst detail | 6 | news analyst |
 | Segment / geographic revenue split | 5 | 3 |
-| Price series, higher timeframe, MACD/crossover | 5 | market analyst |
-| Order book / institutional & options flow | 5 | 3 |
-| Dividend & buyback sustainability history | 4 | 4 |
 | Earnings revisions / surprise history / guidance | 4 | fundamentals (driven by #15) |
-| Macro series (CPI, PMI, Fed path) | 4 | 3 |
 | Raw social split / buzz / mention counts | 4 | social |
+| **Volatility for stop sizing (ATR, gap risk)** | 4 | trader + both cautious ROs |
+| Macro series (CPI, PPI, PMI, Fed path) | 4 | 3 |
+| Dividend & buyback sustainability / pacing | 4 | 4 |
+| Peer / sector comparables | 2 | 2 |
 
-Notable singles: **ATR** (the Execution Desk must set a stop and has no volatility measure),
-volume-at-price, per-quarter **buyback pacing**, **capex**, and overnight gap-down statistics
-around FOMC (both cautious Risk Officers).
+16 of the 102 resist clustering and are left unbucketed rather than forced; the ranking is
+stable without them. Regenerate the whole table with `evidence/analysis/aggregate_arms.py`.
+
+The ATR row is worth its own line: the Execution Desk is required to set a stop on every BUY
+and is given **no volatility measure of any kind** to set it from. Both cautious Risk Officers
+independently asked for overnight gap-down statistics around FOMC for the same reason.
 
 ### The free ones
 

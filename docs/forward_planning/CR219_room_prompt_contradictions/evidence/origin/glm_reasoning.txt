@@ -1,0 +1,48 @@
+Let me look at the data carefully.
+
+CAT fact sheet as of 2025-08-08:
+- Reference price: $412.80
+- P/E: not available
+- TTM revenue growth: -1%
+- Net debt: $26,302M
+- Market cap: $193,390M (LIVE)
+- FCF $8,961M (TTM)
+- Gross debt $31,744M, gross cash $5,442M
+- Margin structure (LIVE): operating 18%
+- Margin trend YoY (LIVE): operating -360bps (Q ending 2025-06-30 vs Q ending 2024-06-30)
+- Buybacks (LIVE): $5,910M repurchased (trailing 4 quarters), 3.1% of market cap
+- Earnings power: revenue $63,139M TTM, revenue/share $134.77
+- Balance sheet: current ratio 1.34, quick ratio 0.81, debt/equity 1.70x
+- Ownership: 468M shares out
+- 52-week range: $269.21–$434.11; price -4.9% vs high, +53.3% vs low
+- Valuation: P/S 3.1x, EV/EBITDA 16.0x, FCF yield 4.6%
+- Dividend: yield 1.4% trailing
+
+Historical mode: no analyst consensus, no forward P/E/PEG, no sector classification, no ownership percentages, no next earnings date, no forward dividend rate.
+
+My role: Fundamentals Analyst. Mandate: durable margins, FCF consistency, balance sheet strength, capital allocation.
+
+Analysis:
+- Revenue growth: -1% TTM — shrinking slightly.
+- Operating margin 18%, but down 360bps YoY — margin compression, a real trend (this one IS stated as a trend, so I can cite direction).
+- Net debt $26.3B, D/E 1.70x — leveraged. Quick ratio 0.81 — thin liquidity.
+- FCF $8,961M TTM → FCF yield 4.6%. Buybacks $5,910M = 3.1% of market cap, plus dividend... payout not stated. FCF covers buybacks ($8.96B vs $5.91B) — capital return is FCF-funded.
+- Valuation: EV/EBITDA 16.0x — not cheap for a name with -1% growth and compressing margins. P/S 3.1x. Stock near high: -4.9% from 52-week high, +53.3% off the low.
+- No P/E available — cannot quote earnings multiple.
+
+Thesis: For a long-term wealth mandate, the fundamentals show a business with slight revenue decline, compressing operating margin, and meaningful leverage, priced near its 52-week high at 16x EV/EBITDA — the quality is not in question so much as the price and the direction of the margins.
+
+Stance: This is a fundamentals read. Given -1% growth, -360bps margin compression, D/E 1.70x, and 16x EV/EBITDA near the high — I'd lean "against" taking the position now, or "neutral". Given the mandate is long-term (3-10 years), a 16x EV/EBITDA multiple with 4.6% FCF yield isn't egregious, but the margin trend is negative and the stock is +53% off the low. I'll go "against" with medium conviction — frame as "wait/avoid" per long-only rules. Actually, let me be careful: "against" means my view on taking this position now. I think "against" at this price is defensible: margin compression + leverage + full valuation. Medium conviction.
+
+Note: no margin trend caveat — actually the sheet DOES give a YoY margin trend (operating -360bps), so I can cite direction for operating margin. The system prompt says never describe margins as rising/falling, but the fact sheet explicitly provides "Margin trend, YoY (LIVE): operating -360bps". The sheet wins — it's a stated measured trend. I'll cite it as measured.
+
+Bullets (3, short, numbers):
+1. Margins: operating 18%, down 360bps YoY (Q2'25 vs Q2'24) — compression is measured, not inferred.
+2. Balance sheet: net debt $26.3B, D/E 1.70x, quick ratio 0.81 — leveraged with thin liquidity; FCF $8,961M TTM covers $5,910M buybacks + dividend.
+3. Price/valuation: EV/EBITDA 16.0x, P/S 3.1x, FCF yield 4.6% on -1% TTM revenue growth; stock -4.9% off 52-week high ($434.11), +53.3% off low ($269.21).
+
+Also note: no P/E on the sheet — flag it's unavailable rather than fill.
+
+Headline: max 32 chars. Something like "16x EV/EBITDA, margins -360bps" — count: "16x EV/EBITDA, margins -360bps" = 30 chars. Good. Or "-360bps op margin YoY". Let me count "16x EV/EBITDA, margins -360bps": 1,6,x,space,E,V,/,E,B,I,T,D,A,comma,space,m,a,r,g,i,n,s,space,-,3,6,0,b,p,s = 30. Good.
+
+Keep it terse per tone preference. Long-only framing: negative view as "avoid/wait".

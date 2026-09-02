@@ -1,0 +1,16 @@
+Fact sheet as of 2026-09-02 (UTC) — every other date in this sheet is anchored to this one; do not estimate how far away a date is from your own sense of the current date.
+Data source disclosure — every fact below is tagged with where it came from. A field with no live source is marked not available below, never silently filled in — do NOT estimate, recall from training memory, or invent a number for it:
+- Retail sentiment/mention/community fields: LIVE, real Reddit aggregate data — a point-in-time snapshot whose fetch date is shown with it below; read it as of THAT date, not as of now (Reddit only — no Twitter/X, StockTwits, Google Trends, or Discord data exists).
+Not in your lane this call: company fundamentals and valuation; market technicals (RSI, trend, ranges, volume); news and catalysts. Another analyst on this desk holds each of those and will speak to it — this is a division of labour, NOT missing data. Do not estimate or infer them, do not ask for them, and do not tell the Room they are unavailable.
+
+Instrument: LONGNAMESENT (ZQXA) — EXCHNAMESENT
+Reference price: $271.83
+Retail sentiment: bullish (+0.42 (live Reddit sentiment, Adanos))
+  Snapshot: fetched 2026-08-30 (3d ago)
+  Mentions: 73,561 Reddit mentions over 33d, trend: SOCTRENDSENT
+  buzz score 88/100, bullish 61% / bearish 29%
+  Classified: 4,471 positive / 2,119 negative / 6,971 neutral — neutral is 51% of the classified sample
+  Engagement: 1,234 distinct posts, 98,765 total upvotes
+  Communities: most active in r/SUBSENT (1 of 44 subreddits in the sample)
+    r/SPLITSENT: 5,150 mentions, sentiment -0.37, buzz 66/100
+    (No other community's numbers were supplied. Do not attribute a figure, tone or trend to one that is not listed.)

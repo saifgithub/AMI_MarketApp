@@ -1,0 +1,19 @@
+Fact sheet as of 2026-09-02 (UTC) — every other date in this sheet is anchored to this one; do not estimate how far away a date is from your own sense of the current date.
+Data source disclosure — every fact below is tagged with where it came from. A field with no live source is marked not available below, never silently filled in — do NOT estimate, recall from training memory, or invent a number for it:
+- RSI, trend, volume, 50-day range: LIVE, computed from real yfinance price history as of this call. No MACD, moving-average crossover signal, or Bollinger Bands are computed — do not cite them.
+Not in your lane this call: company fundamentals and valuation; news and catalysts; retail sentiment and community activity. Another analyst on this desk holds each of those and will speak to it — this is a division of labour, NOT missing data. Do not estimate or infer them, do not ask for them, and do not tell the Room they are unavailable.
+
+Instrument: LONGNAMESENT (ZQXA) — EXCHNAMESENT
+Reference price: $271.83 (the live quote) and $444.22 (the last close, final candle of the 3-month history) — the SAME instrument measured by two sources, not two facts. Use the last close for anything you compute.
+RSI: 57 (TONESENT), trend: TRENDSENT
+50-day range: $333.11–$888.99, last close $444.22 (20% of that range)
+20-day SMA: $411.77, 50-day SMA: $422.88 — the last close is +7.9% vs the 20-day and +5.0% vs the 50-day
+Window trend: up 19.83% across the 63 trading days of the fetched history (first close to last close — this is the quarter-scale move, not a day move)
+Volume: VOLSENT (1.47× the 20-day average, 5-day mean)
+Day move (LIVE): -1.77% today (market open)
+Primary trend (LIVE): 200-day average $188.44, price 12.6% above it (equivalently, the average sits 11.2% below the price — the two differ because each is a share of a different base)
+Relative strength, 52w (LIVE): +27.4% vs S&P 500 +11.9% — 15.5pp ahead of the index
+Volume (LIVE): 44,556,677 shares today, 88,776,655 3-month average
+Beta (LIVE): 1.93 vs the market (5-year monthly, per the provider)
+Short interest (LIVE): 6.28% of float short, 4.7 days to cover — as reported 2026-07-15, NOT a live figure
+52-week range: $155.4–$402.9; from the last close $444.22: +10.3% vs the high, +185.9% vs the low

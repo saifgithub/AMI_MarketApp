@@ -1,0 +1,50 @@
+Fact sheet as of 2026-09-02 (UTC) — every other date in this sheet is anchored to this one; do not estimate how far away a date is from your own sense of the current date.
+Data source disclosure — every fact below is tagged with where it came from. A field with no live source is marked not available below, never silently filled in — do NOT estimate, recall from training memory, or invent a number for it:
+- Numeric fundamentals (price, P/E, growth, margin, net cash, 52-week range): each field below is tagged individually — a provider gap on one field does not make the others fake. Only the fields explicitly marked available/LIVE below are real; any field marked 'not available' has no data behind it.
+- RSI, trend, volume, 50-day range: LIVE, computed from real yfinance price history as of this call. No MACD, moving-average crossover signal, or Bollinger Bands are computed — do not cite them.
+- Recent catalyst/headline: LIVE, real news published within the last 7 days (publisher + per-item age shown below; anything older was dropped, not shown). Some headlines may carry a sentiment tag; treat it as one input, not a verdict.
+- Retail sentiment/mention/community fields: LIVE, real Reddit aggregate data — a point-in-time snapshot whose fetch date is shown with it below; read it as of THAT date, not as of now (Reddit only — no Twitter/X, StockTwits, Google Trends, or Discord data exists).
+- Forward catalyst: the FOMC decision countdown below is REAL, from the Fed's published calendar.
+
+Instrument: LONGNAMESENT (ZQXA) — EXCHNAMESENT
+Reference price: $271.83 (the live quote) and $444.22 (the last close, final candle of the 3-month history) — the SAME instrument measured by two sources, not two facts. Use the last close for anything you compute.
+P/E: 48.77 trailing (measured — last 12 months of reported earnings) · 12.34 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
+TTM revenue growth: 23.61%
+Net cash $944M
+Company size (LIVE): market cap $1,234,567M, FCF $45,678M (TTM), gross debt $8,901M, gross cash $55,221M
+Margin structure (LIVE): gross 63.71%, operating 52.83%, net 41.29%
+Margin trend, YoY (LIVE): gross +1234bps, operating +2345bps, net +3456bps — quarter ending TRENDBASISSENT against the quarter ending TRENDPRIORSENT
+Buybacks (LIVE): $7,654M repurchased (trailing 4 quarters), 8.9% of market cap
+Capital returned (LIVE): $10,871M (trailing 4 quarters) — buybacks $7,654M + dividends $3,217M, 63% of TTM FCF
+Earnings power (LIVE): EPS $7.7701 trailing (measured, last 12 months), revenue $98,765M TTM, revenue/share $66.4401
+Returns (LIVE): ROE 31.55% (on book equity), ROA 17.22%
+Balance sheet (LIVE): current ratio 3.19, quick ratio 2.71, debt/equity 1.47x
+Ownership (LIVE): institutions 72.19%, insiders 4.31%, 8,642M shares out, 7,531M float
+RSI: 57 (TONESENT), trend: TRENDSENT
+50-day range: $333.11–$888.99, last close $444.22 (20% of that range)
+20-day SMA: $411.77, 50-day SMA: $422.88 — the last close is +7.9% vs the 20-day and +5.0% vs the 50-day
+Window trend: up 19.83% across the 63 trading days of the fetched history (first close to last close — this is the quarter-scale move, not a day move)
+Volume: VOLSENT (1.47× the 20-day average, 5-day mean)
+Day move (LIVE): -1.77% today (market open)
+Primary trend (LIVE): 200-day average $188.44, price 12.6% above it (equivalently, the average sits 11.2% below the price — the two differ because each is a share of a different base)
+Relative strength, 52w (LIVE): +27.4% vs S&P 500 +11.9% — 15.5pp ahead of the index
+Volume (LIVE): 44,556,677 shares today, 88,776,655 3-month average
+Beta (LIVE): 1.93 vs the market (5-year monthly, per the provider)
+Short interest (LIVE): 6.28% of float short, 4.7 days to cover — as reported 2026-07-15, NOT a live figure
+52-week range: $155.4–$402.9; from the last close $444.22: +10.3% vs the high, +185.9% vs the low
+Catalysts — recent: "HEADLINESENT" (PUBSENT, 10d ago) — sentiment: SENTIMENTSENT — SUMMARYSENT — NOTE: no headline in this feed names this company, so this item is recent market coverage, NOT a catalyst for this ticker. Do not attribute it to the company or treat it as company news.; forward (REAL, Fed's published calendar): FOMC decision in 14 days
+Retail sentiment: bullish (+0.42 (live Reddit sentiment, Adanos))
+  Snapshot: fetched 2026-08-30 (3d ago)
+  Mentions: 73,561 Reddit mentions over 33d, trend: SOCTRENDSENT
+  buzz score 88/100, bullish 61% / bearish 29%
+  Classified: 4,471 positive / 2,119 negative / 6,971 neutral — neutral is 51% of the classified sample
+  Engagement: 1,234 distinct posts, 98,765 total upvotes
+  Communities: most active in r/SUBSENT (1 of 44 subreddits in the sample)
+    r/SPLITSENT: 5,150 mentions, sentiment -0.37, buzz 66/100
+    (No other community's numbers were supplied. Do not attribute a figure, tone or trend to one that is not listed.)
+Valuation (LIVE): P/S 7.31x, EV/EBITDA 19.42x, PEG 2.15 (PEGBASISSENT basis), FCF yield 3.87%
+Sector/industry (LIVE): ENERGYSENT / DRILLSENT
+Dividend (LIVE): yield 1.63% (trailing), $2.64/share indicated annual, payout 27.33% of earnings, ex-date 2026-10-17 (in 45 days) (M&A: not available, not claimed)
+Analyst consensus (LIVE, Street view — NOT company guidance): STRONGSENT (mean score 3.7 on 1=strong buy … 5=sell), 37 analysts, target $488.12 mean / $355.75 median / $122.75–$611.25 range
+Asymmetry from the last close $444.22: **+9.9%** to the consensus target $488.12, **-25.0%** to the 50-day range low $333.11. AMI's arithmetic on the two lines above — the Street's target is not a trade target and the range low is not a stop.
+Next earnings (LIVE): 2026-09-30 (Q3) — in 28 days, consensus EPS est. $4.44
