@@ -82,8 +82,8 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R23 | Class D — 8 downstream agents hold the sheet, briefs never mention it | **RULED** | Name the sheet + a "quote, don't re-derive" numbers rule, now (not the expensive lane-gating half). GLM's R3 and QWEN's own ruling converge on this independently | K,F,G,Q | ☐ |
-| R24 | Class E — 1-on-1 lane gap (Fundamentals gets price-prediction data its persona forbids) | CONVERGENT | Lane-gate `build_live_data_block()` on the 1-on-1 surface, same mechanism as the Room lanes | K,F,G | ☐ |
+| R23 | Class D — 8 downstream agents hold the sheet, briefs never mention it | **RULED** | Name the sheet + a "quote, don't re-derive" numbers rule, now (not the expensive lane-gating half). GLM's R3 and QWEN's own ruling converge on this independently. Done `5ff7375b` (8 briefs; AC4's before-arm is the banked 66-turn corpus) | K,F,G,Q | ☑ |
+| R24 | Class E — 1-on-1 lane gap (Fundamentals gets price-prediction data its persona forbids) | CONVERGENT | Lane-gate `build_live_data_block()` on the 1-on-1 surface, same mechanism as the Room lanes. Done `a5731d32` + CR040 loud-withhold notice `14b32e92` (reuses `_AGENT_LANES`; guard covers the 1-on-1 surface) | K,F,G | ☑ |
 
 ## Finding #17 — primary_goal collected, never branched on
 
