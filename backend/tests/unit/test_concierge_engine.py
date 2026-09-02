@@ -1,5 +1,6 @@
 """Tests for the scripted Concierge engine — full happy path + classifiers."""
 
+from app.schemas.mandate import Compliance
 from app.schemas.onboarding import (
     ConversationStep,
     OnboardingSession,
@@ -193,19 +194,99 @@ def test_cr114_every_shipped_chip_is_in_the_contract_table():
     )
 
 
+# The two RESTRICTION flags: `Compliance` defaults both to True, so they are
+# in force unless the user opts out. CR220 — before it, `_parse_constraints`
+# returned them as bare keyword hits, so "No hard rules" produced
+# long_only=False/liquid_only=False and an ONBOARDED user came out LESS
+# constrained than one who never onboarded at all.
+_RESTRICTION_FLAGS = {"long_only", "liquid_only"}
+_OPT_IN_FLAGS = _BOOLEAN_FLAGS - _RESTRICTION_FLAGS
+
+
 def test_cr114_each_chip_sets_exactly_the_flag_it_names():
     """The defect CR114 fixes: the chip said one thing and the parser keyed off
     a substring that may or may not have survived a rewording. Tap each chip
-    exactly as shipped and assert the compliance flags that come back."""
+    exactly as shipped and assert the compliance flags that come back.
+
+    CR220 asserts against the RESOLVED `Compliance` object rather than the raw
+    dict, because the raw dict is now deliberately partial — the restriction
+    flags are omitted so the schema default stands. What is enforced is the
+    resolved object, so that is what the chip contract must be pinned to."""
     for chip, expected_flag in _CHIP_TO_FLAG.items():
-        parsed = _parse_constraints(chip)
-        raised = {f for f in _BOOLEAN_FLAGS if parsed[f]}
-        expected = set() if expected_flag is None else {expected_flag}
+        resolved = Compliance(**_parse_constraints(chip))
+        raised = {f for f in _OPT_IN_FLAGS if getattr(resolved, f)}
+        expected = set() if expected_flag in (None, *_RESTRICTION_FLAGS) else {expected_flag}
         assert raised == expected, (
             f'chip "{chip}" raised {raised or "{}"}, expected '
             f'{expected or "{}"} — the chip text and _parse_constraints '
             f"have drifted apart"
         )
+        # A restriction chip must leave its own flag ON; no chip may turn one OFF.
+        for flag in _RESTRICTION_FLAGS:
+            assert getattr(resolved, flag) is True, (
+                f'chip "{chip}" turned {flag} OFF. No Q7 chip may loosen a '
+                f"restriction — that is the CR220 defect."
+            )
+
+
+def test_cr220_no_hard_rules_matches_the_never_onboarded_default():
+    """The CR220 defect, stated directly: a user who answers "No hard rules"
+    must end up with exactly the compliance a user who never onboarded gets
+    from `get_or_default()`. Before the fix they got long_only=False and
+    liquid_only=False — strictly LESS constrained for having done the
+    interview.
+
+    Mutation check: restoring the bare `"long-only" in t` / `"liquid" in t`
+    returns in `_parse_constraints` turns this red."""
+    resolved = Compliance(**_parse_constraints("No hard rules"))
+    assert resolved.model_dump() == Compliance().model_dump()
+    assert resolved.long_only is True
+    assert resolved.liquid_only is True
+
+
+def test_cr220_restriction_flags_are_omitted_not_falsified():
+    """The mechanism behind the fix: `_parse_constraints` must OMIT a
+    restriction flag it has no evidence about, so the schema default applies.
+    Returning it as `False` is what made the guard at the call site useless."""
+    parsed = _parse_constraints("No hard rules")
+    assert "long_only" not in parsed
+    assert "liquid_only" not in parsed
+
+
+def test_cr220_an_explicit_opt_out_is_still_honoured():
+    """The fix must not make the restrictions uncoachable — the interview is
+    the one place a user can loosen them. An explicit request still lands."""
+    assert Compliance(**_parse_constraints("I want to short stocks")).long_only is False
+
+
+def test_cr220_ambiguous_short_language_does_not_loosen():
+    """"I don't want shorting" contains the word "short" but is a request FOR
+    the restriction. Inferring the opt-out from the bare word would be the
+    mirror image of the CR220 defect."""
+    assert Compliance(**_parse_constraints("I don't want shorting")).long_only is True
+
+
+def test_cr220_readback_still_names_a_restriction_that_is_in_force():
+    """Promise-vs-mechanism (the DEF158 shape). `_parse_constraints` now omits
+    the restriction keys, so the readback summary must resolve them through the
+    schema — otherwise "long-only" silently drops out of the flags the user
+    confirms while still being ENFORCED."""
+    session = OnboardingSession()
+    summary = _walk_through_express_path(
+        session,
+        {
+            ConversationStep.WELCOME: "yes",
+            ConversationStep.Q1_GOAL: "retire",
+            ConversationStep.Q2_HORIZON: "10+ years",
+            ConversationStep.Q3_SCENARIO_DRAWDOWN: "Hold and wait",
+            ConversationStep.Q4_SCENARIO_REGRET: "About the same",
+            ConversationStep.Q5_SCENARIO_CONCENTRATION: "30%",
+            ConversationStep.Q6_MAX_DRAWDOWN: "30%",
+            ConversationStep.Q7_CONSTRAINTS: "No hard rules",
+        },
+    )
+    assert summary["compliance"]["long_only"] is True
+    assert summary["compliance"]["liquid_only"] is True
 
 
 def test_cr114_every_compliance_flag_is_reachable_from_some_chip():

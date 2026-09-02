@@ -12,6 +12,8 @@ import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
+import 'package:ami_trade/screens/settings/profile_fields_section.dart';
+import 'package:ami_trade/screens/settings/ticker_rules_section.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
@@ -65,6 +67,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ComplianceFlags? _localCompliance;
   bool _dirty = false;
 
+  // CR220 — the identity/goal fields. Same shadow-copy shape as the three
+  // above: null means "untouched this session", so the diff in `_save()` can
+  // tell "not edited" apart from "edited back to the stored value".
+  String? _localPrimaryGoal;
+  String? _localHorizon;
+  String? _localPath;
+  String? _localLearningStyle;
+  String? _localDisplayName;
+  String? _localTimezone;
+  List<String>? _localRiskQuotes;
+
   // CR101-MOBILE — the seven risk-limit fields. `containsKey` marks a field
   // touched this session; the (possibly null) value is what gets PATCHed.
   // Cleared after a successful save so the NEXT build reads straight off
@@ -76,6 +89,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _localRiskScore ??= m.riskScore;
     _localMaxDD ??= m.maxDrawdownPct;
     _localCompliance ??= m.compliance;
+    _localPrimaryGoal ??= m.primaryGoal;
+    _localHorizon ??= m.horizon;
+    _localPath ??= m.path;
+    _localLearningStyle ??= m.learningStyle;
+    _localDisplayName ??= m.displayName;
+    _localTimezone ??= m.timezone;
+    _localRiskQuotes ??= m.riskQuotes;
+  }
+
+  /// CR220 — one setter for every scalar identity/goal field, so a new field
+  /// is a line in `_save()`'s diff table rather than another near-identical
+  /// handler.
+  /// List equality for the risk quotes — Dart's `==` on `List` is identity,
+  /// so without this every build would look dirty and PATCH on every save.
+  static bool _sameStrings(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  void _setLocal(void Function() apply) {
+    setState(() {
+      apply();
+      _dirty = true;
+    });
   }
 
   void _onRiskLimitChanged(LimitFieldConfig cfg, num? value) {
@@ -130,8 +170,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_localMaxDD != null && _localMaxDD != m.maxDrawdownPct) {
       updates['max_drawdown_pct'] = _localMaxDD;
     }
-    if (_localCompliance != null) {
+    // CR220: only send compliance when it actually CHANGED. It used to be sent
+    // on every save (harmless while the payload was six bools the server would
+    // merge back to themselves) — but `toPatchJson` now always carries
+    // `ticker_allowlist`, including a null one, so an untouched save would
+    // clear a user's allowlist. Comparing against the server's object is what
+    // keeps "I edited my risk score" from silently rewriting a safety control.
+    if (_localCompliance != null && _localCompliance != m.compliance) {
       updates['compliance'] = _localCompliance!.toPatchJson();
+    }
+    // CR220 — the identity/goal fields. Each key here MUST match the backend
+    // `Mandate` field name exactly: the store deep-merges by key and the API
+    // ignores what it does not recognise, so a typo would 200 and silently
+    // drop the change (the DEF195 failure the user cannot see). Pinned by
+    // `test/screens/settings/cr220_profile_fields_test.dart`.
+    for (final entry in <String, List<Object?>>{
+      'primary_goal': [_localPrimaryGoal, m.primaryGoal],
+      'horizon': [_localHorizon, m.horizon],
+      'path': [_localPath, m.path],
+      'learning_style': [_localLearningStyle, m.learningStyle],
+      'timezone': [_localTimezone, m.timezone],
+    }.entries) {
+      final local = entry.value[0];
+      if (local != null && local != entry.value[1]) updates[entry.key] = local;
+    }
+    // Guarded separately: an empty display name would erase the only thing the
+    // analysts have to call the user by, and the server has no default to fall
+    // back to on a PATCH (unlike onboarding, which stamps "Trader").
+    final name = _localDisplayName?.trim();
+    if (name != null && name.isNotEmpty && name != m.displayName) {
+      updates['display_name'] = name;
+    }
+    if (_localRiskQuotes != null && !_sameStrings(_localRiskQuotes!, m.riskQuotes)) {
+      updates['risk_quotes'] = _localRiskQuotes;
     }
     final touchedRiskLimits = Map<String, dynamic>.from(_pendingRiskLimits);
     updates.addAll(touchedRiskLimits);
@@ -140,6 +211,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       _dirty = false;
       _pendingRiskLimits.clear();
+      // CR220: drop the shadow copies so the next build re-reads the server's
+      // returned mandate — the same round-trip contract the risk limits keep.
+      _localPrimaryGoal = null;
+      _localHorizon = null;
+      _localPath = null;
+      _localLearningStyle = null;
+      _localDisplayName = null;
+      _localTimezone = null;
+      _localRiskQuotes = null;
+      _localCompliance = null;
     });
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -326,14 +407,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
+                  // CR220 — the identity/goal half of the mandate, now
+                  // editable. Plan and Credits stay read-only: they are
+                  // entitlement state resolved server-side and stripped from
+                  // any PATCH by CLIENT_UNWRITABLE_MANDATE_FIELDS (DEF179).
+                  // Locale stays read-only here too — it is changed by the
+                  // LANGUAGE section below, and offering two controls for one
+                  // value is how they drift apart.
                   _Section(title: l.settingsSectionProfile, children: [
+                    Text(
+                      l.settingsProfileEditHint,
+                      style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                    ),
+                    const SizedBox(height: AmiSpacing.s),
                     _ReadOnlyRow(label: l.settingsProfilePlan, value: m.plan),
-                    _ReadOnlyRow(label: l.settingsProfileLocale, value: m.locale),
-                    _ReadOnlyRow(label: l.settingsProfileTimezone, value: m.timezone),
-                    _ReadOnlyRow(label: l.settingsProfilePath, value: m.path),
-                    _ReadOnlyRow(label: l.settingsProfileHorizon, value: m.horizon),
-                    _ReadOnlyRow(label: l.settingsProfilePrimaryGoal, value: m.primaryGoal),
                     _ReadOnlyRow(label: l.settingsProfileCredits, value: '${m.creditBalance}'),
+                    _ReadOnlyRow(label: l.settingsProfileLocale, value: m.locale),
+                    const SizedBox(height: AmiSpacing.s),
+                    MandateTextRow(
+                      fieldKey: 'displayNameField',
+                      label: l.settingsProfileDisplayName,
+                      hint: l.settingsProfileDisplayNameHint,
+                      value: _localDisplayName ?? m.displayName,
+                      onChanged: (v) => _setLocal(() => _localDisplayName = v),
+                    ),
+                    const SizedBox(height: AmiSpacing.m),
+                    MandateChoiceRow(
+                      fieldKey: 'primaryGoal',
+                      label: l.settingsProfilePrimaryGoal,
+                      options: primaryGoalOptions(l),
+                      value: _localPrimaryGoal ?? m.primaryGoal,
+                      onChanged: (v) => _setLocal(() => _localPrimaryGoal = v),
+                    ),
+                    const SizedBox(height: AmiSpacing.m),
+                    MandateChoiceRow(
+                      fieldKey: 'horizon',
+                      label: l.settingsProfileHorizon,
+                      options: horizonOptions(l),
+                      value: _localHorizon ?? m.horizon,
+                      onChanged: (v) => _setLocal(() => _localHorizon = v),
+                    ),
+                    const SizedBox(height: AmiSpacing.m),
+                    MandateChoiceRow(
+                      fieldKey: 'path',
+                      label: l.settingsProfilePath,
+                      options: pathOptions(l),
+                      value: _localPath ?? m.path,
+                      explain: l.settingsPathExplain,
+                      onChanged: (v) => _setLocal(() => _localPath = v),
+                    ),
+                    const SizedBox(height: AmiSpacing.m),
+                    MandateChoiceRow(
+                      fieldKey: 'learningStyle',
+                      label: l.settingsProfileLearningStyle,
+                      options: learningStyleOptions(l),
+                      value: _localLearningStyle ?? m.learningStyle,
+                      onChanged: (v) => _setLocal(() => _localLearningStyle = v),
+                    ),
+                    const SizedBox(height: AmiSpacing.m),
+                    _TimezoneRow(
+                      value: _localTimezone ?? m.timezone,
+                      onChanged: (v) => _setLocal(() => _localTimezone = v),
+                    ),
+                  ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  _Section(title: l.settingsSectionTickerRules, children: [
+                    TickerRulesSection(
+                      compliance: _localCompliance ?? m.compliance,
+                      validate: (t) => ref.read(apiClientProvider).validateTicker(t),
+                      onChanged: (next) => _setLocal(() => _localCompliance = next),
+                    ),
+                  ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  _Section(title: l.settingsSectionRiskQuotes, children: [
+                    RiskQuotesSection(
+                      quotes: _localRiskQuotes ?? m.riskQuotes,
+                      onChanged: (next) => _setLocal(() => _localRiskQuotes = next),
+                    ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   _MembershipSection(mandate: m),
@@ -1555,5 +1705,76 @@ class _AlpacaRow extends StatelessWidget {
     ref.invalidate(alpacaLinkedProvider);
     ref.invalidate(alpacaPortfolioProvider);
     ref.invalidate(alpacaPositionsProvider);
+  }
+}
+
+
+/// CR220 — the timezone picker.
+///
+/// Onboarding sends `DateTime.now().timeZoneName`, which is an ABBREVIATION
+/// ("GMT+8", "PST"), not the IANA identifier `mandate_schema.md` specifies. So
+/// most users' stored value is something no library can parse. This row does
+/// not try to repair that automatically — it offers the correct value and lets
+/// the user pick, which is the self-correcting path CR220 chose over touching
+/// the capture side.
+///
+/// The list is deliberately short and regional rather than the full ~600-zone
+/// IANA database: the value is narration only today (every day/week boundary in
+/// the safety floor is pinned to UTC by design, see `risk_limits.py`), so a
+/// searchable 600-row picker would be a lot of surface for a field nothing
+/// enforces. The user's current value is always offered even if it is not in
+/// the list, so a picker refresh can never silently drop what they had.
+class _TimezoneRow extends StatelessWidget {
+  const _TimezoneRow({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  static const _zones = <String>[
+    'UTC',
+    'Asia/Riyadh',
+    'Asia/Dubai',
+    'Asia/Kuala_Lumpur',
+    'Asia/Singapore',
+    'Asia/Karachi',
+    'Asia/Kolkata',
+    'Asia/Jakarta',
+    'Asia/Tokyo',
+    'Europe/London',
+    'Europe/Paris',
+    'Europe/Istanbul',
+    'America/New_York',
+    'America/Chicago',
+    'America/Los_Angeles',
+    'Australia/Sydney',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final options = [
+      if (!_zones.contains(value)) value,
+      ..._zones,
+    ];
+    return Row(
+      children: [
+        Expanded(child: Text(l.settingsProfileTimezone, style: AmiTypography.body)),
+        DropdownButton<String>(
+          key: const Key('timezoneField'),
+          value: value,
+          isDense: true,
+          dropdownColor: AmiColors.slate800,
+          underline: const SizedBox.shrink(),
+          style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
+          items: [
+            for (final z in options)
+              DropdownMenuItem(value: z, child: Text(z)),
+          ],
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+        ),
+      ],
+    );
   }
 }

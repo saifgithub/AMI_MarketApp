@@ -60,6 +60,50 @@ class ComplianceFlags {
     );
   }
 
+  /// CR220 — value equality so `_save()` can tell "the user changed a
+  /// compliance flag" from "the screen rebuilt". Without it `==` is identity,
+  /// every `copyWith` looks like a change, and an untouched save would PATCH
+  /// `ticker_allowlist: null` over a real allowlist.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ComplianceFlags &&
+        other.halal == halal &&
+        other.esgLite == esgLite &&
+        other.noTobaccoAlcoholGambling == noTobaccoAlcoholGambling &&
+        other.noFossilFuels == noFossilFuels &&
+        other.longOnly == longOnly &&
+        other.liquidOnly == liquidOnly &&
+        other.derivativesAllowed == derivativesAllowed &&
+        _listEquals(other.tickerBlocklist, tickerBlocklist) &&
+        _listEquals(other.tickerAllowlist, tickerAllowlist) &&
+        _listEquals(other.customConstraints, customConstraints);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        halal,
+        esgLite,
+        noTobaccoAlcoholGambling,
+        noFossilFuels,
+        longOnly,
+        liquidOnly,
+        derivativesAllowed,
+        Object.hashAll(tickerBlocklist),
+        tickerAllowlist == null ? null : Object.hashAll(tickerAllowlist!),
+        Object.hashAll(customConstraints),
+      );
+
+  static bool _listEquals(List<String>? a, List<String>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   Map<String, dynamic> toPatchJson() => {
         'halal': halal,
         'esg_lite': esgLite,
@@ -69,7 +113,13 @@ class ComplianceFlags {
         'liquid_only': liquidOnly,
         'derivatives_allowed': derivativesAllowed,
         'ticker_blocklist': tickerBlocklist,
-        if (tickerAllowlist != null) 'ticker_allowlist': tickerAllowlist,
+        // CR220: sent even when null. Omitting it meant a cleared allowlist
+        // could never reach the server — the deep-merge on the backend keeps
+        // whatever was already stored for a key that is absent, so "remove my
+        // allowlist" was unrepresentable. `null` is the documented way to
+        // clear it; an EMPTY list is refused by the API on purpose, because
+        // it would mean "nothing is tradable".
+        'ticker_allowlist': tickerAllowlist,
       };
 
   factory ComplianceFlags.fromJson(Map<String, dynamic> j) {

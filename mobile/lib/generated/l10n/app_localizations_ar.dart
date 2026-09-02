@@ -4687,4 +4687,124 @@ class AppLocalizationsAr extends AppLocalizations {
   String optionTicketSharesLocked(String shares) {
     return '$shares shares locked';
   }
+
+  @override
+  String get settingsProfileEditHint =>
+      'Tap a value to change it. Plan and credits are set by your subscription.';
+
+  @override
+  String get settingsProfileDisplayName => 'Display name';
+
+  @override
+  String get settingsProfileLearningStyle => 'Learning style';
+
+  @override
+  String get settingsProfileDisplayNameHint => 'What the analysts call you';
+
+  @override
+  String get settingsGoalRetirement => 'Retirement';
+
+  @override
+  String get settingsGoalLongTermWealth => 'Long-term wealth';
+
+  @override
+  String get settingsGoalIncomeNow => 'Income now';
+
+  @override
+  String get settingsGoalSpecificGoal => 'A specific goal';
+
+  @override
+  String get settingsGoalLearningToTrade => 'Learning to trade';
+
+  @override
+  String get settingsGoalExploring => 'Exploring';
+
+  @override
+  String get settingsHorizonShort => 'Under 1 year';
+
+  @override
+  String get settingsHorizonMedium => '1–3 years';
+
+  @override
+  String get settingsHorizonLong => '3–10 years';
+
+  @override
+  String get settingsHorizonVeryLong => '10+ years';
+
+  @override
+  String get settingsPathActive => 'Active trading';
+
+  @override
+  String get settingsPathLongHorizon => 'Long horizon';
+
+  @override
+  String get settingsPathBoth => 'Both';
+
+  @override
+  String get settingsPathExplain =>
+      'What your analysts weight: short-term setups, long-term structure, or both.';
+
+  @override
+  String get settingsLearningQuick => 'Quick and direct';
+
+  @override
+  String get settingsLearningStory => 'Explain with stories';
+
+  @override
+  String get settingsLearningVisual => 'Visual';
+
+  @override
+  String get settingsLearningHandsOn => 'Hands-on';
+
+  @override
+  String get settingsSectionRiskQuotes => 'YOUR OWN WORDS';
+
+  @override
+  String get settingsRiskQuotesExplain =>
+      'What you told the Concierge about risk. Kept as your own record — your analysts are not shown these.';
+
+  @override
+  String get settingsRiskQuoteDrawdown => 'On a drawdown';
+
+  @override
+  String get settingsRiskQuoteRegret => 'On regret';
+
+  @override
+  String get settingsRiskQuoteConcentration => 'On concentration';
+
+  @override
+  String get settingsSectionTickerRules => 'TICKER RULES';
+
+  @override
+  String get settingsTickerBlocklist => 'Never trade these';
+
+  @override
+  String get settingsTickerAllowlist => 'Only trade these';
+
+  @override
+  String get settingsTickerAdd => 'Add a ticker';
+
+  @override
+  String get settingsTickerAllowlistWarning =>
+      'While this list has any entry, your analysts may ONLY trade these tickers. Everything else is refused.';
+
+  @override
+  String get settingsTickerBlocklistEmpty => 'No blocked tickers.';
+
+  @override
+  String get settingsTickerAllowlistEmpty =>
+      'No allowlist — everything else is permitted.';
+
+  @override
+  String get settingsTickerUnknown =>
+      'That ticker isn\'t in our universe, so it would never match. Check the symbol.';
+
+  @override
+  String get settingsTickerDuplicate => 'Already in the list.';
+
+  @override
+  String get settingsTickerRemove => 'Remove';
+
+  @override
+  String get settingsTimezoneSearch => 'Search timezones';
 }

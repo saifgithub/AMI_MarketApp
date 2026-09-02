@@ -387,18 +387,52 @@ def _parse_drawdown_pct(text: str) -> int:
 
 
 def _parse_constraints(text: str) -> dict[str, Any]:
+    """Q7 → the `Compliance` object.
+
+    CR220: `long_only` and `liquid_only` are RESTRICTIONS that `Compliance`
+    defaults to True, and this function used to return them as bare keyword
+    hits — i.e. False for anyone who did not happen to type "long only" or
+    "liquid". A user answering "no hard rules" therefore came out of the
+    interview LESS constrained than one who never onboarded at all and got
+    `get_or_default()`'s schema defaults. The `or Compliance().model_dump()`
+    fallback at the call site could never repair it, because this dict is
+    never falsy.
+
+    So the two restriction flags are omitted unless the user's text asserts
+    something about them, and the schema default stands. The opt-OUT phrasings
+    are matched explicitly: the interview is the only place a user can loosen
+    them, and silently refusing to honour "I want to short" would be the
+    mirror image of the bug being fixed.
+
+    The remaining flags are opt-IN (default False), so a bare keyword hit is
+    the correct shape for them and they are always present.
+    """
     t = text.lower()
-    return {
+    constraints: dict[str, Any] = {
         "halal": "halal" in t or "sharia" in t,
         "esg_lite": "esg" in t,
         "no_tobacco_alcohol_gambling": "tobacco" in t or "alcohol" in t or "gambling" in t,
         "no_fossil_fuels": "fossil" in t,
-        "long_only": "long-only" in t or "long only" in t or "no short" in t,
-        "liquid_only": "liquid" in t or "microcap" in t,
         "ticker_blocklist": [],
         "ticker_allowlist": None,
         "custom_constraints": [],
     }
+
+    # Opt-out must be asserted, never inferred from the bare word "short":
+    # the Q7 chip itself reads "ONLY long positions (no shorting)", and
+    # freeform like "I don't want shorting" is a request FOR the restriction,
+    # not against it. Guessing wrong here silently loosens a safety control,
+    # which is the whole class of bug this function is being fixed for, so an
+    # ambiguous answer leaves the schema default alone.
+    if "long-only" in t or "long only" in t or "no short" in t:
+        constraints["long_only"] = True
+    elif "want to short" in t or "allow short" in t or "allow me to short" in t:
+        constraints["long_only"] = False
+
+    if "liquid" in t or "microcap" in t or "micro-cap" in t:
+        constraints["liquid_only"] = True
+
+    return constraints
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -428,7 +462,15 @@ def _build_readback_summary(session: OnboardingSession) -> dict[str, Any]:
         "path": session.answers.get("path", Path.LONG_HORIZON.value),
         "risk_score": risk_score,
         "max_drawdown_pct": session.answers.get("max_drawdown_pct", 30),
-        "compliance": session.answers.get("compliance", {}),
+        # CR220: resolve the PARTIAL dict `_parse_constraints` returns through
+        # the schema, so both consumers of this summary — the readback text the
+        # user confirms, and the mandate built at claim — see the same fully
+        # populated object. `_parse_constraints` deliberately omits the two
+        # restriction flags unless the user asserted something about them; if
+        # that partial dict reached the readback directly, `long-only` would
+        # silently drop out of the flags list while still being ENFORCED, which
+        # is a promise-vs-mechanism gap of exactly the DEF158 shape.
+        "compliance": Compliance(**session.answers.get("compliance", {})).model_dump(),
         "locale": session.locale,
         "timezone": session.timezone,
         "risk_quotes": [
@@ -501,8 +543,10 @@ def session_to_mandate_dict(session: OnboardingSession, user_id: Any) -> dict[st
         },
         "risk_quotes": summary["risk_quotes"],
         "max_drawdown_pct": summary["max_drawdown_pct"],
-        "compliance": summary["compliance"]
-        or Compliance().model_dump(),
+        # Already schema-resolved in `_build_readback_summary` (CR220), so the
+        # old `or Compliance().model_dump()` fallback is gone: it could never
+        # fire (the dict was never falsy) and it masked the real defect.
+        "compliance": summary["compliance"],
         "learning_style": LearningStyle.QUICK.value,
         "plan": Plan.TRIAL_TRADER.value,
         "trial_expires_at": None,  # populated on claim

@@ -7675,6 +7675,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{shares} shares locked'**
   String optionTicketSharesLocked(String shares);
+
+  /// No description provided for @settingsProfileEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a value to change it. Plan and credits are set by your subscription.'**
+  String get settingsProfileEditHint;
+
+  /// No description provided for @settingsProfileDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get settingsProfileDisplayName;
+
+  /// No description provided for @settingsProfileLearningStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning style'**
+  String get settingsProfileLearningStyle;
+
+  /// No description provided for @settingsProfileDisplayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the analysts call you'**
+  String get settingsProfileDisplayNameHint;
+
+  /// No description provided for @settingsGoalRetirement.
+  ///
+  /// In en, this message translates to:
+  /// **'Retirement'**
+  String get settingsGoalRetirement;
+
+  /// No description provided for @settingsGoalLongTermWealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-term wealth'**
+  String get settingsGoalLongTermWealth;
+
+  /// No description provided for @settingsGoalIncomeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Income now'**
+  String get settingsGoalIncomeNow;
+
+  /// No description provided for @settingsGoalSpecificGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'A specific goal'**
+  String get settingsGoalSpecificGoal;
+
+  /// No description provided for @settingsGoalLearningToTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning to trade'**
+  String get settingsGoalLearningToTrade;
+
+  /// No description provided for @settingsGoalExploring.
+  ///
+  /// In en, this message translates to:
+  /// **'Exploring'**
+  String get settingsGoalExploring;
+
+  /// No description provided for @settingsHorizonShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 1 year'**
+  String get settingsHorizonShort;
+
+  /// No description provided for @settingsHorizonMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'1–3 years'**
+  String get settingsHorizonMedium;
+
+  /// No description provided for @settingsHorizonLong.
+  ///
+  /// In en, this message translates to:
+  /// **'3–10 years'**
+  String get settingsHorizonLong;
+
+  /// No description provided for @settingsHorizonVeryLong.
+  ///
+  /// In en, this message translates to:
+  /// **'10+ years'**
+  String get settingsHorizonVeryLong;
+
+  /// No description provided for @settingsPathActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active trading'**
+  String get settingsPathActive;
+
+  /// No description provided for @settingsPathLongHorizon.
+  ///
+  /// In en, this message translates to:
+  /// **'Long horizon'**
+  String get settingsPathLongHorizon;
+
+  /// No description provided for @settingsPathBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get settingsPathBoth;
+
+  /// No description provided for @settingsPathExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'What your analysts weight: short-term setups, long-term structure, or both.'**
+  String get settingsPathExplain;
+
+  /// No description provided for @settingsLearningQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick and direct'**
+  String get settingsLearningQuick;
+
+  /// No description provided for @settingsLearningStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain with stories'**
+  String get settingsLearningStory;
+
+  /// No description provided for @settingsLearningVisual.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual'**
+  String get settingsLearningVisual;
+
+  /// No description provided for @settingsLearningHandsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands-on'**
+  String get settingsLearningHandsOn;
+
+  /// No description provided for @settingsSectionRiskQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR OWN WORDS'**
+  String get settingsSectionRiskQuotes;
+
+  /// No description provided for @settingsRiskQuotesExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'What you told the Concierge about risk. Kept as your own record — your analysts are not shown these.'**
+  String get settingsRiskQuotesExplain;
+
+  /// No description provided for @settingsRiskQuoteDrawdown.
+  ///
+  /// In en, this message translates to:
+  /// **'On a drawdown'**
+  String get settingsRiskQuoteDrawdown;
+
+  /// No description provided for @settingsRiskQuoteRegret.
+  ///
+  /// In en, this message translates to:
+  /// **'On regret'**
+  String get settingsRiskQuoteRegret;
+
+  /// No description provided for @settingsRiskQuoteConcentration.
+  ///
+  /// In en, this message translates to:
+  /// **'On concentration'**
+  String get settingsRiskQuoteConcentration;
+
+  /// No description provided for @settingsSectionTickerRules.
+  ///
+  /// In en, this message translates to:
+  /// **'TICKER RULES'**
+  String get settingsSectionTickerRules;
+
+  /// No description provided for @settingsTickerBlocklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Never trade these'**
+  String get settingsTickerBlocklist;
+
+  /// No description provided for @settingsTickerAllowlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Only trade these'**
+  String get settingsTickerAllowlist;
+
+  /// No description provided for @settingsTickerAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a ticker'**
+  String get settingsTickerAdd;
+
+  /// No description provided for @settingsTickerAllowlistWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'While this list has any entry, your analysts may ONLY trade these tickers. Everything else is refused.'**
+  String get settingsTickerAllowlistWarning;
+
+  /// No description provided for @settingsTickerBlocklistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked tickers.'**
+  String get settingsTickerBlocklistEmpty;
+
+  /// No description provided for @settingsTickerAllowlistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No allowlist — everything else is permitted.'**
+  String get settingsTickerAllowlistEmpty;
+
+  /// No description provided for @settingsTickerUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'That ticker isn\'t in our universe, so it would never match. Check the symbol.'**
+  String get settingsTickerUnknown;
+
+  /// No description provided for @settingsTickerDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in the list.'**
+  String get settingsTickerDuplicate;
+
+  /// No description provided for @settingsTickerRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get settingsTickerRemove;
+
+  /// No description provided for @settingsTimezoneSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search timezones'**
+  String get settingsTimezoneSearch;
 }
 
 class _AppLocalizationsDelegate

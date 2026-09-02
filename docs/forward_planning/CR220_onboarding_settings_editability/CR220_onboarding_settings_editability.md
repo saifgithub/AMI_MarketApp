@@ -95,11 +95,44 @@ CR219 (`room_prompt_contradictions`) is live on `content/agents/*.md` and `_form
 `Path.BOTH` work here touches `overlay_generator.py` branches. Check for conflicts before editing
 those files.
 
+## What actually shipped
+
+### Backend
+
+| Change | File |
+|---|---|
+| `_parse_constraints` OMITS the two restriction flags unless the user asserts something, so the schema default stands. The opt-OUT is matched explicitly rather than inferred from the bare word "short" — the Q7 chip itself contains "no shorting", and freeform "I don't want shorting" is a request FOR the restriction | `services/concierge_engine.py` |
+| The readback summary resolves the partial dict through `Compliance` at the single chokepoint `_build_readback_summary`, so the text the user confirms and the mandate built at claim see the same object. Without this, "long-only" would have dropped out of the readback while still being ENFORCED — the DEF158 promise-vs-mechanism shape | `services/concierge_engine.py` |
+| The dead `or Compliance().model_dump()` fallback removed — it could never fire and masked the defect | `services/concierge_engine.py` |
+| Journal diff labels for `primary_goal`, `horizon`, `path`, `learning_style`, `display_name`, `timezone`, `locale`, `risk_quotes` and both ticker lists, with `_humanise_enum` / `_humanise_list` helpers. `None` and `[]` render differently for an allowlist, because they mean opposite things | `api/mandate.py` |
+| `_validate_ticker_lists` on the PATCH path: unresolvable symbol → 422, empty allowlist → 422 (send `null` to clear), casing normalised to the resolver's canonical form. Reuses `lookup_ticker`; no new route. Placed in the API layer, not the store, because the store is also driven by claim-time hydration and the restart upsert | `api/mandate.py` |
+| `Path.BOTH` wired in all three branches. The News/Macro branch carries CR147 Tier A.5's "no macro feed" warning verbatim in substance — dropping it would reopen the fabrication surface CR147 closed | `agents/overlay_generator.py` |
+| Backfill script, dry-run by default, one journaled mandate version per repaired user, `--only-untouched` escape hatch | `scripts/cr220_backfill_compliance_defaults.py` |
+
+### Mobile
+
+| Change | File |
+|---|---|
+| Profile section: pickers for goal / horizon / path / learning style, a text field for display name, an IANA dropdown for timezone. Plan, credits and locale stay read-only | `screens/settings/settings_screen.dart` |
+| `MandateChoiceRow` / `MandateTextRow` / `RiskQuotesSection` — the enum generalisation of `_DrawdownPicker`, in their own file so they are unit-testable | `screens/settings/profile_fields_section.dart` |
+| Ticker allow/blocklist editors, validating through the existing `ApiClient.validateTicker`; standing warning while an allowlist is non-empty; clearing the last row sends `null`, never `[]` | `screens/settings/ticker_rules_section.dart` |
+| `ComplianceFlags` gained value equality + `toPatchJson` now always sends `ticker_allowlist` | `models/mandate.dart` |
+| 38 new i18n keys × 3 locales. AR/MS carry the EN string as a VISIBLE placeholder — `retranslate:[ar,ms]` | `l10n/app_{en,ar,ms}.arb` |
+
+### A regression caught by the tests, not by review
+
+`_save()` sent `compliance` on **every** save (`_localCompliance != null`, which `_initFrom` always
+populates). That was harmless while the payload was six bools the server merged back to themselves.
+It stopped being harmless the moment `toPatchJson` started always carrying `ticker_allowlist`: an
+untouched save would have PATCHed `null` over a real allowlist and silently deleted a safety rule.
+Fixed by comparing against the server's object — which then required real value equality on
+`ComplianceFlags`, since `==` was identity and every `copyWith` looked like a change.
+
 ## Definition of Done
 
 | Item | State |
 |---|---|
-| Scope | pending |
-| Enforcing check | pending |
-| Degrade loudly | pending |
-| Regression risk | pending |
+| Scope | done — 9 fields editable, entitlement boundary reused not reinvented |
+| Enforcing check | 23 backend + 11 mobile guards, all mutation-proven |
+| Degrade loudly | unknown ticker 422s; empty allowlist 422s; backfill journals per user |
+| Regression risk | the compliance-always-sent bug above, found and fixed |

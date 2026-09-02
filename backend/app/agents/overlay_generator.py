@@ -484,8 +484,17 @@ def _market_analyst_block(m: Mandate) -> str:
     #    in `sim_engine.py` or the models. An instruction about a capability the
     #    product does not have is prompt weight with a hallucination surface
     #    attached, and P2 applies with nothing to control.
+    # CR220: BOTH used to fall into the else, i.e. it was indistinguishable
+    # from LONG_HORIZON despite being a distinct, selectable value. It now
+    # says what its name says — carry both trends and be explicit about which
+    # one a call rests on — rather than silently meaning something else.
     if m.path == Path.ACTIVE:
         parts.append("- Emphasise the shortest trend the daily bars can carry. Skip longer-horizon structure.")
+    elif m.path == Path.BOTH:
+        parts.append(
+            "- Carry BOTH the shortest trend the daily bars support and the "
+            "monthly/quarterly structure. State which of the two any call rests on."
+        )
     else:
         parts.append("- Emphasise monthly/quarterly trend. Skip noise-level intraday signals.")
     if m.risk_score <= 2:
@@ -524,6 +533,17 @@ def _news_block(m: Mandate) -> str:
             "datum you are given is the FOMC countdown; anything else about the "
             "cycle is your framing, not data, and must be said as such."
         )
+    elif m.path == Path.BOTH:
+        # CR220. Carries CR147 Tier A.5's constraint verbatim in substance: this
+        # path asks for structural reads too, so it inherits the same warning
+        # that no macro feed exists. Dropping it here would reopen exactly the
+        # fabrication surface CR147 closed for LONG_HORIZON.
+        parts.append(
+            "- Cover both short-term catalysts and structural reads, and say which "
+            "one a call rests on. The only forward macro datum you are given is the "
+            "FOMC countdown; anything else about the cycle is your framing, not "
+            "data, and must be said as such."
+        )
     else:
         parts.append("- Short-term catalyst news is primary.")
     return "\n".join(parts)
@@ -557,6 +577,12 @@ def _social_block(m: Mandate) -> str:
         )
     if m.path == Path.LONG_HORIZON:
         parts.append("- Sentiment matters only as a contrarian indicator at multi-month timeframe (illustrative framing).")
+    elif m.path == Path.BOTH:
+        # CR220 — see the Market Analyst note above.
+        parts.append(
+            "- Treat sentiment as a near-term signal AND as a multi-month "
+            "contrarian indicator; say which reading you are applying (illustrative framing)."
+        )
     if m.compliance.halal:
         parts.append("- Avoid illustrating memes/discussions involving non-halal sectors.")
     return "\n".join(parts)

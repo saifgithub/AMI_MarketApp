@@ -24,6 +24,7 @@ from app.agents.safety_floor import (
     check_holdings_against_mandate,
 )
 from app.api.dependencies import get_current_user
+from app.db import get_session
 from app.db.models import User
 from app.schemas import Compliance, DayTraderPresetInfo, Mandate, ResolvedCaps
 from app.services.credit_service import balance_for, room_cost_for_plan
@@ -38,6 +39,7 @@ from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore, get_mandate_store
 from app.services.sharia_universe import default_halal_universe_async
+from app.services.ticker_reference import lookup_ticker
 from app.services.sim_engine import (
     SimEngine,
     get_sim_engine,
@@ -65,6 +67,93 @@ router = APIRouter(
 def _own(current_user: User, user_id: UUID) -> None:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+
+# CR220 — journal rendering for the identity/goal fields.
+_TICKER_LIST_LABELS = {
+    "ticker_blocklist": "blocked tickers",
+    "ticker_allowlist": "allowed tickers",
+}
+
+
+def _humanise_enum(value: object) -> str:
+    """`long_term_wealth` → `Long Term Wealth`; anything non-enum-shaped is
+    returned as-is so a display name or an IANA timezone survives untouched."""
+    if value is None:
+        return "unset"
+    text = str(value)
+    if "/" in text or " " in text:  # IANA timezone, or an already-spaced name
+        return text
+    return text.replace("_", " ").title()
+
+
+def _validate_ticker_lists(updates: dict[str, Any]) -> None:
+    """CR220: refuse a ticker the universe cannot resolve, and never store an
+    empty allowlist.
+
+    `safety_floor.py` enforces both lists, so an unresolvable symbol is a
+    safety control that silently does nothing — the CR040 class. Validated
+    here rather than in `MandateStore.patch` because the store is also driven
+    by internal paths (claim-time hydration, restart upsert) that have no
+    business touching the ticker-reference table.
+
+    The empty allowlist is the sharper edge and is refused outright: `None`
+    means "no allowlist", `[]` would mean "nothing is tradable", and a user
+    clearing the last row of an allowlist editor means the former every time.
+    """
+    compliance = updates.get("compliance")
+    if not isinstance(compliance, dict):
+        return
+
+    for key in ("ticker_blocklist", "ticker_allowlist"):
+        if key not in compliance:
+            continue
+        value = compliance[key]
+        if value is None:
+            continue
+        if not isinstance(value, list):
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                f"{key} must be a list of ticker symbols",
+            )
+        if key == "ticker_allowlist" and not value:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "an empty allowlist would make nothing tradable — send null to "
+                "remove the allowlist instead",
+            )
+
+        normalised: list[str] = []
+        unknown: list[str] = []
+        with get_session() as session:
+            for raw in value:
+                symbol = str(raw).upper().strip()
+                if not symbol:
+                    continue
+                row = lookup_ticker(session, symbol)
+                if row is None:
+                    unknown.append(symbol)
+                else:
+                    normalised.append(row.symbol)
+        if unknown:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                f"unknown ticker(s) in {key}: {', '.join(unknown)}",
+            )
+        # Write back the resolver's canonical casing so a lowercase entry can
+        # never sit in an enforced list failing to match.
+        compliance[key] = normalised
+
+
+def _humanise_list(value: object) -> str:
+    """A ticker list in journal prose. `None` and `[]` are NOT the same thing
+    for an allowlist — none means "no allowlist", empty means "nothing is
+    tradable" — so they must never render identically."""
+    if value is None:
+        return "none"
+    if isinstance(value, list):
+        return ", ".join(str(v) for v in value) if value else "empty"
+    return str(value)
 
 
 def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
@@ -150,6 +239,7 @@ def patch_mandate(
     store: MandateStore = Depends(get_mandate_store),
 ) -> Mandate:
     _own(current_user, user_id)
+    _validate_ticker_lists(updates)
     before = store.get_or_default(user_id)
     try:
         updated = store.patch(user_id, updates)
@@ -192,10 +282,38 @@ def patch_mandate(
                 new = updates[field]
                 new_text = "following your risk profile" if new is None else f"{new}{suffix}"
                 diffs.append(f"{label} {old_text} → {new_text}")
+        # CR220 — the identity/goal fields the Concierge interview sets. These
+        # PATCHed successfully long before they were editable in Settings, but
+        # every one fell through to the bare "Mandate updated." below, which is
+        # the DEF197 shape: a real change the history cannot describe. Kept in
+        # their own loop rather than the numeric one above because the "following
+        # your risk profile" null-wording there is meaningless for an enum or a
+        # name, and because these are never settable back to None.
+        for field, label in (
+            ("primary_goal", "primary goal"),
+            ("horizon", "horizon"),
+            ("path", "path"),
+            ("learning_style", "learning style"),
+            ("display_name", "display name"),
+            ("timezone", "timezone"),
+            ("locale", "locale"),
+        ):
+            if field in updates and updates[field] != getattr(before, field):
+                old_v = _humanise_enum(getattr(before, field))
+                new_v = _humanise_enum(updates[field])
+                diffs.append(f"{label} {old_v} → {new_v}")
+        if "risk_quotes" in updates and updates["risk_quotes"] != before.risk_quotes:
+            diffs.append("risk quotes edited")
         if "compliance" in updates and isinstance(updates["compliance"], dict):
             before_c = before.compliance.model_dump()
             for k, v in updates["compliance"].items():
-                if before_c.get(k) != v:
+                if before_c.get(k) == v:
+                    continue
+                # CR220: the two ticker lists are lists, not bools — rendering
+                # them raw gives "compliance.ticker_blocklist: [] → ['TSLA']".
+                if k in ("ticker_blocklist", "ticker_allowlist"):
+                    diffs.append(f"{_TICKER_LIST_LABELS[k]} {_humanise_list(before_c.get(k))} → {_humanise_list(v)}")
+                else:
                     diffs.append(f"compliance.{k}: {before_c.get(k)} → {v}")
         if is_day_trader_preset(updates):
             # CR131 audit MAJOR: one shared constant, not a second copy.
