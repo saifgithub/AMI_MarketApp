@@ -103,7 +103,7 @@ accident inside its reasoning during CR217; this asks for it deliberately. The i
 emits zero reasoning tokens and has been resolving these silently on every convene since
 2026-08-13.
 
-## Two things the record does NOT support
+## Three things the record does NOT support
 
 Stated here so a later reader does not over-read the files.
 
@@ -118,3 +118,13 @@ Stated here so a later reader does not over-read the files.
    sections. That collision is this harness's, not production's, and `aggregate_arms.py`
    excludes it — which drops the PM from 6/6 arms to 1/6. Counting it would have inflated
    the headline finding by a whole agent.
+
+3. **Four of `h_short`'s twelve contradiction reports are our own artifact too.**
+   `convene_gemini.py:77` hardcodes `path=Path.LONG_HORIZON` while `--horizon` varies, so
+   the short arm ran an internally incoherent mandate (`Horizon: short (<1 year)` alongside
+   `Path: long_horizon` / `Primary goal: long_term_wealth`), and four agents (market,
+   social, bull, trader) dutifully reported that incoherence. Those reports are about the
+   harness's mandate, not production's — production mandates come from onboarding and
+   cannot combine these values this way. Unlike the PM exclusion, `aggregate_arms.py` does
+   NOT filter these; discount them when reading `h_short/`. (Added 2026-09-02 by the
+   fable review track — see `../fable/01_review_of_findings.md`.)

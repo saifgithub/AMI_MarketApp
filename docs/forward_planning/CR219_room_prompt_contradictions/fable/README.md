@@ -33,6 +33,21 @@ by a Claude Fable 5 session against the parent folder's evidence and the live so
    merge (~1–2 weeks of traffic); it does not gate it. No movement = a new finding, not
    a revert.
 
+Second round (2026-09-02, on the [`05`](05_further_improvements.md) items):
+
+5. **CR210 diffs: committed with their evidence.** The four working-tree files plus the
+   untracked 2026-08-27 arm artifacts were committed (`fix(CR210)…`, AT:R75 CR210) with a
+   results note (`CR210_.../results/acceptance3_wrong_constraint_regressions.md`). Open
+   item recorded there: the post-fix arm has never been re-run — do that before either
+   constraint flag is enabled on Alpha.
+6. **`h_short` harness artifact: disclosed in the parent now** — third item in
+   `evidence/README.md`'s "does NOT support" section, so reviewers reading the arms today
+   aren't misled.
+7. **Infra split: eval harness stays inside CR219; the verdict-outcome ledger becomes its
+   own CR** (to be minted at the combine step — not minted by this review track, one
+   ID-minter rule).
+8. **Outcome ledger is internal-only; revisit user-facing calibration at v1.0.**
+
 ## Bottom line
 
 The research is right and unusually well-disciplined; the proposed scope is sound but

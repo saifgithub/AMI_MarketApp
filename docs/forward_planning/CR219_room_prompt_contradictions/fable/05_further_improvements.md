@@ -248,6 +248,8 @@ fixture.
 | 4 | 2 (thinking experiment), 12 (order), 11 (envelope) | Experiments the harness can now score |
 | 5 | 7 (gap telemetry), 9 (outcome ledger), 14 (delta line) | Standing instrumentation and UX |
 
-Items 1–6 and 10 are small enough to ride CR219's umbrella per Saiful's one-CR call;
-8 and 9 are infrastructure with their own acceptance shapes — if the combined review
-prefers, they are the two candidates to split out without weakening the rest.
+Items 1–6 and 10 are small enough to ride CR219's umbrella per Saiful's one-CR call.
+**Decided 2026-09-02:** item 8 (eval harness) stays inside CR219 — AC4 and the
+experiments depend on it; item 9 (outcome ledger) splits into its own CR, minted at
+the combine step, **internal-only** (no user-facing calibration stats; revisit at
+v1.0).
