@@ -291,4 +291,95 @@ independently asked for overnight gap-down statistics around FOMC for the same r
 - **Capex** — already implicit in the FCF we render, then discarded.
 - **Buyback pacing** — the four-quarter series is already fetched, summed to TTM, and thrown away.
 
+---
+
+## Target architecture (canonical, reconciling GLM §7 + QWEN 04)
+
+Two reviewers wrote a target-architecture doc unprompted and neither was asked to:
+[`GLM/03_target_prompt_set.md`](GLM/03_target_prompt_set.md) §7 ("what best at evaluating a
+ticker adds up to") and [`QWEN/04_prompt_set_architecture.md`](QWEN/04_prompt_set_architecture.md)
+(five properties + a layered stack + explicitly rejected framings). The register calls this
+"near-identical" (`issue_register.md` R45). Reading both closely, the **layering** is genuinely
+the same content at different granularity; the **five properties** share a name in one place
+("Complete") but define it differently, and diverge on the other four — flagged OPEN below
+rather than smoothed over.
+
+### The layering — same architecture, QWEN's finer stack preferred
+
+Both docs describe the same assembled-prompt pipeline: persona → mandate overlay → fact sheet →
+(format/output rules). GLM's four-layer anatomy (§2) and QWEN's six-layer stack (`## The
+layering`) agree on order and on the binding rule that matters — **a layer may describe a
+downstream layer's shape, never its values**, and no earlier layer may re-state what a later,
+generated layer already states authoritatively. Per the task's naming rule, QWEN's finer stack
+is canonical:
+
+| Layer | QWEN name | GLM's equivalent | Job |
+|---|---|---|---|
+| L0 | Persona | PERSONA (`content/agents/*.md`) | Who you are + what your lane can hold — describes the sheet's shape, never its values |
+| L1 | Mandate overlay | MANDATE OVERLAY (`overlay_generator.py`) | What the user's constraints change — demands only what L2/L3 can supply |
+| L2 | Fact sheet | FACT SHEET (`_format_profile`) | The numbers, each tagged LIVE/NA + provenance — the single statement of what arrived |
+| L3 | Derived blocks | *(no GLM equivalent — see below)* | Risk state, drawdown, asymmetry, stop-anchor, coverage/capex/pacing — minted in code, never asked of an agent to derive |
+| L4 | Format/contract block | TAIL (`room_prompts.py`, in part) | Stance line, regex grammar, JSON schema, lane notice, data-source disclosure |
+| L5 | Safety floor | *(no GLM equivalent — see below)* | The deterministic PM compliance veto — not in the argument, no prompt change may soften it |
+
+GLM's TAIL layer folds QWEN's L4 (format/contract) and part of L2/L3's disclosure duties into one
+layer; QWEN splits them out. Neither adds content the other's prompt-set actually contradicts.
+Two layers exist only in QWEN's stack and are not omissions GLM disagrees with — GLM's doc simply
+doesn't discuss them: **L3 (derived blocks)**, which QWEN ties to the derivation policy ("L0-L1
+may never ask an agent to derive"), and **L5 (safety floor)**, the deterministic PM compliance
+check that GLM's target-architecture doc doesn't address at all (GLM's own guard section, §6, is
+about drift-detection in the persona/sheet pair — a different mechanism from the PM's
+uncoachable floor).
+
+### The five properties — one shared name, different definitions; genuinely OPEN
+
+**GLM's five** (§1 table): **True** · **Coherent** · **Profiled** · **Complete** · **Guarded** —
+framed as requirements *every prompt* must satisfy (nothing contradicts the sheet; no instruction
+fights another; the mandate changes what's weighed; every agent holding the sheet knows it;
+drift breaks the build). **QWEN's five** (`## The five properties…`): **Grounded** ·
+**Complete** · **Calibrated** · **Adversarial-with-constraints** · **Accountable to the user** —
+framed as requirements *every agent turn* must satisfy for the deliberation to be worth showing
+the user (numbers trace to the sheet or are labelled inference; the agent had its role's data or
+named the gap; conviction tracks evidence, not role; advocacy is costed against real constraints;
+every turn is checkable in place against the sheet).
+
+Only "Complete" is a literally shared name, and even that means two different things:
+
+> GLM: *"Every agent that holds the sheet knows it holds the sheet"* (§1) — a reach/acknowledgment
+> property, GLM's Class D/E findings.
+>
+> QWEN: *"The agent had the data its role demands, or was told precisely which demand is
+> unbackable"* (`## The five properties…`, item 2) — a data-sufficiency property, closer to
+> GLM's 102-request table than to GLM's own "Complete."
+
+The other four properties do not line up one-to-one either. GLM's **True** overlaps with pieces
+of QWEN's **Grounded** and **Accountable to the user** combined, but QWEN splits that concern
+across two properties where GLM uses one. GLM's **Guarded** — drift breaks the build — has no
+counterpart among QWEN's five named properties; QWEN's guard-equivalent content lives in the
+layering rules instead (`## The layering`, "the guard enforces the description"), not as one of
+its five. QWEN's **Calibrated** and **Adversarial-with-constraints** — conviction tracking
+evidence, and costed advocacy — have no counterpart in GLM's five-property table at all; GLM
+touches calibration only in passing, inside Class B collision #13 (an RO advocating past the cost
+it just quoted), never naming it as one of the five things every prompt must satisfy. GLM's
+**Profiled** (`primary_goal` must act) has no named counterpart in QWEN's five at all, though
+QWEN's rejected-framings section is compatible with it in spirit.
+
+**This is OPEN, not resolved here.** Per the task's instruction, we do not silently pick one
+five-property list: **QWEN's five-property vocabulary is canonical going forward** (per the
+naming-preference rule this WP was given), but a future pass should decide whether GLM's
+**Guarded** and **Profiled** are folded into QWEN's five (as sub-clauses of *Complete* and
+*Grounded*, most plausibly) or kept as a sixth and seventh property — the two lists are not the
+same claim restated in different words, they cover partly different ground, and neither source
+doc reconciles them.
+
+### What both sources agree "best" is not (QWEN only; GLM does not contradict it)
+
+Only QWEN states this explicitly (`## What "best" explicitly is NOT`); nothing in GLM's own
+summary (§7's bullet list — no false denials, no instruction fights, a profile that acts, a
+complete Room, data that answers top requests, a guard that keeps it) contradicts any of the
+three: **not longer prompts** (Class D showed reach ≠ use), **not more instructions** (CR038:
+~70% instruction non-compliance under pressure), **not verdict-accuracy maximisation** (the
+product is a defensible, checkable, calibrated evaluation, not a backtest-winning one). Stated
+once here because both sources point the same direction even though only one wrote it down.
+
 This is exactly CR218's pattern and should be its own CR.
