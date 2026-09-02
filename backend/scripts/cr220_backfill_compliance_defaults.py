@@ -20,12 +20,24 @@ outcome, but it must never be silent (CR040), so each repaired user gets a
 change rides a real mandate version bump so it appears in history and in
 `GET /v1/mandate/{id}/versions` like any other edit.
 
-Deliberately NOT repaired: a user who explicitly asked to loosen a flag. The
-parser's opt-out phrasings ("I want to short") are honoured, and this script
-cannot distinguish "chose False" from "defaulted to False" for the two flags
-in isolation — so `--only-untouched` restricts the run to users whose mandate
-is still at the version onboarding produced (v1) and who have never edited
-compliance. Use it if the blast radius is judged too wide at run time.
+**On `--only-untouched`, and what it cannot do (CR220 MAJOR-1 of round 1).**
+The flag originally claimed to protect "a user who explicitly asked to loosen a
+flag", using `version == 1` as the proxy. That is precisely backwards: an
+interview opt-out ("I want to short") is written BY onboarding, so it lands at
+**v1** and the predicate included exactly the cohort the sentence promised to
+skip — while skipping the Settings-editors it never mentioned.
+
+The promise is not merely mis-implemented, it is **unachievable from the stored
+data**: Q7's raw text is never persisted (`concierge_engine.py:284` stores only
+the parsed dict), so nothing in a mandate distinguishes "chose False" from
+"defaulted to False". No predicate over `mandates` can recover that.
+
+So the flag now claims only what it can prove, and its name says which cohort it
+skips: `--skip-edited` restricts the run to mandates still at v1, i.e. it skips
+users who have edited their mandate SINCE onboarding — a Settings edit is
+positive evidence of a deliberate choice, a v1 value is not. An interview
+opt-out is therefore still repaired by both modes, and `disclosure_summary`
+no longer tells that cohort something false.
 
 Usage (Mac has no DB; runs inside `ami_api_alpha`):
 
@@ -71,10 +83,17 @@ def disclosure_summary(flags: list[str]) -> str:
     """Plain English, in the user's terms — this is read in mandate history by
     someone wondering why a trade started being refused."""
     named = " and ".join(_FLAG_LABELS[f] for f in flags)
+    # CR220 MAJOR-2: the old wording asserted WHY the flag was off — "the
+    # interview recorded this as off for everyone who did not name it" — which
+    # is false for anyone who DID name it and asked to short. The script cannot
+    # tell the two apart (Q7's raw text is never stored), so the disclosure now
+    # states only what is true for every recipient: what changed, and how to
+    # change it back. A disclosure that guesses at the user's own history is
+    # worse than one that does not mention it.
     return (
-        f"Restored {named} — the onboarding interview recorded this as off for "
-        f"everyone who did not name it, which left your mandate less restricted "
-        f"than the default. You can change it in Settings → Compliance."
+        f"Restored {named}. This is the default for every mandate, and yours "
+        f"was set the other way. If that was deliberate, you can turn it back "
+        f"off in Settings → Compliance."
     )
 
 
@@ -85,9 +104,11 @@ def main(argv: list[str] | None = None) -> int:
         help="write the repair (default is a dry run — prints only)",
     )
     ap.add_argument(
-        "--only-untouched", action="store_true",
-        help="restrict to mandates still at v1 (never edited since onboarding), "
-             "so a deliberate user choice is never overwritten",
+        "--skip-edited", action="store_true",
+        help="restrict to mandates still at v1, i.e. SKIP users who have edited "
+             "their mandate since onboarding. Does NOT protect an interview "
+             "opt-out — that is unachievable from stored data; see the module "
+             "docstring.",
     )
     args = ap.parse_args(argv)
 
@@ -101,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
         session.close()
 
     mode = "APPLY" if args.apply else "DRY RUN"
-    scope = "v1-only" if args.only_untouched else "all current mandates"
+    scope = "v1 only (skipping edited)" if args.skip_edited else "all current mandates"
     print(f"CR220 compliance-default backfill — {mode} ({scope})")
     print("-" * 70)
 
@@ -114,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
         flags = flags_to_repair(mandate)
         if not flags:
             continue
-        if args.only_untouched and mandate.version != 1:
+        if args.skip_edited and mandate.version != 1:
             skipped_edited += 1
             continue
 
@@ -141,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * 70)
     print(f"  mandates checked   : {len(snapshots)}")
     print(f"  affected users     : {affected}")
-    if args.only_untouched:
+    if args.skip_edited:
         print(f"  skipped (edited)   : {skipped_edited}")
     if not args.apply:
         print("\n  dry run — re-run with --apply to write the repair.")

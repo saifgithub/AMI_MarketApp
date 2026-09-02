@@ -120,7 +120,14 @@ def _validate_ticker_lists(updates: dict[str, Any]) -> None:
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 f"{key} must be a list of ticker symbols",
             )
-        if key == "ticker_allowlist" and not value:
+        if key == "ticker_allowlist" and not _has_a_real_symbol(value):
+            # CR220 MAJOR-1: this test used to run on the RAW list, while the
+            # dedupe loop below silently drops blanks — so `[""]` passed the
+            # guard and normalised to exactly the `[]` the guard exists to
+            # refuse. A function must not refuse a value on input and then
+            # produce it on output. Asking "does this list contain a real
+            # symbol" instead of "is this list non-empty" closes it at the
+            # only point where the answer is knowable for every shape.
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 "an empty allowlist would make nothing tradable — send null to "
@@ -158,9 +165,27 @@ def _validate_ticker_lists(updates: dict[str, Any]) -> None:
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 f"unknown ticker(s) in {key}: {', '.join(unknown)}",
             )
+        # CR220 MAJOR-1, second limb: re-assert the invariant on the value
+        # actually being stored, not only on the one that arrived. Unreachable
+        # today given the check above, but the assertion belongs next to the
+        # assignment — that is the line a future edit would break.
+        if key == "ticker_allowlist" and not normalised:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "an empty allowlist would make nothing tradable — send null to "
+                "remove the allowlist instead",
+            )
         # Write back the resolver's canonical casing so a lowercase entry can
         # never sit in an enforced list failing to match.
         compliance[key] = normalised
+
+
+def _has_a_real_symbol(value: list) -> bool:
+    """CR220 MAJOR-1. `[""]` and `["   "]` are empty allowlists wearing a
+    non-empty list's shape: the normalising loop drops blanks, so they arrive
+    looking populated and land as `[]` — which the safety floor reads as
+    "nothing is tradable" and refuses every trade against."""
+    return any(str(v).strip() for v in value)
 
 
 def _humanise_list(value: object) -> str:

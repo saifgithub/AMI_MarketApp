@@ -399,10 +399,23 @@ def _parse_constraints(text: str) -> dict[str, Any]:
     never falsy.
 
     So the two restriction flags are omitted unless the user's text asserts
-    something about them, and the schema default stands. The opt-OUT phrasings
-    are matched explicitly: the interview is the only place a user can loosen
-    them, and silently refusing to honour "I want to short" would be the
-    mirror image of the bug being fixed.
+    something about them, and the schema default stands.
+
+    The two are NOT symmetric, and the docstring used to imply they were.
+    `long_only` has an explicit opt-OUT branch, because the interview is the
+    only place a user can loosen it and silently refusing to honour "I want to
+    short" would be the mirror image of the bug being fixed. `liquid_only` has
+    none — it can only ever be set True, and since "illiquid" contains
+    "liquid", "I want to trade illiquid microcaps" restricts the user from
+    exactly what they asked for. That direction is safe (it over-restricts, and
+    Settings → Compliance corrects it in one tap) so it is left alone rather
+    than fixed with more keyword surface — but it is a real limitation, not an
+    omission, and the sentence should not claim otherwise.
+
+    Precedence is the safety property here: restriction language beats opt-out
+    language when a single answer contains both ("long only, though I want to
+    short sometimes"). Pinned by
+    `test_cr220_minor2_restriction_language_beats_opt_out_language`.
 
     The remaining flags are opt-IN (default False), so a bare keyword hit is
     the correct shape for them and they are always present.

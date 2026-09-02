@@ -133,6 +133,6 @@ Fixed by comparing against the server's object — which then required real valu
 | Item | State |
 |---|---|
 | Scope | done — 9 fields editable, entitlement boundary reused not reinvented |
-| Enforcing check | 23 backend + 11 mobile guards, all mutation-proven |
-| Degrade loudly | unknown ticker 422s; empty allowlist 422s; backfill journals per user |
-| Regression risk | the compliance-always-sent bug above, found and fixed |
+| Enforcing check | 35 backend + 11 mobile guards. **9 mutations run and recorded** (5 in round 1, 4 in round 2); that is a count, not a claim of completeness — round 1's audit found three guard-shaped assertions with no guard behind them |
+| Degrade loudly | unknown ticker 422s; an allowlist with no real symbol 422s (incl. `[""]`, which round 1 accepted and stored as the exact `[]` it refuses); every repaired user gets a journal disclosure, enforced by a test that reds when the append is deleted |
+| Regression risk | three found and fixed by test rather than review: the compliance-always-sent bug, the `[""]` allowlist hole (MAJOR-1), the inverted `--skip-edited` predicate (MAJOR-2) |

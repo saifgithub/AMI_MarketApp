@@ -30,7 +30,9 @@ from datetime import datetime, timezone
 from app.api.mandate import router as mandate_router
 from app.db import get_session
 from app.db.models import TickerReferenceRow
-from app.schemas.mandate import CLIENT_UNWRITABLE_MANDATE_FIELDS
+from app.schemas.mandate import CLIENT_UNWRITABLE_MANDATE_FIELDS, Compliance
+from app.services.concierge_engine import _parse_constraints
+from app.services.mandate_store import MandateStore
 from app.services.auth_service import AuthService
 from app.services.journal_store import get_journal_store
 from app.schemas.journal import EntryType
@@ -496,3 +498,148 @@ def test_rerunning_after_apply_finds_nothing(capsys):
     main([])
     out = capsys.readouterr().out
     assert "affected users     : 0" in out, out
+
+
+# ── Round-2 fixes (audit AT:U66, round 1) ───────────────────────────────────
+
+
+def _seed_mandate_with_compliance(**flags):
+    """A stored mandate at v1 carrying the given compliance flags — the shape
+    the OLD `_parse_constraints` produced for a real onboarded user."""
+    from uuid import uuid4
+    from datetime import datetime, timezone as _tz
+    from app.schemas.mandate import Mandate
+
+    uid = uuid4()
+    now = datetime.now(_tz.utc)
+    MandateStore().upsert(uid, Mandate.model_validate({
+        "user_id": str(uid), "version": 1, "display_name": "Trader",
+        "primary_goal": "long_term_wealth", "horizon": "long",
+        "path": "long_horizon", "risk_score": 3,
+        "risk_components": {"drawdown_response": 3, "regret_asymmetry": 0,
+                            "concentration_tolerance": 3},
+        "max_drawdown_pct": 30, "compliance": flags,
+        "created_at": now, "updated_at": now,
+    }))
+    return uid
+
+
+def test_cr220_major1_an_all_blank_allowlist_is_refused(client: TestClient):
+    """MAJOR-1. The emptiness check ran on the RAW list while the dedupe loop
+    dropped blanks, so `[""]` passed the guard and normalised to exactly the
+    `[]` the guard exists to refuse — and `[]` makes the safety floor reject
+    every trade. A function must not refuse a value on input and produce it on
+    output.
+
+    Mutation: reverting the check to `if not value:` turns every
+    parametrisation below red."""
+    user_id, headers = _new_user()
+    for blanks in ([""], ["   "], ["", "  ", ""], ["\t"]):
+        resp = client.patch(
+            f"/v1/mandate/{user_id}",
+            json={"compliance": {"ticker_allowlist": blanks}},
+            headers=headers,
+        )
+        assert resp.status_code == 422, f"{blanks!r} was accepted: {resp.text}"
+        assert "nothing tradable" in resp.text.lower()
+
+
+def test_cr220_major1_a_real_symbol_beside_a_blank_still_works(
+    client: TestClient, known_ticker: str
+):
+    """The other side of MAJOR-1: tightening the check must not refuse a list
+    that does carry a real symbol. The blank is dropped, the symbol survives."""
+    user_id, headers = _new_user()
+    resp = client.patch(
+        f"/v1/mandate/{user_id}",
+        json={"compliance": {"ticker_allowlist": [known_ticker, "", "  "]}},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["compliance"]["ticker_allowlist"] == [known_ticker]
+
+
+def test_cr220_major2_skip_edited_does_not_protect_an_interview_opt_out():
+    """MAJOR-2. `--only-untouched` claimed to spare "a user who explicitly asked
+    to loosen a flag", using `version == 1` as the proxy — but an interview
+    opt-out is written BY onboarding, so it lands at v1 and the predicate
+    included exactly the cohort it promised to skip.
+
+    That promise is unachievable (Q7's raw text is never stored), so the flag
+    was renamed to what it can prove. This test pins the HONEST contract: an
+    opt-out at v1 IS repaired, and the flag's name no longer implies otherwise.
+    """
+    from scripts.cr220_backfill_compliance_defaults import main
+
+    uid = _seed_mandate_with_compliance(long_only=False, liquid_only=False)
+    rc = main(["--apply", "--skip-edited"])
+    assert rc == 0
+    after = MandateStore().get(uid)
+    assert after.compliance.long_only is True, (
+        "a v1 mandate is repaired by --skip-edited; if this ever flips, the "
+        "flag has silently reacquired a promise it cannot keep"
+    )
+
+
+def test_cr220_major2_skip_edited_does_skip_a_settings_editor():
+    """The cohort the flag CAN identify: a mandate edited since onboarding is
+    positive evidence of a deliberate choice, and v2+ is a real signal."""
+    from scripts.cr220_backfill_compliance_defaults import main
+
+    uid = _seed_mandate_with_compliance(long_only=False, liquid_only=False)
+    MandateStore().patch(uid, {"risk_score": 4})  # any edit → v2
+    main(["--apply", "--skip-edited"])
+    after = MandateStore().get(uid)
+    assert after.compliance.long_only is False, "a v2 mandate must be skipped"
+
+
+def test_cr220_minor1_every_repaired_user_is_told(capsys):
+    """MINOR-1. The disclosure is the entire reason this tightening is allowed
+    to be non-silent (CR040), and deleting the whole journal append left the
+    suite green. This is the guard that reds.
+
+    Mutation: removing the `get_journal_store().append(...)` block turns this
+    test red and nothing else."""
+    from scripts.cr220_backfill_compliance_defaults import main
+    from app.services.journal_store import get_journal_store
+
+    uid = _seed_mandate_with_compliance(long_only=False, liquid_only=False)
+    main(["--apply"])
+
+    entries, _, _ = get_journal_store().list_for_user(
+        uid, entry_type=EntryType.MANDATE_EDIT, limit=10
+    )
+    backfill = [e for e in entries if "cr220_backfill" in (e.tags or [])]
+    assert backfill, "a repaired user received no disclosure at all"
+    summary = backfill[0].summary or ""
+    assert "long-only" in summary.lower()
+    assert "settings" in summary.lower()
+
+
+def test_cr220_minor1_the_disclosure_does_not_assert_why_the_flag_was_off():
+    """MINOR-1/MAJOR-2 second limb. The old wording told every recipient the
+    interview "recorded this as off for everyone who did not name it" — false
+    for anyone who DID name it. The script cannot tell the cohorts apart, so
+    the copy must not claim to."""
+    from scripts.cr220_backfill_compliance_defaults import disclosure_summary
+
+    summary = disclosure_summary(["long_only"]).lower()
+    assert "did not name it" not in summary
+    assert "interview" not in summary
+
+
+def test_cr220_minor2_restriction_language_beats_opt_out_language():
+    """MINOR-2. The `if`/`elif` PRECEDENCE is the safety property, and nothing
+    fed it a string containing both — replacing the first branch with
+    `if False:` left the suite green while changing real behaviour.
+
+    Mutation: `if False:` on the restriction branch turns this red."""
+    for text in (
+        "Long only, though I want to short sometimes",
+        "no shorting, but allow short hedges",
+    ):
+        resolved = Compliance(**_parse_constraints(text))
+        assert resolved.long_only is True, (
+            f"{text!r} loosened the restriction — restriction language must "
+            f"win when both appear"
+        )
