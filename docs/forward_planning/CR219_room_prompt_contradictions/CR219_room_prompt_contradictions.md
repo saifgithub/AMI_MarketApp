@@ -82,6 +82,12 @@ Not availability claims, so a persona-text scan cannot see them. Every one was r
 
 **#13 and #14 are CR179 Leg 4 inverted** — the rule is *"hand over the derived figure rather than the two operands and an instruction."* These hand over the operands and forbid the arithmetic.
 
+> **Correction 2026-09-02 (register R19, WP03 diagnostic):** stale at writing. DEF241 + DEF243
+> (closed 2026-08-13) already ship the precomputed per-role drawdown contribution —
+> `room_prompts.py::_drawdown_snapshot_line` renders *"portfolio-drawdown contribution ≈ … —
+> AMI computed this. Quote it; do not recompute it"* when fed what `room_runner.py` passes in
+> production. The diagnostic render is in the WP03 worker report; R19 closed with no code change.
+
 ### Class C — the overlay demands data no tool supplies (DEF063 shape)
 
 | # | Where | Problem |

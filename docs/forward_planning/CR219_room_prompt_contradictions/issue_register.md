@@ -64,12 +64,12 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R15 | #9 Technical overlay demands a trend the persona forbids | CONVERGENT | Resolved automatically once R4 lands; add one overlay clause naming the trends the sheet states | F,G,Q | ☐ |
-| R16 | #10 Bull "end with CONVICTION" vs "write once at top only" | **RULED 2026-09-02** | Disambiguate vocabulary, keep both — Fable withdrew its delete dissent (the trailing CONVICTION is the code-parsed stance envelope, `room_runner.py:2902`). Build: `dev_instructions/WP03_instruction_fights.md` | K,F,G,Q | ☐ |
-| R17 | #11 Bull date-pairing vs no-speculation | CONVERGENT | Scope the no-speculation ban to claims; dating your own inference is honesty, reword to say so | K,G,Q | ☐ |
-| R18 | #12 Trader WAIT vs mandatory stop-loss | CONVERGENT | Fix in `trader.md` persona (WAIT/HOLD carve-out), land alongside the already-landed CR210 regex — not a regex change | K,A,F,G,Q | ☐ |
-| R19 | #13–14 Risk Officers handed operands, forbidden to compute | CONVERGENT | Run one diagnostic convene at HEAD first (code has moved since the CR was written), then precompute per-role drawdown contribution | K,F,G,Q | ☐ |
-| R20 | Should agents ever do arithmetic on sheet figures? (a general policy, not just #13/14) | **RULED** | Global ban + extended precompute — AMI mints and labels every derived number, `Asymmetry` line as the template. Ruled inside QWEN's own review track (`QWEN/02`, `QWEN/03`) | Q | ☐ |
+| R15 | #9 Technical overlay demands a trend the persona forbids | CONVERGENT | Resolved automatically once R4 lands; add one overlay clause naming the trends the sheet states. Done `3420fe74` (+R11 mapping) | F,G,Q | ☑ |
+| R16 | #10 Bull "end with CONVICTION" vs "write once at top only" | **RULED 2026-09-02** | Disambiguate vocabulary, keep both — Fable withdrew its delete dissent (the trailing CONVICTION is the code-parsed stance envelope, `room_runner.py:2902`). Done `3ae20272` (persona uses "case strength"; envelope byte-identical) | K,F,G,Q | ☑ |
+| R17 | #11 Bull date-pairing vs no-speculation | CONVERGENT | Scope the no-speculation ban to claims; dating your own inference is honesty, reword to say so. Done `3ae20272` | K,G,Q | ☑ |
+| R18 | #12 Trader WAIT vs mandatory stop-loss | CONVERGENT | Fix in `trader.md` persona (WAIT/HOLD carve-out), land alongside the already-landed CR210 regex — not a regex change. Done `41a18e4a` (37/37 CR210 tests) | K,A,F,G,Q | ☑ |
+| R19 | #13–14 Risk Officers handed operands, forbidden to compute | CLOSED — finding was stale | WP03 diagnostic (2026-09-02): DEF241+DEF243 (closed 2026-08-13) already precompute and label the per-role drawdown contribution (`_drawdown_snapshot_line`: "AMI computed this. Quote it; do not recompute it"). No code change; correction note added to the base doc | K,F,G,Q | ☑ |
+| R20 | Should agents ever do arithmetic on sheet figures? (a general policy, not just #13/14) | **RULED** | Global ban + extended precompute — AMI mints and labels every derived number, `Asymmetry` line as the template. Ruled inside QWEN's own review track (`QWEN/02`, `QWEN/03`). Done `e394b1d3` (policy in shared tail + guard section; one documented DEF245-motivated allowlist entry in bear_researcher.md) | Q | ☑ |
 
 ## Class C — overlay demands data nothing fetches
 
