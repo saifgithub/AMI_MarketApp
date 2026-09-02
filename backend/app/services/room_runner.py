@@ -106,6 +106,8 @@ from app.services.llm_gateway import (
 from app.services.llm_json import extract_json_object
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
 from app.services.room_prompts import (
+    PM_KILL_CRITERION_MAX_CHARS,
+    PM_KILL_CRITERION_MIN_CHARS,
     PM_NARRATION_MAX_CHARS,
     STANCE_HEADLINE_MAX_CHARS,
     build_risk_officer_messages,
@@ -1594,7 +1596,19 @@ def _horizon_coherence_note(
 # below by name rather than by shape. `ticker` is the one DEF239 named as the
 # reason a general scrape is unsafe: rendering `{"ticker": "AAPL"}` as a defence
 # would destroy the one signal telling a user a decision was never explained.
-_PM_NON_PROSE_KEYS = frozenset({"ticker", "action", "symbol", "decision"})
+#
+# CR219 R52 adds the kill-criterion keys. They ARE prose and they DO clear
+# `_PM_MIN_PROSE_CHARS`, which is exactly why they have to be named here: on a
+# verdict whose `narration` key was missing or misspelled, the shape fallback
+# would find the criterion, publish it as the decision's justification, and
+# CR106 would render "close below the 200-day SMA at $769.48" as the whole
+# defence of the call. That is DEF239's `{"ticker": "AAPL"}` failure with a
+# more convincing string, and it gets more convincing the better the criterion
+# is.
+_PM_NON_PROSE_KEYS = frozenset(
+    {"ticker", "action", "symbol", "decision"}
+    | {"kill_criterion", "killCriterion", "kill_criteria", "what_would_change_this"}
+)
 
 # The length below which an UNKNOWN key's string is treated as metadata rather
 # than a rationale. Not invented here: DEF232 characterised a non-explanation by
@@ -1603,6 +1617,58 @@ _PM_NON_PROSE_KEYS = frozenset({"ticker", "action", "symbol", "decision"})
 # short `narration` is still the PM's narration — so this only decides what an
 # unrecognised key has to clear.
 _PM_MIN_PROSE_CHARS = 40
+
+
+# CR219 R52 — the kill criterion's key, and its synonyms.
+#
+# An explicit allowlist for DEF239's reason, and ORDERED by precedence like
+# `_PM_NARRATION_KEYS`: `kill_criterion` is what the contract asks for, so it
+# wins. Deliberately NO shape fallback here — DEF264 added one for the narration
+# because publishing "it wrote no rationale" over real prose was actively
+# harmful, whereas a missing kill criterion renders as absent and absent is the
+# truth. Scraping for the longest unclaimed string would find the narration
+# itself and present it as the criterion, which is worse than the gap.
+_PM_KILL_CRITERION_KEYS = (
+    "kill_criterion",
+    "killCriterion",
+    "kill_criteria",
+    "what_would_change_this",
+)
+
+
+def _pm_kill_criterion(parsed: dict[str, Any], *, ticker: str) -> str | None:
+    """The observable that would reverse this call, if the CIO stated one.
+
+    Bounded at both ends, matching `pm_verdict_schema`: a value under
+    `PM_KILL_CRITERION_MIN_CHARS` cannot carry a quantity, a direction and a
+    threshold — "No", "None", "N/A" all clear a minLength of 1 while removing
+    the whole field — so it is read as absent rather than rendered as a
+    criterion. Over the ceiling it is NULLED, never truncated, for the same
+    reason `STANCE_HEADLINE_MAX_CHARS` nulls a long headline: a cut sentence is
+    an assertion with its qualifier removed, and "close below the 200-day SMA
+    unless earnings beat" inverts when the tail is dropped.
+
+    Absence is logged, not filled. `room_pm_no_kill_criterion` is the rate a
+    harness scorer and any live measurement read; a silent absence is how a
+    field that never lands looks identical to one that always does.
+    """
+    for key in _PM_KILL_CRITERION_KEYS:
+        value = parsed.get(key)
+        if not isinstance(value, str):
+            continue
+        value = value.strip()
+        if len(value) < PM_KILL_CRITERION_MIN_CHARS:
+            continue
+        if len(value) > PM_KILL_CRITERION_MAX_CHARS:
+            logger.warning(
+                "room_pm_kill_criterion_over_bound",
+                ticker=ticker, key=key, chars=len(value),
+                bound=PM_KILL_CRITERION_MAX_CHARS,
+            )
+            return None
+        return value
+    logger.warning("room_pm_no_kill_criterion", ticker=ticker)
+    return None
 
 
 def _pm_narration(parsed: dict[str, Any]) -> str:
@@ -1806,6 +1872,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # justification. Resolved once, here, so neither the PASS branch below nor
     # the APPROVE branch further down can pick the wrong one independently.
     absent_rationale = _PM_TRUNCATED_NO_NARRATION if truncated else _PM_NO_RATIONALE
+    kill_criterion = _pm_kill_criterion(parsed, ticker=ctx.ticker)
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
@@ -1817,9 +1884,13 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
                 action="PASS", ticker=ctx.ticker, truncated=truncated,
             )
             return absent_rationale, Verdict(
-                action=VerdictAction.PASS, reason=absent_rationale
+                action=VerdictAction.PASS, reason=absent_rationale,
+                kill_criterion=kill_criterion,
             )
-        return narration, Verdict(action=VerdictAction.PASS, reason=narration)
+        return narration, Verdict(
+            action=VerdictAction.PASS, reason=narration,
+            kill_criterion=kill_criterion,
+        )
 
     # CR172 §10 step 3 — before anything else on the APPROVE path, because a
     # refused structure ends the verdict and there is no point pricing levels
@@ -1837,6 +1908,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
             action=VerdictAction.PASS,
             reason=reason,
             overridden_from_llm=True,
+            kill_criterion=kill_criterion,
         )
 
     size_pct = _safe_float(parsed.get("size_pct"))
@@ -1957,6 +2029,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         reason=reason,
         level_provenance=_prov or None,
         structure=costed,
+        kill_criterion=kill_criterion,
     )
 
 
@@ -5653,7 +5726,21 @@ _PM_REFORMAT_SYSTEM = (
     # RESHAPES a user-visible narration on the one path the user cannot see.
     # This is a formatter, so the rationale is carried, not re-authored.
     ' "narration": "<the rationale, carried across verbatim — do not shorten, '
-    'summarise or re-shape it>"}\n'
+    'summarise or re-shape it>",\n'
+    # CR219 R52 — the reformatter's grammar IS `pm_verdict_schema()`, so this
+    # key is required of it whether or not the prompt names it. Naming it is the
+    # point of the CR: a grammar that requires a field the ask never mentions is
+    # the divergence class CR210's acceptance-3 note documents, and here it would
+    # bite hardest — the model would be forced to emit SOMETHING for a field it
+    # was never told about, on the one path that exists to recover a verdict.
+    # "carried across, or a plain restatement" rather than "invent one": this is
+    # a formatter, and a criterion it authored would be a fabricated threshold
+    # attributed to the CIO.
+    ' "kill_criterion": "<the input\'s stated \'what would change this call\', '
+    "carried across verbatim if it has one. If it states none, write one short "
+    "sentence naming the single condition the input itself says it is waiting "
+    "on or relying on — do NOT invent a price level, a margin or any figure the "
+    'input does not contain>"}\n'
     "There are exactly two action values: APPROVE and PASS. A modification is "
     "an approval — if the verdict enters or approves a position (including "
     "'MODIFY-AND-APPROVE', 'approve with a smaller size', or any affirmative "

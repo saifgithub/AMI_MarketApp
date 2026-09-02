@@ -457,7 +457,27 @@ _PM_VERDICT_FORMAT = (
     "52-week range support a thesis measured in weeks to a few months. A "
     "multi-year number is not supported by anything on your fact sheet>,\n"
     ' "narration": "<one decision sentence, then up to 6 short bullets — your '
-    'rationale, written for the user>"}\n'
+    'rationale, written for the user>",\n'
+    # CR219 R52 — the kill criterion. Required on BOTH actions: an APPROVE
+    # without one is a position with no exit thesis, and a PASS without one is a
+    # refusal the user cannot ever revisit ("what would have to change for you to
+    # buy this?" is the question a PASS leaves open).
+    #
+    # The "from the data block above" clause is the load-bearing half. WP02 R11's
+    # vocabulary rule applies: a criterion naming a quantity nothing fetches
+    # ("if guidance is cut at the analyst day") is unfalsifiable at the next
+    # convene, so it teaches the user nothing and cannot be scored. Anchoring it
+    # to the sheet is what makes it checkable — by the user, by the next
+    # convene's delta line, and by a harness scorer.
+    ' "kill_criterion": "<one sentence: the specific, observable change that '
+    "would reverse this call. It MUST name a quantity from the data block above "
+    "— a price level, a moving average, a margin or growth rate, a multiple, a "
+    "short-interest or ownership figure — and state the direction and the "
+    "threshold that would flip you. \"A second consecutive quarter of operating "
+    "margin below 11.2%\" and \"a daily close under the 200-day SMA at $769.48\" "
+    "are criteria; \"deteriorating fundamentals\" and \"if sentiment worsens\" are "
+    "not, because nothing on your sheet can ever settle them. Write one for a "
+    'PASS too — say what would make you buy>"}\n'
     "Write any line break inside narration as the two characters \\n, never as a "
     "real line break — a raw newline inside a JSON string is what makes a whole "
     "verdict unparseable.\n"
@@ -591,6 +611,21 @@ def pm_verdict_schema(option_candidates: Sequence[Any] | None = None) -> dict[st
         "narration": {
             "type": "string", "minLength": 1, "maxLength": PM_NARRATION_MAX_CHARS,
         },
+        # CR219 R52 — a plain bounded string, NOT a `prefixItems` array or an
+        # enum. The CR210 acceptance-3 note is the reason that is worth saying:
+        # both measured regressions there came from a grammar that constrained
+        # the WRONG thing (a shared-enum `items` that pinned vocabulary but not
+        # uniqueness; a Side alternation that dropped a line it should have
+        # pinned), and each scored WORSE than no grammar at all with the model
+        # behaving no differently. What is structural about a kill criterion is
+        # that it EXISTS and is one sentence — both expressible as length bounds.
+        # Whether it names a sheet quantity is semantic, so it is asked for in
+        # the prompt and measured by a scorer, never faked as a grammar.
+        "kill_criterion": {
+            "type": "string",
+            "minLength": PM_KILL_CRITERION_MIN_CHARS,
+            "maxLength": PM_KILL_CRITERION_MAX_CHARS,
+        },
     }
     if option_candidates:
         properties["structure_id"] = {
@@ -684,6 +719,24 @@ _NO_FENCE_CLAUSE = " Do not wrap your reply in a code fence."
 # one of three words. No number is ever produced, so no widget can be tempted
 # to render a false precision from one.
 STANCE_HEADLINE_MAX_CHARS = 32
+
+# CR219 R52 — the kill criterion's bound, and it is a real constraint rather
+# than a round number.
+#
+# Bounded at BOTH ends for the reason `narration` is (a maxLength-only string
+# admits ""), and the floor is 24 rather than 1: a criterion is a sentence
+# naming a quantity, a direction and a threshold, and nothing that short can
+# carry all three. "No" and "None" satisfy a minLength of 1 while removing the
+# entire field, which would pass every structural check.
+#
+# The ceiling is set by the decode budget, which is what the CIO's bounds exist
+# to respect (`test_the_grammar_terminates_before_the_decode_budget_does`):
+# 3600 (narration) + 240 (this) + ~150 scaffolding = 3,990 < 1700 x 3.14 =
+# 5,338. It is also an ASK, not just a cap — one sentence, so a CIO that starts
+# writing a second paragraph of hedging is stopped by the grammar rather than
+# being allowed to bury the criterion in it.
+PM_KILL_CRITERION_MAX_CHARS = 240
+PM_KILL_CRITERION_MIN_CHARS = 24
 """§3.3 measured the collapsed row's gist budget at ~32 Latin characters. The
 server nulls a headline longer than this rather than sending one the client
 must cut: a headline is an ASSERTION, and a truncated assertion can invert its

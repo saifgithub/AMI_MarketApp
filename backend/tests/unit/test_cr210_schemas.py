@@ -30,6 +30,8 @@ from app.services.risk_officer import (
     build_risk_officer_schema,
 )
 from app.services.room_prompts import (
+    PM_KILL_CRITERION_MAX_CHARS,
+    PM_KILL_CRITERION_MIN_CHARS,
     PM_NARRATION_MAX_CHARS,
     STANCE_HEADLINE_MAX_CHARS,
     _CHARS_PER_TOKEN_WORST_CASE,
@@ -185,6 +187,78 @@ def test_narration_cannot_be_empty():
     n = pm_verdict_schema()["properties"]["narration"]
     assert n["minLength"] == 1
     assert n["maxLength"] == PM_NARRATION_MAX_CHARS
+
+
+# ── CR219 R52 — the kill criterion ────────────────────────────────────────
+
+
+def test_the_kill_criterion_is_in_the_grammar_and_in_the_ask():
+    """The whole point of extending schema + prompt + tests in ONE commit: a
+    grammar requiring a field the ask never mentions is the divergence class
+    CR210's acceptance-3 note documents. `test_the_schema_and_the_prompt_name_
+    the_same_keys` above enforces it generally; this names the field, so a
+    later edit that drops it from one side fails with a legible message."""
+    assert "kill_criterion" in pm_verdict_schema()["properties"]
+    assert '"kill_criterion"' in _PM_VERDICT_FORMAT
+
+
+def test_it_is_required_on_both_actions_not_just_an_approve():
+    """An APPROVE without one is a position with no exit thesis; a PASS without
+    one is a refusal the user can never revisit. `strict: true` requires every
+    property anyway — this pins that it was not made a nullable union like the
+    price levels, which are genuinely APPROVE-only."""
+    schema = pm_verdict_schema()
+    assert "kill_criterion" in schema["required"]
+    assert schema["properties"]["kill_criterion"]["type"] == "string"
+    assert "null" not in schema["properties"]["kill_criterion"]["type"]
+    assert "Write one for a PASS too" in _PM_VERDICT_FORMAT
+
+
+def test_it_is_bounded_at_both_ends_and_the_floor_is_not_one():
+    """A maxLength-only string admits "" (the `narration` lesson). A minLength
+    of 1 is barely better here: "No", "None" and "N/A" all clear it while
+    removing the entire field, and a criterion needs a quantity, a direction
+    and a threshold — none of which fits in four characters."""
+    k = pm_verdict_schema()["properties"]["kill_criterion"]
+    assert k["minLength"] == PM_KILL_CRITERION_MIN_CHARS
+    assert k["maxLength"] == PM_KILL_CRITERION_MAX_CHARS
+    assert k["minLength"] > 4
+    for non_criterion in ("No", "None", "N/A", "TBD"):
+        assert len(non_criterion) < k["minLength"]
+
+
+def test_the_ask_demands_a_sheet_observable_quantity():
+    """WP02 R11's vocabulary rule. A criterion naming something nothing fetches
+    ("if guidance is cut at the analyst day") is unfalsifiable at the next
+    convene: it teaches the user nothing and no scorer can settle it."""
+    assert "from the data block above" in _PM_VERDICT_FORMAT
+    # and the ask shows both sides of the line, not just the rule
+    assert "deteriorating fundamentals" in _PM_VERDICT_FORMAT  # a non-example
+    assert "200-day SMA" in _PM_VERDICT_FORMAT                 # an example
+
+
+def test_it_is_a_bounded_string_and_not_an_enum_or_a_prefixitems_array():
+    """CR210 acceptance-3, applied rather than cited: BOTH measured regressions
+    there came from a grammar constraining the WRONG thing, and each scored
+    worse than no grammar at all with the model behaving no differently. What
+    is structural about a kill criterion is that it EXISTS and is one sentence
+    — both length bounds. Whether it names a sheet quantity is semantic, so it
+    is asked for and scored, never faked as a grammar."""
+    k = pm_verdict_schema()["properties"]["kill_criterion"]
+    assert "enum" not in k
+    assert "prefixItems" not in k
+    assert "pattern" not in k
+
+
+def test_the_reformatter_ask_carries_the_field_its_own_grammar_requires():
+    """The reformatter decodes under `pm_verdict_schema()` too, so the key is
+    required of it whether or not its prompt names it. A required field the ask
+    never mentions forces the model to emit something for a field it was never
+    told about — on the one path that exists to RECOVER a verdict."""
+    from app.services.room_runner import _PM_REFORMAT_SYSTEM
+    assert '"kill_criterion"' in _PM_REFORMAT_SYSTEM
+    # and it must not be licensed to author figures the input never had
+    assert "do NOT invent a price level" in _PM_REFORMAT_SYSTEM
 
 
 # ── the bounds fit the decode budget ──────────────────────────────────────

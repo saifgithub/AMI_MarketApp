@@ -86,6 +86,23 @@ class Verdict(BaseModel):
     # path — never "zero desks were scripted", which is a real value and is
     # recorded as `0`. Not backfilled and not inferred, the same rule
     # `level_provenance` below is read under (T-BACKFILL).
+    # CR219 R52 — "what would change this call": the concrete, sheet-observable
+    # change that would reverse this verdict.
+    #
+    # Carried on BOTH actions. An APPROVE without one is a position with no exit
+    # thesis; a PASS without one is a refusal the user can never revisit, and
+    # "what would have to change for you to buy this?" is exactly the question a
+    # PASS leaves open. It is also the single most teachable line on the verdict
+    # card for an education product, and it is what a next-convene delta line
+    # checks first.
+    #
+    # `None` means the CIO did not state one (or the run predates the field) —
+    # never a fabricated stand-in. The criterion must name a quantity the fact
+    # sheet actually carries (WP02 R11's vocabulary rule); that property is
+    # asked for in the prompt and measured by a scorer, not enforced here, since
+    # nothing in a type can tell a real threshold from a plausible-sounding one.
+    kill_criterion: str | None = None
+
     scripted_turns: int | None = None
     # The desks in question, by AgentId value. WHICH desk changes what the count
     # means — a scripted Execution Desk makes the proposal itself canned, which
