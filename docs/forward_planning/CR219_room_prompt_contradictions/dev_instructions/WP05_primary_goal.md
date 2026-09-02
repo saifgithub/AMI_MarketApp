@@ -47,7 +47,8 @@ Fold into the same overlay work while it's open:
 - If, on reading the enum semantics, a field genuinely cannot drive a defensible
   guidance line, the honest alternative is to **stop printing it** — a printed-but-
   inert mandate line is the finding-#17 bug again. Say which way you went in the
-  commit message and flip the register row with that note.
+  commit message and report it — the dispatcher annotates the register row (P33
+  one-writer rule: workers don't edit the register).
 
 ## Acceptance
 

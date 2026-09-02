@@ -40,7 +40,13 @@ rejects it — it grants a false sentiment-baseline claim).
 - **Commit tag**: `(AT:R75 CR219)` on every code commit. Docs-only commits may use plain
   `(AT:R75)`.
 - **Stay in your lane**: touch only files a WP names. Never edit other reviewer folders.
-  `../issue_register.md` Build boxes: flip `☐`→`☑` in the same commit that closes a row.
+- **One writer for `../issue_register.md`** (P33 in `failure_patterns.md`, filed
+  2026-09-02 after two same-evening near-sweeps): workers do NOT edit the register —
+  report which rows you closed and the dispatcher flips the boxes at acceptance.
+  `git commit -- <path>` commits the file's working-tree state, not your staged hunks,
+  so two lanes co-editing one table sweep each other even with perfect pathspec
+  discipline. (Any in-WP text telling you to flip a box yourself predates this rule —
+  the dispatch prompt and this rule win.)
 - **Degrade loudly (CR040)**: every new config setting must be forwarded in
   `docker-compose.yml`'s `api-alpha` block (`test_config_compose_parity.py` enforces);
   every new data field fails visibly when its fetch is absent — never a silent fallback.

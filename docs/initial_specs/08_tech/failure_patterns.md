@@ -1965,3 +1965,42 @@ reporting clean. `backend/tests/unit/test_cr216_test_selection.py` pins **both
 halves** — that the selector finds `test_def358_…` from a change to
 `backtest_sweep.py`, *and* that a name filter genuinely does not, so the
 motivating gap is asserted rather than assumed.
+
+## P33 — a pathspec commit publishes the file, not your hunks
+
+**Class:** two writers concurrently editing one file on a shared checkout, each
+committing "only their change" by pathspec. `git commit -- <path>` commits the
+**working-tree state** of that path — staged-hunk selections are bypassed — so
+whichever lane commits first publishes the other lane's half-written edit under
+its own message and tag.
+
+**How it arose.** Twice in one evening, 2026-09-02, on CR219's
+`issue_register.md` (a shared status table with per-row checkboxes — exactly the
+shape `cr_list.md` had before CR081). The WP07 lane's commit swept the WP02
+lane's uncommitted R13 checkbox flip despite a carefully staged single hunk
+(caught on self-review, amended, the neighbour's state restored to the working
+tree). An hour later the hazard fired mirror-image: the WP02 lane found WP07's
+R46 flip *staged* in the same file at its own commit time and had to defer its
+flip to dodge the reverse sweep. Both instances were caught by the same act:
+reading the commit's own per-file diff before accepting it. The 2026-07-24
+register sweep (fixed structurally by CR081's one-row-file-per-item) is this
+same class; the recurrence is on *ephemeral* shared tables that never get the
+row-file treatment.
+
+**What generalises.** Pathspec discipline protects against *staging* sweeps
+(`git add -A`), not against *interleaving*. Git's commit granularity for a
+pathspec is the file, so any file two lanes co-edit is a shared mutable flag —
+the thing the CR052 protocol forbids — no matter how carefully each side
+stages. Either give each writer a disjoint path (CR081's fix), or name a single
+writer.
+
+**Enforcing check:** two-sided, stated in
+`docs/forward_planning/CR219_room_prompt_contradictions/dev_instructions/README.md`
+("One writer for `../issue_register.md`"): (1) during a multi-lane build, only
+the dispatching session edits the shared tracking table — workers report rows
+closed, the dispatcher flips boxes at acceptance; (2) the dispatcher accepts a
+worker commit only after reading `git show <hash> -- <shared file>` and
+confirming the diff carries nothing but that lane's rows — the exact check that
+caught both instances. Convention-enforced, like the commit-tag rule; a build
+that cannot honour (1) must use CR081's row-file pattern instead of a shared
+table.
