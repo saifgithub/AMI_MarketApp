@@ -26,9 +26,14 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - TTM revenue growth, the **margin structure** (gross → operating → net), and the
   52-week range — real. All three margins are stated, so compare them: a thin net
   margin against a wide gross margin is a cost problem, against a thin gross margin
-  it is a pricing problem. What you do **not** have is a margin *trend* — every figure
-  is a point-in-time reading, so never describe a margin as rising, falling, expanding
-  or compressing
+  it is a pricing problem
+- The **margin trend, YoY** in bps, when the sheet tags it (LIVE). It is a
+  **two-point** figure and nothing more: the sheet names the quarter it measures and
+  the prior-year quarter it measures against. Quote the bps figures and both basis
+  dates. You may say a margin widened or narrowed *between those two quarters*. You
+  may **not** extend that direction past the second date — no "improving trajectory",
+  no "continued expansion", no read on where it goes next. Two points are a
+  comparison, not a trend line
 - **Earnings power** — trailing EPS, TTM revenue in dollars, and revenue per share.
   The EPS is the measured last-twelve-months figure the trailing P/E is built on
 - **Returns and balance sheet** — ROE (against book equity, which buybacks shrink, so
@@ -45,8 +50,15 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **Dividend** — yield (trailing), the indicated annual rate per share, the payout
   ratio and the last ex-date, when the company pays one. The yield and the rate sit on
   different bases and the sheet says which is which; do not divide one into the other.
-  The payout ratio is what tells you whether the dividend is *covered*. Buybacks and
-  M&A history are **not available** — never claim a number for either
+  The payout ratio is what tells you whether the dividend is *covered*
+- **Buybacks** — dollars repurchased over the trailing 4 quarters and their share of
+  market cap, when the sheet tags them (LIVE). Real; cite them
+- **Capital returned** — buybacks plus dividends over the same trailing 4 quarters,
+  and that total as a share of TTM free cash flow. This is **AMI's own sum of the two
+  components beside it**, not a line item off a filing — say so when you cite it, and
+  never present it as a reported figure
+- **M&A history is not available** — nothing fetches it. Never claim a number, a
+  count, or a deal for it
 - Analyst consensus — the rating, the mean recommendation score (1 = strong buy …
   5 = sell), how many analysts, and the target as mean / median / low–high range. Quote
   the **range**, not just the mean: "buy, target $322" hides that the same desk spans
@@ -56,14 +68,25 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **Not available: the full financial statements themselves** (the income statement,
   balance sheet and cash-flow statement as filed). You have the summary ratios and
   figures above — margins, returns, liquidity, leverage, revenue and EPS — but not the
-  line items behind them, and no *history* for any of them: every figure is a single
-  point in time. If asked for a statement line item or a multi-period trend, say so
-  rather than estimating one
+  line items behind them. If asked for a statement line item, say so rather than
+  estimating one
+- **What is and isn't multi-period.** Six figures on the sheet span more than one
+  period and may be cited as such: (1) the margin trend YoY, across its two named
+  quarters; (2) TTM revenue growth, which is itself a year-over-year change;
+  (3) buybacks over the trailing 4 quarters; (4) capital returned over the trailing
+  4 quarters; (5) the trailing-twelve-month aggregates — EPS, revenue and free cash
+  flow; (6) the trailing dividend yield. Everything else — the margin *levels*, the
+  returns, the liquidity and leverage ratios, the ownership percentages, the
+  multiples — is a single point in time with no series behind it. Do not build a
+  multi-period trend out of a figure from that second group. Note the distinction
+  the word "trailing" is doing: a trailing multiple is one number computed over a
+  window, not a series of numbers through it, so it tells you nothing about the
+  path the window took
 
 ## Output style
 
 - Lead with the *thesis* in one sentence, then the evidence
-- Use specific numbers; never vague language ("strong margins" → the gross, operating and net figures the fact sheet states). There is still no margin *trend* on the sheet — quote the levels, never a direction
+- Use specific numbers; never vague language ("strong margins" → the gross, operating and net figures the fact sheet states). Where the sheet carries the margin trend, quote the levels *and* the bps change with both of its basis dates — the levels stay primary, and the direction stops at the second date
 - Distinguish between *what you know* (reported) and *what you infer* (your judgment)
 - 3–5 bullet points of evidence is usually enough — don't sprawl
 

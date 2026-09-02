@@ -207,6 +207,35 @@ def test_r13_every_persona_file_on_disk_is_mapped(sheets):
     )
 
 
+def test_r44_every_surface_builds_its_prompt_from_the_files_r13_enumerates():
+    """R44 — the 26 "unswept" prompts (concierge, Brief Your Agent) are swept by
+    construction, and this is the fact that makes that true rather than a claim
+    about it.
+
+    Every surface builds its system prompt from `load_base_prompt(agent_id)`,
+    which reads `content/agents/{agent_id}.md` — the exact glob R13 enumerates.
+    So the Room, the 1-on-1 path, the concierge and Brief Your Agent all draw
+    from files this guard already checks; there is no second prompt corpus to
+    sweep separately.
+
+    If someone adds a surface that hardcodes persona text in Python instead,
+    that text escapes this guard entirely. This test pins the ONE loader so the
+    assumption is checked rather than remembered."""
+    from app.services.agent_prompts import CONTENT_AGENTS_DIR, load_base_prompt
+
+    assert CONTENT_AGENTS_DIR.resolve() == _AGENTS_DIR.resolve(), (
+        "CR219 R44: the prompt loader no longer reads the directory this guard "
+        f"enumerates. Guard scans {_AGENTS_DIR}, loader reads {CONTENT_AGENTS_DIR} — "
+        "prompts are now shipping from a corpus nothing checks."
+    )
+    # And every mapped persona is actually loadable through it, so the mapping
+    # covers real prompts rather than orphaned files.
+    for persona, agent in _PERSONA_LANES.items():
+        if agent is None:
+            continue
+        assert load_base_prompt(agent).strip(), f"{persona}: loader returned an empty prompt"
+
+
 def test_r13_no_mapping_entry_points_at_a_deleted_file(sheets):
     """Vacuity guard on R13's other side — a mapping entry for a file that no
     longer exists is dead weight that hides how much is really checked."""
@@ -233,6 +262,17 @@ _DENIAL_PATTERNS = (
     re.compile(r"\b(are|is) not connected\b", re.I),
     re.compile(r"\bsimply don'?t exist\b", re.I),
     re.compile(r"\bno peer-basket\b", re.I),
+    # Denials that name what you were NOT given, without using the word "no".
+    # Added while writing WP01's replacement prose: four of the sentences
+    # REPLACING the false denials ("never its trajectory", "not its path",
+    # "no normal to compare it against", "nothing behind it") slipped past the
+    # patterns above. A fix that introduces denials the scanner cannot see would
+    # rebuild the CR219 bug one layer down, so the scanner widened instead.
+    re.compile(r"\bnever its\b", re.I),
+    re.compile(r"\bnot its (path|trajectory|direction|history|series)\b", re.I),
+    re.compile(r"\bnothing behind it\b", re.I),
+    re.compile(r"\bno (normal|prior reading|baseline) to\b", re.I),
+    re.compile(r"\bno prior[- ](period|reading)\b", re.I),
 )
 
 
@@ -265,6 +305,23 @@ _KNOWN_ABSENT: list[dict[str, Any]] = [
             "WP01 R7 + WP06 R37: if a historical/peer multiples line ever ships, "
             "these markers MUST fire and force this denial's rewrite. That firing "
             "is the mechanism working, not a test bug."
+        ),
+    },
+    {
+        "row": "R2",
+        "persona": "fundamentals_analyst",
+        "claim": "no M&A history is available",
+        "anchor": "**M&A history is not available**",
+        "collision_markers": ("M&A (LIVE)", "Acquisitions", "M&A history:", "Deals:"),
+        "note": (
+            "The surviving third of R2's blanket denial. Buybacks and capital-returned "
+            "were false and are now claimable; M&A alone is genuinely unfetched. "
+            "CAREFUL: the bare string 'M&A' IS in the fact body today — the dividend "
+            "line ends '(M&A: not available, not claimed)', an in-body disclosure of "
+            "the absence. So the markers here must name an M&A field being STATED, not "
+            "the word itself; a bare 'M&A' marker would fire against the very sentence "
+            "confirming the denial is true. `test_r2_the_m_and_a_markers_do_not_fire_on"
+            "_the_absence_disclosure` pins that distinction."
         ),
     },
     {
@@ -315,6 +372,17 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         ),
     },
     {
+        "persona": "fundamentals_analyst",
+        "anchor": "is a single point in time with no series behind it",
+        "category": "scope-true",
+        "why": (
+            "R3's replacement, and TRUE: after naming the six genuinely multi-period "
+            "figures, this says the REST (margin levels, returns, liquidity/leverage "
+            "ratios, ownership, multiples) are point-in-time. Each of those is a single "
+            "scalar on the sheet with no prior-period value beside it."
+        ),
+    },
+    {
         "persona": "market_analyst",
         "anchor": "where it marks a field not available, or names a set as not reconstructable",
         "category": "runtime-deference",
@@ -338,6 +406,19 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
     {
         "persona": "market_analyst",
+        "anchor": "you were given its value, not its path",
+        "category": "scope-true",
+        "why": (
+            "R4's replacement in `## Voice`, and TRUE at the level it now claims. "
+            "RSI and the volume ratio are single scalars — the sheet carries no series "
+            "for either, so 'RSI is clearing' remains unsupportable. What R4 fixed is "
+            "the sentence AROUND this: the four measured trends (SMA-alignment, window, "
+            "primary, 52w RS) are now named as citable instead of being swept into a "
+            "blanket 'you do not have a series'."
+        ),
+    },
+    {
+        "persona": "market_analyst",
         "anchor": "When live data isn't available for a ticker, say so rather than",
         "category": "runtime-deference",
         "why": "CR040 — the loud-degradation instruction for an absent fetch.",
@@ -349,6 +430,33 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "why": (
             "TRUE: only the FOMC countdown is a real forward macro datum; no CPI/8-K/S-1 "
             "feed is connected anywhere in the backend."
+        ),
+    },
+    {
+        "persona": "news_analyst",
+        "anchor": "and nothing behind it",
+        "category": "scope-true",
+        "why": (
+            "R5's replacement, and TRUE at the level it now claims. The sheet carries "
+            "ONE consensus EPS estimate for the next reporting date — a single figure, "
+            "with no estimates feed, no revision history and no surprise history behind "
+            "it. R5 deleted the false half ('you are not supplied consensus estimates', "
+            "contradicted by that very line) and kept the true half: having the figure "
+            "is not having a feed."
+        ),
+    },
+    {
+        "persona": "social_media_analyst",
+        "anchor": "there is no normal to compare it against",
+        "category": "scope-true",
+        "why": (
+            "R6's replacement, and the row's whole point. The sheet baselines mention "
+            "VOLUME (a count over a stated period, WITH a trend on that count) but not "
+            "SENTIMENT: the score, split and buzz score are one snapshot, and "
+            "`social_context` keeps a single cache row it overwrites. So there is "
+            "genuinely no sentiment normal. The persona now names which of the two is "
+            "baselined instead of denying both — narrowed, not deleted, per the "
+            "register's rejection of Antigravity's rewrite."
         ),
     },
     {
@@ -374,101 +482,16 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
 ]
 
-# ── R1–R6 DEBT LEDGER. Eight denials in the four analyst personas are FALSE
-# against today's sheet. WP02 (this guard) lands before WP01's persona fixes so
-# that no persona is ever unguarded; until each fix lands, its denial is carried
-# here EXPLICITLY rather than being quietly allowlisted.
+# There is deliberately NO third list here. While WP01's persona fixes were
+# landing, a `KNOWN_FALSE_PENDING_WP01` ledger carried the eight false denials
+# so the guard could be green without pretending they were true. All eight are
+# fixed (R1–R6), the ledger emptied, and it was DELETED rather than left in
+# place at length zero — an empty escape hatch is still an escape hatch, and the
+# next person under deadline would have found it and used it.
 #
-# Every entry is a known lie the agents are being told right now. The list is
-# named for what it is, cites the register row that retires it, and shrinks to
-# empty over WP01's four commits — at which point it is deleted outright and
-# `test_r9_every_denial_is_examined` stops having any escape hatch at all.
-KNOWN_FALSE_PENDING_WP01: list[dict[str, str]] = [
-    {
-        "row": "R1",
-        "persona": "fundamentals_analyst",
-        "anchor": "never describe a margin as rising, falling, expanding",
-        "false_because": (
-            "The sheet carries `Margin trend, YoY (LIVE)` with gross/operating/net bps "
-            "and two dated basis quarters. Measured cost: the trend was cited in 24.2% "
-            "of turns against 95.5% for the undenied margin-structure line beside it."
-        ),
-    },
-    {
-        "row": "R1",
-        "persona": "fundamentals_analyst",
-        "anchor": "There is still no margin *trend* on the sheet",
-        "false_because": (
-            "Same false claim, restated in `## Output style` — outside the "
-            "`## Inputs`→`## Output` slice the CR105 guard scanned, which is why it "
-            "survived. R10 is what makes this one visible at all."
-        ),
-    },
-    {
-        "row": "R2",
-        "persona": "fundamentals_analyst",
-        "anchor": "M&A history are **not available**",
-        "false_because": (
-            "Half false. The sheet carries `Buybacks (LIVE)` and `Capital returned "
-            "(LIVE)`. Only the M&A half is true, and it stays denied — the blanket "
-            "sentence has to be split three ways."
-        ),
-    },
-    {
-        "row": "R3",
-        "persona": "fundamentals_analyst",
-        "anchor": "no *history* for any of them",
-        "false_because": (
-            "'Any of them' is false for the multi-period figures the sheet states "
-            "(TTM revenue, TTM FCF, trailing EPS, trailing dividend yield, the "
-            "trailing-4-quarter buyback and capital-returned sums, the YoY margin "
-            "trend). The as-filed statements stay denied; this blanket tail does not."
-        ),
-    },
-    {
-        "row": "R4",
-        "persona": "market_analyst",
-        "anchor": "is not one this data can support",
-        "false_because": (
-            "Over-broad. The sheet states a 63-trading-day window trend, a primary "
-            "trend against the 200-day average, and 52-week relative strength. Those "
-            "ARE series-derived facts. Indicator TRAJECTORIES stay denied; the "
-            "sentence currently denies both."
-        ),
-    },
-    {
-        "row": "R4",
-        "persona": "market_analyst",
-        "anchor": "you do not have a series",
-        "false_because": (
-            "Same over-broad claim in `## Voice` — again outside the CR105 slice. "
-            "The trajectory examples that follow it ('clearing', 'rolling over') are "
-            "correct; the blanket 'no series' premise is not."
-        ),
-    },
-    {
-        "row": "R5",
-        "persona": "news_analyst",
-        "anchor": "You are not supplied",
-        "false_because": (
-            "False: the news sheet carries `Next earnings (LIVE) … consensus EPS est. "
-            "$4.44`, and the fundamentals sheet carries the full Street consensus. The "
-            "expected-vs-actual the sentence says is impossible is in the prompt."
-        ),
-    },
-    {
-        "row": "R6",
-        "persona": "social_media_analyst",
-        "anchor": "historical baseline",
-        "false_because": (
-            "Half false — the weakest-evidence row in Class A. The sheet's `Mentions: "
-            "73,561 Reddit mentions over 33d, trend:` DOES baseline mention VOLUME. It "
-            "does NOT baseline SENTIMENT. The sentence denies both, so it must be "
-            "narrowed to name which is which — never deleted (register R6 rejects "
-            "Antigravity's rewrite for granting a false sentiment-baseline claim)."
-        ),
-    },
-]
+# A denial now resolves to exactly two things: a known-absent entry proven true
+# against the real sheet, or an allowlisted non-availability category. Anything
+# else is red, with no third option to file it under.
 
 
 def _entry_for(persona: str, line: str) -> dict[str, Any] | None:
@@ -478,9 +501,6 @@ def _entry_for(persona: str, line: str) -> dict[str, Any] | None:
     for entry in _ALLOWLISTED_DENIALS:
         if entry["persona"] == persona and entry["anchor"] in line:
             return entry
-    for entry in KNOWN_FALSE_PENDING_WP01:
-        if entry["persona"] == persona and entry["anchor"] in line:
-            return entry
     return None
 
 
@@ -488,6 +508,47 @@ def _unexamined(persona: str, text: str) -> list[tuple[int, str]]:
     """R10's logic, factored out so the red fixture can drive it on synthetic
     text rather than only on today's files."""
     return [(ln, line) for ln, line in _denial_hits(text) if _entry_for(persona, line) is None]
+
+
+def test_r10_the_scanner_catches_denials_that_never_say_the_word_no():
+    """R10 vacuity guard, and a real near-miss. A denial does not need the word
+    "no" to be a denial. Each string below is drawn from WP01's REPLACEMENT prose
+    and slipped past the first pattern set — a fix that introduces denials the
+    scanner cannot see would rebuild the CR219 bug one layer down.
+
+    If a future rewording of the patterns drops one of these, this goes red
+    rather than the guard quietly checking less than it says it does."""
+    must_match = [
+        "you were given its value, not its path",
+        "one reading of each indicator, never its trajectory",
+        "there is no normal to compare it against",
+        "the one figure the sheet states, and nothing behind it",
+        "every figure is a single point in time with no series behind it",
+        "M&A history is not available",
+        "You are not supplied consensus estimates",
+    ]
+    missed = [s for s in must_match if not _denial_hits(s)]
+    assert not missed, (
+        "CR219 R10: the denial scanner no longer recognises these as absence "
+        f"claims, so a persona could carry one unexamined: {missed}"
+    )
+
+
+def test_r10_the_scanner_does_not_fire_on_ordinary_analytic_prose():
+    """The other half of the vacuity check. A scanner that matched everything
+    would force every line into the mapping and the categories would stop
+    meaning anything — over-matching is how an allowlist degenerates into a
+    rubber stamp."""
+    must_not_match = [
+        "Lead with the *thesis* in one sentence, then the evidence",
+        "Quote the bps figures and both basis dates.",
+        "State what would confirm the setup, and what would invalidate it",
+        "Reportorial. Factual. Numbers and dates.",
+    ]
+    spurious = [s for s in must_not_match if _denial_hits(s)]
+    assert not spurious, (
+        f"CR219 R10: the denial scanner is over-matching ordinary prose: {spurious}"
+    )
 
 
 @pytest.mark.parametrize("persona", sorted(_PERSONA_LANES))
@@ -577,25 +638,62 @@ def test_r12_known_absent_anchor_text_is_still_in_the_persona(entry, sheets):
     )
 
 
-def test_r1_r6_debt_ledger_entries_all_cite_a_register_row_and_still_exist():
-    """The debt list is only tolerable while it is explicit and accurate. Every
-    entry must name the persona, the register row that retires it, WHY the claim
-    is false, and an anchor still present in the file. A stale entry is worse
-    than none: it makes the guard look like it is checking a claim it is not."""
-    for entry in KNOWN_FALSE_PENDING_WP01:
-        assert entry.get("row"), f"debt entry without a register row: {entry}"
-        assert entry.get("persona") in _PERSONA_LANES, entry
-        assert entry.get("anchor"), entry
-        assert entry.get("false_because"), (
-            f"debt entry without an evidenced reason it is false: {entry}"
-        )
-        text = (_AGENTS_DIR / f"{entry['persona']}.md").read_text(encoding="utf-8")
-        assert entry["anchor"] in text, (
-            f"CR219 {entry['row']}: this debt entry's anchor is no longer in "
-            f"{entry['persona']}.md. If WP01 fixed the denial, DELETE the entry "
-            f"(that is how this list empties); if it was merely reworded, the "
-            f"rewording needs re-checking against the sheet: {entry['anchor']!r}"
-        )
+def test_r2_the_m_and_a_markers_do_not_fire_on_the_absence_disclosure(sheets):
+    """R2/R12 pin. The sheet's fact body contains the literal 'M&A' — in the
+    clause '(M&A: not available, not claimed)', which CONFIRMS the denial rather
+    than falsifying it. A marker set naive enough to include a bare 'M&A' would
+    report the denial as false against the sentence agreeing with it, and the
+    fixer's instinct would be to weaken the marker.
+
+    This test states the intended distinction so it survives: markers name an
+    M&A field being STATED, and a bare 'M&A' is demonstrated to be the wrong
+    marker rather than merely omitted by luck."""
+    body = sheet_body(sheets["fundamentals_analyst"])
+    assert "M&A" in body, (
+        "the sheet no longer mentions M&A at all — re-check whether this pin is "
+        "still describing reality before deleting it"
+    )
+    assert "M&A: not available" in body, (
+        "the M&A mention in the fact body is no longer the absence disclosure; "
+        "an M&A field may have shipped — check the known-absent entry"
+    )
+    entry = next(e for e in _KNOWN_ABSENT if e["row"] == "R2")
+    assert "M&A" not in entry["collision_markers"], (
+        "a bare 'M&A' marker would fire against the sheet's own absence disclosure"
+    )
+    assert _collisions(entry, sheets["fundamentals_analyst"]) == []
+
+
+def test_r1_r6_the_eight_false_denials_are_gone_and_stay_gone():
+    """R1–R6 regression pin. These eight sentences were in the shipped personas
+    and were FALSE against the sheet in the same prompt — the CR219 bug itself.
+    Each is asserted absent by its distinctive fragment, so reintroducing any of
+    them (by revert, by a merge, or by a future edit reaching for familiar
+    wording) is red rather than silent.
+
+    This is the check that makes WP01's fix durable. Without it the prose could
+    drift back and only the collision markers would object — and only for the
+    three claims that HAVE markers."""
+    banned = [
+        ("fundamentals_analyst", "never describe a margin as rising, falling, expanding", "R1"),
+        ("fundamentals_analyst", "There is still no margin *trend* on the sheet", "R1"),
+        ("fundamentals_analyst", "M&A history are **not available**", "R2"),
+        ("fundamentals_analyst", "no *history* for any of them", "R3"),
+        ("market_analyst", "is not one this data can support", "R4"),
+        ("market_analyst", "you do not have a series", "R4"),
+        ("news_analyst", "You are not supplied\n  consensus estimates", "R5"),
+        ("social_media_analyst", "You have no\n  historical baseline", "R6"),
+    ]
+    back = [
+        (persona, row, phrase)
+        for persona, phrase, row in banned
+        if phrase in (_AGENTS_DIR / f"{persona}.md").read_text(encoding="utf-8")
+    ]
+    assert not back, (
+        "CR219 R1–R6: a denial the CR measured as FALSE against the fact sheet is "
+        "back in a persona. The sheet carries the data these sentences deny; "
+        f"reinstating one tells the agent to ignore what it was given: {back}"
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -677,6 +775,20 @@ _OVERLAY_DEMANDS: list[dict[str, Any]] = [
     {
         "row": "R11",
         "agent": AgentId.MARKET_ANALYST,
+        "demand": "Emphasise monthly/quarterly trend",
+        "backing_marker": "Primary trend (LIVE)",
+        "why": (
+            "Finding #9 itself, and the reason R15 says it resolves once R4 lands. "
+            "The LONG_HORIZON branch demanded a monthly/quarterly trend while the "
+            "persona said no series claim was supportable, so the agent obeyed the "
+            "persona and called the window trend a 'proxy'. The demand was always "
+            "backed — by the 200-day primary trend and the window trend — and the "
+            "persona now says so. This entry is what keeps the two halves agreeing."
+        ),
+    },
+    {
+        "row": "R11",
+        "agent": AgentId.MARKET_ANALYST,
         "demand": "clearly stated levels",
         "backing_marker": "50-day range:",
         "why": "The 50-day range low/high are the levels.",
@@ -725,6 +837,86 @@ def test_r11_every_overlay_demand_maps_to_something_the_sheet_renders(demand, sh
         f"{demand['agent'].value}, but its rendered sheet has no "
         f"{demand['backing_marker']!r} backing it. The agent is being asked for "
         "data it was never given — either ship the field or drop the demand."
+    )
+
+
+# R11's exhaustiveness half. The four ANALYSTS' role-guidance bullets are the
+# overlay lines that can demand fact-sheet data (the common block's bullets are
+# mandate CONSTRAINTS — caps, horizon, tone — which demand nothing of the
+# sheet). Every one of those bullets must be accounted for: either it maps to a
+# backing marker in `_OVERLAY_DEMANDS`, or it is listed here as making no data
+# demand, with the reason.
+#
+# Without this, R11 would be satisfied by mapping one demand and ignoring the
+# rest — "iterate the enum space, don't hand-pick" applies to the CHECKING too,
+# not just to corpus generation.
+_NON_DATA_ROLE_GUIDANCE: dict[str, str] = {
+    # Framing/emphasis instructions — they shape how the agent weighs what it
+    # has, they do not ask for a field.
+    "Balance red flags with opportunity": "emphasis, no field demanded",
+    "Surface red flags prominently": "emphasis, no field demanded",
+    "Prefer mean-reversion setups": "setup preference, rests on the levels already mapped",
+    "Breakout/breakdown setups acceptable": "setup preference, no new field",
+    "Short-term catalyst news is primary": "prioritisation of headlines already on the sheet",
+    "Distinguish noise (pundit predictions) from signal": "editorial judgement, no field",
+    "Sentiment matters only as a contrarian indicator": "interpretation rule, explicitly illustrative",
+    "Treat sentiment as a near-term signal AND": "interpretation rule, explicitly illustrative",
+    "Retail sentiment can be framed as a tradable signal": "interpretation rule, gated on real data",
+    "Down-weight/contrarian-frame low-quality": "interpretation rule, gated on real data",
+    # Compliance branches — they reference the HALAL block, not the fact sheet.
+    "Halal user: restrict candidates": "reads the HALAL constraint block, not the sheet",
+    "Flag news of subsidiary acquisitions": "compliance framing over headlines already present",
+    "Avoid illustrating memes/discussions": "compliance framing, no field",
+    # Self-limiting statements — these DENY data rather than demanding it, and
+    # match the persona's own true denials.
+    "You have no live macro-indicator calendar": "a denial, not a demand — and true",
+    "You have no live Twitter/X": "a denial, not a demand — and true",
+    "The only forward macro datum you are given is the FOMC": "scopes the demand to the mapped FOMC field",
+    # Non-sheet data source: the portfolio block, not the ticker fact sheet.
+    "Filter headlines to the user's holdings": (
+        "demands the PORTFOLIO block, which is a different injection than the fact "
+        "sheet this guard renders — out of scope here, in scope for WP03/WP04"
+    ),
+    # The R22 violation, carried separately below.
+    "Emphasise momentum in fundamentals": "the R22 violation — see KNOWN_R22_VIOLATIONS_PENDING_WP03",
+}
+
+
+def test_r11_every_analyst_role_guidance_line_is_accounted_for(overlay_corpus):
+    """R11 exhaustiveness — no analyst role-guidance bullet goes unexamined.
+
+    Each must either map to a backing marker (`_OVERLAY_DEMANDS`) or be declared
+    non-data (`_NON_DATA_ROLE_GUIDANCE`) with a reason. A new branch added to
+    `overlay_generator.py` is therefore red until someone says which it is —
+    the same "unknown = red" doctrine R13 applies to persona files."""
+    from app.agents.overlay_generator import _role_specific_block
+
+    analysts = (
+        AgentId.FUNDAMENTALS_ANALYST,
+        AgentId.MARKET_ANALYST,
+        AgentId.NEWS_ANALYST,
+        AgentId.SOCIAL_MEDIA_ANALYST,
+    )
+    mandates = _mandate_space()
+    unaccounted: list[tuple[str, str]] = []
+    for agent in analysts:
+        bullets = set()
+        for mandate in mandates:
+            for line in _role_specific_block(agent, mandate).splitlines():
+                if line.strip().startswith("-"):
+                    bullets.add(line.strip())
+        for bullet in sorted(bullets):
+            mapped = any(
+                d["agent"] == agent and d["demand"] in bullet for d in _OVERLAY_DEMANDS
+            )
+            declared = any(key in bullet for key in _NON_DATA_ROLE_GUIDANCE)
+            if not (mapped or declared):
+                unaccounted.append((agent.value, bullet[:120]))
+    assert not unaccounted, (
+        "CR219 R11: these overlay role-guidance lines are neither mapped to a "
+        "backing field (_OVERLAY_DEMANDS) nor declared as demanding no data "
+        "(_NON_DATA_ROLE_GUIDANCE). An unexamined demand is how #15/#16 shipped — "
+        f"classify each: {unaccounted}"
     )
 
 

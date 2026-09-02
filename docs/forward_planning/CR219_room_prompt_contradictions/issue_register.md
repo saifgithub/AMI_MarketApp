@@ -40,25 +40,25 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R1 | #1–2 Margin trend denied outright | CONVERGENT | Rewrite to a two-point rule: quote the bps figures and their two basis dates, never extend the direction beyond them | K,A,F,G,Q | ☐ |
-| R2 | #3 Buybacks / capital returned / M&A denied | CONVERGENT | Split: buybacks + capital-returned claimable (capital-returned flagged as AMI's sum); M&A stays denied | K,A,F,G,Q | ☐ |
-| R3 | #4 "No history for any of them" (multi-period figures) | CONVERGENT | Narrow to what's actually still true — only the 6 multi-period figures the sheet states are citable | K,A,F,G,Q | ☐ |
-| R4 | #5–6 Market analyst series/trend denials | CONVERGENT | Cite window/primary trend + RS by name; indicator trajectories ("RSI is clearing") stay denied | K,A,F,G,Q | ☐ |
-| R5 | #7 News analyst "not supplied consensus estimates" | CONVERGENT | Delete the sentence; replace with a use-mention naming it the Street's estimate | K,A,F,G,Q | ☐ |
-| R6 | #8 Social "no historical baseline" — the weak link | CONVERGENT | Narrow, don't delete — name exactly what the mention trend does/doesn't baseline. **Reject Antigravity's rewrite** (K/F/G/Q all flag it as granting a false sentiment-baseline claim) | K,A,F,G,Q | ☐ |
-| R7 | Which denials must *stay* (peer-basket P/E, MACD/Bollinger, Twitter/X) | CONVERGENT | Keep all 3; move into the guard's known-absent list rather than free prose | K,F,G | ☐ |
+| R1 | #1–2 Margin trend denied outright | CONVERGENT | Rewrite to a two-point rule: quote the bps figures and their two basis dates, never extend the direction beyond them | K,A,F,G,Q | ☑ |
+| R2 | #3 Buybacks / capital returned / M&A denied | CONVERGENT | Split: buybacks + capital-returned claimable (capital-returned flagged as AMI's sum); M&A stays denied | K,A,F,G,Q | ☑ |
+| R3 | #4 "No history for any of them" (multi-period figures) | CONVERGENT | Narrow to what's actually still true — only the 6 multi-period figures the sheet states are citable | K,A,F,G,Q | ☑ |
+| R4 | #5–6 Market analyst series/trend denials | CONVERGENT | Cite window/primary trend + RS by name; indicator trajectories ("RSI is clearing") stay denied | K,A,F,G,Q | ☑ |
+| R5 | #7 News analyst "not supplied consensus estimates" | CONVERGENT | Delete the sentence; replace with a use-mention naming it the Street's estimate | K,A,F,G,Q | ☑ |
+| R6 | #8 Social "no historical baseline" — the weak link | CONVERGENT | Narrow, don't delete — name exactly what the mention trend does/doesn't baseline. **Reject Antigravity's rewrite** (K/F/G/Q all flag it as granting a false sentiment-baseline claim) | K,A,F,G,Q | ☑ |
+| R7 | Which denials must *stay* (peer-basket P/E, MACD/Bollinger, Twitter/X) | CONVERGENT | Keep all 3; move into the guard's known-absent list rather than free prose | K,F,G | ☑ |
 
 ## Root-cause fix mechanism & the guard
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R8 | How to stop the next field-adding CR from recreating this bug | **RULED** | Hand-fix + guard (rejects Antigravity's static contract block and Fable's generated registry) — `GLM/02` Ruling R1 | K,A,F,G | ☐ |
-| R9 | Guard must check negative claims TRUE, not just present | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,A,F,G | ☐ |
-| R10 | Guard must scan the whole file, not just `## Inputs`→`## Output` | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,A,F,G,Q | ☐ |
-| R11 | Guard must also cover the overlay generator (map demands → field_state keys) | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,F,G | ☐ |
-| R12 | Collision markers — a future field ships, an absence claim goes red automatically | **RULED** | Adopted into the R1 guard design, explicitly "stolen" from Fable's registry proposal | F,G | ☐ |
-| R13 | Guard exhaustive by construction — every persona file must be mapped, unknown = red | **RULED 2026-09-02** | Adopt — QWEN's Gap 6 folds into the R1 guard spec (makes R44's sweep automatic). Build: `dev_instructions/WP02_guard.md` | Q | ☐ |
-| R14 | Guard should document its own authored-mapping blind spot | RULED / CONVERGENT | Adopted — state the limit in the test docstring | K,G | ☐ |
+| R8 | How to stop the next field-adding CR from recreating this bug | **RULED** | Hand-fix + guard (rejects Antigravity's static contract block and Fable's generated registry) — `GLM/02` Ruling R1 | K,A,F,G | ☑ |
+| R9 | Guard must check negative claims TRUE, not just present | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,A,F,G | ☑ |
+| R10 | Guard must scan the whole file, not just `## Inputs`→`## Output` | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,A,F,G,Q | ☑ |
+| R11 | Guard must also cover the overlay generator (map demands → field_state keys) | RULED / CONVERGENT | Required — folds into guard v2 under R1 | K,F,G | ☑ |
+| R12 | Collision markers — a future field ships, an absence claim goes red automatically | **RULED** | Adopted into the R1 guard design, explicitly "stolen" from Fable's registry proposal | F,G | ☑ |
+| R13 | Guard exhaustive by construction — every persona file must be mapped, unknown = red | **RULED 2026-09-02** | Adopt — QWEN's Gap 6 folds into the R1 guard spec (makes R44's sweep automatic). Build: `dev_instructions/WP02_guard.md` | Q | ☑ |
+| R14 | Guard should document its own authored-mapping blind spot | RULED / CONVERGENT | Adopted — state the limit in the test docstring | K,G | ☑ |
 
 ## Class B — instruction fights instruction
 
@@ -76,7 +76,7 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
 | R21 | #15 Short/medium-horizon demand (earnings revisions, surprise history, guidance) | **RULED 2026-09-02** | **Back with real fetches, inside CR219** (GLM track upheld; QWEN/Fable delete position overruled). Field ships first (`dev_instructions/WP06` R21-DATA), demand text aligned after (`WP04`); "guidance" stays out of the demand per R22 | K,F,G,Q | ☐ |
-| R22 | #16 "Guidance" demand collides with the sheet's own disclaimer | CONVERGENT | Fold into the guard as a forbidden-phrase check on overlay_generator outputs | G,Q | ☐ |
+| R22 | #16 "Guidance" demand collides with the sheet's own disclaimer | CONVERGENT | Fold into the guard as a forbidden-phrase check on overlay_generator outputs | G,Q | ☑ (check built; the one live violation is carried in `KNOWN_R22_VIOLATIONS_PENDING_WP03` — deleting the demand at `overlay_generator.py:447` is WP03's, and the guard's vacuity test goes red the moment it does, forcing the carry-list empty) |
 
 ## Class D & E — surface / lane gaps
 
@@ -128,7 +128,7 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 | R41 | Undisclosed harness artifact — `convene_gemini.py` hardcodes `LONG_HORIZON` while `--horizon` varies | OPEN (half done) | README caveat DONE (commit `38a9e85f`); REMAINING: extend `aggregate_arms.py`'s artifact filter to the 4 affected `h_short` reports — `dev_instructions/WP09_docs_corrections.md` | F | ☑ |
 | R42 | CR210 measurements (50/69, 47/68) exist only in code comments, no results artifact | DONE 2026-09-02 | Committed as `49380813` with a results note (`CR210_.../results/acceptance3_wrong_constraint_regressions.md`); CR210's post-fix arm re-run stays open in that note | F | ☑ |
 | R43 | PM breaks its JSON-only contract under instruction pressure | OPEN | File its own DEF — DEF067 precedent (~13% parser loss from similar fragility) | K,G | ☐ |
-| R44 | Sweep the 26 unswept prompts (concierge, Brief Your Agent) | CONVERGENT | Extend `dump_sheets.py`/`assemble_room.py` rather than writing new scripts. Becomes automatic if R13 (exhaustive guard) is adopted | K,F,G,Q | ☐ |
+| R44 | Sweep the 26 unswept prompts (concierge, Brief Your Agent) | CONVERGENT | Extend `dump_sheets.py`/`assemble_room.py` rather than writing new scripts. Becomes automatic if R13 (exhaustive guard) is adopted | K,F,G,Q | ☑ |
 | R45 | A named target architecture — what does "done" look like? | CONVERGENT (independently duplicated) | GLM and QWEN each wrote one, unprompted, landing on near-identical 5-property / 6-layer framings. Worth reconciling into one canonical statement for the final CR doc rather than keeping both | G,Q | ☐ |
 | R46 | Acceptance #5 "evidence/ regenerates" implies byte-identical output | OPEN | Reword to "scripts run clean against a freshly built profile" — the cached profile is gitignored and market data moves | Q | ☑ |
 
@@ -155,7 +155,7 @@ ruling than "everything rides CR219" (R40) and applies only to this group.
 | R58 | Debate-order randomization (Bull always speaks before Bear) | **RULED 2026-09-02** | Parked to a future CR — `dev_instructions/PARKING_LOT.md` | F | ☐ |
 | R59 | Audit: every number the user reads is computed or checked in code | **RULED 2026-09-02** | Parked — R20 already ships the RO-precompute half inside CR219; the general audit waits. `dev_instructions/PARKING_LOT.md` | F,Q | ☐ |
 | R60 | "What changed since your last convene" delta line | **RULED 2026-09-02** | Parked to a future CR — pairs with R52 if picked up. `dev_instructions/PARKING_LOT.md` | F | ☐ |
-| R61 | News headlines are untrusted input — verify they're framed as quoted data | **RULED 2026-09-02** | **Rides CR219** — folded into the guard. Build: `dev_instructions/WP02_guard.md` | F | ☐ |
+| R61 | News headlines are untrusted input — verify they're framed as quoted data | **RULED 2026-09-02** | **Rides CR219** — folded into the guard. Build: `dev_instructions/WP02_guard.md` | F | ☑ |
 
 ---
 
