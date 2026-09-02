@@ -131,6 +131,9 @@ _CLAIMED_REAL_INPUTS = [
     # gated (a filer can carry one series without the other).
     ("fundamentals_analyst", "**Multiples vs. own history**", "historical_pe_median"),
     ("fundamentals_analyst", "**Multiples vs. own history**", "historical_ev_ebitda_median"),
+    # CR219 R21-DATA — unblocks WP04-R21's overlay rewrite.
+    ("fundamentals_analyst", "**Earnings revisions**", "eps_revisions_direction"),
+    ("fundamentals_analyst", "**Surprise history**", "surprise_quarters"),
     # CR166 Tier B — the dividend claim grew the half that makes a yield mean
     # something (cover + ex-date), and the consensus claim grew its dispersion.
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_yield"),

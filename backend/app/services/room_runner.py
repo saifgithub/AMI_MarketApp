@@ -489,6 +489,24 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "historical_pe_median", "historical_pe_years", "historical_pe_window",
     "historical_ev_ebitda_median", "historical_ev_ebitda_years",
     "historical_ev_ebitda_window",
+    # CR219 R21-DATA — earnings revisions direction (`tk.eps_trend`'s `0q`
+    # row: current consensus EPS estimate vs. 90 days ago) and surprise
+    # history (`tk.earnings_history`: reported vs. estimate per quarter,
+    # NOT `tk.earnings_dates`, which needs the uninstalled `lxml` package —
+    # confirmed by running it live, 2026-09-03). This is what unblocks
+    # WP04-R21's overlay rewrite: the short/medium branch demands "earnings
+    # revisions, surprise history" and, until these eight keys, nothing
+    # fetched either half. Four singular keys for the revisions half
+    # (direction/pct/current/window — all optional-live-only for the same
+    # reason `interest_coverage`'s pair is: a name with no analyst coverage
+    # has no consensus trend to state) and four PARALLEL-LIST keys for the
+    # surprise half (quarters/actuals/estimates/pcts — matching the
+    # `buyback_quarterly`/`buyback_quarterly_basis` list-field shape rather
+    # than a list of dicts, one convention for "a dated numeric series"
+    # across this whole module).
+    "eps_revisions_direction", "eps_revisions_pct", "eps_revisions_current",
+    "eps_revisions_window_days",
+    "surprise_quarters", "surprise_actuals", "surprise_estimates", "surprise_pcts",
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
     # shipped without it (gross debt renders, gross cash did not).
     "total_cash",

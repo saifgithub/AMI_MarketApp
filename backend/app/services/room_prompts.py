@@ -32,6 +32,7 @@ from app.services.fundamentals import (
     balance_sheet_line,
     dividend_line,
     earnings_power_line,
+    eps_revisions_line,
     identity_line,
     buyback_line,
     buyback_pacing_line,
@@ -47,6 +48,7 @@ from app.services.fundamentals import (
     relative_strength_line,
     risk_profile_line,
     short_interest_line,
+    surprise_history_line,
     ownership_line,
     pe_line,
     peg_part,
@@ -2455,6 +2457,33 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
         if hist_line:
             lines.append(hist_line)
+        # CR219 R21-DATA — unblocks WP04-R21's overlay rewrite: the demand
+        # for "earnings revisions, surprise history" now has real fields
+        # backing it. Fundamentals lane (WP06's own scoping). Explicitly
+        # guarded (not a bare `lines.append(...)`) because, unlike `pe_line`
+        # a few lines up, both of these CAN return None — this function's
+        # own final `"\n".join(lines)` has no None-filtering step, so an
+        # unconditional append here would raise at render time the first
+        # time either field was genuinely absent.
+        revisions_line = eps_revisions_line(
+            profile.get("eps_revisions_direction")
+            if _is("eps_revisions_direction", "live") else None,
+            profile.get("eps_revisions_pct") if _is("eps_revisions_pct", "live") else None,
+            profile.get("eps_revisions_current")
+            if _is("eps_revisions_current", "live") else None,
+            profile.get("eps_revisions_window_days")
+            if _is("eps_revisions_window_days", "live") else None,
+        )
+        if revisions_line:
+            lines.append(revisions_line)
+        surprise_line = surprise_history_line(
+            profile.get("surprise_quarters") if _is("surprise_quarters", "live") else None,
+            profile.get("surprise_actuals") if _is("surprise_actuals", "live") else None,
+            profile.get("surprise_estimates") if _is("surprise_estimates", "live") else None,
+            profile.get("surprise_pcts") if _is("surprise_pcts", "live") else None,
+        )
+        if surprise_line:
+            lines.append(surprise_line)
         # CR166 Tier B — the net margin moved OFF this line and onto
         # `Margin structure` below, which states it as the third term of
         # gross → operating → net. Stating one figure twice is the defect

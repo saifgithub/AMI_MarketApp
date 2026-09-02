@@ -53,6 +53,12 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   fetched) — it prices past years' earnings/EBITDA at TODAY's price/EV to show
   whether THIS year's number is itself elevated or depressed versus the company's own
   recent history. Still no peer-basket or sector-average comparison of any kind
+- **Earnings revisions** — the direction and size of the analyst consensus EPS
+  estimate move over the last several days, when the sheet tags it (LIVE). Real,
+  from the Street's own tracked estimate history — not a guess at sentiment
+- **Surprise history** — reported EPS against the estimate, per quarter, for as many
+  recent quarters as the sheet actually carries (real, when tagged LIVE — the count
+  varies by ticker; state only what's on the sheet, never assume four)
 - **Ownership** — institutional and insider percentages, shares outstanding and free
   float. Market cap alone does not settle liquidity: a large company with a small
   float, or one where insiders hold a third of the shares, is a different instrument

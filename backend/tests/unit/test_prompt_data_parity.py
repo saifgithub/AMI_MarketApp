@@ -164,6 +164,17 @@ _FUND_SENTINEL: dict = {
     "historical_ev_ebitda_median": 11.3,
     "historical_ev_ebitda_years": 4,
     "historical_ev_ebitda_window": "EVWINDOWSENT",
+    # CR219 R21-DATA — earnings revisions + surprise history. Parallel-list
+    # shape for the surprise half, matching buyback_quarterly's own
+    # convention; values chosen not to collide with any fingerprint here.
+    "eps_revisions_direction": "REVDIRSENT",
+    "eps_revisions_pct": 12.3,
+    "eps_revisions_current": 9.87,
+    "eps_revisions_window_days": 45,
+    "surprise_quarters": ["SURQ1SENT", "SURQ2SENT"],
+    "surprise_actuals": [5.55, 6.66],
+    "surprise_estimates": [5.11, 6.22],
+    "surprise_pcts": [8.6, 7.1],
     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
     # without it. Neither guard could see the gap: the census counts `totalCash`
     # as consumed (it IS read, into `net_cash`) and parity can only ask about a
@@ -577,6 +588,56 @@ def _fake_annual_income_stmt():
     )
 
 
+def _fake_eps_trend():
+    """CR219 R21-DATA — `tk.eps_trend`, for earnings-revisions direction.
+
+    Real shape (verified live against CAT, 2026-09-03): four rows indexed
+    0q/+1q/0y/+1y, each with current/7/30/60/90-days-ago consensus EPS
+    columns. Only the `0q` row is consumed; the other three exist so the
+    real fetcher's `.loc["0q", ...]` indexing is exercised against a
+    realistically-shaped frame, not a single-row stub.
+    """
+    import pandas as pd
+
+    return pd.DataFrame(
+        {
+            "current": [6.95, 6.95, 27.30, 32.40],
+            "7daysAgo": [6.94, 6.96, 27.25, 32.35],
+            "30daysAgo": [6.70, 6.75, 26.00, 31.00],
+            "60daysAgo": [6.60, 6.70, 25.50, 30.50],
+            # CR219 R21-DATA fingerprint: (6.95 - 6.50) / 6.50 * 100 =
+            # 6.923... -> rounds to 6.9 — hand-verified before use.
+            "90daysAgo": [6.50, 6.68, 25.00, 30.00],
+            "currency": ["USD"] * 4,
+        },
+        index=["0q", "+1q", "0y", "+1y"],
+    )
+
+
+def _fake_earnings_history():
+    """CR219 R21-DATA — `tk.earnings_history`, for surprise history.
+
+    Real shape (verified live against CAT, 2026-09-03): epsActual/
+    epsEstimate/epsDifference/surprisePercent, indexed by quarter-end
+    Timestamp, oldest first. `tk.earnings_dates` was NOT used — its scrape
+    path needs `lxml`, not installed in this project (confirmed live, same
+    date, before choosing this alternative).
+    """
+    import pandas as pd
+
+    return pd.DataFrame(
+        {
+            "epsActual": [4.95, 5.16],
+            "epsEstimate": [4.52, 4.71],
+            "epsDifference": [0.43, 0.45],
+            # Fingerprint: (4.95-4.52)/4.52 -> yfinance's own pre-computed
+            # fraction, this module multiplies by 100 and rounds to 1dp.
+            "surprisePercent": [0.0951, 0.0955],
+        },
+        index=pd.to_datetime(["2025-09-30", "2025-12-31"]),
+    )
+
+
 def _fake_yfinance_module() -> types.SimpleNamespace:
     income, cashflow = _fake_statement_frames()
     return types.SimpleNamespace(
@@ -585,6 +646,10 @@ def _fake_yfinance_module() -> types.SimpleNamespace:
             info=_AllKeysInfo(),
             quarterly_income_stmt=income,
             quarterly_cashflow=cashflow,
+            # CR219 R21-DATA — two more sibling properties on the same
+            # `yf.Ticker` object, same "zero new network endpoints" rule.
+            eps_trend=_fake_eps_trend(),
+            earnings_history=_fake_earnings_history(),
             # CR219 R37 — the annual sibling, real yfinance's actual property
             # name (distinct from `quarterly_income_stmt` above).
             income_stmt=_fake_annual_income_stmt(),
@@ -740,6 +805,16 @@ def env(monkeypatch):
             "historical_ev_ebitda_median": "median 11.3x",
             "historical_ev_ebitda_years": "the last 4 FYs' own EBITDA",
             "historical_ev_ebitda_window": "EVWINDOWSENT",
+            # CR219 R21-DATA — each key fingerprints its own distinct
+            # substring of the two rendered lines.
+            "eps_revisions_direction": "REVDIRSENT",
+            "eps_revisions_pct": "12.3%",
+            "eps_revisions_current": "now $9.87",
+            "eps_revisions_window_days": "the last 45 days",
+            "surprise_quarters": "SURQ1SENT: actual",
+            "surprise_actuals": "actual $5.55",
+            "surprise_estimates": "vs. est. $5.11",
+            "surprise_pcts": "beat by 8.6%",
             # CR179 Leg 3.
             "total_cash": "gross cash $55,221M",
             "day_change_pct": "-1.77% today",

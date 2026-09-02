@@ -19,22 +19,24 @@ CITATIONS = [
     # REPLACED it, so the CR doc's file:line refs resolve to the fix rather than
     # to a sentence that no longer exists.
     ("content/agents/fundamentals_analyst.md", (30, 36), "may **not** extend that direction past the second date"),
-    # CR219 WP06 2026-09-03, four inserts to this file in sequence: R33 (4
+    # CR219 WP06 2026-09-03, five inserts to this file in sequence: R33 (4
     # lines, "Interest coverage", after "Returns and balance sheet"), R34 (4
     # lines, "Capital expenditure", after "Capital returned"), R35 (4 lines,
-    # "Buyback pacing", after "Buybacks" — which sits ABOVE R34's insertion
-    # point, so R35 also pushes R34's own bullet down), R37 (6 lines,
-    # "Multiples vs. own history", after the peer-average sentence — which
-    # sits above ALL THREE of the prior insertion points, so R37 pushes
-    # every one of them down too). Net shift below all four for anything
-    # past every insertion point: +18 from the pre-R33 baseline. Re-verified
-    # against actual file content each time (start AND end boundary,
-    # after R35 caught a window whose END no longer matched the block it
-    # was checking even though the SUBSTRING still fell inside it by
-    # accident) — never accumulated by arithmetic alone.
-    ("content/agents/fundamentals_analyst.md", (78, 79), "**M&A history is not available**"),
-    ("content/agents/fundamentals_analyst.md", (91, 102), "Six figures on the sheet span more than one"),
-    ("content/agents/fundamentals_analyst.md", (107, 107), "the direction stops at the second date"),
+    # "Buyback pacing", after "Buybacks" — above R34's point, so R35 also
+    # pushes R34's bullet down), R37 (6 lines, "Multiples vs. own history",
+    # after the peer-average sentence — above all three prior points, so it
+    # pushes every one of them down too), R21-DATA (6 lines, "Earnings
+    # revisions" + "Surprise history", after R37's own bullet — above
+    # nothing yet inserted, so it only pushes what's below IT). Net shift
+    # below all five for anything past every insertion point: +24 from the
+    # pre-R33 baseline. Re-verified against actual file content each time
+    # (start AND end boundary, after R35 caught a window whose END no
+    # longer matched the block it was checking even though the SUBSTRING
+    # still fell inside it by accident) — never accumulated by arithmetic
+    # alone.
+    ("content/agents/fundamentals_analyst.md", (84, 85), "**M&A history is not available**"),
+    ("content/agents/fundamentals_analyst.md", (97, 108), "Six figures on the sheet span more than one"),
+    ("content/agents/fundamentals_analyst.md", (113, 113), "the direction stops at the second date"),
     # CR219 WP01 R4 — the blanket "no series" premise was false (window trend,
     # primary trend, 52w RS and the SMA-alignment read are all measured across
     # the history). Both citations now point at the narrowed claim that replaced
@@ -56,12 +58,12 @@ CITATIONS = [
     ("backend/app/agents/overlay_generator.py", (531, 531), "Emphasise momentum in fundamentals"),
     ("backend/app/agents/overlay_generator.py", (94, 94), "Primary goal: {mandate.primary_goal}"),
     ("backend/app/agents/overlay_generator.py", (521, 521), "long_horizon = m.horizon in"),
-    # CR219 WP06 R33, R34, R35, R37 (2026-09-03) each added one import line
-    # to room_prompts.py's fundamentals import block
-    # (`interest_coverage_line,`, `capex_line,`, `buyback_pacing_line,`,
-    # `historical_multiples_line,`), shifting everything below down by 1
-    # each time.
-    ("backend/app/services/room_prompts.py",   (1607, 1607), "_format_profile(profile, agent_id)"),
+    # CR219 WP06 R33/R34/R35/R37 each added one import line to
+    # room_prompts.py's fundamentals import block; R21-DATA added TWO
+    # (`eps_revisions_line,` and `surprise_history_line,`) — net +5 lines
+    # of import-block shift across all five commits, shifting everything
+    # below down by that much.
+    ("backend/app/services/room_prompts.py",   (1609, 1609), "_format_profile(profile, agent_id)"),
     # The three denials that are TRUE and must survive any fix.
     ("content/agents/market_analyst.md",       (39, 41), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),

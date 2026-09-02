@@ -433,6 +433,110 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
                 out["eps_history"] = [v for _, v in usable]
                 out["eps_history_years"] = [p[:4] for p, _ in usable]
 
+    # ── Earnings revisions direction (CR219 R21-DATA) ──────────────────────
+    # This unblocks WP04-R21's overlay rewrite: the short/medium fundamentals
+    # branch demands "earnings revisions, surprise history" and, until this
+    # field, nothing fetched either — the demand was asking agents to
+    # analyse data they were never given.
+    #
+    # `tk.eps_trend` — yet ANOTHER yfinance property, its own try/except for
+    # the same "one outage costs only its own lines" reason as the annual
+    # statement block above. Verified live (CAT, 2026-09-03): four rows
+    # (0q/+1q/0y/+1y — current quarter, next quarter, current year, next
+    # year), each with `current`/`7daysAgo`/`30daysAgo`/`60daysAgo`/
+    # `90daysAgo` consensus EPS estimates. The CURRENT-QUARTER row (`0q`) is
+    # used — the nearest, most decision-relevant estimate — comparing
+    # `current` against `90daysAgo` for the widest window this data
+    # actually spans (the demand text itself will say "over the stated
+    # window" once WP04 rewrites it, and the window stated here is what
+    # backs that).
+    try:
+        eps_trend = tk.eps_trend
+    except Exception as exc:
+        logger.warn("yfinance_eps_trend_error", ticker=ticker, error=str(exc)[:200])
+        eps_trend = None
+    if eps_trend is not None and "0q" in eps_trend.index:
+        try:
+            current = eps_trend.loc["0q", "current"]
+            ago_90d = eps_trend.loc["0q", "90daysAgo"]
+            current = float(current) if current is not None else None
+            ago_90d = float(ago_90d) if ago_90d is not None else None
+        except (TypeError, ValueError):
+            current = ago_90d = None
+        if (
+            current is not None and ago_90d is not None
+            and math.isfinite(current) and math.isfinite(ago_90d) and ago_90d
+        ):
+            pct_change = round((current - ago_90d) / abs(ago_90d) * 100, 1)
+            # A flat/near-flat band reads as "unchanged" rather than forcing
+            # a direction onto noise — matching the house style
+            # `window_trend_phrase` already applies to price moves ("flat"
+            # under 0.05%), scaled for an estimate that moves in cents, not
+            # points: under half a percent of the estimate itself.
+            if abs(pct_change) < 0.5:
+                direction = "unchanged"
+            else:
+                direction = "up" if pct_change > 0 else "down"
+            out["eps_revisions_direction"] = direction
+            out["eps_revisions_pct"] = pct_change
+            out["eps_revisions_current"] = round(current, 2)
+            out["eps_revisions_window_days"] = 90
+
+    # ── Surprise history (CR219 R21-DATA) ───────────────────────────────────
+    # `tk.earnings_history` — reported vs. estimate for the last several
+    # quarters, yfinance's own pre-computed surprise. Deliberately NOT
+    # `tk.earnings_dates` (also considered): that property's
+    # `_get_earnings_dates_using_scrape` path requires `lxml`, which is not
+    # an installed dependency in this project (confirmed by running it
+    # live, 2026-09-03 — it raised `ImportError` before any network call
+    # even completed) — `earnings_history` is a plain API call with no such
+    # requirement and returns the same reported/estimate/surprise shape.
+    # Adding `lxml` to reach `earnings_dates` instead would be exactly the
+    # kind of new dependency this WP's own rule reserves for R38-style
+    # design review, for a property that is not actually needed once this
+    # one is confirmed to carry the same data.
+    try:
+        earnings_hist = tk.earnings_history
+    except Exception as exc:
+        logger.warn("yfinance_earnings_history_error", ticker=ticker, error=str(exc)[:200])
+        earnings_hist = None
+    if earnings_hist is not None and len(earnings_hist) > 0:
+        try:
+            quarters = [str(idx)[:10] for idx in earnings_hist.index]
+            actuals = [
+                float(v) if v is not None and math.isfinite(v) else None
+                for v in earnings_hist["epsActual"]
+            ]
+            estimates = [
+                float(v) if v is not None and math.isfinite(v) else None
+                for v in earnings_hist["epsEstimate"]
+            ]
+            surprise_pct = [
+                round(float(v) * 100, 1) if v is not None and math.isfinite(v) else None
+                for v in earnings_hist["surprisePercent"]
+            ]
+        except (TypeError, ValueError, KeyError):
+            quarters = actuals = estimates = surprise_pct = []
+        # Four PARALLEL lists, matching the `buyback_quarterly`/
+        # `buyback_quarterly_basis` idiom above rather than a list of dicts
+        # — one shape for "a dated numeric series" across this whole
+        # module. A row missing quarter/actual/estimate is dropped from all
+        # four in lockstep rather than rendered with a gap (DEF053's
+        # "absent beats meaningless", applied to a row instead of a
+        # scalar). Oldest-first, matching `earnings_hist`'s own
+        # chronological index order — unlike the statement frames above,
+        # which arrive newest-first.
+        usable = [
+            (q, a, e, s)
+            for q, a, e, s in zip(quarters, actuals, estimates, surprise_pct)
+            if q and a is not None and e is not None
+        ]
+        if usable:
+            out["surprise_quarters"] = [q for q, _, _, _ in usable]
+            out["surprise_actuals"] = [a for _, a, _, _ in usable]
+            out["surprise_estimates"] = [e for _, _, e, _ in usable]
+            out["surprise_pcts"] = [s for _, _, _, s in usable]
+
     return out or None
 
 
@@ -1122,6 +1226,60 @@ def historical_multiples_line(
         "whether this year's earnings/EBITDA is itself high or low versus "
         "the company's recent history. No peer-basket comparison exists."
     )
+
+
+def eps_revisions_line(
+    direction: str | None, pct: float | None, current: float | None,
+    window_days: int | None, *, live: bool = True,
+) -> str | None:
+    """CR219 R21-DATA — analyst consensus EPS estimate revisions, direction
+    and magnitude, over the stated window.
+
+    This is what unblocks WP04-R21: the short/medium overlay branch demands
+    "earnings revisions" and nothing fetched them until this field. The
+    CURRENT-quarter consensus estimate against the same estimate 90 days
+    ago (`tk.eps_trend`'s `0q` row) — the nearest, most decision-relevant
+    estimate, and the widest comparison window that data actually carries.
+    A near-flat move (under 0.5% of the estimate) reads as "unchanged"
+    rather than a manufactured direction on noise.
+    """
+    if direction is None or current is None or window_days is None:
+        return None
+    part = f"consensus EPS estimate {direction}"
+    if pct is not None and direction != "unchanged":
+        part += f" {abs(pct)}%"
+    part += f" over the last {window_days} days, now ${current}"
+    return _labelled("Earnings revisions", live, [part])
+
+
+def surprise_history_line(
+    quarters: list[str] | None, actuals: list[float] | None,
+    estimates: list[float] | None, surprise_pcts: list[float | None] | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR219 R21-DATA — reported vs. estimate, per quarter, the other half
+    of WP04-R21's "surprise history" demand.
+
+    `tk.earnings_history`, not `tk.earnings_dates` — the latter's scrape
+    path requires `lxml`, not an installed dependency; the former is a
+    plain API call carrying the same reported/estimate/surprise shape.
+    Renders every quarter actually returned (measured, not assumed to be
+    4 — SNOA returned 3 of the usual 4, checked live 2026-09-03), oldest
+    first so the record reads as a timeline.
+    """
+    if not quarters or not actuals or not estimates:
+        return None
+    if not (len(quarters) == len(actuals) == len(estimates)):
+        return None
+    surprise_pcts = surprise_pcts or [None] * len(quarters)
+    entries = []
+    for i, (q, a, e) in enumerate(zip(quarters, actuals, estimates)):
+        part = f"{q}: actual ${a} vs. est. ${e}"
+        pct = surprise_pcts[i] if i < len(surprise_pcts) else None
+        if pct is not None:
+            part += f" ({'beat' if pct >= 0 else 'missed'} by {abs(pct)}%)"
+        entries.append(part)
+    return _labelled("Surprise history", live, ["; ".join(entries)])
 
 
 # ── CR166 Tier B shared fact-sheet lines ────────────────────────────────────
@@ -1864,6 +2022,24 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
         )
         if hist_line:
             lines.append(hist_line)
+        # CR219 R21-DATA — same builders, same order, same wording as the
+        # Room sheet (parity rule above). Explicitly guarded, same reason
+        # `hist_line` is above: this function's own `"\n".join(lines)` at
+        # the bottom has no None-filtering.
+        revisions_line = eps_revisions_line(
+            data.get("eps_revisions_direction"), data.get("eps_revisions_pct"),
+            data.get("eps_revisions_current"), data.get("eps_revisions_window_days"),
+            live=False,
+        )
+        if revisions_line:
+            lines.append(revisions_line)
+        surprise_line = surprise_history_line(
+            data.get("surprise_quarters"), data.get("surprise_actuals"),
+            data.get("surprise_estimates"), data.get("surprise_pcts"),
+            live=False,
+        )
+        if surprise_line:
+            lines.append(surprise_line)
         if "rev_growth" in data:
             lines.append(f"TTM revenue growth: {data['rev_growth']}%")
         # Net margin is no longer stated here — it is the third term of the
