@@ -28,10 +28,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeApiClient extends ApiClient {
-  _FakeApiClient({this.known = const {'AAPL', 'TSLA'}})
-      : super(baseUrl: 'test://localhost');
+  _FakeApiClient() : super(baseUrl: 'test://localhost');
 
-  final Set<String> known;
+  /// The symbols this stand-in resolves. Everything else comes back
+  /// `exists: false`, which is what the refusal tests need.
+  static const known = {'AAPL', 'TSLA'};
   final List<String> validated = [];
 
   @override
