@@ -199,6 +199,33 @@ def test_cr220_empty_allowlist_is_refused(client: TestClient):
     assert "nothing tradable" in resp.text.lower() or "empty allowlist" in resp.text.lower()
 
 
+def test_cr220_duplicate_tickers_are_collapsed(client: TestClient, known_ticker: str):
+    """The same symbol twice is not an error the user needs to fix. Without a
+    dedupe it also costs an extra DB lookup each and repeats itself in the
+    error text ("unknown: AAPL, AAPL, AAPL")."""
+    user_id, headers = _new_user()
+    resp = client.patch(
+        f"/v1/mandate/{user_id}",
+        json={"compliance": {"ticker_blocklist": [known_ticker, known_ticker.lower(), known_ticker]}},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["compliance"]["ticker_blocklist"] == [known_ticker]
+
+
+def test_cr220_an_absurdly_long_ticker_list_is_refused(client: TestClient):
+    """Each entry costs a point lookup, so an unbounded list is an unbounded
+    loop on every PATCH."""
+    user_id, headers = _new_user()
+    resp = client.patch(
+        f"/v1/mandate/{user_id}",
+        json={"compliance": {"ticker_blocklist": ["AAPL"] * 201}},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+    assert "at most" in resp.text
+
+
 def test_cr220_clearing_an_allowlist_with_null_is_allowed(client: TestClient):
     """The legitimate way to remove an allowlist must still work, or the
     refusal above becomes a trap with no way out."""

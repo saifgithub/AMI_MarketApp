@@ -70,6 +70,10 @@ def _own(current_user: User, user_id: UUID) -> None:
 
 
 # CR220 — journal rendering for the identity/goal fields.
+# A hand-curated allow/blocklist is a handful of names; this bounds the
+# per-PATCH lookup loop without constraining any real use.
+_MAX_TICKER_LIST = 200
+
 _TICKER_LIST_LABELS = {
     "ticker_blocklist": "blocked tickers",
     "ticker_allowlist": "allowed tickers",
@@ -123,13 +127,27 @@ def _validate_ticker_lists(updates: dict[str, Any]) -> None:
                 "remove the allowlist instead",
             )
 
+        if len(value) > _MAX_TICKER_LIST:
+            # Each entry costs a point lookup, so an unbounded list is an
+            # unbounded loop on every PATCH. The cap is far above any plausible
+            # hand-curated list and is here to bound the work, not to shape it.
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                f"{key} may hold at most {_MAX_TICKER_LIST} tickers",
+            )
+
+        # Deduplicate while preserving order: the same symbol twice is not an
+        # error the user needs to fix, and without this both the DB loop and
+        # the error message repeat it ("unknown: AAPL, AAPL, AAPL").
+        seen: set[str] = set()
         normalised: list[str] = []
         unknown: list[str] = []
         with get_session() as session:
             for raw in value:
                 symbol = str(raw).upper().strip()
-                if not symbol:
+                if not symbol or symbol in seen:
                     continue
+                seen.add(symbol)
                 row = lookup_ticker(session, symbol)
                 if row is None:
                     unknown.append(symbol)
