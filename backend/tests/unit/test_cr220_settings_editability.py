@@ -433,3 +433,66 @@ def test_cr220_path_both_keeps_the_cr147_no_macro_feed_warning():
     overlay = _overlay_for_path("both", "news_analyst")
     assert "FOMC countdown" in overlay
     assert "your framing, not data" in overlay
+
+
+# ── 6. The backfill actually runs (D10) ─────────────────────────────────────
+#
+# The helper tests above cover selection and wording. These drive `main()`
+# itself, because a backfill that is only ever tested through its helpers is a
+# script nobody has run — and this one WRITES to every affected user's mandate.
+
+from uuid import uuid4
+from datetime import datetime, timezone
+
+from app.services.mandate_store import MandateStore
+from app.schemas.mandate import Mandate
+from scripts.cr220_backfill_compliance_defaults import main
+
+
+def _seed_inverted_user():
+    uid = uuid4()
+    now = datetime.now(timezone.utc)
+    m = Mandate.model_validate({
+        "user_id": str(uid), "version": 1, "display_name": "Trader",
+        "primary_goal": "long_term_wealth", "horizon": "long", "path": "long_horizon",
+        "risk_score": 3,
+        "risk_components": {"drawdown_response": 3, "regret_asymmetry": 0,
+                            "concentration_tolerance": 3},
+        "max_drawdown_pct": 30,
+        # the exact shape the old _parse_constraints produced
+        "compliance": {"long_only": False, "liquid_only": False},
+        "created_at": now, "updated_at": now,
+    })
+    MandateStore().upsert(uid, m)
+    return uid
+
+
+def test_dry_run_reports_but_writes_nothing(capsys):
+    uid = _seed_inverted_user()
+    rc = main([])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "DRY RUN" in out
+    assert str(uid) in out
+    after = MandateStore().get(uid)
+    assert after.compliance.long_only is False, "dry run must not write"
+    assert after.version == 1
+
+
+def test_apply_repairs_and_bumps_the_version(capsys):
+    uid = _seed_inverted_user()
+    rc = main(["--apply"])
+    assert rc == 0
+    after = MandateStore().get(uid)
+    assert after.compliance.long_only is True
+    assert after.compliance.liquid_only is True
+    assert after.version == 2, "the repair must be a real, visible version"
+
+
+def test_rerunning_after_apply_finds_nothing(capsys):
+    _seed_inverted_user()
+    main(["--apply"])
+    capsys.readouterr()
+    main([])
+    out = capsys.readouterr().out
+    assert "affected users     : 0" in out, out
