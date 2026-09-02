@@ -592,10 +592,29 @@ def pm_verdict_schema(option_candidates: Sequence[Any] | None = None) -> dict[st
 # DEF236 — STYLE only. The shape (a thesis sentence, then how many bullets) is
 # stated once, in `_LENGTH_GUIDE`, and no longer restated here in a different
 # unit. See that dict for what the contradiction cost.
+#
+# R20 (CR219, ruled in QWEN's review track) — the global derivation policy,
+# stated once here rather than per-persona: agents never do arithmetic on sheet
+# figures; AMI mints and labels every derived number, the same way the
+# `Asymmetry` line already does ("AMI's arithmetic on the two lines above").
+# This is the shared tail every prose agent (all eleven, not the PM's separate
+# JSON contract) receives last, so it is the one place a policy sentence
+# reaches every debate/analysis voice without being restated eleven times and
+# risking the eleven copies drifting apart (the DEF236 lesson, one layer over).
+# `failure_patterns` P2/CR038 still apply — this is prose, not a control — but
+# where a persona ALSO implies computing (the R19 debators were the known
+# case, closed by DEF241's precomputed contribution line; bear_researcher.md's
+# own "derive the percentage" instruction is the other case this WP found and
+# fixed in the same commit), this sentence is what tells the model the correct
+# figure is already in front of it rather than something to work out.
 _PROSE_FORMAT = (
     "\nFormat: use **bold** for key metrics (numbers, levels, deadlines). "
     "Plain text otherwise — no headings, no tables. The Markdown is "
-    "rendered live in the app."
+    "rendered live in the app.\n"
+    "Quote figures from the data above; never compute a new one. Where a "
+    "ratio, a percentage move or a drawdown contribution matters, AMI has "
+    "already derived and labelled it (e.g. the Asymmetry line) — cite that "
+    "line rather than doing the arithmetic yourself."
 )
 
 # Appended for every prose agent EXCEPT the Trader, whose own profile specifies

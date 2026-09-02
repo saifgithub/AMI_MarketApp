@@ -1125,6 +1125,116 @@ def test_r61_a_hostile_headline_still_renders_inside_an_attribution_frame(sheets
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# R20 — the global derivation policy: agents quote figures, they don't compute
+# new ones. AMI mints and labels every derived number (the `Asymmetry` line is
+# the template); the shared prompt tail (`_PROSE_FORMAT`, room_prompts.py)
+# states the policy once for all eleven prose agents. This section is the
+# grep-style guard the WP03 R20 ruling asks for: no persona may instruct
+# computing a ratio, percentage or contribution FROM RAW SHEET NUMBERS.
+#
+# Scoped narrowly on purpose. It does NOT ban the word "derive"/"compute"
+# outright — `bear_researcher.md` carries "Derive the percentage from two
+# prices in front of you" as DEF245's own considered fix (a controlled,
+# bounded two-input calc: the sheet's last close and the Bear's own picked
+# hypothetical level), deliberately chosen over a literal example that
+# measurably leaked into 2.7% of real verdicts as the single most common
+# downside figure AMI ever produced. There is no way to precompute a figure
+# for an arbitrary per-turn hypothetical the way DEF241 precomputed the fixed
+# reference-position drawdown contribution — so this allowlists that ONE
+# entry, by name, with the reason, rather than weakening the pattern to miss
+# it (the same discipline `_KNOWN_ABSENT`/`_ALLOWLISTED_DENIALS` above use).
+# ──────────────────────────────────────────────────────────────────────────────
+
+_COMPUTE_IMPLYING_PATTERNS = (
+    # "multiply/divide X by Y" — the DEF066→DEF235→DEF241 class pointed at a
+    # persona instead of an overlay branch.
+    re.compile(r"\bmultipl(?:y|ies|ying)\b.{0,40}\bby\b", re.I),
+    re.compile(r"\bdivide\b.{0,40}\bby\b", re.I),
+    re.compile(r"\bdo the (?:math|arithmetic)\b", re.I),
+    re.compile(r"\bwork out\b.{0,30}\b(?:ratio|percentage|contribution|figure)\b", re.I),
+    re.compile(r"\bcalculate\b.{0,30}\b(?:ratio|percentage|contribution|figure|drawdown)\b", re.I),
+    re.compile(r"\bcompute\b.{0,30}\b(?:ratio|percentage|contribution|drawdown)\b", re.I),
+    # "Derive the X from Y" — the DEF245 shape this section's allowlist exists
+    # for. Included deliberately: the pattern must be broad enough to catch the
+    # allowlisted line for real, so the allowlist is proven to suppress
+    # something rather than checking a pattern that never would have fired.
+    re.compile(r"\bderive\b.{0,40}\b(?:ratio|percentage|contribution|figure)\b", re.I),
+)
+
+# One allowlisted line, matched by its distinctive fragment rather than by
+# persona name — so a NEW compute-implying line in the SAME file still fails.
+_COMPUTE_IMPLYING_ALLOWED: tuple[tuple[str, str, str], ...] = (
+    (
+        "bear_researcher",
+        "Derive the percentage from two prices in front of you",
+        (
+            "DEF245's own fix (2026-08-09): replaced a literal '-25%' worked "
+            "example that leaked into 2.7% of 811 real verdicts as the single "
+            "most common downside magnitude. The two inputs (the sheet's last "
+            "close, and the Bear's own picked hypothetical level) cannot be "
+            "precomputed ahead of time the way a fixed reference position can "
+            "(DEF241) — there is no anchor to derive FROM at prompt-build time. "
+            "Pinned by test_the_bear_carries_no_literal_downside_percentage in "
+            "test_def244_def245_sizing_lane_and_literals.py; do not remove "
+            "without re-reading that row."
+        ),
+    ),
+)
+
+
+def _compute_implying_hits(persona: str, text: str) -> list[tuple[int, str]]:
+    """R20's logic, factored out so the red fixture can drive it directly."""
+    allowed_fragments = {frag for p, frag, _ in _COMPUTE_IMPLYING_ALLOWED if p == persona}
+    hits: list[tuple[int, str]] = []
+    for idx, line in enumerate(text.splitlines(), start=1):
+        if any(pat.search(line) for pat in _COMPUTE_IMPLYING_PATTERNS):
+            if any(frag in line for frag in allowed_fragments):
+                continue
+            hits.append((idx, line.strip()))
+    return hits
+
+
+@pytest.mark.parametrize("persona", sorted(p for p in _PERSONA_LANES if p != "README"))
+def test_r20_no_persona_instructs_computing_a_ratio_from_raw_sheet_numbers(persona):
+    """R20 — the global derivation policy, enforced. A persona that tells the
+    model to multiply/divide/calculate a ratio or contribution from raw sheet
+    figures is asking for the DEF066 class by construction; AMI mints and
+    labels every derived number instead (the Asymmetry line, DEF241's rendered
+    contribution figure)."""
+    path = _AGENTS_DIR / f"{persona}.md"
+    hits = _compute_implying_hits(persona, path.read_text(encoding="utf-8"))
+    assert not hits, (
+        f"CR219 R20: {persona}.md instructs computing a ratio/percentage/"
+        "contribution from raw sheet numbers. AMI should precompute and label "
+        f"the figure instead (see the Asymmetry line's style): {hits}"
+    )
+
+
+def test_r20_the_one_allowed_line_is_still_real_and_still_matches_the_pattern():
+    """Vacuity guard, both directions. If DEF245's line is deleted or reworded,
+    this entry is dead weight — delete it. If the compute-implying patterns
+    stop matching it, the allowlist is checking nothing."""
+    for persona, fragment, _why in _COMPUTE_IMPLYING_ALLOWED:
+        text = (_AGENTS_DIR / f"{persona}.md").read_text(encoding="utf-8")
+        assert fragment in text, (
+            f"CR219 R20: the allowlisted fragment {fragment!r} is no longer in "
+            f"{persona}.md — delete this allowlist entry"
+        )
+        # Confirm the pattern set really would have caught it unallowlisted —
+        # otherwise the allowlist is guarding against nothing.
+        raw_hits = [
+            (idx, line.strip())
+            for idx, line in enumerate(text.splitlines(), start=1)
+            if any(pat.search(line) for pat in _COMPUTE_IMPLYING_PATTERNS) and fragment in line
+        ]
+        assert raw_hits, (
+            f"CR219 R20: the compute-implying patterns no longer match the "
+            f"allowlisted {persona}.md line containing {fragment!r} — the "
+            "allowlist entry is vacuous"
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # RED FIXTURES — the guard must fail when it should (WP02 acceptance)
 # ──────────────────────────────────────────────────────────────────────────────
 # Each drives the guard's OWN logic against planted input and asserts it goes
@@ -1190,3 +1300,23 @@ def test_red_fixture_4_a_forbidden_overlay_demand_is_caught():
     }
     hits = _forbidden_hits(synthetic)
     assert len(hits) == 1 and hits[0][1] == "guidance", hits
+
+
+def test_red_fixture_5_a_compute_implying_line_planted_in_a_persona_is_caught():
+    """Red fixture 5 (proves R20). A planted instruction to multiply/divide
+    raw sheet numbers, in a persona with no allowlist entry, must be caught —
+    and the allowlisted DEF245 line elsewhere in the SAME persona must not
+    suppress it."""
+    planted = (
+        "## Output style\n\n"
+        "- Derive the percentage from two prices in front of you; never carry "
+        "a figure over from this instruction\n"
+        "- Multiply the position size by the stop distance to get the "
+        "drawdown contribution yourself\n"
+    )
+    hits = _compute_implying_hits("bear_researcher", planted)
+    assert len(hits) == 1, (
+        f"expected exactly the planted multiply-line to be caught (the "
+        f"allowlisted derive-line must still be suppressed), got {hits}"
+    )
+    assert "Multiply the position size" in hits[0][1]

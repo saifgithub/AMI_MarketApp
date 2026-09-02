@@ -249,7 +249,19 @@ def test_no_agent_prompt_contains_a_literal_percentage_anywhere(filename):
         pytest.skip("documentation, not a prompt")
     import re
 
-    _ALLOWED: set[str] = set()
+    # CR219 R18 (2026-09-02, WP03): trader.md's WAIT/HOLD carve-out states
+    # "Size: 0.00% of portfolio" verbatim, matching the CR210 decoding grammar
+    # (trader_block_regex, room_prompts.py: `Size: +0\.0{1,2}% of portfolio`)
+    # exactly. This is NOT a modelled outcome magnitude in DEF245's sense (a
+    # figure the model reasons its way to and might reuse elsewhere) — it is a
+    # fixed FORMAT-CONTRACT constant: the one and only value the machine-parsed
+    # grammar accepts on a no-position turn, there to keep the persona's prose
+    # in sync with what the parser already enforces. A deliberate, reviewed
+    # addition per this test's own rule.
+    _ALLOWED: set[str] = {
+        "Size:           0.00% of portfolio",
+        "out of — state Size: 0.00% and stop there, rather t",
+    }
 
     # ROUND-3 MINOR 2 — `\d+` misses "twenty-five percent". Adding number WORDS is
     # not a return to the word lists that failed twice: English number words are a

@@ -38,7 +38,7 @@ CITATIONS = [
     ("backend/app/agents/overlay_generator.py", (447, 447), "Emphasise momentum in fundamentals"),
     ("backend/app/agents/overlay_generator.py", (93, 93), "Primary goal: {mandate.primary_goal}"),
     ("backend/app/agents/overlay_generator.py", (437, 437), "long_horizon = m.horizon in"),
-    ("backend/app/services/room_prompts.py",   (1336, 1336), "_format_profile(profile, agent_id)"),
+    ("backend/app/services/room_prompts.py",   (1355, 1355), "_format_profile(profile, agent_id)"),
     # The three denials that are TRUE and must survive any fix.
     ("content/agents/market_analyst.md",       (39, 41), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),
