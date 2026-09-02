@@ -1,0 +1,25 @@
+**Here's the execution plan I've developed for CAT, based on the Research Manager's stance and my mandate constraints:**
+
+[STANCE: against | CONVICTION: high | HEADLINE: Yield fails income_now mandate]
+
+```
+Instrument:     CAT
+Side:           WAIT
+Size:           0% of portfolio
+Entry:          N/A
+Target:         N/A
+Stop:           N/A
+Time horizon:   N/A
+R:R:            N/A
+```
+
+Rationale: The **0.82%** dividend yield and **1.4%** FCF yield fail the `income_now` mandate, while the **24.5x** EV/EBITDA multiple leaves no valuation cushion. With capital returns exceeding TTM FCF by **200%**, we are avoiding tying up our **3.0%** single-name capacity in a debt-funded payout. We preserve capital and avoid any exposure ahead of the FOMC decision in **14 days**.
+
+DATA I LACKED:
+*   (a) Real-time order book depth around the $768.45 200-day moving average.
+*   (b) If available, this would have allowed for an assessment of a short-term trade based on that technical level.
+*   (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none
+
+

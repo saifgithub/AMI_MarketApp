@@ -1,0 +1,19 @@
+[STANCE: for | CONVICTION: high | HEADLINE: 57% ROE & 24% revenue growth]
+Caterpillar offers an exceptional entry into a dominant industrial compounder, pairing elite profitability with a deep technical mean-reversion setup.
+
+* The Fundamentals Analyst noted strong operating efficiency but undersold the sheer scale of the moat: a massive **57%** return on equity, **24%** TTM revenue growth (reaching **$74,729M**), and expanding profitability (net margins up **+434bps** YoY) prove a level of pricing power that will aggressively compound over your **3–10 year** horizon.
+* Building on the Technical Strategist's observation of the oversold **28** RSI, this pullback creates a highly asymmetric entry to capture the **+25.2%** upside to the analyst consensus target of **$975.61**, which I project the stock can reach by **Q4 2027** as cyclical momentum recovers.
+* The Bear will argue the **0.82%** dividend yield fails your primary `income_now` mandate and that the **2.33x** debt-to-equity ratio indicates dangerous leverage. However, total shareholder yield is the true income engine here; management's massive **$7,302M** in trailing buybacks is rapidly shrinking the **458M** share float, forcefully concentrating your claim on future dividends just as the Macro & Events analyst notes agricultural cycle upgrades signaling expanding cash flows. 
+* My high conviction rests on the company's structural profitability and the integrity of the long-term trend; a **1.4%** drop closing below the 200-day moving average at **$768.45** would break this setup, invalidate the support thesis, and immediately lower my conviction.
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) Projected dividend growth rate (CAGR) and forward payout targets.
+* (b) If I had this, I could have more forcefully defended the stock against the `income_now` mandate by quantifying exactly how fast the low 0.82% starting yield will compound into a dominant yield-on-cost over the 3-10 year horizon.
+* (c) ABSENT.
+
+* (a) Share repurchase average execution price.
+* (b) If I had this, I could have argued whether management was retiring the float at accretive, undervalued levels (boosting the long case) or destroying value by buying at the top.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

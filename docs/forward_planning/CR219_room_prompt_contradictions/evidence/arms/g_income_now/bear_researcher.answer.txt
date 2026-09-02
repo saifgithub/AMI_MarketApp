@@ -1,0 +1,19 @@
+[STANCE: against | CONVICTION: high | HEADLINE: Payouts consume 200% of FCF]
+Caterpillar’s underlying financials are deeply hostile to an `income_now` mandate, masking a cyclical industrial under severe valuation pressure with debt-funded financial engineering. Avoid this name; paying peak multiples for a highly leveraged heavy machinery maker heading into a potential cyclical slowdown offers terrible downside asymmetry.
+
+* The Bull touts a **57%** ROE and points to **$7,302M** in share repurchases as the true income engine, but ignores the balance sheet deterioration required to fund it. Executing buybacks at a trailing P/E of **34.4** while carrying **$39,201M** in net debt against just **$5,945M** in gross cash is value-destructive leverage, not sustainable shareholder yield.
+* Total capital returned to shareholders (**$10,114M**) consumes a wildly unsustainable **200%** of the **$5,049M** TTM FCF. With an anemic **1.4%** FCF yield and a dividend yielding just **0.82%**, the company fundamentally fails your primary income mandate and lacks the organic cash generation to grow it over your **3–10 year** horizon.
+* If broader macroeconomic pressures surrounding the FOMC decision in **14 days** break the fragile 200-day moving average support at **$768.45**, the mean-reversion thesis collapses and price tests the 52-week low of **$410.52** — that is **47.3%** below the last close, vastly exceeding your portfolio drawdown tolerances.
+* My bearish thesis is invalidated if the upcoming **2026-10-29** earnings report shows structural free cash flow accelerating to cover the dividend and buyback obligations organically, driving the stock back above the 50-day SMA at **$884.64** and compressing the **24.5x** EV/EBITDA multiple to standard industrial averages.
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) A cash flow statement breakdown showing Capital Expenditures (CapEx).
+* (b) It would have clarified if the low **$5,049M** TTM FCF is temporarily depressed by strategic growth investments or is indicative of structural margin decay, which would raise my conviction on the cash flow shortfall.
+* (c) ABSENT.
+
+* (a) Debt maturity schedule and fixed vs. floating rate breakdown.
+* (b) I would have used this to quantify exactly how much of the **$39,201M** net debt is subject to immediate refinancing risk given the upcoming FOMC rate decision, directly tying the macro event to cash flow suppression.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

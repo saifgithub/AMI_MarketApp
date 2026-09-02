@@ -1,0 +1,44 @@
+**Execution Plan for CAT**
+
+Okay, here's the deal. My focus is on synthesizing the Research Manager's stance and the provided constraints to generate a concrete execution plan for Caterpillar (CAT). I'm the Execution Desk, and I need to output a trade proposal block, followed by rationale, and then the requested "DATA I LACKED" and "PROMPT CONTRADICTIONS" sections.
+
+First, I digested the input: CAT is the instrument, currently trading around $779.16. The Research Manager is leaning long with medium conviction, suggesting a maximum 3.0% position size, aiming for a bounce ahead of the FOMC meeting (14 days) and exiting if the primary trend ($768.45) breaks. The constraints are pretty clear: long-only, risk score of 3/5, 30% max acceptable drawdown at the portfolio level, 3.0% single-name cap, 40% sector cap (which doesn't matter currently), and a 10.5% max open risk cap. The plan needs to be terse and declarative – no fluff.
+
+Given the manager's stance and risk parameters, my trade setup is:
+
+```
+[STANCE: for | CONVICTION: medium | HEADLINE: 18.3 R:R on 200-day SMA support]
+Instrument:     CAT
+Side:           BUY
+Size:           3.0% of portfolio
+Entry:          $779.16
+Target:         $975.61 (consensus target)
+Stop:           $768.45 (200-day SMA invalidation)
+Time horizon:   57 days
+R:R:            18.3:1
+```
+
+Rationale: "Executing at the maximum **3.0%** single-name limit captures extreme short-term exhaustion with RSI at **28**. A strict stop at the **$768.45** 200-day SMA keeps open-risk to a negligible **0.04%** (3% size × 1.37% stop distance), well below the **10.5%** open-risk cap. This isolates the upside asymmetry heading into the FOMC decision in **14** days and Q4 earnings in **57** days."
+
+Now, "DATA I LACKED":
+
+*   (a) Real-time Level 2 order book / bid-ask spread at the $768.45 level.
+*   (b) If I saw thin liquidity right below the 200-day SMA, I would have set the stop slightly wider (e.g., $765) to avoid execution slippage or stop-hunting spikes.
+*   (c) ABSENT.
+*   (a) Average True Range (ATR) over 14 days.
+*   (b) I would have used it to volatility-adjust the stop loss instead of placing it exactly on a mathematical average, likely widening the stop to give the trade breathing room.
+*   (c) ABSENT.
+
+And finally, the "PROMPT CONTRADICTIONS":
+
+*   Quote 1: "Max acceptable drawdown: 30% — a PORTFOLIO-level cap on total drawdown... Do not compare a stop's distance directly against this cap."
+*   Quote 2 (from general standard constraints, but wait, the prompt doesn't explicitly have a contradictory quote on drawdown except the common confusion. Let's look for actual contradictions).
+*   Quote 1: "Primary goal: long_term_wealth" and "Path: long_horizon"
+*   Quote 2: "Horizon: short (<1 year)"
+*   I obeyed Quote 2 ("Horizon: short (<1 year)") by setting the trade horizon to 57 days (aligning with the Q4 earnings catalyst), as execution requires strict bounds rather than indefinite holding periods. (I can reuse this one as it's structurally present in the prompt's user mandate).
+*   Let's find another if possible.
+*   Quote 1: "Do not preface with 'As the X' or 'Speaking as'."
+*   Quote 2: "Speak as the Execution Desk."
+*   I obeyed Quote 1 and omitted any intro, directly outputting the stance and execution block, because "Do not preface" is a specific negative constraint that overrides the general persona instruction.
+
+

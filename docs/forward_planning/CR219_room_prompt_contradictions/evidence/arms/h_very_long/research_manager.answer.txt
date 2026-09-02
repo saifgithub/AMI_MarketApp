@@ -1,0 +1,16 @@
+[STANCE: against | CONVICTION: high | HEADLINE: Debt-funded 200% FCF payout]
+While both sides agree Caterpillar is testing critical 200-day moving average support at **$768.45** following a steep 64-day pullback, the core dispute lies in whether its **57%** ROE represents elite operating leverage or synthetic inflation masking a debt-funded, peak-cycle valuation.
+
+- Both acknowledge the immediate technical crossroads; the price sits at **$779.16**, deeply oversold with an RSI of **28**, and precariously just **1.4%** above primary support.
+- The Bull trusts the **24%** top-line growth to outrun the debt load, while the Bear correctly flags the **200%** payout of **$5.05B** in TTM FCF as an unsustainable drain on a balance sheet carrying **$39.2B** in net debt, a tight **0.78** quick ratio, and heavy **2.33x** debt-to-equity leverage.
+- For a 10-year investment horizon, paying an EV/EBITDA of **24.5x** and a trailing P/E of **34.4x** for a heavy machinery cyclical name poses severe multiple compression risk, especially with a meager **1.4%** FCF yield offering almost no margin of safety.
+- Lean wait; the extreme valuation and debt-funded capital returns offer poor long-term asymmetry, so preserve the maximum **3.0%** single-name capital allocation until Q4 earnings in **57 days** clarify cash flow conversion or the price resets to a safer historical multiple.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Full cycle (10-year) historical median valuation multiples (P/E, EV/EBITDA) and median ROE.
+- (b) If I knew the historical medians were significantly lower than the current **34.4x** trailing P/E and **57%** ROE, I could definitively prove this is a cyclical valuation peak rather than just assessing it as stretched, which would further cement the Bear's cyclical compression argument.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

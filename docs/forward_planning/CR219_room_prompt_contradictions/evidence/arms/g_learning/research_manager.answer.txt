@@ -1,0 +1,19 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: 200% FCF payout breaks LT thesis]
+Both sides correctly identify the **$768.45** 200-day SMA as the critical technical pivot, but funding a **200%** free cash flow payout with debt disqualifies the stock for a 3–10 year horizon despite the oversold **28** RSI.
+
+* The Bull and Bear agree the stock rests at major support just **1.4%** below the last close of **$779.16**, but they dispute whether the **$39.2B** net debt represents standard equipment-financing leverage or a late-cycle vulnerability.
+* Asymmetry favors downside risk for long-term holders: while the consensus target sits **+25.2%** higher at **$975.61**, a structural breakdown below the **$768.45** support floor exposes the **$410.52** 52-week low.
+* Lean avoid/pass; returning **$10.11B** against **$5.05B** in TTM FCF at a **24.1x** forward P/E requires flawless macroeconomic execution and rate relief from the FOMC decision in **14 days**.
+* Size implication is **0%**; allocate no capital until quarterly earnings in **57 days** prove the **24%** top-line growth can organically fund shareholder returns without expanding the **2.33x** debt/equity ratio.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) A strict accounting breakout of the **$45.1B** gross debt separating industrial corporate debt from captive finance arm (Caterpillar Financial) receivables.
+* (b) If the vast majority of the debt is self-liquidating customer finance paper, the **2.33x** debt/equity ratio is standard heavy-machinery practice rather than a distress signal, which would have shifted my stance to 'for' given the **24%** top-line growth and **1.4%** proximity to structural support.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+* Quote 1 (Output structure): "There is no short option: the simulator rejects any sell beyond what is held, and the mandate carries long-only. 'Avoid' is how a negative view is expressed."
+* Quote 2 (Format instructions): "STANCE: your view on taking this position now — 'for', 'against', or 'neutral' if you genuinely land in the middle."
+* Resolution: I obeyed Quote 2 by writing `against` in the bracketed metadata to strictly satisfy the required enum values, but adhered to Quote 1 in the prose by phrasing the actionable recommendation as "avoid/pass".

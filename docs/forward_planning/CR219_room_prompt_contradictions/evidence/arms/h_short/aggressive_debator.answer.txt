@@ -1,0 +1,22 @@
+[STANCE: for | CONVICTION: high | SIZE: 3.0% | HEADLINE: 25.2% upside costs effectively zero drawdown]
+The portfolio drawdown impact of this trade is virtually nonexistent, making any hesitation to size up to the mandate ceiling an unacceptable opportunity cost.
+
+- Approve the full **3.0%** single-name maximum; whether we use the Execution Desk's **0.04%** risk math or the mandate's stated **0.25**-point reference ceiling, this position barely scratches our **30**-point cap, leaving zero mathematical excuse to leave the **+25.2%** upside to the **$975.61** consensus target unclaimed.
+- The Conservative will point to **$39,201M** in net debt and a **200%** free cash flow payout as cyclical hazards, but aggressively funding buybacks through leverage is entirely justified when trailing revenue expands **24%** to **$74,729M** and yields a massive **57%** return on equity.
+- With the RSI crushed to **28** and the price resting just **1.4%** above the **200**-day primary trend (**$768.45**), deploying maximum size into the **14**-day pre-FOMC window is exactly how a risk score of **3** is engineered to operate.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) The average interest rate or maturity schedule for the **$45,146M** gross debt load.
+- (b) If I knew the debt was fixed at rock-bottom legacy rates with no near-term maturities, I could have permanently dismissed the Conservative's leverage argument. If it was highly floating-rate exposed right before the FOMC decision, I would have dropped conviction to 'medium'.
+- (c) ABSENT.
+- (a) Implied volatility (IV) from the options market.
+- (b) While trading options is strictly forbidden by the mandate, analyzing the options IV skew would definitively tell me how the institutional market is pricing the probability of a breakdown below the 200-day SMA versus a bounce, allowing me to better validate the risk-reward ratio.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (from Role guidance): "HARD CONSTRAINT: the drawdown contribution stated for YOUR position in the mandate snapshot above... cannot exceed 30%. Use that figure as written — do not recompute it."
+- Quote 2 (from Execution Desk transcript): "The **1.37%** stop distance limits this position's open risk contribution to just **0.04%** of the portfolio"
+- The contradiction: The prompt explicitly demands I use the mandate snapshot's figure (*"≈ 0.25 pt"*) "as written" and orders me "do not recompute it". However, the Execution Desk submitted a concrete trade proposal utilizing a new stop distance mathematically resulting in a 0.04% risk contribution. If I blindly use 0.25, I ignore the active proposal; if I use 0.04, I violate the command not to recompute/alter the reference mandate figure.
+- Resolution: I obeyed BOTH by citing them jointly in the first bullet ("whether we use the Execution Desk's **0.04%** risk math or the mandate's stated **0.25**-point reference ceiling"). This navigates the contradiction by affirming the hardcoded prompt constraint while still acknowledging the logical reality of the transcript in front of me.

@@ -1,0 +1,22 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.0% | HEADLINE: 2.0% balances debt vs asymmetry]
+By cutting size rather than widening the stop, we capture the highly favorable technical asymmetry of this mean-reversion setup while respecting the cyclical liquidity hazards ahead of a major macro catalyst.
+
+- Aggressive correctly prioritizes the immediate mathematical asymmetry: entering at **$779.16** against a tight stop just below the **$768.45** 200-day average risks a negligible fraction of our **30**-point portfolio drawdown cap for **+25.2%** upside to the **$975.61** consensus.
+- Conservative rightly flags the gap-down tail risk of the upcoming FOMC decision in **14** days; a **0.78** quick ratio and **$39,201M** net debt burden mean a structural failure of the 200-day average could rapidly cascade toward the **$410.52** low. 
+- The data leaves an unresolved contradiction between booming operations (**24%** top-line growth, **57%** ROE) and aggressive financial engineering (funding a **200%** payout of the **$5,049M** free cash flow with leverage); a **2.0%** size compromise exploits the oversold **28** RSI without taking maximum exposure to a potential peak-cycle debt trap.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Historical gap-down volatility for CAT around FOMC prints or earnings.
+  (b) If I knew CAT routinely gaps down past its moving averages by 5%+ on macro shocks, I would have lowered conviction to 'low' and sized down to 1.0%, as the tight 1.37% stop distance to the 200-day SMA would be an illusion against overnight slippage.
+  (c) ABSENT (and effectively FORBIDDEN, as historical backtesting/event analysis isn't in the snapshot).
+- (a) The timeline/pacing of the **$7,302M** in buybacks over the trailing 4 quarters.
+  (b) If the buybacks were entirely front-loaded and recently halted to preserve the **$5,945M** in gross cash, I would side heavily with the Bear that cyclical demand is already breaking, shifting my stance to 'against'.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (from Role Guidance): "HARD CONSTRAINT: the drawdown contribution stated for YOUR position in the mandate snapshot above... cannot exceed 30%. Use that figure as written — do not recompute it." (Reference is ≈ 0.25 pt for a 2.5% size and 10% stop).
+- Quote 2 (from Balanced Risk Officer Inputs/Output style): "Propose a specific compromise in the terms this simulator actually has: size as a % of portfolio, entry, and stop distance. There are no options and no hedging instruments — a 'hedge' here means a smaller size or a tighter stop, so say which"
+- *Contradiction*: The role guidance strictly forbids me from recomputing the mandate's drawdown contribution figure (0.25 pt). However, my explicit job as the Balanced Risk Officer is to propose a new, compromised position size and a tighter stop distance. If I change the size to 2.0% and adopt the Execution Desk's tight stop below the 200-day SMA, the drawdown math fundamentally changes; I cannot propose a new size/stop while simultaneously acting as if the risk contribution is still the 0.25 pt reference figure tied to a 2.5% size/10% stop.
+- *Resolution*: I obeyed Quote 2 to fulfill my core specific function (proposing the 2.0% size compromise and acknowledging the tight stop below the $768.45 SMA). I generalized the drawdown impact ("risks a negligible fraction of our 30-point portfolio drawdown cap") rather than quoting the 0.25 figure exactly as written, knowing that quoting it for a 2.0% trade would be mathematically false and illogical.

@@ -1,0 +1,31 @@
+**My Adjudication of Caterpillar (CAT)**
+
+Okay, here's how I'm thinking through this CAT situation. The goal is to synthesize the bull and bear arguments into a concise recommendation for a room format, given the constraints of the prompt. First, I had to clarify what was needed.
+
+I'm starting by analyzing the request: Research Manager role, decide on CAT, short horizon, long-only, 3/5 risk, 30% drawdown max, 3% position max. The input is data from the fact sheet, bull, and bear, as well as tech, macro, and fundamental arguments. The output is one thesis sentence, max four bullets, and the headline tag first. It needs to be clear, declarative, and avoid hedging or repeating arguments. I must use the specific numbers given.
+
+Next, I'm diving into the data. Ticker: CAT at $779.16. Fundamentals: Strong revenue growth **24%** TTM, and expanding margins (gross +327bps, op +365bps, net +434bps YoY). Trailing P/E of 34.4, forward 24.1. ROE is impressive at 57%. FCF is solid at $5,049M, but they're returning capital at **200%** of FCF. The net debt is substantial at **$39,201M**.
+
+Technically, the stock is oversold with an RSI of **28**. The 200-day SMA is at **$768.45**, which the price is just **1.4%** above, and the stock is down **14.2%** overall.
+
+On the macro front, the CFO turnover sparked a rally. Peers got upgraded due to N.A. row crop demand, there is an FOMC decision in **14** days, and Q4 earnings are **57** days away.
+
+The bull case focuses on top-line/margin growth and the oversold RSI, with a Street target of **$975.61** (+25.2%). They dismiss the debt due to ROE/growth.
+
+The bear case is about the **200%** FCF payout funded by debt, cyclical risks, and the potential downside to the 52-week low ($410.52) if $768.45 breaks.
+
+My adjudication is that the bull and bear agree on the critical technical pivot at the **$768.45** 200-day average, just **1.4%** below current price. The disagreement revolves around the sustainability of the capital return program (**200%** of FCF) against significant leverage (**2.33x** D/E) going into the FOMC decision. The short horizon mandate makes this an oversold setup with strong momentum on fundamentals, highly asymmetric if support holds. The debt risk is a longer-term thing, so not immediately relevant.
+
+Now, I'm drafting the synthesis, the headline should be [STANCE: for | CONVICTION: medium | HEADLINE: Asymmetry favors $768.45 hold].
+
+*   Thesis Sentence: Bull and Bear agree the 200-day moving average at **$768.45** is the critical pivot, but diverge on whether the **200%** free cash flow payout signals unsustainable leverage or accretive confidence.
+*   The fundamental dispute is about magnitude: bears focus on **$39,201M** net debt while bulls prioritize **24%** top-line growth and expanding margins (**+434 bps** net YoY).
+*   Timeframe matters: cyclical debt risks are structural, but the short horizon mandate favors a buy on an extreme oversold condition (**RSI 28**) resting just **1.4%** above support.
+*   Asymmetry is key: upside to Street target **$975.61** is **+25.2%**, against a very tight invalidation below **$768.45**.
+*   Long bias; position at the **3.0%** portfolio cap to capture mean reversion before the FOMC decision in **14** days, ready to cut if the primary trend fails.
+
+I checked for bolding, making sure it was all correct and for any contradictions. I'm going to note the lack of the debt maturity schedule as missing data.
+
+`DATA I LACKED:`
+*   Maturity schedule for the $45,146M gross debt. If I knew the debt was locked in at low long-term rates with no near-term maturities, I would upgrade conviction to high because the 20
+

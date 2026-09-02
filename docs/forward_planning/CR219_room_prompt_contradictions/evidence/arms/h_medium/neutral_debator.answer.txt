@@ -1,0 +1,19 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.0% | HEADLINE: 2.0% balances growth with gap risk]
+Allocate **2.0%** with a **6.0%** stop, splitting the difference between the Aggressive's mandate-capped push for maximum asymmetry and the Conservative's need to constrain FOMC-driven gap risk.
+
+* The Aggressive case correctly identifies the high-probability technical asymmetry: buying at **$779.16** near an oversold RSI of **28** just **1.4%** above the **$768.45** 200-day average captures the fundamental momentum of **24%** top-line growth and **+434bps** net margin expansion. 
+* The Conservative case correctly identifies the severe tail risk: holding an industrial cyclical at **24.5x** EV/EBITDA that funds a **$10.1B** payout with only **$5.0B** in free cash flow leaves the stock highly vulnerable to a discontinuous gap down if the FOMC refuses to cut rates in **14** days.
+* The data cannot resolve the fundamental inconsistency between the two views: the numbers do not tell us whether the massive **57%** ROE fully justifies the aggressive leverage, or if the **0.78** quick ratio signals an impending balance sheet crunch. 
+* By scaling down to a **2.0%** size and implementing a **6.0%** stop (an exit near **$732.41**), we safely clear the **$768.45** primary support without choking the trade, while intentionally restricting our contribution to the **30%** portfolio drawdown cap to just **0.12** points.
+
+DATA I LACKED:
+* (a) Sector median debt-to-equity and quick ratios for Heavy Construction Machinery peers like Deere and AGCO.
+* (b) If I knew that a **2.33x** debt-to-equity and **0.78** quick ratio were standard operating leverage for this specific capital-intensive industry, I would have dismissed the Conservative's balance sheet panic and raised my recommended size to the full 3.0%.
+* (c) ABSENT from the fact sheet.
+* (a) Free cash flow conversion rate history over the past 5 years.
+* (b) If I could see that CAT routinely covers its massive payouts with operating cash flow peaks in the year immediately following revenue surges, the 200% TTM FCF payout ratio would be less alarming, raising my conviction.
+* (c) FORBIDDEN (instructions forbid time-series history that is not provided).
+
+PROMPT CONTRADICTIONS:
+* Contradiction: The core output instructions dictate "Plain text otherwise — no headings, no tables." However, the Evaluation Addendum explicitly commands me to "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`".
+* Resolution: I obeyed the Evaluation Addendum and generated the required markdown headings, treating the addendum as a developer-level override that supersedes the in-character formatting rules.

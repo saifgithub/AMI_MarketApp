@@ -1,0 +1,22 @@
+[STANCE: for | CONVICTION: high | HEADLINE: 24% growth meets 200-day support]
+Caterpillar offers a rare alignment of deep technical value and structural earnings power, positioned to capture an industrial upcycle as rate headwinds fade.
+
+- The fact sheet demonstrates elite operational execution with top-line momentum at **24%** TTM revenue growth, compounded by massive profitability expansion as net margins jumped **+434bps** YoY to **15%**.
+- The Technical Strategist identifies a textbook mean-reversion entry for a multi-year hold: price is deeply oversold at **28** RSI and resting just **1.4%** above primary 200-day SMA support at **$768.45**, clearing the path to reach the Street's **$975.61** mean target within my **3-year** time horizon.
+- The Bear will argue that returning **200%** of FCF while carrying **$39.2B** in net debt is an unsustainable balance sheet risk. However, as the Macro Analyst highlights, the upcoming FOMC decision in **14 days** signals a shifting rate environment that will lower industrial financing costs, supporting Caterpillar's exceptional **57%** ROE and the **4%** cyclical rally already underway in peers like Deere and AGCO.
+- The thesis breaks if the price prints a daily close below the Technical Strategist's **$768.45** 200-day moving average, invalidating the structural support floor. My CONVICTION is high; it would rise further if the FOMC delivers a favorable rate trajectory in **14 days**, and lower if Q4 consensus EPS estimates of **$6.9161** are revised downward before the **2026-10-29** report.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Geographic revenue distribution (e.g., North America vs. Asia/China).
+- (b) I would have used this to map the **24%** growth rate to specific global infrastructure cycles, making the 3-10 year cyclical growth argument much tighter. 
+- (c) ABSENT.
+- (a) Long-term (3-5 year) forward EPS growth estimates.
+- (b) I would have used it to justify the **24.1x** forward P/E over the long mandate horizon, rather than relying solely on the trailing PEG of **1.70**.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (Output style): "End with your CONVICTION and what would raise or lower it — not a position size. Sizing is the Execution Desk's proposal... at this phase no trade has been proposed to size"
+- Quote 2 (User mandate snapshot): "Sizing ceiling: any position size you suggest must respect the enforced single-name cap of 3.0% of portfolio... Do NOT propose a larger allocation"
+- I obeyed Quote 1 and provided NO position size whatsoever. Quote 2 implies I might suggest a position size as long as it respects the ceiling, but Quote 1 strictly forbids me from sizing at all. I deferred entirely to Quote 1.

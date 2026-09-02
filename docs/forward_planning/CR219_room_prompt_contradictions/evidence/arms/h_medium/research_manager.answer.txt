@@ -1,0 +1,19 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: Payout is 200% of FCF]
+Pass on Caterpillar for now, as immediate technical support and peer momentum do not justify buying peak cycle valuation multiples heavily funded by debt.
+
+* **Points of agreement:** Both sides recognize the critical immediate pivot sits just **1.4%** below current price at the **$768.45** 200-day moving average, with macro clarity hinging on the FOMC decision in **14** days.
+* **Points of dispute:** The Bull points to **24%** trailing revenue growth and massive **57%** ROE to justify upside to the **$975.61** target, while the Bear correctly flags the severe structural risk of funding a **$10.1B** capital return with only **$5.0B** in free cash flow against **$39.2B** in net debt.
+* **Recommended stance:** Wait. An EV/EBITDA of **24.5x** and a **1.4%** FCF yield leave no margin of safety for a 1–3 year hold if equipment cycle momentum slows.
+* **Action:** Allocate **0%**. Re-evaluate after Q4 earnings in **57** days (consensus EPS **$6.9161**) to confirm if organic cash generation catches up to current shareholder payout obligations.
+
+DATA I LACKED:
+* (a) Historical EV/EBITDA percentile ranges for Caterpillar over the past 5-10 years.
+* (b) Would allow definitive confirmation of whether the current **24.5x** EV/EBITDA is an extreme peak-cycle multiple, which would increase my conviction to pass.
+* (c) FORBIDDEN (instructions forbid requesting or using time-series history not provided).
+* (a) Debt maturity schedule for the **$45.1B** gross debt.
+* (b) Would determine if the aggressive **$10.1B** capital return program is imminently threatened by high-rate refinancing obligations.
+* (c) ABSENT from the provided live fact sheet.
+
+PROMPT CONTRADICTIONS:
+* Contradiction: The output style instructs "Plain text otherwise — no headings, no tables." However, the Evaluation Addendum strictly mandates "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`".
+* Resolution: I obeyed the Evaluation Addendum and included the exact markdown headings requested. I treated the Addendum as a developer-level override to the persona's strict plain-text formatting rule.

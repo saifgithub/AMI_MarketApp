@@ -1,0 +1,20 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 200% FCF payout vs $39.2B debt]
+
+Avoid Caterpillar at current multiples; the company is aggressively cannibalizing its balance sheet by funding massive shareholder returns with debt at the presumed peak of an industrial cycle.
+
+- Capital return is mathematically unsustainable. The company is distributing **$10.11B** (buybacks and dividends), consuming **200%** of its **$5.05B** TTM FCF, against a highly leveraged balance sheet holding **$39.2B** in net debt and a fragile **0.78** quick ratio.
+- The technical structure is already failing with price down **14.2%** over the last **64** trading days. If the **$768.45** 200-day SMA breaks, price tests the 52-week low of **$410.52** — that is **-47.3%** below the last close of **$779.16** — a highly probable scenario if equipment demand has peaked.
+- The Bull expects the FOMC decision in **14 days** to support the **24.1x** forward P/E and **24%** revenue growth. But with a **1.6** beta, if rate cuts signal macroeconomic deterioration rather than a soft landing, heavy machinery orders will collapse, exposing the extreme **2.33x** debt/equity burden.
+- My conviction is high. This avoid thesis breaks if price establishes firm support above the **$768.45** 200-day average and Q4 earnings in **57 days** prove FCF generation has expanded enough to organically cover the **$10.11B** capital return rate without further leveraging.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A breakout of the **$45.1B** gross debt distinguishing between industrial corporate debt and captive finance arm (Caterpillar Financial) receivables.
+- (b) If the vast majority of this debt is self-liquidating customer finance paper, the **2.33x** debt/equity ratio would be standard industry practice rather than a severe distress signal, which would lower my conviction against the stock.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (from Fact Sheet Data source disclosure): "Only the fields explicitly marked available/LIVE below are real"
+- Quote 2 (from Fact Sheet data block): "Short interest (LIVE): 1.57% of float short, 2.1 days to cover — as reported 2026-08-14, NOT a live figure"
+- Resolution: I obeyed Quote 2's explicit text that the short interest was "NOT a live figure" despite it carrying the "(LIVE)" tag immediately prior on the same line. I omitted short interest from my analysis to avoid relying on stale data.

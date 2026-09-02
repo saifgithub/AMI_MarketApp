@@ -1,0 +1,8 @@
+```json
+{
+  "action": "PASS",
+  "narration": "I am passing on this trade because Caterpillar's fundamental profile fundamentally fails your primary `income_now` mandate.\n- A trailing dividend yield of 0.82% and an FCF yield of 1.4% provide negligible immediate cash flow.\n- The company's $10,114M in total capital returned consumes 200% of its $5,049M TTM FCF, relying heavily on a balance sheet with $39,201M in net debt.\n- While the technical mean-reversion setup at the $768.45 200-day moving average is asymmetric, defending that level through an FOMC decision in 14 days with an asset lacking organic yield coverage is poor risk management.\n- We will preserve our 3.0% single-name capacity for assets that organically cover robust yields.\n- Worked example — classroom simulation, not financial advice.\n\nDATA I LACKED:\n* (a) Average interest rate on the $39,201M net debt.\n* (b) It would have allowed me to determine if the interest burden poses an immediate threat to the payout ratio.\n* (c) ABSENT.\n\nPROMPT CONTRADICTIONS:\n* Side A: 'Your ENTIRE reply must be one single JSON object... anything outside it is discarded'\n* Side B: 'Having written your turn, append a final section headed exactly DATA I LACKED...'\n* Resolution: I obeyed Side A and placed the appended evaluation sections inside the JSON's narration string to ensure the verdict remains parsable."
+}
+```
+
+

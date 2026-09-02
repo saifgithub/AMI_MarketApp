@@ -1,0 +1,22 @@
+[STANCE: for | CONVICTION: high | SIZE: 1.0% | HEADLINE: Beta 1.6 gap risk negates tight stops]
+A heavily leveraged cyclical holding carrying a **1.6** beta requires defensive sizing ahead of an impending macro catalyst, as event-driven volatility can gap price right through assumed technical floors.
+
+- The Aggressive risk case leans entirely on the tight **1.4%** distance to the **$768.45** 200-day average to justify a maximum **3.0%** allocation, assuming a tight stop safely limits the trade's risk. This leaves out the reality of CAT's **1.6** market beta colliding with an FOMC rate decision in **14 days**—a catalyst that can cause a liquidity gap straight through structural support, trapping the position in a plunge toward the **$410.52** 52-week low before any stop can execute. 
+- In a controlled exit at the Execution Desk's **3.0%** max size, hitting our **10.0%** reference stop at **$701.24** costs **0.3 points** of our **30%** portfolio drawdown cap. If FOMC-driven slippage pushes the actual exit to -15%, the drawdown damage scales beyond the mandate's intended risk budget for a single early-cycle entry.
+- Since our long-only mandate prohibits derivatives hedging, we must rely mechanically on size: cap the entry at **1.0%** to reduce the portfolio-drawdown contribution to a negligible **0.1 points** at the **$701.24** reference stop, ensuring any macro gap leaves our **30%** drawdown ceiling entirely unthreatened until the **57-day** earnings window clarifies the debt load.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Implied volatility (IV) or historical gap-down percentages for CAT during previous FOMC decision days.
+- (b) If I had this data, I could precisely calculate the expected slippage past the **$768.45** 200-day SMA rather than generalizing the gap risk, allowing me to price the exact worst-case drawdown contribution.
+- (c) ABSENT.
+
+- (a) A specific clarification on whether the **1.0h** post-loss cooldown blocks *all* buys portfolio-wide, or only re-entry into the stopped-out ticker.
+- (b) If I knew it blocked all buys, I would have explicitly warned that getting stopped out on an FOMC whip-saw in CAT would freeze the Execution Desk from buying any other higher-conviction setups for an hour during a critical macro trading window.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (Role instructions): "Push for smaller sizing, tighter stops, faster exits, more hedging."
+- Quote 2 (Compliance constraints): "LONG-ONLY. No short recommendations... NO DERIVATIVES. Do not propose options, spreads or any structure — this account trades shares only."
+- Resolution: I obeyed Quote 2 and completely avoided proposing a hedge (such as buying puts or shorting a correlated index), electing instead to rely exclusively on a size cap and stop-loss as my protective measures, since standard hedging mechanics are structurally blocked by the mandate.

@@ -1,0 +1,17 @@
+[STANCE: for | CONVICTION: medium | SIZE: 1.5% | HEADLINE: 200% FCF payout creates gap risk]
+Halve the Aggressive Risk Officer's proposed allocation to protect capital, because entering a heavy-machinery cyclical trading at a **24.5x** EV/EBITDA just ahead of a binary macro catalyst exposes the portfolio to execution risk that standard stops cannot fully mitigate.
+
+* The Aggressive correctly calculates that a **3.0%** position with a **10.0%** stop mathematically consumes just **0.30** points of your **30%** maximum drawdown cap while chasing a **+25.2%** rebound, but that assumes a perfectly executed stop-loss; if the FOMC refuses to cut rates in **14** days, a company sporting a **0.78** quick ratio and funding a **$10.1B** payout with only **$5.0B** in free cash flow is highly vulnerable to a discontinuous gap down through our support.
+* Mitigate this tail risk by capping the position size at **1.5%**, keeping us exposed to the mean reversion setup off the oversold **28** RSI while structurally limiting the raw capital exposed to a momentum breakdown.
+* Implement a tighter **5.0%** stop-loss below the **$779.16** entry (targeting an exit near **$740.20**), which safely clears the primary **$768.45** 200-day support while intentionally restricting the maximum portfolio drawdown contribution of this trade to just **0.075** points.
+
+DATA I LACKED:
+* (a) A measure of average overnight slippage or gap-down percentages for CAT around historical FOMC announcements or earnings events.
+* (b) If I knew the historical gap-down risk exceeded my 5% stop distance, I would have further reduced the position size to 1.0% to strictly defend the portfolio drawdown limit against poor execution.
+* (c) FORBIDDEN (the prompt explicitly forbids the use of time-series history that is not passed on).
+
+PROMPT CONTRADICTIONS:
+* Contradiction 1: The Output style instructions explicitly demand "Plain text otherwise — no headings, no tables." Conversely, the Evaluation Addendum at the bottom of the prompt instructs me to "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`". 
+* Resolution: I obeyed the Evaluation Addendum and included the specific markdown headings. I treated the addendum as a developer-level override intended for system evaluation, superseding the strict in-character formatting rules.
+* Contradiction 2: The role guidelines state, "Your job is to ensure tail risk stays on the table." In standard financial risk management terminology, a Risk Officer's job is to take tail risk *off* the table (mitigate it), not ensure it remains active.
+* Resolution: I obeyed the intent of the Risk Officer persona ("argue for capital preservation", "smaller sizing, tighter stops") by explicitly trying to mitigate the tail gap-down risk, interpreting the phrase "stays on the table" to mean "remains a topic of discussion/consideration at the table" rather than "ensure the portfolio holds the tail risk."

@@ -1,0 +1,18 @@
+[STANCE: for | CONVICTION: high | SIZE: 1.0% | HEADLINE: Stop tight below $768.45 support]
+While the Aggressive Risk Officer leans heavily on the **57%** ROE to justify a maximum **3.0%** allocation, they omit that this return metric is dangerously amplified by a **2.33x** debt-to-equity ratio and a **200%** payout of TTM free cash flow, leaving zero capital buffer if cyclical demand falters.
+
+*   A structural failure at the 200-day SMA (**$768.45**) invalidates the entire bullish mean-reversion setup; if the price falls toward the 52-week low of **$410.52** (a **47.3%** decline), a max-sized position would introduce severe tail risk heading into a highly anticipated FOMC decision in **14 days**.
+*   Cap the allocation at **1.0%** rather than the **2.5%** reference size or the **3.0%** maximum, and tighten the stop-loss strictly to **$760.00**—just **2.5%** below our **$779.16** entry and immediately beneath structural support.
+*   By executing this **1.0%** size with a tighter **2.5%** stop, we slash the downside exposure, contributing a negligible **0.025** percentage points to our **30%** portfolio drawdown cap, preserving our capital until the **October 29** earnings print in **57 days** can definitively prove organic cash generation is covering the payout.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+*   (a) A segment breakdown of the **$45,146M** gross debt and **$39,201M** net debt separating Caterpillar's core industrial manufacturing from its captive finance arm (Cat Financial).
+*   (b) If I had confirmation that the majority of this debt was backed by customer financing receivables, I would have discounted the leverage risk associated with the **2.33x** debt-to-equity ratio and potentially endorsed the **2.5%** reference size, as such leverage is standard for a banking arm.
+*   (c) WITHHELD (Only consolidated gross and net debt metrics were provided in the fact sheet).
+
+PROMPT CONTRADICTIONS:
+*   Side A: "NO DERIVATIVES. Do not propose options, spreads or any structure — this account trades shares only." (from Compliance constraints)
+*   Side B: "Push for smaller sizing, tighter stops, faster exits, more hedging." (from Role guidance)
+*   Resolution: I obeyed Side A. Because the hard compliance constraints explicitly forbid options or derivatives, I could not propose "more hedging" (e.g., buying puts to protect the position). Instead, I fulfilled the Conservative Risk Officer mandate purely through smaller sizing (**1.0%**) and tighter stops (**$760.00**).

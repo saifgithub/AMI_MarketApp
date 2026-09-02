@@ -1,0 +1,32 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: 18.3 R:R on 200-day SMA support]
+
+```
+Instrument:     CAT
+Side:           BUY
+Size:           3.0% of portfolio
+Entry:          $779.16
+Target:         $975.61 (Street consensus)
+Stop:           $768.45 (200-day SMA)
+Time horizon:   57 days
+R:R:            18.3:1
+```
+
+Executing at the maximum **3.0%** single-name limit leverages the extreme short-term exhaustion indicated by an RSI of **28**. Placing a strict structural stop at the **$768.45** primary trend support creates a highly asymmetric **18.3:1** reward-to-risk ratio. The **1.37%** stop distance limits this position's open risk contribution to just **0.04%** of the portfolio, cleanly isolating upside ahead of the FOMC decision in **14** days and Q4 earnings in **57** days.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Real-time Level 2 order book depth and bid-ask spread at the **$768.45** support level.
+  (b) If I saw extremely thin liquidity or a large cluster of sell stops resting exactly at the 200-day average, I would have set the stop slightly wider (e.g., **$765.00**) to avoid execution slippage and stop-hunting spikes.
+  (c) ABSENT.
+- (a) Average True Range (ATR) over the last 14 to 20 days.
+  (b) I would have used ATR to volatility-adjust the stop loss rather than pinning it precisely to a rigid mathematical moving average, which often results in premature stop-outs from intraday noise before the daily close.
+  (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1: Under User Mandate, "Primary goal: long_term_wealth" and "Path: long_horizon".
+- Quote 2: Under User Mandate, "Horizon: short (<1 year)".
+- I obeyed Quote 2 ("Horizon: short (<1 year)") by setting the trade horizon strictly to **57** days to align with the Q4 earnings catalyst. As the Execution Desk, my parameters demand concrete, actionable timeframes, making a "long_horizon" path incompatible with a precise mean-reversion setup.
+- Quote 3: "Speak as the Execution Desk."
+- Quote 4: "Do not preface with 'As the X' or 'Speaking as'. Speak directly."
+- I obeyed Quote 4 by completely omitting any persona-based introduction and launching directly into the stance bracket and execution block. The negative constraint on formatting overrides the general role-play instruction.

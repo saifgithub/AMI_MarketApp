@@ -1,0 +1,13 @@
+[STANCE: against | CONVICTION: high | SIZE: 0% | HEADLINE: 2.33x leverage inflates 57% ROE]
+The Aggressive leans on a massive **57%** ROE to justify a **2.0%** allocation, but completely ignores that this return is mechanically inflated by a highly vulnerable **2.33x** debt-to-equity ratio resting on **$39,201M** in net debt.
+
+* Funding **$7,302M** in buybacks to mask a weak **0.82%** dividend pushes the capital payout to **200%** of FCF; carrying this leverage into an FOMC decision in **14 days** creates unacceptable balance-sheet risk for an income mandate.
+* The price sits a fragile **1.4%** above its 200-day moving average at **$768.45**, and breaking that primary trend opens a **47.3%** downside vacuum to the 52-week low of **$410.52**.
+* The reference position's **10.0%** stop at **$701.24** on a **2.5%** size would contribute just **0.25 points** to your **30-point** drawdown cap, but absorbing even this limited risk for a structurally deficient yield is a poor trade; cap your size at **0%** and wait.
+
+DATA I LACKED:
+* (a) Debt maturity schedule and fixed versus floating interest rate breakdown for the **$39,201M** net debt.
+* (b) Had I known the debt was locked in long-term at low fixed rates, I would have viewed the FOMC decision risk as minimal and potentially accepted a **1.0%** allocation at the 200-day support rather than demanding **0%**.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

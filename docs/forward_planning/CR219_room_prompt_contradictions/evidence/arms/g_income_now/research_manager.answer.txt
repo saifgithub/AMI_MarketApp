@@ -1,0 +1,19 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 0.82% yield fails income_now]
+Both sides agree Caterpillar is deeply oversold and testing its 200-day moving average at **$768.45**, but the balance sheet engineering required to fund its shareholder returns completely disqualifies it for your primary income mandate.
+
+- The Bull and Bear fundamentally dispute the sustainability of the **$10,114M** capital return program; while the Bull views it as aggressive float reduction, the Bear correctly identifies that paying out **200%** of the **$5,049M** TTM FCF relies entirely on extending the **$39,201M** net debt burden.
+- An anemic **0.82%** trailing dividend yield paired with a meager **1.4%** FCF yield offers virtually zero immediate cash flow, directly violating the `income_now` objective.
+- The entry is highly vulnerable heading into the FOMC decision in **14 days**; at a peak **34.4** trailing P/E and a **24.5x** EV/EBITDA multiple, holding the stock requires blind faith in the razor-thin **1.4%** cushion above primary support.
+- Pass on allocating any of your **3.0%** single-name capacity here; wait for an asset that organically covers its yield with free cash flow rather than debt-funded buybacks.
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) Average interest rate / cost of debt on the $39,201M net debt.
+* (b) It would have allowed me to quantify the immediate cash interest burden and determine how close the 200% FCF payout ratio pushes the company toward actual insolvency vs. manageable leverage.
+* (c) ABSENT.
+
+* (a) Projected dividend growth rate.
+* (b) Had this been provided, I could have assessed whether the extremely low 0.82% starting yield was compounding fast enough to serve a 3-10 year horizon, potentially shifting my stance to neutral rather than a hard 'against'.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

@@ -1,0 +1,17 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: Oversold momentum justifies long lean]
+Bull and Bear agree the 200-day moving average at **$768.45** is the critical structural pivot, but diverge on whether the aggressive **200%** free cash flow payout exposes dangerous leverage or reflects management confidence.
+
+- The fundamental dispute centers on magnitude: the Bear focuses on the vulnerability of a **$39,201M** net debt burden heading into cyclical uncertainty, while the Bull prioritizes the **24%** top-line growth and margin expansion (**+434 bps** net YoY) funding the payouts.
+- Timeframe dictates the verdict: while cyclical debt risks are valid long-term concerns, the short-term mandate favors capitalizing on extreme near-term exhaustion (**RSI 28**) resting just **1.4%** above primary trend support.
+- Asymmetry is highly favorable for a mean-reversion setup: the upside to the Street's **$975.61** consensus target is **+25.2%**, measured against a very tight invalidation level if the **$768.45** moving average fails.
+- Lean long; size at the maximum **3.0%** single-name cap to position for a bounce ahead of the FOMC rate decision in **14** days, ready to exit if the primary trend breaks.
+
+DATA I LACKED:
+- (a) Debt maturity schedule for the **$45,146M** gross debt load.
+- (b) If I knew the majority of this debt was locked in at long-term fixed rates with no near-term maturities, I would have upgraded conviction to 'high', as the **200%** FCF payout ratio would pose no immediate liquidity threat ahead of the FOMC decision.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1: "Primary goal: long_term_wealth" and "Path: long_horizon"
+- Quote 2: "Horizon: short (<1 year)"
+- I obeyed Quote 2 ("Horizon: short (<1 year)") because my adjudication explicitly separates the Bear's long-term cyclical debt risks from the Bull's actionable near-term oversold setup (**RSI 28**), framing the trade around a quick mean-reversion bounce and the upcoming catalyst in **14** days rather than a multi-year hold.

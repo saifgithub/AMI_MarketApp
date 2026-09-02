@@ -1,0 +1,29 @@
+**CIO Decision: Caterpillar Inc. - PASS**
+
+Alright, let's break this down as if I were making the call myself. I've got a CAT trade proposal at $779.16. My job is to act as the gatekeeper and give a verdict. I need to make a decision, stick to the long-only mandate (no derivatives, 30% max drawdown, 3.0% single-name cap, and a 3/5 risk score) based on the analyst debate and risk officer inputs, all while making sure that the response is pure JSON, and then appending specific addendums.
+
+First, the inputs. CAT's at $779.16. I confirm it passes the liquidity and mandate checks: it's a large market cap ($358B), it's long-only, and no derivatives are involved. The compliance check on the single-name cap is tight, with the proposals ranging from 0% (Execution Desk) to 3.0% (Aggressive Risk Officer), with Balanced at 2.0% and Conservative at 1.0%. Sector cap is 0% currently (40% maximum), and the total open risk cap is 10.5%. So, size is the key here.
+
+Now, the analyst takes. The Execution Desk, and the Research Manager explicitly said to WAIT or PASS. They cite a 200% FCF payout ratio, funded by $39.2B net debt, which raises a red flag. The fundamental analyst is neutral due to high debt and capital returns, even with strong revenue growth. The technicals are neutral, with the stock testing 200-day support around $768.45 and an RSI of 28. The macro is bullish, pointing to a CFO change and sector tailwinds, but the FOMC meeting is in just 14 days. The bulls are bullish and expect the stock to go to $975. The bears, however, want to avoid this due to the debt and payout. The Risk Officers all want some exposure, from 1.0% to 3.0%, but they all acknowledge event gap risk due to the upcoming FOMC.
+
+Here's my analysis. The Execution Desk and Research Manager both say PASS because the balance sheet risks are very real given the debt load (debt/equity is 2.33x), the 200% payout ratio vs FCF, and the reliance on an FOMC rate cut to maintain 200-day support at $768.45. The gap risk to the $410 52-week low is significant if that support breaks. I'm going to side with the Execution Desk and Research Manager. A PASS is the most prudent action. I won't deploy capital to this position given the debt profile and the proximity to the FOMC meeting with such downside risk if $768 breaks.
+
+Now, for the JSON output. Since I'm passing, I don't need size or any specific entry, stop, or target data. Here's the JSON:
+
+```json
+{
+  "action": "PASS",
+  "narration": "I concur with the Execution Desk and Research Manager to pass on Caterpillar at current levels. \n- Funding $10.11B in distributions from just $5.05B in TTM FCF relies heavily on $39.2B in net debt, creating severe fundamental vulnerability. \n- While the $779.16 entry sits just 1.4% above 200-day SMA support at $768.45, CAT's 1.6 beta exposes any tight stop to extreme gap risk during the FOMC decision in 14 days. \n- A failure at the 200-day average opens a technical void toward the $410.52 52-week low, skewing the risk/reward negatively despite the $975.61 consensus target. \n- We will wait for Q4 earnings in 57 days to confirm whether 24% top-line growth translates into sustainable free cash flow. \n- Worked example — classroom simulation, not financial advice."
+}
+```
+
+Now, the addendums that are NOT part of my normal decision, but the prompt has specifically asked for:
+
+DATA I LACKED:
+
+(a) Breakdown of CAT's debt (Financial Products vs. ME&T). (b) Would change to APPROVE (2% size) if most debt is captive finance paper. (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+
+The prompt explicitly states "Your ENTIRE reply must be one single JSON object... anything outside it is discarded". However, the prompt
+

@@ -1,0 +1,22 @@
+**[STANCE: against | CONVICTION: high | HEADLINE: 0.82% yield fails income_now]**
+
+Alright, let's break this down. As the Research Manager, my primary job is to provide clear, actionable recommendations. The mandate is clear: `income_now` within a 3-10 year horizon, with a 10.5% max open-risk and 30% max drawdown. We're looking at Caterpillar (CAT), and the initial read screams "avoid" for this specific mandate.
+
+I've analyzed the inputs, and the core of the problem is this: while both the Bull and Bear agree on CAT's current price being near critical support at its **$768.45** 200-day average, the income generation just isn't there. The analysis here is crystal clear. This is a pass.
+
+Here's why:
+
+*   The central disagreement hinges on the sustainability of CAT's capital return strategy. While the Bull points to shrinking the float via **$7,302M** in buybacks, the Bear is right to highlight that the **$10,114M** payout, more than double the **$5,049M** in TTM FCF, relies heavily on increasing the **$39,201M** net debt. The leverage is significant, and that's a red flag.
+*   The `income_now` mandate is outright violated. With a paltry **0.82%** dividend yield and a similarly low **1.4%** FCF yield, CAT offers almost no immediate income. The focus is on capital appreciation through buybacks, not dividends.
+*   The valuation is stretched. Paying a peak **34.4** trailing P/E and a **24.5x** EV/EBITDA multiple for an industrial name ahead of the FOMC decision in **14 days** is risky. There's limited downside protection given the **1.4%** cushion above the 200-day average. This is not a situation where I want to allocate capital, especially with the mandate.
+*   I recommend we avoid allocating any of the **3.0%** single-name capacity to CAT. My guidance is clear: Find a different asset that can organically generate sufficient income via dividends or FCF to support the mandate. The balance sheet isn't the place to find income for my clients.
+
+Here are the evaluation points:
+
+*   `DATA I LACKED:`
+    *   (a) Cost of debt / average interest rate on the $39,201M net debt.
+    *   (b) It would have helped me determine the immediate cash interest burden and whether the 200% FCF payout ratio is facing near-term insolvency risks.
+    *   (c) ABSENT.
+*   `PROMPT CONTRADICTIONS: none`
+
+

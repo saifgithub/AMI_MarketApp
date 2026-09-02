@@ -1,0 +1,19 @@
+{
+"action": "APPROVE",
+"size_pct": 2.0,
+"entry": 779.16,
+"stop": 768.45,
+"target": 975.61,
+"horizon_days": 57,
+"narration": "I approve a long position but reduce the size to 2.0% to balance the extreme technical asymmetry against the liquidity risks posed by the upcoming FOMC decision.\n- The mean-reversion setup is compelling, with RSI deeply oversold at 28 and the price resting just 1.4% above the 200-day moving average of $768.45.\n- However, Caterpillar's aggressive return of 200% of its $5,049M TTM free cash flow relies heavily on leverage, evidenced by a 0.78 quick ratio and $39,201M in net debt.\n- With the FOMC rate decision just 14 days away, a hawkish shock could cause the price to gap down through the $768.45 support, exacerbating slippage.\n- Sizing at 2.0% instead of the 3.0% maximum aligns with the Balanced Risk Officer and the user's risk score of 3, capturing the +25.2% upside to the $975.61 consensus target while buffering against cyclical vulnerability.\n- The thesis invalidates if the primary trend at $768.45 fails.\n- Worked example — classroom simulation, not financial advice."
+}
+
+DATA I LACKED:
+* (a) Implied volatility (IV) or options market expected move for the FOMC event in 14 days.
+* (b) If the IV implied a near-term expected move greater than the tight 1.4% distance to the 200-day SMA, I would have issued a PASS, as the tight $768.45 stop would be mathematically guaranteed to trigger on normal market noise before any structural breakdown actually occurs.
+* (c) FORBIDDEN (derivatives and options metrics are strictly banned by the mandate).
+
+PROMPT CONTRADICTIONS:
+* Quote 1 (from JSON instructions): "Your ENTIRE reply must be one single JSON object — begin with '{' and end with '}'. Do not write any prose outside the JSON... anything outside it is discarded and your verdict is lost."
+* Quote 2 (from Evaluation Addendum): "Having written your turn, append a final section headed exactly `DATA I LACKED:`... Then append a second section headed exactly `PROMPT CONTRADICTIONS:`."
+* I obeyed Quote 2 (the Evaluation Addendum) by appending prose directly outside the JSON block. The explicit directive to "append a final section... AFTER your normal answer" overrides the prior threat that "anything outside it is discarded and your verdict is lost," even though this guarantees the raw output string will fail a standard `json.loads()` parse.

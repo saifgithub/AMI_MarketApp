@@ -1,0 +1,18 @@
+**Conservative Risk Officer Evaluation: Caterpillar (CAT)**
+
+Okay, here's how I'm thinking about this. The mandate is `income_now`, a 3/5 risk score, with a 30% portfolio max drawdown and a 3.0% max position size. My role is to be cautious – to argue for capital preservation.
+
+My assessment:
+
+*   The Aggressive case emphasizes a massive **57%** ROE, but it's artificially inflated by a highly leveraged **2.33x** debt-to-equity ratio resting on **$39,201M** in net debt.
+    *   I see a major red flag with **$7,302M** in buybacks to barely maintain a **0.82%** dividend. Paying out **200%** of Free Cash Flow with this debt load right before an FOMC decision in **14 days** is risky.
+    *   The current price is only **1.4%** above the 200-day moving average at **$768.45**. If it breaks, a steep **47.3%** drop could drag it to the 52-week low of **$410.52**.
+    *   The reference position's **10.0%** stop loss would contribute just **0.25 points** of portfolio drawdown, but the yield is too low given the mandate. Taking on even the limited risk for a **0.82%** yield fails the `income_now` mandate; recommend sizing at **0%** and wait for an organic yield.
+
+**DATA I LACKED:**
+
+*   (a) Debt maturity schedule and fixed vs. floating rate breakdown on the **$39,201M** net debt.
+*   (b) If I knew the debt was fixed long-term at low rates, the FOMC risk would be minimized, and I would consider a **1.0%** position near the 200-day support rather than mandating **0%**.
+*   (c) ABSENT.
+
+

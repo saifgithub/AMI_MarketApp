@@ -1,0 +1,22 @@
+[STANCE: neutral | CONVICTION: medium | SIZE: 1.0% | HEADLINE: Cap size to 1.0% on 1.6 beta]
+The Aggressive Risk Officer's reliance on a tight stop-loss ignores the high probability of a volatility gap-down given the stock's **1.6** beta and a debt-funded **200%** FCF payout that leaves zero cushion if the macro cycle turns.
+
+- The Aggressive correctly notes that maximizing the single-name cap at **3.0%** with a **10.0%** stop costs only **0.3** points of your **30%** portfolio drawdown cap, but that assumes a clean, orderly exit on a heavy-machinery stock that has already bled **14.2%** over the last 64 days.
+- If the precarious **$768.45** 200-day moving average breaks, the stretched **34.4x** trailing P/E and tight **1.4%** FCF yield provide no valuation floor, threatening a swift cyclical flush toward the **$410.52** 52-week low.
+- Protect the mandate by capping size at **1.0%** instead of the maximum; even if technical support fails completely and the price resets to that **$410.52** cyclical floor, a **47.3%** drop on a **1.0%** allocation contributes only **0.47** points to your **30%** limit, preserving capital while keeping you exposed to the **+25.2%** consensus upside.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A detailed maturity schedule for the **$45.1B** in gross debt.
+- (b) If I knew the maturities were heavily weighted toward the next 12–24 months, I would have set my conviction to high for an 'against' stance with a 0.0% size, as the **0.78** quick ratio against near-term debt would present an acute liquidity crisis rather than just a longer-term cyclical risk.
+- (c) WITHHELD (The fundamental analyst explicitly noted they lacked a historical timeline of debt maturities, and every figure is a single point in time).
+
+PROMPT CONTRADICTIONS:
+- Instruction: "A single position of size P% (of portfolio) with a stop S% below entry contributes only about P×S/100 percentage points to portfolio drawdown (e.g. 5% size, 20% stop...)"
+- Instruction: "Single-name position-size cap: 3.0% of portfolio in any one name"
+- I obeyed the **3.0%** hard cap for position sizing limitations, treating the **5%** sizing referenced in the drawdown arithmetic strictly as an illustrative example rather than a permissible threshold.
+
+- Instruction: "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing" (implied via the system constraints the other analysts grappled with).
+- Fact Sheet: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps"
+- I obeyed the supplied LIVE data from the Fact Sheet when reviewing the fundamental growth arguments, as dynamically injected real-time data overrides the prompt's static negative constraints regarding what data I supposedly do not possess.

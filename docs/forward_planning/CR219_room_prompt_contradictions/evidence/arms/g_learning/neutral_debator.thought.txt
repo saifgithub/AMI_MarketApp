@@ -1,0 +1,26 @@
+**Balanced Risk Officer Assessment: CAT (Caterpillar)**
+
+Okay, here's the deal:
+
+I need to balance the aggressive and conservative stances on CAT. I'm seeing an opportunity, but the risk picture isn't entirely clear.
+
+*   My stance: **For**. I'm taking the trade. **Conviction: low.** I am targeting a **2.0%** position size. I'm going with a *Beta 1.6 demands wider stops* headline.
+
+I'm recommending taking the trade, but I'm splitting the difference on size and widening the stop to absorb event-driven volatility.
+
+*   The Aggressive case is right to target the **+25.2%** asymmetry to the **$975.61** consensus from the deeply oversold **28** RSI. But, the Conservative position rightly identifies that a **1.6** Beta heading into the FOMC decision in **14 days** creates a gap risk that shatters tight structural stops.
+*   The data fundamentally fails to adjudicate the structural risk: we cannot determine if the **$39.2B** net debt funding the **200%** FCF payout is toxic corporate leverage or standard self-liquidating customer finance paper, making a max allocation mathematically reckless.
+*   My compromise: Enter at **$779.16** but step down to a **2.0%** size and place the stop at the **$701.24** reference level (**10.0%** distance) rather than hugging the **$768.45** 200-day SMA. This protects against FOMC whip-sawing while contributing only **0.2 points** to our **30%** portfolio drawdown cap.
+
+**DATA I LACKED:**
+
+*   (a) A breakout of the **$39.2B** gross debt into captive finance receivables (Caterpillar Financial) vs. corporate debt.
+    *   (b) If I knew the debt was mostly standard finance paper, I would increase conviction to high and size to the max **3.0%**, as the Bear thesis of insolvency would be invalidated.
+    *   (c) ABSENT.
+*   (a) Implied volatility pricing for the FOMC decision in **14 days**.
+    *   (b) If I had exact expected move data, I could set a precise stop below the volatility band rather than defaulting to the arbitrary **10.0%** reference stop.
+    *   (c) ABSENT.
+
+**PROMPT CONTRADICTIONS: none**
+
+

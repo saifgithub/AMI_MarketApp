@@ -1,0 +1,26 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 200% FCF payout blocks entry]
+
+Instrument: CAT
+Side: WAIT
+Size: **0.0%** of portfolio
+Entry: **$779.16** (Reference market)
+Target: **$975.61** (Consensus target, +**25.2%** upside)
+Stop: **$767.00** (Invalidation just below the **$768.45** 200-day SMA)
+Time horizon: **57 days** (Through Q4 earnings)
+R:R: **16.1** (Hypothetical setup risking **$12.16** for **$196.45** upside)
+
+*   Although CAT is sitting in a technically oversold mean-reversion setup with an RSI of **28** just **1.4%** above structural support at the 200-day SMA (**$768.45**), the underlying cash fundamentals present too much risk for our **3.0%** maximum single-name allocation.
+*   The company is returning **$10,114M** to shareholders while generating only **$5,049M** in TTM free cash flow, indicating they are plugging a **200%** payout gap with debt; paying a **34.4x** trailing P/E for a cyclical industrial yielding just **1.4%** FCF leaves zero margin of safety.
+*   We preserve capital and wait; we need the FOMC rate decision in **14 days** and the **October 29** earnings print (consensus EPS **$6.9161**) to prove organic cash generation can cover the payout without structurally blowing out the **2.33x** debt-to-equity ratio.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+*   (a) A segment breakdown of the **$45,146M** gross debt separating Caterpillar's core industrial manufacturing from its captive finance arm (Cat Financial).
+*   (b) If I had confirmation that the vast majority of this debt was backed by high-quality customer financing receivables (which operate like a bank), I would have heavily discounted the leverage risk associated with the **2.33x** debt-to-equity ratio and executed a BUY at the **$768.45** technical support level.
+*   (c) WITHHELD (Only consolidated gross and net debt metrics were provided in the fact sheet).
+
+PROMPT CONTRADICTIONS:
+*   Side A: "Side: BUY | HOLD | WAIT"
+*   Side B: "You DO NOT ... Skip the stop-loss" and "Output structure (always specific) ... Stop: ${price} (max acceptable loss)"
+*   Resolution: I obeyed both. A strict "WAIT" execution inherently means zero capital is deployed (Size: 0.0%), making a "stop-loss" mathematically impossible as there is no position to stop out of. However, because Side B strictly prohibits skipping the stop-loss parameter, I filled out the Entry, Target, Stop, and R:R fields with the *hypothetical* technical parameters of the setup we are explicitly rejecting.

@@ -1,0 +1,15 @@
+[STANCE: for | CONVICTION: low | SIZE: 2.0% | HEADLINE: Unresolved FCF gap caps size]
+We will capture the mean-reversion setup at the 200-day average by stepping in with a **2.0%** allocation, balancing the undeniable momentum of the company's profitability against a glaring cash flow deficit the data cannot clarify.
+
+*   Aggressive correctly identifies the conviction in the underlying business performance; buying a stock generating a **57%** ROE, revenue growth of **24%**, and net margins expanding **+434bps** to **15%** while the RSI sits deeply oversold at **28** is exactly how we exploit technical weakness in a strong primary trend.
+*   Conservative correctly identifies the severe tail risk in the capital structure; returning **$10,114M** to shareholders while generating only **$5,049M** in TTM FCF represents a **200%** payout ratio that leaves the stock highly vulnerable to cyclical compression if the FOMC decision in **14 days** disappoints.
+*   The inconsistency the data cannot resolve is the true nature of the **$45,146M** gross debt driving the **2.33x** leverage—we cannot know if it is standard, safe captive-finance debt or bloated operational leverage—so we compromise with a **2.0%** size and a tighter **5.0%** stop at **$740.20** (just below the **$768.45** support), which limits this trade's contribution to our **30%** portfolio drawdown cap to a negligible **0.1** percentage points.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+*   (a) A segment breakdown of the **$45,146M** gross debt separating Caterpillar's core industrial manufacturing from its captive finance arm (Cat Financial).
+*   (b) If I had confirmation that the vast majority of this debt was backed by high-quality customer financing receivables (which operate as a financial institution), I would have dismissed the Conservative desk's leverage fears, upgraded my conviction to high, and endorsed the Aggressive **3.0%** maximum size.
+*   (c) WITHHELD (Only consolidated gross and net debt metrics were provided).
+
+PROMPT CONTRADICTIONS: none

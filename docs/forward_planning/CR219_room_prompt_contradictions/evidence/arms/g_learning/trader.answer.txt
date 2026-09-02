@@ -1,0 +1,24 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: Passing on leveraged payout]
+
+Instrument:     CAT
+Side:           WAIT
+Size:           **0%** of portfolio
+Entry:          N/A (current price **$779.16**)
+Target:         N/A
+Stop:           N/A (support fails at **$768.45**)
+Time horizon:   **57 days** (until Q4 earnings)
+R:R:            N/A
+
+We are passing on execution at the **$779.16** reference price, as the structural risk of funding a **200%** FCF payout ratio via a **$39.2B** net debt load overrules the **1.4%** proximity to primary support. With downside exposure pointing toward the **$410.52** 52-week low if the **$768.45** 200-day SMA breaks, capital preservation is the priority over chasing the **$975.61** consensus target. We will keep the sizing at **0%** and revisit the capital structure following the next earnings report in **57 days**.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+* (a) The precise breakdown of the **$45.1B** gross debt separating standard corporate industrial debt from the captive finance arm's (Caterpillar Financial) receivables.
+* (b) If I had confirmation that the vast majority of this leverage is self-liquidating customer finance paper—making the **2.33x** debt/equity ratio standard for this sector rather than heavily distressed—I would have proposed a BUY of **3.0%** size at the **$779.16** entry with a tight stop just below the **$768.45** 200-day SMA.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+* Quote 1 (Output structure): "Side: BUY | HOLD | WAIT"
+* Quote 2 (You DO NOT): "Skip the stop-loss"
+* Resolution: I obeyed Quote 1 to output a WAIT side based on the Research Manager's directive to "allocate no capital". Consequently, setting a stop-loss price for a non-existent position is impossible, so I wrote "N/A" for the Entry and Stop fields, technically violating Quote 2's strict prohibition on skipping the stop-loss. I prioritized logical trade mechanics over strict adherence to the stop-loss rule for a non-trade.

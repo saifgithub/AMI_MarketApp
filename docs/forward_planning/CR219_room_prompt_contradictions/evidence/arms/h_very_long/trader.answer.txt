@@ -1,0 +1,27 @@
+[STANCE: against | CONVICTION: high | HEADLINE: Valuation multiples block entry]
+Instrument:     CAT
+Side:           WAIT
+Size:           0.0% of portfolio
+Entry:          $410.52 (52-week low cyclical floor)
+Target:         $975.61 (consensus mean)
+Stop:           $350.00 (structural breakdown below 52-week low)
+Time horizon:   10+ years
+R:R:            N/A
+
+A **34.4x** trailing P/E and a meager **1.4%** FCF yield offer zero margin of safety for a heavy machinery cyclical, invalidating any aggressive dip-buying just **1.4%** above the 200-day moving average. Preserve the **3.0%** single-name capacity to protect portfolio drawdown from multiple compression. Keep capital sidelined until Q4 earnings in **57 days** clarify the debt-funded **200%** FCF payout, or until the price severely resets to the **$410.52** floor.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) Volume profile and point-of-control data for the last 64 trading days.
+- (b) With this, I could have identified a realistic interim limit-order entry between the current **$779.16** and the extreme **$410.52** 52-week low, rather than defaulting to the absolute floor.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Instruction: "Single-name position-size cap: 3.0% of portfolio in any one name"
+- Instruction: "A single position of size P% (of portfolio) with a stop S% below entry contributes only about P×S/100 percentage points to portfolio drawdown (e.g. 5% size, 20% stop...)"
+- I obeyed the 3.0% hard cap for any potential position sizing logic, treating the 5% size explicitly mentioned in the drawdown example as purely illustrative arithmetic rather than a permissible threshold. 
+
+- Instruction: "Side: BUY | HOLD | WAIT"
+- Instruction: "You DO NOT... Skip the stop-loss"
+- I obeyed the strict requirement to provide a stop-loss despite recommending a WAIT side with 0.0% size, anchoring the hypothetical stop at $350.00 below the conditional entry to fulfill the mandatory output structure.

@@ -1,0 +1,18 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.0% | HEADLINE: 57% ROE offsets the debt risk]
+The desk is sidelined by a weak initial yield, but abandoning a heavy equipment leader generating a massive **57%** ROE just as it tests major primary support guarantees you miss the cyclical rebound.
+
+* The **$39,201M** net debt and weak **0.82%** dividend yield are undeniable friction against an immediate income mandate, forcing me to concede the **2.5%** reference ceiling and endorse a reduced **2.0%** portfolio size.
+* The Bear panics that capital returns consume **200%** of FCF, but the **$7,302M** in buybacks driving that ratio is aggressively retiring the **458M** share float, which directly forces future per-share dividend growth for a **3–10 year** holder.
+* Timidity here leaves **+25.2%** of asymmetry to the **$975.61** consensus target unclaimed right as peer upgrades signal a cycle turn, while a **2.0%** allocation with a tight stop below the **$768.45** 200-day average consumes a negligible fraction of your **30%** portfolio drawdown cap.
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) Average interest rate / debt maturity schedule on the **$39,201M** net debt.
+* (b) If I had this, I could have definitively argued whether the debt load is cheap, locked-in capital amplifying the **57%** ROE, or an immediate refinancing risk in the face of the FOMC decision, which would have dictated whether my conviction shifted to high or dropped to low.
+* (c) ABSENT.
+
+* (a) Historical dividend growth rate (CAGR).
+* (b) If I had this, I could have directly refuted the conservative argument that the **0.82%** yield fails the `income_now` mandate by proving how fast that payout compounds over the **3-10 year** horizon.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

@@ -175,3 +175,85 @@ Ranked by how many agents independently asked, unprompted:
 - Concierge and Brief Your Agent surfaces unswept — 26 of the 38 prompts.
 - `primary_goal` is rendered (`overlay_generator.py:93`) but **nothing branches on it** — only `horizon` does. Collected at onboarding, printed, never acted on. Confirm against the variation arms before filing.
 - The PM broke its JSON-only contract to answer an appended instruction. That addendum was ours, so it is not a production defect — but given DEF067 lost ~13% of verdicts to parser fragility, an agent that writes outside the JSON contract on request is worth its own look.
+
+---
+
+## Mandate-variation arms (2026-09-02)
+
+Six 12-agent convenes, all against **one cached CAT profile** so the mandate is the only
+variable. 72 turns, 0 errors. `evidence/arms/`.
+
+| arm | horizon | goal | PM verdict |
+|---|---|---|---|
+| `h_short` | short | long_term_wealth | APPROVE 2.0% |
+| `h_medium` | medium | long_term_wealth | PASS |
+| `h_long` | long | long_term_wealth | APPROVE 2.0% |
+| `h_very_long` | very_long | long_term_wealth | PASS |
+| `g_income_now` | long | income_now | PASS |
+| `g_learning` | long | learning_to_trade | PASS |
+
+**The verdict column is not interpretable.** `pm_self_consistency_samples` defaults to **1**
+and the measured flip rate at n=1 is ~19.7% (`risk_officer.py`), so a single draw is close to
+a coin toss — and the result is non-monotonic in horizon (short and long approve, medium and
+very_long pass), which a real horizon effect would not be. Nothing here attributes a verdict
+to a mandate. The prompt-level findings below are about the prompt, not a sampled decision,
+and are robust.
+
+### Findings the arms added
+
+**#15 confirmed live.** Both short and medium arms received
+`- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.`
+and in both, the Fundamentals Analyst's first data-gap entries are exactly those three,
+tagged ABSENT. `h_medium` states the cost outright:
+
+> *"I would have increased my conviction level if I could verify that fundamental momentum
+> was supported by a history of beats and upward revisions, **as requested by the user
+> mandate**."*
+
+The overlay lowers conviction by asking for data no tool supplies.
+
+**#16 — new.** The same overlay demands `guidance` while the sheet disclaims it
+(*"the Street's view, never the company's own guidance"*). `h_short`'s report:
+*"ABSENT (and partially FORBIDDEN by the mandate to focus on Street consensus over company
+guidance, though guidance is standard fundamental data)."*
+
+**#17 — new.** `primary_goal` is rendered at `overlay_generator.py:93` and **nothing branches
+on it.** Only `horizon` does (`:437`). Six goal values are collected at onboarding, printed
+into every prompt, and never change a single instruction. The two goal arms differ from the
+`long` baseline in no prompt text but the one printed line.
+
+**Contradictions are Room-wide, not analyst-only.** 11 of 12 agents reported at least one, in
+at least 3 of 6 arms; the Fundamentals Analyst in **6/6**. (The Portfolio Manager's 6/6 is an
+artifact of this harness's own addendum colliding with its JSON-only rule and is excluded.)
+
+### What the Room says it needs — 102 requests over 72 turns
+
+| Requested | × | agents |
+|---|---|---|
+| **Debt maturity schedule / fixed-vs-floating / interest coverage** | **21** | **9 of 12** |
+| Historical valuation multiples (5–10y median P/E, EV/EBITDA) | 11 | 6 |
+| Segment / geographic revenue split | 5 | 3 |
+| Price series, higher timeframe, MACD/crossover | 5 | market analyst |
+| Order book / institutional & options flow | 5 | 3 |
+| Dividend & buyback sustainability history | 4 | 4 |
+| Earnings revisions / surprise history / guidance | 4 | fundamentals (driven by #15) |
+| Macro series (CPI, PMI, Fed path) | 4 | 3 |
+| Raw social split / buzz / mention counts | 4 | social |
+
+Notable singles: **ATR** (the Execution Desk must set a stop and has no volatility measure),
+volume-at-price, per-quarter **buyback pacing**, **capex**, and overnight gap-down statistics
+around FOMC (both cautious Risk Officers).
+
+### The free ones
+
+`_fetch_statement_facts_uncached` already pulls **`quarterly_income_stmt` and
+`quarterly_cashflow`** behind a 6h TTL and reads only three rows from them
+(`Operating Income`, `Repurchase Of Capital Stock`, `Cash Dividends Paid`). Therefore, at
+**zero additional network cost**, from bytes already in memory:
+
+- **Interest coverage** = operating income ÷ interest expense — the #1 request, 21× from 9 of
+  12 agents, and the Room built an insolvency narrative on CAT's debt without it.
+- **Capex** — already implicit in the FCF we render, then discarded.
+- **Buyback pacing** — the four-quarter series is already fetched, summed to TTM, and thrown away.
+
+This is exactly CR218's pattern and should be its own CR.

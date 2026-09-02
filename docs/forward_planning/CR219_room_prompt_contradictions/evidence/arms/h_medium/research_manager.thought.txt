@@ -1,0 +1,19 @@
+**[STANCE: against | CONVICTION: medium | HEADLINE: Payout is 200% of FCF]**
+
+Avoid CAT. Technical support and peer momentum don't justify buying peak multiples fueled by debt.
+
+*   Both agree on the immediate pivot at the **$768.45** 200-day moving average and FOMC in **14** days.
+*   The Bull relies on **24%** revenue growth and **57%** ROE to justify valuation.
+*   The Bear identifies the risk of a **$10.1B** payout with **$5.0B** free cash flow.
+*   A **24.5x** EV/EBITDA and **1.4%** FCF yield offer no safety if cycle momentum slows.
+
+`DATA I LACKED:`
+
+*   Historical EV/EBITDA percentile ranges for CAT. Would confirm whether **24.5x** is "peak-cycle".
+*   Debt maturity schedule for the **$45.1B** gross debt. Would assess capital return risk.
+
+`PROMPT CONTRADICTIONS:`
+
+*   Conflicting formatting instructions: "In 1-on-1, structure your answer in 3 parts. In the Room, follow the format instruction appended at the end of your prompt instead." and "Write one thesis sentence, then up to 4 short bullets... Plain text otherwise — no headings, no tables." Resolved by appending headings as instructed at the end.
+
+

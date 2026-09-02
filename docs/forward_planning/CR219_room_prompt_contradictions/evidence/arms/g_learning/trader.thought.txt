@@ -1,0 +1,39 @@
+**Execution Desk Trade Proposal: CAT - WAIT**
+
+Okay, so the goal is to create an Execution Desk trade proposal for Caterpillar Inc. (CAT) based on what the Research Manager laid out, the fact sheet, and the mandate I have. The Execution Desk wants a specific format: a block with the key trade parameters (Instrument, Side, Size, Entry, Target, Stop, Time horizon, R:R), a rationale (2-3 sentences), and then an evaluation addendum (Data I Lacked, Prompt Contradictions).
+
+First, I looked at the inputs. The Research Manager's synthesis is against CAT, with medium conviction. The mandate says the risk score is 3/5, with a 30% max drawdown, a 3.0% single-name cap, and a 40% sector cap. The mandate is long-only. The fact sheet shows CAT at $779.16, the 200-day SMA at $768.45, a 52-week low of $410.52, and a consensus target of $975.61.
+
+Now, the trade action. The Research Manager explicitly said no capital should be allocated, meaning **0%** size, until quarterly earnings in 57 days. Therefore, even though I'm given the flexibility to offer concrete levels for Entry and Stop, I have to output the "WAIT" side. Since I cannot short, the side is WAIT. The size must be **0%** of the portfolio. The Entry, Target, and Stop will be N/A because this is a WAIT. The time horizon is **57 days**, and R:R is N/A.
+
+So, here's what I'm proposing:
+
+```
+[STANCE: against | CONVICTION: medium | HEADLINE: Passing on leveraged payout]
+Instrument:     CAT
+Side:           WAIT
+Size:           **0%** of portfolio
+Entry:          N/A (current price **$779.16**)
+Target:         N/A
+Stop:           N/A
+Time horizon:   **57 days** (until earnings)
+R:R:            N/A
+```
+
+I'll write the rationale now.
+
+We are passing on execution at the **$779.16** reference price, as the structural risk of funding a **200%** FCF payout ratio via a **$39.2B** net debt load overrules the **1.4%** proximity to primary support. With downside exposure pointing toward the **$410.52** 52-week low if the **$768.45** 200-day SMA breaks, capital preservation is the priority over chasing the **$975.61** consensus target. We will keep the sizing at **0%** and revisit the capital structure following Q4 earnings in **57 days**.
+
+Now, the evaluation addendum:
+
+DATA I LACKED:
+*   (a) The precise breakdown of the **$45.1B** gross debt separating standard corporate industrial debt from the captive finance arm's (Caterpillar Financial) receivables.
+*   (b) If I had confirmation that the vast majority of this leverage is self-liquidating customer finance paper—making the **2.33x** debt/equity ratio standard rather than distressed—I would have proposed a BUY of **3.0%** size at the **$779.16** entry with a tight stop below the **$768.45** 200-day SMA.
+*   (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+*   Quote 1 (Output structure): "Side: BUY | HOLD | WAIT"
+*   Quote 2 (You DO NOT): "Skip the stop-loss"
+*   Resolution: I obeyed Quote 1 to output a WAIT side (and a 0% size) based on the Research Manager's mandate to "allocate no capital". Consequently, a stop-loss price for a non-existent position is mathematically impossible, so I wrote "N/A" for the Stop and Entry fields, technically violating Quote 2's prohibition on skipping the stop-loss. I prioritized logical coherence over strict adherence to the stop-loss rule for a non-trade.
+
+

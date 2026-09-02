@@ -1,0 +1,20 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 0.82% yield fails income mandate]
+
+Instrument:     CAT
+Side:           WAIT
+Size:           0% of portfolio
+Entry:          N/A
+Target:         N/A
+Stop:           N/A
+Time horizon:   N/A
+R:R:            N/A
+
+The **0.82%** dividend yield fundamentally fails the primary `income_now` mandate, and the **$10,114M** trailing capital return consumes an unsustainable **200%** of TTM FCF. We preserve our **3.0%** single-name capacity rather than deploying capital into a debt-funded payout that is resting perilously close to the **$768.45** 200-day moving average. With an FOMC decision looming in **14 days** and the long-only constraint forbidding short exposure, the only mandate-compliant execution is to hold cash and avoid the name entirely. 
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) Level 2 order book depth / bid density at the **$768.45** 200-day moving average.
+* (b) If I had this, I could have quantified the actual market support defending that technical level. A massive institutional bid wall might have justified a highly restricted, tight-stop tactical entry, but without it, the breakdown risk remains too high to justify stepping in.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

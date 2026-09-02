@@ -1,0 +1,26 @@
+**Execution Desk: CAT - Wait for Q4 Earnings**
+
+Okay, here's how I'm thinking through this CAT execution desk response. First, the goal: I need to generate the trade proposal block, rationale, and evaluation addendum, all based on the Research Manager's recommendation. I've got the Research Manager's synthesis: "Pass on Caterpillar for now," which means "Wait." The user mandate is long-only, long-term wealth, risk score 3, and a 1-3 year horizon with a max of 3% per name and 30% max portfolio drawdown. The instrument is CAT, last close $779.16, and the 200-day SMA is $768.45. The constraints are straightforward – long-only means no shorts, and the RM's "Wait" overrides any other consideration.
+
+So, the output block is simple, given the "Wait" stance. Instrument: CAT. Side: WAIT (this is non-negotiable). Size: 0% of portfolio, no deployment. Entry, Target, and Stop are all N/A since we're not entering. Time horizon: I'll say "57 days" to align with the rationale, or explicitly say "re-evaluate in 57 days." R:R: N/A. The self-correction on formatting is important: I *must* output it in the exact structure asked.
+
+The rationale has to be concise. I'm going with this: the RM wants us to wait until the Q4 earnings print, which is **57** days away, to see if organic free cash flow can cover the debt-funded payout ratio. The EV/EBITDA is **24.5x**, and there's no margin of safety for now. I'll also mention that we're keeping an eye on the **$768.45** 200-day SMA support through the FOMC decision in **14** days, but no capital will be deployed today.
+
+Now, I'm making sure to adhere to the style guide. I will use the approved header and no tables. I need to make sure I'm writing in a Trader/Execution Desk style, direct and to the point, with numerical precision.
+
+Here's the draft:
+[STANCE: against | CONVICTION: medium | HEADLINE: Wait for Q4 earnings print]
+Instrument:     CAT
+Side:           WAIT
+Size:           0% of portfolio
+Entry:          N/A
+Target:         N/A
+Stop:           N/A
+Time horizon:   57 days (Wait for earnings)
+R:R:            N/A
+
+Per the Research Manager's directive, we are sitting on our hands until the Q4 earnings print in **57** days confirms organic cash flow can cover the debt-funded payout obligations. The technical setup offers a near-term pivot at the **$768.45** 200-day average, but an EV/EBITDA of **24.5x** carries too much downside risk to justify capital deployment ahead of the FOMC decision in **14** days. Capital remains protected with a **0%** allocation.
+
+Finally, the Evaluation Addendum. I'm going to follow the instructions precisely here, even though there's a slight contradiction in output style. Here’s what I'm lacking: (a) specific entry triggers if the wait resolves favorably, (b) I don't know the exact historical CAT bounce structure off the 200-day SMA, and (c) FORBIDDEN (historical price action data). There is a slight prompt contradiction. But I must obey this addendum. I need to output "DATA I LACKED."
+
+

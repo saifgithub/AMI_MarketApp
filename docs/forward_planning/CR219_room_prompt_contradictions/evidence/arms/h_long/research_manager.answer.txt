@@ -1,0 +1,16 @@
+[STANCE: against | CONVICTION: high | HEADLINE: 200% FCF payout signals peak risk]
+Wait on Caterpillar despite the oversold RSI of **28** and proximity to the **$768.45** support level, as the glaring free cash flow deficit makes the premium valuation too risky for a long-term mandate.
+
+*   The Bull and Bear agree the stock is testing critical structural support just **1.4%** above the 200-day SMA following a **14.2%** window pullback, but dispute whether accelerating net margins (up **+434bps** to **15%**) justify the leverage.
+*   The asymmetry to the **$975.61** consensus target (**+25.2%**) masks severe structural risk; paying a **34.4x** trailing P/E for an industrial cyclical yielding just **1.4%** in free cash flow leaves zero margin of safety.
+*   Returning **$10,114M** to shareholders while generating only **$5,049M** in TTM FCF means the company is plugging a **200%** payout gap with debt, exacerbating the **2.33x** debt/equity ratio ahead of a potentially volatile FOMC decision in **14 days**.
+*   Lean pass; allocate **0.0%** (saving the **3.0%** single-name portfolio cap) and wait for the **October 29** earnings print in **57 days** to prove organic cash generation can safely cover the capital return run-rate.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+*   (a) A breakdown of the **$45,146M** gross debt between Caterpillar's core industrial manufacturing operations and its captive finance arm (Cat Financial).
+*   (b) If the debt was predominantly backed by high-quality customer financing receivables rather than industrial operations, I would have significantly discounted the Bear's leverage concerns regarding the **2.33x** debt/equity ratio and potentially shifted my stance to 'for' given the technical entry point.
+*   (c) WITHHELD (only consolidated net/gross debt figures were provided in the block).
+
+PROMPT CONTRADICTIONS: none

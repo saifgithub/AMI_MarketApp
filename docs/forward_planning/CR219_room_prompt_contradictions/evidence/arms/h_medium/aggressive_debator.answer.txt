@@ -1,0 +1,20 @@
+[STANCE: for | CONVICTION: high | SIZE: 3.0% | HEADLINE: Timidity costs a 25.2% rebound]
+Take the full **3.0%** mandate cap today because waiting **57** days for earnings to confirm safety completely forfeits the optimal asymmetric entry at primary support while leaving our massive risk budget unutilized.
+
+* A maximum **3.0%** position sized with a **10.0%** stop below the **$768.45** 200-day average contributes just **0.30** points to your **30%** portfolio drawdown cap; we currently carry absolutely zero open risk against a **10.5%** limit, making the Execution Desk's refusal to engage mathematically cowardly.
+* The Research Manager and Bear are entirely too focused on the **24.5x** EV/EBITDA and the **200%** FCF payout ratio, failing to respect that this exact leverage profile is actively generating a massive **57%** ROE alongside a **+434bps** net margin improvement.
+* By sitting on our hands through the FOMC decision in **14** days, we surrender the opportunity cost of catching a highly oversold asset (RSI **28**) at the absolute floor of its **50-day** range, abandoning the **+25.2%** upside to the Street's **$975.61** target in exchange for phantom security.
+
+DATA I LACKED:
+* (a) Operating cash flow (CFO) and capitalized expenditures (CAPEX) breakdown.
+* (b) If CAPEX was temporarily elevated for cyclical expansion, I would have used the baseline operating cash flow to immediately crush the Bear's argument that the **$10.1B** capital return is unsustainable against **$5.0B** in FCF, raising my conviction to max.
+* (c) ABSENT from the fundamental live feed.
+* (a) Open interest and options volume positioning.
+* (b) If I could see heavy dealer short gamma positioning below the **$768.45** 200-day moving average, I would have advocated for a slightly wider stop to avoid stop-hunting before the FOMC meeting.
+* (c) FORBIDDEN (derivatives data is prohibited by the mandate).
+
+PROMPT CONTRADICTIONS:
+* Contradiction 1: The system instructions demand "Plain text otherwise — no headings, no tables" in the output style. However, the Evaluation Addendum explicitly commands me to "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`". 
+* Resolution: I obeyed the Evaluation Addendum. I treated the addendum as a developer-level override designed for prompt engineering feedback, superseding the in-character formatting constraints. 
+* Contradiction 2: The system prompt tells me my role is to "argue for risk-on" and "Push for full mandate-allowed sizing" while citing the "opportunity cost of timidity." Conversely, the user's mandate snapshot explicitly lists a "Risk score: 3/5", indicating a balanced, moderate investor profile, not an aggressively risk-seeking one.
+* Resolution: I obeyed my specific persona instructions to act as the Aggressive Risk Officer pushing for maximum risk-on exposure, but I strictly capped my size recommendation at the **3.0%** single-name position-size cap established by the user's balanced mandate.

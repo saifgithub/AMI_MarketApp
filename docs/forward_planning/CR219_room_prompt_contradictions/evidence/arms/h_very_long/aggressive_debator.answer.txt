@@ -1,0 +1,19 @@
+[STANCE: for | CONVICTION: high | SIZE: 3.0% | HEADLINE: Deploy full 3.0% at SMA support]
+Taking the maximum mandate-allowed position size exploits a heavily de-risked entry at primary support, securing outsized upside before macro conditions shift.
+
+- Allocate the full **3.0%** single-name limit; pairing this with a **10.0%** stop below the **$768.45** 200-day average contributes a negligible **0.3** points to your **30%** portfolio drawdown cap, safely keeping us in the trade to capture the **+25.2%** asymmetry to the **$975.61** consensus target.
+- The Execution Desk demands waiting due to cyclical risks and a **200%** FCF payout on **$39.2B** in net debt, but they ignore the opportunity cost: the **$10.11B** capital return is retiring **2.0%** of the float, actively compounding the massive **24%** top-line growth over a **10-year** horizon.
+- Surrendering our seat here is entirely unnecessary when the downside is already priced into an oversold RSI of **28** just **1.4%** above the 200-day moving average, especially with an FOMC rate decision in **14 days** poised to serve as an infrastructure-friendly catalyst.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A breakdown of the **$39.2B** net debt terms (fixed vs floating rates) and the maturity schedule.
+- (b) If I knew the debt was fixed at long-term, low rates extending across our **10-year** horizon, I could have mathematically dismissed the conservative team's cyclical multiple compression risk, rendering the **200%** FCF payout a non-issue.
+- (c) WITHHELD (The data block provides gross and net debt as a single point-in-time snapshot, explicitly lacking maturity history).
+
+PROMPT CONTRADICTIONS:
+- "A single position of size P% (of portfolio) with a stop S% below entry contributes only about P×S/100 percentage points to portfolio drawdown (e.g. 5% size, 20% stop...)" vs. "Single-name position-size cap: 3.0% of portfolio in any one name".
+  I obeyed the **3.0%** hard cap, treating the **5%** size in the drawdown example strictly as illustrative arithmetic rather than a permitted trading ceiling. 
+- "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing" (implied via standard rules cited by prior analysts) vs. Fact Sheet explicitly stating: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps".
+  I obeyed the Fact Sheet data. Live supplied data within the current run explicitly overrides static instructional boundaries regarding what data is or isn't available to the model.

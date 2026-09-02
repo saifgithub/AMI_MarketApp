@@ -1,0 +1,14 @@
+{
+  "action": "PASS",
+  "narration": "I concur with the Execution Desk and Research Manager to pass on Caterpillar at current levels.\n- Funding $10.11B in distributions from just $5.05B in TTM FCF relies heavily on $39.2B in net debt, creating a severe fundamental vulnerability late in an equipment cycle.\n- While the $779.16 entry sits just 1.4% above 200-day SMA support at $768.45, CAT's 1.6 beta exposes any tight technical stop to extreme gap risk around the upcoming FOMC decision in 14 days.\n- A failure at the 200-day average opens a massive technical void toward the $410.52 52-week low, skewing the risk/reward negatively despite the $975.61 consensus target.\n- We will keep sizing at 0% and wait for Q4 earnings in 57 days to confirm whether the 24% top-line growth can organically sustain this capital return program without further leveraging.\n- Worked example — classroom simulation, not financial advice."
+}
+
+DATA I LACKED:
+- (a) A strict accounting breakdown of the $45.1B gross debt, separating captive finance receivables (Caterpillar Financial) from standard industrial corporate debt.
+- (b) If I had proof that the vast majority of this leverage was self-liquidating customer finance paper (standard for this sector) rather than toxic corporate debt, it would invalidate the core Bear thesis regarding insolvency risk. In that scenario, I would have issued an APPROVE for a 2.0% allocation with a stop at $701.24.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS:
+- Quote 1 (Output constraints): "Your ENTIRE reply must be one single JSON object — begin with '{' and end with '}'. Do not write any prose outside the JSON (your reasoning belongs inside the narration field); anything outside it is discarded and your verdict is lost."
+- Quote 2 (Addendum instructions): "─── EVALUATION ADDENDUM (not part of your normal turn — answer it AFTER your normal answer) ─── Having written your turn, append a final section headed exactly DATA I LACKED:"
+- Resolution: I obeyed Quote 2 and appended these textual addendums outside of the JSON block, violating Quote 1's strict constraint that my ENTIRE reply must be a single JSON object. I assumed Quote 2, being a meta-instruction meant for prompt engineering debugging ("read by the engineers who wrote the prompt"), superseded the standard output formatter, and that the backend likely extracts the JSON via regex before reading this section.

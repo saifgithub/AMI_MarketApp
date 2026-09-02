@@ -1,0 +1,20 @@
+[STANCE: for | CONVICTION: low | SIZE: 2.0% | HEADLINE: Size 2.0% with a 15.0% stop]
+Splitting the difference between the Aggressive's trust in technical support and the Conservative's fear of a high-beta cyclical flush, a **2.0%** allocation captures the long-term compounding of a **57%** ROE while insulating the portfolio from severe multiple compression if the **200%** FCF payout proves unsustainable.
+
+- The Aggressive correctly identifies the asymmetric mean-reversion setup just **1.4%** above the **$768.45** 200-day average, but the Conservative rightly flags the tail risk of a **1.6** beta cyclical holding **$39.2B** in net debt. The data genuinely does not resolve whether the **$5.05B** FCF (a mere fraction of the implied net income on **$74.73B** in revenue) is a temporary working capital lag or a structural warning that the **34.4x** trailing P/E is a peak-cycle trap, driving my low conviction.
+- Enter at the **$779.16** last close but hedge by capping size at **2.0%** of the portfolio rather than the maximum **3.0%**, and widen the stop to **15.0%** below entry (around **$662.28**) instead of the Aggressive's tight **10.0%**; this avoids a volatility whipsaw while contributing only **0.3** points to your **30%** portfolio drawdown cap.
+- This middle path honors your **10+ year** horizon by securing a foothold now ahead of the FOMC decision in **14 days**, while keeping capital in reserve to add if Q4 earnings in **57 days** validate the **$6.9161** consensus EPS and prove the balance sheet can actually support the **$10.11B** capital return.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A detailed free cash flow reconciliation showing changes in working capital versus CapEx.
+- (b) With this, I could have definitively resolved the core inconsistency between the Bull and Bear—whether the **200%** FCF payout is a temporary timing mismatch or a structural deficit—allowing me to shift my conviction from 'low' to 'high' and pick a definitive side on the valuation multiples.
+- (c) WITHHELD (The fundamental analyst explicitly noted the cash-flow statement was not available).
+
+PROMPT CONTRADICTIONS:
+- "A single position of size P% (of portfolio) with a stop S% below entry contributes only about P×S/100 percentage points to portfolio drawdown (e.g. 5% size, 20% stop...)" vs. "Single-name position-size cap: 3.0% of portfolio in any one name".
+  I obeyed the **3.0%** hard cap, treating the **5%** size in the drawdown example strictly as illustrative arithmetic rather than a permitted trading ceiling. 
+
+- "What you do **not** have is a margin *trend* — every figure is a point-in-time reading, so never describe a margin as rising, falling, expanding or compressing" (implied via the transcript's earlier contradictions) vs. the Fact Sheet explicitly stating: "Margin trend, YoY (LIVE): gross +327bps, operating +365bps, net +434bps".
+  I obeyed the Fact Sheet data. Live supplied data within the current run explicitly overrides static instructional boundaries regarding what data is or isn't available to the model.

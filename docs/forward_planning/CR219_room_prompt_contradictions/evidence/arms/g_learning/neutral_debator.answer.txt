@@ -1,0 +1,18 @@
+[STANCE: for | CONVICTION: low | SIZE: 2.0% | HEADLINE: Beta 1.6 demands wider stops]
+We will take the trade but reject the Aggressive desk's fragile stop-loss placement, stepping down the size to absorb the event-driven volatility that the Conservative desk correctly flags.
+
+- The Aggressive case correctly identifies the **+25.2%** asymmetry to the **$975.61** consensus target from a deeply oversold **28** RSI, but the Conservative case is right that a **1.6** beta heading into an FOMC decision in **14 days** creates gap risk that will effortlessly shatter a tight **1.4%** stop below the **$768.45** 200-day average. 
+- The data fails to resolve the core fundamental contradiction: we cannot definitively know whether the massive **$39.2B** net debt driving the **200%** FCF payout is toxic late-cycle corporate leverage or standard, self-liquidating customer finance paper, making maximum conviction impossible.
+- Our compromise is a **2.0%** size at the **$779.16** entry, utilizing a wider "hedge" via the reference **$701.24** stop. Giving the trade **10.0%** of breathing room prevents an FOMC whip-saw from stopping us out prematurely, while strictly limiting the damage to just **0.2 points** of our **30%** portfolio drawdown cap if the cyclical thesis genuinely breaks.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A strict accounting breakdown separating the **$45.1B** gross debt into captive finance receivables (e.g., Caterpillar Financial) versus industrial corporate debt.
+- (b) If I knew the vast majority of this leverage was standard, self-liquidating finance paper, it would completely invalidate the Bear's insolvency narrative. I would have shifted to high conviction and authorized the maximum **3.0%** size.
+- (c) ABSENT.
+- (a) Implied volatility (IV) pricing or historical expected moves for CAT during previous FOMC decision days.
+- (b) If I had exact expected move data, I could have calculated a mathematically precise stop-loss placement below the volatility band rather than defaulting to the arbitrary **10.0%** reference stop.
+- (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none

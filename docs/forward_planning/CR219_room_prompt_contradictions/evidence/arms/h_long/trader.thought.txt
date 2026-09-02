@@ -1,0 +1,45 @@
+**Execution Desk Summary: Caterpillar Inc. (CAT)**
+
+Okay, here's the deal. I need to deliver a concrete trade proposal for CAT, following the Execution Desk's strict format. The RM's stance is "against" and the conviction is "high," recommending a "WAIT" with 0.0% allocation. I'm going to follow that recommendation to the letter.
+
+Here's my thinking: The mandate dictates a risk score of 3/5, a 30% max drawdown, a 3.0% max single-name size, a 40.0% max sector size, long-only, no derivatives, liquid only. My job is to translate this synthesis into a specific proposal, no matter what. The research is clear: "WAIT."
+
+The inputs are: the mandate (rules), the Research Manager's synthesis (WAIT due to valuation and payout), and the fact sheet (technical levels, earnings date, consensus target). I am *not* deviating from the "WAIT" instruction. Even though the technicals look interesting (oversold RSI at 28, testing the 200-day SMA at $768.45) and the consensus target is $975.61 (I calculated that upside potential to be 25.2%), the fundamental risk is too high to initiate a long position.
+
+The specific execution: I'm sticking to the "WAIT" with a size of 0.0%, no allocation. Because the desk requires it, even for a "WAIT" response, I'll provide a hypothetical entry ($779.16), a hypothetical target ($975.61), and a stop ($767.00). My reasoning is this: the high payout and reliance on debt are significant risks, and it would be unwise to go long before the Oct 29 earnings print. I'll include the 57-day time horizon until earnings in the proposal to comply with the instructions. I am still keeping size at 0.0%
+
+I'm making a hypothetical scenario with an entry, stop and target. The structure should strictly be:
+
+Instrument: CAT
+Side: WAIT
+Size: 0.0% of portfolio
+Entry: $779.16 (Current market)
+Target: $975.61 (Consensus target, +25.2%)
+Stop: $767.00 (Invalidation below $768.45 200-day SMA)
+Time horizon: 57 days (Through Oct 29 earnings)
+R:R: 16.1 (Hypothetical, risking $12.16 for $196.45)
+
+I'll also craft the following rationale to further explain to my PM:
+
+*   Although CAT sits in an oversold mean-reversion setup with RSI at 28 just 1.4% above primary support at the 200-day SMA ($768.45), the fundamental profile lacks the safety required to deploy our 3.0% maximum allocation.
+*   Returning $10,114M in capital on just $5,049M of TTM free cash flow means the company is funding its payout with debt, leaving no margin of safety at a 34.4x trailing P/E.
+*   We hold size at 0.0%; wait for the FOMC decision in 14 days and the October 29 earnings print to confirm if organic cash generation can sustain the yield without further stretching the 2.33x debt-to-equity ratio.
+
+Here's the final output, exactly as specified:
+
+[STANCE: against | CONVICTION: high | HEADLINE: 200% FCF payout blocks entry]
+
+Instrument: CAT
+Side: WAIT
+Size: 0.0% of portfolio
+Entry: $779.16 (Current market)
+Target: $975.61 (Consensus target, +25.2%)
+Stop: $767.00 (Invalidation below $768.45 200-day SMA)
+Time horizon: 57 days (Through Oct 29 earnings)
+R:R: 16.1 (Hypothetical, risking $12.16 for $196.45)
+
+Rationale:
+
+*   Although CAT sits in an oversold mean-reversion setup with RSI at 28 just 1.4% above primary support at the 200-day SMA ($768.45), the fundamental profile lacks the safety required to deploy our 3.0% maximum allocation.
+*   Returning $10,
+

@@ -1,0 +1,19 @@
+[STANCE: for | CONVICTION: high | SIZE: 3.0% | HEADLINE: 25.2% upside vs tight 1.4% risk]
+Waiting for balance sheet validation means missing the massive asymmetric upside of an oversold bounce off structural support directly into an FOMC rate pivot.
+
+- Size this at the absolute **3.0%** mandate ceiling; stepping down when the Street targets **$975.61** (a **+25.2%** run) leaves double-digit alpha completely unclaimed.
+- Passing until Q4 earnings in **57 days** is a guaranteed opportunity cost that abandons the FOMC decision in **14 days**—the exact macro catalyst that just triggered a **4%** cyclical rally in peers Deere and AGCO.
+- The Conservative desk will panic over the **$39.2B** net debt and **200%** FCF payout, but with price resting just **1.4%** above the **$768.45** 200-day SMA, we can invalidate the trade with a tight stop that contributes a fraction of a percent to our **30%** portfolio drawdown cap, rendering long-term debt anxieties irrelevant to the immediate trade risk.
+
+─── EVALUATION ADDENDUM ───
+
+DATA I LACKED:
+- (a) A strict accounting breakdown separating the **$45.1B** gross debt into standard corporate debt versus captive finance arm (Caterpillar Financial) receivables.
+- (b) If I had proof that the vast majority of this debt was self-liquidating customer finance paper—which is standard for heavy machinery—I would have explicitly used it to demolish the Bear's insolvency narrative rather than just bypassing it with stop-loss mathematics.
+- (c) ABSENT. 
+
+- (a) The historical 5-year trend of the RSI dropping into the highly oversold **28** territory.
+- (b) If I could observe how quickly CAT historically bounces from sub-30 RSI extremes while resting on the 200-day SMA, I would have cited the average forward 30-day return to further justify the maximum **3.0%** allocation.
+- (c) FORBIDDEN ("every figure is a single point in time / no history... computed from real yfinance price history as of this call").
+
+PROMPT CONTRADICTIONS: none

@@ -1,0 +1,22 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: Wait for Q4 earnings print]
+Instrument:     CAT
+Side:           WAIT
+Size:           0% of portfolio
+Entry:          N/A
+Target:         N/A
+Stop:           N/A
+Time horizon:   57 days (Wait for earnings)
+R:R:            N/A
+
+Per the Research Manager's directive, we are sitting on our hands until the Q4 earnings print in **57** days confirms whether organic cash flow can sustain the current payout obligations. The technical setup offers a near-term pivot at the **$768.45** 200-day moving average, but deploying capital into an EV/EBITDA of **24.5x** provides zero margin of safety ahead of the FOMC decision in **14** days. Capital remains protected; we allocate **0%** today and will revisit post-earnings.
+
+DATA I LACKED:
+* (a) Option implied volatility / skew for the upcoming earnings print in 57 days.
+* (b) If I had elevated put skew indicating the market was heavily hedging against a macro or earnings miss, I would have used it to validate the decision to wait, raising my conviction in avoiding the stock right now.
+* (c) FORBIDDEN (Mandate strictly states "NO DERIVATIVES. Do not propose options, spreads or any structure", so implied volatility data is entirely absent).
+
+PROMPT CONTRADICTIONS:
+* Contradiction: The role instructions mandate "Output structure (always specific)... Stop: ${price} (max acceptable loss)". However, because the Research Manager directed a "WAIT" with 0% allocation, there is no open position to stop out of, making a specific dollar price stop logically impossible and contradictory to a null trade.
+* Resolution: I obeyed the Research Manager's synthesis to avoid the trade and populated the mandatory execution block fields (Entry, Target, Stop, R:R) with "N/A" to respect the structural requirement of the block without inventing fake prices for a non-existent trade.
+* Contradiction: The core prompt states "Plain text otherwise — no headings, no tables." Conversely, the Evaluation Addendum demands "append a final section headed exactly `DATA I LACKED:`" and "append a second section headed exactly `PROMPT CONTRADICTIONS:`".
+* Resolution: I obeyed the Evaluation Addendum, assuming it is a developer-level override to the persona's standard formatting rules.

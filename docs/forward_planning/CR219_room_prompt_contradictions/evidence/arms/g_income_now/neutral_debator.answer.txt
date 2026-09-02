@@ -1,0 +1,14 @@
+[STANCE: for | CONVICTION: low | SIZE: 1.0% | HEADLINE: 1.0% size limits payout risks]
+A **1.0%** allocation respects the aggressive case's asymmetric technical entry at the 200-day moving average, while enforcing the conservative's caution against a structurally deficient **0.82%** yield by severely tightening the stop distance.
+
+- The Aggressive correctly spots the technical asymmetry of an oversold **28** RSI testing the **$768.45** 200-day SMA, but the Conservative rightly warns that a **0.82%** yield funded by a **200%** FCF payout ratio fails the primary `income_now` mandate and heightens risk heading into an FOMC decision in **14 days**.
+- The data leaves a critical inconsistency unresolved: **24%** revenue growth and expanding net margins (**+434bps**) signal immense pricing power, yet a severely lagging **$5,049M** TTM FCF creates a blind spot on whether the **$39,201M** net debt represents manageable cyclical leverage or a structural cash flow trap.
+- Hedge this uncertainty by cutting the proposed size to **1.0%** at the **$779.16** entry and pulling the stop drastically tighter to **$760.00** (a **2.5%** distance, placed just below the primary 200-day support); this forces the trade to prove its technical floor immediately while contributing a microscopic **0.025 points** to your **30-point** maximum portfolio drawdown cap.
+
+─── EVALUATION ADDENDUM ───
+DATA I LACKED:
+* (a) Capital expenditures (CapEx) or an operating cash flow bridge.
+* (b) If I had this, I could have determined if the **$5,049M** FCF is temporarily depressed by long-horizon growth investments (supporting the Aggressive case) or if core cash conversion is fundamentally failing to match the **24%** revenue growth (supporting Conservative), which would have shifted my conviction from low to high in either direction.
+* (c) ABSENT.
+
+PROMPT CONTRADICTIONS: none
