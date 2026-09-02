@@ -108,6 +108,11 @@ _CLAIMED_REAL_INPUTS = [
     # CR219 R34 — explicit capex, so the claim never has to be inferred from
     # a change in the free-cash-flow figure R20 forbids doing arithmetic on.
     ("fundamentals_analyst", "**Capital expenditure**", "capex_ttm"),
+    # CR219 R35 — all three keys the pacing claim rests on: the series, its
+    # dates, and the precomputed pace label.
+    ("fundamentals_analyst", "**Buyback pacing**", "buyback_quarterly"),
+    ("fundamentals_analyst", "**Buyback pacing**", "buyback_quarterly_basis"),
+    ("fundamentals_analyst", "**Buyback pacing**", "buyback_pace"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_institutions"),
     ("fundamentals_analyst", "**Ownership**", "held_pct_insiders"),
     ("fundamentals_analyst", "**Ownership**", "shares_outstanding"),

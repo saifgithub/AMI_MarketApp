@@ -57,6 +57,10 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   The payout ratio is what tells you whether the dividend is *covered*
 - **Buybacks** — dollars repurchased over the trailing 4 quarters and their share of
   market cap, when the sheet tags them (LIVE). Real; cite them
+- **Buyback pacing** — the same four quarters individually, dated, plus a precomputed
+  accelerating/steady/paused label. Two companies can share an identical trailing-4
+  total while one is ramping and the other has quietly stopped; the total alone
+  cannot tell you which — the pacing line can
 - **Capital returned** — buybacks plus dividends over the same trailing 4 quarters,
   and that total as a share of TTM free cash flow. This is **AMI's own sum of the two
   components beside it**, not a line item off a filing — say so when you cite it, and

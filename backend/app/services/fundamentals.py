@@ -170,6 +170,48 @@ def _margin_bps(num: list[float | None] | None, den: list[float | None] | None,
     return round(((a_n / a_d) - (b_n / b_d)) * 10_000)
 
 
+def _buyback_pace(quarters: list[float]) -> str | None:
+    """CR219 R35 — accelerating / steady / paused, off the four per-quarter
+    magnitudes (already-absolute, oldest-to-newest).
+
+    A pure threshold classifier, same house style as `rsi_tone`
+    (`trading_math/indicators.py`) — a deterministic bucket, never an LLM
+    judgment call, so the label on the sheet is reproducible from the same
+    four numbers every time. The latest quarter is compared against the
+    prior three quarters' average, at a symmetric 20% threshold:
+
+    - **paused**: latest is 20% or less of the prior average — comfortably
+      below what a merely quieter quarter would show, so a company still
+      repurchasing a residual amount (an option-dilution offset, say) does
+      not get called "paused" by accident.
+    - **accelerating**: latest is 20% or more ABOVE the prior average.
+    - **steady**: everything between the two thresholds — deliberately wide,
+      because a buyback programme (which management explicitly varies with
+      price and opportunity, unlike a dividend) has real quarter-to-quarter
+      noise that is not a change of pace.
+
+    Requires exactly 4 non-None quarters — the same `len(recent) == 4` gate
+    the TTM sum uses, so the two never disagree about whether the company
+    has enough history to speak about at all.
+    """
+    if len(quarters) != 4:
+        return None
+    latest = quarters[0]
+    prior_avg = sum(quarters[1:]) / 3
+    if prior_avg <= 0:
+        # No repurchase activity in the prior three quarters at all — a
+        # brand-new programme has no "pace" yet to classify against, and
+        # calling it "accelerating" against a zero base is a manufactured
+        # comparison, not a measured one.
+        return None
+    ratio = latest / prior_avg
+    if ratio <= 0.2:
+        return "paused"
+    if ratio >= 1.2:
+        return "accelerating"
+    return "steady"
+
+
 def fetch_statement_facts(ticker: str) -> dict[str, Any] | None:
     """Margin TREND and buyback activity from the quarterly statements.
 
@@ -258,6 +300,23 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
         recent = [v for v in repurchase[:4] if v is not None]
         if len(recent) == 4:
             out["buyback_ttm"] = round(abs(sum(recent)) / 1_000_000)
+            # CR219 R35 — the four individual quarters, and the pace they
+            # describe, rather than just their sum. The magnitudes existed
+            # right here and were discarded the moment they were summed;
+            # nothing new is fetched. Rounded to whole $M, newest-first, same
+            # order `periods`/`_stmt_series` already use throughout this
+            # function. Gated on `periods` carrying at least 4 dates too — a
+            # series with no dated basis is the same "number with no basis"
+            # defect `margin_trend_line`'s docstring designs against, so all
+            # three keys below ship together or not at all.
+            if len(periods) >= 4:
+                out["buyback_quarterly"] = [
+                    round(abs(v) / 1_000_000) for v in recent
+                ]
+                out["buyback_quarterly_basis"] = periods[:4]
+                pace = _buyback_pace([abs(v) for v in recent])
+                if pace is not None:
+                    out["buyback_pace"] = pace
 
     # ── Dividends paid, trailing four quarters ───────────────────────────
     # CR218. The sheet already carried a dividend YIELD, and an analyst that
@@ -1025,6 +1084,49 @@ def buyback_line(
     return _labelled("Buybacks", live, [part])
 
 
+def buyback_pacing_line(
+    quarterly_millions: list[int] | None,
+    basis: list[str] | None,
+    pace: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR219 R35 — the four-quarter repurchase series, and the pace it
+    describes, beside the trailing-4-quarter TOTAL `buyback_line` already
+    states. A total alone cannot say whether a programme is ramping,
+    steady, or has quietly stopped — the same "one number hides two
+    different stories" reasoning `capital_return_line`'s docstring makes
+    about buybacks-vs-dividends, one level down: two companies with an
+    identical $7,654M trailing-4-quarter total can be in opposite phases of
+    the same programme.
+
+    `pace` is the precomputed `_buyback_pace` label (CR179 Leg 4's rule
+    again: a classification is handed over, not left for the model to eyeball
+    four numbers and characterise). It is genuinely optional even when the
+    series renders — `_buyback_pace` withholds a label rather than fabricate
+    one against a zero prior-quarters base, and this line must render the
+    honest four figures either way.
+
+    Quarters render OLDEST first, matching how the basis dates read left to
+    right as a timeline — the newest-first order the raw statement columns
+    and `buyback_ttm`'s derivation use internally is reversed here for
+    readability, and reversed nowhere else in this module, so the two lists
+    passed in (already newest-first from the fetcher) are both flipped at
+    the render boundary rather than at the point they were computed.
+    """
+    if not quarterly_millions or not basis or len(quarterly_millions) != 4 or len(basis) != 4:
+        return None
+    oldest_first_values = list(reversed(quarterly_millions))
+    oldest_first_basis = list(reversed(basis))
+    series = ", ".join(
+        f"{date}: ${v:,}M" for date, v in zip(oldest_first_basis, oldest_first_values)
+    )
+    part = f"{series}"
+    if pace is not None:
+        part += f" — {pace}"
+    return _labelled("Buyback pacing", live, [part])
+
+
 def interest_coverage_line(
     ratio: float | None, quarter: str | None, *, live: bool = True
 ) -> str | None:
@@ -1641,6 +1743,12 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
             ),
             buyback_line(
                 data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
+            ),
+            # CR219 R35 — same builder, same order, same wording as the Room
+            # sheet (parity rule above).
+            buyback_pacing_line(
+                data.get("buyback_quarterly"), data.get("buyback_quarterly_basis"),
+                data.get("buyback_pace"), live=False,
             ),
             capital_return_line(
                 data.get("capital_return_ttm"), data.get("buyback_ttm"),

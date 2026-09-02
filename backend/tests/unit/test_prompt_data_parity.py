@@ -133,6 +133,13 @@ _FUND_SENTINEL: dict = {
     "margin_trend_basis": "TRENDBASISSENT vs TRENDPRIORSENT",
     "buyback_ttm": 7654,
     "buyback_yield": 8.9,
+    # CR219 R35 — the same $7,654M total, broken into its four quarters
+    # (newest-first, matching the fetcher's own order) plus the dates and
+    # pace those figures describe. 3000+2000+1654+1000=7654, consistent with
+    # buyback_ttm above though the two are independently injected sentinels.
+    "buyback_quarterly": [3000, 2000, 1654, 1000],
+    "buyback_quarterly_basis": ["BBQ1SENT", "BBQ2SENT", "BBQ3SENT", "BBQ4SENT"],
+    "buyback_pace": "PACESENT",
     # CR218 — the capital-allocation arithmetic the sheet used to leave to the
     # model: dividends in dollars (the sheet gave only a yield), the total
     # returned, and that total against FCF. Values chosen not to collide with
@@ -651,6 +658,11 @@ def env(monkeypatch):
             "margin_trend_basis": "TRENDBASISSENT",
             "buyback_ttm": "$7,654M repurchased",
             "buyback_yield": "8.9% of market cap",
+            # CR219 R35 — three keys, each fingerprints its own distinct
+            # substring of the rendered (reversed-to-oldest-first) series.
+            "buyback_quarterly": "BBQ4SENT: $1,000M",
+            "buyback_quarterly_basis": "BBQ1SENT",
+            "buyback_pace": "PACESENT",
             # CR218.
             "dividends_paid_ttm": "dividends $3,217M",
             "capital_return_ttm": "$10,871M (trailing 4 quarters)",

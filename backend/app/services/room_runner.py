@@ -441,6 +441,16 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "gross_margin_trend_bps", "operating_margin_trend_bps",
     "net_margin_trend_bps", "margin_trend_basis",
     "buyback_ttm", "buyback_yield",
+    # CR219 R35 — the four individual quarterly repurchase magnitudes (not
+    # just their sum above), the dates they're stated against, and the
+    # precomputed accelerating/steady/paused pace those four figures
+    # describe. From the SAME `Repurchase Of Capital Stock` row `buyback_ttm`
+    # already reads; nothing new is fetched, only kept instead of discarded
+    # after the sum. All three ship together or not at all (see the
+    # fetcher), so a partial provenance state — a series with no basis dates,
+    # say — cannot occur; registered as three separate keys anyway, matching
+    # every other multi-part CR104 field on this sheet.
+    "buyback_quarterly", "buyback_quarterly_basis", "buyback_pace",
     # CR218 — dividends paid in dollars, the total returned, and that total as a
     # share of FCF. Optional-live-only for exactly the reason the buyback line
     # above is: a non-payer has no dividend row and a company with no repurchase

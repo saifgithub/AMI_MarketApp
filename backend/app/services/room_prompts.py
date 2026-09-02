@@ -34,6 +34,7 @@ from app.services.fundamentals import (
     earnings_power_line,
     identity_line,
     buyback_line,
+    buyback_pacing_line,
     capex_line,
     capital_return_line,
     day_move_line,
@@ -2459,6 +2460,17 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             buyback_line(
                 profile.get("buyback_ttm") if _is("buyback_ttm", "live") else None,
                 profile.get("buyback_yield") if _is("buyback_yield", "live") else None,
+            ),
+            # CR219 R35 — the four-quarter series and pace beside the total
+            # above; all three keys are set together at the fetcher or not at
+            # all, but each still rides its own field_state gate per the
+            # per-field discipline every line on this sheet follows.
+            buyback_pacing_line(
+                profile.get("buyback_quarterly")
+                if _is("buyback_quarterly", "live") else None,
+                profile.get("buyback_quarterly_basis")
+                if _is("buyback_quarterly_basis", "live") else None,
+                profile.get("buyback_pace") if _is("buyback_pace", "live") else None,
             ),
             capital_return_line(
                 profile.get("capital_return_ttm")
