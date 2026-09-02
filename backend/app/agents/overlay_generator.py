@@ -16,6 +16,7 @@ from app.schemas import (
     LearningStyle,
     Mandate,
     Path,
+    PrimaryGoal,
 )
 from app.trading_math.risk_limits import (
     resolved_max_open_positions,
@@ -91,6 +92,7 @@ def _mandate_common_block(
 
 ## Financial profile
 - Primary goal: {mandate.primary_goal}
+{_goal_block(mandate)}
 - Horizon: {mandate.horizon}  ({_horizon_label(mandate.horizon)})
 - Target outcome: {target_text}
 - Path: {mandate.path}
@@ -120,6 +122,88 @@ size % × stop distance %)/100 across all open positions, including this one.
 - Locale: {mandate.locale}  — respond in this language unless overridden in this session
 - Tone preference: {_tone_for_learning_style(mandate.learning_style)}
 ---"""
+
+
+# CR219 R25/R26 (finding #17) — `primary_goal` was printed into every prompt
+# (the "Primary goal:" line above) but nothing branched on it: six onboarding
+# answers produced identical analysis. Ruled (DECISIONS_2026-09-02.md §"R25"):
+# wire it as WEIGHTED EMPHASIS, never a hard PM filter gate — the Chief
+# Investment Officer keeps holistic gatekeeping (`_portfolio_manager_block`
+# above is untouched by this), and no line below may read as an auto-reject.
+#
+# `match` over every `PrimaryGoal` arm, exhaustive by construction: an
+# unhandled value raises here rather than silently rendering nothing (CR040 —
+# degrade loudly). Python cannot prove this exhaustive statically for a
+# `str, Enum` subclass, so `test_cr219_wp05_goal_and_mandate_fields.py` iterates the enum
+# and asserts every arm yields a distinct, non-empty block — that test is the
+# actual exhaustiveness guarantee, this `case _:` is the runtime one.
+#
+# Each line is a pure emphasis/framing statement — it does not name a
+# fact-sheet field, so it makes no new demand for the WP02 guard's R11 mapping
+# to back (the guard's own R11 section notes the common block's bullets are
+# mandate CONSTRAINTS, not sheet-field demands). A goal that shifts emphasis
+# toward data the sheet already carries (e.g. dividend/coverage lines for
+# INCOME_NOW) is expressed as an editorial instruction to weigh what is
+# already rendered elsewhere, never as a claim about a new field.
+def _goal_block(m: Mandate) -> str:
+    goal = PrimaryGoal(m.primary_goal)
+    match goal:
+        case PrimaryGoal.INCOME_NOW:
+            line = (
+                "- Goal emphasis (income_now): weight dividend safety, payout "
+                "coverage and interest coverage more heavily than growth "
+                "narrative. This shifts what each analyst leads with — it "
+                "does not disqualify a name outright."
+            )
+        case PrimaryGoal.RETIREMENT:
+            line = (
+                "- Goal emphasis (retirement): weight capital durability and "
+                "sequence-of-returns risk — how badly a large near-term "
+                "drawdown would compound — over short-term upside. This "
+                "shifts emphasis, not eligibility."
+            )
+        case PrimaryGoal.LONG_TERM_WEALTH:
+            line = (
+                "- Goal emphasis (long_term_wealth): weight durability, "
+                "competitive moat and free-cash-flow consistency over a "
+                "near-term catalyst. This shifts emphasis, not eligibility."
+            )
+        case PrimaryGoal.SPECIFIC_GOAL:
+            target_note = (
+                f" toward the stated target ({m.target_outcome.amount:,.0f} "
+                f"{m.target_outcome.currency} by {m.target_outcome.by_year})"
+                if m.target_outcome is not None
+                else " — no specific target amount/date was set, so weigh the "
+                "stated horizon instead"
+            )
+            line = (
+                f"- Goal emphasis (specific_goal): weight whether this "
+                f"trade's timeline and risk are consistent with progress"
+                f"{target_note}. This shifts emphasis, not eligibility."
+            )
+        case PrimaryGoal.LEARNING_TO_TRADE:
+            line = (
+                "- Goal emphasis (learning_to_trade): show your working — "
+                "each analyst states plainly *why* its own headline figure "
+                "moved its view, not just what the figure is. Teaching "
+                "value is the point; this does not relax any cap."
+            )
+        case PrimaryGoal.EXPLORING:
+            line = (
+                "- Goal emphasis (exploring): this user has not committed to "
+                "a specific objective yet — favour breadth and clearly "
+                "explained tradeoffs over a narrow, high-conviction push in "
+                "any one direction."
+            )
+        case _:
+            # CR040 — an enum arm nothing above accounts for must fail loudly
+            # at render time, not silently print the bare goal with no guidance
+            # (that is finding #17 again, one field at a time).
+            raise ValueError(
+                f"_goal_block: no weighted-guidance line for primary_goal={goal!r} "
+                "— add a case above rather than letting this render silently."
+            )
+    return line
 
 
 # Liquidity floor NARRATED to agents (CR046 C-b/C-c) — single-sourced so the prose
@@ -610,6 +694,7 @@ def _bull_block(m: Mandate) -> str:
         "- Cite specific analyst evidence (Fundamentals / Market / News / Social).",
         "- Frame upside in terms of horizon. Use numbers, not vague claims.",
         "- Anticipate the Bear's strongest counter; address it head-on.",
+        _regret_framing_line(m),
     ]
     if m.compliance.long_only:
         parts.append("- Long-only mandate — straight 'buy' framing. No pair trades.")
@@ -641,6 +726,7 @@ def _bear_block(m: Mandate) -> str:
             "flags — frame a negative view as 'avoid' or 'wait for better entry'."
         )
     parts.append("- Cite specific risk evidence. Steelman the case. Don't FUD. Anticipate the Bull's counter.")
+    parts.append(_regret_framing_line(m))
     if m.compliance.halal and not m.compliance.long_only:
         parts.append(
             "- Halal + non-long-only: be aware shorting may have additional Sharia considerations. Prefer 'avoid' framing unless directly asked."
@@ -713,6 +799,8 @@ def _aggressive_block(m: Mandate) -> str:
         "conviction for evidence that would move a sceptic, and say plainly when you "
         "are arguing the best version of a weak hand."
     )
+    parts.append(_drawdown_stress_line(m))
+    parts.append(_regret_framing_line(m))
     if m.risk_score <= 2:
         parts.append(
             "- For low-risk-score user: your role is to ensure conservative voice doesn't dominate to inaction. Push, but recognise the user's stated profile."
@@ -739,6 +827,8 @@ def _conservative_block(m: Mandate) -> str:
         "conviction for a specific, quantified downside — when all you have is general "
         "prudence, report that instead of dressing it up."
     )
+    parts.append(_drawdown_stress_line(m))
+    parts.append(_regret_framing_line(m))
     if m.risk_score <= 2:
         parts.append("- Lead the debate. Aggressive voice must justify any deviation toward higher risk.")
     elif m.risk_score >= 4:
@@ -761,7 +851,9 @@ def _neutral_block(m: Mandate) -> str:
         # conviction the room's read on whether the evidence decides anything.
         "- Your conviction reports how clearly the evidence separates the two cases: "
         "high when one side's numbers plainly win, low when both are genuinely still "
-        "standing. Low conviction still states a view — it does not hedge."
+        f"standing. Low conviction still states a view — it does not hedge.\n"
+        f"{_drawdown_stress_line(m)}\n"
+        f"{_regret_framing_line(m)}"
     )
 
 
@@ -826,6 +918,81 @@ If asked for trading advice:
 "That's something for your team. Want me to open the Technical Strategist 1-on-1,
 or Convene the Room?"
 ---"""
+
+
+# CR219 R56 — the two RiskComponents fields collected at onboarding
+# (`concierge_engine._classify_drawdown_response` / `_classify_regret`),
+# carried through `brief_engine.py:533-534` / `agent_runner.py:362-363`, and
+# used by NOTHING downstream — only `concentration_tolerance` fed an overlay
+# branch (`_sector_cap_pct` above). Both are already folded into `risk_score`
+# at onboarding (`concierge_engine._derive_risk_score`), so risk_score alone
+# already carries their combined effect on the numeric caps; what neither one
+# gets, until now, is the qualitative flavour a scalar collapses — HOW a user
+# says they would react, not just how much risk that implies. NOT a floor
+# change: `agents/safety_floor.py` and its inputs are untouched by this file.
+
+
+def _drawdown_stress_line(m: Mandate) -> str:
+    """R56 — `drawdown_response` (1-5) as a risk-officer emphasis line: how
+    hard the three debators should stress-test a drawdown scenario before the
+    trade is sized, not a change to any enforced cap.
+
+    The user's self-reported reaction to a real drawdown is a genuinely
+    distinct signal from risk_score: two users at the same risk_score can
+    differ on whether they say they'd panic-sell into a loss (1) or add on
+    weakness (5), and that self-report is exactly the thing a debate about
+    sizing should stress — a stated high tolerance is a claim to pressure-
+    test, not a floor to defer to."""
+    resp = m.risk_components.drawdown_response
+    if resp <= 2:
+        return (
+            f"- Drawdown-response stress test (self-reported {resp}/5 — leans "
+            "toward selling into a loss): stress this scenario HARDER than the "
+            "numeric risk_score alone implies. If this position went against "
+            "the user near the drawdown cap, would the debate's own sizing "
+            "survive a panic-sell impulse, or does it depend on discipline the "
+            "user has told AMI not to assume?"
+        )
+    if resp >= 4:
+        return (
+            f"- Drawdown-response stress test (self-reported {resp}/5 — leans "
+            "toward adding on weakness): stress-test that stated appetite "
+            "against THIS trade specifically — a user who says they'd buy more "
+            "into a drawdown still needs the scenario argued, not skipped, "
+            "because the claim is being tested here, not assumed true."
+        )
+    return (
+        f"- Drawdown-response stress test (self-reported {resp}/5 — holds/rides "
+        "out a loss): argue the drawdown scenario at the same weight the "
+        "numeric caps already carry — no additional lean either way."
+    )
+
+
+def _regret_framing_line(m: Mandate) -> str:
+    """R56 — `regret_asymmetry` (-1/0/+1) as a one-line framing hint: which
+    error the user fears more, missing upside or losing capital. Framing only
+    — it does not resize anything; the debate still argues the trade on its
+    merits."""
+    asym = m.risk_components.regret_asymmetry
+    if asym < 0:
+        return (
+            "- Regret framing: this user has told AMI that losing money stings "
+            "worse than missing a gain. Frame the downside case in those terms "
+            "— it is the error this user is more afraid of — without inflating "
+            "risk beyond what the position actually carries."
+        )
+    if asym > 0:
+        return (
+            "- Regret framing: this user has told AMI that missing upside "
+            "stings worse than a loss. Frame the cost of over-caution in those "
+            "terms — it is the error this user is more afraid of — without "
+            "downplaying a real downside to fit that preference."
+        )
+    return (
+        "- Regret framing: this user has not stated an asymmetry between "
+        "missing upside and losing capital — argue both risks on their own "
+        "merits, with no framing lean toward either error."
+    )
 
 
 def _max_position_pct(mandate: Mandate) -> float:
