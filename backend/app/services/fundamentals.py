@@ -1470,7 +1470,8 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
     data = fetch_live_fundamentals(ticker)
     if not data:
         return None
-    from app.services.room_prompts import _lane_for  # noqa: PLC0415 — breaks an import cycle, see docstring
+    # noqa: PLC0415 — breaks an import cycle, see the docstring above.
+    from app.services.room_prompts import _ALL_DOMAINS, _DOMAIN_LABELS, _lane_for
 
     lane = _lane_for(agent_id)
 
@@ -1486,6 +1487,22 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
     lines = [
         f"─── LIVE MARKET DATA — {sym} — as of {today.isoformat()} (UTC) ───"
     ]
+    # CR040/CR219 R24 — a withheld lane announces itself instead of silently
+    # vanishing, same principle as the Room's `_out_of_lane_line`, worded
+    # differently on purpose: the Room can truthfully say "another analyst on
+    # this desk holds it", but a 1-on-1 chat has no other analyst in the
+    # conversation to point to — that claim would be false here. Omitted
+    # entirely when nothing is withheld (agent_id=None, or an agent absent
+    # from `_AGENT_LANES`), so every pre-R24 caller's output is unchanged.
+    if lane != _ALL_DOMAINS:
+        withheld = [_DOMAIN_LABELS[d] for d in ("fundamentals", "technicals", "news", "social")
+                    if d not in lane]
+        if withheld:
+            lines.append(
+                "Not shown in this chat: " + "; ".join(withheld) + ". That is a "
+                "division of labour on this desk, not missing data — do not "
+                "estimate or infer it, and do not tell the user it is unavailable."
+            )
     # Identity and the reference quote are core, unconditional — same
     # reasoning as the Room's `_reference_price_line`: every agent needs a
     # price to reason about the portfolio block, and it is not what the

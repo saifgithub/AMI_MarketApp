@@ -287,6 +287,43 @@ def test_build_block_identity_and_price_survive_lane_gating(monkeypatch):
     assert "Price: $271.83" in block
 
 
+def test_build_block_withheld_lane_announces_itself(monkeypatch):
+    """CR040 — a withheld lane must not silently vanish. The Room's
+    `_out_of_lane_line` exists for exactly this; the 1-on-1 block gets an
+    analogous notice, worded for a single-agent chat (no "another analyst
+    holds it" claim — there is no other analyst in this conversation)."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    block = build_live_data_block("AAPL", AgentId.FUNDAMENTALS_ANALYST)
+    assert "Not shown in this chat:" in block
+    assert "market technicals (RSI, trend, ranges, volume)" in block
+    assert "division of labour" in block
+    assert "do not estimate or infer it" in block
+    # The Room's exact wording would be false here — there is no other
+    # analyst in a 1-on-1 conversation to hand withheld data to.
+    assert "another analyst" not in block.lower()
+
+
+def test_build_block_unlaned_and_default_carry_no_withheld_notice(monkeypatch):
+    """The notice must not fire when nothing is withheld — otherwise every
+    pre-R24 caller's output changes shape, which is exactly the parity
+    break `test_prompt_data_parity.py` exists to catch."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    default_block = build_live_data_block("AAPL")
+    trader_block = build_live_data_block("AAPL", AgentId.TRADER)
+    for block in (default_block, trader_block):
+        assert "Not shown in this chat:" not in block
+
+
 # ── fetch_live_fundamentals (yfinance) ──────────────────────────────────
 
 
