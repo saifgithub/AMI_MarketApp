@@ -1664,6 +1664,7 @@ def build_room_messages(
     # verdict they already imply. See `_floor_state_preview` for why this is
     # scoped to the one agent whose verdict the floor overrides.
     floor_preview_block = ""
+    scoreboard_block = ""
     if phase == "VERDICT":
         floor_preview_block = _floor_state_preview(
             mandate,
@@ -1671,6 +1672,12 @@ def build_room_messages(
             last_loss_closed_at,
             trade_open_timestamps,
         )
+        # CR219 R50 — the parsed envelopes, tabulated in code. VERDICT only:
+        # this is a cross-Room aggregate for the agent that must weigh the whole
+        # Room, and handing it to an agent whose turn is to state its OWN
+        # position would replace the judgement that turn exists to exercise
+        # (the same scoping CR197 gives the option ladder).
+        scoreboard_block = _room_scoreboard(transcript)
 
     # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
     # as forbidding a second entry in a name already held — long_only only bars shorts.
@@ -1777,6 +1784,9 @@ def build_room_messages(
         # voice's claim rather than as the figures of record.
         f"{option_candidate_block}"
         f"{chr(10) if option_candidate_block else ''}"
+        # CR219 R50 — immediately above the transcript it is computed FROM, so
+        # the CIO reads the tally and the prose it summarises as one thing.
+        f"{scoreboard_block}"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"
         f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "
@@ -3068,3 +3078,93 @@ def _format_transcript(transcript: list[AgentMessage]) -> str:
         # retired name in generated prose the user reads.
         lines.append(f"[{agent_display_name(m.agent_id)}] {m.content}")
     return "\n".join(lines)
+
+
+# CR219 R50 — the Room scoreboard, minted by AMI from the parsed envelopes.
+#
+# The stance envelopes are already machine-parsed per turn (`parse_stance_envelope`)
+# and carried on every transcript entry as `stance`/`conviction`/`headline`
+# (CR106 B2). By the VERDICT phase the CIO reads them back only as prose, buried
+# in eleven turns, and weighs whatever recency left salient.
+#
+# This is R20's philosophy at the Room level: where an aggregate can be computed,
+# AMI computes it rather than asking a model to summarise. Zero extra LLM calls.
+#
+# Degrade loudly (CR040), and this is the specific reason the row is never
+# dropped: DEF251 measured ~20% of debator turns emitting NO envelope at all. A
+# scoreboard that silently omits those rows would show a 9-agent Room as
+# unanimous when two of its voices were never counted — inventing consensus out
+# of a parser gap, which is the exact failure DEF251 and CR106's T-SUM11 gutter
+# rule both exist to prevent. So a turn with no parseable stance renders as
+# `unparsed`, in position, and the header states how many.
+_SCOREBOARD_UNPARSED = "unparsed"
+
+
+def _scoreboard_cell(value: str | None) -> str:
+    """A field the agent did not state renders as `unparsed`, never as blank
+    and never as a default. `none` is the prompt's own opt-out and reaches here
+    as `None` too — same destination: the CIO is told the view was not stated,
+    not handed a fabricated neutral."""
+    return value if value else _SCOREBOARD_UNPARSED
+
+
+def _room_scoreboard(transcript: list[AgentMessage]) -> str:
+    """A fixed-width agent | stance | conviction | headline table.
+
+    Deterministic: same transcript in, same bytes out. Nothing here calls a
+    model, and nothing here re-parses prose — it reads the envelope fields the
+    runner already parsed at the moment each turn was produced.
+
+    Rows are in transcript order (the order the Room actually spoke). Only
+    `role == "agent"` entries are scored; a user or system entry is not a voice
+    in the Room and would land in the count as one.
+    """
+    rows = [m for m in transcript if m.role == "agent"]
+    if not rows:
+        return ""
+
+    cells = [
+        (
+            agent_display_name(m.agent_id),
+            _scoreboard_cell(m.stance),
+            _scoreboard_cell(m.conviction),
+            _scoreboard_cell(m.headline),
+        )
+        for m in rows
+    ]
+    stated = sum(1 for _, stance, _, _ in cells if stance != _SCOREBOARD_UNPARSED)
+    unparsed = len(cells) - stated
+
+    headers = ("AGENT", "STANCE", "CONVICTION", "HEADLINE")
+    widths = [
+        max(len(headers[i]), max(len(c[i]) for c in cells))
+        for i in range(3)
+    ]
+
+    def _row(c: Sequence[str]) -> str:
+        return "  ".join(
+            [c[i].ljust(widths[i]) for i in range(3)] + [c[3]]
+        ).rstrip()
+
+    lines = [_row(headers), "  ".join("-" * w for w in widths) + "  " + "-" * 8]
+    lines.extend(_row(c) for c in cells)
+
+    # The caption states the denominator the same way the Verdict Board does
+    # (CR106 T-SUM11): a count over agents that STATED a view, never a total
+    # that always sums to the roster size.
+    caption = (
+        f"{stated} of {len(cells)} stated a view"
+        + (
+            f"; {unparsed} emitted no readable position and are shown as "
+            f"`{_SCOREBOARD_UNPARSED}` — absent, NOT neutral, and not evidence "
+            f"of agreement"
+            if unparsed else ""
+        )
+    )
+    return (
+        "\nRoom scoreboard — every position stated so far, tabulated by AMI from "
+        "the agents' own stance lines (not a summary, and not another voice; "
+        f"this is the transcript below, counted). {caption}.\n"
+        + "\n".join(lines)
+        + "\n"
+    )
