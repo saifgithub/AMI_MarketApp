@@ -2,10 +2,11 @@
 
 Three things this deliberately does NOT do:
 
-  * It does not attribute a VERDICT to a mandate. `pm_self_consistency_samples`
-    defaults to 1 and the measured flip rate at n=1 is ~19.7% (risk_officer.py),
-    so one draw per arm cannot separate a mandate effect from a coin toss. The
-    verdicts are printed as a record, labelled.
+  * It does not attribute a VERDICT to a mandate. The arms ran single PM draws
+    (production has defaulted to `pm_self_consistency_samples=5` since CR214);
+    at n=1 the measured flip rate is ~19.7% (risk_officer.py), so one draw per
+    arm cannot separate a mandate effect from a coin toss. The verdicts are
+    printed as a record, labelled.
   * It does not count the Portfolio Manager's contradiction report. The PM's
     prompt says "your ENTIRE reply must be one single JSON object"; this
     harness's own addendum asks for two appended sections. That collision is
