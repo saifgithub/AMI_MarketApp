@@ -30,6 +30,7 @@ CITATIONS = [
     ("content/agents/market_analyst.md",       (27, 29), "No MACD, moving-average crossover signal"),
     ("content/agents/social_media_analyst.md", (17, 17), "No Twitter/X, StockTwits, Google Trends, or Discord"),
     ("content/agents/fundamentals_analyst.md", (39, 40), "not a numeric peer-average"),
+    ("backend/app/services/room_prompts.py",   (1, 999), "trader_block_regex"),
 ]
 
 bad = 0

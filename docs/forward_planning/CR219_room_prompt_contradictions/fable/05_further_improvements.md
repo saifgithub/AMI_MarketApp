@@ -31,6 +31,8 @@ cost is on-prem GPU time, not dollars.
 - Also fixes a UX trust problem: at ~19.7% flip, a user who re-runs the same ticker
   sees the Room reverse itself for no visible reason.
 
+**Correction 2026-09-02**: default is already 5 (CR214); superseded by the re-derived R47, see `../dev_instructions/WP07_harness_measurement.md`.
+
 ### 2. Thinking mode is OFF on the live model — a verified, untapped lever
 
 Probed LAN-direct on 2026-09-02 against `http://192.168.20.74:8048` (root

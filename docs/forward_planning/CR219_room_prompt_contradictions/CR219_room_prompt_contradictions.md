@@ -78,7 +78,7 @@ Not availability claims, so a persona-text scan cannot see them. Every one was r
 | 13 | Aggressive RO | *"Push for full mandate-allowed sizing"* (3.0% cap) vs *"use the drawdown figure as written — do not recompute it"* — that figure was computed for **2.5%**. Advocated 3.0% while quoting the 2.5% cost. |
 | 14 | Balanced RO | Told to propose a specific size **and** stop, forbidden from multiplying them. Proposed 2.0% × 5.0% and refused to compute the result. |
 
-**#12 overlaps live work.** An uncommitted `trader_block_regex` hunk in `room_prompts.py` fixes exactly this for the **Size** field on HOLD/WAIT. The **Stop** field has the identical defect and is not covered.
+**#12 overlaps live work.** A `trader_block_regex` hunk in `room_prompts.py` (commit `49380813`, 2026-09-02) fixes exactly this for the **Size** field on HOLD/WAIT. The **Stop** field has the identical defect and is not covered.
 
 **#13 and #14 are CR179 Leg 4 inverted** — the rule is *"hand over the derived figure rather than the two operands and an instruction."* These hand over the operands and forbid the arithmetic.
 
@@ -215,7 +215,7 @@ variable. 72 turns, 0 errors. `evidence/arms/`.
 | `g_income_now` | long | income_now | PASS |
 | `g_learning` | long | learning_to_trade | PASS |
 
-**The verdict column is not interpretable.** `pm_self_consistency_samples` defaults to **1**
+**The verdict column is not interpretable.** `pm_self_consistency_samples` defaults to **5** (since CR214)
 and the measured flip rate at n=1 is ~19.7% (`risk_officer.py`), so a single draw is close to
 a coin toss — and the result is non-monotonic in horizon (short and long approve, medium and
 very_long pass), which a real horizon effect would not be. Nothing here attributes a verdict

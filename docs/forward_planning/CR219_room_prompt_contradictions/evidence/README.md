@@ -108,8 +108,8 @@ emits zero reasoning tokens and has been resolving these silently on every conve
 Stated here so a later reader does not over-read the files.
 
 1. **Verdict differences between arms are not attributable to the mandate.**
-   `pm_self_consistency_samples` defaults to 1 and the measured flip rate at n=1 is ~19.7%
-   (`risk_officer.py`), so one draw per arm cannot separate a mandate effect from a coin
+   The arms ran single PM draws (production has defaulted to 5 since CR214); at n=1
+   the measured flip rate is ~19.7% (`risk_officer.py`), so one draw per arm cannot separate a mandate effect from a coin
    toss — and the observed pattern is non-monotonic in horizon, which a real horizon effect
    would not be. The verdicts are a record, not a result.
 
