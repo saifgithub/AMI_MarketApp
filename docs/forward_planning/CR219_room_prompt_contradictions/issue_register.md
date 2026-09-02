@@ -103,10 +103,10 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R29 | Does citation-rate recovery prove the Room's answer got better? | CONVERGENT | No — it's a suppression proxy, not an outcome measure. Need a real benchmark (R31) | K,F,G,Q | ☐ |
+| R29 | Does citation-rate recovery prove the Room's answer got better? | CONVERGENT | No — it's a suppression proxy, not an outcome measure. Need a real benchmark (R31). Distinction documented in `harness/README.md` (2c75f1c8) | K,F,G,Q | ☑ |
 | R30 | Should Acceptance #4 gate the merge, or trail it? | OPEN (leaning decided) | Fable: trail, ~1–2 weeks Alpha traffic, no fixed threshold. No reviewer opposes it, but it isn't formally ruled | F | ☐ |
-| R31 | Benchmark / golden-set harness design | **RULED 2026-09-02** | Merged: QWEN's deterministic scorers + ticker×mandate frame at Kimi/GLM's initial scale (4–5 cached profiles), production 5-way PM vote (R32); grow to 8–10 once scorers hold. Build: `dev_instructions/WP07_harness_measurement.md` | K,G,Q | ☐ |
-| R32 | PM verdict sampling inside the harness | CONVERGENT | Mirror the production 5-way vote, not single draws (Kimi's D3 / GLM's R5) | K,G | ☐ |
+| R31 | Benchmark / golden-set harness design | **RULED 2026-09-02** | Merged: QWEN's deterministic scorers + ticker×mandate frame at Kimi/GLM's initial scale (4–5 cached profiles), production 5-way PM vote (R32); grow to 8–10 once scorers hold. Built + smoke-tested (`harness/`, 2c75f1c8, CAT×long 12/12 turns) | K,G,Q | ☑ |
+| R32 | PM verdict sampling inside the harness | CONVERGENT | Mirror the production 5-way vote, not single draws (Kimi's D3 / GLM's R5). Done in `harness/run_convene.py` (smoke: 5 draws, 4 parsed, 4/4 PASS) | K,G | ☑ |
 
 ## Data additions
 
@@ -148,7 +148,7 @@ ruling than "everything rides CR219" (R40) and applies only to this group.
 | R51 | Partial-outage honesty (count/disclose/cap scripted fallbacks) | RULED (Fable's scoping) | Rides CR219's umbrella | F | ☐ |
 | R52 | "What would change this call" kill-criterion field on the verdict | RULED (Fable's scoping) | Rides CR219's umbrella | F | ☐ |
 | R53 | Permanent DATA GAPS telemetry tail on analyst turns | **RULED 2026-09-02** | Parked to a future CR — `dev_instructions/PARKING_LOT.md` | F | ☐ |
-| R54 | Standing replay eval harness across prompt CRs | **RULED 2026-09-02** | Stays inside CR219 — AC4 and several experiments (R31, R48) depend on it | F | ☐ |
+| R54 | Standing replay eval harness across prompt CRs | **RULED 2026-09-02** | Stays inside CR219 — AC4 and several experiments (R31, R48) depend on it. Satisfied by `harness/` (2c75f1c8) | F | ☑ |
 | R55 | Verdict-outcome ledger (internal calibration floor) | **RULED 2026-09-02** | Splits into its **own future CR**, minted at the combine step, internal-only (no user-facing calibration stats; revisit at v1.0) — the one item explicitly ruled *out* of CR219 | F | ☐ |
 | R56 | Mandate-utilization guard — `drawdown_response`/`regret_asymmetry` are also dead fields | RULED (Fable's scoping) | Rides CR219's umbrella; fold into the R25/R26 (`primary_goal`) work while that's open | F | ☐ |
 | R57 | Stance-envelope grammar tension (force emission vs. keep it a measurement channel) | **RULED 2026-09-02** | Parked to a future CR — revisit once R50's scoreboard shows parse rates. `dev_instructions/PARKING_LOT.md` | F | ☐ |
