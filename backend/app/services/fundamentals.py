@@ -25,6 +25,7 @@ from typing import Any
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.time import relative_day_phrase
+from app.schemas import AgentId
 from app.services.market_data import get_market_data_provider
 from app.trading_math.valuation import (
     dividend_yield_pct,
@@ -1433,7 +1434,7 @@ def fetch_next_earnings(ticker: str):
         return None
 
 
-def build_live_data_block(ticker: str) -> str | None:
+def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str | None:
     """Compose a system-prompt-ready block of live numeric fundamentals.
 
     Returns None when:
@@ -1444,12 +1445,38 @@ def build_live_data_block(ticker: str) -> str | None:
     surface uses a richer profile via `_format_profile`; this is the
     lean version for 1-on-1 chat where the agent doesn't have a full
     Room scenario built around the ticker.
+
+    CR219 R24 — `agent_id=None` renders the FULL, ungated block and is the
+    default, for the same reason `_format_profile(profile, agent_id=None)`
+    defaults to full (room_prompts.py): non-Room callers and
+    `test_prompt_data_parity.py` ask "is this computed field rendered
+    anywhere at all", and the lane split must not change that answer. The
+    1-on-1 chat runner (`agent_runner.py`) is the one caller that knows a
+    real agent id and passes it, which is what actually closes the gap: the
+    Room already lane-gates the four analysts via `_AGENT_LANES`
+    (room_prompts.py:1790), but this block did not, so a 1-on-1 Fundamentals
+    Analyst received the same price/momentum lines its own persona forbids
+    it to cite.
+
+    Reuses `_AGENT_LANES` / `_lane_for` from `room_prompts.py` rather than
+    forking a second lane table (the WP04 instruction) — imported inside the
+    function body because `room_prompts.py` imports THIS module at its own
+    top level, so a top-level import back here would be circular. The same
+    deferred-import shape already exists at `prompt_version.py:162` for the
+    identical reason.
     """
     if not settings.use_real_market_data:
         return None
     data = fetch_live_fundamentals(ticker)
     if not data:
         return None
+    from app.services.room_prompts import _lane_for  # noqa: PLC0415 — breaks an import cycle, see docstring
+
+    lane = _lane_for(agent_id)
+
+    def _in_lane(domain: str) -> bool:
+        return domain in lane
+
     sym = ticker.upper()
     today = datetime.now(timezone.utc).date()
     # DEF124/D2/D3: same run-date anchor as the Room's `_format_profile` —
@@ -1459,90 +1486,105 @@ def build_live_data_block(ticker: str) -> str | None:
     lines = [
         f"─── LIVE MARKET DATA — {sym} — as of {today.isoformat()} (UTC) ───"
     ]
+    # Identity and the reference quote are core, unconditional — same
+    # reasoning as the Room's `_reference_price_line`: every agent needs a
+    # price to reason about the portfolio block, and it is not what the
+    # lane firewall withholds.
     lines.append(identity_line(data.get("long_name"), sym, data.get("exchange_name")))
     if "base_price" in data:
         lines.append(f"Price: ${data['base_price']}")
-    if "pe" in data or "forward_pe" in data:
-        lines.append(pe_line(data.get("pe"), data.get("forward_pe")))
-    if "rev_growth" in data:
-        lines.append(f"TTM revenue growth: {data['rev_growth']}%")
-    # Net margin is no longer stated here — it is the third term of the
-    # `Margin structure` line below (CR166 Tier B). Two statements of one figure
-    # is the defect `_reference_price_line` had to reconcile for price.
-    if "net_cash" in data:
-        phrase = net_position_phrase(data["net_cash"])  # "net cash $X M" / "net debt $Y M"
-        lines.append(phrase[:1].upper() + phrase[1:])
-    # CR145 Tier A — same three fields the Room renders, on the same line shape,
-    # so the two surfaces cannot state a different size for the same company.
-    size_parts = []
-    if "market_cap" in data:
-        size_parts.append(f"market cap ${data['market_cap']:,}M")
-    if "free_cash_flow" in data:
-        size_parts.append(f"FCF ${data['free_cash_flow']:,}M (TTM)")
-    if "total_debt" in data:
-        size_parts.append(f"gross debt ${data['total_debt']:,}M")
-    if "total_cash" in data:
-        size_parts.append(f"gross cash ${data['total_cash']:,}M")
-    if size_parts:
-        lines.append("Company size: " + ", ".join(size_parts))
-    # CR166 Tier B — same builders, same order, same wording as the Room sheet.
-    for builder in (
-        margin_structure_line(
-            data.get("gross_margin"), data.get("operating_margin"),
-            data.get("profit_margin"), live=False,
-        ),
-        margin_trend_line(
-            data.get("gross_margin_trend_bps"),
-            data.get("operating_margin_trend_bps"),
-            data.get("net_margin_trend_bps"),
-            data.get("margin_trend_basis"), live=False,
-        ),
-        buyback_line(
-            data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
-        ),
-        capital_return_line(
-            data.get("capital_return_ttm"), data.get("buyback_ttm"),
-            data.get("dividends_paid_ttm"), data.get("capital_return_pct_fcf"),
-            live=False,
-        ),
+    if _in_lane("fundamentals"):
+        if "pe" in data or "forward_pe" in data:
+            lines.append(pe_line(data.get("pe"), data.get("forward_pe")))
+        if "rev_growth" in data:
+            lines.append(f"TTM revenue growth: {data['rev_growth']}%")
+        # Net margin is no longer stated here — it is the third term of the
+        # `Margin structure` line below (CR166 Tier B). Two statements of one figure
+        # is the defect `_reference_price_line` had to reconcile for price.
+        if "net_cash" in data:
+            phrase = net_position_phrase(data["net_cash"])  # "net cash $X M" / "net debt $Y M"
+            lines.append(phrase[:1].upper() + phrase[1:])
+        # CR145 Tier A — same three fields the Room renders, on the same line shape,
+        # so the two surfaces cannot state a different size for the same company.
+        size_parts = []
+        if "market_cap" in data:
+            size_parts.append(f"market cap ${data['market_cap']:,}M")
+        if "free_cash_flow" in data:
+            size_parts.append(f"FCF ${data['free_cash_flow']:,}M (TTM)")
+        if "total_debt" in data:
+            size_parts.append(f"gross debt ${data['total_debt']:,}M")
+        if "total_cash" in data:
+            size_parts.append(f"gross cash ${data['total_cash']:,}M")
+        if size_parts:
+            lines.append("Company size: " + ", ".join(size_parts))
+        # CR166 Tier B — same builders, same order, same wording as the Room sheet.
+        for builder in (
+            margin_structure_line(
+                data.get("gross_margin"), data.get("operating_margin"),
+                data.get("profit_margin"), live=False,
+            ),
+            margin_trend_line(
+                data.get("gross_margin_trend_bps"),
+                data.get("operating_margin_trend_bps"),
+                data.get("net_margin_trend_bps"),
+                data.get("margin_trend_basis"), live=False,
+            ),
+            buyback_line(
+                data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
+            ),
+            capital_return_line(
+                data.get("capital_return_ttm"), data.get("buyback_ttm"),
+                data.get("dividends_paid_ttm"), data.get("capital_return_pct_fcf"),
+                live=False,
+            ),
+            earnings_power_line(
+                data.get("trailing_eps"), data.get("revenue_ttm"),
+                data.get("revenue_per_share"), live=False,
+            ),
+            returns_line(data.get("return_on_equity"), data.get("return_on_assets"), live=False),
+            balance_sheet_line(
+                data.get("current_ratio"), data.get("quick_ratio"),
+                data.get("debt_to_equity"), live=False,
+            ),
+            ownership_line(
+                data.get("held_pct_institutions"), data.get("held_pct_insiders"),
+                data.get("shares_outstanding"), data.get("float_shares"), live=False,
+            ),
+        ):
+            if builder:
+                lines.append(builder)
+    if _in_lane("technicals"):
         # CR179 Leg 3 — same builders, same order, same wording as the Room
-        # sheet. The Room lane-gates these to the technicals desk; the 1-on-1
-        # surface has no lane firewall (one analyst, no division of labour to
-        # protect), so the parity rule applies unmodified: the same analyst must
-        # not see a poorer sheet here than in the Room.
-        day_move_line(data.get("day_change_pct"), data.get("market_state"), live=False),
-        primary_trend_line(
-            data.get("sma_200"), data.get("price_vs_sma_200_pct"), live=False,
-        ),
-        relative_strength_line(
-            data.get("change_52w_pct"), data.get("change_52w_sp500_pct"),
-            data.get("relative_strength_52w_pct"), live=False,
-        ),
-        liquidity_line(
-            data.get("volume_today"), data.get("volume_avg_3m"), live=False,
-        ),
-        risk_profile_line(data.get("beta"), live=False),
-        short_interest_line(
-            data.get("short_pct_float"), data.get("short_days_to_cover"),
-            data.get("short_interest_date"), live=False,
-        ),
-        earnings_power_line(
-            data.get("trailing_eps"), data.get("revenue_ttm"),
-            data.get("revenue_per_share"), live=False,
-        ),
-        returns_line(data.get("return_on_equity"), data.get("return_on_assets"), live=False),
-        balance_sheet_line(
-            data.get("current_ratio"), data.get("quick_ratio"),
-            data.get("debt_to_equity"), live=False,
-        ),
-        ownership_line(
-            data.get("held_pct_institutions"), data.get("held_pct_insiders"),
-            data.get("shares_outstanding"), data.get("float_shares"), live=False,
-        ),
-    ):
-        if builder:
-            lines.append(builder)
-    if "low" in data and "high" in data:
+        # sheet. CR219 R24: the Room lane-gates these to the technicals desk
+        # (room_prompts.py `_in_lane("technicals")`, same domain as RSI/trend/
+        # range below); this block now applies the identical gate, closing
+        # the gap where a 1-on-1 Fundamentals Analyst received day-move,
+        # 200-day trend, relative strength, volume, beta and short interest —
+        # all subject matter its own persona denies having.
+        for builder in (
+            day_move_line(data.get("day_change_pct"), data.get("market_state"), live=False),
+            primary_trend_line(
+                data.get("sma_200"), data.get("price_vs_sma_200_pct"), live=False,
+            ),
+            relative_strength_line(
+                data.get("change_52w_pct"), data.get("change_52w_sp500_pct"),
+                data.get("relative_strength_52w_pct"), live=False,
+            ),
+            liquidity_line(
+                data.get("volume_today"), data.get("volume_avg_3m"), live=False,
+            ),
+            risk_profile_line(data.get("beta"), live=False),
+            short_interest_line(
+                data.get("short_pct_float"), data.get("short_days_to_cover"),
+                data.get("short_interest_date"), live=False,
+            ),
+        ):
+            if builder:
+                lines.append(builder)
+    # 52-week range is dual-lane, same reasoning as the Room's `week52` line
+    # (room_prompts.py): a price RANGE is fundamentals-or-technicals subject
+    # matter depending on which desk you ask, so either lane keeps it.
+    if ("low" in data and "high" in data) and (_in_lane("fundamentals") or _in_lane("technicals")):
         if data.get("week52_range_live"):
             lines.append(f"52-week range: ${data['low']}–${data['high']}")
         else:
@@ -1550,50 +1592,58 @@ def build_live_data_block(ticker: str) -> str | None:
                 f"Recent range (±5% placeholder — real 52-week range unavailable): "
                 f"${data['low']}–${data['high']}"
             )
-    multiples = []
-    if "price_to_sales" in data:
-        multiples.append(f"P/S {data['price_to_sales']}x")
-    if "ev_to_ebitda" in data:
-        multiples.append(f"EV/EBITDA {data['ev_to_ebitda']}x")
-    peg = peg_part(data.get("peg_ratio"), data.get("peg_basis"))
-    if peg:
-        multiples.append(peg)
-    if "fcf_yield" in data:
-        multiples.append(f"FCF yield {data['fcf_yield']}%")
-    if multiples:
-        lines.append("Valuation: " + ", ".join(multiples))
+    if _in_lane("fundamentals"):
+        multiples = []
+        if "price_to_sales" in data:
+            multiples.append(f"P/S {data['price_to_sales']}x")
+        if "ev_to_ebitda" in data:
+            multiples.append(f"EV/EBITDA {data['ev_to_ebitda']}x")
+        peg = peg_part(data.get("peg_ratio"), data.get("peg_basis"))
+        if peg:
+            multiples.append(peg)
+        if "fcf_yield" in data:
+            multiples.append(f"FCF yield {data['fcf_yield']}%")
+        if multiples:
+            lines.append("Valuation: " + ", ".join(multiples))
     # Fetched BEFORE the dividend line rather than after it (CR166 Tier B): the
     # ex-date and the indicated rate ride this same object (CR030), so the
-    # dividend line cannot be composed until it has been called.
+    # dividend line cannot be composed until it has been called. Fetched
+    # unconditionally — `earnings` also backs the dual-lane next-earnings
+    # line below, which fundamentals OR news may render.
     earnings = fetch_next_earnings(ticker)
-    dividend = dividend_line(
-        data.get("dividend_yield"),
-        earnings.dividend_rate if earnings else None,
-        data.get("payout_ratio"),
-        earnings.ex_dividend_date if earnings else None,
-        today=today,
-        live=False,
-    )
-    if dividend:
-        lines.append(dividend)
-    if "sector" in data or "industry" in data:
-        lines.append(f"Sector/industry: {data.get('sector', '—')} / {data.get('industry', '—')}")
-    consensus = analyst_consensus_line(
-        data.get("analyst_rating"),
-        data.get("analyst_target_price"),
-        data.get("analyst_opinion_count"),
-        data.get("analyst_target_high"),
-        data.get("analyst_target_low"),
-        data.get("analyst_target_median"),
-        data.get("analyst_rating_score"),
-        live=False,
-    )
-    if consensus:
-        lines.append(consensus)
+    if _in_lane("fundamentals"):
+        dividend = dividend_line(
+            data.get("dividend_yield"),
+            earnings.dividend_rate if earnings else None,
+            data.get("payout_ratio"),
+            earnings.ex_dividend_date if earnings else None,
+            today=today,
+            live=False,
+        )
+        if dividend:
+            lines.append(dividend)
+        if "sector" in data or "industry" in data:
+            lines.append(
+                f"Sector/industry: {data.get('sector', '—')} / {data.get('industry', '—')}"
+            )
+        consensus = analyst_consensus_line(
+            data.get("analyst_rating"),
+            data.get("analyst_target_price"),
+            data.get("analyst_opinion_count"),
+            data.get("analyst_target_high"),
+            data.get("analyst_target_low"),
+            data.get("analyst_target_median"),
+            data.get("analyst_rating_score"),
+            live=False,
+        )
+        if consensus:
+            lines.append(consensus)
     # Real next-earnings window (DEF098) — date + quarter + consensus EPS, so the
     # 1-on-1 fundamentals block reaches parity with the Room's `_format_profile`,
     # which has surfaced this since DEF053. Same wording as the Room line.
-    if earnings and earnings.earnings_date:
+    # Dual-lane like the Room's `next_earnings` (room_prompts.py): a scheduled
+    # earnings date is a forward catalyst as much as a fundamentals fact.
+    if earnings and earnings.earnings_date and (_in_lane("fundamentals") or _in_lane("news")):
         # DEF124/D1: interval alongside the date, same pattern (and same
         # shared helper) as the Room line — never asked of the model.
         interval = relative_day_phrase(date.fromisoformat(earnings.earnings_date), today)

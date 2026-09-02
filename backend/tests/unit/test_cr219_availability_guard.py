@@ -153,6 +153,44 @@ def sheets() -> dict[str, str]:
     return out
 
 
+@pytest.fixture(scope="module")
+def one_on_one_blocks() -> dict[str, str]:
+    """CR219 R24 — every agent's 1-on-1 live-data block, rendered by
+    `fundamentals.build_live_data_block`, plus `"__DEFAULT__"` for the
+    no-agent-id call every pre-R24 caller and `test_prompt_data_parity.py`
+    still make.
+
+    Same stubs as `sheets` (same sentinel, same fetch seams): the 1-on-1
+    block calls `fetch_live_fundamentals` and, via `fetch_next_earnings`,
+    `get_market_data_provider().earnings(...)` — both already patched below
+    for the Room sheets, so this reuses the identical patched context rather
+    than inventing a second one. R24's whole point is that the 1-on-1
+    surface must not be a SEPARATE, unlaned truth from the Room's — sharing
+    the fixture's stubs is that guarantee applied to the test fixture too.
+    """
+    prior_real = settings.use_real_market_data
+    settings.use_real_market_data = True
+
+    stubs = [
+        (fundamentals_svc, "fetch_live_fundamentals", lambda t: dict(P._FUND_SENTINEL)),
+        (fundamentals_svc, "get_market_data_provider", lambda: P._FakeEarningsProvider()),
+    ]
+    patches = [mock.patch.object(mod, name, fn) for mod, name, fn in stubs]
+    for p in patches:
+        p.start()
+    try:
+        from app.services.fundamentals import build_live_data_block
+
+        out: dict[str, str] = {"__DEFAULT__": build_live_data_block(P._TICKER)}
+        for agent in AgentId:
+            out[agent.value] = build_live_data_block(P._TICKER, agent)
+    finally:
+        for p in patches:
+            p.stop()
+        settings.use_real_market_data = prior_real
+    return out
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # R13 — exhaustive enumeration: every persona file must be mapped
 # ──────────────────────────────────────────────────────────────────────────────
@@ -480,6 +518,59 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
             "that the sheet lacks a field."
         ),
     },
+    # R23 — the same CR040 per-field deference line, now in the 8 downstream
+    # briefs' `## Inputs` (WP04). Each points at the fact sheet the agent
+    # receives and defers to its own not-available marking rather than
+    # asserting a blanket absence — the identical shape as the four analysts'
+    # entries above, just added to a different section.
+    {
+        "persona": "bull_researcher",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "bear_researcher",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "research_manager",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "trader",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "aggressive_debator",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "conservative_debator",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "neutral_debator",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
+    {
+        "persona": "portfolio_manager",
+        "anchor": "Where the sheet marks a field not available, that statement wins — do not",
+        "category": "runtime-deference",
+        "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
+    },
 ]
 
 # There is deliberately NO third list here. While WP01's persona fixes were
@@ -623,6 +714,54 @@ def test_r9_r12_known_absent_claims_have_no_collision_with_the_real_sheet(entry,
         "shipped and the denial is now a lie — rewrite the persona and update this "
         "entry. Do NOT weaken the markers to make this pass."
     )
+
+
+@pytest.mark.parametrize("entry", _KNOWN_ABSENT, ids=lambda e: f"{e['persona']}:{e['row']}")
+def test_r24_known_absent_claims_have_no_collision_with_the_one_on_one_block(
+    entry, one_on_one_blocks
+):
+    """CR219 R24 — the SAME truth check R9/R12 run against the Room sheet,
+    run again against the 1-on-1 `build_live_data_block` surface. A denial
+    proven true in the Room is a claim about what the AGENT receives, not
+    about which renderer happened to produce it — so it must stay true on
+    every surface that agent can be reached through. Before R24 lane-gated
+    this block, a false-in-the-Room-sense collision here would have gone
+    undetected entirely; this is what closes that blind spot for good: the
+    day a field ships, BOTH this test and R9/R12's Room version go red.
+
+    `build_live_data_block` has no header disclosure block naming absent
+    domains (unlike `_format_profile`, which legitimately names what it
+    withholds) — so unlike `sheet_body`, there is no split to make: a
+    collision anywhere in this block is a collision, full stop."""
+    block = one_on_one_blocks[_PERSONA_LANES[entry["persona"]].value]
+    hits = [m for m in entry["collision_markers"] if m in block]
+    assert not hits, (
+        f"CR219 R24 ({entry['row']}): {entry['persona']}.md still claims "
+        f"{entry['claim']!r}, but the 1-on-1 live-data block this agent receives "
+        f"now contains {hits}. The Room and the 1-on-1 surface must not disagree "
+        "on what this agent was given — rewrite the persona and update the "
+        "known-absent entry. Do NOT weaken the markers to make this pass."
+    )
+
+
+def test_r24_the_one_on_one_block_is_lane_gated_the_same_way_the_room_is(one_on_one_blocks):
+    """Direct proof the fixture is exercising the real gate, not merely
+    inheriting a pass from empty markers above. Fundamentals-domain and
+    technicals-domain fingerprints from the SAME sentinel must each appear
+    only in their own lane's 1-on-1 block, and the unlaned default must
+    carry both — the exact shape `test_fundamentals.py`'s R24 tests pin in
+    more detail; this is the guard-file's own corroboration that the two
+    lane checks are not accidentally agreeing with each other."""
+    fund_block = one_on_one_blocks[AgentId.FUNDAMENTALS_ANALYST.value]
+    tech_block = one_on_one_blocks[AgentId.MARKET_ANALYST.value]
+    default_block = one_on_one_blocks["__DEFAULT__"]
+
+    # P/E (48.77) is fundamentals-domain; the day-move figure is technicals.
+    assert "48.77" in fund_block
+    assert "48.77" not in tech_block
+    assert "-1.77" in tech_block
+    assert "-1.77" not in fund_block
+    assert "48.77" in default_block and "-1.77" in default_block
 
 
 @pytest.mark.parametrize("entry", _KNOWN_ABSENT, ids=lambda e: f"{e['persona']}:{e['row']}")

@@ -165,6 +165,12 @@ class AgentRunner:
             # has none) and inject a live-data block per ticker so the LLM
             # quotes today's P/E rather than training-memory facts. Bug
             # 85469d8e — must cover all 12 agents.
+            #
+            # CR219 R24: `agent_id` is passed through so the block is
+            # lane-gated the same way the Room already gates `_format_profile`
+            # — the four analysts each get their own domain, everyone else
+            # (whose `_AGENT_LANES` entry is absent) still gets the full
+            # block, fail-open like the Room.
             tickers = extract_tickers(user_message)
             if not tickers:
                 for h in reversed(history[-3:]):
@@ -173,7 +179,7 @@ class AgentRunner:
                         if tickers:
                             break
             for t in tickers:
-                block = await asyncio.to_thread(build_live_data_block, t)
+                block = await asyncio.to_thread(build_live_data_block, t, agent_id)
                 if block:
                     system_prompt = system_prompt + "\n\n" + block
 

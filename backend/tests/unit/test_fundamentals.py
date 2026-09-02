@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.config import settings
+from app.schemas import AgentId
 from app.services import fundamentals
 from app.services.fundamentals import (
     build_live_data_block,
@@ -135,6 +136,155 @@ def test_build_block_omits_missing_keys(monkeypatch):
     assert "None" not in block
     assert "Net cash" not in block
     assert "revenue growth" not in block
+
+
+# ── CR219 R24 — lane-gating (reuses room_prompts._AGENT_LANES) ──────────
+#
+# One payload carrying at least one field from every domain: fundamentals
+# (pe, margin), technicals (CR179 Leg 3: day_change_pct/sma_200/beta/...),
+# and the dual-lane fields (52-week range, next earnings). If a domain's
+# gate is wrong, either an in-lane line goes missing or an out-of-lane line
+# leaks — this payload is rich enough for both directions to be visible.
+_LANED_PAYLOAD: dict = {
+    "base_price": 271.83,
+    "long_name": "LANESENT CORP",
+    "exchange_name": "NASDAQ",
+    # fundamentals-domain
+    "pe": "48.77",
+    "rev_growth": 23.61,
+    "net_cash": 944,
+    "gross_margin": 63.71,
+    "operating_margin": 52.83,
+    "profit_margin": 41.29,
+    "price_to_sales": "7.31",
+    "dividend_yield": 1.63,
+    "sector": "ENERGYSENT",
+    "industry": "DRILLSENT",
+    "analyst_target_price": 488.12,
+    "analyst_rating": "STRONGSENT",
+    # technicals-domain (CR179 Leg 3 — fetched via the fundamentals endpoint,
+    # classified as technicals by SUBJECT MATTER, same as the Room)
+    "day_change_pct": -1.77,
+    "market_state": "REGULAR",
+    "sma_200": 188.44,
+    "price_vs_sma_200_pct": 12.6,
+    "volume_today": 44556677,
+    "volume_avg_3m": 88776655,
+    "change_52w_pct": 27.4,
+    "change_52w_sp500_pct": 11.9,
+    "relative_strength_52w_pct": 15.5,
+    "beta": 1.93,
+    "short_pct_float": 6.28,
+    "short_days_to_cover": 4.7,
+    "short_interest_date": "2026-07-15",
+    # dual-lane
+    "low": 155.4,
+    "high": 402.9,
+    "week52_range_live": True,
+}
+
+
+def test_build_block_fundamentals_analyst_gets_no_technicals_section(monkeypatch):
+    """CR219 R24 — the same lane-gating the Room applies to `_format_profile`
+    now applies here: a 1-on-1 Fundamentals Analyst does not receive the
+    day-move/200-day-trend/relative-strength/volume/beta/short-interest
+    block, matching the persona's own denial that this data is another
+    desk's."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    block = build_live_data_block("AAPL", AgentId.FUNDAMENTALS_ANALYST)
+    assert block is not None
+    # In lane: fundamentals content survives.
+    assert "P/E: 48.77" in block
+    assert "gross 63.71%" in block
+    assert "Sector/industry: ENERGYSENT / DRILLSENT" in block
+    # Out of lane: no technicals-domain content leaks.
+    for marker in (
+        "-1.77% today", "200-day average", "S&P 500", "vs the market",
+        "shares today", "3-month average", "days to cover",
+    ):
+        assert marker not in block, f"{marker!r} leaked into the fundamentals_analyst block"
+
+
+def test_build_block_market_analyst_still_gets_technicals_section(monkeypatch):
+    """The other half of the same check — a lane-gated Market Analyst must
+    not lose the CR179 Leg 3 data it is entitled to; only the OTHER desk's
+    data is withheld."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    block = build_live_data_block("AAPL", AgentId.MARKET_ANALYST)
+    assert block is not None
+    # In lane: technicals content survives.
+    assert "-1.77% today" in block
+    assert "200-day average" in block
+    assert "vs the market" in block  # beta
+    # Out of lane: no fundamentals-only content leaks (dividend/sector/
+    # consensus/valuation are fundamentals-exclusive; margin/growth too).
+    for marker in (
+        "P/E: 48.77", "gross 63.71%", "Sector/industry:", "TTM revenue growth",
+        "Valuation:", "STRONGSENT",
+    ):
+        assert marker not in block, f"{marker!r} leaked into the market_analyst block"
+
+
+def test_build_block_dual_lane_range_survives_either_lane(monkeypatch):
+    """52-week range is dual-lane (fundamentals OR technicals), same as the
+    Room's `week52` line — both firewalled analysts should still see it."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    fund_block = build_live_data_block("AAPL", AgentId.FUNDAMENTALS_ANALYST)
+    tech_block = build_live_data_block("AAPL", AgentId.MARKET_ANALYST)
+    assert "52-week range: $155.4–$402.9" in fund_block
+    assert "52-week range: $155.4–$402.9" in tech_block
+
+
+def test_build_block_unlaned_agent_and_default_get_the_full_block(monkeypatch):
+    """`agent_id=None` (the default, every pre-R24 call site) and an agent
+    absent from `_AGENT_LANES` (e.g. the Trader — only the four analysts are
+    gated, room_prompts.py `_AGENT_LANES`) both fail OPEN to the full block,
+    matching `_format_profile`'s own fail-open contract. This is the parity
+    guarantee `test_prompt_data_parity.py` depends on: it calls with no
+    agent_id and must keep seeing every domain."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    default_block = build_live_data_block("AAPL")
+    trader_block = build_live_data_block("AAPL", AgentId.TRADER)
+    for block in (default_block, trader_block):
+        assert block is not None
+        assert "P/E: 48.77" in block
+        assert "-1.77% today" in block
+        assert "Sector/industry: ENERGYSENT / DRILLSENT" in block
+
+
+def test_build_block_identity_and_price_survive_lane_gating(monkeypatch):
+    """Identity and the reference quote are core, not a lane's data — every
+    agent needs a price to reason about the portfolio block, same as the
+    Room's unconditional `_reference_price_line`."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals", lambda t: dict(_LANED_PAYLOAD)
+    )
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    block = build_live_data_block("AAPL", AgentId.FUNDAMENTALS_ANALYST)
+    assert "LANESENT CORP" in block
+    assert "Price: $271.83" in block
 
 
 # ── fetch_live_fundamentals (yfinance) ──────────────────────────────────
