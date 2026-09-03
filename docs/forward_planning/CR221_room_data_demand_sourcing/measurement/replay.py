@@ -106,8 +106,17 @@ ARMS: dict[str, dict[str, bool]] = {
         "room_cashflow_bridge_enabled": True,
         "fundamentals_fcf_from_statements_enabled": True,
     },
+    "history": {
+        "room_fcf_history_enabled": True,
+        "room_fcf_conversion_enabled": True,
+        "room_roe_history_enabled": True,
+    },
 }
-ARM_ITEMS = {"debt": ("A1", "A3"), "cash": ("C2", "C3", "C4", "C5")}
+ARM_ITEMS = {
+    "debt": ("A1", "A3"),
+    "cash": ("C3", "C4"),
+    "history": ("C2", "C5", "B2"),
+}
 FLAGS = tuple(sorted({flag for spec in ARMS.values() for flag in spec}))
 
 
