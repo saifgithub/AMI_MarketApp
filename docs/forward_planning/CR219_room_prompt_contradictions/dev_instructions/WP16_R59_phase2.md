@@ -51,6 +51,15 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
   `("risk_rung", "key_number"/"decisive_number")` upgrade to `CODE_CHECKED`
   citing the risk_officer sites — A3's own commit, dispatched.
 
+- **A2 profile thread ACCEPTED 2026-09-03** — `466c7500`: `profile=ctx.profile`
+  threaded at `render_officer_turns`' single production call site
+  (`room_runner.py` `_run_risk_officer`), wiring test spies the REAL call and
+  asserts the built sheet arrives; sheet-only quote proven unstruck end-to-end;
+  both tests sabotage-verified load-bearing. 67/67 on dispatcher rerun.
+  Dispatcher verified the path is LIVE: `render_officer_turns` has exactly one
+  production call site and `ROOM_RISK_OFFICER_ENABLED=true` on Alpha.
+  **CR219-F2-PROFILE's clear precondition is met** — awaiting Saiful's clear.
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit
