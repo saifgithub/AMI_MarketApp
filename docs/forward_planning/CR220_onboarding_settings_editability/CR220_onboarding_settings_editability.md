@@ -107,7 +107,7 @@ those files.
 | Journal diff labels for `primary_goal`, `horizon`, `path`, `learning_style`, `display_name`, `timezone`, `locale`, `risk_quotes` and both ticker lists, with `_humanise_enum` / `_humanise_list` helpers. `None` and `[]` render differently for an allowlist, because they mean opposite things | `api/mandate.py` |
 | `_validate_ticker_lists` on the PATCH path: unresolvable symbol → 422, empty allowlist → 422 (send `null` to clear), casing normalised to the resolver's canonical form. Reuses `lookup_ticker`; no new route. Placed in the API layer, not the store, because the store is also driven by claim-time hydration and the restart upsert | `api/mandate.py` |
 | `Path.BOTH` wired in all three branches. The News/Macro branch carries CR147 Tier A.5's "no macro feed" warning verbatim in substance — dropping it would reopen the fabrication surface CR147 closed | `agents/overlay_generator.py` |
-| Backfill script, dry-run by default, one journaled mandate version per repaired user, `--only-untouched` escape hatch | `scripts/cr220_backfill_compliance_defaults.py` |
+| Backfill script, dry-run by default, one journaled mandate version per repaired user, `--skip-edited` escape hatch | `scripts/cr220_backfill_compliance_defaults.py` |
 
 ### Mobile
 

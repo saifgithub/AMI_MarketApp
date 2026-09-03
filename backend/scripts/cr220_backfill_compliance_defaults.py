@@ -20,8 +20,8 @@ outcome, but it must never be silent (CR040), so each repaired user gets a
 change rides a real mandate version bump so it appears in history and in
 `GET /v1/mandate/{id}/versions` like any other edit.
 
-**On `--only-untouched`, and what it cannot do (CR220 MAJOR-1 of round 1).**
-The flag originally claimed to protect "a user who explicitly asked to loosen a
+**On `--skip-edited`, and what it cannot do (CR220 MAJOR-2 of round 1).**
+The flag was called `--only-untouched` and originally claimed to protect "a user who explicitly asked to loosen a
 flag", using `version == 1` as the proxy. That is precisely backwards: an
 interview opt-out ("I want to short") is written BY onboarding, so it lands at
 **v1** and the predicate included exactly the cohort the sentence promised to
@@ -49,6 +49,16 @@ Usage (Mac has no DB; runs inside `ami_api_alpha`):
 
     # apply
     ssh melehost "docker exec ami_api_alpha python /tmp/cr220_backfill_compliance_defaults.py --apply"
+
+**If the run dies partway (recovery — CR040, audit round 2 MINOR-1).** The repair and its journal
+entry are separate transactions with no rollback between them, so a crash can leave users repaired
+but undisclosed, and the flag-based idempotency then skips them on a re-run. That gap is
+RECONSTRUCTIBLE, and this is the procedure rather than something to rediscover: a repaired user
+carries a real mandate version bump whose v(n-1)→v(n) delta is visible through `list_versions` /
+`get_version`, and a disclosed user carries a journal entry tagged `cr220_backfill` with
+`payload={"backfill": "cr220"}`. Take the set difference — repaired-but-not-tagged — and write the
+missing disclosure for exactly those users. Do NOT re-run `--apply` to fix it: the flags are already
+correct, so it finds nothing and the disclosure stays missing.
 """
 
 from __future__ import annotations
