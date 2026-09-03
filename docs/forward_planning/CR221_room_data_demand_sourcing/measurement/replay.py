@@ -90,9 +90,50 @@ Be blunt. This section is read by the engineers who wrote the prompt, not by the
 # the negative control: no free source was found for it, nothing was built, so
 # its ask must NOT fall. A treatment arm where H2 also drops is measuring the
 # model's mood, not the data.
-SHIPPED_ITEMS = ("A1", "A3")
 NEGATIVE_CONTROL = "H2"
-FLAGS = ("room_debt_maturity_enabled", "room_cost_of_debt_enabled")
+
+# One arm per shipped GROUP, never one arm for everything: demand extinction is
+# a per-item claim, and two groups behind one switch cannot be attributed
+# separately. Every flag not named by an arm is forced False for that arm, so
+# `off` is a real baseline rather than "whatever the process last set".
+ARMS: dict[str, dict[str, bool]] = {
+    "off": {},
+    "debt": {
+        "room_debt_maturity_enabled": True,
+        "room_cost_of_debt_enabled": True,
+    },
+    "cash": {
+        "room_cashflow_bridge_enabled": True,
+        "fundamentals_fcf_from_statements_enabled": True,
+    },
+}
+ARM_ITEMS = {"debt": ("A1", "A3"), "cash": ("C2", "C3", "C4", "C5")}
+FLAGS = tuple(sorted({flag for spec in ARMS.values() for flag in spec}))
+
+
+def _apply_def400(profile: dict) -> dict:
+    """DEF400's effect, applied to the ONE cached profile the arms share.
+
+    `fundamentals_fcf_from_statements_enabled` acts inside
+    `fetch_live_fundamentals`, so on a replay it would need a second profile
+    build — and R46's one-pickle rule exists because market data moves between
+    fetches, which would confound every arm in the comparison. This does the
+    same substitution on the pickle instead: deterministic arithmetic over
+    `free_cash_flow_ttm`, `market_cap` and `capital_return_ttm`, all three of
+    which are already IN the pickle, so no second fetch and no second snapshot.
+    """
+    derived = profile.get("free_cash_flow_ttm")
+    if derived is None:
+        return profile
+    patched = dict(profile)
+    patched["free_cash_flow"] = derived
+    market_cap = patched.get("market_cap")
+    if market_cap:
+        patched["fcf_yield"] = round(derived / market_cap * 100, 1)
+    returned = patched.get("capital_return_ttm")
+    if returned is not None and derived > 0:
+        patched["capital_return_pct_fcf"] = round(returned / derived * 100)
+    return patched
 
 
 class AddendumClient(VLLMClient):
@@ -102,8 +143,51 @@ class AddendumClient(VLLMClient):
         return super().chat(system, user + ADDENDUM, **kw)
 
 
+_BULLET = re.compile(r"^[ \t]*(?:[-*\u2022]|\d+\.)[ \t]+", re.M)
+_DATUM_LABEL = re.compile(r"\*{0,2}Datum:?\*{0,2}[ \t]*(.+)", re.I)
+
+
+def _clean(text: str) -> str:
+    return re.sub(r"\*\*|\s+", " ", text).strip().strip(":").strip().rstrip(".")
+
+
+def _datum_of(bullet: str) -> str | None:
+    """The DATUM a bullet names, across the three shapes the models actually emit.
+
+    The addendum asks for `(a) the datum`. `gemini-3.1-pro-preview` — which
+    produced CR219's 127-line corpus and therefore the register's per-item
+    counts — complied literally, so `inventory.load_requests` reads `(a)` and
+    is right to. `qwen3.8-flash-next`, the production model this replay runs
+    against, complies three different ways WITHIN A SINGLE CONVENE (measured
+    2026-09-03, CAT x long):
+
+        - Real-time order flow imbalance near $771.39; (b) ...   <- (a) is the datum
+        - Segment revenue breakdown: (a) The specific percentage ...  <- headline is
+        *   **Datum:** Segment-level revenue and EBITDA ...           <- labelled
+
+    Reading `(a)` blindly across all three scores the RATIONALE as the ask for
+    two of them, which is how the first pilot recorded a request for the debt
+    maturity ladder as an interest-coverage ask. This is measurement plumbing,
+    not a scoring choice: `inventory.py` stays exactly as it is, because the
+    banked corpus it reads has exactly one shape.
+    """
+    text = bullet.strip()
+    if not text:
+        return None
+    labelled = _DATUM_LABEL.match(text)
+    if labelled:
+        return _clean(labelled.group(1).split("(b)")[0]) or None
+    head, marker, rest = text.partition("(a)")
+    if not marker:
+        return None
+    head = _clean(head)
+    if head:
+        return head
+    return _clean(rest.split("(b)")[0]) or None
+
+
 def requests_in(convene: dict) -> list[tuple[str, str]]:
-    """`(agent, request)` for every `(a)` line — `inventory.load_requests`' rule."""
+    """`(agent, datum)` for every bullet under `DATA I LACKED:`."""
     out: list[tuple[str, str]] = []
     for turn in convene.get("turns", []):
         block = re.search(
@@ -112,8 +196,16 @@ def requests_in(convene: dict) -> list[tuple[str, str]]:
         )
         if not block:
             continue
-        for line in re.findall(r"\(a\)\s*(.+)", block.group(1)):
-            out.append((turn["agent"], re.sub(r"\*\*|\s+", " ", line).strip().rstrip(".")))
+        bullets = _BULLET.split(block.group(1))[1:]
+        # A `**Datum:**` block nests `(a)`/`(b)`/`(c)` as sub-bullets of the
+        # datum itself. Once any bullet in the turn is labelled, the labelled
+        # ones are the complete list and the sub-bullets are their rationale —
+        # counting those too would triple this turn's demand.
+        labelled = [b for b in bullets if _DATUM_LABEL.match(b.strip())]
+        for bullet in labelled or bullets:
+            datum = _datum_of(bullet)
+            if datum:
+                out.append((turn["agent"], datum))
     return out
 
 
@@ -131,12 +223,21 @@ def score(convene: dict) -> dict[str, dict]:
     return per
 
 
-def arm(label: str, on: bool, *, ticker: str, mandate: str, client: VLLMClient) -> dict:
+def arm(label: str, *, ticker: str, mandate: str, client: VLLMClient) -> dict:
+    spec = ARMS[label]
     for flag in FLAGS:
-        setattr(settings, flag, on)
-    convene = run_convene(
-        ticker=ticker, mandate_label=mandate, client=client, profiles_dir=PROFILES,
-    )
+        setattr(settings, flag, spec.get(flag, False))
+
+    import run_convene as harness
+    plain = harness.load_or_build
+    if spec.get("fundamentals_fcf_from_statements_enabled"):
+        harness.load_or_build = lambda *a, **k: _apply_def400(plain(*a, **k))
+    try:
+        convene = run_convene(
+            ticker=ticker, mandate_label=mandate, client=client, profiles_dir=PROFILES,
+        )
+    finally:
+        harness.load_or_build = plain
     convene["cr221_arm"] = label
     convene["cr221_flags"] = {f: getattr(settings, f) for f in FLAGS}
     return convene
@@ -148,6 +249,8 @@ def main() -> int:
     ap.add_argument("--mandates", nargs="+", default=["long"])
     ap.add_argument("--base-url", default=DEFAULT_BASE_URL)
     ap.add_argument("--out-root", default=RESULTS)
+    ap.add_argument("--arms", nargs="+", default=list(ARMS),
+                    choices=list(ARMS))
     args = ap.parse_args()
 
     os.makedirs(args.out_root, exist_ok=True)
@@ -155,38 +258,48 @@ def main() -> int:
     client = AddendumClient(args.base_url)
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
-    totals: dict[str, collections.Counter] = {"off": collections.Counter(),
-                                              "on": collections.Counter()}
-    agents_seen: dict[str, dict[str, set]] = {"off": {}, "on": {}}
+    labels = args.arms
+    totals = {label: collections.Counter() for label in labels}
+    agents_seen: dict[str, dict[str, set]] = {label: {} for label in labels}
+    asks = {label: 0 for label in labels}
 
     for mandate in args.mandates:
-        for label, on in (("off", False), ("on", True)):
-            convene = arm(label, on, ticker=args.ticker, mandate=mandate, client=client)
+        for label in labels:
+            convene = arm(label, ticker=args.ticker, mandate=mandate, client=client)
             scored = score(convene)
             convene["cr221_scored"] = scored
             path = os.path.join(
                 args.out_root, f"{stamp}_{args.ticker}_{mandate}_{label}.json")
             with open(path, "w") as fh:
                 json.dump(convene, fh, indent=2, default=str)
-            print(f"  [{mandate}/{label}] {len(requests_in(convene))} request lines "
-                  f"-> {len(scored)} items   {os.path.basename(path)}", flush=True)
+            named = len(requests_in(convene))
+            asks[label] += named
+            print(f"  [{mandate}/{label}] {named} data items named "
+                  f"-> {len(scored)} register items   {os.path.basename(path)}",
+                  flush=True)
             for item_id, row in scored.items():
                 totals[label][item_id] += row["lines"]
                 agents_seen[label].setdefault(item_id, set()).update(row["agents"])
 
-    print("\n" + "=" * 78)
-    print(f"DEMAND EXTINCTION — {args.ticker} × {len(args.mandates)} mandate(s)")
-    print("=" * 78)
-    print(f"{'item':5s} {'off':>10s} {'on':>10s}  label")
-    for item_id in sorted(set(totals['off']) | set(totals['on'])):
+    n = len(args.mandates)
+    width = 9
+    print("\n" + "=" * 96)
+    print(f"DEMAND EXTINCTION — {args.ticker} × {n} mandate(s), {n * len(labels)} convenes")
+    print("=" * 96)
+    head = "".join(f"{label:>{width}s}" for label in labels)
+    print(f"{'item':5s}{head}  label")
+    print(f"{'TOTAL':5s}" + "".join(f"{asks[l]:>{width}d}" for l in labels)
+          + "  every datum named, register-matched or not")
+    print("-" * 96)
+    seen = sorted(set().union(*(set(t) for t in totals.values())))
+    for item_id in seen:
         label = next((i.label for i in items.ITEMS if i.id == item_id), "?")
-        marker = ""
-        if item_id in SHIPPED_ITEMS:
-            marker = "  <-- SHIPPED, must fall"
-        elif item_id == NEGATIVE_CONTROL:
+        owner = next((a for a, ids in ARM_ITEMS.items() if item_id in ids), None)
+        marker = f"  <-- {owner} arm ships this, must fall" if owner else ""
+        if item_id == NEGATIVE_CONTROL:
             marker = "  <-- negative control, must NOT fall"
-        print(f"{item_id:5s} {totals['off'][item_id]:>10d} {totals['on'][item_id]:>10d}"
-              f"  {label[:44]}{marker}")
+        print(f"{item_id:5s}" + "".join(f"{totals[l][item_id]:>{width}d}" for l in labels)
+              + f"  {label[:40]}{marker}")
     return 0
 
 

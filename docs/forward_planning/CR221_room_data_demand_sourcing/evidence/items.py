@@ -137,7 +137,9 @@ ITEMS: tuple[Item, ...] = (
          "same filing-report route as A2 (§5)",
          r"(revenue|sales)[^.]{0,40}(segment|end.market|breakdown by segment)|"
          r"segment revenue|revenue segmentation|revenue breakdown by segment|"
-         r"revenue exposure breakdown"),
+         r"revenue exposure breakdown|"
+         r"segment[- ]?(level|wise)?[^.]{0,30}"
+         r"(revenue|sales|ebitda|operating profit|profit|contribution)"),
     Item("D2", "Segment & geography", "Revenue by geography", OPEN,
          "same route",
          r"geograph"),
@@ -238,7 +240,8 @@ ITEMS: tuple[Item, ...] = (
          r"bullish.{0,10}bearish|buzz score|mention volume|mention counts|reddit mention"),
     Item("J2", "Social", "Sentiment history / rolling baseline", CLOSED,
          "structurally absent: the cache keeps one row and overwrites it, by design",
-         r"rolling average of sentiment|historical baseline data"),
+         r"rolling average of sentiment|historical baseline data|"
+         r"historical sentiment|sentiment (history|trend)"),
 
     # --- K. User context --------------------------------------------------
     Item("K1", "User context", "Decision Journal history for this ticker", DELIVERED,
