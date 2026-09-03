@@ -2017,3 +2017,15 @@ just wasn't applied to every shared file.) Rule restated to cover both sides:
 on a file you co-edited, **never `git checkout`/`restore`** — remove your hunks
 by inverse Edit, exactly as you added them; and after any lane aborts, every
 concurrent lane re-checks `git diff HEAD` on its own uncommitted files.
+
+**5th instance (2026-09-03), two sharp edges in one incident.** (a) `git add
+<own files>` followed by a BARE `git commit -m` swept another lane's
+concurrently-staged file (`DEF399.row.md` rode WP14's `14221679`) — add-first
+does not protect, because a bare commit publishes the whole index including
+everyone else's staged files; the trailing `-- <pathspec>` is what scopes the
+commit, every time, no exceptions. (b) The attempted repair, `git reset --soft
+HEAD^`, ran after `main`'s tip had already moved and briefly orphaned another
+lane's landed commit — on a shared branch under concurrent commits, never
+`reset` the branch pointer to fix attribution; a mis-attributed but
+content-correct commit is the cheaper wound. Both were self-caught and
+disclosed; history verified healthy by the dispatcher afterwards.
