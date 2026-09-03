@@ -99,11 +99,25 @@ fixture.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Any
 
 from app.schemas.agents import AgentId
+# CR219 R59-F1/F3/F6 (lane B1) — the numeral-extraction/normalization rule
+# moved to `numeric_quotation.py`, which the new labelled sheet-figure
+# checker also needs, so the two modules share ONE implementation rather than
+# carrying two copies that could drift apart. Re-exported under the SAME
+# names this module has always used, so every existing import site —
+# `test_cr219_r59_f2_key_number_verification.py` included — is unaffected;
+# this is a house-move, not a behavior change (that test file is part of this
+# lane's own required rerun, unmodified, to prove exactly that).
+from app.services.numeric_quotation import (
+    _MAGNITUDE_MULTIPLIER,
+    _NUMERAL_RE,
+    _Numeral,
+    _extract_numerals,
+    _numeral_is_corroborated,
+)
 from app.trading_math.option_ladder import LadderOption
 
 RISK_OFFICER_PERSONA = (
@@ -266,81 +280,11 @@ def build_risk_officer_schema(rows: list[LadderOption]) -> dict[str, Any]:
 # See the module docstring for the normalization rule and the failure posture.
 # This section is self-contained: no caller outside this module needs to know
 # how a numeral is extracted or matched, only the yes/no `_quotation_check()`
-# returns.
+# returns. `_MAGNITUDE_MULTIPLIER`/`_NUMERAL_RE`/`_Numeral`/`_extract_numerals`/
+# `_numeral_is_corroborated` are imported at the top of this module now (moved
+# to `numeric_quotation.py` — see that import's comment for why).
 
 _UNVERIFIABLE_MARK = "[AMI: unverifiable]"
-
-# One magnitude letter, directly after the digits (optionally through a
-# trailing space) — "1.2B", "1.2 B". Case-insensitive: a model is as likely to
-# write "b" as "B". Order matters (longest common prefix first is irrelevant
-# here since each is one char), kept as a plain dict for a single lookup.
-_MAGNITUDE_MULTIPLIER = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
-
-# A numeral: optional leading currency sign, digit groups with optional comma
-# separators, an optional decimal part, an optional magnitude letter, an
-# optional trailing percent. Every group is optional except the digits
-# themselves, so this matches the bare "4.06" case too.
-#
-# The `int` group's alternation ORDER matters: the comma-grouped form
-# (`\d{1,3}(?:,\d{3})+`) requires at least one actual `,ddd` group, so a plain
-# digit run with no commas ("1234.50") always falls through to the second
-# alternative and matches ALL of "1234" rather than the first branch grabbing
-# only "123" and leaving "4.50" to be re-matched as a second, spurious
-# numeral — verified against exactly that case in the module's tests.
-_NUMERAL_RE = re.compile(
-    r"[$£€]?"
-    r"(?P<int>\d{1,3}(?:,\d{3})+|\d+)"
-    r"(?:\.(?P<frac>\d+))?"
-    r"\s?(?P<mag>[kKmMbBtT])?"
-    r"(?P<pct>%)?"
-)
-
-
-@dataclass(frozen=True)
-class _Numeral:
-    """One numeral found in free text, parsed to a comparable float.
-
-    `value` is the fully-resolved figure (magnitude suffix applied) — this is
-    what a corroborating value is compared to on the RAW scale (no suffix in
-    the claim, e.g. plain "4.06"). `multiplier` is the magnitude scale the
-    claim itself applied (1.0 when there was no suffix); `decimals` is how many
-    digits after the point the ORIGINAL text stated, i.e. the precision the
-    claim committed to IN ITS OWN UNIT — "1.2" in "$1.2B" is 1 decimal of
-    BILLIONS, not of raw dollars. Comparison therefore divides the
-    corroborating value by `multiplier` before rounding to `decimals`, never
-    the other way around — see `_numeral_is_corroborated`.
-    """
-
-    raw: str
-    value: float
-    multiplier: float
-    decimals: int
-
-
-def _extract_numerals(text: str) -> list[_Numeral]:
-    """Every numeral in `text`, parsed per the module's normalization rule.
-
-    Returns [] for text with no numerals at all — the caller reads that as
-    "nothing to corroborate", not as a miss (a pure-words key_number is fine)."""
-    out: list[_Numeral] = []
-    for m in _NUMERAL_RE.finditer(text):
-        int_part = m.group("int")
-        if int_part is None:
-            continue
-        frac_part = m.group("frac") or ""
-        try:
-            base = float(f"{int_part.replace(',', '')}.{frac_part or '0'}")
-        except ValueError:
-            continue
-        mag = (m.group("mag") or "").lower()
-        multiplier = _MAGNITUDE_MULTIPLIER.get(mag, 1.0)
-        out.append(_Numeral(
-            raw=m.group(0),
-            value=base * multiplier,
-            multiplier=multiplier,
-            decimals=len(frac_part),
-        ))
-    return out
 
 
 def _numeric_leaves(obj: Any, *, _depth: int = 0) -> list[float]:
@@ -386,21 +330,6 @@ def _corroborating_values(profile: dict[str, Any] | None, rows: list[LadderOptio
             "reward_risk": r.reward_risk,
         }))
     return values
-
-
-def _numeral_is_corroborated(numeral: _Numeral, corpus: list[float]) -> bool:
-    """Does some sheet/ladder figure, rounded to the CLAIM's own precision IN
-    THE CLAIM'S OWN UNIT, equal the claim? See the module docstring for why
-    this is precision-of-the-claim rounding rather than a fixed tolerance
-    band, and `_Numeral`'s docstring for why both sides divide by the claim's
-    magnitude multiplier before rounding — `"$1.2B"` is 1 decimal of BILLIONS,
-    so a raw `market_cap` of 1_234_000_000 is rounded in billions
-    (`1_234_000_000 / 1e9 = 1.234` → `1.2`) before the compare, not rounded on
-    the raw dollar scale where a billion-scale figure has no fractional part
-    to round away at all."""
-    decimals = min(numeral.decimals, 6)  # defensive cap, not a real-world case
-    target = round(numeral.value / numeral.multiplier, decimals)
-    return any(round(v / numeral.multiplier, decimals) == target for v in corpus)
 
 
 def _quotation_check(

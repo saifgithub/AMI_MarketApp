@@ -38,7 +38,7 @@ import re
 import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _dataclass_replace
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
@@ -107,6 +107,13 @@ from app.services.llm_gateway import (
     get_llm_gateway,
 )
 from app.services.llm_json import extract_json_object
+# CR219 R59-F1/F3/F6 (lane B1) — the sheet-figure checker for prose: a
+# labelled numeral in analyst prose, a stance-envelope HEADLINE, or a PM
+# kill_criterion that disagrees with the fact sheet's own value for that
+# field earns an `[AMI …]` annotation. See `numeric_quotation.py`'s module
+# docstring for the full design (why label-matched, why this narrow a
+# vocabulary, why never a veto).
+from app.services.numeric_quotation import annotate_sheet_mismatches, find_sheet_mismatches
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
 from app.services.room_prompts import (
     GAPS_ITEM_MAX_CHARS,
@@ -2084,6 +2091,19 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # the APPROVE branch further down can pick the wrong one independently.
     absent_rationale = _PM_TRUNCATED_NO_NARRATION if truncated else _PM_NO_RATIONALE
     kill_criterion = _pm_kill_criterion(parsed, ticker=ctx.ticker)
+    # CR219 R59-F6 — `kill_criterion`'s own schema note (`schemas/room.py`)
+    # is explicit that it "must name a quantity the fact sheet actually
+    # carries", asked for in the prompt but never enforced. Same checker,
+    # append style (there is no tight render cap here the way
+    # `STANCE_HEADLINE_MAX_CHARS` forces F3 to null instead — this is a
+    # full sentence, `PM_KILL_CRITERION_MAX_CHARS` chars, and the note is
+    # exactly what makes the criterion checkable rather than merely
+    # plausible-sounding). `ctx.profile` is the run's own fact sheet; a
+    # missing one makes the check a no-op, never a strike. `kill_criterion`
+    # may be `None` here (the CIO stated none) — `annotate_sheet_mismatches`
+    # returns `None` unchanged in that case, same "nothing to check" path
+    # as an empty string.
+    kill_criterion = annotate_sheet_mismatches(kill_criterion, ctx.profile)
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
@@ -5802,6 +5822,18 @@ async def _compute_agent_text(
             # STANCE at all" emission signal, computed without duplicating
             # that function's locator here.
             envelope_parsed = text != pre_strip
+            # CR219 R59-F3 — a HEADLINE that quotes a sheet figure wrongly is
+            # NULLED, never annotated in place: `STANCE_HEADLINE_MAX_CHARS`
+            # is 32 chars, far too tight for a readable "sheet says X, not
+            # Y" note, so this follows the SAME null-don't-cut convention
+            # `parse_stance_envelope` already applies to an over-length
+            # headline (`_stance_field`'s length check above) — an
+            # unverifiable assertion loses its qualifier the same way a cut
+            # one does. `profile` is THIS agent's own threaded sheet; a
+            # missing/empty one makes the check a no-op (unknowable is not
+            # unverifiable), same as every other call site in this module.
+            if envelope.headline and find_sheet_mismatches(envelope.headline, profile):
+                envelope = _dataclass_replace(envelope, headline=None)
             # CR219 R53 — the four analysts only, same set `_GAPS_FORMAT` was
             # appended to (room_prompts.py). Parsed off the STANCE-stripped
             # text so a leaked machine channel never appears inside a gap
@@ -5856,6 +5888,17 @@ async def _compute_agent_text(
         size_pct=ctx.trader_size_pct,
         reference_close=_reference_close(ctx.profile),
     )
+    # CR219 R59-F1 — the sheet-figure checker: a labelled restatement of a
+    # sheet field ("the P/E is 25", "RSI at 61") that disagrees with the
+    # fact sheet's own value for that field earns a loud annotation, in
+    # composition with the DEF095 geometry check above (both are additive
+    # `[AMI …]` appends on `text`, order-independent — see
+    # `numeric_quotation.py`'s module docstring for why this checker never
+    # touches an unlabelled or derived numeral, so it cannot collide with
+    # what the geometry check already verified). `profile` is THIS agent's
+    # own threaded sheet — a missing/empty one makes the checker a no-op,
+    # never a strike (unknowable is not unverifiable).
+    text = annotate_sheet_mismatches(text, profile)
     return text, geom_sig, envelope, envelope_parsed, data_gaps
 
 
