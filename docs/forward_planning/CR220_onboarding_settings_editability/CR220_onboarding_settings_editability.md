@@ -128,6 +128,32 @@ untouched save would have PATCHed `null` over a real allowlist and silently dele
 Fixed by comparing against the server's object — which then required real value equality on
 `ComplianceFlags`, since `==` was identity and every `copyWith` looked like a change.
 
+## Shipped
+
+**Alpha:** `alpha-2026-09-03-1` @ `398578db`, promoted 2026-09-03 from a clean detached worktree —
+CR219 had 8 uncommitted files on the shared checkout at the time and none of them shipped. All four
+preflight gates passed there (hold / audit-lane / tree / suite `VERDICT: PASS`, 5866 passed 0 failed
+0 errors, wire contract PASS). Schema at head, container healthy, `/v1/health` reports the tag and
+SHA back.
+
+**Backfill: applied to 42 of 45 mandates (93%).** The dry run was read before `--apply`, per the
+auditor's promotion condition 1 — and the number is itself the finding: the inversion was systemic,
+not an edge case. Two of the 42 were at v4 and v11 (users who had edited since onboarding); Saiful
+ruled the full pass with that number in front of him. Re-running the dry run afterwards reports
+**0 affected**, which is the idempotency proof. Alpha healthy after the writes.
+
+**Stores:** `0.1.0+103` uploaded to TestFlight (`--internal-only`, forced by the `test_…`
+RevenueCat Test Store key in `infra/alpha.env` — purchases are simulated and only INTERNAL groups
+can receive it) and published to the Play internal track at the same `+103`.
+
+**The DEF195 guard fired and passed on the way out:** *"✓ every key this client can PATCH exists on
+the deployed backend."* That is the check validating CR220's new PATCH keys against the running
+Alpha, and it is why the backend-first ordering (D9) mattered.
+
+**Still open:** the round-2 audit verdict. Round 1 returned 2 MAJOR + 3 MINOR, all fixed and
+mutation-proven, submitted as round 2 at `398578db`. `NEEDS-DEVICE-CHECK` stands for the pickers,
+the ticker chip delete affordance and the allowlist banner.
+
 ## Definition of Done
 
 | Item | State |
