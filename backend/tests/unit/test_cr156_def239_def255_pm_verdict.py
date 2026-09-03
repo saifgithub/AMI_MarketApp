@@ -180,7 +180,10 @@ def test_the_stop_clause_is_omitted_when_there_is_no_stop_to_reason_about():
 def test_an_incoherent_horizon_flags_but_never_vetoes():
     """The safety floor is the sole vetoer (DEF059). An incoherent horizon is a
     reasoning flaw to disclose, not a mandate violation to block on — turning it
-    into a veto would discard a real verdict over its arithmetic."""
+    into a veto would discard a real verdict over its arithmetic.
+
+    CR219 R59 F4: implausible horizons (outside [1, 365]) are now clamped and
+    disclosed at parse time rather than flagged by _horizon_coherence_note."""
     raw = (
         '{"action": "APPROVE", "size_pct": 2.0, "entry": 100.0, "stop": 94.0, '
         '"target": 113.0, "horizon_days": 1095, "narration": "Long thesis."}'
@@ -188,7 +191,9 @@ def test_an_incoherent_horizon_flags_but_never_vetoes():
     _display, verdict = _parse_pm_verdict(raw, _ctx())
     assert verdict is not None
     assert verdict.action == VerdictAction.APPROVE
-    assert "reaches beyond every input" in verdict.reason
+    # The horizon is clamped to 365 with disclosure
+    assert verdict.time_horizon_days == 365
+    assert "adjusted" in verdict.reason
 
 
 # ── CR156 B — the two-action vocabulary, reconciled across every layer ───────

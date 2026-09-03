@@ -2157,6 +2157,16 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         horizon_days = int(parsed.get("horizon_days"))
     except (TypeError, ValueError):
         horizon_days = ctx.trader_horizon_weeks * 7
+    # CR219 R59 F4: clamp time_horizon_days to plausible band [1, 365] with disclosure.
+    # 365 mirrors _MAX_EVIDENCED_HORIZON_DAYS — the widest window on the fact sheet.
+    _horizon_clamped = False
+    if horizon_days is not None:
+        if horizon_days < 1:
+            horizon_days = 1
+            _horizon_clamped = True
+        elif horizon_days > 365:
+            horizon_days = 365
+            _horizon_clamped = True
     horizon_note = _horizon_coherence_note(horizon_days, entry, stop)
 
     ceiling = _risk_tier_size_ceiling(ctx.mandate)
@@ -2170,6 +2180,8 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if size_pct > ceiling:
         size_pct = ceiling
         reason += f" (sized down to {ceiling:.1f}% — mandate risk-tier ceiling.)"
+    if _horizon_clamped:
+        reason += f" (AMI adjusted the horizon to {horizon_days} days — the stated horizon was outside the plausible range [1, 365].)"
     _defaulted = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None and entry is not None]
     if _defaulted:
         reason += (
