@@ -221,6 +221,16 @@ _TECH_SENTINEL = Technicals(
     # fetched and only ever read one candle deep.
     return_period_pct=19.83,
     period_candles=63,
+    # CR219 R36 — ATR(14). Missed in the original R36 commit: the fetcher
+    # and render paths were pinned by test_cr219_r36_atr.py's own hand-built
+    # fixture, but THIS shared sentinel — the one evidence/dump_sheets.py
+    # and evidence/assemble_room.py actually drive — still defaulted to
+    # atr14=None, so the regenerated evidence snapshots showed zero ATR
+    # lines anywhere, including for the Trader. Caught while regenerating
+    # evidence for WP06's closing acceptance, not by a test going red (no
+    # test asserted the evidence snapshot's content) — fixed here so the
+    # Trader/Risk Officer sheets in the regenerated evidence are honest.
+    atr14=4.21,
 )
 
 # CR148 Tier B — the snapshot's age renders as a date + a relative age, so its

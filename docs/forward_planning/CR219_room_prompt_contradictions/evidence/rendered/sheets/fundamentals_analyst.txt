@@ -6,13 +6,19 @@ Not in your lane this call: market technicals (RSI, trend, ranges, volume); news
 Instrument: LONGNAMESENT (ZQXA) — EXCHNAMESENT
 Reference price: $271.83
 P/E: 48.77 trailing (measured — last 12 months of reported earnings) · 12.34 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
+Multiples vs. own history (LIVE): P/E: today's price against each of the last 4 FYs' own diluted EPS (PEWINDOWSENT), median 15.7x, EV/EBITDA: today's EV against each of the last 4 FYs' own EBITDA (EVWINDOWSENT), median 11.3x. NOT a historical price-based multiple series — today's price/EV priced against past years' own fundamentals, to show whether this year's earnings/EBITDA is itself high or low versus the company's recent history. No peer-basket comparison exists.
+Earnings revisions (LIVE): consensus EPS estimate REVDIRSENT 12.3% over the last 45 days, now $9.87
+Surprise history (LIVE): SURQ1SENT: actual $5.55 vs. est. $5.11 (beat by 8.6%); SURQ2SENT: actual $6.66 vs. est. $6.22 (beat by 7.1%)
 TTM revenue growth: 23.61%
 Net cash $944M
 Company size (LIVE): market cap $1,234,567M, FCF $45,678M (TTM), gross debt $8,901M, gross cash $55,221M
 Margin structure (LIVE): gross 63.71%, operating 52.83%, net 41.29%
 Margin trend, YoY (LIVE): gross +1234bps, operating +2345bps, net +3456bps — quarter ending TRENDBASISSENT against the quarter ending TRENDPRIORSENT
 Buybacks (LIVE): $7,654M repurchased (trailing 4 quarters), 8.9% of market cap
+Buyback pacing (LIVE): BBQ4SENT: $1,000M, BBQ3SENT: $1,654M, BBQ2SENT: $2,000M, BBQ1SENT: $3,000M — PACESENT
 Capital returned (LIVE): $10,871M (trailing 4 quarters) — buybacks $7,654M + dividends $3,217M, 63% of TTM FCF
+Capital expenditure (LIVE): $6,543M (trailing 4 quarters)
+Interest coverage (EBIT / interest expense) (LIVE): 9.4x — quarter ending COVQUARTERSENT
 Earnings power (LIVE): EPS $7.7701 trailing (measured, last 12 months), revenue $98,765M TTM, revenue/share $66.4401
 Returns (LIVE): ROE 31.55% (on book equity), ROA 17.22%
 Balance sheet (LIVE): current ratio 3.19, quick ratio 2.71, debt/equity 1.47x
