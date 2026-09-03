@@ -221,11 +221,11 @@ Every "verified" below was probed against the live source in this session. Scrip
 
 ### 4a · Already fetched by code we run today, and discarded — 10 items
 
-Zero new network, zero new dependency. This is the R33/R34/R35 shape, six more times.
+Zero new network, zero new dependency. This is the R33/R34/R35 shape, five more times.
+**A3 was here until it was probed** — see §4b and DEF399 for why the probe moved it.
 
 | Items | Where the data already is |
 |---|---|
-| **A3** cost of debt | `fundamentals.py:385` already reads `Interest Expense` from the quarterly income statement for R33's coverage ratio. Divide by average total debt, already on the sheet. |
 | **C2 C3 C4 C5** cash-flow history, bridge, working capital, FCF conversion | `_fetch_statement_facts_uncached` (`fundamentals.py:210`) pulls the quarterly cash-flow statement; only the trailing four quarters survive. **B2** (cycle-median ROE) rides the same series. |
 | **C8** dividend growth CAGR | `MarketDataProvider.dividend_history()` → `DividendPayment` (CR206), fetched today for the options desk's early-assignment rule. The sheet carries yield, indicated annual, payout and ex-date — never the growth series. |
 | **G1 G2 G3** IV, skew, open interest | `MarketDataProvider.option_chain()` → `OptionQuote` carries `implied_vol`, `open_interest`, `volume` (CR172 §4). Its own docstring warns `implied_vol` is the provider's figure, *"provenance unknown and occasionally absurd"* — sanity-gating (`services/option_chain.py`) is the work, not the fetch. |
@@ -238,9 +238,12 @@ Zero new network, zero new dependency. This is the R33/R34/R35 shape, six more t
 | **A1** maturity ladder | `companyfacts` carries `LongTermDebtMaturitiesRepaymentsOfPrincipalIn{NextTwelveMonths,YearTwo…YearFive}`. They are simply absent from `INGEST_TAGS_US_GAAP`. | **Two filers.** CAT: 5 tags, 18 points each, FY end 2025-12-31 — 2026 $7,120M · 2027 $8,920M · 2028 $7,747M · 2029 $3,112M · 2030 $1,261M. Deere: 5 tags, 4 points each, FY end 2025-11-02. A five-entry addition to `edgar_tags.py`. |
 | **C7** buyback execution price | `TreasuryStockSharesAcquired` ÷ R35's repurchase dollars. | CAT n=197, latest 2026-06-30 = 6,972,123 shares. **Deere has no shares-repurchased tag** — filer-inconsistent, so it ships with a real absent state, which is CR104's rule anyway. |
 | **A2 A4 D1 D2** captive split, fixed/floating, segment and geographic revenue | **Not `companyfacts`** (§6). The filing's own rendered reports, indexed by `FilingSummary.xml` on the same host. | CAT 10-K `0000018230-26-000008` (filed 2026-02-13): `R106.htm` long-term debt by *Machinery, Power & Energy* vs. Financial Products; `R108.htm` the ladder; `R129.htm` disaggregation of revenue; `R136.htm` geographic areas. |
+| **A3** cost of debt | `InterestExpense` (income statement) and `InterestPaidNet` (cash-flow supplemental), over EDGAR gross debt — both legs from one store at one `as_of`. **Not** the yfinance row §4a first assumed. | **This premise was probed and failed, which is DEF399.** CAT's FY2025 income statement (`R3.htm`) carries *Interest expense of Financial Products* $1,359M **plus** *excluding Financial Products* $502M = **$1,861M**; yfinance's four quarters sum to **$529M**, 28% of it, because the finance arm's interest is booked inside cost of revenue. GM reads 0.17x against its own `us-gaap:InterestExpense`. CAT tags **no** income-statement interest concept in `companyfacts` (dimensional lines again — §6 on a second item), so it resolves on cash interest or not at all. Where the two bases disagree >2x (HOG $31M vs $331M, F $7,613M vs $3,501M) the honest output is **absence**, not the friendlier number. |
 | **I1** executive-change detail | The submissions JSON tags every filing with its 8-K **item codes**; `5.02` is *"Departure of Directors or Certain Officers; Election of Directors; Appointment of Certain Officers"*. Fetch that document when the code is present. | CAT's 2026-04-10 8-K (`0001104659-26-042062`) states it outright: **Kyle Epley, 53, appointed CFO effective 2026-05-01, succeeding Andrew R.J. Bonfield, who remains an employee through retirement on 2026-10-01.** That is *exactly* the question the News Analyst asked in 5 of 7 convenes — and once tagged `ABSENT (only the aggregated headline text was provided)`. It was in a filing we already download. |
 
-### 4c · Free, reliable, no API key, new call — 5 items
+### 4c · Free, reliable, no API key, new call — 4 items
+
+*(H1 takes two rows — its CPI/PPI leg and its PMI leg have different answers — but it is one item.)*
 
 | Items | Source | Verified |
 |---|---|---|
@@ -283,7 +286,7 @@ work this CR hands back rather than sources.
 |---|---|---|---|---|
 | 1 | Add 5 maturity tags to `edgar_tags.py` | A1 | 14 | 5 entries + a render |
 | 2 | EDGAR filing-report route via `FilingSummary.xml` | A2 A4 D1 D2 | 30 | a new parse path, free host (§6) |
-| 3 | Derive cost of debt from the interest expense R33 reads | A3 | 6 | a division |
+| 3 | EDGAR interest expense (accrual + cash) over EDGAR gross debt | A3 | 6 | two tag families, same host |
 | 4 | Keep the multi-year statement series instead of the trailing four | B2 C2 C5 (+B1's fundamentals leg) | 6 | discarded data |
 | 5 | Fetch the profile at a longer bar window | B1 F1–F9 F11 | 32 | a parameter |
 | 6 | Peer cohort × fundamentals | B3 B4 | 3 | N fetches, cohort exists |
@@ -296,8 +299,8 @@ work this CR hands back rather than sources.
 | 13 | EDGAR 8-K Item 5.02 | I1 | 5 | same host we already call |
 | 14 | Derive catalyst magnitude from bars + headline date | I2 | 2 | arithmetic |
 
-**Six decisions need no new network at all** (3, 4, 7, 9, 11, 14). Six more ride hosts we
-already call (1, 2, 8, 10, 13) or a parameter (5). Only #12 adds an HTTP dependency, and it
+**Five decisions need no new network at all** (4, 7, 9, 11, 14). Seven more ride hosts we
+already call (1, 2, 3, 8, 10, 13) or a parameter (5). Only #12 adds an HTTP dependency, and it
 needs no key. **Zero paid providers.**
 
 ### Preliminary build order
@@ -306,7 +309,7 @@ Ranked by demand against sourcing cost. A recommendation, not a ruling.
 
 | # | Item(s) | Why here |
 |---|---|---|
-| 1 | A1 + A3 | 20 lines from the two most-asked debt sub-items, for five tag entries and a division. Nothing blocks either. |
+| 1 | A1 + A3 | 20 lines from the two most-asked debt sub-items. **Source layer landed 2026-09-03** — see Build status below. |
 | 2 | I1 | 5 lines, one agent, stuck on the same wall in 6 of 7 convenes — and the answer is in a filing we already download. Cheapest high-conviction fix in the list. |
 | 3 | C3 + C4 + C2 + C5 + B2 | 20 lines across five items, all one decision on data already pulled and thrown away. |
 | 4 | A2 + A4 + D1 + D2 | 30 lines, the biggest payoff — and the biggest unknown. Needs its design note re-cut against §6 before any code. |
@@ -317,6 +320,41 @@ Ranked by demand against sourcing cost. A recommendation, not a ruling.
 | 9 | B3 + B4 | Low measured demand; its real value is unblocking a stale sheet denial. |
 | — | H2 | Blocked on §4e. Probe the Atlanta Fed feed from melehost first. |
 | — | E3 G4 G5 J2 | Declared absences, handed to CR219's surface. |
+
+### Build status
+
+The register's `○` column is unchanged for A1 and A3 **on purpose**: it tracks what the
+Room can see, and until the render lands the agents are still short of both. What exists
+today is the source layer.
+
+Two-phase by necessity, not preference. `room_runner._profile_for_ticker` and
+`room_prompts._format_profile` are the render sites and both are dirty under CR219's
+prompt lane, so phase 1 touches producer files only. That also keeps DEF098's parity
+guard quiet: it keys off the *fetcher's* output dict, and nothing here adds a key to it.
+
+| | Landed (`472efbfc`) | Pending phase 2 |
+|---|---|---|
+| **A1** | `edgar_tags.DEBT_MATURITY_LADDER` (5 tags, in `INGEST_TAGS_US_GAAP`); `services/debt_maturity.py` — one-vintage resolver, derived beyond-year-five, the two reconciling figures; `room_debt_maturity_enabled` + compose; 13 tests, 2 mutations killed. | the render, and the basis line it must carry |
+| **A3** | `edgar_tags.INTEREST_ACCRUAL` / `INTEREST_CASH`; `services/interest_cost.py` — three labelled bases, >2x disagreement refusal; `valuation.cost_of_debt_pct` with a 40% artifact ceiling; `room_cost_of_debt_enabled` + compose; 13 tests, 2 mutations killed. | the render; and A3 is **DEF399's fix vehicle**, so the shipped `interest_coverage` numerator changes with it |
+
+**Two things the build found that the sourcing pass did not.**
+
+**1. The ladder does not reconcile to the sheet, and must say so.** CAT's five buckets sum
+to **$28,160M** against a fact sheet reading **gross debt $45,146M**. Both are right: the
+ladder is long-term principal only, excluding short-term borrowings ($5,514M) and
+everything beyond year five (derived, $9,656M). An agent handed the ladder beside gross
+debt with no basis note reads a $17B gap as a contradiction and burns a turn on it —
+which is the CR219 failure class this whole CR sits downstream of. The resolver therefore
+returns the reconciling figures, and the render is not free to omit them.
+
+**2. EDGAR gross debt is short for the same filers, and it is not patched.**
+`DEBT_ANCHOR + DEBT_OPTIONAL_ADD` sums to $36,210M for CAT, because it tags current
+maturities dimensionally and `LongTermDebtCurrent` / `DebtCurrent` resolve to nothing.
+That biases the cost of debt HIGH — 5.1% against ~4.3% on the fuller base. The missing
+piece is exactly A1's year-one bucket, so the two items compose; adding it conditionally
+would double-count for every filer that *does* tag current debt, and would redefine gross
+debt for one consumer only. Recorded as a bound on the figure, not fixed behind the
+reader's back.
 
 ---
 

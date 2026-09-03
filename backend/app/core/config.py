@@ -882,6 +882,14 @@ class Settings(BaseSettings):
     # between fetches. See `app/services/debt_maturity.py`.
     room_debt_maturity_enabled: bool = False
 
+    # CR221 A3 — implied cost of debt on the fact sheet, from EDGAR interest
+    # expense over EDGAR gross debt (`app/services/interest_cost.py`). Its own
+    # flag rather than sharing A1's: §7 measures demand extinction PER ITEM, and
+    # two fields behind one switch cannot be attributed separately. This one is
+    # also the DEF399 fix vehicle — the numerator it sources is the one the
+    # shipped `interest_coverage` gets wrong.
+    room_cost_of_debt_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
