@@ -3,9 +3,10 @@
 **Status:** in_progress · **Owner:** coder.api · **Filed:** 2026-09-03 · **Tag:** `(AT:R75 CR221)`
 
 **Done at filing:** §1–§6 — the item register, the cross-check against CR219, a *verified free*
-source for every open item but one, and the §6 measurement. **Open:** the design notes (§7
-item 4), the §6 routing decision with the WP10 lane, and the one item (H2) with no free source
-yet found.
+source for every open item but one, and the §6 measurement. **Ruled 2026-09-03:** R38's route
+is CR221's (`ac55352c`) — CR219 ships a declared-absent entry now, this CR builds the real line
+later, inheriting `WP10_R38_parked/` as its head start. **Open:** the build itself, the §7
+measurement re-run it is designed for, and the one item (H2) with no free source yet found.
 
 ---
 
@@ -188,7 +189,7 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 
 **49 items · 9 delivered · 4 closed · 36 open.** One further request line is not a data item at
 all (*"whether the 1.0h post-loss cooldown blocks all buys portfolio-wide"*) and leaves scope
-in §7.
+in §8.
 
 Read the counts as demand *shape*, not just size: A2 is 9 of 12 agents independently hitting
 the same wall, while F3–F8 are one agent asking eight ways. The build order in §5 weights both.
@@ -349,19 +350,125 @@ designed, and a parser that cannot fire has no test that can prove it wrong.
 **The data is real** — §4b verified it in CAT's `R106.htm`. R38's *conclusion* (no new provider,
 no paid feed) survives; its *route* does not.
 
-This is a live lane: `ingest_edgar_facts.py`, `edgar_tags.py`, `fundamentals.py` and
-`room_runner.py` are all dirty in the working tree under WP10. **This CR does not touch them.**
-Per stay-in-your-lane the finding is reported with its repro, and the routing is the
-dispatcher's call:
+### Ruled, 2026-09-03 (`ac55352c`)
 
-- fold the correction into WP10 while it is open (cheapest — nothing has shipped), or
-- let WP10 land its no-op and file a DEF against it.
+WP10's own escape hatch fired on the same evidence, reached independently — its finished parser
+returned nothing against the live payload. Saiful ruled, verbatim:
 
-Recommendation: the first.
+> accept recommendation: Declared-absent entry in CR219 now now and Re-route under CR221 later
+
+**Enacted:** CR219 closes R38 with a `SHEET_ABSENTS` declared-absent entry whose collision
+markers are drawn from the parked patch's own render strings — so the availability guard goes
+red the day a real split line lands. The full WP10 build (5 source files, 83 green tests) is
+parked at `CR219/dev_instructions/WP10_R38_parked/`, **not deleted**: its registry, config flag,
+three-state contract, both render sites and ~60 route-independent tests are route-independent
+and are this CR's head start. Only the route changes — `companyfacts` dimensional parse becomes
+the `FilingSummary.xml` per-filing reports of §4b.
 
 ---
 
-## 7. Scope
+## 7. Measurement — proving the data changed the Room
+
+**Required deliverable (Saiful, 2026-09-03):** once the fields are built, re-run CR219's own
+convenes with the new data and conclude how much difference it makes.
+
+This section is written *before* the build because it constrains it: an A/B that cannot be run
+later is one nobody designed for now.
+
+### 7.1 The endpoint problem — read this before choosing a metric
+
+**"Did the verdict change" cannot be the primary endpoint.** The PM's verdict is measurably
+noisy: `risk_officer.py:32` records **19.7% of convenes splitting across byte-identical
+inputs**. Production has defaulted to `pm_self_consistency_samples=5` since CR214, and CR219's
+R47 found every remaining n=5 flip is a **parse-loss tie**, not indecision. A verdict that moves
+after we add a field is, at any n we can afford, indistinguishable from a coin landing
+differently. CR219's own `aggregate_arms.py` refuses to attribute verdicts for exactly this
+reason, and this CR inherits that refusal.
+
+So the primary endpoint is not the verdict. It is **whether the Room stopped asking**.
+
+### 7.2 Primary endpoint — demand extinction, per item
+
+Re-run the same seven convenes with the same `DATA I LACKED:` addendum, and score the replies
+against the **49-item register** using `evidence/items.py`, which already maps request text to
+item ids. The baseline is this CR's own corpus.
+
+| | Baseline (2026-09-02) | Prediction after the build |
+|---|---|---|
+| Items we shipped | asked 1–18 times each | **asked 0 times** |
+| Items we declared absent (E3, G4, G5, J2) | asked 2–3 times each | asked ~0 — a declared absence should stop the question |
+| Items we did not ship (H2) | 5 | unchanged — the negative control |
+
+This endpoint is direct, pre-registered, per-item, and needs no significance test to be
+readable: an item asked 18 times by 9 agents that is asked 0 times afterwards has been
+answered. An item that is *still* asked after we shipped it is the more interesting result —
+it means the render is not where the agent looks, which is precisely the CR219 failure class.
+
+**H2 is the negative control** and must not be dropped from the run: if demand falls on
+everything including the one item we did not source, the instrument is measuring something
+other than the data.
+
+### 7.3 Secondary — is the new data actually used?
+
+1. **Citation rate per new line**, via CR219's `evidence/analysis/citation_rates.py`. The
+   precedent is the whole reason CR219 exists: on identical sheets, margin *structure* was
+   cited 95.5% of the time and margin *trend* 24.2%. A field nobody cites cost tokens and
+   context for nothing, and that is a finding, not a failure to hide.
+2. **Reasoning-trace presence.** The convenes bank full reasoning traces. A number that appears
+   in the reasoning but not the answer is being used and not shown; the reverse is being shown
+   and not used. Both are worth knowing and neither shows up in a verdict.
+3. **Cost.** Prompt tokens, latency, and remaining context headroom against the served budget —
+   the check WP06 already ran once when the sheet grew.
+
+### 7.4 Recorded, not attributed
+
+Verdict distribution across arms, labelled with its n and the 19.7% figure, exactly as
+`aggregate_arms.py` prints it today. Recorded so the run is complete; **not** offered as
+evidence the data changed a decision.
+
+### 7.5 Design — what makes the comparison valid
+
+- **One profile pickle per ticker.** `harness/build_profile.py` caches profiles precisely
+  because market data moves between fetches (R46); the README's rule is that *every arm in a
+  comparison must load the same pickle*. The control and treatment arms therefore differ in the
+  new fields **and nothing else** — same prices, same news, same FOMC countdown.
+- **Therefore: every CR221 field ships behind its own config flag, default off.** The control
+  arm is a flag flip against one enriched pickle, not a second build or an earlier checkout.
+  This is a build constraint, not a measurement preference — without it the A/B is not
+  runnable, and it also satisfies WP06's degrade-loudly rule for free.
+- **Same battery.** The six mandate arms plus the full convene, same tickers, same
+  `mandates.py` `BATTERY`, run through `harness/run_convene.py` as `room_runner` calls it.
+- **Both models.** The arms were run on Gemini 3.1 Pro to get reasoning traces; production
+  serves Qwen3.8. Score the production model for what users get, and the arms model for
+  comparability with the CR219 baseline. Do not merge the two into one number.
+
+### 7.6 The live instrument — and a taxonomy collision to fix first
+
+CR219's **R53** (in flight, WP14) is building a permanent `DATA GAPS:` tail on every Alpha
+convene plus `backend/scripts/aggregate_data_gaps.py` — a standing demand signal on real
+traffic. That is the trailing confirmation this CR's one-off re-run cannot give: it answers
+"did demand stay down, on tickers we never tested".
+
+**But it will not be comparable as written.** `aggregate_data_gaps.py:85` copies
+`aggregate_arms.py`'s `BUCKETS` taxonomy verbatim — the same regex this CR measured as
+undercounting debt (26 asks against an actual 35) and dropping 17 lines to `(unbucketed)`.
+Production telemetry keyed to that taxonomy cannot be compared against this CR's 49-item
+register, and the undercount lands on the single largest ask.
+
+**Ask of the R53 lane:** key the buckets to `CR221/evidence/items.py` rather than to
+`aggregate_arms.py`'s prototype regex, so both instruments speak one language. Reported as a
+cross-lane finding — R53's files are not this CR's to edit.
+
+### 7.7 What "how much difference it makes" will be reported as
+
+One table, per item: baseline asks → post-build asks → citation rate → whether it appeared in
+reasoning. Plus the cost delta and the recorded-only verdict distribution. The conclusion is
+allowed to be **"less than we expected"** — a null on a field is a finding about that field,
+and the negative control is there to make a null readable rather than deniable.
+
+---
+
+## 8. Scope
 
 **In scope**
 
@@ -375,6 +482,12 @@ Recommendation: the first.
    any code.
 5. The §6 correction, reported to the WP10 lane with its repro.
 6. The ranked build order, with its inputs shown.
+7. **The build itself** — the fetch/derive/cache layer for every sourced item, each behind its
+   own config flag (§7.5 makes this a hard constraint, not a preference), landed on WP06's
+   existing per-field rules.
+8. **The §7 re-run and its conclusion** — CR219's convenes replayed against the enriched
+   profile, scored per item, with the cost delta and the negative control reported.
+9. **R38's re-route**, inheriting `WP10_R38_parked/`.
 
 **Out of scope**
 
@@ -391,7 +504,7 @@ Recommendation: the first.
 
 ---
 
-## 8. Acceptance
+## 9. Acceptance
 
 1. `evidence/items.py` runs from any working directory, prints 49 items, and **exits non-zero**
    if any of the 127 lines claims no item or if the register's totals drift from §2.
@@ -404,6 +517,14 @@ Recommendation: the first.
    its date.
 7. A design note exists per sourcing decision before its follow-on CR opens.
 8. H2 is either sourced from melehost or recorded as a declared absence — not left ambiguous.
+9. **Every shipped field is behind its own config flag, defaulting off, forwarded in
+   `docker-compose.yml`'s `api-alpha` block** (`test_config_compose_parity.py` enforces). A
+   field that cannot be switched off cannot be the treatment arm of §7's A/B.
+10. **The §7 re-run is executed and reported**: per-item baseline asks → post-build asks,
+    citation rate per new line, reasoning-trace presence, cost delta, and the recorded-only
+    verdict distribution labelled with its n and the 19.7% flip figure. H2's demand is reported
+    as the negative control.
+11. The §7.6 taxonomy collision is raised with the R53 lane, and the outcome recorded here.
 
 ---
 
@@ -414,7 +535,7 @@ Recommendation: the first.
 - `../CR219_room_prompt_contradictions/dev_instructions/WP06_data_additions.md` — the rules
   every follow-on field commit inherits.
 - `../CR219_room_prompt_contradictions/dev_instructions/R38_edgar_design_note.md` — the note §6
-  corrects, and the template §7.4 reuses.
+  corrects, and the template §8.4 reuses.
 - [`../CR218_capital_return_field/`](../CR218_capital_return_field/) — the "precompute it" precedent.
 - [`../CR164_room_backtest/`](../CR164_room_backtest/) — the EDGAR companyfacts ingest this CR
   extends by five tags.
