@@ -132,6 +132,7 @@ from app.services.entitlements import (
 )
 from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
+from app.services.verdict_outcomes import bank_verdict_outcome
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
@@ -5282,6 +5283,40 @@ class RoomRunner:
                 (run.finished_at - (run.started_at or run.finished_at)).total_seconds() * 1000
             )
             _persist_run(run)
+            # CR219 R55 — bank this verdict in the calibration ledger.
+            #
+            # `_reference_close(profile)` is the price the Room was actually
+            # shown this run, and capturing it HERE rather than re-deriving it
+            # at scoring time is the whole point: a quote fetched later would
+            # score the Room against data it never had, turning a calibration
+            # check into a fabrication. A profile without LIVE technicals
+            # provenance yields None, which banks the row `unscorable` — how
+            # often the Room decides with no live price is itself worth
+            # counting (CR040), not a case to route around.
+            #
+            # The horizon is passed as a plain string. `Mandate` sets
+            # `use_enum_values=True`, so `ctx.mandate.horizon` is ALREADY a
+            # `str` at runtime even though the field is annotated `Horizon` —
+            # reading the annotation and writing `.value` here raised
+            # `'str' object has no attribute 'value'` on every real convene.
+            # `getattr(..., "value", ...)` keeps a genuine enum working too,
+            # since a caller constructing a Mandate by hand can still hold one.
+            #
+            # Internal calibration floor only — a sanity check that APPROVEs
+            # are not systematically worse than PASSes, never a performance
+            # claim and never user-facing. `bank_verdict_outcome` swallows its
+            # own exceptions: a ledger write must not fail a completed convene.
+            bank_verdict_outcome(
+                room_run_id=run_id,
+                user_id=user_id,
+                ticker=ctx.ticker,
+                verdict=run.verdict,
+                reference_price=_reference_close(profile),
+                reference_at=run.finished_at,
+                mandate_horizon=getattr(
+                    ctx.mandate.horizon, "value", ctx.mandate.horizon,
+                ),
+            )
             logger.info(
                 "room_completed",
                 run_id=str(run_id),
