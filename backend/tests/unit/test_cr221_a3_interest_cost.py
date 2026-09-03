@@ -182,3 +182,31 @@ def test_both_interest_tag_families_are_ingested_so_the_resolver_can_fire() -> N
     needed = edgar_tags.INTEREST_ACCRUAL + edgar_tags.INTEREST_CASH
     missing = [t for t in needed if t not in edgar_tags.INGEST_TAGS_US_GAAP]
     assert not missing, f"ingest would never store {missing}"
+
+
+def test_a_two_year_old_annual_figure_is_data_dark_not_a_cheap_rate() -> None:
+    """Microsoft's live shape: newest `InterestExpense` FY2024, sheet at 2026.
+
+    Before the age bound this read 7.3% — a two-year-old numerator over a
+    current denominator, which is not a rate at all.
+    """
+    stale_end = date(2024, 6, 30)
+    facts = [
+        _instant(edgar_tags.LONG_TERM_DEBT_NONCURRENT, 40_294, end=date(2026, 6, 30)),
+        _annual("InterestExpense", 2_935, end=stale_end),
+    ]
+    assert interest_cost.resolve_interest_cost(facts, date(2026, 9, 3)) is None
+
+
+def test_the_denominator_is_struck_at_the_numerators_period_end() -> None:
+    """A ratio whose two legs describe different moments is not a rate."""
+    facts = [
+        _annual("InterestPaidNet", _CAT_CASH_INTEREST),                    # FY to 2025-12-31
+        _instant(edgar_tags.LONG_TERM_DEBT_NONCURRENT, 30_696),            # 2025-12-31
+        _FactView(tag=edgar_tags.LONG_TERM_DEBT_NONCURRENT, value=60_000,
+                  period_start=None, period_end=date(2026, 6, 30),
+                  filed=date(2026, 7, 29)),                                # newer, wrong leg
+    ]
+    cost = interest_cost.resolve_interest_cost(facts, date(2026, 9, 3))
+    assert cost.gross_debt == 30_696, "the 2026-06-30 balance sheet is the wrong pair"
+    assert cost.period_end == _FY_END

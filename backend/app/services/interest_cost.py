@@ -84,15 +84,28 @@ class InterestCost:
 
 
 def _annual_duration(
-    facts: Sequence[edgar_pit._FactView], tags: Sequence[str], as_of: date
+    facts: Sequence[edgar_pit._FactView],
+    tags: Sequence[str],
+    as_of: date,
+    *,
+    max_age_days: int = edgar_pit.MAX_INSTANT_AGE_DAYS,
 ) -> tuple[float, date] | None:
-    """Newest fiscal-year-length duration ending on or before `as_of`."""
+    """Newest fiscal-year-length duration ending on or before `as_of`.
+
+    Aged out at `max_age_days`, and that bound is load-bearing rather than
+    defensive: Microsoft's newest `InterestExpense` in `companyfacts` is FY2024,
+    while its balance sheet resolves at 2026-06-30, so without this the rate
+    read 7.3% from a two-year-old numerator over a current denominator. A
+    company that has not filed an annual interest figure in over a year is
+    data-dark for this ratio, not cheap to borrow.
+    """
     for tag in tags:
         spans = [
             f for f in facts
             if f.tag == tag
             and f.period_start is not None
             and f.period_end <= as_of
+            and (as_of - f.period_end).days <= max_age_days
             and 330 <= (f.period_end - f.period_start).days <= 380
         ]
         if spans:
@@ -130,13 +143,24 @@ def resolve_interest_cost(
     if chosen is None:
         return None
 
+    value, basis, period_end = chosen
+    # The denominator is resolved at the NUMERATOR's period end, not at
+    # `as_of`. A ratio whose two legs describe different moments is not a
+    # rate: Microsoft paired FY2024 interest with a 2026-06-30 balance sheet
+    # and computed 7.3%. Same moment, or nothing.
+    #
+    # The list is filtered rather than the date merely passed down, because
+    # `resolve_instant_dated` has no upper bound on `period_end` — it leans on
+    # `load_facts`' `filed <= as_of` to make a future balance sheet impossible,
+    # which is true of the DATE THE CALLER ASKED FOR and not of an earlier one
+    # substituted here.
+    at_or_before = [f for f in facts if f.period_end <= period_end]
     gross_debt = edgar_pit.instant_sum(
-        facts, edgar_tags.DEBT_ANCHOR, edgar_tags.DEBT_OPTIONAL_ADD, as_of
+        at_or_before, edgar_tags.DEBT_ANCHOR, edgar_tags.DEBT_OPTIONAL_ADD, period_end
     )
     if gross_debt is None:
         return None
 
-    value, basis, period_end = chosen
     return InterestCost(
         annual_interest=abs(value),
         basis=basis,
