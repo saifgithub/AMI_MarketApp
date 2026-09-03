@@ -14,9 +14,13 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
+*(none)*
+
+## CLEARED HOLDS
+
 ### CR219-F2-PROFILE — key_number verification strikes honest sheet quotes until the profile is threaded
 
-**Raised:** 2026-09-03 (AT:R75 CR219) · **Blocked:** any Alpha promotion carrying `0f9cc06d`
+**Raised:** 2026-09-03 (AT:R75 CR219) · **CLEARED:** 2026-09-03 (AT:R75 CR221) · **Blocked:** any Alpha promotion carrying `0f9cc06d`
 (`risk_officer.py` key_number/decisive_number verification)
 
 **Why.** `0f9cc06d` makes `render_officer_turns`/`render_risk_assessment` verify every numeral in the
@@ -36,9 +40,28 @@ exists). Verify by running the new wiring test, not by reading the diff.
 verification is "still a check" — over-striking honest quotes is the inverse CR040 failure, a control
 that fires on the truthful case.
 
----
+**Cleared because the stated condition is met, and verified the way the hold demanded — by running
+the test, not by reading the diff.** `466c7500` is on `main` and threads `profile=ctx.profile` into
+`render_officer_turns` at the production call site (`_run_risk_officer`). Both tests the hold names
+pass on the current tree:
 
-## CLEARED HOLDS
+```
+pytest backend/tests/unit/test_cr201_risk_officer_room.py \
+       backend/tests/unit/test_cr219_r59_f2_key_number_verification.py -k 'profile or sheet_only'
+8 passed, 60 deselected in 7.19s
+```
+
+Among them `test_flag_on_the_production_call_site_threads_profile_non_none` — a spy wrapping the REAL
+`render_officer_turns`, so it pins the call site rather than the signature, which is the distinction
+the "not merely that the parameter exists" clause was written to enforce — and
+`test_flag_on_a_sheet_only_quote_passes_unstruck_end_to_end`. Ladder-only verification is no longer
+the live behaviour, so the inverse-CR040 failure this hold protected against cannot fire.
+
+Cleared by the CR221 lane acting as promoter, not by CR219's: the hold blocks *any* Alpha promotion,
+and its clear condition is a test result anyone can reproduce. CR219 recorded the precondition as met
+in `23833602` ("hold precondition met, awaiting clear") and left the entry standing.
+
+---
 
 ### DEF294-CLIENT — the quiz reveal would mark correct answers WRONG on every installed build
 
