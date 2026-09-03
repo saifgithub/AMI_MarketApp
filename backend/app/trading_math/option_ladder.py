@@ -46,6 +46,12 @@ class LadderOption:
     share_of_cap_pct: float | None = None
     headroom_after_pts: float | None = None
     reward_risk: float | None = None
+    # CR219 R59-§13(a) — the SAME rung's risk, in dollars against the run's own
+    # portfolio value, so no downstream agent has to multiply `contribution_pts`
+    # by a portfolio value it was handed separately (and has repeatedly gotten
+    # wrong doing so by hand — DEF066/DEF235/DEF241/CR166 Tier D). None, never
+    # 0.0, when either factor is unusable: see `build_option_ladder`'s docstring.
+    dollar_risk_usd: float | None = None
 
 
 def reward_to_risk(entry: float, stop: float, target: float) -> float | None:
@@ -69,6 +75,7 @@ def build_option_ladder(
     cap_pts: float,
     current_drawdown_pct: float | None = None,
     backstop_pct: float = SINGLE_NAME_ABSOLUTE_CAP_PCT,
+    portfolio_value: float | None = None,
 ) -> list[LadderOption]:
     """The candidate sizes plus their computed consequences, smallest first.
 
@@ -81,9 +88,20 @@ def build_option_ladder(
     (CR040/DEF053): None means the caller never supplied what has already been spent,
     so `headroom_after_pts` stays None rather than assuming a flat book. A fabricated
     "effectively empty" reading is exactly what DEF292 found.
+
+    `portfolio_value` is optional and follows the SAME discipline (CR219 R59-§13(a)):
+    a figure this function cannot honestly compute stays None rather than defaulting
+    to a fabricated $0 — see `_cap_in_shares_clause` (`room_prompts.py`) for the
+    identical "missing/zero input renders nothing" call made for the same reason.
+    When supplied and positive, `dollar_risk_usd` is `portfolio_value *
+    contribution_pts / 100` per rung — the same expression already computed once,
+    for one size only, at `room_runner.py`'s option-strategist budget site — so every
+    rung carries its own dollar risk and no downstream agent has to multiply it out
+    by hand.
     """
     spread = risk_debator_sizes(reference_size_pct, backstop=backstop_pct)
     rr = reward_to_risk(entry, stop, target) if target is not None else None
+    has_portfolio_value = portfolio_value is not None and portfolio_value > 0
 
     rows: list[LadderOption] = []
     for label, size in (
@@ -103,6 +121,11 @@ def build_option_ladder(
             if (contribution is not None and cap_pts > 0 and current_drawdown_pct is not None)
             else None
         )
+        dollar_risk = (
+            round(float(portfolio_value) * contribution / 100.0, 2)
+            if (contribution is not None and has_portfolio_value)
+            else None
+        )
         rows.append(
             LadderOption(
                 label=label,
@@ -114,6 +137,7 @@ def build_option_ladder(
                 # carried on each row because the row is what the reader compares,
                 # and repeating it is cheaper than a footnote they must join.
                 reward_risk=rr,
+                dollar_risk_usd=dollar_risk,
             )
         )
     return rows

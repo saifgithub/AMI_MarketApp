@@ -6024,6 +6024,12 @@ async def _run_risk_officer(
             existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
             last_loss_closed_at=ctx.risk_last_loss_closed_at,
             trade_open_timestamps=ctx.risk_trade_open_timestamps,
+            # CR219 R59-§13(a): the same run's own portfolio value, so the
+            # ladder's per-rung dollar risk (`_rung_head`) is priced against
+            # THIS book, never a default. `ctx.portfolio_value` is the same
+            # source `_build_room_option_candidates`'s budget line and
+            # `_cap_in_shares_clause` already read above in this module.
+            portfolio_value=ctx.portfolio_value,
         )
         stream_meta: dict[str, Any] = {}
         chunks = await asyncio.wait_for(

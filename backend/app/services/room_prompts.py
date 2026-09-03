@@ -1979,6 +1979,7 @@ def build_risk_officer_messages(
     existing_open_risk_pct: Any = None,
     last_loss_closed_at: Any = None,
     trade_open_timestamps: Any = None,
+    portfolio_value: float | None = None,
 ) -> tuple[str, list[ChatMessage], list[LadderOption]]:
     """CR201 — the structured Risk Officer's one prompt, plus the ladder it fills in.
 
@@ -2002,6 +2003,12 @@ def build_risk_officer_messages(
     officer sizes options, it does not screen instruments). The grounding
     directive is prepended by the gateway on every call, as for every other
     agent.
+
+    `portfolio_value` (CR219 R59-§13(a)) is optional and passed straight through
+    to `build_option_ladder`, which follows the same missing-input discipline as
+    every other dollar figure in this module (`_cap_in_shares_clause` a few
+    hundred lines below): omitted or non-positive, every rung's dollar risk
+    stays None and nothing renders for it.
     """
     from app.services.risk_officer import (
         RISK_OFFICER_PERSONA,
@@ -2028,6 +2035,10 @@ def build_risk_officer_messages(
         current_drawdown_pct=(
             current_drawdown_pct
             if isinstance(current_drawdown_pct, (int, float)) else None
+        ),
+        portfolio_value=(
+            portfolio_value
+            if isinstance(portfolio_value, (int, float)) else None
         ),
     )
 

@@ -573,10 +573,23 @@ class RenderedRiskTurn:
 def _rung_head(r: LadderOption) -> str:
     """The rung's computed figures, in `render_risk_assessment`'s exact shape —
     ladder values only, so no formatter exists that could render a payload
-    number."""
+    number.
+
+    CR219 R59-§13(a): `dollar_risk_usd` renders beside `contribution_pts` when
+    (and only when) `build_option_ladder` computed it — a rung built from a
+    missing/zero `portfolio_value` carries `None` there, per that function's own
+    discipline, and this renders NOTHING for it rather than a fabricated `$0`
+    (the `headroom_after_pts` guard just below is the working precedent). Byte-
+    identical output on every rung built without a portfolio value, so this is
+    additive, not a reformat.
+    """
     head = f"**{r.size_pct:.1f}%** of portfolio"
     if r.contribution_pts is not None:
         head += f" (≈ {r.contribution_pts:.2f} pt of drawdown"
+        if r.dollar_risk_usd is not None:
+            from app.services.room_prompts import _money  # lazy: avoids a cycle
+
+            head += f", {_money(r.dollar_risk_usd)} at risk"
         if r.headroom_after_pts is not None:
             head += f", {r.headroom_after_pts:.2f} pt of cap left"
         head += ")"

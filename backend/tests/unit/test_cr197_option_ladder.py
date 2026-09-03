@@ -83,6 +83,56 @@ def test_no_drawdown_supplied_means_no_headroom_claimed():
     assert all(r.contribution_pts is not None for r in _ladder(current_drawdown_pct=None))
 
 
+# ── §13(a): per-rung dollar risk, so no agent ever multiplies ────────────────
+
+
+def test_dollar_risk_is_the_same_expression_the_option_budget_uses():
+    """`portfolio_value * contribution_pts / 100` — the identical arithmetic
+    already computed once, for one size only, at the option-strategist budget
+    site (`room_runner.py`'s `budget = round(portfolio_value *
+    contribution.contribution_pts / 100.0, 2)`). Pinned per rung here so a
+    future edit to either site is caught by drift, not by inspection."""
+    rows = _ladder(portfolio_value=100_000.0)
+    for r in rows:
+        assert r.dollar_risk_usd == pytest.approx(
+            round(100_000.0 * r.contribution_pts / 100.0, 2)
+        )
+    # And the concrete figures, so a silent formula change still fails loudly.
+    by_size = {r.size_pct: r.dollar_risk_usd for r in rows}
+    assert by_size[1.5] == pytest.approx(90.0)
+    assert by_size[3.0] == pytest.approx(180.0)
+    assert by_size[5.0] == pytest.approx(300.0)
+
+
+def test_no_portfolio_value_means_no_dollar_risk_claimed():
+    """CR219 R59-§13(a)'s load-bearing caution: a figure this function cannot
+    honestly compute stays None, never a fabricated $0 — the same rule
+    `headroom_after_pts` already follows for a missing `current_drawdown_pct`."""
+    rows = _ladder()  # portfolio_value not supplied at all
+    assert all(r.dollar_risk_usd is None for r in rows)
+    assert all(r.contribution_pts is not None for r in rows)  # the OTHER figures still compute
+
+
+def test_a_zero_portfolio_value_also_means_no_dollar_risk():
+    """Zero is not a real portfolio value any more than None is — both are
+    'unusable', not 'a book worth $0'. Mirrors `_cap_in_shares_clause`'s
+    `if not portfolio_value or portfolio_value <= 0` guard exactly."""
+    assert all(r.dollar_risk_usd is None for r in _ladder(portfolio_value=0.0))
+
+
+def test_a_negative_portfolio_value_also_means_no_dollar_risk():
+    assert all(r.dollar_risk_usd is None for r in _ladder(portfolio_value=-1.0))
+
+
+def test_an_incoherent_proposal_costs_the_dollar_figure_too():
+    """When `contribution_pts` itself is None (incoherent stop), the dollar
+    risk derived from it must also be None — there is nothing honest to
+    multiply a real portfolio value by."""
+    rows = _ladder(entry=100.0, stop=0.0, portfolio_value=100_000.0)
+    assert all(r.contribution_pts is None for r in rows)
+    assert all(r.dollar_risk_usd is None for r in rows)
+
+
 def test_reward_risk_is_carried_on_every_row():
     rows = _ladder()
     assert all(r.reward_risk == pytest.approx(13.0 / 6.0) for r in rows)

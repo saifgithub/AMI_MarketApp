@@ -548,6 +548,41 @@ def test_flag_on_a_sheet_only_quote_passes_unstruck_end_to_end(monkeypatch):
     assert neu.headline == "RSI 61.4"
 
 
+def test_flag_on_the_production_call_site_threads_portfolio_value(monkeypatch):
+    """CR219 R59-§13(a) — the wiring half. A spy wraps the REAL
+    `build_risk_officer_messages` (the production `build_option_ladder` call
+    site for the Risk Officer path), so a room convene that ships through
+    `_run_risk_officer` without threading `ctx.portfolio_value` fails here,
+    the same shape `test_flag_on_the_production_call_site_threads_profile_
+    non_none` pins for `profile`."""
+    captured: list[dict] = []
+    orig = rr_mod.build_risk_officer_messages
+
+    def spy(*args, **kwargs):
+        captured.append(kwargs)
+        return orig(*args, **kwargs)
+
+    monkeypatch.setattr(rr_mod, "build_risk_officer_messages", spy)
+    gw = _Gateway()
+    events, runner = _run_room(gw, monkeypatch)
+
+    assert len(captured) == 1, "build_risk_officer_messages must be called exactly once per convene"
+    assert "portfolio_value" in captured[0], (
+        "the production call site did not pass `portfolio_value` at all"
+    )
+    # `_run_room`/`RoomRunner.run` did not override the default, so this is
+    # `RoomRunner.run`'s own `portfolio_value=100_000.0` default — proof this
+    # is the RUN's real value, not a stand-in the spy invented.
+    assert captured[0]["portfolio_value"] == 100_000.0
+
+    # End-to-end: the ladder built from that threaded value reaches the
+    # rendered transcript as a per-rung dollar figure — `_rung_head` is
+    # unconditional (ladder-derived, never an officer quotation), so this
+    # proves the wiring reaches the SCREEN, not just the function call.
+    turns = _risk_turns(runner, events)
+    assert any("at risk" in m.content and "$" in m.content for m in turns)
+
+
 def test_flag_on_risk_officer_never_surfaces(monkeypatch):
     gw = _Gateway()
     events, runner = _run_room(gw, monkeypatch)
