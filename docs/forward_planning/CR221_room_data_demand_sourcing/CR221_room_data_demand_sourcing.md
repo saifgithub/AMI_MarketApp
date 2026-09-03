@@ -356,6 +356,42 @@ would double-count for every filer that *does* tag current debt, and would redef
 debt for one consumer only. Recorded as a bound on the figure, not fixed behind the
 reader's back.
 
+### Phase 2 landed, and slot 3 opened (2026-09-03)
+
+The prompt lane cleared at `8d495606`, so the two render sites became writable and phase 2
+shipped: `95e7dbec` (the A1/A3 render, flag-gated, with the dark-ingest warning),
+`7a9854eb` (an unreachable fact store degrades the block instead of killing every Room
+run — the crash a fresh solo-dev DB would have hit), `fb0a916a` (A3's denominator struck at
+the numerator's own period end, not at `as_of`; MSFT was pairing FY2024 interest with a
+2026 balance sheet and reading 7.3%), `e9d3c131` (the ladder's reconciliation clause).
+
+`8b4f189c` then shipped **C3 + C4** — the cash-flow bridge — and with it the fix for a
+defect the bridge could not be built without.
+
+| | Shipped | Flag |
+|---|---|---|
+| **C3/C4** | `fundamentals._ttm_millions` + five source keys off the `.quarterly_cashflow` frame already fetched; `cashflow_bridge_line` on both surfaces; working-capital drivers with a remainder that closes the sum. | `room_cashflow_bridge_enabled` |
+| **DEF400** | `free_cash_flow` — and with it `fcf_yield` and CR218's `capital_return_pct_fcf` — derived as OCF − capex, falling back to `.info` when a filer's four quarters are short. | `fundamentals_fcf_from_statements_enabled` |
+
+**The third thing the build found: a shipped number is wrong, and the Room escalates on it.**
+`.info`'s `freeCashflow` reconciles to nothing — CAT **$5,049M** against $13,569M − $4,575M =
+**$8,994M**, which the same frame's own `Free Cash Flow` row confirms to the dollar. It was
+right when CR218 shipped (that comment records $8,961M), so this is provider drift on a
+rendered figure. It lands on the capital-return line: **200% of TTM FCF** on the stale number,
+**112%** on the filed one. §7's first replay then showed this is not latent — **four of twelve
+agents reasoned from it in a single convene**, three naming *"the 200% FCF payout"* and one
+quoting `$5,049M` by value. A company returning twice its free cash flow is a solvency alarm;
+112% is an ordinary cyclical year. Filed and fixed as **DEF400**.
+
+Two consequences for this CR. **C3/C4 unblocked** — §5's build order had them waiting on
+DEF400, and the fix is the same code path. **C2/C5 remain open**: they want the FCF *series*,
+which the bridge does not carry.
+
+**Slot 2 (I1, EDGAR 8-K `5.02`) stays behind slot 3**, and the reason is worth recording: I1 is
+5 request lines from 1 agent and needs a new external-prose-on-request path, while slot 3 is
+20 lines across 5 items over a frame we already fetch. Breadth per unit of new surface, not
+sequence in the register.
+
 ---
 
 ## 6. The R38 correction — measured, and it lands on a lane in flight
