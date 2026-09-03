@@ -2629,6 +2629,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("debt_maturity_period_end"),
                 profile.get("debt_maturity_beyond_5y"),
                 profile.get("debt_maturity_excluded_st"),
+                profile.get("total_debt") if _is("total_debt", "live") else None,
             ) if (settings.room_debt_maturity_enabled
                   and _is("debt_maturity", "live")) else None,
             # CR221 A3 — the implied rate and both of its inputs. Its own flag,

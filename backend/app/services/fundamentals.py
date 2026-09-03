@@ -1458,6 +1458,7 @@ def debt_maturity_line(
     period_end: str | None,
     beyond_five: float | None,
     excluded_short_term: float | None,
+    sheet_gross_debt: float | None = None,
     *,
     live: bool = True,
 ) -> str | None:
@@ -1486,6 +1487,19 @@ def debt_maturity_line(
     # flattering one to draw.
     if len(labels) < len(edgar_tags.DEBT_MATURITY_LADDER):
         tail += f"; the filer discloses only these {len(labels)} years"
+    # The measured ask is "the maturity schedule for the $45,146M gross debt
+    # load" — the sheet's own figure, which the ladder is not on the basis of.
+    # Ladder + beyond-five + short-term still lands ~4% under it for CAT, and
+    # an agent that adds them up will find that gap whether or not we mention
+    # it. Naming it is the difference between a stated basis difference and a
+    # contradiction the agent has to spend a turn on.
+    accounted = sum(values) + (beyond_five or 0) + (excluded_short_term or 0)
+    if sheet_gross_debt and abs(accounted - sheet_gross_debt) / sheet_gross_debt > 0.02:
+        tail += (
+            f". Does not reconcile to the gross debt ${sheet_gross_debt:,.0f}M "
+            f"stated above: that figure is on a different basis, and "
+            f"${accounted:,.0f}M is what these filed maturity tags account for"
+        )
     return _labelled("Debt maturity ladder", live, [" · ".join(parts), tail])
 
 

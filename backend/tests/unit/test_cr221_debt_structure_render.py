@@ -209,3 +209,31 @@ def test_a_profile_build_survives_an_unreachable_store(monkeypatch) -> None:
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: {})
     profile = room_runner._profile_for_ticker("ANY")
     assert profile["field_state"]["debt_maturity"] == "unavailable"
+
+
+def test_the_ladder_names_its_gap_against_the_sheets_own_gross_debt() -> None:
+    """The measured ask is "the maturity schedule for the $45,146M gross debt".
+
+    That is the sheet's own figure and the ladder is not on its basis: five
+    buckets plus the derived beyond-five plus short-term borrowings account for
+    $43,330M of it. An agent that adds them up finds the 4% gap whether or not
+    the line mentions it, so the line mentions it — a stated basis difference
+    instead of a contradiction to spend a turn on.
+    """
+    profile = _profile()
+    profile["total_debt"] = 45_146
+    profile["field_state"]["total_debt"] = "live"
+    settings.room_debt_maturity_enabled = True
+    sheet = room_prompts._format_profile(profile, AgentId.FUNDAMENTALS_ANALYST)
+
+    assert "Does not reconcile to the gross debt $45,146M" in sheet
+    assert "$43,330M is what these filed maturity tags account for" in sheet
+
+
+def test_a_ladder_that_does_reconcile_says_nothing_about_it() -> None:
+    profile = _profile()
+    profile["total_debt"] = 43_500
+    profile["field_state"]["total_debt"] = "live"
+    settings.room_debt_maturity_enabled = True
+    sheet = room_prompts._format_profile(profile, AgentId.FUNDAMENTALS_ANALYST)
+    assert "Does not reconcile" not in sheet
