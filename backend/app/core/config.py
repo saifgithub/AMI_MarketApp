@@ -890,6 +890,26 @@ class Settings(BaseSettings):
     # shipped `interest_coverage` gets wrong.
     room_cost_of_debt_enabled: bool = False
 
+    # CR221 C3/C4 — the cash-flow bridge (operating cash flow, capex, the
+    # derived free cash flow) plus the working-capital detail behind it. Nine
+    # request lines from six agents, every operand already on the frame the
+    # statements fetch pulls. Own flag for the same per-item attribution reason
+    # as A1/A3 above.
+    room_cashflow_bridge_enabled: bool = False
+
+    # DEF400 — take `free_cash_flow` (and everything derived from it: the FCF
+    # yield, and CR218's capital-return share) from the statements, OCF minus
+    # capex, rather than `.info`'s pre-computed `freeCashflow`.
+    #
+    # Flagged because it MOVES a shipped, rendered number, and off by default
+    # until CR221 §7 has measured it. What it moves it to is the checkable one:
+    # measured 2026-09-03, `.info` puts CAT's TTM FCF at $5,049M against a
+    # $8,994M subtraction that the frame's own `Free Cash Flow` row confirms to
+    # the dollar, which turns CR218's capital-return line from 112% of free cash
+    # flow into 200% — and "the 200% FCF payout" is verbatim what the Portfolio
+    # Manager reasoned from in the CR219 corpus.
+    fundamentals_fcf_from_statements_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

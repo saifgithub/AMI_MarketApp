@@ -154,6 +154,21 @@ def _stmt_series(frame: Any, *row_names: str) -> list[float | None] | None:
     return None
 
 
+def _ttm_millions(series: list[float | None] | None) -> int | None:
+    """The trailing four quarters of a statement row, in whole $M, signed.
+
+    None unless all four are present. Three quarters summed and labelled TTM
+    is a wrong number with a right-sounding name, which is the failure class
+    the whole module's absent-is-not-zero rule exists to prevent.
+    """
+    if series is None or len(series) < 4:
+        return None
+    recent = series[:4]
+    if any(v is None for v in recent):
+        return None
+    return round(sum(recent) / 1_000_000)
+
+
 def _margin_bps(num: list[float | None] | None, den: list[float | None] | None,
                 latest: int, prior: int) -> int | None:
     """Change in a margin between two quarters, in basis points.
@@ -359,6 +374,63 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
         recent = [v for v in capex[:4] if v is not None]
         if len(recent) == 4:
             out["capex_ttm"] = round(abs(sum(recent)) / 1_000_000)
+
+    # ── The cash-flow bridge: OCF - capex = FCF (CR221 C3/C4, DEF400) ─────
+    # Two things at once, because they are one disclosure.
+    #
+    # C3/C4 is what six agents asked for in nine request lines — *"a detailed
+    # free cash flow reconciliation showing changes in working capital versus
+    # CapEx"*. Every operand is already on the frame fetched above; only the
+    # capex leg survived the function, so the bridge could not be stated.
+    #
+    # DEF400 is why it must be derived rather than read. `.info`'s
+    # `freeCashflow` is a single pre-computed figure that reconciles to
+    # nothing: measured 2026-09-03, CAT's is $5,049M against $13,569M of
+    # operating cash flow less $4,575M of capex = $8,994M, and the frame's own
+    # `Free Cash Flow` row agrees with the subtraction to the dollar (MSFT
+    # likewise: $16,546M stated, $66,987M derived). It was right when CR218
+    # was written — that comment records $8,961M — so this is provider drift
+    # on a shipped number, not a basis we mis-read. The subtraction is
+    # checkable against a row on the same frame; the `.info` scalar is not.
+    #
+    # Absent is absent: an incomplete quarter set yields no bridge rather than
+    # a partial-year figure wearing a TTM label.
+    ocf = _stmt_series(
+        cashflow, "Operating Cash Flow",
+        "Cash Flow From Continuing Operating Activities",
+        "Total Cash From Operating Activities",
+    )
+    ocf_ttm = _ttm_millions(ocf)
+    if ocf_ttm is not None and len(periods) >= 4:
+        out["operating_cash_flow_ttm"] = ocf_ttm
+        out["cashflow_ttm_basis"] = f"{periods[3]} to {periods[0]}"
+        if "capex_ttm" in out:
+            # `capex_ttm` is stored as a magnitude, so this is a subtraction
+            # even though the underlying row is a signed outflow.
+            out["free_cash_flow_ttm"] = ocf_ttm - out["capex_ttm"]
+
+    # Working-capital detail. The total and its three named drivers, each an
+    # independent 4-quarter series — a driver that does not report all four
+    # quarters is dropped rather than back-filled, and the render carries the
+    # remainder as `other` so the parts always sum to the stated total. The
+    # sign is the statement's own: negative consumed cash.
+    if out.get("cashflow_ttm_basis"):
+        wc_total = _ttm_millions(_stmt_series(cashflow, "Change In Working Capital"))
+        components = {
+            "wc_receivables_ttm": ("Change In Receivables", "Changes In Receivables"),
+            "wc_inventory_ttm": ("Change In Inventory", "Changes In Inventories"),
+            "wc_payables_ttm": (
+                "Change In Payables And Accrued Expense", "Change In Payable",
+            ),
+        }
+        found = {
+            field: value
+            for field, rows in components.items()
+            if (value := _ttm_millions(_stmt_series(cashflow, *rows))) is not None
+        }
+        if wc_total is not None and found:
+            out["wc_change_ttm"] = wc_total
+            out.update(found)
 
     # ── Interest coverage, latest quarter (CR219 R33) ────────────────────
     # The #1 arm request across the CR219 measurement — 21 mentions from 9 of
@@ -870,6 +942,15 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
                 pass
 
     free_cash_flow = _num("freeCashflow")
+    # DEF400 — `.info`'s `freeCashflow` reconciles to nothing on this same
+    # provider's own statements, so prefer the subtraction that does. Reads
+    # through the 6h statements cache the merge below already populates, so
+    # this costs no extra fetch. Falls back rather than blanking: a filer whose
+    # quarters are incomplete keeps the `.info` figure it has always had.
+    if settings.fundamentals_fcf_from_statements_enabled:
+        derived = (fetch_statement_facts(ticker) or {}).get("free_cash_flow_ttm")
+        if derived is not None:
+            free_cash_flow = derived * 1_000_000
     market_cap = _num("marketCap")
     fcf_yield = fcf_yield_pct(free_cash_flow, market_cap)
     if fcf_yield is not None:
@@ -1531,6 +1612,88 @@ def cost_of_debt_line(
     )
 
 
+_FCF_BASIS_DIVERGENCE_PCT = 2.0
+
+
+def _signed_millions(value: float) -> str:
+    return f"{'-' if value < 0 else '+'}${abs(value):,.0f}M"
+
+
+def cashflow_bridge_line(
+    operating_cash_flow: int | None,
+    capex: int | None,
+    free_cash_flow: int | None,
+    basis: str | None,
+    wc_change: int | None,
+    wc_receivables: int | None,
+    wc_inventory: int | None,
+    wc_payables: int | None,
+    sheet_free_cash_flow: int | None = None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 C3/C4 — the reconciliation nine request lines from six agents asked for.
+
+    The ask is verbatim *"a detailed free cash flow reconciliation showing
+    changes in working capital versus CapEx"*, and the reason it matters is on
+    the Portfolio Manager's own follow-up: it wanted to know whether *"the 200%
+    FCF payout was a structural deficit or a temporary"* swing, and could not
+    tell from a single pre-computed FCF scalar with nothing behind it.
+
+    So this states the subtraction rather than its result, and states what
+    working capital did inside it. The working-capital drivers are printed with
+    an `other` remainder computed to close the gap, because the three named rows
+    do not sum to the reported total for any filer measured (CAT: -$4,435M
+    named against -$1,067M reported) and three numbers that visibly fail to add
+    up read as an error in the sheet rather than as an incomplete decomposition.
+
+    The last argument is DEF400's tripwire. While that fix is off, the sheet's
+    own `free_cash_flow` comes from `.info` and this bridge does not reconcile
+    to it — CAT $5,049M against $8,994M. Two contradicting numbers on one sheet
+    with nothing said about it is the exact CR219 failure class, so the
+    divergence is named in the line rather than left for an agent to trip over.
+    """
+    if operating_cash_flow is None or capex is None or free_cash_flow is None:
+        return None
+    dated = f", 4 quarters {basis}" if basis else ""
+    parts = [
+        f"operating cash flow ${operating_cash_flow:,.0f}M "
+        f"- capex ${capex:,.0f}M = free cash flow ${free_cash_flow:,.0f}M{dated}"
+    ]
+
+    if wc_change is not None:
+        verb = "consumed" if wc_change < 0 else "released"
+        drivers = [
+            (label, value)
+            for label, value in (
+                ("receivables", wc_receivables),
+                ("inventory", wc_inventory),
+                ("payables", wc_payables),
+            )
+            if value is not None
+        ]
+        named = sum(value for _, value in drivers)
+        detail = [f"{label} {_signed_millions(value)}" for label, value in drivers]
+        remainder = wc_change - named
+        if round(remainder) != 0:
+            detail.append(f"other {_signed_millions(remainder)}")
+        parts.append(
+            f"working capital {verb} ${abs(wc_change):,.0f}M "
+            f"({', '.join(detail)})" if detail
+            else f"working capital {verb} ${abs(wc_change):,.0f}M"
+        )
+
+    if sheet_free_cash_flow is not None and free_cash_flow:
+        drift = abs(sheet_free_cash_flow - free_cash_flow) / abs(free_cash_flow) * 100
+        if drift > _FCF_BASIS_DIVERGENCE_PCT:
+            parts.append(
+                f"the free cash flow ${sheet_free_cash_flow:,.0f}M stated above is a "
+                f"vendor-supplied figure that does not reconcile to this subtraction; "
+                f"${free_cash_flow:,.0f}M is what the filed statements support"
+            )
+
+    return _labelled("Cash-flow bridge", live, parts)
+
+
 def capital_return_line(
     total_millions: int | None,
     buyback_millions: int | None,
@@ -2170,6 +2333,15 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
             # CR219 R34 — same builder, same order, same wording as the Room
             # sheet (parity rule above).
             capex_line(data.get("capex_ttm"), live=False),
+            # CR221 C3/C4 — same builder, same order, same wording as the
+            # Room sheet (parity rule above), behind the same flag.
+            cashflow_bridge_line(
+                data.get("operating_cash_flow_ttm"), data.get("capex_ttm"),
+                data.get("free_cash_flow_ttm"), data.get("cashflow_ttm_basis"),
+                data.get("wc_change_ttm"), data.get("wc_receivables_ttm"),
+                data.get("wc_inventory_ttm"), data.get("wc_payables_ttm"),
+                data.get("free_cash_flow"), live=False,
+            ) if settings.room_cashflow_bridge_enabled else None,
             # CR219 R33 — same builder, same order, same wording as the Room
             # sheet (parity rule above).
             interest_coverage_line(

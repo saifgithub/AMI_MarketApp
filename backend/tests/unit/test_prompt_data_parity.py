@@ -155,6 +155,17 @@ _FUND_SENTINEL: dict = {
     # CR219 R34 — capital expenditure, from the same `.quarterly_cashflow`
     # call the buyback/dividend rows above already read.
     "capex_ttm": 6543,
+    # CR221 C3/C4 — the bridge and the working-capital detail, from the same
+    # `.quarterly_cashflow` frame. Fingerprints chosen not to collide with any
+    # figure above; the three drivers deliberately do NOT sum to the total, so
+    # the render's `other` remainder (+300) is exercised too.
+    "operating_cash_flow_ttm": 9876,
+    "free_cash_flow_ttm": 3333,
+    "cashflow_ttm_basis": "CFBASISSENT",
+    "wc_change_ttm": -800,
+    "wc_receivables_ttm": -1600,
+    "wc_inventory_ttm": -400,
+    "wc_payables_ttm": 900,
     # CR219 R37 — today's price/EV against each of the last several FYs' own
     # EPS/EBITDA, median'd. Values chosen not to collide with any other
     # fingerprint here; window strings distinct per direction.
@@ -562,10 +573,25 @@ def _fake_statement_frames():
             # how the fetcher only reads `[:4]` — proves the slice, not just
             # the arithmetic, if it ever regressed to summing all five.
             [-2e9, -1.5e9, -1.8e9, -1.243e9, -9e8],      # Capex      → 6,543M
+            # CR221 C3/C4 — the bridge and the working-capital detail behind
+            # it. Same reason the capex row above exists: without these the
+            # branch never fires and the parity guard would pass while knowing
+            # nothing about five new fields. OCF 9,876M - capex 6,543M = FCF
+            # 3,333M. The three named drivers sum to -1,100M against a reported
+            # -800M total, so the render's `other` remainder is +300M — the
+            # named rows not adding up to the total is the real filers'
+            # behaviour (measured on CAT and MSFT), not an arithmetic slip.
+            [3e9, 2.5e9, 2.376e9, 2e9, 1e9],             # OCF        → 9,876M
+            [-2e8, -2e8, -2e8, -2e8, -1e8],              # ΔWC        →  -800M
+            [-4e8, -4e8, -4e8, -4e8, -1e8],              # Receivables→ -1,600M
+            [-1e8, -1e8, -1e8, -1e8, -1e8],              # Inventory  →  -400M
+            [2.25e8, 2.25e8, 2.25e8, 2.25e8, 1e8],       # Payables   →   900M
         ],
         index=[
             "Repurchase Of Capital Stock", "Cash Dividends Paid",
-            "Capital Expenditure",
+            "Capital Expenditure", "Operating Cash Flow",
+            "Change In Working Capital", "Change In Receivables",
+            "Change In Inventory", "Change In Payables And Accrued Expense",
         ],
         columns=periods,
     )
@@ -675,6 +701,11 @@ def env(monkeypatch):
     monkeypatch.setattr(settings, "use_real_market_data", True)
     monkeypatch.setattr(settings, "suppress_analyst_consensus", False)
     monkeypatch.setattr(settings, "adanos_api_key", "x")  # gates the 1-on-1 social block
+    # CR221 C3/C4 — on, because these five fields DO come out of
+    # `fetch_live_fundamentals` (unlike A1/A3, which room_runner overlays), so
+    # with the flag off this guard would report them unrendered. On is also the
+    # state the guard is for: it proves each one reaches the sheet.
+    monkeypatch.setattr(settings, "room_cashflow_bridge_enabled", True)
 
     # 1) Discover the fundamentals produced-field set from the REAL fetcher driven
     #    by a fake yfinance that answers every key — BEFORE we stub the fetcher.
@@ -805,6 +836,16 @@ def env(monkeypatch):
             "interest_coverage_quarter": "COVQUARTERSENT",
             # CR219 R34.
             "capex_ttm": "$6,543M (trailing 4 quarters)",
+            # CR221 C3/C4 — every term of the bridge separately: an operand
+            # silently dropped from a stated subtraction is the one failure
+            # this line exists to prevent.
+            "operating_cash_flow_ttm": "operating cash flow $9,876M",
+            "free_cash_flow_ttm": "free cash flow $3,333M",
+            "cashflow_ttm_basis": "CFBASISSENT",
+            "wc_change_ttm": "working capital consumed $800M",
+            "wc_receivables_ttm": "receivables -$1,600M",
+            "wc_inventory_ttm": "inventory -$400M",
+            "wc_payables_ttm": "payables +$900M",
             # CR219 R37 — three keys per half (median, year-count, window
             # string), each fingerprinted separately so a mix-up between the
             # P/E half and the EV/EBITDA half — or a live median paired with

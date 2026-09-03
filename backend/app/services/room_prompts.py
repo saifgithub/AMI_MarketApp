@@ -38,6 +38,7 @@ from app.services.fundamentals import (
     buyback_pacing_line,
     capex_line,
     capital_return_line,
+    cashflow_bridge_line,
     cost_of_debt_line,
     day_move_line,
     debt_maturity_line,
@@ -1608,6 +1609,13 @@ def build_room_messages(
     # ordinary case and the prompt is then byte-identical to pre-CR172.
     option_candidates: Sequence[Any] | None = None,
     option_spot: float | None = None,
+    # CR219 R60 — the prior convene's comparison basis for THIS (user, ticker),
+    # already looked up by the runner (`room_runner._room_delta_context`) —
+    # None on a first convene or when the only prior was an outage abstain.
+    # Rendered for the PM's VERDICT turn only, same scope as `floor_preview_block`
+    # / `scoreboard_block` just above: this is the CIO's own comparison against
+    # a prior CIO decision, not evidence the eleven arguing agents weigh.
+    prior_convene: dict[str, Any] | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -1786,6 +1794,7 @@ def build_room_messages(
     # scoped to the one agent whose verdict the floor overrides.
     floor_preview_block = ""
     scoreboard_block = ""
+    delta_block = ""
     if phase == "VERDICT":
         floor_preview_block = _floor_state_preview(
             mandate,
@@ -1799,6 +1808,18 @@ def build_room_messages(
         # position would replace the judgement that turn exists to exercise
         # (the same scoping CR197 gives the option ladder).
         scoreboard_block = _room_scoreboard(transcript)
+        # CR219 R60 — "what changed since your last convene". Same VERDICT-only
+        # scope as the two blocks above and the same reason: this is the CIO's
+        # own comparison against a prior CIO decision, not evidence the eleven
+        # arguing agents' turns exist to weigh. `prior_convene` is None on a
+        # first convene or when the only prior was an outage abstain — the
+        # runner resolves that BEFORE calling here (`_room_delta_context`), so
+        # this file never touches the database.
+        delta_block = _room_delta_line(
+            prior_convene,
+            this_sheet_state=(profile.get("field_state") or {}),
+            this_reference_price=_prompt_reference_price(profile),
+        )
 
     # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
     # as forbidding a second entry in a name already held — long_only only bars shorts.
@@ -1908,6 +1929,10 @@ def build_room_messages(
         # CR219 R50 — immediately above the transcript it is computed FROM, so
         # the CIO reads the tally and the prose it summarises as one thing.
         f"{scoreboard_block}"
+        # CR219 R60 — beside the scoreboard, both AMI's own arithmetic and both
+        # empty on the ordinary paths (byte-identical prompt then): a first
+        # convene, or a convene whose only prior was an outage abstain.
+        f"{delta_block}"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"
         f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "
@@ -2605,6 +2630,26 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             capex_line(
                 profile.get("capex_ttm") if _is("capex_ttm", "live") else None,
             ),
+            # CR221 C3/C4 — the bridge the capex line above is one leg of.
+            # Same flag discipline as A1/A3 below: §7 attributes per item, so
+            # the control arm is a flag flip against one cached profile.
+            cashflow_bridge_line(
+                profile.get("operating_cash_flow_ttm")
+                if _is("operating_cash_flow_ttm", "live") else None,
+                profile.get("capex_ttm") if _is("capex_ttm", "live") else None,
+                profile.get("free_cash_flow_ttm")
+                if _is("free_cash_flow_ttm", "live") else None,
+                profile.get("cashflow_ttm_basis")
+                if _is("cashflow_ttm_basis", "live") else None,
+                profile.get("wc_change_ttm") if _is("wc_change_ttm", "live") else None,
+                profile.get("wc_receivables_ttm")
+                if _is("wc_receivables_ttm", "live") else None,
+                profile.get("wc_inventory_ttm")
+                if _is("wc_inventory_ttm", "live") else None,
+                profile.get("wc_payables_ttm")
+                if _is("wc_payables_ttm", "live") else None,
+                profile.get("free_cash_flow") if _is("free_cash_flow", "live") else None,
+            ) if settings.room_cashflow_bridge_enabled else None,
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
             # mentions, 9/12 agents) in the CR219 measurement. Ratio and
             # quarter are gated on separate field_state keys — the same
@@ -3427,6 +3472,104 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
         "\nRoom scoreboard — every position stated so far, tabulated by AMI from "
         "the agents' own stance lines (not a summary, and not another voice; "
         f"this is the transcript below, counted). {caption}.\n"
+        + "\n".join(lines)
+        + "\n"
+    )
+
+
+def _prompt_reference_price(profile: dict[str, Any]) -> float | None:
+    """The same strict price `room_runner._reference_close` computes, mirrored
+    here rather than imported: `room_runner` imports FROM this module, so the
+    reverse import would be circular. `_field_is_live` above is the identical
+    gate `_reference_close` reads off `field_state["technicals"]`, so the two
+    functions read the same fact under two names for the same reason —
+    neither is the source of truth; `field_state` is.
+
+    Deliberately NOT `_reference_price_and_label`'s `base_price` fallback a
+    few functions up: that helper answers "what price can this line show at
+    all", and this one answers "the exact price WP11's ledger and R52's bank
+    hook captured", which must be the identical figure the delta line's price
+    move is computed against — a fallback price here would compare a
+    permissive 'now' against a strict 'then' banked by `_reference_close`.
+    """
+    if not _field_is_live(profile, "technicals"):
+        return None
+    try:
+        return float(profile["last_close"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+# CR219 R60 — "what changed since your last convene" (fable/05 §14).
+#
+# `prior` is the raw bundle `room_runner._room_delta_context` looked up —
+# never a DB call from this module, the same "runner does I/O, this file only
+# formats" split `_room_scoreboard` above and `_floor_state_preview` both
+# already keep. `None` means no usable prior exists (first convene, or the
+# only prior was an outage abstain) and the caller does not even reach this
+# function in that case (see `build_room_messages`) — but the guard is
+# repeated here too, same defensive style `_floor_state_preview` uses for its
+# own all-absent case, so a future caller cannot skip it by construction.
+#
+# Every number here is computed BY THIS FUNCTION from stored data — the PM
+# never composes the delta itself (design doc §13's rule, applied to the one
+# surface built for exactly that comparison).
+def _room_delta_line(
+    prior: dict[str, Any] | None,
+    *,
+    this_sheet_state: dict[str, str],
+    this_reference_price: float | None,
+) -> str:
+    """`prior` keys: `date` (datetime), `action` (str), `kill_criterion`
+    (str | None), `reference_price` (float | None), `sheet_state`
+    (dict[str, str] | None — absent on a run banked before this WP).
+
+    Degrades by OMISSION, never by a placeholder: a prior with no
+    `reference_price` on either side skips the price-move sentence rather
+    than dividing by an absent number; a prior with no `sheet_state` skips
+    the field-transition list rather than claiming nothing changed (that
+    claim would be a fabrication, not an absence — the R38 no-segment logic
+    this WP's own scope note points at). The prior action and date are
+    always usable when `prior` is non-None at all, since the caller already
+    filtered out the one case (`NO_VERDICT`) where even those are not a real
+    call to compare against.
+    """
+    if prior is None:
+        return ""
+
+    lines: list[str] = [
+        f"- Last convened {prior['date'].strftime('%Y-%m-%d')}: {prior['action']}."
+    ]
+
+    prior_price = prior.get("reference_price")
+    if prior_price is not None and this_reference_price is not None and prior_price:
+        move_pct = (this_reference_price - prior_price) / prior_price * 100
+        lines.append(
+            f"  Price then ${prior_price:.2f} -> now ${this_reference_price:.2f} "
+            f"({move_pct:+.1f}%)."
+        )
+
+    prior_sheet = prior.get("sheet_state")
+    if prior_sheet:
+        transitions = [
+            (field, prior_sheet[field], this_sheet_state[field])
+            for field in sorted(prior_sheet)
+            if field in this_sheet_state and this_sheet_state[field] != prior_sheet[field]
+        ]
+        if transitions:
+            changes = ", ".join(f"{f}: {a} -> {b}" for f, a, b in transitions)
+            lines.append(f"  Fact-sheet fields that changed state: {changes}.")
+
+    prior_kill = prior.get("kill_criterion")
+    if prior_kill:
+        lines.append(
+            f"  Last time's kill criterion: \"{prior_kill}\" — address in your "
+            f"narration whether it has triggered."
+        )
+
+    return (
+        "\nWhat changed since the last convene — built by AMI from the stored "
+        "prior verdict, not a model's recollection:\n"
         + "\n".join(lines)
         + "\n"
     )

@@ -411,6 +411,15 @@ class _RoomContext:
     # structure with the run's clock would overstate its freshness by exactly
     # the interval the user is being shown a drift for.
     option_priced_at: datetime | None = None
+    # CR219 R60 — the prior convene's comparison basis for this (user, ticker),
+    # looked up ONCE at context-build time (`_room_delta_context`, called from
+    # `start_run` right after `ctx` exists) and reused for every PM prompt this
+    # run builds (self-consistency can call `_stream_pm_response` N times).
+    # None on a first convene or when the only prior was an outage abstain —
+    # `build_room_messages` renders nothing in that case, same absence
+    # `sector_weights`'s empty-dict default degrades to "no line" rather than
+    # a fabricated one.
+    prior_convene_delta: dict[str, Any] | None = None
 
 
 # CR104 — the numeric fundamentals fields tracked per-field in
@@ -494,6 +503,13 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # capex). Optional-live-only for the same absent-row reason as the two
     # rows above it.
     "capex_ttm",
+    # CR221 C3/C4 — the cash-flow bridge and the working-capital detail behind
+    # it, from that same `.quarterly_cashflow` frame. Optional-live-only for
+    # exactly the reason the render needs: XOM reports no working-capital rows
+    # at all (measured), so the bridge must be able to ship its subtraction
+    # with the detail absent rather than all-or-nothing.
+    "operating_cash_flow_ttm", "free_cash_flow_ttm", "cashflow_ttm_basis",
+    "wc_change_ttm", "wc_receivables_ttm", "wc_inventory_ttm", "wc_payables_ttm",
     # CR219 R33 — interest coverage (EBIT / interest expense), the single
     # most-requested figure in the CR219 arm measurement (21 mentions, 9/12
     # agents). From the same `.quarterly_income_stmt` the margin-trend block
@@ -4141,6 +4157,62 @@ class RoomRunner:
             ).scalar_one_or_none()
             return row.id if row else None
 
+    def _room_delta_context(self, user_id: UUID, ticker: str) -> dict[str, Any] | None:
+        """CR219 R60 — the raw bundle `room_prompts._room_delta_line` renders.
+
+        Same shape as `_find_recent_completed_run` right above (latest
+        `status="completed"` row with a verdict, for this exact user+ticker,
+        ordered by `finished_at DESC`) with two differences: no dedup-window
+        cutoff — the delta line wants the last real convene regardless of how
+        long ago it was, not only a recent one — and it returns the verdict's
+        own comparison fields, not just an id.
+
+        No self-match risk: this is called from `start_run` right after the
+        CURRENT run's own row is inserted (`status="running"`, no verdict yet
+        — see the call site), so the `status="completed"` filter alone already
+        excludes it; there is no `id != this_run_id` clause to forget.
+
+        Returns None on: no prior run at all, a prior row whose `verdict` JSON
+        fails to parse (defensive — `_persist_run` always writes a valid
+        `Verdict.model_dump()`, but a hand-edited or pre-schema row should
+        degrade to "no delta", never raise into a live convene), or a prior
+        verdict whose action is `NO_VERDICT` — an outage abstain is not a real
+        call to compare against (R51/DEF376; the WP's own preferred simpler
+        rule is to skip rather than walk further back). `sheet_state` inside
+        the returned dict is None on a prior banked before this WP shipped —
+        the caller (`_room_delta_line`) renders the partial line for that
+        shape, never an error.
+        """
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow)
+                .where(RoomRunRow.user_id == user_id)
+                .where(RoomRunRow.ticker == ticker)
+                .where(RoomRunRow.status == "completed")
+                .where(RoomRunRow.verdict.isnot(None))
+                .order_by(RoomRunRow.finished_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+        if row is None or row.finished_at is None:
+            return None
+        try:
+            verdict = Verdict.model_validate(row.verdict)
+        except Exception:
+            logger.warning(
+                "room_delta_prior_verdict_unparseable",
+                user_id=str(user_id), ticker=ticker, run_id=str(row.id),
+            )
+            return None
+        if verdict.action == VerdictAction.NO_VERDICT:
+            return None
+        return {
+            "date": row.finished_at,
+            "action": str(verdict.action),
+            "kill_criterion": verdict.kill_criterion,
+            "reference_price": verdict.reference_price,
+            "sheet_state": verdict.sheet_state,
+        }
+
     def _resolve_and_charge_feeds(
         self, user_id: UUID, ticker: str, *, withheld: frozenset[AgentId] = frozenset()
     ) -> tuple[NewsFeed, SocialFeed, int]:
@@ -4688,6 +4760,12 @@ class RoomRunner:
             roster_next_step=roster.next_step,
             profile=profile,
         )
+        # CR219 R60 — looked up ONCE per run, same un-wrapped style as
+        # `_find_active_run`/`_find_recent_completed_run` above (a single
+        # indexed row read, not the heavier to_thread-wrapped I/O below it).
+        # None on a first convene or an outage-abstain-only prior; the runner
+        # never re-queries per PM prompt, including under self-consistency.
+        ctx.prior_convene_delta = self._room_delta_context(user_id, ticker)
 
         profile = ctx.profile
         # Initialise trader prices off the profile. CR104: `base_price` is no
@@ -5282,6 +5360,38 @@ class RoomRunner:
             run.duration_ms = int(
                 (run.finished_at - (run.started_at or run.finished_at)).total_seconds() * 1000
             )
+            # CR219 R60 — the comparison basis for the NEXT convene's delta
+            # line, written into the verdict JSONB itself (scope item 1; no
+            # migration). Separate from R55's ledger bank call just below:
+            # that writes a ROW to the `verdict_outcomes` table for scoring,
+            # this writes two FIELDS onto `run.verdict` for the next prompt to
+            # read back — neither write depends on the other succeeding, and
+            # this one rides the SAME `_persist_run(run)` call the status flip
+            # above already needs, so there is no second DB round trip.
+            #
+            # `reference_price` is the identical `_reference_close(profile)`
+            # R55 banks a few lines down — read once, used twice, never
+            # re-derived — so the delta line's "price move since" and the
+            # calibration ledger's own reference price can never disagree.
+            # `sheet_state` is a plain copy of `profile["field_state"]`: it is
+            # already the compact `field -> state` map the design calls for,
+            # so there is no compaction logic here beyond the copy (a dict
+            # literal, not the live `profile` object — the next convene must
+            # read what THIS run saw, not a dict some later mutation touched).
+            #
+            # Guarded on `run.verdict is not None` even though every path that
+            # reaches RoomStatus.COMPLETED sets it (`_assemble_no_verdict`,
+            # `_assemble_verdict`, or the LLM-parsed path all assign `verdict`
+            # before the phase loop exits) — the same defensive style R55's
+            # own `bank_verdict_outcome` swallow-and-skip already applies one
+            # call down, so a future third branch that somehow reaches here
+            # without a verdict degrades to "no delta persisted", never a
+            # crash on the way to COMPLETED.
+            if run.verdict is not None:
+                run.verdict = run.verdict.model_copy(update={
+                    "sheet_state": dict(profile.get("field_state") or {}),
+                    "reference_price": _reference_close(profile),
+                })
             _persist_run(run)
             # CR219 R55 — bank this verdict in the calibration ledger.
             #
@@ -6089,6 +6199,11 @@ async def _stream_pm_response(
         # which is the same reason DEF238 records for `sector_weights` above.
         option_candidates=ctx.option_candidates,
         option_spot=ctx.option_spot,
+        # CR219 R60 — looked up once per run in `start_run`, not here: every
+        # self-consistency sample (this function can be called N times per
+        # run) reads the SAME prior, which is correct — the prior convene did
+        # not change mid-run.
+        prior_convene=ctx.prior_convene_delta,
     )
     # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
     # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of
