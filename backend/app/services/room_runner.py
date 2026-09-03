@@ -4725,25 +4725,27 @@ class RoomRunner:
                         _pm_samples = max(1, int(settings.pm_self_consistency_samples))
                         _voted: tuple[str, Verdict, str] | None = None
                         if _pm_samples > 1:
-                            _raws = [
-                                r for r in await asyncio.gather(*(
-                                    _stream_pm_response(
+                            # DEF397 — lost draws are replaced, not silently
+                            # dropped from the denominator; see the helper.
+                            _cands, raw_text, _lost, _recovered = (
+                                await _draw_pm_candidates(
+                                    _pm_samples,
+                                    lambda: _stream_pm_response(
                                         run_id=run_id, ctx=ctx, profile=profile,
-                                        formatter=formatter, run=run, gateway=gateway,
+                                        formatter=formatter, run=run,
+                                        gateway=gateway,
                                         agent_timeout_s=agent_timeout_s,
-                                    )
-                                    for _ in range(_pm_samples)
-                                )) if r
-                            ]
-                            _cands: list[tuple[str, Verdict]] = []
-                            for _rt in _raws:
-                                _n, _v = _parse_pm_verdict(_rt, ctx)
-                                if _v is not None:
-                                    _cands.append((_n, _v))
-                            # Keep one raw reply so an all-unparseable draw still
-                            # reaches DEF058's reformat retry rather than silently
-                            # costing the run its verdict.
-                            raw_text = _raws[0] if _raws else ""
+                                    ),
+                                    lambda _rt: _parse_pm_verdict(_rt, ctx),
+                                )
+                            )
+                            if _lost:
+                                logger.warning(
+                                    "room_pm_draws_replaced",
+                                    run_id=str(run_id),
+                                    lost=_lost,
+                                    recovered=_recovered,
+                                )
                             if _cands:
                                 _voted = _vote_pm_samples(_cands)
                         else:
@@ -4805,6 +4807,18 @@ class RoomRunner:
                                         f"{parsed.reason} (Your team was split on "
                                         f"this — {_agreement} of the independent "
                                         f"reads landed here.)"
+                                    )
+                                })
+                            if len(_cands) < _pm_samples:
+                                # DEF397 — the vote ran short even after the
+                                # replacement round. A "4/4" that was really
+                                # 4-of-5-requested must say so where the user
+                                # reads it (CR040), not only in a log line.
+                                parsed = parsed.model_copy(update={
+                                    "reason": (
+                                        f"{parsed.reason} (Only {len(_cands)} of "
+                                        f"{_pm_samples} independent reads were "
+                                        f"readable for this vote.)"
                                     )
                                 })
                         elif not raw_text:
@@ -5597,6 +5611,52 @@ async def _run_risk_officer(
             ),
         ):
             yield ev
+
+
+async def _draw_pm_candidates(
+    pm_samples: int,
+    draw: Callable[[], Awaitable[str]],
+    parse: Callable[[str], tuple[str, Verdict | None]],
+) -> tuple[list[tuple[str, Verdict]], str, int, int]:
+    """Collect the CIO's independent draws, replacing the ones that die.
+
+    DEF397, dropped-draw leg. An empty stream (timeout) or an unparseable
+    reply used to be dropped silently, shrinking the vote denominator: the
+    CR219 R47 corpus (300 draws) measured every observed verdict flip as
+    exactly this — a lost draw makes the survivor count even, a 2-2 tie
+    breaks to PASS, and the run then reports agreement over the survivors
+    ("4/4") as if all five requested reads agreed. One bounded replacement
+    round (at most `lost` extra draws, and only when at least one original
+    stream answered — a dark provider is DEF059's outage path, not ours)
+    restores the requested denominator instead of voting over whoever
+    survived.
+
+    Returns (candidates, first_raw_text, lost, recovered). `first_raw_text`
+    is kept so an all-unparseable run still reaches DEF058's reformat retry
+    rather than silently costing the run its verdict.
+    """
+    raws = [r for r in await asyncio.gather(*(draw() for _ in range(pm_samples))) if r]
+    cands: list[tuple[str, Verdict]] = []
+    for rt in raws:
+        n, v = parse(rt)
+        if v is not None:
+            cands.append((n, v))
+    lost = pm_samples - len(cands)
+    replacement_raws: list[str] = []
+    recovered = 0
+    if lost and raws:
+        replacement_raws = [
+            r for r in await asyncio.gather(*(draw() for _ in range(lost))) if r
+        ]
+        for rt in replacement_raws:
+            if len(cands) >= pm_samples:
+                break
+            n, v = parse(rt)
+            if v is not None:
+                cands.append((n, v))
+                recovered += 1
+    raw_text = (raws or replacement_raws or [""])[0]
+    return cands, raw_text, lost, recovered
 
 
 def _vote_pm_samples(
