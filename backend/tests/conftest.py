@@ -16,9 +16,12 @@ human to declare anything per-surface, because per-surface declaration is the
 mechanism that already failed three times (DEF357, DEF363, DEF365).
 """
 
+import atexit
 import json
 import os
+import shutil
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path as _Path
 from uuid import uuid4
@@ -420,6 +423,34 @@ _wire_records: list[dict] = []
 
 
 def pytest_configure(config):
+    # Redirect pytest's tmp_path/tmp_path_factory base to the external drive
+    # when it's mounted: a 52GB backlog of abandoned pytest-of-<user> dirs
+    # filled the internal disk (cleared 2026-09-03) because interrupted runs
+    # skip pytest's keep-last-3 cleanup. Each invocation gets its OWN root,
+    # not a shared one — pytest's numbered-dir pruning selects victims by
+    # sequence number with no liveness check, so two concurrent suites
+    # sharing a root delete each other's live fixtures mid-run (measured
+    # 2026-09-03; see failure_patterns.md P33 for the sibling git-side class).
+    # atexit reaps this run's root; the 48h sweep reaps roots whose runs were
+    # killed before their atexit could — a 2-day-old root cannot be live.
+    # No-op on machines without the drive (CI included) and when the caller
+    # already pinned PYTEST_DEBUG_TEMPROOT itself.
+    _external_drive = _Path("/Volumes/Extreme Pro")
+    if _external_drive.exists() and "PYTEST_DEBUG_TEMPROOT" not in os.environ:
+        _roots = _external_drive / "tmp_claude_pytest" / "roots"
+        _roots.mkdir(parents=True, exist_ok=True)
+        _cutoff = time.time() - 48 * 3600
+        for _old in _roots.iterdir():
+            try:
+                if _old.stat().st_mtime < _cutoff:
+                    shutil.rmtree(_old, ignore_errors=True)
+            except OSError:
+                pass
+        _root = _roots / f"run_{os.getpid()}_{uuid4().hex[:8]}"
+        _root.mkdir()
+        os.environ["PYTEST_DEBUG_TEMPROOT"] = str(_root)
+        atexit.register(shutil.rmtree, str(_root), True)
+
     from starlette.testclient import TestClient
 
     original_request = TestClient.request
