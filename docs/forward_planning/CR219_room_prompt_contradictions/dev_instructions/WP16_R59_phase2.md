@@ -38,6 +38,19 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
   latency instead of token-live streaming, so a wrong triple is never shown
   live.
 
+- **A2 ACCEPTED 2026-09-03** — `0f9cc06d`, unconditional key_number/decisive_number
+  verification with headline demotion, 80/80 on dispatcher rerun (52 new + the
+  CR197/CR201 pins). The dark opt-in flag it initially shipped was removed on
+  dispatcher instruction; the two reconciled fixtures were verified honest (the
+  `"RSI 43"` placeholder was genuinely unquotable; pins survive on the rung's
+  own `0.18`). **Two follow-ups queued:** (1) the production call site does not
+  thread `profile` yet — ladder-only verification would strike honest SHEET
+  quotes, so promotion hold `CR219-F2-PROFILE` is ACTIVE in
+  `infra/PROMOTION_HOLD.md` until the runner-lane hunk + wiring test land
+  (queue: WP14 → WP11 hook → this); (2) A3's registry rows for
+  `("risk_rung", "key_number"/"decisive_number")` upgrade to `CODE_CHECKED`
+  citing the risk_officer sites — A3's own commit, dispatched.
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit

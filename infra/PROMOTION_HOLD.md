@@ -14,6 +14,28 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
+### CR219-F2-PROFILE — key_number verification strikes honest sheet quotes until the profile is threaded
+
+**Raised:** 2026-09-03 (AT:R75 CR219) · **Blocked:** any Alpha promotion carrying `0f9cc06d`
+(`risk_officer.py` key_number/decisive_number verification)
+
+**Why.** `0f9cc06d` makes `render_officer_turns`/`render_risk_assessment` verify every numeral in the
+Risk Officers' `key_number`/`decisive_number` against the sheet + ladder, unconditionally — correct,
+and accepted. But the only production call site (`room_runner.py`, ~`:5633`) does not pass `profile`
+yet, so live verification is **ladder-only**: an officer quoting a SHEET figure — its most natural
+quote per its own instruction, e.g. "interest coverage 2.1×" — would be struck `[AMI: unverifiable]`
+and demoted from the comb headline **even though the quote is genuine**. Honest quotes rendered as
+fabrications, on every convene, with nothing failing. The threading hunk is queued on the
+single-writer `room_runner.py` lane (behind WP14's acceptance and WP11's hook).
+
+**To clear:** the call-site commit threading the profile into `render_officer_turns` is on `main`,
+with a wiring test pinning that the production call site passes it (not merely that the parameter
+exists). Verify by running the new wiring test, not by reading the diff.
+
+**Do NOT clear it by:** reverting `0f9cc06d`, or promoting on the reasoning that ladder-only
+verification is "still a check" — over-striking honest quotes is the inverse CR040 failure, a control
+that fires on the truthful case.
+
 ---
 
 ## CLEARED HOLDS
