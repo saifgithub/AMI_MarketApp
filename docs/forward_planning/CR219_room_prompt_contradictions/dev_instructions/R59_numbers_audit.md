@@ -10,8 +10,11 @@ note the Journal replays the *same* persisted verdict JSONB through
 `room_board_mappers.dart`, so every verdict-card finding below is inherited by
 the Journal board verbatim.
 
-**Line numbers are against committed `HEAD` (`f5aa5f3a`), not the working
-tree.** `room_runner.py` and `room_prompts.py` were dirty from another lane
+**Line numbers are against committed `HEAD` (`6394a3dc`), not the working
+tree.** *(Dispatcher correction 2026-09-03: the original header said `f5aa5f3a`,
+but that commit's `room_runner.py` is 5,730 lines — the 6,082-line file every
+citation was verified against IS `6394a3dc`; spot-checks confirm the line
+numbers are right and only this label was wrong.)* `room_runner.py` and `room_prompts.py` were dirty from another lane
 during this audit and shifted twice mid-pass, so citing the working tree would
 have produced references that rot within the hour. Spot-check with
 `git show HEAD:<path>`; at HEAD `room_runner.py` is 6,082 lines. Every
