@@ -191,6 +191,30 @@ PHASES: tuple[_Phase, ...] = (
 )
 
 
+# ── CR219 R58 — seeded RESEARCHERS debate order ────────────────────────────
+#
+# `PHASES` above is a frozen module-level tuple (CR077 pins this — the parallel
+# guard walks it by identity) and stays byte-identical; the order is applied at
+# ITERATION TIME in the runner loop, never by mutating the table. Only the
+# RESEARCHERS phase (Bull/Bear) is in scope — RISK's three-way debator order is
+# a different question (§12) and untouched here.
+
+
+def _researchers_order(run_id: UUID) -> tuple[AgentId, AgentId]:
+    """Deterministic Bull/Bear order for one run.
+
+    `run_id.int` is the UUID's 128 bits as an integer; UUID4 (every run id this
+    app mints — see `run_id = run_id or uuid4()` above) draws those bits
+    uniformly at random, so the low bit is itself ~50/50 and stable for that
+    run id forever — the same run replayed, or its transcript re-read later,
+    reorders identically. No stdlib `random`/hash-seeding involved, so this
+    needs no seeding and is reproducible from the id alone.
+    """
+    if run_id.int % 2 == 0:
+        return (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER)
+    return (AgentId.BEAR_RESEARCHER, AgentId.BULL_RESEARCHER)
+
+
 # ── Per-agent canned reasoning templates ──────────────────────────────────
 
 # Each template renders one realistic-shaped contribution for the alpha.
@@ -4586,6 +4610,23 @@ class RoomRunner:
                 # only ever names ANALYSTS-phase agents, so this is a no-op
                 # for RESEARCHERS/SYNTHESIS/EXECUTION/RISK/VERDICT.
                 phase_agents = tuple(a for a in phase.agents if a not in ctx.withheld)
+                if phase.label == "RESEARCHERS":
+                    # CR219 R58 — apply the seeded order here, at iteration
+                    # time, never by mutating PHASES (CR077 pins that tuple).
+                    # Flag off ⇒ phase_agents is untouched, i.e. exactly
+                    # today's fixed Bull-then-Bear order.
+                    if settings.room_debate_order_seeded:
+                        phase_agents = _researchers_order(run_id)
+                    # Logged unconditionally (not just when seeded) so a batch
+                    # can be audited for the order actually served without
+                    # parsing every transcript — the served order IS the
+                    # record either way (WP13).
+                    logger.info(
+                        "room_researchers_order",
+                        run_id=str(run_id),
+                        seeded=settings.room_debate_order_seeded,
+                        order=[a.value for a in phase_agents],
+                    )
                 if phase.label == "ANALYSTS" and ctx.withheld:
                     for agent_id in phase.agents:
                         if agent_id not in ctx.withheld:

@@ -820,6 +820,23 @@ class Settings(BaseSettings):
     # attributable. Rollback is this flag; no migration.
     room_risk_officer_enabled: bool = False
 
+    # CR219 R58 — the RESEARCHERS phase (Bull, then Bear) always speaks in that
+    # fixed order today. `05_further_improvements.md` §12: LLM judges anchor on
+    # order, and the Research Manager reads both — so the fixed order is a
+    # standing source of decision variance nobody has measured.
+    #
+    # OFF by default: this flips the transcript's turn order, which is the
+    # record itself, so it is a measured behaviour change like every other flag
+    # in this block, not a pure fix. See WP13's replay
+    # (`docs/forward_planning/CR219_room_prompt_contradictions/harness/results/`)
+    # for the measurement this default is pending.
+    #
+    # ON: the order is a deterministic function of the run id — stable for that
+    # run and any replay of it, ~50/50 Bull-first/Bear-first across runs. The
+    # RISK phase's three-way debator order is OUT of scope (a different
+    # question); only RESEARCHERS (Bull/Bear) is seeded.
+    room_debate_order_seeded: bool = False
+
     # CR210 — JSON decoding grammars on the machine-read Room surfaces: the CIO
     # verdict, its DEF058 reformatter, and the CR201 Risk Officer. The model is
     # not asked to comply with a shape, it is prevented from emitting any other

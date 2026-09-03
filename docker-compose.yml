@@ -419,6 +419,10 @@ services:
       # rollout says otherwise; do NOT enable in the same window as
       # PM_OPTION_LADDER_ENABLED. See Settings.room_risk_officer_enabled.
       ROOM_RISK_OFFICER_ENABLED: ${ROOM_RISK_OFFICER_ENABLED:-false}
+      # CR219 R58 — seed the RESEARCHERS phase's Bull/Bear order from the run id
+      # instead of the fixed Bull-first order. Off pending WP13's replay
+      # measurement. See Settings.room_debate_order_seeded.
+      ROOM_DEBATE_ORDER_SEEDED: ${ROOM_DEBATE_ORDER_SEEDED:-false}
       # CR210 — decoding grammars on the machine-read Room surfaces (CIO verdict,
       # its reformatter, Risk Officer). Off until the held-out before/after has
       # run; only the on-prem vLLM enforces them, every other provider records
