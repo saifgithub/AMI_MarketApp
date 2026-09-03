@@ -62,3 +62,43 @@ R38's box stays `☐`: the gate is lifted, the code is not written.
 **54/61 ☑.** One live row open (R38, unblocked and awaiting its build) plus the
 six parked rows (R53, R55, R57–R60), which are excluded from CR219's completion
 target by design — see `PARKING_LOT.md`.
+
+---
+
+# Ruling 2026-09-03 (later the same day) — "Build all"
+
+Asked whether to build R38 or park it and close CR219, Saiful ruled, verbatim:
+
+> Build all
+
+**Scope of the ruling:** every unbuilt register row — R38 AND the six parked
+rows (R53, R55, R57, R58, R59, R60). All seven now build inside CR219.
+`PARKING_LOT.md` is superseded (header updated; table kept as history). CR219's
+completion target is back to 61/61.
+
+Dispatcher scoping calls made under this ruling (each recorded in its WP;
+Saiful can override any of them):
+
+- **R55** — the 2026-09-02 "own future CR" half is superseded (rides CR219, the
+  one-CR precedent); the **internal-only half stands** (no user-facing
+  calibration stats before v1.0). WP11.
+- **R57** — "Build all" is not read as amending two pinned design decisions
+  (CR210's no-prose-agent-constrained wiring pin; DEF251's
+  measurement-channel-never-control comment). What builds is the measurement
+  leg the row's own wake-up condition demanded: per-turn emission telemetry +
+  per-agent rates + a written revisit rule. Grammar-forcing the envelope stays
+  gated on that data and on Saiful amending the pins explicitly. WP14.
+- **R58** — the code mechanism ships default-OFF; the harness measurement
+  decides the recommendation; flipping the default is Saiful's. WP13.
+- **R59** — two phases: read-only inventory first (WP12), fixes + the
+  provenance guard dispatched after dispatcher review.
+- **R60** — backend-only surface now (PM prompt injection + API field); mobile
+  rendering + i18n flagged as follow-up. WP15.
+- **R38** — the design note's open flag-OFF framing question is ruled: flag off
+  ⇒ no `field_state` key at all. No migration in WP10 (WP11 owns this wave's
+  only alembic head). WP10.
+
+**Wave order (P33 single-writer lanes):** Wave 1 = WP10 + WP11 (hook held
+back) + WP12 + WP13 in parallel; wave 2 = WP14 + WP11's runner hook after
+"WP13 accepted"; wave 3 = WP15 after "WP14 accepted". `room_runner.py` has
+exactly one writer per wave.

@@ -1,9 +1,15 @@
-# Parking lot — ruled OUT of CR219 (do not build)
+# Parking lot — SUPERSEDED 2026-09-03 ("Build all")
 
-Rows Saiful explicitly parked (2026-09-02 for R53/R57–R60; earlier for R55). A worker
-session finding these in the register builds **nothing** for them; they wait for their
-own future CR. Kept here so the ideas don't die with the register's status column.
-Source detail for all of them: `../fable/05_further_improvements.md`.
+> **Every row below was un-parked by Saiful's 2026-09-03 ruling "Build all"**
+> (`DECISIONS_2026-09-03.md`, second section). They now build inside CR219:
+> R53+R57 → `WP14`, R55 → `WP11`, R58 → `WP13`, R59 → `WP12` (phase 1),
+> R60 → `WP15`. The table is kept as history of the original parking rationale;
+> the wake-up conditions are moot. R55's **internal-only** constraint survives
+> the un-parking; its "own future CR" half does not.
+
+Original header (2026-09-02): rows Saiful explicitly parked (2026-09-02 for
+R53/R57–R60; earlier for R55), waiting for their own future CR. Source detail
+for all of them: `../fable/05_further_improvements.md`.
 
 | Row | Idea (one line) | Why parked | Wake-up condition |
 |---|---|---|---|
