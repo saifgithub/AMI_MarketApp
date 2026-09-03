@@ -591,6 +591,25 @@ a table Alembic has no record of, and the next `upgrade head` dying on
 `DuplicateTable` while later ALTERs that running code depends on never run.
 `measurement/edgar.db` is a fresh, gitignored, three-ticker store instead.
 
+### 7.6d The negative control has to change, and this is recorded BEFORE the run
+
+§7's design names **H2** (Fed-path rate-cut probability) as the negative control: the one item
+with no free source, nothing built, so its ask must not fall. Round 1's first four convenes say
+that control carries no information. H2 was asked **0 times in all three arms** of the short
+mandate and once in the long pilot — an item asked 0–1 times per convene cannot show a fall,
+so "H2 did not fall" would be true of a coin.
+
+**The control is therefore D1 + A2** — revenue by business segment, and the industrial vs.
+captive-finance debt split. Nothing is built for either; both are on this CR's own open list;
+and unlike H2 they are asked constantly (D1 alone: 6 asks in one 12-agent convene). A control
+needs a rate high enough that a fall would be visible, and these have it.
+
+This is written down before round 1 finished on purpose. Swapping a control after seeing which
+one moved is how a null becomes a finding, and §7.1 exists to stop exactly that.
+
+H2 stays in the report as an observation — it is still the one item with no free source — but
+it is no longer load-bearing.
+
 ### 7.7 What "how much difference it makes" will be reported as
 
 One table, per item: baseline asks → post-build asks → citation rate → whether it appeared in
