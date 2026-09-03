@@ -140,10 +140,20 @@ def horizon_days_for(horizon: str | None, verdict_horizon_days: int | None) -> i
     The PM's own stated `time_horizon_days` wins when present — a call made on
     a 10-day thesis should be scored at 10 days, not at the mandate's default
     quarter. Falls back to the mandate horizon map, then to medium.
+
+    Accepts the horizon as either a `str` or a `Horizon` member. `Mandate` sets
+    `use_enum_values=True`, so in practice it arrives as a string — but the
+    annotation says `Horizon`, and that mismatch already cost one broken hook
+    (`'str' object has no attribute 'value'` on every real convene). Normalise
+    here rather than trusting each caller to guess which one it holds: a caller
+    that guesses wrong the OTHER way would pass `Horizon.LONG`, miss the map,
+    and silently score every long-horizon call at the medium default — a wrong
+    number rather than a crash, which is the worse failure.
     """
     if verdict_horizon_days is not None and verdict_horizon_days > 0:
         return int(verdict_horizon_days)
-    return HORIZON_DAYS.get((horizon or "").lower(), _DEFAULT_HORIZON_DAYS)
+    key = getattr(horizon, "value", horizon)
+    return HORIZON_DAYS.get(str(key or "").lower(), _DEFAULT_HORIZON_DAYS)
 
 
 # ── Exclusions ──────────────────────────────────────────────────────────────

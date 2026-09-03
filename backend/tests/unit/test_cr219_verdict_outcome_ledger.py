@@ -36,6 +36,7 @@ from app.api.admin_verdict_outcomes import router as vo_router
 from app.core.config import settings
 from app.db import get_session, init_schema
 from app.db.models import PriceHistoryDailyRow, RoomRunRow, User, VerdictOutcomeRow
+from app.schemas.mandate import Horizon
 from app.schemas.room import Verdict, VerdictAction
 from app.services import verdict_outcomes as vo
 
@@ -241,23 +242,30 @@ def test_rebank_same_run_updates_not_duplicates() -> None:
     assert rows[0].verdict_action == VerdictAction.PASS.value
 
 
-def test_held_back_hook_expression_is_valid_verbatim() -> None:
+def test_held_back_hook_expression_is_valid_verbatim(base_mandate) -> None:
     """The room_runner hook's exact call, proven before it is applied.
 
-    The hook itself is HELD BACK — WP13 owns `room_runner.py` this wave, and
-    two lanes co-editing one file is the sweep that has bitten this project
-    three times. But the call it will make can be proven here: this is the
-    verbatim expression, including `_reference_close(profile)` (the price the
-    Room was actually shown, imported from room_runner without editing it) and
-    `Horizon.LONG.value` — the mandate horizon is an enum, so `.value` is
-    required and a bare `ctx.mandate.horizon` would silently fall through to
-    the medium default.
+    The hook is now applied at the `RoomStatus.COMPLETED` branch. This asserts
+    the call it makes, taking the horizon off a REAL `Mandate` the way the hook
+    does — not a hand-written `Horizon.LONG.value`.
+
+    That distinction is the whole point of this test now. Its first version DID
+    hand-write `.value`, which is exactly why it passed while the hook it was
+    meant to validate raised `'str' object has no attribute 'value'` on every
+    real convene: `Mandate` sets `use_enum_values=True`, so the runtime value
+    is a `str` even though the field is annotated `Horizon`. A contract test
+    that constructs its own inputs cannot catch a mismatch in what the real
+    caller holds.
     """
-    from app.schemas.mandate import Horizon
     from app.services.room_runner import _reference_close
 
     uid = _mk_user()
     rid = _mk_run(uid)
+
+    # Constructed with `Horizon.LONG`, which pydantic coerces to the STRING
+    # "long" under `use_enum_values` — the exact shape that broke the hook.
+    assert base_mandate.horizon == "long"
+    assert not isinstance(base_mandate.horizon, Horizon)
 
     # A LIVE-technicals profile, the shape `_reference_close` gates on.
     profile = {"field_state": {"technicals": "live"}, "last_close": 231.5}
@@ -267,7 +275,9 @@ def test_held_back_hook_expression_is_valid_verbatim() -> None:
         verdict=_verdict(approve_votes=4, samples=5),
         reference_price=_reference_close(profile),
         reference_at=datetime.now(timezone.utc),
-        mandate_horizon=Horizon.LONG.value,
+        mandate_horizon=getattr(
+            base_mandate.horizon, "value", base_mandate.horizon,
+        ),
     )
 
     r = _rows()[0]
@@ -310,6 +320,27 @@ def test_mandate_horizon_maps_to_days() -> None:
     for horizon, days in vo.HORIZON_DAYS.items():
         assert vo.horizon_days_for(horizon, None) == days
     assert vo.horizon_days_for("nonsense", None) == vo.HORIZON_DAYS["medium"]
+
+
+def test_horizon_accepts_both_str_and_enum() -> None:
+    """Regression: the str/enum mismatch that broke the hook on first apply.
+
+    `Mandate` sets `use_enum_values=True`, so `ctx.mandate.horizon` is a `str`
+    at runtime while the field is ANNOTATED `Horizon`. Reading the annotation
+    and writing `.value` raised `'str' object has no attribute 'value'` on
+    every real convene (6 room_runner tests).
+
+    The mirror-image mistake is worse: passing a raw `Horizon` member would
+    miss the string-keyed map and silently score every long-horizon call at the
+    medium default — a wrong number instead of a crash. Both forms are pinned
+    so neither direction can regress.
+    """
+    for member in Horizon:
+        assert (
+            vo.horizon_days_for(member, None)
+            == vo.horizon_days_for(member.value, None)
+            == vo.HORIZON_DAYS[member.value]
+        )
 
 
 def test_conviction_buckets_from_cr214_votes() -> None:
