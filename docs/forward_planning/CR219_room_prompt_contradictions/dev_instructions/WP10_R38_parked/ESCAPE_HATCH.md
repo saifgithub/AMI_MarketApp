@@ -100,3 +100,14 @@ Three ways forward, all Saiful's / the dispatcher's call:
    fallback the WP's own ruling names.
 3. **Land the parked patch as a knowingly-inert no-op** and file a DEF. Not
    recommended by either lane, for the CR040 reason above.
+---
+
+## RULING 2026-09-03 (Saiful)
+
+Declared-absent entry in CR219 now; re-route under **CR221** later. This parked
+folder is CR221's head start for the FilingSummary.xml route — registry, config
+flag, three-state contract, both render sites, ~60 route-independent tests in
+the patch. CR219's own closure is the `SHEET_ABSENTS` entry whose collision
+markers are drawn from this patch's render strings, so the availability guard
+goes red the day the real line lands. Recorded in
+`../DECISIONS_2026-09-03.md` (third ruling).

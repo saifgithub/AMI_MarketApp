@@ -102,3 +102,23 @@ Saiful can override any of them):
 back) + WP12 + WP13 in parallel; wave 2 = WP14 + WP11's runner hook after
 "WP13 accepted"; wave 3 = WP15 after "WP14 accepted". `room_runner.py` has
 exactly one writer per wave.
+
+---
+
+# Ruling 2026-09-03 (third) — R38 after the escape hatch
+
+WP10's escape hatch fired (`c05793c5`: `companyfacts` carries no segment data —
+the design note's premise was false, proven twice independently). Put to Saiful
+with three options; he ruled, verbatim:
+
+> accept recommendation: Declared-absent entry in CR219 now  now and Re-route
+> under CR221  later
+
+**Enacted as:** (1) CR219 closes R38 with a `SHEET_ABSENTS` declared-absent
+entry — the sheet says the industrial-vs-captive split is not supplied, with
+collision markers drawn from the parked patch's own render strings so the
+availability guard goes red the day a real split line lands; (2) the
+FilingSummary.xml re-route belongs to **CR221** (Room data-demand sourcing,
+another session's CR), with `WP10_R38_parked/` — registry, flag, three-state
+contract, both render sites, ~60 route-independent tests — as its head start.
+CR219 makes no claim about when CR221 builds it.
