@@ -330,12 +330,17 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
     daily run's output shows the ledger is alive rather than silent.
 
     Returns counts by outcome: scored / not_due / unscorable_mock /
-    unscorable_no_bar / excluded.
+    unscorable_no_bar / unscorable_no_reference / excluded. The unscorable
+    reasons are counted SEPARATELY rather than summed — "the store has no bar
+    yet" is transient and may resolve on a later run, "every bar is fabricated"
+    never will, and "the Room decided without a live price" is a fact about the
+    Room rather than about the data feed. A single lumped counter would hide
+    which of the three is growing, which is the only thing the number is for.
     """
     now = _as_utc(now) or _utcnow()
     counts = {
         "scored": 0, "not_due": 0, "unscorable_mock": 0,
-        "unscorable_no_bar": 0, "excluded": 0,
+        "unscorable_no_bar": 0, "unscorable_no_reference": 0, "excluded": 0,
     }
     excluded = excluded_user_ids()
 
@@ -362,7 +367,7 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
             _finish(
                 row_id, STATUS_UNSCORABLE, reason=REASON_NO_REFERENCE_PRICE, now=now,
             )
-            counts["unscorable_no_bar"] += 1
+            counts["unscorable_no_reference"] += 1
             continue
 
         due_at = (ref_at or now) + timedelta(days=h_days)

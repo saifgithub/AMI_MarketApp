@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
             f"scored={counts['scored']} not_due={counts['not_due']} "
             f"unscorable_mock={counts['unscorable_mock']} "
             f"unscorable_no_bar={counts['unscorable_no_bar']} "
+            f"unscorable_no_reference={counts['unscorable_no_reference']} "
             f"excluded={counts['excluded']}"
         )
     return 0

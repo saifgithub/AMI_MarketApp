@@ -386,6 +386,38 @@ def test_no_stored_bar_marks_unscorable_with_its_own_reason() -> None:
     assert _rows()[0].exclusion_reason == vo.REASON_NO_HORIZON_BAR
 
 
+def test_unscorable_reasons_are_counted_separately() -> None:
+    """Three distinct unscorable causes, three distinct counters.
+
+    A lumped counter would hide which one is growing: "no bar yet" is transient,
+    "all bars fabricated" never resolves, and "the Room decided without a live
+    price" is a fact about the Room rather than the feed.
+    """
+    uid = _mk_user()
+    now = datetime.now(timezone.utc)
+    ref = now - timedelta(days=100)
+    outcome_day = (ref + timedelta(days=63)).date()
+
+    # no bar at all
+    _bank(uid, _mk_run(uid, "AAPL"), _verdict(), 100.0, ref)
+    # mock-only bars
+    vo.bank_verdict_outcome(
+        room_run_id=_mk_run(uid, "MSFT"), user_id=uid, ticker="MSFT",
+        verdict=_verdict(), reference_price=100.0, reference_at=ref,
+        mandate_horizon="medium",
+    )
+    _bar("MSFT", outcome_day, 110.0, source="mock_walk")
+
+    counts = vo.score_pending(now=now)
+    assert counts["unscorable_no_bar"] == 1
+    assert counts["unscorable_mock"] == 1
+    assert counts["unscorable_no_reference"] == 0
+    assert counts["scored"] == 0
+
+    reasons = {r.exclusion_reason for r in _rows()}
+    assert reasons == {vo.REASON_NO_HORIZON_BAR, vo.REASON_MOCK_PRICE}
+
+
 # ── 5. Aggregates + endpoint ────────────────────────────────────────────────
 
 def _client() -> TestClient:
