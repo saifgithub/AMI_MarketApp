@@ -175,3 +175,37 @@ def test_a_filer_present_in_the_store_does_not_trip_the_ingest_warning(
                         lambda event, **kw: warned.append(event))
     room_runner._overlay_debt_structure({}, {}, "OTHERTKR", date(2026, 3, 1))
     assert "edgar_debt_structure_tags_not_ingested" not in warned
+
+
+def test_an_unreachable_fact_store_costs_the_block_not_the_convene(monkeypatch) -> None:
+    """A missing `edgar_facts` table must not take the whole profile with it.
+
+    Measured, not imagined: a fresh solo-dev sqlite has no such table, and the
+    first cut of this overlay raised `OperationalError` straight out of
+    `_profile_for_ticker` — every Room run on that machine, dead.
+    """
+    def boom(*_a, **_k):
+        raise RuntimeError("no such table: edgar_facts")
+
+    warned: list[str] = []
+    monkeypatch.setattr(room_runner.debt_maturity, "fetch_debt_maturity", boom)
+    monkeypatch.setattr(room_runner.logger, "warn",
+                        lambda event, **kw: warned.append(event))
+
+    field_state: dict[str, str] = {}
+    room_runner._overlay_debt_structure({}, field_state, "ANY", date(2026, 3, 1))
+
+    assert field_state == {"debt_maturity": "unavailable",
+                           "cost_of_debt": "unavailable"}
+    assert "edgar_debt_structure_unreadable" in warned
+
+
+def test_a_profile_build_survives_an_unreachable_store(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        room_runner.debt_maturity, "fetch_debt_maturity",
+        lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("db down")),
+    )
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: {})
+    profile = room_runner._profile_for_ticker("ANY")
+    assert profile["field_state"]["debt_maturity"] == "unavailable"

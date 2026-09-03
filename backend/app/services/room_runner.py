@@ -661,7 +661,24 @@ def _overlay_debt_structure(
     flag flip at render time — a second profile build would confound the
     comparison with everything else that moved.
     """
-    ladder = debt_maturity.fetch_debt_maturity(ticker, as_of)
+    try:
+        ladder = debt_maturity.fetch_debt_maturity(ticker, as_of)
+        cost = interest_cost.fetch_interest_cost(ticker, as_of)
+    except Exception as exc:
+        # The fact store is optional infrastructure to a Room run — a missing
+        # `edgar_facts` table (a fresh solo-dev sqlite) or an unreachable DB
+        # must cost this block, never the whole profile. Loud, not silent: a
+        # convene that renders no debt block for a reason that is OURS should
+        # say so in the logs, which is the whole difference between this and
+        # the DEF063 class of dark feature.
+        logger.warn(
+            "edgar_debt_structure_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
+        field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
+        return
+
     if ladder is not None:
         profile["debt_maturity_labels"] = [label for label, _ in ladder.buckets]
         profile["debt_maturity_values"] = [
@@ -680,7 +697,6 @@ def _overlay_debt_structure(
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
 
-    cost = interest_cost.fetch_interest_cost(ticker, as_of)
     if cost is not None:
         profile["cost_of_debt_pct"] = cost.cost_of_debt_pct
         profile["cost_of_debt_basis"] = cost.basis
@@ -695,10 +711,16 @@ def _overlay_debt_structure(
     # these tags for any filer means the ingest predates them, not that this
     # company discloses nothing — the two are identical at the sheet, and the
     # measured state of Alpha on 2026-09-03 was exactly this.
-    if ladder is None and cost is None and not edgar_pit.tags_ever_ingested(
-        edgar_tags.DEBT_MATURITY_TAGS + edgar_tags.INTEREST_ACCRUAL
-        + edgar_tags.INTEREST_CASH
-    ):
+    if ladder is not None or cost is not None:
+        return
+    try:
+        ingested = edgar_pit.tags_ever_ingested(
+            edgar_tags.DEBT_MATURITY_TAGS + edgar_tags.INTEREST_ACCRUAL
+            + edgar_tags.INTEREST_CASH
+        )
+    except Exception:
+        return
+    if not ingested:
         logger.warn(
             "edgar_debt_structure_tags_not_ingested",
             ticker=ticker.upper(),
