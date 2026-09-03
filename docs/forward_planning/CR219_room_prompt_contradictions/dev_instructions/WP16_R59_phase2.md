@@ -21,6 +21,23 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
 | B2 | **F4** — `time_horizon_days` plausibility band | Haiku (mechanical; dispatcher verifies) | Clamp-and-disclose exactly like `size_pct` at `room_runner.py:2023-2025`, band mirroring `_level_is_implausible` (`room_runner.py:2750`) |
 | B3 | **§13(a)** — per-rung dollar risk | Sonnet | Thread `portfolio_value` into `build_option_ladder` (`backend/app/trading_math/option_ladder.py`), add the field to `LadderOption`, render in `_rung_head`; the audit's caution binds: missing/zero portfolio value ⇒ render nothing, never `$0`. Touches risk_officer.py — MUST wait for A2's acceptance |
 
+## Acceptance log
+
+- **A3 ACCEPTED 2026-09-03** — `f1f641cd`, 26-row registry + 3 enforcing checks,
+  10/10 on dispatcher rerun, red-fail checks empirically fired.
+- **A1 ACCEPTED 2026-09-03** — `9ca2ada9`, geometry verification on the 1-on-1
+  path, 7/7 on dispatcher rerun. Two dispatcher rulings on its flagged items:
+  (1) **the audit trail stays raw by design** — `record_one_on_one_message`
+  keeps the unannotated model turn (an LLM audit trail's job is raw
+  provenance); the Journal + SSE carry the annotated text; the divergence is
+  intentional, do not "fix" it. (2) `_annotate_direction_against_price` stays
+  unwired here — confirmed inert without a Verdict/profile `levels` source, not
+  merely unavailable; revisit only if the 1-on-1 ever grows structured levels.
+  Client-visible note: the 1-on-1 reply now buffers to completion before
+  presenting (the Room's own buffer-verify-present pattern) — a beat of
+  latency instead of token-live streaming, so a wrong triple is never shown
+  live.
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit
