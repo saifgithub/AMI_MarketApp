@@ -480,22 +480,33 @@ evidence the data changed a decision.
   serves Qwen3.8. Score the production model for what users get, and the arms model for
   comparability with the CR219 baseline. Do not merge the two into one number.
 
-### 7.6 The live instrument — and a taxonomy collision to fix first
+### 7.6 The live instrument — and why it counts something else
 
-CR219's **R53** (in flight, WP14) is building a permanent `DATA GAPS:` tail on every Alpha
-convene plus `backend/scripts/aggregate_data_gaps.py` — a standing demand signal on real
+CR219's **R53** (landed 2026-09-03, `8d495606`) puts a permanent `DATA GAPS:` tail on every
+Alpha convene plus `backend/scripts/aggregate_data_gaps.py` — a standing demand signal on real
 traffic. That is the trailing confirmation this CR's one-off re-run cannot give: it answers
 "did demand stay down, on tickers we never tested".
 
-**But it will not be comparable as written.** `aggregate_data_gaps.py:85` copies
+**It is not comparable to this CR's register.** `aggregate_data_gaps.py:85` copies
 `aggregate_arms.py`'s `BUCKETS` taxonomy verbatim — the same regex this CR measured as
 undercounting debt (26 asks against an actual 35) and dropping 17 lines to `(unbucketed)`.
-Production telemetry keyed to that taxonomy cannot be compared against this CR's 49-item
-register, and the undercount lands on the single largest ask.
+Production telemetry keyed to that taxonomy cannot be scored against the 49-item register,
+and the undercount lands on the single largest ask.
 
-**Ask of the R53 lane:** key the buckets to `CR221/evidence/items.py` rather than to
-`aggregate_arms.py`'s prototype regex, so both instruments speak one language. Reported as a
-cross-lane finding — R53's files are not this CR's to edit.
+**Resolved 2026-09-03 — no change asked for, and none needed.** R53 landed at `8d495606`
+with the taxonomy deliberately frozen, and its own comment gives the reason: *"the arms
+prototype's own bucket taxonomy, unchanged — the point is that this script's ranking is
+directly comparable to the number the arms experiment already produced, not a fresh
+categorization that would break that comparison."* That is right for R53's purpose.
+Re-keying it to `items.py` would buy CR221 comparability by destroying R53's.
+
+So the two instruments count different things **by design**, and this CR states it rather
+than reconciling it: R53 answers *"which areas is the Room short in, tracked continuously
+against a fixed prototype baseline"*; CR221 §7.2 scores with `items.py` and answers *"did
+this specific item stop being asked for"*. **Neither number may be quoted as the other.**
+The one live figure that must not be repeated in a CR221 report is R53's debt-bucket count —
+measured here as undercounting 26 against an actual 35, with 8 of the 17 `(unbucketed)`
+lines being debt asks its regex misses and a 9th claimed by a peer pattern.
 
 ### 7.7 What "how much difference it makes" will be reported as
 
