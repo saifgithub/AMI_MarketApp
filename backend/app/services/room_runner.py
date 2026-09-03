@@ -67,6 +67,7 @@ from app.schemas.room import (
     VerdictAction,
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.services import debt_maturity, edgar_pit, edgar_tags, interest_cost
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
@@ -641,6 +642,70 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     )
 
 
+def _overlay_debt_structure(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR221 A1/A3 — the maturity ladder and implied cost of debt, from the
+    EDGAR fact store rather than from yfinance.
+
+    ONE state key per block, not per key, and for the reason the technicals
+    block gives rather than the reason `interest_coverage`'s pair does: each
+    resolver returns one dataclass or nothing, so a ladder cannot arrive with
+    a live period-end and absent buckets. The keys inside a block are
+    render inputs to a single line, not independently-sourced facts.
+
+    Populated regardless of `room_debt_maturity_enabled` /
+    `room_cost_of_debt_enabled`; those gate the RENDER. CR221 §7 measures
+    demand extinction per item against ONE cached profile pickle per ticker
+    (R46: market data moves between fetches), so the control arm has to be a
+    flag flip at render time — a second profile build would confound the
+    comparison with everything else that moved.
+    """
+    ladder = debt_maturity.fetch_debt_maturity(ticker, as_of)
+    if ladder is not None:
+        profile["debt_maturity_labels"] = [label for label, _ in ladder.buckets]
+        profile["debt_maturity_values"] = [
+            round(value / 1_000_000) for _, value in ladder.buckets
+        ]
+        profile["debt_maturity_period_end"] = ladder.period_end.isoformat()
+        profile["debt_maturity_beyond_5y"] = (
+            None if ladder.beyond_year_five is None
+            else round(ladder.beyond_year_five / 1_000_000)
+        )
+        profile["debt_maturity_excluded_st"] = (
+            None if ladder.excluded_short_term_borrowings is None
+            else round(ladder.excluded_short_term_borrowings / 1_000_000)
+        )
+        field_state["debt_maturity"] = LiveDataState.LIVE.value
+    else:
+        field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
+
+    cost = interest_cost.fetch_interest_cost(ticker, as_of)
+    if cost is not None:
+        profile["cost_of_debt_pct"] = cost.cost_of_debt_pct
+        profile["cost_of_debt_basis"] = cost.basis
+        profile["cost_of_debt_interest"] = round(cost.annual_interest / 1_000_000)
+        profile["cost_of_debt_gross_debt"] = round(cost.gross_debt / 1_000_000)
+        profile["cost_of_debt_period_end"] = cost.period_end.isoformat()
+        field_state["cost_of_debt"] = LiveDataState.LIVE.value
+    else:
+        field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
+
+    # CR040 loud degrade. Both blocks absent AND the store holds no row under
+    # these tags for any filer means the ingest predates them, not that this
+    # company discloses nothing — the two are identical at the sheet, and the
+    # measured state of Alpha on 2026-09-03 was exactly this.
+    if ladder is None and cost is None and not edgar_pit.tags_ever_ingested(
+        edgar_tags.DEBT_MATURITY_TAGS + edgar_tags.INTEREST_ACCRUAL
+        + edgar_tags.INTEREST_CASH
+    ):
+        logger.warn(
+            "edgar_debt_structure_tags_not_ingested",
+            ticker=ticker.upper(),
+            fix="re-run backend/scripts/ingest_edgar_facts.py",
+        )
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -780,6 +845,15 @@ def _profile_for_ticker(
             if f in live:
                 profile[f] = live[f]
                 field_state[f] = LiveDataState.LIVE.value
+
+    # CR221 A1/A3 — debt structure, from the EDGAR store rather than yfinance.
+    # Attempted exactly when the fundamentals overlay above was attempted, so a
+    # mock-data run never mixes real filed debt figures into a synthetic sheet.
+    if as_of is not None or settings.use_real_market_data:
+        _overlay_debt_structure(profile, field_state, ticker, today)
+    else:
+        field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
+        field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

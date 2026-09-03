@@ -27,6 +27,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.core.time import relative_day_phrase
 from app.schemas import AgentId
+from app.services import edgar_tags
 from app.services.market_data import get_market_data_provider
 from app.trading_math.valuation import (
     dividend_yield_pct,
@@ -1448,6 +1449,71 @@ def interest_coverage_line(
     return _labelled(
         "Interest coverage (EBIT / interest expense)", live,
         [f"{ratio}x — quarter ending {quarter}"],
+    )
+
+
+def debt_maturity_line(
+    labels: list[str] | None,
+    values: list[float] | None,
+    period_end: str | None,
+    beyond_five: float | None,
+    excluded_short_term: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR221 A1 — principal repayments by year, on a basis the line states itself.
+
+    Fourteen request lines from six agents asked for this schedule. The basis
+    note is not decoration and must not be dropped to save room: Caterpillar's
+    five buckets sum to $28,160M while the same sheet reads "gross debt
+    $45,146M", because the ladder is long-term principal only. An agent handed
+    both figures with nothing to reconcile them reads a $17B gap as a
+    contradiction and spends its turn there — the CR219 failure class this
+    whole line exists downstream of. So the excluded short-term borrowings and
+    the derived beyond-year-five bucket travel WITH the ladder, and a short
+    ladder says how many years it actually covers.
+    """
+    if not labels or not values or len(labels) != len(values) or not period_end:
+        return None
+    parts = [f"{label} ${value:,.0f}M" for label, value in zip(labels, values)]
+    if beyond_five is not None:
+        parts.append(f"beyond year 5 ${beyond_five:,.0f}M (derived)")
+    tail = f"long-term debt principal as of {period_end}"
+    if excluded_short_term is not None:
+        tail += f"; excludes short-term borrowings ${excluded_short_term:,.0f}M"
+    # A three-bucket ladder rendered without this reads as "nothing matures
+    # after year three", which is a conclusion the filer never stated and the
+    # flattering one to draw.
+    if len(labels) < len(edgar_tags.DEBT_MATURITY_LADDER):
+        tail += f"; the filer discloses only these {len(labels)} years"
+    return _labelled("Debt maturity ladder", live, [" · ".join(parts), tail])
+
+
+def cost_of_debt_line(
+    pct: float | None,
+    basis: str | None,
+    annual_interest: float | None,
+    gross_debt: float | None,
+    period_end: str | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 A3 — the implied rate, with both of its inputs and its basis.
+
+    Six request lines from four agents. Every term is shown because the rate
+    is a quotient of two figures that can each be read a different way, and
+    DEF399 is what happens when one of them is taken on trust: the shipped
+    interest-coverage numerator is a non-operating stub for filers whose
+    finance arm books interest into cost of revenue, and nothing on the sheet
+    said so. Naming the basis (accrued vs cash) and printing the numerator and
+    denominator makes a wrong input visible instead of silently priced in.
+    """
+    if pct is None or not basis or annual_interest is None or gross_debt is None:
+        return None
+    dated = f" to {period_end}" if period_end else ""
+    return _labelled(
+        "Implied cost of debt", live,
+        [f"{pct}%",
+         f"${annual_interest:,.0f}M {basis}{dated} / gross debt ${gross_debt:,.0f}M"],
     )
 
 

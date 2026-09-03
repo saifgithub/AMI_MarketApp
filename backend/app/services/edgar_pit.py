@@ -84,6 +84,26 @@ def load_facts(ticker: str, tags: Sequence[str], as_of: date) -> list[_FactView]
     ]
 
 
+def tags_ever_ingested(tags: Sequence[str]) -> bool:
+    """Does the store hold ANY fact under these tags, for ANY ticker?
+
+    CR221's loud-degrade probe, and it is not hypothetical: on 2026-09-03 the
+    Alpha store held 351,139 facts across 150 tickers and **zero** rows under
+    the maturity or interest tags, because the last ingest ran 2026-08-19 —
+    before those tags were added to `INGEST_TAGS_US_GAAP`. A feature flag
+    turned on against that store renders nothing, and "nothing" is
+    indistinguishable at the sheet from "this filer discloses nothing".
+
+    That is DEF038/DEF063's shape (a shipped feature dark for want of one
+    deployment step) and CR040 says it must fail visibly. Callers use this to
+    log the difference between *no data for this filer* and *the ingest has
+    not been re-run*. One indexed existence check, only on the absent path.
+    """
+    stmt = select(EdgarFactRow.id).where(EdgarFactRow.tag.in_(list(tags))).limit(1)
+    with get_session() as session:
+        return session.execute(stmt).first() is not None
+
+
 # ── Pure resolvers ──────────────────────────────────────────────────────────
 
 

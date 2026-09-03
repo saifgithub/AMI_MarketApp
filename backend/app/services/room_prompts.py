@@ -38,7 +38,9 @@ from app.services.fundamentals import (
     buyback_pacing_line,
     capex_line,
     capital_return_line,
+    cost_of_debt_line,
     day_move_line,
+    debt_maturity_line,
     historical_multiples_line,
     interest_coverage_line,
     liquidity_line,
@@ -2617,6 +2619,28 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("interest_coverage_quarter")
                 if _is("interest_coverage_quarter", "live") else None,
             ),
+            # CR221 A1 — the maturity ladder, 14 request lines from 6 agents.
+            # Flag-gated at the render, not at the fetch: §7 measures demand
+            # extinction per item against one cached profile, so the control
+            # arm must be a flag flip rather than a second profile build.
+            debt_maturity_line(
+                profile.get("debt_maturity_labels"),
+                profile.get("debt_maturity_values"),
+                profile.get("debt_maturity_period_end"),
+                profile.get("debt_maturity_beyond_5y"),
+                profile.get("debt_maturity_excluded_st"),
+            ) if (settings.room_debt_maturity_enabled
+                  and _is("debt_maturity", "live")) else None,
+            # CR221 A3 — the implied rate and both of its inputs. Its own flag,
+            # because §7 attributes per item and DEF399 rides on this one.
+            cost_of_debt_line(
+                profile.get("cost_of_debt_pct"),
+                profile.get("cost_of_debt_basis"),
+                profile.get("cost_of_debt_interest"),
+                profile.get("cost_of_debt_gross_debt"),
+                profile.get("cost_of_debt_period_end"),
+            ) if (settings.room_cost_of_debt_enabled
+                  and _is("cost_of_debt", "live")) else None,
             earnings_power_line(
                 profile.get("trailing_eps") if _is("trailing_eps", "live") else None,
                 profile.get("revenue_ttm") if _is("revenue_ttm", "live") else None,
