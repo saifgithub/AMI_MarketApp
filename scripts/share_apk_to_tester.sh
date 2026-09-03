@@ -32,7 +32,47 @@ set -uo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
 
-: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+# Melehost addresses: LAN-direct (fast) and Tailscale fallback (VPN, ~500ms latency).
+# Same user and path on both. Caller may override AMI_APK_SHARE_DEST completely
+# (full scp destination string), in which case no fallback probe runs.
+: "${MELEHOST_LAN_IP:=192.168.20.59}"
+: "${MELEHOST_TAILSCALE_IP:=100.110.14.31}"
+: "${MELEHOST_USER:=saiful}"
+: "${MELEHOST_APK_PATH:=/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+
+# Only set AMI_APK_SHARE_DEST if not already set by caller. This allows the
+# fallback probe to run: we detect which host is reachable and build the
+# destination dynamically. If caller sets AMI_APK_SHARE_DEST (full scp-style
+# string), that overrides any probe — we use it as-is.
+if [[ -z "${AMI_APK_SHARE_DEST:-}" ]]; then
+  # Probe reachability of the primary (LAN) address first. Use nc on port 22
+  # (SSH) instead of ICMP ping — more networks allow TCP to a known service
+  # than allow ICMP, and scp will use SSH anyway.
+  PRIMARY_HOST="${MELEHOST_USER}@${MELEHOST_LAN_IP}:${MELEHOST_APK_PATH}"
+  FALLBACK_HOST="${MELEHOST_USER}@${MELEHOST_TAILSCALE_IP}:${MELEHOST_APK_PATH}"
+
+  if nc -z -w 3 "${MELEHOST_LAN_IP}" 22 2>/dev/null; then
+    # Primary is reachable; use it.
+    AMI_APK_SHARE_DEST="${PRIMARY_HOST}"
+    CHOSEN_ROUTE="LAN"
+  else
+    # Primary is not responding; fall back to Tailscale. Try it once to confirm
+    # it's reachable before committing to it.
+    if nc -z -w 3 "${MELEHOST_TAILSCALE_IP}" 22 2>/dev/null; then
+      AMI_APK_SHARE_DEST="${FALLBACK_HOST}"
+      CHOSEN_ROUTE="Tailscale fallback"
+    else
+      # Neither reachable. Log the problem and let scp try anyway — the error
+      # will be loud and clear. Use the primary so the error message names the
+      # expected host (not a fallback that also failed).
+      AMI_APK_SHARE_DEST="${PRIMARY_HOST}"
+      CHOSEN_ROUTE="LAN (unreachable; Tailscale also failed)"
+    fi
+  fi
+else
+  # Caller set AMI_APK_SHARE_DEST explicitly. Honor it, no probe.
+  CHOSEN_ROUTE="(caller-specified override)"
+fi
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 # CR050 — GCP OAuth 2.0 **Web** client_id (ami-trade-web). Public config; baked as
 # the default so Google Sign-In is never silently disabled by a forgotten export.
@@ -85,7 +125,7 @@ fi
 # stated here instead, and the installed app states its own gates under
 # Settings — the copy that survives being installed.
 echo "▶ artifact feature set: AMI_GAMES=${AMI_GAMES}$([[ "$AMI_GAMES" == "true" ]] || echo '  (no GAME tab in this APK)')"
-echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}"
+echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}  (via ${CHOSEN_ROUTE})"
 if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
   echo "✓ automated-tester APK is current: ${AMI_APK_SHARE_DEST}"
   exit 0

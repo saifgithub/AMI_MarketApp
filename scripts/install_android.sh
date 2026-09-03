@@ -165,10 +165,21 @@ fi
 # with the store-release path so the rig is refreshed on EVERY build. Guarded so
 # a LAN hiccup can never abort an otherwise-good device install; the helper
 # prints its own loud STALE warning, which its exit code echoes into SHARE_OK.
-: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+#
+# The shared script owns the default destination and fallback logic (primary LAN IP
+# vs. Tailscale fallback). Pass through any caller override via AMI_APK_SHARE_DEST
+# env var, but let the shared script's defaults take over if not set.
 SHARE_OK=0
-if AMI_APK_SHARE_DEST="$AMI_APK_SHARE_DEST" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh" "$APK"; then
-  SHARE_OK=1
+if [[ -n "${AMI_APK_SHARE_DEST:-}" ]]; then
+  # Caller set an override; pass it through to the shared script.
+  if AMI_APK_SHARE_DEST="$AMI_APK_SHARE_DEST" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh" "$APK"; then
+    SHARE_OK=1
+  fi
+else
+  # No caller override; let the shared script's fallback logic choose LAN or Tailscale.
+  if "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh" "$APK"; then
+    SHARE_OK=1
+  fi
 fi
 
 # Install on each target
