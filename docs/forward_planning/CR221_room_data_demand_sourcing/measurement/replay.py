@@ -252,8 +252,27 @@ def arm(label: str, *, ticker: str, mandate: str, client: VLLMClient) -> dict:
     return convene
 
 
+_MIN_ANSWER_CHARS = 40
+
+
+def is_complete(convene: dict) -> bool:
+    """Every turn answered. A convene with dead turns must never be scored.
+
+    The provider went down mid-round on 2026-09-03 and two whole convenes came
+    back with twelve `Connection refused` turns each. Scored, they read as ZERO
+    demand — a perfect extinction result produced by an outage. That is the
+    CR040 silent-fallback shape landing on the measurement instead of on the
+    product, and a run that cannot tell the two apart cannot be trusted about
+    either.
+    """
+    turns = convene.get("turns") or []
+    return bool(turns) and all(
+        len((turn.get("answer") or "").strip()) >= _MIN_ANSWER_CHARS for turn in turns
+    )
+
+
 def _banked(args) -> dict[str, list[dict]]:
-    """Convenes already on disk for one run stamp, keyed by arm.
+    """Convenes already on disk, keyed by arm — newest stamp wins per cell.
 
     Re-scoring is free — no model, no cost — and it has to stay free, because
     the scorer is the part of this rig most likely to need a correction after
@@ -264,13 +283,23 @@ def _banked(args) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for label in args.arms:
         for mandate in args.mandates:
-            path = os.path.join(
-                args.out_root, f"{args.score_only}_{args.ticker}_{mandate}_{label}.json")
-            if not os.path.exists(path):
-                print(f"!! missing {os.path.basename(path)}")
+            found = None
+            for stamp in sorted(args.score_only, reverse=True):
+                path = os.path.join(
+                    args.out_root, f"{stamp}_{args.ticker}_{mandate}_{label}.json")
+                if not os.path.exists(path):
+                    continue
+                with open(path) as fh:
+                    convene = json.load(fh)
+                if not is_complete(convene):
+                    print(f"!! DEAD TURNS, skipped: {os.path.basename(path)}")
+                    continue
+                found = convene
+                break
+            if found is None:
+                print(f"!! no complete convene for {mandate}/{label}")
                 continue
-            with open(path) as fh:
-                out.setdefault(label, []).append(json.load(fh))
+            out.setdefault(label, []).append(found)
     return out
 
 
@@ -278,6 +307,12 @@ def report(convenes: dict[str, list[dict]], args, *, verbatim: bool) -> int:
     labels = [label for label in args.arms if convenes.get(label)]
     if not labels:
         print("!! nothing to report")
+        return 1
+    sizes = {label: len(convenes[label]) for label in labels}
+    if len(set(sizes.values())) != 1:
+        print(f"!! arms have unequal convene counts {sizes} — the totals row would "
+              f"compare a sum over N convenes with a sum over M. Re-run the missing "
+              f"cells, or pass only the mandates every arm completed.")
         return 1
     totals = {label: collections.Counter() for label in labels}
     agents = {label: collections.defaultdict(set) for label in labels}
@@ -329,9 +364,11 @@ def main() -> int:
     ap.add_argument("--out-root", default=RESULTS)
     ap.add_argument("--arms", nargs="+", default=list(ARMS),
                     choices=list(ARMS))
-    ap.add_argument("--score-only", metavar="STAMP", default=None,
-                    help="re-score banked convenes with this run stamp instead "
-                         "of driving the model — no LLM calls, no cost")
+    ap.add_argument("--score-only", metavar="STAMP", nargs="+", default=None,
+                    help="re-score banked convenes with these run stamps instead "
+                         "of driving the model — no LLM calls, no cost. Several "
+                         "stamps are searched newest-first per (mandate, arm), "
+                         "which is how a re-run after an outage rejoins its round.")
     ap.add_argument("--verbatim", action="store_true",
                     help="with --score-only, print every datum named, by arm")
     args = ap.parse_args()
