@@ -77,6 +77,23 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
   new `Verdict` fields (`reference_price`, `next_convene_delta`), which A3
   classified COMPUTED by reading the code. 14/14 on dispatcher rerun.
 
+- **B3 ACCEPTED 2026-09-03** — `19e3e2e1`: `dollar_risk_usd` per rung
+  (portfolio_value × contribution_pts / 100, the option-budget expression),
+  rendered inside the drawdown parenthetical via the DEF234/242 formatter;
+  None/zero portfolio value renders NOTHING (never `$0`); production call
+  site wired + spy-tested. 81/81 on dispatcher rerun.
+- **B1 ACCEPTED 2026-09-03** — `83f5b5e0` (rerouted Opus→Sonnet after two
+  server-side 529s; clean tree confirmed before respawn): `numeric_quotation.py`
+  checker for F1 (analyst prose) / F3 (headline, null-don't-cut) / F6
+  (kill_criterion, directional label-then-number binding). 14 scoped fields,
+  labels copied verbatim from the renderer and grep-guarded against rename
+  rot; A2's normalizer factored to the shared module with its 44 pins proven
+  unchanged; derived arithmetic and unlabelled numerals pass untouched;
+  missing profile = no-op. Four construction bugs found, fixed, pinned
+  (magnitude-suffix word boundary; label-digit self-match; relational-word
+  direction; exclude-pattern scope). 250/250 on dispatcher rerun.
+  **R59 closes with this — the full numbers-audit program is built.**
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit
