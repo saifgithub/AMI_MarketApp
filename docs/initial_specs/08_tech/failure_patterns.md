@@ -2004,3 +2004,16 @@ confirming the diff carries nothing but that lane's rows — the exact check tha
 caught both instances. Convention-enforced, like the commit-tag rule; a build
 that cannot honour (1) must use CR081's row-file pattern instead of a shared
 table.
+
+**Variant (2026-09-03, 4th instance): the revert-side sweep.** The hazard is
+not only in committing — `git checkout`/`restore` on a co-edited file deletes
+the OTHER lane's uncommitted hunks just as silently. WP10 (R38), abandoning its
+own build via checkout of `room_runner.py`, wiped WP13's uncommitted debate-order
+hunk in the same file; WP13 caught it only because it habitually re-ran
+`git diff HEAD` and found its edit gone, re-applied, and committed immediately.
+(WP10 had Edit-surgically removed its own hunks from `config.py` /
+`docker-compose.yml` precisely to preserve WP13's — the discipline exists, it
+just wasn't applied to every shared file.) Rule restated to cover both sides:
+on a file you co-edited, **never `git checkout`/`restore`** — remove your hunks
+by inverse Edit, exactly as you added them; and after any lane aborts, every
+concurrent lane re-checks `git diff HEAD` on its own uncommitted files.
