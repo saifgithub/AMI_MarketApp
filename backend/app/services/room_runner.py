@@ -5901,6 +5901,15 @@ async def _run_risk_officer(
         rows,
         headline_max_chars=STANCE_HEADLINE_MAX_CHARS,
         fallback_reason=fallback_reason,
+        # CR219 R59-F2 (CR219-F2-PROFILE promotion hold): the fact sheet is
+        # already in hand two calls up (`build_risk_officer_messages`,
+        # `profile=ctx.profile` above) — threading it here is what lets
+        # `key_number`/`decisive_number` corroborate against the SHEET, not
+        # only the ladder. `ctx.profile` defaults to `{}`, never None, so this
+        # is never a missing-argument crash; risk_officer.py's own checker
+        # degrades to ladder-only verification on an empty/malformed profile,
+        # never a skip.
+        profile=ctx.profile,
     ):
         async for ev in _stream_agent_text(
             agent_id=turn.agent_id,

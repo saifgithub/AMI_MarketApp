@@ -49,6 +49,7 @@ from app.schemas.mandate import Plan
 from app.services import room_runner as rr_mod
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.risk_officer import (
+    _UNVERIFIABLE_MARK,
     RISK_TURN_ORDER,
     render_officer_turns,
 )
@@ -465,6 +466,86 @@ def test_flag_on_an_invented_size_never_reaches_the_transcript(monkeypatch):
     for m in turns:
         assert "12.0" not in m.content
         assert m.argued_size_pct != 12.0
+
+
+def test_flag_on_the_production_call_site_threads_profile_non_none(monkeypatch):
+    """CR219-F2-PROFILE promotion hold — the wiring test it names. This must
+    pin the PRODUCTION call site (`_run_risk_officer` inside room_runner.py),
+    not merely that `render_officer_turns` accepts a `profile` kwarg: a spy
+    wraps the REAL function, so a room convene that ships through this call
+    site without threading `ctx.profile` fails here, whether the regression
+    is dropping the argument, passing None, or passing the wrong object."""
+    captured: list[dict] = []
+    orig = rr_mod.render_officer_turns
+
+    def spy(*args, **kwargs):
+        captured.append(kwargs)
+        return orig(*args, **kwargs)
+
+    monkeypatch.setattr(rr_mod, "render_officer_turns", spy)
+    gw = _Gateway()
+    _run_room(gw, monkeypatch)
+
+    assert len(captured) == 1, "render_officer_turns must be called exactly once per convene"
+    assert "profile" in captured[0], (
+        "the production call site did not pass `profile` at all — "
+        "CR219-F2-PROFILE's exact regression shape"
+    )
+    profile = captured[0]["profile"]
+    assert profile is not None, "profile arrived as None — a missed threading, not a real sheet"
+    assert isinstance(profile, dict), f"profile was not a dict: {type(profile)!r}"
+    # Not just "truthy" — this is AAPL's real ctx.profile, built by
+    # `_profile_for_ticker` off the SAME code path production takes. Its
+    # `ticker`/`field_state` keys are always present regardless of live-data
+    # settings (CR104), so their presence proves this is ctx's actual sheet,
+    # not an empty placeholder that happened to satisfy `is not None`.
+    assert profile.get("ticker") == "AAPL"
+    assert "field_state" in profile
+
+
+def test_flag_on_a_sheet_only_quote_passes_unstruck_end_to_end(monkeypatch):
+    """The hold's second required test: a figure that exists ONLY on the
+    fact sheet — absent from the ladder entirely — must corroborate and
+    render CLEAN through the real room path now that `profile` is threaded.
+    Before this wiring landed, the exact same payload would have missed
+    (ladder-only verification) and rendered `[AMI: unverifiable]` — this test
+    is the end-to-end proof that the promotion hold is actually satisfied,
+    not just that the parameter is accepted somewhere.
+    """
+    # RSI 61.4 is on the SHEET only: it does not correspond to any of this
+    # convene's ladder rungs (size_pct / contribution_pts / share_of_cap_pct /
+    # headroom_after_pts / reward_risk), which is exactly what makes this a
+    # sheet-only, not ladder-derivable, quotation.
+    monkeypatch.setattr(
+        rr_mod, "_profile_for_ticker",
+        lambda *a, **kw: {"ticker": "AAPL", "field_state": {}, "rsi": 61.4},
+    )
+
+    def _officer_reply_with_sheet_quote(system_prompt: str) -> str:
+        payload = json.loads(_echo_officer_reply(system_prompt))
+        payload["decisive_number"] = "RSI 61.4"
+        return json.dumps(payload)
+
+    gw = _Gateway()
+    orig = _Gateway.stream_chat
+
+    async def patched(self, *, system_prompt, **kw):
+        if self._match(system_prompt) == "risk_officer":
+            self.officer_reply = _officer_reply_with_sheet_quote(system_prompt)
+        async for chunk in orig(self, system_prompt=system_prompt, **kw):
+            yield chunk
+
+    gw.stream_chat = patched.__get__(gw)
+    events, runner = _run_room(gw, monkeypatch)
+    turns = _risk_turns(runner, events)
+    assert len(turns) == 3
+
+    neu = next(m for m in turns if AgentId(m.agent_id) is AgentId.NEUTRAL_DEBATOR)
+    assert "decided by RSI 61.4" in neu.content
+    assert _UNVERIFIABLE_MARK not in neu.content
+    # The comb headline slot: a sheet-only quote must NOT be demoted to the
+    # rung-derived fallback — it survives as the genuine quotation it is.
+    assert neu.headline == "RSI 61.4"
 
 
 def test_flag_on_risk_officer_never_surfaces(monkeypatch):
