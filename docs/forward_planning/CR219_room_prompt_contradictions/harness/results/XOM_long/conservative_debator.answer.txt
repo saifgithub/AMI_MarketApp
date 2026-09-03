@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.5% | HEADLINE: R:R 0.23:1 compresses upside]
+
+Execution Desk proposes **3.0%** size. I cut it by 50 bps because the **0.23:1** risk/reward is unacceptable for a long-only hold, even with a low-beta profile.
+
+- **Asymmetry risk:** Price at **$164.15** is only **+3.4%** from the consensus mean target **$169.68**. This compresses upside capture to a fraction of the **12.2%** downside to the 200-day average, demanding a smaller entry to preserve capital efficiency.
+- **Funding stress:** The **183%** capital return ratio against **$20,671M** TTM FCF creates a structural drag on compounding. This is not a liquidity crisis given **80.2x** interest coverage, but it degrades the "free-cash-flow consistency" the mandate requires, warranting a smaller position until returns align with cash generation.
+- **Event buffer:** The **FOMC decision in 13 days** is the primary volatility driver. At **2.5%** size with the **$147.74** stop, the portfolio drawdown contribution remains well within safe limits, providing ample headroom to absorb policy noise without forced exits.

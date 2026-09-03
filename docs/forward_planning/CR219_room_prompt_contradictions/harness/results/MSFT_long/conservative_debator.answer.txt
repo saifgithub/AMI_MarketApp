@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | SIZE: 1.50% | HEADLINE: Azure visibility risk vs 0.4% FCF yield]
+
+Endorse the desk's **1.50%** size: the **0.4% FCF yield** and **$115,948M** capex create cash-flow fragility that the **4/4 EPS beats** mask, and the Azure segment split introduces precise consensus targets for the **2026-10-28** print, raising the risk of a visible miss.
+
+- **Downside scenario**: If Azure standalone disclosure reveals growth deceleration on **2026-10-28**, multiple compression from **21.1x** forward P/E tests the **$431.12** 200-day average (**-13.2%** from **$496.82**). The **15.5%** stop captures this; the reference **10.0%** stop (entry **$496.82**, exit **$447.14**) would be whipsawed by **FOMC** noise in **13 days**.
+- **Portfolio impact**: At **1.50%** size with a **15.5%** stop, drawdown contribution is **0.23** percentage points of the **30%** cap, leaving **9.8** points of open-risk headroom for the remaining **1.50%** tranche and other names. The **0.92%** short interest confirms the market isn't crowded on the downside, but it offers no protective cushion.
+- **Protective measure**: Trigger the second tranche only on either relative strength re-acceleration (closing the **19.2pp** gap to the S&P) or a pullback to **$431.12** with volume confirmation. Do not average into weakness before the segment disclosure.

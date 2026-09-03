@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.75% | HEADLINE: Splitting size on funding gap]
+
+The data adjudicates the long case, so the split is strictly on sizing discipline: **2.75%** captures the trend conviction while trimming the aggressive tail exposure.
+
+- **Aggressive gets it right:** The **0.23:1 R:R** is mitigated by the **2.5% dividend** yield and the **80.2x** interest coverage, which makes the **$144.09** trend line the true risk boundary, not the near-term target. However, Aggressive overweights the **$674,970M** scale when the **183%** return-to-FCF ratio directly violates the mandate's **FCF consistency** requirement.
+- **Conservative gets it right:** Cutting size acknowledges that returning nearly twice what the company generates creates a cash-flow drag. However, Conservative's **2.5%** underweights the **0.17** beta and the structural **+28.7pp** outperformance, which provide the downside cushion Conservative ignores.
+- **The middle:** **2.75%** is the exact midpoint. It respects the **0.23:1 R:R** compression against the **$169.68** consensus target but retains enough size to capture the **13.9%** trend premium over the **$144.09** 200-day average.

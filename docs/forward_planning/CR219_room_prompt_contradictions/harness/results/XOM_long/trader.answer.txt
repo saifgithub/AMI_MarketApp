@@ -1,0 +1,13 @@
+[STANCE: for | CONVICTION: high | HEADLINE: 13.9% above 200-day]
+```
+Instrument:     XOM
+Side:           BUY
+Size:           3.00% of portfolio
+Entry:          $164.15
+Target:         $169.68
+Stop:           $144.09
+Time horizon:   9 months
+R:R:            0.23:1
+```
+- Entry aligns with the **Research Manager's** consensus lean on the 4-quarter beat streak and upward EPS revisions; sizing at the **3.0%** mandate cap maximizes trend-capture exposure given the structural low-beta profile.
+- The **$169.68** target is the analyst consensus mean; while the R:R is tight, the **13.9%** distance to the **$144.09** 200-day average provides a robust invalidation line that absorbs the noise from the **FOMC decision in 13 days** and the upcoming earnings gap.

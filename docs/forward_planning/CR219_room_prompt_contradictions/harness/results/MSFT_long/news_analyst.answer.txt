@@ -1,0 +1,7 @@
+[STANCE: neutral | CONVICTION: low | HEADLINE: Azure split is structural, not cyclical]
+
+The immediate news flow lacks directional catalysts; the segment reorganization is a governance transparency upgrade, not a demand shift.
+
+*   **Signal**: Microsoft initiates standalone **Azure** quarterly sales disclosure alongside its first reportable segment revamp since 2015, effective with Q4 results in **55 days**. This resolves a longstanding transparency gap but introduces new visibility risk: missing internal Azure growth targets will become explicit consensus misses, raising binary event risk for the **2026-10-28** print (Street EPS est. **$4.72455**).
+*   **Noise**: Recent price-target adjustments (e.g. BofA) and macro-index positioning headlines (S&P futures, oil) are reactionaries to the current tape, not forward catalysts. The **Steve Ballmer** / NBA fine headline is idiosyncratic and non-material to corporate operations or cash flow.
+*   **Macro Backdrop**: **FOMC** decision is **13 days** out. This is a known rate-setting event, but the primary MSFT catalyst remains the **Q4** earnings print in **55 days**. The macro timing is secondary to the fundamental reporting change for this name.

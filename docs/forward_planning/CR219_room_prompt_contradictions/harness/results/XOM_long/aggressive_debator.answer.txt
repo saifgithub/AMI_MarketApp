@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | SIZE: 3.0% | HEADLINE: 0.25pt drawdown contribution]
+
+**Position sizing:** Full **3.0%** is mandated by opportunity cost, not just risk tolerance. The reference **0.25pt** drawdown contribution against the **30.0pt** cap leaves 99.2% of the budget unused for this name; halting at half-size forfeits the compounding power of the full allocation when the **80.2x** interest coverage and **0.17** beta make capital preservation structural. The **183%** capital return ratio is a distribution pacing issue, not a solvency threat, given the **$674,970M** market cap and **$20,671M** TTM FCF floor.
+
+- **Asymmetry tolerance:** The **2.5%** dividend yield plus the **$20,512M** trailing buyback creates a hard floor beneath the current **$164.15** price, neutralizing the tight **0.23:1** R:R to the **$169.68** consensus target. You are paid to wait; do not under-weight the cash yield component.
+- **Concentration safety:** A **3.0%** position consumes only **7.5%** of the **40.0%** sector ceiling, leaving ample room for sector expansion without triggering rebalance friction.
+- **Trend integrity:** The **13.9%** premium to the **$144.09** 200-day average is the only hard technical risk, but the **1.0%** short interest and **4,104M** float prevent squeeze-driven volatility from breaking the trend.

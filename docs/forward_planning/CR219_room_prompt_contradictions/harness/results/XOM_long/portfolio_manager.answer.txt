@@ -1,0 +1,5 @@
+Approved at 2.75% size to balance the trend-continuation upside against the structural cash-flow tension and compressed R:R, with the horizon anchored to the 57-day earnings window.
+- The 4-quarter beat streak and +7.7% consensus EPS revision validate the 15.4x forward P/E, while the 0.17 beta and 80.2x interest coverage make the downside highly structural.
+- I am rejecting the Execution Desk's 3.0% size; the 183% capital return against $20,671M TTM FCF degrades the mandate's FCF-consistency requirement, and the +3.4% upside to the $169.68 mean target leaves too little room for full-size risk.
+- I am adjusting the stop to $147.74 (10.0% below entry) rather than the $144.09 200-day average to respect the reference risk-tier parameters, contributing 0.275 points to the 30-point portfolio drawdown cap.
+- Setting a 57-day horizon because the fundamental catalyst (Q4 earnings, 2026-10-30) is the definitive test of the earnings revision momentum.

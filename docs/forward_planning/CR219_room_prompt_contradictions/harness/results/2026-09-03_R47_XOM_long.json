@@ -1,0 +1,2033 @@
+{
+ "source_run": "/Volumes/Extreme Pro/AMI_MarketApp/docs/forward_planning/CR219_room_prompt_contradictions/harness/results/XOM_long/run.json",
+ "ticker": "XOM",
+ "mandate_label": "long",
+ "model": {
+  "alias": "ami-llm",
+  "root": "/models/qwen38-flash-next-nvfp4",
+  "max_model_len": 262144,
+  "base_url": "http://192.168.20.74:8048",
+  "aliases_served": [
+   "ami-llm",
+   "qwen3.8-flash-next"
+  ]
+ },
+ "k": 20,
+ "pm_samples": 5,
+ "thinking": false,
+ "reasoning_effort": null,
+ "max_tokens": 1700,
+ "production_max_tokens": 1700,
+ "temperature": 1.0,
+ "pm_prompt_tokens_banked": 9036,
+ "ran_at": "2026-09-03T02:45:29.235084+00:00",
+ "votes": [
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    null,
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1736,
+   "elapsed_s": 85.8,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "The long thesis is supported by momentum, earnings revisions and a fortress balance sheet, but the execution desk\u2019s 3.0% size and 9-month horizon misprice the asymmetry and funding gap.\n\n- Cutting size to 2.5% (Conservative/Balanced) respects the 183% capital-return vs FCF gap; this directly violates the mandate's FCF consistency requirement.\n- Tightening the stop from the $144.09 200-day average ($164.15 entry) to $147.74 caps portfolio drawdown at 0.25pt against the 30.0pt cap, neutralizing the 0.23:1 R:R.\n- Reducing horizon to 90 days: the $37,753M trailing capital return vs $20,671M FCF requires quarterly pacing checks, not a blind 9-month hold.\n- The 4-quarter beat streak and +7.7% EPS revisions validate a long entry, but Venezuela headlines lack formal XOM commitment and the FOMC (13 days out) is a binary volatility catalyst\u2014wait on macro, enter now on technicals.\n- The 3.4% asymmetry to consensus targets requires strict invalidation. Full 3% size ignores the distribution funding risk.\n- The dividend yield and buyback pacing are the cash floor; the stop must protect that floor, not the 200-day trend.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Daily close under 200-day average of $144.09",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 34,
+     "tok_reasoning": 0,
+     "elapsed_s": 6.7,
+     "action": null,
+     "answer_chars": 144,
+     "answer": "Let me bring the room together \u2014 analysts first, then the debate, then risk.\n\nI'll open with four analysts in parallel, then convene the debate."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 449,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.9,
+     "action": "APPROVE",
+     "answer_chars": 1338
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 551,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.2,
+     "action": "APPROVE",
+     "answer_chars": 1780
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 282,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.8,
+     "action": "APPROVE",
+     "answer_chars": 872
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 420,
+     "tok_reasoning": 0,
+     "elapsed_s": 20.2,
+     "action": "APPROVE",
+     "answer_chars": 1332
+    }
+   ]
+  },
+  {
+   "action": "PASS",
+   "size_pct": null,
+   "agreement": "2/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    "APPROVE",
+    null,
+    "PASS",
+    "APPROVE",
+    "PASS"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1638,
+   "elapsed_s": 78.9,
+   "verdict": {
+    "action": "PASS",
+    "size_pct": null,
+    "entry": null,
+    "target": null,
+    "stop": null,
+    "time_horizon_days": null,
+    "reason": "Rejected: the Execution Desk's proposal fails the mandate's free-cash-flow consistency requirement and the proposed asymmetry is unacceptable.\n- The 183% capital return ratio vs. $20,671M TTM FCF is a structural funding gap that violates the 'durability and free-cash-flow consistency' preference for long-term wealth.\n- The Risk:Reward is 0.23:1 ($3.4% upside to $169.68 target vs. $20.06 risk to $144.09 stop), failing to justify entry near the 52-week high band.\n- Venezuela headlines are competitor activity (Chevron $7B), not a direct XOM catalyst; no company-specific news supports immediate entry.\n- FOMC in 13 days and earnings in 57 days create a vacuum; better to wait for capital return pacing to normalize or price to discount back toward the 200-day average.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day average of $144.09.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": null,
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 569,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.4,
+     "action": "APPROVE",
+     "answer_chars": 1772
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 50,
+     "tok_reasoning": 0,
+     "elapsed_s": 6.1,
+     "action": null,
+     "answer_chars": 229,
+     "answer": "Let me start by pulling the latest research for XOM \u2014 fundamentals, market data, recent news, and technical analysis.\n\nLet me pull the research on XOM \u2014 fundamentals, market sentiment, technicals, and recent news all in parallel."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 385,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.8,
+     "action": "PASS",
+     "answer_chars": 1296
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 378,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.1,
+     "action": "APPROVE",
+     "answer_chars": 1197
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 256,
+     "tok_reasoning": 0,
+     "elapsed_s": 13.5,
+     "action": "PASS",
+     "answer_chars": 891
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "5/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1718,
+   "elapsed_s": 107.9,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 57,
+    "reason": "I trim the 3.0% request to 2.5% and tighten the stop; the structural beat streak survives, but the cash-return overdraw demands a wider margin of safety.\n\u2022 The 0.23:1 R:R is compressed at the $169.68 target; the 2.5% size aligns with Risk-3 tolerance while honoring the 183% capital-return-to-FCF gap flagged by both Bear and Conservative.\n\u2022 The $147.74 stop reduces portfolio drawdown contribution to ~0.25pt of the 30pt cap, offering more protection against the $144.09 200-day break than the $164.15-to-$144.09 proposal.\n\u2022 Horizon set at 57 days to capture the Q4 earnings print on 2026-10-30, anchoring the thesis to the next hard catalyst rather than a multi-year assumption.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day moving average at $144.09 would invalidate the technical trend thesis.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 350,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.2,
+     "action": "APPROVE",
+     "answer_chars": 998
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 373,
+     "tok_reasoning": 0,
+     "elapsed_s": 45.2,
+     "action": "APPROVE",
+     "answer_chars": 1031
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 297,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.6,
+     "action": "APPROVE",
+     "answer_chars": 891
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 384,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.8,
+     "action": "APPROVE",
+     "answer_chars": 1160
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 314,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.1,
+     "action": "APPROVE",
+     "answer_chars": 933
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "2/3",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 3,
+   "draw_actions": [
+    "APPROVE",
+    "PASS",
+    null,
+    null,
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1292,
+   "elapsed_s": 66.0,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 60,
+    "reason": "Long XOM, but cut the Execution Desk's 3.0% size to 2.5% and move the stop to $147.74.\n\u2022 Capital return at 183% of FCF is a cash-flow drag; conservative sizing protects the compounding mandate until this ratio closes.\n\u2022 0.23:1 R:R (upside $169.68 vs. downside $144.09) is too tight for a full 3.0% cap.\n\u2022 Tightening the stop to $147.74 (10.0% from entry) trims the drawdown contribution to 0.25 points of the 30.0 point portfolio cap.\n\u2022 The 0.17 beta and $144.09 200-day average (13.9% below price) validate the trend; the stop sits above the 200-day as an early exit before that trend line breaks.\n\u2022 FOMC decision in 13 days and earnings in 57 days justify a shorter 60-day horizon to manage event risk.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day average at $144.09, which invalidates the primary trend.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 361,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.4,
+     "action": "APPROVE",
+     "answer_chars": 1079
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 353,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.2,
+     "action": "PASS",
+     "answer_chars": 1209
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 60,
+     "tok_reasoning": 0,
+     "elapsed_s": 6.7,
+     "action": null,
+     "answer_chars": 225,
+     "answer": "Let me pull the fact sheet first, then convene the room.\n\n\nFact sheet is up. Now I'll convene the full 11-analyst room to debate XOM \u2014 fundamentals and technicals first, then the bull/bear debate, risk review, and my verdict."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 162,
+     "tok_reasoning": 0,
+     "elapsed_s": 9.7,
+     "action": null,
+     "answer_chars": 537,
+     "answer": "Verdict: APPROVE\nReasoning: Execution's 3% sizing with a tight R:R is too aggressive for a Risk-3 mandate given the 183% capital return ratio against FCF and compressed upside to consensus targets. Cutting size to the Conservative/Risk-3 balanced midpoint of 2.75% and moving the stop to $147.74 tightens risk and drawdown contribution while preserving the trend-capture thesis.\nFinal trade: XOM | BUY | 2.75% | $164.15 | $169.68 | $147.74 | 180d\nMandate compliance: PASS\nTag: Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 356,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.0,
+     "action": "APPROVE",
+     "answer_chars": 947
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "PASS",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 2627,
+   "elapsed_s": 123.7,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "Approval granted for a modified position of 2.5% size, reflecting the tight risk/reward profile and the structural cash-flow funding gap flagged by the Bear Researcher.\n\n- Sizing adjusted from the proposed 3.0% to 2.5% to reflect the 0.23:1 R:R ratio, aligning with the Conservative Risk Officer's discipline on capital efficiency.\n- The 183% capital return ratio against $20,671M TTM FCF requires caution; a 2.5% position balances the 0.17 beta and trend strength against this funding constraint.\n- Target remains at the consensus mean of $169.68; the +3.4% asymmetry does not justify full cap utilization given the limited upside capture in the near term.\n- Entry at $164.15; stop tightened to $147.74 (10% below entry) rather than the $144.09 200-day average, as the tighter stop better protects capital against the $169.68 target compression while maintaining a 0.25pt portfolio drawdown contribution.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Daily close below the 200-day average of $144.09",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 395,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.3,
+     "action": "PASS",
+     "answer_chars": 1342
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 354,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.0,
+     "action": "APPROVE",
+     "answer_chars": 1108
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 371,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.1,
+     "action": "APPROVE",
+     "answer_chars": 1035
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 413,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.2,
+     "action": "APPROVE",
+     "answer_chars": 1393
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 1094,
+     "tok_reasoning": 0,
+     "elapsed_s": 52.1,
+     "action": "APPROVE",
+     "answer_chars": 3794
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.75,
+   "agreement": "2/3",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 3,
+   "draw_actions": [
+    "PASS",
+    "APPROVE",
+    null,
+    null,
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1514,
+   "elapsed_s": 77.7,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.75,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 60,
+    "reason": "Approved at 2.75% to balance the strong technicals against the poor R:R and cash-flow overdraw.\n- 2.75% sizing respects the Balanced RO\u2019s cap on the 183% capital-return/FCF ratio without ignoring the 80.2x coverage.\n- Stop tightened to $147.74 (-10%) from $144.09 (-12.2%) to protect the tighter 0.23:1 R:R toward the $169.68 consensus.\n- Drawdown contribution at this size/stop is roughly 0.23pt of the 30pt portfolio cap, well within risk-3 tolerance.\n- Horizon set to 60 days (approx. 2 months) as a conservative window before the 57-day earnings event; the 9-month desk proposal exceeds current data validity.\n- Forward catalyst is FOMC in 13 days; Venezuela news is competitor CVX activity, not a direct XOM signal.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Daily close below the 200-day average of $144.09, invalidating the structural uptrend and the relative-strength thesis.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 376,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.4,
+     "action": "PASS",
+     "answer_chars": 1571
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 258,
+     "tok_reasoning": 0,
+     "elapsed_s": 12.7,
+     "action": "APPROVE",
+     "answer_chars": 698
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 166,
+     "tok_reasoning": 0,
+     "elapsed_s": 9.6,
+     "action": null,
+     "answer_chars": 514,
+     "answer": "Verdict: APPROVE\nReasoning:\nI am accepting the long thesis but tightening risk parameters. I have modified the size from 3.0% to 2.5%, tightened the stop from $144.09 to $147.74, and extended the horizon to 9 months to capture compounding while respecting the 183% capital return vs. FCF tension.\nFinal trade:\n  Instrument, Side, Size, Entry, Target, Stop, Horizon: XOM, BUY, 2.5%, $164.15, $169.68, $147.74, 9 months\nMandate compliance: PASS\nTag:       Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 375,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.6,
+     "action": null,
+     "answer_chars": 1343,
+     "answer": "Verdict:   PASS\n\nReasoning:  Execution Desk\u2019s proposal is rejected.\n1. Size: 3.00% at cap is too large; mandate caps single-name exposure, and 3% is the maximum, not the required default. Aggressive\u2019s argument that full size is \"mandated by opportunity cost\" is incorrect.\n2. Risk/Reward: R:R of 0.23:1 (3.4% upside vs 12.2% stop distance) is structurally poor for a long-only entry near the 52-week high, even with low beta. The \"dividend floor\" argument from Aggressive does not justify accepting a sub-0.5:1 R:R on a fresh entry.\n3. Thesis Integrity: Capital return (183% of FCF) violates the \"free-cash-flow consistency\" preference for long-term wealth. While 80.2x interest coverage prevents immediate insolvency, it does not resolve the quality-of-compounding flaw for a long-horizon mandate.\n4. Timing: 13.9% premium to the 200-day average (164.15 vs 144.09) is a stretched entry. FOMC event (13 days) adds unnecessary volatility risk to a tight-R:R position.\n5. Asymmetry: Upside to the Street consensus target ($169.68) is +3.4%. This offers negligible capture for the risk profile, and consensus targets are not trade objectives.\nFinal trade (if approved/modified):  N/A\nMandate compliance: PASS (No hard rule violation, but trade fails discretionary criteria).\nTag:       Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 339,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.4,
+     "action": "APPROVE",
+     "answer_chars": 995
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.75,
+   "agreement": "3/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    "PASS",
+    "APPROVE",
+    null,
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1701,
+   "elapsed_s": 79.9,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.75,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 144.09,
+    "time_horizon_days": 270,
+    "reason": "The long thesis stands on 4 consecutive earnings beats and 15.4x forward P/E, but Execution's 3.0% sizing ignores the funding gap risk flagged by the Bear.\n\n- The **183%** capital return ratio is the critical tension; it is not a solvency crisis with **80.2x** interest coverage, but it violates the mandate's FCF-consistency emphasis.\n- We are approving at **2.75%** size\u2014splitting the difference between Aggressive (3.0%) and Conservative (2.5%)\u2014to respect the 0.23:1 risk/reward while capturing trend alpha.\n- The **200-day average** at $144.09 provides the hard invalidation floor, representing a -12.2% downside that fits within the portfolio drawdown budget.\n- The **$169.68** consensus target limits upside capture to +3.4%, but the **2.5%** dividend yield and **$20.5B** buyback provide a structural yield floor.\n- Venezuela headlines are competitor activity (Chevron's $7B) without a formal XOM commitment, making this a technical/trend trade, not a catalyst play.\n- Sizing at 2.75% with a 12.2% stop contributes only ~0.34 percentage points to the portfolio's 30% drawdown cap.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day SMA of $144.09 invalidates the trend continuation thesis.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 358,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.5,
+     "action": "PASS",
+     "answer_chars": 1372
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 432,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.0,
+     "action": "APPROVE",
+     "answer_chars": 1379
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 13,
+     "tok_reasoning": 0,
+     "elapsed_s": 4.6,
+     "action": null,
+     "answer_chars": 41,
+     "answer": "Let's bring the room in. What's our view?"
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 467,
+     "tok_reasoning": 0,
+     "elapsed_s": 20.0,
+     "action": "APPROVE",
+     "answer_chars": 1435
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 431,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.8,
+     "action": "APPROVE",
+     "answer_chars": 1298
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "3/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    "APPROVE",
+    "APPROVE",
+    "PASS",
+    null,
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1840,
+   "elapsed_s": 88.2,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "Approve, but I'm cutting size to 2.5% and tightening the stop to $147.74 to fix the Execution Desk's flawed asymmetry.\n- The proposed R:R of 0.23:1 is a mandate violation of basic risk management, even for a 0.17 beta stock. The $169.68 target is only 3.4% away, but the $144.09 floor is 12.2% down.\n- Sizing at 2.5% caps this single position's contribution to portfolio drawdown at ~0.41 points out of our 30-point limit, preserving capital against the FOMC 13-day event risk.\n- A tighter stop at $147.74 (10% down) is a cleaner invalidation line for a 0.17 beta stock; the full 12.2% gap to the $144.09 200-day average is an overkill buffer that wastes the 28.7pp relative strength premium we are paying for.\n- The Bear's 'sector cap' objection is technically void \u2014 we are at 0% energy allocation. The Bear's 'cash-flow funding gap' is a valid qualitative flag, which is why we size at 2.5%, not 3.0%, despite the 4-quarter beat streak.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A sustained daily close below the 200-day SMA at $144.09.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 404,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.8,
+     "action": "APPROVE",
+     "answer_chars": 1357
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 396,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.9,
+     "action": "APPROVE",
+     "answer_chars": 1148
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 355,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.2,
+     "action": "PASS",
+     "answer_chars": 1180
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 172,
+     "tok_reasoning": 0,
+     "elapsed_s": 10.3,
+     "action": null,
+     "answer_chars": 623,
+     "answer": "Verdict:   PASS\nReasoning: Compliance check cleared all gates, but the execution plan fails on asymmetry; entering at $164.15 for a $169.68 target with a $144.09 stop yields a 0.23:1 R:R, which is unacceptable for a long-only mandate regardless of the 0.17 beta. The structural tension between the 183% capital return ratio and $20.67B TTM FCF requires a price re-rating to improve the reward-to-risk profile before committing capital.\nFinal trade (if approved/modified):\n  Instrument, Side, Size, Entry, Target, Stop, Horizon\nMandate compliance: PASS\nTag:       Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 513,
+     "tok_reasoning": 0,
+     "elapsed_s": 23.0,
+     "action": "APPROVE",
+     "answer_chars": 1581
+    }
+   ]
+  },
+  {
+   "action": "PASS",
+   "size_pct": null,
+   "agreement": "2/3",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 1,
+   "draws_parsed": 3,
+   "draw_actions": [
+    "APPROVE",
+    null,
+    null,
+    "PASS",
+    "PASS"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 3167,
+   "elapsed_s": 146.3,
+   "verdict": {
+    "action": "PASS",
+    "size_pct": null,
+    "entry": null,
+    "target": null,
+    "stop": null,
+    "time_horizon_days": null,
+    "reason": "PASS: Reject due to unacceptable risk/reward asymmetry and structural capital-return overdraw.\n- **Negative Asymmetry:** The Execution Desk's **0.23:1** R:R is rejected; upside to **$169.68** is only **+3.4%** vs. the downside to the **$144.09** trend stop, which is **12.2%** below price. Compounding requires positive asymmetry, not just low-beta safety.\n- **FCF vs. Distributions:** Returning **$37,753M** against only **$20,671M** TTM FCF (**183%**) forces a **$29,174M** Capex and cash return funding gap.\n- **Long-term constraint:** A **183%** distribution ratio requires balance-sheet erosion or return cuts to close, which degrades FCF consistency and violates the long-term wealth mandate.\n- **Event Risk:** A **FOMC decision in 13 days** creates macro noise that compresses entry value when the Street target is already **+3.4%** overhead.\n- **Valuation Stretch:** Trading at **21.1x trailing** P/E vs. the **19.7x** historical median suggests current price captures most expected recovery.\n- **Verdict:** PASS to preserve capital efficiency. Do not chase a tight target with a wide trend-line stop.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Reconsider a BUY only if price pulls back closer to the $155.00 level to improve the R:R ratio and trailing capital return falls below 110% of TTM FCF (under $22.7B).",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": null,
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 363,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.7,
+     "action": "APPROVE",
+     "answer_chars": 1130
+    },
+    {
+     "error": null,
+     "finish": "length",
+     "truncated": true,
+     "tok_prompt": 9036,
+     "tok_out": 1700,
+     "tok_reasoning": 0,
+     "elapsed_s": 73.7,
+     "action": null,
+     "answer_chars": 5501,
+     "answer": "I need to synthesize all the inputs to reach a verdict. Let me trace through the decision sequence.\n\nFirst, the deterministic compliance check:\n- Long only? Proposed BUY, so yes, PASS.\n- No derivatives? Shares, PASS.\n- Liquidity/market cap? XOM is $674B mega cap, PASS.\n- Single-name cap 3%? Desk proposes 3% cap, PASS.\n- Drawdown? Portfolio currently flat, so the 30% cap is fully open. PASS.\n- Sector 40%? 0% open now, so PASS.\n- Cooldown? No stop-out, so PASS.\n- Positions count? No limit, PASS.\n- Pace? No cap hit, PASS.\n- Open-risk 10.5%? A single 3% position at the 10% stop contributes ~0.3 points, PASS.\nSo all compliance checks pass.\n\nNow weighing the debate. The research manager supports, the bull is high conviction, and the bear is medium conviction. The risk officers are split: Aggressive wants 3%, Conservative wants 2.5%, and Balanced wants 2.75%.\n\nThe critical issue is the 0.23:1 R:R flagged by the Bear and Conservative. With an entry at 164.15, target at 169.68, and stop at 144.09, the upside is only 3.4% while the downside is 12.2%. That's a tight risk-reward ratio.\nHowever, the low beta (0.17) and high dividend yield (2.5%) mitigate the downside risk, so the stop distance feels safer. But the 183% capital return over free cash flow is a red flag for the free-cash-flow consistency the mandate requires. The Fundamentals Analyst and Bear both call it out as a structural drag, and the Research Manager dismisses it.\n\nGiven the 12.2% downside to the 200-day average and the 3.4% upside, I prefer the smaller size to respect that poor risk-reward. The Conservative's 2.5% is defensible here because 3% feels too aggressive when the upside is only 3.4% while the downside is 12.2%, and it also addresses the cash-flow consistency issue.\n\nLet's calculate the risk. With a stop at 144.09 (12.2% below 164.15), a 2.5% position contributes about 0.31 points to portfolio drawdown out of a 30-point cap.\nWait, let's re-read the instructions on modifying. If I change size from 3% to 2.5%, that is an APPROVE.\n\nLet's review the other inputs. The execution desk proposed a 9-month horizon. I'll shorten the horizon to 90 days.\nThe horizon_days field needs a number. Let me look at the prompt.\n\"A multi-year number is not supported by anything on your fact sheet\"\nLet's use a 90-day horizon (or just 13 days before the FOMC decision? 90 days allows trend to work). Wait, the desk's horizon_days field?\nThe desk said \"9 months\". I will override it to 90 days, and explain in narration.\n\nLet's check if the Execution Desk's size is exactly 3%. Yes. I'll change it to 2.5% as the Conservative suggested, to manage the asymmetric risk-reward.\nWait, let's re-read: \"To change the Trader's size, tighten the stop, or shift the entry, use action APPROVE with your revised numbers\".\nI am changing size to 2.5%. Stop and entry and target and horizon_days stay the same, except I will change horizon_days to 90 because 9 months is too long for a 3% position and 9 months is not supported by the data (only up to 52-week range).\nThe Conservative suggested a stop of $147.74.\nWait, I need to decide on the stop. The desk's stop is $144.09 (the 200-day average).\nThe Conservative's stop is $147.74. Let me calculate the drawdown:\nAt 2.5% size with a stop at 147.74: Stop is $16.41 below $164.15, which is ~10%. Contribution is 2.5 * 10 = 0.25 points.\nIf the stop is at 144.09: Stop is $20.06 below $164.15, which is ~12.2%. Contribution is 2.5 * 12.2 = 0.30 points.\nBoth are tiny.\nI will change the stop to the tighter $147.74 as suggested by the Conservative to manage the poor 0.23:1 risk-reward and provide more headroom before the 200-day average break. The target remains the consensus mean at 169.68. With a target of 169.68 and stop of 147.74, the upside is $5.53 and downside is $16.41. Wait, the target/stop ratio is 5.53 / 16.41 = 0.34:1. Still terrible.\nThe problem with this trade is the target (169.68) is only 3.4% above the entry (164.15). If I want to improve the R:R, I need to either raise the target, tighten the stop, or drop the entry price.\nThe prompt says: \"Use a tighter stop, a closer entry, or a longer horizon to improve the R:R.\"\nI cannot change the current price to enter.\nI can change the stop to tighten. If I change the stop to $156.00, the stop distance is $8.15 (5.0%). Then the upside (5.53) is better than downside (8.15)? Wait, 5.53 vs 8.15 is still 0.67:1.\nActually, the problem is the target is only $5.53 away. Any tight stop will make the R:R better, but it will get stopped out quickly.\nBut if the desk's target of 169.68 is only the \"consensus mean,\" the Bull said it has \"upward earnings momentum... EPS revisions up 7.7%\".\nCan I just cut the size instead? Yes, cutting size is allowed to modify. If I keep the wide stop (which gives it room to breathe) but cut the size to 2.5%, that's a valid change. Or cut size to 2.0% to respect the poor R:R.\nLet's see the debate. Aggressive wants 3%, Conservative 2.5%, Balanced 2.75%.\nI will choose 2.5% because the Bear's 183% capital return is a legitimate mandate friction, and the tight upside/downside makes 3% over-weighting it. I'll use 2.5% size, but change the stop to the tighter $147.74 and the horizon to 90 days.\nWait, what's the target? 169.68. If I keep it, the target is fixed.\nWait! Is there a way to change the target? \"If you want to cut the Trader's size, tighten the stop, or shift the entry, use action APPROVE with your revised numbers\". It does not mention the target.\nSo target is fixed."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 351,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.1,
+     "action": null,
+     "answer_chars": 1106,
+     "answer": "Compliance check:\n- Long-only: PASS (Buy order)\n- No derivatives: PASS\n- Liquid: PASS ($674B market cap)\n- Single-name cap (3.0%): PASS (Execution Desk proposes exactly 3.0%)\n- Sector cap (40%): PASS (0% current exposure + 3.0% proposed < 40%)\n- Drawdown impact: PASS (3.0% size * 12.2% stop distance \u2248 0.37pt contribution vs 30% cap)\n\nVerdict: APPROVE (Modified)\nReasoning: While the fundamental trend and earnings momentum are strong, the Execution Desk's proposed R:R of 0.23:1 is mathematically poor for a long-only position, offering only 3.4% upside to consensus versus 12.2% risk to the trend line. Additionally, the 183% capital return ratio against FCF is a structural flaw that requires conservative sizing for a wealth-building mandate. I am modifying the size down to 2.5% and the target to the 52-week high to create a more asymmetric trade.\nFinal trade:\n  Instrument: XOM\n  Side: BUY\n  Size: 2.50%\n  Entry: $164.15\n  Target: $176.41 (52-week high)\n  Stop: $144.09 (200-day average)\n  Horizon: 180 days\nMandate compliance: PASS\nTag: Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 372,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.3,
+     "action": "PASS",
+     "answer_chars": 1278
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 381,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.5,
+     "action": "PASS",
+     "answer_chars": 1338
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.75,
+   "agreement": "4/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    null,
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1944,
+   "elapsed_s": 89.2,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.75,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 270,
+    "reason": "Approve the long position but reduce size to 2.75% and tighten the stop to $147.74 to respect the 0.23:1 R:R constraint and mandate caps.\n- Execution's 3.0% size violates the single-name cap of 3.0% when combined with the need to respect the mandate's explicit 3.0% ceiling as a hard stop, but 2.75% aligns with the Balanced officer's split to mitigate the capital return overdraw risk.\n- The $144.09 stop (12.2% distance) is too wide for the $169.68 target (3.4% upside); tightening to $147.74 (10.0% distance) improves the portfolio drawdown contribution to ~0.275% (2.75 * 10), keeping it within the 30% cap while preserving the trend invalidation level.\n- Capital return at 183% of FCF ($37,753M vs $20,671M) is a structural drag on 'free-cash-flow consistency' required by the mandate, warranting the size cut from 3.0% to 2.75%.\n- Forward P/E of 15.4x and 4-quarter earnings beat streak support the valuation, but the 0.23:1 R:R to consensus target $169.68 demands tighter risk management than the 13.9% premium to the 200-day average.\n- FOMC decision in 13 days and earnings in 57 days create event gaps; the tightened stop protects against policy noise without requiring full 3.0% exposure.\n- Sector concentration remains safe at 2.75% vs 40% cap, but the funding gap requires the reduced size per Balanced Risk Officer's adjudication.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": null,
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 162,
+     "tok_reasoning": 0,
+     "elapsed_s": 9.6,
+     "action": null,
+     "answer_chars": 592,
+     "answer": "Verdict: PASS\nReasoning: The asymmetry is structurally inverted. With price at $164.15, the consensus mean target is $169.68 (+3.4% upside), while the 200-day moving average sits at $144.09 (-12.2% downside). The Risk Officer correctly flags the 0.23:1 R:R as unacceptable. Furthermore, the 183% capital return ratio against TTM free cash flow violates the mandate's requirement for free-cash-flow consistency, creating a structural drag on compounding for a long-term wealth mandate.\nFinal trade: N/A\nMandate compliance: PASS\nTag: Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 563,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.2,
+     "action": "APPROVE",
+     "answer_chars": 1756
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 352,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.5,
+     "action": "APPROVE",
+     "answer_chars": 1042
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 384,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.6,
+     "action": "APPROVE",
+     "answer_chars": 1184
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 483,
+     "tok_reasoning": 0,
+     "elapsed_s": 21.3,
+     "action": "APPROVE",
+     "answer_chars": 1401
+    }
+   ]
+  },
+  {
+   "action": "PASS",
+   "size_pct": null,
+   "agreement": "2/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    "APPROVE",
+    "PASS",
+    null,
+    "APPROVE",
+    "PASS"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1393,
+   "elapsed_s": 72.8,
+   "verdict": {
+    "action": "PASS",
+    "size_pct": null,
+    "entry": null,
+    "target": null,
+    "stop": null,
+    "time_horizon_days": null,
+    "reason": "Risk/reward asymmetry is inverted; the proposed 0.23:1 R:R at $164.15 does not clear the desk's bar for a new long.\n\n- Upside is capped: $169.68 consensus target is only +3.4% from entry, while downside to the $144.09 200-day average is -12.2%.\n- Cash-flow tension: $37,753M capital return against $20,671M TTM FCF (183%) degrades the long-term compounding quality required by the mandate.\n- Event risk: FOMC decision in 13 days creates near-term volatility noise without a company-specific catalyst to offset it.\n- Valuation gap: 21.1x trailing P/E sits above the 19.7x median of the last four FYs' own fundamentals.\n- Sizing discipline: A 3.0% position size at this entry is indefensible; the asymmetry does not support capital deployment now.\n- Re-evaluation trigger: Enter if price pulls back below $150 or if FCF rises to cover the capital return ratio.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Buy if price retracts below $150 (improving R:R) or if trailing FCF rises above $30,000M to close the capital-return funding gap.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": null,
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 496,
+     "tok_reasoning": 0,
+     "elapsed_s": 22.2,
+     "action": "APPROVE",
+     "answer_chars": 1587
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 231,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.9,
+     "action": "PASS",
+     "answer_chars": 984
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 15,
+     "tok_reasoning": 0,
+     "elapsed_s": 4.7,
+     "action": null,
+     "answer_chars": 60,
+     "answer": "Let me pull up the relevant information for the room on XOM."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 328,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.7,
+     "action": "APPROVE",
+     "answer_chars": 1003
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 323,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.3,
+     "action": "PASS",
+     "answer_chars": 1051
+    }
+   ]
+  },
+  {
+   "action": "PASS",
+   "size_pct": null,
+   "agreement": "2/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    "APPROVE",
+    null,
+    "APPROVE",
+    "PASS",
+    "PASS"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1750,
+   "elapsed_s": 82.8,
+   "verdict": {
+    "action": "PASS",
+    "size_pct": null,
+    "entry": null,
+    "target": null,
+    "stop": null,
+    "time_horizon_days": null,
+    "reason": "PASSING the 3.0% BUY because the 0.23:1 R:R to the $169.68 target is too tight and the $37,753M trailing capital return against $20,671M TTM FCF contradicts the mandate's FCF consistency mandate.\n- Upside capture to $169.68 is only +3.4% vs 12.2% downside to the $144.09 200-day average; the 0.23:1 risk/reward does not clear my bar.\n- 183% capital return ratio ($37,753M returned vs $20,671M FCF) is a structural cash-flow deficit that dilutes the 'FCF consistency' requirement.\n- FOMC decision in 13 days is the primary near-term volatility driver; a 57-day earnings gap creates a news vacuum.\n- 13.9% premium over the 200-day SMA of $144.09 is technically extended; I require a retest closer to that moving average before deploying capital.\n- Vanguard 2.5% yield is insufficient compensation for the funding gap and compressed upside asymmetry at current levels.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "I will BUY if the capital return rate falls below $20,671M TTM FCF, aligning with the free-cash-flow consistency mandate, OR if the price retraces to the 200-day SMA at $144.09 and holds, providing a better risk-reward entry.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": null,
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 348,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.9,
+     "action": "APPROVE",
+     "answer_chars": 917
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 190,
+     "tok_reasoning": 0,
+     "elapsed_s": 10.5,
+     "action": null,
+     "answer_chars": 604,
+     "answer": "Verdict:   APPROVE\nReasoning: Execution Desk proposed 3.00%; I am cutting size to 2.50% to respect the structural funding gap and compressed R:R, while retaining enough exposure to the structural uptrend. The 183% capital return overdraw and the FOMC in 13 days warrant a smaller position; the 200-day SMA is the definitive invalidation line for a long-horizon hold.\nFinal trade:\n  Instrument: XOM\n  Side: BUY\n  Size: 2.50% of portfolio\n  Entry: $164.15\n  Target: $169.68\n  Stop: $144.09\n  Horizon: 180 days\nMandate compliance: PASS\nTag:       Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 623,
+     "tok_reasoning": 0,
+     "elapsed_s": 25.9,
+     "action": "APPROVE",
+     "answer_chars": 1885
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 224,
+     "tok_reasoning": 0,
+     "elapsed_s": 12.7,
+     "action": "PASS",
+     "answer_chars": 782
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 365,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.8,
+     "action": "PASS",
+     "answer_chars": 1152
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "3/3",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 3,
+   "draw_actions": [
+    null,
+    null,
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1529,
+   "elapsed_s": 73.0,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 176.41,
+    "stop": 147.74,
+    "time_horizon_days": 60,
+    "reason": "The 0.23:1 risk/reward to the Street target is inadequate for a 3% clip; sizing at 2.5% balances the 183% return-to-FCF structural drag against the 80.2x interest coverage and 13.9% premium to the 200-day average.\n- Cut Execution Desk's 3.0% size to 2.5% per the Conservative Risk Officer, respecting the compressed upside to the $169.68 consensus mean.\n- Tighten the stop from $144.09 to $147.74 (10.0% below entry), limiting portfolio drawdown contribution to 0.25pts against the 30pt cap.\n- Raise the target from $169.68 to $176.41 (52-week high) to improve the payoff ratio beyond the single-analyst mean.\n- The 183% capital return over TTM FCF is the primary mandate conflict; we must monitor this gap rather than ignore it with a max-sized position.\n- The $164.15 entry is supported by 4 consecutive EPS beats and a 7.7% upward revision in consensus estimates.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the $147.74 stop, or a confirmed cut to the $4.12 indicated annual dividend rate.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 187,
+     "tok_reasoning": 0,
+     "elapsed_s": 10.4,
+     "action": null,
+     "answer_chars": 617,
+     "answer": "Verdict: APPROVE\nReasoning: I am approving a BUY but cutting size to 2.0% and shifting the horizon to 3 months; the Execution Desk's 3.0% size and 9-month horizon misprices the near-term catalyst vacuum and ignores the tight 0.23:1 risk/reward, while the Fundamentals Analyst's \"capital return overdraw\" flag contradicts the mandate's demand for long-term cash-flow durability.\nFinal trade (if approved/modified):\n  Instrument: XOM\n  Side: BUY\n  Size: 2.0%\n  Entry: $164.15\n  Target: $169.68\n  Stop: $144.09\n  Horizon: 90 days\nMandate compliance: PASS\nTag: Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 161,
+     "tok_reasoning": 0,
+     "elapsed_s": 9.7,
+     "action": null,
+     "answer_chars": 627,
+     "answer": "Verdict: PASS\nReasoning: 1. Execution Desk proposes a 0.23:1 risk/reward ratio ($169.68 target vs. $144.09 stop from $164.15), which is structurally unprofitable and does not meet the threshold for capital deployment. 2. Capital return (183% of FCF) contradicts the \"free-cash-flow consistency\" mandate requirement for a long-term compounder.\nMandate compliance: FAIL [The proposed trade violates the core mandate principle of free-cash-flow consistency by buying into a structural funding gap, and the risk/reward asymmetry is insufficient for approval.]\nTag:       Worked example \u2014 classroom simulation, not financial advice."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 403,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.4,
+     "action": "APPROVE",
+     "answer_chars": 1281
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 394,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.0,
+     "action": "APPROVE",
+     "answer_chars": 1182
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 384,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.5,
+     "action": "APPROVE",
+     "answer_chars": 1130
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "APPROVE",
+    "PASS",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1838,
+   "elapsed_s": 85.3,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "Approved at a reduced size to manage the poor risk/reward ratio and compress entry risk ahead of the FOMC event.\n- Execution Desk proposed 3.0% size; I reduced to 2.50% to respect the 0.23:1 risk/reward profile and tighten capital efficiency against the tight upside to $169.68.\n- 2.50% size with a 10.0% stop ($147.74) contributes ~0.25pt to the 30.0% portfolio drawdown cap, fitting a Risk-3 mandate while leaving ample headroom.\n- Conservative Risk Officer\u2019s $147.74 stop replaces the 200-day average ($144.09) to avoid a deeper 12.2% per-trade risk and protect capital from a trend failure.\n- Sector exposure (Energy/Oil & Gas Integrated) at 2.50% is well below the 40% sector cap and within the 3.0% single-name ceiling.\n- Forward events: FOMC is 13 days out; earnings 57 days out\u2014shortening the horizon to 90 days aligns with near-term volatility rather than a multi-year assumption.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "Sustained close below the 200-day moving average of $144.09 or capital return exceeding TTM free cash flow for two consecutive quarters.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 365,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.3,
+     "action": "APPROVE",
+     "answer_chars": 1113
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 390,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.2,
+     "action": "PASS",
+     "answer_chars": 1312
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 370,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.2,
+     "action": "APPROVE",
+     "answer_chars": 1107
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 333,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.7,
+     "action": "APPROVE",
+     "answer_chars": 952
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 380,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.9,
+     "action": "APPROVE",
+     "answer_chars": 1179
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "PASS",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1937,
+   "elapsed_s": 105.6,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 270,
+    "reason": "Approved with reduced sizing to balance the low-beta trend against the compressed risk/reward and cash-flow tension.\n- Execution Desk's 3.0% size exposes capital to a poor 0.23:1 R:R for minimal upside capture to the $169.68 consensus target.\n- Cutting size to 2.50% (Risk Conservative's level) mitigates the structural 183% capital-return-to-FCF drag that violates the mandate's FCF consistency requirement.\n- Tightening the stop from $144.09 to $147.74 protects against the 6.9% gap to the $176.41 52-week high and the imminent FOMC volatility.\n- The 0.25pt portfolio drawdown contribution fits safely within the 30.0% portfolio cap.\n- Low 0.17 beta and 4-quarter EPS beat streak (Q2 beat by 13.3%) justify holding a meaningful trend position despite the funding gap.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below $144.09, the 200-day moving average, invalidates the structural uptrend and forces a liquidation.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 509,
+     "tok_reasoning": 0,
+     "elapsed_s": 22.2,
+     "action": "PASS",
+     "answer_chars": 1895
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 316,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.9,
+     "action": "APPROVE",
+     "answer_chars": 851
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 394,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.6,
+     "action": "APPROVE",
+     "answer_chars": 1228
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 380,
+     "tok_reasoning": 0,
+     "elapsed_s": 33.1,
+     "action": "APPROVE",
+     "answer_chars": 1065
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 338,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.8,
+     "action": "APPROVE",
+     "answer_chars": 1041
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "5/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 2504,
+   "elapsed_s": 124.0,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "Decision: APPROVE at 2.50% size with a $147.74 stop \u2014 the tight 0.23:1 R:R to the Street mean and the unresolved funding gap demand a trimmed entry, not the full 3.0% cap.\n- Capital return at 183% of $20,671M TTM FCF conflicts with the mandate's FCF consistency; 80.2x coverage buys time but not a full allocation.\n- R:R is compressed: only +3.4% to the $169.68 consensus mean vs ~12.2% downside to the $144.09 200-day average.\n- 2.5% with a $147.74 stop contributes ~0.25pt to the 30% portfolio drawdown cap \u2014 well inside limits despite the modest 3/5 risk score.\n- FOMC in 13 days is the primary near-term vol driver; the tighter stop keeps the position alive through that event rather than being stopped out on noise.\n- 0.17 beta, +28.7pp RS vs S&P, and the 4-quarter beat streak are the structural reasons to hold a core weight \u2014 but scaled down for the valuation asymmetry.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day average of $144.09 invalidates the structural uptrend and the long thesis.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 461,
+     "tok_reasoning": 0,
+     "elapsed_s": 21.6,
+     "action": "APPROVE",
+     "answer_chars": 1332
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 431,
+     "tok_reasoning": 0,
+     "elapsed_s": 37.6,
+     "action": "APPROVE",
+     "answer_chars": 1355
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 675,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.8,
+     "action": "APPROVE",
+     "answer_chars": 2018
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 587,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.5,
+     "action": "APPROVE",
+     "answer_chars": 1675
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 350,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.5,
+     "action": "APPROVE",
+     "answer_chars": 1021
+    }
+   ]
+  },
+  {
+   "action": "PASS",
+   "size_pct": null,
+   "agreement": "2/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    null,
+    "PASS",
+    "PASS",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1549,
+   "elapsed_s": 76.1,
+   "verdict": {
+    "action": "PASS",
+    "size_pct": null,
+    "entry": null,
+    "target": null,
+    "stop": null,
+    "time_horizon_days": null,
+    "reason": "The proposed trade fails the deterministic compliance check on asymmetric risk-to-reward; the mandate does not support entering a position at $164.15 for a target of $169.68.\n\u2022 R:R is 0.23:1 \u2014 the $5.53 upside to the consensus target is dwarfed by the $20.06 downside to the 200-day average ($144.09).\n\u2022 The 183% capital-return-to-FCF ratio directly conflicts with the mandate's explicit preference for 'free-cash-flow consistency'.\n\u2022 Upside capture is compressed (+3.4%) while structural downside is wide (-12.2%), offering poor expected value for the required capital risk.\n\u2022 The $674,970M market cap and $29,174M trailing Capex indicate high maintenance costs that limit near-term upside optionality.\n\u2022 The $31,780M net debt level, while supported by 80.2x interest coverage, does not compensate for the fundamental funding gap in shareholder returns.\n\u2022 A daily close under the $144.09 200-day average is the invalidation line for the trend thesis.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close under the 200-day moving average at $144.09.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": null,
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 82,
+     "tok_reasoning": 0,
+     "elapsed_s": 6.9,
+     "action": null,
+     "answer_chars": 274,
+     "answer": "Compliance check: XOM is not on the blocklist, is long-only, and is a liquid large-cap. A 3.0% position sizing at $164.15 with a $144.09 stop contributes ~0.60 percentage points to portfolio drawdown, well within the 30% limit. No compliance failure. Proceeding to decision."
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 290,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.0,
+     "action": "PASS",
+     "answer_chars": 949
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 308,
+     "tok_reasoning": 0,
+     "elapsed_s": 15.7,
+     "action": "PASS",
+     "answer_chars": 1069
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 500,
+     "tok_reasoning": 0,
+     "elapsed_s": 21.7,
+     "action": "APPROVE",
+     "answer_chars": 1503
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 369,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.8,
+     "action": "APPROVE",
+     "answer_chars": 1127
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/4",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 4,
+   "draw_actions": [
+    null,
+    "APPROVE",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 2363,
+   "elapsed_s": 101.7,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "The 4-quarter beat streak and structural uptrend justify a long, but the 0.23:1 R:R and compressed upside capture demand a conservative size.\n- Size cut to 2.5% from 3.0% per Risk Officer Conservative: the 183% capital return vs $20,671M FCF creates a cash-flow drag, reducing quality of compounding.\n- Stop tightened to $147.74 (-10.0%): the $144.09 200-day average is too distant for a tight R:R; $147.74 preserves capital while staying within the 0.25pt portfolio drawdown budget.\n- Consensus target $169.68 is only +3.4% away: upside capture is negligible versus 12.2% downside to the 200-day average; the 2.5% dividend yield plus $20,512M buyback offsets the tight R:R.\n- Venezuela headlines are competitor activity (Chevron $7B), not XOM-specific catalysts; FOMC in 13 days is the primary volatility driver.\n- 0.25pt portfolio drawdown contribution is 0.8% of the 30pt cap: ample headroom remains, justifying entry despite mandate emphasis on free-cash-flow consistency.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A sustained break below the $144.09 200-day average invalidates the structural uptrend and reverses this call.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 749,
+     "tok_reasoning": 0,
+     "elapsed_s": 30.0,
+     "action": null,
+     "answer_chars": 1919,
+     "answer": "Let me convene the room. First, let me pull the full brief for XOM and get the mandate snapshot.\nNow let me pull the portfolio state and get all the agents started. I'll launch the four analyst agents in parallel first, then the debate and risk teams after.\n\n{\"status\": \"running\", \"ticker\": \"XOM\", \"brief\": \"ExxonMobil Holdings Corporation (XOM), NYSE, Sector: Energy / Oil & Gas Integrated, Mkt cap $674,970M. Ref price $164.15. P/E 21.1x trailing (measured), 15.4x forward (consensus est.). EV/EBITDA 10.5x. P/S 1.9x. PEG 1.41 (trailing). FCF yield 3.1%. FCF TTM $20,671M. Capital returned TTM $37,753M (183% of FCF). Buybacks TTM $20,512M (3.0% mkt cap, pacing steady ~$5B/qtr). Dividend yield 2.5% (trailing), $4.12/share annual, payout 53%. Ex-date 2026-08-17 (17 days ago). EPS $7.77 trailing, consensus forward $3.59 (up 7.7% over last 90 days). Net debt $31,780M. Gross debt $42,368M, cash $10,588M. Interest coverage 80.2x (EBIT/int exp, Q2 2026). Debt/equity 0.16x. Current ratio 1.14. ROE 13%, ROA 6%. Gross margin 30%, operating margin 16% (+467bps YoY), net margin 9% (+377bps YoY). TTM revenue growth 44%. 4/4 earnings beats over last 4 quarters. 52-week range: $108.35\u2013$176.41. 200-day avg: $144.09 (price 13.9% above it). Beta 0.17. Short interest 1.0% of float. Institutional ownership 67%. 4,112M shares out. Analyst consensus: buy, mean score 2.3, target mean $169.68 (range $142\u2013$200). Upside from ref: +3.4% to mean target. Recent catalysts: Chevron to Invest $7B in Venezuela (no XOM headline). Exon slips as $95 oil meets Venezuela's hard reality. Cramer named XOM as one stock to buy. No M&A available. Forward: FOMC in 13 days. Next earnings 2026-10-30 (57 days). Retail sentiment moderately bullish. Sector/Industry: Energy/Oil & Gas Integrated.\", \"mandate\": {\"risk_score\": 3, \"max_drawdown_pct\": 30, \"sector_allocation\": {}, \"open_positions\": []}, \"as_of\": \"2026-09-03T21:40:43.068343+00:00\"}"
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 428,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.9,
+     "action": "APPROVE",
+     "answer_chars": 1354
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 433,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.8,
+     "action": "APPROVE",
+     "answer_chars": 1252
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 404,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.7,
+     "action": "APPROVE",
+     "answer_chars": 1239
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 349,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.3,
+     "action": "APPROVE",
+     "answer_chars": 987
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "3/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "APPROVE",
+    "APPROVE",
+    "PASS",
+    "PASS",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1857,
+   "elapsed_s": 86.5,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 90,
+    "reason": "Long at 2.5% with a 10% stop; trimming the desk's 3.0% size to respect the 0.23:1 R:R and the 183% capital-return overdraw against $20,671M FCF.\n- Asymmetry is poor: $164.15 is only +3.4% to the $169.68 consensus mean, but 12.2% below the $144.09 200-day average.\n- Cash return outpaces cash generation ($37,753M returned vs $20,671M FCF), a structural drag on the mandate's FCF-consistency preference.\n- 2.5% size and a tighter $147.74 stop reduce the portfolio drawdown contribution to ~0.25 pts of the 30% cap.\n- Fortress balance sheet (80.2x interest coverage) and 4 consecutive earnings beats (including Q2's 13.3%) support the trend.\n- 90-day horizon aligns with the FOMC (13 days) and Q4 earnings (57 days) catalysts, matching the 52-week data scope.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day average at $144.09, or capital return exceeding $20,671M TTM FCF for a further 2 quarters.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 299,
+     "tok_reasoning": 0,
+     "elapsed_s": 14.5,
+     "action": "APPROVE",
+     "answer_chars": 830
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 409,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.2,
+     "action": "APPROVE",
+     "answer_chars": 1050
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 227,
+     "tok_reasoning": 0,
+     "elapsed_s": 12.6,
+     "action": "PASS",
+     "answer_chars": 691
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 517,
+     "tok_reasoning": 0,
+     "elapsed_s": 24.1,
+     "action": "PASS",
+     "answer_chars": 1885
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 405,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.1,
+     "action": "APPROVE",
+     "answer_chars": 1078
+    }
+   ]
+  },
+  {
+   "action": "APPROVE",
+   "size_pct": 2.5,
+   "agreement": "4/5",
+   "draws_requested": 5,
+   "draws_errored": 0,
+   "draws_truncated": 0,
+   "draws_parsed": 5,
+   "draw_actions": [
+    "APPROVE",
+    "PASS",
+    "APPROVE",
+    "APPROVE",
+    "APPROVE"
+   ],
+   "reasoning_tokens": 0,
+   "out_tokens": 1905,
+   "elapsed_s": 87.5,
+   "verdict": {
+    "action": "APPROVE",
+    "size_pct": 2.5,
+    "entry": 164.15,
+    "target": 169.68,
+    "stop": 147.74,
+    "time_horizon_days": 57,
+    "reason": "Approving the long in XOM, but cutting the Execution Desk's 3.0% size to 2.5% to enforce a tighter 10% risk budget against the 183% capital-return-to-FCF overdraw.\n- Asymmetry is poor: +3.4% to target vs. -12.2% to 200-DMA demands disciplined sizing.\n- 183% return ratio to $20,671M FCF contradicts the free-cash-flow consistency mandate; 2.5% respects the structural funding gap while retaining 80.2x interest coverage as a safety buffer.\n- 10% stop (147.74) vs. Desk's 12.2% stop (144.09) reduces portfolio drawdown contribution to ~0.25pt, preserving capital for the FOMC in 13 days.\n- FOMC event risk justifies smaller size to absorb potential volatility spikes.\n- 9-month horizon exceeds the 57-day earnings gap; aligning to next Q4 earnings date.\n- Consensus target of $169.68 is the ceiling; no upside to 183% multiple justified.",
+    "violations": [],
+    "overridden_from_llm": false,
+    "opinions_not_included": [],
+    "approve_votes": null,
+    "samples": null,
+    "kill_criterion": "A daily close below the 200-day average of $144.09, or a reported Q4 capital-return-to-FCF ratio exceeding 200%.",
+    "scripted_turns": null,
+    "scripted_agents": [],
+    "level_provenance": {
+     "entry": "pm",
+     "stop": "pm",
+     "target": "pm"
+    },
+    "structure": null
+   },
+   "per_draw": [
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 353,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.0,
+     "action": "APPROVE",
+     "answer_chars": 1028
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 333,
+     "tok_reasoning": 0,
+     "elapsed_s": 17.2,
+     "action": "PASS",
+     "answer_chars": 1163
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 362,
+     "tok_reasoning": 0,
+     "elapsed_s": 16.4,
+     "action": "APPROVE",
+     "answer_chars": 954
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 400,
+     "tok_reasoning": 0,
+     "elapsed_s": 18.1,
+     "action": "APPROVE",
+     "answer_chars": 1120
+    },
+    {
+     "error": null,
+     "finish": "stop",
+     "truncated": false,
+     "tok_prompt": 9036,
+     "tok_out": 457,
+     "tok_reasoning": 0,
+     "elapsed_s": 19.8,
+     "action": "APPROVE",
+     "answer_chars": 1349
+    }
+   ]
+  }
+ ],
+ "summary": {
+  "votes": 20,
+  "outcome_counts": {
+   "APPROVE": 15,
+   "PASS": 5
+  },
+  "modal_outcome": "APPROVE",
+  "modal_count": 15,
+  "flip_rate": 0.25,
+  "distinct_outcomes": 2,
+  "size_pct_values": [
+   2.5,
+   2.75
+  ],
+  "size_pct_median": 2.5,
+  "draws_requested": 100,
+  "draws_parsed": 83,
+  "draws_truncated": 1,
+  "draws_errored": 0,
+  "draw_parse_rate": 0.83,
+  "draw_parse_loss_rate": 0.17,
+  "draw_action_counts": {
+   "APPROVE": 63,
+   "PASS": 20
+  },
+  "reasoning_tokens_total": 0,
+  "reasoning_tokens_per_vote_mean": 0,
+  "out_tokens_per_vote_mean": 1890.1,
+  "elapsed_s_total": 1838.9
+ }
+}

@@ -19,11 +19,16 @@ H="docs/forward_planning/CR219_room_prompt_contradictions/harness"
 $V $H/build_profile.py CAT                       # fetch + cache one profile (once)
 $V $H/run_convene.py --ticker CAT --mandate long # one full 12-agent convene, scored
 $V $H/score_only.py $H/results/CAT_long/run.json # re-score a banked run, no LLM calls
+
+# replay the PM stage alone against a FIXED transcript (R47 / R48)
+$V $H/pm_replay.py --run $H/results/CAT_long/run.json --k 20 --label R47_CAT
 ```
 
 Every script runs from **any** working directory — paths derive from the script's own
 location (`_paths.py`), the `../evidence/` convention. Use the repo venv: plain `pytest`
-and plain `python` on PATH resolve to a `structlog`-less env.
+and plain `python` on PATH resolve to a `structlog`-less env. **Pass `--run` as an
+absolute path**: `bootstrap()` chdirs into `backend/` before argument paths resolve, so a
+relative one is read against the wrong directory.
 
 Output lands in `results/<label>/`: `run.json` (prompts, answers, tokens, PM draws,
 scores) plus one `.answer.txt` per agent. `--label` names the folder; the default is
@@ -78,6 +83,31 @@ action, median size among winners, ties to PASS. Never a single draw: at n=1 the
 flip rate is ~19.7%, so a one-draw verdict cannot be told from a coin toss, which is
 exactly why the `../evidence/arms/` verdict column is uninterpretable.
 
+### `pm_replay.py` — the PM stage alone, on a transcript that cannot move
+
+`run_convene.py` measures the whole Room; `pm_replay.py` measures the PM's own decode
+variance, and the two questions need different instruments. A flip rate is only
+interpretable if the PM's *input* is byte-identical across repetitions: rerunning the
+eleven upstream agents per repetition would vary the transcript, and a verdict difference
+could then be the transcript's rather than the PM's. So the convene runs **once**, and
+the replay reads the `system_prompt` / `user_message` bytes back out of that `run.json`
+verbatim. Nothing is re-rendered.
+
+One repetition is one **verdict**, not one draw: `pm_self_consistency_samples` draws,
+each parsed by the production `_parse_pm_verdict`, voted by the production
+`_vote_pm_samples`. The flip rate that matters is the rate at which the *shipped
+procedure* lands somewhere else, not the rate at which a single sample wanders.
+
+`--thinking`, `--reasoning-effort` and `--max-tokens` are the R48 arm switches; the same
+fixed transcripts serve both arms, so the flag is the only difference between them.
+Requests are strictly sequential — the serve is a shared LAN resource.
+
+**A truncated draw is discarded, never scored.** A draw whose `finish_reason` is `length`
+clipped its JSON envelope mid-object, and `_parse_pm_verdict` fails safe to PASS on
+exactly that; counting it as a PASS *vote* would manufacture the losing arm the R48 probe
+warned about. `draws_truncated` is recorded per vote and totalled per arm, and every
+write-up reports it.
+
 **What it does not run:** `enforce_safety_floor`. The floor is a deterministic post-check
 needing DB-backed trade history the Mac has no access to. The harness measures what the
 Room produced; the floor's veto is production's separate guarantee, tested separately.
@@ -122,14 +152,22 @@ the figure.
 
 ## Banked results
 
-`results/` holds the runs. R47 (residual PM flip rate at n=5) and R48 (thinking on/off
-A/B) land here as dated notes when Saiful gives the go — those batches are **held**, not
-run: this folder currently contains the build plus one smoke run.
+`results/` holds the runs. R47 and R48 **ran 2026-09-03** on Saiful's go.
 
 | Path | What |
 |---|---|
-| `results/CAT_long/` | The smoke run, 2026-09-02: CAT × `long`, 12/12 turns, no errors, no truncation, 5 PM draws voted 4/4 PASS |
+| `results/2026-09-03_R47_flip_at_n5.md` | **R47** — residual flip rate at n=5 is **5/60 (8.3%)**, and every flip was caused by a **lost draw**, not by the PM changing its mind. Leave `pm_self_consistency_samples` at 5; fix the parse loss (R43) instead |
+| `results/2026-09-03_R48_thinking_ab.md` | **R48** — PM thinking on/off on a fixed transcript: **identical verdicts**, parse loss 14%→2%, at **5.4× wall clock**. No default change. Plus the MSFT **runaway**: 2/3 draws burned an 8k ceiling on reasoning and emitted zero answer |
+| `results/2026-09-03_R47_{CAT,MSFT,XOM}_long.json` | The three k=20 replays (300 draws) |
+| `results/2026-09-03_R48_CAT_{A_nothinking,B_thinking}.json` | The two A/B arms (100 draws) |
+| `results/2026-09-03_R48_budget_probe.json` | The six draws the B-arm budget was derived from |
+| `results/CAT_long/`, `MSFT_long/`, `XOM_long/` | The three fixed convenes every replay reads from. CAT is the 2026-09-02 smoke run (12/12 turns, 4/4 PASS); MSFT and XOM were run 2026-09-03 |
 | `results/2026-09-02_R48_thinking_probe.md` | R48 step 1 — the raw finding that per-request thinking works, and the three things it changes for the A/B |
+
+**The headline both notes share:** the PM's biggest measured problem is not indecision and
+not a missing reasoning mode — it is that **7.7% of its draws (23/300) are discarded by the
+parser**, and a discarded draw turns an odd vote even and flips verdicts. That is
+[R43's](../dev_instructions/R43_DEF_draft.md) DEF, and these runs are its largest corpus.
 
 Smoke-run scores, for reference when a later run looks off:
 `envelope_parse_rate` 0.909 (10/11) · `numbers_match_sheet` 0.922 (154/167) ·

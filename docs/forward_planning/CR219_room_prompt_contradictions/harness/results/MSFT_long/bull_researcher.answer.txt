@@ -1,0 +1,9 @@
+[STANCE: for | CONVICTION: high | HEADLINE: 4/4 consecutive EPS beats]
+
+**Earnings momentum is structural, not episodic.** The company beat consensus estimates by **11.8%** in the most recent quarter (**actual $4.74** vs. **$4.24 est.**) and has posted four consecutive positive surprises. This track record validates a forward **P/E** of **21.1x** as reasonable for an **18% TTM** revenue growth engine.
+
+**Durability is locked in via segment transparency.** The new standalone **Azure** disclosure eliminates the "black box" valuation discount. It forces a clean re-rating based on high-growth cloud revenue, removing ambiguity from the **40%** net margin structure and making the **$331,839M** TTM revenue growth story easier for the market to price correctly.
+
+**Asymmetry favors accumulation.** The **$571.38** consensus target offers **+15.0%** upside from **$496.82**. The relative strength lag of **19.2pp** against the S&P 500 creates an entry point below the recent 52-week high, allowing us to capitalize on the valuation compression without chasing the price.
+
+**Falsifier**: The thesis dies if capital expenditure remains near **$115,948M** without a corresponding surge in FCF to fund the **294% capital return** payout. If FCF yield stays at **0.4%** through **2026-10-28**, MSFT must cut **$48,716M** in shareholder distributions, breaking the shareholder-loyalty compounding mechanism.

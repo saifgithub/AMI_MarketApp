@@ -1,0 +1,14 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: +15.0% to $571, beta 1.1 lag]
+
+Instrument:     MSFT
+Side:           BUY
+Size:           1.50% of portfolio
+Entry:          Market
+Target:         $571.38
+Stop:           $420.00
+Time horizon:   12 months
+R:R:            1.45:1
+
+- **Pacing**: Deploying **1.50%** now, not the **3.0%** cap. Beta **1.1** and **19.2pp** lag to the S&P demand phase-in; the open tranche triggers on either a re-acceleration in relative strength or a pullback to the **200-day** moving average of **$431.12**.
+- **Risk math**: The **15.5%** stop from **$496.82** sits below the **$431.12** **200-day** average, respecting the technical floor while capping this position's drawdown contribution at ~**0.23%** of the **30%** portfolio limit — leaving ample room for the remaining **1.50%** and other names.
+- **Catalyst alignment**: The stop clears the **FOMC** decision in **13 days**; the target aligns with the **$571.38** consensus **15.0%** upside, capturing the expected re-rating from the **$496.82** base through the **2026-10-28** Azure transparency print without chasing the **$553.72** 52-week high.

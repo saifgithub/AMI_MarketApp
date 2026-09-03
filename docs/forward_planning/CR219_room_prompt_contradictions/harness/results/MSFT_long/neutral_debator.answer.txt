@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | SIZE: 2.25% | HEADLINE: 4/4 beats offset 0.4% FCF yield]
+
+The durable 34% ROE and 4/4 earnings beats justify meaningful exposure, but the 0.4% FCF yield and $115,948M capex burden demand a disciplined 2.25% size rather than the 3.0% ceiling.
+
+- **Aggressive's win**: The +15.0% upside to $571.38 and forward P/E of 21.1x offer compelling long-term value that 1.5% size under-captures.
+- **Conservative's win**: The 294% capital return vs TTM FCF of $16,546M is a structural fragility the 4/4 beats mask; 3.0% size ignores the cash-flow stress and 2026-10-28 Azure binary risk.
+- **Middle path**: 2.25% size with a 12.5% stop respects both the compounding thesis and the capex/FCF tension, contributing ~0.28 pts to the 30% portfolio drawdown cap.

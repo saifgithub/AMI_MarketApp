@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: high | HEADLINE: 294% capital return vs. 0.4% FCF yield flags capex burden]
+
+MSFT is a high-quality compounder whose fundamentals support the long-term thesis, but the current valuation and massive capital expenditure burden require strict position sizing relative to the 3% cap.
+
+*   **Earnings & Margins:** **TTM revenue growth** of **18%** and **EPS** of **$17.94** (trailing) show durable growth. **Net margin** is robust at **40%**, with YoY expansion of **+411 bps** (Q2 FY26 vs Q2 FY25). **ROE** of **34%** confirms high capital efficiency.
+*   **Valuation & History:** **Forward P/E** of **21.1x** is reasonable for the growth rate, but the **FCF yield** is razor-thin at **0.4%**. Today's price priced against historical EBITDA yields a median **26.2x** EV/EBITDA, suggesting the multiple is not deeply compressed against its own history.
+*   **Capital Allocation Stress:** **Capital expenditure** of **$115,948M** (TTM) is enormous. **Capital returned** of **$48,716M** (TTM) represents **294% of TTM FCF**, forcing reliance on the balance sheet or future earnings to sustain buybacks/dividends. **Net debt** sits at **$51,970M**, though **interest coverage** of **48.4x** removes near-term risk.

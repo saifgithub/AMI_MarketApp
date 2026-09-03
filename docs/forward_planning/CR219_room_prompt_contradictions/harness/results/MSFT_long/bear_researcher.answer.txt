@@ -1,0 +1,7 @@
+[STANCE: against | CONVICTION: medium | HEADLINE: FCF yield 0.4% vs capex $115.9B]
+
+The **0.4% FCF yield** is the smoking gun: at **$16,546M** TTM FCF, the **$48,716M** in shareholder returns is a financial engineering feat, not an organic cash-generation engine, making the valuation vulnerable if **$115,948M** capex persists without immediate FCF repair.
+- Valuation compresses hard at multiples near historical peaks: at **$496.82**, MSFT trades at **27.7x** trailing P/E and **19.3x** EV/EBITDA, versus historical medians of **39.2x** P/E and **26.2x** EV/EBITDA; even if multiples revert to those medians, price tests the 52-week low of **$349.20** (the data shows a **-10.3%** drawdown from the 52-week high is the only downside reference, the downside is substantial).
+- Beta of **1.1** combined with the structural **19.2pp** lag to the S&P 500 means this name does not offer defensive downside protection in a rotation, while still carrying the full volatility burden of a high-beta tech infrastructure stock.
+- The new **Azure** standalone disclosure is a binary visibility risk, not just transparency; it replaces opaque growth management with precise consensus targets for the **2026-10-28** earnings event.
+- Invalidator: **FCF yield** meaningfully expands to fund **$48,716M** returns organically, or **capex** guidance is cut sharply in the next quarter.

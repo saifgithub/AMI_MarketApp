@@ -1,0 +1,13 @@
+**1. Points of agreement.** Both sides confirm that the Azure standalone disclosure and reportable segment reorganization fundamentally alter how the business will be viewed by the Street, effective this fall. Both agree that the massive capital expenditure cycle drives shareholder returns beyond organic FCF, requiring the balance sheet to sustain the 294% capital return. Both sides see the 2026-10-28 earnings print as the primary binary event risk, with the new visibility raising the stakes on missing consensus targets.
+
+**2. Points of dispute.** The Bull argues that the 19.2pp relative strength lag and the resulting valuation gap create a highly favorable risk/reward for long-term accumulation ahead of the Azure transparency event. The Bear disputes this, arguing that the 0.4% FCF yield makes the valuation fragile and the beta of 1.1 means the stock carries full volatility downside without offering index-hedged protection. The Bull views the 4/4 consecutive EPS beats as proof of compounding momentum; the Bear views them as a crowded consensus expectation.
+
+**3. Recommended stance.** Lean long. For a 3-10 year wealth-building mandate, Microsoft's 34% ROE and 45% operating margin remain highly durable. The valuation compression relative to its own 52-week high provides a rational entry point. The 294% capital return is a feature of its market dominance, not a bug, and does not threaten solvency given the 48.4x interest coverage. Buy the relative strength laggard at 21.1x forward P/E.
+[STANCE: for | CONVICTION: medium | HEADLINE: +15.0% upside to consensus targets]
+
+MSFT is a durable core holding; buy the relative strength laggard at **21.1x** forward P/E, sizing at the **3.0%** cap.
+
+- **Asymmetry**: Reference price **$496.82** vs. consensus target **$571.38** (**+15.0%** upside).
+- **Risk/Reward**: **-10.3%** downside to the **52-week high** of **$553.72** with no downside to the low; risk-reward is skewed favorably.
+- **Position sizing**: Max **3.0%** portfolio weight per mandate.
+- **Timeline**: Accumulate ahead of the **2026-10-28** (55 days) earnings print and **13-day** FOMC decision.

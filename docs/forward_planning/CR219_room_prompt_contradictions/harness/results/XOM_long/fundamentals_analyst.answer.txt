@@ -1,0 +1,9 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: Capital return 183% of FCF]
+
+XOM screens as a durable compounder with solid fundamentals, but capital return outpacing free cash flow is the primary structural watch item for long-horizon wealth building.
+
+*   **Capital Allocation vs. Cash:** The **183%** capital return ratio against **$20,671M** TTM FCF is unsustainable if it persists. With **$29,174M** in trailing Capex, the company is running a cash deficit to fund the **$4.12** dividend and **$20,512M** in buybacks. Steady buyback pacing (~$5.1B/quarter) is positive, but the funding gap is a long-term constraint.
+*   **Valuation & Valuation Gap:** At **21.1x trailing P/E** vs **15.4x forward P/E**, the market prices a significant earnings recovery. The current **$164.15** sits below the analyst consensus mean target of **$169.68**, with a wide range (**$142.00–$200.00**) indicating dispersed conviction. The trailing multiple sits above the 19.7x median of the past four years' fundamentals.
+*   **Margin Resilience & Earnings Power:** Operating margin improved **+467bps** YoY to **16%**, and net margin **+377bps** to **9%** in Q2 2026, supporting the EPS beat streak. **80.2x interest coverage** on Q2 2026 EBIT is fortress-like, and **$31.78B** net debt remains manageable at **0.16x debt/equity**.
+
+Fundamentals support the thesis, but the capital return overdraw is the core risk for a long-horizon hold.
