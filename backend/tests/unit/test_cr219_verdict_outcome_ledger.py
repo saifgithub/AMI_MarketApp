@@ -417,6 +417,32 @@ def test_scorer_is_idempotent() -> None:
     assert rows[0].forward_return == pytest.approx(0.10)
 
 
+def test_row_not_due_on_first_run_scores_on_a_later_one() -> None:
+    """A pending row survives a run that finds it early and scores when due.
+
+    This is the daily cadence's actual shape — most rows are not due on the day
+    they are first seen — and the property that makes a daily cron correct
+    rather than a one-shot: `not_due` must leave the row untouched and pending,
+    not consume or close it.
+    """
+    uid = _mk_user()
+    banked = datetime.now(timezone.utc) - timedelta(days=10)
+    _bank(uid, _mk_run(uid), _verdict(), price=100.0, ref_at=banked)
+
+    early = vo.score_pending(now=banked + timedelta(days=20))
+    assert early["not_due"] == 1 and early["scored"] == 0
+    assert _rows()[0].status == vo.STATUS_PENDING
+    assert _rows()[0].scored_at is None
+
+    _bar("AAPL", (banked + timedelta(days=63)).date(), 120.0)
+    later = vo.score_pending(now=banked + timedelta(days=70))
+    assert later["scored"] == 1
+
+    r = _rows()[0]
+    assert r.status == vo.STATUS_SCORED
+    assert r.forward_return == pytest.approx(0.20)
+
+
 def test_mock_walk_price_marks_unscorable_never_scores() -> None:
     """CR040 applied: a fabricated bar must never become a calibration number."""
     uid = _mk_user()
