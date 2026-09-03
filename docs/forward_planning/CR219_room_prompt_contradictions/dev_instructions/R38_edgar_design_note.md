@@ -6,6 +6,15 @@ note, and no new dependency is installed — the ruling (`DECISIONS_2026-09-02.m
 design note first, acknowledged in the daily review, before any code. This is
 that note.
 
+> **ACKNOWLEDGED 2026-09-03 — Saiful.** Put to him with R30 and R43; his answer
+> was "Rc38. Ok". The gate this note opens with is therefore lifted and the
+> EDGAR code is WP06's to build, behind the config flag and degrade-loudly
+> failure described below. The escape hatch in "Explicitly out of scope" still
+> binds: if the dimensional-parser work balloons beyond a contained change to
+> `parse_companyfacts` plus a small entity registry, stop and report back —
+> reversing to a declared-absent entry with its own CR is Saiful's call, not a
+> worker's.
+
 ## The problem this solves
 
 `fetch_live_fundamentals` (via `fetch_statement_facts`) and `edgar_pit.py`
