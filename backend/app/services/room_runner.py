@@ -516,6 +516,9 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # CR221 C2/C5 — the annual series, off `tk.cashflow`. Optional-live-only
     # because three usable years is the floor and not every filer clears it.
     "fcf_history_years", "fcf_history", "capex_history", "fcf_conversion_pct",
+    # CR221 B2 — cycle ROE, off the annual balance sheet joined to the annual
+    # income frame by period.
+    "roe_history_years", "roe_history_pct", "roe_median_pct",
     # CR219 R33 — interest coverage (EBIT / interest expense), the single
     # most-requested figure in the CR219 arm measurement (21 mentions, 9/12
     # agents). From the same `.quarterly_income_stmt` the margin-trend block

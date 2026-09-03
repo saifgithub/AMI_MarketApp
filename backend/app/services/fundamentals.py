@@ -565,6 +565,48 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
                     if sum(c is not None for c in conversion) >= 3:
                         out["fcf_conversion_pct"] = conversion
 
+    # ── Cycle ROE history (CR221 B2) ──────────────────────────────────────
+    # *"Full cycle (10-year) historical median valuation multiples (P/E,
+    # EV/EBITDA) and median ROE"*. R37 shipped the multiples half; this is the
+    # ROE half, and it is the half that makes the sheet's existing point-in-time
+    # `return_on_equity` readable — 41.7% is a different claim against a cycle
+    # median of 47.6% than against one of 20%.
+    #
+    # `tk.balance_sheet` is the third annual sibling on the same Ticker. Joined
+    # to the income frame BY PERIOD, not by index: XOM returns four balance
+    # columns against five income columns (measured), so positional zipping
+    # would pair each year's profit with the previous year's equity.
+    #
+    # Year-end equity, not the average of opening and closing — same basis as
+    # the `return_on_equity` already on the sheet, so the median and the
+    # current figure are comparable. Two definitions of one ratio on one sheet
+    # is the contradiction class this CR sits downstream of.
+    try:
+        balance = tk.balance_sheet
+        balance_periods = [str(c)[:10] for c in balance.columns]
+    except Exception as exc:
+        logger.warn("yfinance_balance_sheet_error", ticker=ticker, error=str(exc)[:200])
+        balance = None
+        balance_periods = []
+    if balance is not None and balance_periods and annual_income is not None:
+        equity_series = _stmt_series(
+            balance, "Stockholders Equity", "Common Stock Equity",
+            "Total Stockholder Equity",
+        )
+        income_by_period = dict(zip(annual_periods, _stmt_series(
+            annual_income, "Net Income", "Net Income Common Stockholders",
+        ) or []))
+        if equity_series:
+            roe = [
+                (period, round(income_by_period[period] / equity * 100, 1))
+                for period, equity in zip(balance_periods, equity_series)
+                if equity and equity > 0 and income_by_period.get(period) is not None
+            ]
+            if len(roe) >= 3:
+                out["roe_history_years"] = [p[:4] for p, _ in roe]
+                out["roe_history_pct"] = [v for _, v in roe]
+                out["roe_median_pct"] = round(statistics.median(v for _, v in roe), 1)
+
     # ── Earnings revisions direction (CR219 R21-DATA) ──────────────────────
     # This unblocks WP04-R21's overlay rewrite: the short/medium fundamentals
     # branch demands "earnings revisions, surprise history" and, until this
@@ -1760,6 +1802,37 @@ def _series(years: list[str], values: list[int | None], unit: str = "$") -> str:
     )
 
 
+def roe_history_line(
+    years: list[str] | None,
+    values: list[float] | None,
+    median: float | None,
+    current: float | None = None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 B2 — return on equity across the cycle, and its median.
+
+    R37 shipped the *"median valuation multiples"* half of the Research
+    Manager's ask; this is the *"and median ROE"* half. It exists to make the
+    figure already on the sheet readable: Caterpillar's 41.7% is a poor year
+    against a 47.6% four-year median and an outstanding one against a 20% one,
+    and a point-in-time ratio cannot say which.
+
+    Net income over YEAR-END equity, the same basis as the `return_on_equity`
+    the sheet already carries, so the current figure and the median are the
+    same measurement at different times rather than two ratios sharing a name.
+    """
+    if not years or not values or median is None or len(values) < 3:
+        return None
+    parts = [
+        f"{' · '.join(f'FY{y} {v}%' for y, v in zip(years, values))}, "
+        f"{len(values)}-year median {median}%"
+    ]
+    if current is not None:
+        parts.append(f"currently {current}%")
+    parts.append("net income over year-end equity")
+    return _labelled("Return on equity history", live, parts)
+
+
 def fcf_history_line(
     years: list[str] | None,
     fcf: list[int] | None,
@@ -2488,6 +2561,13 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
                 data.get("fcf_history_years"), data.get("fcf_conversion_pct"),
                 live=False,
             ) if settings.room_fcf_conversion_enabled else None,
+            # CR221 B2 — same builder, same order, same wording as the Room
+            # sheet (parity rule above), behind the same flag.
+            roe_history_line(
+                data.get("roe_history_years"), data.get("roe_history_pct"),
+                data.get("roe_median_pct"), data.get("return_on_equity"),
+                live=False,
+            ) if settings.room_roe_history_enabled else None,
             # CR219 R33 — same builder, same order, same wording as the Room
             # sheet (parity rule above).
             interest_coverage_line(

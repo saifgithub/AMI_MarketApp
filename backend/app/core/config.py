@@ -919,6 +919,10 @@ class Settings(BaseSettings):
     # CR221 C5 — free cash flow as a share of net income, year by year.
     room_fcf_conversion_enabled: bool = False
 
+    # CR221 B2 — return on equity across the cycle plus its median, the half of
+    # the Research Manager's ask R37's median multiples did not cover.
+    room_roe_history_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

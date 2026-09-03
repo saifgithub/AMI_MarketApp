@@ -47,6 +47,7 @@ from app.services.fundamentals import (
     debt_maturity_line,
     historical_multiples_line,
     interest_coverage_line,
+    roe_history_line,
     liquidity_line,
     margin_structure_line,
     margin_trend_line,
@@ -2668,6 +2669,17 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("fcf_conversion_pct")
                 if _is("fcf_conversion_pct", "live") else None,
             ) if settings.room_fcf_conversion_enabled else None,
+            # CR221 B2 — the cycle context for the ROE the sheet already has.
+            roe_history_line(
+                profile.get("roe_history_years")
+                if _is("roe_history_years", "live") else None,
+                profile.get("roe_history_pct")
+                if _is("roe_history_pct", "live") else None,
+                profile.get("roe_median_pct")
+                if _is("roe_median_pct", "live") else None,
+                profile.get("return_on_equity")
+                if _is("return_on_equity", "live") else None,
+            ) if settings.room_roe_history_enabled else None,
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
             # mentions, 9/12 agents) in the CR219 measurement. Ratio and
             # quarter are gated on separate field_state keys — the same

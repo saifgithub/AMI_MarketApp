@@ -173,6 +173,10 @@ _FUND_SENTINEL: dict = {
     "fcf_history": [3210, 3120, 3030],
     "capex_history": [1000, 1010, 1020],
     "fcf_conversion_pct": [45, 52, 61],
+    # CR221 B2 — cycle ROE. Distinct from every percentage above.
+    "roe_history_years": ["2016", "2015", "2014"],
+    "roe_history_pct": [35.7, 24.0, 33.1],
+    "roe_median_pct": 33.1,
     # CR219 R37 — today's price/EV against each of the last several FYs' own
     # EPS/EBITDA, median'd. Values chosen not to collide with any other
     # fingerprint here; window strings distinct per direction.
@@ -628,6 +632,21 @@ def _fake_annual_cashflow():
     )
 
 
+def _fake_annual_balance_sheet():
+    """CR221 B2 — year-end equity, on the income frame's own fiscal-year
+    columns. Values chosen so each year's ROE is its own fingerprint
+    (35.7 / 24.0 / 33.1 / 22.7%, median 28.6%) rather than a smooth series a
+    positional-zip bug could still land inside.
+    """
+    import pandas as pd
+
+    fy_periods = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31"]
+    return pd.DataFrame(
+        [[20e9, 25e9, 15e9, 18e9, float("nan")]],
+        index=["Stockholders Equity"], columns=fy_periods,
+    )
+
+
 def _fake_annual_income_stmt():
     """CR219 R37 — `tk.income_stmt` (ANNUAL — distinct from `quarterly_income_stmt`
     above), for the own-history median multiples.
@@ -727,6 +746,10 @@ def _fake_yfinance_module() -> types.SimpleNamespace:
             # fires and this guard would pass knowing nothing about four more
             # fields — the failure `_fake_statement_frames`' docstring names.
             cashflow=_fake_annual_cashflow(),
+            # CR221 B2 — the third annual sibling, joined to `income_stmt`
+            # BY PERIOD (XOM returns four balance columns against five income
+            # ones, so positional zipping would pair the wrong years).
+            balance_sheet=_fake_annual_balance_sheet(),
         ),
     )
 
@@ -746,6 +769,7 @@ def env(monkeypatch):
     monkeypatch.setattr(settings, "room_cashflow_bridge_enabled", True)
     monkeypatch.setattr(settings, "room_fcf_history_enabled", True)
     monkeypatch.setattr(settings, "room_fcf_conversion_enabled", True)
+    monkeypatch.setattr(settings, "room_roe_history_enabled", True)
 
     # 1) Discover the fundamentals produced-field set from the REAL fetcher driven
     #    by a fake yfinance that answers every key — BEFORE we stub the fetcher.
@@ -893,6 +917,9 @@ def env(monkeypatch):
             "fcf_history": "$3,210M",
             "capex_history": "capex FY2019 $1,000M",
             "fcf_conversion_pct": "FY2019 45% · FY2018 52%",
+            "roe_history_years": "FY2016",
+            "roe_history_pct": "FY2016 35.7%",
+            "roe_median_pct": "3-year median 33.1%",
             # CR219 R37 — three keys per half (median, year-count, window
             # string), each fingerprinted separately so a mix-up between the
             # P/E half and the EV/EBITDA half — or a live median paired with

@@ -449,6 +449,8 @@ services:
       # See Settings.room_fcf_history_enabled / room_fcf_conversion_enabled.
       ROOM_FCF_HISTORY_ENABLED: ${ROOM_FCF_HISTORY_ENABLED:-false}
       ROOM_FCF_CONVERSION_ENABLED: ${ROOM_FCF_CONVERSION_ENABLED:-false}
+      # CR221 B2 — cycle ROE history. See Settings.room_roe_history_enabled.
+      ROOM_ROE_HISTORY_ENABLED: ${ROOM_ROE_HISTORY_ENABLED:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
