@@ -1,5 +1,6 @@
 """1-on-1 chat endpoints. POST to start, POST to send messages (SSE stream back)."""
 
+import asyncio
 import json
 
 from uuid import UUID
@@ -7,10 +8,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
-from app.schemas import AgentId, agent_display_name
+from app.core.config import settings
+from app.schemas import AgentId, Mandate, agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.mandate import Plan
 from app.schemas.one_on_one import (
+    ChatMsg,
     OneOnOneMessageRequest,
     OneOnOneSession,
     OneOnOneStartRequest,
@@ -19,9 +22,12 @@ from app.services.agent_runner import AgentRunner, get_agent_runner
 from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits, one_on_one_cost, refund, spend
 from app.services.entitlements import effective_plan_for_user
+from app.services.fundamentals import extract_tickers
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
 from app.services.mandate_store import resolve_mandate
+from app.services.room_runner import _risk_tier_size_ceiling, _verify_and_annotate_geometry
+from app.services.technicals import compute_technicals
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
@@ -58,6 +64,34 @@ def _agent_id_str(session: OneOnOneSession) -> str:
         if isinstance(session.agent_id, AgentId)
         else str(session.agent_id)
     )
+
+
+async def _one_on_one_reference_close(
+    user_message: str, history: list[ChatMsg]
+) -> float | None:
+    """The price a 1-on-1 geometry check is measured against — same series and
+    same live-only gate `room_runner._reference_close` reads off the Room's
+    profile (`field_state["technicals"] == LIVE`), sourced independently here
+    because this surface builds no structured profile dict (CR219 R59-F5).
+
+    Ticker resolution mirrors `AgentRunner.stream_one_on_one_message`'s own
+    fallback (this message, else the last 3 history turns) so "the agent's
+    sheet" means the same ticker the live-data block in the system prompt was
+    built for, not a second, independent guess.
+    """
+    if not settings.use_real_market_data:
+        return None
+    tickers = extract_tickers(user_message)
+    if not tickers:
+        for h in reversed(history[-3:]):
+            if h.role == "user":
+                tickers = extract_tickers(h.content)
+                if tickers:
+                    break
+    if not tickers:
+        return None
+    technicals = await asyncio.to_thread(compute_technicals, tickers[0])
+    return technicals.price if technicals is not None else None
 
 
 @router.post(
@@ -177,15 +211,41 @@ async def send_message(
         buffer: list[str] = []
         failed = False
         try:
+            # CR219 R59-F5: the raw text is buffered to completion — not
+            # streamed chunk-by-chunk as it used to be — because
+            # `_verify_and_annotate_geometry` needs the FULL reply to find an
+            # entry/stop/target triple, and the Room's own house pattern
+            # (`_collect_agent_stream` + `_restream_for_ui`,
+            # `room_runner.py`) is exactly this: buffer, verify, present —
+            # never stream a wrong level triple live and correct it after the
+            # user has already read it. `size_pct` is the mandate's own
+            # risk-tier cap (never scraped from the reply — DEF235);
+            # `reference_close` degrades to None (check degrades to its
+            # pre-DEF237 behaviour, never a false plausibility read) when
+            # real market data is off or no ticker resolves.
             async for chunk in runner.stream_one_on_one_message(
                 session=session,
                 history=req.history,
                 user_message=req.user_message,
                 alpaca_snapshot=render_snapshot(req.alpaca),
             ):
-                total_chars += len(chunk)
                 buffer.append(chunk)
-                yield sse_text("token", chunk)
+            mandate = Mandate.model_validate(session.mandate_used)
+            reference_close = await _one_on_one_reference_close(
+                req.user_message, req.history
+            )
+            annotated, _signal = _verify_and_annotate_geometry(
+                "".join(buffer),
+                size_pct=_risk_tier_size_ceiling(mandate),
+                reference_close=reference_close,
+            )
+            # The buffer now holds exactly what was presented to the user —
+            # the single source both the SSE frame below and the Journal
+            # write in `finally` read from, so the two can never disagree.
+            buffer = [annotated]
+            total_chars = len(annotated)
+            if annotated:
+                yield sse_text("token", annotated)
         except Exception as e:
             # DEF127: framed, not interpolated — see app/api/sse.py.
             failed = True
