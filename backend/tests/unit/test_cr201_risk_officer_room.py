@@ -93,7 +93,15 @@ def _payload(sizes=(1.5, 3.0, 5.0), **kw):
         ],
         "recommended": 3.0,
         "confidence": "medium",
-        "decisive_number": "RSI 43",
+        # CR219 R59-F2: a genuine quotation, not a placeholder.
+        # `render_officer_turns` now checks `key_number`/`decisive_number`
+        # against the sheet/ladder before rendering them — "0.18" is the
+        # reference rung's OWN `contribution_pts` for this fixture's ladder
+        # (reference_size_pct 3.0, entry 100/stop 94/target 113, cap_pts
+        # 30.0), so it is a figure the officer is actually entitled to cite,
+        # not an unquotable one that would now render struck and demoted from
+        # the headline slot.
+        "decisive_number": "0.18",
     }
     p.update(kw)
     return p
@@ -179,7 +187,7 @@ def test_the_balanced_voice_carries_the_call_and_the_open_menu_line(rows):
                if t.agent_id is AgentId.NEUTRAL_DEBATOR)
     assert "Risk Officer's call: **3.0%**" in neu.text
     assert "confidence medium" in neu.text
-    assert "decided by RSI 43" in neu.text
+    assert "decided by 0.18" in neu.text
     assert "These are options, not instructions" in neu.text
     assert "safety floor" in neu.text
 
@@ -191,7 +199,7 @@ def test_headlines_are_capped_by_nulling_never_truncation(rows):
     assert turns[AgentId.CONSERVATIVE_DEBATOR].headline is None
     assert turns[AgentId.AGGRESSIVE_DEBATOR].headline == "kn-5.0"
     # The recommended rung's headline is the decisive number.
-    assert turns[AgentId.NEUTRAL_DEBATOR].headline == "RSI 43"
+    assert turns[AgentId.NEUTRAL_DEBATOR].headline == "0.18"
 
 
 def test_fallback_renders_the_ladder_alone_and_marks_every_turn(rows):
