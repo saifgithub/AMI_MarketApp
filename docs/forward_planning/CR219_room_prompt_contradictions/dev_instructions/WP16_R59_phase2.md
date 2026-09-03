@@ -67,6 +67,16 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
   (docstring records the why; never-veto preserved). 147/147 on dispatcher
   rerun. Registry row upgrade for `verdict.time_horizon_days` dispatched to A3.
 
+- **A3 final upgrades ACCEPTED 2026-09-03** — `25559c82` (key_number/
+  decisive_number → CODE_CHECKED after A2) and `665477e0`
+  (time_horizon_days → CODE_CHECKED after B2, both cited to real sites).
+  **The registry now carries ZERO `LLM_UNVERIFIED` rows**, pinned by a
+  dedicated test whose docstring scopes the claim honestly (field registry
+  only — prose surfaces are B1's checker, not this). En route, the
+  exhaustiveness guard made its FIRST REAL CATCH: red-failed on R60's two
+  new `Verdict` fields (`reference_price`, `next_convene_delta`), which A3
+  classified COMPUTED by reading the code. 14/14 on dispatcher rerun.
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit
