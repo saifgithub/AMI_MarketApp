@@ -271,6 +271,45 @@ def is_complete(convene: dict) -> bool:
     )
 
 
+_STUB_TURN = {
+    "agent": "fundamentals_analyst",
+    "answer": "Body.\n\nDATA I LACKED:\n- (a) Debt maturity ladder; (b) x; (c) ABSENT.\n",
+}
+
+
+def _dry_run(args) -> int:
+    """Run the whole loop with a stub convene and no model.
+
+    Costs nothing and takes a second, and it exists because the live path broke
+    on a name the `--score-only` path did not use: an hour of convenes ran, the
+    JSON was written, and `main` died on the summary line. Anything that walks
+    the loop end to end catches that; nothing that only re-scores does.
+    """
+    import run_convene as harness
+
+    before = {flag: getattr(settings, flag) for flag in FLAGS}
+    real_run, real_load = globals()["run_convene"], harness.load_or_build
+    globals()["run_convene"] = lambda **kw: {"turns": [dict(_STUB_TURN)]}
+    harness.load_or_build = lambda *a, **k: {"free_cash_flow_ttm": 8_994,
+                                             "market_cap": 364_191,
+                                             "capital_return_ttm": 10_114}
+    try:
+        convenes = {label: [] for label in args.arms}
+        for mandate in args.mandates:
+            for label in args.arms:
+                convenes[label].append(
+                    arm(label, ticker=args.ticker, mandate=mandate, client=None))
+    finally:
+        globals()["run_convene"] = real_run
+        harness.load_or_build = real_load
+        for flag, value in before.items():
+            setattr(settings, flag, value)
+
+    print(f"[dry-run] {sum(len(v) for v in convenes.values())} stub convenes "
+          f"through the real `arm()`; flags restored")
+    return report(convenes, args, verbatim=args.verbatim)
+
+
 def _banked(args) -> dict[str, list[dict]]:
     """Convenes already on disk, keyed by arm — newest stamp wins per cell.
 
@@ -369,12 +408,17 @@ def main() -> int:
                          "of driving the model — no LLM calls, no cost. Several "
                          "stamps are searched newest-first per (mandate, arm), "
                          "which is how a re-run after an outage rejoins its round.")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="drive the whole run loop with a stub convene and no "
+                         "model, to prove the loop and the report agree")
     ap.add_argument("--verbatim", action="store_true",
                     help="with --score-only, print every datum named, by arm")
     args = ap.parse_args()
 
     if args.score_only:
         return report(_banked(args), args, verbatim=args.verbatim)
+    if args.dry_run:
+        return _dry_run(args)
 
     os.makedirs(args.out_root, exist_ok=True)
     os.makedirs(PROFILES, exist_ok=True)
@@ -382,7 +426,7 @@ def main() -> int:
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
     labels = args.arms
-    convenes: dict[str, list[tuple[str, dict]]] = {label: [] for label in labels}
+    convenes: dict[str, list[dict]] = {label: [] for label in labels}
 
     for mandate in args.mandates:
         for label in labels:
@@ -394,14 +438,12 @@ def main() -> int:
             with open(path, "w") as fh:
                 json.dump(convene, fh, indent=2, default=str)
             named = len(requests_in(convene))
-            asks[label] += named
             print(f"  [{mandate}/{label}] {named} data items named "
                   f"-> {len(scored)} register items   {os.path.basename(path)}",
                   flush=True)
-            convenes[label].append((mandate, convene))
+            convenes[label].append(convene)
 
-    return report({label: [c for _, c in convenes[label]] for label in labels},
-                  args, verbatim=False)
+    return report(convenes, args, verbatim=False)
 
 
 if __name__ == "__main__":
