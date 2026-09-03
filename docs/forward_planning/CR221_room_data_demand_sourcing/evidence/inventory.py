@@ -12,10 +12,16 @@ which this does not replace:
 
   * It reads the full CAT convene as well as the six arms — 127 lines, not
     102. CR219's headline number is arms-only and stays correct as quoted.
-  * It sub-splits the debt cluster and re-homes the eleven debt asks CR219's
+  * It sub-splits the debt cluster and re-homes the eight debt asks CR219's
     regex misses (`maturity schedule for the $45.1B` carries no `debt
-    maturity` bigram, so it fell to `(unbucketed)`). The debt cluster is 35
-    distinct lines from 9 of 12 agents, not 26.
+    maturity` bigram, so it fell to `(unbucketed)`), plus one its peer pattern
+    claims first. The debt cluster is 35 distinct lines from 9 of 12 agents,
+    not 26.
+
+The cluster view below is the coarse cut. `items.py` supersedes it with the
+49-item register CR221 §2 is written against — clusters answer "which areas is
+the Room short in", items answer "how much data is missing". Both read this
+module's `load_requests`, which is the only place that touches CR219's evidence.
 
 Runs from any working directory. Read-only.
 """
