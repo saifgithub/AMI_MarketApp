@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A · Concierge Briefing — Your Team</title>
+<style>
+  :root {
+    --canvas: #0F172A;
+    --panel: #111827;
+    --card: #152845;
+    --border: rgba(148,163,184,0.15);
+    --text: #E2E8F0;
+    --text-2: #94A3B8;
+    --text-3: #64748B;
+    --grad-a: #7C3AED;
+    --grad-b: #2563EB;
+    --cyan: #22D3EE;
+    --purple: #A78BFA;
+    --amber: #FBBF24;
+    --green: #34D399;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060B18;
+    color: var(--text);
+    font-family: -apple-system, "Inter", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+  }
+  .page-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 24px;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--canvas);
+    border-radius: 40px;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 60px rgba(124,58,237,0.12), 0 24px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen {
+    flex: 1;
+    padding: 28px 20px 20px;
+    overflow-y: auto;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  a { text-decoration: none; color: inherit; }
+
+  .back-row { margin-bottom: 18px; }
+  .back-link {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+
+  .header-title { font-family: var(--mono); font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 8px; }
+  .header-note { font-size: 13px; line-height: 1.5; color: var(--text-2); margin-bottom: 24px; }
+
+  .family-section { margin-bottom: 22px; }
+  .family-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4px 10px;
+  }
+  .family-name { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .family-count { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--text-3); }
+
+  .agent-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .hex-avatar {
+    width: 30px; height: 33px;
+    clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px; color: #060B18; font-weight: 700;
+  }
+  .hex-avatar.locked { background: #334155; color: var(--text-3); }
+  .agent-info { flex: 1; min-width: 0; }
+  .agent-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .agent-role { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agent-status {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.15em;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .status-open { color: var(--green); }
+  .status-locked { color: var(--text-3); }
+
+  .bottom-pad { height: 8px; }
+
+  .annotation {
+    max-width: 390px;
+    margin-top: 20px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-3);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="page-title">A — Concierge Briefing · Your Team (Depth Layer)</div>
+  <div class="phone">
+    <div class="screen">
+
+      <div class="back-row"><a class="back-link" href="home.html">‹ Floor</a></div>
+
+      <div class="header-title">Your Team</div>
+      <div class="header-note">Tap an agent to chat 1-on-1 or coach them.</div>
+
+      <div class="family-section">
+        <div class="family-header">
+          <div class="family-name" style="color:#22D3EE;">Analysts</div>
+          <div class="family-count">4</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#22D3EE;">F</div>
+          <div class="agent-info">
+            <div class="agent-name">Fundamentals Analyst</div>
+            <div class="agent-role">Reads the filings so you don't have to.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#22D3EE;">M</div>
+          <div class="agent-info">
+            <div class="agent-name">Market Analyst</div>
+            <div class="agent-role">Watches price, volume, and the tape.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#22D3EE;">N</div>
+          <div class="agent-info">
+            <div class="agent-name">News Analyst</div>
+            <div class="agent-role">Separates headlines from noise.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar locked">S</div>
+          <div class="agent-info">
+            <div class="agent-name" style="color:var(--text-3);">Social Media Analyst</div>
+            <div class="agent-role">Reads the crowd's mood.</div>
+          </div>
+          <div class="agent-status status-locked">Locked</div>
+        </div>
+      </div>
+
+      <div class="family-section">
+        <div class="family-header">
+          <div class="family-name" style="color:#A78BFA;">Research</div>
+          <div class="family-count">3</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#A78BFA;">B+</div>
+          <div class="agent-info">
+            <div class="agent-name">Bull Researcher</div>
+            <div class="agent-role">Builds the case for buying.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#A78BFA;">B−</div>
+          <div class="agent-info">
+            <div class="agent-name">Bear Researcher</div>
+            <div class="agent-role">Builds the case against.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar locked">R</div>
+          <div class="agent-info">
+            <div class="agent-name" style="color:var(--text-3);">Research Manager</div>
+            <div class="agent-role">Weighs both sides and calls it.</div>
+          </div>
+          <div class="agent-status status-locked">Locked</div>
+        </div>
+      </div>
+
+      <div class="family-section">
+        <div class="family-header">
+          <div class="family-name" style="color:#FBBF24;">Risk</div>
+          <div class="family-count">3</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar locked">A</div>
+          <div class="agent-info">
+            <div class="agent-name" style="color:var(--text-3);">Aggressive Debator</div>
+            <div class="agent-role">Argues for swinging bigger.</div>
+          </div>
+          <div class="agent-status status-locked">Locked</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar locked">C</div>
+          <div class="agent-info">
+            <div class="agent-name" style="color:var(--text-3);">Conservative Debator</div>
+            <div class="agent-role">Argues for protecting capital.</div>
+          </div>
+          <div class="agent-status status-locked">Locked</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar locked">N</div>
+          <div class="agent-info">
+            <div class="agent-name" style="color:var(--text-3);">Neutral Debator</div>
+            <div class="agent-role">Keeps the other two honest.</div>
+          </div>
+          <div class="agent-status status-locked">Locked</div>
+        </div>
+      </div>
+
+      <div class="family-section">
+        <div class="family-header">
+          <div class="family-name" style="color:#34D399;">Execution + Managers</div>
+          <div class="family-count">2</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#34D399;">T</div>
+          <div class="agent-info">
+            <div class="agent-name">Trader</div>
+            <div class="agent-role">Turns the call into a paper trade.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+        <div class="agent-row">
+          <div class="hex-avatar" style="background:#A78BFA;">P</div>
+          <div class="agent-info">
+            <div class="agent-name">Portfolio Manager</div>
+            <div class="agent-role">Final sign-off on every move.</div>
+          </div>
+          <div class="agent-status status-open">Open</div>
+        </div>
+      </div>
+
+      <div class="bottom-pad"></div>
+    </div>
+  </div>
+  <div class="annotation">The depth layer: all 12 agents grouped by family with plain-language roles — reached only by tapping "Your Team" or "Ask an Agent", never shown on the home surface.</div>
+</body>
+</html>

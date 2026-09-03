@@ -38,7 +38,7 @@ MOBILE_DIR="${PROJECT_ROOT}/mobile"
 : "${MELEHOST_LAN_IP:=192.168.20.59}"
 : "${MELEHOST_TAILSCALE_IP:=100.110.14.31}"
 : "${MELEHOST_USER:=saiful}"
-: "${MELEHOST_APK_PATH:=/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+: "${MELEHOST_APK_PATH:=/home/saiful/projects/AMI_MarketApp/apk/}"
 
 # Only set AMI_APK_SHARE_DEST if not already set by caller. This allows the
 # fallback probe to run: we detect which host is reachable and build the

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B · Today Feed — Today</title>
+<style>
+  :root {
+    --canvas: #0F172A;
+    --panel: #111827;
+    --card: #152845;
+    --border: rgba(148,163,184,0.15);
+    --text: #E2E8F0;
+    --text-2: #94A3B8;
+    --text-3: #64748B;
+    --grad-a: #7C3AED;
+    --grad-b: #2563EB;
+    --cyan: #22D3EE;
+    --purple: #A78BFA;
+    --amber: #FBBF24;
+    --green: #34D399;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060B18;
+    color: var(--text);
+    font-family: -apple-system, "Inter", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+  }
+  .page-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 24px;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--canvas);
+    border-radius: 40px;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 60px rgba(124,58,237,0.12), 0 24px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen {
+    flex: 1;
+    padding: 28px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 26px;
+  }
+  .date-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .streak-chip {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid rgba(251,191,36,0.35);
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: rgba(251,191,36,0.06);
+  }
+
+  .feed-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .feed-card.accent { background: var(--card); }
+
+  .card-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 14px;
+  }
+
+  .move-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .ticker-hex {
+    width: 36px; height: 40px;
+    clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 9px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .move-headline { font-size: 17px; font-weight: 600; line-height: 1.35; }
+  .move-why { font-size: 13px; line-height: 1.55; color: var(--text-2); margin-bottom: 16px; }
+  .card-cta {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 12px;
+    display: inline-block;
+  }
+  .card-sig { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-3); }
+
+  .pulse-number { font-family: var(--mono); font-size: 24px; color: var(--green); letter-spacing: 0.02em; margin-bottom: 10px; }
+  .pulse-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+  .pulse-note { font-size: 13px; color: var(--text-2); }
+
+  .lesson-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+  .progress-dots { display: flex; gap: 6px; margin-bottom: 14px; }
+  .pdot { width: 18px; height: 4px; border-radius: 2px; background: #1E293B; }
+  .pdot.done { background: linear-gradient(90deg, var(--grad-a), var(--grad-b)); }
+  .lesson-cta {
+    display: inline-block;
+    border: 1px solid rgba(124,58,237,0.5);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text);
+  }
+
+  .spacer { flex: 1; }
+
+  .bottom-nav {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    padding: 12px 8px 20px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .nav-item.active { color: var(--text); }
+  .nav-dot {
+    width: 8px; height: 9px;
+    clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+  }
+  .nav-dot.hollow { background: var(--text-3); opacity: 0.35; }
+
+  .annotation {
+    max-width: 390px;
+    margin-top: 20px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-3);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="page-title">B — Today Feed · Today (Home)</div>
+  <div class="phone">
+    <div class="screen">
+
+      <div class="topbar">
+        <div class="date-label">Tuesday, Aug 12</div>
+        <div class="streak-chip">Streak 12</div>
+      </div>
+
+      <div class="feed-card accent">
+        <div class="card-label">Today's Move</div>
+        <div class="move-head">
+          <div class="ticker-hex">NVDA</div>
+          <div class="move-headline">Your team sees a setup on NVDA</div>
+        </div>
+        <div class="move-why">Unusual options activity plus strong datacenter demand — the desk thinks the odds favor buyers this week.</div>
+        <a class="card-cta" href="drilldown_room.html">See the Call →</a>
+        <div class="card-sig">— Research Desk</div>
+      </div>
+
+      <div class="feed-card">
+        <div class="card-label">Portfolio Pulse</div>
+        <div class="pulse-row">
+          <div class="pulse-number">+2.1% this week</div>
+          <svg width="80" height="26" viewBox="0 0 80 26" fill="none">
+            <polyline points="0,20 11,17 22,19 33,13 44,15 55,8 66,10 80,3"
+              stroke="#34D399" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="pulse-note">Nothing needs your attention.</div>
+      </div>
+
+      <div class="feed-card">
+        <div class="card-label">One Lesson</div>
+        <div class="lesson-title">Position sizing in 4 minutes</div>
+        <div class="progress-dots">
+          <div class="pdot done"></div>
+          <div class="pdot done"></div>
+          <div class="pdot"></div>
+          <div class="pdot"></div>
+        </div>
+        <a class="lesson-cta" href="#">Keep Streak</a>
+      </div>
+
+      <div class="spacer"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active"><div class="nav-dot"></div>Today</div>
+      <div class="nav-item"><div class="nav-dot hollow"></div>Portfolio</div>
+      <div class="nav-item"><div class="nav-dot hollow"></div>Learn</div>
+      <div class="nav-item"><div class="nav-dot hollow"></div>Menu</div>
+    </div>
+  </div>
+  <div class="annotation">Home is a three-card daily feed; agents appear only as "desks" signing cards. Everything else — the team of 12, league, journal, settings — lives behind the Menu desk drawer.</div>
+</body>
+</html>

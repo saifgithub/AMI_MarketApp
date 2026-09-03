@@ -182,6 +182,74 @@ def main():
             lines.append(f"| {key[0]} | `{key[1]}` | {_pct(ak, an)} | {_pct(bk, bn)} "
                          f"| {b} / {c} | {p:.3f} |")
 
+    # ── did the grammar change what was DECIDED? ──────────────────────────
+    #
+    # The question CR210's acceptance list does not ask and should. Every check
+    # above is about FORM; this is about content, and it is free — the same 394
+    # completions carry it. A grammar that quietly moved the Desk from WAIT to
+    # BUY, or the CIO from PASS to APPROVE, would be a very different CR from the
+    # one that merely guarantees a shape.
+    #
+    # Constrained decoding legitimately diverges token by token (masking changes
+    # which token is argmax, and one different token changes everything after
+    # it), so a shifted DISTRIBUTION is expected noise and a shifted RATE is not.
+    # Paired flip counts are what separate them, which is why both are printed.
+    lines += ["\n## Did the grammar change what was decided?\n",
+              "Form is what a grammar guarantees. This is the content question, "
+              "answered from the same completions. Per-item flips, not just "
+              "totals — constrained decoding diverges token by token, so a "
+              "different distribution is expected and a different RATE is not.\n",
+              "| surface | decision | unconstrained | constrained | flips → | flips ← | McNemar p |",
+              "|---|---|---|---|---|---|---|"]
+
+    def _decision(surface, text):
+        if surface == "S4":
+            i, j = text.find("{"), text.rfind("}")
+            try:
+                o = json.loads(text[i:j + 1]) if i != -1 and j > i else {}
+            except json.JSONDecodeError:
+                return None
+            a = str(o.get("action") or "").upper()
+            return a or None
+        if surface == "S5":
+            m = __import__("re").search(
+                r"Side:\s*(BUY|HOLD|WAIT|SELL|SHORT)", text, __import__("re").I)
+            return m.group(1).upper() if m else None
+        if surface == "S6":
+            i, j = text.find("{"), text.rfind("}")
+            try:
+                o = json.loads(text[i:j + 1]) if i != -1 and j > i else {}
+            except json.JSONDecodeError:
+                return None
+            try:
+                return f"{round(float(o.get('recommended')), 1)}"
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    for surface in ("S4", "S5", "S6"):
+        pids = [p for p in set(plain_c) & set(gram_c)
+                if prompts.get(p, {}).get("surface") == surface]
+        if not pids:
+            continue
+        pdec = {p: _decision(surface, plain_c[p]["text"]) for p in pids}
+        gdec = {p: _decision(surface, gram_c[p]["text"]) for p in pids}
+        for value in sorted({v for v in list(pdec.values()) + list(gdec.values()) if v}):
+            pk = sum(1 for p in pids if pdec[p] == value)
+            gk = sum(1 for p in pids if gdec[p] == value)
+            to = sum(1 for p in pids if pdec[p] != value and gdec[p] == value)
+            fro = sum(1 for p in pids if pdec[p] == value and gdec[p] != value)
+            lines.append(
+                f"| {surface} | `{value}` | {_pct(pk, len(pids))} | "
+                f"{_pct(gk, len(pids))} | {to} | {fro} | "
+                f"{mcnemar_exact(fro, to):.3f} |"
+            )
+    lines.append(
+        "\nA `p` below 0.05 on any row means the grammar moved that decision's "
+        "RATE, not merely its per-item assignment. That would be a behaviour "
+        "change to escalate before flipping a flag, not a formatting win.\n"
+    )
+
     # ── cost ──────────────────────────────────────────────────────────────
     lines += ["\n## What the structure cost\n",
               "| arm | n | mean output tokens | p95 | hit the budget | mean chars |",

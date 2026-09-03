@@ -1,0 +1,776 @@
+<title>CR219 Review Matrix</title>
+<style>
+:root{
+  --bg:#faf8f3; --surface:#ffffff; --surface-2:#f2efe6;
+  --border:#e2ddcf; --border-strong:#cfc8b4;
+  --text:#211f1a; --text-dim:#6b6355; --text-faint:#9c9484;
+  --accent:#9a5b1f; --accent-soft:#f1e2ce;
+  --link:#7a4718;
+  --group-bg:#efe6d3; --group-text:#4a3a1e;
+  --k1:#3d6b6b; --k1-bg:#e3edec;
+  --k2:#7a5a9c; --k2-bg:#ece5f2;
+  --k3:#a8542e; --k3-bg:#f4e5db;
+  --k4:#3a5f8a; --k4-bg:#e2eaf3;
+  --k5:#5c7a2e; --k5-bg:#e9efdc;
+  --shadow: 0 1px 3px rgba(30,25,15,0.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#18160f; --surface:#211e16; --surface-2:#282419;
+    --border:#3a3324; --border-strong:#4d4530;
+    --text:#ece6d6; --text-dim:#b0a68e; --text-faint:#7d745e;
+    --accent:#e0a25a; --accent-soft:#3a2f1c;
+    --link:#e0a25a;
+    --group-bg:#332a19; --group-text:#e8d3a8;
+    --k1:#7fc3bd; --k1-bg:#1f3230;
+    --k2:#b79cdb; --k2-bg:#2c2536;
+    --k3:#e0906a; --k3-bg:#382a20;
+    --k4:#8bb0e0; --k4-bg:#212e3d;
+    --k5:#a8c576; --k5-bg:#28311a;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#18160f; --surface:#211e16; --surface-2:#282419;
+  --border:#3a3324; --border-strong:#4d4530;
+  --text:#ece6d6; --text-dim:#b0a68e; --text-faint:#7d745e;
+  --accent:#e0a25a; --accent-soft:#3a2f1c;
+  --link:#e0a25a;
+  --group-bg:#332a19; --group-text:#e8d3a8;
+  --k1:#7fc3bd; --k1-bg:#1f3230;
+  --k2:#b79cdb; --k2-bg:#2c2536;
+  --k3:#e0906a; --k3-bg:#382a20;
+  --k4:#8bb0e0; --k4-bg:#212e3d;
+  --k5:#a8c576; --k5-bg:#28311a;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--text); margin:0;
+  font-family:"IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+}
+
+.wrap{ max-width:1400px; margin:0 auto; padding:40px 28px 80px; }
+
+header.page{ margin-bottom:32px; }
+.eyebrow{
+  font-family:"IBM Plex Mono", ui-monospace, monospace;
+  font-size:11.5px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 10px;
+}
+h1{
+  font-family:"Newsreader", Georgia, serif;
+  font-weight:600; font-size:clamp(28px,4vw,40px); line-height:1.12;
+  margin:0 0 14px; text-wrap:balance; color:var(--text);
+}
+.lede{
+  font-size:15.5px; line-height:1.65; color:var(--text-dim);
+  max-width:66ch; margin:0 0 6px;
+}
+.lede + .lede{ margin-top:10px; }
+code.inline{
+  font-family:"IBM Plex Mono", ui-monospace, monospace;
+  font-size:0.92em; background:var(--surface-2); padding:0.1em 0.4em;
+  border-radius:4px; border:1px solid var(--border);
+}
+
+.legend{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:10px; margin:26px 0 8px;
+}
+.chip{
+  background:var(--surface); border:1px solid var(--border);
+  border-left:4px solid var(--chip-color, var(--accent));
+  border-radius:8px; padding:11px 13px; box-shadow:var(--shadow);
+}
+.chip .name{
+  font-family:"IBM Plex Mono", ui-monospace, monospace;
+  font-weight:600; font-size:13px; color:var(--text); display:block;
+}
+.chip .role{ font-size:11.5px; color:var(--text-faint); margin-top:2px; display:block; }
+.chip .desc{ font-size:12px; color:var(--text-dim); margin-top:6px; line-height:1.45; }
+
+.stats{
+  display:flex; gap:22px; flex-wrap:wrap; margin:22px 0 4px;
+  font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:12px;
+  color:var(--text-dim);
+}
+.stats b{ color:var(--text); font-variant-numeric:tabular-nums; }
+
+.tablecard{
+  margin-top:26px; border:1px solid var(--border-strong); border-radius:10px;
+  overflow:hidden; background:var(--surface); box-shadow:var(--shadow);
+}
+.scroller{ overflow-x:auto; overflow-y:visible; }
+
+table{ border-collapse:separate; border-spacing:0; width:100%; min-width:1180px; font-size:12.6px; }
+
+thead th{
+  position:sticky; top:0; z-index:3;
+  background:var(--surface-2); color:var(--text);
+  font-family:"IBM Plex Mono", ui-monospace, monospace;
+  font-weight:600; font-size:11px; letter-spacing:.03em; text-transform:uppercase;
+  text-align:left; padding:12px 14px; border-bottom:1px solid var(--border-strong);
+  border-right:1px solid var(--border);
+}
+thead th:first-child{
+  left:0; z-index:4; min-width:272px; max-width:272px;
+}
+thead th.model-th{ min-width:190px; }
+thead th .model-role{
+  display:block; text-transform:none; letter-spacing:0; font-weight:400;
+  color:var(--text-faint); font-size:10.5px; margin-top:3px;
+}
+
+tbody td{
+  padding:10px 14px; vertical-align:top; border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border); line-height:1.5; color:var(--text);
+}
+tbody td:first-child{
+  position:sticky; left:0; z-index:2; background:var(--surface);
+  font-weight:600; color:var(--text); border-right:1px solid var(--border-strong);
+}
+tbody tr:nth-child(even) td:first-child{ background:var(--surface-2); }
+tbody tr:nth-child(even) td{ background-color:color-mix(in srgb, var(--surface-2) 55%, var(--surface)); }
+
+tbody td.empty{ color:var(--text-faint); font-style:italic; }
+tbody td.empty .dash{ font-style:normal; }
+
+tr.group-row td{
+  position:sticky; left:0; z-index:2;
+  background:var(--group-bg) !important; color:var(--group-text);
+  font-family:"IBM Plex Mono", ui-monospace, monospace;
+  font-weight:600; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
+  padding:9px 14px; border-top:2px solid var(--border-strong);
+  border-bottom:1px solid var(--border-strong);
+}
+tr.group-row{ background:var(--group-bg); }
+
+.refnum{
+  font-family:"IBM Plex Mono", ui-monospace, monospace; font-weight:600; font-size:10.5px;
+  color:var(--accent); background:var(--accent-soft); border-radius:4px;
+  padding:1px 5px; margin-right:7px; display:inline-block; vertical-align:2px;
+}
+
+.finding-id{
+  font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:10.5px;
+  color:var(--text-faint); display:block; margin-bottom:2px;
+}
+
+.note{
+  font-size:11.3px; color:var(--text-faint); font-style:italic; display:block; margin-top:4px;
+}
+.flag{
+  display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:9.5px;
+  text-transform:uppercase; letter-spacing:.05em; padding:1px 6px; border-radius:3px;
+  margin-left:6px; background:var(--accent-soft); color:var(--accent); font-weight:600;
+}
+
+footer.foot{
+  margin-top:34px; padding-top:22px; border-top:1px solid var(--border);
+  font-size:12.5px; color:var(--text-dim); line-height:1.7; max-width:78ch;
+}
+footer.foot h2{
+  font-family:"Newsreader", serif; font-size:15px; font-weight:600; margin:0 0 10px; color:var(--text);
+}
+footer.foot ul{ margin:0 0 14px; padding-left:20px; }
+footer.foot li{ margin-bottom:6px; }
+
+::selection{ background:var(--accent-soft); }
+a{ color:var(--link); }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<div class="wrap">
+
+<header class="page">
+  <p class="eyebrow">CR219 &middot; Room prompt contradictions &middot; reviewer comparison</p>
+  <h1>Five reviews, side by side</h1>
+  <p class="lede">CR219 documents 17 findings where a Room agent's persona denies data its own fact sheet actually supplies (plus several instruction-vs-instruction collisions and data the Room asks for but nothing fetches). The plan was reviewed independently by five LLMs. This table lines up every issue any of them raised against what each one recommended for it &mdash; own words, condensed, not ranked or judged. A blank cell means that reviewer didn't address that issue, not that it disagreed.</p>
+  <p class="lede">Built from all sixteen review files read in full, cross-checked twice against source. Each row carries a reference tag (<span class="refnum" style="margin-right:0">R1</span>&hellip;<span class="refnum" style="margin-right:0">R61</span>) for pointing back to a specific line.</p>
+</header>
+
+<div class="legend">
+  <div class="chip" style="--chip-color:var(--k1)">
+    <span class="name">Kimi</span><span class="role">independent</span>
+    <span class="desc">Hand-fix + truth-checking guard. Re-ran the load-bearing checks firsthand; strongest on sequencing and on catching the stale "PM samples default to 1" claim.</span>
+  </div>
+  <div class="chip" style="--chip-color:var(--k2)">
+    <span class="name">Antigravity</span><span class="role">independent &mdash; authorship uncertain</span>
+    <span class="desc">Self-labeled "Kimi (Track K) / Antigravity AI" but stylistically distinct from the standalone Kimi package. Most directive: ships ready-to-paste code diffs rather than design discussion.</span>
+  </div>
+  <div class="chip" style="--chip-color:var(--k3)">
+    <span class="name">Fable</span><span class="role">independent</span>
+    <span class="desc">Proposed the architecturally deeper fix &mdash; generate the availability text from the renderer itself &mdash; which Saiful declined in favor of hand-fix + guard. Alone produced a 15-item second-pass list on Room result quality beyond CR219's scope.</span>
+  </div>
+  <div class="chip" style="--chip-color:var(--k4)">
+    <span class="name">GLM</span><span class="role">synthesis, not independent</span>
+    <span class="desc">Explicitly read and reconciled Kimi / Antigravity / Fable, then wrote up Saiful's rulings on their forks. Its cells often record a ruling reached during the review, not a cold opinion.</span>
+  </div>
+  <div class="chip" style="--chip-color:var(--k5)">
+    <span class="name">QWEN</span><span class="role">independent &mdash; blind to the other four</span>
+    <span class="desc">Deliberately did not read Kimi/Antigravity/Fable/GLM. Caught the same two stale facts as Kimi fully blind &mdash; the strongest corroboration signal in the set. Pushes hardest on "coherent &ne; better."</span>
+  </div>
+</div>
+
+<div class="stats">
+  <span><b>61</b> issues tracked, referenced below as <b>R1</b>&ndash;<b>R61</b></span>
+  <span><b>17</b> numbered findings from the base CR</span>
+  <span><b>44</b> further issues raised by one or more reviewers</span>
+  <span><b>16</b> source files read in full</span>
+</div>
+
+<div class="tablecard">
+<div class="scroller">
+<table>
+<thead>
+<tr>
+  <th>Issue</th>
+  <th class="model-th" style="color:var(--k1)">Kimi</th>
+  <th class="model-th" style="color:var(--k2)">Antigravity</th>
+  <th class="model-th" style="color:var(--k3)">Fable</th>
+  <th class="model-th" style="color:var(--k4)">GLM</th>
+  <th class="model-th" style="color:var(--k5)">QWEN</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="group-row"><td colspan="6">Class A &mdash; persona denies a field the sheet marks LIVE</td></tr>
+
+<tr>
+  <td><span class="refnum">R1</span><span class="finding-id">#1&ndash;2</span>Margin trend denied outright</td>
+  <td>Rewrite (one of the 7 false denials to correct)</td>
+  <td>Rewrite: "analyze margin structure and YoY margin trend when present"</td>
+  <td>Delete from persona prose; state lives in the generated registry</td>
+  <td>Rewrite &mdash; keep it a two-point comparison, not a series</td>
+  <td>"Two-point rule": quote the bps figures and their two basis dates, never extend the direction beyond them</td>
+</tr>
+<tr>
+  <td><span class="refnum">R2</span><span class="finding-id">#3</span>Buybacks / capital returned / M&amp;A denied</td>
+  <td>Rewrite (one of the 7)</td>
+  <td>Rewrite: "analyze buybacks and capital-return metrics when present"</td>
+  <td>Delete; moves into the registry (M&amp;A absence kept)</td>
+  <td>Rewrite (Phase 1)</td>
+  <td>Split: buybacks/capital-returned claimable (capital-returned flagged as AMI's sum); M&amp;A denial stays &mdash; sheet's own line is the authority</td>
+</tr>
+<tr>
+  <td><span class="refnum">R3</span><span class="finding-id">#4</span>"No history for any of them" (multi-period figures)</td>
+  <td>Rewrite (one of the 7)</td>
+  <td>Rewrite: "multi-period window trends and TTM series are provided where available"</td>
+  <td>Deleted; per-field history claims generated by registry</td>
+  <td>Rewrite (Phase 1)</td>
+  <td>Narrow: statement-line items/per-quarter history stay denied; only the 6 multi-period figures the sheet actually states are citable</td>
+</tr>
+<tr>
+  <td><span class="refnum">R4</span><span class="finding-id">#5&ndash;6</span>Market analyst series/trend denials</td>
+  <td>Rewrite (one of the 7)</td>
+  <td>Rewrite: "evaluate the price series, window trend, primary trend, 52w range, ATR"</td>
+  <td>Deleted; registry states window/primary trend + RS as LIVE, with a limit note</td>
+  <td>Rewrite (Phase 1)</td>
+  <td>Rewrite to cite trends by name; indicator <em>trajectories</em> ("RSI is clearing") stay denied &mdash; same two-point rule</td>
+</tr>
+<tr>
+  <td><span class="refnum">R5</span><span class="finding-id">#7</span>News analyst "not supplied consensus estimates"</td>
+  <td>Rewrite (one of the 7)</td>
+  <td>Rewrite: "reference consensus EPS estimates and earnings dates provided"</td>
+  <td>Deleted; registry states consensus EPS as LIVE</td>
+  <td>Rewrite (Phase 1)</td>
+  <td>Delete the sentence entirely; replace with a use-mention naming it as the Street's estimate</td>
+</tr>
+<tr>
+  <td><span class="refnum">R6</span><span class="finding-id">#8</span>Social "no historical baseline" &mdash; the weak link</td>
+  <td>Narrow the rewrite &mdash; name exactly what the mention trend does/doesn't baseline; don't grant a sentiment baseline that doesn't exist</td>
+  <td>Rewrite grants sentiment score + mention trend <span class="flag">flagged unsafe</span></td>
+  <td>Deleted from persona; registry marks mention-trend LIVE, sentiment-baseline absent</td>
+  <td>Same narrow instinct as Kimi &mdash; explicitly rejects Antigravity's rewrite as a false claim</td>
+  <td>Same narrow instinct &mdash; keep the sentiment restriction, drop the mention restriction</td>
+</tr>
+<tr>
+  <td><span class="refnum">R7</span>Which denials must <em>stay</em> (peer-basket P/E, MACD/Bollinger, Twitter/X)</td>
+  <td>Keep all 3</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Move into <code class="inline">SHEET_ABSENTS</code>, out of persona prose &mdash; "a growing allowlist is the old failure mode returning"</td>
+  <td>Keep all 3 (Phase 1)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Root-cause fix mechanism &amp; the guard</td></tr>
+
+<tr>
+  <td><span class="refnum">R8</span>How to stop the next field-adding CR from recreating this bug</td>
+  <td>Hand-fix each denial + a truth-checking guard test</td>
+  <td>One standardized static "Dynamic Data Contract" block, same text in all 13 persona files</td>
+  <td><strong>Generate</strong> the availability statement from the renderer itself &mdash; new <code class="inline">sheet_registry.py</code> module</td>
+  <td>Ruling: <strong>hand-fix + guard</strong> &mdash; rejects both static-only (drifts again) and fully-generated (bigger lift); grafts Fable's collision-marker idea in</td>
+  <td class="empty"><span class="dash">&mdash;</span> (gives per-finding rewrites, no mechanism opinion)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R9</span>Guard must check negative claims TRUE, not just present</td>
+  <td>Required</td>
+  <td>Functionally does this (fails build if a persona denies a LIVE field)</td>
+  <td>"Truth resolution" check: allowlisted absence must exist in the registry and its collision markers must not appear in the rendered sheet</td>
+  <td>Adopted into guard v2</td>
+  <td>Assumed as the guard's baseline</td>
+</tr>
+<tr>
+  <td><span class="refnum">R10</span>Guard must scan the whole file, not just <code class="inline">## Inputs</code>&rarr;<code class="inline">## Output</code></td>
+  <td>Required</td>
+  <td>Scans all persona files (implicit)</td>
+  <td>Explicit "(a) whole-file scan"</td>
+  <td>Adopted &mdash; "scanning the whole persona, not <code class="inline">## Inputs</code> alone"</td>
+  <td>Confirms the window blind spot; endorsed as baseline</td>
+</tr>
+<tr>
+  <td><span class="refnum">R11</span>Guard must also cover the overlay generator (map demands &rarr; field_state keys)</td>
+  <td>Required addition &mdash; same pattern as <code class="inline">_CLAIMED_REAL_INPUTS</code></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>"(e) Overlay arbitration" test &mdash; unmapped demand fails</td>
+  <td>Adopted (guard v2 item 3)</td>
+  <td class="empty"><span class="dash">&mdash;</span> (handles it as a forbidden-phrase check instead, see #16 row)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R12</span>Collision markers &mdash; a future field ships, an absence claim goes red automatically</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Originated the idea</strong> &mdash; <code class="inline">collision_markers</code> field on every <code class="inline">AbsentItem</code></td>
+  <td>Explicitly "stolen" into the R1 guard &mdash; "the one piece of Fable's design R1 does not preclude"</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R13</span>Guard exhaustive by construction &mdash; every persona file must be mapped, unknown = red</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span> (registry is exhaustive by design, not framed this way)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Originated</strong> (Gap 6) &mdash; inverts "unknown = safe" to "unknown = red"; builds it into Phase 0 of its own plan</td>
+</tr>
+<tr>
+  <td><span class="refnum">R14</span>Guard should document its own authored-mapping blind spot</td>
+  <td>Required &mdash; "so CR219's own lesson isn't re-learned"</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Adopted verbatim (guard v2 item 4)</td>
+  <td>Superseded &mdash; its exhaustiveness fix closes the blind spot rather than just documenting it</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Class B &mdash; instruction fights instruction</td></tr>
+
+<tr>
+  <td><span class="refnum">R15</span><span class="finding-id">#9</span>Technical overlay demands a trend the persona forbids</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Registry's <code class="inline">limit</code> string is the arbiter &mdash; overlay demands "direction over the 64-day window, not a series"</td>
+  <td>Resolved by the Class-A rewrite; add one overlay clause naming the trends the sheet states</td>
+  <td>Same resolution as GLM &mdash; "resolved by Phase 1 #5/#6"</td>
+</tr>
+<tr>
+  <td><span class="refnum">R16</span><span class="finding-id">#10</span>Bull: "end with CONVICTION" vs "write once at top only"</td>
+  <td>Partially a false positive &mdash; two mechanisms sharing vocabulary; disambiguate wording, keep both</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Pick one &mdash; keep the top-of-turn stance line, <strong>delete</strong> the "end with" clause <span class="flag">differs</span></td>
+  <td>Same as Kimi &mdash; disambiguate, don't delete either</td>
+  <td>"Persona loses" &mdash; conviction lives in the stance line, prose says what would raise/lower it (same outcome as Kimi/GLM, different route)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R17</span><span class="finding-id">#11</span>Bull: date-pairing vs no-speculation</td>
+  <td>Bound the rule to the consensus-target line it was written about</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Same as Kimi (Phase 2)</td>
+  <td>Scope the ban to claims &mdash; dating your own inference is honesty, not speculation</td>
+</tr>
+<tr>
+  <td><span class="refnum">R18</span><span class="finding-id">#12</span>Trader: WAIT vs "never skip the stop-loss" <span class="note">(+ the CR doc's "uncommitted hunk" claim was stale &mdash; see Factual corrections below)</span></td>
+  <td>Fix belongs in <code class="inline">trader.md</code> (WAIT/HOLD carve-out), land with the already-correct regex</td>
+  <td>Standardize execution schema in code &mdash; Stop mandatory on BUY only, "N/A" on HOLD/WAIT</td>
+  <td>Fix on the instruction side &mdash; scope the ban to BUY turns; don't extend the regex</td>
+  <td>Confirms Size half fixed at HEAD (CR210 <code class="inline">49380813</code>), Stop half isn't; fix belongs in <code class="inline">trader.md</code></td>
+  <td>Independently found the same stale citation, blind &mdash; re-point it and add to <code class="inline">verify_citations.py</code></td>
+</tr>
+<tr>
+  <td><span class="refnum">R19</span><span class="finding-id">#13&ndash;14</span>Risk Officers: handed operands, forbidden to compute</td>
+  <td>Run one diagnostic convene at HEAD first &mdash; code has moved; don't rewrite blind</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Not a design question &mdash; apply CR179 Leg 4: precompute the drawdown contribution in code</td>
+  <td>Confirms Kimi's read &mdash; residual defect is the overlay naming a size the snapshot didn't compute for</td>
+  <td>Frames as a missing <em>policy</em>, not just missing precomputes &mdash; render the size actually pushed, or state both contributions as labelled AMI figures</td>
+</tr>
+<tr>
+  <td><span class="refnum">R20</span>Should there be a blanket rule: agents never do arithmetic on sheet figures?</td>
+  <td class="empty"><span class="dash">&mdash;</span> (handles #13/14 as isolated instances)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span> (its "every number computed-or-checked" item gestures at this, see beyond-CR219 section)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Originated and ruled</strong> &mdash; global ban + extended precompute pass; AMI mints and labels every derived number, the <code class="inline">Asymmetry</code> line as template</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Class C &mdash; overlay demands data nothing fetches</td></tr>
+
+<tr>
+  <td><span class="refnum">R21</span><span class="finding-id">#15</span>Short/medium-horizon demand (earnings revisions, surprise history, guidance)</td>
+  <td>Decision needed &mdash; delete outright, or back with a real fetch</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Delete</strong> &mdash; replace with registry-backed momentum lines (same move as CR146)</td>
+  <td>Ruling: <strong>back</strong> with real fetches (Phase 3); soften wording in the interim</td>
+  <td><strong>Delete</strong> &mdash; replace with a line the <em>existing</em> data backs, no new fetch proposed <span class="flag">differs from GLM</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R22</span><span class="finding-id">#16</span>"Guidance" demand collides with the sheet's own disclaimer</td>
+  <td class="empty"><span class="dash">&mdash;</span> (folds into #15)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span> (resolved by deleting #15 wholesale)</td>
+  <td>Fold into the guard as a forbidden-phrase check on overlay outputs</td>
+  <td>Same forbidden-phrase mechanism &mdash; "cheap string check, no NLP"</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Class D &amp; E &mdash; surface / lane gaps</td></tr>
+
+<tr>
+  <td><span class="refnum">R23</span>Class D &mdash; 8 downstream agents hold the sheet, briefs never mention it</td>
+  <td>Name the sheet + a "quote, don't re-derive" numbers rule; wants before/after measurement</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Compact grouped-digest block via the registry &mdash; "the acknowledgment Saiful chose"</td>
+  <td>Ruling: name + numbers rule, measured in Phase 2</td>
+  <td>Ship the cheap half now (one line); defer lane-gating behind a golden-set measurement</td>
+</tr>
+<tr>
+  <td><span class="refnum">R24</span>Class E &mdash; 1-on-1 lane gap (Fundamentals gets price-prediction data its persona forbids)</td>
+  <td>Confirmed, cheap fix</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Same mechanism as Class A &mdash; 1-on-1 lines get their own registry entries + a role-boundary clause</td>
+  <td>Lane-gate <code class="inline">build_live_data_block()</code> (Phase 2)</td>
+  <td class="empty"><span class="dash">&mdash;</span> (agrees it's confirmed, no distinct fix given)</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Finding #17 &mdash; primary_goal collected, never branched on</td></tr>
+
+<tr>
+  <td><span class="refnum">R25</span>Wire it, or delete the printed line?</td>
+  <td>Wire it (ruled D4); delete the line as the fallback if not wired</td>
+  <td><strong>Wire</strong> &mdash; advice-level weighted guidance, not hard PM gates</td>
+  <td><strong>Branch</strong> it, not delete &mdash; one overlay line per goal, registry-backed</td>
+  <td>Ruling: wire as weighted guidance; PM keeps holistic gatekeeping</td>
+  <td>Flags it as a CR040 degrade-loudly violation in reverse; ruled: keep printing now, branch soon (Phase 3b)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R26</span>If wired, by what mechanism?</td>
+  <td>Not specified beyond a sketch (income_now &rarr; dividend cover)</td>
+  <td>Concrete <code class="inline">_primary_goal_guidance()</code> function, one text block per goal</td>
+  <td>One overlay line per goal, table of goal &rarr; emphasis for all 6 values</td>
+  <td>Adopts Antigravity's shape with its own text; PM keeps holistic gatekeeping</td>
+  <td>Exhaustive <code class="inline">match</code> over every enum arm &mdash; an unhandled future value must raise, never silently print-and-ignore</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Factual corrections to the base CR doc</td></tr>
+
+<tr>
+  <td><span class="refnum">R27</span>"<code class="inline">pm_self_consistency_samples</code> defaults to 1"</td>
+  <td><strong>Found stale</strong> &mdash; actual default is 5 since CR214; the 19.7% flip rate is a harness property, not a product one</td>
+  <td class="empty"><span class="dash">&mdash;</span> (cites the 19.7% figure at face value)</td>
+  <td class="empty"><span class="dash">&mdash;</span> (its own 05 doc repeats the stale figure) <span class="flag">not caught</span></td>
+  <td>Confirms Kimi's correction; notes Fable's doc still repeats it</td>
+  <td><strong>Independently found the same correction, fully blind</strong> &mdash; strong corroboration</td>
+</tr>
+<tr>
+  <td><span class="refnum">R28</span>"An uncommitted <code class="inline">trader_block_regex</code> hunk"</td>
+  <td>Reviewed with the hunk present; doesn't flag the wording as stale</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Treats it as still uncommitted, consistent with the CR doc <span class="flag">not caught</span></td>
+  <td><strong>Confirms it landed</strong> via CR210 commit <code class="inline">49380813</code> &mdash; stale in the other direction</td>
+  <td><strong>Independently found</strong> it's committed &mdash; re-point the citation, add to the tracked list</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Measurement &amp; the acceptance instrument</td></tr>
+
+<tr>
+  <td><span class="refnum">R29</span>Does citation-rate recovery prove the Room's <em>answer</em> got better?</td>
+  <td><strong>No</strong> &mdash; "measures the wrong half"; proves suppression stopped, not that decisions improved</td>
+  <td class="empty"><span class="dash">&mdash;</span> (treats citation recovery as sufficient)</td>
+  <td>Implicitly agrees (see trail-vs-gate row)</td>
+  <td>Adopts Kimi's framing</td>
+  <td>Most detailed &mdash; citation rate is a proxy for suppression, "the wrong instrument" for evaluation quality</td>
+</tr>
+<tr>
+  <td><span class="refnum">R30</span>Should Acceptance #4 gate the merge, or trail it?</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Trail</strong>, ~1&ndash;2 weeks Alpha traffic, no fixed threshold; no movement = a new finding, not a revert</td>
+  <td class="empty"><span class="dash">&mdash;</span> (inherits via the golden-set framing, not restated)</td>
+  <td>Agrees &mdash; golden set is the instrument, corpus citation "demoted to corroboration" with a stated n target</td>
+</tr>
+<tr>
+  <td><span class="refnum">R31</span>Benchmark / golden-set harness design</td>
+  <td>4&ndash;5 cached archetype profiles; rubric: grounding, mandate adherence, lane discipline, contradiction-free, JSON compliance</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Adopts Kimi's design near-verbatim (Phase 4)</td>
+  <td>Own design: 8&ndash;10 tickers &times; 3 mandates, deterministic scorers, run on <strong>both models</strong> (full battery + incumbent transfer check)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R32</span>PM verdict sampling inside the harness</td>
+  <td>Mirror the production 5-way vote, not single draws (D3)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Adopts Kimi's D3 as Ruling R5</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Data additions</td></tr>
+
+<tr>
+  <td><span class="refnum">R33</span>Interest coverage <span class="note">op. income &divide; interest expense &mdash; #1 arm request, 21&times; from 9/12 agents</span></td>
+  <td>Priority 1 &mdash; zero cost</td>
+  <td>Build it &mdash; function given</td>
+  <td>In scope via the registry, first live proof of the collision-marker mechanism</td>
+  <td>Phase 3 item 1</td>
+  <td>Phase 4, "the free ones"</td>
+</tr>
+<tr>
+  <td><span class="refnum">R34</span>Capex line</td>
+  <td>Priority 2 &mdash; zero cost</td>
+  <td class="empty"><span class="dash">&mdash;</span> (folded into the general pillar)</td>
+  <td>In scope via registry</td>
+  <td>Phase 3 item 1 (bundled)</td>
+  <td>Phase 4, bundled</td>
+</tr>
+<tr>
+  <td><span class="refnum">R35</span>Buyback pacing</td>
+  <td>Priority 3 &mdash; zero cost</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>In scope via registry</td>
+  <td>Phase 3 item 1 (bundled)</td>
+  <td>Phase 4, bundled</td>
+</tr>
+<tr>
+  <td><span class="refnum">R36</span>ATR / volatility for stop sizing <span class="note">Execution Desk sets a mandatory stop with no volatility measure at all</span></td>
+  <td>Priority 6 &mdash; computable from data already fetched</td>
+  <td>Build it &mdash; 14-day ATR function given</td>
+  <td>"Needs a look, not asserted" &mdash; confirm the bar window covers it first</td>
+  <td>Phase 3 item 2</td>
+  <td>Gap 4 &mdash; its sharpest independent finding: "the single most consequential evaluation weakness the evidence surfaced"</td>
+</tr>
+<tr>
+  <td><span class="refnum">R37</span>Historical median multiples (5/10yr P/E, EV/EBITDA) <span class="note">the only gap that demonstrably flipped a verdict</span></td>
+  <td>Priority 4, "highest-value item in the entire folder" &mdash; ruled in scope</td>
+  <td>Build it &mdash; cited as eliminating "coin-toss PM flips"</td>
+  <td><strong>Declared-absent instead</strong> &mdash; not cheaply available; "worth its own future CR" <span class="flag">holds out</span></td>
+  <td>Phase 3 item 3 &mdash; in scope</td>
+  <td class="empty"><span class="dash">&mdash;</span> (not itemized as a distinct build)</td>
+</tr>
+<tr>
+  <td><span class="refnum">R38</span>Debt split: industrial vs. captive finance</td>
+  <td>Ruled to build (D5, against Kimi's own recommendation to just document the limitation) &mdash; SEC filings source</td>
+  <td>Cited as part of the insolvency-panic fix, no build spec given</td>
+  <td><strong>Declared-absent instead</strong> &mdash; the absence note itself is framed as the fix <span class="flag">holds out</span></td>
+  <td>Phase 3 item 5 &mdash; build, scoped to captive-finance-heavy names</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R39</span>Sequencing &mdash; contradiction fixes before new fields?</td>
+  <td><strong>Yes</strong>, explicit rule &mdash; "adding fields while personas still deny existing ones is how CR219 happened"</td>
+  <td class="empty"><span class="dash">&mdash;</span> (no explicit order given)</td>
+  <td>Implicit in its migration order (registry+guard first)</td>
+  <td>Adopts Kimi's rule, restated as "the safety property"</td>
+  <td>Same &mdash; free fields held until after Phase 1&ndash;2 so the citation measurement isn't confounded</td>
+</tr>
+<tr>
+  <td><span class="refnum">R40</span>Scope &mdash; does all data work ride CR219, or split to another CR?</td>
+  <td>Rides CR219, sequenced after contradiction fixes</td>
+  <td>All four pillars under one CR219</td>
+  <td>Free fields fold into CR219; median multiples + debt-structure detail <strong>explicitly deferred</strong> to a future CR <span class="flag">the one holdout</span></td>
+  <td>Ruling: "all in CR219 &mdash; unanimous anyway" <span class="flag">not quite accurate re: Fable</span></td>
+  <td>Ruled: "everything rides CR219. No CR-B, no fast-follow CRs."</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Process &amp; governance</td></tr>
+
+<tr>
+  <td><span class="refnum">R41</span>Undisclosed harness artifact &mdash; <code class="inline">convene_gemini.py</code> hardcodes <code class="inline">LONG_HORIZON</code> while <code class="inline">--horizon</code> varies</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Found</strong> (Gap 1) &mdash; add as a 3rd item in the README's caveats; extend the artifact filter to the 4 affected reports</td>
+  <td class="empty"><span class="dash">&mdash;</span> (outside its verification scope)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R42</span>CR210 measurements (50/69, 47/68) exist only in code comments, no results artifact</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Found</strong> (Overlap 1) &mdash; commit the diffs with a results artifact or the numbers die with the working tree</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R43</span>PM breaks its JSON-only contract under instruction pressure</td>
+  <td>File its own DEF &mdash; DEF067 precedent (~13% parser loss)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Notes the CR's own "Open" item, no new detail</td>
+  <td>Adopts Kimi's recommendation (Phase 0)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R44</span>Sweep the 26 unswept prompts (concierge, Brief Your Agent)</td>
+  <td>Extend the existing scripts rather than writing new ones</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Guard should scan <code class="inline">concierge.md</code> from day one</td>
+  <td>Adopts Kimi's approach</td>
+  <td>Made structural &mdash; a consequence of the exhaustive-by-construction guard, not a manual chore</td>
+</tr>
+<tr>
+  <td><span class="refnum">R45</span>A named target architecture &mdash; what does "done" look like?</td>
+  <td class="empty"><span class="dash">&mdash;</span> <span class="note">(GLM notes this as Kimi's own weak spot)</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span> (its registry doc is architectural but mechanism-scoped)</td>
+  <td><strong>Supplies one</strong> &mdash; 5 properties (True, Coherent, Profiled, Complete, Guarded) + a 6-layer prompt stack</td>
+  <td><strong>Independently supplies its own</strong> &mdash; 5 properties (Grounded, Complete, Calibrated, Adversarial-with-constraints, Accountable) on a convergent 6-layer stack</td>
+</tr>
+<tr>
+  <td><span class="refnum">R46</span>Acceptance #5 "evidence/ regenerates" implies byte-identical output</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Found</strong> &mdash; the cached profile is gitignored and market data moves; reword to "runs clean," not "diff-identical"</td>
+</tr>
+
+<tr class="group-row"><td colspan="6">Beyond CR219 &mdash; further Room-result levers (mostly Fable's second pass)</td></tr>
+
+<tr>
+  <td><span class="refnum">R47</span>Raise PM self-consistency default (production, decision variance)</td>
+  <td class="empty"><span class="dash">&mdash;</span> (only addresses the harness's sampling, row above)</td>
+  <td class="empty"><span class="dash">&mdash;</span> (cites the flip rate as a problem solved by better data instead)</td>
+  <td>Default to n=3 (5 if latency allows) &mdash; <span class="flag">based on the stale "defaults to 1" claim</span>, production is already 5</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R48</span>Thinking mode is verified OFF on the live model &mdash; untapped lever</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Found live</strong> (<code class="inline">reasoning_tokens: 0</code> probed on the vLLM serve) &mdash; measured PM-only experiment, budget re-derived first</td>
+  <td>Adopted as Ruling R5</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R49</span>PM overridden by floor checks (cooldown, over-trading) it never sees</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Add floor-input parity (extend CR069) + a pre-verdict compliance-preview line</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R50</span>Code-generated Room scoreboard (stance/conviction/headline table)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Prepend a compact table to RM/Trader/PM turns; degrade loudly on missing envelopes</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R51</span>Partial-outage honesty (count/disclose/cap scripted fallbacks)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Extend DEF059's total-outage rule to the partial case; force PASS above a threshold</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R52</span>"What would change this call" kill-criterion field on the verdict</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Bounded PM JSON field naming the disconfirming evidence</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R53</span>Permanent DATA GAPS telemetry tail on analyst turns</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Institutionalize the arms' gap-report as a standing structured tail, logged offline</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R54</span>Standing replay eval harness across prompt CRs</td>
+  <td class="note" style="font-style:normal">Converges narrowly &mdash; its benchmark harness is CR219-scoped, not a standing tool</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Promote CR219/CR210 scripts into <code class="inline">scripts/room_eval/</code>, prerequisite for the thinking experiment and future CRs</td>
+  <td class="note" style="font-style:normal">Converges narrowly, same as Kimi</td>
+  <td class="note" style="font-style:normal">Its golden set is CR219-scoped, not framed as permanent</td>
+</tr>
+<tr>
+  <td><span class="refnum">R55</span>Verdict-outcome ledger (internal calibration floor)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Persist every verdict, auto-score at matched horizon vs. later prices &mdash; internal-only, never a performance claim</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R56</span>Mandate-utilization guard &mdash; <code class="inline">drawdown_response</code> / <code class="inline">regret_asymmetry</code> are also dead fields</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td><strong>Verified</strong> &mdash; same dead-field shape as #17; wants a unit test asserting every Mandate field branches or is explicitly registered narration-only</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R57</span>Stance-envelope grammar tension (force emission vs. keep it a measurement channel)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Leave it until the scoreboard exists; flags the tension against DEF251/CR210's pinned decisions</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R58</span>Debate-order randomization (Bull always speaks before Bear)</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Cheap experiment &mdash; seed order per run id, replay the corpus, compare distributions</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R59</span>Audit: every number the user reads is computed or checked in code</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Extend RO precompute with per-rung dollar risk; enumerate every verdict-card numeric and its source</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="note" style="font-style:normal">Converges via its own derivation-policy ruling (Class B row above), framed inside CR219 rather than beyond it</td>
+</tr>
+<tr>
+  <td><span class="refnum">R60</span>"What changed since your last convene" delta line</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Code-built delta line on re-convenes; pairs with the kill-criterion field</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+<tr>
+  <td><span class="refnum">R61</span>News headlines are untrusted input &mdash; verify they're framed as quoted data</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td>Cheap check + fixture, "data not instructions" hygiene applied to headline text</td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+  <td class="empty"><span class="dash">&mdash;</span></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<footer class="foot">
+  <h2>Reading notes</h2>
+  <ul>
+    <li><strong>GLM is a synthesis, not a sixth independent opinion</strong> &mdash; it explicitly read Kimi, Antigravity and Fable before writing, and several of its cells above record a ruling reached during that reconciliation (Saiful's R1&ndash;R5) rather than a cold take. Treat agreement between GLM and any one of the other three with that in mind.</li>
+    <li><strong>Antigravity's authorship is uncertain.</strong> The package self-identifies as "Kimi (Track K) / Antigravity AI," but reads stylistically distinct from the standalone Kimi package &mdash; different session tag, no <code class="inline">AT:K1</code>/<code class="inline">AT:K2</code> marker, more prescriptive tone with ready-to-paste code. Worth confirming which model actually ran inside Antigravity for this one.</li>
+    <li><strong>QWEN was deliberately blind</strong> to the other four packages. Where it lands on the same correction as Kimi/GLM without having read them (the two stale CR-doc facts), that is the strongest corroboration signal in the set.</li>
+    <li>Rows marked <span class="flag">flag</span> are places where reviewers land on genuinely different answers, or where a claim doesn't hold up against another reviewer's fact-check &mdash; not errors on my part, just where the five disagree or one missed something the others caught.</li>
+  </ul>
+</footer>
+
+</div>
