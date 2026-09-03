@@ -86,11 +86,11 @@ CR040 failure this whole CR is chasing.)
 ## Field-by-field classification: where this module's rows come from
 
 Classified per the audit's §2.1-§2.4 inventory tables, kept current as each
-phase-2 lane lands. `time_horizon_days` is recorded `LLM_UNVERIFIED` (F4)
-because that is the truth as of now — its plausibility-band fix is lane B2's
-job, not this module's, and this registry is a record of current provenance,
-not a prediction of a future one. Upgrade it the same way F2 was upgraded
-below, in the same commit that lands the fix.
+phase-2 lane lands. Two upgrades so far, both the welcome direction of check
+2 (no-silent-downgrade) — each is a fix landing in a DIFFERENT lane's file,
+so this module's own job on each was reading the real diff and writing an
+honest citation, never assuming the row should move just because a fix was
+announced.
 
 F2's `key_number` / `decisive_number` were originally recorded here as
 `LLM_UNVERIFIED`, written concurrently with lane A2's own in-flight,
@@ -100,13 +100,47 @@ time. **Lane A2 landed** (commit `0f9cc06d`, CR219 R59-F2):
 `_quotation_check` (via `_annotated_if_unverified`) **unconditionally** — not
 behind an opt-in flag, per that module's own "on by default — this is a fix,
 not an opt-in feature" — before either field renders, so both rows are now
-`CODE_CHECKED` below. This is check 2 (no-silent-downgrade) firing in the
-welcome direction: an upgrade from `LLM_UNVERIFIED` to `CODE_CHECKED` is never
-blocked by `test_no_silent_downgrade_pin` (it pins only rows moving TOWARD
-`LLM_UNVERIFIED`), and needed no relaxation of that test's guarantee — only
-its complementary exact-set pin, `test_llm_unverified_rows_match_the_audit_
-today`, needed its `expected_unverified` set updated to drop the two rows
-that just left it, which is a factual correction, not a loosened bound.
+`CODE_CHECKED` below.
+
+F4's `time_horizon_days` was originally recorded `LLM_UNVERIFIED` — parsed
+with no range check at all. **Lane B2 landed** (commit `0ab65a8b`, CR219
+R59-F4): `_parse_pm_verdict` now clamps a stated horizon to `[1, 365]`
+inline (365 mirrors `_MAX_EVIDENCED_HORIZON_DAYS`, the widest window the
+fact sheet carries) and discloses the clamp in `reason` — the same
+clamp-and-disclose shape `size_pct` already used, cited by the same
+enclosing-function pattern (`_parse_pm_verdict` has no standalone named
+clamp callable, exactly like the `stop`/`target` rows above it). Now
+`CODE_CHECKED` below.
+
+Both upgrades: never blocked by `test_no_silent_downgrade_pin` (it pins only
+rows moving TOWARD `LLM_UNVERIFIED`) and needed no relaxation of that test's
+guarantee — only its complementary exact-set pin,
+`test_llm_unverified_rows_match_the_audit_today`, needed its
+`expected_unverified` set updated to drop the rows that left it, which is a
+factual correction, not a loosened bound. As of the B2 upgrade, the registry
+carries **zero** `LLM_UNVERIFIED` rows — every numeric this module tracks is
+either COMPUTED or CODE_CHECKED today. That is a snapshot, not a ceiling: a
+new numeric field ships `LLM_UNVERIFIED` all the time (it is a passing row,
+by design — see "What this guard deliberately does not do" above), and the
+guard's job was never to make that count zero, only to make it visible. Read
+zero as "nothing currently tracked is unverified", not as "nothing in the
+Room is" — F1, F3 and the rest of the audit's prose-surface findings are
+outside what a field registry can see at all, per that same section.
+
+**`reference_price` and `next_convene_delta` are check 1 working, not check
+2.** CR219 R60 (commit `97a7a679`, "the delta line") shipped two new numeric
+fields on `Verdict` after this module's first version — neither is in the
+audit's own §2.1 table, because the audit predates the field. Check 1's
+exhaustiveness walk caught both as a genuine local red-fail the next time
+this module's own test suite ran, exactly the mechanism this whole guard
+exists to provide: a schema that grew a numeric field nobody had classified
+failed the build until someone did. Both are classified `COMPUTED` by
+reading `room_runner._reference_close` and `room_runner.
+_build_next_convene_delta` directly — pure code, zero LLM involvement at any
+point, matching `NextConveneDelta`'s own docstring ("built entirely in
+code"). This is the guard's central promise proving itself on a field this
+module's author never anticipated, not a defect in the audit or in this
+registry's earlier state.
 """
 
 from __future__ import annotations
@@ -182,10 +216,13 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "in code at entry * 1.13 and disclosed in `reason`",
     ),
     ("verdict", "time_horizon_days"): ProvenanceRow(
-        Provenance.LLM_UNVERIFIED,
-        "R59 audit F4 — app.services.room_runner._parse_pm_verdict parses "
-        "horizon_days with no range check; fix is lane B2 (a plausibility "
-        "band mirroring _level_is_implausible), not yet landed as of this row",
+        Provenance.CODE_CHECKED,
+        "app.services.room_runner._parse_pm_verdict — LLM-stated, then "
+        "clamped inline to the plausible band [1, 365] (CR219 R59-F4, commit "
+        "0ab65a8b; 365 mirrors _MAX_EVIDENCED_HORIZON_DAYS, the widest window "
+        "the fact sheet carries) and disclosed in `reason` on a clamp. Same "
+        "enclosing-function citation pattern as the size_pct/entry rows "
+        "above — the clamp is inline with no standalone named callable",
     ),
     ("verdict", "approve_votes"): ProvenanceRow(
         Provenance.COMPUTED,
@@ -201,6 +238,33 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         Provenance.COMPUTED,
         "app.services.room_runner._compute_agent_text — counted in code from "
         "its nested _fall_back_to_script fallback path",
+    ),
+    # CR219 R60 (commit 97a7a679) shipped AFTER this module's first version —
+    # neither row is in the audit's own §2.1 table. Found by check 1's
+    # exhaustiveness walk firing for real, not by re-reading the audit; both
+    # classified by reading room_runner.py directly, same discipline as every
+    # other row here. See this module's docstring for the "what a red-fail
+    # from a genuinely new field looks like" note this pair now backs.
+    ("verdict", "reference_price"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.room_runner._reference_close — reads profile['last_close'] "
+        "directly, gated on a LIVE technicals field_state entry; zero LLM "
+        "involvement. Assigned onto the verdict at bank time, room_runner.py's "
+        "COMPLETED-run branch (line ~5517 as of this row)",
+    ),
+    ("verdict", "next_convene_delta"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.room_runner._build_next_convene_delta — pure arithmetic "
+        "on two already-fetched reference prices "
+        "(price_move_pct = (this - prior) / prior * 100) and a set "
+        "difference over two sheet_state maps; the PM never composes this, it "
+        "is injected as a fact (schemas/room.py's NextConveneDelta docstring: "
+        "'built entirely in code'). One row for the whole nested object, same "
+        "structure.* precedent as the row above: NextConveneDelta's own "
+        "changed_fields is a list[SheetFieldTransition], and "
+        "SheetFieldTransition has zero numeric leaves (field/from_state/"
+        "to_state are all str) — so the only numeric leaf in the whole "
+        "subtree is price_move_pct, computed the same way",
     ),
     (
         "verdict", "structure",

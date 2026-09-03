@@ -168,10 +168,22 @@ _PINNED_NOT_LLM_UNVERIFIED: dict[tuple[str, str], Provenance] = {
     ("verdict", "entry"): Provenance.CODE_CHECKED,
     ("verdict", "stop"): Provenance.COMPUTED,
     ("verdict", "target"): Provenance.COMPUTED,
+    # CR219 R59-F4 landed (commit 0ab65a8b): _parse_pm_verdict now clamps a
+    # stated horizon to [1, 365] inline and discloses the clamp in `reason`
+    # — moved from LLM_UNVERIFIED (see the emptied expected_unverified in
+    # test_llm_unverified_rows_match_the_audit_today below) to CODE_CHECKED.
+    ("verdict", "time_horizon_days"): Provenance.CODE_CHECKED,
     ("verdict", "approve_votes"): Provenance.COMPUTED,
     ("verdict", "samples"): Provenance.COMPUTED,
     ("verdict", "scripted_turns"): Provenance.COMPUTED,
     ("verdict", "structure"): Provenance.COMPUTED,
+    # CR219 R60 (commit 97a7a679) shipped these two AFTER this test file's
+    # first version — found by test_every_numeric_verdict_and_costed_
+    # structure_field_is_registered firing for real, not anticipated. Both
+    # are pure code (room_runner._reference_close / _build_next_convene_delta,
+    # zero LLM involvement) — see numeric_provenance.py's docstring.
+    ("verdict", "reference_price"): Provenance.COMPUTED,
+    ("verdict", "next_convene_delta"): Provenance.COMPUTED,
     ("costed_structure", "contracts"): Provenance.COMPUTED,
     ("costed_structure", "days_to_expiry"): Provenance.COMPUTED,
     ("costed_structure", "legs"): Provenance.COMPUTED,
@@ -222,20 +234,17 @@ def test_no_silent_downgrade_pin():
 def test_llm_unverified_rows_match_the_audit_today():
     """The complement of the pin above: today's known-unverified rows, by
     name, so a row silently disappearing from the registry (rather than being
-    reclassified) is caught too. F4's time_horizon_days is recorded here
-    because that is what the code does as of this module. F2's key_number /
-    decisive_number are NOT in this set any more — lane A2 landed (commit
-    0f9cc06d): `_quotation_check` now runs unconditionally in
-    render_risk_assessment/render_officer_turns, so both moved to
-    CODE_CHECKED (see `_PINNED_NOT_LLM_UNVERIFIED` above) in the same commit
-    that updated this set. This is a factual correction to match the new
-    ground truth, not a relaxation of the no-silent-downgrade guarantee that
-    lives in `test_no_silent_downgrade_pin` above — that test's own
-    guarantee only binds the harmful direction and was never touched by this
-    upgrade."""
-    expected_unverified = {
-        ("verdict", "time_horizon_days"),
-    }
+    reclassified) is caught too. Empty as of the F4 upgrade — see
+    `test_registry_currently_carries_zero_llm_unverified_rows` below for what
+    that does and does not mean. F2's key_number/decisive_number left this
+    set when lane A2 landed (commit 0f9cc06d); F4's time_horizon_days left it
+    when lane B2 landed (commit 0ab65a8b) — both moved to CODE_CHECKED (see
+    `_PINNED_NOT_LLM_UNVERIFIED` above) in the same commit that updated this
+    set. Each removal is a factual correction to match new ground truth, not
+    a relaxation of the no-silent-downgrade guarantee that lives in
+    `test_no_silent_downgrade_pin` above — that test's own guarantee only
+    binds the harmful direction and was never touched by either upgrade."""
+    expected_unverified: set[tuple[str, str]] = set()
     actual_unverified = {
         key for key, row in NUMERIC_PROVENANCE.items()
         if row.provenance is Provenance.LLM_UNVERIFIED
@@ -246,6 +255,27 @@ def test_llm_unverified_rows_match_the_audit_today():
         "appearing in _PINNED_NOT_LLM_UNVERIFIED above means it vanished from "
         "the registry rather than being reclassified — check "
         "NUMERIC_PROVENANCE directly."
+    )
+
+
+def test_registry_currently_carries_zero_llm_unverified_rows():
+    """The headline this module's docstring calls out explicitly: every
+    numeric field this registry tracks is COMPUTED or CODE_CHECKED today (F2
+    and F4 both landed). Read this literally, not expansively — it is a
+    snapshot of what THIS registry tracks (Verdict/CostedStructure numeric
+    fields, plus risk_rung and stance_envelope), not a claim that every
+    number in the Room is verified. F1, F3 and the rest of the audit's
+    prose-surface findings sit entirely outside what a field registry can
+    see (see this module's 'What this guard deliberately does not do'), and
+    a brand-new numeric field ships LLM_UNVERIFIED all the time — that is a
+    PASSING row, by design. This test pins TODAY'S count; it does not, and
+    must not be read to, assert a ceiling of zero forever."""
+    unverified = [k for k, row in NUMERIC_PROVENANCE.items() if row.provenance is Provenance.LLM_UNVERIFIED]
+    assert unverified == [], (
+        f"expected zero LLM_UNVERIFIED rows, found {unverified} — either a "
+        "fix regressed, or this test is stale and should be updated (with "
+        "test_llm_unverified_rows_match_the_audit_today above) in the same "
+        "commit that reclassifies a row"
     )
 
 
