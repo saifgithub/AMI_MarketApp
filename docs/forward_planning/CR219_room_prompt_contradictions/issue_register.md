@@ -75,7 +75,7 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R21 | #15 Short/medium-horizon demand (earnings revisions, surprise history, guidance) | **RULED 2026-09-02** | **Back with real fetches, inside CR219** (GLM track upheld; QWEN/Fable delete position overruled). Field ships first (`dev_instructions/WP06` R21-DATA), demand text aligned after (`WP04`); "guidance" stays out of the demand per R22 | K,F,G,Q | ☐ |
+| R21 | #15 Short/medium-horizon demand (earnings revisions, surprise history, guidance) | **RULED 2026-09-02** | **Back with real fetches, inside CR219** (GLM track upheld; QWEN/Fable delete position overruled). Done: fields `ecb8f199` (eps_trend + earnings_history — NOT earnings_dates, needs uninstalled lxml), demand aligned `955349bc` ("guidance" dropped, guard carry-list deleted, R11 mapping resolves every phrase) | K,F,G,Q | ☑ |
 | R22 | #16 "Guidance" demand collides with the sheet's own disclaimer | CONVERGENT | Fold into the guard as a forbidden-phrase check on overlay_generator outputs | G,Q | ☑ (check built; the one live violation is carried in `KNOWN_R22_VIOLATIONS_PENDING_WP03` — deleting the demand at `overlay_generator.py:447` is WP03's, and the guard's vacuity test goes red the moment it does, forcing the carry-list empty) |
 
 ## Class D & E — surface / lane gaps
@@ -112,14 +112,14 @@ per-row build instructions for every item live in [`dev_instructions/`](dev_inst
 
 | Ref | Issue | Status | Disposition | Reviewers | Build |
 |---|---|---|---|---|---|
-| R33 | Interest coverage (free) | CONVERGENT | Build — zero network cost, #1 arm request (21× from 9/12 agents) | K,A,F,G,Q | ☐ |
-| R34 | Capex line (free) | CONVERGENT | Build — already implicit in rendered FCF | K,F,G,Q | ☐ |
-| R35 | Buyback pacing (free) | CONVERGENT | Build — four-quarter series already fetched and discarded | K,F,G,Q | ☐ |
-| R36 | ATR / volatility for stop sizing | CONVERGENT | Build — computable from daily bars already fetched. Fable: confirm the bar window covers 14+ sessions first | K,A,F,G,Q | ☐ |
-| R37 | Historical median multiples (5/10yr P/E, EV/EBITDA) | **RULED 2026-09-02** | **Build in CR219** (Fable's defer dissent overruled). Window labeled honestly (~4–5y from yfinance, not 10). Build: `dev_instructions/WP06_data_additions.md` | K,A,F,G | ☐ |
-| R38 | Debt split: industrial vs. captive finance | **RULED 2026-09-02** | **Build in CR219** — SEC/EDGAR source accepted as a new dependency; design note first, degrade-loudly flag. Build: `dev_instructions/WP06_data_additions.md` | K,A,F,G | ☐ |
-| R39 | Sequencing — contradiction fixes before new fields? | CONVERGENT | Yes — guard + persona fixes land before any new field, every reviewer who addressed it agrees | K,F,G,Q | ☐ |
-| R40 | Scope — does all data work ride CR219, or split to another CR? | RESOLVED 2026-09-02 | All data work rides CR219 — the R37/R38 exception dissolved when both were ruled in. (R55's outcome ledger remains the one explicit split-out.) | K,A,F,G,Q | ☐ |
+| R33 | Interest coverage (free) | CONVERGENT | Build — zero network cost, #1 arm request (21× from 9/12 agents). Done `ab9decb2` | K,A,F,G,Q | ☑ |
+| R34 | Capex line (free) | CONVERGENT | Build — already implicit in rendered FCF. Done `a841ac13` (explicit line; R20 forbids reverse-engineering it) | K,F,G,Q | ☑ |
+| R35 | Buyback pacing (free) | CONVERGENT | Build — four-quarter series already fetched and discarded. Done `c7c40213` | K,F,G,Q | ☑ |
+| R36 | ATR / volatility for stop sizing | CONVERGENT | Build — computable from daily bars already fetched. Fable: confirm the bar window covers 14+ sessions first. Done `a4459b01` (window confirmed ~65 sessions; Trader+RO lanes only) | K,A,F,G,Q | ☑ |
+| R37 | Historical median multiples (5/10yr P/E, EV/EBITDA) | **RULED 2026-09-02** | **Build in CR219** (Fable's defer dissent overruled). Window labeled honestly (~4–5y from yfinance, not 10). Done `d3943aa5` (own-history medians, window+year-count keys ride each half; peer-basket denial R7 stays true — marker did not fire) | K,A,F,G | ☑ |
+| R38 | Debt split: industrial vs. captive finance | **RULED 2026-09-02**, code gated on note acknowledgment | Design note landed `ecbbd4b7` (`dev_instructions/R38_edgar_design_note.md`) with a scope-shrinking finding: no new endpoint — the segment data is already in the `companyfacts` payload the existing ingest discards; needs a dimensional parser. CODE waits for the note's acknowledgment at a daily review | K,A,F,G | ☐ |
+| R39 | Sequencing — contradiction fixes before new fields? | CONVERGENT | Yes — guard + persona fixes land before any new field, every reviewer who addressed it agrees. Honored: WP01–WP03 merged 2026-09-02 before the first field (`ab9decb2`, 2026-09-03) | K,F,G,Q | ☑ |
+| R40 | Scope — does all data work ride CR219, or split to another CR? | RESOLVED 2026-09-02 | All data work rides CR219 — the R37/R38 exception dissolved when both were ruled in. (R55's outcome ledger remains the one explicit split-out.) Enacted: all fields shipped in-CR; R38's code is the one piece pending its gate | K,A,F,G,Q | ☑ |
 
 ## Process & governance
 
