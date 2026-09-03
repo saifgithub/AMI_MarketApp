@@ -1,6 +1,6 @@
 {
  "arm": "grammar",
- "url": "http://192.168.20.74:8000/v1/chat/completions",
+ "url": "http://192.168.20.74:8048/v1/chat/completions",
  "model": "ami-llm",
  "surfaces": [
   "S4",
@@ -21,6 +21,6 @@
  "concurrency": 4,
  "n": 197,
  "hit_budget": 0,
- "elapsed_min": 7.0,
- "finished_utc": "2026-08-27T18:15:57Z"
+ "elapsed_min": 27.1,
+ "finished_utc": "2026-09-03T05:14:18Z"
 }
