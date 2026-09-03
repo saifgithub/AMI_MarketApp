@@ -49,13 +49,34 @@ def test_the_line_carries_the_series_the_median_and_the_basis() -> None:
     assert "FY2025 41.7% · FY2024 55.4% · FY2023 53.0% · FY2022 42.3%" in line
     assert "4-year median 47.6%" in line
     assert "currently 41.7%" in line
-    assert "net income over year-end equity" in line
+    assert "each year net income over year-end equity" in line
 
 
 def test_the_median_still_renders_without_a_current_figure() -> None:
     line = roe_history_line(_YEARS, _ROE, _MEDIAN, None)
     assert "4-year median 47.6%" in line
     assert "currently" not in line
+
+
+def test_a_divergent_vendor_roe_is_named_not_labelled_with_the_series_basis() -> None:
+    """The measured CAT case: 57.0% vendor against FY2025's filed 41.7%.
+
+    The first version of this line appended `currently 57%` and then closed
+    with "net income over year-end equity", which is the series' basis and not
+    the vendor figure's — DEF400's shape on a second field. It survived because
+    THIS fixture used to pass 41.7 for both, so the divergent case never ran.
+    """
+    line = roe_history_line(_YEARS, _ROE, _MEDIAN, 57.0)
+    assert "currently 57.0%" not in line
+    assert "vendor TTM ratio on an undisclosed equity basis" in line
+    assert "FY2025's 41.7% is what the filed statements support" in line
+
+
+def test_a_current_figure_inside_the_band_still_reads_as_agreement() -> None:
+    """1.5 points is drift, not a different basis — do not cry divergence."""
+    line = roe_history_line(_YEARS, _ROE, _MEDIAN, 43.2)
+    assert "currently 43.2%" in line
+    assert "vendor TTM ratio" not in line
 
 
 def test_two_years_is_not_a_cycle() -> None:

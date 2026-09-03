@@ -1715,6 +1715,12 @@ def cost_of_debt_line(
 
 _FCF_BASIS_DIVERGENCE_PCT = 2.0
 
+# ROE is a percentage already, so this is percentage POINTS, not a relative
+# drift like the FCF threshold above. 2.0 points is wide enough that a rounding
+# difference or one quarter of drift reads as agreement, and narrow enough that
+# CAT's measured 15.3-point gap cannot.
+_ROE_BASIS_DIVERGENCE_PCT = 2.0
+
 
 def _signed_millions(value: float) -> str:
     return f"{'-' if value < 0 else '+'}${abs(value):,.0f}M"
@@ -1817,9 +1823,21 @@ def roe_history_line(
     against a 47.6% four-year median and an outstanding one against a 20% one,
     and a point-in-time ratio cannot say which.
 
-    Net income over YEAR-END equity, the same basis as the `return_on_equity`
-    the sheet already carries, so the current figure and the median are the
-    same measurement at different times rather than two ratios sharing a name.
+    Every figure in the SERIES is net income over year-end equity, computed
+    from the filed statements. `current` is the sheet's own `return_on_equity`,
+    which is NOT that: it is `.info`'s vendor ratio, TTM net income over an
+    equity basis the vendor does not state. Measured on CAT 2026-09-03 the two
+    read 41.7% and 57.0% at the same instant — vendor TTM income $10,844M
+    against FY2025's filed $8,884M, a 22% gap in the numerator alone.
+
+    An earlier version of this line appended `currently {current}%` and then
+    closed with "net income over year-end equity", applying the series' basis
+    as a label to a number that does not have it — DEF400's shape on a second
+    field, and the exact "two ratios sharing a name" this line exists to stop.
+    Its test fixture passed 41.7 for both, so the divergent case never ran.
+
+    So the current figure is carried only with its divergence named, the same
+    way `cashflow_bridge_line` carries the vendor FCF it cannot reconcile.
     """
     if not years or not values or median is None or len(values) < 3:
         return None
@@ -1828,8 +1846,16 @@ def roe_history_line(
         f"{len(values)}-year median {median}%"
     ]
     if current is not None:
-        parts.append(f"currently {current}%")
-    parts.append("net income over year-end equity")
+        drift = abs(current - values[0])
+        if drift > _ROE_BASIS_DIVERGENCE_PCT:
+            parts.append(
+                f"the {current}% stated above is a vendor TTM ratio on an "
+                f"undisclosed equity basis; FY{years[0]}'s {values[0]}% is what "
+                f"the filed statements support"
+            )
+        else:
+            parts.append(f"currently {current}%")
+    parts.append("each year net income over year-end equity")
     return _labelled("Return on equity history", live, parts)
 
 
