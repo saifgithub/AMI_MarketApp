@@ -166,6 +166,13 @@ _FUND_SENTINEL: dict = {
     "wc_receivables_ttm": -1600,
     "wc_inventory_ttm": -400,
     "wc_payables_ttm": 900,
+    # CR221 C2/C5 — the annual series. Deliberately three years, not four:
+    # three is the render's floor, so the sentinel sits ON the boundary rather
+    # than comfortably inside it. Years chosen far from any other fingerprint.
+    "fcf_history_years": ["2019", "2018", "2017"],
+    "fcf_history": [3210, 3120, 3030],
+    "capex_history": [1000, 1010, 1020],
+    "fcf_conversion_pct": [45, 52, 61],
     # CR219 R37 — today's price/EV against each of the last several FYs' own
     # EPS/EBITDA, median'd. Values chosen not to collide with any other
     # fingerprint here; window strings distinct per direction.
@@ -598,6 +605,29 @@ def _fake_statement_frames():
     return income, cashflow
 
 
+def _fake_annual_cashflow():
+    """CR221 C2/C5 — annual OCF and capex, on `_fake_annual_income_stmt`'s
+    own fiscal-year columns so the two frames join on period.
+
+    Same oldest-column-NaN shape as the income frame beside it: four usable
+    years out of five columns, so the render's "4-year average" is measured
+    rather than assumed. FCF per year is OCF - capex = 3,210 / 3,120 / 3,030 /
+    2,940, and the fifth year is dropped by BOTH frames, which is what makes
+    the conversion join provable rather than coincidental.
+    """
+    import pandas as pd
+
+    fy_periods = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31"]
+    return pd.DataFrame(
+        [
+            [4.21e9, 4.12e9, 4.03e9, 3.94e9, float("nan")],    # Operating Cash Flow
+            [-1e9, -1e9, -1e9, -1e9, float("nan")],            # Capital Expenditure
+        ],
+        index=["Operating Cash Flow", "Capital Expenditure"],
+        columns=fy_periods,
+    )
+
+
 def _fake_annual_income_stmt():
     """CR219 R37 — `tk.income_stmt` (ANNUAL — distinct from `quarterly_income_stmt`
     above), for the own-history median multiples.
@@ -618,8 +648,11 @@ def _fake_annual_income_stmt():
         [
             [14305.0, 16038.0, 15705.0, 11414.0, float("nan")],  # EBITDA
             [18.81, 22.05, 20.12, 12.64, float("nan")],          # Diluted EPS
+            # CR221 C5 — the conversion denominator. Chosen so each year's
+            # FCF/NI lands on its own two-digit fingerprint: 45/52/61/72%.
+            [7.133e9, 6.0e9, 4.967e9, 4.083e9, float("nan")],    # Net Income
         ],
-        index=["EBITDA", "Diluted EPS"],
+        index=["EBITDA", "Diluted EPS", "Net Income"],
         columns=fy_periods,
     )
 
@@ -689,6 +722,11 @@ def _fake_yfinance_module() -> types.SimpleNamespace:
             # CR219 R37 — the annual sibling, real yfinance's actual property
             # name (distinct from `quarterly_income_stmt` above).
             income_stmt=_fake_annual_income_stmt(),
+            # CR221 C2/C5 — the ANNUAL cash-flow sibling (distinct from
+            # `quarterly_cashflow` above). Without it the C2/C5 branch never
+            # fires and this guard would pass knowing nothing about four more
+            # fields — the failure `_fake_statement_frames`' docstring names.
+            cashflow=_fake_annual_cashflow(),
         ),
     )
 
@@ -706,6 +744,8 @@ def env(monkeypatch):
     # with the flag off this guard would report them unrendered. On is also the
     # state the guard is for: it proves each one reaches the sheet.
     monkeypatch.setattr(settings, "room_cashflow_bridge_enabled", True)
+    monkeypatch.setattr(settings, "room_fcf_history_enabled", True)
+    monkeypatch.setattr(settings, "room_fcf_conversion_enabled", True)
 
     # 1) Discover the fundamentals produced-field set from the REAL fetcher driven
     #    by a fake yfinance that answers every key — BEFORE we stub the fetcher.
@@ -846,6 +886,13 @@ def env(monkeypatch):
             "wc_receivables_ttm": "receivables -$1,600M",
             "wc_inventory_ttm": "inventory -$400M",
             "wc_payables_ttm": "payables +$900M",
+            # CR221 C2/C5 — the series and the two derived averages. Each
+            # list fingerprints on its own first element, and the averages
+            # are asserted separately in the item's own test file.
+            "fcf_history_years": "FY2019",
+            "fcf_history": "$3,210M",
+            "capex_history": "capex FY2019 $1,000M",
+            "fcf_conversion_pct": "FY2019 45% · FY2018 52%",
             # CR219 R37 — three keys per half (median, year-count, window
             # string), each fingerprinted separately so a mix-up between the
             # P/E half and the EV/EBITDA half — or a live median paired with

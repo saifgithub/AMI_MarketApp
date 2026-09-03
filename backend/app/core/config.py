@@ -910,6 +910,15 @@ class Settings(BaseSettings):
     # Manager reasoned from in the CR219 corpus.
     fundamentals_fcf_from_statements_enabled: bool = False
 
+    # CR221 C2 — multi-year free cash flow and capex, with their averages, off
+    # the annual `tk.cashflow` frame. Its own flag from C5's below for the same
+    # per-item attribution reason as A1/A3: two register items, two asks, two
+    # different agents, and §7 has to be able to tell which one it moved.
+    room_fcf_history_enabled: bool = False
+
+    # CR221 C5 — free cash flow as a share of net income, year by year.
+    room_fcf_conversion_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

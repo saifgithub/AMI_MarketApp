@@ -506,6 +506,65 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
                 out["eps_history"] = [v for _, v in usable]
                 out["eps_history_years"] = [p[:4] for p, _ in usable]
 
+    # ── Multi-year FCF, capex and conversion (CR221 C2/C5) ────────────────
+    # Five request lines from four agents, all wanting the same series and
+    # none of them satisfiable from a single TTM figure: *"historical
+    # multi-year averages for free cash flow and capital expenditure"*,
+    # *"free cash flow conversion rate history over the past 5 years"*,
+    # *"FCF as a percentage of net income over time"*.
+    #
+    # `tk.cashflow` is the ANNUAL sibling of the `quarterly_cashflow` frame
+    # this function already holds — the same "one more property on the same
+    # Ticker, no new endpoint" shape as `income_stmt` above, with its own
+    # try/except for the same reason.
+    #
+    # FCF is DERIVED here, never read from the frame's `Free Cash Flow` row,
+    # for DEF400's reason: the two agree on every filer measured, and where a
+    # vendor figure and a subtraction disagree the subtraction is the one that
+    # can be checked. Conversion is withheld for any year whose net income is
+    # not positive — FCF over a loss is a number with no meaning, and printing
+    # -340% next to four honest percentages invites exactly the misreading the
+    # series was added to prevent.
+    try:
+        annual_cash = tk.cashflow
+        cash_periods = [str(c)[:10] for c in annual_cash.columns]
+    except Exception as exc:
+        logger.warn("yfinance_annual_cashflow_error", ticker=ticker, error=str(exc)[:200])
+        annual_cash = None
+        cash_periods = []
+    if annual_cash is not None and cash_periods:
+        annual_ocf = _stmt_series(annual_cash, "Operating Cash Flow",
+                                  "Cash Flow From Continuing Operating Activities")
+        annual_capex = _stmt_series(annual_cash, "Capital Expenditure",
+                                    "Purchase Of PPE")
+        if annual_ocf and annual_capex:
+            years = [
+                (period, round((ocf + capex) / 1_000_000), round(abs(capex) / 1_000_000))
+                for period, ocf, capex in zip(cash_periods, annual_ocf, annual_capex)
+                if ocf is not None and capex is not None
+            ]
+            # Three is the floor for calling something a history. Two points
+            # are a comparison, and an average of two is just their midpoint
+            # wearing a longer word.
+            if len(years) >= 3:
+                out["fcf_history_years"] = [p[:4] for p, _, _ in years]
+                out["fcf_history"] = [fcf for _, fcf, _ in years]
+                out["capex_history"] = [capex for _, _, capex in years]
+                net_income = _stmt_series(
+                    annual_income, "Net Income", "Net Income Common Stockholders",
+                ) if annual_income is not None else None
+                if net_income:
+                    by_period = dict(zip(annual_periods, net_income))
+                    # `fcf` is already whole $M; the income frame is raw
+                    # dollars, so the denominator is scaled to match.
+                    conversion = [
+                        round(fcf / (by_period[period] / 1_000_000) * 100)
+                        if by_period.get(period) and by_period[period] > 0 else None
+                        for period, fcf, _ in years
+                    ]
+                    if sum(c is not None for c in conversion) >= 3:
+                        out["fcf_conversion_pct"] = conversion
+
     # ── Earnings revisions direction (CR219 R21-DATA) ──────────────────────
     # This unblocks WP04-R21's overlay rewrite: the short/medium fundamentals
     # branch demands "earnings revisions, surprise history" and, until this
@@ -1694,6 +1753,83 @@ def cashflow_bridge_line(
     return _labelled("Cash-flow bridge", live, parts)
 
 
+def _series(years: list[str], values: list[int | None], unit: str = "$") -> str:
+    return " · ".join(
+        f"FY{year} " + (f"${value:,.0f}M" if unit == "$" else f"{value}%")
+        for year, value in zip(years, values) if value is not None
+    )
+
+
+def fcf_history_line(
+    years: list[str] | None,
+    fcf: list[int] | None,
+    capex: list[int] | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 C2 — the multi-year series, and the averages the ask named.
+
+    *"Historical multi-year averages for free cash flow and capital
+    expenditure"* — three request lines from three agents, none answerable
+    from the single trailing figure the sheet carried. The averages are
+    computed here rather than left to the reader for CR179 Leg 4's reason
+    (four recurrences have shown a prompt instruction not to calculate is not
+    a control), and the window is stated as the number of years actually
+    usable, never as the number of columns the frame returned — CAT's oldest
+    column is NaN, so a "5-year average" over it would be a 4-year average
+    wearing a longer label.
+
+    Free cash flow here is operating cash flow less capex, said out loud,
+    because the sheet's own FCF figure is a vendor scalar on a basis that
+    reconciles to nothing (DEF400) and two differently-derived FCFs on one
+    sheet must not look like one series.
+    """
+    if not years or not fcf or len(fcf) < 3:
+        return None
+    parts = [
+        f"{_series(years, fcf)} ({len(fcf)}-year average "
+        f"${sum(fcf) / len(fcf):,.0f}M)"
+    ]
+    if capex and len(capex) == len(fcf):
+        parts.append(
+            f"capex {_series(years, capex)} (average ${sum(capex) / len(capex):,.0f}M)"
+        )
+    parts.append("each year operating cash flow less capex")
+    return _labelled("Free cash flow history", live, parts)
+
+
+def fcf_conversion_line(
+    years: list[str] | None,
+    conversion: list[int | None] | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 C5 — free cash flow as a share of net income, year by year.
+
+    *"Historical free cash flow conversion rates (FCF as a percentage of net
+    income over time)"*. The trend is the finding, not the level: Microsoft
+    converts 84% -> 82% -> 70% -> 50% across its capex build-out (measured
+    2026-09-03), which no single year states and no TTM figure can.
+
+    A year whose net income was not positive contributes nothing — the ratio
+    has no meaning over a loss, and one impossible percentage beside three
+    honest ones is read as a series, not as an exception.
+    """
+    if not years or not conversion:
+        return None
+    usable = [(y, c) for y, c in zip(years, conversion) if c is not None]
+    if len(usable) < 3:
+        return None
+    tail = ""
+    omitted = len(years) - len(usable)
+    if omitted:
+        tail = (f"; {omitted} loss-making year"
+                f"{'s' if omitted > 1 else ''} omitted")
+    return _labelled(
+        "FCF conversion", live,
+        [f"{_series([y for y, _ in usable], [c for _, c in usable], unit='%')} "
+         f"of net income{tail}"],
+    )
+
+
 def capital_return_line(
     total_millions: int | None,
     buyback_millions: int | None,
@@ -2342,6 +2478,16 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
                 data.get("wc_inventory_ttm"), data.get("wc_payables_ttm"),
                 data.get("free_cash_flow"), live=False,
             ) if settings.room_cashflow_bridge_enabled else None,
+            # CR221 C2/C5 — same builders, same order, same wording as the
+            # Room sheet (parity rule above), behind the same flags.
+            fcf_history_line(
+                data.get("fcf_history_years"), data.get("fcf_history"),
+                data.get("capex_history"), live=False,
+            ) if settings.room_fcf_history_enabled else None,
+            fcf_conversion_line(
+                data.get("fcf_history_years"), data.get("fcf_conversion_pct"),
+                live=False,
+            ) if settings.room_fcf_conversion_enabled else None,
             # CR219 R33 — same builder, same order, same wording as the Room
             # sheet (parity rule above).
             interest_coverage_line(
