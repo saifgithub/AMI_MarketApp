@@ -617,6 +617,124 @@ reasoning. Plus the cost delta and the recorded-only verdict distribution. The c
 allowed to be **"less than we expected"** — a null on a field is a finding about that field,
 and the negative control is there to make a null readable rather than deniable.
 
+### 7.8 ROUND 1 RESULT — the primary endpoint failed, and the secondary one is decisive
+
+Nine clean convenes: `off` / `debt` / `cash` × short / medium / long, CAT, one profile pickle
+throughout, control arm a flag flip. Stamps `20260903T123617Z`, `20260903T175205Z`,
+`20260903T180639Z`. Reproduce with:
+
+```
+replay.py --score-only 20260903T123617Z 20260903T175205Z 20260903T180639Z
+citations.py --stamp 20260903T123617Z 20260903T175205Z 20260903T180639Z
+outcomes.py  --stamp 20260903T123617Z 20260903T175205Z 20260903T180639Z
+```
+
+#### The primary endpoint is dead at this n, and the negative control is what killed it
+
+| | off | debt | cash | |
+|---|---|---|---|---|
+| **TOTAL data named** | 54 | 56 | 50 | every datum, register-matched or not |
+| A1 maturity ladder | 1 | **0** | 0 | shipped in `debt` |
+| A3 cost of debt | 0 | 0 | 0 | shipped in `debt` — never asked at all in round 1 |
+| C3 cash-flow bridge | 3 | 1 | **0** | shipped in `cash` |
+| C4 working capital | 0 | 1 | **0** | shipped in `cash` |
+| **D1 segment revenue** | 10 | 6 | 4 | **negative control — nothing built** |
+| **A2 captive split** | 7 | 0 | 2 | **negative control — nothing built** |
+
+Every shipped item ends at zero in its own arm. That reads like a clean result and it is not one:
+**the negative control fell further than any treatment.** D1+A2 go 17 → 6 → 6 across arms where
+nothing about segment or captive-finance data changed, a 65% fall in an item that was predicted
+flat. A treated item falling 3 → 0 cannot be attributed to its treatment when the untreated
+control falls 17 → 6 beside it.
+
+§7.6d swapped the control from H2 to D1+A2 *before* this run finished, precisely so the null
+would be readable instead of deniable. It is readable. The primary endpoint reports **no
+measurable demand extinction**.
+
+#### Why it failed — the addendum is rank-limited, not count-limited
+
+The totals are the tell: **54 / 56 / 50**, flat, while individual items swing by 7. The Room does
+not name every gap it has; each agent names its top few, so the addendum is a ranked shortlist
+with a roughly fixed length. Fill one gap and the next one moves up into the slot — the count
+stays, the composition changes. Per-item ask counts are therefore a **zero-sum reallocation**,
+not a census of what is missing, and differencing them across arms measures re-ranking rather
+than satisfaction.
+
+This retroactively justifies §1's own framing. CR219's 127 lines were always "how loud is the
+demand", never "how much data is missing" — that is why this CR deduplicated to 49 items in the
+first place. Round 1 shows the same limit applies to the *differences* between two runs of the
+instrument, not only to its absolute counts.
+
+A second, cheaper reason compounds it. Round 1 is 3 mandates; the banked corpus is 7 convenes
+across 6 mandate arms plus a full live convene. Per-item baselines in the `off` arm are 0–3
+asks, against register line-counts of 14 (A1) and 5 (A3). **A3 was asked zero times in all nine
+convenes**, so the one item whose sourcing verdict this build overturned has no baseline to fall
+from. An endpoint that needs a fall needs a baseline, and at 3 mandates most items do not have one.
+
+#### The secondary endpoint separates cleanly — and DEF400 is the result
+
+| item | arm | cited / 36 turns | cited / agents that asked for it |
+|---|---|---|---|
+| A1 maturity ladder | debt | 1 | **1 / 6** |
+| A3 cost of debt | debt | 2 | **0 / 4** (cited, but by agents that never asked) |
+| C3 cash-flow bridge | cash | 7 | **5 / 6** |
+| C4 working capital | cash | 0 | **0 / 2** |
+
+**DEF400 — the same figure, before and after the fix:**
+
+| figure | off | debt | cash |
+|---|---|---|---|
+| stale `$5,049M` / `200% of FCF` | 5 of 12 agents | 5 of 12 | **0 of 12** |
+| filed `$8,994M` / `112% of FCF` | 0 of 12 | 0 of 12 | **7 of 12** |
+
+Zero overlap in either direction, across 108 turns. Five of twelve agents argued from a wrong
+free-cash-flow number in both untreated arms; none did in the treated arm, and *more* agents
+picked up the correct figure than had picked up the wrong one. This is the one endpoint in the
+whole design that produced perfect separation, and it is not about a new field — it is about a
+field that was already shipped and wrong.
+
+What that wrongness was doing, verbatim from the two untreated arms — `off` and `debt`, both of
+which carry the stale figure: `HEADLINE: Capital returned at 200% of TTM FCF` (short/off,
+long/off, medium/debt), `$5,049M TTM FCF is structurally unsustainable without further debt`
+(short/off), `Capital Destruction via Debt` and `a structural deficit, not a surplus`
+(medium/debt). It reached the verdict — the
+medium/`off` PM wrote *"I raised the size from 2.5% to 2.75% … but capped below the 3.0% hard
+limit due to the 200% capital-return-to-FCF ratio."* In the `cash` arm the same agents write
+`HEADLINE: Capital return 112% of FCF` — still worth saying, no longer an alarm.
+
+#### Recorded, not attributed — and the cost
+
+| arm | convenes | prompt tok | out tok | vs off | verdicts |
+|---|---|---|---|---|---|
+| off | 3 | 152,593 | 11,247 | +0.0% | APPROVE 2, PASS 1 |
+| debt | 3 | 162,098 | 12,564 | **+6.2%** | APPROVE 2, PASS 1 |
+| cash | 3 | 163,944 | 11,918 | **+7.4%** | PASS 2, APPROVE 1 |
+
+Verdicts behave exactly as §7.1 predicted and are reported for the record only. The three arms
+produce 2/1, 2/1 and 1/2 APPROVE/PASS, and the internal approve-vote counts swing 0/5 to 5/5
+within a single arm. One of the three PASSes is an unrelated 4% position-size compliance block.
+Nothing here is attributable to a data field at n=3.
+
+#### How much difference it makes — the answer
+
+1. **Demand: none measurable.** The instrument reallocates asks rather than extinguishing them,
+   and the negative control moved more than every treatment combined. This endpoint should not
+   be re-run at this n; it needs either many more convenes or a different instrument.
+2. **Correctness: decisive.** DEF400 removes a false alarm from 5 of 12 agents with 100%
+   separation, on a field the Room was already using to size positions.
+3. **Use: one of four lines landed.** C3 reached 5 of its 6 askers. A1 reached 1 of 6, A3 reached
+   0 of 4 while being cited twice by agents that never asked, C4 reached 0 of 2.
+4. **Cost: +6–7% prompt tokens** per convene, output flat.
+
+**Ship recommendation, in flag order.** `fundamentals_fcf_from_statements_enabled` (DEF400) and
+`room_cashflow_bridge_enabled` (C3/C4) are earned by this measurement — one fixes a wrong number,
+the other is read by the agents that wanted it and carries the clause explaining the substitution.
+A1 and A3 are correct, cheap and under-used *at this n*; their case rests on the banked corpus
+(14 lines / 6 agents and 5 lines / 4 agents) which round 1 is too small to confirm or refute, so
+they ship with that stated rather than on evidence they do not have. C2/C5/B2 are unmeasured —
+round 2 has not run, and it needs a rebuilt profile pickle since the current one predates those
+keys.
+
 ---
 
 ## 8. Scope
