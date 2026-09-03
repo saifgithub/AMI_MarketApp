@@ -23,7 +23,7 @@ figure that replaced it was cited by 3 — because 200% of free cash flow is
 alarming and 112% is unremarkable, and agents cite what argues. A line that
 lowers citation by removing a false alarm has done its job.
 
-    backend/.venv/bin/python <this>/citations.py --stamp 20260903T123617Z
+    backend/.venv/bin/python <this>/citations.py --stamp 20260903T123617Z 20260903T180639Z
 """
 from __future__ import annotations
 
@@ -83,23 +83,32 @@ def _cited(turns: list[dict], patterns: list[str]) -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--stamp", required=True)
+    ap.add_argument("--stamp", nargs="+", required=True)
     ap.add_argument("--ticker", default="CAT")
     ap.add_argument("--mandates", nargs="+", default=["short", "medium", "long"])
     ap.add_argument("--results", default=RESULTS)
     args = ap.parse_args()
 
     asked_by = _asking_agents()
+    # Newest stamp wins per (mandate, arm): a re-run replaces the cell it re-ran,
+    # it does not add a second copy of it. Same rule as replay.py's `_banked`.
     loaded: dict[tuple[str, str], list[dict]] = {}
-    for mandate in args.mandates:
-        for arm in ("off", "debt", "cash", "history"):
-            path = os.path.join(
-                args.results, f"{args.stamp}_{args.ticker}_{mandate}_{arm}.json")
-            if os.path.exists(path):
-                with open(path) as fh:
-                    loaded[(mandate, arm)] = json.load(fh)["turns"]
+    for stamp in sorted(args.stamp):
+        for mandate in args.mandates:
+            for arm in ("off", "debt", "cash", "history"):
+                path = os.path.join(
+                    args.results, f"{stamp}_{args.ticker}_{mandate}_{arm}.json")
+                if os.path.exists(path):
+                    with open(path) as fh:
+                        loaded[(mandate, arm)] = json.load(fh)["turns"]
     if not loaded:
         print("!! no convenes found for that stamp")
+        return 1
+
+    per_arm = collections.Counter(arm for _, arm in loaded)
+    if len(set(per_arm.values())) > 1:
+        print(f"!! unequal convene counts per arm {dict(per_arm)} — a citation rate "
+              "compared across arms of different size is not a comparison")
         return 1
 
     print("=" * 92)
