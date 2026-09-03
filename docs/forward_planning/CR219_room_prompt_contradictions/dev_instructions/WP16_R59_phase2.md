@@ -60,6 +60,13 @@ audit's own §5 table, split by file-collision lanes (P33 single-writer rule).
   production call site and `ROOM_RISK_OFFICER_ENABLED=true` on Alpha.
   **CR219-F2-PROFILE's clear precondition is met** — awaiting Saiful's clear.
 
+- **B2 ACCEPTED 2026-09-03** — `0ab65a8b` (Haiku lane, hard-verified):
+  `time_horizon_days` clamped to [1, 365] (mirroring
+  `_MAX_EVIDENCED_HORIZON_DAYS`) with an AMI-voiced disclosure in the reason,
+  exactly the `size_pct` idiom. The CR156 pin reconciliation is honest
+  (docstring records the why; never-veto preserved). 147/147 on dispatcher
+  rerun. Registry row upgrade for `verdict.time_horizon_days` dispatched to A3.
+
 ## Lane discipline (all lanes)
 
 Shared checkout, many sessions: touch ONLY your lane's files; pathspec-commit
