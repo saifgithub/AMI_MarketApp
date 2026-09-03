@@ -735,6 +735,65 @@ they ship with that stated rather than on evidence they do not have. C2/C5/B2 ar
 round 2 has not run, and it needs a rebuilt profile pickle since the current one predates those
 keys.
 
+### 7.9 ROUND 2 — the history arm, and a second confirmation that the endpoint is blind
+
+Six convenes, `off` vs `history` × short/medium/long, stamp `20260903T191926Z`, on a rebuilt CAT
+pickle carrying the C2/C5/B2 keys the round-1 pickle predates (**107 LIVE fields vs 100**). Round
+1's pickle is moved aside rather than deleted, so its exact sheet stays recoverable.
+
+| | off | history |
+|---|---|---|
+| **TOTAL data named** | 55 | 54 |
+| **C2** multi-year FCF/capex averages | — | — |
+| **C5** FCF conversion history | — | — |
+| **B2** cycle ROE + median | — | — |
+| D1 segment revenue *(control)* | 2 | 2 |
+| A2 captive split *(control)* | 6 | 8 |
+| B3 peer-basket multiples | 5 | 1 |
+| F10 ATR(14) | 5 | 3 |
+| J1 raw social split | 5 | 4 |
+
+**All three items this arm ships are absent from the scored table entirely — zero asks in both
+arms.** They have no baseline to fall from, which is the same shape as A3 in round 1. Two rounds
+now agree independently: at three mandates on one ticker, most register items are simply not
+asked for often enough to support a difference. The control behaved this time (D1 2/2, A2 6/8),
+and it did not rescue the endpoint — B3 still swung 5 → 1 on an untreated item, so the noise
+floor is intact even when the control happens to sit still.
+
+Round 2 therefore confirms §7.8's conclusion rather than extending it. **The demand-extinction
+endpoint is retired.** It should not be re-run for a third arm at this n.
+
+#### What round 2 actually produced was a defect in the arm it was testing
+
+The measurement's value came from reading what it *rendered*, not from its endpoint. Extracting
+the history arm's three lines off the banked sheet showed:
+
+```
+Return on equity history (LIVE): FY2025 41.7% · … , 4-year median 47.6%,
+currently 57%, net income over year-end equity
+```
+
+`currently 57%` sitting beside `FY2025 41.7%` under a closing clause naming *one* basis. Round
+1's render of the same fiscal data four hours earlier read `currently 41.7%`, which is what made
+it visible. Measured at one instant on CAT: the series' FY2025 is 41.7% (filed net income
+$8,884M over year-end equity $21,318M) and `.info`'s `returnOnEquity` is 57.0%, off vendor TTM
+income $10,844M — **a 22% gap in the numerator alone, 15.3 points in the ratio**. The line was
+applying a basis it had computed to a number it had not: DEF400's shape on a second field, in
+the very line whose docstring claimed to prevent "two ratios sharing a name".
+
+It survived its own test suite because the fixture passed `41.7` as both the newest FY and the
+current figure, so the divergent case never ran — the same fixture-shaped blindness the parity
+guard's docstring warns about. Fixed in `9da0be32`: the current figure is carried only with its
+divergence named, exactly as `cashflow_bridge_line` carries the vendor FCF it cannot reconcile,
+and the basis clause now reads "each year …" so it describes only the series. Two tests added,
+one on the measured 57.0 case and one at 43.2 pinning that 1.5 points still reads as agreement.
+
+**Caught before the flag was ever enabled, so nothing shipped wrong** — but the sequence is worth
+recording, because it is the third time in this CR that rendering a field on live data found
+something no unit test could: DEF399 (interest coverage 31.8× against a real ~6×), DEF400 (the
+vendor FCF), and now B2. The measurement rig earns its keep as a *renderer*, whatever its
+endpoint does.
+
 ---
 
 ## 8. Scope
