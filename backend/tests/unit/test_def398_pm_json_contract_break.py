@@ -19,6 +19,7 @@ while violating it. The parser is the control. The structural control is CR210's
 `pm_verdict_schema()` grammar, still gated OFF pending its acceptance-3 re-run.
 """
 import json
+from pathlib import Path
 
 from app.services.llm_json import extract_json_object
 
@@ -75,10 +76,18 @@ def test_shapes_that_must_still_be_REFUSED():
 
 
 def test_against_the_recorded_arms():
-    """The two real replies, replayed end to end."""
-    base = "../docs/forward_planning/CR219_room_prompt_contradictions/evidence/arms"
+    """The two real replies, replayed end to end.
+
+    The corpus path derives from this file's own location (the evidence/
+    scripts' convention): a CWD-relative path resolved only when pytest ran
+    from backend/, and failed the promotion suite gate, which does not.
+    """
+    base = (
+        Path(__file__).resolve().parents[3]
+        / "docs/forward_planning/CR219_room_prompt_contradictions/evidence/arms"
+    )
     for arm, action in (("h_short", "APPROVE"), ("g_learning", "PASS")):
-        with open(f"{base}/{arm}/convene.json") as fh:
+        with open(base / arm / "convene.json") as fh:
             turns = json.load(fh)["turns"]
         reply = [t for t in turns if t["agent"] == "portfolio_manager"][0]["answer"]
         got = extract_json_object(reply)
