@@ -31,6 +31,43 @@ class RoomStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class SheetFieldTransition(BaseModel):
+    """CR219 R60 — one `field_state` entry that changed between two convenes.
+
+    `field` is the `profile["field_state"]` key (e.g. `margin_trend`); `from_state`
+    /`to_state` are `LiveDataState` values as strings (`LIVE`, `UNAVAILABLE`, …) —
+    read straight off the two runs' `Verdict.sheet_state` maps, never re-derived.
+    Only fields whose state actually differs are carried; a field present in both
+    at the same state is not a transition and is omitted.
+    """
+
+    field: str
+    from_state: str
+    to_state: str
+
+
+class NextConveneDelta(BaseModel):
+    """CR219 R60 — "what changed since your last convene", built entirely in
+    code from the prior run's persisted verdict and this run's fact sheet. The
+    PM never composes this; it is injected as a fact, the same discipline
+    `_room_scoreboard` (R50) and `_floor_state_preview` (R49) already apply to
+    the rest of the VERDICT-phase context.
+
+    Every field is optional because the prior run may predate `sheet_state`
+    (shipped with this WP) — an old-shape prior degrades to a partial line
+    (action/date/kill-criterion still usable, `changed_fields` empty) rather
+    than being discarded or erroring. There is no line at all — this whole
+    object is absent — on a first convene or when the only prior is an outage
+    abstain (`NO_VERDICT`, R51/DEF376): see `room_runner._room_delta_context`.
+    """
+
+    prior_date: datetime
+    prior_action: str
+    price_move_pct: float | None = None
+    changed_fields: list[SheetFieldTransition] = Field(default_factory=list)
+    prior_kill_criterion: str | None = None
+
+
 class Verdict(BaseModel):
     """The Portfolio Manager's final verdict on a Room run."""
 
@@ -151,6 +188,48 @@ class Verdict(BaseModel):
     # zero of 2,555 persisted verdicts carried the old pair (measured on Alpha,
     # 2026-08-23), because the menu is gated on `derivatives_allowed`.
     structure: CostedStructure | None = None
+
+    # CR219 R60 — the comparison basis for the NEXT convene's delta line,
+    # written at bank time (COMPLETED runs only, `room_runner.py`'s
+    # `RoomStatus.COMPLETED` branch) and read back the next time this
+    # (user_id, ticker) convenes.
+    #
+    # `sheet_state` is a plain copy of THIS run's `profile["field_state"]`
+    # (`field -> LiveDataState value`) — already the compact map the design
+    # calls for, so no compaction logic exists here beyond the copy.
+    # `reference_price` is `_reference_close(profile)`, the SAME price WP11's
+    # ledger hook banks — reused, not re-derived, so the delta line's "price
+    # move since" never disagrees with the calibration ledger's own reference.
+    # Deliberately separate from the `verdict_outcomes` ledger table WP11
+    # writes: this rides the verdict JSONB itself (no migration, per scope
+    # item 1), the ledger is its own table for its own scoring purpose, and
+    # neither write depends on the other succeeding.
+    #
+    # Both `None` on every run before this WP shipped and on a run whose
+    # verdict was never assigned (should not reach COMPLETED, but the bank
+    # site checks `run.verdict is not None` regardless, same guard style as
+    # `bank_verdict_outcome`'s own swallow-and-skip). Never backfilled or
+    # inferred — the same T-BACKFILL rule `level_provenance` above is read
+    # under: a prior run with `sheet_state=None` renders the partial delta
+    # line, not a fabricated "nothing changed."
+    sheet_state: dict[str, str] | None = None
+    reference_price: float | None = None
+
+    # CR219 R60 — the delta itself, built ONCE at run-start time from the
+    # prior run's `sheet_state`/`reference_price`/`kill_criterion` above and
+    # THIS run's own fact sheet (`room_runner._room_delta_context` looks the
+    # prior up, `room_runner._build_next_convene_delta` computes the delta,
+    # `room_prompts._room_delta_line` renders it into the PM prompt). Carried
+    # on the response so mobile can render it later (backend-only in this WP
+    # — no Flutter work).
+    #
+    # `None` on a first convene, on a run whose only prior was an outage
+    # abstain (`NO_VERDICT`) with no earlier real verdict to fall back to, or
+    # on any run before this WP shipped. Absence, not noise — the R38
+    # no-segment framing: a first convene has nothing to compare against, and
+    # says so by omission rather than by a "no prior data" line that reads as
+    # information.
+    next_convene_delta: NextConveneDelta | None = None
 
 
 class RoomRun(BaseModel):

@@ -39,7 +39,14 @@ from app.schemas.mandate import (
     RiskComponents,
     TargetOutcome,
 )
-from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
+from app.schemas.room import (
+    NextConveneDelta,
+    RoomRun,
+    RoomStatus,
+    SheetFieldTransition,
+    Verdict,
+    VerdictAction,
+)
 from app.schemas.user import User
 
 __all__ = [
@@ -66,6 +73,7 @@ __all__ = [
     "Horizon",
     "LearningStyle",
     "Mandate",
+    "NextConveneDelta",
     "Path",
     "Plan",
     "PrimaryGoal",
@@ -73,6 +81,7 @@ __all__ = [
     "RiskComponents",
     "RoomRun",
     "RoomStatus",
+    "SheetFieldTransition",
     "TargetOutcome",
     "User",
     "UserOverlay",
