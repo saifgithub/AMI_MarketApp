@@ -1,0 +1,6 @@
+# Local fixtures, never committed — same rule as the CR219 harness's profiles/.
+# A DB and a pickle cannot be reviewed in a diff, and loading a pickle executes
+# code. Both are rebuilt by the scripts beside them.
+*.db
+*.db-journal
+profiles/

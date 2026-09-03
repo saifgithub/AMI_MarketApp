@@ -1,0 +1,7 @@
+# CR221 §7 — the tickers the before/after replay needs EDGAR facts for.
+# CAT is the corpus: all six mandate arms and the full convene ran on it.
+# MSFT and XOM are the R47 flip study's other two names, kept so a widened
+# re-run does not need a second ingest.
+CAT
+MSFT
+XOM

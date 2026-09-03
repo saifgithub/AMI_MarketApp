@@ -508,6 +508,53 @@ The one live figure that must not be repeated in a CR221 report is R53's debt-bu
 measured here as undercounting 26 against an actual 35, with 8 of the 17 `(unbucketed)`
 lines being debt asks its regex misses and a 9th claimed by a peer pattern.
 
+### 7.6b The instrument, and three things the build settled about it
+
+**The instrument is the arms addendum, not R53's shipped tail.** R53's
+`DATA GAPS:` block is the right permanent production signal, but it is
+ANALYSTS-only (`room_prompts.py:1693`) — four agents. The register's demand
+comes from twelve: A1's fourteen lines span six, most of them researchers and
+risk debators the shipped tail never reaches. Scoring with it would measure a
+quarter of the demand and report it as the whole. So `measurement/replay.py`
+appends `evidence/convene_gemini.py`'s addendum **byte-identical** — reworded,
+it would not be the question the 127-line baseline answered — and it does so
+through a `VLLMClient` subclass, so CR219's harness files are read, never
+edited.
+
+**The baseline has to be re-run, for a second reason.** §7.5 already required
+it (one pickle per ticker, R46). The stronger reason is that the banked corpus
+was produced by **`gemini-3.1-pro-preview`**, and the replay runs the
+production model, on-prem `qwen3.8-flash-next` (`root` read from `/v1/models`,
+2026-09-03). The banked 127 lines are the register's *provenance*; they are not
+this experiment's control arm.
+
+**The control arm is a flag flip, and that is now verified rather than
+asserted.** The same cached CAT profile renders a 3,968-character fact sheet
+with both flags off and 4,315 with both on — the 347-character delta is the two
+new lines and nothing else moved.
+
+### 7.6c Deployment prerequisite — the flags turn on nothing without this
+
+Measured on Alpha 2026-09-03: `edgar_facts` holds **351,139 rows across 150
+tickers** and **zero** under any of the five maturity tags or the two interest
+tag families, because the last ingest ran **2026-08-19** — before those tags
+existed in `INGEST_TAGS_US_GAAP`. Enabling either flag against that store
+renders nothing, and nothing is indistinguishable at the sheet from "this filer
+discloses none".
+
+So, in order: promote, **re-run `backend/scripts/ingest_edgar_facts.py --force`**
+(without `--force` it skips every ticker that already has facts, which is all
+150 of them), then enable. `edgar_debt_structure_tags_not_ingested` is the warn
+that fires if that order is not followed — the CR040 loud-degrade this CR owes
+DEF038/DEF063.
+
+The local measurement store is deliberately **not** the solo-dev `.local.db`.
+That file is stamped at an alembic revision it never actually migrated to, so
+hand-creating `edgar_facts` in it would rebuild DEF215's exact failure —
+a table Alembic has no record of, and the next `upgrade head` dying on
+`DuplicateTable` while later ALTERs that running code depends on never run.
+`measurement/edgar.db` is a fresh, gitignored, three-ticker store instead.
+
 ### 7.7 What "how much difference it makes" will be reported as
 
 One table, per item: baseline asks → post-build asks → citation rate → whether it appeared in
