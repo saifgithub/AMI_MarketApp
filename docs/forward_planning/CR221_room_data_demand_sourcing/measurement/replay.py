@@ -243,6 +243,75 @@ def arm(label: str, *, ticker: str, mandate: str, client: VLLMClient) -> dict:
     return convene
 
 
+def _banked(args) -> dict[str, list[dict]]:
+    """Convenes already on disk for one run stamp, keyed by arm.
+
+    Re-scoring is free — no model, no cost — and it has to stay free, because
+    the scorer is the part of this rig most likely to need a correction after
+    the fact. The first pilot's headline was wrong for exactly that reason
+    (`_datum_of`), and re-running nine convenes to find out would have made
+    fixing it a decision rather than an obligation.
+    """
+    out: dict[str, list[dict]] = {}
+    for label in args.arms:
+        for mandate in args.mandates:
+            path = os.path.join(
+                args.out_root, f"{args.score_only}_{args.ticker}_{mandate}_{label}.json")
+            if not os.path.exists(path):
+                print(f"!! missing {os.path.basename(path)}")
+                continue
+            with open(path) as fh:
+                out.setdefault(label, []).append(json.load(fh))
+    return out
+
+
+def report(convenes: dict[str, list[dict]], args, *, verbatim: bool) -> int:
+    labels = [label for label in args.arms if convenes.get(label)]
+    if not labels:
+        print("!! nothing to report")
+        return 1
+    totals = {label: collections.Counter() for label in labels}
+    agents = {label: collections.defaultdict(set) for label in labels}
+    asks = {label: 0 for label in labels}
+    for label in labels:
+        for convene in convenes[label]:
+            rows = requests_in(convene)
+            asks[label] += len(rows)
+            for agent, text in rows:
+                for item in items.claims(text):
+                    totals[label][item.id] += 1
+                    agents[label][item.id].add(agent)
+
+    n = len(convenes[labels[0]])
+    width = 9
+    print("\n" + "=" * 96)
+    print(f"DEMAND EXTINCTION — {args.ticker} × {n} mandate(s), "
+          f"{sum(len(v) for v in convenes.values())} convenes")
+    print("=" * 96)
+    print(f"{'item':5s}" + "".join(f"{label:>{width}s}" for label in labels) + "  label")
+    print(f"{'TOTAL':5s}" + "".join(f"{asks[label]:>{width}d}" for label in labels)
+          + "  every datum named, register-matched or not")
+    print("-" * 96)
+    for item_id in sorted(set().union(*(set(t) for t in totals.values()))):
+        label = next((i.label for i in items.ITEMS if i.id == item_id), "?")
+        owner = next((a for a, ids in ARM_ITEMS.items() if item_id in ids), None)
+        marker = f"  <-- {owner} arm ships this, must fall" if owner else ""
+        if item_id == NEGATIVE_CONTROL:
+            marker = "  <-- negative control, must NOT fall"
+        print(f"{item_id:5s}"
+              + "".join(f"{totals[label_][item_id]:>{width}d}" for label_ in labels)
+              + f"  {label[:40]}{marker}")
+
+    if verbatim:
+        for label in labels:
+            print(f"\n--- {label} " + "-" * 80)
+            for convene in convenes[label]:
+                for agent, text in requests_in(convene):
+                    claimed = ",".join(i.id for i in items.claims(text)) or "-"
+                    print(f"  [{claimed:8s}][{agent[:19]:19s}] {text[:100]}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--ticker", default="CAT")
@@ -251,7 +320,15 @@ def main() -> int:
     ap.add_argument("--out-root", default=RESULTS)
     ap.add_argument("--arms", nargs="+", default=list(ARMS),
                     choices=list(ARMS))
+    ap.add_argument("--score-only", metavar="STAMP", default=None,
+                    help="re-score banked convenes with this run stamp instead "
+                         "of driving the model — no LLM calls, no cost")
+    ap.add_argument("--verbatim", action="store_true",
+                    help="with --score-only, print every datum named, by arm")
     args = ap.parse_args()
+
+    if args.score_only:
+        return report(_banked(args), args, verbatim=args.verbatim)
 
     os.makedirs(args.out_root, exist_ok=True)
     os.makedirs(PROFILES, exist_ok=True)
@@ -259,9 +336,7 @@ def main() -> int:
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
     labels = args.arms
-    totals = {label: collections.Counter() for label in labels}
-    agents_seen: dict[str, dict[str, set]] = {label: {} for label in labels}
-    asks = {label: 0 for label in labels}
+    convenes: dict[str, list[tuple[str, dict]]] = {label: [] for label in labels}
 
     for mandate in args.mandates:
         for label in labels:
@@ -277,30 +352,10 @@ def main() -> int:
             print(f"  [{mandate}/{label}] {named} data items named "
                   f"-> {len(scored)} register items   {os.path.basename(path)}",
                   flush=True)
-            for item_id, row in scored.items():
-                totals[label][item_id] += row["lines"]
-                agents_seen[label].setdefault(item_id, set()).update(row["agents"])
+            convenes[label].append((mandate, convene))
 
-    n = len(args.mandates)
-    width = 9
-    print("\n" + "=" * 96)
-    print(f"DEMAND EXTINCTION — {args.ticker} × {n} mandate(s), {n * len(labels)} convenes")
-    print("=" * 96)
-    head = "".join(f"{label:>{width}s}" for label in labels)
-    print(f"{'item':5s}{head}  label")
-    print(f"{'TOTAL':5s}" + "".join(f"{asks[l]:>{width}d}" for l in labels)
-          + "  every datum named, register-matched or not")
-    print("-" * 96)
-    seen = sorted(set().union(*(set(t) for t in totals.values())))
-    for item_id in seen:
-        label = next((i.label for i in items.ITEMS if i.id == item_id), "?")
-        owner = next((a for a, ids in ARM_ITEMS.items() if item_id in ids), None)
-        marker = f"  <-- {owner} arm ships this, must fall" if owner else ""
-        if item_id == NEGATIVE_CONTROL:
-            marker = "  <-- negative control, must NOT fall"
-        print(f"{item_id:5s}" + "".join(f"{totals[l][item_id]:>{width}d}" for l in labels)
-              + f"  {label[:40]}{marker}")
-    return 0
+    return report({label: [c for _, c in convenes[label]] for label in labels},
+                  args, verbatim=False)
 
 
 if __name__ == "__main__":
