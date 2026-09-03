@@ -1,0 +1,668 @@
+"""CR219 R38 — the industrial vs. captive-finance debt split.
+
+WHY. `fetch_live_fundamentals` renders ONE blended `total_debt` figure. For an
+industrial with a captive lender — CAT is the running example, and its 10-K
+consolidates Caterpillar Financial Services Corporation — that one number
+conflates two credit profiles: the equipment-manufacturing parent, whose
+leverage is ordinary corporate leverage, and a lending book that is SUPPOSED to
+run leveraged the way any floorplan lender does. A Risk Officer reading
+"$38B total debt" cannot say how much of it funds customers' purchases versus
+the parent's own operations, and the two carry different insolvency
+implications.
+
+This file is the design note's 8-point test plan, point for point:
+
+  1  dimensional parser — member figure + computed remainder, arithmetic checked
+  2  no segment present — nothing extra, and NOT an `UNAVAILABLE` state
+  3  entity registry — every entry, against realistic member-name variants
+  4  outage/degrade — store failure leaves the blended figure standing
+  5  config flag OFF — no `debt_split` key at all, not even `UNAVAILABLE`
+  6  parity — the LIVE/absent dual-state render on both surfaces
+  7  guard — the `field_state` keys are registered, or the renderer drops them
+  8  compose parity — covered generically by `test_config_compose_parity.py`
+
+NO NETWORK. Every companyfacts payload here is hand-built to the shape the SEC
+endpoint returns; the parser is a pure function of that dict and nothing in
+this file opens a socket.
+"""
+
+from __future__ import annotations
+
+import sys
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+import pytest
+
+from app.core.config import settings
+from app.db import get_session
+from app.db.models import EdgarFactRow
+from app.services import edgar_tags, fundamentals as fundamentals_svc
+from app.services.fundamentals import debt_split_line, fetch_debt_split
+from app.services.room_runner import _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS
+
+# The ingest script is not an importable package module (it lives under
+# `backend/scripts/`), so its directory goes on the path — derived from THIS
+# file, never from the CWD, so the test passes from both the repo root and
+# `backend/` (DEF398's gate lesson).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+
+from ingest_edgar_facts import (  # noqa: E402
+    _parse_debt_split,
+    _segment_member_names,
+    parse_companyfacts,
+)
+
+_NOW = datetime(2026, 9, 3, tzinfo=timezone.utc)
+_M = 1_000_000.0
+
+
+def _fact(
+    val: float, *, end: str = "2025-12-31", filed: str = "2026-02-10",
+    accn: str = "0000018230-26-000012", segment: object = None,
+) -> dict:
+    """One companyfacts unit item, in the endpoint's own shape."""
+    out = {"end": end, "val": val, "accn": accn, "fy": 2025, "fp": "FY",
+           "form": "10-K", "filed": filed}
+    if segment is not None:
+        out["segment"] = segment
+    return out
+
+
+def _payload(items: list[dict], tag: str = "LongTermDebtNoncurrent") -> dict:
+    return {"facts": {"us-gaap": {tag: {"units": {"USD": items}}}}}
+
+
+# ── Test 1 — the dimensional parser ─────────────────────────────────────────
+
+
+class TestDimensionalParser:
+    """A member figure and a whole-company figure under one identity resolve
+    to the member's own debt plus a COMPUTED industrial remainder."""
+
+    def test_member_and_remainder_both_resolve_with_matching_arithmetic(self):
+        payload = _payload([
+            _fact(38_000 * _M),
+            _fact(28_000 * _M, segment={
+                "dim": "us-gaap:LegalEntityAxis",
+                "mem": "cat:CaterpillarFinancialServicesCorporationMember",
+            }),
+        ])
+        facts = _parse_debt_split(payload, "CAT")
+        by_tag = {f["tag"]: f["value"] for f in facts}
+        captive = by_tag[f"{edgar_tags.DEBT_SPLIT_CAPTIVE_TAG}:LongTermDebtNoncurrent"]
+        industrial = by_tag[f"{edgar_tags.DEBT_SPLIT_INDUSTRIAL_TAG}:LongTermDebtNoncurrent"]
+        assert captive == pytest.approx(28_000 * _M)
+        assert industrial == pytest.approx(10_000 * _M)
+        # The note's own arithmetic check: member + remainder == consolidated.
+        assert captive + industrial == pytest.approx(38_000 * _M)
+
+    def test_the_derived_facts_carry_the_source_filing_identity(self):
+        """A PIT store row with no `filed` date is unresolvable point-in-time.
+        The derived rows inherit the SOURCE fact's identity rather than the
+        run's clock — the same leakage rule every other stored fact obeys."""
+        payload = _payload([
+            _fact(38_000 * _M, end="2025-12-31", filed="2026-02-10", accn="ACC-1"),
+            _fact(28_000 * _M, end="2025-12-31", filed="2026-02-10", accn="ACC-1",
+                  segment={"dim": "us-gaap:LegalEntityAxis",
+                           "mem": "CaterpillarFinancialServicesCorporationMember"}),
+        ])
+        for f in _parse_debt_split(payload, "CAT"):
+            assert f["period_end"] == date(2025, 12, 31)
+            assert f["filed"] == date(2026, 2, 10)
+            assert f["accession_no"] == "ACC-1"
+            assert f["taxonomy"] == edgar_tags.DEBT_SPLIT_TAXONOMY
+
+    def test_a_member_with_no_matching_consolidated_figure_resolves_nothing(self):
+        """Half a split is not a split. Without the whole-company figure the
+        remainder cannot be computed, and a lone member figure rendered as
+        "captive finance debt" with no industrial half beside it would invite
+        exactly the subtraction the sheet is supposed to have already done."""
+        payload = _payload([
+            _fact(28_000 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                        "mem": "CatFinancialMember"}),
+        ])
+        assert _parse_debt_split(payload, "CAT") == []
+
+    def test_a_member_exceeding_the_consolidated_figure_is_refused(self):
+        """A negative industrial remainder means the two figures are not on
+        one consolidation basis. Rendering "-$2,000M industrial debt" would be
+        arithmetic that has gone wrong presented as a balance-sheet fact."""
+        payload = _payload([
+            _fact(26_000 * _M),
+            _fact(28_000 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                        "mem": "CatFinancialMember"}),
+        ])
+        assert _parse_debt_split(payload, "CAT") == []
+
+    def test_facts_from_different_filings_are_never_subtracted(self):
+        """The two halves must come from the same accession and period. A
+        consolidated figure from one 10-K minus a member figure from another
+        is a difference between two dates, not a split."""
+        payload = _payload([
+            _fact(38_000 * _M, end="2025-12-31", filed="2026-02-10", accn="ACC-1"),
+            _fact(28_000 * _M, end="2024-12-31", filed="2025-02-10", accn="ACC-0",
+                  segment={"dim": "us-gaap:LegalEntityAxis",
+                           "mem": "CatFinancialMember"}),
+        ])
+        assert _parse_debt_split(payload, "CAT") == []
+
+    def test_a_non_debt_tag_is_never_split(self):
+        """R38 is scoped to `DEBT_ANCHOR`/`DEBT_OPTIONAL_ADD`. A segment-tagged
+        revenue or equity fact must not acquire an `ami:` split row."""
+        payload = _payload(
+            [
+                _fact(90_000 * _M),
+                _fact(20_000 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                            "mem": "CatFinancialMember"}),
+            ],
+            tag="Revenues",
+        )
+        assert _parse_debt_split(payload, "CAT") == []
+
+    @pytest.mark.parametrize("tag", edgar_tags.DEBT_ANCHOR + edgar_tags.DEBT_OPTIONAL_ADD)
+    def test_every_debt_tag_the_blended_figure_uses_can_be_split(self, tag):
+        payload = _payload(
+            [
+                _fact(500 * _M),
+                _fact(300 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                         "mem": "CatFinancialMember"}),
+            ],
+            tag=tag,
+        )
+        assert len(_parse_debt_split(payload, "CAT")) == 2
+
+    def test_the_non_dimensional_pass_still_ignores_segment_facts(self):
+        """The member's own figure must never reach the store under a plain
+        us-gaap tag: the PIT resolver would read it as the whole company's
+        debt and understate every ratio built on it."""
+        payload = _payload([
+            _fact(38_000 * _M),
+            _fact(28_000 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                        "mem": "CatFinancialMember"}),
+        ])
+        plain = [f for f in parse_companyfacts(payload, "CAT")
+                 if f["taxonomy"] == "us-gaap"]
+        assert [f["value"] for f in plain] == [pytest.approx(38_000 * _M)]
+
+    def test_parse_companyfacts_emits_both_passes(self):
+        payload = _payload([
+            _fact(38_000 * _M),
+            _fact(28_000 * _M, segment={"dim": "us-gaap:LegalEntityAxis",
+                                        "mem": "CatFinancialMember"}),
+        ])
+        taxonomies = {f["taxonomy"] for f in parse_companyfacts(payload, "CAT")}
+        assert taxonomies == {"us-gaap", edgar_tags.DEBT_SPLIT_TAXONOMY}
+
+
+class TestSegmentShapes:
+    """The `segment` object arrives in several shapes across filers."""
+
+    def test_single_object(self):
+        assert _segment_member_names({"segment": {"dim": "d", "mem": "M1"}}) == ["M1"]
+
+    def test_list_of_objects_multi_axis(self):
+        names = _segment_member_names(
+            {"segment": [{"dim": "d1", "mem": "M1"}, {"dim": "d2", "mem": "M2"}]},
+        )
+        assert names == ["M1", "M2"]
+
+    def test_member_spelled_out(self):
+        assert _segment_member_names({"segment": {"member": "M1"}}) == ["M1"]
+
+    def test_absent_segment_is_not_dimensional(self):
+        assert _segment_member_names({"val": 1}) == []
+
+    def test_an_unrecognised_shape_yields_no_names(self):
+        """The conservative direction: an unparseable segment must not be
+        mistaken for a whole-company fact, and it is not — it yields no member
+        names, so it matches nothing and contributes to neither half."""
+        assert _segment_member_names({"segment": {"axis": "d"}}) == []
+
+
+# ── Test 2 — no segment present (the common case) ───────────────────────────
+
+
+class TestNoCaptiveFinanceSegment:
+    """The overwhelming majority of the ticker universe. Not an outage."""
+
+    def test_a_registered_ticker_with_no_dimensional_facts_splits_nothing(self):
+        assert _parse_debt_split(_payload([_fact(38_000 * _M)]), "CAT") == []
+
+    def test_an_unregistered_ticker_is_never_split_even_with_segments(self):
+        payload = _payload([
+            _fact(38_000 * _M),
+            _fact(28_000 * _M, segment={"dim": "us-gaap:StatementBusinessSegmentsAxis",
+                                        "mem": "aapl:ServicesMember"}),
+        ])
+        assert _parse_debt_split(payload, "AAPL") == []
+
+    def test_an_unregistered_ticker_sets_no_field_at_all(self):
+        """Not `UNAVAILABLE` — genuinely absent. A ticker with no captive
+        lender has a one-part debt structure; calling that "unavailable" would
+        imply a fetch failure for almost every name on the sheet."""
+        assert fetch_debt_split("AAPL") == {}
+
+    def test_the_absent_state_renders_nothing(self):
+        assert debt_split_line(None, None, None, None, None) is None
+
+
+# ── Test 3 — the entity-name registry ───────────────────────────────────────
+
+
+class TestEntityRegistry:
+    """Real-world XBRL member naming is fuzzy, not a clean enum. Each entry
+    gets its own case/whitespace/punctuation variants, the way `_EXCHANGE_NAMES`
+    is tested per venue code."""
+
+    @pytest.mark.parametrize("member", [
+        "CaterpillarFinancialServicesCorporationMember",
+        "cat:CaterpillarFinancialServicesCorporationMember",
+        "Caterpillar Financial Services Corporation [Member]",
+        "  caterpillar financial services corp  ",
+        "CatFinancialMember",
+        "FinancialProductsMember",
+        "cat:FinancialProductsSegmentMember",
+    ])
+    def test_cat(self, member):
+        assert edgar_tags.match_captive_finance_member("CAT", member)
+
+    @pytest.mark.parametrize("member", [
+        "JohnDeereCapitalCorporationMember",
+        "de:JohnDeereCapitalCorporationMember",
+        "John Deere Capital Corporation [Member]",
+        "  john deere capital  ",
+        "FinancialServicesMember",
+        "de:FinancialServicesSegmentMember",
+    ])
+    def test_de(self, member):
+        assert edgar_tags.match_captive_finance_member("DE", member)
+
+    @pytest.mark.parametrize("member", [
+        "PaccarFinancialCorpMember",
+        "pcar:PACCARFinancialCorpMember",
+        "PACCAR Financial Corp. [Member]",
+        "  paccar financial services  ",
+        "FinancialServicesMember",
+    ])
+    def test_pcar(self, member):
+        assert edgar_tags.match_captive_finance_member("PCAR", member)
+
+    @pytest.mark.parametrize("ticker", ["CAT", "DE", "PCAR"])
+    def test_every_registered_ticker_has_a_renderable_lender_name(self, ticker):
+        """A match with no human-readable name would render the normalised
+        match key ("caterpillarfinancialservices") on the sheet."""
+        assert edgar_tags.CAPTIVE_FINANCE_NAMES.get(ticker)
+
+    def test_the_two_registry_halves_cover_the_same_tickers(self):
+        assert set(edgar_tags.captive_finance_tickers()) == set(
+            edgar_tags.CAPTIVE_FINANCE_NAMES,
+        )
+
+    @pytest.mark.parametrize("ticker,member", [
+        ("CAT", "ConstructionIndustriesMember"),
+        ("CAT", "ResourceIndustriesMember"),
+        ("DE", "ProductionAndPrecisionAgricultureMember"),
+        ("PCAR", "TrucksMember"),
+        ("AAPL", "CaterpillarFinancialServicesCorporationMember"),
+    ])
+    def test_non_finance_segments_and_unregistered_tickers_do_not_match(
+        self, ticker, member,
+    ):
+        """A wrong split is worse than no split: an operating segment matched
+        as a lending book would relabel real industrial debt as captive."""
+        assert not edgar_tags.match_captive_finance_member(ticker, member)
+
+    def test_an_empty_member_name_never_matches(self):
+        assert not edgar_tags.match_captive_finance_member("CAT", "")
+        assert not edgar_tags.match_captive_finance_member("CAT", "   ")
+
+    def test_normalisation_strips_case_punctuation_and_whitespace(self):
+        assert edgar_tags.normalize_member_name(
+            " Cat Financial [Member] ",
+        ) == "catfinancialmember"
+
+
+# ── The store read ──────────────────────────────────────────────────────────
+
+
+def _seed_split(
+    ticker: str = "CAT", *, source_tag: str = "LongTermDebtNoncurrent",
+    captive: float = 28_000 * _M, industrial: float = 10_000 * _M,
+    period_end: date = date(2025, 12, 31), filed: date = date(2026, 2, 10),
+) -> None:
+    with get_session() as session:
+        for tag, value in (
+            (edgar_tags.DEBT_SPLIT_CAPTIVE_TAG, captive),
+            (edgar_tags.DEBT_SPLIT_INDUSTRIAL_TAG, industrial),
+        ):
+            session.add(EdgarFactRow(
+                cik=18230, ticker=ticker,
+                taxonomy=edgar_tags.DEBT_SPLIT_TAXONOMY,
+                tag=f"{tag}:{source_tag}", unit="USD", value=value,
+                period_start=None, period_end=period_end, filed=filed,
+                accession_no=f"ACC-{period_end}-{tag}", ingested_at=_NOW,
+            ))
+
+
+class TestStoreRead:
+    def test_a_seeded_split_resolves_in_millions(self):
+        _seed_split()
+        out = fetch_debt_split("CAT")
+        assert out["debt_split_state"] == "resolved"
+        assert out["debt_split_captive"] == 28_000
+        assert out["debt_split_industrial"] == 10_000
+        assert out["debt_split_period"] == "2025-12-31"
+        assert out["debt_split_entity"] == "Caterpillar Financial Services"
+
+    def test_the_newest_period_wins(self):
+        _seed_split(period_end=date(2024, 12, 31), filed=date(2025, 2, 10),
+                    captive=20_000 * _M, industrial=8_000 * _M)
+        _seed_split(period_end=date(2025, 12, 31), filed=date(2026, 2, 10))
+        out = fetch_debt_split("CAT")
+        assert out["debt_split_period"] == "2025-12-31"
+        assert out["debt_split_captive"] == 28_000
+
+    def test_the_anchor_tag_is_preferred_over_an_optional_add(self):
+        """`DEBT_ANCHOR`'s ordering exists so a debt figure is never blended
+        across two concepts. The split obeys the same preference: a short-term
+        borrowings split must not outrank the long-term anchor merely by
+        sorting later."""
+        _seed_split(source_tag="ShortTermBorrowings",
+                    captive=3_000 * _M, industrial=1_000 * _M)
+        _seed_split(source_tag="LongTermDebtNoncurrent")
+        out = fetch_debt_split("CAT")
+        assert out["debt_split_captive"] == 28_000
+
+    def test_a_registered_ticker_with_an_empty_store_reads_unresolved(self):
+        """The second non-error state: the subsidiary is known to exist, but
+        this period's split is not in the store. Explicitly stated, never
+        silently falling back to the blended figure relabelled as a split."""
+        out = fetch_debt_split("CAT")
+        assert out["debt_split_state"] == "unresolved"
+        assert out["debt_split_entity"] == "Caterpillar Financial Services"
+        assert "debt_split_captive" not in out
+
+    def test_a_half_written_period_reads_unresolved(self):
+        """One half with no counterpart cannot be rendered as a split."""
+        with get_session() as session:
+            session.add(EdgarFactRow(
+                cik=18230, ticker="CAT", taxonomy=edgar_tags.DEBT_SPLIT_TAXONOMY,
+                tag=f"{edgar_tags.DEBT_SPLIT_CAPTIVE_TAG}:LongTermDebtNoncurrent",
+                unit="USD", value=28_000 * _M, period_start=None,
+                period_end=date(2025, 12, 31), filed=date(2026, 2, 10),
+                accession_no="ACC-HALF", ingested_at=_NOW,
+            ))
+        assert fetch_debt_split("CAT")["debt_split_state"] == "unresolved"
+
+
+# ── Test 4 — outage / degrade loudly ────────────────────────────────────────
+
+
+class TestOutageDegradesLoudly:
+    def test_a_store_failure_is_logged_and_leaves_the_state_unresolved(
+        self, monkeypatch,
+    ):
+        import app.db as db_mod
+
+        def _boom():
+            raise RuntimeError("edgar store unreachable")
+
+        monkeypatch.setattr(db_mod, "get_session", _boom)
+        logged: list[tuple] = []
+        monkeypatch.setattr(
+            fundamentals_svc.logger, "warn",
+            lambda event, **kw: logged.append((event, kw)),
+        )
+        out = fetch_debt_split("CAT")
+        assert out["debt_split_state"] == "unresolved"
+        assert any(e == "edgar_debt_split_error" for e, _ in logged), (
+            "a store outage that logs nothing is the silent fallback CR040 forbids"
+        )
+
+    def test_a_store_failure_never_propagates(self, monkeypatch):
+        import app.db as db_mod
+
+        monkeypatch.setattr(db_mod, "get_session", lambda: (_ for _ in ()).throw(
+            RuntimeError("boom"),
+        ))
+        fetch_debt_split("CAT")  # must not raise
+
+    def test_the_blended_total_still_renders_through_a_split_outage(
+        self, monkeypatch,
+    ):
+        """The split failing must never take the debt TOTAL down — the same
+        contract `fetch_statement_facts` keeps for the CR145 Tier D lines."""
+        import app.db as db_mod
+
+        monkeypatch.setattr(settings, "use_edgar_debt_split", True)
+        monkeypatch.setattr(db_mod, "get_session", lambda: (_ for _ in ()).throw(
+            RuntimeError("boom"),
+        ))
+        block = _one_on_one_block(
+            {"total_debt": 38_000, **fetch_debt_split("CAT")},
+        )
+        assert "gross debt $38,000M" in block
+        assert "UNAVAILABLE" in block
+
+
+# ── Test 5 — the config flag OFF sets no key at all ─────────────────────────
+
+
+class TestConfigFlagOff:
+    def test_the_flag_defaults_off(self):
+        assert settings.use_edgar_debt_split is False
+
+    def test_flag_off_produces_no_debt_split_key(self, monkeypatch):
+        """NOT `UNAVAILABLE`. A flag that is off by design/rollout means the
+        feature does not exist yet, which is a different sentence from "this
+        run's data is missing" — and `_format_profile` must not render a
+        permanent disclaimer for a feature nobody turned on."""
+        _seed_split()
+        monkeypatch.setattr(settings, "use_edgar_debt_split", False)
+        called: list[str] = []
+        monkeypatch.setattr(
+            fundamentals_svc, "fetch_debt_split",
+            lambda t: called.append(t) or {},
+        )
+        out = _live_fundamentals_with_fake_yfinance(monkeypatch, "CAT")
+        assert not called, "the flag is off; the store must not even be read"
+        assert not [k for k in out if k.startswith("debt_split")]
+
+    def test_flag_on_produces_the_keys(self, monkeypatch):
+        _seed_split()
+        monkeypatch.setattr(settings, "use_edgar_debt_split", True)
+        out = _live_fundamentals_with_fake_yfinance(monkeypatch, "CAT")
+        assert out["debt_split_state"] == "resolved"
+        assert out["debt_split_industrial"] == 10_000
+
+    def test_flag_on_for_a_ticker_with_no_lender_still_produces_no_key(
+        self, monkeypatch,
+    ):
+        monkeypatch.setattr(settings, "use_edgar_debt_split", True)
+        out = _live_fundamentals_with_fake_yfinance(monkeypatch, "AAPL")
+        assert not [k for k in out if k.startswith("debt_split")]
+
+
+def _live_fundamentals_with_fake_yfinance(monkeypatch, ticker: str) -> dict:
+    """`fetch_live_fundamentals` driven by a minimal `.info`, no network."""
+    import types
+
+    class _FakeTicker:
+        def __init__(self, t):
+            self.info = {"currentPrice": 300.0, "trailingPE": 18.0,
+                         "totalDebt": 38_000 * _M, "totalCash": 6_000 * _M}
+
+        quarterly_income_stmt = None
+        quarterly_cashflow = None
+
+    monkeypatch.setitem(
+        sys.modules, "yfinance",
+        types.SimpleNamespace(Ticker=_FakeTicker, __version__="0.2.0"),
+    )
+    return fundamentals_svc.fetch_live_fundamentals(ticker) or {}
+
+
+# ── Test 6 — the dual-state render, on both surfaces ────────────────────────
+
+
+def _one_on_one_block(data: dict) -> str:
+    from unittest import mock
+
+    with mock.patch.object(settings, "use_real_market_data", True), \
+            mock.patch.object(fundamentals_svc, "fetch_live_fundamentals",
+                              lambda t: dict(data)):
+        return fundamentals_svc.build_live_data_block("CAT")
+
+
+def _room_sheet(profile_extra: dict, field_state_extra: dict) -> str:
+    from app.services.room_prompts import _format_profile
+
+    profile = {
+        "ticker": "CAT", "base_price": 300.0,
+        "field_state": {"run_date": "live", **field_state_extra},
+        **profile_extra,
+    }
+    return _format_profile(profile)
+
+
+class TestTheLineItself:
+    def test_resolved_renders_both_halves_named_and_dated(self):
+        line = debt_split_line(
+            "resolved", "Caterpillar Financial Services", 28_000, 10_000,
+            "2025-12-31",
+        )
+        assert "industrial $10,000M" in line
+        assert "captive finance $28,000M" in line
+        assert "Caterpillar Financial Services" in line
+        assert "2025-12-31" in line
+        assert "(LIVE)" in line
+
+    def test_resolved_says_why_the_two_halves_differ(self):
+        """A number with no interpretation is what produced the blended figure
+        this line exists to correct."""
+        line = debt_split_line("resolved", "X", 1, 2, "2025-12-31")
+        assert "different credit profiles" in line
+
+    def test_unresolved_renders_an_explicit_unavailable_line(self):
+        line = debt_split_line("unresolved", "John Deere Capital", None, None, None)
+        assert "UNAVAILABLE" in line
+        assert "John Deere Capital" in line
+        assert "BLENDED" in line
+
+    def test_unresolved_never_relabels_the_blended_figure_as_a_split(self):
+        line = debt_split_line("unresolved", "X", None, None, None)
+        assert "industrial $" not in line
+        assert "captive finance $" not in line
+
+    def test_absent_renders_nothing(self):
+        assert debt_split_line(None, None, None, None, None) is None
+
+    def test_a_resolved_state_missing_its_halves_falls_to_unavailable(self):
+        """Belt and braces against a partial provenance state: a `resolved`
+        label with no numbers must not render a header over an absence
+        (DEF053), and must not claim a split it does not carry."""
+        line = debt_split_line("resolved", "X", None, None, "2025-12-31")
+        assert "UNAVAILABLE" in line
+
+    def test_live_false_omits_the_marker(self):
+        line = debt_split_line("resolved", "X", 1, 2, "2025-12-31", live=False)
+        assert "(LIVE)" not in line
+
+
+class TestBothSurfacesRenderIt:
+    """The 1-on-1 sheet and the Room sheet must not disagree about one
+    company — the CR166 Tier B / CR179 Leg 3 / CR218 parity rule."""
+
+    def test_both_render_sites_call_the_builder(self):
+        import inspect
+
+        from app.services import fundamentals, room_prompts
+
+        assert "debt_split_line(" in inspect.getsource(fundamentals)
+        assert "debt_split_line(" in inspect.getsource(room_prompts)
+
+    def test_room_renders_the_resolved_split(self):
+        sheet = _room_sheet(
+            {"debt_split_state": "resolved",
+             "debt_split_entity": "Caterpillar Financial Services",
+             "debt_split_captive": 28_000, "debt_split_industrial": 10_000,
+             "debt_split_period": "2025-12-31"},
+            {k: "live" for k in (
+                "debt_split_state", "debt_split_entity", "debt_split_captive",
+                "debt_split_industrial", "debt_split_period")},
+        )
+        assert "industrial $10,000M" in sheet
+        assert "captive finance $28,000M" in sheet
+
+    def test_room_renders_the_unresolved_line(self):
+        sheet = _room_sheet(
+            {"debt_split_state": "unresolved", "debt_split_entity": "PACCAR Financial"},
+            {"debt_split_state": "live", "debt_split_entity": "live"},
+        )
+        assert "UNAVAILABLE" in sheet
+        assert "PACCAR Financial" in sheet
+
+    def test_room_renders_nothing_when_the_state_is_absent(self):
+        sheet = _room_sheet({}, {})
+        assert "Debt split" not in sheet
+
+    def test_one_on_one_renders_the_resolved_split(self):
+        block = _one_on_one_block({
+            "base_price": 300.0, "pe": "18.0", "total_debt": 38_000,
+            "debt_split_state": "resolved",
+            "debt_split_entity": "Caterpillar Financial Services",
+            "debt_split_captive": 28_000, "debt_split_industrial": 10_000,
+            "debt_split_period": "2025-12-31",
+        })
+        assert "industrial $10,000M" in block
+        assert "captive finance $28,000M" in block
+
+    def test_one_on_one_renders_nothing_when_the_state_is_absent(self):
+        block = _one_on_one_block({"base_price": 300.0, "pe": "18.0",
+                                   "total_debt": 38_000})
+        assert "Debt split" not in block
+        assert "gross debt $38,000M" in block
+
+
+# ── Test 7 — the field_state registration guard ─────────────────────────────
+
+
+class TestProvenanceRegistration:
+    """CR104: a field with no recorded provenance renders as nothing at all.
+    Computing the split and forgetting to register its keys is the CR040
+    silent-dark shape — the arithmetic runs and reaches no agent."""
+
+    @pytest.mark.parametrize("field", [
+        "debt_split_state", "debt_split_entity", "debt_split_captive",
+        "debt_split_industrial", "debt_split_period",
+    ])
+    def test_registered_as_optional_live(self, field):
+        assert field in _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS, (
+            f"{field} is fetched but unregistered, so the renderer drops it"
+        )
+
+    def test_every_key_the_fetcher_produces_is_registered(self):
+        """The registration list and the fetcher must not drift: a sixth key
+        added to `fetch_debt_split` with no entry above renders as nothing."""
+        _seed_split()
+        produced = set(fetch_debt_split("CAT"))
+        assert produced <= set(_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS), (
+            f"unregistered: {sorted(produced - set(_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS))}"
+        )
+
+
+# ── Test 8 — compose parity ─────────────────────────────────────────────────
+
+
+class TestComposeParity:
+    """`test_config_compose_parity.py` covers any new `bool` setting
+    generically. This asserts the forwarding it checks actually exists, so a
+    reader of THIS file can see the CR040 obligation was met rather than
+    having to trust a test in another file."""
+
+    def test_the_flag_is_forwarded_in_the_api_alpha_block(self):
+        compose = (
+            Path(__file__).resolve().parents[3] / "docker-compose.yml"
+        ).read_text()
+        assert "USE_EDGAR_DEBT_SPLIT: ${USE_EDGAR_DEBT_SPLIT:-false}" in compose

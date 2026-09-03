@@ -1,0 +1,681 @@
+diff --git a/backend/app/services/edgar_tags.py b/backend/app/services/edgar_tags.py
+index 584d174a..2fcdf3ad 100644
+--- a/backend/app/services/edgar_tags.py
++++ b/backend/app/services/edgar_tags.py
+@@ -80,6 +80,99 @@ INVENTORY = ("InventoryNet",)
+ # dei taxonomy — shares outstanding cover-page fact (instant), the market-cap basis.
+ SHARES_OUTSTANDING_DEI = ("EntityCommonStockSharesOutstanding",)
+ 
++# ── CR219 R38 — the captive-finance entity registry ─────────────────────────
++#
++# An industrial with a captive lender reports ONE blended `total_debt`. The
++# parent's equipment-manufacturing leverage and the subsidiary's lending book
++# are different credit profiles — a finance arm is SUPPOSED to run leveraged,
++# an industrial parent is not — and a single figure cannot be read as either.
++#
++# Matching is by ENTITY NAME, not by a us-gaap tag: the debt tags are the same
++# `DEBT_ANCHOR`/`DEBT_OPTIONAL_ADD` ones already ingested. What distinguishes
++# the finance arm's figure is the XBRL dimension it is reported under (a
++# `LegalEntityAxis` / `ConsolidatedEntitiesAxis` member), and member names are
++# fuzzy real-world strings, not a clean enum — CAT alone appears as
++# `CaterpillarFinancialServicesCorporationMember`,
++# `FinancialProductsMember`, and `CatFinancialMember` across filings and
++# periods. So each ticker carries a tuple of NORMALISED substrings (lowercase,
++# non-alphanumerics stripped) and a member matches if any one of them is
++# contained in the normalised member name.
++#
++# Three entries, deliberately: US heavy-equipment names with a named,
++# SEC-registered captive lender. This is a manual registry by design — a
++# name-similarity heuristic would eventually match a segment that is not a
++# lending book at all, and a wrong split is worse than no split.
++_CAPTIVE_FINANCE_MEMBERS: dict[str, tuple[str, ...]] = {
++    "CAT": (
++        "caterpillarfinancialservices",
++        "catfinancial",
++        "financialproducts",
++    ),
++    "DE": (
++        "johndeerecapital",
++        "financialservices",
++    ),
++    "PCAR": (
++        "paccarfinancial",
++        "financialservices",
++    ),
++}
++
++# The human-readable name of each captive lender, for the rendered line. Kept
++# beside the match substrings rather than derived from them: the substrings are
++# normalised match keys and would render as `caterpillarfinancialservices`.
++CAPTIVE_FINANCE_NAMES: dict[str, str] = {
++    "CAT": "Caterpillar Financial Services",
++    "DE": "John Deere Capital",
++    "PCAR": "PACCAR Financial",
++}
++
++# Namespace for the dimensional facts the ingest resolves. They are DERIVED
++# figures (a member-resolved value, and a whole-company-minus-member
++# remainder), not raw us-gaap facts, so they must never collide with a real
++# tag name in `INGEST_TAGS_US_GAAP` — an `ami:` prefix and its own taxonomy
++# string keep them separable in the store and un-readable by the PIT resolver,
++# which only ever asks for us-gaap/dei tags by name.
++DEBT_SPLIT_TAXONOMY = "ami"
++DEBT_SPLIT_CAPTIVE_TAG = "ami:CaptiveFinanceDebt"
++DEBT_SPLIT_INDUSTRIAL_TAG = "ami:IndustrialDebt"
++DEBT_SPLIT_TAGS = (DEBT_SPLIT_CAPTIVE_TAG, DEBT_SPLIT_INDUSTRIAL_TAG)
++
++
++def normalize_member_name(name: str) -> str:
++    """Lowercase, alphanumerics only — the comparison basis for member matching.
++
++    XBRL member names arrive with varying case, whitespace, punctuation and
++    the trailing `Member` suffix; every one of those varies between filers and
++    between periods for one filer. Stripping to alphanumerics is what makes
++    `Caterpillar Financial Services Corporation [Member]` and
++    `CaterpillarFinancialServicesCorporationMember` the same string.
++    """
++    return "".join(ch for ch in str(name).lower() if ch.isalnum())
++
++
++def match_captive_finance_member(ticker: str, member_name: str) -> bool:
++    """Does `member_name` name this ticker's known captive-finance subsidiary?
++
++    False for every ticker not in the registry — the overwhelming majority.
++    That is the COMMON case, not an outage: a company with no captive lender
++    has a one-part debt structure, and the caller must render nothing extra
++    rather than a "split unavailable" disclaimer (CR040 / the R38 note's
++    failure-mode section).
++    """
++    keys = _CAPTIVE_FINANCE_MEMBERS.get(str(ticker).upper().strip())
++    if not keys:
++        return False
++    normalized = normalize_member_name(member_name)
++    if not normalized:
++        return False
++    return any(key in normalized for key in keys)
++
++
++def captive_finance_tickers() -> tuple[str, ...]:
++    """Every ticker the registry knows a captive lender for."""
++    return tuple(sorted(_CAPTIVE_FINANCE_MEMBERS))
++
+ # Every tag the ingest script persists. Anything else in companyfacts is
+ # skipped at ingest — the store holds what the resolver can use, nothing more.
+ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
+diff --git a/backend/app/services/fundamentals.py b/backend/app/services/fundamentals.py
+index 448d2fe0..d067aa80 100644
+--- a/backend/app/services/fundamentals.py
++++ b/backend/app/services/fundamentals.py
+@@ -618,6 +618,162 @@ def fetch_fundamentals(ticker: str, as_of: date | None = None) -> dict[str, Any]
+     return fetch_pit_fundamentals(ticker, as_of)
+ 
+ 
++# ── CR219 R38 — the industrial / captive-finance debt split ─────────────────
++#
++# Read off the SAME point-in-time `edgar_facts` store the backtest trusts,
++# refreshed on the ingest script's own cadence — not a second EDGAR-calling
++# code path beside `edgar_pit.py`/`ingest_edgar_facts.py`. The consequence
++# is that the split is available to as-of sheets for free, and that no
++# per-convene SEC request is ever made for it.
++#
++# The three non-error states are DISTINCT, and conflating any of them with the
++# fourth is the silent-fallback shape CR040 forbids:
++#   * no captive-finance segment stored → returns `{}`, no `debt_split` key.
++#     The common case (every ticker with no captive lender) and NOT a gap.
++#   * segment known but this period unresolvable → `debt_split_state` =
++#     "unresolved", rendered as an explicit line, never as the blended figure
++#     relabelled as a split.
++#   * store unreachable → logged loudly, `debt_split_state` = "unresolved".
++#     The blended `total_debt` has its own independent yfinance provenance and
++#     is untouched: a split outage must never take the debt TOTAL down.
++_DEBT_SPLIT_UNRESOLVED = "unresolved"
++_DEBT_SPLIT_RESOLVED = "resolved"
++
++
++def fetch_debt_split(ticker: str) -> dict[str, Any]:
++    """The stored captive-finance / industrial debt split for one ticker.
++
++    Returns `{}` when the ticker has no known captive-finance subsidiary —
++    the caller must then render nothing extra and set no `field_state` key.
++    Returns `{"debt_split_state": "unresolved", ...}` when the subsidiary IS
++    known but the store carries no resolvable figures for it, and the fully
++    populated dict when it does.
++
++    Never raises. A store outage degrades this one line, not the sheet.
++    """
++    from app.services import edgar_tags  # lazy: keeps this module import-light
++
++    key = str(ticker).upper().strip()
++    lender = edgar_tags.CAPTIVE_FINANCE_NAMES.get(key)
++    if lender is None:
++        return {}
++
++    out: dict[str, Any] = {
++        "debt_split_state": _DEBT_SPLIT_UNRESOLVED,
++        "debt_split_entity": lender,
++    }
++    try:
++        from sqlalchemy import select
++
++        from app.db import get_session
++        from app.db.models import EdgarFactRow
++
++        # Stored tags are `<half>:<source us-gaap tag>` — the source tag is
++        # kept in the name so the two halves are only ever subtracted from a
++        # figure of the SAME debt concept.
++        prefixes = {f"{half}:": half for half in edgar_tags.DEBT_SPLIT_TAGS}
++        with get_session() as session:
++            rows = session.execute(
++                select(
++                    EdgarFactRow.tag, EdgarFactRow.value,
++                    EdgarFactRow.period_end, EdgarFactRow.filed,
++                ).where(
++                    EdgarFactRow.ticker == key,
++                    EdgarFactRow.taxonomy == edgar_tags.DEBT_SPLIT_TAXONOMY,
++                ),
++            ).all()
++    except Exception as exc:
++        logger.warn("edgar_debt_split_error", ticker=key, error=str(exc)[:200])
++        return out
++
++    # Anchor-tag preference, mirroring `DEBT_ANCHOR`'s own ordering: the two
++    # halves must be resolved off the SAME source us-gaap tag and the SAME
++    # filing, or the split is two different debt concepts subtracted from each
++    # other. Latest period_end wins, ties broken by latest filed — the same
++    # rule `edgar_pit.resolve_instant_dated` applies to amendments.
++    by_source: dict[tuple[str, date, date], dict[str, float]] = {}
++    for tag, value, period_end, filed in rows:
++        for prefix, half in prefixes.items():
++            if not str(tag).startswith(prefix):
++                continue
++            source_tag = str(tag)[len(prefix):]
++            slot = by_source.setdefault((source_tag, period_end, filed), {})
++            slot[half] = float(value)
++            break
++    resolvable = [
++        (source_tag, period_end, filed, halves)
++        for (source_tag, period_end, filed), halves in by_source.items()
++        if len(halves) == 2
++    ]
++    if not resolvable:
++        return out
++
++    for anchor in edgar_tags.DEBT_ANCHOR:
++        candidates = [r for r in resolvable if r[0] == anchor]
++        if candidates:
++            break
++    else:
++        candidates = resolvable
++    source_tag, period_end, filed, halves = max(
++        candidates, key=lambda r: (r[1], r[2]),
++    )
++    captive = halves[edgar_tags.DEBT_SPLIT_CAPTIVE_TAG]
++    industrial = halves[edgar_tags.DEBT_SPLIT_INDUSTRIAL_TAG]
++    out["debt_split_state"] = _DEBT_SPLIT_RESOLVED
++    out["debt_split_captive"] = round(captive / 1_000_000)
++    out["debt_split_industrial"] = round(industrial / 1_000_000)
++    out["debt_split_period"] = period_end.isoformat()
++    return out
++
++
++def debt_split_line(
++    state: str | None, entity: str | None,
++    captive: int | None, industrial: int | None, period: str | None,
++    *, live: bool = True,
++) -> str | None:
++    """CR219 R38 — the debt split, or an explicit statement that it is missing.
++
++    Three renderings, one per state the note distinguishes:
++
++    * `state is None` → `None`. Either the flag is off or this company has no
++      captive lender. Neither is a data gap, so neither gets a disclaimer:
++      a company with no finance arm has a one-part debt structure, and a
++      feature nobody has enabled has not failed.
++    * `state == "unresolved"` → the explicit UNAVAILABLE line. The subsidiary
++      is known to exist and the sheet says so, rather than letting the blended
++      total read as if it were the industrial figure.
++    * `state == "resolved"` → both halves, named, dated.
++
++    The blended `total_debt` line is never touched by any of these — it has
++    its own provenance and answers a different question.
++    """
++    if state is None:
++        return None
++    if state != _DEBT_SPLIT_RESOLVED or captive is None or industrial is None:
++        who = entity or "a captive finance subsidiary"
++        return _labelled(
++            "Debt split (industrial vs. captive finance)", live,
++            [
++                f"UNAVAILABLE — {who} is a consolidated subsidiary, but this "
++                "period's split could not be resolved from the filed facts. "
++                "The gross debt figure above is the BLENDED total and must not "
++                "be read as the industrial parent's own leverage"
++            ],
++        )
++    parts = [f"industrial ${industrial:,}M", f"captive finance ${captive:,}M"]
++    if entity:
++        parts.append(f"finance arm: {entity}")
++    if period:
++        parts.append(f"as of {period}")
++    line = _labelled("Debt split (industrial vs. captive finance)", live, parts)
++    return (
++        f"{line}. The two halves are different credit profiles — a captive "
++        "lender is funded to lend and is expected to carry leverage the "
++        "industrial parent is not; the blended gross-debt figure above "
++        "conflates them."
++    )
++
++
+ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
+     """Fetch real fundamentals via yfinance. Returns None on any error.
+ 
+@@ -1145,6 +1301,15 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
+         if rating_score is not None:
+             out["analyst_rating_score"] = round(rating_score, 1)
+ 
++    # CR219 R38 — the debt split, off the stored EDGAR dimensional facts. The
++    # flag being off sets NO key at all (not even an unresolved state): a
++    # feature that has not been turned on has not failed, and a permanent
++    # "unavailable" disclaimer for it would be the noise CR040 is about,
++    # inverted. Same reason a ticker with no captive lender contributes
++    # nothing here — `fetch_debt_split` returns `{}` for it.
++    if settings.use_edgar_debt_split:
++        out.update(fetch_debt_split(ticker))
++
+     return out
+ 
+ 
+@@ -2105,6 +2270,13 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
+                 data.get("current_ratio"), data.get("quick_ratio"),
+                 data.get("debt_to_equity"), live=False,
+             ),
++            # CR219 R38 — same builder, same order, same wording as the Room
++            # sheet (parity rule above).
++            debt_split_line(
++                data.get("debt_split_state"), data.get("debt_split_entity"),
++                data.get("debt_split_captive"), data.get("debt_split_industrial"),
++                data.get("debt_split_period"), live=False,
++            ),
+             ownership_line(
+                 data.get("held_pct_institutions"), data.get("held_pct_insiders"),
+                 data.get("shares_outstanding"), data.get("float_shares"), live=False,
+diff --git a/backend/app/services/room_prompts.py b/backend/app/services/room_prompts.py
+index e9ca010f..50932f8d 100644
+--- a/backend/app/services/room_prompts.py
++++ b/backend/app/services/room_prompts.py
+@@ -39,6 +39,7 @@ from app.services.fundamentals import (
+     capex_line,
+     capital_return_line,
+     day_move_line,
++    debt_split_line,
+     historical_multiples_line,
+     interest_coverage_line,
+     liquidity_line,
+@@ -2576,6 +2577,26 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
+                 profile.get("quick_ratio") if _is("quick_ratio", "live") else None,
+                 profile.get("debt_to_equity") if _is("debt_to_equity", "live") else None,
+             ),
++            # CR219 R38 — the industrial half of the debt beside the blended
++            # total above. A captive lender is funded to lend; folding its
++            # book into one leverage figure makes the parent look levered in a
++            # way it is not, and the finance arm look safe in a way it is not.
++            # `debt_split_state` gates the whole line: absent (no flag, or no
++            # captive subsidiary) renders nothing at all, which is why this
++            # builder can return None on the common path without a
++            # "split unavailable" disclaimer firing for every ordinary ticker.
++            debt_split_line(
++                profile.get("debt_split_state")
++                if _is("debt_split_state", "live") else None,
++                profile.get("debt_split_entity")
++                if _is("debt_split_entity", "live") else None,
++                profile.get("debt_split_captive")
++                if _is("debt_split_captive", "live") else None,
++                profile.get("debt_split_industrial")
++                if _is("debt_split_industrial", "live") else None,
++                profile.get("debt_split_period")
++                if _is("debt_split_period", "live") else None,
++            ),
+             ownership_line(
+                 profile.get("held_pct_institutions") if _is("held_pct_institutions", "live") else None,
+                 profile.get("held_pct_insiders") if _is("held_pct_insiders", "live") else None,
+diff --git a/backend/app/services/room_runner.py b/backend/app/services/room_runner.py
+index e0b86ed9..b160d8ef 100644
+--- a/backend/app/services/room_runner.py
++++ b/backend/app/services/room_runner.py
+@@ -191,6 +191,30 @@ PHASES: tuple[_Phase, ...] = (
+ )
+ 
+ 
++# ── CR219 R58 — seeded RESEARCHERS debate order ────────────────────────────
++#
++# `PHASES` above is a frozen module-level tuple (CR077 pins this — the parallel
++# guard walks it by identity) and stays byte-identical; the order is applied at
++# ITERATION TIME in the runner loop, never by mutating the table. Only the
++# RESEARCHERS phase (Bull/Bear) is in scope — RISK's three-way debator order is
++# a different question (§12) and untouched here.
++
++
++def _researchers_order(run_id: UUID) -> tuple[AgentId, AgentId]:
++    """Deterministic Bull/Bear order for one run.
++
++    `run_id.int` is the UUID's 128 bits as an integer; UUID4 (every run id this
++    app mints — see `run_id = run_id or uuid4()` above) draws those bits
++    uniformly at random, so the low bit is itself ~50/50 and stable for that
++    run id forever — the same run replayed, or its transcript re-read later,
++    reorders identically. No stdlib `random`/hash-seeding involved, so this
++    needs no seeding and is reproducible from the id alone.
++    """
++    if run_id.int % 2 == 0:
++        return (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER)
++    return (AgentId.BEAR_RESEARCHER, AgentId.BULL_RESEARCHER)
++
++
+ # ── Per-agent canned reasoning templates ──────────────────────────────────
+ 
+ # Each template renders one realistic-shaped contribution for the alpha.
+@@ -510,6 +534,20 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
+     # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
+     # shipped without it (gross debt renders, gross cash did not).
+     "total_cash",
++    # CR219 R38 — the industrial-vs-captive-finance debt split, read off the
++    # stored EDGAR dimensional facts (NOT `.info`, and NOT a live SEC call —
++    # `fetch_debt_split` reads the same point-in-time store the backtest
++    # trusts). Optional-live-only in the strongest sense on this list: the
++    # keys are absent for every ticker with no captive lender, which is almost
++    # all of them, and absent for ALL of them while `use_edgar_debt_split` is
++    # off — a flag that is off means the feature does not exist yet, so no
++    # `field_state` entry is written at all and no disclaimer renders.
++    # `debt_split_state` carries the resolved/unresolved distinction: a known
++    # finance arm whose period cannot be resolved renders an explicit
++    # UNAVAILABLE line rather than letting the blended total pass as the
++    # industrial figure.
++    "debt_split_state", "debt_split_entity",
++    "debt_split_captive", "debt_split_industrial", "debt_split_period",
+     # CR179 Leg 3 — the technicals-lane keys `.info` has always returned, held
+     # under a "CR166 stage 3" census exemption and rendered by nobody. They
+     # arrive from `.info` rather than from `compute_technicals`, so each carries
+@@ -4586,6 +4624,23 @@ class RoomRunner:
+                 # only ever names ANALYSTS-phase agents, so this is a no-op
+                 # for RESEARCHERS/SYNTHESIS/EXECUTION/RISK/VERDICT.
+                 phase_agents = tuple(a for a in phase.agents if a not in ctx.withheld)
++                if phase.label == "RESEARCHERS":
++                    # CR219 R58 — apply the seeded order here, at iteration
++                    # time, never by mutating PHASES (CR077 pins that tuple).
++                    # Flag off ⇒ phase_agents is untouched, i.e. exactly
++                    # today's fixed Bull-then-Bear order.
++                    if settings.room_debate_order_seeded:
++                        phase_agents = _researchers_order(run_id)
++                    # Logged unconditionally (not just when seeded) so a batch
++                    # can be audited for the order actually served without
++                    # parsing every transcript — the served order IS the
++                    # record either way (WP13).
++                    logger.info(
++                        "room_researchers_order",
++                        run_id=str(run_id),
++                        seeded=settings.room_debate_order_seeded,
++                        order=[a.value for a in phase_agents],
++                    )
+                 if phase.label == "ANALYSTS" and ctx.withheld:
+                     for agent_id in phase.agents:
+                         if agent_id not in ctx.withheld:
+diff --git a/backend/scripts/ingest_edgar_facts.py b/backend/scripts/ingest_edgar_facts.py
+index d7e273fa..c6e7aac1 100644
+--- a/backend/scripts/ingest_edgar_facts.py
++++ b/backend/scripts/ingest_edgar_facts.py
+@@ -24,6 +24,16 @@ never as overwrites (the table is append-only per accession).
+ One dead ticker must not kill the rest: no-CIK, no-facts (404) and repeated
+ HTTP failures are logged loudly, counted, and the run continues.
+ 
++CR219 R38 adds a SECOND parse pass over the same payload. companyfacts carries
++dimensional (axis/member) facts inside each fact's `segment` object, which the
++original parser silently discarded; for the debt tags only, and only for the
++three tickers in `edgar_tags`'s captive-finance registry, that pass resolves
++the finance subsidiary's own debt and derives the industrial remainder. Both
++land as ordinary `edgar_facts` rows under `ami:`-namespaced synthetic tags — no
++schema change, and the us-gaap PIT resolver never asks for them. Re-run the
++ingest with `--force` after deploying that pass or the split stays empty and
++every ticker reads as having no captive-finance segment.
++
+ Usage (from backend/, or in-container with PYTHONPATH=/app):
+     .venv/bin/python scripts/ingest_edgar_facts.py \
+         --user-agent "AMI MarketApp CR164 admin@example.com"
+@@ -49,7 +59,16 @@ from sqlalchemy import func, select
+ 
+ from app.db import get_session, init_schema
+ from app.db.models import EdgarFactRow
+-from app.services.edgar_tags import INGEST_TAGS_DEI, INGEST_TAGS_US_GAAP
++from app.services.edgar_tags import (
++    DEBT_ANCHOR,
++    DEBT_OPTIONAL_ADD,
++    DEBT_SPLIT_CAPTIVE_TAG,
++    DEBT_SPLIT_INDUSTRIAL_TAG,
++    DEBT_SPLIT_TAXONOMY,
++    INGEST_TAGS_DEI,
++    INGEST_TAGS_US_GAAP,
++    match_captive_finance_member,
++)
+ 
+ REPO_ROOT = Path(__file__).resolve().parents[2]
+ DEFAULT_TICKERS_FILE = REPO_ROOT / "docs/forward_planning/CR035_room_benchmark/tickers_150.txt"
+@@ -114,12 +133,167 @@ def _parse_date(value) -> date | None:
+         return None
+ 
+ 
+-def parse_companyfacts(data: dict) -> list[dict]:
++_DEBT_TAGS = frozenset(DEBT_ANCHOR + DEBT_OPTIONAL_ADD)
++
++
++def _segment_member_names(fact: dict) -> list[str]:
++    """Every member name carried on one companyfacts fact's `segment` object.
++
++    The shape varies: a single-axis fact carries one `{"dim": ..., "mem": ...}`
++    object, a multi-axis fact carries a list of them, and some payloads name
++    the member under `member` rather than `mem`. All three are read; anything
++    else yields no names, which makes the fact non-dimensional as far as this
++    parser is concerned — the conservative direction, since an unrecognised
++    shape must never be mistaken for a whole-company figure.
++    """
++    segment = fact.get("segment")
++    if not segment:
++        return []
++    entries = segment if isinstance(segment, list) else [segment]
++    names: list[str] = []
++    for entry in entries:
++        if isinstance(entry, str):
++            names.append(entry)
++            continue
++        if not isinstance(entry, dict):
++            continue
++        for key in ("mem", "member", "value"):
++            value = entry.get(key)
++            if isinstance(value, str) and value:
++                names.append(value)
++                break
++    return names
++
++
++def _fact_identity(f: dict) -> tuple | None:
++    """`(period_end, filed, accn, value, period_start, fy, fp, form)` or None.
++
++    The shared validation every fact must pass before it can be stored: a
++    resolvable period end, a filed date, an accession number and a finite
++    numeric value. A fact missing any of those is unresolvable point-in-time
++    and is dropped rather than half-stored.
++    """
++    period_end = _parse_date(f.get("end"))
++    filed = _parse_date(f.get("filed"))
++    accn = f.get("accn")
++    val = f.get("val")
++    if period_end is None or filed is None or not accn or val is None:
++        return None
++    try:
++        value = float(val)
++    except (TypeError, ValueError):
++        return None
++    if not math.isfinite(value):
++        return None
++    fy = f.get("fy")
++    return (
++        period_end, filed, str(accn), value, _parse_date(f.get("start")),
++        int(fy) if isinstance(fy, int) else None,
++        f.get("fp") or None, f.get("form") or None,
++    )
++
++
++def _parse_debt_split(data: dict, ticker: str) -> list[dict]:
++    """CR219 R38 — resolve the captive-finance / industrial debt split.
++
++    Reads the per-fact `segment` axis/member object the non-dimensional pass
++    above deliberately discards, for the debt tags ONLY. For each
++    (tag, unit, period_end, filed, accession) where BOTH a whole-company
++    (segment-free) figure and a matched captive-finance member figure exist,
++    two derived facts are emitted under the `ami:` synthetic tags: the member's
++    own debt, and the industrial remainder.
++
++    The remainder is COMPUTED (consolidated minus member), not looked up. Not
++    every filer tags the industrial half as its own explicit member — many tag
++    only the finance subsidiary and leave the parent implicit — so a lookup
++    would resolve for some filers and silently vanish for others, while the
++    subtraction resolves wherever the member itself does. A negative remainder
++    is refused: it means the two figures are not on the same consolidation
++    basis, and a negative "industrial debt" is arithmetic that has gone wrong,
++    not a fact about a balance sheet.
++
++    Returns [] for every ticker with no registry entry and every filer with no
++    matching member — the common case, and NOT an outage. The caller renders
++    nothing extra rather than a "split unavailable" disclaimer.
++    """
++    out: list[dict] = []
++    us_gaap = (data.get("facts") or {}).get("us-gaap") or {}
++    for tag, body in us_gaap.items():
++        if tag not in _DEBT_TAGS:
++            continue
++        for unit, items in ((body or {}).get("units") or {}).items():
++            if unit not in KEEP_UNITS:
++                continue
++            whole: dict[tuple, float] = {}
++            member: dict[tuple, tuple] = {}
++            for f in items or []:
++                identity = _fact_identity(f)
++                if identity is None:
++                    continue
++                period_end, filed, accn, value, *_rest = identity
++                key = (period_end, filed, accn)
++                names = _segment_member_names(f)
++                if not names:
++                    # Whole-company figure. Last one wins only if none was
++                    # seen — a repeated non-dimensional fact under one identity
++                    # is a malformed payload, and the first is as good a
++                    # choice as any while being deterministic.
++                    whole.setdefault(key, value)
++                    continue
++                if any(match_captive_finance_member(ticker, n) for n in names):
++                    member.setdefault(key, identity)
++            for key, identity in member.items():
++                consolidated = whole.get(key)
++                if consolidated is None:
++                    continue
++                period_end, filed, accn, captive, period_start, fy, fp, form = identity
++                industrial = consolidated - captive
++                if industrial < 0:
++                    print(
++                        f"    [debt-split] {ticker} {tag} {period_end}: member "
++                        f"{captive:,.0f} exceeds consolidated {consolidated:,.0f} "
++                        "— not the same consolidation basis, skipping",
++                        flush=True,
++                    )
++                    continue
++                for synthetic_tag, value in (
++                    (DEBT_SPLIT_CAPTIVE_TAG, captive),
++                    (DEBT_SPLIT_INDUSTRIAL_TAG, industrial),
++                ):
++                    out.append({
++                        "taxonomy": DEBT_SPLIT_TAXONOMY,
++                        # The source us-gaap tag is preserved inside the
++                        # synthetic name so the resolver can prefer the same
++                        # anchor order `DEBT_ANCHOR` already establishes,
++                        # instead of blending two different debt concepts.
++                        "tag": f"{synthetic_tag}:{tag}",
++                        "unit": unit,
++                        "value": value,
++                        "period_start": period_start,
++                        "period_end": period_end,
++                        "fy": fy,
++                        "fp": fp,
++                        "form": form,
++                        "filed": filed,
++                        "accession_no": accn,
++                    })
++    return out
++
++
++def parse_companyfacts(data: dict, ticker: str = "") -> list[dict]:
+     """Flatten companyfacts JSON to the facts the resolver can use.
+ 
+     Keeps only the ingest tag sets, only KEEP_UNITS, and only facts carrying
+     the identity fields (end/val/filed/accn) — anything else is unresolvable
+     point-in-time and is dropped here rather than half-stored.
++
++    Dimensional facts (a `segment` axis/member object) are excluded from this
++    pass, as they always have been: a member's own figure is not the
++    whole-company figure the PIT resolver reads, and letting one through under
++    a plain us-gaap tag would understate every ratio built on it. CR219 R38
++    adds a SECOND pass (`_parse_debt_split`) that reads exactly those
++    dimensional debt facts and stores them under their own `ami:` tags, which
++    the us-gaap resolver never asks for.
+     """
+     out: list[dict] = []
+     facts = data.get("facts") or {}
+@@ -131,32 +305,27 @@ def parse_companyfacts(data: dict) -> list[dict]:
+                 if unit not in KEEP_UNITS:
+                     continue
+                 for f in items or []:
+-                    period_end = _parse_date(f.get("end"))
+-                    filed = _parse_date(f.get("filed"))
+-                    accn = f.get("accn")
+-                    val = f.get("val")
+-                    if period_end is None or filed is None or not accn or val is None:
+-                        continue
+-                    try:
+-                        value = float(val)
+-                    except (TypeError, ValueError):
++                    if _segment_member_names(f):
+                         continue
+-                    if not math.isfinite(value):
++                    identity = _fact_identity(f)
++                    if identity is None:
+                         continue
+-                    fy = f.get("fy")
++                    period_end, filed, accn, value, period_start, fy, fp, form = identity
+                     out.append({
+                         "taxonomy": taxonomy,
+                         "tag": tag,
+                         "unit": unit,
+                         "value": value,
+-                        "period_start": _parse_date(f.get("start")),
++                        "period_start": period_start,
+                         "period_end": period_end,
+-                        "fy": int(fy) if isinstance(fy, int) else None,
+-                        "fp": f.get("fp") or None,
+-                        "form": f.get("form") or None,
++                        "fy": fy,
++                        "fp": fp,
++                        "form": form,
+                         "filed": filed,
+-                        "accession_no": str(accn),
++                        "accession_no": accn,
+                     })
++    if ticker:
++        out.extend(_parse_debt_split(data, ticker))
+     return out
+ 
+ 
+@@ -230,7 +399,7 @@ def main() -> None:
+             print(f"{prefix}: FAILED after retry — continuing", flush=True)
+             continue
+ 
+-        parsed = parse_companyfacts(payload)
++        parsed = parse_companyfacts(payload, ticker)
+         with get_session() as session:
+             existing = {
+                 tuple(row)
