@@ -85,24 +85,28 @@ CR040 failure this whole CR is chasing.)
 
 ## Field-by-field classification: where this module's rows come from
 
-Classified exactly per the audit's §2.1-§2.4 inventory tables, current as of
-this module's writing (`6394a3dc` + lane A1's F5 fix + lane A2's F2 fix, both
-landing concurrently — see the two `LLM_UNVERIFIED` rows below for how this
-registry treats a field whose fix is a DIFFERENT, not-yet-landed lane).
-`time_horizon_days` is recorded `LLM_UNVERIFIED` (F4) because that is the
-truth as of now — its plausibility-band fix is lane B2's job, not this
-module's, and this registry is a record of current provenance, not a
-prediction of a future one. The same applies to F2's `key_number` /
-`decisive_number`: this module was written concurrently with lane A2's
-check-or-strike fix for those two fields; they are recorded `LLM_UNVERIFIED`
-here because that is what `backend/app/services/risk_officer.py` did at the
-moment this row was written, not because A2's fix is doubted. **If A2's fix
-has landed by the time you read this and `risk_officer.py` now checks or
-strikes those fields, this is check 2 firing correctly** — upgrade the row
-type in the same commit that changes the renderer, per the no-silent-downgrade
-rule (which binds a downgrade; an upgrade from `LLM_UNVERIFIED` to
-`CODE_CHECKED` is always welcome and never blocked by check 2 — see
-`test_no_silent_downgrade_pin` for why only the harmful direction is pinned).
+Classified per the audit's §2.1-§2.4 inventory tables, kept current as each
+phase-2 lane lands. `time_horizon_days` is recorded `LLM_UNVERIFIED` (F4)
+because that is the truth as of now — its plausibility-band fix is lane B2's
+job, not this module's, and this registry is a record of current provenance,
+not a prediction of a future one. Upgrade it the same way F2 was upgraded
+below, in the same commit that lands the fix.
+
+F2's `key_number` / `decisive_number` were originally recorded here as
+`LLM_UNVERIFIED`, written concurrently with lane A2's own in-flight,
+not-yet-landed fix — that was the honest state of `risk_officer.py` at the
+time. **Lane A2 landed** (commit `0f9cc06d`, CR219 R59-F2):
+`render_risk_assessment` and `render_officer_turns` now call
+`_quotation_check` (via `_annotated_if_unverified`) **unconditionally** — not
+behind an opt-in flag, per that module's own "on by default — this is a fix,
+not an opt-in feature" — before either field renders, so both rows are now
+`CODE_CHECKED` below. This is check 2 (no-silent-downgrade) firing in the
+welcome direction: an upgrade from `LLM_UNVERIFIED` to `CODE_CHECKED` is never
+blocked by `test_no_silent_downgrade_pin` (it pins only rows moving TOWARD
+`LLM_UNVERIFIED`), and needed no relaxation of that test's guarantee — only
+its complementary exact-set pin, `test_llm_unverified_rows_match_the_audit_
+today`, needed its `expected_unverified` set updated to drop the two rows
+that just left it, which is a factual correction, not a loosened bound.
 """
 
 from __future__ import annotations
@@ -297,21 +301,20 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "enum-validated against _CONFIDENCE_VALUES (F7, noted not a finding)",
     ),
     ("risk_rung", "key_number"): ProvenanceRow(
-        Provenance.LLM_UNVERIFIED,
-        "R59 audit F2 — app.services.risk_officer, free text explicitly asked "
-        "to be 'a quotation from the fact sheet' (build_risk_officer_"
-        "instruction), never verified against the sheet or the ladder before "
-        "rendering (render_officer_turns) or before promotion into the comb "
-        "headline slot. Fix is lane A2 (check-or-strike against the sheet + "
-        "ladder), landing concurrently with this row and not yet reflected "
-        "here — see this module's docstring for how a landed A2 should update "
-        "this row",
+        Provenance.CODE_CHECKED,
+        "app.services.risk_officer._quotation_check, called unconditionally "
+        "via _annotated_if_unverified from render_risk_assessment and "
+        "render_officer_turns (CR219 R59-F2, commit 0f9cc06d) — every numeral "
+        "in the string is normalized and matched against the fact sheet "
+        "(profile, optional) and the ladder's own rung figures before render; "
+        "a miss carries '[AMI: unverifiable]' in the body and is dropped from "
+        "the comb headline slot in favour of _rung_derived_headline",
     ),
     ("risk_rung", "decisive_number"): ProvenanceRow(
-        Provenance.LLM_UNVERIFIED,
-        "R59 audit F2 — app.services.risk_officer.render_officer_turns, same "
-        "unverified-quotation shape as key_number, promoted into the balanced "
-        "call's headline. Fix is lane A2, same caveat as key_number above",
+        Provenance.CODE_CHECKED,
+        "app.services.risk_officer._quotation_check, same unconditional "
+        "check as key_number (CR219 R59-F2, commit 0f9cc06d), applied to the "
+        "balanced call's headline candidate in render_officer_turns",
     ),
     # ── surface: stance_envelope (backend/app/services/room_runner.py
     #    parse_stance_envelope) — NOT walked by check 1; the SIZE: field on

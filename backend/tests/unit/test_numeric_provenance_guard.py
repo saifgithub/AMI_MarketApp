@@ -186,6 +186,13 @@ _PINNED_NOT_LLM_UNVERIFIED: dict[tuple[str, str], Provenance] = {
     ("risk_rung", "reward_risk"): Provenance.COMPUTED,
     ("risk_rung", "recommended"): Provenance.CODE_CHECKED,
     ("risk_rung", "confidence"): Provenance.CODE_CHECKED,
+    # CR219 R59-F2 landed (commit 0f9cc06d): _quotation_check now runs
+    # unconditionally in render_risk_assessment/render_officer_turns, so
+    # these two moved from LLM_UNVERIFIED (see the removed entries in
+    # test_llm_unverified_rows_match_the_audit_today below) to CODE_CHECKED
+    # here — the welcome direction, never blocked by test_no_silent_downgrade_pin.
+    ("risk_rung", "key_number"): Provenance.CODE_CHECKED,
+    ("risk_rung", "decisive_number"): Provenance.CODE_CHECKED,
     ("stance_envelope", "argued_size_pct"): Provenance.CODE_CHECKED,
 }
 
@@ -215,15 +222,19 @@ def test_no_silent_downgrade_pin():
 def test_llm_unverified_rows_match_the_audit_today():
     """The complement of the pin above: today's known-unverified rows, by
     name, so a row silently disappearing from the registry (rather than being
-    reclassified) is caught too. F4's time_horizon_days and F2's key_number /
-    decisive_number are recorded here because that is what the code does as
-    of this module — see numeric_provenance.py's docstring for why F2's two
-    rows are expected to flip to CODE_CHECKED once lane A2 lands, and why that
-    flip needs no permission from this test (only the harmful direction does)."""
+    reclassified) is caught too. F4's time_horizon_days is recorded here
+    because that is what the code does as of this module. F2's key_number /
+    decisive_number are NOT in this set any more — lane A2 landed (commit
+    0f9cc06d): `_quotation_check` now runs unconditionally in
+    render_risk_assessment/render_officer_turns, so both moved to
+    CODE_CHECKED (see `_PINNED_NOT_LLM_UNVERIFIED` above) in the same commit
+    that updated this set. This is a factual correction to match the new
+    ground truth, not a relaxation of the no-silent-downgrade guarantee that
+    lives in `test_no_silent_downgrade_pin` above — that test's own
+    guarantee only binds the harmful direction and was never touched by this
+    upgrade."""
     expected_unverified = {
         ("verdict", "time_horizon_days"),
-        ("risk_rung", "key_number"),
-        ("risk_rung", "decisive_number"),
     }
     actual_unverified = {
         key for key, row in NUMERIC_PROVENANCE.items()
