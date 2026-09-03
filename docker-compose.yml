@@ -432,6 +432,9 @@ services:
       # because it changes user-visible prose shape and makes AMI's geometry note
       # fire on every BUY turn. See Settings.room_trader_regex_enabled.
       ROOM_TRADER_REGEX_ENABLED: ${ROOM_TRADER_REGEX_ENABLED:-false}
+      # CR221 A1 — debt maturity ladder on the Room fact sheet. Off until §7's
+      # before/after replay has run. See Settings.room_debt_maturity_enabled.
+      ROOM_DEBT_MATURITY_ENABLED: ${ROOM_DEBT_MATURITY_ENABLED:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

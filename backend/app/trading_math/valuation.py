@@ -21,6 +21,12 @@ raw values and hands them in.
 
 from __future__ import annotations
 
+from typing import Sequence
+
+# Above this, the figure is a flow-over-point artifact rather than a rate —
+# see `cost_of_debt_pct`. Distressed corporate borrowing tops out well below it.
+_MAX_PLAUSIBLE_COST_OF_DEBT_PCT = 40.0
+
 
 def multiple_compression_downside(pe: float | None, delta_pts: float) -> float | None:
     """Downside %, if a P/E of `pe` compresses by `delta_pts` points.
@@ -61,6 +67,36 @@ def fcf_yield_pct(free_cash_flow: float | None, market_cap: float | None) -> flo
     if free_cash_flow is None or market_cap is None or market_cap <= 0:
         return None
     return round(free_cash_flow / market_cap * 100, 1)
+
+
+def cost_of_debt_pct(
+    annual_interest: float | None, gross_debt: float | None
+) -> float | None:
+    """Implied annual cost of debt % = annual interest / gross debt (1 dp).
+
+    CR221 A3 — asked for 6 times by 4 agents ("what average interest rate is
+    this company paying?"). Both inputs come from the caller already annualised
+    and already agreed on a basis; the four-quarters-or-nothing rule that makes
+    the numerator honest lives in `edgar_pit.ttm`, not here.
+
+    `abs()` on the numerator for the reason `interest_coverage` uses it: filers
+    sign interest expense as a cost or as a magnitude, and both mean the same
+    outflow.
+
+    Refused above `_MAX_PLAUSIBLE_COST_OF_DEBT_PCT`, because the numerator is a
+    FLOW over the year and the denominator a POINT at the end of it: a company
+    that repaid most of its debt in Q4 pays a full year of interest against a
+    stub balance and computes to a triple-digit "rate". Distressed borrowers
+    reach the high teens, so the ceiling clears every real cost of debt and
+    catches only the artifact.
+
+    >>> cost_of_debt_pct(-1_842, 45_146)   # Caterpillar FY2025, $M
+    4.1
+    """
+    if annual_interest is None or gross_debt is None or gross_debt <= 0:
+        return None
+    pct = round(abs(annual_interest) / gross_debt * 100, 1)
+    return None if pct > _MAX_PLAUSIBLE_COST_OF_DEBT_PCT else pct
 
 
 def net_cash_millions(total_cash: float | None, total_debt: float | None) -> int | None:

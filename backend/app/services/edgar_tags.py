@@ -62,8 +62,15 @@ DILUTED_SHARES = ("WeightedAverageNumberOfDilutedSharesOutstanding",)
 # Instant concepts (balance-sheet points) — resolved at latest period_end filed <= as_of.
 CASH_ANCHOR = ("CashAndCashEquivalentsAtCarryingValue",)
 CASH_OPTIONAL_ADD = ("ShortTermInvestments",)
-DEBT_ANCHOR = ("LongTermDebtNoncurrent", "LongTermDebt")
-DEBT_OPTIONAL_ADD = ("LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings")
+# Named because two consumers need THIS tag specifically, not "whichever debt
+# tag resolves first": the maturity ladder's beyond-year-five residual is only
+# arithmetic against noncurrent debt (`LongTermDebt` includes the current
+# portion and would double-count year one), and the ladder's basis note names
+# the short-term borrowings it excludes.
+LONG_TERM_DEBT_NONCURRENT = "LongTermDebtNoncurrent"
+SHORT_TERM_BORROWINGS = "ShortTermBorrowings"
+DEBT_ANCHOR = (LONG_TERM_DEBT_NONCURRENT, "LongTermDebt")
+DEBT_OPTIONAL_ADD = ("LongTermDebtCurrent", "DebtCurrent", SHORT_TERM_BORROWINGS)
 EQUITY = (
     "StockholdersEquity",
     "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
@@ -76,6 +83,36 @@ ASSETS = ("Assets",)
 CURRENT_ASSETS = ("AssetsCurrent",)
 CURRENT_LIABILITIES = ("LiabilitiesCurrent",)
 INVENTORY = ("InventoryNet",)
+
+# CR221 A3 / DEF399 — interest expense, on two irreconcilable bases kept apart
+# on purpose. `INTEREST_ACCRUAL` is the income-statement concept;
+# `INTEREST_CASH` is the cash-flow supplemental. They usually agree within a
+# few percent, and where they DISAGREE it is a signal, not noise: on
+# Harley-Davidson the accrual tag reads $31M against $331M paid, because the
+# accrual line excludes the finance arm. `interest_cost.py` refuses rather than
+# picks when they diverge — see DEF399 for why picking is how the shipped
+# `interest_coverage` came to overstate Caterpillar's by 5x.
+INTEREST_ACCRUAL = ("InterestExpense", "InterestExpenseNonoperating")
+INTEREST_CASH = ("InterestPaidNet", "InterestPaid")
+
+# CR221 A1 — the debt maturity ladder (instants, stated at the balance-sheet
+# date). NOT a preference list: these are five DISTINCT buckets, so the resolver
+# reads them as a set at one common `period_end` and may never substitute one
+# for another. Year one is the anchor — a filer disclosing a ladder at all tags
+# it — and the (label, tag) pairing lives here so bucket order and bucket
+# labelling cannot drift apart in two files.
+#
+# `...AfterYearFive` exists in us-gaap but is tagged by neither of the two
+# filers measured (CAT 18 points on each of the five below, Deere 4), so the
+# beyond-five figure is derived from noncurrent debt rather than read.
+DEBT_MATURITY_LADDER: tuple[tuple[str, str], ...] = (
+    ("Within 1 year", "LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"),
+    ("Year 2", "LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo"),
+    ("Year 3", "LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree"),
+    ("Year 4", "LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour"),
+    ("Year 5", "LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive"),
+)
+DEBT_MATURITY_TAGS: tuple[str, ...] = tuple(tag for _, tag in DEBT_MATURITY_LADDER)
 
 # dei taxonomy — shares outstanding cover-page fact (instant), the market-cap basis.
 SHARES_OUTSTANDING_DEI = ("EntityCommonStockSharesOutstanding",)
@@ -103,5 +140,8 @@ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
     + CURRENT_ASSETS
     + CURRENT_LIABILITIES
     + INVENTORY
+    + DEBT_MATURITY_TAGS
+    + INTEREST_ACCRUAL
+    + INTEREST_CASH
 )
 INGEST_TAGS_DEI: frozenset[str] = frozenset(SHARES_OUTSTANDING_DEI)

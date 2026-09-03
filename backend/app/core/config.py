@@ -874,6 +874,14 @@ class Settings(BaseSettings):
     # markdown bolding — so ~12% of Desk turns render with no labelled block.
     room_trader_regex_enabled: bool = False
 
+    # CR221 A1 — the debt maturity ladder on the Room's fact sheet, sourced from
+    # the five `LongTermDebtMaturitiesRepaymentsOfPrincipalIn*` tags the EDGAR
+    # ingest now stores. Flagged not because the data is doubtful but because
+    # CR221 §7 measures it: the control arm has to be a flag flip against one
+    # cached profile, or "did the ask stop" is confounded by market data moving
+    # between fetches. See `app/services/debt_maturity.py`.
+    room_debt_maturity_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
