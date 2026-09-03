@@ -139,6 +139,21 @@ def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | 
     # control. Deliberately NOT gated on `repair_truncated`: nothing is being
     # repaired or guessed here — the object is complete, only the tail is cut.
     if candidate.startswith("{"):
+        # DEF398 — the trailing prose may itself contain a brace, and then the
+        # `rfind` below lands inside the prose rather than on the object's own
+        # closer, so the trimmed candidate is malformed and the verdict is lost
+        # anyway. Measured shape: the PM appends a `DATA I LACKED:` section that
+        # QUOTES its own JSON-only contract back at us verbatim — "begin with
+        # '{' and end with '}'" — so the quoted rule is precisely what defeats
+        # the DEF352 recovery. raw_decode reads the FIRST complete value from
+        # position 0 and reports where it ended, which cannot be confused by
+        # anything written after it.
+        try:
+            decoded, _end = json.JSONDecoder(strict=False).raw_decode(candidate)
+        except json.JSONDecodeError:
+            decoded = None
+        if isinstance(decoded, dict):
+            return decoded
         last = candidate.rfind("}")
         if last > 0 and last + 1 < len(candidate):
             try:
