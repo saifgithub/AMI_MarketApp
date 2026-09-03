@@ -87,6 +87,13 @@ _UNREVIEWED = {
     ("lessons_service.py", "mark_started", "LessonProgressRow"),
     ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
     ("watchlist_store.py", "add", "SimWatchlistRow"),
+    # DEF401 — CR219's calibration ledger, caught by this guard on the day it
+    # landed. `uq_verdict_outcomes_room_run` is the constraint; the loser is
+    # swallowed by the function's own blanket `except Exception`, so it drops a
+    # bank silently rather than raising. It reads like re-read-and-update (the
+    # docstring's contract is "Idempotent per run"), but this is CR219's lane
+    # and DEF220 is the standing precedent against fixing a surfaced site blind.
+    ("verdict_outcomes.py", "bank_verdict_outcome", "VerdictOutcomeRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
 
