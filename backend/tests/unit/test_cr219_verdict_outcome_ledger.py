@@ -241,6 +241,65 @@ def test_rebank_same_run_updates_not_duplicates() -> None:
     assert rows[0].verdict_action == VerdictAction.PASS.value
 
 
+def test_held_back_hook_expression_is_valid_verbatim() -> None:
+    """The room_runner hook's exact call, proven before it is applied.
+
+    The hook itself is HELD BACK — WP13 owns `room_runner.py` this wave, and
+    two lanes co-editing one file is the sweep that has bitten this project
+    three times. But the call it will make can be proven here: this is the
+    verbatim expression, including `_reference_close(profile)` (the price the
+    Room was actually shown, imported from room_runner without editing it) and
+    `Horizon.LONG.value` — the mandate horizon is an enum, so `.value` is
+    required and a bare `ctx.mandate.horizon` would silently fall through to
+    the medium default.
+    """
+    from app.schemas.mandate import Horizon
+    from app.services.room_runner import _reference_close
+
+    uid = _mk_user()
+    rid = _mk_run(uid)
+
+    # A LIVE-technicals profile, the shape `_reference_close` gates on.
+    profile = {"field_state": {"technicals": "live"}, "last_close": 231.5}
+
+    vo.bank_verdict_outcome(
+        room_run_id=rid, user_id=uid, ticker="AAPL",
+        verdict=_verdict(approve_votes=4, samples=5),
+        reference_price=_reference_close(profile),
+        reference_at=datetime.now(timezone.utc),
+        mandate_horizon=Horizon.LONG.value,
+    )
+
+    r = _rows()[0]
+    assert r.status == vo.STATUS_PENDING
+    assert float(r.reference_price) == 231.5
+    assert r.horizon_days == vo.HORIZON_DAYS["long"] == 126
+    assert r.conviction == vo.CONVICTION_HIGH  # 4/5 = 0.8, the high threshold
+
+
+def test_hook_banks_unscorable_when_technicals_are_not_live() -> None:
+    """`_reference_close` yields None without LIVE provenance (CR104).
+
+    That is not a hook bug to route around — it is the honest path: the run
+    goes into the ledger `unscorable`, so how often the Room decides without a
+    live price stays countable.
+    """
+    from app.services.room_runner import _reference_close
+
+    uid = _mk_user()
+    profile = {"field_state": {"technicals": "unavailable"}, "last_close": 231.5}
+    assert _reference_close(profile) is None
+
+    vo.bank_verdict_outcome(
+        room_run_id=_mk_run(uid), user_id=uid, ticker="AAPL", verdict=_verdict(),
+        reference_price=_reference_close(profile),
+        reference_at=datetime.now(timezone.utc), mandate_horizon="medium",
+    )
+    r = _rows()[0]
+    assert r.status == vo.STATUS_UNSCORABLE
+    assert r.exclusion_reason == vo.REASON_NO_REFERENCE_PRICE
+
+
 def test_verdict_horizon_overrides_mandate_horizon() -> None:
     uid = _mk_user()
     _bank(uid, _mk_run(uid), _verdict(time_horizon_days=10), horizon="long")
@@ -255,8 +314,11 @@ def test_mandate_horizon_maps_to_days() -> None:
 
 def test_conviction_buckets_from_cr214_votes() -> None:
     assert vo.conviction_bucket(5, 5) == vo.CONVICTION_HIGH
+    assert vo.conviction_bucket(4, 5) == vo.CONVICTION_HIGH  # 0.8 is inclusive
     assert vo.conviction_bucket(3, 5) == vo.CONVICTION_MEDIUM
+    assert vo.conviction_bucket(2, 5) == vo.CONVICTION_MEDIUM  # 0.4 is inclusive
     assert vo.conviction_bucket(1, 5) == vo.CONVICTION_LOW
+    assert vo.conviction_bucket(0, 5) == vo.CONVICTION_LOW
     # Absence is absence — self-consistency off, or a pre-CR214 run.
     assert vo.conviction_bucket(None, None) is None
     assert vo.conviction_bucket(3, 0) is None
