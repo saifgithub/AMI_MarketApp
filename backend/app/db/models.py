@@ -2656,3 +2656,81 @@ class AdminAuditRow(Base):
         DateTime(timezone=True), default=_utcnow, server_default=func.now(),
         nullable=False,
     )
+
+
+class VerdictOutcomeRow(Base):
+    """CR219 R55 — one banked Room verdict, and what the market did afterwards.
+
+    **This is a calibration sanity floor, not a performance claim.** The two
+    questions it can answer are "are APPROVEs systematically WORSE than PASSes"
+    and "does high conviction mean anything at all" — both are floors a
+    functioning decision process must clear, not evidence that the Room picks
+    winners. AMI Trade is a simulation-only education product and is not
+    licensed to give investment advice; nothing derived from this table may be
+    surfaced to a user or framed as a track record. Internal only (Saiful's
+    2026-09-02 ruling), admin-gated, no user-facing surface before v1.0.
+
+    Why a table rather than a query over `room_runs.verdict`: the reference
+    price has to be **the price the Room actually saw on that run**
+    (`room_runner._reference_close(ctx.profile)`), captured at bank time. A
+    later re-derivation would score the Room against data it never had, which
+    turns a calibration check into a fabrication.
+
+    `status` is the lifecycle:
+      `pending`     banked, horizon not yet elapsed (or not yet scored)
+      `scored`      `outcome_price` + `forward_return` are real market data
+      `unscorable`  deliberately never scored; `exclusion_reason` says why
+
+    `unscorable` is load-bearing and is the CR040 degrade-loudly application
+    here: an excluded synthetic user, an absent reference price, and a horizon
+    close that could only be served from `mock_walk` all land here with a
+    reason string rather than being silently dropped or silently scored
+    against a random walk.
+
+    `conviction` carries the CR214 graded signal (`approve_votes`/`samples`)
+    as a text label, NOT a PM-stated word — the `Verdict` schema has no
+    conviction field, and the self-consistency vote count is the only
+    conviction-shaped quantity the Room actually produces.
+    """
+
+    __tablename__ = "verdict_outcomes"
+    __table_args__ = (
+        UniqueConstraint("room_run_id", name="uq_verdict_outcomes_room_run"),
+        Index("ix_verdict_outcomes_status", "status"),
+        Index("ix_verdict_outcomes_user_ticker", "user_id", "ticker"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+
+    # FK target is `room_runs.id` (RoomRunRow). One ledger row per run —
+    # re-banking the same run must update, never duplicate.
+    room_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("room_runs.id", ondelete="CASCADE"), nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, index=True, nullable=False)
+
+    verdict_action: Mapped[str] = mapped_column(String, nullable=False)
+    conviction: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    approve_votes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    samples: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    size_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    # The close the Room was shown this run. NULL means the run had no LIVE
+    # technicals provenance, which makes the row unscorable by construction.
+    reference_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    reference_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    horizon_days: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    status: Mapped[str] = mapped_column(
+        String, default="pending", server_default=text("'pending'"), nullable=False,
+    )
+    outcome_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    outcome_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    forward_return: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    scored_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    exclusion_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
+    )
