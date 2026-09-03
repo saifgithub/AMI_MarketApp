@@ -139,7 +139,12 @@ ITEMS: tuple[Item, ...] = (
          r"segment revenue|revenue segmentation|revenue breakdown by segment|"
          r"revenue exposure breakdown|"
          r"segment[- ]?(level|wise)?[^.]{0,30}"
-         r"(revenue|sales|ebitda|operating profit|profit|contribution)"),
+         r"(revenue|sales|ebitda|operating profit|profit|contribution)|"
+         # `inventory.py`'s Segment CLUSTER already claims "revenue mix"; the
+         # item pattern was transcribed without it, so every "power-gen revenue
+         # mix percentage" fell through to no item at all.
+         r"revenue mix|(revenue|sales) (share|contribution)|"
+         r"(share|percentage|%) of total (revenue|sales)"),
     Item("D2", "Segment & geography", "Revenue by geography", OPEN,
          "same route",
          r"geograph"),
