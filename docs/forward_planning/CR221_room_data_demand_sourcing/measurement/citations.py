@@ -105,20 +105,17 @@ def main() -> int:
     print("=" * 92)
     print(f"CITATION — {args.ticker}, {len(loaded)} convenes")
     print("=" * 92)
-    print(f"{'item':5s} {'arm':8s} {'cited/12':>9s} {'cited/askers':>13s}  askers")
+    print(f"{'item':5s} {'arm':8s} {'cited/turns':>12s} {'cited/askers':>13s}  askers")
     print("-" * 92)
     for item_id, (arm, patterns) in SHIPPED.items():
-        turns, agents = [], 0
-        for (mandate, label), rows in loaded.items():
-            if label == arm:
-                turns += rows
-                agents += len({r["agent"] for r in rows})
+        turns = [t for (m, label), rows in loaded.items() if label == arm for t in rows]
+        agents = len(turns)
         if not turns:
             continue
         cited = _cited(turns, patterns)
         askers = asked_by.get(item_id, set())
         overlap = cited & askers
-        print(f"{item_id:5s} {arm:8s} {len(cited):>4d}/{agents:<4d} "
+        print(f"{item_id:5s} {arm:8s} {len(cited):>6d}/{agents:<5d} "
               f"{len(overlap):>6d}/{len(askers):<6d}  "
               f"{','.join(sorted(a[:12] for a in askers)) or '-'}")
 
@@ -132,7 +129,8 @@ def main() -> int:
                 continue
             cited = _cited(turns, patterns)
             n = len({t["agent"] for t in turns})
-            print(f"  {label:24s} {arm:8s} cited by {len(cited):2d} of {n} agents")
+            print(f"  {label:24s} {arm:8s} cited by {len(cited):2d} of the {n} "
+                  f"distinct agents ({len(turns)} turns)")
     return 0
 
 
