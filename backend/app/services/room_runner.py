@@ -106,6 +106,7 @@ from app.services.llm_gateway import (
 from app.services.llm_json import extract_json_object
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
 from app.services.room_prompts import (
+    GAPS_ITEM_MAX_CHARS,
     PM_KILL_CRITERION_MAX_CHARS,
     PM_KILL_CRITERION_MIN_CHARS,
     PM_NARRATION_MAX_CHARS,
@@ -3248,6 +3249,89 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     )
 
 
+# CR219 R53 — the GAPS telemetry tail, on the same DEF147 idiom as the stance
+# envelope just above (locate-and-strip is loose; parse is strict; the two
+# jobs are independent so a malformed tail costs the field, never the prose).
+#
+# Unlike STANCE, GAPS is asked for as a TRAILING line only (`_GAPS_FORMAT`,
+# room_prompts.py) — it was never the field DEF147 measured truncation eating,
+# so there is no reason to fight for the front-of-turn slot the way the stance
+# envelope had to, and a second instruction competing for "the very first
+# line" is exactly the DEF251 collision this file already has one scar from.
+# So the locator here stays end-anchored rather than adopting DEF247's
+# "any line, wherever it sits" search — a mid-turn line that merely starts
+# with `GAPS:` is far more likely to be the agent discussing the concept
+# (this is a telemetry ask about data availability, a topic an analyst turn
+# can legitimately narrate) than a duplicate machine channel, and nothing has
+# yet been measured to justify widening it. If the corpus later shows GAPS
+# displaced the way STANCE was, this can be widened the same way DEF247
+# widened that one — deliberately, from a measurement, not a hunch.
+_GAPS_LINE_RE = re.compile(
+    rf"{_EMPHASIS}\[?\s*{_EMPHASIS}GAPS\s*:\s*(.*?)\s*\]?{_EMPHASIS}\s*\Z",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Up to 3 items, separated by ';' — the prompt's own delimiter choice, over a
+# comma, because a gap item routinely contains one ("segment revenue, geo
+# split") and a comma-split would fracture it into two bogus items.
+_GAPS_MAX_ITEMS = 3
+
+
+def parse_data_gaps(text: str) -> tuple[str, list[str] | None]:
+    """Split an analyst's turn into (prose, data_gaps).
+
+    Returns `(text, None)` unchanged when no `GAPS:` tail is found — absence is
+    itself a signal `aggregate_data_gaps.py` counts as an omission, never
+    silently coerced to "nothing was missing". Returns `(stripped, [])` for the
+    prompt's own opt-out (`GAPS: none`) — a DISTINCT, positive state: the agent
+    looked and found nothing to report, which is not the same fact as the agent
+    never emitting the tail at all (the same `None`-vs-empty-list discipline
+    `_StanceEnvelope`'s STANCE field already applies to `none`-vs-absent one
+    field over).
+
+    Every recognised tail is stripped regardless of what it parses to — the
+    telemetry channel must never reach the user, whether or not a single item
+    survives the length bound.
+    """
+    lines = text.split("\n")
+    filled = [i for i, line in enumerate(lines) if line.strip()]
+    if not filled:
+        return text, None
+
+    last = filled[-1]
+    match = _GAPS_LINE_RE.match(lines[last].strip())
+    if match is None:
+        return text, None
+
+    body = "\n".join(lines[:last]).rstrip()
+    raw = match.group(1)
+    # DEF257's emphasis strip, reused: a bolded tail's captured group can still
+    # carry a trailing `**` the outer pattern's own trailing `{_EMPHASIS}` did
+    # not reach because it sits INSIDE the optional `]`.
+    raw = _ENVELOPE_TRIM_RE.sub("", raw)
+
+    if raw.strip().lower() in ("none", "no gaps", "n/a", "na", ""):
+        return body, []
+
+    items: list[str] = []
+    for part in raw.split(";"):
+        item = _ENVELOPE_TRIM_RE.sub("", part).strip().rstrip(".")
+        # Also strip a leading list marker ('(a)', '-', '1.') — the arms
+        # harness's own lettered-item habit is a plausible drift target since
+        # this prompt evolved from that one, and a marker left in place would
+        # bucket as its own distinct (unbucketed) item in the aggregation.
+        item = re.sub(r"^(?:\(?[a-zA-Z0-9]\)|\d+[.)]|[-*•])\s*", "", item).strip()
+        if not item or len(item) > GAPS_ITEM_MAX_CHARS:
+            # Nulled-by-omission, never truncated — the same DEF059-class rule
+            # STANCE_HEADLINE applies: a cut phrase can name the wrong gap.
+            continue
+        items.append(item)
+        if len(items) == _GAPS_MAX_ITEMS:
+            break
+
+    return body, items
+
+
 # DEF125 — the transcript mark for a turn the model was cut off mid-writing.
 #
 # Written in the established `[AMI …]` annotation voice (see
@@ -4681,9 +4765,9 @@ class RoomRunner:
                         # Emit in fixed order. After all four are committed to
                         # run.transcript, RESEARCHERS onward see every analyst —
                         # only the analysts are blind to each other.
-                        for agent_id, (text, geom_sig, envelope) in zip(
-                            phase_agents, results
-                        ):
+                        for agent_id, (
+                            text, geom_sig, envelope, envelope_parsed, data_gaps,
+                        ) in zip(phase_agents, results):
                             async for ev in _stream_agent_text(
                                 agent_id=agent_id,
                                 run_id=run_id,
@@ -4693,6 +4777,8 @@ class RoomRunner:
                                 char_delay_min=char_delay_min,
                                 char_delay_max=char_delay_max,
                                 envelope=envelope,
+                                envelope_parsed=envelope_parsed,
+                                data_gaps=data_gaps,
                             ):
                                 yield ev
                     elif (
@@ -5223,7 +5309,7 @@ async def _compute_agent_text(
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
     portfolio_snapshot: str | None = None,
     parallel_phase: bool = False,
-) -> tuple[str, dict[str, Any] | None, "_StanceEnvelope"]:
+) -> tuple[str, dict[str, Any] | None, "_StanceEnvelope", bool | None, list[str] | None]:
     """Produce one agent's final contribution text (LLM when live, scripted
     otherwise) plus its DEF095 geometry-verification signal — WITHOUT streaming
     it or touching `run.transcript`.
@@ -5239,9 +5325,18 @@ async def _compute_agent_text(
     The live path buffers the full LLM response (with a per-agent timeout); if
     the upstream model hangs past `agent_timeout_s` (or errors, or returns
     empty) the agent falls back to its scripted template so the run can still
-    finish. Returns `(text, geom_signal)`; `geom_signal` is a DEF095 telemetry
-    payload when the agent narrated a ratio its own levels don't support, else
-    None. The caller logs it (so run_id stays with the streamer).
+    finish. Returns `(text, geom_signal, envelope, envelope_parsed,
+    data_gaps)`; `geom_signal` is a DEF095 telemetry payload when the agent
+    narrated a ratio its own levels don't support, else None. The caller logs
+    it (so run_id stays with the streamer).
+
+    CR219 R53/R57 — the last two are turn-telemetry, both `None` unless this
+    was a parsed live turn that was actually asked: `envelope_parsed` is
+    `None` for the non-live scripted demo path (no envelope was ever asked
+    for, so there is nothing to report an emission rate over — distinct from
+    `False`, which means it WAS asked and said nothing shaped like the
+    machine channel); `data_gaps` is `None` for every agent outside the four
+    analysts (`PHASES[0].agents`, R53's own scope), same reasoning.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
     plan = effective_plan_for_user(ctx.user_id)
@@ -5252,6 +5347,14 @@ async def _compute_agent_text(
     # a scripted fallback, a timeout and an LLM failure all reach the comb's
     # gutter rather than borrowing a stance from somewhere.
     envelope = _StanceEnvelope()
+    # CR219 R57 — `None` until a live turn actually reaches the parse call
+    # below; stays `None` on every non-live/fallback/timeout/error path, which
+    # is the same "nothing to measure here" absence `envelope` itself already
+    # keeps for those paths.
+    envelope_parsed: bool | None = None
+    # CR219 R53 — `None` unless this agent is one of the four analysts AND the
+    # tail was actually parsed (below). Never asked ⇒ never measured.
+    data_gaps: list[str] | None = None
 
     def _fall_back_to_script(reason: str) -> str:
         """CR219 R51 — one recording point for every way a live turn becomes a
@@ -5355,7 +5458,25 @@ async def _compute_agent_text(
             # prose and a trailing envelope and break its end-anchor — and before
             # the transcript commit, so no downstream agent ever reads a machine
             # channel as if it were another agent's argument (DEF095).
+            pre_strip = text
             text, envelope = parse_stance_envelope(text)
+            # CR219 R57 — "found a tail" is exactly "the strip changed the
+            # text": `parse_stance_envelope` returns its input BYTE-IDENTICAL
+            # on every path that locates nothing (empty input; no leading
+            # line and no legacy trailing form), and strips at least one line
+            # on every other path. This is DEF251's own "contains the string
+            # STANCE at all" emission signal, computed without duplicating
+            # that function's locator here.
+            envelope_parsed = text != pre_strip
+            # CR219 R53 — the four analysts only, same set `_GAPS_FORMAT` was
+            # appended to (room_prompts.py). Parsed off the STANCE-stripped
+            # text so a leaked machine channel never appears inside a gap
+            # item, and BEFORE the "no prose" fallback below so a gap the
+            # agent did state survives even if its prose was swallowed by it
+            # (the same "stance is kept" precedent the comment two lines down
+            # already sets for the envelope).
+            if agent_id in PHASES[0].agents:
+                text, data_gaps = parse_data_gaps(text)
             # DEF147: with the envelope leading the turn, a generation that
             # stopped right after it leaves no prose at all. Same destination as
             # an empty stream two lines up, rather than a blank contribution.
@@ -5401,7 +5522,7 @@ async def _compute_agent_text(
         size_pct=ctx.trader_size_pct,
         reference_close=_reference_close(ctx.profile),
     )
-    return text, geom_sig, envelope
+    return text, geom_sig, envelope, envelope_parsed, data_gaps
 
 
 async def _stream_agent_text(
@@ -5414,6 +5535,8 @@ async def _stream_agent_text(
     char_delay_min: float,
     char_delay_max: float,
     envelope: "_StanceEnvelope | None" = None,
+    envelope_parsed: bool | None = None,
+    data_gaps: list[str] | None = None,
 ) -> AsyncIterator[RoomEvent]:
     """Stream an already-computed contribution: typewriter tokens, commit it to
     `run.transcript`, then emit `agent_done`.
@@ -5422,6 +5545,13 @@ async def _stream_agent_text(
     gather the slow LLM calls and STILL emit every agent's tokens (and commit
     them to the transcript) in a fixed, deterministic order regardless of which
     call finished first (CR077 §Build 3).
+
+    CR219 R53/R57 — `envelope_parsed` and `data_gaps` land on the STORED
+    `AgentMessage` only, never on the yielded `RoomEvent`. This is telemetry
+    for `aggregate_data_gaps.py`, deliberately not a wire field: `RoomEvent`
+    is what `room.py` turns into SSE for the client, and the WP that created
+    these two fields is explicit they are "Telemetry framing, not user copy" —
+    adding them here would be the first step toward a client rendering them.
     """
     if geom_sig is not None:
         logger.warning(
@@ -5446,6 +5576,9 @@ async def _stream_agent_text(
         conviction=env.conviction,  # type: ignore[arg-type]
         headline=env.headline,
         argued_size_pct=env.size_pct,
+        # CR219 R53/R57 — see the docstring above for why these stop here.
+        data_gaps=data_gaps,
+        envelope_parsed=envelope_parsed,
     ))
     _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
     yield RoomEvent(
@@ -5482,7 +5615,7 @@ async def _speak_one_agent(
     last. The ANALYSTS phase bypasses this and drives `_compute_agent_text` /
     `_stream_agent_text` directly so its four calls can be gathered.
     """
-    text, geom_sig, envelope = await _compute_agent_text(
+    text, geom_sig, envelope, envelope_parsed, data_gaps = await _compute_agent_text(
         agent_id=agent_id,
         ctx=ctx,
         profile=profile,
@@ -5503,6 +5636,8 @@ async def _speak_one_agent(
         char_delay_min=char_delay_min,
         char_delay_max=char_delay_max,
         envelope=envelope,
+        envelope_parsed=envelope_parsed,
+        data_gaps=data_gaps,
     ):
         yield ev
 

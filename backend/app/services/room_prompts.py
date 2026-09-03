@@ -731,6 +731,17 @@ _NO_FENCE_CLAUSE = " Do not wrap your reply in a code fence."
 # to render a false precision from one.
 STANCE_HEADLINE_MAX_CHARS = 32
 
+# CR219 R53 — one GAPS item's bound. Same reasoning as STANCE_HEADLINE_MAX_CHARS
+# (§3.3's ~32-Latin-character gist budget) applied to a telemetry field instead
+# of a rendered one: the aggregation script buckets these by regex
+# (`aggregate_data_gaps.py`, modeled on the arms harness's `aggregate_arms.py`),
+# and a bucket built from a truncated fragment mis-tags as readily as a rendered
+# one mis-reads. Sized generously relative to the headline (a gap item names a
+# DATA CLASS — "segment revenue split", not a number) rather than reused
+# verbatim, so the two bounds can move independently if either budget turns out
+# wrong.
+GAPS_ITEM_MAX_CHARS = 64
+
 # CR219 R52 — the kill criterion's bound, and it is a real constraint rather
 # than a round number.
 #
@@ -791,6 +802,41 @@ def _build_stance_format(*, with_size: bool) -> str:
 
 
 _STANCE_FORMAT = _build_stance_format(with_size=False)
+
+
+# CR219 R53 — the permanent DATA GAPS tail (fable/05 §7). The arms experiment's
+# one-off addendum on 84 turns produced the project's best data-roadmap evidence
+# (interest coverage: 21 asks from 9/12 agents) by asking every agent for a
+# lettered `DATA I LACKED:` block; this is the production version, scoped down
+# to a one-line, three-item tail on the FOUR analysts only — the four voices
+# whose whole job is reading a fixed data block and noticing what is not in it.
+# The other eight agents synthesise or judge the analysts' output rather than
+# reading fresh data, so a gap in THEIR turn would name the same absences a
+# fifth time; the analysts are the source.
+#
+# Telemetry framing throughout, deliberately: this is a channel `aggregate_
+# data_gaps.py` reads, not user copy, and the runner strips it before the turn
+# ever reaches the transcript's `content` (same discipline as the stance
+# envelope, `room_runner.py` DEF147 block). It trails the turn rather than
+# leading it like STANCE — GAPS was never the field DEF147 measured truncation
+# eating (the analysts' own decode budget already clears their observed
+# maxima — see `_AGENT_MAX_TOKENS`'s DEF125 table), and asking two different
+# things to both occupy "the very first line" invites exactly the DEF251
+# collision (two instructions, one slot, the model picks one).
+_GAPS_FORMAT = (
+    "\n\nAfter your analysis, end the turn with one more line, in exactly this "
+    "shape:\n"
+    f"GAPS: <up to 3 short items (max {GAPS_ITEM_MAX_CHARS} characters each), "
+    "separated by ';', or 'none'>\n"
+    "- Name the specific data you would have wanted for THIS analysis and did "
+    "not have — a data CLASS ('5-year historical P/E band'), not a citation or "
+    "a number. This is a roadmap signal for what AMI should add next, not part "
+    "of your case to the user.\n"
+    "- If nothing was missing, write 'GAPS: none'. Never pad the list to reach "
+    "three, and never repeat a gap another analyst already named in the "
+    "transcript above.\n"
+    "- Write this line ONCE, at the very end, after your analysis is complete."
+)
 
 
 def trader_block_regex(*, ticker: str) -> str:
@@ -1635,6 +1681,15 @@ def build_room_messages(
         format_instruction = prose_format + (
             _STANCE_FORMAT_RISK if agent_id in _SIZE_DECLARING_AGENTS else _STANCE_FORMAT
         )
+        # CR219 R53 — appended last, after the stance envelope: STANCE leads the
+        # turn (DEF147) and GAPS trails it, so the two instructions name two
+        # different slots rather than competing for "the very first line" the
+        # way DEF251 measured a colliding pair silently losing one of them.
+        # ANALYSTS only — `phase` above is computed from the same
+        # `_PHASE_FOR_AGENT` table every other phase-scoped block in this
+        # function reads (see the RISK/VERDICT gate a few lines below).
+        if phase == "ANALYSTS":
+            format_instruction += _GAPS_FORMAT
 
     # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
     # VERDICT) get the derived contribution figure; earlier phases have no

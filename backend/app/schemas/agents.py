@@ -151,3 +151,25 @@ class AgentMessage(BaseModel):
     # in code (`risk_debator_sizes`) and handed to the agents, so the only spread
     # worth measuring is between what an agent was handed and what it endorses.
     argued_size_pct: float | None = None
+
+    # CR219 R53 — the FOUR analysts' own account of what they lacked THIS turn,
+    # parsed from a trailing `GAPS:` line and stripped before `content` is set
+    # (telemetry, never user copy — same channel discipline as `stance`).
+    # `None` for the eight non-analyst agents (never asked), and for an analyst
+    # turn whose tail was missing or malformed — that absence is itself the
+    # signal `aggregate_data_gaps.py` counts (an analyst that stops emitting
+    # shows up as a rate, not a silent zero). An emitted `GAPS: none` is a
+    # DISTINCT state — the agent lacked nothing — and stores as `[]`, not `None`.
+    data_gaps: list[str] | None = None
+
+    # CR219 R57 — whether a stance-envelope tail was FOUND at parse time (DEF251's
+    # "contains the string STANCE at all" signal), independent of whether any of
+    # its three fields went on to parse to a valid value. A measurement channel
+    # only (DEF251's own comment: never a control) — `aggregate_data_gaps.py`
+    # reports it as a per-agent emission rate, the wake-up condition item 11 of
+    # `fable/05_further_improvements.md` names for revisiting the two CR210/DEF251
+    # pins. `None` for a turn `parse_stance_envelope` was never asked to read at
+    # all (the PM's JSON verdict, the CR201 Risk-Officer-rendered turns, the
+    # non-live scripted demo) — distinct from `False`, which means it WAS asked
+    # and said nothing shaped like the machine channel.
+    envelope_parsed: bool | None = None
