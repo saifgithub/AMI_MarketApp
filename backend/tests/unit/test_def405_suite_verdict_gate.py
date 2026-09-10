@@ -21,6 +21,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -128,6 +129,10 @@ def test_the_gate_captures_the_commit_before_the_suite_runs() -> None:
 
 
 def test_the_record_lives_where_git_ignores_it() -> None:
-    ignore = (_ROOT / ".gitignore").read_text().splitlines()
-    assert ".deliveryos/*" in ignore
+    """Asked of git, not read from its ignore file: naming that file here would make the
+    CR216 selector attribute every same-named file in the repo to this test (audit
+    CR221-SLOT4 MAJOR-2 — it did, for `mobile/ios/`)."""
+    rc = subprocess.run(["git", "check-ignore", "-q", ".deliveryos/suite_verdict.json"],
+                        cwd=_ROOT, check=False).returncode
+    assert rc == 0, "the verdict record must be ignored by git, or the gate dirties the tree it measures"
     assert '.deliveryos/suite_verdict.json' in _GATE.read_text()

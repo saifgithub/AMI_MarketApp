@@ -96,10 +96,22 @@ def _an_unnamed_tracked_nonpython_file() -> Path:
         ["git", "ls-files", "mobile/ios/"], cwd=BACKEND.parent,
         capture_output=True, text=True, check=False,
     ).stdout.split()
+    # The selector attributes by basename, so a test anywhere under tests/ that names a
+    # same-named file — not this one — makes the candidate attributable and inverts both
+    # tests below. Skip such candidates and say which test collides, so the next collision
+    # is a named fixture failure and not two inverted selector tests (CR221-SLOT4 MAJOR-2).
+    haystack = {p: p.read_text(errors="replace") for p in (BACKEND / "tests").rglob("*.py")}
+    collisions: list[str] = []
     for rel in out:
-        if not rel.endswith(".py") and (BACKEND.parent / rel).is_file():
-            return BACKEND.parent / rel
-    raise AssertionError("no tracked non-Python file found under mobile/ios/")
+        if rel.endswith(".py") or not (BACKEND.parent / rel).is_file():
+            continue
+        named_by = [p.name for p, text in haystack.items() if Path(rel).name in text]
+        if named_by:
+            collisions.append(f"{rel} is named by {', '.join(named_by)}")
+            continue
+        return BACKEND.parent / rel
+    raise AssertionError("no tracked non-Python file under mobile/ios/ is unnamed by tests/: "
+                         + "; ".join(collisions))
 
 
 def test_an_unattributable_tracked_file_demands_the_full_suite() -> None:
