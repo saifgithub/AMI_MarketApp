@@ -1031,3 +1031,45 @@ auditor landed. **Single concrete item blocking the next gate: E5 — the iOS Ap
 been re-run since DEF382 replaced `TutorialCoachMark`.** DEF382 was verified on `flutter test`
 only (1446 unit tests); the tour rewrite is exactly what DEF375's 7 stranded tests were blocked
 on, and nobody has re-measured. Last real baseline: 8 failed / 11 passed / 4 skipped.
+
+## 2026-09-10
+
+Run mid-session by the CR219 dispatcher — first review since 09-02; no session ran one
+09-03→09-09. Board from row files: **15 open Defects + 6 proposed CRs**;
+`gen_registers.py verify all` clean. Bug-monitor backstop ran first: **0 open reports**
+(queue empty since 08-15). Mac off-LAN; melehost reached via its Tailscale address
+(`100.110.14.31`, the committed `share_apk_to_tester.sh` fallback).
+
+**Carried forward with their blocker named, not re-asked** (unchanged from 09-02):
+DEF100 / DEF344 / CR198 (payments parked); CR022 (pre-release); CR161 (Tier-1 trigger);
+DEF178 ("rotate later"); DEF104 (DEF204 ruling); DEF144 / DEF200 / DEF367 / DEF375 /
+DEF385 / DEF386 (in flight or already approved); CR159 / CR191 (the ruling is the row);
+CR213 (re-raise only if CR214 unparks). Plus **DEF399** — its fix vehicle is CR221 A3,
+an active lane; carried.
+
+**Asked and answered:**
+
+- **DEF402** (open since 09-03) — asked: build the CF-tunnel watchdog on melehost now?
+  → Saiful: **"Build the watchdog now"** — explicit go recorded for the melehost install
+  + provable-connector-fault auto-restart. Lane dispatched (Sonnet).
+- **DEF400** (open since 09-03) — asked: flip `fundamentals_fcf_from_statements_enabled`
+  on Alpha in today's promotion? → Saiful: **"Wait for CR221's memo"** — flag stays OFF,
+  row stays open pending CR221 §7's cash-arm conclusion.
+- **DEF393** (open since 09-01) — asked: fix the kimi effort banner now? → Saiful:
+  **"Fix now"** → fixed same run (`18e132dd`, dispatcher-verified): the kimi coder home
+  is shared across lanes, so the dead `EFFORT` was dropped from the branch + banner
+  rather than written into a racy config.
+- **DEF403** (minted this run) — the CR051 real-users exclusion rule is hand-synced
+  across five sites and has drifted: the three script copies lack the 12 probe-id
+  exclusions (the drift is documented in `verdict_outcomes.py`'s own lineage note).
+  Asked: file only or fix? → Saiful: **"File + fix now"** — lane dispatched (Sonnet).
+
+**Closed without asking:** **DEF401** — fixed this run (`5ee0051f`, dispatcher rerun
+37/37 from both CWDs): a lost ledger insert reads back the winner's row through the
+existing update path; the P15 guard's `_UNREVIEWED` entry retired.
+
+**Flagged, no decision asked:** 09-02's "Hermes rig dead" flag has cleared itself —
+`/home/saiful/hermes_folder` exists and `apk/` carries a build; no DEF owed. E5 (the
+iOS Appium gate re-run since DEF382) remains the Engagement-gate blocker, unchanged.
+CR219's trailing AC4 is being measured this session (cutoff `alpha-2026-09-03-1`;
+~7 days of traffic — the short side of the ruled 1–2-week window).
