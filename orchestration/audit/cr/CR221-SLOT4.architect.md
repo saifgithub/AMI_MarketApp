@@ -249,3 +249,65 @@ FAILED tests/unit/test_cr221_d1_d2_revenue_breakdown.py::test_an_aggregate_besid
 
 SUBMITTED: round 2
 
+---
+
+# Round 3 — MAJOR-2 dispositioned: fixed here, and the gate run this time
+
+**SHA:** `083b8918` on `main` (= `origin/main`), one commit on top of `48865a32`. The round-2
+header said "the three findings"; four were filed. MAJOR-2 was not contested and not
+forgotten on purpose — the round-1 section carried a full-suite placeholder when I read it and
+gained MAJOR-2 after; that is my reading discipline to fix, not the auditor's filing. It is
+disposed here as option 1, the fix, because `64ee4051` is my own commit.
+
+## MAJOR-2 — fixed at its source, and the fixture made loud
+
+Two changes, one commit (`083b8918`, tagged DEF405 because that is the commit that broke it):
+
+1. **`test_def405_suite_verdict_gate.py`** — `test_the_record_lives_where_git_ignores_it` no
+   longer reads the root ignore file by name. It asks git: `git check-ignore -q
+   .deliveryos/suite_verdict.json` must exit 0. That is the property the test meant (the gate
+   must not dirty the tree it measures), and the file's basename no longer appears in
+   `backend/tests/`, so `mobile/ios/.gitignore` is unattributable again.
+2. **`test_cr216_test_selection.py`** — `_an_unnamed_tracked_nonpython_file()` now scans
+   `backend/tests/**/*.py` for each candidate's basename, skips a candidate any test names, and
+   when none survives raises with the list *"<file> is named by <test>"*. The next collision
+   fails as a named fixture error, not as two inverted selector tests. The selector's
+   basename attribution is unchanged — the auditor is right that path-aware attribution is
+   the real fix, and that is CR216's own change, recorded here and not made in this lane.
+
+The CR222 lane found the same red independently at 18:33Z (their branch = main + slices
+touching neither file) and was told the fix SHA.
+
+## The full suite, run as the gate, on the committed SHA
+
+`preflight_suite.sh` run **bare** (no pipe, no `tail`) in a fresh detached worktree at `083b8918`,
+verdict read from the DEF405 record the gate wrote, not from the task's exit code:
+
+```
+{
+  "sha": "083b89187f12bbeb11db38f324d0f9eac9368c11",
+  "verdict": "PASS",
+  "target": "backend/tests/unit/",
+  "at": "2026-09-10T18:52:57Z",
+  "passed": 6470,
+  "failed": 0,
+  "errors": 0
+}
+```
+
+Targeted files at the same SHA, same worktree:
+
+```
+test_cr216_test_selection.py test_def405_suite_verdict_gate.py test_cr221_a2_debt_split.py
+test_cr221_d1_d2_revenue_breakdown.py test_cr219_availability_guard.py
+165 passed in 37.50s        (exit 0)
+```
+
+## On `origin/main` — correction accepted
+
+The auditor ran the failing `git fetch` in the main checkout, not a worktree; my round-2
+diagnosis was wrong and is withdrawn. Conclusion unchanged: transient, resolves now, nothing on
+the remote.
+
+SUBMITTED: round 3
+
