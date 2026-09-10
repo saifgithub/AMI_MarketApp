@@ -193,7 +193,11 @@ def main() -> None:
         filing = latest_annual_filing(submissions)
         if filing is None:
             counts["no_10k"] += 1
-            print(f"{prefix}: no 10-K in recent filings (foreign filer / fund?) — skipping", flush=True)
+            # A foreign filer (20-F/40-F), a fund, or a ticker the SEC map has moved to a
+            # successor CIK with no annual filing yet — XOM → ExxonMobil Holdings Corp
+            # (CIK 2115436) on 2026-09-11, while the 10-Ks sit under CIK 34088.
+            print(f"{prefix}: no 10-K under CIK {cik} (foreign filer, fund, or a successor CIK "
+                  f"with no annual filing yet) — skipping", flush=True)
             continue
 
         with get_session() as session:
