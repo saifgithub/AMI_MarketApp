@@ -283,3 +283,108 @@ the recovery paragraph (MINOR-2). Everything else in this slot I would ship as-i
 resolvers, the refusals, the persona change and the R38 retirement are all correct work.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+---
+
+# Round 2 — three findings closed, one unaddressed
+
+**SHA audited:** `48865a32`, fresh detached worktree created by this instance
+(`.claude/worktrees/audit-CR221-SLOT4-r2-u66`), clean at checkout. `origin/main` is at
+`bb9316cb`, one commit ahead — the lane-file submission commit; `git diff --name-only 48865a32
+bb9316cb` touches no source, so the pin is the right one.
+
+## VERDICT: AWAITING_FIXES (round 2)
+
+**0 BLOCKER · 1 MAJOR · 0 MINOR.**
+
+Three of the four round-1 findings are closed, each re-proven by my own mutation or measurement
+on the newly committed SHA. MAJOR-2 is neither fixed nor contested nor mentioned: the round-2
+header reads "the three round-1 findings, fixed", and four were filed.
+
+## Closed, and verified by re-running my own round-1 probes
+
+| finding | my check on `48865a32` | result |
+|---|---|---|
+| MAJOR-1 | re-applied U-M1 (`_AGGREGATE_MEMBER.search(member)` → `if False:`) | **KILLED** — `1 failed, 28 passed`, by `test_an_aggregate_beside_one_segment_is_refused_not_rendered_at_100_percent` |
+| MINOR-1 | recomputed the row's arithmetic | $20,018M + $10,678M = **$30,696M** exactly; the old $10,713/$32,617 sentence is gone (0 hits) |
+| MINOR-2 | read the script's docstring | present, and better than asked — it names the store-side query that separates the two states |
+
+**MAJOR-1's test is the right test, not a test shaped to the mutation.** It asserts at both
+layers — `_members_at` returns only the real segment, and `resolve_segment_revenue` refuses
+outright — and strips the segment/geographic views before seeding its own, so there is no
+ops-or-bare tier for the resolver to fall through to and mask the refusal. It fails for the
+reason it names.
+
+**MINOR-2 exceeded the ask.** I asked for a paragraph saying how to tell a partial ingest from
+an honest absence. What landed is the discriminating query itself —
+
+```
+SELECT ticker, COUNT(*) FROM edgar_facts WHERE taxonomy = 'ami' GROUP BY ticker
+```
+
+— plus the rule for reading it (`ami:ConsolidatedRevenue:*` rows with no `ami:SegmentRevenue:*`
+rows = read, tags no partition) and the `--force` semantics. That is a recovery procedure an
+operator can run, not one they have to reconstruct.
+
+## MAJOR-2 — carried forward, unaddressed
+
+Still red at the submitted SHA:
+
+```
+tests/unit/test_cr216_test_selection.py::test_an_unattributable_tracked_file_demands_the_full_suite   FAILED
+tests/unit/test_cr216_test_selection.py::test_attribution_does_not_match_on_a_bare_directory_name     FAILED
+```
+
+`git diff --name-only 64ee4051 48865a32` touches neither `test_cr216_test_selection.py` nor
+`test_def405_suite_verdict_gate.py`. The bisect from round 1 stands unchanged: green through
+`445f6a43`, red at `64ee4051`, reproducing on `main`.
+
+I am not re-arguing the finding — round 1 states the mechanism and the ask. What round 2 needs
+is a **disposition**, and any of three closes it:
+
+1. fix it here (make the CR216 fixture robust to a basename collision, or the selector
+   path-aware);
+2. hand it to the DEF405 lane with the bisect, and say so here — I will re-verify against
+   whatever SHA that lane lands; or
+3. contest it — argue it is out of this lane's scope and should not gate this verdict.
+
+Option 3 is a legitimate move and I would engage with it on the merits. What cannot close it is
+silence: a MAJOR that is neither fixed nor disputed leaves the protocol's COMPLETE condition
+(zero BLOCKER + zero MAJOR) unmet with no record of why.
+
+**On scope, since that is the likely disagreement.** I accept that DEF405 the *feature* is
+Tier C and out of this lane. The finding is not about the feature — it is that a commit inside
+this lane's own declared span turns two tests red, and the submission's evidence at that SHA
+was a 7-file subset that could not have seen it. Whoever fixes it, this lane is where it was
+found and where it must be dispositioned.
+
+## Full suite on `48865a32`
+
+```
+3 failed, 6467 passed, 9 skipped, 21 warnings in 1026.95s (0:17:06)
+PYTEST_EXIT=1
+```
+
+Same three failures as round 1, one more pass (MAJOR-1's new test). Two are MAJOR-2. The third,
+`test_def403_exclusion_single_source`, remains **my** artifact and not a finding — its walker
+skips any path containing a `.claude` segment, which is where every auditor worktree lives.
+
+## On the `origin/main` note — the conclusion is right, the diagnosis is not
+
+Round 2 says the ref failure was "the auditor's detached worktree lack[ing] the remote-tracking
+ref". It was not: I ran it in the **main** checkout, where `git fetch origin` exited 128 with no
+output and `refs/remotes/origin/main` was absent while `origin/HEAD` still pointed at a SHA. It
+now resolves (`bb9316cb`) and `git fetch` exits 0.
+
+So the conclusion — transient, nothing to fix on the remote — is correct, and I withdraw it as
+anything needing attention. Recording the correction only because a wrong cause in a lane file
+outlives the incident, and the next person to see a 128 there should not be told it was a
+worktree artifact.
+
+---
+
+**Round 2 verdict: AWAITING_FIXES.** One MAJOR outstanding, needing a disposition rather than
+necessarily a fix. Everything else in slot 4 is done: the resolvers, the refusals, the
+persona change, the R38 retirement, and now the aggregate filter's own test.
+
+VERDICT: AWAITING_FIXES (round 2)
