@@ -20,7 +20,7 @@ is demand for two things. So the per-item line counts do not sum to 127.
 What this asserts, and fails loudly on (CR040):
   * every one of the 127 lines claims at least one item — an unclaimed line
     means the register is incomplete, which is the failure that matters;
-  * the register's own totals (49 items, 9 delivered, 4 closed, 36 open) match
+  * the register's own totals (49 items, 9 delivered, 5 closed, 35 open) match
     what is declared below, so the doc and the data cannot drift apart.
 
 Read-only. Runs from any working directory:
@@ -69,8 +69,9 @@ ITEMS: tuple[Item, ...] = (
          "derive: the Interest Expense R33 already reads / average debt",
          r"average interest rate|interest rate (or|/)|cost of debt|average interest|"
          r"debt terms|interest burden"),
-    Item("A4", "Debt & capital structure", "Fixed vs. floating rate mix", OPEN,
-         "narrative in the debt footnote, not a numeric tag",
+    Item("A4", "Debt & capital structure", "Fixed vs. floating rate mix", CLOSED,
+         "closed 2026-09-11 (slot 4): no fixed/floating fact in the XBRL instance, only "
+         "per-instrument stated rates on DebtInstrumentAxis — a list of notes, not a mix",
          r"fixed.{0,12}floating|floating"),
     Item("A5", "Debt & capital structure", "Interest coverage ratio", DELIVERED,
          "CR219 R33, commit ab9decb2",
@@ -258,7 +259,7 @@ ITEMS: tuple[Item, ...] = (
 # instruction-collision class. Declared so it does not read as an unmapped line.
 NON_DATA = (r"cooldown", "cooldown-rule scope clarification (CR219's surface, not a source)")
 
-EXPECTED = {"total": 49, DELIVERED: 9, CLOSED: 4, OPEN: 36}
+EXPECTED = {"total": 49, DELIVERED: 9, CLOSED: 5, OPEN: 35}
 
 
 def claims(text: str) -> list[Item]:

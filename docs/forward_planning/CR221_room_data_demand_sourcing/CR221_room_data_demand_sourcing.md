@@ -5,23 +5,26 @@
 **Done at filing:** §1–§6 — the item register, the cross-check against CR219, a *verified free*
 source for every open item but one, and the §6 measurement. **Ruled 2026-09-03:** R38's route
 is CR221's (`ac55352c`) — CR219 ships a declared-absent entry now, this CR builds the real line
-later, inheriting `WP10_R38_parked/` as its head start. **Open:** the build itself, the §7
-measurement re-run it is designed for, and the one item (H2) with no free source yet found.
+later, inheriting `WP10_R38_parked/` as its head start. **Built:** slot 1 (A1 + A3), slot 3
+(C3 + C4 + DEF400), the history arm (C2/C5/B2), and slot 4 (A2 + D1 + D2, with A4 closed) —
+§5 "Build status". **Measured:** §7 rounds 1–2; two flags live on Alpha since 2026-09-10.
+**Open:** slot 4's ingest on Alpha and its §7 round, the remaining slots, and the one item
+(H2) with no free source yet found.
 
 ---
 
 ## What
 
 CR219 asked twelve agents, on every turn, to name the data they lacked. They answered **127
-times**, and those 127 asks are **49 distinct data items**. Nine are already delivered, four
-are closed, **36 are open**.
+times**, and those 127 asks are **49 distinct data items**. Nine are already delivered, five
+are closed (four at filing; A4 joined them in the slot-4 build, 2026-09-11), **35 are open**.
 
-This CR takes those 36 and finds each one a source that is **free and reliable**. It does not
+This CR takes those open items and finds each one a source that is **free and reliable**. It does not
 ship fact-sheet fields — every field is a follow-on CR. What was missing was not build
 capacity; it was an answer to *"where does that number come from, does that source exist, and
 what does it cost us?"* — asked once for all of it instead of one field at a time.
 
-**The headline result: 35 of the 36 open items have a verified free source, and none of them
+**The headline result: 34 of the 35 open items have a verified free source, and none of them
 needs a paid provider.** Most are SEC EDGAR or FRED — one of which we already call, the other
 of which turns out to need no API key. One item (Fed-path probabilities) has no free source we
 could verify.
@@ -90,7 +93,7 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 | A1 | Debt maturity ladder, repayments by year | 14 | 6 | ○ |
 | A2 | Industrial vs. captive-finance debt split | **18** | **9** | ○ |
 | A3 | Average interest rate / cost of debt | 6 | 4 | ○ |
-| A4 | Fixed vs. floating rate mix | 4 | 3 | ○ |
+| A4 | Fixed vs. floating rate mix | 4 | 3 | ⛔ not structural — slot 4, §5 |
 | A5 | Interest coverage ratio | 2 | 2 | ✅ R33 `ab9decb2` |
 
 ### B · Valuation history & comparables
@@ -187,7 +190,7 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 |---|---|---|---|---|
 | K1 | Decision Journal history for this ticker | 1 | 1 | ✅ DEF054/DEF055 — the arm ask is a harness artifact (empty journal) |
 
-**49 items · 9 delivered · 4 closed · 36 open.** One further request line is not a data item at
+**49 items · 9 delivered · 5 closed · 35 open** (4 closed / 36 open at filing; A4 closed in the slot-4 build, 2026-09-11). One further request line is not a data item at
 all (*"whether the 1.0h post-loss cooldown blocks all buys portfolio-wide"*) and leaves scope
 in §8.
 
@@ -237,7 +240,7 @@ Zero new network, zero new dependency. This is the R33/R34/R35 shape, five more 
 |---|---|---|
 | **A1** maturity ladder | `companyfacts` carries `LongTermDebtMaturitiesRepaymentsOfPrincipalIn{NextTwelveMonths,YearTwo…YearFive}`. They are simply absent from `INGEST_TAGS_US_GAAP`. | **Two filers.** CAT: 5 tags, 18 points each, FY end 2025-12-31 — 2026 $7,120M · 2027 $8,920M · 2028 $7,747M · 2029 $3,112M · 2030 $1,261M. Deere: 5 tags, 4 points each, FY end 2025-11-02. A five-entry addition to `edgar_tags.py`. |
 | **C7** buyback execution price | `TreasuryStockSharesAcquired` ÷ R35's repurchase dollars. | CAT n=197, latest 2026-06-30 = 6,972,123 shares. **Deere has no shares-repurchased tag** — filer-inconsistent, so it ships with a real absent state, which is CR104's rule anyway. |
-| **A2 A4 D1 D2** captive split, fixed/floating, segment and geographic revenue | **Not `companyfacts`** (§6). The filing's own rendered reports, indexed by `FilingSummary.xml` on the same host. | CAT 10-K `0000018230-26-000008` (filed 2026-02-13): `R106.htm` long-term debt by *Machinery, Power & Energy* vs. Financial Products; `R108.htm` the ladder; `R129.htm` disaggregation of revenue; `R136.htm` geographic areas. |
+| **A2 D1 D2** captive split, segment and geographic revenue (A4 fixed/floating was routed here too and closed in the build — §4f) | **Not `companyfacts`** (§6). The filing's own rendered reports, indexed by `FilingSummary.xml` on the same host — **built 2026-09-11 one step short of that**, from the extracted XBRL instance the R-pages are rendered from (§5, slot 4). | CAT 10-K `0000018230-26-000008` (filed 2026-02-13): `R106.htm` long-term debt by *Machinery, Power & Energy* vs. Financial Products; `R108.htm` the ladder; `R129.htm` disaggregation of revenue; `R136.htm` geographic areas. |
 | **A3** cost of debt | `InterestExpense` (income statement) and `InterestPaidNet` (cash-flow supplemental), over EDGAR gross debt — both legs from one store at one `as_of`. **Not** the yfinance row §4a first assumed. | **This premise was probed and failed, which is DEF399.** CAT's FY2025 income statement (`R3.htm`) carries *Interest expense of Financial Products* $1,359M **plus** *excluding Financial Products* $502M = **$1,861M**; yfinance's four quarters sum to **$529M**, 28% of it, because the finance arm's interest is booked inside cost of revenue. GM reads 0.17x against its own `us-gaap:InterestExpense`. CAT tags **no** income-statement interest concept in `companyfacts` (dimensional lines again — §6 on a second item), so it resolves on cash interest or not at all. Where the two bases disagree >2x (HOG $31M vs $331M, F $7,613M vs $3,501M) the honest output is **absence**, not the friendlier number. |
 | **I1** executive-change detail | The submissions JSON tags every filing with its 8-K **item codes**; `5.02` is *"Departure of Directors or Certain Officers; Election of Directors; Appointment of Certain Officers"*. Fetch that document when the code is present. | CAT's 2026-04-10 8-K (`0001104659-26-042062`) states it outright: **Kyle Epley, 53, appointed CFO effective 2026-05-01, succeeding Andrew R.J. Bonfield, who remains an employee through retirement on 2026-10-01.** That is *exactly* the question the News Analyst asked in 5 of 7 convenes — and once tagged `ABSENT (only the aggregated headline text was provided)`. It was in a filing we already download. |
 
@@ -266,10 +269,11 @@ Zero new network, zero new dependency. This is the R33/R34/R35 shape, five more 
 |---|---|
 | **H2** Fed path / rate-cut probability — 5 lines, 3 agents | CME FedWatch is the market standard and is not a free API. The **Atlanta Fed's Market Probability Tracker** publishes exactly this, free, from a Reserve Bank — but its data files (`mpt-current.csv`, `mpt_hist.xlsx`) return a bot-challenge HTML page from this environment under both a plain and a browser user-agent, so **machine-fetchability is unverified**; probe it from melehost before committing to it. FRED serves no probability series. A *derived* path from the free Treasury curve is possible but answers a different question than *"25bps or 50bps"*, and saying otherwise would be the DEF059 shape. |
 
-### 4f · Closed — 4 items
+### 4f · Closed — 5 items
 
 | Items | Why |
 |---|---|
+| **A4** fixed vs. floating mix | Closed 2026-09-11 in the slot-4 build. The filing carries no fixed/floating fact; what it tags is per-instrument stated rates on `DebtInstrumentAxis` (CAT, DE) — a list of notes, not a mix — and summing them into one figure is the guess the persona already forbids. 4 lines, 3 agents. |
 | **G4 G5** Level 2 depth, dark-pool prints | Real-time depth-of-book is per-seat licensed exchange data. No free source exists, and none is appropriate for a simulation-only training app. |
 | **E3** guidance | Ruled out by CR219 R22; the sheet's disclaimer stands. Recorded so the register is complete, not to reopen it. |
 | **J2** sentiment history | Structurally absent — the social cache keeps one row and overwrites it, by design. The agent correctly tagged its own gap `FORBIDDEN`. |
@@ -280,12 +284,12 @@ work this CR hands back rather than sources.
 
 ---
 
-## 5. The 36 open items are 14 sourcing decisions
+## 5. The open items are 14 sourcing decisions
 
 | # | Decision | Items | Lines | Cost |
 |---|---|---|---|---|
 | 1 | Add 5 maturity tags to `edgar_tags.py` | A1 | 14 | 5 entries + a render |
-| 2 | EDGAR filing-report route via `FilingSummary.xml` | A2 A4 D1 D2 | 30 | a new parse path, free host (§6) |
+| 2 | EDGAR filing route — the extracted XBRL instance (§6; A4 closed in the build) | A2 D1 D2 | 26 | a new parse path, free host (§6) — **built, slot 4** |
 | 3 | EDGAR interest expense (accrual + cash) over EDGAR gross debt | A3 | 6 | two tag families, same host |
 | 4 | Keep the multi-year statement series instead of the trailing four | B2 C2 C5 (+B1's fundamentals leg) | 6 | discarded data |
 | 5 | Fetch the profile at a longer bar window | B1 F1–F9 F11 | 32 | a parameter |
@@ -312,7 +316,7 @@ Ranked by demand against sourcing cost. A recommendation, not a ruling.
 | 1 | A1 + A3 | 20 lines from the two most-asked debt sub-items. **Source layer landed 2026-09-03** — see Build status below. |
 | 2 | I1 | 5 lines, one agent, stuck on the same wall in 6 of 7 convenes — and the answer is in a filing we already download. Cheapest high-conviction fix in the list. |
 | 3 | C3 + C4 + C2 + C5 + B2 | 20 lines across five items, all one decision on data already pulled and thrown away. |
-| 4 | A2 + A4 + D1 + D2 | 30 lines, the biggest payoff — and the biggest unknown. Needs its design note re-cut against §6 before any code. |
+| 4 | A2 + D1 + D2 (+ A4, closed) | 26 lines, the biggest payoff — and the biggest unknown. **Built 2026-09-11** — see "Slot 4 built" below. |
 | 5 | C8 + C7 + C9 + E4 | Cheap, already fetched, filer-inconsistent → real absent states. |
 | 6 | G1 + G2 + G3 | Fetched already; the IV sanity gating is the work. |
 | 7 | H1 + H3 + I2 | One keyless dependency plus one derivation. Name the ISM substitute honestly. |
@@ -391,6 +395,90 @@ which the bridge does not carry.
 5 request lines from 1 agent and needs a new external-prose-on-request path, while slot 3 is
 20 lines across 5 items over a frame we already fetch. Breadth per unit of new surface, not
 sequence in the register.
+
+### Slot 4 built — A2, D1, D2 from the filing's own XBRL instance; A4 closed (2026-09-11, `aff954b6`)
+
+Saiful's pick for the final window (2026-09-10: *"we have an additional 6 hours"* → slot 4). The
+§6 re-route is now code, and the route is one step shorter than §4b's `FilingSummary.xml`
+proposal. The R-pages (`R106.htm`, `R129.htm`, `R136.htm`) are rendered HTML of the same
+data that the **extracted XBRL instance** carries as facts —
+`https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{primary_stem}_htm.xml`, one XML per
+filing, free, same host, same user-agent. Its `xbrli:context` elements carry the
+`xbrldi:explicitMember` dimensions that `companyfacts` strips, so the parser reads
+`(concept, axis, member, period)` cells directly instead of scraping tables.
+`backend/scripts/ingest_edgar_dimensional.py` fetches the newest original 10-K's instance per
+ticker (amendments skipped), parse-validates it, and stores derived rows under a house
+taxonomy (`ami:CaptiveFinanceDebt:<concept>`, `ami:IndustrialDebt:<concept>`,
+`ami:SegmentRevenue:<tier>:<member>`, `ami:GeographicRevenue:<member>`,
+`ami:ConsolidatedRevenue:<concept>`) in the existing `edgar_facts` store, point-in-time by
+`filed` like everything else in it.
+
+**Measured on the four registry filers' FY2025 10-Ks** (read live 2026-09-10, `$M`):
+
+| | Captive debt | Industrial debt | Segments (tier, coverage) | Geography (coverage) |
+|---|---|---|---|---|
+| CAT | 32,617 | 10,713 | 4 · external sales · 101% of 67,589 | 4 regions · 100% |
+| F | 141,417 | 21,919 | 4 · incl. intersegment · 100% of 187,267 | 5 · 100% |
+| PCAR | 15,666 | *not tagged* → captive-only | 1 member at 92% → **refused** | 3 · 100% |
+| DE | *no dimensional debt facts* → **UNAVAILABLE** | — | 4 · incl. intersegment · 101% of 45,684 | 6 · 100% |
+
+**Four things the build settled, each pinned by a test.**
+
+**1. The industrial figure is read from its own column, never derived.** CAT tags both sides
+of its consolidating balance sheet on `srt:ProductOrServiceAxis`, and the two
+`LongTermDebtAndCapitalLeaseObligations` cells — Financial Products $20,018M, Machinery,
+Power & Energy $10,678M — sum to the non-dimensional `LongTermDebtNoncurrent` $30,696M to the
+dollar. The parked WP10 contract derived industrial as consolidated minus captive; on CAT that
+gives **$3,593M for a filed $10,713M**, because the house gross-debt tags are a different
+family from the column's. A filer that tags one side gets one side (PCAR), and the
+captive-only line says outright that industrial is *not* the difference.
+
+**2. Registry matching is exact, not substring.** Ford's industrial column is
+`CompanyExcludingFordCreditMember`; a "contains `fordcredit`" rule files the industrial
+parent under the lender. Four filers in `edgar_tags.CAPTIVE_FINANCE` (CAT, DE, F, PCAR), each
+with its lender named and both member sets listed; a filer outside it gets no line at all.
+
+**3. A breakdown is a partition or it is nothing.** Filings tag overlapping cuts side by side:
+CAT carries `country:US` + `NonUsMember` beside its four regions, and an aggregate segment
+member beside the four segments. The resolver takes the largest member set whose sum sits
+within 10% of the *same filing's* consolidated revenue, at least two members, and the line
+states the coverage either way ("these sum to 101% of the $67,589M consolidated total, the
+difference being corporate items, intersegment sales and eliminations"). Segment revenue is
+tried in tiers — external sales (`OperatingSegmentsExcludingIntersegmentElimination`), then
+including intersegment (`OperatingSegments`), then bare members — and the tier order is not
+cosmetic: Deere's bare members cover 87% and would have failed the band; its operating-segment
+tier covers 101%.
+
+**4. Units resolve through `xbrli:unit`, not the `unitRef` string.** A `unitRef` is an id the
+filer's tool chooses. CAT writes `usd`; Deere writes `Ifeqnbq-buca0lohammirw`. The first
+parser draft read the id as the unit and silently dropped **all 278 of Deere's facts** — the
+CR040 shape exactly, a filer reading as "tags nothing" for a parsing reason. Found by the
+four-filer smoke, not by the suite, which is the fourth time in this CR that running on a real
+filing found what a fixture could not.
+
+**A4 (fixed vs. floating mix) closes ⛔ — not structural.** Nothing in the instance carries a
+fixed/floating split as a fact. What exists is per-instrument stated rates on
+`DebtInstrumentAxis` (CAT, DE), which is a list of notes, not a mix; summing them into one
+would be the "guess is worse than the blended figure" the persona already forbids. 4 lines
+from 3 agents, and the register's totals move: **9 delivered · 5 closed · 35 open.** Decision
+#2 now covers three items, 26 lines.
+
+**Render.** Three flags — `room_debt_split_enabled`, `room_segment_revenue_enabled`,
+`room_geographic_revenue_enabled` — default off, forwarded in compose. The overlay populates
+the profile regardless (one `field_state` key per item: `debt_split`, `segment_revenue`,
+`geographic_revenue`), and the flag gates the Room render only, the CR221 slot-1 convention
+that keeps §7's control arm a flag flip. `debt_split` is LIVE for every registry filer, in one
+of three states the line names — resolved, captive-only, UNAVAILABLE — and absent for everyone
+else. The 1-on-1 sheet is untouched, like A1/A3. **CR219's R38 declared-absent entry is
+retired**: its collision markers were armed for exactly this line and went red on the first
+render, which is the mechanism working; the persona now defers to the sheet's "Debt split"
+line and denies the split only where the sheet has none. 73 tests across
+`test_cr221_a2_debt_split.py` and `test_cr221_d1_d2_revenue_breakdown.py`, built on CAT's
+filed cells.
+
+**Not yet:** the dimensional ingest has not run on Alpha (promotion pending), and round 3 of
+§7 cannot run from the Mac today — the vLLM host is LAN-only and the Mac is off the LAN — so
+all three flags stay OFF pending measurement, exactly as A1/A3 did.
 
 ---
 
