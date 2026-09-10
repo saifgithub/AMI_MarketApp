@@ -476,9 +476,28 @@ line and denies the split only where the sheet has none. 73 tests across
 `test_cr221_a2_debt_split.py` and `test_cr221_d1_d2_revenue_breakdown.py`, built on CAT's
 filed cells.
 
-**Not yet:** the dimensional ingest has not run on Alpha (promotion pending), and round 3 of
-§7 cannot run from the Mac today — the vLLM host is LAN-only and the Mac is off the LAN — so
-all three flags stay OFF pending measurement, exactly as A1/A3 did.
+**Promoted 2026-09-11 (`alpha-2026-09-11-1` / `445f6a43`), by hand over Tailscale** — the
+`melehost` alias resolves to a LAN address the Mac could not reach that night. Postflight
+identity, readiness, config and market green; alembic at head; the tag also carries the 1a
+lane's DEF401 and DEF403. **The suite gate had said FAIL and the promotion went ahead anyway**:
+the gate ran as `preflight_suite.sh | tail` inside a background task, the task reported
+*tail's* exit 0, and the one failure was DEF403's register-row link (docs-only, fixed at
+`9aff8fef`), so nothing shipped was wrong — but the gate had said no and nothing downstream
+noticed. Filed as **DEF405** with a guard the same night (the gate now writes
+`.deliveryos/suite_verdict.json` with the commit it tested, and postflight's new `suite` check
+fails a promotion whose record is missing, stale, partial, for another commit, or not PASS —
+`failure_patterns.md` P35, the third DEF326-shaped instance).
+
+**The dimensional ingest ran inside `ami_api_alpha` the same hour**: 146 of 150 filings, 0
+failures, 2,736 `ami:` rows (segment 1,067 · geographic 1,173 · consolidated 460 · captive debt
+17 · industrial debt 19). The four skips are three foreign filers (NIO, SPOT, XPEV — 20-F, no
+10-K) and XOM, whose ticker the SEC map now points at *ExxonMobil Holdings Corp* (CIK 2115436,
+a successor with no annual filing yet) while the 10-Ks sit under CIK 34088 — recorded, not
+worked around. Resolved on Alpha's own store, inside the container: CAT $32,617M / $10,713M,
+F $141,417M / $21,919M, DE UNAVAILABLE, all to the dollar against the Mac; AAPL segments
+(Americas, Europe, Greater China…) 100%, MSFT's three segments 100% and its US/Non-US
+geography 100%, NVDA's two segments 100%. PCAR is not in the 150-ticker universe, so its
+captive-only shape exists on the Mac's smoke only. **All three flags remain OFF.**
 
 ---
 
@@ -957,3 +976,77 @@ endpoint does.
   extends by five tags.
 - `../CR172_options_simulation/` — where `OptionQuote.implied_vol` and `open_interest` are already fetched.
 - `../CR206_dividend_feed_for_early_assignment/` — where `DividendPayment` is already fetched.
+
+### 7.10 ROUND 3 — the dims arm: the split is answered, and the demand moves one step downstream
+
+**Run.** Stamp `20260910T164026Z`, 2026-09-10 16:40–17:30Z, from the Mac against vLLM over
+Tailscale (`100.79.86.15:8048`, `/v1/models` root `qwen38-flash-next-nvfp4`). CAT, two arms
+(`off`, `dims` = A2 + D1 + D2 rendered), three mandates (short, medium, long): 6 convenes,
+36 turns per arm. Profile rebuilt for this round (110 LIVE fields) from the Mac's sqlite
+EDGAR store, the three lines read from rows the slot-4 ingest wrote there; each arm forces
+every other flag False. Negative control H2, recorded before the run (§7.6d). Six result
+files under `measurement/results/`, scored with `replay.py --score-only`, `citations.py`,
+`outcomes.py` — the numbers below are those scripts' output, not a reading of the transcripts.
+
+**Primary endpoint — `DATA I LACKED:` counts.**
+
+| mandate | total off | total dims | A2 off | A2 dims | D1 / D2 / H2 |
+|---|---|---|---|---|---|
+| short | 12 | 18 | 3 | 1 | 0 / 0 / 0 in both arms |
+| medium | 11 | 18 | 0 | 5 | 0 / 0 / 0 |
+| long | 9 | 15 | 0 | 0 | 0 / 0 / 0 |
+| **all** | **32** | **51** | **3** | **6** | — |
+
+Read literally, the arm that ships the debt split is asked for it twice as often. Read the
+lines, and it is not so. The three `off` asks are for the split itself (Fundamentals,
+Conservative, Neutral — all short mandate: *"a breakout of CAT's $39,201M net debt between
+industrial debt and Captive Finance debt"*). None of the six `dims` matches asks for the split.
+One (Bear, short) asks for the *cash-flow* split by arm. Five (Bull, Bear, Research Manager,
+Trader, Neutral — medium) ask for the same new thing: *"Caterpillar Financial Services' net
+interest margin trend over the last 4 quarters"*, *"interest expense breakdown or yield on debt
+issued for the captive finance arm"*. The A2 regex claims them because they name the finance
+arm. So: **the split ask is extinct in the arm that carries it, and its successor is the
+finance arm's funding cost** — one step downstream of the figure that was supplied.
+
+The totals rising 32 → 51 is the third sighting of the rounds-1/2 finding: the endpoint is
+rank-limited. Supply a datum and the agents name the next one; the count does not fall, it
+refills. This round adds the mechanism — the refill is not random, it is the *adjacent*
+datum (split → cost of the split's larger half).
+
+**Secondary endpoint — citation of the shipped figure** (`citations.py`, markers widened to
+the `$32.6B` / `$10.7B` forms agents actually write):
+
+| item | cited / 36 turns | cited / corpus askers | the shape it took |
+|---|---|---|---|
+| A2 debt split | 8 | **8 of 9** | Bull: *"the $32.6B captive finance debt is funded lending, not distress"*; Fundamentals: *"industrial debt is $10.7B, manageable against $5.0B FCF"*; Bear/Conservative (medium): *"$32.6B captive debt exposure is unquantified without NIM data"* |
+| D1 segments | 2 | 1 of 4 | named, not argued from |
+| D2 geography | 0 | 0 of 1 | never used |
+
+Eight of the nine agents who had asked for the split in the banked corpus used it once it
+was there, and used it both ways — the Bull to dismiss the blended leverage, the Bear to
+locate the rate risk in the finance arm. That is the figure doing what a figure should. The
+geography line, asked for once in 127 lines, was read by nobody.
+
+**Outcomes and cost** (`outcomes.py`): PASS in all six cells; PM agreement 5/5 in five cells,
+3/5 in medium/dims (two of five samples approved). Prompt tokens `dims` 153,937 vs `off`
+156,352 (−1.5%) — three sheet lines cost nothing measurable; the difference is turn-length
+noise, as in rounds 1 and 2.
+
+**What this supports.** Turning `room_debt_split_enabled` on is supported on every axis this
+rig measures: the ask disappears, 8 of 9 askers cite it, the verdict does not move, the cost
+does not move. `room_segment_revenue_enabled` is weakly supported (one of four askers).
+`room_geographic_revenue_enabled` is not supported by this round (never cited) and should stay
+OFF until a ticker whose story *is* geographic (a China-exposed name, say) is measured. The
+flips are Saiful's call; none is made here.
+
+**Candidate item, unmeasured.** The successor ask — the captive arm's interest expense and
+net interest margin by quarter, five asks in one convene — would be **A6** in the register.
+The same extracted-instance route that produced A2 carries *Financial Products* segment
+interest expense as a dimensional fact on CAT's 10-Q; whether it does for other captive
+filers is not measured and is not claimed.
+
+**One line for another lane.** In both arms the FCF figure agents cite is the vendor
+`$5,049M` / `200% of FCF` (5 of 12 agents in `off`); the filed `$8,994M` / `112%` sits on the
+same profile and is cited by none. That is DEF400's sheet-rendering question, noted here
+because the rig saw it, and left to that lane.
+

@@ -21,7 +21,7 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS = os.path.join(_HERE, "results")
-ARMS = ("off", "debt", "cash", "history")
+ARMS = ("off", "debt", "cash", "history", "dims")
 
 
 def _load(results: str, stamps: list[str], ticker: str, mandate: str, arm: str):

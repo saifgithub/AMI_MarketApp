@@ -111,11 +111,20 @@ ARMS: dict[str, dict[str, bool]] = {
         "room_fcf_conversion_enabled": True,
         "room_roe_history_enabled": True,
     },
+    # Slot 4 (2026-09-11): the three lines read from the filing's own XBRL
+    # instance. A2 is the register's single largest item (18 lines, 9 agents),
+    # so this is the arm the demand-extinction endpoint had the best chance on.
+    "dims": {
+        "room_debt_split_enabled": True,
+        "room_segment_revenue_enabled": True,
+        "room_geographic_revenue_enabled": True,
+    },
 }
 ARM_ITEMS = {
     "debt": ("A1", "A3"),
     "cash": ("C3", "C4"),
     "history": ("C2", "C5", "B2"),
+    "dims": ("A2", "D1", "D2"),
 }
 FLAGS = tuple(sorted({flag for spec in ARMS.values() for flag in spec}))
 

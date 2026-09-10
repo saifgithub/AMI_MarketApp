@@ -53,11 +53,26 @@ SHIPPED = {
     "A3": ("debt", [r"5\.1%", r"1,842", r"36,210", r"cost of debt"]),
     "C3": ("cash", [r"13,569", r"4,575", r"8,994", r"cash-flow bridge"]),
     "C4": ("cash", [r"5,001", r"2,391", r"2,957", r"3,368"]),
+    # Slot 4, measured from `_format_profile` on the round-3 pickle (the
+    # figures are the filing's, so they do not move between pickles).
+    # The $B forms are here because the first short-mandate read scored A2 at
+    # 0/12 while three agents were arguing from "$32.6B captive finance debt is
+    # funded lending, not distress" — qwen rounds the sheet's $M to $B. The
+    # earlier rows' markers carry the same blind spot and are left as measured.
+    "A2": ("dims", [r"10,713", r"32,617", r"10\.7\s?B", r"32\.6\s?B", r"captive finance \$"]),
+    "D1": ("dims", [r"27,143", r"24,800", r"12,185", r"4,220", r"27\.1\s?B", r"24\.8\s?B",
+                    r"12\.2\s?B", r"Power Energy", r"Construction Industries", r"Resource Industries"]),
+    "D2": ("dims", [r"36,609", r"12,793", r"11,199", r"6,988", r"36\.6\s?B", r"12\.8\s?B",
+                    r"11\.2\s?B", r"North America \$", r"EMEA", r"Asia Pacific", r"Latin America"]),
 }
 
 # DEF400 is not a new line — it MOVES one — so it is counted both ways.
 DEF400_STALE = [r"5,049", r"\b200% of"]
 DEF400_FILED = [r"8,994", r"\b112% of"]
+
+# Every arm the shipped table names, plus the baseline — derived, so a new arm
+# cannot be scored for demand (replay.py) and silently skipped for citation here.
+ARMS = ("off",) + tuple(sorted({arm for arm, _ in SHIPPED.values()}))
 
 
 def _asking_agents() -> dict[str, set[str]]:
@@ -95,7 +110,7 @@ def main() -> int:
     loaded: dict[tuple[str, str], list[dict]] = {}
     for stamp in sorted(args.stamp):
         for mandate in args.mandates:
-            for arm in ("off", "debt", "cash", "history"):
+            for arm in ARMS:
                 path = os.path.join(
                     args.results, f"{stamp}_{args.ticker}_{mandate}_{arm}.json")
                 if os.path.exists(path):
