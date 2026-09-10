@@ -466,6 +466,19 @@ services:
       # Settings.prereg_applies_to_long_horizon.
       TRAINING_PREREGISTRATION_REQUIRED: ${TRAINING_PREREGISTRATION_REQUIRED:-false}
       PREREG_APPLIES_TO_LONG_HORIZON: ${PREREG_APPLIES_TO_LONG_HORIZON:-false}
+      # CR222 §2 — the passive twin block in the Portfolio Health Finding, its
+      # mandate → instrument mapping, the expense ratios it displays, and the two
+      # market-day sufficiency floors. PASSIVE_TWIN_HALAL_TICKER is EMPTY on
+      # purpose: an unset halal instrument must make the block insufficient with
+      # a named cause, never fall back to SPY (CR040/DEF059). See
+      # Settings.portfolio_passive_twin_enabled and its neighbours.
+      PORTFOLIO_PASSIVE_TWIN_ENABLED: ${PORTFOLIO_PASSIVE_TWIN_ENABLED:-false}
+      PASSIVE_TWIN_DEFAULT_TICKER: ${PASSIVE_TWIN_DEFAULT_TICKER:-SPY}
+      PASSIVE_TWIN_HALAL_TICKER: ${PASSIVE_TWIN_HALAL_TICKER:-}
+      PASSIVE_TWIN_DEFAULT_EXPENSE_RATIO_PCT: ${PASSIVE_TWIN_DEFAULT_EXPENSE_RATIO_PCT:-0.0945}
+      PASSIVE_TWIN_HALAL_EXPENSE_RATIO_PCT: ${PASSIVE_TWIN_HALAL_EXPENSE_RATIO_PCT:-0.0}
+      TWIN_MIN_MARKET_DAYS: ${TWIN_MIN_MARKET_DAYS:-20}
+      TWIN_MIN_MARKET_DAYS_FOR_SE: ${TWIN_MIN_MARKET_DAYS_FOR_SE:-60}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

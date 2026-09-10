@@ -958,6 +958,45 @@ class Settings(BaseSettings):
     # until someone deliberately decides otherwise.
     prereg_applies_to_long_horizon: bool = False
 
+    # CR222 §2 — the passive twin block in the Portfolio Health Finding: what a
+    # mandate-matched passive holding would have returned on the same cash, on
+    # the same dates, never traded. Off by default: it adds a block to a shipped,
+    # permanently-archived report, so it goes live by a deliberate env flip.
+    portfolio_passive_twin_enabled: bool = False
+
+    # CR222 §2 — the mandate → passive instrument mapping. Two scalars rather
+    # than a dict-shaped PASSIVE_TWIN_MAP: compose forwards scalars, and the map
+    # has exactly two arms today (halal / everything else).
+    #
+    # The halal ticker DEFAULTS TO EMPTY on purpose. A halal mandate with no
+    # configured Sharia-screened ETF must make the block `sufficient:false` with
+    # a cause naming the unconfigured mapping — never fall back to SPY, which
+    # would compare a halal user against a benchmark their own mandate forbids
+    # and say nothing about it (CR040 / DEF059). An empty default is what makes
+    # "nobody has chosen the halal instrument yet" impossible to mistake for
+    # "the default is fine".
+    passive_twin_default_ticker: str = "SPY"
+    passive_twin_halal_ticker: str = ""
+
+    # Annual expense ratio of each mapped instrument, in percentage points
+    # (0.0945 = 9.45 bps). DISPLAY DATA in this slice — the block carries it so a
+    # reader can see the twin is not free, and it is deliberately NOT subtracted
+    # from the twin's return: the twin's prices are total-return adjusted closes
+    # that already carry the fund's own drag, so applying it again would
+    # double-count. A future slice that switches to an index rather than a fund
+    # is where it would start being applied.
+    passive_twin_default_expense_ratio_pct: float = 0.0945
+    passive_twin_halal_expense_ratio_pct: float = 0.0
+
+    # CR222 §2 — the two sufficiency floors, in MARKET DAYS (rows on the shared
+    # NAV grid), not calendar days. Below the first the block carries no numbers
+    # at all; between the two it carries the difference plus the machine state
+    # saying that difference has no sampling-error estimate behind it. There is
+    # no bootstrap in Portfolio Health and this CR does not build one
+    # (CR222 Corrections §6), so the honest thing is to name the absence.
+    twin_min_market_days: int = 20
+    twin_min_market_days_for_se: int = 60
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

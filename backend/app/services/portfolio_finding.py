@@ -537,6 +537,78 @@ def _f3_standing_disclosures(context: dict) -> str:
     ])
 
 
+# CR222 §2 — an expense ratio is basis points wearing a percent sign, so it is
+# the one figure in the report that needs more than 2 dp: SPY's 0.0945% renders
+# as "0.09%" at the ladder's floor, which is a fee 5% lighter than the real one
+# and reads as a round number nobody charges.
+_TWIN_EXPENSE_DP = 4
+
+
+def _f3_passive_twin(context: dict) -> str | None:
+    """CR222 §2 — the same money, on the same dates, held passively.
+
+    Rendered into §F3 beside the measured metrics rather than as a sixth
+    section: `validate_sections` walks exactly f1–f5, so a new key would be a
+    block of numbers no allow-list ever checked — the one thing this module's
+    whole design is about not shipping.
+
+    CR131's honesty rules, structurally: no grade, no warning, no verdict, and
+    ONE shape whether the difference is positive or negative. The difference is
+    stated in percentage points and nothing here interprets it — an interpreted
+    difference is the verdict CR131 removed.
+    """
+    block = context.get("passive_twin")
+    if not isinstance(block, dict):
+        return None
+
+    lines = ["**The same money, held passively**"]
+    ticker = block.get("twin_ticker")
+
+    if not block.get("sufficient"):
+        # The cause is a MACHINE state, not prose: M06/M09 owns the sentence a
+        # user reads for each one. Naming the cause here is what keeps an
+        # unconfigured halal mapping from looking like an ordinary short window.
+        cause = block.get("insufficient_cause")
+        lines.append(
+            f"Not measured this run. Machine state: {cause}."
+            if ticker is None else
+            f"Not measured this run for {ticker}. Machine state: {cause}."
+        )
+        return "\n".join(lines)
+
+    expense = block.get("twin_expense_ratio_pct")
+    lines.append(
+        f"Comparison holding: {ticker}, annual expense ratio "
+        f"{_fmt(expense, _TWIN_EXPENSE_DP)}%. Bought with the same cash on the "
+        f"same dates as "
+        f"this book's own deposits, and never traded."
+    )
+    lines.append(
+        f"Money-weighted (the deposits' own timing kept): this book "
+        f"{_pct(block['user_irr'], 2)}% a year against {ticker}'s "
+        f"{_pct(block['twin_irr'], 2)}%, a difference of "
+        f"{_pct(block['irr_difference'], 2)} percentage points."
+    )
+    lines.append(
+        f"Time-weighted over the same window (the deposits' timing removed, "
+        f"not annualised): this book {_pct(block['user_twr'], 2)}% against "
+        f"{ticker}'s {_pct(block['twin_twr'], 2)}%, a difference of "
+        f"{_pct(block['twr_difference'], 2)} percentage points."
+    )
+    lines.append(
+        f"Measured over {block['market_days']} market days on the shared date "
+        f"grid. Method: internal rate of return over the deposit schedule, and "
+        f"the chain-linked time-weighted return over the same points."
+    )
+    if block.get("difference_precision") == "no_sampling_error_estimate":
+        lines.append(
+            "Precision: this difference carries no sampling-error estimate. "
+            "Nothing here estimates one, and a window this short would not "
+            "support one if it did."
+        )
+    return "\n".join(lines)
+
+
 def _f4(context: dict) -> str:
     vol = _block(context, "portfolio_volatility")
     bets = _block(context, "effective_bets")
@@ -631,6 +703,9 @@ def render_deterministic_sections(
     f3_parts = [
         _f3_metric_block(block, context) for block in context["metrics"]
     ]
+    twin = _f3_passive_twin(context)
+    if twin is not None:
+        f3_parts.append(twin)
     f3_parts.append(_f3_standing_disclosures(context))
 
     return {
@@ -700,11 +775,45 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
     # set verbatim and never at the ×100 scale, so the double-scaled reading of
     # its own number is not a token this Finding may contain.
     for key, node in context.items():
-        if key == "metrics":
+        if key in ("metrics", "passive_twin"):
             continue
         for value in _numeric_leaves(node):
             _register_number(value, PCT, allow)
             _register_number(value, RAW, allow)
+
+    # CR222 §2 — the twin block is registered FIELD BY FIELD rather than through
+    # the leaf sweep above, because it mixes two units and the sweep knows only
+    # one. Its returns are fractions and register at the ×100 percent scale; its
+    # expense ratio is ALREADY in percentage points, so registering it the
+    # sweep's way would admit "9.45%" for a 0.0945% fee — a fee overstated by two
+    # orders of magnitude, the same double-scaling defect the Tier-2 unit map
+    # exists to prevent — and would refuse the 0.0945 the renderer actually
+    # writes. `market_days` is a count and registers verbatim.
+    twin = context.get("passive_twin")
+    if isinstance(twin, dict):
+        for key in (
+            "user_irr", "user_twr", "twin_irr", "twin_twr",
+            "irr_difference", "twr_difference",
+        ):
+            value = twin.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                _register_number(float(value), PCT, allow)
+        expense = twin.get("twin_expense_ratio_pct")
+        if isinstance(expense, (int, float)) and not isinstance(expense, bool):
+            _register_number(float(expense), PCT, allow, already_percent=True)
+            # An expense ratio is basis points wearing a percent sign — 0.0945%
+            # is a real, published number and rounds to "0.09" at the dp ladder's
+            # floor, which is a different fee. The renderer writes it at
+            # `_TWIN_EXPENSE_DP`, so admit exactly what the renderer writes
+            # (the same ask-the-renderer move DEF212 made for a breach pair).
+            _register(
+                allow.pct,
+                _fmt(float(expense), _TWIN_EXPENSE_DP),
+                _TWIN_EXPENSE_DP,
+            )
+        market_days = twin.get("market_days")
+        if isinstance(market_days, int) and not isinstance(market_days, bool):
+            allow.raw.add(Decimal(market_days).normalize())
 
     for block in context["metrics"]:
         percent_unit = _unit(block["metric"]) == UNIT_PERCENT
@@ -1269,6 +1378,7 @@ async def generate_and_persist_finding(
     store,
     evaluate,
     gateway=None,
+    passive_twin: dict | None = None,
 ) -> FindingResult:
     """Render, validate, persist. One journal read serves both the idempotency
     check and the hysteresis state — they are the same question about the same
@@ -1280,8 +1390,16 @@ async def generate_and_persist_finding(
     `evaluate_rules` to them. A default would have to be either a silent
     no-rules render or a runtime raise, and the first ships a Finding with §F5
     empty and no signal that anything was skipped.
+
+    `passive_twin` (CR222 §2) is `None` when the flag is off, and an absent key
+    is what makes the flag-off report byte-identical to the pre-CR one. It does
+    NOT ride `metric_blocks`: those go through M04's uncertainty contract and
+    the §F3 metric templates, and the twin is neither — it is a counterfactual
+    over the NAV spine, with its own sufficiency states and its own units.
     """
     context = build_stripped_context(metric_blocks, as_of=as_of)
+    if passive_twin is not None:
+        context["passive_twin"] = passive_twin
 
     prior = load_latest_finding(store, user_id, portfolio_id)
     # The prior read includes soft-deleted entries, and the two things it feeds
