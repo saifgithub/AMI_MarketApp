@@ -849,6 +849,9 @@ def _overlay_filing_dimensions(
         )
 
 
+_EDGAR_8K_AGING_WARN_DAYS = 30
+
+
 def _overlay_executive_change(
     profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
 ) -> None:
@@ -861,7 +864,9 @@ def _overlay_executive_change(
     blur (CR040): `filed` and `none_in_window` are live — the scan vouches
     for the window either way; `unscanned`, `stale` and `unreadable` are
     unavailable, each with its own warn, so a quiet filer and a store that
-    never heard of the ticker never look the same at the sheet.
+    never heard of the ticker never look the same at the sheet. A live scan
+    whose unverified gap to `as_of` exceeds _EDGAR_8K_AGING_WARN_DAYS warns
+    `edgar_8k_scan_aging` without leaving the live state.
     """
     try:
         scan, rows = edgar_8k.fetch_8k_state(ticker, as_of)
@@ -915,17 +920,36 @@ def _overlay_executive_change(
     if verified_through < verified_from:
         profile["executive_change_state"] = "stale"
         field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
+        # Two causes: the scan predates the render window (a re-run fixes
+        # it), or `as_of` predates the scan's own window (a backtest — no
+        # re-run reaches back there).
+        backtest = as_of < scan.scanned_at.date()
         logger.warn(
             "edgar_8k_scan_stale",
             ticker=ticker.upper(), scanned_at=scan.scanned_at.isoformat(),
-            as_of=as_of.isoformat(), fix="re-run backend/scripts/ingest_edgar_8k.py",
+            as_of=as_of.isoformat(),
+            fix=(
+                "the store does not cover this as_of: it predates the scan's window "
+                f"(covered_since {scan.covered_since.isoformat()}, window {scan.window_days} days)"
+                if backtest else "re-run backend/scripts/ingest_edgar_8k.py"
+            ),
         )
         return
 
     profile["executive_change_verified_from"] = verified_from.isoformat()
     profile["executive_change_verified_through"] = verified_through.isoformat()
-    # The scan vouches for nothing after itself; the line names the hole.
-    profile["executive_change_unverified_days"] = (as_of - verified_through).days
+    # The scan vouches for nothing after itself; the line names the hole, and
+    # a hole past a month is a warn — the state stays live (the line says
+    # what is unverified) but nobody should learn the scan aged from the sheet.
+    unverified_days = (as_of - verified_through).days
+    profile["executive_change_unverified_days"] = unverified_days
+    if unverified_days > _EDGAR_8K_AGING_WARN_DAYS:
+        logger.warn(
+            "edgar_8k_scan_aging",
+            ticker=ticker.upper(), scanned_at=scan.scanned_at.isoformat(),
+            as_of=as_of.isoformat(), unverified_days=unverified_days,
+            fix="re-run backend/scripts/ingest_edgar_8k.py",
+        )
     items = [r for r in rows if verified_from <= r.filed <= verified_through]
     if not items:
         profile["executive_change_state"] = "none_in_window"

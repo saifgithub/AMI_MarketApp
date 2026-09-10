@@ -23,14 +23,39 @@ and never touches sec.gov inside a convene.
     never scanned, or the scan is too old to vouch for the render window.
 
 An index the ingest could not READ is not an index with nothing on it
-(P26): a renamed column, an item string in a new format or an unparseable
-date raises `IndexUnreadable` and the ingest writes no scan row, so the
-Room says "unscanned", never "none filed".
+(P26): a renamed column, an item string in a new format, an 8-K date that
+does not parse, or a `filings.recent` with every column present and ZERO
+rows (a mapped CIK never has zero filings — that shape is the index having
+moved, e.g. everything under `filings.files`) raises `IndexUnreadable` and
+the ingest writes no scan row, so the Room says "unscanned", never "none
+filed". One unparseable date on an old non-8-K row does NOT void the scan:
+`covered_since` is the min over the dates that parse.
 
 Item 5.02 is a catch-all (director elections, pay terms, non-C-suite
 departures), so the sheet quotes what the filing says and never classifies
 it. The excerpt is sentence-bounded and capped — CAT's section leads with the
 succession and ends with the pay bullets, and the cap drops the latter.
+
+**What the hidden-text filter is, exactly.** `html_to_text` drops the
+`<ix:header>` block, script/style/title/noscript/template/iframe/svg/
+textarea, the `hidden` attribute, and any element whose inline style carries
+one of these patterns: `display:none`, `visibility:hidden`, `opacity:0`,
+`position:absolute|fixed` with `left|top|text-indent` at or beyond -999
+(px/pt/em/rem/%), `clip:rect(0,0,0,0)`, `clip-path:inset(50%|100%)`,
+`(max-)height|width:0` together with `overflow:hidden`, or a font-size under
+2px/2pt, under 0.2em/rem or under 20%. It also reads the document's own
+`<style>` blocks and drops elements carrying a class or id whose simple
+selector (`.c`, `#i`, `tag.c`, `tag#i`) has a rule matching any of those
+patterns. Hiding by colour (white-on-white), by an external stylesheet, by
+layout (an element painted over) or by a compound selector is NOT detected.
+This is a filter, not a control (CR038): what reaches the prompt is capped,
+sanitised and bracketed as a filing quote, and the Room reads it as such.
+
+**The excerpt is bracketed, not quoted.** A filing containing a plain `"`
+would close an ASCII quotation and let the rest read as sheet-authored
+prose, so the seam brackets the excerpt as `⟦filing text begins⟧ … ⟦filing
+text ends⟧` and strips U+27E6/U+27E7 from the filing text first — the
+filing cannot produce the closer. Both glyphs survive `sanitize_for_prompt`.
 
 PURE except `fetch_8k_state` and `ever_scanned`, which touch the store; the
 network is the ingest script's.
@@ -100,21 +125,16 @@ class Scan:
 
 class IndexUnreadable(ValueError):
     """The submissions JSON is not the index this module knows how to read:
-    a column is missing or renamed, the columns disagree in length, an 8-K
-    inside the window carries an item string that is not a list of
-    `d.dd` codes, or a filing date does not parse. The ingest writes NO scan
-    row on this — an unreadable index and a quiet filer must never produce
-    the same record (P26, CR040)."""
+    a column is missing or renamed, the columns disagree in length, the
+    block has zero rows, an 8-K inside the window carries an item string
+    that is not a list of `d.dd` codes, an 8-K's filing date does not parse,
+    or no filing date parses at all. The ingest writes NO scan row on this —
+    an unreadable index and a quiet filer must never produce the same record
+    (P26, CR040)."""
 
 
 _REQUIRED_COLUMNS = ("form", "items", "filingDate", "accessionNumber", "primaryDocument")
 _ITEM_TOKEN = re.compile(r"^\d{1,2}\.\d{2}$")
-
-
-def has_item(items: str, code: str = ITEM_CODE) -> bool:
-    """Token match on the index's comma-separated item string: "5.02" must
-    not match "5.03" or "15.02"."""
-    return code in [t.strip() for t in str(items or "").split(",")]
 
 
 def _item_tokens(items: object, *, row: int) -> tuple[str, ...]:
@@ -134,9 +154,11 @@ def _parse_date(value: object, *, row: int, column: str) -> date | None:
 
 
 def recent_block(submissions: dict) -> dict:
-    """`filings.recent` with every column this module reads present and of
-    one length, or `IndexUnreadable`. An index with ZERO filings is readable
-    (every column present, all empty)."""
+    """`filings.recent` with every column this module reads present, of one
+    length and at least one row, or `IndexUnreadable`. Zero rows with every
+    column present is the exact shape a pagination change would produce
+    (everything moved under `filings.files`); a mapped CIK never has zero
+    filings, so that block is unreadable, not quiet."""
     if not isinstance(submissions, dict):
         raise IndexUnreadable("submissions is not an object")
     filings = submissions.get("filings")
@@ -149,6 +171,11 @@ def recent_block(submissions: dict) -> dict:
     lengths = {c: len(recent[c]) for c in _REQUIRED_COLUMNS}
     if len(set(lengths.values())) != 1:
         raise IndexUnreadable(f"filings.recent columns disagree in length: {lengths}")
+    if lengths["form"] == 0:
+        raise IndexUnreadable(
+            "filings.recent has zero rows — a mapped CIK never has zero filings; "
+            "the index has moved (filings.files?)"
+        )
     return recent
 
 
@@ -187,17 +214,25 @@ def select_502_filings(submissions: dict, *, since: date) -> list[FilingRef]:
     return refs
 
 
-def covered_since(submissions: dict) -> date | None:
-    """The oldest filing date in `filings.recent` — how far back the index
-    page the ingest read actually reaches. None for an index with no filings
-    at all; `IndexUnreadable` for one whose dates do not parse."""
+def covered_since(submissions: dict) -> date:
+    """The oldest PARSEABLE filing date in `filings.recent` — how far back
+    the index page the ingest read actually reaches. A row whose date does
+    not parse is skipped here (the 8-K rows are validated by
+    `select_502_filings`; a bad date on a 2019 10-Q must not void the
+    ticker), and skipping it can only shorten the claim, never lengthen it.
+    `IndexUnreadable` when no date parses at all."""
     recent = recent_block(submissions)
     dates: list[date] = []
     for i, value in enumerate(recent["filingDate"]):
-        parsed = _parse_date(value, row=i, column="filingDate")
+        try:
+            parsed = _parse_date(value, row=i, column="filingDate")
+        except IndexUnreadable:
+            continue
         if parsed is not None:
             dates.append(parsed)
-    return min(dates) if dates else None
+    if not dates:
+        raise IndexUnreadable("filings.recent: no filingDate parses")
+    return min(dates)
 
 
 def archive_url(cik: int, ref: FilingRef) -> str:
@@ -208,8 +243,10 @@ def archive_url(cik: int, ref: FilingRef) -> str:
 
 # ── The document ─────────────────────────────────────────────────────────────
 
-# Content a human reader of the filing never sees must not reach the prompt:
-# these elements, and any element styled invisible (a filer-controlled channel).
+# The hidden-text filter, stated exactly in the module docstring: these
+# elements, the `hidden` attribute, the inline patterns in `_HIDDEN_STYLE`,
+# and classes/ids the document's own `<style>` blocks bind to one of those
+# patterns. Colour, external stylesheets and layout are not detected.
 _DROP_TAGS = frozenset({
     "script", "style", "title", "ix:header", "noscript", "textarea", "template",
     "iframe", "svg",
@@ -221,19 +258,73 @@ _VOID_TAGS = frozenset({
 _BLOCK_TAGS = frozenset({
     "p", "div", "br", "tr", "td", "th", "li", "table", "h1", "h2", "h3", "h4",
 })
+_ZERO = r"0(?:\.0+)?"
+_DECL_END = r"\s*(?:!important\s*)?(?:;|$)"
 _HIDDEN_STYLE = re.compile(
-    r"display\s*:\s*none|visibility\s*:\s*hidden|font-size\s*:\s*0(?:\.0*)?\s*(?:p[xt]|em|%|;|$)",
+    r"display\s*:\s*none"
+    r"|visibility\s*:\s*hidden"
+    rf"|opacity\s*:\s*{_ZERO}{_DECL_END}"
+    r"|clip\s*:\s*rect\(\s*0(?:px)?(?:\s*,\s*|\s+)0(?:px)?(?:\s*,\s*|\s+)0(?:px)?(?:\s*,\s*|\s+)0(?:px)?\s*\)"
+    r"|clip-path\s*:\s*inset\(\s*(?:50|100)%"
+    rf"|font-size\s*:\s*(?:{_ZERO}|[01](?:\.\d+)?\s*p[xt]|0\.[01]\d*\s*r?em|(?:[0-9]|1[0-9])(?:\.\d+)?\s*%){_DECL_END}",
     re.I,
 )
+_OFFSCREEN_POSITION = re.compile(r"position\s*:\s*(?:absolute|fixed)\b", re.I)
+_OFFSCREEN_OFFSET = re.compile(
+    r"(?:left|top|text-indent)\s*:\s*-(?:999|[1-9]\d{3,})(?:\.\d+)?\s*(?:px|pt|em|rem|%)", re.I,
+)
+_COLLAPSED_BOX = re.compile(rf"(?:max-)?(?:height|width)\s*:\s*{_ZERO}\s*(?:px|pt|em|rem|%)?{_DECL_END}", re.I)
+_OVERFLOW_HIDDEN = re.compile(r"overflow(?:-[xy])?\s*:\s*hidden", re.I)
 
 
-def _is_hidden(attrs) -> bool:
+def _style_hides(style: str) -> bool:
+    """One inline style (or one stylesheet rule body) that hides its element
+    under the patterns the module docstring lists."""
+    if _HIDDEN_STYLE.search(style):
+        return True
+    if _OFFSCREEN_POSITION.search(style) and _OFFSCREEN_OFFSET.search(style):
+        return True
+    return bool(_COLLAPSED_BOX.search(style) and _OVERFLOW_HIDDEN.search(style))
+
+
+def _is_hidden(attrs, hidden_classes: frozenset[str], hidden_ids: frozenset[str]) -> bool:
     for name, value in attrs or ():
         if name == "hidden":
             return True
-        if name == "style" and value and _HIDDEN_STYLE.search(value):
+        if name == "style" and value and _style_hides(value):
+            return True
+        if name == "class" and value and hidden_classes.intersection(value.split()):
+            return True
+        if name == "id" and value and value.strip() in hidden_ids:
             return True
     return False
+
+
+_STYLE_BLOCK = re.compile(r"<style\b[^>]*>(.*?)</style\s*>", re.I | re.S)
+_CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
+_CSS_RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
+_SIMPLE_SELECTOR = re.compile(r"^\s*(?:[a-z][\w-]*)?(?:\.(?P<cls>[\w-]+)|#(?P<id>[\w-]+))\s*$", re.I)
+
+
+def hidden_selectors(html: str) -> tuple[frozenset[str], frozenset[str]]:
+    """(classes, ids) the document's own `<style>` blocks bind to a hiding
+    rule. Only a simple selector is honoured — `.c`, `#i`, `p.c`, `div#i` —
+    so a compound rule (`.a .b`) hides nothing here and is a stated limit."""
+    classes: set[str] = set()
+    ids: set[str] = set()
+    for block in _STYLE_BLOCK.findall(html):
+        for selectors, body in _CSS_RULE.findall(_CSS_COMMENT.sub("", block)):
+            if not _style_hides(body):
+                continue
+            for selector in selectors.split(","):
+                m = _SIMPLE_SELECTOR.match(selector)
+                if m is None:
+                    continue
+                if m.group("cls"):
+                    classes.add(m.group("cls"))
+                else:
+                    ids.add(m.group("id"))
+    return frozenset(classes), frozenset(ids)
 
 
 class _TextExtractor(HTMLParser):
@@ -241,17 +332,21 @@ class _TextExtractor(HTMLParser):
     matching end tag, nested same-name tags counted, so a hidden `<div>` with
     visible `<div>`s inside it is dropped whole and nothing after it is."""
 
-    def __init__(self) -> None:
+    def __init__(self, hidden_classes: frozenset[str], hidden_ids: frozenset[str]) -> None:
         super().__init__(convert_charrefs=True)
         self._parts: list[str] = []
         self._dropping: list[list] = []  # [tag, depth]
+        self._hidden_classes = hidden_classes
+        self._hidden_ids = hidden_ids
 
     def handle_starttag(self, tag: str, attrs) -> None:
         if self._dropping:
             if tag == self._dropping[-1][0] and tag not in _VOID_TAGS:
                 self._dropping[-1][1] += 1
             return
-        if tag in _DROP_TAGS or (tag not in _VOID_TAGS and _is_hidden(attrs)):
+        if tag in _DROP_TAGS or (
+            tag not in _VOID_TAGS and _is_hidden(attrs, self._hidden_classes, self._hidden_ids)
+        ):
             self._dropping.append([tag, 1])
             return
         if tag in _BLOCK_TAGS:
@@ -279,8 +374,11 @@ class _TextExtractor(HTMLParser):
 def html_to_text(html: str) -> str:
     """Visible text of an inline-XBRL 8-K, one line per block, with the
     `<ix:header>` hidden facts, script/style/title/noscript/template/iframe/
-    svg/textarea and anything styled invisible dropped."""
-    parser = _TextExtractor()
+    svg/textarea, and anything the listed inline or `<style>`-bound hiding
+    patterns catch dropped. Not a colour or layout renderer; see the module
+    docstring for the exact list."""
+    classes, ids = hidden_selectors(html)
+    parser = _TextExtractor(classes, ids)
     parser.feed(html)
     parser.close()
     return parser.text()
@@ -296,7 +394,13 @@ def html_to_text(html: str) -> str:
 # 2026-06-05 8-K heads its section "Item 5.02(c) Appointment of Principal
 # Officer", and that IS the heading.
 _HEADING_502 = re.compile(r"^\s*Item\s*5\.02\b", re.I | re.M)
-_NEXT_HEADING = re.compile(r"^\s*(?:Item\s*\d{1,2}\.\d\d\b|SIGNATURES?\b)", re.I | re.M)
+# The terminator excludes the section's own code: a filing that heads its
+# sub-items separately ("Item 5.02(b) Departure …", then "Item 5.02(c)
+# Appointment …") is one section, not two, and cutting at the second
+# sub-heading labelled a truncated departure "complete".
+_NEXT_HEADING = re.compile(
+    r"^\s*(?:Item\s*(?!5\.02\b)\d{1,2}\.\d\d\b|SIGNATURES?\b)", re.I | re.M,
+)
 
 
 def extract_item_502(html: str) -> str | None:
@@ -335,11 +439,22 @@ _SENTENCE_END = re.compile(r"[.!?][\"”’)]?\s")
 _ABBREVIATION = re.compile(r"(?:\b(?:Mr|Mrs|Ms|Dr|Inc|Co|Corp|Ltd|No|Jr|Sr|St|vs)|\b[A-Z])$")
 
 
+EXCERPT_OPEN = "⟦filing text begins⟧ "
+EXCERPT_CLOSE = " ⟦filing text ends⟧"
+_BRACKET_GLYPHS = {ord("⟦"): None, ord("⟧"): None}
+
+
+def clean_filing_text(text: object) -> str:
+    """`sanitize_for_prompt` plus the excerpt's own bracket glyphs dropped,
+    so the filing cannot forge the sheet's closer."""
+    return sanitize_for_prompt(text).translate(_BRACKET_GLYPHS)
+
+
 def excerpt(section: str, cap: int = EXCERPT_CAP) -> tuple[str, bool, int]:
     """(text, truncated, full_len). The read side never trusts the row: the
     text is re-sanitised here. A cut lands on the last sentence end inside
     `cap` when one sits past 40% of it; otherwise a hard cut with an ellipsis."""
-    s = sanitize_for_prompt(section)
+    s = clean_filing_text(section)
     full_len = len(s)
     if full_len <= cap:
         return s, False, full_len
@@ -457,7 +572,9 @@ def executive_change_line(
     """The sheet line, or None when the state is not a live one. Every string
     lifted from an item passes `sanitize_for_prompt` here, at the seam, and
     the excerpt is re-capped here too — the profile dict is not trusted for
-    length any more than for content. `total` is the count of Item 5.02
+    length any more than for content. The excerpt sits between EXCERPT_OPEN
+    and EXCERPT_CLOSE with the bracket glyphs stripped from it, so a `"` in
+    the filing cannot end the quotation early. `total` is the count of Item 5.02
     filings in the verified window (the overlay renders at most
     MAX_ITEMS_RENDERED of them); the line states the true count and says how
     many are shown, never a count the scan contradicts."""
@@ -497,7 +614,7 @@ def executive_change_line(
                 "extracted — the filing exists; its content is not supplied."
             )
             continue
-        clean = sanitize_for_prompt(raw)
+        clean = clean_filing_text(raw)
         recapped = len(clean) > EXCERPT_CAP + 1  # excerpt() yields at most cap + "…"
         ex = clean[:EXCERPT_CAP].rstrip() + "…" if recapped else clean
         truncated = bool(item.get("truncated")) or recapped
@@ -506,7 +623,7 @@ def executive_change_line(
         parts.append(
             head
             + f"; the filing's own words, {'opening sentences' if truncated else 'complete'} "
-            f"({len(ex):,} of {full_len:,} chars{bounded}): \"{ex}\""
+            f"({len(ex):,} of {full_len:,} chars{bounded}): {EXCERPT_OPEN}{ex}{EXCERPT_CLOSE}"
         )
     n_shown = len(shown)
     try:

@@ -13,7 +13,9 @@ summary, never silently skipped (CR040). Rows whose status is not
 
 The scan row is NOT written when the index itself could not be read
 (`edgar_8k.IndexUnreadable`: a renamed column, an item string in a new
-format, an unparseable date) or fetched — an unreadable index and a quiet
+format, an 8-K date that does not parse, or a `filings.recent` with zero
+rows — a mapped CIK never has zero filings, so that is the index having
+moved, not a quiet filer) or fetched — an unreadable index and a quiet
 filer must never produce the same record (P26). The ticker is counted and
 named under `[index_unreadable]` / `[submissions_failed]` and the Room reads
 it as unscanned, never as "none filed".
@@ -175,9 +177,7 @@ def ingest_ticker(
                 tally.filings["updated"] += 1
 
     # The scan row is written whatever happened to the DOCUMENTS: the index
-    # was read, and that is what the "none filed between" claim rests on. An
-    # index with no filings at all is fully covered (`covered` is None).
-    covered = covered or since
+    # was read, and that is what the "none filed between" claim rests on.
     with get_session() as session:
         session.add(Edgar8kScanRow(
             ticker=ticker, cik=cik, scanned_at=datetime.now(timezone.utc),
