@@ -69,7 +69,13 @@ from app.schemas.room import (
     VerdictAction,
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
-from app.services import debt_maturity, edgar_pit, edgar_tags, interest_cost
+from app.services import (
+    debt_maturity,
+    edgar_pit,
+    edgar_tags,
+    filing_dimensions,
+    interest_cost,
+)
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
@@ -761,6 +767,87 @@ def _overlay_debt_structure(
         )
 
 
+_FILING_DIMENSION_BLOCKS = ("debt_split", "segment_revenue", "geographic_revenue")
+
+
+def _overlay_filing_dimensions(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR221 A2 / D1 / D2 — the debt split and the two revenue breakdowns,
+    from the filings' own columns (`filing_dimensions`).
+
+    Same conventions as `_overlay_debt_structure`: one state key per block,
+    populated regardless of the three render flags so §7's control arm is a
+    flag flip against one cached profile. One difference, deliberate: the
+    `debt_split` block is LIVE for every filer in the captive-finance registry
+    even when nothing resolved, because `debt_split_state` then reads
+    "unresolved" and the sheet says the gross debt is a blended total. Marking
+    it unavailable would hide the lender's existence — the failure the line
+    exists to prevent. A filer with no registered lender gets `unavailable`
+    and, correctly, no line.
+    """
+    lender = edgar_tags.captive_finance_lender(ticker)
+    try:
+        dims = filing_dimensions.fetch_filing_dimensions(ticker, as_of)
+    except Exception as exc:
+        logger.warn(
+            "edgar_filing_dimensions_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["segment_revenue"] = LiveDataState.UNAVAILABLE.value
+        field_state["geographic_revenue"] = LiveDataState.UNAVAILABLE.value
+        if lender:
+            profile["debt_split_state"] = "unresolved"
+            profile["debt_split_entity"] = lender
+            field_state["debt_split"] = LiveDataState.LIVE.value
+        else:
+            field_state["debt_split"] = LiveDataState.UNAVAILABLE.value
+        return
+
+    if lender:
+        profile["debt_split_entity"] = lender
+        split = dims.debt_split
+        if split is None:
+            profile["debt_split_state"] = "unresolved"
+        else:
+            profile["debt_split_state"] = "resolved" if split.industrial is not None else "captive_only"
+            profile["debt_split_captive"] = round(split.captive / 1_000_000)
+            profile["debt_split_industrial"] = (
+                None if split.industrial is None else round(split.industrial / 1_000_000)
+            )
+            profile["debt_split_period"] = split.period_end.isoformat()
+        field_state["debt_split"] = LiveDataState.LIVE.value
+    else:
+        field_state["debt_split"] = LiveDataState.UNAVAILABLE.value
+
+    for key, breakdown in (("segment_revenue", dims.segments), ("geographic_revenue", dims.geography)):
+        if breakdown is None:
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+            continue
+        profile[f"{key}_labels"] = list(breakdown.labels)
+        profile[f"{key}_values"] = [round(v / 1_000_000) for v in breakdown.values]
+        profile[f"{key}_total"] = round(breakdown.total / 1_000_000)
+        profile[f"{key}_period_end"] = breakdown.period_end.isoformat()
+        profile[f"{key}_basis"] = breakdown.basis
+        field_state[key] = LiveDataState.LIVE.value
+
+    # CR040 loud degrade, the A1 shape: nothing resolved AND no derived row in
+    # the store for any filer means the dimensional ingest never ran, not that
+    # this company tags nothing.
+    if dims.debt_split is not None or dims.segments is not None or dims.geography is not None:
+        return
+    try:
+        ingested = edgar_pit.prefix_ever_ingested(edgar_tags.DIMENSIONAL_TAXONOMY + ":")
+    except Exception:
+        return
+    if not ingested:
+        logger.warn(
+            "edgar_dimensional_rows_not_ingested",
+            ticker=ticker.upper(),
+            fix="run backend/scripts/ingest_edgar_dimensional.py",
+        )
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -906,9 +993,12 @@ def _profile_for_ticker(
     # mock-data run never mixes real filed debt figures into a synthetic sheet.
     if as_of is not None or settings.use_real_market_data:
         _overlay_debt_structure(profile, field_state, ticker, today)
+        _overlay_filing_dimensions(profile, field_state, ticker, today)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
+        for block in _FILING_DIMENSION_BLOCKS:
+            field_state[block] = LiveDataState.UNAVAILABLE.value
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

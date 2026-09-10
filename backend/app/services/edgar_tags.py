@@ -15,6 +15,8 @@ working-capital stub.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 # Duration concepts (quarterly/annual flows) — resolved via quarterly series + TTM.
 REVENUE = (
     "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -116,6 +118,141 @@ DEBT_MATURITY_TAGS: tuple[str, ...] = tuple(tag for _, tag in DEBT_MATURITY_LADD
 
 # dei taxonomy — shares outstanding cover-page fact (instant), the market-cap basis.
 SHARES_OUTSTANDING_DEI = ("EntityCommonStockSharesOutstanding",)
+
+# ── CR221 slot 4 (A2 / D1 / D2) — what the filing carries only in its columns ──
+#
+# `companyfacts` serves one non-dimensional value per concept; the captive-
+# finance debt split, revenue by segment and revenue by geography live in the
+# filing's dimensional contexts and are read from its XBRL instance instead
+# (`edgar_instance.py`, `scripts/ingest_edgar_dimensional.py`). The derived
+# rows carry their own taxonomy string and an `ami:` prefix so they can never
+# collide with a real us-gaap tag name here — the PIT resolver asks for
+# us-gaap/dei tags by name and must never read a member's figure as the whole
+# company's.
+DIMENSIONAL_TAXONOMY = "ami"
+CAPTIVE_DEBT_TAG = "ami:CaptiveFinanceDebt"         # + ":<source us-gaap tag>"
+INDUSTRIAL_DEBT_TAG = "ami:IndustrialDebt"          # + ":<source us-gaap tag>"
+SEGMENT_REVENUE_TAG = "ami:SegmentRevenue"          # + ":<tier>:<member qname>"
+GEOGRAPHIC_REVENUE_TAG = "ami:GeographicRevenue"    # + ":<member qname>"
+CONSOLIDATED_REVENUE_TAG = "ami:ConsolidatedRevenue"  # + ":<source us-gaap tag>"
+
+# The debt concepts a consolidating column can carry, by family. A side's
+# total is the combined concept when the filer tags one (F, PCAR), else
+# noncurrent plus the current family: `DebtCurrent` already includes
+# short-term borrowings, so it is never added to them (F's Ford Credit column:
+# $89,665M noncurrent + $51,752M `DebtCurrent` = the $141,417M combined figure
+# it also tags). Order within a family is preference, first present wins.
+DEBT_FAMILY_COMBINED = ("DebtLongtermAndShorttermCombinedAmount", "DebtAndCapitalLeaseObligations")
+DEBT_FAMILY_NONCURRENT = ("LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations")
+DEBT_FAMILY_CURRENT_ALL = ("DebtCurrent",)
+DEBT_FAMILY_CURRENT_LTD = ("LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent")
+DEBT_FAMILY_SHORT = ("ShortTermBorrowings", "CommercialPaper")
+DEBT_SPLIT_SOURCE_TAGS: frozenset[str] = frozenset(
+    DEBT_FAMILY_COMBINED + DEBT_FAMILY_NONCURRENT + DEBT_FAMILY_CURRENT_ALL
+    + DEBT_FAMILY_CURRENT_LTD + DEBT_FAMILY_SHORT
+)
+
+# Axis LOCAL names (the prefix is the filer's to choose) on which a
+# consolidating column may appear. CAT uses ProductOrService, F uses
+# StatementBusinessSegments; the two entity axes are the textbook placement
+# and were seen on neither, but cost nothing to admit.
+DEBT_SPLIT_AXES = (
+    "ProductOrServiceAxis", "StatementBusinessSegmentsAxis",
+    "LegalEntityAxis", "ConsolidatedEntitiesAxis",
+)
+
+# Revenue concepts, broadest first — where a filer tags two for one cell the
+# first wins, so `Revenues` (which includes finance income) beats the
+# contract-revenue concept that excludes it.
+REVENUE_TAGS = (
+    "Revenues",
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "SalesRevenueNet",
+)
+
+
+@dataclass(frozen=True)
+class CaptiveFinance:
+    """One filer's in-house lender: its name for the sheet, and the normalised
+    member names its filing uses for the two consolidating columns."""
+
+    lender: str
+    captive: tuple[str, ...]
+    industrial: tuple[str, ...]
+
+
+# Matching is EXACT on the normalised member name, not by substring: Ford's
+# industrial column is `CompanyExcludingFordCreditMember`, and a substring rule
+# for "fordcredit" would file the industrial figure under the lender. Names
+# were read off each filer's latest 10-K instance on 2026-09-10; a filer that
+# renames a member stops resolving and the sheet says so, which is the correct
+# failure. Manual by design — a name-similarity heuristic would eventually
+# match an operating segment that is not a lending book, and a wrong split is
+# worse than no split.
+CAPTIVE_FINANCE: dict[str, CaptiveFinance] = {
+    "CAT": CaptiveFinance(
+        lender="Caterpillar Financial Services",
+        captive=("financialproducts",),
+        industrial=("machinerypowerenergy", "machineryenergytransportation"),
+    ),
+    "DE": CaptiveFinance(
+        lender="John Deere Capital",
+        captive=("financialservices", "johndeerecapital"),
+        industrial=("equipmentoperations",),
+    ),
+    "F": CaptiveFinance(
+        lender="Ford Credit",
+        captive=("fordcredit",),
+        industrial=("companyexcludingfordcredit",),
+    ),
+    "PCAR": CaptiveFinance(
+        lender="PACCAR Financial",
+        captive=("financialservices", "paccarfinancial"),
+        industrial=("truckpartsandother",),
+    ),
+}
+
+
+def normalize_member_name(qname: str) -> str:
+    """`cat:FinancialProductsSegmentMember` → `financialproducts`.
+
+    Prefix dropped, lowercase alphanumerics only, then the `Member` and
+    `Segment` suffixes stripped — CAT tags the same column as both
+    `FinancialProductsMember` and `FinancialProductsSegmentMember`.
+    """
+    local = str(qname).rsplit(":", 1)[-1]
+    text = "".join(ch for ch in local.lower() if ch.isalnum())
+    if text.endswith("member"):
+        text = text[: -len("member")]
+    if text.endswith("segment"):
+        text = text[: -len("segment")]
+    return text
+
+
+def captive_finance_lender(ticker: str) -> str | None:
+    entry = CAPTIVE_FINANCE.get(str(ticker).upper().strip())
+    return entry.lender if entry else None
+
+
+def captive_finance_role(ticker: str, member_qname: str) -> str | None:
+    """`"captive"`, `"industrial"`, or None when the member is neither — which
+    is every member of every filer not in the registry."""
+    entry = CAPTIVE_FINANCE.get(str(ticker).upper().strip())
+    if entry is None:
+        return None
+    name = normalize_member_name(member_qname)
+    if not name:
+        return None
+    if name in entry.captive:
+        return "captive"
+    if name in entry.industrial:
+        return "industrial"
+    return None
+
+
+def captive_finance_tickers() -> tuple[str, ...]:
+    return tuple(sorted(CAPTIVE_FINANCE))
+
 
 # Every tag the ingest script persists. Anything else in companyfacts is
 # skipped at ingest — the store holds what the resolver can use, nothing more.

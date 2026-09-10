@@ -362,30 +362,11 @@ _KNOWN_ABSENT: list[dict[str, Any]] = [
             "_the_absence_disclosure` pins that distinction."
         ),
     },
-    {
-        "row": "R38",
-        "persona": "fundamentals_analyst",
-        "claim": "the industrial-vs-captive-finance split of gross debt is not supplied",
-        "anchor": "split of that total is not supplied",
-        "collision_markers": (
-            "Debt split", "industrial vs. captive finance", "captive finance $", "finance arm:",
-        ),
-        "note": (
-            "CR219 R38 (declared-absent close, ESCAPE_HATCH.md 2026-09-03): the design "
-            "note's premise was false — SEC companyfacts carries no per-fact `segment` "
-            "object (measured 0/39,403 on CAT, independently on 0/35,550 on Deere), so "
-            "the dimensional parser the note called for cannot fire on the only route it "
-            "had. The real feature is parked, unshipped, at "
-            "docs/forward_planning/CR219_room_prompt_contradictions/dev_instructions/"
-            "WP10_R38_parked/ (`wp10_r38_build.patch`) pending CR221's FilingSummary.xml "
-            "re-route. Markers are the parked patch's OWN `_labelled(\"Debt split "
-            "(industrial vs. captive finance)\", ...)` render strings — the label fires "
-            "on all three of the patch's render states (no-segment/unresolved/resolved), "
-            "the body parts only on the resolved one. The day CR221 lands that line, "
-            "every one of these markers goes red and forces this denial's rewrite — that "
-            "firing is the mechanism working, not a test bug."
-        ),
-    },
+    # R38 (the industrial-vs-captive-finance debt split) left this list on
+    # 2026-09-11: CR221 A2 ships the line from the filing's own XBRL instance,
+    # exactly the event the retired entry's markers were armed to catch. The
+    # persona now defers to the sheet's "Debt split" line; its residual
+    # "not supplied" clause is allowlisted below as runtime deference.
     {
         "row": "R7",
         "persona": "market_analyst",
@@ -422,6 +403,16 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "anchor": "where it marks a field not available, or names a set as not reconstructable",
         "category": "runtime-deference",
         "why": "CR040 — tells the agent the sheet's per-field state wins over this list.",
+    },
+    {
+        "persona": "fundamentals_analyst",
+        "anchor": "not supplied. Never split it yourself",
+        "category": "runtime-deference",
+        "why": (
+            "CR221 A2 (2026-09-11) — the sentence now defers to the sheet's \"Debt split "
+            "(industrial vs. captive finance)\" line and denies the split only where that "
+            "line is absent; the residual clause forbids the agent deriving one itself."
+        ),
     },
     {
         "persona": "fundamentals_analyst",
@@ -1462,59 +1453,6 @@ def test_red_fixture_2_a_fabricated_known_absent_entry_collides_with_the_real_sh
         "R12's collision check did not fire against a marker that is demonstrably "
         "on the rendered sheet — the guard would let a false denial through"
     )
-
-
-def test_red_fixture_2b_r38_markers_fire_on_the_parked_patchs_own_render_line(sheets):
-    """Red fixture 2b — CR219 R38's specific promise (ESCAPE_HATCH.md RULING):
-    'the day CR221 lands the real line, the guard must go red on this entry'.
-
-    This does not wait for CR221. It fabricates a sheet the way R12's own vacuity
-    check does — by SPLICING the parked patch's actual render text into a real,
-    fully-populated sheet — and proves the R38 entry's collision markers fire on
-    it TODAY. If they did not, the entry would be inert exactly the way
-    `_parse_debt_split` itself turned out to be inert (ESCAPE_HATCH.md's own
-    diagnosis), and nobody would find out until CR221 shipped for real.
-
-    The two render strings below are transcribed verbatim from
-    `WP10_R38_parked/wp10_r38_build.patch`'s `debt_split_line()`: the RESOLVED
-    branch (`_labelled("Debt split (industrial vs. captive finance)", live,
-    ["industrial $...M", "captive finance $...M", "finance arm: ...", "as of
-    ..."])`) and the UNRESOLVED branch (same label, an UNAVAILABLE body). Both
-    must collide — CR221 could ship either state first.
-    """
-    entry = next(e for e in _KNOWN_ABSENT if e["row"] == "R38")
-
-    resolved_line = (
-        "Debt split (industrial vs. captive finance) (LIVE): industrial $45,000M, "
-        "captive finance $28,500M, finance arm: Caterpillar Financial Services, "
-        "as of 2026-06-30. The two halves are different credit profiles — a "
-        "captive lender is funded to lend and is expected to carry leverage the "
-        "industrial parent is not; the blended gross-debt figure above conflates "
-        "them."
-    )
-    unresolved_line = (
-        "Debt split (industrial vs. captive finance) (LIVE): UNAVAILABLE — "
-        "Caterpillar Financial Services is a consolidated subsidiary, but this "
-        "period's split could not be resolved from the filed facts. The gross "
-        "debt figure above is the BLENDED total and must not be read as the "
-        "industrial parent's own leverage"
-    )
-
-    real_sheet = sheets["fundamentals_analyst"]
-    for label, line in (("resolved", resolved_line), ("unresolved", unresolved_line)):
-        assert _collisions(entry, real_sheet) == [], (
-            f"fixture setup broken: today's real sheet already collides with the "
-            f"R38 entry before splicing anything in ({label} check)"
-        )
-        spliced = real_sheet + "\n" + line
-        hits = _collisions(entry, spliced)
-        assert hits, (
-            f"CR219 R38: the entry's collision markers did NOT fire against the "
-            f"parked patch's own {label}-state render line. The markers are inert "
-            "— exactly the CR040 shape ESCAPE_HATCH.md diagnosed for the parser "
-            "itself — and the guard would stay green the day CR221 ships this "
-            "line for real."
-        )
 
 
 def test_red_fixture_3_an_unmapped_persona_file_is_caught():

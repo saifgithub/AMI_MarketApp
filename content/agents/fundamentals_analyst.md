@@ -46,9 +46,10 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - Net cash **or net debt** — the sheet states whichever the sign says, in $M. Gross
   debt, market cap and TTM free cash flow in dollars are stated beside it. That gross
   debt figure is the company's **BLENDED total** — for a name with a captive-finance
-  arm (an equipment maker's in-house lender, say), the industrial-vs-captive-finance
-  split of that total is not supplied. Never split it yourself; the two halves have
-  different credit profiles and a guess is worse than the blended figure alone
+  arm (an equipment maker's in-house lender, say), use the "Debt split (industrial vs.
+  captive finance)" line where the sheet carries it; where it does not, the split is
+  not supplied. Never split it yourself; the two halves have different credit profiles
+  and a guess is worse than the blended figure alone
 - Sector/industry classification — real, but a category, not a numeric peer-average
   P/E (no peer-basket comparison is computed)
 - **Multiples vs. own history** — today's price/EV against each of the last several

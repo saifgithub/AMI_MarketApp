@@ -923,6 +923,19 @@ class Settings(BaseSettings):
     # the Research Manager's ask R37's median multiples did not cover.
     room_roe_history_enabled: bool = False
 
+    # CR221 A2 — the industrial vs. captive-finance debt split, read from the
+    # filing's own consolidating columns (`services/filing_dimensions.py`).
+    # 18 request lines from 9 agents, the single largest item in the register.
+    # Renders only for filers in `edgar_tags.CAPTIVE_FINANCE`; for everyone
+    # else the line does not exist, which is not a gap.
+    room_debt_split_enabled: bool = False
+
+    # CR221 D1 / D2 — revenue by business segment and by geography, from the
+    # same instance documents. Two flags, one per register item, for §7's
+    # per-item attribution rule.
+    room_segment_revenue_enabled: bool = False
+    room_geographic_revenue_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

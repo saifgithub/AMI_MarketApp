@@ -42,9 +42,11 @@ from app.services.fundamentals import (
     cashflow_bridge_line,
     cost_of_debt_line,
     day_move_line,
+    debt_split_line,
     fcf_conversion_line,
     fcf_history_line,
     debt_maturity_line,
+    revenue_breakdown_line,
     historical_multiples_line,
     interest_coverage_line,
     roe_history_line,
@@ -2728,6 +2730,39 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("cost_of_debt_period_end"),
             ) if (settings.room_cost_of_debt_enabled
                   and _is("cost_of_debt", "live")) else None,
+            # CR221 A2 — the debt split, from the filing's consolidating
+            # columns. The block is live for every registry filer;
+            # `debt_split_state` picks the rendering (resolved / captive-only
+            # / unresolved), and a filer with no finance arm has no block.
+            debt_split_line(
+                profile.get("debt_split_state"),
+                profile.get("debt_split_entity"),
+                profile.get("debt_split_captive"),
+                profile.get("debt_split_industrial"),
+                profile.get("debt_split_period"),
+            ) if (settings.room_debt_split_enabled
+                  and _is("debt_split", "live")) else None,
+            # CR221 D1 / D2 — revenue by segment and by geography, each a
+            # partition of the same filing's consolidated total. Two flags,
+            # two register items.
+            revenue_breakdown_line(
+                "segment",
+                profile.get("segment_revenue_labels"),
+                profile.get("segment_revenue_values"),
+                profile.get("segment_revenue_total"),
+                profile.get("segment_revenue_period_end"),
+                profile.get("segment_revenue_basis"),
+            ) if (settings.room_segment_revenue_enabled
+                  and _is("segment_revenue", "live")) else None,
+            revenue_breakdown_line(
+                "geography",
+                profile.get("geographic_revenue_labels"),
+                profile.get("geographic_revenue_values"),
+                profile.get("geographic_revenue_total"),
+                profile.get("geographic_revenue_period_end"),
+                profile.get("geographic_revenue_basis"),
+            ) if (settings.room_geographic_revenue_enabled
+                  and _is("geographic_revenue", "live")) else None,
             earnings_power_line(
                 profile.get("trailing_eps") if _is("trailing_eps", "live") else None,
                 profile.get("revenue_ttm") if _is("revenue_ttm", "live") else None,

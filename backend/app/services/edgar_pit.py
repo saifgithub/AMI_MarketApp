@@ -84,6 +84,44 @@ def load_facts(ticker: str, tags: Sequence[str], as_of: date) -> list[_FactView]
     ]
 
 
+def load_facts_by_prefix(ticker: str, prefix: str, as_of: date) -> list[_FactView]:
+    """`load_facts` for the derived `ami:` rows, whose tag names embed a member
+    QName the caller cannot enumerate (CR221 slot 4). Same filed-date cutoff,
+    same re-assertion — the PIT property does not relax for derived rows."""
+    stmt = (
+        select(EdgarFactRow)
+        .where(EdgarFactRow.ticker == ticker.upper().strip())
+        .where(EdgarFactRow.tag.startswith(prefix, autoescape=True))
+        .where(EdgarFactRow.filed <= as_of)
+    )
+    with get_session() as session:
+        rows = session.execute(stmt).scalars().all()
+    assert_dates_within([r.filed for r in rows], as_of, origin="edgar_pit.load_facts_by_prefix")
+    return [
+        _FactView(
+            tag=r.tag,
+            value=float(r.value),
+            period_start=r.period_start,
+            period_end=r.period_end,
+            filed=r.filed,
+        )
+        for r in rows
+    ]
+
+
+def prefix_ever_ingested(prefix: str) -> bool:
+    """`tags_ever_ingested` for a tag prefix — the loud-degrade probe for the
+    derived rows, whose absence for one filer is indistinguishable at the
+    sheet from an ingest that never ran."""
+    stmt = (
+        select(EdgarFactRow.id)
+        .where(EdgarFactRow.tag.startswith(prefix, autoescape=True))
+        .limit(1)
+    )
+    with get_session() as session:
+        return session.execute(stmt).first() is not None
+
+
 def tags_ever_ingested(tags: Sequence[str]) -> bool:
     """Does the store hold ANY fact under these tags, for ANY ticker?
 

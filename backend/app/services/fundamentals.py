@@ -1713,6 +1713,110 @@ def cost_of_debt_line(
     )
 
 
+_DEBT_SPLIT_LABEL = "Debt split (industrial vs. captive finance)"
+
+
+def debt_split_line(
+    state: str | None,
+    entity: str | None,
+    captive: float | None,
+    industrial: float | None,
+    period: str | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 A2 — the industrial half of the debt beside the blended total.
+
+    Eighteen request lines from nine agents, the largest single item in the
+    register. A captive lender is funded to lend; folding its book into one
+    leverage figure makes the parent look levered in a way it is not, and the
+    finance arm look safe in a way it is not. Three renderings for the three
+    states `filing_dimensions` distinguishes, and a fourth outcome — `None`
+    — for the common case of a company with no finance arm, which is not a
+    gap and gets no disclaimer.
+
+    The captive-only rendering exists because PACCAR tags only the finance
+    column, and it says explicitly that the industrial figure is NOT the gross
+    debt above less the captive figure: the two are on different tag bases
+    (CAT: $3,593M by subtraction against $10,713M filed).
+    """
+    if state is None:
+        return None
+    who = entity or "a captive finance subsidiary"
+    dated = [f"as of {period}"] if period else []
+    if state == "resolved" and captive is not None and industrial is not None:
+        line = _labelled(
+            _DEBT_SPLIT_LABEL, live,
+            [f"industrial ${industrial:,.0f}M", f"captive finance ${captive:,.0f}M",
+             f"finance arm: {who}", *dated],
+        )
+        return (
+            f"{line}. The two halves are different credit profiles — a captive "
+            "lender is funded to lend and is expected to carry leverage the "
+            "industrial parent is not; the blended gross-debt figure above "
+            "conflates them."
+        )
+    if state == "captive_only" and captive is not None:
+        line = _labelled(
+            _DEBT_SPLIT_LABEL, live,
+            [f"captive finance ${captive:,.0f}M", f"finance arm: {who}", *dated],
+        )
+        return (
+            f"{line}. The filing tags no separate figure for the industrial "
+            "side; the industrial parent's own debt is NOT the gross debt above "
+            "less this figure, because the two are on different tag bases."
+        )
+    return _labelled(
+        _DEBT_SPLIT_LABEL, live,
+        [
+            f"UNAVAILABLE — {who} is a consolidated subsidiary, but this "
+            "period's split could not be resolved from the filed facts. The "
+            "gross debt figure above is the BLENDED total and must not be read "
+            "as the industrial parent's own leverage"
+        ],
+    )
+
+
+def revenue_breakdown_line(
+    kind: str,
+    labels: list[str] | None,
+    values: list[float] | None,
+    total: float | None,
+    period_end: str | None,
+    basis: str | None,
+    *, live: bool = True,
+) -> str | None:
+    """CR221 D1 / D2 — revenue by segment or by geography, as a partition.
+
+    The members shown are the subset of the filing's tagged members that
+    sums to within 10% of the same filing's consolidated revenue
+    (`filing_dimensions.select_partition`), so the shares add up. The
+    coverage is always stated: CAT's external segment sales sum to 101% of
+    consolidated revenue because corporate items net against them, and an
+    agent handed four shares that do not add to 100 with nothing said about
+    it reads an error where there is a reconciling item.
+    """
+    if not labels or not values or len(labels) != len(values) or not total or not period_end:
+        return None
+    name = "Revenue by segment" if kind == "segment" else "Revenue by geography"
+    parts = [
+        f"{label} ${value:,.0f}M ({100.0 * value / total:.0f}%)"
+        for label, value in zip(labels, values)
+    ]
+    line = _labelled(f"{name} FY{period_end[:4]}", live, parts)
+    coverage = 100.0 * sum(values) / total
+    how = f"{basis}; " if basis else ""
+    if abs(coverage - 100.0) < 0.5:
+        return f"{line}; {how}these sum to the ${total:,.0f}M consolidated total"
+    rest = (
+        "corporate items, intersegment sales and eliminations"
+        if kind == "segment" else "amounts not allocated to a region"
+    )
+    return (
+        f"{line}; {how}these sum to {coverage:.0f}% of the ${total:,.0f}M "
+        f"consolidated total, the difference being {rest}"
+    )
+
+
 _FCF_BASIS_DIVERGENCE_PCT = 2.0
 
 # ROE is a percentage already, so this is percentage POINTS, not a relative
