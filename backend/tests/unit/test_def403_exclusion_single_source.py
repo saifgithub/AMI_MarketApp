@@ -52,10 +52,13 @@ _SEED_BURST_TS = datetime(2026, 5, 24, 5, 10, 30, tzinfo=timezone.utc)
 def _iter_source_files():
     for pattern in ("*.py", "*.sh"):
         for path in REPO_ROOT.rglob(pattern):
-            parts = path.parts
             # Skip worktrees (other lanes' checkouts), venvs, and caches —
             # this guard is about THIS checkout's source, not every mirror
-            # of it on disk.
+            # of it on disk. Judge segments RELATIVE to the checkout root:
+            # the checkout itself may live under .claude/worktrees/<lane>,
+            # and an absolute-path filter would skip every file in it
+            # (DEF404 — the vacuity assert fired in a worktree).
+            parts = path.relative_to(REPO_ROOT).parts
             if any(
                 seg in (
                     ".claude", ".venv", "venv", "__pycache__", "node_modules",
