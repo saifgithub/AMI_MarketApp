@@ -794,6 +794,7 @@ async def submit_trade(
                 "realised_pnl": result.short_realised_pnl,
             },
             "compliance": _compliance_json(result.compliance),
+            "toll_charged": result.toll_charged,
         }
 
     trade = result.trade
@@ -819,6 +820,11 @@ async def submit_trade(
         "resting": False,
         "trade": trade.to_json(),
         "compliance": _compliance_json(result.compliance),
+        # CR222 §1 — what this fill was actually charged, or null while the toll
+        # flag is off. Read from the engine's own result rather than derived
+        # from the cash delta, which a concurrent bracket sweep can move
+        # underneath a client between the fill and the next snapshot.
+        "toll_charged": result.toll_charged,
     }
 
 

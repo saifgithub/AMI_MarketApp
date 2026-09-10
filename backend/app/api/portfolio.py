@@ -32,6 +32,7 @@ from app.services.health_gate import GateStatus, enforce_gate, evaluate_gate
 from app.services.journal_store import get_journal_store
 from app.services.llm_gateway import get_llm_gateway
 from app.services.passive_twin import build_passive_twin
+from app.services.training_toll import build_toll
 from app.services.portfolio_finding import generate_and_persist_finding
 from app.services.portfolio_health import build_health_context
 from app.services.portfolio_health_constants import STATUS_OK
@@ -232,6 +233,16 @@ async def portfolio_health_finding(
     # CR222 §2 — `None` while the flag is off, which leaves the Finding exactly
     # as it was before this CR. Synchronous DB reads, so off the event loop.
     twin = await asyncio.to_thread(build_passive_twin, user_id, mandate=mandate)
+    # CR222 §1 — likewise `None` while the toll flag is off. `total_value` is
+    # taken off the health context rather than re-derived: it was already
+    # computed from this run's own marks, and a second fan-out could return a
+    # different book's worth of prices to the same report. `build_toll` reads it
+    # only once the flag is on, so a context without the key (the health
+    # engine's own refusal shapes, and every test that stubs one) still returns
+    # `None` rather than raising.
+    toll = await asyncio.to_thread(
+        build_toll, portfolio=p, total_value=context.get("total_value"),
+    )
     result = await generate_and_persist_finding(
         user_id=user_id,
         portfolio_id=p.id,
@@ -243,6 +254,7 @@ async def portfolio_health_finding(
         ),
         gateway=get_llm_gateway(),
         passive_twin=twin,
+        toll=toll,
     )
 
     # Re-evaluated so `daily_used` includes the row just written — a client that

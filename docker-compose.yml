@@ -479,6 +479,14 @@ services:
       PASSIVE_TWIN_HALAL_EXPENSE_RATIO_PCT: ${PASSIVE_TWIN_HALAL_EXPENSE_RATIO_PCT:-0.0}
       TWIN_MIN_MARKET_DAYS: ${TWIN_MIN_MARKET_DAYS:-20}
       TWIN_MIN_MARKET_DAYS_FOR_SE: ${TWIN_MIN_MARKET_DAYS_FOR_SE:-60}
+      # CR222 §1 (Ruling 1) — the training lane's transaction cost, CHARGED
+      # against cash. A MONEY-PATH flag: off by default, flipped deliberately,
+      # and no backfill (charging starts at flag-on). See
+      # Settings.training_toll_enabled and its neighbours.
+      TRAINING_TOLL_ENABLED: ${TRAINING_TOLL_ENABLED:-false}
+      TRAINING_TOLL_BPS: ${TRAINING_TOLL_BPS:-10.0}
+      TRAINING_TOLL_MIN: ${TRAINING_TOLL_MIN:-1.0}
+      TRAINING_TOLL_OPTION_BPS: ${TRAINING_TOLL_OPTION_BPS:-50.0}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

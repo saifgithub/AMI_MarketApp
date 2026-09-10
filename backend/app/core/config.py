@@ -997,6 +997,27 @@ class Settings(BaseSettings):
     twin_min_market_days: int = 20
     twin_min_market_days_for_se: int = 60
 
+    # CR222 §1 (Ruling 1) — the training lane's transaction cost, CHARGED
+    # against cash through the same fill-fee mechanism the game lane uses.
+    # Off by default and, per Ruling 1, NO BACKFILL: charging begins at flag-on,
+    # nothing re-costs a historical fill, and every portfolio's cumulative toll
+    # starts at 0. This is a money-path flag — it changes what a shipped fill
+    # deducts — so it goes live by a deliberate env flip, never by a deploy.
+    training_toll_enabled: bool = False
+
+    # Deliberate parity with `games_scoring.FEE_BPS` / `FEE_MIN`: the two lanes
+    # should not disagree about what a round trip costs without a stated
+    # reason, and there is none. Per SIDE, on the fill's own notional.
+    training_toll_bps: float = 10.0
+    training_toll_min: float = 1.00
+
+    # Option legs, on PREMIUM notional (never the strike — that is collateral).
+    # Retail option spreads run an order of magnitude wider than equity ones;
+    # 50 bps is already conservative against Bryzgalova, Pavlova & Sikorskaya
+    # (2023)'s measured ~8%-of-premium retail round trips, and it is labeled an
+    # estimate wherever it is shown.
+    training_toll_option_bps: float = 50.0
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

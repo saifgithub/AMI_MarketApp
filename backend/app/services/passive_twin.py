@@ -73,6 +73,21 @@ DIFFERENCE_PRECISION_NONE = "none"
 
 TWIN_METRIC = "passive_twin"
 
+# CR222 §1 toll symmetry — the machine state naming BOTH sides' cost treatment,
+# present on the block only while `training_toll_enabled` is on. Off, the key is
+# absent entirely and the block is byte-identical to slice B's, which is the
+# same absent-not-zeroed contract the whole twin flag holds.
+COST_TREATMENT_BOTH_TOLLED = "both_sides_tolled_twin_untraded_untaxed"
+
+
+def _twin_toll_charged() -> bool:
+    """Whether the twin's deposit-buys pay the toll — the SAME flag the user's
+    own fills read, deliberately not a second one. Two switches is how the two
+    sides of one comparison end up on different cost bases."""
+    from app.services.training_toll import toll_enabled
+
+    return toll_enabled()
+
 _CAPITAL_EVENT_DEPOSITS = ("open", "restart")
 
 # Bisection bounds on the ANNUAL rate. −0.9999 is a near-total annual loss (the
@@ -163,6 +178,7 @@ def _flows_for(
     dates: Sequence[date],
     navs: Sequence[float],
     events: Sequence[str | None],
+    deposits: Sequence[float] | None = None,
 ) -> list[CashFlow]:
     """The IRR schedule for one NAV series: a deposit at each capital event, and
     the terminal NAV as the single money-out flow.
@@ -170,11 +186,19 @@ def _flows_for(
     A capital event on the FINAL date contributes a deposit and nothing else has
     happened to it yet, which is a schedule with no elapsed time — `irr` refuses
     it rather than reporting the arithmetic of a zero-length window.
+
+    `deposits` (CR222 §1) is the amount that WENT IN at each event, which is the
+    user's own NAV on both series — the twin receives the same cash on the same
+    dates by definition. It defaults to `navs` and only differs once the toll is
+    on: the twin's day-0 VALUE is then the deposit minus the toll it paid to buy,
+    and charging the schedule the value rather than the deposit would hide the
+    toll it just paid inside the amount it is measured against.
     """
+    amounts = navs if deposits is None else deposits
     flows: list[CashFlow] = []
-    for on, nav, event in zip(dates, navs, events):
+    for on, amount, event in zip(dates, amounts, events):
         if event in _CAPITAL_EVENT_DEPOSITS:
-            flows.append(CashFlow(on=on, amount=-float(nav)))
+            flows.append(CashFlow(on=on, amount=-float(amount)))
     if not flows:
         return []
     flows.append(CashFlow(on=dates[-1], amount=float(navs[-1])))
@@ -185,13 +209,14 @@ def _returns_for(
     dates: Sequence[date],
     navs: Sequence[float],
     events: Sequence[str | None],
+    deposits: Sequence[float] | None = None,
 ) -> SeriesReturns:
     points = [
         NavPoint(as_of=d, nav=float(n), capital_event=e)
         for d, n, e in zip(dates, navs, events)
     ]
     return SeriesReturns(
-        irr=irr(_flows_for(dates, navs, events)),
+        irr=irr(_flows_for(dates, navs, events, deposits)),
         twr=time_weighted_return(points),
     )
 
@@ -265,7 +290,7 @@ def _insufficient(
     """An insufficient twin block carries NO numbers a reader could mistake for
     a measurement — same null-forcing contract as `portfolio_health._block`, for
     the same reason: `null` has to mean exactly one thing downstream."""
-    return {
+    block = {
         "metric": TWIN_METRIC,
         "sufficient": False,
         "insufficient_cause": cause,
@@ -280,6 +305,18 @@ def _insufficient(
         "twr_difference": None,
         "difference_precision": DIFFERENCE_PRECISION_NONE,
     }
+    return _with_cost_treatment(block)
+
+
+def _with_cost_treatment(block: dict) -> dict:
+    """Add the cost-treatment machine state, and ONLY while the toll is on.
+
+    Absent, not null, when the toll is off — the flag-off block has to be
+    byte-identical to slice B's, and a key holding `None` is not the same dict.
+    """
+    if _twin_toll_charged():
+        block["cost_treatment"] = COST_TREATMENT_BOTH_TOLLED
+    return block
 
 
 def build_twin_block(
@@ -335,16 +372,39 @@ def build_twin_block(
     # `restart` liquidates first, because the user's restart wiped the book and
     # a twin that kept compounding through it would be measuring against a
     # portfolio that no longer exists.
+    #
+    # CR222 §1 toll symmetry: once the toll is on, the twin's own deposit-buy is
+    # a fill and pays it, so the deposit buys shares with what is left after the
+    # toll. Without this the comparison is rigged in the twin's favour from the
+    # first day the flag is on — the user's book pays a cost the benchmark does
+    # not — which is the difference reading as skill when it is only accounting.
+    # One side, not two: a deposit-buy is ONE fill and the twin never trades
+    # again, so it pays once and the user pays on every fill they place. That
+    # asymmetry is the real one, and it is what the block's own machine state
+    # says out loud.
+    charge_toll = _twin_toll_charged()
     shares = 0.0
     twin_values: list[float] = []
     for on, nav, event in zip(nav_dates, nav_values, capital_events):
         close = float(twin_closes[on])
         if event in _CAPITAL_EVENT_DEPOSITS:
-            shares = float(nav) / close
+            deposit = float(nav)
+            if charge_toll:
+                from app.services.training_toll import equity_toll
+
+                deposit = max(0.0, deposit - equity_toll(deposit))
+            shares = deposit / close
         twin_values.append(shares * close)
 
-    user = _returns_for(nav_dates, [float(v) for v in nav_values], capital_events)
-    twin = _returns_for(nav_dates, twin_values, capital_events)
+    user_navs = [float(v) for v in nav_values]
+    user = _returns_for(nav_dates, user_navs, capital_events)
+    # The twin's schedule is measured against the SAME cash the user put in,
+    # never against the shares that cash bought after its own toll came out.
+    # `deposits` is `user_navs` on both flag states; with the toll off the twin's
+    # value at each event equals it, so this is a no-op there by construction.
+    twin = _returns_for(
+        nav_dates, twin_values, capital_events, deposits=user_navs,
+    )
 
     precision = (
         DIFFERENCE_PRECISION_NO_SE
@@ -352,7 +412,7 @@ def build_twin_block(
         else DIFFERENCE_PRECISION_NONE
     )
 
-    return {
+    return _with_cost_treatment({
         "metric": TWIN_METRIC,
         "sufficient": True,
         "insufficient_cause": None,
@@ -375,7 +435,7 @@ def build_twin_block(
         # which means the same thing for a different reason — nothing in
         # Portfolio Health estimates one at any length (CR222 Corrections §6).
         "difference_precision": precision,
-    }
+    })
 
 
 def build_passive_twin(user_id: UUID, *, mandate=None, nav_rows=None) -> dict | None:

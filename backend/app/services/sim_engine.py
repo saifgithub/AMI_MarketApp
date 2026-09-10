@@ -401,6 +401,9 @@ class OptionOpenResult:
     strategy_name: str | None = None
     net_cost: float | None = None
     collateral_posted: float | None = None
+    # CR222 §1 — the training toll charged on this open, or `None` when the flag
+    # is off. Same null contract as `SubmitResult.toll_charged`.
+    toll_charged: float | None = None
 
 
 class UnpriceableError(RuntimeError):
@@ -442,6 +445,13 @@ class SubmitResult:
     short_ticker: str | None = None
     short_quantity: float | None = None
     short_realised_pnl: float | None = None
+    # CR222 §1 — the training toll actually charged on this fill, or `None` when
+    # the flag is off. `None` rather than 0.0 for `sim_trades.toll_charged`'s
+    # reason: "not charged because the feature is off" and "charged nothing" are
+    # different facts, and only the second could ever be a measurement. The
+    # trade confirmation reads this field; nothing derives it from the cash
+    # delta, which a concurrent bracket sweep could move underneath a client.
+    toll_charged: float | None = None
 
 
 @dataclass
@@ -584,6 +594,37 @@ def _marked_tickers(p: Portfolio) -> list[str]:
     of it.
     """
     return [h.ticker for h in p.holdings] + [s.ticker for s in p.shorts]
+
+
+def _training_toll_for(notional: float) -> float | None:
+    """CR222 §1 — the toll this training fill owes, or `None` when the flag is off.
+
+    `None`, not 0.0, so `_execute_fill` writes NULL rather than a measured zero
+    on a flag-off row (Ruling 1: nothing may re-cost a fill the toll never
+    applied to, and a column of zeros is that re-costing).
+
+    One function for both training fill sites, and a MODULE function rather
+    than a method: the flag is read at fill time on every call, so flipping
+    `TRAINING_TOLL_ENABLED` takes effect on the next fill and never on a
+    portfolio's history.
+    """
+    from app.services.training_toll import equity_toll, toll_enabled
+
+    if not toll_enabled():
+        return None
+    return equity_toll(notional)
+
+
+def _option_toll_for(legs) -> float | None:
+    """CR222 §1 — the toll a structure's OPEN owes, or `None` when the flag is
+    off. Same null contract as `_training_toll_for`."""
+    from app.services.training_toll import (
+        option_toll, premium_notional, toll_enabled,
+    )
+
+    if not toll_enabled():
+        return None
+    return option_toll(premium_notional(legs))
 
 
 def _option_marks_for_portfolio(p: Portfolio):
@@ -1484,6 +1525,7 @@ class SimEngine:
                 compliance=compliance,
             )
 
+        toll = _training_toll_for(fill_price * quantity)
         return self._execute_fill(
             user_id=user_id,
             portfolio=portfolio,
@@ -1496,6 +1538,8 @@ class SimEngine:
             target=target,
             horizon_days=horizon_days,
             verdict_ref=verdict_ref,
+            fee=toll or 0.0,
+            toll=toll,
             price_source=open_quote.source,
         )
 
@@ -1516,6 +1560,7 @@ class SimEngine:
         kind: str = "training",
         run_id: UUID | None = None,
         fee: float = 0.0,
+        toll: float | None = None,
         now: datetime | None = None,
         price_source: str | None = None,
     ) -> SubmitResult:
@@ -1538,11 +1583,23 @@ class SimEngine:
 
         CR109 slice 2 additions — `kind`/`run_id` select which portfolio
         row the fill lands on (default TRAINING; `submit()` never passes
-        them, so it is unaffected). `fee` is Amendment D's trading cost:
-        defaults to 0.0, so the training path moves exactly the cash it
-        always did; only `submit_game_trade()` ever passes a non-zero fee,
-        burned on both a buy and a sell (subtracted from cash, credited to
-        nothing — `games_scoring.trade_fee`).
+        them, so it is unaffected). `fee` is the fill's transaction cost:
+        defaults to 0.0, so a lane that passes none moves exactly the cash it
+        always did. Two call sites pass a non-zero one — `submit_game_trade()`
+        with Amendment D's `games_scoring.trade_fee`, and (CR222 §1, Ruling 1)
+        the training paths with `training_toll.equity_toll` when
+        `training_toll_enabled` is on. Both are burned on a buy and on a sell:
+        subtracted from cash and credited to nothing.
+
+        CR222 §1 — `toll` is the same amount as `fee` on the training paths,
+        passed separately because it is a RECORD, not a second deduction: it is
+        what lands on the trade row's `toll_charged`, and nothing here adds it
+        to the cash movement. Keeping it distinct from `fee` is what stops the
+        game lane's Amendment-D fee — which is not a training toll and must
+        never be summed into one — from being written into the toll column by a
+        caller that only remembered one of the two. Only the training paths
+        pass it; `submit_game_trade()` passes `fee` alone and the column stays
+        NULL on every game row.
         """
         # DEF312 — an inverted bracket is refused HERE, at the one chokepoint
         # every fill path crosses, and against the price it will actually be
@@ -1708,11 +1765,16 @@ class SimEngine:
             else:
                 self._apply_sell_row(s, p_row, ticker, quantity, fill_price)
             if fee:
-                # Amendment D — BURNED: subtracted from this fill's own
-                # portfolio and credited to nothing (no table, counter or
+                # Amendment D / CR222 §1 — BURNED: subtracted from this fill's
+                # own portfolio and credited to nothing (no table, counter or
                 # aggregate anywhere accumulates it). Applied on BOTH a buy
                 # (on top of the notional already deducted above) and a
                 # sell (on top of the proceeds already credited above).
+                #
+                # THE one cash deduction for both lanes' transaction costs. The
+                # training toll reaches it through `fee` rather than through a
+                # branch of its own: a second subtraction site is how the two
+                # lanes' arithmetic drifts apart, and this is a money path.
                 p_row.current_cash = round(float(p_row.current_cash) - fee, 2)
             # DEF166/DEF110: a SELL trade row is created "open" and NEVER
             # transitions — only `evaluate_outcomes` closes trades, and it
@@ -1739,6 +1801,7 @@ class SimEngine:
                 verdict_ref=verdict_ref,
                 realised_pnl=0,
                 price_source=price_source,
+                toll_charged=toll,
             ))
             s.flush()
             portfolio = _portfolio_from_row(p_row)
@@ -1768,6 +1831,7 @@ class SimEngine:
         return SubmitResult(
             accepted=True, trade=trade,
             compliance=compliance, portfolio_snapshot=portfolio,
+            toll_charged=toll,
         )
 
     # ── Resting-order book (CR170) ────────────────────────────────────────
@@ -1938,18 +2002,27 @@ class SimEngine:
         if order.order_type == OrderType.STOP_LIMIT:
             named = order.limit_price
         assert named is not None  # every resting order names a price
+        # CR222 §1 — a resting order that fills IS a fill, so it pays the toll
+        # on the price it actually books at, not the one it named days earlier.
+        # Charged here rather than at rest for the same reason cash is never
+        # reserved (§6 above): a debit at rest is indistinguishable from a loss
+        # in the NAV series, and the order may never fill at all.
+        resting_fill_price = fill_price_for(side=order.side, named=named, mark=mark)
+        toll = _training_toll_for(resting_fill_price * order.quantity)
         return self._execute_fill(
             user_id=user_id,
             portfolio=portfolio,
             ticker=order.ticker,
             side=order.side,
             quantity=order.quantity,
-            fill_price=fill_price_for(side=order.side, named=named, mark=mark),
+            fill_price=resting_fill_price,
             compliance=compliance,
             stop=order.stop,
             target=order.target,
             horizon_days=order.horizon_days,
             verdict_ref=order.verdict_ref,
+            fee=toll or 0.0,
+            toll=toll,
             price_source=mark_source,
         )
 
@@ -2534,9 +2607,13 @@ class SimEngine:
                 # bracket sweep or the margin pass. Reporting a fill that did
                 # not happen is worse than reporting nothing.
                 return refuse(f"no open short in {ticker} to cover")
+            # CR222 §1 — a cover is a fill and pays the toll like one. Only
+            # HERE: the margin, stop and target sweeps call the same helper
+            # without a toll, because the user did not place those fills.
+            toll = _training_toll_for(fill_price * quantity)
             realised = _cover_short_row(
                 s, portfolio_row=p_row, short_row=short_row,
-                close_price=fill_price, reason="user",
+                close_price=fill_price, reason="user", toll=toll,
             )
             s.flush()
             snapshot = _portfolio_from_row(p_row)
@@ -2555,6 +2632,7 @@ class SimEngine:
             short_ticker=ticker,
             short_quantity=quantity,
             short_realised_pnl=realised,
+            toll_charged=toll,
         )
 
     def _open_short_fill(
@@ -2588,7 +2666,13 @@ class SimEngine:
         # ever written, and this function is unreachable from a buy.
 
         notional = fill_price * quantity
-        needed = sim_shorts.cash_required_for(notional)
+        # CR222 §1 — the toll is charged on the fill, so it is part of what the
+        # user must be able to afford. Folded into `needed` rather than checked
+        # separately: the refusal sentence names ONE number, and a user told
+        # they can afford the short and then debited more than that is the
+        # money-path arithmetic the D-5 gate exists for.
+        toll = _training_toll_for(notional)
+        needed = round(sim_shorts.cash_required_for(notional) + (toll or 0.0), 2)
         if needed > portfolio.current_cash + 1e-6:
             return SubmitResult(
                 accepted=False, trade=None,
@@ -2634,6 +2718,7 @@ class SimEngine:
                 borrow=borrow,
                 stop=stop,
                 target=target,
+                toll=toll,
             )
             s.flush()
 
@@ -2655,6 +2740,7 @@ class SimEngine:
             short_action="short_open",
             short_ticker=ticker,
             short_quantity=quantity,
+            toll_charged=toll,
         )
 
     def open_shorts(self, user_id: UUID) -> list[SimShortPositionRow]:
@@ -3116,6 +3202,13 @@ class SimEngine:
         Whole position only — matching §1's sell-never-crosses-zero symmetry.
         A partial cover would blend two exit prices into one realised figure,
         the same attribution problem, from the other end.
+
+        CR222 §1 — charges NO toll, because nothing reaches this today: a user's
+        cover arrives through `submit()` → `_cover_short_fill`, which does charge
+        one. A future caller that wires this to a route must pass a toll here
+        too, or a user's cover would be free through one door and charged
+        through the other. Stated rather than pre-emptively charged: an
+        unreachable third toll site is a site nothing tests.
         """
         from app.services import sim_shorts
 
@@ -3303,6 +3396,11 @@ class SimEngine:
                     expiry=expiry,
                     shares_held=shares_held,
                     verdict_ref=verdict_ref,
+                    # CR222 §1 — the option rate, on PREMIUM notional. Not the
+                    # equity rate: retail option spreads run an order of
+                    # magnitude wider, and a structure charged at 10 bps of
+                    # premium would price a spread crossing as free.
+                    toll=_option_toll_for(leg_list),
                 )
             except (sim_options.InsufficientCashError, ValueError) as exc:
                 logger.info(
@@ -3322,6 +3420,10 @@ class SimEngine:
             strategy_id = trade_row.strategy_id
             net_cost = float(trade_row.net_cost_at_open)
             collateral = float(trade_row.collateral_posted)
+            option_toll_charged = (
+                None if trade_row.toll_charged is None
+                else float(trade_row.toll_charged)
+            )
             leg_count = len(leg_rows)
 
         logger.info(
@@ -3342,6 +3444,7 @@ class SimEngine:
             strategy_name=strategy_name,
             net_cost=net_cost,
             collateral_posted=collateral,
+            toll_charged=option_toll_charged,
         )
 
     def run_option_lifecycle(

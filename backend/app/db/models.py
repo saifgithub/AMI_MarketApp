@@ -610,6 +610,18 @@ class SimTradeRow(Base):
     status: Mapped[str] = mapped_column(String, default="open", nullable=False)
     verdict_ref: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
     realised_pnl: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    # CR222 §1 (Ruling 1) — the training toll actually charged on THIS fill.
+    #
+    # NULLABLE with no server_default and no backfill, for `price_source`'s
+    # reason one step further: "this fill predates the toll" and "this fill was
+    # charged nothing" are different facts, and Ruling 1 says only the second can
+    # ever be a measurement. A 0.00 default would re-cost every historical fill
+    # as a free one — a backfill of amounts, which the ruling forbids — and the
+    # cumulative figure is a SUM over this column, so NULL summing to nothing is
+    # exactly the no-backfill guarantee expressed in arithmetic.
+    toll_charged: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 2), nullable=True,
+    )
 
 
 class PortfolioValueSnapshotRow(Base):
@@ -2419,6 +2431,18 @@ class SimShortPositionRow(Base):
     # user | margin | stop | target
     close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+    # CR222 §1 — the training toll charged on this position's OWN fills:
+    # the open, plus the cover once it closes. Same NULL-means-predates-the-toll
+    # contract as `sim_trades.toll_charged`.
+    #
+    # A TRANSACTION cost, and structurally separate from `borrow_accrued_total`
+    # above, which is a HOLDING cost per day. Two columns because they are two
+    # quantities: fold the toll into the borrow total and the daily accrual can
+    # no longer be audited against its own rate, which is the one thing
+    # `short_borrow_rate.py`'s whole provenance design exists to keep possible.
+    toll_charged: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 2), nullable=True,
+    )
 
 
 class SimOptionLegRow(Base):
@@ -2551,6 +2575,12 @@ class SimOptionTradeRow(Base):
         DateTime(timezone=True), nullable=True,
     )
     realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+    # CR222 §1 — the toll charged when this structure OPENED, at the option
+    # rate on premium notional. Same NULL-means-predates-the-toll contract as
+    # `sim_trades.toll_charged`; the cumulative figure sums both columns.
+    toll_charged: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 2), nullable=True,
+    )
 
 
 class VllmCacheSampleRow(Base):

@@ -506,6 +506,19 @@ def _f3_standing_disclosures(context: dict) -> str:
     anchor = _block(context, "portfolio_volatility") or context["metrics"][0]
     t_eff = anchor.get("t_eff")
     t_eff_text = _fmt(t_eff, 1) if t_eff else "—"
+    # CR222 §1 — this sentence was the CR's own Why §1: it stated the training
+    # lane charges nothing, and once the toll is on that is no longer true. It
+    # must move WITH the flag, not be left standing beside a §F3 block that
+    # contradicts it — a report asserting both is worse than one asserting
+    # neither. Taxes stay uncharged either way, and the sentence still says so.
+    costs_line = (
+        "Transaction costs ARE charged in this simulation, at an estimated "
+        "flat rate per fill; taxes are not. Every other figure here is gross "
+        "of the costs live trading adds."
+        if isinstance(context.get("toll"), dict) else
+        "All figures are gross of fees: this simulation charges no commissions, "
+        "spreads, or taxes, and live trading does."
+    )
     return "\n".join([
         "**Method and its limits**",
         f"Estimator: EWMA-weighted sample covariance, λ=0.97 (RiskMetrics "
@@ -528,8 +541,7 @@ def _f3_standing_disclosures(context: dict) -> str:
         "only when every holding priced on every trading day. It assumes "
         "periods are independent. They are not exactly, and the same objection "
         "applies to every annualised figure here.",
-        "All figures are gross of fees: this simulation charges no commissions, "
-        "spreads, or taxes, and live trading does.",
+        costs_line,
         "Every forward-looking figure is a backcast of today's holdings against "
         "past returns.",
         NON_STATIONARITY_CAVEAT,
@@ -606,6 +618,68 @@ def _f3_passive_twin(context: dict) -> str | None:
             "Nothing here estimates one, and a window this short would not "
             "support one if it did."
         )
+    cost_treatment = block.get("cost_treatment")
+    if cost_treatment is not None:
+        # CR222 §1 — a MACHINE state, like `insufficient_cause` above: it names
+        # both sides' cost treatment so the comparison cannot be read as though
+        # only one side paid, and M06/M09 owns the sentence a user reads for it.
+        lines.append(f"Cost treatment. Machine state: {cost_treatment}.")
+    return "\n".join(lines)
+
+
+def _f3_toll(context: dict) -> str | None:
+    """CR222 §1 — what trading this book has cost it, cumulatively.
+
+    Appended into §F3 by the same route as `_f3_passive_twin`, and for the
+    identical reason: `validate_sections` walks exactly f1–f5, so a sixth
+    section would be a block of numbers no allow-list ever checked.
+
+    CR131's honesty rules hold here too — no grade, no warning, no verdict. The
+    share of gross P&L is stated and left alone; an interpreted share is the
+    verdict CR131 removed. The rate is labeled an ESTIMATE because it is one: a
+    flat spread-plus-commission proxy, not a measured half-spread (the
+    `measured-toll` follow-on is what would change that).
+    """
+    block = context.get("toll")
+    if not isinstance(block, dict):
+        return None
+
+    lines = ["**What trading has cost this book**"]
+    lines.append(
+        f"Charged to date: {_fmt(block['cumulative_toll'], 2)} in simulated "
+        f"transaction costs. Estimated, not measured: "
+        f"{_fmt(block['toll_bps'], 1)} basis points of each fill's notional per "
+        f"side, floored at {_fmt(block['toll_min'], 2)}, and "
+        f"{_fmt(block['toll_option_bps'], 1)} basis points of premium on an "
+        f"option leg."
+    )
+    if block.get("charges") is not None:
+        # A measured zero, and named as a MACHINE state rather than narrated:
+        # M06/M09 owns the sentence a user reads for it.
+        lines.append(f"Machine state: {block['charges']}.")
+        return "\n".join(lines)
+
+    share = block.get("share_of_gross_pnl_pct")
+    if share is None:
+        # No share is published against a gross P&L at or below zero — a
+        # percentage of a loss is not a figure anybody can read, and a 0.0 there
+        # would say the toll cost nothing.
+        lines.append(
+            f"Gross of that cost this book is at "
+            f"{_fmt(block['gross_pnl'], 2)}. No share is stated: a share of a "
+            f"result at or below zero is not a proportion."
+        )
+    else:
+        lines.append(
+            f"Gross of that cost this book is at "
+            f"{_fmt(block['gross_pnl'], 2)}, so the cost of trading took "
+            f"{_fmt(share, 2)}% of it."
+        )
+    lines.append(
+        "These costs ARE charged against cash on every fill from the day the "
+        "toll was switched on. Fills before that day were never re-costed, so "
+        "this figure starts at zero there rather than reaching backwards."
+    )
     return "\n".join(lines)
 
 
@@ -706,6 +780,9 @@ def render_deterministic_sections(
     twin = _f3_passive_twin(context)
     if twin is not None:
         f3_parts.append(twin)
+    toll = _f3_toll(context)
+    if toll is not None:
+        f3_parts.append(toll)
     f3_parts.append(_f3_standing_disclosures(context))
 
     return {
@@ -775,7 +852,7 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
     # set verbatim and never at the ×100 scale, so the double-scaled reading of
     # its own number is not a token this Finding may contain.
     for key, node in context.items():
-        if key in ("metrics", "passive_twin"):
+        if key in ("metrics", "passive_twin", "toll"):
             continue
         for value in _numeric_leaves(node):
             _register_number(value, PCT, allow)
@@ -814,6 +891,22 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
         market_days = twin.get("market_days")
         if isinstance(market_days, int) and not isinstance(market_days, bool):
             allow.raw.add(Decimal(market_days).normalize())
+
+    # CR222 §1 — the toll block, also field by field and for the twin's reason:
+    # it mixes units. The dollar figures and the two rate constants are RAW —
+    # a toll of 12.50 is twelve dollars fifty, and 10.0 bps is ten basis points;
+    # registering either at the ×100 percent scale would admit "1250%" as a
+    # token this Finding may contain. The share is ALREADY in percentage points.
+    toll = context.get("toll")
+    if isinstance(toll, dict):
+        for key in ("cumulative_toll", "gross_pnl", "toll_bps", "toll_min",
+                    "toll_option_bps"):
+            value = toll.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                _register_number(float(value), RAW, allow)
+        share = toll.get("share_of_gross_pnl_pct")
+        if isinstance(share, (int, float)) and not isinstance(share, bool):
+            _register_number(float(share), PCT, allow, already_percent=True)
 
     for block in context["metrics"]:
         percent_unit = _unit(block["metric"]) == UNIT_PERCENT
@@ -1379,6 +1472,7 @@ async def generate_and_persist_finding(
     evaluate,
     gateway=None,
     passive_twin: dict | None = None,
+    toll: dict | None = None,
 ) -> FindingResult:
     """Render, validate, persist. One journal read serves both the idempotency
     check and the hysteresis state — they are the same question about the same
@@ -1396,10 +1490,16 @@ async def generate_and_persist_finding(
     NOT ride `metric_blocks`: those go through M04's uncertainty contract and
     the §F3 metric templates, and the twin is neither — it is a counterfactual
     over the NAV spine, with its own sufficiency states and its own units.
+
+    `toll` (CR222 §1) rides in on exactly the same contract for exactly the same
+    reasons — `None` while `TRAINING_TOLL_ENABLED` is off, and an absent key is
+    what keeps a flag-off report byte-identical to the pre-CR one.
     """
     context = build_stripped_context(metric_blocks, as_of=as_of)
     if passive_twin is not None:
         context["passive_twin"] = passive_twin
+    if toll is not None:
+        context["toll"] = toll
 
     prior = load_latest_finding(store, user_id, portfolio_id)
     # The prior read includes soft-deleted entries, and the two things it feeds

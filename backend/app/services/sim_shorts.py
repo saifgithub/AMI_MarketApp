@@ -146,12 +146,20 @@ def open_short(
     stop: float | None = None,
     target: float | None = None,
     now: datetime | None = None,
+    toll: float | None = None,
 ) -> SimShortPositionRow:
     """Sell to open. Debits only the margin above the proceeds, and writes the
     position row with the borrow rate resolved ONCE, here, with its provenance.
 
     The caller has already checked affordability, matching how
     `_execute_fill`'s buy branch checks before opening its transaction.
+
+    CR222 §1 — `toll` is the training toll on this fill, or `None` when the flag
+    is off. Charged ONCE, here, and it does not touch `borrow`: the toll is a
+    transaction cost on the fill and the borrow accrual is a holding cost per
+    day, so the two coexist rather than double-charge. It is deducted in the
+    same statement that already moves the margin, so this open still has exactly
+    one cash write.
     """
     now = now or datetime.now(timezone.utc)
     notional = round(fill_price * quantity, 2)
@@ -173,10 +181,12 @@ def open_short(
         target=target,
         opened_at=now,
         state="open",
+        toll_charged=toll,
     )
     session.add(row)
     portfolio_row.current_cash = round(
-        float(portfolio_row.current_cash) - cash_required_for(notional), 2,
+        float(portfolio_row.current_cash) - cash_required_for(notional) - (toll or 0.0),
+        2,
     )
     return row
 
@@ -189,6 +199,7 @@ def cover_short(
     close_price: float,
     reason: str = "user",
     now: datetime | None = None,
+    toll: float | None = None,
 ) -> float:
     """Buy to cover, in full. Returns the realised P&L (borrow excluded).
 
@@ -201,6 +212,15 @@ def cover_short(
 
     The arithmetic cannot produce a refusal in any case: the loss is taken out
     of the posted cash before what remains comes back.
+
+    CR222 §1 — `toll` is the training toll on the USER's own cover fill, and it
+    is `None` on every forced close (margin, stop, target). Charging a user for
+    a buy-in the system performed on their behalf is the opposite of what §7's
+    containment design promises, and it would arrive as an unexplained debit on
+    the one path where the user did nothing. It is added to whatever the open
+    already charged, and it never refuses the cover: the deduction is applied
+    after the proceeds are credited, so the containment guarantee above holds
+    unchanged.
     """
     now = now or datetime.now(timezone.utc)
     quantity = float(short_row.quantity)
@@ -211,8 +231,12 @@ def cover_short(
     realised = round(short_unrealised_pnl(quantity, entry_price, close_price), 2)
 
     portfolio_row.current_cash = round(
-        float(portfolio_row.current_cash) + proceeds, 2,
+        float(portfolio_row.current_cash) + proceeds - (toll or 0.0), 2,
     )
+    if toll is not None:
+        short_row.toll_charged = round(
+            float(short_row.toll_charged or 0.0) + toll, 2,
+        )
     short_row.state = "closed"
     short_row.closed_at = now
     short_row.close_price = close_price

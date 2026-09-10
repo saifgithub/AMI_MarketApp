@@ -132,6 +132,7 @@ def open_structure(
     shares_held: float = 0.0,
     verdict_ref: UUID | None = None,
     now: datetime | None = None,
+    toll: float | None = None,
 ) -> tuple[SimOptionTradeRow, list[SimOptionLegRow]]:
     """Write the structure, move the cash. Raises rather than half-writing.
 
@@ -139,6 +140,12 @@ def open_structure(
     encoded as an OCC symbol — both mean the caller handed us something the
     floor should already have refused, and writing a partial position would
     leave the user holding legs that no close path can find.
+
+    CR222 §1 — `toll` is the training toll on this open, computed by the caller
+    at the option rate on PREMIUM notional, or `None` when the flag is off. It
+    is added to `needed` BEFORE the affordability check, so a structure the user
+    cannot afford once the toll is counted raises `InsufficientCashError` naming
+    the real figure rather than opening and overdrawing them.
     """
     now = now or datetime.now(timezone.utc)
     leg_list = list(legs)
@@ -151,7 +158,11 @@ def open_structure(
             "this before it reaches the ledger"
         )
 
-    needed = cash_required_for(metrics.net_cost, metrics.collateral_required)
+    needed = round(
+        cash_required_for(metrics.net_cost, metrics.collateral_required)
+        + (toll or 0.0),
+        2,
+    )
     available = float(portfolio_row.current_cash)
     if needed > available + 1e-6:
         raise InsufficientCashError(needed, available)
@@ -178,6 +189,7 @@ def open_structure(
         verdict_ref=verdict_ref,
         opened_at=now,
         status="open",
+        toll_charged=toll,
     )
     session.add(trade_row)
 
