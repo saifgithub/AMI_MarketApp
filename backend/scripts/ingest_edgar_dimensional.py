@@ -24,6 +24,18 @@ Same SEC fair-use rules as the facts ingest: descriptive User-Agent with a
 contact email, ~4 req/s. Same portable dedup: existing identity keys per CIK
 are preloaded and only absent rows are inserted, so re-running is safe.
 
+A run that dies part-way leaves a partial set, and from the sheet a ticker the
+run never reached looks exactly like a filer that tags no partition: both
+render nothing. Tell them apart from the store, not the sheet:
+
+    SELECT ticker, COUNT(*) FROM edgar_facts WHERE taxonomy = 'ami' GROUP BY ticker
+
+A ticker with no `ami:` rows at all was never ingested (or was skipped and
+named in that run's summary); one with `ami:ConsolidatedRevenue:*` rows but no
+`ami:SegmentRevenue:*` rows was read and tags no partition. Re-running without
+`--force` fills the gaps — a filing already stored is skipped by accession —
+and `--force` re-reads a filing that is already present.
+
 Usage (from backend/, or in-container):
     python scripts/ingest_edgar_dimensional.py \
         --user-agent "AMI MarketApp CR221 admin@example.com" [--only CAT,DE] [--force]

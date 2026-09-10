@@ -155,6 +155,24 @@ def test_no_subset_inside_the_band_means_no_partition() -> None:
 # ── The resolvers ───────────────────────────────────────────────────────────
 
 
+def test_an_aggregate_beside_one_segment_is_refused_not_rendered_at_100_percent(cat_rows) -> None:
+    """Slot-4 audit MAJOR-1. `_AGGREGATE_MEMBER` is the only thing that stops a filer's
+    own subtotal being rendered as a sibling of one of its parts — at a flawless 100%
+    coverage, with the reconciliation sentence confirming it. The partition test above
+    never reaches the filter (it sits one layer up, in `_members_at`); this one does,
+    with the exact case the filter's comment fears: an aggregate beside ONE segment."""
+    fy_end, fy_start = date(2025, 12, 31), date(2025, 1, 1)
+    ext = f"{edgar_tags.SEGMENT_REVENUE_TAG}:ext:"
+    views = [v for v in _views(cat_rows)
+             if not v.tag.startswith(edgar_tags.SEGMENT_REVENUE_TAG + ":")
+             and not v.tag.startswith(edgar_tags.GEOGRAPHIC_REVENUE_TAG + ":")]
+    for member, share in (("us-gaap:ReportableSegmentsMember", 0.92), ("acme:WidgetsMember", 0.08)):
+        views.append(_FactView(tag=ext + member, value=share * _TOTAL * _M,
+                               period_start=fy_start, period_end=fy_end, filed=_FILED))
+    assert filing_dimensions._members_at(views, ext, fy_end) == {"acme:WidgetsMember": pytest.approx(0.08 * _TOTAL * _M)}
+    assert filing_dimensions.resolve_segment_revenue(views, _AS_OF) is None
+
+
 def test_segments_resolve_on_the_external_sales_tier_with_the_coverage_stated(cat_rows) -> None:
     b = filing_dimensions.resolve_segment_revenue(_views(cat_rows), _AS_OF)
     assert b.labels == ("Power Energy", "Construction Industries", "Resource Industries", "Financial Products")
