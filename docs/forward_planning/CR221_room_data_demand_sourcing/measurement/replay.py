@@ -119,12 +119,20 @@ ARMS: dict[str, dict[str, bool]] = {
         "room_segment_revenue_enabled": True,
         "room_geographic_revenue_enabled": True,
     },
+    # Slot 2 (2026-09-11): I1, the executive-change line from 8-K Item 5.02,
+    # store-backed (`scripts/ingest_edgar_8k.py`). The CAT pickles predate the
+    # overlay and must be rebuilt after the ingest — and a rebuild moves every
+    # other live field too (R46), so re-run every arm on the new pickle.
+    "exec": {
+        "room_executive_change_enabled": True,
+    },
 }
 ARM_ITEMS = {
     "debt": ("A1", "A3"),
     "cash": ("C3", "C4"),
     "history": ("C2", "C5", "B2"),
     "dims": ("A2", "D1", "D2"),
+    "exec": ("I1",),
 }
 FLAGS = tuple(sorted({flag for spec in ARMS.values() for flag in spec}))
 

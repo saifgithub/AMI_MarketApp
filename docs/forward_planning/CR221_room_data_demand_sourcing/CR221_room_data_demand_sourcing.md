@@ -499,6 +499,83 @@ F $141,417M / $21,919M, DE UNAVAILABLE, all to the dollar against the Mac; AAPL 
 geography 100%, NVDA's two segments 100%. PCAR is not in the 150-ticker universe, so its
 captive-only shape exists on the Mac's smoke only. **All three flags remain OFF.**
 
+### Slot 2 built — I1 from 8-K Item 5.02 (2026-09-11, `785a6611`)
+
+Register item I1, "Executive-change detail (identity, background, circumstance)": 5 request lines
+from one agent, the News Analyst, all on CAT's CFO transition. §4b's route is now code —
+`backend/app/services/edgar_8k.py`, `backend/scripts/ingest_edgar_8k.py`, migration
+`cr221a0b0c0d4`, and `_overlay_executive_change` in `room_runner.py`.
+
+**Store-backed, not request-time.** §4b framed I1 as "a new external-prose-on-request path";
+the build rejected that. A live sec.gov call inside `_profile_for_ticker` would have been the
+Room's first runtime network dependency on EDGAR (every other slot is DB-only), needed a
+patchable seam for the parity and CR219 fixtures (which run the real profile builder against an
+empty sqlite), and put the SEC's rate limit and a 5 s retry inside a convene. So the ingest
+script reads the submissions index (`filings.recent.items`, a comma-separated string — token
+match, "5.02" must not match "5.03"), fetches each Item 5.02 primary document, parses the section
+with stdlib `html.parser` (no new dependency) and stores it in `edgar_8k_items`; `edgar_facts`
+cannot hold prose (`value` is `Numeric NOT NULL`). One `edgar_8k_scans` row per pass records
+`scanned_at`, `covered_since` (how far back the index page reaches) and the window, so the sheet
+can say "none filed between X and Y" as a **dated claim** — without it, a quiet filer and an
+empty store are the same silence.
+
+**Five states, each with its own log event** (`executive_change_state`; `field_state`
+key `executive_change`):
+
+| state | field_state | log | meaning |
+|---|---|---|---|
+| `filed` | live | `edgar_8k_item_unextracted` (info, per item without text) | the scan covers the window and found Item 5.02 filings in it |
+| `none_in_window` | live | none | the scan covers the window and found none — rendered as "none filed between … Do not supply one from memory." |
+| `unscanned` | unavailable | `edgar_8k_not_ingested` (no scan row for ANY ticker) or `edgar_8k_ticker_not_scanned` | the ingest never ran, or this ticker is not on its list |
+| `stale` | unavailable | `edgar_8k_scan_stale` | the newest scan cannot vouch for the render window (verified_through < verified_from) |
+| `unreadable` | unavailable | `edgar_8k_unreadable` | the store raised |
+
+A document that failed to fetch or parse at ingest still gets its item row (`extract_status`
+`fetch_failed` / `unextracted`, text NULL) **and** the scan row — the filing's existence comes
+from the index; the sheet names the accession and says its content is not supplied. The next run
+retries non-extracted rows without `--force`.
+
+**Windows and cap, measured.** Ingest window 365 days; render window 180 days; verified window =
+[max(covered_since, scanned_at − 365, as_of − 180), min(scanned_at, as_of)]. At most 2 filings
+render. The excerpt is sentence-bounded at 1,200 chars (a period after Mr./Inc./an initial is not
+a sentence end) with the "Item 5.02" prefix and the Reg S-K caption stripped: on CAT's
+0001104659-26-042062 the body is 2,058 chars and the excerpt 1,053 — it keeps "appointed Kyle
+Epley as the Company's Chief Financial Officer, effective May 1, 2026, succeeding Andrew R.J.
+Bonfield", "retirement from the Company on October 1, 2026" and "joined Caterpillar in 1996",
+and drops the pay bullets ("$930,500" is absent). Every string reaching the line passes
+`sanitize_for_prompt` at the render seam. The rendered line carries form, filed date, age in
+days from the sheet's run date, event date (`reportDate`) and accession, plus a trailer that Item
+5.02 also covers director elections and pay terms and the analyst must not infer a reason the
+filing does not state. AAPL's 2026-04-20 8-K pins the parser's one trap: the in-body "Item
+5.02(c)(3) of Form 8-K" is not the heading.
+
+**Lane and provenance.** News lane (the News Analyst plus every full-sheet agent), placed beside
+the catalyst line so tenure-withholding strips it; it renders under `withheld_paid` because the
+paywall is on the FEED and this source is free; it has its own `field_state` key because `news`
+is four-state and surcharge-bound. The header gets its own bullet ("a free source, NOT the news
+feed above and NOT under its 7-day floor"). The 1-on-1 `build_news_context_block` is untouched,
+like every prior slot.
+
+**Persona, overlay, guard — edited by hand in the same commit.** `news_analyst.md` line 19 now
+defers to the `"Executive change (8-K Item 5.02)"` line by its exact label and denies only the
+residual (macro calendar, S-1/10-K text); `overlay_generator.py`'s news bullet keeps its R11
+prefix and names the line; the CR219 allowlist entry's anchor and `why` are rewritten. The
+guard could not catch this one itself — the `sheets` fixture flips no `room_*` flag, and an
+allowlisted entry has no collision markers — so `test_cr221_i1_executive_change.py` pins the
+coupling (persona and overlay contain the label verbatim; the anchor is a substring of the
+persona line).
+
+**Deploy order (§7.6c).** Promote → `docker exec ami_api_alpha python scripts/ingest_edgar_8k.py
+--user-agent "AMI Trade CR221 (saiful.mazli@gmail.com)"` → read the summary's named failures
+(`[fetch_failed]`, `[unextracted]`, `[recent_block_short]`) → set
+`ROOM_EXECUTIVE_CHANGE_ENABLED=true` in melehost's `.env`. Freshness is a cron follow-up
+(Saiful's call): without a re-run, `edgar_8k_scan_stale` fires 180 days after the last scan and
+the line goes unavailable rather than quietly out of date. Live probe on the Mac (2026-09-11,
+scratch sqlite): CAT and F both resolve — CAT to the Epley/Bonfield filing, F to the
+2026-04-15 departure of J. Douglas Field (202 chars, rendered complete); 5.7 s for both tickers.
+**The flag stays OFF until the §7.3 citation-rate rig runs**; `replay.py` has the `exec` arm, and
+the CAT pickles must be rebuilt after the ingest (R46: a rebuild moves every other live field).
+
 ---
 
 ## 6. The R38 correction — measured, and it lands on a lane in flight
