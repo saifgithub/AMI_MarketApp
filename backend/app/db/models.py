@@ -1919,6 +1919,70 @@ class NewsArchiveRow(Base):
     )
 
 
+class Edgar8kScanRow(Base):
+    """One row per ingest pass per ticker over the SEC submissions index
+    (CR221 I1, `scripts/ingest_edgar_8k.py`).
+
+    This is what lets the sheet say "no executive change filed between X and
+    Y" as a DATED claim rather than as silence: `scanned_at` bounds the claim
+    on the recent side, `covered_since` (the oldest filing on the index page
+    read) and `window_days` bound it on the far side. A ticker with items but
+    no scan row, or a scan older than the render window, is "unavailable" with
+    a named reason, never "none" (CR040).
+    """
+
+    __tablename__ = "edgar_8k_scans"
+    __table_args__ = (
+        Index("ix_edgar_8k_scans_ticker_scanned", "ticker", "scanned_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    cik: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    scanned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    covered_since: Mapped[date] = mapped_column(Date, nullable=False)
+    window_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    items_found: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class Edgar8kItemRow(Base):
+    """One 8-K tagged Item 5.02 by the SEC index, with its section text
+    (CR221 I1).
+
+    Text lives here and not in `edgar_facts` because that table's `value` is
+    `Numeric NOT NULL` — it cannot hold a name, a title or a sentence.
+    Identity is `(cik, accession_no)`: two AAPL filings share the primary
+    document filename `ef20060722_8k.htm`, so the filename alone collides.
+    `extract_status` says whether `section_text` is the parsed Item 5.02
+    section ("extracted"), the document was read but no section resolved
+    ("unextracted"), or the document could not be fetched ("fetch_failed") —
+    the filing's existence comes from the index either way, only its prose
+    is missing, and the sheet says so rather than dropping the filing.
+    `filed` is the point-in-time key.
+    """
+
+    __tablename__ = "edgar_8k_items"
+    __table_args__ = (
+        UniqueConstraint("cik", "accession_no", name="uq_edgar_8k_item"),
+        Index("ix_edgar_8k_items_ticker_filed", "ticker", "filed"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    cik: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    accession_no: Mapped[str] = mapped_column(String, nullable=False)
+    form: Mapped[str] = mapped_column(String, nullable=False)  # 8-K | 8-K/A
+    filed: Mapped[date] = mapped_column(Date, nullable=False)
+    report_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    item_codes: Mapped[str] = mapped_column(String, nullable=False)  # "5.02,9.01"
+    primary_document: Mapped[str] = mapped_column(String, nullable=False)
+    extract_status: Mapped[str] = mapped_column(String, nullable=False)
+    section_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
 class BacktestRunIndexRow(Base):
     """Harness bookkeeping: one row per backtest Room run (CR164).
 

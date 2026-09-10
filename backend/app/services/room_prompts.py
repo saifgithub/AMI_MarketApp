@@ -64,6 +64,7 @@ from app.services.fundamentals import (
     returns_line,
 )
 from app.core.config import settings
+from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -2443,6 +2444,22 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
         )
+    # CR221 I1 — the 8-K line is a free source with its own provenance key, so
+    # its disclosure sits beside the feed's rather than inside it: the feed's
+    # 7-day floor and paywall states say nothing about a filing.
+    if settings.room_executive_change_enabled and _in_lane("news") and not news_withheld_tenure:
+        if _is("executive_change", "live"):
+            header_lines.append(
+                f"- {EXEC_CHANGE_LABEL}: LIVE, read from the issuer's own SEC 8-K "
+                "index and filing text (a free source, NOT the news feed above and "
+                "NOT under its 7-day floor); the line states the window it was "
+                "verified for and each filing's filed date and age."
+            )
+        else:
+            header_lines.append(
+                f"- {EXEC_CHANGE_LABEL}: not available this call — do not supply "
+                "an executive change from memory."
+            )
     if not _in_lane("social"):
         pass  # out of lane — named in the lane line below, not disclosed as absent
     elif social_withheld_tenure:
@@ -2887,6 +2904,20 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
     else:
         lines.append(_catalyst_line(profile))
+        # CR221 I1 — sits with the catalyst so tenure-withholding strips it,
+        # renders under withheld_paid because the paywall is on the FEED and
+        # this source is free, and carries its own field_state key because
+        # `news` is four-state and surcharge-bound. Not folded into the
+        # catalyst string: that line's off-ticker caveat is about the feed.
+        extra = executive_change_line(
+            profile.get("executive_change_state"),
+            profile.get("executive_change_items"),
+            profile.get("executive_change_verified_from"),
+            profile.get("executive_change_verified_through"),
+        ) if (settings.room_executive_change_enabled
+              and _is("executive_change", "live")) else None
+        if extra:
+            lines.append(extra)
     if not _in_lane("social"):
         pass
     elif social_withheld_tenure:

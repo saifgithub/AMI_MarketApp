@@ -936,6 +936,14 @@ class Settings(BaseSettings):
     room_segment_revenue_enabled: bool = False
     room_geographic_revenue_enabled: bool = False
 
+    # CR221 I1 — executive/board changes from the issuer's own 8-K Item 5.02
+    # filings (`services/edgar_8k.py`). 5 request lines from one agent, the
+    # News Analyst. Own flag for §7's per-item attribution; gates the RENDER
+    # only, the overlay always populates. Store-backed: renders nothing until
+    # `scripts/ingest_edgar_8k.py` has run (the `edgar_8k_not_ingested` warn
+    # is the guard for the wrong order).
+    room_executive_change_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

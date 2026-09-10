@@ -634,9 +634,10 @@ def _news_block(m: Mandate) -> str:
         # the agent has never been shown. Wiring it is Tier B.
         "- Filter headlines to the user's holdings, which are in the portfolio block above.",
         "- Distinguish noise (pundit predictions) from signal (earnings, regulatory, M&A). Lead with signal.",
-        "- You have no live macro-indicator calendar or regulatory-filings feed; "
-        "reason about macro backdrop illustratively unless real headline data "
-        "has been injected into this prompt elsewhere.",
+        "- You have no live macro-indicator calendar; the only filing text you "
+        "receive is the sheet's \"Executive change (8-K Item 5.02)\" line where "
+        "present. Reason about macro backdrop illustratively unless real headline "
+        "data has been injected into this prompt elsewhere.",
     ]
     if m.compliance.halal:
         parts.append(

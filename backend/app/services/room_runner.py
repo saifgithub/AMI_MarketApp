@@ -71,6 +71,7 @@ from app.schemas.room import (
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services import (
     debt_maturity,
+    edgar_8k,
     edgar_pit,
     edgar_tags,
     filing_dimensions,
@@ -848,6 +849,104 @@ def _overlay_filing_dimensions(
         )
 
 
+def _overlay_executive_change(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR221 I1 — executive/board changes from the issuer's 8-K Item 5.02
+    filings (`edgar_8k`), one `field_state` key: `executive_change`.
+
+    Populated regardless of `room_executive_change_enabled`; the flag gates
+    the RENDER, so §7.5's control arm is a flag flip against one cached
+    profile. Five sub-states in `executive_change_state`, and they must not
+    blur (CR040): `filed` and `none_in_window` are live — the scan vouches
+    for the window either way; `unscanned`, `stale` and `unreadable` are
+    unavailable, each with its own warn, so a quiet filer and a store that
+    never heard of the ticker never look the same at the sheet.
+    """
+    try:
+        scan, rows = edgar_8k.fetch_8k_state(ticker, as_of)
+    except Exception as exc:
+        logger.warn(
+            "edgar_8k_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        profile["executive_change_state"] = "unreadable"
+        field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
+        return
+
+    if scan is None:
+        profile["executive_change_state"] = "unscanned"
+        field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
+        try:
+            ever = edgar_8k.ever_scanned()
+        except Exception:
+            ever = True  # a failed probe must not read as "the ingest never ran"
+        if not ever:
+            logger.warn(
+                "edgar_8k_not_ingested",
+                ticker=ticker.upper(), fix="run backend/scripts/ingest_edgar_8k.py",
+            )
+        else:
+            logger.warn(
+                "edgar_8k_ticker_not_scanned",
+                ticker=ticker.upper(),
+                fix="add the ticker to the ingest list and re-run backend/scripts/ingest_edgar_8k.py",
+            )
+        return
+
+    # The window the scan can vouch for: no earlier than the index page it
+    # read reaches, its own lookback, or the render window; no later than the
+    # scan itself or the sheet's date.
+    verified_from = max(
+        scan.covered_since,
+        scan.scanned_at.date() - timedelta(days=scan.window_days),
+        as_of - timedelta(days=edgar_8k.RENDER_WINDOW_DAYS),
+    )
+    verified_through = min(scan.scanned_at.date(), as_of)
+    if verified_through < verified_from:
+        profile["executive_change_state"] = "stale"
+        field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
+        logger.warn(
+            "edgar_8k_scan_stale",
+            ticker=ticker.upper(), scanned_at=scan.scanned_at.isoformat(),
+            as_of=as_of.isoformat(), fix="re-run backend/scripts/ingest_edgar_8k.py",
+        )
+        return
+
+    profile["executive_change_verified_from"] = verified_from.isoformat()
+    profile["executive_change_verified_through"] = verified_through.isoformat()
+    items = [r for r in rows if verified_from <= r.filed <= verified_through]
+    if not items:
+        profile["executive_change_state"] = "none_in_window"
+        field_state["executive_change"] = LiveDataState.LIVE.value
+        return
+
+    rendered: list[dict[str, Any]] = []
+    for r in items[: edgar_8k.MAX_ITEMS_RENDERED]:
+        if r.extract_status == edgar_8k.EXTRACTED and r.section_text:
+            ex, truncated, full_len = edgar_8k.excerpt(edgar_8k.strip_item_title(r.section_text))
+        else:
+            ex, truncated, full_len = None, False, 0
+            logger.info(
+                "edgar_8k_item_unextracted",
+                ticker=ticker.upper(), accession=r.accession_no, status=r.extract_status,
+            )
+        rendered.append({
+            "accession_no": r.accession_no,
+            "form": r.form,
+            "filed": r.filed.isoformat(),
+            "report_date": r.report_date.isoformat() if r.report_date else None,
+            "age_days": (as_of - r.filed).days,
+            "extract_status": r.extract_status,
+            "excerpt": ex,
+            "truncated": truncated,
+            "full_len": full_len,
+        })
+    profile["executive_change_state"] = "filed"
+    profile["executive_change_items"] = rendered
+    field_state["executive_change"] = LiveDataState.LIVE.value
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -988,17 +1087,21 @@ def _profile_for_ticker(
                 profile[f] = live[f]
                 field_state[f] = LiveDataState.LIVE.value
 
-    # CR221 A1/A3 — debt structure, from the EDGAR store rather than yfinance.
+    # CR221 A1/A3 — debt structure, from the EDGAR store rather than yfinance;
+    # A2/D1/D2 — the filing's own columns; I1 — 8-K Item 5.02 text.
     # Attempted exactly when the fundamentals overlay above was attempted, so a
-    # mock-data run never mixes real filed debt figures into a synthetic sheet.
+    # mock-data run never mixes real filed figures into a synthetic sheet.
     if as_of is not None or settings.use_real_market_data:
         _overlay_debt_structure(profile, field_state, ticker, today)
         _overlay_filing_dimensions(profile, field_state, ticker, today)
+        _overlay_executive_change(profile, field_state, ticker, today)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
         for block in _FILING_DIMENSION_BLOCKS:
             field_state[block] = LiveDataState.UNAVAILABLE.value
+        field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
+        profile["executive_change_state"] = "unscanned"
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

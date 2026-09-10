@@ -504,13 +504,24 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "category": "runtime-deference",
         "why": "CR040 — the loud-degradation instruction for an absent fetch.",
     },
+    # The 8-K half of this entry's old `why` ("no CPI/8-K/S-1 feed is connected
+    # anywhere in the backend") stopped being true on 2026-09-11: CR221 I1
+    # ships 8-K Item 5.02 text to the sheet. Edited by hand, not caught by a
+    # marker — the `sheets` fixture flips no `room_*` flag, so a flag-gated
+    # store-backed line never renders here and an allowlisted entry carries no
+    # collision markers to fire. The enforcing check lives in the slot's own
+    # test file instead.
     {
         "persona": "news_analyst",
-        "anchor": "no macro indicator calendar and no regulatory-filings feed",
+        "anchor": "no macro indicator calendar and no other regulatory-filings feed",
         "category": "scope-true",
         "why": (
-            "TRUE: only the FOMC countdown is a real forward macro datum; no CPI/8-K/S-1 "
-            "feed is connected anywhere in the backend."
+            "CR221 I1 (2026-09-11) — 8-K Item 5.02 now reaches the sheet as the "
+            "\"Executive change (8-K Item 5.02)\" line (store-backed, flag-gated; "
+            "services/edgar_8k.py). The residual denial is TRUE: no CPI calendar and "
+            "no S-1/10-K text feed is connected. The deference clause is pinned by "
+            "test_cr221_i1_executive_change.py because allowlisted entries carry no "
+            "collision markers."
         ),
     },
     {

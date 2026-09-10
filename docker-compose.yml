@@ -457,6 +457,9 @@ services:
       ROOM_DEBT_SPLIT_ENABLED: ${ROOM_DEBT_SPLIT_ENABLED:-false}
       ROOM_SEGMENT_REVENUE_ENABLED: ${ROOM_SEGMENT_REVENUE_ENABLED:-false}
       ROOM_GEOGRAPHIC_REVENUE_ENABLED: ${ROOM_GEOGRAPHIC_REVENUE_ENABLED:-false}
+      # CR221 I1 — executive change from 8-K Item 5.02. Needs
+      # `scripts/ingest_edgar_8k.py` to have run. See Settings.
+      ROOM_EXECUTIVE_CHANGE_ENABLED: ${ROOM_EXECUTIVE_CHANGE_ENABLED:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
