@@ -1198,3 +1198,80 @@ Not built; not in the §1 totals, which count the original 127-line census.
 same profile and is cited by none. That is DEF400's sheet-rendering question, noted here
 because the rig saw it, and left to that lane.
 
+
+### 7.11 ROUND 4 — the exec arm: the item nobody asked for, and every asker cited
+
+`20260910T191437Z` · CAT × {short, medium, long} × {`off`, `exec`} · 6 convenes, 36 analyst turns
+· `/models/qwen38-flash-next-nvfp4`, `thinking=False`, `pm_samples=5` · profile rebuilt at run
+start (`profile_CAT.round4.pkl`, 111 LIVE fields both arms) · code measured: `d6c364c2` (main),
+the third review round's fixes included.
+
+**The render seam, checked before the numbers.** The sheet line appears in the `exec` arm only —
+`off` carries zero `Executive change` sheet lines and `exec` carries one; the persona sentence
+that tells the News Analyst how to read the line is in both prompts by design, so a naive grep
+for the label finds it twice and means nothing. The flag bought **1,975 prompt characters**.
+
+**Primary endpoint: I1 was never asked for, in either arm, in any mandate.** Not in round 4, and
+not in rounds 2 or 3 either — `I1` appears in no convene's request scoring at any stamp. The
+demand-extinction table cannot move an item that is never demanded, so on the primary endpoint
+this build scores **nothing at all**:
+
+| | `off` | `exec` |
+|---|---|---|
+| I1 executive-change detail — asks | 0 | 0 |
+| Total data items named | 48 | 48 |
+
+This is the §7.1 endpoint failure in its purest form yet. The 127-line census recorded the News
+Analyst asking for executive-change detail in **5 of 7 convenes** — that is why I1 was built. The
+rank-limited endpoint (§7.9) is why it now asks for nothing: with the CFO change *answered on the
+sheet*, the analyst's five scarcest asks are simply five other things, and the register-matched
+count stays flat at 48 because the demand redistributes rather than shrinking.
+
+**Secondary endpoint: 1 of 1 askers cited it, in all three mandates, quoting the filing.** The
+one agent the line is for used it every single time:
+
+| item | arm | cited/turns | cited/askers | askers |
+|---|---|---|---|---|
+| I1 | `exec` | 1/36 | **1 / 1** | `news_analyst` |
+
+Verbatim, and precise — the names, both dates, the filing's own date, the item code:
+
+- *short*: “The 8-K filing dated **2026-04-10** confirms **Kyle Epley** assumed the **CFO** role
+  effective **2026-05-01**, succeeding **Andrew R.J. Bonfield** (retiring **2026-10-01**).” …
+  “No new Item 5.02 filings have appeared since **2026-04-10**.”
+- *medium*: “The **8-K filed 2026-04-10** (153 days old) confirms CFO transition to **Kyle
+  Epley** … replacing **Andrew R.J. Bonfield**. This is settled.”
+- *long*: “The 8-K … is 153 days old and **likely absorbed into the reference price** of
+  $802.47.”
+
+Three things in that are worth more than the citation rate. The analyst read the **age** the line
+states and did something with it — “153 days old”, “settled”, “absorbed into the reference price”
+— which is the gap sentence the second review round argued for, working as intended. It read the
+**absence** correctly too (“no new Item 5.02 filings since”), which is the `none_in_window` half
+of the state machine. And the fact **propagated**: in the short mandate the Bull Researcher cited
+it second-hand (“the Macro & Events analyst confirmed that the CFO transition is a closed event”),
+so one sheet line reached an agent that never saw it.
+
+**Cost and verdicts.** The arm costs **+7.9%** prompt tokens (155,407 → 167,713 over 3 convenes)
+for 1,975 characters of filing text. Verdicts move in both directions and are **not attributed**
+(§7.1: 19.7% split on identical inputs) — `short` PASS→APPROVE, `long` APPROVE→PASS, `medium`
+PASS→PASS. Three convenes per arm cannot separate a 2-in-6 flip from noise, and this round makes
+no claim that it does.
+
+**What this supports.** `room_executive_change_enabled` is supported on the axis that has proven
+decisive four rounds running — the agent it is built for cites it, quotes it accurately, respects
+its stated age, and passes it on — and unsupported on the axis this rig has now shown blind four
+times. At +7.9% for one ticker's one filing, the honest reading is that the line earns its place
+for a name with a real 5.02 event and costs 7.9% for nothing on a name without one, which is
+exactly what the `none_in_window`/`unscanned` states are for. The flip is Saiful's call, and it
+needs the in-container ingest first (§7.6c): the flag turns on nothing without scan rows.
+
+**A fourth confirmation, and a recommendation about the endpoint itself.** Four rounds, four
+builds, four times the primary endpoint said nothing and the secondary endpoint said everything.
+Rounds 1–3 could be read as "the endpoint is noisy"; round 4 removes that reading, because here
+the demand for the built item was **exactly zero in both arms** — there was never a number to
+move. The rank-limited "five things I lacked" ask is not a demand *measure*; it is a demand
+*sample*, and a sample of size five from a distribution of 36 open items cannot see a single
+item's satisfaction. §7.2's primary endpoint should be retired in favour of §7.3's citation rate
+for any future slot, and the register's per-item line counts should be read as *what the Room
+asked once*, never as *what the Room needs*.
