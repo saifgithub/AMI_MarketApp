@@ -460,6 +460,12 @@ services:
       # CR221 I1 — executive change from 8-K Item 5.02. Needs
       # `scripts/ingest_edgar_8k.py` to have run. See Settings.
       ROOM_EXECUTIVE_CHANGE_ENABLED: ${ROOM_EXECUTIVE_CHANGE_ENABLED:-false}
+      # CR222 §3 — pre-registration on the training trade ticket, and whether
+      # it also binds long_horizon mandates. See
+      # Settings.training_preregistration_required /
+      # Settings.prereg_applies_to_long_horizon.
+      TRAINING_PREREGISTRATION_REQUIRED: ${TRAINING_PREREGISTRATION_REQUIRED:-false}
+      PREREG_APPLIES_TO_LONG_HORIZON: ${PREREG_APPLIES_TO_LONG_HORIZON:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

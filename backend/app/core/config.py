@@ -944,6 +944,20 @@ class Settings(BaseSettings):
     # is the guard for the wrong order).
     room_executive_change_enabled: bool = False
 
+    # CR222 §3 — pre-registration on the training trade ticket. With this on,
+    # `safety_floor.check_mandate_compliance` refuses a training trade that
+    # opens or adds to a position without a thesis, an invalidation and a
+    # horizon. Off by default: it changes what a shipped ticket accepts, so it
+    # goes live by a deliberate env flip, not by a deploy.
+    training_preregistration_required: bool = False
+
+    # CR222 §3 — whether the above also binds `long_horizon` mandates. Off:
+    # the requirement is aimed at the active path, where an entry without a
+    # written reason is the profile the evidence describes. A long-horizon user
+    # buying an index position monthly is not that case, so they are exempt
+    # until someone deliberately decides otherwise.
+    prereg_applies_to_long_horizon: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

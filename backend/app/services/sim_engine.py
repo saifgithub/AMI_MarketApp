@@ -1318,6 +1318,11 @@ class SimEngine:
         stop: float | None = None,
         target: float | None = None,
         horizon_days: int | None = None,
+        # CR222 §3 — carried to `check_mandate_compliance` only. Neither field
+        # touches the fill or the trade row; the pre-registration record lives
+        # on the journal entry the route writes after the fill.
+        thesis: str | None = None,
+        invalidation: str | None = None,
         verdict_ref: UUID | None = None,
         halal_universe: set[str] | None = None,
         classification_universe: object | None = None,
@@ -1398,6 +1403,9 @@ class SimEngine:
             order_type=order_type,
             quantity=quantity,
             limit_price=limit_price,
+            thesis=thesis,
+            invalidation=invalidation,
+            horizon_days=horizon_days,
         )
 
         ctx = self._compliance_context(user_id, portfolio, ticker)
@@ -1872,6 +1880,16 @@ class SimEngine:
         """
         user_id = order.user_id
         portfolio = self.ensure_portfolio(user_id)
+        # CR222 §3 — NO pre-registration fields, and that is a real, stated
+        # consequence rather than an oversight: `sim_resting_orders` carries no
+        # column for a thesis, so with `TRAINING_PREREGISTRATION_REQUIRED` on a
+        # resting BUY is refused here at fill time with `blocked_by=
+        # "preregistration"`, journaled by `record_compliance_block` and
+        # notified to the user like any other fill-time refusal. Refusing is
+        # the right direction — the alternative is a resting order becoming a
+        # time-delayed bypass of the requirement, which is exactly what this
+        # method's docstring exists to prevent. Carrying registration onto the
+        # book is CR222's mobile follow-on slice, with the columns it needs.
         proposed = ProposedTrade(
             ticker=order.ticker,
             side=order.side,

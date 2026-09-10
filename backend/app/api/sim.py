@@ -52,8 +52,10 @@ from app.services.sim_resting_orders import (
     sweep_resting_orders,
 )
 from app.services.sim_trade_effects import (
+    PREREGISTRATION_PAYLOAD_KEY,
     apply_post_fill_effects,
     record_compliance_block,
+    registered_preregistration,
 )
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -86,6 +88,41 @@ def _require_ticker_or_422(ticker: str) -> None:
         ) from exc
 
 
+def _closed_trade_payload(
+    *,
+    user_id: UUID,
+    trade,
+    closed_price: float | None,
+    realised_pnl: float,
+    status: str,
+) -> dict:
+    """CR222 §3 — the close entry's payload: the trade, the realised outcome,
+    and the registration the position was opened with.
+
+    ONE builder for both close paths (`evaluate_trades`' bracket sweep and
+    `close_trade`'s manual exit) because the two are the same event to a
+    reader: the position ended and here is how against what was expected.
+    Two builders would diverge on the first change, which is the DEF098 shape
+    this codebase keeps meeting.
+
+    `outcome` is a fresh block rather than fields merged into `trade`: the
+    trade JSON is a shipped shape the client parses, and adding keys to it
+    would put a new fact where an old parser will not look for it.
+    """
+    payload: dict = {
+        "trade": trade.to_json(),
+        "outcome": {
+            "status": status,
+            "closed_price": closed_price,
+            "realised_pnl": realised_pnl,
+        },
+    }
+    registered = registered_preregistration(user_id, trade.id)
+    if registered is not None:
+        payload[PREREGISTRATION_PAYLOAD_KEY] = registered
+    return payload
+
+
 class SubmitTradeRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
@@ -103,6 +140,14 @@ class SubmitTradeRequest(BaseModel):
     stop: float | None = None
     target: float | None = None
     horizon_days: int | None = None
+    # CR222 §3 — pre-registration. `horizon_days` above is the third field and
+    # already existed (it is on the trade row); these two are new and live on
+    # the journal entry, not the trade row. Optional here: whether they are
+    # required is `safety_floor.check_mandate_compliance`'s decision, and a
+    # 422 from this schema would refuse the trade without ever naming which
+    # field was missing (DEF197).
+    thesis: str | None = None
+    invalidation: str | None = None
     verdict_ref: UUID | None = None
     mandate_override: dict | None = None
 
@@ -687,6 +732,8 @@ async def submit_trade(
         stop=req.stop,
         target=req.target,
         horizon_days=req.horizon_days,
+        thesis=req.thesis,
+        invalidation=req.invalidation,
         verdict_ref=req.verdict_ref,
         halal_universe=halal_universe,
         classification_universe=classification_universe,
@@ -756,7 +803,16 @@ async def submit_trade(
     # this route: the resting-order sweep reaches the same three effects with no
     # request in the call stack. Extracted before that second fill site exists,
     # so the two paths cannot diverge.
-    apply_post_fill_effects(user_id=req.user_id, trade=trade)
+    # CR222 §3 — the registration and the mandate version it was judged under
+    # ride along; both are properties of the DECISION, so neither is on the
+    # trade row and neither can be recovered from it later.
+    apply_post_fill_effects(
+        user_id=req.user_id,
+        trade=trade,
+        thesis=req.thesis,
+        invalidation=req.invalidation,
+        mandate_version=mandate.version,
+    )
 
     return {
         "ok": True,
@@ -926,7 +982,16 @@ async def evaluate_trades(
                     ticker=t.ticker,
                     tags=["sim_trade", "closed", u.new_status],
                     outcome=Outcome.WIN if u.new_status == "won" else Outcome.LOSS,
-                    payload={"trade": t.to_json()},
+                    # CR222 §3 — the realised outcome sits beside what was
+                    # registered on the way in, so a review reads thesis →
+                    # invalidation → what happened without a join.
+                    payload=_closed_trade_payload(
+                        user_id=user_id,
+                        trade=t,
+                        closed_price=u.closed_price,
+                        realised_pnl=u.realised_pnl,
+                        status=u.new_status,
+                    ),
                 ))
             except Exception:  # pragma: no cover
                 pass
@@ -988,7 +1053,13 @@ async def close_trade(
             ticker=closed.ticker,
             tags=["sim_trade", "closed", "manual"],
             outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
-            payload={"trade": closed.to_json()},
+            payload=_closed_trade_payload(
+                user_id=user_id,
+                trade=closed,
+                closed_price=closed.closed_price,
+                realised_pnl=closed.realised_pnl,
+                status="manual",
+            ),
         ))
     except Exception:  # pragma: no cover
         pass

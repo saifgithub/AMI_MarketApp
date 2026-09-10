@@ -47,15 +47,44 @@ from app.services.sim_engine import SimTrade
 from app.services.watchlist_store import get_watchlist_store
 
 
-def apply_post_fill_effects(*, user_id: UUID, trade: SimTrade) -> None:
+#: CR222 §3 — the payload key the registered thesis/invalidation/horizon live
+#: under on a SIM_TRADE journal entry, and the key the close paths read them
+#: back from. One constant, because a writer and a reader that each spell the
+#: key themselves are the CR131 drift the audit proved exploitable.
+PREREGISTRATION_PAYLOAD_KEY = "preregistration"
+
+
+def apply_post_fill_effects(
+    *,
+    user_id: UUID,
+    trade: SimTrade,
+    thesis: str | None = None,
+    invalidation: str | None = None,
+    mandate_version: int | None = None,
+) -> None:
     """Watchlist and journal for one filled training trade.
 
     Reads the **trade**, never a request: `trade.stop`/`trade.target` are the
     values `_execute_fill` actually wrote. CR109 slice 7 removed the third
     effect, the `trade_disciplined` reputation award.
+
+    CR222 §3 — `thesis`/`invalidation`/`mandate_version` are the exception, and
+    they have to be: neither free-text field is on the trade row (they are a
+    record of a decision, not a term of a fill), and the row carries no mandate
+    version at all. `trade.horizon_days` IS on the row and is read from there,
+    so the one field that has a home keeps it. All three default to None, which
+    is what the resting-order sweep passes — an order placed before the flag
+    was on carries no registration, and a fabricated one would be worse than
+    none (CR040).
     """
     _add_to_watchlist(user_id, trade)
-    _append_journal(user_id, trade)
+    _append_journal(
+        user_id,
+        trade,
+        thesis=thesis,
+        invalidation=invalidation,
+        mandate_version=mandate_version,
+    )
 
 
 def _add_to_watchlist(user_id: UUID, trade: SimTrade) -> None:
@@ -67,7 +96,14 @@ def _add_to_watchlist(user_id: UUID, trade: SimTrade) -> None:
         pass
 
 
-def _append_journal(user_id: UUID, trade: SimTrade) -> None:
+def _append_journal(
+    user_id: UUID,
+    trade: SimTrade,
+    *,
+    thesis: str | None = None,
+    invalidation: str | None = None,
+    mandate_version: int | None = None,
+) -> None:
     try:
         side_label = (
             trade.side.value if hasattr(trade.side, "value")
@@ -75,7 +111,15 @@ def _append_journal(user_id: UUID, trade: SimTrade) -> None:
         ).upper()
         stop_str = f"${trade.stop:.2f}" if trade.stop is not None else "—"
         target_str = f"${trade.target:.2f}" if trade.target is not None else "—"
-        get_journal_store().append(JournalEntryCreate(
+        payload: dict = {"trade": trade.to_json()}
+        prereg = preregistration_record(
+            thesis=thesis,
+            invalidation=invalidation,
+            horizon_days=trade.horizon_days,
+        )
+        if prereg is not None:
+            payload[PREREGISTRATION_PAYLOAD_KEY] = prereg
+        draft = JournalEntryCreate(
             user_id=user_id,
             entry_type=EntryType.SIM_TRADE,
             reference_id=trade.id,
@@ -90,10 +134,72 @@ def _append_journal(user_id: UUID, trade: SimTrade) -> None:
             ticker=trade.ticker,
             tags=["sim_trade"],
             outcome=Outcome.PENDING,
-            payload={"trade": trade.to_json()},
-        ))
+            payload=payload,
+        )
+        # Only when the caller actually knows it. `mandate_version` defaults to
+        # 1 on the schema, and 1 is a real version — passing None through would
+        # stamp "v1" on an entry whose mandate version was never read, which is
+        # a fabricated fact rather than a missing one.
+        if mandate_version is not None:
+            draft = draft.model_copy(update={"mandate_version": mandate_version})
+        get_journal_store().append(draft)
     except Exception:  # pragma: no cover
         pass
+
+
+def preregistration_record(
+    *,
+    thesis: str | None,
+    invalidation: str | None,
+    horizon_days: int | None,
+) -> dict | None:
+    """CR222 §3 — the registered decision, or None when nothing was registered.
+
+    None rather than a dict of nulls: an entry with no registration and an
+    entry that registered three empty fields are different facts, and a review
+    that reads thesis → invalidation → outcome has to be able to tell them
+    apart. A partial registration IS recorded (with its own nulls) — the floor
+    only permits one when the requirement was off, and hiding what the user did
+    write would lose it.
+    """
+    if thesis is None and invalidation is None and horizon_days is None:
+        return None
+    return {
+        "thesis": thesis,
+        "invalidation": invalidation,
+        "horizon_days": horizon_days,
+    }
+
+
+def registered_preregistration(user_id: UUID, trade_id: UUID) -> dict | None:
+    """CR222 §3 — what this position was registered with when it was opened.
+
+    Read back off the OPENING journal entry so a close entry can carry it
+    beside the realised outcome, which is the whole point of the feature: a
+    review reads thesis → invalidation → what actually happened, in one row,
+    without a join the reader has to know to make.
+
+    Best-effort in the same sense as everything else in this module — the
+    position is already closed and the cash already moved by the time this
+    runs. A failed read costs the close entry its registration block, not the
+    entry, and it is logged rather than swallowed: a close that silently loses
+    the thesis makes the feature look like it never worked.
+    """
+    try:
+        entry = get_journal_store().first_for_reference(
+            user_id, EntryType.SIM_TRADE, trade_id,
+        )
+    except Exception:
+        logger.exception(
+            "preregistration_readback_failed",
+            user_id=str(user_id),
+            trade_id=str(trade_id),
+        )
+        return None
+    if entry is None:
+        return None
+    record = entry.payload.get(PREREGISTRATION_PAYLOAD_KEY)
+    return dict(record) if isinstance(record, dict) else None
 
 
 def record_compliance_block(

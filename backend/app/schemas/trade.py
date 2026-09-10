@@ -191,6 +191,17 @@ class ProposedTrade(BaseModel):
     order_type: OrderType = OrderType.MARKET
     limit_price: float | None = None
 
+    # CR222 §3 — pre-registration. All three stay OPTIONAL at the schema level
+    # and the minimum lengths are NOT `min_length` constraints here: whether
+    # they are required at all depends on the flag, the mandate `path` and the
+    # Day Trader preset, which only `check_mandate_compliance` can see. A
+    # schema-level constraint would 422 every caller the moment the field is
+    # present-but-short, on a path where the honest answer is a named,
+    # readable refusal from the floor (DEF197 shape), not a validation error.
+    thesis: str | None = None
+    invalidation: str | None = None
+    horizon_days: int | None = Field(default=None, ge=1)
+
     @property
     def is_buy(self) -> bool:
         return self.side == Side.BUY
@@ -215,6 +226,12 @@ class ComplianceResult(BaseModel):
         # down: a confident, wrong explanation of the user's own settings,
         # which is the CR038/DEF059 class on a surface they act on.
         "unpriceable",
+        # CR222 §3 — the trade was never judged against a mandate rule at all:
+        # it arrived without the thesis / invalidation / horizon the user's own
+        # pre-registration setting requires. Its own member for the DEF305
+        # reason above — folding it into `compliance` would tell the user a
+        # risk rule refused them when nothing about the position was assessed.
+        "preregistration",
         None,
     ] = None
     # CR069: the sourced Sharia verdict (with provenance) when the halal flag is

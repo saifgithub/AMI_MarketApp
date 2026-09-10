@@ -282,6 +282,39 @@ class JournalStore:
             entries = [_row_to_entry(r) for r in rows]
             return entries[:limit], len(entries)
 
+    def first_for_reference(
+        self,
+        user_id: UUID,
+        entry_type: EntryType | str,
+        reference_id: UUID,
+    ) -> JournalEntry | None:
+        """CR222 §3 — the OLDEST live entry of this type against this reference.
+
+        Oldest, not newest: for a sim trade the reference is the trade id and
+        the entries against it are the open followed by its close, so "the
+        first one" is the entry that carries what was registered on the way in.
+        Reading the newest would find the close and, on a second close of the
+        same reference, itself.
+
+        Soft-deleted rows are excluded like every other read here. A user who
+        deleted their own opening entry has no registration to carry forward,
+        and resurrecting it into a later entry would put back what they removed.
+        """
+        et = entry_type if isinstance(entry_type, EntryType) else EntryType(entry_type)
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow)
+                .where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.entry_type == et.value,
+                    JournalEntryRow.reference_id == reference_id,
+                    JournalEntryRow.deleted_at.is_(None),
+                )
+                .order_by(JournalEntryRow.created_at.asc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return _row_to_entry(row) if row else None
+
     def get(self, user_id: UUID, entry_id: UUID) -> JournalEntry | None:
         with get_session() as s:
             row = s.execute(

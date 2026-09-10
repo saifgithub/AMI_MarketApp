@@ -13,7 +13,7 @@ from typing import Any, Sequence
 from pydantic import BaseModel, Field
 
 from app.core.logging import logger
-from app.schemas import AgentId, Mandate, Verdict, VerdictAction
+from app.schemas import AgentId, Mandate, Path, Verdict, VerdictAction
 from app.schemas.classification import (
     ClassificationKind,
     ClassificationStatus,
@@ -610,6 +610,27 @@ def check_mandate_compliance(
                 )
                 blocked_by = blocked_by or "open_risk"
 
+    # 6g) Pre-registration (CR222 §3). NOT a risk limit and not a mandate rule:
+    #   nothing about the position is judged here. It asks whether the user
+    #   wrote down, before the fill, what they expect and what would tell them
+    #   they were wrong — which is what lesson 357 already teaches and the
+    #   product did not require. Hence its own `blocked_by` member; see
+    #   `ComplianceResult.blocked_by`.
+    #
+    #   Four conditions, all of which must hold. Each one is a case where
+    #   requiring the fields would be wrong rather than merely strict:
+    #     - the flag is off → the feature does not exist for this user;
+    #     - the mandate's `path` is `long_horizon` → exempt by default
+    #       (`prereg_applies_to_long_horizon`);
+    #     - the trade CLOSES or reduces → a user must never be trapped in a
+    #       position by a field they did not fill in on the way in;
+    #     - the Day Trader preset is active → Saiful's ruling, 2026-09-11.
+    if _preregistration_required(proposed, mandate, sell_to_open=sell_to_open):
+        missing = _preregistration_gaps(proposed)
+        if missing:
+            violations.extend(missing)
+            blocked_by = blocked_by or "preregistration"
+
     # 7) Drawdown projection
     # The actual worst-case drawdown after this trade depends on entry/stop;
     # for the deterministic check we use a simple projected-drawdown rule:
@@ -668,6 +689,112 @@ def _held_quantity(holdings: object, ticker: str) -> float:
         if str(getattr(h, "ticker", "")).upper().strip() == ticker:
             total += float(getattr(h, "quantity", 0.0) or 0.0)
     return total
+
+
+# CR222 §3 — the two lengths below are floors on effort, not on quality: no
+# deterministic check can tell a real thesis from a plausible one, and pretending
+# otherwise would be the CR038 mistake (an instruction dressed as a control). What
+# they CAN do is stop a one-word entry, which is the failure mode a free-text field
+# with no floor actually produces.
+PREREG_MIN_THESIS_CHARS = 40
+PREREG_MIN_INVALIDATION_CHARS = 20
+
+
+def _day_trader_preset_active(mandate: Mandate) -> bool:
+    """CR222 Ruling 2 — is the Day Trader preset currently applied to this mandate?
+
+    Read off the mandate the floor already holds, through
+    `day_trader_preset.is_day_trader_preset` — the SAME predicate and the same
+    `DAY_TRADER_PRESET_OVERRIDES` constant `api/mandate.py` recognises the PATCH
+    with and `day_trader_outcomes.py` traces its cohort marker to. A second
+    notion of "the preset is on" is exactly the drift CR131's audit proved
+    exploitable, so there is only ever one.
+
+    `day_trader_outcomes.py` asks a different question — *when did this user
+    switch* — and answers it from the journal marker, which needs a DB read.
+    This one asks whether the preset is on RIGHT NOW, which the mandate's own
+    seven fields already say; the floor runs on every ticket and has no business
+    opening a session to find out.
+    """
+    from app.services.day_trader_preset import (
+        DAY_TRADER_PRESET_OVERRIDES,
+        is_day_trader_preset,
+    )
+
+    return is_day_trader_preset(
+        {field: getattr(mandate, field, None) for field in DAY_TRADER_PRESET_OVERRIDES}
+    )
+
+
+def _preregistration_required(
+    proposed: ProposedTrade, mandate: Mandate, *, sell_to_open: bool | None,
+) -> bool:
+    """CR222 §3 — do the pre-registration fields bind THIS trade?
+
+    `sell_to_open` is the same value the long-only block above derived from
+    `holdings`, so "opens or adds to a position" is decided once for the whole
+    function. `None` there means the floor could not tell a sell-to-close from a
+    sell-to-open — and an undecidable sell is treated as a CLOSE here, which is
+    the direction that cannot trap a user in a position (the DEF169 rule: a
+    check that could not run must not block).
+    """
+    from app.core.config import settings
+
+    if not settings.training_preregistration_required:
+        return False
+
+    path = getattr(mandate.path, "value", mandate.path)
+    if path == Path.LONG_HORIZON.value and not settings.prereg_applies_to_long_horizon:
+        return False
+
+    if not (proposed.is_buy or sell_to_open):
+        return False
+
+    return not _day_trader_preset_active(mandate)
+
+
+def _preregistration_gaps(proposed: ProposedTrade) -> list[str]:
+    """One sentence per missing or too-short field, NAMING the field (DEF197).
+
+    User-facing, so AMI by name and no jargon: a refusal that says only
+    "blocked by preregistration" tells the one person who could fix it nothing.
+    """
+    gaps: list[str] = []
+
+    thesis = (proposed.thesis or "").strip()
+    if not thesis:
+        gaps.append(
+            "AMI needs a thesis before it opens this position — at least "
+            f"{PREREG_MIN_THESIS_CHARS} characters saying what you expect to "
+            "happen and why."
+        )
+    elif len(thesis) < PREREG_MIN_THESIS_CHARS:
+        gaps.append(
+            f"Your thesis is {len(thesis)} characters and AMI needs at least "
+            f"{PREREG_MIN_THESIS_CHARS} — say what you expect to happen and why."
+        )
+
+    invalidation = (proposed.invalidation or "").strip()
+    if not invalidation:
+        gaps.append(
+            "AMI needs an invalidation before it opens this position — at least "
+            f"{PREREG_MIN_INVALIDATION_CHARS} characters saying what would tell "
+            "you this trade is wrong."
+        )
+    elif len(invalidation) < PREREG_MIN_INVALIDATION_CHARS:
+        gaps.append(
+            f"Your invalidation is {len(invalidation)} characters and AMI needs "
+            f"at least {PREREG_MIN_INVALIDATION_CHARS} — say what would tell you "
+            "this trade is wrong."
+        )
+
+    if proposed.horizon_days is None:
+        gaps.append(
+            "AMI needs a horizon_days before it opens this position — how many "
+            "days you intend to hold it."
+        )
+
+    return gaps
 
 
 def check_holdings_against_mandate(
