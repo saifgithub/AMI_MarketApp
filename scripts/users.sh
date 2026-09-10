@@ -13,8 +13,10 @@
 #   scripts/users.sh --events <id>    # subscription_events log for a user
 #   scripts/users.sh --contacts [N]   # CSV of contactable (email-having) real users
 #                                       to STDOUT for engagement comms (CR082).
-#                                       Summary on STDERR. Excludes synthetics/seed
-#                                       rows (memory/feedback_user_report_exclusions.md).
+#                                       Summary on STDERR. Excludes synthetics/seed/
+#                                       probe rows via the CR051 rule, fetched from
+#                                       ami_api_alpha at call time (DEF403) — see
+#                                       fetch_real_pred() below.
 #                                       e.g. scripts/users.sh --contacts > contacts.csv
 #
 # All queries run against the postgres container on melehost via SSH.
@@ -35,14 +37,24 @@ run_sql_csv() {
   ssh "$SSH_HOST" "$PSQL --csv -c \"$1\""
 }
 
-# The synthetic/seed exclusion predicate — kept byte-identical to
-# scripts/analytics/daily_report.py REAL_PRED and memory/feedback_user_report_exclusions.md
-# so the outreach list never contains the 13 CR035 room-benchmark synthetics or
-# the 10 seed fixtures.
-REAL_PRED="coalesce(last_app_version,'') <> 'room-benchmark' \
-  AND NOT (created_at >= '2026-05-24 05:10:00' \
-  AND created_at < '2026-05-24 05:11:00' \
-  AND device_model IS NULL AND last_app_version IS NULL)"
+# The synthetic/seed/probe exclusion predicate — DEF403: fetched lazily (only
+# by the commands that need it, via fetch_real_pred below) from the ONE
+# canonical definition (app.services.admin_analytics._real_users_clause()),
+# never hand-copied here. This script has no `app` import path of its own,
+# so it asks ami_api_alpha (the container that does) for the compiled SQL
+# over the same SSH transport as every other query below. Fails loudly on
+# error rather than silently falling back to a stale literal — that
+# silent-fallback shape is exactly the drift DEF403 found (three hand-synced
+# copies missing the 12 probe-id exclusions the ORM copies had).
+fetch_real_pred() {
+  local pred
+  pred=$(ssh "$SSH_HOST" "docker exec ami_api_alpha python3 -m app.services.admin_analytics" 2>/dev/null)
+  if [[ -z "$pred" ]]; then
+    echo "FATAL: could not fetch the canonical real-users predicate from ami_api_alpha (DEF403)." >&2
+    exit 1
+  fi
+  echo "$pred"
+}
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -257,6 +269,8 @@ cmd_events() {
 
 cmd_contacts() {
   local n="${1:-1000}"
+  local REAL_PRED
+  REAL_PRED="$(fetch_real_pred)"
   # Loud gap summary to stderr — how many real users are actually reachable by
   # email. Anonymous-first means most rows have email IS NULL; make that visible.
   local summary

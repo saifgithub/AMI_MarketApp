@@ -2029,3 +2029,79 @@ lane's landed commit — on a shared branch under concurrent commits, never
 `reset` the branch pointer to fix attribution; a mis-attributed but
 content-correct commit is the cheaper wound. Both were self-caught and
 disclosed; history verified healthy by the dispatcher afterwards.
+
+---
+
+## P34 — a rule deliberately hand-synced across N sites, and only the sites someone remembered to revisit got the later amendment
+
+**Class:** distinct from P11. P11 is a rule nobody wrote down as multi-site — the
+second report arrives from a call site the original fixer never knew existed.
+This is the opposite failure: every site's own comment says *"keep byte-identical
+to X"*, the lineage is fully documented, and it still drifts — because the hand-
+sync convention has no enforcement, only intention, and a later amendment (a new
+exclusion added to the rule) only ever touches the sites the amending session
+happened to open.
+
+| | The rule | Sites at mint time | The later amendment | What went un-updated |
+|---|---|---|---|---|
+| **DEF403** (2026-09-10) | CR051 "real user" exclusion (CR035 room-benchmark synthetics, the 2026-05-24 05:10 seed-fixture burst, and — added later — 12 CR125/DEF227-229 probe users by id) | 5: `admin_analytics.py` (ORM), `verdict_outcomes.py` (ORM, imports the first), `daily_report.py` (raw SQL over SSH), `users.sh` (raw SQL over SSH), `weekly_room_retro.py` (ORM, reimplemented rather than imported) | The 12 probe-id exclusions, added to the two ORM sites that already imported/derived from `admin_analytics._real_users_clause()` | The other 3 — `daily_report.py`, `users.sh`, `weekly_room_retro.py` — kept the CR035+seed checks only. `weekly_room_retro.py`'s copy in particular had comments naming the exact byte-identity intent and still missed the amendment, because "keep in sync" was the entire mechanism. `inbox_store.py` (a 6th, undocumented copy — not even named in the lineage comment) had the same gap. |
+
+**Why the previous guard failed.** There was no guard — same root cause as P11,
+but the failure mode differs in a way worth its own entry. P11's fix is a
+*sweep*: enumerate every site once, because nobody knew they existed. Here every
+site already *knew* about every other site (the comments say so) and hand-sync
+still failed, because "keep byte-identical" is a discipline, not a mechanism —
+it depends on whoever adds the next exclusion remembering to open N-1 other
+files, and on every one of those files actually being reachable from wherever
+the amending session is running. Two of DEF403's three stale sites were
+*correctly* raw SQL rather than ORM (`daily_report.py`/`users.sh` run on the
+melehost host or over SSH, with no `app` import path at all) — hand-copying
+there wasn't laziness, it was the only mechanism available until this fix built
+one. The third (`weekly_room_retro.py`) had no such excuse: it runs inside
+`ami_api_alpha` via `docker exec ... python -m scripts.weekly_room_retro`, where
+`app` was importable the entire time, and reimplemented anyway.
+
+**The invariant.** *A rule that must hold identically at N sites is only safe at
+N=1 definition. Where N>1 call sites are unavoidable, each must derive from the
+one definition at CALL TIME, not at author time — an ORM site imports it
+directly; a raw-SQL site with no code-import path fetches the one definition's
+compiled output at runtime (never a pasted transcription of it) over whatever
+transport it already uses to reach the data. "Keep byte-identical to X" in a
+comment is not the fix — it is the documentation of the fix's absence.*
+
+**Enforcing checks (DEF403).**
+
+- `admin_analytics.py` is now the sole place the rule is *written*:
+  `_real_users_clause()` (ORM), `real_users_where_sql()` (the clause compiled to
+  a literal Postgres `WHERE` fragment, no DB connection needed — offline
+  `sqlalchemy` compilation), `is_real_user()` (the same rule evaluated in Python
+  against an in-memory row), and a `python3 -m app.services.admin_analytics` CLI
+  that prints the compiled fragment for a raw-SQL caller to fetch.
+- `verdict_outcomes.excluded_user_ids()` — unchanged, already correct (imports
+  `_real_users_clause()`).
+- `inbox_store._is_real_tester()` — now composes `is_real_user()` with its own
+  suspended/desk checks (which are NOT part of the CR051 rule) instead of
+  carrying its own copy of the CR035/seed/probe-id logic.
+- `weekly_room_retro.is_synthetic_user()` — now `not is_real_user(user)`, a pure
+  delegation; it ran inside `app`'s import path the whole time and had no reason
+  not to.
+- `daily_report.py` / `users.sh` — fetch the compiled fragment at runtime via
+  `docker exec ami_api_alpha python3 -m app.services.admin_analytics` (the same
+  docker-exec-over-SSH transport they already use for every query), substituted
+  into the existing SQL rather than a literal. Fails loudly (raises / exits
+  non-zero) if the fetch fails — never a silent fallback to a stale local copy.
+- `backend/tests/unit/test_def403_exclusion_single_source.py` — the guard:
+  (1) a repo-wide scan asserting the 12 probe-id UUID literals appear in exactly
+  one source file, with a vacuity check that they appear *somewhere*; (2) a
+  second scan for the raw-SQL predicate string reappearing outside the canonical
+  renderer; (3) a behavioral check, against a real (sqlite) DB with one fixture
+  user per exclusion class plus one genuine real user, that
+  `_real_users_clause()`, `is_real_user()`, `excluded_user_ids()`,
+  `_is_real_tester()`, `is_synthetic_user()`, and the fetched raw-SQL fragment
+  all agree on the identical verdict for every fixture — not merely that each
+  independently looks plausible.
+
+The general control is the question P11 asks, sharpened: **"how many places
+implement this rule" is not resolved by finding out and writing a comment that
+says so — it is resolved only when N-1 of them stop implementing it and start
+asking the one that does.**

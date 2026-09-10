@@ -10,6 +10,14 @@ scale).
 including explicit `mode=user` ids — passes through the base real-tester
 filter, so a blast can never reach a suspended user, a house desk, a
 CR035 synthetic, a seed fixture, or a by-id-excluded probe row.
+
+DEF403 — the CR035/seed/probe-id portion of that filter is
+`admin_analytics.is_real_user()`, not a second hand-copy: this module used
+to carry its own `EXCLUDED_USER_IDS`/seed-window/room-benchmark checks,
+which is exactly the hand-synced-copy pattern that let three of five CR051
+sites drift out of date with the 12 probe-id exclusions. Only the
+suspended/desk checks stay local — they are inbox-specific, not part of
+the CR051 real-vs-synthetic rule.
 """
 
 from __future__ import annotations
@@ -29,35 +37,7 @@ from app.schemas.messages import (
     ReplyOut,
     SendResponse,
 )
-
-# The 12 by-id exclusions from memory/feedback_user_report_exclusions.md —
-# 2 CR125 promotion probes + 10 DEF227/228/229 live-verification convene
-# users. Excluded BY ID because their shape (device-less anon rows) is
-# indistinguishable from a genuine bare session. Keep in sync with that file.
-EXCLUDED_USER_IDS: frozenset[UUID] = frozenset(
-    UUID(x)
-    for x in (
-        # CR125 promotion probes (2026-08-07 17:21 UTC)
-        "ea99a8bc-e612-4569-928d-6ed4d1a0d708",
-        "8735d3f2-3cff-43e5-a670-ecd5677226b7",
-        # DEF227/228/229 convene users (2026-08-07 19:17-19:22 UTC)
-        "8f45cd0e-565d-4c7d-b621-a956a4f99339",  # GRAB
-        "f16d093d-dd9b-41a9-8315-e18e205c09ec",  # AMD
-        "d7edc328-aa28-41d3-9828-795f145b9879",  # NVDA
-        "4ae1436a-3aa8-45c0-a502-f4151c8879b6",  # ANET
-        "5d6a5550-895e-45e5-92ca-56891609e7fd",  # KTOS
-        "1a6be9ff-6d35-468e-855e-bbaeb187a242",  # MU
-        "1c5bb79c-920e-4152-a29a-e6a2d41adcbb",  # SNDK
-        "fa724aab-83fb-4bbb-a84e-0774f6721226",  # AVGO
-        "0310202b-e2ac-42ff-b44e-8d25b8d0e36c",  # LITE
-        "92518daf-b2f7-49dd-857c-60060e2ceef1",  # NBIS
-    )
-)
-
-# The 2026-05-24 seed-fixture burst window (device-less, version-less rows
-# created inside this minute are seed data, not people).
-_SEED_WINDOW_START = datetime(2026, 5, 24, 5, 10, 0, tzinfo=timezone.utc)
-_SEED_WINDOW_END = datetime(2026, 5, 24, 5, 11, 0, tzinfo=timezone.utc)
+from app.services.admin_analytics import is_real_user
 
 
 def _as_utc(dt: datetime) -> datetime:
@@ -80,22 +60,18 @@ def _build_int(app_version: str | None) -> int | None:
 
 
 def _is_real_tester(u: User) -> bool:
-    """The base filter every audience mode applies (incl. mode=user)."""
+    """The base filter every audience mode applies (incl. mode=user).
+
+    Composes the CR051 real-vs-synthetic rule (`is_real_user` — CR035
+    synthetics, seed fixtures, by-id probes) with the two checks that are
+    specific to messaging, not part of that rule: never blast a suspended
+    account or a house desk.
+    """
     if u.suspended_at is not None:
         return False
     if u.is_desk:
         return False
-    if (u.last_app_version or "") == "room-benchmark":  # CR035 synthetics
-        return False
-    if (
-        u.device_model is None
-        and u.last_app_version is None
-        and _SEED_WINDOW_START <= _as_utc(u.created_at) < _SEED_WINDOW_END
-    ):
-        return False  # 2026-05-24 seed fixtures
-    if u.id in EXCLUDED_USER_IDS:
-        return False
-    return True
+    return is_real_user(u)
 
 
 def resolve_audience(session, audience: Audience) -> list[UUID]:

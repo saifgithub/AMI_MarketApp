@@ -6,9 +6,14 @@ psql` transport as scripts/users.sh, but SQL is piped over stdin so nothing need
 shell-quoting) and renders a self-contained, theme-aware HTML dashboard plus a
 compact text summary.
 
-All figures EXCLUDE the synthetic rows per memory/feedback_user_report_exclusions.md:
+All figures EXCLUDE the synthetic/seed/probe rows via the CR051 real-users
+rule — DEF403: fetched at runtime from the one canonical definition
+(`app.services.admin_analytics._real_users_clause()`, asked over the same
+docker-exec transport below, never hand-copied here):
   - 13 CR035 `last_app_version='room-benchmark'` load-test users
   - 10 seed fixtures created in the 2026-05-24 05:10 minute (no device/app)
+  - 12 CR125/DEF227-229 probe users, excluded by id (shape-indistinguishable
+    from real bare sessions)
 
 Usage:
   python3 scripts/analytics/daily_report.py [--out report.html] [--local]
@@ -27,24 +32,28 @@ from datetime import datetime, timezone
 
 TZ = "Asia/Kuala_Lumpur"
 CONTAINER = "ami_postgres"
+API_CONTAINER = "ami_api_alpha"
 DB = "ami_trade"
 DB_USER = "postgres"
 
 # "Today" as a SQL expression in Saiful's timezone. Reused across queries.
 D0 = f"(now() AT TIME ZONE '{TZ}')::date"
 
-# The synthetic-exclusion predicate (applied to the users table). Keep byte-identical
-# to feedback_user_report_exclusions.md so reports and the memory rule never drift.
-REAL_PRED = (
-    "coalesce(last_app_version,'') <> 'room-benchmark' "
-    "AND NOT (created_at >= '2026-05-24 05:10:00' "
-    "AND created_at < '2026-05-24 05:11:00' "
-    "AND device_model IS NULL AND last_app_version IS NULL)"
-)
+# The synthetic-exclusion predicate (applied to the users table). DEF403 —
+# fetched at runtime from the ONE canonical definition
+# (`app.services.admin_analytics._real_users_clause()`) via `fetch_real_pred()`
+# below, rather than hand-copied here: this script has no `app` import path
+# (it runs on the melehost host, not inside `ami_api_alpha`), so it asks the
+# container that does for the compiled SQL. Never paste a literal copy of
+# this predicate again — that is exactly the drift DEF403 found. `REAL_PRED`
+# is a placeholder token, substituted into `CTES` once `fetch_real_pred()`
+# has run (see `collect()`).
+REAL_PRED_PLACEHOLDER = "__REAL_PRED__"
 
 # Common CTEs: real users, a unioned per-user activity stream, and its day buckets.
+# `{REAL_PRED_PLACEHOLDER}` is replaced with the fetched predicate at query time.
 CTES = f"""
-real_users AS (SELECT * FROM users WHERE {REAL_PRED}),
+real_users AS (SELECT * FROM users WHERE {REAL_PRED_PLACEHOLDER}),
 activity AS (
   SELECT user_id, triggered_at AS ts FROM room_runs
   UNION ALL SELECT user_id, opened_at FROM sim_trades
@@ -74,6 +83,38 @@ def _psql_argv(local: bool, ssh_host: str) -> list[str]:
         f"psql -U {DB_USER} -d {DB} -At -F '|' -q -v ON_ERROR_STOP=1"
     )
     return ["ssh", ssh_host, exec_cmd]
+
+
+def _api_argv(local: bool, ssh_host: str) -> list[str]:
+    """Same transport shape as `_psql_argv`, targeting `ami_api_alpha` — the
+    one container with `app` on PYTHONPATH, so the canonical exclusion rule
+    can be asked for rather than hand-copied (DEF403)."""
+    cmd = ["python3", "-m", "app.services.admin_analytics"]
+    if local:
+        return ["docker", "exec", API_CONTAINER, *cmd]
+    exec_cmd = f"docker exec {API_CONTAINER} " + " ".join(cmd)
+    return ["ssh", ssh_host, exec_cmd]
+
+
+def fetch_real_pred(*, local: bool, ssh_host: str) -> str:
+    """The CR051 real-users WHERE fragment, from the one canonical source.
+
+    Asks `ami_api_alpha` to compile `admin_analytics._real_users_clause()`
+    to literal SQL (see that module's `real_users_where_sql()`/`_cli()`) —
+    never a pasted copy. Fails loudly (CR040): a transport error here must
+    not silently fall back to a stale local literal, or every report from
+    that point on would be counting probe/synthetic users as real without
+    anyone knowing.
+    """
+    proc = subprocess.run(
+        _api_argv(local, ssh_host), text=True, capture_output=True,
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+        raise RuntimeError(
+            "fetch_real_pred failed — could not reach ami_api_alpha for the "
+            f"canonical exclusion rule:\n{proc.stderr.strip()}"
+        )
+    return proc.stdout.strip()
 
 
 def query(sql: str, *, local: bool, ssh_host: str) -> list[list[str]]:
@@ -223,10 +264,15 @@ ORDER BY u.claimed_at DESC LIMIT 6;
 
 def collect(local: bool, ssh_host: str) -> dict:
     kw = {"local": local, "ssh_host": ssh_host}
-    snap = scalars(Q_SNAPSHOT, **kw)
-    eng = scalars(Q_ENGAGE, **kw)
+    real_pred = fetch_real_pred(**kw)
+
+    def resolved(q: str) -> str:
+        return q.replace(REAL_PRED_PLACEHOLDER, real_pred)
+
+    snap = scalars(resolved(Q_SNAPSHOT), **kw)
+    eng = scalars(resolved(Q_ENGAGE), **kw)
     rel = scalars(Q_RELIABILITY, **kw)
-    series = query(Q_SERIES, **kw)
+    series = query(resolved(Q_SERIES), **kw)
     return {
         "snap": snap,
         "eng": eng,
@@ -236,10 +282,10 @@ def collect(local: bool, ssh_host: str) -> dict:
              "rooms": int(r[3]), "completed": int(r[4])}
             for r in series
         ],
-        "flag_lowcomplete": query(Q_FLAG_LOWCOMPLETE, **kw),
-        "flag_claimed_idle": query(Q_FLAG_CLAIMED_IDLE, **kw),
+        "flag_lowcomplete": query(resolved(Q_FLAG_LOWCOMPLETE), **kw),
+        "flag_claimed_idle": query(resolved(Q_FLAG_CLAIMED_IDLE), **kw),
         "flag_orphans": query(Q_FLAG_ORPHANS, **kw),
-        "recent_claimed": query(Q_RECENT_CLAIMED, **kw),
+        "recent_claimed": query(resolved(Q_RECENT_CLAIMED), **kw),
     }
 
 
@@ -691,7 +737,7 @@ DOC = """<div class="wrap">
     <div class="meta">
       <div>Generated <span class="mono">{generated}</span></div>
       <div class="context">{real_total} real users · {claimed} claimed · {anon} anonymous · {suspended} suspended</div>
-      <div class="context">Synthetics excluded (13 benchmark + 10 seed) · window {window}</div>
+      <div class="context">Synthetics excluded (13 benchmark + 10 seed + 12 probe) · window {window}</div>
     </div>
   </header>
 

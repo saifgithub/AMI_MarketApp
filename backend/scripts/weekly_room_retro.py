@@ -8,10 +8,11 @@ Selection (a "due" run): room_runs with status='completed', verdict
 non-null and bucketable (APPROVE/PASS/REJECT/MODIFY), NOT the DEF059
 LLM-outage fail-safe (DEF336: an outage PASS measures provider uptime,
 not judgement), NOT indexed in backtest_run_index, owner passing the
-synthetic-user exclusion (adapted from scripts/analytics/daily_report.py
-REAL_PRED, :36-42 — keep semantically identical to
-memory/feedback_user_report_exclusions.md), and triggered_at aged
->= --min-age-days (default 7) so the 1w horizon is realizable.
+synthetic-user exclusion (DEF403: `app.services.admin_analytics.is_real_user()`,
+the one canonical definition of the CR051 rule — this script runs inside
+`ami_api_alpha` so it imports it rather than hand-copying it), and
+triggered_at aged >= --min-age-days (default 7) so the 1w horizon is
+realizable.
 
 Scoring — CR164 conventions, imported not reimplemented:
   - as_of = triggered_at's UTC calendar date; entry = adj_close at the
@@ -66,6 +67,7 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import BacktestRunIndexRow, LLMAuditRow, RoomRunRow, SimTradeRow, User
+from app.services.admin_analytics import is_real_user
 from app.services.room_runner import init_schema, is_llm_outage_verdict
 from scripts.backtest_report import (
     ACTIONS,
@@ -85,12 +87,6 @@ CORRELATION_WINDOW_S = 60
 # plus the 20-trading-day forward window, with margin.
 REFRESH_MIN_DAYS = 120
 
-# Synthetic-user exclusion — adapted from scripts/analytics/daily_report.py
-# REAL_PRED (:36-42); keep semantically identical to
-# memory/feedback_user_report_exclusions.md so reports never drift.
-_SEED_BURST_LO = datetime(2026, 5, 24, 5, 10, 0, tzinfo=timezone.utc)
-_SEED_BURST_HI = datetime(2026, 5, 24, 5, 11, 0, tzinfo=timezone.utc)
-
 
 def _as_utc(dt: datetime | None) -> datetime | None:
     """Naive stamps (sqlite) are UTC by storage convention."""
@@ -100,17 +96,17 @@ def _as_utc(dt: datetime | None) -> datetime | None:
 
 
 def is_synthetic_user(user: User) -> bool:
-    """daily_report.py REAL_PRED, inverted: room-benchmark installs plus the
-    2026-05-24 05:10 seed burst (no device, no app version)."""
-    if (user.last_app_version or "") == "room-benchmark":
-        return True
-    created = _as_utc(user.created_at)
-    return (
-        created is not None
-        and _SEED_BURST_LO <= created < _SEED_BURST_HI
-        and user.device_model is None
-        and user.last_app_version is None
-    )
+    """The CR051 real-vs-synthetic rule, inverted.
+
+    DEF403 — this used to reimplement CR035/seed-burst checks by hand and,
+    because it runs inside `ami_api_alpha` (the container `app` is
+    importable from), had no excuse not to import the canonical
+    `admin_analytics.is_real_user()` instead. The hand-copy had already
+    drifted: it never carried the 12 CR125/DEF227-229 probe-id exclusions
+    the ORM copies got, so this script's synthetic-user accounting silently
+    undercounted for as long as that copy existed.
+    """
+    return not is_real_user(user)
 
 
 def select_due_runs(

@@ -68,6 +68,56 @@ def _real_users_clause():
     )
 
 
+def real_users_where_sql() -> str:
+    """`_real_users_clause()` compiled to a literal Postgres boolean expression.
+
+    DEF403 — the CR051 lineage (`scripts/analytics/daily_report.py`,
+    `scripts/users.sh`, `backend/scripts/weekly_room_retro.py`) needs this
+    rule outside the ORM: `daily_report.py` and `users.sh` run raw SQL over
+    SSH from a host with no `app` import path, so they cannot call
+    `_real_users_clause()` directly. This is the one place the rule is
+    written down; every other site asks for its SQL rather than restating
+    it. Compiles offline (`literal_binds=True`) — no DB connection needed,
+    only the Postgres dialect's rendering of the same clause the ORM
+    filters use. Column names are bare (`users.id` → `id`) so the fragment
+    drops into a raw `WHERE` clause unqualified; callers that alias the
+    table must not need to, since every existing raw-SQL site queries
+    `users` directly.
+    """
+    from sqlalchemy.dialects import postgresql
+
+    compiled = _real_users_clause().compile(
+        dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
+    )
+    return str(compiled).replace("users.", "")
+
+
+def is_real_user(user: User) -> bool:
+    """`_real_users_clause()`, evaluated in Python against one loaded `User`.
+
+    For callers that already hold `User` rows in memory rather than
+    building a query — `inbox_store.py`'s audience resolution being the
+    motivating case (DEF403) — and would otherwise re-derive the same three
+    checks by hand. Kept semantically identical to `_real_users_clause()`
+    on purpose: same three conjuncts, same constants, just evaluated
+    client-side instead of compiled to SQL.
+    """
+    if (user.last_app_version or "") == "room-benchmark":
+        return False
+    created = user.created_at
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    if (
+        _SEED_BURST_START <= created < _SEED_BURST_END
+        and user.device_model is None
+        and user.last_app_version is None
+    ):
+        return False
+    if user.id in _EXCLUDED_USER_IDS:
+        return False
+    return True
+
+
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -247,3 +297,22 @@ def revenuecat(days: int = 30) -> dict[str, Any]:
             for et, ts in recent
         ],
     }
+
+
+def _cli() -> int:
+    """`python3 -m app.services.admin_analytics` — prints the CR051
+    real-users WHERE fragment (DEF403).
+
+    Callable from inside `ami_api_alpha` (the only place `app` is on
+    PYTHONPATH) so a host-level script — `scripts/analytics/daily_report.py`,
+    `scripts/users.sh` — can fetch the canonical rule via
+    `docker exec ami_api_alpha python3 -m app.services.admin_analytics`
+    instead of hand-copying it. No DB connection required: the clause is
+    compiled offline.
+    """
+    print(real_users_where_sql())
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_cli())
