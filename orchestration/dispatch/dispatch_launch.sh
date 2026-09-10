@@ -49,7 +49,7 @@ INSTANCE=$1; LANE=$2; TIER=$3; FANOUT=$4; shift 4; BODY=$*
 # GPU), so it costs nothing to try first, and `local` fail -> standard, never retry the same tier.
 HARNESS=claude
 case "$TIER" in
-  local)    HARNESS=kimi; MODEL="ami-vllm/qwen3.8-flash-next"; EFFORT="medium"; BUDGET=0 ;;
+  local)    HARNESS=kimi; MODEL="ami-vllm/qwen3.8-flash-next"; BUDGET=0 ;;
   economy)  MODEL="claude-haiku-4-5-20251001"; EFFORT="low";    BUDGET=2 ;;
   standard) MODEL="claude-sonnet-5";           EFFORT="medium"; BUDGET=5 ;;
   premium)  MODEL="claude-opus-4-8";           EFFORT="high";   BUDGET=10 ;;
@@ -129,7 +129,7 @@ else
 fi
 
 if [ "$HARNESS" = "kimi" ]; then
-  echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=free(local GPU)"
+  echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL)  fanout=$FANOUT  budget=free(local GPU)"
   echo "resume  kimi -r <session id printed when the run ends>"
 else
   echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=\$$BUDGET  session=$SID"
