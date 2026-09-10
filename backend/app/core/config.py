@@ -1018,6 +1018,23 @@ class Settings(BaseSettings):
     # estimate wherever it is shown.
     training_toll_option_bps: float = 50.0
 
+    # CR222 §4 — the `behaviour` block in Portfolio Health §F: annualised
+    # turnover, median holding period, attention-trade share and the Odean
+    # disposition ratio, for ANY training user (not gated on the Day Trader
+    # preset — CR131's before/after block is a separate, still-gated feature).
+    # Off by default: it adds a block to a shipped, permanently-archived
+    # report, so it goes live by a deliberate env flip like its CR222 siblings.
+    portfolio_behaviour_diagnostics_enabled: bool = False
+
+    # CR222 §4 honesty floors (CR131's, restated for the whole-population
+    # block): below the trade floor OR the elapsed-days floor the block is
+    # `too_early` with no numeric figure at all. `min_trades_for_diagnostics`
+    # counts CLOSED LOTS, not raw trade rows — an open position has no
+    # realised outcome to measure. `min_elapsed_days_for_diagnostics` is
+    # measured from the user's OWN first training trade, not from flag-on.
+    min_trades_for_diagnostics: int = 10
+    min_elapsed_days_for_diagnostics: int = 60
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

@@ -27,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_current_user
 from app.db.models import User
+from app.services.behaviour_diagnostics import build_behaviour_block
 from app.services.day_trader_outcomes import compute_day_trader_outcomes
 from app.services.health_gate import GateStatus, enforce_gate, evaluate_gate
 from app.services.journal_store import get_journal_store
@@ -243,6 +244,10 @@ async def portfolio_health_finding(
     toll = await asyncio.to_thread(
         build_toll, portfolio=p, total_value=context.get("total_value"),
     )
+    # CR222 §4 — likewise `None` while the diagnostics flag is off. No push,
+    # no alert, no streak interaction: this is a read of the user's own
+    # training ledger for THIS report, nothing more.
+    behaviour = await asyncio.to_thread(build_behaviour_block, user_id)
     result = await generate_and_persist_finding(
         user_id=user_id,
         portfolio_id=p.id,
@@ -255,6 +260,7 @@ async def portfolio_health_finding(
         gateway=get_llm_gateway(),
         passive_twin=twin,
         toll=toll,
+        behaviour=behaviour,
     )
 
     # Re-evaluated so `daily_used` includes the row just written — a client that

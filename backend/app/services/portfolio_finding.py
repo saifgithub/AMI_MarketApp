@@ -683,6 +683,92 @@ def _f3_toll(context: dict) -> str | None:
     return "\n".join(lines)
 
 
+def _f3_behaviour(context: dict) -> str | None:
+    """CR222 §4 — the measured behaviour block, generalised from CR131's Day
+    Trader before/after mirror to ANY training user.
+
+    Appended into §F3 by the same route as `_f3_passive_twin` / `_f3_toll`,
+    for the identical reason: `validate_sections` walks exactly f1–f5, so a
+    sixth section would be a block of numbers no allow-list ever checked.
+
+    CR131's honesty rules hold verbatim: `too_early` renders one refusal
+    sentence and NOTHING else — no trade count, no partial figure; `ready`
+    is numbers and their published-baseline citations, no grade, no warning,
+    no verdict.
+    """
+    block = context.get("behaviour")
+    if not isinstance(block, dict):
+        return None
+
+    if block.get("status") != "ready":
+        # `too_early` — a plain refusal, deliberately carrying nothing else:
+        # a partial number here is exactly the over-read CR131 exists to
+        # prevent (see behaviour_diagnostics.py's own docstring).
+        return (
+            "**How this book has been traded**\n"
+            "Too early to measure this user's own trading behaviour — not "
+            "enough closed trades or elapsed time since their first training "
+            "trade yet."
+        )
+
+    lines = ["**How this book has been traded**"]
+    lines.append(
+        f"Annualised turnover: {_fmt(block['turnover_pct_annualised'], 1)}% "
+        f"a year, measured over {_fmt(block['window_days'], 1)} days since "
+        f"this user's first training trade."
+    )
+    median_hold = block.get("median_holding_period_days")
+    lines.append(
+        f"Median holding period: {_fmt(median_hold, 1)} calendar days over "
+        f"closed positions."
+        if median_hold is not None else
+        "Median holding period: not measured this run (no closed lot on "
+        "record)."
+    )
+    attention = block.get("attention_trade_share_pct")
+    lines.append(
+        f"Attention-triggered buys: {_fmt(attention, 1)}% of this user's own "
+        f"buys landed within 5 trading days of a 10%-or-larger price move in "
+        f"the same ticker, or within 1 day of a Room convene on it."
+        if attention is not None else
+        "Attention-triggered buys: not measured this run (no buy on record)."
+    )
+    disposition = block.get("disposition") or {}
+    pgr, plr = disposition.get("pgr"), disposition.get("plr")
+    if pgr is not None and plr is not None:
+        lines.append(
+            f"Disposition ratio (Odean 1998): this user realised "
+            f"{_pct(pgr, 1)}% of their available gains and "
+            f"{_pct(plr, 1)}% of their available losses."
+        )
+    else:
+        lines.append(
+            "Disposition ratio: not measured this run (no priced gain or "
+            "loss, open or closed, on record)."
+        )
+    baselines = block.get("baselines") or {}
+    turnover_baseline = baselines.get("barber_odean_2000_turnover") or {}
+    disposition_baseline = baselines.get("odean_1998_disposition") or {}
+    if turnover_baseline:
+        lines.append(
+            f"Published baseline (Barber & Odean 2000): the average US retail "
+            f"household turned over "
+            f"{_fmt(turnover_baseline['average_household_annual_turnover_pct'], 1)}% "
+            f"a year; the most-active quintile "
+            f"{_fmt(turnover_baseline['most_active_quintile_annual_turnover_pct'], 1)}%."
+        )
+    if disposition_baseline:
+        lines.append(
+            f"Published baseline (Odean 1998): the measured account population "
+            f"realised "
+            f"{_pct(disposition_baseline['proportion_gains_realised'], 1)}% "
+            f"of available gains and "
+            f"{_pct(disposition_baseline['proportion_losses_realised'], 1)}% "
+            f"of available losses."
+        )
+    return "\n".join(lines)
+
+
 def _f4(context: dict) -> str:
     vol = _block(context, "portfolio_volatility")
     bets = _block(context, "effective_bets")
@@ -783,6 +869,9 @@ def render_deterministic_sections(
     toll = _f3_toll(context)
     if toll is not None:
         f3_parts.append(toll)
+    behaviour = _f3_behaviour(context)
+    if behaviour is not None:
+        f3_parts.append(behaviour)
     f3_parts.append(_f3_standing_disclosures(context))
 
     return {
@@ -852,7 +941,7 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
     # set verbatim and never at the ×100 scale, so the double-scaled reading of
     # its own number is not a token this Finding may contain.
     for key, node in context.items():
-        if key in ("metrics", "passive_twin", "toll"):
+        if key in ("metrics", "passive_twin", "toll", "behaviour"):
             continue
         for value in _numeric_leaves(node):
             _register_number(value, PCT, allow)
@@ -907,6 +996,60 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
         share = toll.get("share_of_gross_pnl_pct")
         if isinstance(share, (int, float)) and not isinstance(share, bool):
             _register_number(float(share), PCT, allow, already_percent=True)
+
+    # CR222 §4 — the behaviour block, field by field for the same reason as
+    # the twin and the toll: it mixes units. `window_days` and
+    # `median_holding_period_days` are RAW (a day count, not a percentage);
+    # `turnover_pct_annualised` and `attention_trade_share_pct` are ALREADY
+    # in percentage points; `pgr`/`plr` are FRACTIONS (Odean's own 0-1 scale)
+    # and register at the ×100 percent scale via `_register_number(...,
+    # PCT, allow)`, matching what `_f3_behaviour` actually renders (`_pct`
+    # itself multiplies by 100, so the renderer passes the raw fraction
+    # straight through — see that function). The baselines sub-dict is
+    # registered the same way: its two turnover figures are already
+    # percentage points, its two disposition figures are fractions needing
+    # ×100 — the generic leaf sweep cannot tell those apart, which is
+    # exactly why this whole
+    # block is excluded from it above.
+    behaviour = context.get("behaviour")
+    if isinstance(behaviour, dict):
+        for key in ("window_days", "closed_lot_count", "median_holding_period_days"):
+            value = behaviour.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                _register_number(float(value), RAW, allow)
+        for key in ("turnover_pct", "turnover_pct_annualised", "attention_trade_share_pct"):
+            value = behaviour.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                _register_number(float(value), PCT, allow, already_percent=True)
+        disposition = behaviour.get("disposition")
+        if isinstance(disposition, dict):
+            for key in ("pgr", "plr"):
+                value = disposition.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    _register_number(float(value), PCT, allow)
+            for key in (
+                "realised_gains_count", "paper_gains_count",
+                "realised_losses_count", "paper_losses_count",
+                "priced_lots_excluded",
+            ):
+                value = disposition.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    _register_number(float(value), RAW, allow)
+        baselines = behaviour.get("baselines")
+        if isinstance(baselines, dict):
+            turnover_baseline = baselines.get("barber_odean_2000_turnover") or {}
+            for key in (
+                "average_household_annual_turnover_pct",
+                "most_active_quintile_annual_turnover_pct",
+            ):
+                value = turnover_baseline.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    _register_number(float(value), PCT, allow, already_percent=True)
+            disposition_baseline = baselines.get("odean_1998_disposition") or {}
+            for key in ("proportion_gains_realised", "proportion_losses_realised"):
+                value = disposition_baseline.get(key)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    _register_number(float(value), PCT, allow)
 
     for block in context["metrics"]:
         percent_unit = _unit(block["metric"]) == UNIT_PERCENT
@@ -1473,6 +1616,7 @@ async def generate_and_persist_finding(
     gateway=None,
     passive_twin: dict | None = None,
     toll: dict | None = None,
+    behaviour: dict | None = None,
 ) -> FindingResult:
     """Render, validate, persist. One journal read serves both the idempotency
     check and the hysteresis state — they are the same question about the same
@@ -1494,12 +1638,19 @@ async def generate_and_persist_finding(
     `toll` (CR222 §1) rides in on exactly the same contract for exactly the same
     reasons — `None` while `TRAINING_TOLL_ENABLED` is off, and an absent key is
     what keeps a flag-off report byte-identical to the pre-CR one.
+
+    `behaviour` (CR222 §4) rides in on the identical contract — `None` while
+    `PORTFOLIO_BEHAVIOUR_DIAGNOSTICS_ENABLED` is off, and an absent key is
+    what keeps a flag-off report byte-identical to the pre-CR one. Its own
+    `too_early`/`ready` shape is CR131's, carried through unchanged.
     """
     context = build_stripped_context(metric_blocks, as_of=as_of)
     if passive_twin is not None:
         context["passive_twin"] = passive_twin
     if toll is not None:
         context["toll"] = toll
+    if behaviour is not None:
+        context["behaviour"] = behaviour
 
     prior = load_latest_finding(store, user_id, portfolio_id)
     # The prior read includes soft-deleted entries, and the two things it feeds

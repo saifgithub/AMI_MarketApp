@@ -62,6 +62,7 @@ from sqlalchemy import select
 from app.db import get_session
 from app.db.models import JournalEntryRow, SimPortfolioRow, SimTradeRow
 from app.schemas.journal import EntryType
+from app.services.behaviour_diagnostics import turnover as _shared_turnover
 from app.services.sim_engine import training_trade_scope
 
 
@@ -314,10 +315,14 @@ def _window_summary(trades: list[_Trade], days: float, starting_capital: float) 
     # migration) and stays a stable, always-available denominator; it is an
     # approximation of the literal Barber-Odean definition, not a
     # reproduction of it.
-    buy_notional = sum(t.quantity * t.entry_price for t in trades if t.side == "buy")
-    sell_notional = sum(t.quantity * t.entry_price for t in trades if t.side == "sell")
-    avg_side_notional = (buy_notional + sell_notional) / 2.0
-    turnover_pct = (avg_side_notional / starting_capital * 100.0) if starting_capital else 0.0
+    #
+    # CR222 §4 — lifted into `behaviour_diagnostics.turnover`, the single
+    # owner of this arithmetic now; called here rather than duplicated so the
+    # two modules cannot drift apart. `_Trade` here already exposes exactly
+    # the `.side`/`.quantity`/`.entry_price` the shared function reads.
+    turnover_result = _shared_turnover(
+        trades, window_days=days, starting_capital=starting_capital,
+    )
 
     annualise = DAYS_PER_YEAR / days
     realised_pnl_total = round(sum(t.realised_pnl for t in closed), 2)
@@ -327,8 +332,8 @@ def _window_summary(trades: list[_Trade], days: float, starting_capital: float) 
         "trade_count": trade_count,
         "trades_per_day": round(trade_count / days, 3),
         "trades_per_week": round(trade_count / days * 7.0, 3),
-        "turnover_pct": round(turnover_pct, 2),
-        "turnover_pct_annualised": round(turnover_pct * annualise, 2),
+        "turnover_pct": turnover_result.turnover_pct,
+        "turnover_pct_annualised": turnover_result.turnover_pct_annualised,
         "realised_pnl": realised_pnl_total,
         "realised_pnl_annualised_pct": (
             round(realised_pnl_total / starting_capital * 100.0 * annualise, 2)

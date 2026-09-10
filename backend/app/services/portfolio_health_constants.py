@@ -294,6 +294,7 @@ VALIDATOR_FIXED_RAW = {
     "11", "12",                  # the M11 / M12 BOK lesson cross-reference
     "2020", "2022",              # scenario-episode display years
     "0",                         # "no commissions, spreads, or taxes" adjacents
+    "1998", "2000",              # CR222 §4 citation years: Odean; Barber & Odean
 }
 VALIDATOR_FIXED_PCT = {
     "95",                        # 95% CI

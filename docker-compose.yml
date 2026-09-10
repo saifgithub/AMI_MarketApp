@@ -487,6 +487,13 @@ services:
       TRAINING_TOLL_BPS: ${TRAINING_TOLL_BPS:-10.0}
       TRAINING_TOLL_MIN: ${TRAINING_TOLL_MIN:-1.0}
       TRAINING_TOLL_OPTION_BPS: ${TRAINING_TOLL_OPTION_BPS:-50.0}
+      # CR222 §4 — the `behaviour` block in Portfolio Health §F (turnover,
+      # median holding period, attention-trade share, Odean disposition
+      # ratio) for any training user, and its two honesty floors. See
+      # Settings.portfolio_behaviour_diagnostics_enabled and its neighbours.
+      PORTFOLIO_BEHAVIOUR_DIAGNOSTICS_ENABLED: ${PORTFOLIO_BEHAVIOUR_DIAGNOSTICS_ENABLED:-false}
+      MIN_TRADES_FOR_DIAGNOSTICS: ${MIN_TRADES_FOR_DIAGNOSTICS:-10}
+      MIN_ELAPSED_DAYS_FOR_DIAGNOSTICS: ${MIN_ELAPSED_DAYS_FOR_DIAGNOSTICS:-60}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
