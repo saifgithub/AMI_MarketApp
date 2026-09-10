@@ -14,7 +14,8 @@ from uuid import UUID, uuid4
 from app.db import get_session
 from app.db.models import User, UserDeviceRow
 from app.schemas.messages import Audience
-from app.services.inbox_store import EXCLUDED_USER_IDS, resolve_audience
+from app.services.admin_analytics import _EXCLUDED_USER_IDS as EXCLUDED_USER_IDS
+from app.services.inbox_store import resolve_audience
 
 
 def _make_user(
