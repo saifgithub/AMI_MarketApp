@@ -243,6 +243,7 @@ Zero new network, zero new dependency. This is the R33/R34/R35 shape, five more 
 | **A2 D1 D2** captive split, segment and geographic revenue (A4 fixed/floating was routed here too and closed in the build — §4f) | **Not `companyfacts`** (§6). The filing's own rendered reports, indexed by `FilingSummary.xml` on the same host — **built 2026-09-11 one step short of that**, from the extracted XBRL instance the R-pages are rendered from (§5, slot 4). | CAT 10-K `0000018230-26-000008` (filed 2026-02-13): `R106.htm` long-term debt by *Machinery, Power & Energy* vs. Financial Products; `R108.htm` the ladder; `R129.htm` disaggregation of revenue; `R136.htm` geographic areas. |
 | **A3** cost of debt | `InterestExpense` (income statement) and `InterestPaidNet` (cash-flow supplemental), over EDGAR gross debt — both legs from one store at one `as_of`. **Not** the yfinance row §4a first assumed. | **This premise was probed and failed, which is DEF399.** CAT's FY2025 income statement (`R3.htm`) carries *Interest expense of Financial Products* $1,359M **plus** *excluding Financial Products* $502M = **$1,861M**; yfinance's four quarters sum to **$529M**, 28% of it, because the finance arm's interest is booked inside cost of revenue. GM reads 0.17x against its own `us-gaap:InterestExpense`. CAT tags **no** income-statement interest concept in `companyfacts` (dimensional lines again — §6 on a second item), so it resolves on cash interest or not at all. Where the two bases disagree >2x (HOG $31M vs $331M, F $7,613M vs $3,501M) the honest output is **absence**, not the friendlier number. |
 | **I1** executive-change detail | The submissions JSON tags every filing with its 8-K **item codes**; `5.02` is *"Departure of Directors or Certain Officers; Election of Directors; Appointment of Certain Officers"*. Fetch that document when the code is present. | CAT's 2026-04-10 8-K (`0001104659-26-042062`) states it outright: **Kyle Epley, 53, appointed CFO effective 2026-05-01, succeeding Andrew R.J. Bonfield, who remains an employee through retirement on 2026-10-01.** That is *exactly* the question the News Analyst asked in 5 of 7 convenes — and once tagged `ABSENT (only the aggregated headline text was provided)`. It was in a filing we already download. |
+| **A6** captive funding cost / finance-arm NIM — *surfaced by round 3 (§7.10), outside the 127-line census; the §1 totals are unchanged* | The same extracted-instance route as slot 4: the arm's interest expense is a dimensional fact on the finance member, annual in the 10-K and quarter + YTD in each 10-Q. **Not `companyfacts`** — CAT's `companyconcept` for `FinancingInterestExpense` answers 404. | **Four captive filers probed 2026-09-11** (latest 10-K + latest 10-Q each). **Funding cost: CAT, F, PCAR feasible** — CAT `FinancingInterestExpense` × `FinancialProductsMember` FY2025 $1,359M (Q2-26 $362M vs Q2-25 $336M), over finance-arm debt filed at both year-ends ($29,799M → $32,617M as three components); F `InterestExpenseOperating` × `FordCreditMember` FY2025 $7,133M over $137,868M → $141,417M; PCAR on a **custom tag** `pcar:InterestAndOtherBorrowingExpense` FY2025 $783.0M, and PCAR files the rate itself (4.5% effective on FS debt, 10-K only). **DE partial**: the numerator is filed (`InterestExpenseOperating` × FS segment, FY2025 $2,923M) but no captive-side debt is tagged on any axis — only FS segment assets ($70,300M) or John Deere Capital's own filings (CIK 27673, not fetched). **NIM: not sourceable for CAT, DE, F** — none files an interest-income concept for the arm (CAT bundles it in *Revenues of Financial Products* $3,609M; F's only `InvestmentIncomeInterest` $357M is cash interest and would misstate a NIM by an order of magnitude); PCAR alone files `InterestAndFeeIncomeLoansAndLeases` $1,428.7M. One 10-K + one 10-Q yield **2** discrete quarters (current and prior-year twin), no 10-K carries a 90-day context and no filer files Q4, so four consecutive quarters need three 10-Qs plus a subtraction. A build extends the instance-tag allowlist and adds a custom-taxonomy path for PCAR; a line would state *interest expense ÷ average finance-arm debt, FY* with both instants named, never a NIM. |
 
 ### 4c · Free, reliable, no API key, new call — 4 items
 
@@ -499,7 +500,7 @@ F $141,417M / $21,919M, DE UNAVAILABLE, all to the dollar against the Mac; AAPL 
 geography 100%, NVDA's two segments 100%. PCAR is not in the 150-ticker universe, so its
 captive-only shape exists on the Mac's smoke only. **All three flags remain OFF.**
 
-### Slot 2 built — I1 from 8-K Item 5.02 (2026-09-11, `785a6611`)
+### Slot 2 built — I1 from 8-K Item 5.02 (2026-09-11, `98e1b36f`)
 
 Register item I1, "Executive-change detail (identity, background, circumstance)": 5 request lines
 from one agent, the News Analyst, all on CAT's CFO transition. §4b's route is now code —
@@ -576,7 +577,7 @@ scratch sqlite): CAT and F both resolve — CAT to the Epley/Bonfield filing, F 
 **The flag stays OFF until the §7.3 citation-rate rig runs**; `replay.py` has the `exec` arm, and
 the CAT pickles must be rebuilt after the ingest (R46: a rebuild moves every other live field).
 
-**Review round (2026-09-11).** Four MAJOR findings against `785a6611`, all of one shape — a line
+**Review round (2026-09-11).** Four MAJOR findings against `98e1b36f`, all of one shape — a line
 that states something the data behind it cannot vouch for — plus the MINORs that were cheap:
 
 - *An unreadable index read as a quiet filer.* `select_502_filings` returned `[]` for a submissions
@@ -614,6 +615,36 @@ that states something the data behind it cannot vouch for — plus the MINORs th
   verbatim quote. Not fixed: the single-capital abbreviation guard (harmless, never lengthens an
   excerpt); the CR219 guard cannot see flag-gated store-backed lines by construction — the pin
   stays in this slot's test file.
+
+**Review rounds 2 and 3 (2026-09-11, `c25fee09`, `d6c364c2`).** Two more refuting passes, each
+of two lenses, each landing MAJORs that were real and evidenced by a run:
+
+- *Round 2.* A submissions JSON with every column present and **zero rows** (the shape
+  `filings.files` pagination produces) read as a quiet filer — now `IndexUnreadable`, no scan
+  row. A filer that heads its sub-items separately ("Item 5.02(b) Departure …", then "Item
+  5.02(c) Appointment …") was cut at the second sub-heading and the truncated departure labelled
+  complete — the terminator now excludes the section's own code. The hidden-text filter was
+  narrower than the module claimed — it is now **exactly the stated list** (inline and
+  `<style>`-bound class/id rules), with colour, external stylesheets, layout and compound
+  selectors named as what it does not detect. The excerpt is bracketed `⟦filing text begins⟧ …
+  ⟦filing text ends⟧` with those glyphs stripped from the filing text, because a plain `"` in a
+  filing closed an ASCII quotation and let the rest read as sheet prose. Aging warn at 30 days;
+  a backtest `as_of` before the scan's window names the store, not a re-run; `has_item` deleted.
+- *Round 3.* The round-2 filter matched CSS property names as **substrings**: `border-width:0`,
+  `min-height:0`, `line-height:0` with `overflow:hidden`, and `backface-visibility:hidden` — the
+  CSS EDGAR puts on visible table cells (`border-width: 0` is in the AAPL fixture) — dropped
+  filing prose the line then labelled complete. Every property regex now carries a left boundary.
+  And the round-2 terminator exclusion had undone the documented pass-over of a line-start
+  reference ahead of the real heading ("Item 5.02 of Form 8-K applies."): the section started
+  at the reference and swallowed the heading. A 5.02 match with no body line of its own before
+  another 5.02 heading is now passed over; a sub-item heading, whose body is on the next line,
+  still starts the section. Cheap MINORs with it: `opacity:.0`/`0%` hide, margin offsets count
+  as off-screen, a rule inside an `@media` block is not read (stated), and a sentence opening
+  "Signature Bank …" no longer terminates the section. The three real fixtures are
+  byte-identical before and after both rounds (AAPL 1,726 · CAT 2,216 · GOOGL 1,130 chars).
+
+Merged onto `main` as `98e1b36f`…`d6c364c2`; 268 tests green across the I1 file and the guards.
+Audit lane `CR221-SLOT2` follows.
 
 ---
 
@@ -1155,11 +1186,12 @@ does not move. `room_segment_revenue_enabled` is weakly supported (one of four a
 OFF until a ticker whose story *is* geographic (a China-exposed name, say) is measured. The
 flips are Saiful's call; none is made here.
 
-**Candidate item, unmeasured.** The successor ask — the captive arm's interest expense and
-net interest margin by quarter, five asks in one convene — would be **A6** in the register.
-The same extracted-instance route that produced A2 carries *Financial Products* segment
-interest expense as a dimensional fact on CAT's 10-Q; whether it does for other captive
-filers is not measured and is not claimed.
+**Candidate item — measured the same night.** The successor ask — the captive arm's interest
+expense and net interest margin by quarter, five asks in one convene — is **A6**, probed on
+four captive filers' latest 10-K and 10-Q instances (§4b, A6 row): the funding-cost side is
+feasible for CAT, F and PCAR and partial for DE (no captive-side debt tagged); the NIM side is
+not sourceable for CAT, DE or F, because none files an interest-income concept for the arm.
+Not built; not in the §1 totals, which count the original 127-line census.
 
 **One line for another lane.** In both arms the FCF figure agents cite is the vendor
 `$5,049M` / `200% of FCF` (5 of 12 agents in `off`); the filed `$8,994M` / `112%` sits on the

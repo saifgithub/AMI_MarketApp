@@ -64,6 +64,10 @@ SHIPPED = {
                     r"12\.2\s?B", r"Power Energy", r"Construction Industries", r"Resource Industries"]),
     "D2": ("dims", [r"36,609", r"12,793", r"11,199", r"6,988", r"36\.6\s?B", r"12\.8\s?B",
                     r"11\.2\s?B", r"North America \$", r"EMEA", r"Asia Pacific", r"Latin America"]),
+    # Slot 2 (I1), from the builder's rendered line on the CAT 8-K of
+    # 2026-04-10: the names and the item code are the filing's, the $B blind
+    # spot does not apply to prose.
+    "I1": ("exec", [r"Epley", r"Bonfield", r"Item 5\.02", r"8-K filed 2026-04-10", r"0001104659-26-042062"]),
 }
 
 # DEF400 is not a new line — it MOVES one — so it is counted both ways.
