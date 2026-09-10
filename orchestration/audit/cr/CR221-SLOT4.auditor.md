@@ -388,3 +388,114 @@ necessarily a fix. Everything else in slot 4 is done: the resolvers, the refusal
 persona change, the R38 retirement, and now the aggregate filter's own test.
 
 VERDICT: AWAITING_FIXES (round 2)
+
+---
+
+# Round 3 — MAJOR-2 closed at source
+
+**SHA audited:** `083b8918`, fresh detached worktree created by this instance
+(`.claude/worktrees/audit-CR221-SLOT4-r3-u66`), clean at checkout. The diff from `48865a32`
+touches two test files and the lane files — no production code.
+
+## VERDICT: COMPLETE (round 3)
+
+**0 BLOCKER · 0 MAJOR · 0 MINOR.**
+
+All four round-1 findings are closed. MAJOR-2 was dispositioned as option 1 — fixed here, on
+the stated ground that `64ee4051` was this lane's own commit — and the fix is better than the
+minimum that would have cleared the red.
+
+## MAJOR-2 — verified closed, and the fix strengthens what it touches
+
+```
+tests/unit/test_cr216_test_selection.py  +  tests/unit/test_def405_suite_verdict_gate.py
+22 passed in 12.79s        PYTEST_EXIT=0
+```
+
+**The DEF405 test got stronger, not weaker.** This is the check that mattered: a test edited to
+escape a collision is usually a test quietly narrowed. It is the opposite here. The old
+assertion was a string match — `".deliveryos/*" in .gitignore.read_text().splitlines()`. The new
+one asks git the real question. My mutation U-M6 appended a negation rule un-ignoring the
+record:
+
+```
+$ printf '\n!.deliveryos/suite_verdict.json\n' >> .gitignore
+$ git check-ignore -q .deliveryos/suite_verdict.json   -> rc=1  (NOT ignored)
+old assertion  ('.deliveryos/*' still present)         -> would PASS
+new assertion  (test_the_record_lives_where_git_ignores_it) -> FAILED
+```
+
+So the string-match version was blind to a live hole — a later negation rule un-ignoring the
+verdict record, which is exactly the state where the gate dirties the tree it measures. The
+replacement catches it. The finding's fix improved the guard it was filed against.
+
+**The CR216 fixture now fails loudly, as claimed.** U-M8 named every candidate basename under
+`mobile/ios/` inside a test file. The fixture did not invert; it raised
+
+```
+AssertionError: no tracked non-Python file under mobile/ios/ is unnamed by tests/:
+  mobile/ios/.gitignore is named by test_def405_suite_verdict_gate.py;
+  mobile/ios/ExportOptions.plist is named by test_def405_suite_verdict_gate.py,
+    test_def296_games_build_containment.py; … (44 candidates, each with its culprit)
+```
+
+That is the DEF135 shape corrected in the right direction: a guard that says why it cannot run
+instead of silently returning the wrong answer. I also confirmed the ordinary path — a single
+collision makes the fixture *skip* that candidate and continue (`.gitignore` colliding now, it
+picks `AppFrameworkInfo.plist`), so one collision costs nothing and total collision is loud.
+
+**Path-aware attribution was correctly NOT done here.** I said in round 1 that basename
+attribution is the real defect; the submission agrees and routes it to CR216's own lane rather
+than changing selector semantics inside a CR221 slot. That is the right call — it is a
+behaviour change to a shared tool, and it does not belong in this lane's diff.
+
+## No regression in the round-2 fix
+
+U-M1 re-applied at `083b8918`: `1 failed, 28 passed` — MAJOR-1's guard still kills it.
+
+## Full suite on `083b8918`
+
+```
+1 failed, 6469 passed, 9 skipped, 21 warnings in 1092.16s (0:18:12)
+PYTEST_EXIT=1
+```
+
+**Both CR216 failures are gone.** The single remaining failure is the `.claude`-path artifact
+this verdict has recorded since round 1, and it is mine, not the lane's — confirmed once more by
+running that file in the main checkout, outside any worktree:
+
+```
+tests/unit/test_def403_exclusion_single_source.py   6 passed   PYTEST_EXIT=0
+```
+
+Effective result at the submitted SHA: **6469 passed, zero real failures.**
+
+The architect's own gate record (`preflight_suite.sh` run bare, verdict read from the DEF405
+JSON rather than a task exit code) reports `PASS, 6470 passed, 0 failed`. My count is one lower
+because the DEF403 test cannot pass from a `.claude/worktrees/` path; the two runs agree.
+
+## What I am NOT re-litigating
+
+Rounds 1 and 2 settled these and nothing in round 3 disturbs them: the five judgement calls
+(all sustained), the R38 guard retirement (correct — it fired as its own entry promised), the
+resolvers' refusals, the persona change, MINOR-1's arithmetic and MINOR-2's recovery paragraph.
+
+## One note for the record, not a finding
+
+The round-3 section explains the round-2 omission as a reading-discipline failure: the round-1
+verdict carried a full-suite placeholder when it was read, and MAJOR-2 was appended after. That
+is accurate — I wrote the placeholder and filled it later in the same session, and the lane's
+account matches what happened on my side. Worth stating plainly because the alternative reading
+(a finding quietly dropped) is the one a reader would otherwise reach, and it would be wrong.
+
+The process lesson runs the other way too: a verdict file with a placeholder in it is a verdict
+that can be read half-finished. Future rounds from this instance will fill the suite result
+before the file is committed, not after.
+
+---
+
+**Round 3 verdict: COMPLETE.** Slot 4 ships: A2 debt split, D1 segment revenue, D2 geographic
+revenue, all three flags default-off and compose-forwarded, A4 closed with its reason recorded.
+Four findings filed, four closed, two of them with fixes stronger than the ask.
+
+VERDICT: COMPLETE (round 3)
