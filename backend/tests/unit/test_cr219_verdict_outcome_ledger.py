@@ -242,6 +242,155 @@ def test_rebank_same_run_updates_not_duplicates() -> None:
     assert rows[0].verdict_action == VerdictAction.PASS.value
 
 
+# ── 2b. DEF401 — check-then-INSERT race under uq_verdict_outcomes_room_run ──
+
+class _BlindSelectOnce:
+    """Session proxy whose FIRST `verdict_outcomes` SELECT reports nothing.
+
+    Reproduces the real read-to-commit gap P15 describes: the pre-check
+    SELECT lands before the other writer's commit, so the function takes its
+    INSERT path and meets the real UNIQUE constraint — the same idiom
+    `test_def220_check_then_insert_outcomes.py` uses (`_BlindSelectOn`),
+    reused here because `bank_verdict_outcome` opens its own session the same
+    way `save_new_version` does. Deterministic, not a thread race: the
+    auditor measured 0 races in 60 trials on this stack because one uvicorn
+    holds an invariant nobody wrote down — threads would be flaky-green for
+    the same reason the bug was invisible.
+    """
+
+    def __init__(self, session):
+        self._s = session
+        self._blinded = False
+
+    def execute(self, stmt, *a, **k):
+        if not self._blinded and "verdict_outcomes" in str(stmt) and "SELECT" in str(stmt):
+            self._blinded = True
+
+            class _Empty:
+                def scalar_one_or_none(self):
+                    return None
+
+            return _Empty()
+        return self._s.execute(stmt, *a, **k)
+
+    def __getattr__(self, name):
+        return getattr(self._s, name)
+
+
+def test_a_lost_bank_race_returns_the_winners_row(monkeypatch) -> None:
+    """The loser of `uq_verdict_outcomes_room_run` reads back the winner's row.
+
+    DEF401: the docstring's own contract is "Idempotent per run" and the
+    caller only wants the row id, so a lost race is not a failure — it must
+    behave exactly like a normal re-bank hit, not like the `verdict_outcome_
+    bank_failed` path the blanket `except Exception` used to send it down.
+
+    Log assertion recorded off a stand-in logger rather than `caplog` — the
+    module logs via `structlog`, whose stream configuration other tests in
+    the suite can change, matching `test_def335_share_basis_restatement.py`'s
+    stated reason for the same choice.
+    """
+    import contextlib
+
+    import app.services.verdict_outcomes as vo_mod
+
+    uid = _mk_user()
+    rid = _mk_run(uid)
+
+    with get_session() as s:  # the winner, committed before we run
+        s.add(VerdictOutcomeRow(
+            room_run_id=rid, user_id=uid, ticker="AAPL",
+            verdict_action=VerdictAction.APPROVE.value,
+            reference_price=100.0, reference_at=datetime.now(timezone.utc),
+            horizon_days=63, status=vo.STATUS_PENDING,
+        ))
+
+    real_get_session = vo_mod.get_session
+
+    @contextlib.contextmanager
+    def _blinded_session():
+        with real_get_session() as s:
+            yield _BlindSelectOnce(s)
+
+    monkeypatch.setattr(vo_mod, "get_session", _blinded_session)
+
+    seen: list[dict] = []
+
+    class _Recorder:
+        def info(self, event, **kw):
+            seen.append({"event": event, **kw})
+
+        def warning(self, event, **kw):
+            seen.append({"event": event, **kw})
+
+    monkeypatch.setattr(vo_mod, "logger", _Recorder())
+
+    result = _bank(uid, rid, _verdict(VerdictAction.PASS))
+
+    assert result is not None, "a lost race must not return None"
+
+    rows = _rows()
+    assert len(rows) == 1, "the constraint held but a duplicate row appeared"
+    assert rows[0].id == result
+    assert rows[0].verdict_action == VerdictAction.PASS.value, (
+        "the loser's update was dropped instead of being applied to the "
+        "winner's row"
+    )
+
+    assert not [e for e in seen if e["event"] == "verdict_outcome_bank_failed"], (
+        f"a lost race must not be logged as verdict_outcome_bank_failed; got {seen}"
+    )
+
+
+def test_a_lost_bank_race_on_a_fresh_run_also_returns_the_winners_row(
+    monkeypatch,
+) -> None:
+    """Same race, but the winner's row is brand new rather than a re-bank.
+
+    Covers the branch where the pre-check SELECT misses AND the winner's row
+    did not exist before this test started — the exact shape `bank_
+    verdict_outcome` hits on two concurrent FIRST banks of the same run. The
+    winner commits through a separate, already-closed session first (the same
+    "committed before we run" structure `test_def220_check_then_insert_
+    outcomes.py::test_a_device_that_loses_the_race_still_re_keys_its_owner`
+    uses) — `_BlindSelectOnce` still forces our own pre-check to miss it.
+    """
+    import contextlib
+
+    import app.services.verdict_outcomes as vo_mod
+
+    uid = _mk_user()
+    rid = _mk_run(uid)
+
+    with get_session() as winner_s:  # the winner, committed before we run
+        winner_row = VerdictOutcomeRow(
+            room_run_id=rid, user_id=uid, ticker="AAPL",
+            verdict_action=VerdictAction.APPROVE.value,
+            reference_price=100.0, reference_at=datetime.now(timezone.utc),
+            horizon_days=63, status=vo.STATUS_PENDING,
+        )
+        winner_s.add(winner_row)
+        winner_s.flush()
+        winner_id = winner_row.id
+
+    real_get_session = vo_mod.get_session
+
+    @contextlib.contextmanager
+    def _blinded_session():
+        with real_get_session() as s:
+            yield _BlindSelectOnce(s)
+
+    monkeypatch.setattr(vo_mod, "get_session", _blinded_session)
+
+    result = _bank(uid, rid, _verdict(VerdictAction.PASS))
+
+    assert result is not None
+    assert result == winner_id
+    rows = _rows()
+    assert len(rows) == 1
+    assert rows[0].verdict_action == VerdictAction.PASS.value
+
+
 def test_held_back_hook_expression_is_valid_verbatim(base_mandate) -> None:
     """The room_runner hook's exact call, proven before it is applied.
 

@@ -57,6 +57,7 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
@@ -242,6 +243,21 @@ def bank_verdict_outcome(
         else:
             status, reason = STATUS_PENDING, None
 
+        def _apply_update(existing: VerdictOutcomeRow) -> None:
+            # A re-persist of the same run (the Room upserts) must update,
+            # never duplicate — and must never un-score a scored row.
+            if existing.status != STATUS_SCORED:
+                existing.verdict_action = str(action)
+                existing.conviction = conviction_bucket(approve_votes, samples)
+                existing.approve_votes = approve_votes
+                existing.samples = samples
+                existing.size_pct = getattr(verdict, "size_pct", None)
+                existing.reference_price = reference_price
+                existing.reference_at = ref_at
+                existing.horizon_days = h_days
+                existing.status = status
+                existing.exclusion_reason = reason
+
         with get_session() as s:
             existing = s.execute(
                 select(VerdictOutcomeRow).where(
@@ -249,19 +265,7 @@ def bank_verdict_outcome(
                 )
             ).scalar_one_or_none()
             if existing is not None:
-                # A re-persist of the same run (the Room upserts) must update,
-                # never duplicate — and must never un-score a scored row.
-                if existing.status != STATUS_SCORED:
-                    existing.verdict_action = str(action)
-                    existing.conviction = conviction_bucket(approve_votes, samples)
-                    existing.approve_votes = approve_votes
-                    existing.samples = samples
-                    existing.size_pct = getattr(verdict, "size_pct", None)
-                    existing.reference_price = reference_price
-                    existing.reference_at = ref_at
-                    existing.horizon_days = h_days
-                    existing.status = status
-                    existing.exclusion_reason = reason
+                _apply_update(existing)
                 return existing.id
 
             row = VerdictOutcomeRow(
@@ -279,8 +283,33 @@ def bank_verdict_outcome(
                 status=status,
                 exclusion_reason=reason,
             )
-            s.add(row)
-            s.flush()
+            try:
+                with s.begin_nested():
+                    s.add(row)
+                    s.flush()
+            except IntegrityError:
+                # DEF401 — `uq_verdict_outcomes_room_run`: another caller's
+                # read-to-commit window overlapped ours and it won. The
+                # docstring's contract is "Idempotent per run" and the caller
+                # only wants the row id, so the loser reads back the winner's
+                # row and takes the same found-row path a normal hit takes —
+                # this is not a failure, so it must not log
+                # `verdict_outcome_bank_failed` or return None.
+                logger.info(
+                    "verdict_outcome_bank_race_lost", run_id=str(room_run_id),
+                )
+                existing = s.execute(
+                    select(VerdictOutcomeRow).where(
+                        VerdictOutcomeRow.room_run_id == room_run_id
+                    )
+                ).scalar_one_or_none()
+                if existing is None:
+                    # The constraint fired, so a row must exist; a miss here
+                    # means something stranger than a race. Let the outer
+                    # blanket handler log and swallow it rather than guessing.
+                    raise
+                _apply_update(existing)
+                return existing.id
             return row.id
     except Exception as exc:  # noqa: BLE001 — see docstring
         logger.warning(
