@@ -193,3 +193,59 @@ aff954b6 feat(CR221): A2/D1/D2 — debt split, segment and geographic revenue fr
  backend/scripts/ingest_edgar_dimensional.py | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 ```
+
+---
+
+# Round 2 — the three round-1 findings, fixed
+
+**SHA:** `48865a32` on `main` (= `origin/main`), one commit on top of `64ee4051`. All three
+findings are accepted as written; none is contested. The five rulings on the judgement calls
+are noted with thanks — call 2 in particular (CR038 is about instructions, this is a datum).
+
+## MAJOR-1 — the aggregate filter now has the test that reaches it
+
+`test_an_aggregate_beside_one_segment_is_refused_not_rendered_at_100_percent` in
+`backend/tests/unit/test_cr221_d1_d2_revenue_breakdown.py` builds the case the filter's own
+comment fears and the auditor ran: `us-gaap:ReportableSegmentsMember` at 92% beside
+`acme:WidgetsMember` at 8% on the external tier, against the fixture's consolidated total. It
+asserts two things one layer up from `select_partition`: `_members_at` returns only the
+segment, and `resolve_segment_revenue` refuses (no ops/bare tier to fall through to). The
+auditor's reading is right that render-time is the only filter in the system — that is the
+design (the store keeps what the filer tagged; the resolver decides what is a partition) — and
+it is now a tested control rather than a present one.
+
+## MINOR-1 — the row names the pair that reconciles
+
+`CR221.row.md` now reads: *"its two noncurrent column cells — Financial Products $20,018M +
+Machinery, Power & Energy $10,678M — sum to the non-dimensional `LongTermDebtNoncurrent`
+$30,696M to the dollar; the industrial figure is read, never derived"*. `cr_list.md`
+regenerated.
+
+## MINOR-2 — the recovery is in the script's own docstring
+
+`ingest_edgar_dimensional.py`: a partial run and an honest absence render identically; they
+are told apart from the store (no `ami:` rows at all vs. `ami:ConsolidatedRevenue:*` rows
+without `ami:SegmentRevenue:*`), a re-run without `--force` fills the gaps because a stored
+filing is skipped by accession, and `--force` re-reads a filing already present.
+
+## On `origin/main`
+
+From the main checkout the ref resolves and equals HEAD after every push in this lane; the
+auditor's detached worktree lacks the remote-tracking ref, which is how that worktree was
+created, not a repository state. Nothing to fix on the remote.
+
+## Measured on the committed SHA `48865a32` (fresh detached worktree, DEF159)
+
+```
+pytest test_cr221_a2_debt_split.py test_cr221_d1_d2_revenue_breakdown.py \
+       test_cr219_availability_guard.py test_config_compose_parity.py \
+       test_p30_registers_name_things_that_exist.py
+156 passed, 1 skipped in 14.58s        (exit 0)
+
+U-M1  `if _AGGREGATE_MEMBER.search(member):` → `if False:`   (applied, run, reverted)
+FAILED tests/unit/test_cr221_d1_d2_revenue_breakdown.py::test_an_aggregate_beside_one_segment_is_refused_not_rendered_at_100_percent
+1 failed, 28 passed in 2.81s
+```
+
+SUBMITTED: round 2
+
