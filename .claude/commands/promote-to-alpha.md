@@ -141,6 +141,15 @@ user clears a hold, and only against the precondition the hold names.
   containing only the word *passed*, and that is exactly how
   `alpha-2026-08-17-1` shipped on a red suite. If it prints FAIL it also prints
   every FAILED and ERROR node id; fix or stop. There is no `--force`.
+- **Run the gate bare — never through a pipe, a background task, or anything that
+  reports its own exit code (DEF405, 2026-09-11).** `preflight_suite.sh | tail -25` in
+  a background task returned *tail's* 0, the operator read "completed (exit code 0)",
+  and `alpha-2026-09-11-1` shipped on a suite that had printed `VERDICT: FAIL`. The
+  gate now also writes `.deliveryos/suite_verdict.json` (verdict, the commit captured
+  before the run, target, counts, time), and step 7c's `suite` check fails the
+  promotion if that record is missing, stale, partial, for another commit, or not
+  PASS — so the wrapper can swallow the exit code but not the record. Do not commit
+  between the gate and the tag: the record names the commit it tested.
 - flutter analyze must exit 0. The pre-existing
   `assets/icons/ doesn't exist` warning is OK; only block on real
   issues. (If `flutter` isn't installed or available at the path, ask
@@ -475,7 +484,7 @@ python3 scripts/promotion/postflight.py \
   --expect-sha "${GIT_SHA}" --expect-tag "${ALPHA_TAG}"
 ```
 
-Five checks, one exit code:
+Six checks, one exit code:
 
 | check | what it answers | why it exists |
 |---|---|---|
@@ -484,6 +493,7 @@ Five checks, one exit code:
 | `readiness` | `/v1/ready`: DB, schema at head, LLM resolved | DEF215's outage state is one `/v1/health` returns 200 for |
 | `config` | every populated key in `infra/alpha.env` reads `configured: true` | DEF038, DEF063 — the set-diff no human performs reliably |
 | `market` | quote source is not `mock_walk` | a silent fall-through to a random walk |
+| `suite` | did `preflight_suite.sh` record PASS, on this commit, for the whole suite, within 6h? (runs first, local) | DEF405 — the gate's exit code was consumed by a `\| tail` in a background task and a red suite shipped; the record survives the wrapper |
 
 **Exit codes are three, not two, and the distinction is load-bearing:**
 

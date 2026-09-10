@@ -2105,3 +2105,42 @@ The general control is the question P11 asks, sharpened: **"how many places
 implement this rule" is not resolved by finding out and writing a comment that
 says so — it is resolved only when N-1 of them stop implementing it and start
 asking the one that does.**
+
+## P35 — a gate's exit code consumed by the wrapper that ran it
+
+**Class:** a check that correctly ends in an exit code, run through something
+that reports its *own* exit code — a pipe, a background task, a `$(...)`
+substitution, a CI step with `|| true` — so the operator reads the wrapper's
+green and the gate's red never reaches anyone.
+
+**Instances.** DEF326 (2026-08-17): the suite gate was prose plus a bare
+`pytest`, the operator read the pass count, `alpha-2026-08-17-1` shipped on 54
+errors. The fix made the gate a script that ends in a VERDICT line and an exit
+code. DEF403's row link (2026-09-11) then failed that gate, and **DEF405**: the
+gate was run as `preflight_suite.sh | tail -25` in a background task, the task
+reported *tail's* exit 0, the operator read "completed (exit code 0)", and
+`alpha-2026-09-11-1` shipped on a suite that had printed `VERDICT: FAIL`. HEAD
+had also moved during the twenty-minute run, so the gate had not even tested
+the commit that was tagged.
+
+**Why the previous guard failed.** DEF326 made the gate *produce* a signal
+nobody could misread. It did not make the signal *arrive*: an exit code is a
+property of a process, and every wrapper between the process and the operator
+replaces it with its own. The operator's habit — "read the exit code, not the
+summary" — was exactly right and was applied to the wrong process. A guard that
+depends on the operator running it unwrapped is a prompt instruction, and
+prompt instructions are not controls.
+
+**What generalises.** The gate must leave a record that survives its caller,
+and something the operator *does* read must consume that record. Here: the gate
+writes `.deliveryos/suite_verdict.json` — verdict, the commit captured *before*
+the run, the target, the counts, the time — at every exit path; and
+`postflight.py`, whose exit code was read that night, gained a `suite` check
+that fails the promotion when the record is missing, stale, partial, for another
+commit, or not PASS. The wrapper can still swallow the exit code. It cannot
+swallow the file, and the promotion now ends red instead of green.
+
+**Enforcing check:** `backend/tests/unit/test_def405_suite_verdict_gate.py` —
+pins that every `exit` in the gate script is preceded by a `record_verdict`,
+that the commit is captured before the suite runs, and that the postflight check
+names every non-green state and runs first in the driver.

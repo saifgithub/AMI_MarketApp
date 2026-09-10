@@ -45,6 +45,9 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ALPHA_ENV = _REPO_ROOT / "infra" / "alpha.env"
 _DEFAULT_BASE = "https://api-alpha.agenticmarketintel.ai"
+_SUITE_VERDICT = _REPO_ROOT / ".deliveryos" / "suite_verdict.json"
+_FULL_SUITE_TARGET = "backend/tests/unit/"
+_SUITE_VERDICT_MAX_AGE_H = 6
 
 # Keys that live in the env file and are legitimately NOT `Settings` fields.
 #
@@ -343,6 +346,56 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
     return problems
 
 
+def check_suite_verdict(path: Path, expect_sha: str, *, now: float | None = None,
+                        max_age_h: float = _SUITE_VERDICT_MAX_AGE_H) -> list[str]:
+    """DEF405 — was the suite gate green, on THIS commit, for the WHOLE suite?
+
+    `preflight_suite.sh` ends in an exit code, and on 2026-09-11 that exit code
+    was consumed by the `| tail` of a background task: the operator read
+    "completed (exit code 0)" and promoted alpha-2026-09-11-1 on a suite that
+    had printed `VERDICT: FAIL` — the third DEF326-shaped instance. The gate
+    therefore also writes its verdict to a file, stamped with the commit it
+    measured, and this check reads it after the deploy. A wrapper can swallow
+    an exit code; it cannot swallow a record. Failing, not COULD NOT RUN, on a
+    missing file: "the gate never ran" is a failed promotion, not an unknown.
+    """
+    import datetime as _dt
+    import time as _time
+
+    if not path.exists():
+        return [f"no suite verdict at {path} — preflight_suite.sh did not run "
+                "before this promotion (or ran from another checkout). The suite "
+                "gate is step 1; a promotion without it is a promotion on nothing."]
+    try:
+        rec = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [f"suite verdict at {path} is unreadable ({exc}) — treat as no gate"]
+    problems: list[str] = []
+    verdict = str(rec.get("verdict", ""))
+    if verdict != "PASS":
+        problems.append(
+            f"the suite gate recorded {verdict or 'nothing'} (passed={rec.get('passed')} "
+            f"failed={rec.get('failed')} errors={rec.get('errors')}) and this promotion "
+            "went ahead anyway — DEF326/DEF405: the exit code was not read")
+    sha = str(rec.get("sha", ""))
+    if not expect_sha or not sha or not (sha.startswith(expect_sha) or expect_sha.startswith(sha)):
+        problems.append(f"the suite gate ran on {sha[:12] or '?'} but {expect_sha[:12]} was "
+                        "promoted — the tested tree is not the shipped tree")
+    target = str(rec.get("target", ""))
+    if target.rstrip("/") != _FULL_SUITE_TARGET.rstrip("/"):
+        problems.append(f"the suite gate ran on {target!r}, not the whole unit suite "
+                        f"({_FULL_SUITE_TARGET}) — a partial run is not the gate")
+    try:
+        at = _dt.datetime.fromisoformat(str(rec.get("at", "")).replace("Z", "+00:00"))
+        age_h = ((now if now is not None else _time.time()) - at.timestamp()) / 3600
+    except ValueError:
+        age_h = float("inf")
+    if age_h > max_age_h:
+        problems.append(f"the suite verdict is {age_h:.1f}h old (limit {max_age_h}h) — "
+                        "re-run preflight_suite.sh; a stale pass covers a different tree")
+    return problems
+
+
 def check_readiness(base: str, secret: str, timeout: int) -> list[str]:
     """DEF215's detector, plus DB and provider resolution."""
     status, body = _get(f"{base}/v1/ready", secret, timeout)
@@ -440,6 +493,8 @@ def main() -> int:
     ap.add_argument("--host", default="melehost", help="ssh alias for the box")
     ap.add_argument("--remote", default="~/ami_trade/", help="deploy path on the box")
     ap.add_argument("--timeout", type=int, default=20)
+    ap.add_argument("--suite-verdict", default=str(_SUITE_VERDICT),
+                    help="the record preflight_suite.sh writes (DEF405)")
     args = ap.parse_args()
 
     env_path = Path(args.env_file)
@@ -450,6 +505,9 @@ def main() -> int:
         return 2
 
     checks = [
+        # First, and local: it answers "should this promotion have happened",
+        # which the four live checks cannot.
+        ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
         ("identity", lambda: check_identity(
             args.base, secret, args.expect_sha, args.expect_tag, args.timeout)),
         ("tree", lambda: check_tree(args.host, args.remote, args.timeout)),

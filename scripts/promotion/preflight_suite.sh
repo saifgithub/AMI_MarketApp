@@ -20,6 +20,16 @@
 # because they are one.
 #
 # Exit 0 suite green · 1 suite not green · 2 could not run.
+#
+# DEF405 (2026-09-11, the third instance of this shape): the exit code is the
+# gate, and an exit code does not survive a pipe. `preflight_suite.sh | tail`
+# in a background task returned tail's 0, the operator read "completed (exit
+# code 0)", and alpha-2026-09-11-1 shipped on a suite that had printed
+# `VERDICT: FAIL`. So the verdict is ALSO written to a file, with the commit
+# it was measured on, and `postflight.py`'s `suite` check reads that file and
+# fails the promotion when it is missing, stale, partial, for another commit,
+# or not PASS. The wrapper can swallow the exit code; it cannot swallow the
+# record.
 
 set -uo pipefail
 
@@ -32,11 +42,25 @@ PYTEST=("$REPO_ROOT/backend/.venv/bin/python" -m pytest)
 TARGET="${1:-backend/tests/unit/}"
 LOG="$(mktemp -t ami_preflight_suite)"
 
+# Captured BEFORE the suite runs: HEAD can move during a twenty-minute run
+# (it did — the gate ran on 0aa2ac03 and 445f6a43 was tagged), and the record
+# must say what was tested, not what was there when the verdict printed.
+GATE_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+VERDICT_FILE="$REPO_ROOT/.deliveryos/suite_verdict.json"
+PASSED=0; FAILED=0; ERRORS=0; SKIPPED=0
+
+record_verdict() {
+  mkdir -p "$(dirname "$VERDICT_FILE")"
+  printf '{"sha": "%s", "verdict": "%s", "target": "%s", "at": "%s", "passed": %s, "failed": %s, "errors": %s}\n' \
+    "$GATE_SHA" "$1" "$TARGET" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PASSED" "$FAILED" "$ERRORS" >"$VERDICT_FILE"
+}
+
 # The Mac has no backend and no database; these run against the sqlite tempfile
 # fixture, which is the one backend thing that does work here (CLAUDE.md).
 if [ ! -x "$REPO_ROOT/backend/.venv/bin/python" ]; then
   echo "VERDICT: FAIL — backend/.venv/bin/python not found, so the suite did not run."
   echo "         A suite that could not run is not a green suite."
+  record_verdict COULD_NOT_RUN
   exit 2
 fi
 
@@ -68,6 +92,7 @@ if [ "$SUITE_EXIT" -ne 0 ]; then
   echo "VERDICT: FAIL — the suite exited $SUITE_EXIT. Do not promote."
   echo "         An ERROR is a teardown or fixture that raised. It is not a"
   echo "         lesser kind of green (DEF326)."
+  record_verdict FAIL
   exit 1
 fi
 
@@ -91,13 +116,16 @@ if [ -f "$WIRE" ]; then
     echo "VERDICT: FAIL — the backend suite passed but the wire contract did not."
     echo "         A green suite proves the server agrees with itself. This"
     echo "         checks it against what the app actually reads."
+    record_verdict FAIL
     exit 1
   fi
 else
   echo "WIRE CONTRACT: verify.py missing — cannot check. Aborting rather than"
   echo "               reporting a pass nothing verified."
+  record_verdict FAIL
   exit 1
 fi
 
+record_verdict PASS
 echo "VERDICT: PASS — the suite exited 0."
 exit 0
