@@ -1,7 +1,9 @@
 """training toll charged per fill — CR222 §1, Ruling 1 (option B, no backfill)
 
 Revision ID: cr222a0b0c0d4
-Revises: cr219a0b0c0d3
+Revises: cr221a0b0c0d4 (re-parented from cr219a0b0c0d3 — DEF406: both lanes
+branched the same parent, leaving two heads the promotion's `upgrade head`
+would refuse)
 Create Date: 2026-09-11
 
 Three additive NULLABLE columns, one on each table that records a training fill:
@@ -39,7 +41,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "cr222a0b0c0d4"
-down_revision: Union[str, Sequence[str], None] = "cr219a0b0c0d3"
+down_revision: Union[str, Sequence[str], None] = "cr221a0b0c0d4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
