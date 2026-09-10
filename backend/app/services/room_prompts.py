@@ -2453,7 +2453,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {EXEC_CHANGE_LABEL}: LIVE, read from the issuer's own SEC 8-K "
                 "index and filing text (a free source, NOT the news feed above and "
                 "NOT under its 7-day floor); the line states the window it was "
-                "verified for and each filing's filed date and age."
+                "verified for, any unverified days since the scan, the count of "
+                "filings in that window and each shown filing's filed date and age."
             )
         else:
             header_lines.append(
@@ -2914,6 +2915,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             profile.get("executive_change_items"),
             profile.get("executive_change_verified_from"),
             profile.get("executive_change_verified_through"),
+            total=profile.get("executive_change_total"),
+            unverified_days=profile.get("executive_change_unverified_days"),
         ) if (settings.room_executive_change_enabled
               and _is("executive_change", "live")) else None
         if extra:

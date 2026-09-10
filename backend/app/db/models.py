@@ -1953,6 +1953,10 @@ class Edgar8kItemRow(Base):
     `Numeric NOT NULL` — it cannot hold a name, a title or a sentence.
     Identity is `(cik, accession_no)`: two AAPL filings share the primary
     document filename `ef20060722_8k.htm`, so the filename alone collides.
+    Read by CIK too (`edgar_8k.fetch_8k_state`, via the ticker's scan row):
+    GOOG and GOOGL share a CIK, and a filing stored under one must not leave
+    the other reading as a quiet filer. `ticker` records who the ingest was
+    walking when it stored the row.
     `extract_status` says whether `section_text` is the parsed Item 5.02
     section ("extracted"), the document was read but no section resolved
     ("unextracted"), or the document could not be fetched ("fetch_failed") —
@@ -1964,7 +1968,7 @@ class Edgar8kItemRow(Base):
     __tablename__ = "edgar_8k_items"
     __table_args__ = (
         UniqueConstraint("cik", "accession_no", name="uq_edgar_8k_item"),
-        Index("ix_edgar_8k_items_ticker_filed", "ticker", "filed"),
+        Index("ix_edgar_8k_items_cik_filed", "cik", "filed"),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)

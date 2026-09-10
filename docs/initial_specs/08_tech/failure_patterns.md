@@ -1563,7 +1563,7 @@ shape: something the failure mode is structurally incapable of producing.
 - Refuse at **the layer that turns records into claims**, not only at the producer. The producer is
   the thing that died; it cannot be relied on to report its own death.
 
-**Instances.** DEF059 (outage → confident APPROVE, 2026-07). DEF336 (`dd72fe90`, 450 outage PASSes
+**Instances.** CR221 I1 review (2026-09-11): the 8-K ingest wrote a scan row for a submissions index it could not read (renamed column, new item format), and the sheet rendered a LIVE "none filed between X and Y" — fixed by `IndexUnreadable` + no scan row + the ticker named; pinned in `test_cr221_i1_executive_change.py`. DEF059 (outage → confident APPROVE, 2026-07). DEF336 (`dd72fe90`, 450 outage PASSes
 scored as a batch). DEF345 (`r70-outcome-2` truncated at 17 of 450). Three occurrences by three
 different mechanisms at the same seam — **flagged as a CR185 Dilemma candidate**: the recurring
 question is not "guard this job" but "what makes a produced dataset trustworthy at all", and it has

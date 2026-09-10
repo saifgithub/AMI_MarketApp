@@ -11,6 +11,13 @@ fetch or parse failure is retried once, then counted and NAMED in the
 summary, never silently skipped (CR040). Rows whose status is not
 `extracted` are retried on the next run without `--force`.
 
+The scan row is NOT written when the index itself could not be read
+(`edgar_8k.IndexUnreadable`: a renamed column, an item string in a new
+format, an unparseable date) or fetched — an unreadable index and a quiet
+filer must never produce the same record (P26). The ticker is counted and
+named under `[index_unreadable]` / `[submissions_failed]` and the Room reads
+it as unscanned, never as "none filed".
+
 SEC fair use: descriptive User-Agent with a contact email, 0.25 s between
 requests. Dedup on `(cik, accession_no)`; re-running is safe.
 
@@ -41,6 +48,7 @@ from app.services.edgar_8k import (
     INGEST_WINDOW_DAYS,
     SUBMISSIONS_URL,
     UNEXTRACTED,
+    IndexUnreadable,
     archive_url,
     covered_since,
     extract_item_502,
@@ -77,6 +85,115 @@ def fetch_text(client: httpx.Client, url: str) -> tuple[str, str | None]:
             continue
         return ("error", None)
     return ("error", None)
+
+
+class Tally:
+    """The run's counts and the NAMES behind every non-clean count, so the
+    summary can say which ticker failed how, not just how many did."""
+
+    def __init__(self) -> None:
+        self.tickers = {
+            "ingested": 0, "no_cik": 0, "submissions_failed": 0, "index_unreadable": 0,
+            "recent_block_short": 0,
+        }
+        self.filings = {"new": 0, "updated": 0, "unchanged": 0}
+        self.text = {EXTRACTED: 0, UNEXTRACTED: 0, FETCH_FAILED: 0}
+        self.named: dict[str, list[str]] = {
+            "no_cik": [], "submissions_failed": [], "index_unreadable": [],
+            "recent_block_short": [], UNEXTRACTED: [], FETCH_FAILED: [],
+        }
+
+
+def ingest_ticker(
+    client: httpx.Client,
+    ticker: str,
+    cik: int,
+    submissions: dict,
+    *,
+    since: date,
+    window_days: int,
+    sleep: float,
+    force: bool,
+    tally: Tally,
+) -> str:
+    """One ticker's pass over an already-fetched submissions index: select,
+    fetch and store its Item 5.02 filings, then write the scan row. Returns
+    the one-line report for the log. Writes NO scan row when the index is
+    unreadable — that ticker stays "unscanned" in the Room."""
+    try:
+        refs = select_502_filings(submissions, since=since)
+        covered = covered_since(submissions)
+    except IndexUnreadable as exc:
+        tally.tickers["index_unreadable"] += 1
+        tally.named["index_unreadable"].append(f"{ticker} ({exc})")
+        return f"cik={cik} INDEX UNREADABLE ({exc}) — no scan row written"
+
+    with get_session() as session:
+        stored = dict(
+            session.execute(
+                select(Edgar8kItemRow.accession_no, Edgar8kItemRow.extract_status)
+                .where(Edgar8kItemRow.cik == cik)
+            ).all()
+        )
+
+    kinds: dict[str, int] = {}
+    for ref in refs:
+        if stored.get(ref.accession_no) == EXTRACTED and not force:
+            tally.filings["unchanged"] += 1
+            continue
+        status, html = fetch_text(client, archive_url(cik, ref))
+        time.sleep(sleep)
+        if status == "ok" and html is not None:
+            section = extract_item_502(html)
+            extract_status = EXTRACTED if section else UNEXTRACTED
+        else:
+            section = None
+            extract_status = FETCH_FAILED
+        tally.text[extract_status] += 1
+        kinds[extract_status] = kinds.get(extract_status, 0) + 1
+        if extract_status != EXTRACTED:
+            tally.named[extract_status].append(f"{ticker} {ref.accession_no} ({status})")
+
+        with get_session() as session:
+            row = session.execute(
+                select(Edgar8kItemRow).where(
+                    Edgar8kItemRow.cik == cik, Edgar8kItemRow.accession_no == ref.accession_no,
+                )
+            ).scalars().first()
+            if row is None:
+                session.add(Edgar8kItemRow(
+                    ticker=ticker, cik=cik, accession_no=ref.accession_no, form=ref.form,
+                    filed=ref.filed, report_date=ref.report_date,
+                    item_codes=",".join(ref.item_codes), primary_document=ref.primary_document,
+                    extract_status=extract_status, section_text=section,
+                ))
+                tally.filings["new"] += 1
+            else:
+                row.extract_status = extract_status
+                row.section_text = section
+                row.ingested_at = datetime.now(timezone.utc)
+                tally.filings["updated"] += 1
+
+    # The scan row is written whatever happened to the DOCUMENTS: the index
+    # was read, and that is what the "none filed between" claim rests on. An
+    # index with no filings at all is fully covered (`covered` is None).
+    covered = covered or since
+    with get_session() as session:
+        session.add(Edgar8kScanRow(
+            ticker=ticker, cik=cik, scanned_at=datetime.now(timezone.utc),
+            covered_since=covered, window_days=window_days, items_found=len(refs),
+        ))
+    tally.tickers["ingested"] += 1
+    if covered > since:
+        # `filings.recent` caps at ~1,000 rows; a heavy filer's page may not
+        # reach the window start. The older `filings.files` pages are not
+        # read in v1, so the scan row's `covered_since` narrows the claim.
+        tally.tickers["recent_block_short"] += 1
+        tally.named["recent_block_short"].append(f"{ticker} (index reaches {covered})")
+    return (
+        f"cik={cik} 5.02 filings in window={len(refs)} · {kinds or 'nothing new'}"
+        f" · index reaches {covered}"
+    )
 
 
 def main() -> None:
@@ -119,105 +236,34 @@ def main() -> None:
         if entry.get("ticker") and entry.get("cik_str") is not None
     }
 
-    tickers_c = {"ingested": 0, "skipped": 0, "no_cik": 0, "submissions_failed": 0,
-                 "recent_block_short": 0}
-    filings_c = {"new": 0, "updated": 0, "unchanged": 0}
-    text_c = {"extracted": 0, "unextracted": 0, "fetch_failed": 0}
-    named: dict[str, list[str]] = {
-        "no_cik": [], "submissions_failed": [], "recent_block_short": [],
-        "unextracted": [], "fetch_failed": [],
-    }
-    rows_skipped = 0
+    tally = Tally()
 
     for i, ticker in enumerate(tickers, 1):
         prefix = f"[{i}/{len(tickers)}] {ticker}"
         cik = cik_by_ticker.get(ticker)
         if cik is None:
-            tickers_c["no_cik"] += 1
-            named["no_cik"].append(ticker)
+            tally.tickers["no_cik"] += 1
+            tally.named["no_cik"].append(ticker)
             print(f"{prefix}: NO CIK in SEC ticker map — skipping", flush=True)
             continue
 
         status, submissions = fetch_json(client, SUBMISSIONS_URL.format(cik=cik))
         time.sleep(args.sleep)
         if status != "ok" or not submissions:
-            tickers_c["submissions_failed"] += 1
-            named["submissions_failed"].append(f"{ticker} ({status})")
+            tally.tickers["submissions_failed"] += 1
+            tally.named["submissions_failed"].append(f"{ticker} ({status})")
             print(f"{prefix}: submissions fetch failed ({status}) — no scan row, continuing", flush=True)
             continue
 
-        refs, skipped = select_502_filings(submissions, since=since)
-        rows_skipped += skipped
-        with get_session() as session:
-            stored = dict(
-                session.execute(
-                    select(Edgar8kItemRow.accession_no, Edgar8kItemRow.extract_status)
-                    .where(Edgar8kItemRow.cik == cik)
-                ).all()
-            )
-
-        kinds: dict[str, int] = {}
-        for ref in refs:
-            if stored.get(ref.accession_no) == EXTRACTED and not args.force:
-                filings_c["unchanged"] += 1
-                continue
-            status, html = fetch_text(client, archive_url(cik, ref))
-            time.sleep(args.sleep)
-            if status == "ok" and html is not None:
-                section = extract_item_502(html)
-                extract_status = EXTRACTED if section else UNEXTRACTED
-            else:
-                section = None
-                extract_status = FETCH_FAILED
-            text_c[extract_status] += 1
-            kinds[extract_status] = kinds.get(extract_status, 0) + 1
-            if extract_status != EXTRACTED:
-                named[extract_status].append(f"{ticker} {ref.accession_no} ({status})")
-
-            with get_session() as session:
-                row = session.execute(
-                    select(Edgar8kItemRow).where(
-                        Edgar8kItemRow.cik == cik, Edgar8kItemRow.accession_no == ref.accession_no,
-                    )
-                ).scalars().first()
-                if row is None:
-                    session.add(Edgar8kItemRow(
-                        ticker=ticker, cik=cik, accession_no=ref.accession_no, form=ref.form,
-                        filed=ref.filed, report_date=ref.report_date,
-                        item_codes=",".join(ref.item_codes), primary_document=ref.primary_document,
-                        extract_status=extract_status, section_text=section,
-                    ))
-                    filings_c["new"] += 1
-                else:
-                    row.extract_status = extract_status
-                    row.section_text = section
-                    row.ingested_at = datetime.now(timezone.utc)
-                    filings_c["updated"] += 1
-
-        # The scan row is written whatever happened to the documents: the
-        # index was read, and that is what the "none filed between" claim rests on.
-        covered = covered_since(submissions) or since
-        with get_session() as session:
-            session.add(Edgar8kScanRow(
-                ticker=ticker, cik=cik, scanned_at=datetime.now(timezone.utc),
-                covered_since=covered, window_days=args.window_days, items_found=len(refs),
-            ))
-        tickers_c["ingested"] += 1
-        if covered > since:
-            # `filings.recent` caps at ~1,000 rows; a heavy filer's page may not
-            # reach the window start. The older `filings.files` pages are not
-            # read in v1, so the scan row's `covered_since` narrows the claim.
-            tickers_c["recent_block_short"] += 1
-            named["recent_block_short"].append(f"{ticker} (index reaches {covered})")
-        print(
-            f"{prefix}: cik={cik} 5.02 filings in window={len(refs)} · {kinds or 'nothing new'}"
-            f" · index reaches {covered}" + (f" · selector skipped {skipped} rows" if skipped else ""),
-            flush=True,
+        line = ingest_ticker(
+            client, ticker, cik, submissions, since=since, window_days=args.window_days,
+            sleep=args.sleep, force=args.force, tally=tally,
         )
+        print(f"{prefix}: {line}", flush=True)
 
-    print(f"\n[summary] tickers {tickers_c} · filings {filings_c} · text {text_c} "
-          f"· rows skipped by the selector {rows_skipped}", flush=True)
-    for kind, names in named.items():
+    print(f"\n[summary] tickers {tally.tickers} · filings {tally.filings} · text {tally.text}",
+          flush=True)
+    for kind, names in tally.named.items():
         if names:
             print(f"[{kind}] {', '.join(names)}", flush=True)
 

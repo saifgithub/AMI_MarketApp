@@ -887,10 +887,19 @@ def _overlay_executive_change(
                 ticker=ticker.upper(), fix="run backend/scripts/ingest_edgar_8k.py",
             )
         else:
+            # Two causes share this row-less state: the ticker is not on the
+            # ingest list, or it is and its last pass ended before a scan row
+            # (submissions fetch failed, or the index was unreadable — both
+            # named in the ingest summary, neither persisted).
             logger.warn(
                 "edgar_8k_ticker_not_scanned",
                 ticker=ticker.upper(),
-                fix="add the ticker to the ingest list and re-run backend/scripts/ingest_edgar_8k.py",
+                fix=(
+                    "no scan row for this ticker: either it is not on the ingest list, or its "
+                    "last backend/scripts/ingest_edgar_8k.py pass failed before writing one "
+                    "([submissions_failed]/[index_unreadable] in that run's summary) — check "
+                    "the list and re-run"
+                ),
             )
         return
 
@@ -915,6 +924,8 @@ def _overlay_executive_change(
 
     profile["executive_change_verified_from"] = verified_from.isoformat()
     profile["executive_change_verified_through"] = verified_through.isoformat()
+    # The scan vouches for nothing after itself; the line names the hole.
+    profile["executive_change_unverified_days"] = (as_of - verified_through).days
     items = [r for r in rows if verified_from <= r.filed <= verified_through]
     if not items:
         profile["executive_change_state"] = "none_in_window"
@@ -944,6 +955,7 @@ def _overlay_executive_change(
         })
     profile["executive_change_state"] = "filed"
     profile["executive_change_items"] = rendered
+    profile["executive_change_total"] = len(items)  # the line states this, not len(rendered)
     field_state["executive_change"] = LiveDataState.LIVE.value
 
 

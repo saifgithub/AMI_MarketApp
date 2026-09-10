@@ -17,6 +17,8 @@ by `scripts/ingest_edgar_8k.py`. An empty table yields the
 
 Identity for an item is `(cik, accession_no)`: two AAPL filings share the
 primary-document filename `ef20060722_8k.htm`, so the filename alone collides.
+Items are read by CIK (through the ticker's scan row), so the read index is
+`(cik, filed)`: GOOG and GOOGL share a CIK.
 """
 from __future__ import annotations
 
@@ -70,12 +72,12 @@ def upgrade() -> None:
         sa.UniqueConstraint("cik", "accession_no", name="uq_edgar_8k_item"),
     )
     op.create_index(
-        "ix_edgar_8k_items_ticker_filed", "edgar_8k_items", ["ticker", "filed"],
+        "ix_edgar_8k_items_cik_filed", "edgar_8k_items", ["cik", "filed"],
     )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_edgar_8k_items_ticker_filed", table_name="edgar_8k_items")
+    op.drop_index("ix_edgar_8k_items_cik_filed", table_name="edgar_8k_items")
     op.drop_table("edgar_8k_items")
     op.drop_index("ix_edgar_8k_scans_ticker_scanned", table_name="edgar_8k_scans")
     op.drop_table("edgar_8k_scans")

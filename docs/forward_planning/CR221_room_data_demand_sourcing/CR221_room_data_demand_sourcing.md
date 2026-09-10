@@ -576,6 +576,45 @@ scratch sqlite): CAT and F both resolve — CAT to the Epley/Bonfield filing, F 
 **The flag stays OFF until the §7.3 citation-rate rig runs**; `replay.py` has the `exec` arm, and
 the CAT pickles must be rebuilt after the ingest (R46: a rebuild moves every other live field).
 
+**Review round (2026-09-11).** Four MAJOR findings against `785a6611`, all of one shape — a line
+that states something the data behind it cannot vouch for — plus the MINORs that were cheap:
+
+- *An unreadable index read as a quiet filer.* `select_502_filings` returned `[]` for a submissions
+  JSON whose shape had changed (`filings.recent` renamed, items as `"Item 5.02,Item 9.01"`,
+  `filingDate` renamed or unparseable), the ingest wrote the scan row anyway, and the sheet rendered
+  a LIVE "none filed between X and Y" — P26 exactly. Now `recent_block` validates the five columns
+  it reads (present, one length), every in-window 8-K's item string must be `d.dd` tokens and its
+  date must parse, and any of those raises `IndexUnreadable`; `ingest_ticker` writes **no scan row**
+  on it and names the ticker under `[index_unreadable]`. The Room reads it as `unscanned`. Seven
+  shapes are parametrised in the test, and the ingest-to-overlay consequence is pinned end to end
+  (`test_ingest_writes_no_scan_row_for_an_unreadable_index_and_names_it`). The 150-ticker index
+  format is unchanged — the live re-ingest of CAT, F, GOOGL and GOOG ran with `index_unreadable: 0`.
+- *A false count.* Three Item 5.02 filings in the window rendered as "2 filings between …". The
+  overlay now carries `executive_change_total`; the line says "4 filings (newest 2 shown; 2 older
+  not shown)" — Alphabet's real store, above, is the measured case.
+- *A cross-reference read as the heading, or as its end.* "The information set forth in Item 5.02 of
+  this Current Report …" in Item 1.01 became the section, labelled "complete"; "filed pursuant to
+  Item 5.02 of Form 8-K" mid-section cut it off before "not the result of any disagreement". The
+  anchor is now the **line start** of `html_to_text`'s block-per-line output (a heading starts a
+  block; a reference sits mid-sentence), the first candidate whose section clears the 40-char floor
+  wins, and the parenthesis lookahead is gone — because the live probe found Alphabet's 2026-06-05
+  8-K (`0001652044-26-000059`) heading its section "Item 5.02(c) Appointment of Principal Officer",
+  which the first parser stored as `unextracted`. It is the third real fixture; it extracts at 1,117
+  chars, complete, and the retry pass picked it up without `--force`.
+- *Cheap MINORs.* The days between the scan and the sheet's run date are named in the line ("The
+  163 days after 2026-04-01 … are NOT verified"); the seam re-caps an over-long excerpt
+  (`EXCERPT_CAP`, with an ellipsis) instead of trusting the profile dict; items are read by the scan
+  row's **CIK**, not the ticker, so GOOG shows GOOGL's filings rather than reading as quiet (the
+  ingest dedups on CIK; the read index is now `(cik, filed)`); `<noscript>`/`<textarea>`/
+  `<template>`/`<iframe>`/`<svg>`/`<head>` and anything styled `display:none`, `visibility:hidden`,
+  `font-size:0` or `hidden` are dropped by the text extractor; the `edgar_8k_ticker_not_scanned`
+  warn names both causes (not on the list, or the last pass failed before a scan row); the persona
+  sentence now says *filing text* reaches the analyst only through the line (a headline may still
+  report a change) and asks for the role/names/circumstance the filing states rather than a
+  verbatim quote. Not fixed: the single-capital abbreviation guard (harmless, never lengthens an
+  excerpt); the CR219 guard cannot see flag-gated store-backed lines by construction — the pin
+  stays in this slot's test file.
+
 ---
 
 ## 6. The R38 correction — measured, and it lands on a lane in flight
