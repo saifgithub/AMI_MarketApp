@@ -39,15 +39,20 @@ succession and ends with the pay bullets, and the cap drops the latter.
 **What the hidden-text filter is, exactly.** `html_to_text` drops the
 `<ix:header>` block, script/style/title/noscript/template/iframe/svg/
 textarea, the `hidden` attribute, and any element whose inline style carries
-one of these patterns: `display:none`, `visibility:hidden`, `opacity:0`,
-`position:absolute|fixed` with `left|top|text-indent` at or beyond -999
-(px/pt/em/rem/%), `clip:rect(0,0,0,0)`, `clip-path:inset(50%|100%)`,
-`(max-)height|width:0` together with `overflow:hidden`, or a font-size under
-2px/2pt, under 0.2em/rem or under 20%. It also reads the document's own
-`<style>` blocks and drops elements carrying a class or id whose simple
-selector (`.c`, `#i`, `tag.c`, `tag#i`) has a rule matching any of those
-patterns. Hiding by colour (white-on-white), by an external stylesheet, by
-layout (an element painted over) or by a compound selector is NOT detected.
+one of these patterns: `display:none`, `visibility:hidden`, `opacity:0`
+(also `.0`, `0%`), `position:absolute|fixed` with `left|top|margin-left|
+margin-top|text-indent` at or beyond -999 (px/pt/em/rem/%),
+`clip:rect(0,0,0,0)`, `clip-path:inset(50%|100%)`, `(max-)height|width:0`
+together with `overflow:hidden`, or a font-size under 2px/2pt, under
+0.2em/rem or under 20%. Each property is matched as a whole name, so
+`border-width:0`, `min-height:0`, `line-height:0` and `backface-visibility:
+hidden` — ordinary EDGAR CSS on visible text — are not hiding. It also reads
+the document's own top-level `<style>` rules and drops elements carrying a
+class or id whose simple selector (`.c`, `#i`, `tag.c`, `tag#i`) has a rule
+matching any of those patterns; a rule inside an at-rule block (`@media`,
+`@supports`) is not read, so a screen-only hide there is a stated miss.
+Hiding by colour (white-on-white), by an external stylesheet, by layout (an
+element painted over) or by a compound selector is NOT detected.
 This is a filter, not a control (CR038): what reaches the prompt is capped,
 sanitised and bracketed as a filing quote, and the Room reads it as such.
 
@@ -261,9 +266,9 @@ _BLOCK_TAGS = frozenset({
 _ZERO = r"0(?:\.0+)?"
 _DECL_END = r"\s*(?:!important\s*)?(?:;|$)"
 _HIDDEN_STYLE = re.compile(
-    r"display\s*:\s*none"
-    r"|visibility\s*:\s*hidden"
-    rf"|opacity\s*:\s*{_ZERO}{_DECL_END}"
+    r"(?<![\w-])display\s*:\s*none"
+    r"|(?<![\w-])visibility\s*:\s*hidden"
+    rf"|opacity\s*:\s*(?:{_ZERO}|\.0+)%?{_DECL_END}"
     r"|clip\s*:\s*rect\(\s*0(?:px)?(?:\s*,\s*|\s+)0(?:px)?(?:\s*,\s*|\s+)0(?:px)?(?:\s*,\s*|\s+)0(?:px)?\s*\)"
     r"|clip-path\s*:\s*inset\(\s*(?:50|100)%"
     rf"|font-size\s*:\s*(?:{_ZERO}|[01](?:\.\d+)?\s*p[xt]|0\.[01]\d*\s*r?em|(?:[0-9]|1[0-9])(?:\.\d+)?\s*%){_DECL_END}",
@@ -271,9 +276,12 @@ _HIDDEN_STYLE = re.compile(
 )
 _OFFSCREEN_POSITION = re.compile(r"position\s*:\s*(?:absolute|fixed)\b", re.I)
 _OFFSCREEN_OFFSET = re.compile(
-    r"(?:left|top|text-indent)\s*:\s*-(?:999|[1-9]\d{3,})(?:\.\d+)?\s*(?:px|pt|em|rem|%)", re.I,
+    r"(?<![\w-])(?:(?:margin-)?(?:left|top)|text-indent)\s*:\s*-(?:999|[1-9]\d{3,})(?:\.\d+)?\s*(?:px|pt|em|rem|%)",
+    re.I,
 )
-_COLLAPSED_BOX = re.compile(rf"(?:max-)?(?:height|width)\s*:\s*{_ZERO}\s*(?:px|pt|em|rem|%)?{_DECL_END}", re.I)
+# `(?<![\w-])` on the property names: `border-width:0`, `min-height:0` and
+# `line-height:0` are how EDGAR styles visible table cells.
+_COLLAPSED_BOX = re.compile(rf"(?<![\w-])(?:max-)?(?:height|width)\s*:\s*{_ZERO}\s*(?:px|pt|em|rem|%)?{_DECL_END}", re.I)
 _OVERFLOW_HIDDEN = re.compile(r"overflow(?:-[xy])?\s*:\s*hidden", re.I)
 
 
@@ -303,17 +311,22 @@ def _is_hidden(attrs, hidden_classes: frozenset[str], hidden_ids: frozenset[str]
 _STYLE_BLOCK = re.compile(r"<style\b[^>]*>(.*?)</style\s*>", re.I | re.S)
 _CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
 _CSS_RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
+# An at-rule block (`@media print { .x { display:none } }`) is dropped whole:
+# its rules apply to a medium this reader is not, and honouring a print-only
+# hide dropped screen-visible prose.
+_AT_RULE_BLOCK = re.compile(r"@[\w-]+[^{}]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", re.S)
 _SIMPLE_SELECTOR = re.compile(r"^\s*(?:[a-z][\w-]*)?(?:\.(?P<cls>[\w-]+)|#(?P<id>[\w-]+))\s*$", re.I)
 
 
 def hidden_selectors(html: str) -> tuple[frozenset[str], frozenset[str]]:
     """(classes, ids) the document's own `<style>` blocks bind to a hiding
     rule. Only a simple selector is honoured — `.c`, `#i`, `p.c`, `div#i` —
-    so a compound rule (`.a .b`) hides nothing here and is a stated limit."""
+    and only at the top level, so a compound rule (`.a .b`) or a rule inside
+    an at-rule block hides nothing here; both are stated limits."""
     classes: set[str] = set()
     ids: set[str] = set()
     for block in _STYLE_BLOCK.findall(html):
-        for selectors, body in _CSS_RULE.findall(_CSS_COMMENT.sub("", block)):
+        for selectors, body in _CSS_RULE.findall(_AT_RULE_BLOCK.sub("", _CSS_COMMENT.sub("", block))):
             if not _style_hides(body):
                 continue
             for selector in selectors.split(","):
@@ -398,20 +411,30 @@ _HEADING_502 = re.compile(r"^\s*Item\s*5\.02\b", re.I | re.M)
 # sub-items separately ("Item 5.02(b) Departure …", then "Item 5.02(c)
 # Appointment …") is one section, not two, and cutting at the second
 # sub-heading labelled a truncated departure "complete".
+# The signature block is the word alone on its line: a sentence that happens
+# to open "Signature Bank …" inside the section is not a terminator.
 _NEXT_HEADING = re.compile(
-    r"^\s*(?:Item\s*(?!5\.02\b)\d{1,2}\.\d\d\b|SIGNATURES?\b)", re.I | re.M,
+    r"^\s*(?:Item\s*(?!5\.02\b)\d{1,2}\.\d\d\b|SIGNATURES?\.?\s*$)", re.I | re.M,
 )
 
 
 def extract_item_502(html: str) -> str | None:
     """The Item 5.02 section as ONE sanitised line, or None when no heading
     starts a line or no candidate section is long enough to be one. The
-    first line-start heading whose section clears the floor wins, so a
-    line-start reference ahead of the real heading is passed over."""
+    first line-start heading whose section clears the floor wins. A
+    line-start reference ahead of the real heading ("Item 5.02 of Form 8-K
+    applies.") is passed over: it is a lone line that runs straight into
+    another 5.02 heading with no body line of its own. A sub-item heading
+    ("Item 5.02(b) Departure …") has its body on the next line, so it is not
+    passed over and the section starts there — the same 5.02 terminator
+    exclusion that keeps the (c) sub-item inside it."""
     text = html_to_text(html)
     for heading in _HEADING_502.finditer(text):
         tail = _NEXT_HEADING.search(text, heading.end())
         end = tail.start() if tail else len(text)
+        following = _HEADING_502.search(text, heading.end())
+        if following and following.start() < end and "\n" not in text[heading.start():following.start()].strip():
+            continue
         section = sanitize_for_prompt(text[heading.start():end])
         if len(section) >= _MIN_SECTION_CHARS:
             return section

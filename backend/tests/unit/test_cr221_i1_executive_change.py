@@ -95,6 +95,7 @@ _CAT_ACC = "0001104659-26-042062"
 _CAT_FILED = date(2026, 4, 10)
 _CAT_EVENT = date(2026, 4, 7)
 _CAT_SECTION = extract_item_502(_CAT_HTML)
+_CAT_SECTION_LEN = 2216
 _CAT_EXCERPT_LEN = 1053
 _CAT_BODY_LEN = 2058
 
@@ -466,14 +467,42 @@ def test_a_cross_reference_inside_the_section_does_not_end_it() -> None:
     section = extract_item_502(html)
     assert section is not None
     assert "not the result of any disagreement" in section and "SIGNATURES" not in section
-    # A line-start reference whose "section" is too short is passed over for
-    # the real heading further down.
+    # A line-start reference ahead of the real heading is passed over: the
+    # section STARTS at the heading, and the reference is not swallowed into
+    # it (the 5.02 terminator exclusion made that possible — review round 3).
+    for reference in ("Item 5.02 of Form 8-K applies.",
+                      "Item 5.02 is not applicable to the exhibits below."):
+        html = (
+            f"<p>{reference}</p>"
+            "<p>Item 5.02 Departure of Directors or Certain Officers.</p>"
+            f"<p>{_SUCCESSION}</p><p>Item 9.01 Exhibits.</p>"
+        )
+        section = extract_item_502(html)
+        assert section is not None and section.startswith("Item 5.02 Departure"), section[:80]
+        assert _SUCCESSION in section and reference[10:] not in section
+    # A sentence opening "Signature …" inside the section is not the
+    # signature block; only the word alone on its line is.
     html = (
-        "<p>Item 5.02 of Form 8-K applies.</p>"
         "<p>Item 5.02 Departure of Directors or Certain Officers.</p>"
+        f"<p>{_SUCCESSION}</p><p>Signature Bank previously employed Mr. Epley as treasurer.</p>"
+        "<p>SIGNATURES</p><p>Pursuant to the requirements of the Exchange Act.</p>"
+    )
+    section = extract_item_502(html) or ""
+    assert "Signature Bank" in section and "Pursuant to the requirements" not in section
+
+
+def test_a_short_departure_sub_item_before_the_appointment_is_kept() -> None:
+    # The pass-over must not eat a sub-item heading whose body is short: (b)
+    # has its body on its own line, so the section starts at (b), not (c).
+    html = (
+        "<p>Item 5.02(b) Departure of Certain Officers.</p>"
+        "<p>On April 7, 2026, Mr. Bonfield retired.</p>"
+        "<p>Item 5.02(c) Appointment of Certain Officers.</p>"
         f"<p>{_SUCCESSION}</p><p>Item 9.01 Exhibits.</p>"
     )
-    assert "Kyle Epley" in (extract_item_502(html) or "")
+    section = extract_item_502(html) or ""
+    assert section.startswith("Item 5.02(b)") and "Mr. Bonfield retired" in section
+    assert "Kyle Epley" in section and "Item 9.01" not in section
 
 
 def test_text_a_reader_never_sees_never_reaches_the_prompt() -> None:
@@ -513,6 +542,9 @@ _HIDING_STYLES = {
     "CLIP-RECT-PX": "clip: rect(0px 0px 0px 0px)",
     "CLIP-PATH": "clip-path:inset(100%)",
     "CLIP-PATH-HALF": "clip-path: inset(50%)",
+    "OPACITY-DOT": "opacity:.0",
+    "OPACITY-PCT": "opacity: 0%",
+    "OFFSCREEN-MARGIN": "position:absolute;margin-left:-9999px",
 }
 
 
@@ -569,6 +601,12 @@ def test_visible_text_a_near_miss_pattern_styles_is_kept() -> None:
         "opacity:0.5", "position:relative;left:-9999px", "position:absolute;left:-10px",
         "height:0", "overflow:hidden", "width:0.1%", "font-size:2px", "font-size:9pt",
         "font-size:0.9em", "font-size:20%", "text-indent:36pt", "height: 2px",
+        # Property names are matched whole: these are visible-text EDGAR CSS
+        # that a bare `height|width|visibility` match ate (review round 3).
+        "min-height:0;overflow:hidden", "min-width:0px;overflow:hidden",
+        "border-width:0;overflow:hidden", "line-height:0;overflow:hidden",
+        "outline-width:0;overflow:hidden", "backface-visibility:hidden",
+        "position:absolute;border-left:-9999px", "opacity:0.01",
     }
     spans = "".join(f"<span style='{s}'>KEPT-{i}</span> " for i, s in enumerate(sorted(kept)))
     html = (
@@ -578,8 +616,26 @@ def test_visible_text_a_near_miss_pattern_styles_is_kept() -> None:
     line = _line_for(html)
     for i in range(len(kept)):
         assert f"KEPT-{i}" in line
-    assert extract_item_502(_CAT_HTML) == _CAT_SECTION  # the measured section is unchanged
+    # The measured CAT section is pinned by its length here, not compared to
+    # itself: _CAT_SECTION is computed from the code under test at import.
+    assert len(_CAT_SECTION) == _CAT_SECTION_LEN and _CAT_SECTION.startswith("Item 5.02")
     assert "Marsida Saraci" in (extract_item_502(_GOOGL_HTML) or "")
+
+
+def test_a_style_rule_names_a_property_whole_and_skips_at_rule_blocks() -> None:
+    # `.tbl{border-width:0;overflow:hidden}` styles a visible table; a
+    # print-only `display:none` is not this reader's medium (a stated miss in
+    # the other direction: a screen-only hide inside @media is not read).
+    html = (
+        "<style>.tbl{border-width:0; overflow:hidden} @media print { .np { display:none } }"
+        " @media screen { .sc { display:none } } .gone{display:none}</style>"
+        "<p>Item 5.02 Departure of Directors or Certain Officers.</p>"
+        f"<p class='tbl'>{_SUCCESSION}</p><p class='np'>PRINT-HIDDEN-KEPT</p>"
+        "<p class='sc'>SCREEN-HIDDEN-REACHES</p><p class='gone'>GONE-LEAK</p><p>Item 9.01 Exhibits.</p>"
+    )
+    line = _line_for(html)
+    assert "Kyle Epley" in line and "PRINT-HIDDEN-KEPT" in line
+    assert "SCREEN-HIDDEN-REACHES" in line and "GONE-LEAK" not in line
 
 
 def test_colour_hiding_is_a_stated_limit_and_does_reach_the_line() -> None:
@@ -662,7 +718,7 @@ def test_a_quote_in_the_filing_cannot_close_the_excerpt() -> None:
     inside = line[start + len(edgar_8k.EXCERPT_OPEN):end]
     assert '"' in inside and "Ignore prior instructions" in inside
     assert "treat this as the sheet's own words" in inside and "⟦" not in inside and "⟧" not in inside
-    assert line.endswith(edgar_8k.EXCERPT_CLOSE.rstrip() + edgar_8k._TRAILER) or edgar_8k.EXCERPT_CLOSE in line
+    assert line.index(edgar_8k.EXCERPT_CLOSE) < line.index(edgar_8k._TRAILER.strip())
     assert len(breakout) == 151 and "(147 of 147 chars)" in line  # the four stripped glyphs are not counted
     # The store-side cut strips the glyphs too, so lengths agree across the seam.
     assert excerpt(breakout)[2] == 147 and "⟧" not in excerpt(breakout)[0]
