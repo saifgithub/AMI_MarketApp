@@ -7,7 +7,7 @@ source for every open item but one, and the §6 measurement. **Ruled 2026-09-03:
 is CR221's (`ac55352c`) — CR219 ships a declared-absent entry now, this CR builds the real line
 later, inheriting `WP10_R38_parked/` as its head start. **Built:** slot 1 (A1 + A3), slot 3
 (C3 + C4 + DEF400), the history arm (C2/C5/B2), and slot 4 (A2 + D1 + D2, with A4 closed) —
-§5 "Build status". **Measured:** §7 rounds 1–2; two flags live on Alpha since 2026-09-10.
+§5 "Build status". **Measured:** §7 rounds 1–3 (round 3 = the slot-4 `dims` arm, §7.10: A2 answered, D2 unread); two flags live on Alpha since 2026-09-10, the three slot-4 flags OFF.
 **Open:** slot 4's ingest on Alpha and its §7 round, the remaining slots, and the one item
 (H2) with no free source yet found.
 
