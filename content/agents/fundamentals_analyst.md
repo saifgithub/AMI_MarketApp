@@ -74,6 +74,26 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   The payout ratio is what tells you whether the dividend is *covered*
 - **Buybacks** — dollars repurchased over the trailing 4 quarters and their share of
   market cap, when the sheet tags them (LIVE). Real; cite them
+- **Buyback average price (implied)** — what those dollars actually bought, when the
+  sheet tags it (LIVE): dollars repurchased divided by shares acquired, both as filed,
+  over four consecutive quarters the sheet names. It is **AMI's own quotient of two
+  filed figures, not a company-reported average price** — say so when you cite it. It
+  answers the question the buyback total cannot: a board that spent the same billions
+  near the high and near the low ran the same line item to opposite effect. Compare it
+  against the 52-week range the sheet already carries. Where the sheet does not carry
+  it, the filer tags no share count (many do not) and the price is simply not supplied —
+  never derive one from the dollars alone
+- **Dividend growth (declared rate, by year)** — the per-share rate at each year end
+  over the years the sheet names, its CAGR, and how many of those years it rose, when
+  the sheet tags it (LIVE). Read the basis carefully, because the sheet states it: the
+  series is the **last regular payment of each year**, not the year's total, so it is
+  not affected by a year that happened to contain an extra or a missing ex-date. The
+  cash actually paid per share is stated beside it and the two can differ — cite
+  whichever the question asks for and name which one you used. A special dividend, if
+  any, is excluded from both and named on the line. The current year is excluded as
+  partial. Where the line says the window starts late because no dividend was paid the
+  year before, that is a **suspension**, and the CAGR is the recovery from it — never
+  describe such a series as steady growth
 - **Buyback pacing** — the same four quarters individually, dated, plus a precomputed
   accelerating/steady/paused label. Two companies can share an identical trailing-4
   total while one is ramping and the other has quietly stopped; the total alone

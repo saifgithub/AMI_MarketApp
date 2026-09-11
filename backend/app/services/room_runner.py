@@ -70,7 +70,9 @@ from app.schemas.room import (
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services import (
+    buyback_price,
     debt_maturity,
+    dividend_growth,
     edgar_8k,
     edgar_pit,
     edgar_tags,
@@ -852,6 +854,58 @@ def _overlay_filing_dimensions(
 _EDGAR_8K_AGING_WARN_DAYS = 30
 
 
+def _overlay_capital_returns(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR221 C8 / C7 — how fast the dividend grew, and what the buyback paid.
+
+    Two independent blocks, one `field_state` key each, populated regardless
+    of their render flags (§7.5's control arm is a flag flip against one
+    cached profile). They share an overlay because they answer the same
+    question — what capital return has actually done, as opposed to its level
+    today — and because failing one must not cost the other its state.
+
+    C8 reads CR206's payment feed (already fetched for the options desk, so no
+    new call); C7 reads the EDGAR store. Either source failing is logged and
+    leaves its own block `unavailable`, never a zero.
+    """
+    try:
+        payments = get_market_data_provider().dividend_history(ticker)
+    except Exception as exc:
+        logger.warn(
+            "dividend_history_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+            fix="CR206's payment feed failed; the dividend growth line is withheld",
+        )
+        payments = None
+    growth = dividend_growth.resolve_dividend_growth(payments, as_of)
+    profile["dividend_growth"] = growth
+    # A company that has never paid is not a gap, but it is also not a growth
+    # rate: the block is unavailable either way and renders no line.
+    field_state["dividend_growth"] = (
+        LiveDataState.LIVE.value if growth is not None
+        else LiveDataState.UNAVAILABLE.value
+    )
+
+    try:
+        facts = edgar_pit.load_facts(
+            ticker, tuple(edgar_tags.BUYBACKS) + tuple(edgar_tags.BUYBACK_SHARES), as_of,
+        )
+        price = buyback_price.resolve_buyback_price(facts, as_of)
+    except Exception as exc:
+        logger.warn(
+            "buyback_price_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+            fix="the EDGAR store failed; the implied buyback price is withheld",
+        )
+        price = None
+    profile["buyback_price"] = price
+    field_state["buyback_price"] = (
+        LiveDataState.LIVE.value if price is not None
+        else LiveDataState.UNAVAILABLE.value
+    )
+
+
 def _overlay_executive_change(
     profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
 ) -> None:
@@ -1131,6 +1185,7 @@ def _profile_for_ticker(
         _overlay_debt_structure(profile, field_state, ticker, today)
         _overlay_filing_dimensions(profile, field_state, ticker, today)
         _overlay_executive_change(profile, field_state, ticker, today)
+        _overlay_capital_returns(profile, field_state, ticker, today)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
@@ -1138,6 +1193,8 @@ def _profile_for_ticker(
             field_state[block] = LiveDataState.UNAVAILABLE.value
         field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
         profile["executive_change_state"] = "unscanned"
+        field_state["dividend_growth"] = LiveDataState.UNAVAILABLE.value
+        field_state["buyback_price"] = LiveDataState.UNAVAILABLE.value
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

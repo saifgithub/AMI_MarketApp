@@ -416,6 +416,18 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
     {
         "persona": "fundamentals_analyst",
+        "anchor": "the filer tags no share count (many do not) and the price is simply not supplied",
+        "category": "runtime-deference",
+        "why": (
+            "CR221 C7 (2026-09-11) — a CONDITIONAL absence, not a claim the figure is "
+            "unfetchable: the sentence fires only where the sheet omits the line, which "
+            "happens when the filer tags no TreasuryStockSharesAcquired (measured: CAT "
+            "197 points, Deere none). The residual clause forbids the agent deriving a "
+            "price from the buyback dollars alone, which is the DEF399 shape."
+        ),
+    },
+    {
+        "persona": "fundamentals_analyst",
         "anchor": "Not available: the full financial statements themselves",
         "category": "scope-true",
         "why": (

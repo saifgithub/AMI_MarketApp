@@ -460,6 +460,11 @@ services:
       # CR221 I1 — executive change from 8-K Item 5.02. Needs
       # `scripts/ingest_edgar_8k.py` to have run. See Settings.
       ROOM_EXECUTIVE_CHANGE_ENABLED: ${ROOM_EXECUTIVE_CHANGE_ENABLED:-false}
+      # CR221 C8/C7 — dividend growth history, and the implied buyback
+      # execution price. C7 needs `ingest_edgar_facts.py --force` once for
+      # the new TreasuryStockSharesAcquired tag. See Settings.
+      ROOM_DIVIDEND_GROWTH_ENABLED: ${ROOM_DIVIDEND_GROWTH_ENABLED:-false}
+      ROOM_BUYBACK_PRICE_ENABLED: ${ROOM_BUYBACK_PRICE_ENABLED:-false}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

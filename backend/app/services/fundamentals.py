@@ -2827,3 +2827,77 @@ def build_live_data_block(ticker: str, agent_id: AgentId | None = None) -> str |
         f"if a number isn't above, qualify your claim or omit it.)"
     )
     return "\n".join(lines)
+
+
+def _money(amount: float) -> str:
+    """Cents for an ordinary per-share amount, more digits for a sub-cent one.
+
+    `:,.4g` drops trailing zeros, so a $1.20 declared rate rendered as "$1.2"
+    and a $5.00 annual total as "$5" — on a dividend series that reads as a
+    different figure. Plain `:,.2f` is wrong the other way: GE's rate was
+    $0.0498 and rounds to $0.05, losing the precision the raise is measured on.
+    So: two decimals above a dime, four below it.
+    """
+    return f"{amount:,.2f}" if abs(amount) >= 0.10 else f"{amount:,.4f}"
+
+
+_DIVIDEND_GROWTH_LABEL = "Dividend growth (declared rate, by year)"
+_BUYBACK_PRICE_LABEL = "Buyback average price (implied)"
+
+
+def dividend_growth_line(growth, *, live: bool = True) -> str | None:
+    """CR221 C8 — what the dividend has actually done, on a stated basis.
+
+    The series is the **last regular payment of each year**, not the year's
+    sum: a monthly payer whose ex-date slips across a year boundary shows a
+    phantom cut and surge in the sums while its declared rate only ever rose
+    (Realty Income, 2024/2025 — 5.90% by sums against 2.25% by rate). Both
+    bases appear, labelled, so a reader wanting cash-per-share has it.
+
+    Everything the figure rests on is on the line: the years, the payments
+    per year, any special dividend excluded, the partial year dropped, and
+    whether the window was cut short by a year with no payments at all.
+    """
+    if growth is None:
+        return None
+    rates = " · ".join(f"{year} ${_money(rate)}" for year, rate in growth.rate_by_year)
+    totals = " · ".join(f"{year} ${_money(total)}" for year, total in growth.total_by_year)
+    counts = {n for _, n in growth.payments_per_year}
+    cadence = (f"{counts.pop()} payments each year" if len(counts) == 1
+               else "payments per year: " + ", ".join(
+                   f"{year} {n}" for year, n in growth.payments_per_year))
+    parts = [
+        f"declared rate {rates} per share",
+        f"{growth.cagr_pct:+.1f}% CAGR over {growth.last_year - growth.first_year} years",
+        f"raised in {growth.raised_years} of the last {growth.comparisons}",
+        f"cash paid per share by year {totals}",
+        f"AMI's own reading of the payments' ex-dates, {cadence}",
+    ]
+    if growth.specials:
+        excluded = ", ".join(f"${_money(amount)} ex {when}" for when, amount in growth.specials)
+        parts.append(f"special dividend excluded from both figures: {excluded}")
+    if growth.partial_year is not None:
+        parts.append(f"{growth.partial_year} excluded as a partial year")
+    if growth.truncated_by_gap:
+        parts.append(
+            f"the window starts at {growth.first_year} because the company paid "
+            "no dividend in the year before it — this is not a five-year series")
+    return _labelled(_DIVIDEND_GROWTH_LABEL, live, parts)
+
+
+def buyback_price_line(price, *, live: bool = True) -> str | None:
+    """CR221 C7 — the implied average execution price, named as arithmetic.
+
+    Dollars repurchased over shares acquired, both as filed, over four
+    consecutive quarters that carry both. It is AMI's own quotient and the
+    line says so: a filer that publishes its own average price computes it on
+    its own basis and the two need not agree.
+    """
+    if price is None:
+        return None
+    return _labelled(_BUYBACK_PRICE_LABEL, live, [
+        f"${price.avg_price:,.2f} per share",
+        f"${price.dollars / 1e6:,.0f}M repurchased ÷ {price.shares:,.0f} shares acquired, as filed",
+        f"over the {price.quarters} quarters {price.period_start} to {price.period_end}",
+        "AMI's own quotient of two filed figures, not a company-reported average price",
+    ])

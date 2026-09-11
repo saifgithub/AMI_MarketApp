@@ -944,6 +944,20 @@ class Settings(BaseSettings):
     # is the guard for the wrong order).
     room_executive_change_enabled: bool = False
 
+    # CR221 C8 — dividend growth from CR206's payment feed (no new call). 3
+    # request lines from 3 agents. The series is the last REGULAR payment of
+    # each year, not the year's sum: a monthly payer whose ex-date slips
+    # across a year boundary shows a phantom cut in the sums (Realty Income
+    # 2024/25 — 5.90% by sums against a true 2.25%). Gates the RENDER only.
+    room_dividend_growth_enabled: bool = False
+
+    # CR221 C7 — the implied average buyback execution price, dollars over
+    # shares, both as filed. 1 request line from 1 agent. Needs
+    # `ingest_edgar_facts.py --force` once for the new
+    # `TreasuryStockSharesAcquired` tag; until then it renders nothing.
+    # Gates the RENDER only, the overlay always populates.
+    room_buyback_price_enabled: bool = False
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

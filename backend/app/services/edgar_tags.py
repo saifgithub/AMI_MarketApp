@@ -45,6 +45,14 @@ BUYBACKS = (
     "PaymentsForRepurchaseOfCommonStock",
     "PaymentsForRepurchaseOfEquity",
 )
+# CR221 C7 — the SHARE count behind those dollars, so the implied average
+# execution price is a quotient of two filed figures rather than a guess.
+# Unit `shares`, which `ingest_edgar_facts.KEEP_UNITS` already keeps. Filer
+# coverage is uneven by design of the taxonomy (Deere tags no equivalent), so
+# the resolver ships a real absent state rather than a derived one.
+BUYBACK_SHARES = (
+    "TreasuryStockSharesAcquired",
+)
 OPERATING_INCOME = ("OperatingIncomeLoss",)
 DEPRECIATION_AMORTIZATION = (
     "DepreciationDepletionAndAmortization",
@@ -264,6 +272,7 @@ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
     + GROSS_PROFIT
     + COST_OF_REVENUE
     + BUYBACKS
+    + BUYBACK_SHARES
     + OPERATING_INCOME
     + DEPRECIATION_AMORTIZATION
     + DIVIDENDS_PAID_COMMON

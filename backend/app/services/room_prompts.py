@@ -37,6 +37,8 @@ from app.services.fundamentals import (
     identity_line,
     buyback_line,
     buyback_pacing_line,
+    buyback_price_line,
+    dividend_growth_line,
     capex_line,
     capital_return_line,
     cashflow_bridge_line,
@@ -2760,6 +2762,20 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("debt_split_period"),
             ) if (settings.room_debt_split_enabled
                   and _is("debt_split", "live")) else None,
+            # CR221 C8 — what the dividend has actually done, on the declared
+            # rate rather than the calendar-year sum. Its own flag: §7
+            # attributes per item.
+            dividend_growth_line(
+                profile.get("dividend_growth"),
+            ) if (settings.room_dividend_growth_enabled
+                  and _is("dividend_growth", "live")) else None,
+            # CR221 C7 — the implied average execution price behind the
+            # buyback dollars already on the sheet. AMI's own quotient, and
+            # the line says so.
+            buyback_price_line(
+                profile.get("buyback_price"),
+            ) if (settings.room_buyback_price_enabled
+                  and _is("buyback_price", "live")) else None,
             # CR221 D1 / D2 — revenue by segment and by geography, each a
             # partition of the same filing's consolidated total. Two flags,
             # two register items.
