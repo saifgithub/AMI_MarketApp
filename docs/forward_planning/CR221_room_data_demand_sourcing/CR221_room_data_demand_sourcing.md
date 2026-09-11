@@ -116,8 +116,8 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 | C4 | Working-capital change detail | 2 | 2 | ○ |
 | C5 | FCF conversion history (FCF ÷ net income) | 2 | 2 | ○ |
 | C6 | Buyback pacing over the trailing quarters | 1 | 1 | ✅ R35 `c7c40213` |
-| C7 | Buyback average execution price | 1 | 1 | ○ |
-| C8 | Historical dividend growth CAGR | 2 | 2 | ○ |
+| C7 | Buyback average execution price | 1 | 1 | ✅ slot 5, §7.12 — flag-off, absent for CAT today (the four shared quarters are not a year) |
+| C8 | Historical dividend growth CAGR | 2 | 2 | ✅ slot 5, §7.12 — flag-off, declared-rate basis |
 | C9 | Projected dividend growth / forward payout target | 2 | 2 | ○ |
 
 ### D · Segment & geography
@@ -1049,6 +1049,115 @@ recording, because it is the third time in this CR that rendering a field on liv
 something no unit test could: DEF399 (interest coverage 31.8× against a real ~6×), DEF400 (the
 vendor FCF), and now B2. The measurement rig earns its keep as a *renderer*, whatever its
 endpoint does.
+
+---
+
+## 7.12 Slot 5 — C8 dividend growth, C7 implied buyback price
+
+Two items, both decisions that needed no new network: C8 rides the `DividendPayment` history
+CR206 already fetches (decision 9, IN HAND), and C7 is a quotient of R35's repurchase dollars
+over one new tag (decision 8, REACHABLE).
+
+### C8 — the basis is the declared rate, not the calendar-year sum
+
+The obvious implementation sums each calendar year's payments and takes the CAGR of the sums.
+Measured on Realty Income, that implementation prints a dividend cut the company never made.
+O pays monthly; its May 2024 ex-date slipped to 2024-06-03, so eleven ex-dates land in 2024 and
+thirteen in 2025. The calendar sums run 3.062 → 2.872 → 3.490 while the declared rate rose every
+single month. A sum basis reads 5.90% CAGR against the rate basis's true 2.25%, and an analyst
+reading the sheet would see a monthly payer that cut and then surged.
+
+So the series carries the **last declared rate of each year**, with the calendar sums beside it
+and the payment count per year stated, because an uneven cadence is information rather than noise
+to smooth away.
+
+Three further structural rules, each from a measured case:
+
+| Rule | The case that produced it |
+|---|---|
+| Specials excluded from both bases and named | Costco's $15.00 of 2023-12-27. A naive sum reads 18.96 for 2023 and prints a 79% collapse in 2024 |
+| A genuine step-up is a raise, not a special | GE's rate went 0.0638 → 0.28 in 2024, a 4.4× move that the special filter must not eat |
+| The window truncates at a gap and says so | Disney paid nothing in 2020, 2021 and 2022; a five-year window would bridge the suspension and call the recovery steady growth |
+| The partial current year is never in the series | 2026 is excluded and the line says it was |
+
+### C7 — pairing is not enough, the window must be contiguous
+
+The live probe found a defect in my own first implementation, and it is the finding worth
+recording from this slot. CAT's `companyfacts` on 2026-09-11 carries 26 discrete quarters on the
+dollar tag and 47 on the share tag, but the newest four they **both** carry are Q1 of 2023, 2024,
+2025 and 2026 — the same calendar quarter four years running. Summing them gives $13,543M over
+26.1M shares and a **$518.82 "trailing-twelve-month" average price spanning three and a quarter
+years**. That is `edgar_pit.ttm()`'s documented hazard arriving through a second series: a hole in
+the middle, summed as though contiguous.
+
+My first window check counted quarters and did not require them to abut. Fixed with a contiguity
+guard and a 330-to-400-day span guard. CAT then resolves $664.64 over 2025-07-01..2026-06-30,
+which sits inside CAT's own close range for that year (low $386.02, high $1,062.93, mean $632.74).
+**CAT is an absent state today, not a number** — and that is the correct answer, because the four
+shared quarters are not a year.
+
+Deere tags no share count at all (CR221 §4b: CAT n=197 points, Deere none), so the absent state is
+the common outcome rather than an error.
+
+### What mutation-proofing found, and it was not nothing
+
+Ten mutations, and the first sweep killed only seven. The three survivors were a real gap in the
+tests, not a scoring artefact, and two of them hid behind a later guard:
+
+| Mutation | Why it first survived |
+|---|---|
+| Drop the contiguity guard | The measured Q1×4 case spans 1,185 days, so the **span** guard caught it anyway. No test had a case where contiguity was the only check that could fire |
+| Drop the one-year span guard | The only bad-span case was that same Q1×4 window, which contiguity caught first. Each guard was shadowed by the other |
+| Weaken the share floor to `shares > 0` | The residual case divided $7.2bn by 40 shares and got $180.6M per share, which `MAX_PRICE` refused. The floor was never the deciding check |
+
+Three tests were added, each constructed so **only** the target guard can fire: a one-month hole
+inside a 395-day span (contiguity alone), four contiguous 71-day periods spanning 287 days (span
+alone), and 999 shares against $1.5M for a plausible-looking $1,501.50 per share that only the
+floor rejects.
+
+Writing them turned up two more facts about the upstream filter. `quarterly_series` keeps only
+periods of 70 to 100 days, so:
+
+- A first draft of the span test used half-year periods. They never reach the resolver at all —
+  the series came back empty and the test passed for the wrong reason, exactly like the test it
+  replaced. A first draft of the pairing test shifted a period to 58 days, with the same result.
+- Four contiguous periods that pass the filter span between about **256 and 418 days**, so both
+  ends of the year check are reachable and neither is decoration.
+- Three contiguous periods span at most **314 days**, and the span guard requires 330. So
+  `len(paired) < 4` relaxed to `< 3` changes no outcome: it is **provably equivalent**, and the
+  one surviving mutation is unreachable by construction rather than untested. The check is kept
+  because its log message names the condition the span message would not, and the test records the
+  arithmetic so a future change to the upstream filter re-opens the question loudly.
+
+Two more mutations were then added for the render itself, and they caught a live flaw the whole
+suite had missed. The line formatted amounts with `:,.4g`, which drops trailing zeros: CAT's $1.20
+declared rate printed as **"$1.2"** and its $5.00 annual total as **"$5"**. On a dividend series
+that reads as a different figure, and twenty-three passing tests had nothing to say about it
+because not one looked at the digits. Plain two decimals is wrong the other way — GE's $0.0498
+rate rounds away to $0.05, losing the precision the 4.4× raise is measured on. Fixed with a
+`_money` helper: cents above a dime, four decimals below it, both shapes pinned by a test and both
+directions mutation-killed.
+
+Final sweep: **eleven of twelve mutations killed, each by the test named for it; the twelfth proved
+equivalent.**
+
+Two lessons, and the second is a near-miss rather than a finding:
+
+1. **A guard behind another guard is untested by default.** A sweep that counts survivors without
+   asking *which test should have died* will not tell you that, and neither will a green suite.
+   This is the §7.11 lesson arriving a second time in the same CR.
+2. **I read the sweep's result through `tail -12` and concluded every mutation had died** — the
+   pipe reported the tail's exit 0 and the script's `sys.exit(1)` never reached me. That is
+   DEF405's exact shape, committed by the person who wrote up DEF405, on the gate he built to
+   check his own work. Re-run bare, the sweep still reported one survivor. The rule generalises
+   past `preflight_suite.sh`: **read the exit code of the thing that computed the verdict, not of
+   whatever printed it.**
+
+### Deployment prerequisite
+
+`room_buyback_price_enabled` cannot render anything until `ingest_edgar_facts.py --force` has run
+once for the new `TreasuryStockSharesAcquired` tag. The tag is new to `INGEST_TAGS_US_GAAP` in this
+slot, so no existing row carries it. Both flags default False and are compose-forwarded.
 
 ---
 
