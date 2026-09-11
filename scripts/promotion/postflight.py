@@ -396,6 +396,60 @@ def check_suite_verdict(path: Path, expect_sha: str, *, now: float | None = None
     return problems
 
 
+_REVISION_LINE = re.compile(r"^revision\s*(?::[^=]+)?=\s*['\"]([^'\"]+)['\"]",
+                            re.MULTILINE)
+_DOWN_REVISION_LINE = re.compile(r"^down_revision\s*(?::[^=]+)?=(.*)$", re.MULTILINE)
+_QUOTED_ID = re.compile(r"['\"]([^'\"]+)['\"]")
+
+
+def check_migration_heads(
+        versions_dir: Path = _REPO_ROOT / "backend" / "alembic" / "versions",
+) -> list[str]:
+    """DEF406 — the merged tree has exactly ONE alembic head.
+
+    Two lanes each verified "single head" on their own pre-merge branches, both
+    correctly — and the merged tree still had two, because both migrations
+    named the same parent. A fork is a property of the MERGED tree, so the
+    check lives where the merged tree is measured (the same lesson DEF405
+    learned one layer up), not in any lane's own gate. `alembic upgrade head`
+    refuses a multi-head chain, which on 2026-09-11 would have failed the
+    promotion mid-deploy instead of here.
+
+    Stdlib-only on purpose: postflight runs under whatever python3 the operator
+    has, so this parses the version files rather than importing alembic. A
+    down_revision line may carry several ids (an alembic merge revision) — all
+    quoted ids on the line count as parents.
+    """
+    revisions: set[str] = set()
+    parents: set[str] = set()
+    try:
+        files = sorted(versions_dir.glob("*.py"))
+    except OSError as exc:
+        return [f"cannot list {versions_dir}: {exc}"]
+    for path in files:
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError as exc:
+            return [f"cannot read {path.name}: {exc}"]
+        rev = _REVISION_LINE.search(text)
+        if not rev:
+            continue
+        revisions.add(rev.group(1))
+        down = _DOWN_REVISION_LINE.search(text)
+        if down:
+            parents.update(_QUOTED_ID.findall(down.group(1)))
+    if not revisions:
+        # Vacuity: an empty parse must fail loudly, never read as "one head".
+        return [f"parsed no alembic revisions under {versions_dir} — "
+                "the parser or the path is broken, not the chain"]
+    heads = sorted(revisions - parents)
+    if len(heads) != 1:
+        return [f"{len(heads)} alembic heads ({', '.join(heads)}) — two lanes "
+                "branched the same parent; re-parent one migration so "
+                "`upgrade head` has a single target (DEF406)"]
+    return []
+
+
 def check_readiness(base: str, secret: str, timeout: int) -> list[str]:
     """DEF215's detector, plus DB and provider resolution."""
     status, body = _get(f"{base}/v1/ready", secret, timeout)
@@ -508,6 +562,9 @@ def main() -> int:
         # First, and local: it answers "should this promotion have happened",
         # which the four live checks cannot.
         ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
+        # Also local, also "should this have happened": a migration fork only
+        # exists in the merged tree, so no lane's own gate can see it (DEF406).
+        ("migrations", lambda: check_migration_heads()),
         ("identity", lambda: check_identity(
             args.base, secret, args.expect_sha, args.expect_tag, args.timeout)),
         ("tree", lambda: check_tree(args.host, args.remote, args.timeout)),
