@@ -146,4 +146,41 @@ $1,062.93, mean $632.74), which is the external corroboration.
 once for the new `TreasuryStockSharesAcquired` tag; no existing row carries it. Both flags
 default False and are compose-forwarded. Nothing is enabled by this lane.
 
+## CORRECTION, added before the auditor reached this lane
+
+After submitting, I ran the deployment prerequisite — `ingest_edgar_facts.py --force` for the new
+`TreasuryStockSharesAcquired` tag — against the measurement store. **The CAT case study above does
+not reproduce on a complete ingest, and the auditor should read this section as overriding it.**
+
+156 facts inserted, all of them the new tag. CAT's two tags then share 55 quarters, the newest six
+consecutive, and C7 resolves to **$664.64 over 2025-07-01..2026-06-30** — the figure the unit tests
+predicted from the same inputs, which corroborates the fixtures. But the "newest four shared
+quarters are Q1 of 2023, 2024, 2025 and 2026" pattern was an **artefact of a store holding zero
+rows for the share tag**, not a property of CAT's filings. I checked the shape of what the probe
+returned and never checked that the source had any rows at all.
+
+What this does and does not change:
+
+- **No code changes.** The contiguity and span guards are still correct and still necessary —
+  `edgar_pit.ttm()` documents the non-contiguous-summing hazard independently of CAT — they are
+  simply no longer justified by this particular case. Every test and every mutation verdict above
+  stands unaltered.
+- **The absent state is better attested, not worse.** Microsoft carries 72 dollar quarters and
+  **zero** share quarters in the same store, so C7 is correctly absent there; Deere and Exxon
+  carry too little to resolve. That is the DEF399 shape, measured on real filings.
+- **One new finding.** The per-quarter implied prices span $111.51 to $1,056.33 in a year CAT
+  traded $386.02–$1,062.93. The differencing is arithmetically correct; the two tags' year-to-date
+  points are not synchronised quarter by quarter, and the noise averages out over four (FY2025
+  reads $368.65, H1 2026 reads $935.44, both plausible). So the four-quarter aggregate is the only
+  honest granularity, which is what the line already renders — now for a measured reason.
+- **A fifth thing for the auditor to attack**, alongside the four listed above: whether the
+  contiguity and span guards, having lost their motivating case, are still carrying their weight or
+  are now speculative. I believe they are load-bearing on `ttm()`'s documented hazard alone, but
+  that is exactly the kind of claim an independent reader should test rather than accept.
+
+One unrelated failure to flag and disclaim: `test_def278_migrations_are_immutable` fails on main,
+naming `cr221a0b0c0d4_edgar_8k_items.py` and `cr222a0b0c0d4_training_toll.py` as edited at
+`94fc8619` and `839c3283`. Those are the DEF406 migration re-parenting, another lane's commits.
+**This slot adds no migration**; the full suite was otherwise 6,653 passed / 9 skipped.
+
 SUBMITTED: round 1

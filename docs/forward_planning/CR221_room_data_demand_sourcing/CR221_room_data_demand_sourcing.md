@@ -1153,11 +1153,57 @@ Two lessons, and the second is a near-miss rather than a finding:
    past `preflight_suite.sh`: **read the exit code of the thing that computed the verdict, not of
    whatever printed it.**
 
-### Deployment prerequisite
+### Deployment prerequisite, run — and running it overturned the C7 case study
 
-`room_buyback_price_enabled` cannot render anything until `ingest_edgar_facts.py --force` has run
-once for the new `TreasuryStockSharesAcquired` tag. The tag is new to `INGEST_TAGS_US_GAAP` in this
-slot, so no existing row carries it. Both flags default False and are compose-forwarded.
+`room_buyback_price_enabled` renders nothing until `ingest_edgar_facts.py --force` has run once
+for the new `TreasuryStockSharesAcquired` tag, because the tag is new to `INGEST_TAGS_US_GAAP` in
+this slot and no existing row carries it. Run against the measurement store on 2026-09-11: 156
+facts inserted, 3,681 deduped, all 156 of them the new tag.
+
+**With a complete ingest, the CAT case above does not reproduce.** The two tags share 55
+quarters, and the newest six run consecutively:
+
+| Quarter | Dollars | Shares | Implied |
+|---|---|---|---|
+| 2025-01-01..2025-03-31 | $3,660M | 7,515,281 | $487.01 |
+| 2025-04-01..2025-06-30 | $828M | 2,666,175 | $310.56 |
+| 2025-07-01..2025-09-30 | $362M | 847,999 | $426.89 |
+| 2025-10-01..2025-12-31 | $340M | 3,048,960 | $111.51 |
+| 2026-01-01..2026-03-31 | $5,028M | 5,557,798 | $904.67 |
+| 2026-04-01..2026-06-30 | $1,494M | 1,414,325 | $1,056.33 |
+
+C7 resolves to **$664.64 over 2025-07-01..2026-06-30**, which is the figure the unit tests
+predicted from the same inputs, so the fixtures are corroborated. But **"the newest four shared
+quarters are Q1 of 2023, 2024, 2025 and 2026" was an artefact of an incomplete ingest, not a
+property of CAT's filings.** The store I first probed held **zero** rows for the share tag; the
+sparse Q1-only pattern came from that emptiness, not from EDGAR. The §7.12 narrative above is left
+as written because it is what I believed at build time, and this paragraph is the correction
+rather than a rewrite of the record.
+
+**What survives the correction, and what does not:**
+
+- **The guards stand.** Contiguity and span are still the difference between a trailing-year
+  quotient and a multi-year total labelled as one, and `ttm()` documents that hazard
+  independently of CAT. They are simply no longer justified by *this* case.
+- **The absent state is real, and better attested than before.** Microsoft carries **72 dollar
+  quarters and zero share quarters** in the same store, so C7 is correctly absent there; Deere and
+  Exxon carry too little to resolve at all. That is the DEF399 shape the unpaired-legs guard
+  exists for, measured on real filings.
+- **A new finding the correction produced: the per-quarter implied prices are not usable.** The
+  spread runs $111.51 to $1,056.33 in a year CAT traded $386.02 to $1,062.93. The differencing is
+  arithmetically correct — the two tags' year-to-date points are simply not synchronised
+  quarter by quarter — and it averages out over four: FY2025 whole-year reads $368.65 and H1 2026
+  reads $935.44, both plausible against the price path. **So the four-quarter aggregate is the
+  only honest granularity for this item, and rendering a per-quarter implied price would be
+  wrong.** The line renders the aggregate only, which is what it already did, now for a measured
+  reason rather than a design guess.
+- **A process lesson, and it is the same one twice in one slot.** §7.12's guards were justified by
+  a case produced by a store I had not verified was populated. I checked the *shape* of what came
+  back and not whether the source had any rows at all. The DEF405 note above says to read the exit
+  code of what computed the verdict; this says to check that the input existed before believing
+  what the output implies.
+
+Both flags remain False by default and compose-forwarded. Nothing is enabled.
 
 ---
 
