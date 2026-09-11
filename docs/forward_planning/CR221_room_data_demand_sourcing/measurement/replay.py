@@ -126,6 +126,15 @@ ARMS: dict[str, dict[str, bool]] = {
     "exec": {
         "room_executive_change_enabled": True,
     },
+    # Slot 5 (2026-09-11): C8 dividend growth on the declared-rate basis and C7
+    # the implied buyback price. C7 is ABSENT for CAT by design — the four
+    # quarters both EDGAR tags share are not a year — so on the CAT pickle this
+    # arm turns on one line, not two. That is worth measuring as it stands
+    # rather than picking a ticker to make it look better.
+    "capret": {
+        "room_dividend_growth_enabled": True,
+        "room_buyback_price_enabled": True,
+    },
 }
 ARM_ITEMS = {
     "debt": ("A1", "A3"),
@@ -133,6 +142,7 @@ ARM_ITEMS = {
     "history": ("C2", "C5", "B2"),
     "dims": ("A2", "D1", "D2"),
     "exec": ("I1",),
+    "capret": ("C8", "C7"),
 }
 FLAGS = tuple(sorted({flag for spec in ARMS.values() for flag in spec}))
 
