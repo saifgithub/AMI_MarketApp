@@ -51,10 +51,27 @@ _VERSIONS = _REPO_ROOT / "backend" / "alembic" / "versions"
 # the one database which will never run that revision again. Removing it from
 # here would not undo the edit, it would only make the suite red about
 # something already fixed.
+#
+# `cr221a0b0c0d4` is the same shape and took the same treatment (2026-09-12).
+# It was committed in `98e1b36f` creating `ix_edgar_8k_items_ticker_filed`, and
+# edited 48 minutes later in `94fc8619` to create `ix_edgar_8k_items_cik_filed`
+# instead — items are read through the scan row's CIK so GOOG sees GOOGL's
+# filings, and the two share one. The rename is right; making it by editing a
+# committed revision is not, and this guard is what caught it. `e221i000009c`
+# is the repair: it drops the stale index and creates the CIK one, by
+# inspection, so that a fresh database and a database that ran the first form
+# both converge. Listed here for the same reason as `c109g000007a` — the edit
+# is in git permanently, so no repair can make this assertion pass again, and
+# leaving it red would be the suite complaining about something already fixed.
+#
+# This list is for edits that have a shipped repair or a deliberate baseline.
+# It is NOT a way to quiet the guard: add a file here only together with the
+# revision that reconciles the databases, and name that revision.
 _PRE_GUARD_EDITS = frozenset({
     "8a4ce4f8abc3_notifications_price_alerts.py",
     "a9d1c7e80006_admin_backoffice.py",
     "c109g000007a_cr109_slice4_placement.py",
+    "cr221a0b0c0d4_edgar_8k_items.py",  # repaired by e221i000009c
 })
 
 
