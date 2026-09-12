@@ -90,9 +90,9 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 
 | | Item | Lines | Agents | |
 |---|---|---|---|---|
-| A1 | Debt maturity ladder, repayments by year | 14 | 6 | ○ |
-| A2 | Industrial vs. captive-finance debt split | **18** | **9** | ○ |
-| A3 | Average interest rate / cost of debt | 6 | 4 | ○ |
+| A1 | Debt maturity ladder, repayments by year | 14 | 6 | ◐ slot 1 `472efbfc` — `room_debt_maturity_enabled`, OFF |
+| A2 | Industrial vs. captive-finance debt split | **18** | **9** | ◐ slot 4 `aff954b6` — `room_debt_split_enabled`, OFF; needs the dimensional ingest first (§7.6c) |
+| A3 | Average interest rate / cost of debt | 6 | 4 | ◐ slot 1 `472efbfc` — `room_cost_of_debt_enabled`, OFF |
 | A4 | Fixed vs. floating rate mix | 4 | 3 | ⛔ not structural — slot 4, §5 |
 | A5 | Interest coverage ratio | 2 | 2 | ✅ R33 `ab9decb2` |
 
@@ -101,7 +101,7 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 | | Item | Lines | Agents | |
 |---|---|---|---|---|
 | B1 | Historical *price-based* P/E + EV/EBITDA series (5–10y median, percentile, cycle-trough) | 13 | 6 | ○ |
-| B2 | Cycle-median ROE | 1 | 1 | ○ |
+| B2 | Cycle-median ROE | 1 | 1 | ◐ `room_roe_history_enabled`, OFF; basis corrected in `9da0be32` |
 | B3 | Peer-basket valuation multiples | 1 | 1 | ○ |
 | B4 | Peer/sector median balance-sheet ratios (D/E, quick ratio) | 2 | 2 | ○ |
 | B5 | Own-history multiples vs. past FYs' own fundamentals | — | — | ✅ R37 `d3943aa5` — narrower than B1 |
@@ -111,21 +111,21 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 | | Item | Lines | Agents | |
 |---|---|---|---|---|
 | C1 | Explicit capex line | 9 | 7 | ✅ R34 `a841ac13` — TTM only; C2/C9 carry the rest |
-| C2 | Multi-year capex / FCF averages | 3 | 3 | ○ |
-| C3 | Operating cash flow line + OCF→FCF bridge | 9 | 6 | ○ |
-| C4 | Working-capital change detail | 2 | 2 | ○ |
-| C5 | FCF conversion history (FCF ÷ net income) | 2 | 2 | ○ |
+| C2 | Multi-year capex / FCF averages | 3 | 3 | ◐ `room_fcf_history_enabled`, OFF |
+| C3 | Operating cash flow line + OCF→FCF bridge | 9 | 6 | ◐ `room_cashflow_bridge_enabled`, OFF |
+| C4 | Working-capital change detail | 2 | 2 | ◐ `room_cashflow_bridge_enabled`, OFF |
+| C5 | FCF conversion history (FCF ÷ net income) | 2 | 2 | ◐ `room_fcf_conversion_enabled`, OFF |
 | C6 | Buyback pacing over the trailing quarters | 1 | 1 | ✅ R35 `c7c40213` |
-| C7 | Buyback average execution price | 1 | 1 | ✅ slot 5, §7.12 — flag-off, absent for CAT today (the four shared quarters are not a year) |
-| C8 | Historical dividend growth CAGR | 2 | 2 | ✅ slot 5, §7.12 — flag-off, declared-rate basis |
+| C7 | Buyback average execution price | 1 | 1 | ◐ slot 5, §7.12 — `room_buyback_price_enabled`, OFF; $664.64 for CAT once the new tag is ingested, absent for MSFT (no share tag) |
+| C8 | Historical dividend growth CAGR | 2 | 2 | ◐ slot 5, §7.12 — `room_dividend_growth_enabled`, OFF; declared-rate basis |
 | C9 | Projected dividend growth / forward payout target | 2 | 2 | ○ |
 
 ### D · Segment & geography
 
 | | Item | Lines | Agents | |
 |---|---|---|---|---|
-| D1 | Revenue by business segment | 6 | 4 | ○ |
-| D2 | Revenue by geography | 2 | 1 | ○ |
+| D1 | Revenue by business segment | 6 | 4 | ◐ slot 4 `aff954b6` — `room_segment_revenue_enabled`, OFF; needs the dimensional ingest first |
+| D2 | Revenue by geography | 2 | 1 | ◐ slot 4 `aff954b6` — `room_geographic_revenue_enabled`, OFF; needs the dimensional ingest first |
 
 ### E · Earnings expectations
 
@@ -174,7 +174,7 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 
 | | Item | Lines | Agents | |
 |---|---|---|---|---|
-| I1 | Executive-change detail (identity, background, circumstance) | 5 | 1 | ○ |
+| I1 | Executive-change detail (identity, background, circumstance) | 5 | 1 | ◐ slot 2 `d6c364c2` — `room_executive_change_enabled`, OFF; needs the in-container 8-K ingest first (§7.6c) |
 | I2 | Catalyst magnitude (the % move a headline caused) | 2 | 1 | ○ |
 
 ### J · Social
@@ -190,7 +190,13 @@ both items, so counts do not sum to 127. **✅ delivered · ⛔ closed · ○ op
 |---|---|---|---|---|
 | K1 | Decision Journal history for this ticker | 1 | 1 | ✅ DEF054/DEF055 — the arm ask is a harness artifact (empty journal) |
 
-**49 items · 9 delivered · 5 closed · 35 open** (4 closed / 36 open at filing; A4 closed in the slot-4 build, 2026-09-11). One further request line is not a data item at
+**49 items · 9 delivered · 13 dark · 5 closed · 22 open** (4 closed / 36 open at filing; A4 closed in the slot-4 build, 2026-09-11).
+
+**`◐` dark is not a cosmetic fourth state — it is the one this register was missing, and its absence hid the whole build.** A producer merged behind a flag that defaults False is not on the sheet, so it is not delivered; its code exists, so calling it open says something false. Slots 1 through 5 shipped thirteen items and every one of them sat at `○` — including A2, the single largest item at 18 request lines from 9 agents. The register script could not notice, because it compared a hardcoded `EXPECTED` dict against totals derived from the same hardcoded list: a guard validating its own constant. It now reads `backend/app/core/config.py` and fails if a dark item's flag is missing there, if a dark item names no flag, or if an open item names one (§7.13).
+
+The distinction is also what §7 needs to pick its next arm: a flag flip and a sprint of work are different sizes of job, and `○` could not tell them apart.
+
+One further request line is not a data item at
 all (*"whether the 1.0h post-loss cooldown blocks all buys portfolio-wide"*) and leaves scope
 in §8.
 
@@ -213,7 +219,7 @@ Verified against the regenerated sheet at `CR219/evidence/rendered/sheets/__FULL
 | E1, E2 | `Earnings revisions (LIVE)` + `Surprise history (LIVE)` | **Yes** (E3 guidance deliberately excluded) |
 | J1 | buzz score, bullish/bearish %, mention counts, classified split | **Yes** |
 | K1 | wired via `journal_context.py` | **Yes** |
-| A2 | absent | **Designed only** (R38, `ecbbd4b7`) — and see §6 |
+| A2 | absent | **Built, dark** — designed R38 `ecbbd4b7`, built slot 4 `aff954b6`; `room_debt_split_enabled` is OFF and the dimensional ingest has not run, so the sheet still shows nothing — and see §6 |
 
 ---
 
@@ -1205,6 +1211,76 @@ rather than a rewrite of the record.
 
 Both flags remain False by default and compose-forwarded. Nothing is enabled.
 
+
+## 7.13 The register could not see its own build
+
+Asked how much of CR221 was still outstanding, I answered from my own lane and said two things.
+That was wrong, and checking it properly found a defect in the instrument the CR uses to answer
+that exact question.
+
+`evidence/items.py` is the register: 49 items, the script that claims each of the 127 request
+lines for one of them, and the totals §2 quotes. It reported **35 open**. The true figure was 22.
+Thirteen items had a producer service, a line helper, a flag-gated render and an overlay, all
+merged to main — and the register called every one of them `open`, the same word it uses for an
+item with no code at all.
+
+**The cause was a missing state, not thirteen missed edits.** The register had three: `delivered`
+meaning on the sheet today, `closed`, and `open`. Everything CR221 actually built landed in none
+of them. A producer behind a flag that defaults False is not on the sheet, so it is not delivered;
+its code exists, so `open` states something false. With nowhere correct to put them, slots 1
+through 5 left thirteen items where they started.
+
+**And the guard could not notice, because it was checking itself.** The script asserted
+`actual == EXPECTED` where `EXPECTED` was a hardcoded dict and `actual` was recomputed from the
+same hardcoded list in the same file. It agreed with itself on every run and exited 0 throughout.
+Worse than useless: correcting a single status without also editing the dict would have made the
+script fail, so the check actively held the drift in place.
+
+### The fix, and what makes it a guard
+
+A fourth state `BUILT` (`◐` dark), carrying the name of the Settings flag that gates its render,
+and a check that reads `backend/app/core/config.py`:
+
+- every dark item must name a flag that exists in that file;
+- a dark item naming no flag fails — the flag is the evidence for the claim;
+- an open item naming a flag fails — `open` now means no code exists.
+
+That turns a self-referential comparison into a claim about the code, which is the property the
+old check lacked. Verified by three mutations rather than by reading it:
+
+| Mutation | Result |
+|---|---|
+| Rename A1's flag to one not in `config.py` | exit 1, names A1 and the missing flag |
+| Strip A1's flag while leaving it dark | exit 1, "BUILT means 'merged behind a flag', so the flag is the evidence" |
+| Give open item F1 a flag | exit 1, "only BUILT items carry one" |
+
+The register now reports **9 delivered · 13 dark · 5 closed · 22 open**, and eleven stale `○`
+rows in §2 plus the §3 cross-check row for A2 were corrected to match.
+
+### Why it mattered beyond bookkeeping
+
+Three reasons this was worth stopping for.
+
+1. **A2 was among the thirteen.** At 18 request lines from 9 agents it is the register's single
+   largest item, and the register said it was unbuilt while its code sat on main behind an off
+   flag.
+2. **§7 selects its next arm from this field.** A flag flip and a sprint of build work are
+   different sizes of job, and `open` could not tell them apart, so the measurement plan was
+   reading from a field that could not answer its question.
+3. **It is the third instance of one shape in this CR.** §7.11 found a guard hiding behind another
+   guard. §7.12 found three mutations surviving because each guard was shadowed by a later one,
+   and separately found that I had read a sweep's verdict through `tail -12` and taken the pipe's
+   exit 0 for the script's. Now a guard that validated its own constant. **Every one is a check
+   that appeared to pass while testing nothing**, and in each case the green result was what
+   delayed finding it. The common repair is the same: make the check assert against something it
+   does not itself produce.
+
+The failure-patterns register (`docs/initial_specs/08_tech/failure_patterns.md`) treats a second
+occurrence as requiring an entry with an enforcing check, and a third as a Dilemma rather than
+another point fix (CR185). Three instances of *self-validating check* inside one CR meets that
+bar, and it is recorded here for whoever reads this CR next; filing it is a governance call, not
+one to make silently inside a measurement section.
+
 ---
 
 ## 8. Scope
@@ -1246,7 +1322,11 @@ Both flags remain False by default and compose-forwarded. Nothing is enabled.
 ## 9. Acceptance
 
 1. `evidence/items.py` runs from any working directory, prints 49 items, and **exits non-zero**
-   if any of the 127 lines claims no item or if the register's totals drift from §2.
+   if any of the 127 lines claims no item, if the register's totals drift from §2, or if the
+   register has drifted from the CODE — every `◐` dark item must name a Settings flag that
+   exists in `backend/app/core/config.py`, and no `○` open item may name one. Verified by
+   three mutations: a renamed flag, a dark item with no flag, and an open item carrying one;
+   each exits 1 with the item named.
 2. `evidence/inventory.py` still prints all 127 lines by agent, from any working directory.
 3. `evidence/edgar_census.py` exits 0 and prints the fact-point-key census for two filers.
 4. Every §3 row names a commit SHA and a sheet line, or states the absence.
