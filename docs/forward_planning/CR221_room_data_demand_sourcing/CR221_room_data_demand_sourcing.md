@@ -1339,10 +1339,21 @@ one to make silently inside a measurement section.
 9. **Every shipped field is behind its own config flag, defaulting off, forwarded in
    `docker-compose.yml`'s `api-alpha` block** (`test_config_compose_parity.py` enforces). A
    field that cannot be switched off cannot be the treatment arm of §7's A/B.
-10. **The §7 re-run is executed and reported**: per-item baseline asks → post-build asks,
-    citation rate per new line, reasoning-trace presence, cost delta, and the recorded-only
-    verdict distribution labelled with its n and the 19.7% flip figure. H2's demand is reported
-    as the negative control.
+10. **The §7 re-run is executed and reported.** The primary endpoint is **citation rate per new
+    line** (§7.3) — did the shipped figure reach the argument — reported alongside
+    reasoning-trace presence, cost delta, and the recorded-only verdict distribution labelled
+    with its n and the 19.7% flip figure.
+
+    **Demand extinction is NOT the endpoint, and this clause used to say it was.** §7.9 retired
+    it on measurement: the `DATA I LACKED:` addendum is a rank-limited shortlist of five items,
+    not a census, so an item can be shipped, cited, and still named in the addendum by an agent
+    ranking what it wants next. Round 4 settled it — the built item drew **zero** demand in both
+    arms, so there was never a number for the build to move. Per-item baseline-to-post-build ask
+    counts are still reported as a **secondary** figure, because they are cheap and occasionally
+    diagnostic, but a fall in them is not the acceptance test and a flat reading is not a failure.
+
+    H2's demand is reported as the negative control, with §7.9's caveat that the control was
+    measured, found uninformative for the same reason, and formally replaced mid-experiment.
 11. The §7.6 taxonomy collision is raised with the R53 lane, and the outcome recorded here.
 
 ---
