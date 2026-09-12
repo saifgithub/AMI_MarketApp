@@ -207,10 +207,19 @@ same rows with or without an index, so nothing on the sheet is wrong and no asse
 submission changes. What a database that ran the first form has is the wrong index and no revision
 left to fix it.
 
-**Exposure was not measured.** melehost was unreachable from the Mac at fix time (both the
-Tailscale address and the LAN alias timed out), so whether Alpha carries the ticker index or the
-CIK one is *unknown*, not confirmed clean. The repair is written to converge either shape for
-exactly that reason.
+**Exposure measured after this addendum was first written, and it is nil.** The paragraph here
+originally said melehost was unreachable and the exposure therefore unknown. It has since been
+measured (2026-09-12, `ami_postgres`, database `ami_trade` — not `ami`): `pg_indexes` returns **no
+rows** for `edgar_8k_items` because the table does not exist, and `alembic_version` reads
+**`cr219a0b0c0d3`**, the revision immediately before this slot's. Alpha never ran
+`cr221a0b0c0d4` in either form, so no database carries the stale index and the DEF278 hazard never
+materialized here.
+
+That makes `e221i000009c` **precautionary rather than corrective**, and the auditor should judge it
+on that basis. It is kept for two reasons: the guarantee "any database converges" should not rest
+on a measurement taken at one moment on one host, and Alpha is not the only place this chain can be
+built. When Alpha next upgrades it runs the current (CIK) form and the repair takes its no-op path
+— shape A of the proof below, which is exactly the case the proof covers.
 
 **Repair:** `e221i000009c` (commit `77ad0df7`) drops the stale index if present and creates the CIK
 one if absent, both by inspecting index names rather than `IF NOT EXISTS`, so it is portable to the
