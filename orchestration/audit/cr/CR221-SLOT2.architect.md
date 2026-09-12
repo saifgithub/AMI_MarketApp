@@ -187,3 +187,46 @@ move in both directions and are **not attributed** (§7.1: 19.7% split on identi
   for the retired persona denial lives in this slot's own test file.
 
 SUBMITTED: round 1
+
+---
+
+## ADDENDUM (2026-09-12, after SUBMITTED round 1) — a defect in this slot's migration
+
+Not a change to the submitted scope, and not a fix request. Recording a defect this lane found in
+its own work after submitting, so the auditor is not the one to discover it.
+
+**DEF407.** This slot's migration `cr221a0b0c0d4` was committed in `98e1b36f` creating
+`ix_edgar_8k_items_ticker_filed`, then EDITED 48 minutes later in `94fc8619` — the I1 review round
+that this submission covers — to create `ix_edgar_8k_items_cik_filed` instead. The rename is
+correct on its merits (items are read through the scan row's CIK so GOOG sees GOOGL's filings, and
+the two share one); editing a committed revision to make it is the DEF278 mistake, and DEF278's
+guard is what caught it.
+
+**Severity is performance, not correctness.** The read filters on `(cik, filed)` and returns the
+same rows with or without an index, so nothing on the sheet is wrong and no assertion in this
+submission changes. What a database that ran the first form has is the wrong index and no revision
+left to fix it.
+
+**Exposure was not measured.** melehost was unreachable from the Mac at fix time (both the
+Tailscale address and the LAN alias timed out), so whether Alpha carries the ticker index or the
+CIK one is *unknown*, not confirmed clean. The repair is written to converge either shape for
+exactly that reason.
+
+**Repair:** `e221i000009c` (commit `77ad0df7`) drops the stale index if present and creates the CIK
+one if absent, both by inspecting index names rather than `IF NOT EXISTS`, so it is portable to the
+SQLite unit fixture. Downgrade is a deliberate no-op per `d109h000008b`. Proven on three shapes in
+a throwaway sqlite — fresh/already-CIK, ticker-indexed, and table-absent — each idempotent on a
+second run. Alembic head stays single.
+
+`cr221a0b0c0d4_edgar_8k_items.py` is now in DEF278's `_PRE_GUARD_EDITS` **with the repair revision
+named**, as `c109g000007a` carries `d109h000008b`: the edit is in git permanently so no repair can
+make that assertion pass again.
+
+**Attack surface this opens for the auditor**, stated plainly since it is the obvious one: the
+allowlist is a git-history escape hatch, and adding a file to it is indistinguishable — to the
+suite — from fixing the problem. The check that the entry is honest is human. If the auditor wants
+to test that, the question to ask is whether `e221i000009c` actually converges the database that
+ran the first form, and the answer is reproducible: build a sqlite with
+`ix_edgar_8k_items_ticker_filed`, run the revision, and read the index names back.
+
+Full record: `docs/defect/_registry/DEF407.row.md`.
