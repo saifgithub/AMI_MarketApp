@@ -5,11 +5,22 @@
 **Done at filing:** §1–§6 — the item register, the cross-check against CR219, a *verified free*
 source for every open item but one, and the §6 measurement. **Ruled 2026-09-03:** R38's route
 is CR221's (`ac55352c`) — CR219 ships a declared-absent entry now, this CR builds the real line
-later, inheriting `WP10_R38_parked/` as its head start. **Built:** slot 1 (A1 + A3), slot 3
-(C3 + C4 + DEF400), the history arm (C2/C5/B2), and slot 4 (A2 + D1 + D2, with A4 closed) —
-§5 "Build status". **Measured:** §7 rounds 1–3 (round 3 = the slot-4 `dims` arm, §7.10: A2 answered, D2 unread); two flags live on Alpha since 2026-09-10, the three slot-4 flags OFF.
-**Open:** slot 4's ingest on Alpha and its §7 round, the remaining slots, and the one item
-(H2) with no free source yet found.
+later, inheriting `WP10_R38_parked/` as its head start. **Built:** slot 1 (A1 + A3), slot 2
+(I1), slot 3 (C3 + C4 + DEF400), the history arm (C2/C5/B2), slot 4 (A2 + D1 + D2, with A4
+closed), and slot 5 (C8 + C7) — §5 "Build status". That is **13 of the 49 items built and dark**:
+merged behind flags that default False, so no user has seen any of them. Two flags are live on
+Alpha since 2026-09-10; the other eleven are OFF.
+
+**Measured:** §7 rounds 1–4 (round 3 = the slot-4 `dims` arm, §7.10: A2 answered, D2 unread;
+round 4 retired the demand-extinction endpoint, §7.9). **Slot 4's dimensional ingest DID run
+inside `ami_api_alpha`** — 146 of 150 filings, 2,736 `ami:` rows, resolved to the dollar against
+the Mac (§5, "Build status"). An earlier version of this header said that was still open, which
+contradicted the body; the body was right.
+
+**Open:** 22 items with no code at all, the §7 round for slots 2/4/5, the one item (H2) with no
+free source yet found, and H1/H3 blocked on a **legal** read of FRED's terms that is Saiful's or
+a lawyer's call, not a build decision (§4c). Two audit lanes are submitted and awaiting an
+independent verdict: CR221-SLOT2 and CR221-SLOT5, both round 1.
 
 ---
 
@@ -17,15 +28,18 @@ later, inheriting `WP10_R38_parked/` as its head start. **Built:** slot 1 (A1 + 
 
 CR219 asked twelve agents, on every turn, to name the data they lacked. They answered **127
 times**, and those 127 asks are **49 distinct data items**. Nine are already delivered, five
-are closed (four at filing; A4 joined them in the slot-4 build, 2026-09-11), **35 are open**.
+are closed (four at filing; A4 joined them in the slot-4 build, 2026-09-11), thirteen are
+**built and dark** — merged behind flags that default False — and **22 are open**, meaning no
+code exists for them at all. The register carried no `dark` state until 2026-09-12 and so called
+all 35 of those "open", which hid the entire build; §7.13 has the correction.
 
 This CR takes those open items and finds each one a source that is **free and reliable**. It does not
 ship fact-sheet fields — every field is a follow-on CR. What was missing was not build
 capacity; it was an answer to *"where does that number come from, does that source exist, and
 what does it cost us?"* — asked once for all of it instead of one field at a time.
 
-**The headline result: 34 of the 35 open items have a verified free source, and none of them
-needs a paid provider.** Most are SEC EDGAR or FRED — one of which we already call, the other
+**The headline result: 34 of the 35 items that were open at sourcing time have a verified free
+source, and none of them needs a paid provider.** Most are SEC EDGAR or FRED — one of which we already call, the other
 of which turns out to need no API key. One item (Fed-path probabilities) has no free source we
 could verify.
 
