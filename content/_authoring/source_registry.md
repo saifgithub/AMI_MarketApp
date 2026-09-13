@@ -122,6 +122,33 @@ allowlist** — admitting them is a decision, not a formality, and belongs to th
 
 ---
 
+## Tier 4 — First-party measurement (narrow, null results only)
+
+AMI's own pre-registered research, cited by document path plus the universe and window it ran on.
+Admitted because a lesson that teaches *why a method disappoints* has no external source for the
+specific thing we measured — the finding is ours, and hiding it behind a paraphrase of someone
+else's paper would be less honest, not more.
+
+Deliberately narrower than Tiers 1–3, and the limits are the point:
+
+- **Null and negative results only.** A first-party *positive* result — a measured edge, a return, a
+  win rate — is a performance claim and is not admissible here at any tier. D-004 governs.
+- **Reproducible from committed artifacts.** The study's code, data window and outputs must be in
+  the repo, so the number can be recomputed rather than trusted.
+- **Cited with its universe and window, always**, and stated in the lesson body as *our* result on
+  *that* data — never as a general law about markets.
+
+| Source | Typical use |
+|---|---|
+| AMI Trade — internal cross-sectional signal study, 32 large-cap US equities, 2,891 trading dates, walk-forward (`docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md`) | that cross-sectional demeaning can remove a signal along with the market component — **null result; quote the AUC pair and p-value with the universe and window attached, never as a standalone claim** |
+
+Admitted by the QUANT 13–15 signal-pipeline wave (2026-09-13) for lesson 402, which teaches the
+collapse from 0.5528 to 0.5055 (p=0.62) as AMI's own finding on that universe. The alternative was
+to teach the principle with invented figures while the real measurement sat in an internal doc —
+which is the weaker lesson and the less honest one.
+
+---
+
 ## Verification passes
 
 ### 2026-07-22 — sourced batch (lessons 293–345, 30 lessons) · dual-AI-pass + adversarial refute

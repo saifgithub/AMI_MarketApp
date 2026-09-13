@@ -1,0 +1,104 @@
+---
+id: "402_capstone_why_a_clean_pipeline_still_fails"
+title: "Capstone: why a clean pipeline still fails"
+duration_min: 7
+level: 12
+module: 27
+difficulty: 5
+track: "quant_methods"
+code: "QUANT 15"
+topic: "signal_pipeline_capstone"
+prerequisites: ["400_standardising_a_signal_before_you_combine_it", "401_combining_signals_orthogonality_and_weights", "342_overfitting_and_curve_fitting", "345_data_mining_and_survivorship_bias"]
+tags: ["quant", "capstone", "synthesis", "signal-construction", "evaluation", "sample-size", "level-12"]
+sources: ["Bodie, Kane & Marcus — Investments, 12th ed., ch. 24 (portfolio performance evaluation, the precision of performance measurement)", "AMI Trade — internal cross-sectional signal study, 32 large-cap US equities, 2,891 trading dates, walk-forward by date (docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md)"]
+verified: {by: "quant-pipeline-authoring", date: "2026-09-13", method: "the standard-error table was recomputed independently at 20% annualised volatility — SE of the mean is σ÷√years giving 40.0 pp at 63 observations, 20.0 pp at 252, 8.9 pp at 1,260 and 4.5 pp at 5,040, against SE of volatility σ÷√(2T) giving 1.78/0.89/0.40/0.20 pp; figures match CR136's governing-principle table. The AUC figures 0.5528, 0.5055 and p=0.6231 are quoted verbatim from AMI's own study on the stated universe and window, and are labelled in the lesson body as our result on that data rather than as a general law. No forward-looking claim, no performance claim, no real ticker"}
+agent_callouts: ["research_manager", "trader"]
+locale_versions: ["en"]
+created_at: "2026-09-13"
+updated_at: "2026-09-13"
+---
+
+# Capstone: why a clean pipeline still fails
+
+You can now build the whole thing: standardise each signal, subtract the cross-sectional mean, strip what the factors already explain, weight by the inverse of volatility, and normalise so the absolute weights sum to one. Every step is defensible. The pipeline is still, in most hands, disappointing — and the reasons are worth more than the recipe.
+
+## Three reasons a correct pipeline underdelivers
+
+**One: the step that removes the market can remove the signal with it.** Cross-sectional demeaning is the step that turns "this name rose" into "this name rose more than its peers". If a signal's predictive power came from knowing what the whole market was about to do, that power lives entirely in the part the step deletes.
+
+This is not a hypothetical. AMI ran exactly this test on 32 large-cap US equities across 2,891 trading dates — 92,512 observations, walked forward by date. Predicting each name's own direction, the model scored **0.5528** on a scale where 0.5 is a coin flip. Re-run to predict whether a name would beat the cross-sectional median instead, the same features on the same data scored **0.5055**, with a p-value of **0.62** — indistinguishable from chance.
+
+| Question asked | Score | Verdict |
+|---|---|---|
+| Will this name rise? | 0.5528 | above chance |
+| Will it beat its peers? | 0.5055 | not distinguishable |
+
+The diagnosis was visible in which inputs mattered most: market-wide volatility measures. They describe what every name is doing at once, so they cannot discriminate between two names. That is our result, on that universe, over that window, with those inputs. A different universe, a longer horizon or better data can give a different answer — and the honest reading is that this was a test of our data, not a law about markets.
+
+**Two: the output is far harder to evaluate than it is to build.** For an asset with 20% annualised volatility, the uncertainty in a measured average return is roughly σ divided by the square root of the years observed, while the uncertainty in measured volatility falls much faster:
+
+| Data available | Uncertainty in average return | Uncertainty in volatility |
+|---|---|---|
+| 3 months | **40.0 pp** | 1.78 pp |
+| 1 year | 20.0 pp | 0.89 pp |
+| 5 years | 8.9 pp | 0.40 pp |
+
+Three months of data pins down how risky a book is to within about two points and says essentially nothing about what it earns. This is the arithmetic behind <Lesson id="339_sample_size_and_statistical_significance"/>, and it does not improve with better modelling — only with more years.
+
+**Three: a better model on thin data is still thin.** In the same study, ordinary logistic regression matched gradient boosting, and combining models added 0.003. When the simplest method ties the most sophisticated one, the ceiling is in the data, not the algorithm — which is why <Lesson id="342_overfitting_and_curve_fitting"/> matters more than model selection.
+
+## The steelman
+
+The strongest objection: this reads as an argument for giving up, and it is not one. Everything above is a description of what is hard to *measure*, not proof that nothing is there. The pipeline's individual steps remain correct — standardisation really does make signals comparable, orthogonalisation really does prevent double-counting, and inverse-volatility weighting really does stop a noisy name dominating a book. None of that is undone by a disappointing result on one universe.
+
+What changes is the burden of proof. A pipeline that produces a number is not the same as a pipeline that produces an edge, and the gap between them is filled by evidence you have to go and get — out-of-sample, on data the method never saw, over a window long enough for the answer to mean something. The falsifier is clean: if a signal survives cross-sectional demeaning on data it was not built on, it is discriminating between names, and the objection has been answered on its own terms.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="In AMI's study, the same features scored 0.5528 when predicting a name's own direction and 0.5055 when predicting whether it would beat its peers. What does that gap indicate?"
+  options={[
+    "The second model was poorly specified, since identical features should produce identical scores on the same data",
+    "Most of the apparent predictive power was market-wide movement, which cross-sectional demeaning removes — the features described what all names were doing at once and so could not discriminate between them",
+    "The strategy works but requires a longer holding period than the second test allowed",
+    "Beating the median is inherently harder than rising, so any drop in score is expected and carries no diagnostic information"
+  ]}
+  answer={1}
+  explanation="The features that mattered most were market-wide volatility measures, which take the same value for every name on a given day and therefore cannot rank one against another. Removing the shared market component removed nearly all the measured skill. Identical features do not imply identical scores, because the two models answer different questions. Holding period was not the variable that changed. And while relative prediction is harder, treating the collapse as merely expected discards the diagnosis the comparison hands you."
+/>
+
+<Quiz
+  question="With 20% annualised volatility and three months of data, uncertainty in the measured average return is about 40.0 percentage points while uncertainty in measured volatility is about 1.78. What follows for evaluating a newly built signal pipeline?"
+  options={[
+    "Three months is adequate for both, since the same data supports both measurements equally",
+    "How risky the resulting book is can be established quickly, but whether it earns anything cannot — so early performance figures carry almost no information and the risk figures carry real information",
+    "Neither quantity can be measured at three months, so no evaluation of any kind is possible",
+    "The average return is measurable and the volatility is not, since returns are directly observed while volatility must be inferred"
+  ]}
+  answer={1}
+  explanation="The two uncertainties differ by more than twentyfold at this sample size: risk is pinned down to within about two points while the return estimate is wider than almost any plausible true value. That asymmetry is why second-moment quantities are reportable early and return-based ones are not. Both being adequate would require the return error to be far smaller than it is; neither being usable ignores how tight the volatility estimate already is; and the final answer inverts the relationship, since it is the return estimate that stays imprecise."
+/>
+
+<Quiz
+  question="Someone presents a signal pipeline: standardised, cross-sectionally demeaned, orthogonalised against known factors, inverse-volatility weighted, absolute weights summing to one, and showing strong backtested returns over eight months. Pulling together everything in this module, what is the single most useful question to ask?"
+  options={[
+    "Which model class was used, since a more sophisticated method would strengthen a result this consistent",
+    "Whether the absolute weights sum to exactly one, since a normalisation error would invalidate the construction",
+    "How many signals were combined, since more signals mean better diversification across independent bets",
+    "Whether the result holds on data the pipeline never saw, and over a window long enough that the return estimate means something — because a correct construction is not evidence of an edge, and eight months of returns carries an uncertainty band wide enough to contain almost any conclusion"
+  ]}
+  answer={3}
+  explanation="Every construction step can be executed perfectly and still produce a number with no predictive content; what separates the two is out-of-sample evidence over an adequate window, and at eight months the uncertainty in a measured average return is wider than the result being claimed. Model class is close to irrelevant when a linear method already ties a sophisticated one on the same data. Normalisation is worth checking but is arithmetic hygiene, not evidence. And counting signals measures the library rather than the number of distinct bets, which is exactly the error orthogonalisation exists to prevent."
+/>
+
+## Try it
+
+Find a strategy description that reports a headline return — a vendor sheet, a paper, or a Room verdict — and work out which of the five construction steps it performed and which it skipped. Then ask the two questions this lesson trains: was the market component removed, and is the reporting window long enough for the return figure to mean anything? Log both answers in your Decision Journal alongside your conviction before you asked. Put the same claim to the Research Manager and grade its reasoning against yours — AMI's output is a training artifact for you to judge, never investment advice.
+
+## Takeaway
+
+Every step of the standard pipeline is defensible and none of them manufactures an edge — the step that removes the market can remove the signal too, the returns it produces take years to measure while its risk takes months, and a correct construction is a starting point for evidence rather than a substitute for it.
+
+*Where this comes from: the precision-of-performance-measurement treatment in Bodie, Kane & Marcus, Investments, and AMI's own cross-sectional study on 32 US large-caps over 2,891 trading dates.*

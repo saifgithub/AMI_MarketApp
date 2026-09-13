@@ -1,0 +1,107 @@
+---
+id: "400_standardising_a_signal_before_you_combine_it"
+title: "Standardising a signal before you combine it"
+duration_min: 6
+level: 12
+module: 27
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 13"
+topic: "signal_standardisation"
+prerequisites: ["339_sample_size_and_statistical_significance", "338_correlation_is_not_causation"]
+tags: ["quant", "z-score", "standardisation", "cross-sectional", "signal-construction", "level-12"]
+sources: ["Bodie, Kane & Marcus — Investments, 12th ed., ch. 5 (risk and return measurement) and ch. 24 (portfolio performance evaluation)"]
+verified: {by: "quant-pipeline-authoring", date: "2026-09-13", method: "every figure recomputed from the series printed in the lesson: population means 4/5/8 and standard deviations 2/5/1 from the four-month series shown, z-scores (12−4)÷2=4, (10−5)÷5=1, (9−8)÷1=1, cross-sectional mean (4+1+1)÷3=2, demeaned +2/−1/−1 summing to exactly zero. Series chosen symmetric so every standard deviation is a whole number and the whole example is hand-checkable. All three names openly hypothetical, no real ticker and no market claim"}
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-09-13"
+updated_at: "2026-09-13"
+---
+
+# Standardising a signal before you combine it
+
+Two signals measured on different scales cannot simply be added together. Before anything can be combined, each one has to be put on a common footing — and then compared against its peers on the same day. This lesson walks the four operations that do that, and shows why cross-sectional demeaning changes the claim you are making.
+
+## Example
+
+Three openly hypothetical names. Each has a four-month history of monthly gains, and each behaves differently.
+
+| Name | Four-month history | Mean |
+|---|---|---|
+| Alpha | 2, 6, 2, 6 | 4 |
+| Beta | 0, 10, 0, 10 | 5 |
+| Gamma | 7, 9, 7, 9 | 8 |
+
+**Subtract the mean.** Alpha's readings become −2, +2, −2, +2. The drift is gone; what is left is movement around its own centre.
+
+**Measure the spread.** Squaring those deviations and averaging gives the variance, and its square root is the standard deviation: **2** for Alpha, **5** for Beta, **1** for Gamma. Beta swings five times as widely as Gamma.
+
+**Divide by it.** This month Alpha gains 12, Beta 10, Gamma 9. Dividing each by its own spread converts a raw gain into a count of typical moves:
+
+| Name | This month | Standardised |
+|---|---|---|
+| Alpha | 12 | (12 − 4) ÷ 2 = **4** |
+| Beta | 10 | (10 − 5) ÷ 5 = **1** |
+| Gamma | 9 | (9 − 8) ÷ 1 = **1** |
+
+Beta's 10 and Gamma's 9 look similar in raw terms. Standardised, both are an ordinary month — one typical move. Alpha's is four.
+
+**Subtract the cross-sectional mean.** Now compare across names on the same day. The average standardised reading is (4 + 1 + 1) ÷ 3 = **2**. Subtracting it gives Alpha **+2**, Beta **−1**, Gamma **−1**, and those sum to exactly zero.
+
+Read what just happened. All three names rose this month. After the last step, two of them are *negative*. The number no longer says "this name went up" — it says "this name went up more than its peers did", and that is a different claim about a different thing.
+
+## The trap
+
+The trap is stopping after the third step and believing you have found stock-selection skill. A standardised signal that is positive for every name on a rising day is telling you the market rose. It will look impressive in a backtest, it will be genuinely predictive of something, and it will not help you choose between two names — because it says the same thing about both.
+
+The correct model: standardising against a name's own history makes signals *comparable to each other*, and subtracting the cross-sectional mean makes them *comparable to the market*. Only cross-sectional demeaning isolates what is specific to the name. A signal that survives the first step but not the second was measuring the market all along, and the cost of finding that out later is an entire strategy built on it.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Gamma's four-month history is 7, 9, 7, 9 and this month it reads 9. Its standard deviation is 1. What is its standardised reading?"
+  options={[
+    "9 — the raw reading is already on a standard scale once the history is known",
+    "2 — subtracting the smallest historical value (7) from the current reading",
+    "1 — the mean is 8, so (9 − 8) ÷ 1 = 1, an ordinary month by this name's own standards",
+    "0.125 — dividing the current reading by the historical mean instead of subtracting it"
+  ]}
+  answer={2}
+  explanation="The mean of 7, 9, 7, 9 is 8 and the standard deviation is 1, so (9 − 8) ÷ 1 = 1. The raw-reading answer skips standardisation entirely, which is what makes signals on different scales impossible to compare. Subtracting the lowest historical value measures distance from a floor, not distance from the centre. Dividing by the mean produces a ratio, not a count of typical moves."
+/>
+
+<Quiz
+  question="After standardising, the three names read 4, 1 and 1. The cross-sectional mean is 2. What do the demeaned values become, and what is notable about the result?"
+  options={[
+    "+2, +1, +1 — every name gained, so every demeaned value stays positive",
+    "4, 1, 1 — unchanged, because cross-sectional demeaning applies only to negative readings",
+    "+6, +3, +3 — adding the cross-sectional mean to each reading instead of subtracting it",
+    "+2, −1, −1 — and although all three names gained this month, two now carry negative values, because the number now measures performance relative to peers rather than absolute movement"
+  ]}
+  answer={3}
+  explanation="Subtracting 2 from each gives +2, −1, −1, and those sum to exactly zero — which is the defining property of a cross-sectionally demeaned signal. The sign change on two gaining names is the whole point: the quantity has stopped describing whether a name rose and started describing whether it rose more than the others. Keeping every value positive would mean the market move was never removed, and adding the mean rather than subtracting it doubles the market component instead of stripping it."
+/>
+
+<Quiz
+  question="You are handed a signal whose backtest shows it was positive on almost every name during a rising market and negative on almost every name during a falling one. Bringing together standardisation and cross-sectional demeaning, what is the most likely explanation, and what would test it?"
+  options={[
+    "The signal is unusually strong, since agreeing across the whole universe means every name confirms it",
+    "The signal is broken and should be discarded without further testing",
+    "The signal has a large market component that cross-sectional demeaning was never applied to, and the test is to subtract the cross-sectional mean each day and re-measure — if the predictive power survives, the signal distinguishes between names; if it vanishes, the signal was tracking the market",
+    "The result proves the market itself is predictable, which is a stronger finding than stock selection would be"
+  ]}
+  answer={2}
+  explanation="A signal that moves the same way on nearly every name simultaneously is describing a condition shared by all of them, which is the market. Cross-sectional demeaning is precisely the test: it removes what is common to the day and leaves what is specific to the name. Universal agreement is evidence of a shared driver rather than of strength. Discarding without testing throws away a signal that may still be useful for a different purpose, and market timing is a separate claim requiring its own evidence, not a bonus finding."
+/>
+
+## Try it
+
+Take two holdings in your simulated Portfolio and write down each one's last four monthly moves. Compute each mean, each standard deviation, and this month's standardised reading by hand. Then subtract the average of the two standardised readings from each. Notice which holding stays positive. Ask the Research Manager which of your holdings is genuinely outperforming and check its reasoning against your own arithmetic — AMI's answers are training artifacts for you to grade, never advice.
+
+## Takeaway
+
+Standardising a signal makes it comparable to other signals; subtracting the cross-sectional mean makes it comparable to the market — and only after that second step does a positive number mean the name beat its peers rather than simply rose.
+
+*Where this comes from: the standardisation and relative-performance measurement conventions set out in Bodie, Kane & Marcus, Investments.*

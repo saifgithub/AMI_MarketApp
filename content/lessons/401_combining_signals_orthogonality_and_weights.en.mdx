@@ -1,0 +1,107 @@
+---
+id: "401_combining_signals_orthogonality_and_weights"
+title: "Combining signals: orthogonality and weights"
+duration_min: 6
+level: 12
+module: 27
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 14"
+topic: "signal_combination"
+prerequisites: ["400_standardising_a_signal_before_you_combine_it", "379_factors_value_size_momentum_quality_low_vol", "380_risk_parity_and_risk_budgeting"]
+tags: ["quant", "orthogonalisation", "residual", "signal-combination", "weighting", "level-12"]
+sources: ["Fama & French — Common Risk Factors in the Returns on Stocks and Bonds, Journal of Financial Economics 33(1) (1993), 3–56", "Bodie, Kane & Marcus — Investments, 12th ed., ch. 10 (arbitrage pricing theory and multifactor models)"]
+verified: {by: "quant-pipeline-authoring", date: "2026-09-13", method: "every figure recomputed: correlation 0.8 gives R² = 0.64, so 64% explained and 36% residual; inverse-volatility weights from an identical residual signal of 0.6 at volatilities 1, 2 and 2 give 0.6, −0.3, +0.3, whose absolute values sum to 1.2, normalising to exactly +50%, −25%, +25% with Σ|w| = 1. Volatilities chosen so every weight is a whole percentage. Both cited works verified against the publishers' records; no factor premium magnitude is asserted anywhere, only the structure of the decomposition. All names openly hypothetical"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-09-13"
+updated_at: "2026-09-13"
+---
+
+# Combining signals: orthogonality and weights
+
+Standardised signals can be added together, but adding them naively double-counts whatever they share. Two decisions remain: how much of each signal is genuinely new information, and how much weight each one earns. Both have a defensible answer, and both are easy to get wrong in the same direction.
+
+## Example
+
+Start with a signal that has already been standardised and cross-sectionally demeaned, per <Lesson id="400_standardising_a_signal_before_you_combine_it"/>.
+
+**Ask what is already explained.** Suppose this signal correlates 0.8 with a momentum factor you already hold — one of the factors covered in <Lesson id="379_factors_value_size_momentum_quality_low_vol"/>. Squaring that correlation gives R² = **0.64**. So 64% of the signal's variation is movement you already own, and only **36%** is new.
+
+The part that is left over after removing what a factor explains is called the **residual**. Working with the residual instead of the raw signal is *orthogonalisation*, and the reason for it is simple: adding a signal that is two-thirds momentum to a book that already holds momentum is buying the same exposure twice while believing you diversified.
+
+**Then decide the weights.** Three hypothetical names, each with an identical residual signal strength of 0.6 — Beta's pointing the other way — but different volatilities:
+
+| Name | Residual ÷ volatility | Raw weight |
+|---|---|---|
+| Alpha | +0.6 ÷ 1 | **+0.6** |
+| Beta | −0.6 ÷ 2 | **−0.3** |
+| Gamma | +0.6 ÷ 2 | **+0.3** |
+
+Dividing by volatility is inverse-volatility weighting, the same idea as in <Lesson id="380_risk_parity_and_risk_budgeting"/>: equal conviction in a noisier name earns a smaller position, because the position size that matters is the risk it contributes.
+
+**Finally, normalise.** The absolute values sum to 0.6 + 0.3 + 0.3 = **1.2**. Dividing each by 1.2 gives **+50%**, **−25%** and **+25%**, and their absolute values now sum to exactly 1.
+
+Note the absolute value. Beta's weight is negative and still consumes a quarter of the budget, because a position that pays when a name falls is still a position with risk in it. A budget that netted the long and short legs against each other would report this book as half-invested when it is fully committed.
+
+## The trap
+
+The trap is adding a fourth signal that correlates 0.9 with one already in the book and recording it as diversification. The count of signals went up, the number of distinct bets did not. At 0.9 correlation only 19% of the new signal is new, so roughly four-fifths of the position it earns is a top-up of a bet already held — taken while believing risk had been spread.
+
+The correct habit: before a signal earns weight, measure what it shares with everything already in the book and keep only the residual. The test is uncomfortable on purpose, because a signal that looks strong in isolation frequently turns out to be a signal you already own wearing different notation. Counting signals measures your library. Counting residuals measures your bets.
+
+## The steelman
+
+The strongest case against all of this: every step adds a parameter fitted to history, and each one is a chance to overfit. The correlation used for orthogonalisation is itself estimated from a sample and will be different next year; the volatilities used for weighting are backward-looking; and a book weighted this way concentrates capital in whatever has recently been quiet, with no view on whether it is worth owning. Those are real objections, and <Lesson id="342_overfitting_and_curve_fitting"/> is the reason to take them seriously.
+
+What survives is the ordering, not the precision. You do not need the correlation to be exactly 0.8 to know that a signal sharing most of its variation with one you hold is mostly not new. Fixed, simple weights — inverse volatility, or even equal weights — cannot overfit in the way an optimiser fitted to the same history can, which is a genuine argument for the crude version over the sophisticated one. The falsifier is available: run the book with the residual step and without it, on data neither version was built on, and see which holds up.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A candidate signal correlates 0.8 with a factor already held in the book. How much of the signal's variation is new information?"
+  options={[
+    "80% — the correlation itself measures the share the signal has in common",
+    "36% — squaring the correlation gives R² = 0.64, so 64% is already explained and the residual is the remaining 36%",
+    "20% — subtracting the correlation from 1 gives the unexplained share directly",
+    "64% — the squared correlation measures the part that is new"
+  ]}
+  answer={1}
+  explanation="R² = 0.8² = 0.64 is the share of variation explained by the factor, leaving 0.36 as the residual. Reading the correlation itself as a share confuses a correlation with a proportion of variance. Subtracting the correlation from 1 skips the squaring step and overstates what is new. And treating the squared correlation as the new part inverts the quantity — 64% is precisely the portion already owned."
+/>
+
+<Quiz
+  question="Three names carry an identical residual signal strength of 0.6, with Beta's pointing the opposite way. Their volatilities are 1, 2 and 2 respectively. After inverse-volatility weighting and normalising so the absolute weights sum to 1, what does each name receive?"
+  options={[
+    "+33%, −33%, +33% — the signal strength is identical, so the weights are equal",
+    "+20%, −40%, +40% — weighting each name in proportion to its volatility rather than inversely",
+    "+50%, −25%, +25% — dividing 0.6 by each volatility gives 0.6, −0.3 and 0.3, whose absolute values sum to 1.2, and dividing through by 1.2 normalises them",
+    "+60%, −30%, +30% — the raw quotients, which already sum to 1.2 and need no normalising"
+  ]}
+  answer={2}
+  explanation="Dividing the shared 0.6 signal by volatilities of 1, 2 and 2 gives 0.6, −0.3 and +0.3; the absolute values sum to 1.2, and dividing each by 1.2 yields +50%, −25% and +25%. Equal weights would ignore volatility entirely, which is the thing the step exists to account for. Weighting in proportion to volatility inverts the logic, handing the largest position to the noisiest name. And the raw quotients sum to 1.2 rather than 1, so a book built on them is over-committed by a fifth."
+/>
+
+<Quiz
+  question="An analyst adds a fifth signal to a book, reporting it as improved diversification. It correlates 0.9 with a signal already held. Drawing on both orthogonality and weighting, what has actually changed, and what should have been done instead?"
+  options={[
+    "Diversification improved, since five signals spread risk more widely than four regardless of how they relate to each other",
+    "Only 19% of the new signal is new, so most of the weight it receives is a top-up of a bet already held — the book concentrated rather than diversified, and the fix is to orthogonalise the candidate against the existing signals and weight only the residual",
+    "Nothing changed, because a correlation below 1.0 means the two signals are independent by definition",
+    "The book improved, because a high correlation between two signals confirms both are measuring something real"
+  ]}
+  answer={1}
+  explanation="At 0.9 correlation, R² = 0.81 and only 19% of the candidate is new, so roughly four-fifths of its weight duplicates exposure already held — the opposite of diversification, and done while believing the reverse. Counting signals rather than residuals is what makes the error invisible. A correlation below 1.0 does not imply independence; only a correlation of zero does. And two signals agreeing may well both be real, but that is an argument for holding one of them, not for paying twice for the same bet."
+/>
+
+## Try it
+
+Pick two holdings in your simulated Portfolio that you believe you hold for different reasons. Write down each one's last twelve monthly moves and estimate how closely they track each other. Square that estimate to see how much of the second holding is explained by the first, and ask yourself whether the remaining share justifies a separate position. Then put the same question to the Portfolio Manager and grade its reasoning against your own arithmetic rather than the other way round — AMI's answers are training artifacts, never advice.
+
+## Takeaway
+
+A signal earns weight only for the part of it you do not already own, and the weight it earns shrinks with its volatility — count residuals rather than signals, and use absolute values when checking the budget, because a short position spends risk too.
+
+*Where this comes from: the residual-after-factors decomposition introduced in Fama & French's multifactor work (1993) and the multifactor treatment in Bodie, Kane & Marcus, Investments.*
