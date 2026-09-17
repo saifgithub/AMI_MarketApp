@@ -1,0 +1,47 @@
+{
+  "note": "descriptive, derived after the run from stored arrays; not pre-registered",
+  "month_share_beats_spy_by_10pt": 0.06508688041275106,
+  "per_bot_share_of_weeks_beating_spy": {
+    "min": 0.47271725151570826,
+    "median": 0.5057872496784861,
+    "max": 0.5405107477494029
+  },
+  "share_of_4_consecutive_non_overlapping_weeks_all_beating_spy": 0.06176749539594843,
+  "rsi_rule_pooled_trades": {
+    "DEFINE": {
+      "n_trades": 284,
+      "n_wins": 227,
+      "win_rate": 0.7992957746478874,
+      "mean_exposure": 0.3700496986474846,
+      "tickers_with_100pct_win_rate": [
+        {
+          "ticker": "TSLA",
+          "n_trades": 9,
+          "net_total_return": 3.9824271788849277,
+          "buy_hold_total_return": 11.897245654440264
+        }
+      ]
+    },
+    "HOLDOUT": {
+      "n_trades": 155,
+      "n_wins": 118,
+      "win_rate": 0.7612903225806451,
+      "mean_exposure": 0.3681700118063755,
+      "tickers_with_100pct_win_rate": [
+        {
+          "ticker": "AAPL",
+          "n_trades": 9,
+          "net_total_return": 2.467307871149379,
+          "buy_hold_total_return": 8.361761392526185
+        }
+      ]
+    },
+    "intraday_60m": {
+      "n_trades": 535,
+      "n_wins": 383,
+      "win_rate": 0.7158878504672898,
+      "mean_exposure": 0.43594105323473065,
+      "tickers_with_100pct_win_rate": []
+    }
+  }
+}

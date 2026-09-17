@@ -1,0 +1,48 @@
+C07 -- "I gave an AI bot real money and it beat the market" -- RESULTS SUMMARY
+==============================================================================
+
+PART 1 -- the disclosed rule: Wilder RSI(14), long<30/flat>70, long/flat only
+U-EQ (22 tickers), next_open execution, 5.0 bps/side, 500 placebo reps
+------------------------------------------------------------------------------
+[DEFINE (2005-2018)]
+  Tickers beating buy-and-hold net: 3/22
+  Zero-trade tickers (excluded from placebo mean): none
+  Paired diff, mean daily net return (rule - buy&hold): -0.000350 [-0.000449, -0.000255] (block bootstrap, block_len=84)
+  Mean placebo percentile across tickers: 0.573 [0.482, 0.676] (22/22 tickers with trades)
+
+[HOLDOUT (2019-2026)]
+  Tickers beating buy-and-hold net: 2/22
+  Zero-trade tickers (excluded from placebo mean): none
+  Paired diff, mean daily net return (rule - buy&hold): -0.000580 [-0.000754, -0.000410] (block bootstrap, block_len=70)
+  Mean placebo percentile across tickers: 0.583 [0.505, 0.657] (22/22 tickers with trades)
+
+[60-minute (~730 days)]
+  Tickers beating buy-and-hold net: 3/22
+  Zero-trade tickers (excluded from placebo mean): none
+  Paired diff, mean daily net return (rule - buy&hold): -0.000080 [-0.000115, -0.000046] (block bootstrap, block_len=96)
+  Mean placebo percentile across tickers: 0.569 [0.499, 0.650] (22/22 tickers with trades)
+
+PART 2 -- what a short window can show: the zero-skill bot
+2000 bots, ['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'NVDA', 'TSLA', 'DIS', 'JPM', 'KO', 'WMT'], 2005-01-03 -> 2026-08-31 (5448 trading days)
+------------------------------------------------------------------------------
+[Zero-skill bot vs SPY]
+  1-week windows (n=10886000): beats SPY 50.56%, by >=1pt 35.90%, by >=3pt 14.83%
+  1-month (21d) windows (n=10854000): beats SPY 51.05%, by >=1pt 44.05%, by >=3pt 31.11%
+  Weekly excess return percentiles (5/25/50/75/95): -4.98% / -1.79% / 0.04% / 1.87% / 5.27%
+  Monthly excess return percentiles (5/25/50/75/95): -9.69% / -3.68% / 0.15% / 4.10% / 11.11%
+
+[Part 1 RSI rule as a 22-ticker equal-weight portfolio, vs SPY, same window]
+  Construction: mean of the 22 U-EQ tickers' Part-1 RSI-rule daily net returns (equal-weight, rebalanced daily), compounded into a price path
+  1-week windows (n=5443): beats SPY 43.27%, by >=1pt 17.53%, by >=3pt 2.28%
+  1-month windows (n=5427): beats SPY 39.60%, by >=1pt 26.33%, by >=3pt 10.17%
+
+[Trending-month conditional: equal-weight basket up >= 8% over 21 days]
+  Trending 21-day windows: 479 of 5427 (8.83% of all windows)
+  Trade win rate in trending windows: 60.88% [60.80%, 60.96%] (n=1437359 trades)
+  Trade win rate unconditionally: 52.65% [52.63%, 52.68%] (n=16339286 trades)
+  Mean 21-day basket return in trending windows: 11.35%
+
+[Sample-size arithmetic for a genuine +5pt/year edge at 2 standard errors]
+  Weekly: measured sigma=0.03243, mu/week=0.00096 -> n=4549.0 weeks (87.48 years)
+  Monthly: measured sigma=0.06475, mu/month=0.00417 -> n=965.9 months (80.49 years)
+

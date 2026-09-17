@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "AMZN",
+      "GOOGL",
+      "NVDA",
+      "TSLA",
+      "DIS",
+      "JPM",
+      "KO",
+      "WMT"
+    ],
+    "start": "2005-01-03",
+    "end": "2026-08-31",
+    "n_bots": 2000,
+    "n_trading_days": 5448,
+    "week_window": 5,
+    "month_window": 21,
+    "trending_threshold": 0.08,
+    "edge_pts_per_year_for_sample_size": 0.05
+  },
+  "zero_skill_bot": {
+    "week_vs_spy": {
+      "n_pairs": 10886000,
+      "share_beats_spy": 0.50561850082675,
+      "share_beats_spy_by_1pt": 0.35901919897115564,
+      "share_beats_spy_by_3pt": 0.14833510931471616
+    },
+    "month_vs_spy": {
+      "n_pairs": 10854000,
+      "share_beats_spy": 0.5105160309563295,
+      "share_beats_spy_by_1pt": 0.44054864566058594,
+      "share_beats_spy_by_3pt": 0.31107987838584855
+    },
+    "week_excess_percentiles": {
+      "p5": -0.049846920080598336,
+      "p25": -0.017924661939883846,
+      "p50": 0.00037044445542011584,
+      "p75": 0.01872740659231395,
+      "p95": 0.05273938858405271
+    },
+    "month_excess_percentiles": {
+      "p5": -0.0968925885082541,
+      "p25": -0.03677312881350028,
+      "p50": 0.0014877455935402573,
+      "p75": 0.04101584849120837,
+      "p95": 0.1111355566584737
+    }
+  },
+  "rsi_rule_equal_weight_portfolio": {
+    "construction": "mean of the 22 U-EQ tickers' Part-1 RSI-rule daily net returns (equal-weight, rebalanced daily), compounded into a price path",
+    "week_vs_spy": {
+      "n_pairs": 5443,
+      "share_beats_spy": 0.4326658092963439,
+      "share_beats_spy_by_1pt": 0.17527099026272278,
+      "share_beats_spy_by_3pt": 0.02278155428991365
+    },
+    "month_vs_spy": {
+      "n_pairs": 5427,
+      "share_beats_spy": 0.39598304772434123,
+      "share_beats_spy_by_1pt": 0.2633130643080892,
+      "share_beats_spy_by_3pt": 0.10171365395245992
+    }
+  },
+  "trending_month_conditional": {
+    "n_trending_windows": 479,
+    "n_total_21d_windows": 5427,
+    "share_of_windows_trending": 0.08826239174497881,
+    "trend_trade_win_rate": 0.6088353709824755,
+    "trend_trade_win_rate_wilson_ci": {
+      "estimate": 0.6088353709824755,
+      "lower": 0.6080372789961553,
+      "upper": 0.6096328812275905
+    },
+    "n_trend_trades": 1437359,
+    "trend_mean_21d_return": 0.11352691426874051,
+    "unconditional_trade_win_rate": 0.5265171317767496,
+    "unconditional_trade_win_rate_wilson_ci": {
+      "estimate": 0.5265171317767496,
+      "lower": 0.5262750282730331,
+      "upper": 0.526759222811813
+    },
+    "n_all_trades": 16339286
+  },
+  "sample_size_arithmetic": {
+    "weekly": {
+      "sigma": 0.03242606915920305,
+      "mu_per_period": 0.0009615384615384616,
+      "n_periods": 4548.993111778401,
+      "n_years": 87.48063676496925
+    },
+    "monthly": {
+      "sigma": 0.064746817237312,
+      "mu_per_period": 0.004166666666666667,
+      "n_periods": 965.8714388801777,
+      "n_years": 80.48928657334814
+    }
+  }
+}
