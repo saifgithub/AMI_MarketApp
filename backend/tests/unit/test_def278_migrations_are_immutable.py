@@ -64,14 +64,65 @@ _VERSIONS = _REPO_ROOT / "backend" / "alembic" / "versions"
 # is in git permanently, so no repair can make this assertion pass again, and
 # leaving it red would be the suite complaining about something already fixed.
 #
+# `cr222a0b0c0d4` is a BASELINE with no repair revision, and it is the only
+# entry that earns that on measurement rather than on age (DEF411, 2026-09-17).
+# It was committed in `6159a62b` (07:05) and edited 16 minutes later in
+# `839c3283` (DEF406) to re-parent it from `cr219a0b0c0d3` onto
+# `cr221a0b0c0d4`: CR221 and CR222 had both branched the same parent, so `main`
+# carried two heads and `upgrade head` would have refused. One invariant had to
+# give way to the other.
+#
+# Two facts make a repair impossible to write honestly here.
+#
+# First, the DDL did not change. Parsing both forms and hashing the AST of each
+# function gives identical digests — `upgrade` f17148e6de849606 and `downgrade`
+# fb351fc49dfbbe14 in both — and the only changed module value is
+# `down_revision`. Since `alembic_version` records only the revision id, a
+# database stamped `cr222a0b0c0d4` has by definition run that `upgrade()` and
+# therefore holds all three nullable `toll_charged` columns whichever form it
+# ran. There is no missing column to repair. That is the whole difference from
+# `c109g000007a` and `cr221a0b0c0d4` above, where the DDL genuinely differed.
+#
+# Second, no database ran either form — MEASURED on Alpha, not inferred.
+# 2026-09-17, `ami_postgres` / database `ami_trade` (role `postgres`, not `ami`
+# — DEF407 names that trap): `alembic_version` reads **`cr219a0b0c0d3`**, the
+# revision immediately before this one; `information_schema` reports no
+# `toll_charged` column on any table and no `edgar_8k%` table. So Alpha sits
+# one revision short of this file and will run the current form when it next
+# upgrades. This closes the measurement DEF407 could not take — the Mac's
+# routes to melehost were timing out that day, so it argued from git ancestry
+# alone; the live stamp now agrees with that argument.
+#
+# What a re-parent CAN strand is the NEW parent's DDL: under the pre-edit chain
+# `cr221a0b0c0d4` was a sibling head that never ran, so a database stamped
+# `cr222a0b0c0d4` by that path would lack the edgar_8k tables and no later
+# `upgrade head` would add them. That failure mode is real in general and
+# unreachable here — the measurement above shows no database took that path.
+#
+# A repair revision would therefore reconcile nothing. Shipping an empty one to
+# satisfy this list's letter would assert a fix that never happened and lengthen
+# the chain for ceremony. The guard was still right to fire: it cannot see that
+# `upgrade()` was untouched, and "the edit was inert" is a conclusion reached by
+# a human reading ancestry and querying the live database — which is what this
+# comment records.
+#
+# On authority, since this list is where that gets decided: DEF407 left this
+# file failing deliberately, as the peer lane's to judge. That deferral was
+# lifted by Saiful on 2026-09-17 against the measurement above, and this entry
+# is filed as DEF411 rather than made silently. The DEF407 row is amended to
+# point here.
+#
 # This list is for edits that have a shipped repair or a deliberate baseline.
 # It is NOT a way to quiet the guard: add a file here only together with the
-# revision that reconciles the databases, and name that revision.
+# revision that reconciles the databases, and name that revision — or, as with
+# `cr222a0b0c0d4`, with the measured evidence that there is no database to
+# reconcile, and the named authority that lifted any standing deferral.
 _PRE_GUARD_EDITS = frozenset({
     "8a4ce4f8abc3_notifications_price_alerts.py",
     "a9d1c7e80006_admin_backoffice.py",
     "c109g000007a_cr109_slice4_placement.py",
     "cr221a0b0c0d4_edgar_8k_items.py",  # repaired by e221i000009c
+    "cr222a0b0c0d4_training_toll.py",  # baseline, no repair — DEF411, see above
 })
 
 
