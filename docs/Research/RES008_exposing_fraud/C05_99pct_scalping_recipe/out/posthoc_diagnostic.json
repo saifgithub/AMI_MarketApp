@@ -1,0 +1,2591 @@
+{
+  "note": "EXPLORATORY -- not pre-registered; written and run after the pre-registered results were seen.",
+  "meta": {
+    "seed": 20260917,
+    "n_placebo_reps": 500,
+    "distance_matched_dropped_for_5m": false,
+    "wall_time_s": 1013.9797880649567
+  },
+  "cells": {
+    "V1_strict_60m": {
+      "n_trades": 798,
+      "gross_expectancy_r": {
+        "recipe": 0.04337206862616137,
+        "placebo_p5": -0.1289066925053764,
+        "placebo_p50": -0.05880734254170433,
+        "placebo_p95": 0.009613688541237545,
+        "recipe_percentile_in_placebo": 0.994
+      },
+      "gross_win_rate": {
+        "recipe": 0.4298245614035088,
+        "placebo_p5": 0.3556863284664444,
+        "placebo_p50": 0.38270802617625,
+        "placebo_p95": 0.40835814717603497
+      },
+      "net_win_rate": {
+        "recipe": 0.4298245614035088
+      },
+      "net_expectancy_pct": {
+        "recipe": 0.0008261908675245821,
+        "placebo_p5": -0.0035689357920309344,
+        "placebo_p50": -0.002151996852658726,
+        "placebo_p95": -0.0009491793138984281,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_expectancy_pct": {
+        "recipe": 0.0024139101657701975,
+        "placebo_p5": -0.0019779032219150684,
+        "placebo_p50": -0.0005575878837298874,
+        "placebo_p95": 0.0006448034563729359
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.009331445291141017,
+        "recipe_p50": 0.020728556296376148,
+        "placebo_p10": 0.0018611814316623447,
+        "placebo_p50": 0.008973520929178923
+      },
+      "avg_cost_r": {
+        "recipe": 0.09376306960821512,
+        "placebo_p50": 0.5258511565444566
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 236,
+          "recipe_stop_dist_pct_p10": 0.008409933998509558,
+          "recipe_stop_dist_pct_p50": 0.015740587053781147,
+          "placebo_stop_dist_pct_p10": 0.0015374242910487872,
+          "placebo_stop_dist_pct_p50": 0.006671311510405419,
+          "distance_matched_floor_used": 0.008409933998509558,
+          "distance_matched_n_floor_exhausted": 22372
+        },
+        "ETH-USD": {
+          "n_taken": 233,
+          "recipe_stop_dist_pct_p10": 0.013303560730141849,
+          "recipe_stop_dist_pct_p50": 0.024402533241818,
+          "placebo_stop_dist_pct_p10": 0.0023865944651511556,
+          "placebo_stop_dist_pct_p50": 0.009609396336658301,
+          "distance_matched_floor_used": 0.013303560730141849,
+          "distance_matched_n_floor_exhausted": 22546
+        },
+        "SPY": {
+          "n_taken": 68,
+          "recipe_stop_dist_pct_p10": 0.005781176450166625,
+          "recipe_stop_dist_pct_p50": 0.011205306073549776,
+          "placebo_stop_dist_pct_p10": 0.0008862585448338315,
+          "placebo_stop_dist_pct_p50": 0.004982090691245953,
+          "distance_matched_floor_used": 0.005781176450166625,
+          "distance_matched_n_floor_exhausted": 6815
+        },
+        "QQQ": {
+          "n_taken": 66,
+          "recipe_stop_dist_pct_p10": 0.008216830043516116,
+          "recipe_stop_dist_pct_p50": 0.016063273444376195,
+          "placebo_stop_dist_pct_p10": 0.001282603399994475,
+          "placebo_stop_dist_pct_p50": 0.007834836374355357,
+          "distance_matched_floor_used": 0.008216830043516116,
+          "distance_matched_n_floor_exhausted": 6512
+        },
+        "AAPL": {
+          "n_taken": 63,
+          "recipe_stop_dist_pct_p10": 0.014400589235058174,
+          "recipe_stop_dist_pct_p50": 0.022354496794878574,
+          "placebo_stop_dist_pct_p10": 0.0025139170591991057,
+          "placebo_stop_dist_pct_p50": 0.010915568522244373,
+          "distance_matched_floor_used": 0.014400589235058174,
+          "distance_matched_n_floor_exhausted": 6441
+        },
+        "NVDA": {
+          "n_taken": 70,
+          "recipe_stop_dist_pct_p10": 0.022752153414593593,
+          "recipe_stop_dist_pct_p50": 0.03908440402455855,
+          "placebo_stop_dist_pct_p10": 0.003530554668679665,
+          "placebo_stop_dist_pct_p50": 0.01691040629175389,
+          "distance_matched_floor_used": 0.022752153414593593,
+          "distance_matched_n_floor_exhausted": 7103
+        },
+        "TSLA": {
+          "n_taken": 62,
+          "recipe_stop_dist_pct_p10": 0.0336480948932853,
+          "recipe_stop_dist_pct_p50": 0.04800846090109415,
+          "placebo_stop_dist_pct_p10": 0.004697184556204365,
+          "placebo_stop_dist_pct_p50": 0.02009060060205705,
+          "distance_matched_floor_used": 0.0336480948932853,
+          "distance_matched_n_floor_exhausted": 6633
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 112,
+            "net_pct": 0.0025787892007006655,
+            "gross_pct": 0.004578789200700667
+          },
+          "short": {
+            "n": 124,
+            "net_pct": -0.0026604582353664825,
+            "gross_pct": -0.0006604582353664808
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 119,
+            "net_pct": 0.001053858761434081,
+            "gross_pct": 0.003053858761434083
+          },
+          "short": {
+            "n": 114,
+            "net_pct": -0.005064536053386322,
+            "gross_pct": -0.0030645360533863206
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 37,
+            "net_pct": 0.005432882627441034,
+            "gross_pct": 0.006432882627441035
+          },
+          "short": {
+            "n": 31,
+            "net_pct": -0.0036262956996987524,
+            "gross_pct": -0.0026262956996987515
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 35,
+            "net_pct": 0.01109439766767885,
+            "gross_pct": 0.012094397667678851
+          },
+          "short": {
+            "n": 31,
+            "net_pct": 0.0005478123519055537,
+            "gross_pct": 0.0015478123519055546
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 28,
+            "net_pct": -0.0054617368682369815,
+            "gross_pct": -0.004461736868236981
+          },
+          "short": {
+            "n": 35,
+            "net_pct": -0.01192716398730725,
+            "gross_pct": -0.010927163987307248
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 40,
+            "net_pct": 0.028427753949233758,
+            "gross_pct": 0.02942775394923376
+          },
+          "short": {
+            "n": 30,
+            "net_pct": 0.010626512590735996,
+            "gross_pct": 0.011626512590735997
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 33,
+            "net_pct": -0.003950063400614488,
+            "gross_pct": -0.002950063400614487
+          },
+          "short": {
+            "n": 29,
+            "net_pct": -0.0033358966531131335,
+            "gross_pct": -0.0023358966531131327
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 78422,
+        "net_expectancy_r": {
+          "placebo_p5": -0.4934109785472712,
+          "placebo_p50": -0.23704376495514268,
+          "placebo_p95": -0.15350580729246494,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.005069442762574476,
+          "placebo_p50": -0.0032947676514674972,
+          "placebo_p95": -0.0014840266916803693,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "win_rate": {
+          "placebo_p5": 0.36488188850530623,
+          "placebo_p50": 0.3907035175879397,
+          "placebo_p95": 0.4164662447257384,
+          "recipe_percentile_in_placebo": 0.992
+        }
+      }
+    },
+    "V1_strict_5m": {
+      "n_trades": 696,
+      "gross_expectancy_r": {
+        "recipe": -0.012188830393877666,
+        "placebo_p5": -0.2128715849327843,
+        "placebo_p50": -0.12554577743457856,
+        "placebo_p95": -0.038235143568565555,
+        "recipe_percentile_in_placebo": 0.984
+      },
+      "gross_win_rate": {
+        "recipe": 0.42528735632183906,
+        "placebo_p5": 0.2368343195266272,
+        "placebo_p50": 0.2637356857323194,
+        "placebo_p95": 0.2926559943157351
+      },
+      "net_win_rate": {
+        "recipe": 0.40086206896551724
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.0019299710552421235,
+        "placebo_p5": -0.0023881068237875977,
+        "placebo_p50": -0.002001962361120908,
+        "placebo_p95": -0.0016416405824760515,
+        "recipe_percentile_in_placebo": 0.622
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.00030640783685131835,
+        "placebo_p5": -0.0007668388138724635,
+        "placebo_p50": -0.00038068880078616954,
+        "placebo_p95": -1.995208174824832e-05
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.001808098397208977,
+        "recipe_p50": 0.004152702669784302,
+        "placebo_p10": 0.00036427986455151833,
+        "placebo_p50": 0.0021465427189352013
+      },
+      "avg_cost_r": {
+        "recipe": 0.5097696470783418,
+        "placebo_p50": 3.211819778839578
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 233,
+          "recipe_stop_dist_pct_p10": 0.001541558366174719,
+          "recipe_stop_dist_pct_p50": 0.0033106710020691693,
+          "placebo_stop_dist_pct_p10": 0.00030745306763381176,
+          "placebo_stop_dist_pct_p50": 0.0017915611293012911,
+          "distance_matched_floor_used": 0.001541558366174719,
+          "distance_matched_n_floor_exhausted": 21293
+        },
+        "ETH-USD": {
+          "n_taken": 201,
+          "recipe_stop_dist_pct_p10": 0.0021955593036138274,
+          "recipe_stop_dist_pct_p50": 0.004239211746983262,
+          "placebo_stop_dist_pct_p10": 0.00046795845249767353,
+          "placebo_stop_dist_pct_p50": 0.0024763295169414837,
+          "distance_matched_floor_used": 0.0021955593036138274,
+          "distance_matched_n_floor_exhausted": 18523
+        },
+        "SPY": {
+          "n_taken": 58,
+          "recipe_stop_dist_pct_p10": 0.0012887195542958059,
+          "recipe_stop_dist_pct_p50": 0.0024009138440555158,
+          "placebo_stop_dist_pct_p10": 0.0002085182862422244,
+          "placebo_stop_dist_pct_p50": 0.0011040084909096457,
+          "distance_matched_floor_used": 0.0012887195542958059,
+          "distance_matched_n_floor_exhausted": 5817
+        },
+        "QQQ": {
+          "n_taken": 52,
+          "recipe_stop_dist_pct_p10": 0.0020543969700739678,
+          "recipe_stop_dist_pct_p50": 0.004392335040108097,
+          "placebo_stop_dist_pct_p10": 0.00025490019477521155,
+          "placebo_stop_dist_pct_p50": 0.0015993441687302157,
+          "distance_matched_floor_used": 0.0020543969700739678,
+          "distance_matched_n_floor_exhausted": 5214
+        },
+        "AAPL": {
+          "n_taken": 56,
+          "recipe_stop_dist_pct_p10": 0.003094368072327422,
+          "recipe_stop_dist_pct_p50": 0.00513790477187026,
+          "placebo_stop_dist_pct_p10": 0.0005702978961367058,
+          "placebo_stop_dist_pct_p50": 0.0026867844758617916,
+          "distance_matched_floor_used": 0.003094368072327422,
+          "distance_matched_n_floor_exhausted": 5644
+        },
+        "NVDA": {
+          "n_taken": 53,
+          "recipe_stop_dist_pct_p10": 0.00459627509951746,
+          "recipe_stop_dist_pct_p50": 0.008122785538229173,
+          "placebo_stop_dist_pct_p10": 0.0006258527969830942,
+          "placebo_stop_dist_pct_p50": 0.0029262216026239374,
+          "distance_matched_floor_used": 0.00459627509951746,
+          "distance_matched_n_floor_exhausted": 5563
+        },
+        "TSLA": {
+          "n_taken": 43,
+          "recipe_stop_dist_pct_p10": 0.006211464202280514,
+          "recipe_stop_dist_pct_p50": 0.009395033941256948,
+          "placebo_stop_dist_pct_p10": 0.0007960956248677984,
+          "placebo_stop_dist_pct_p50": 0.004470205120850842,
+          "distance_matched_floor_used": 0.006211464202280514,
+          "distance_matched_n_floor_exhausted": 4435
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 119,
+            "net_pct": -0.0013716067678490197,
+            "gross_pct": 0.0006283932321509807
+          },
+          "short": {
+            "n": 114,
+            "net_pct": -0.002399688644921631,
+            "gross_pct": -0.00039968864492163014
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 100,
+            "net_pct": -0.0005292125099732701,
+            "gross_pct": 0.0014707874900267304
+          },
+          "short": {
+            "n": 101,
+            "net_pct": -0.002433125052148149,
+            "gross_pct": -0.0004331250521481484
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 30,
+            "net_pct": -0.0018219705605369522,
+            "gross_pct": -0.0008219705605369517
+          },
+          "short": {
+            "n": 28,
+            "net_pct": -0.0017467910289337648,
+            "gross_pct": -0.0007467910289337647
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 29,
+            "net_pct": -0.003096029678015412,
+            "gross_pct": -0.0020960296780154113
+          },
+          "short": {
+            "n": 23,
+            "net_pct": -0.0016630384648630328,
+            "gross_pct": -0.000663038464863032
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 28,
+            "net_pct": -0.005499523213033942,
+            "gross_pct": -0.004499523213033941
+          },
+          "short": {
+            "n": 28,
+            "net_pct": -0.003047780969207833,
+            "gross_pct": -0.002047780969207832
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 22,
+            "net_pct": 0.0010918771351868049,
+            "gross_pct": 0.0020918771351868056
+          },
+          "short": {
+            "n": 31,
+            "net_pct": -0.0015303608070605075,
+            "gross_pct": -0.0005303608070605065
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 19,
+            "net_pct": 0.00031512509926582465,
+            "gross_pct": 0.0013151250992658255
+          },
+          "short": {
+            "n": 24,
+            "net_pct": -0.00497692596029554,
+            "gross_pct": -0.003976925960295539
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 66489,
+        "net_expectancy_r": {
+          "placebo_p5": -24.49841685747275,
+          "placebo_p50": -1.012687045095856,
+          "placebo_p95": -0.7888594264095994,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.002661180578727375,
+          "placebo_p50": -0.0022090774855453043,
+          "placebo_p95": -0.0017915594402358975,
+          "recipe_percentile_in_placebo": 0.842
+        },
+        "win_rate": {
+          "placebo_p5": 0.31841756759007844,
+          "placebo_p50": 0.34876989869753977,
+          "placebo_p95": 0.3735560547333803,
+          "recipe_percentile_in_placebo": 0.998
+        }
+      }
+    },
+    "V1_strict_daily": {
+      "n_trades": 659,
+      "gross_expectancy_r": {
+        "recipe": -0.062454822425666,
+        "placebo_p5": -0.11667816408265774,
+        "placebo_p50": -0.03608760789071404,
+        "placebo_p95": 0.04069921985595207,
+        "recipe_percentile_in_placebo": 0.308
+      },
+      "gross_win_rate": {
+        "recipe": 0.38239757207890746,
+        "placebo_p5": 0.3595468899170155,
+        "placebo_p50": 0.3913738019169329,
+        "placebo_p95": 0.4247563705883832
+      },
+      "net_win_rate": {
+        "recipe": 0.38239757207890746
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.006721988856087047,
+        "placebo_p5": -0.006783273302418329,
+        "placebo_p50": -0.0013692562537997953,
+        "placebo_p95": 0.0038544528284629323,
+        "recipe_percentile_in_placebo": 0.058
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.005568726337118912,
+        "placebo_p5": -0.005621167512608888,
+        "placebo_p50": -0.0002090963529505135,
+        "placebo_p95": 0.005016898193082212
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.02567665176528906,
+        "recipe_p50": 0.07849095108224538,
+        "placebo_p10": 0.006010461932077872,
+        "placebo_p50": 0.033483352289378335
+      },
+      "avg_cost_r": {
+        "recipe": 0.01985986238391072,
+        "placebo_p50": 0.1308516456333781
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 58,
+          "recipe_stop_dist_pct_p10": 0.07653428667130605,
+          "recipe_stop_dist_pct_p50": 0.12021978834251992,
+          "placebo_stop_dist_pct_p10": 0.010323114126869589,
+          "placebo_stop_dist_pct_p50": 0.0437334947900285,
+          "distance_matched_floor_used": 0.07653428667130605,
+          "distance_matched_n_floor_exhausted": 6144
+        },
+        "ETH-USD": {
+          "n_taken": 43,
+          "recipe_stop_dist_pct_p10": 0.07850117607745627,
+          "recipe_stop_dist_pct_p50": 0.13657755952358852,
+          "placebo_stop_dist_pct_p10": 0.014179930634998918,
+          "placebo_stop_dist_pct_p50": 0.058250804436227516,
+          "distance_matched_floor_used": 0.07850117607745627,
+          "distance_matched_n_floor_exhausted": 4420
+        },
+        "SPY": {
+          "n_taken": 138,
+          "recipe_stop_dist_pct_p10": 0.017386613072690318,
+          "recipe_stop_dist_pct_p50": 0.03293261707271507,
+          "placebo_stop_dist_pct_p10": 0.00307882980560983,
+          "placebo_stop_dist_pct_p50": 0.0175074060784467,
+          "distance_matched_floor_used": 0.017386613072690318,
+          "distance_matched_n_floor_exhausted": 13140
+        },
+        "QQQ": {
+          "n_taken": 115,
+          "recipe_stop_dist_pct_p10": 0.02201224866924103,
+          "recipe_stop_dist_pct_p50": 0.04492786748940374,
+          "placebo_stop_dist_pct_p10": 0.004333433324708805,
+          "placebo_stop_dist_pct_p50": 0.025920739219350362,
+          "distance_matched_floor_used": 0.02201224866924103,
+          "distance_matched_n_floor_exhausted": 10917
+        },
+        "AAPL": {
+          "n_taken": 152,
+          "recipe_stop_dist_pct_p10": 0.039741634943349216,
+          "recipe_stop_dist_pct_p50": 0.08419094599155369,
+          "placebo_stop_dist_pct_p10": 0.007570416803039787,
+          "placebo_stop_dist_pct_p50": 0.03492858622173659,
+          "distance_matched_floor_used": 0.039741634943349216,
+          "distance_matched_n_floor_exhausted": 14428
+        },
+        "NVDA": {
+          "n_taken": 102,
+          "recipe_stop_dist_pct_p10": 0.06347996173875217,
+          "recipe_stop_dist_pct_p50": 0.11265492414207783,
+          "placebo_stop_dist_pct_p10": 0.011383244218292354,
+          "placebo_stop_dist_pct_p50": 0.05675086760890185,
+          "distance_matched_floor_used": 0.06347996173875217,
+          "distance_matched_n_floor_exhausted": 9906
+        },
+        "TSLA": {
+          "n_taken": 51,
+          "recipe_stop_dist_pct_p10": 0.07066375088964225,
+          "recipe_stop_dist_pct_p50": 0.1374573991686433,
+          "placebo_stop_dist_pct_p10": 0.016541913239260287,
+          "placebo_stop_dist_pct_p50": 0.0687586707493159,
+          "distance_matched_floor_used": 0.07066375088964225,
+          "distance_matched_n_floor_exhausted": 4909
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 26,
+            "net_pct": -0.0009801929460332597,
+            "gross_pct": 0.001019807053966742
+          },
+          "short": {
+            "n": 32,
+            "net_pct": -0.04960982746258713,
+            "gross_pct": -0.04760982746258713
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 18,
+            "net_pct": 0.016131791440859015,
+            "gross_pct": 0.018131791440859017
+          },
+          "short": {
+            "n": 25,
+            "net_pct": -0.051190177919349954,
+            "gross_pct": -0.04919017791934995
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 62,
+            "net_pct": -0.0019160831912886447,
+            "gross_pct": -0.0009160831912886438
+          },
+          "short": {
+            "n": 76,
+            "net_pct": -0.011010796505472936,
+            "gross_pct": -0.010010796505472935
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 53,
+            "net_pct": 0.006745887731424629,
+            "gross_pct": 0.00774588773142463
+          },
+          "short": {
+            "n": 62,
+            "net_pct": -0.00986858335531965,
+            "gross_pct": -0.00886858335531965
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 65,
+            "net_pct": 0.015242850053417679,
+            "gross_pct": 0.01624285005341768
+          },
+          "short": {
+            "n": 87,
+            "net_pct": -0.037910415990024975,
+            "gross_pct": -0.03691041599002497
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 52,
+            "net_pct": 0.07090773503280558,
+            "gross_pct": 0.07190773503280556
+          },
+          "short": {
+            "n": 50,
+            "net_pct": -0.029405662130064264,
+            "gross_pct": -0.028405662130064263
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 23,
+            "net_pct": 0.004389087704931463,
+            "gross_pct": 0.005389087704931464
+          },
+          "short": {
+            "n": 28,
+            "net_pct": -0.02242565510461958,
+            "gross_pct": -0.02142565510461958
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 63864,
+        "net_expectancy_r": {
+          "placebo_p5": -11.89878966926658,
+          "placebo_p50": -0.07257440830059876,
+          "placebo_p95": 0.010351172496375509,
+          "recipe_percentile_in_placebo": 0.418
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.012577292236650998,
+          "placebo_p50": -0.004771781143598466,
+          "placebo_p95": 0.0023062377440277587,
+          "recipe_percentile_in_placebo": 0.308
+        },
+        "win_rate": {
+          "placebo_p5": 0.3619354747789814,
+          "placebo_p50": 0.3916729679987445,
+          "placebo_p95": 0.4212962962962963,
+          "recipe_percentile_in_placebo": 0.308
+        }
+      }
+    },
+    "V1_loose_60m": {
+      "n_trades": 975,
+      "gross_expectancy_r": {
+        "recipe": 0.04064131959379611,
+        "placebo_p5": -0.12662293120565696,
+        "placebo_p50": -0.06308272362736395,
+        "placebo_p95": 0.0038918252737402937,
+        "recipe_percentile_in_placebo": 0.996
+      },
+      "gross_win_rate": {
+        "recipe": 0.4358974358974359,
+        "placebo_p5": 0.35594636545526037,
+        "placebo_p50": 0.38001027582125274,
+        "placebo_p95": 0.4064883308653759
+      },
+      "net_win_rate": {
+        "recipe": 0.4358974358974359
+      },
+      "net_expectancy_pct": {
+        "recipe": 0.0007642912180502232,
+        "placebo_p5": -0.003460685972570323,
+        "placebo_p50": -0.0022551607526125287,
+        "placebo_p95": -0.00112507119858106,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_expectancy_pct": {
+        "recipe": 0.002332496346255353,
+        "placebo_p5": -0.0018858989401992418,
+        "placebo_p50": -0.0006800190157066781,
+        "placebo_p95": 0.0004480096556291011
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.008829499010816194,
+        "recipe_p50": 0.020704431706326284,
+        "placebo_p10": 0.001813240899144463,
+        "placebo_p50": 0.008840042717632113
+      },
+      "avg_cost_r": {
+        "recipe": 0.0935210606629048,
+        "placebo_p50": 0.5368459399565262
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 291,
+          "recipe_stop_dist_pct_p10": 0.007957227973811118,
+          "recipe_stop_dist_pct_p50": 0.015909731888773516,
+          "placebo_stop_dist_pct_p10": 0.0015577488371213268,
+          "placebo_stop_dist_pct_p50": 0.00674792200059778,
+          "distance_matched_floor_used": 0.007957227973811118,
+          "distance_matched_n_floor_exhausted": 27369
+        },
+        "ETH-USD": {
+          "n_taken": 263,
+          "recipe_stop_dist_pct_p10": 0.013714969105690783,
+          "recipe_stop_dist_pct_p50": 0.025066977961927167,
+          "placebo_stop_dist_pct_p10": 0.002320396645079013,
+          "placebo_stop_dist_pct_p50": 0.009623944063707576,
+          "distance_matched_floor_used": 0.013714969105690783,
+          "distance_matched_n_floor_exhausted": 25606
+        },
+        "SPY": {
+          "n_taken": 93,
+          "recipe_stop_dist_pct_p10": 0.005346777647368055,
+          "recipe_stop_dist_pct_p50": 0.009941613684334416,
+          "placebo_stop_dist_pct_p10": 0.0008227291972739145,
+          "placebo_stop_dist_pct_p50": 0.004979516947015726,
+          "distance_matched_floor_used": 0.005346777647368055,
+          "distance_matched_n_floor_exhausted": 9437
+        },
+        "QQQ": {
+          "n_taken": 86,
+          "recipe_stop_dist_pct_p10": 0.007842353203044345,
+          "recipe_stop_dist_pct_p50": 0.01600058288182978,
+          "placebo_stop_dist_pct_p10": 0.001255754619449975,
+          "placebo_stop_dist_pct_p50": 0.007665396707772524,
+          "distance_matched_floor_used": 0.007842353203044345,
+          "distance_matched_n_floor_exhausted": 8580
+        },
+        "AAPL": {
+          "n_taken": 85,
+          "recipe_stop_dist_pct_p10": 0.014396584177897352,
+          "recipe_stop_dist_pct_p50": 0.02159716795935163,
+          "placebo_stop_dist_pct_p10": 0.0026132324906245723,
+          "placebo_stop_dist_pct_p50": 0.01111499435198268,
+          "distance_matched_floor_used": 0.014396584177897352,
+          "distance_matched_n_floor_exhausted": 8721
+        },
+        "NVDA": {
+          "n_taken": 82,
+          "recipe_stop_dist_pct_p10": 0.022121333406436235,
+          "recipe_stop_dist_pct_p50": 0.037093135512874575,
+          "placebo_stop_dist_pct_p10": 0.0035579734073243607,
+          "placebo_stop_dist_pct_p50": 0.016605283705824564,
+          "distance_matched_floor_used": 0.022121333406436235,
+          "distance_matched_n_floor_exhausted": 8320
+        },
+        "TSLA": {
+          "n_taken": 75,
+          "recipe_stop_dist_pct_p10": 0.032954920904453705,
+          "recipe_stop_dist_pct_p50": 0.0443977844509544,
+          "placebo_stop_dist_pct_p10": 0.004563554605975859,
+          "placebo_stop_dist_pct_p50": 0.019857108797531338,
+          "distance_matched_floor_used": 0.032954920904453705,
+          "distance_matched_n_floor_exhausted": 8016
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 148,
+            "net_pct": 0.0012997268393263588,
+            "gross_pct": 0.0032997268393263604
+          },
+          "short": {
+            "n": 143,
+            "net_pct": -0.0015847270571665367,
+            "gross_pct": 0.0004152729428334651
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 133,
+            "net_pct": -0.0010555990978032587,
+            "gross_pct": 0.0009444009021967432
+          },
+          "short": {
+            "n": 130,
+            "net_pct": -0.005321068107806316,
+            "gross_pct": -0.003321068107806314
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 39,
+            "net_pct": 0.005377615384438443,
+            "gross_pct": 0.006377615384438444
+          },
+          "short": {
+            "n": 54,
+            "net_pct": -0.0003452304426386446,
+            "gross_pct": 0.0006547695573613561
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 38,
+            "net_pct": 0.005845146523022216,
+            "gross_pct": 0.0068451465230222166
+          },
+          "short": {
+            "n": 48,
+            "net_pct": -0.0020971138687609406,
+            "gross_pct": -0.0010971138687609395
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 43,
+            "net_pct": 0.000763376938418346,
+            "gross_pct": 0.0017633769384183468
+          },
+          "short": {
+            "n": 42,
+            "net_pct": -0.005945360606332902,
+            "gross_pct": -0.004945360606332901
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 35,
+            "net_pct": 0.025400099417259975,
+            "gross_pct": 0.026400099417259976
+          },
+          "short": {
+            "n": 47,
+            "net_pct": -0.0035224784840570725,
+            "gross_pct": -0.0025224784840570716
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 36,
+            "net_pct": 0.018122010381625312,
+            "gross_pct": 0.019122010381625313
+          },
+          "short": {
+            "n": 39,
+            "net_pct": 0.0035916867393145967,
+            "gross_pct": 0.004591686739314598
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 96049,
+        "net_expectancy_r": {
+          "placebo_p5": -0.4820452789012411,
+          "placebo_p50": -0.24804062374203734,
+          "placebo_p95": -0.16475225180513536,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.004972547612944979,
+          "placebo_p50": -0.003347999207827108,
+          "placebo_p95": -0.0017583130840838693,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "win_rate": {
+          "placebo_p5": 0.3609057665859977,
+          "placebo_p50": 0.38794448903668033,
+          "placebo_p95": 0.4128090366581415,
+          "recipe_percentile_in_placebo": 0.998
+        }
+      }
+    },
+    "V1_loose_5m": {
+      "n_trades": 871,
+      "gross_expectancy_r": {
+        "recipe": -0.019393433175160117,
+        "placebo_p5": -0.19769607633037733,
+        "placebo_p50": -0.12853461514682157,
+        "placebo_p95": -0.05203230715890455,
+        "recipe_percentile_in_placebo": 0.994
+      },
+      "gross_win_rate": {
+        "recipe": 0.425947187141217,
+        "placebo_p5": 0.24411858157893296,
+        "placebo_p50": 0.26815028109145755,
+        "placebo_p95": 0.2920632826694809
+      },
+      "net_win_rate": {
+        "recipe": 0.39380022962112515
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.0017581082867832124,
+        "placebo_p5": -0.002345998500880071,
+        "placebo_p50": -0.002013637234103527,
+        "placebo_p95": -0.0017357403633749366,
+        "recipe_percentile_in_placebo": 0.932
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.00015650093890720715,
+        "placebo_p5": -0.0007485498648080692,
+        "placebo_p50": -0.00041304763374726467,
+        "placebo_p95": -0.0001352089958785012
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.0016661250042261397,
+        "recipe_p50": 0.004211570390752862,
+        "placebo_p10": 0.0003714387048945561,
+        "placebo_p50": 0.002177305516548987
+      },
+      "avg_cost_r": {
+        "recipe": 0.515163103176685,
+        "placebo_p50": 4.006963552567816
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 279,
+          "recipe_stop_dist_pct_p10": 0.0013978451565507383,
+          "recipe_stop_dist_pct_p50": 0.003221941005255456,
+          "placebo_stop_dist_pct_p10": 0.0003074964275259003,
+          "placebo_stop_dist_pct_p50": 0.0018019032376755007,
+          "distance_matched_floor_used": 0.0013978451565507383,
+          "distance_matched_n_floor_exhausted": 25443
+        },
+        "ETH-USD": {
+          "n_taken": 245,
+          "recipe_stop_dist_pct_p10": 0.001915740613502436,
+          "recipe_stop_dist_pct_p50": 0.004295688484606672,
+          "placebo_stop_dist_pct_p10": 0.0004771541378532949,
+          "placebo_stop_dist_pct_p50": 0.0024589929603637227,
+          "distance_matched_floor_used": 0.001915740613502436,
+          "distance_matched_n_floor_exhausted": 22108
+        },
+        "SPY": {
+          "n_taken": 70,
+          "recipe_stop_dist_pct_p10": 0.0012939595891235825,
+          "recipe_stop_dist_pct_p50": 0.002613120555081377,
+          "placebo_stop_dist_pct_p10": 0.00020894373205859062,
+          "placebo_stop_dist_pct_p50": 0.0011179868829682903,
+          "distance_matched_floor_used": 0.0012939595891235825,
+          "distance_matched_n_floor_exhausted": 6993
+        },
+        "QQQ": {
+          "n_taken": 70,
+          "recipe_stop_dist_pct_p10": 0.001575147044522487,
+          "recipe_stop_dist_pct_p50": 0.0037432388579631327,
+          "placebo_stop_dist_pct_p10": 0.0002625354004003154,
+          "placebo_stop_dist_pct_p50": 0.0015566297667651146,
+          "distance_matched_floor_used": 0.001575147044522487,
+          "distance_matched_n_floor_exhausted": 6721
+        },
+        "AAPL": {
+          "n_taken": 67,
+          "recipe_stop_dist_pct_p10": 0.003111097011354177,
+          "recipe_stop_dist_pct_p50": 0.005136963771667979,
+          "placebo_stop_dist_pct_p10": 0.0005730386862779785,
+          "placebo_stop_dist_pct_p50": 0.002699143324441057,
+          "distance_matched_floor_used": 0.003111097011354177,
+          "distance_matched_n_floor_exhausted": 6772
+        },
+        "NVDA": {
+          "n_taken": 67,
+          "recipe_stop_dist_pct_p10": 0.004490419698926474,
+          "recipe_stop_dist_pct_p50": 0.008553334341093939,
+          "placebo_stop_dist_pct_p10": 0.0006589407094270487,
+          "placebo_stop_dist_pct_p50": 0.0029424483240290612,
+          "distance_matched_floor_used": 0.004490419698926474,
+          "distance_matched_n_floor_exhausted": 7000
+        },
+        "TSLA": {
+          "n_taken": 73,
+          "recipe_stop_dist_pct_p10": 0.005856060628654413,
+          "recipe_stop_dist_pct_p50": 0.009055757954863124,
+          "placebo_stop_dist_pct_p10": 0.0007785637429441335,
+          "placebo_stop_dist_pct_p50": 0.0044931372778781245,
+          "distance_matched_floor_used": 0.005856060628654413,
+          "distance_matched_n_floor_exhausted": 7575
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 132,
+            "net_pct": -0.0017023499468303562,
+            "gross_pct": 0.0002976500531696441
+          },
+          "short": {
+            "n": 147,
+            "net_pct": -0.0023447781803233566,
+            "gross_pct": -0.00034477818032335625
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 108,
+            "net_pct": -0.0009954025459435537,
+            "gross_pct": 0.0010045974540564468
+          },
+          "short": {
+            "n": 137,
+            "net_pct": -0.002385944860066097,
+            "gross_pct": -0.0003859448600660964
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 45,
+            "net_pct": -0.0019108002163683055,
+            "gross_pct": -0.0009108002163683052
+          },
+          "short": {
+            "n": 25,
+            "net_pct": -0.001027837063291489,
+            "gross_pct": -2.7837063291489272e-05
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 33,
+            "net_pct": -0.00282565177654741,
+            "gross_pct": -0.0018256517765474095
+          },
+          "short": {
+            "n": 37,
+            "net_pct": -0.0029114197737158684,
+            "gross_pct": -0.0019114197737158673
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 37,
+            "net_pct": -0.0007218422306736194,
+            "gross_pct": 0.0002781577693263815
+          },
+          "short": {
+            "n": 30,
+            "net_pct": -0.0031371859094607157,
+            "gross_pct": -0.002137185909460715
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 29,
+            "net_pct": 0.0026337042236288023,
+            "gross_pct": 0.003633704223628803
+          },
+          "short": {
+            "n": 38,
+            "net_pct": -0.0014529530980467806,
+            "gross_pct": -0.00045295309804677987
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 33,
+            "net_pct": 0.0003264713838602431,
+            "gross_pct": 0.001326471383860244
+          },
+          "short": {
+            "n": 40,
+            "net_pct": -0.0031501463885941494,
+            "gross_pct": -0.0021501463885941485
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 82612,
+        "net_expectancy_r": {
+          "placebo_p5": -24.06566627368367,
+          "placebo_p50": -1.043028840015538,
+          "placebo_p95": -0.7949286423870607,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.002676809585555661,
+          "placebo_p50": -0.0022517100649408497,
+          "placebo_p95": -0.0018175543813527403,
+          "recipe_percentile_in_placebo": 0.976
+        },
+        "win_rate": {
+          "placebo_p5": 0.32213209733487835,
+          "placebo_p50": 0.3491329479768786,
+          "placebo_p95": 0.37489183529199155,
+          "recipe_percentile_in_placebo": 0.994
+        }
+      }
+    },
+    "V1_loose_daily": {
+      "n_trades": 834,
+      "gross_expectancy_r": {
+        "recipe": -0.050048662447035826,
+        "placebo_p5": -0.1345138671022026,
+        "placebo_p50": -0.06192909756227781,
+        "placebo_p95": 0.0034900756569054155,
+        "recipe_percentile_in_placebo": 0.638
+      },
+      "gross_win_rate": {
+        "recipe": 0.3872901678657074,
+        "placebo_p5": 0.3527804893921645,
+        "placebo_p50": 0.3807390370902083,
+        "placebo_p95": 0.40871926732029
+      },
+      "net_win_rate": {
+        "recipe": 0.3872901678657074
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.002816017983831748,
+        "placebo_p5": -0.006997075342385129,
+        "placebo_p50": -0.0025816224062994277,
+        "placebo_p95": 0.001940859895570003,
+        "recipe_percentile_in_placebo": 0.47
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.0016793273363497315,
+        "placebo_p5": -0.005850559185606143,
+        "placebo_p50": -0.0014390348266815952,
+        "placebo_p95": 0.0030851820057030133
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.024296127253369996,
+        "recipe_p50": 0.07507835253413833,
+        "placebo_p10": 0.005292476036666714,
+        "placebo_p50": 0.03163623122015005
+      },
+      "avg_cost_r": {
+        "recipe": 0.020709932869186393,
+        "placebo_p50": 0.14460270968272965
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 66,
+          "recipe_stop_dist_pct_p10": 0.07277437206919886,
+          "recipe_stop_dist_pct_p50": 0.12791431136435588,
+          "placebo_stop_dist_pct_p10": 0.010141002133962164,
+          "placebo_stop_dist_pct_p50": 0.04362265305805017,
+          "distance_matched_floor_used": 0.07277437206919886,
+          "distance_matched_n_floor_exhausted": 7004
+        },
+        "ETH-USD": {
+          "n_taken": 48,
+          "recipe_stop_dist_pct_p10": 0.08360390814291142,
+          "recipe_stop_dist_pct_p50": 0.14094810413629003,
+          "placebo_stop_dist_pct_p10": 0.014903654537742853,
+          "placebo_stop_dist_pct_p50": 0.06020940758611049,
+          "distance_matched_floor_used": 0.08360390814291142,
+          "distance_matched_n_floor_exhausted": 5081
+        },
+        "SPY": {
+          "n_taken": 187,
+          "recipe_stop_dist_pct_p10": 0.0174007143527964,
+          "recipe_stop_dist_pct_p50": 0.031135553475775575,
+          "placebo_stop_dist_pct_p10": 0.002751533962103033,
+          "placebo_stop_dist_pct_p50": 0.015154897135160605,
+          "distance_matched_floor_used": 0.0174007143527964,
+          "distance_matched_n_floor_exhausted": 18060
+        },
+        "QQQ": {
+          "n_taken": 156,
+          "recipe_stop_dist_pct_p10": 0.02107571494300386,
+          "recipe_stop_dist_pct_p50": 0.04289891991045963,
+          "placebo_stop_dist_pct_p10": 0.0039769232092655765,
+          "placebo_stop_dist_pct_p50": 0.024928913818604122,
+          "distance_matched_floor_used": 0.02107571494300386,
+          "distance_matched_n_floor_exhausted": 14884
+        },
+        "AAPL": {
+          "n_taken": 183,
+          "recipe_stop_dist_pct_p10": 0.03948030206046451,
+          "recipe_stop_dist_pct_p50": 0.08284503484155419,
+          "placebo_stop_dist_pct_p10": 0.0074400066738439085,
+          "placebo_stop_dist_pct_p50": 0.0341857232929865,
+          "distance_matched_floor_used": 0.03948030206046451,
+          "distance_matched_n_floor_exhausted": 17401
+        },
+        "NVDA": {
+          "n_taken": 130,
+          "recipe_stop_dist_pct_p10": 0.05983358332921139,
+          "recipe_stop_dist_pct_p50": 0.11468921969635747,
+          "placebo_stop_dist_pct_p10": 0.010543595303368423,
+          "placebo_stop_dist_pct_p50": 0.05485535586207976,
+          "distance_matched_floor_used": 0.05983358332921139,
+          "distance_matched_n_floor_exhausted": 12872
+        },
+        "TSLA": {
+          "n_taken": 64,
+          "recipe_stop_dist_pct_p10": 0.07592075748272072,
+          "recipe_stop_dist_pct_p50": 0.12473698837942222,
+          "placebo_stop_dist_pct_p10": 0.01634331092890702,
+          "placebo_stop_dist_pct_p50": 0.06932795583964357,
+          "distance_matched_floor_used": 0.07592075748272072,
+          "distance_matched_n_floor_exhausted": 6318
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 29,
+            "net_pct": 0.022187977281015247,
+            "gross_pct": 0.024187977281015245
+          },
+          "short": {
+            "n": 37,
+            "net_pct": -0.0368075366703135,
+            "gross_pct": -0.03480753667031349
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 22,
+            "net_pct": 0.042481586009918505,
+            "gross_pct": 0.04448158600991851
+          },
+          "short": {
+            "n": 26,
+            "net_pct": -0.040930162499570696,
+            "gross_pct": -0.0389301624995707
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 59,
+            "net_pct": -0.0004259820215796579,
+            "gross_pct": 0.000574017978420343
+          },
+          "short": {
+            "n": 128,
+            "net_pct": -0.01234894146458529,
+            "gross_pct": -0.01134894146458529
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 64,
+            "net_pct": 0.010525109407321372,
+            "gross_pct": 0.011525109407321373
+          },
+          "short": {
+            "n": 92,
+            "net_pct": -0.013064576138679802,
+            "gross_pct": -0.012064576138679806
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 70,
+            "net_pct": 0.0418516302196985,
+            "gross_pct": 0.04285163021969851
+          },
+          "short": {
+            "n": 113,
+            "net_pct": -0.017440601043888348,
+            "gross_pct": -0.016440601043888347
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 52,
+            "net_pct": 0.06486802125295446,
+            "gross_pct": 0.06586802125295446
+          },
+          "short": {
+            "n": 78,
+            "net_pct": -0.04207660992084859,
+            "gross_pct": -0.041076609920848585
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 32,
+            "net_pct": 0.006471416369523603,
+            "gross_pct": 0.007471416369523604
+          },
+          "short": {
+            "n": 32,
+            "net_pct": -0.019483867288578365,
+            "gross_pct": -0.018483867288578364
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 81620,
+        "net_expectancy_r": {
+          "placebo_p5": -10.679682868450058,
+          "placebo_p50": -0.10208261795507431,
+          "placebo_p95": -0.02994795517529298,
+          "recipe_percentile_in_placebo": 0.724
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.012876259363410381,
+          "placebo_p50": -0.0072704930656947355,
+          "placebo_p95": -0.0005237957220815442,
+          "recipe_percentile_in_placebo": 0.862
+        },
+        "win_rate": {
+          "placebo_p5": 0.35239614859652246,
+          "placebo_p50": 0.3797928743317093,
+          "placebo_p95": 0.4065533980582524,
+          "recipe_percentile_in_placebo": 0.648
+        }
+      }
+    },
+    "V2_strict_60m": {
+      "n_trades": 759,
+      "gross_expectancy_r": {
+        "recipe": 0.0763677270952203,
+        "placebo_p5": -0.14311726992230028,
+        "placebo_p50": -0.05592012686672926,
+        "placebo_p95": 0.025688743944187464,
+        "recipe_percentile_in_placebo": 0.992
+      },
+      "gross_win_rate": {
+        "recipe": 0.37549407114624506,
+        "placebo_p5": 0.3043914240678585,
+        "placebo_p50": 0.3328903496068777,
+        "placebo_p95": 0.36040741467942305
+      },
+      "net_win_rate": {
+        "recipe": 0.37285902503293805
+      },
+      "net_expectancy_pct": {
+        "recipe": 0.0012575256945821518,
+        "placebo_p5": -0.0037808347244006305,
+        "placebo_p50": -0.0022341552606313366,
+        "placebo_p95": -0.0007693330377477144,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_expectancy_pct": {
+        "recipe": 0.00284514097784961,
+        "placebo_p5": -0.0021886282708761438,
+        "placebo_p50": -0.0006425752785044361,
+        "placebo_p95": 0.000820030983416308
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.009671625767006002,
+        "recipe_p50": 0.020120482670138076,
+        "placebo_p10": 0.001878759791139208,
+        "placebo_p50": 0.008988769088290636
+      },
+      "avg_cost_r": {
+        "recipe": 0.09513360290491552,
+        "placebo_p50": 0.5210371098044893
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 233,
+          "recipe_stop_dist_pct_p10": 0.008045846073463654,
+          "recipe_stop_dist_pct_p50": 0.014577925724476259,
+          "placebo_stop_dist_pct_p10": 0.0015901899891151458,
+          "placebo_stop_dist_pct_p50": 0.006746079779376012,
+          "distance_matched_floor_used": 0.008045846073463654,
+          "distance_matched_n_floor_exhausted": 22017
+        },
+        "ETH-USD": {
+          "n_taken": 213,
+          "recipe_stop_dist_pct_p10": 0.013851925263960528,
+          "recipe_stop_dist_pct_p50": 0.022672901124062565,
+          "placebo_stop_dist_pct_p10": 0.0023609702219355676,
+          "placebo_stop_dist_pct_p50": 0.00964736316609129,
+          "distance_matched_floor_used": 0.013851925263960528,
+          "distance_matched_n_floor_exhausted": 20860
+        },
+        "SPY": {
+          "n_taken": 65,
+          "recipe_stop_dist_pct_p10": 0.006980086811852082,
+          "recipe_stop_dist_pct_p50": 0.011306759234660424,
+          "placebo_stop_dist_pct_p10": 0.0008862585448338315,
+          "placebo_stop_dist_pct_p50": 0.005026217721888455,
+          "distance_matched_floor_used": 0.006980086811852082,
+          "distance_matched_n_floor_exhausted": 6714
+        },
+        "QQQ": {
+          "n_taken": 61,
+          "recipe_stop_dist_pct_p10": 0.010069578240986456,
+          "recipe_stop_dist_pct_p50": 0.015965963153357386,
+          "placebo_stop_dist_pct_p10": 0.0013419595145920805,
+          "placebo_stop_dist_pct_p50": 0.00794947359293767,
+          "distance_matched_floor_used": 0.010069578240986456,
+          "distance_matched_n_floor_exhausted": 6294
+        },
+        "AAPL": {
+          "n_taken": 57,
+          "recipe_stop_dist_pct_p10": 0.01266896380553808,
+          "recipe_stop_dist_pct_p50": 0.021427044853234826,
+          "placebo_stop_dist_pct_p10": 0.002540411428823656,
+          "placebo_stop_dist_pct_p50": 0.010883684077678653,
+          "distance_matched_floor_used": 0.01266896380553808,
+          "distance_matched_n_floor_exhausted": 5665
+        },
+        "NVDA": {
+          "n_taken": 65,
+          "recipe_stop_dist_pct_p10": 0.023077798231470967,
+          "recipe_stop_dist_pct_p50": 0.03629951645099119,
+          "placebo_stop_dist_pct_p10": 0.003571095988626257,
+          "placebo_stop_dist_pct_p50": 0.016843007961756123,
+          "distance_matched_floor_used": 0.023077798231470967,
+          "distance_matched_n_floor_exhausted": 6801
+        },
+        "TSLA": {
+          "n_taken": 65,
+          "recipe_stop_dist_pct_p10": 0.027896865141489553,
+          "recipe_stop_dist_pct_p50": 0.04217434135675319,
+          "placebo_stop_dist_pct_p10": 0.004546979743853669,
+          "placebo_stop_dist_pct_p50": 0.020217291182646535,
+          "distance_matched_floor_used": 0.027896865141489553,
+          "distance_matched_n_floor_exhausted": 6856
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 125,
+            "net_pct": 8.554768185345465e-05,
+            "gross_pct": 0.0020855476818534566
+          },
+          "short": {
+            "n": 108,
+            "net_pct": -0.0016709211359495686,
+            "gross_pct": 0.0003290788640504332
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 110,
+            "net_pct": -0.001505677463782237,
+            "gross_pct": 0.0004943225362177647
+          },
+          "short": {
+            "n": 103,
+            "net_pct": -0.00582218506914856,
+            "gross_pct": -0.003822185069148558
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 37,
+            "net_pct": 0.00952796854237009,
+            "gross_pct": 0.01052796854237009
+          },
+          "short": {
+            "n": 28,
+            "net_pct": -0.0046105818862247116,
+            "gross_pct": -0.0036105818862247102
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 36,
+            "net_pct": 0.01543747515186061,
+            "gross_pct": 0.01643747515186061
+          },
+          "short": {
+            "n": 25,
+            "net_pct": 0.003320785838273186,
+            "gross_pct": 0.004320785838273187
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 26,
+            "net_pct": 0.001475179681882804,
+            "gross_pct": 0.002475179681882805
+          },
+          "short": {
+            "n": 31,
+            "net_pct": -0.013430583353556073,
+            "gross_pct": -0.012430583353556072
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 36,
+            "net_pct": 0.03423186828042714,
+            "gross_pct": 0.03523186828042713
+          },
+          "short": {
+            "n": 29,
+            "net_pct": -0.00460930393977884,
+            "gross_pct": -0.0036093039397788397
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 37,
+            "net_pct": 0.008315892002080398,
+            "gross_pct": 0.0093158920020804
+          },
+          "short": {
+            "n": 28,
+            "net_pct": -3.720437812929871e-05,
+            "gross_pct": 0.0009627956218707022
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 75207,
+        "net_expectancy_r": {
+          "placebo_p5": -0.4160033173835009,
+          "placebo_p50": -0.24296200167353532,
+          "placebo_p95": -0.15474380837468232,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.00526517809140565,
+          "placebo_p50": -0.0032904556502807982,
+          "placebo_p95": -0.0013171867045612571,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "win_rate": {
+          "placebo_p5": 0.3111495507332373,
+          "placebo_p50": 0.3381770145310436,
+          "placebo_p95": 0.36351531291611183,
+          "recipe_percentile_in_placebo": 0.986
+        }
+      }
+    },
+    "V2_strict_5m": {
+      "n_trades": 668,
+      "gross_expectancy_r": {
+        "recipe": 0.07308378189223871,
+        "placebo_p5": -0.21744728906587796,
+        "placebo_p50": -0.12146974773913545,
+        "placebo_p95": -0.026100080673512528,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_win_rate": {
+        "recipe": 0.38173652694610777,
+        "placebo_p5": 0.2219933369320696,
+        "placebo_p50": 0.24695121951219512,
+        "placebo_p95": 0.275089208117019
+      },
+      "net_win_rate": {
+        "recipe": 0.3652694610778443
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.0012615986814505612,
+        "placebo_p5": -0.0023636718287014225,
+        "placebo_p50": -0.0019549336432500854,
+        "placebo_p95": -0.0015707640568469257,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_expectancy_pct": {
+        "recipe": 0.0003536707796272838,
+        "placebo_p5": -0.0007509781483371696,
+        "placebo_p50": -0.0003430931200932606,
+        "placebo_p95": 4.068412714990412e-05
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.001756027886696777,
+        "recipe_p50": 0.0038966333922305215,
+        "placebo_p10": 0.0003667778834061705,
+        "placebo_p50": 0.0021691054967718274
+      },
+      "avg_cost_r": {
+        "recipe": 0.5273866790173661,
+        "placebo_p50": 3.17038416504653
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 221,
+          "recipe_stop_dist_pct_p10": 0.001593458469949797,
+          "recipe_stop_dist_pct_p50": 0.0029757778257859737,
+          "placebo_stop_dist_pct_p10": 0.00030745306763381176,
+          "placebo_stop_dist_pct_p50": 0.0017913877033421057,
+          "distance_matched_floor_used": 0.001593458469949797,
+          "distance_matched_n_floor_exhausted": 20693
+        },
+        "ETH-USD": {
+          "n_taken": 190,
+          "recipe_stop_dist_pct_p10": 0.002244695849647142,
+          "recipe_stop_dist_pct_p50": 0.004049471383064562,
+          "placebo_stop_dist_pct_p10": 0.0004723750102782081,
+          "placebo_stop_dist_pct_p50": 0.0024819332021852446,
+          "distance_matched_floor_used": 0.002244695849647142,
+          "distance_matched_n_floor_exhausted": 17861
+        },
+        "SPY": {
+          "n_taken": 52,
+          "recipe_stop_dist_pct_p10": 0.0012719133208618477,
+          "recipe_stop_dist_pct_p50": 0.0022029235131538604,
+          "placebo_stop_dist_pct_p10": 0.00019899775726774945,
+          "placebo_stop_dist_pct_p50": 0.0010864859552979717,
+          "distance_matched_floor_used": 0.0012719133208618477,
+          "distance_matched_n_floor_exhausted": 5236
+        },
+        "QQQ": {
+          "n_taken": 50,
+          "recipe_stop_dist_pct_p10": 0.002089523755180246,
+          "recipe_stop_dist_pct_p50": 0.004184296827032018,
+          "placebo_stop_dist_pct_p10": 0.00025370376089801325,
+          "placebo_stop_dist_pct_p50": 0.00157934862670688,
+          "distance_matched_floor_used": 0.002089523755180246,
+          "distance_matched_n_floor_exhausted": 5058
+        },
+        "AAPL": {
+          "n_taken": 53,
+          "recipe_stop_dist_pct_p10": 0.0031417512891588426,
+          "recipe_stop_dist_pct_p50": 0.0051971228436575945,
+          "placebo_stop_dist_pct_p10": 0.0005714702692730092,
+          "placebo_stop_dist_pct_p50": 0.002714094933410296,
+          "distance_matched_floor_used": 0.0031417512891588426,
+          "distance_matched_n_floor_exhausted": 5380
+        },
+        "NVDA": {
+          "n_taken": 54,
+          "recipe_stop_dist_pct_p10": 0.00449163679246536,
+          "recipe_stop_dist_pct_p50": 0.007596656214996948,
+          "placebo_stop_dist_pct_p10": 0.0006123404044021594,
+          "placebo_stop_dist_pct_p50": 0.0029886617487507954,
+          "distance_matched_floor_used": 0.00449163679246536,
+          "distance_matched_n_floor_exhausted": 5830
+        },
+        "TSLA": {
+          "n_taken": 48,
+          "recipe_stop_dist_pct_p10": 0.006127918478697542,
+          "recipe_stop_dist_pct_p50": 0.008272955853252852,
+          "placebo_stop_dist_pct_p10": 0.0007345964335363168,
+          "placebo_stop_dist_pct_p50": 0.004369257377978421,
+          "distance_matched_floor_used": 0.006127918478697542,
+          "distance_matched_n_floor_exhausted": 4994
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 121,
+            "net_pct": -0.0011168597222367235,
+            "gross_pct": 0.0008831402777632769
+          },
+          "short": {
+            "n": 100,
+            "net_pct": -0.0021055451166566517,
+            "gross_pct": -0.00010554511665665122
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 116,
+            "net_pct": -0.0011656970266455534,
+            "gross_pct": 0.0008343029733544473
+          },
+          "short": {
+            "n": 74,
+            "net_pct": -0.0017002887963421666,
+            "gross_pct": 0.00029971120365783363
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 31,
+            "net_pct": -0.001959706786038467,
+            "gross_pct": -0.0009597067860384666
+          },
+          "short": {
+            "n": 21,
+            "net_pct": -0.0011884193084656716,
+            "gross_pct": -0.00018841930846567152
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 29,
+            "net_pct": -0.0022709805672860065,
+            "gross_pct": -0.0012709805672860056
+          },
+          "short": {
+            "n": 21,
+            "net_pct": -0.0005392149549711123,
+            "gross_pct": 0.0004607850450288886
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 30,
+            "net_pct": -0.0011971014689598303,
+            "gross_pct": -0.00019710146895982975
+          },
+          "short": {
+            "n": 23,
+            "net_pct": -0.0036287193375741764,
+            "gross_pct": -0.0026287193375741755
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 27,
+            "net_pct": 0.0029708517182897884,
+            "gross_pct": 0.00397085171828979
+          },
+          "short": {
+            "n": 27,
+            "net_pct": -0.0009629901605252032,
+            "gross_pct": 3.700983947479769e-05
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 27,
+            "net_pct": 0.0013583344124597477,
+            "gross_pct": 0.0023583344124597483
+          },
+          "short": {
+            "n": 21,
+            "net_pct": -0.0021254852926123084,
+            "gross_pct": -0.0011254852926123075
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 65052,
+        "net_expectancy_r": {
+          "placebo_p5": -25.38710134379784,
+          "placebo_p50": -0.9956765593683696,
+          "placebo_p95": -0.74870795019124,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.0026995794273696394,
+          "placebo_p50": -0.00215705124657062,
+          "placebo_p95": -0.0015669090459751078,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "win_rate": {
+          "placebo_p5": 0.27407577679137607,
+          "placebo_p50": 0.3023254243392913,
+          "placebo_p95": 0.3348419717537364,
+          "recipe_percentile_in_placebo": 0.998
+        }
+      }
+    },
+    "V2_strict_daily": {
+      "n_trades": 601,
+      "gross_expectancy_r": {
+        "recipe": -0.020421912065399558,
+        "placebo_p5": -0.08477203462369225,
+        "placebo_p50": 0.0014774498372426346,
+        "placebo_p95": 0.09925219950002137,
+        "recipe_percentile_in_placebo": 0.336
+      },
+      "gross_win_rate": {
+        "recipe": 0.33777038269550747,
+        "placebo_p5": 0.31808630114948805,
+        "placebo_p50": 0.3489178540587219,
+        "placebo_p95": 0.38262161751292184
+      },
+      "net_win_rate": {
+        "recipe": 0.33610648918469216
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.004323040390097795,
+        "placebo_p5": -0.006210107923836507,
+        "placebo_p50": 0.00031979291907463633,
+        "placebo_p95": 0.0077983620656437045,
+        "recipe_percentile_in_placebo": 0.114
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.0031749538676352344,
+        "placebo_p5": -0.005055301585208654,
+        "placebo_p50": 0.0014752543988610586,
+        "placebo_p95": 0.008951786385226559
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.03049086814507423,
+        "recipe_p50": 0.07656090258202106,
+        "placebo_p10": 0.007045607103525535,
+        "placebo_p50": 0.0359427260028652
+      },
+      "avg_cost_r": {
+        "recipe": 0.018209987603230574,
+        "placebo_p50": 0.1129166474571856
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 51,
+          "recipe_stop_dist_pct_p10": 0.05513104679267184,
+          "recipe_stop_dist_pct_p50": 0.08979978747793284,
+          "placebo_stop_dist_pct_p10": 0.010520016385573478,
+          "placebo_stop_dist_pct_p50": 0.04398121988424701,
+          "distance_matched_floor_used": 0.05513104679267184,
+          "distance_matched_n_floor_exhausted": 5161
+        },
+        "ETH-USD": {
+          "n_taken": 38,
+          "recipe_stop_dist_pct_p10": 0.08699795272008053,
+          "recipe_stop_dist_pct_p50": 0.13221861402871044,
+          "placebo_stop_dist_pct_p10": 0.01490670270042348,
+          "placebo_stop_dist_pct_p50": 0.06189305575498417,
+          "distance_matched_floor_used": 0.08699795272008053,
+          "distance_matched_n_floor_exhausted": 4066
+        },
+        "SPY": {
+          "n_taken": 108,
+          "recipe_stop_dist_pct_p10": 0.02171801219925667,
+          "recipe_stop_dist_pct_p50": 0.03754318246473391,
+          "placebo_stop_dist_pct_p10": 0.0036836269862854185,
+          "placebo_stop_dist_pct_p50": 0.019755393843057585,
+          "distance_matched_floor_used": 0.02171801219925667,
+          "distance_matched_n_floor_exhausted": 10642
+        },
+        "QQQ": {
+          "n_taken": 92,
+          "recipe_stop_dist_pct_p10": 0.02753514882848784,
+          "recipe_stop_dist_pct_p50": 0.04394596531002966,
+          "placebo_stop_dist_pct_p10": 0.004738932549191553,
+          "placebo_stop_dist_pct_p50": 0.02681124981822163,
+          "distance_matched_floor_used": 0.02753514882848784,
+          "distance_matched_n_floor_exhausted": 9079
+        },
+        "AAPL": {
+          "n_taken": 147,
+          "recipe_stop_dist_pct_p10": 0.04078574389602086,
+          "recipe_stop_dist_pct_p50": 0.07600261441742888,
+          "placebo_stop_dist_pct_p10": 0.008126017015698959,
+          "placebo_stop_dist_pct_p50": 0.03538530415214374,
+          "distance_matched_floor_used": 0.04078574389602086,
+          "distance_matched_n_floor_exhausted": 14205
+        },
+        "NVDA": {
+          "n_taken": 111,
+          "recipe_stop_dist_pct_p10": 0.05092570414110275,
+          "recipe_stop_dist_pct_p50": 0.10339284069313771,
+          "placebo_stop_dist_pct_p10": 0.01099368419784335,
+          "placebo_stop_dist_pct_p50": 0.055822057782717545,
+          "distance_matched_floor_used": 0.05092570414110275,
+          "distance_matched_n_floor_exhausted": 10771
+        },
+        "TSLA": {
+          "n_taken": 54,
+          "recipe_stop_dist_pct_p10": 0.07450581211336552,
+          "recipe_stop_dist_pct_p50": 0.12478273935819857,
+          "placebo_stop_dist_pct_p10": 0.016243725197306182,
+          "placebo_stop_dist_pct_p50": 0.06982032333051245,
+          "distance_matched_floor_used": 0.07450581211336552,
+          "distance_matched_n_floor_exhausted": 5423
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 24,
+            "net_pct": 0.033918859543352754,
+            "gross_pct": 0.035918859543352756
+          },
+          "short": {
+            "n": 27,
+            "net_pct": 0.01222646152177972,
+            "gross_pct": 0.014226461521779721
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 18,
+            "net_pct": -0.00937234492304643,
+            "gross_pct": -0.0073723449230464295
+          },
+          "short": {
+            "n": 20,
+            "net_pct": -0.04413571262538174,
+            "gross_pct": -0.04213571262538174
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 65,
+            "net_pct": 0.0040680342548376465,
+            "gross_pct": 0.005068034254837647
+          },
+          "short": {
+            "n": 43,
+            "net_pct": -0.018605894628958872,
+            "gross_pct": -0.01760589462895887
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 49,
+            "net_pct": 0.006189783924638337,
+            "gross_pct": 0.007189783924638338
+          },
+          "short": {
+            "n": 43,
+            "net_pct": -0.0018153866713377092,
+            "gross_pct": -0.0008153866713377083
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 69,
+            "net_pct": 0.020775511108796857,
+            "gross_pct": 0.02177551110879686
+          },
+          "short": {
+            "n": 78,
+            "net_pct": -0.03714001218242438,
+            "gross_pct": -0.03614001218242437
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 51,
+            "net_pct": 0.027200712164192384,
+            "gross_pct": 0.028200712164192388
+          },
+          "short": {
+            "n": 60,
+            "net_pct": -0.05787126957997987,
+            "gross_pct": -0.056871269579979865
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 27,
+            "net_pct": 0.052368110204305734,
+            "gross_pct": 0.05336811020430573
+          },
+          "short": {
+            "n": 27,
+            "net_pct": -0.009110847547516778,
+            "gross_pct": -0.008110847547516778
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 59347,
+        "net_expectancy_r": {
+          "placebo_p5": -17.937376397397,
+          "placebo_p50": -0.05492791813576197,
+          "placebo_p95": 0.044446711153089555,
+          "recipe_percentile_in_placebo": 0.612
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.011448471560390534,
+          "placebo_p50": -0.004145465752677409,
+          "placebo_p95": 0.0047092242850392575,
+          "recipe_percentile_in_placebo": 0.472
+        },
+        "win_rate": {
+          "placebo_p5": 0.3129497171375344,
+          "placebo_p50": 0.34175084175084175,
+          "placebo_p95": 0.3724931244836289,
+          "recipe_percentile_in_placebo": 0.372
+        }
+      }
+    },
+    "V2_loose_60m": {
+      "n_trades": 900,
+      "gross_expectancy_r": {
+        "recipe": 0.0561118740958582,
+        "placebo_p5": -0.13018586806692486,
+        "placebo_p50": -0.053801151733760676,
+        "placebo_p95": 0.0279948065741586,
+        "recipe_percentile_in_placebo": 0.988
+      },
+      "gross_win_rate": {
+        "recipe": 0.37555555555555553,
+        "placebo_p5": 0.30777032863393167,
+        "placebo_p50": 0.33258300292616194,
+        "placebo_p95": 0.3600609074085372
+      },
+      "net_win_rate": {
+        "recipe": 0.37333333333333335
+      },
+      "net_expectancy_pct": {
+        "recipe": 0.0015509557760563578,
+        "placebo_p5": -0.0035718781276833362,
+        "placebo_p50": -0.0023001432240939857,
+        "placebo_p95": -0.0008776598546490442,
+        "recipe_percentile_in_placebo": 1.0
+      },
+      "gross_expectancy_pct": {
+        "recipe": 0.0031254002205008046,
+        "placebo_p5": -0.001992315026446505,
+        "placebo_p50": -0.0007202460670696963,
+        "placebo_p95": 0.0006981957115746683
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.009054987816150335,
+        "recipe_p50": 0.02013493837337737,
+        "placebo_p10": 0.0018337782824619242,
+        "placebo_p50": 0.008932245774829265
+      },
+      "avg_cost_r": {
+        "recipe": 0.09501191424902693,
+        "placebo_p50": 0.5273786299958497
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 267,
+          "recipe_stop_dist_pct_p10": 0.008021614188241233,
+          "recipe_stop_dist_pct_p50": 0.015612201859366383,
+          "placebo_stop_dist_pct_p10": 0.0015592962640744064,
+          "placebo_stop_dist_pct_p50": 0.006839300619239714,
+          "distance_matched_floor_used": 0.008021614188241233,
+          "distance_matched_n_floor_exhausted": 25279
+        },
+        "ETH-USD": {
+          "n_taken": 250,
+          "recipe_stop_dist_pct_p10": 0.012669158581478364,
+          "recipe_stop_dist_pct_p50": 0.022905229523600478,
+          "placebo_stop_dist_pct_p10": 0.0023865944651511556,
+          "placebo_stop_dist_pct_p50": 0.009605500801380928,
+          "distance_matched_floor_used": 0.012669158581478364,
+          "distance_matched_n_floor_exhausted": 24094
+        },
+        "SPY": {
+          "n_taken": 77,
+          "recipe_stop_dist_pct_p10": 0.006151838162982779,
+          "recipe_stop_dist_pct_p50": 0.009518396304517819,
+          "placebo_stop_dist_pct_p10": 0.0007709270959837451,
+          "placebo_stop_dist_pct_p50": 0.004909518893686358,
+          "distance_matched_floor_used": 0.006151838162982779,
+          "distance_matched_n_floor_exhausted": 8040
+        },
+        "QQQ": {
+          "n_taken": 81,
+          "recipe_stop_dist_pct_p10": 0.009818979201743,
+          "recipe_stop_dist_pct_p50": 0.014849146532649661,
+          "placebo_stop_dist_pct_p10": 0.0012690733242938935,
+          "placebo_stop_dist_pct_p50": 0.007833544396488598,
+          "distance_matched_floor_used": 0.009818979201743,
+          "distance_matched_n_floor_exhausted": 8520
+        },
+        "AAPL": {
+          "n_taken": 73,
+          "recipe_stop_dist_pct_p10": 0.013056011617314458,
+          "recipe_stop_dist_pct_p50": 0.02156597210075603,
+          "placebo_stop_dist_pct_p10": 0.0025227790221584428,
+          "placebo_stop_dist_pct_p50": 0.010890405324748283,
+          "distance_matched_floor_used": 0.013056011617314458,
+          "distance_matched_n_floor_exhausted": 7436
+        },
+        "NVDA": {
+          "n_taken": 80,
+          "recipe_stop_dist_pct_p10": 0.0231174691587088,
+          "recipe_stop_dist_pct_p50": 0.03399168100997206,
+          "placebo_stop_dist_pct_p10": 0.003403346871907873,
+          "placebo_stop_dist_pct_p50": 0.016446799072585155,
+          "distance_matched_floor_used": 0.0231174691587088,
+          "distance_matched_n_floor_exhausted": 8417
+        },
+        "TSLA": {
+          "n_taken": 72,
+          "recipe_stop_dist_pct_p10": 0.030490528484695734,
+          "recipe_stop_dist_pct_p50": 0.0461506065318559,
+          "placebo_stop_dist_pct_p10": 0.0045452861275491595,
+          "placebo_stop_dist_pct_p50": 0.020136658841721385,
+          "distance_matched_floor_used": 0.030490528484695734,
+          "distance_matched_n_floor_exhausted": 7715
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 143,
+            "net_pct": -0.0004793761327320019,
+            "gross_pct": 0.0015206238672679996
+          },
+          "short": {
+            "n": 124,
+            "net_pct": 0.0003239203099778659,
+            "gross_pct": 0.0023239203099778677
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 127,
+            "net_pct": -0.0015516553815380688,
+            "gross_pct": 0.0004483446184619329
+          },
+          "short": {
+            "n": 123,
+            "net_pct": -0.004096486784611973,
+            "gross_pct": -0.002096486784611972
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 26,
+            "net_pct": 0.010673177012962843,
+            "gross_pct": 0.011673177012962844
+          },
+          "short": {
+            "n": 51,
+            "net_pct": -0.0022684847050343424,
+            "gross_pct": -0.0012684847050343413
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 41,
+            "net_pct": 0.006235033819509966,
+            "gross_pct": 0.007235033819509967
+          },
+          "short": {
+            "n": 40,
+            "net_pct": -0.002968987460133787,
+            "gross_pct": -0.0019689874601337863
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 33,
+            "net_pct": 0.010975799486922245,
+            "gross_pct": 0.011975799486922246
+          },
+          "short": {
+            "n": 40,
+            "net_pct": -0.005047240269118888,
+            "gross_pct": -0.0040472402691188875
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 38,
+            "net_pct": 0.019270403620713517,
+            "gross_pct": 0.020270403620713518
+          },
+          "short": {
+            "n": 42,
+            "net_pct": -0.01223044806086459,
+            "gross_pct": -0.01123044806086459
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 42,
+            "net_pct": 0.02166342733436553,
+            "gross_pct": 0.02266342733436553
+          },
+          "short": {
+            "n": 30,
+            "net_pct": 0.01792379883346931,
+            "gross_pct": 0.01892379883346931
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 89501,
+        "net_expectancy_r": {
+          "placebo_p5": -0.4205723927226837,
+          "placebo_p50": -0.2666329904389595,
+          "placebo_p95": -0.16309887344278579,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.005472882092418686,
+          "placebo_p50": -0.003558972046931749,
+          "placebo_p95": -0.0014544402546828683,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "win_rate": {
+          "placebo_p5": 0.30657748049052397,
+          "placebo_p50": 0.33221663561611037,
+          "placebo_p95": 0.36160714285714285,
+          "recipe_percentile_in_placebo": 0.994
+        }
+      }
+    },
+    "V2_loose_5m": {
+      "n_trades": 828,
+      "gross_expectancy_r": {
+        "recipe": -0.021156155920086694,
+        "placebo_p5": -0.19686895873163704,
+        "placebo_p50": -0.12158325431376088,
+        "placebo_p95": -0.03902090074721232,
+        "recipe_percentile_in_placebo": 0.978
+      },
+      "gross_win_rate": {
+        "recipe": 0.3526570048309179,
+        "placebo_p5": 0.22506592621757485,
+        "placebo_p50": 0.249079754601227,
+        "placebo_p95": 0.27361963190184047
+      },
+      "net_win_rate": {
+        "recipe": 0.3321256038647343
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.002204143061313864,
+        "placebo_p5": -0.002356639043073139,
+        "placebo_p50": -0.001999435669486242,
+        "placebo_p95": -0.0016279014241212019,
+        "recipe_percentile_in_placebo": 0.174
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.0005930319502027523,
+        "placebo_p5": -0.0007499601215045103,
+        "placebo_p50": -0.000390274111884614,
+        "placebo_p95": -2.0561452786446413e-05
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.001911716100291066,
+        "recipe_p50": 0.004244278971573751,
+        "placebo_p10": 0.0003781829582529123,
+        "placebo_p50": 0.002211273465250219
+      },
+      "avg_cost_r": {
+        "recipe": 0.517017411159244,
+        "placebo_p50": 3.7422297759166163
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 260,
+          "recipe_stop_dist_pct_p10": 0.0016101021372549303,
+          "recipe_stop_dist_pct_p50": 0.0031523764093735647,
+          "placebo_stop_dist_pct_p10": 0.00030664585191793044,
+          "placebo_stop_dist_pct_p50": 0.0017881202347794665,
+          "distance_matched_floor_used": 0.0016101021372549303,
+          "distance_matched_n_floor_exhausted": 24216
+        },
+        "ETH-USD": {
+          "n_taken": 246,
+          "recipe_stop_dist_pct_p10": 0.0021680788483971146,
+          "recipe_stop_dist_pct_p50": 0.0041883100417889185,
+          "placebo_stop_dist_pct_p10": 0.00046786564546593524,
+          "placebo_stop_dist_pct_p50": 0.0024668862174353047,
+          "distance_matched_floor_used": 0.0021680788483971146,
+          "distance_matched_n_floor_exhausted": 22919
+        },
+        "SPY": {
+          "n_taken": 59,
+          "recipe_stop_dist_pct_p10": 0.0012826505401046663,
+          "recipe_stop_dist_pct_p50": 0.002689194315321533,
+          "placebo_stop_dist_pct_p10": 0.00020722299375422625,
+          "placebo_stop_dist_pct_p50": 0.0011062636719009107,
+          "distance_matched_floor_used": 0.0012826505401046663,
+          "distance_matched_n_floor_exhausted": 5962
+        },
+        "QQQ": {
+          "n_taken": 59,
+          "recipe_stop_dist_pct_p10": 0.0021245564970388876,
+          "recipe_stop_dist_pct_p50": 0.004326878962669859,
+          "placebo_stop_dist_pct_p10": 0.00026262487245683636,
+          "placebo_stop_dist_pct_p50": 0.001571876643500987,
+          "distance_matched_floor_used": 0.0021245564970388876,
+          "distance_matched_n_floor_exhausted": 6059
+        },
+        "AAPL": {
+          "n_taken": 64,
+          "recipe_stop_dist_pct_p10": 0.003326122218385756,
+          "recipe_stop_dist_pct_p50": 0.005642009267929991,
+          "placebo_stop_dist_pct_p10": 0.0005915289426066011,
+          "placebo_stop_dist_pct_p50": 0.0027143072070996517,
+          "distance_matched_floor_used": 0.003326122218385756,
+          "distance_matched_n_floor_exhausted": 6558
+        },
+        "NVDA": {
+          "n_taken": 69,
+          "recipe_stop_dist_pct_p10": 0.003319772314689584,
+          "recipe_stop_dist_pct_p50": 0.0071741667912711025,
+          "placebo_stop_dist_pct_p10": 0.0006282751666556131,
+          "placebo_stop_dist_pct_p50": 0.002919752833817695,
+          "distance_matched_floor_used": 0.003319772314689584,
+          "distance_matched_n_floor_exhausted": 7056
+        },
+        "TSLA": {
+          "n_taken": 71,
+          "recipe_stop_dist_pct_p10": 0.006311674766191252,
+          "recipe_stop_dist_pct_p50": 0.009395033941256948,
+          "placebo_stop_dist_pct_p10": 0.0008009073185129098,
+          "placebo_stop_dist_pct_p50": 0.004435667244032054,
+          "distance_matched_floor_used": 0.006311674766191252,
+          "distance_matched_n_floor_exhausted": 7604
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 111,
+            "net_pct": -0.0022516731741702447,
+            "gross_pct": -0.0002516731741702441
+          },
+          "short": {
+            "n": 149,
+            "net_pct": -0.0023215765227242416,
+            "gross_pct": -0.0003215765227242414
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 123,
+            "net_pct": -0.001493289846545702,
+            "gross_pct": 0.0005067101534542986
+          },
+          "short": {
+            "n": 123,
+            "net_pct": -0.002360177255468757,
+            "gross_pct": -0.0003601772554687563
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 36,
+            "net_pct": -0.0009456260937648858,
+            "gross_pct": 5.437390623511426e-05
+          },
+          "short": {
+            "n": 23,
+            "net_pct": -0.0006776463039550927,
+            "gross_pct": 0.0003223536960449076
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 32,
+            "net_pct": -0.004324542775234218,
+            "gross_pct": -0.003324542775234217
+          },
+          "short": {
+            "n": 27,
+            "net_pct": -0.00482670126656729,
+            "gross_pct": -0.003826701266567289
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 30,
+            "net_pct": 0.000468441288440517,
+            "gross_pct": 0.0014684412884405178
+          },
+          "short": {
+            "n": 34,
+            "net_pct": -0.005938009623312982,
+            "gross_pct": -0.004938009623312981
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 39,
+            "net_pct": 0.002174510938601565,
+            "gross_pct": 0.003174510938601566
+          },
+          "short": {
+            "n": 30,
+            "net_pct": 0.0006021807058576652,
+            "gross_pct": 0.001602180705857666
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 34,
+            "net_pct": -0.0035894948734442583,
+            "gross_pct": -0.0025894948734442574
+          },
+          "short": {
+            "n": 37,
+            "net_pct": -0.006212381166882089,
+            "gross_pct": -0.005212381166882088
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 80374,
+        "net_expectancy_r": {
+          "placebo_p5": -21.327386485714356,
+          "placebo_p50": -1.0284707799347603,
+          "placebo_p95": -0.7670179929409452,
+          "recipe_percentile_in_placebo": 1.0
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.0027630092723067105,
+          "placebo_p50": -0.002293395310914413,
+          "placebo_p95": -0.0017796471709776948,
+          "recipe_percentile_in_placebo": 0.62
+        },
+        "win_rate": {
+          "placebo_p5": 0.2729276297176484,
+          "placebo_p50": 0.3010951929907648,
+          "placebo_p95": 0.3277088741894567,
+          "recipe_percentile_in_placebo": 0.968
+        }
+      }
+    },
+    "V2_loose_daily": {
+      "n_trades": 773,
+      "gross_expectancy_r": {
+        "recipe": -0.03026003989790753,
+        "placebo_p5": -0.13181828949710345,
+        "placebo_p50": -0.05302377114396739,
+        "placebo_p95": 0.030248196658893174,
+        "recipe_percentile_in_placebo": 0.666
+      },
+      "gross_win_rate": {
+        "recipe": 0.3311772315653299,
+        "placebo_p5": 0.29970758736718905,
+        "placebo_p50": 0.3278687606729935,
+        "placebo_p95": 0.35542359667359663
+      },
+      "net_win_rate": {
+        "recipe": 0.3311772315653299
+      },
+      "net_expectancy_pct": {
+        "recipe": -0.0067780437779424415,
+        "placebo_p5": -0.00804288763399342,
+        "placebo_p50": -0.0027398990232551826,
+        "placebo_p95": 0.0032678602661139313,
+        "recipe_percentile_in_placebo": 0.108
+      },
+      "gross_expectancy_pct": {
+        "recipe": -0.005622804450646193,
+        "placebo_p5": -0.006879436351460301,
+        "placebo_p50": -0.0015766325082548402,
+        "placebo_p95": 0.004433974181038229
+      },
+      "stop_dist_pct": {
+        "recipe_p10": 0.028740595639709453,
+        "recipe_p50": 0.07307566894173745,
+        "placebo_p10": 0.0057330289586311175,
+        "placebo_p50": 0.033216707000972345
+      },
+      "avg_cost_r": {
+        "recipe": 0.019399141318397595,
+        "placebo_p50": 0.13379712654913722
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 72,
+          "recipe_stop_dist_pct_p10": 0.05438374416225358,
+          "recipe_stop_dist_pct_p50": 0.08965221687217349,
+          "placebo_stop_dist_pct_p10": 0.010520016385573478,
+          "placebo_stop_dist_pct_p50": 0.04390723205369286,
+          "distance_matched_floor_used": 0.05438374416225358,
+          "distance_matched_n_floor_exhausted": 7335
+        },
+        "ETH-USD": {
+          "n_taken": 48,
+          "recipe_stop_dist_pct_p10": 0.08890031623675843,
+          "recipe_stop_dist_pct_p50": 0.13567746379217505,
+          "placebo_stop_dist_pct_p10": 0.014913815080011609,
+          "placebo_stop_dist_pct_p50": 0.06181511235226142,
+          "distance_matched_floor_used": 0.08890031623675843,
+          "distance_matched_n_floor_exhausted": 5213
+        },
+        "SPY": {
+          "n_taken": 157,
+          "recipe_stop_dist_pct_p10": 0.020149467771711737,
+          "recipe_stop_dist_pct_p50": 0.03292944716631664,
+          "placebo_stop_dist_pct_p10": 0.002762264011806963,
+          "placebo_stop_dist_pct_p50": 0.015806931778045513,
+          "distance_matched_floor_used": 0.020149467771711737,
+          "distance_matched_n_floor_exhausted": 15662
+        },
+        "QQQ": {
+          "n_taken": 130,
+          "recipe_stop_dist_pct_p10": 0.028342548691825502,
+          "recipe_stop_dist_pct_p50": 0.042485987761027244,
+          "placebo_stop_dist_pct_p10": 0.004551336612320234,
+          "placebo_stop_dist_pct_p50": 0.02611489203513374,
+          "distance_matched_floor_used": 0.028342548691825502,
+          "distance_matched_n_floor_exhausted": 13134
+        },
+        "AAPL": {
+          "n_taken": 169,
+          "recipe_stop_dist_pct_p10": 0.0447840253196125,
+          "recipe_stop_dist_pct_p50": 0.07600261441742888,
+          "placebo_stop_dist_pct_p10": 0.007199825759861247,
+          "placebo_stop_dist_pct_p50": 0.03350795646346521,
+          "distance_matched_floor_used": 0.0447840253196125,
+          "distance_matched_n_floor_exhausted": 16812
+        },
+        "NVDA": {
+          "n_taken": 131,
+          "recipe_stop_dist_pct_p10": 0.05057331133717613,
+          "recipe_stop_dist_pct_p50": 0.09378343507054755,
+          "placebo_stop_dist_pct_p10": 0.010487119701252894,
+          "placebo_stop_dist_pct_p50": 0.05423944505884562,
+          "distance_matched_floor_used": 0.05057331133717613,
+          "distance_matched_n_floor_exhausted": 12763
+        },
+        "TSLA": {
+          "n_taken": 66,
+          "recipe_stop_dist_pct_p10": 0.060574946735637555,
+          "recipe_stop_dist_pct_p50": 0.11967404550240976,
+          "placebo_stop_dist_pct_p10": 0.0161785114710477,
+          "placebo_stop_dist_pct_p50": 0.06896050230045743,
+          "distance_matched_floor_used": 0.060574946735637555,
+          "distance_matched_n_floor_exhausted": 6496
+        }
+      },
+      "by_side_instrument": {
+        "BTC-USD": {
+          "long": {
+            "n": 33,
+            "net_pct": 0.0746816319996634,
+            "gross_pct": 0.07668163199966341
+          },
+          "short": {
+            "n": 39,
+            "net_pct": -0.022758098088201548,
+            "gross_pct": -0.020758098088201546
+          }
+        },
+        "ETH-USD": {
+          "long": {
+            "n": 22,
+            "net_pct": 0.03942359539112386,
+            "gross_pct": 0.04142359539112386
+          },
+          "short": {
+            "n": 26,
+            "net_pct": -0.05201030991572744,
+            "gross_pct": -0.05001030991572744
+          }
+        },
+        "SPY": {
+          "long": {
+            "n": 55,
+            "net_pct": -0.0007274137756822215,
+            "gross_pct": 0.0002725862243177794
+          },
+          "short": {
+            "n": 102,
+            "net_pct": -0.020881661758444147,
+            "gross_pct": -0.019881661758444146
+          }
+        },
+        "QQQ": {
+          "long": {
+            "n": 63,
+            "net_pct": 0.014112271810977874,
+            "gross_pct": 0.015112271810977875
+          },
+          "short": {
+            "n": 67,
+            "net_pct": -0.018211078009459005,
+            "gross_pct": -0.017211078009459004
+          }
+        },
+        "AAPL": {
+          "long": {
+            "n": 55,
+            "net_pct": 0.023385482478789965,
+            "gross_pct": 0.024385482478789976
+          },
+          "short": {
+            "n": 114,
+            "net_pct": -0.0434737865698841,
+            "gross_pct": -0.0424737865698841
+          }
+        },
+        "NVDA": {
+          "long": {
+            "n": 51,
+            "net_pct": 0.06304133466373259,
+            "gross_pct": 0.06404133466373259
+          },
+          "short": {
+            "n": 80,
+            "net_pct": -0.04457260585295232,
+            "gross_pct": -0.04357260585295232
+          }
+        },
+        "TSLA": {
+          "long": {
+            "n": 29,
+            "net_pct": 0.05096418858494376,
+            "gross_pct": 0.05196418858494376
+          },
+          "short": {
+            "n": 37,
+            "net_pct": -0.034806796974934724,
+            "gross_pct": -0.033806796974934716
+          }
+        }
+      },
+      "distance_matched_placebo": {
+        "run": true,
+        "n_floor_exhausted_total": 77415,
+        "net_expectancy_r": {
+          "placebo_p5": -13.75315394983598,
+          "placebo_p50": -0.1441462745450584,
+          "placebo_p95": -0.047110111725685314,
+          "recipe_percentile_in_placebo": 0.944
+        },
+        "net_expectancy_pct": {
+          "placebo_p5": -0.01668448734405781,
+          "placebo_p50": -0.009127090417593126,
+          "placebo_p95": -0.0018548583702516159,
+          "recipe_percentile_in_placebo": 0.704
+        },
+        "win_rate": {
+          "placebo_p5": 0.28605179260969343,
+          "placebo_p50": 0.3136482939632546,
+          "placebo_p95": 0.3390486925701334,
+          "recipe_percentile_in_placebo": 0.866
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,160 @@
+C05 -- 'The 99% win rate scalping recipe' -- results summary
+====================================================================================================
+
+Seed: 20260917
+Instruments: BTC-USD, ETH-USD, SPY, QQQ, AAPL, NVDA, TSLA
+Costs (bps/side): {'equity': 5.0, 'crypto': 10.0}
+Target R: {'V1': 1.5, 'V2': 2.0}
+STC length/fast/slow: 80/27/50
+Swing-stop lookback: 10 bars, max hold: 200 bars
+Placebo replications per cell: 500
+
+cell                       n      win_rate [95% CI]     placebo 5-95       net exp R [95% CI] placebo p95  gross exp R cost/trade R
+----------------------------------------------------------------------------------------------------------------------------------
+V1_strict_60m            798 0.430 [0.396,0.464]  0.354-0.409  -0.0504 [-0.1256, 0.0267]   -0.4524    0.0434    0.0938
+V1_strict_5m             696 0.401 [0.365,0.438]  0.236-0.289  -0.5220 [-0.6512,-0.3964]   -2.2101   -0.0122    0.5098
+V1_strict_daily          659 0.382 [0.346,0.420]  0.356-0.420  -0.0826 [-0.1726, 0.0078]   -0.0899   -0.0627    0.0199
+V1_loose_60m             975 0.436 [0.405,0.467]  0.357-0.405  -0.0529 [-0.1275, 0.0166]   -0.4589    0.0406    0.0935
+V1_loose_5m              871 0.394 [0.362,0.427]  0.246-0.292  -0.5346 [-0.6576,-0.4216]   -2.2145   -0.0194    0.5152
+V1_loose_daily           834 0.387 [0.355,0.421]  0.354-0.409  -0.0710 [-0.1522, 0.0122]   -0.1233   -0.0503    0.0207
+V2_strict_60m            759 0.373 [0.339,0.408]  0.305-0.361  -0.0188 [-0.1116, 0.0747]   -0.4196    0.0764    0.0951
+V2_strict_5m             668 0.365 [0.330,0.402]  0.219-0.276  -0.4543 [-0.5755,-0.3329]   -2.1639    0.0731    0.5274
+V2_strict_daily          601 0.336 [0.299,0.375]  0.316-0.381  -0.0388 [-0.1617, 0.0867]   -0.0092   -0.0206    0.0182
+V2_loose_60m             900 0.373 [0.342,0.405]  0.305-0.358  -0.0389 [-0.1346, 0.0588]   -0.4566    0.0561    0.0950
+V2_loose_5m              828 0.332 [0.301,0.365]  0.225-0.275  -0.5382 [-0.6597,-0.4186]   -2.2025   -0.0212    0.5170
+V2_loose_daily           774 0.332 [0.300,0.366]  0.299-0.356  -0.0472 [-0.1614, 0.0727]   -0.0936   -0.0277    0.0194
+
+Per-cell detail (skipped trades, exit reasons, per-instrument win rate):
+----------------------------------------------------------------------------------------------------
+V1_strict_60m: n_trades=798 n_skipped=2
+  gross_win_rate=0.430  exit_reasons={'stop': 408, 'take_profit': 323, 'stop_gap': 38, 'time_exit': 29}
+  placebo actual_win_rate_percentile=0.998 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 236 n_skipped=  0 long/short=112/124 win_rate=0.432
+    ETH-USD  n_taken= 233 n_skipped=  0 long/short=119/114 win_rate=0.412
+    SPY      n_taken=  68 n_skipped=  0 long/short=37/31 win_rate=0.441
+    QQQ      n_taken=  66 n_skipped=  1 long/short=35/31 win_rate=0.530
+    AAPL     n_taken=  63 n_skipped=  1 long/short=28/35 win_rate=0.286
+    NVDA     n_taken=  70 n_skipped=  0 long/short=40/30 win_rate=0.557
+    TSLA     n_taken=  62 n_skipped=  0 long/short=33/29 win_rate=0.371
+
+V1_strict_5m: n_trades=696 n_skipped=0
+  gross_win_rate=0.425  exit_reasons={'stop': 361, 'take_profit': 279, 'stop_gap': 34, 'time_exit': 22}
+  placebo actual_win_rate_percentile=1.000 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 233 n_skipped=  0 long/short=119/114 win_rate=0.382
+    ETH-USD  n_taken= 201 n_skipped=  0 long/short=100/101 win_rate=0.423
+    SPY      n_taken=  58 n_skipped=  0 long/short=30/28 win_rate=0.414
+    QQQ      n_taken=  52 n_skipped=  0 long/short=29/23 win_rate=0.385
+    AAPL     n_taken=  56 n_skipped=  0 long/short=28/28 win_rate=0.339
+    NVDA     n_taken=  53 n_skipped=  0 long/short=22/31 win_rate=0.528
+    TSLA     n_taken=  43 n_skipped=  0 long/short=19/24 win_rate=0.326
+
+V1_strict_daily: n_trades=659 n_skipped=2
+  gross_win_rate=0.382  exit_reasons={'stop': 334, 'take_profit': 250, 'stop_gap': 70, 'time_exit': 5}
+  placebo actual_win_rate_percentile=0.354 actual_net_expectancy_percentile=0.954
+    BTC-USD  n_taken=  58 n_skipped=  0 long/short=26/32 win_rate=0.379
+    ETH-USD  n_taken=  43 n_skipped=  0 long/short=18/25 win_rate=0.372
+    SPY      n_taken= 138 n_skipped=  0 long/short=62/76 win_rate=0.348
+    QQQ      n_taken= 115 n_skipped=  0 long/short=53/62 win_rate=0.417
+    AAPL     n_taken= 152 n_skipped=  1 long/short=65/87 win_rate=0.355
+    NVDA     n_taken= 102 n_skipped=  1 long/short=52/50 win_rate=0.441
+    TSLA     n_taken=  51 n_skipped=  0 long/short=23/28 win_rate=0.373
+
+V1_loose_60m: n_trades=975 n_skipped=2
+  gross_win_rate=0.436  exit_reasons={'stop': 485, 'take_profit': 402, 'stop_gap': 57, 'time_exit': 31}
+  placebo actual_win_rate_percentile=1.000 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 291 n_skipped=  0 long/short=148/143 win_rate=0.433
+    ETH-USD  n_taken= 263 n_skipped=  0 long/short=133/130 win_rate=0.418
+    SPY      n_taken=  93 n_skipped=  0 long/short=39/54 win_rate=0.473
+    QQQ      n_taken=  86 n_skipped=  1 long/short=38/48 win_rate=0.453
+    AAPL     n_taken=  85 n_skipped=  1 long/short=43/42 win_rate=0.388
+    NVDA     n_taken=  82 n_skipped=  0 long/short=35/47 win_rate=0.451
+    TSLA     n_taken=  75 n_skipped=  0 long/short=36/39 win_rate=0.480
+
+V1_loose_5m: n_trades=871 n_skipped=2
+  gross_win_rate=0.426  exit_reasons={'stop': 443, 'take_profit': 346, 'stop_gap': 47, 'time_exit': 35}
+  placebo actual_win_rate_percentile=1.000 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 279 n_skipped=  0 long/short=132/147 win_rate=0.373
+    ETH-USD  n_taken= 245 n_skipped=  0 long/short=108/137 win_rate=0.400
+    SPY      n_taken=  70 n_skipped=  1 long/short=45/25 win_rate=0.343
+    QQQ      n_taken=  70 n_skipped=  1 long/short=33/37 win_rate=0.357
+    AAPL     n_taken=  67 n_skipped=  0 long/short=37/30 win_rate=0.418
+    NVDA     n_taken=  67 n_skipped=  0 long/short=29/38 win_rate=0.507
+    TSLA     n_taken=  73 n_skipped=  0 long/short=33/40 win_rate=0.411
+
+V1_loose_daily: n_trades=834 n_skipped=1
+  gross_win_rate=0.387  exit_reasons={'stop': 408, 'take_profit': 321, 'stop_gap': 98, 'time_exit': 7}
+  placebo actual_win_rate_percentile=0.642 actual_net_expectancy_percentile=0.998
+    BTC-USD  n_taken=  66 n_skipped=  0 long/short=29/37 win_rate=0.409
+    ETH-USD  n_taken=  48 n_skipped=  0 long/short=22/26 win_rate=0.458
+    SPY      n_taken= 187 n_skipped=  0 long/short=59/128 win_rate=0.310
+    QQQ      n_taken= 156 n_skipped=  0 long/short=64/92 win_rate=0.397
+    AAPL     n_taken= 183 n_skipped=  0 long/short=70/113 win_rate=0.404
+    NVDA     n_taken= 130 n_skipped=  1 long/short=52/78 win_rate=0.408
+    TSLA     n_taken=  64 n_skipped=  0 long/short=32/32 win_rate=0.422
+
+V2_strict_60m: n_trades=759 n_skipped=3
+  gross_win_rate=0.375  exit_reasons={'stop': 426, 'take_profit': 267, 'stop_gap': 40, 'time_exit': 26}
+  placebo actual_win_rate_percentile=0.984 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 233 n_skipped=  0 long/short=125/108 win_rate=0.365
+    ETH-USD  n_taken= 213 n_skipped=  0 long/short=110/103 win_rate=0.329
+    SPY      n_taken=  65 n_skipped=  1 long/short=37/28 win_rate=0.415
+    QQQ      n_taken=  61 n_skipped=  1 long/short=36/25 win_rate=0.492
+    AAPL     n_taken=  57 n_skipped=  1 long/short=26/31 win_rate=0.333
+    NVDA     n_taken=  65 n_skipped=  0 long/short=36/29 win_rate=0.462
+    TSLA     n_taken=  65 n_skipped=  0 long/short=37/28 win_rate=0.338
+
+V2_strict_5m: n_trades=668 n_skipped=1
+  gross_win_rate=0.382  exit_reasons={'stop': 374, 'take_profit': 240, 'stop_gap': 33, 'time_exit': 21}
+  placebo actual_win_rate_percentile=1.000 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 221 n_skipped=  0 long/short=121/100 win_rate=0.348
+    ETH-USD  n_taken= 190 n_skipped=  0 long/short=116/74 win_rate=0.368
+    SPY      n_taken=  52 n_skipped=  0 long/short=31/21 win_rate=0.365
+    QQQ      n_taken=  50 n_skipped=  0 long/short=29/21 win_rate=0.380
+    AAPL     n_taken=  53 n_skipped=  1 long/short=30/23 win_rate=0.321
+    NVDA     n_taken=  54 n_skipped=  0 long/short=27/27 win_rate=0.463
+    TSLA     n_taken=  48 n_skipped=  0 long/short=27/21 win_rate=0.354
+
+V2_strict_daily: n_trades=601 n_skipped=2
+  gross_win_rate=0.338  exit_reasons={'stop': 327, 'take_profit': 197, 'stop_gap': 67, 'time_exit': 10}
+  placebo actual_win_rate_percentile=0.256 actual_net_expectancy_percentile=0.886
+    BTC-USD  n_taken=  51 n_skipped=  0 long/short=24/27 win_rate=0.431
+    ETH-USD  n_taken=  38 n_skipped=  0 long/short=18/20 win_rate=0.316
+    SPY      n_taken= 108 n_skipped=  1 long/short=65/43 win_rate=0.306
+    QQQ      n_taken=  92 n_skipped=  0 long/short=49/43 win_rate=0.359
+    AAPL     n_taken= 147 n_skipped=  1 long/short=69/78 win_rate=0.320
+    NVDA     n_taken= 111 n_skipped=  0 long/short=51/60 win_rate=0.288
+    TSLA     n_taken=  54 n_skipped=  0 long/short=27/27 win_rate=0.426
+
+V2_loose_60m: n_trades=900 n_skipped=2
+  gross_win_rate=0.376  exit_reasons={'stop': 503, 'take_profit': 311, 'stop_gap': 51, 'time_exit': 35}
+  placebo actual_win_rate_percentile=0.998 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 267 n_skipped=  0 long/short=143/124 win_rate=0.375
+    ETH-USD  n_taken= 250 n_skipped=  0 long/short=127/123 win_rate=0.340
+    SPY      n_taken=  77 n_skipped=  1 long/short=26/51 win_rate=0.390
+    QQQ      n_taken=  81 n_skipped=  0 long/short=41/40 win_rate=0.383
+    AAPL     n_taken=  73 n_skipped=  1 long/short=33/40 win_rate=0.397
+    NVDA     n_taken=  80 n_skipped=  0 long/short=38/42 win_rate=0.362
+    TSLA     n_taken=  72 n_skipped=  0 long/short=42/30 win_rate=0.444
+
+V2_loose_5m: n_trades=828 n_skipped=3
+  gross_win_rate=0.353  exit_reasons={'stop': 478, 'take_profit': 263, 'time_exit': 45, 'stop_gap': 42}
+  placebo actual_win_rate_percentile=1.000 actual_net_expectancy_percentile=1.000
+    BTC-USD  n_taken= 260 n_skipped=  0 long/short=111/149 win_rate=0.308
+    ETH-USD  n_taken= 246 n_skipped=  0 long/short=123/123 win_rate=0.350
+    SPY      n_taken=  59 n_skipped=  0 long/short=36/23 win_rate=0.407
+    QQQ      n_taken=  59 n_skipped=  1 long/short=32/27 win_rate=0.220
+    AAPL     n_taken=  64 n_skipped=  1 long/short=30/34 win_rate=0.312
+    NVDA     n_taken=  69 n_skipped=  1 long/short=39/30 win_rate=0.449
+    TSLA     n_taken=  71 n_skipped=  0 long/short=34/37 win_rate=0.296
+
+V2_loose_daily: n_trades=774 n_skipped=2
+  gross_win_rate=0.332  exit_reasons={'stop': 417, 'take_profit': 251, 'stop_gap': 92, 'time_exit': 14}
+  placebo actual_win_rate_percentile=0.586 actual_net_expectancy_percentile=0.992
+    BTC-USD  n_taken=  72 n_skipped=  0 long/short=33/39 win_rate=0.444
+    ETH-USD  n_taken=  48 n_skipped=  0 long/short=22/26 win_rate=0.354
+    SPY      n_taken= 157 n_skipped=  0 long/short=55/102 win_rate=0.255
+    QQQ      n_taken= 130 n_skipped=  0 long/short=62/68 win_rate=0.369
+    AAPL     n_taken= 170 n_skipped=  1 long/short=57/113 win_rate=0.271
+    NVDA     n_taken= 131 n_skipped=  1 long/short=51/80 win_rate=0.359
+    TSLA     n_taken=  66 n_skipped=  0 long/short=29/37 win_rate=0.409
+

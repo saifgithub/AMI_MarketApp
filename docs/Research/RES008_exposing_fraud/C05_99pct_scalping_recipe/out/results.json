@@ -1,0 +1,1388 @@
+{
+  "meta": {
+    "seed": 20260917,
+    "history_end": "2026-08-31",
+    "tickers": [
+      "BTC-USD",
+      "ETH-USD",
+      "SPY",
+      "QQQ",
+      "AAPL",
+      "NVDA",
+      "TSLA"
+    ],
+    "cost_bps": {
+      "equity": 5.0,
+      "crypto": 10.0
+    },
+    "target_r": {
+      "V1": 1.5,
+      "V2": 2.0
+    },
+    "stc_length": 80,
+    "stc_fast": 27,
+    "stc_slow": 50,
+    "lookback": 10,
+    "max_bars": 200,
+    "n_boot": 5000,
+    "n_placebo_reps": 500
+  },
+  "cells": {
+    "V1_strict_60m": {
+      "n_trades": 798,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.4298245614035088,
+        "lower": 0.3958938741619884,
+        "upper": 0.4644276410603303
+      },
+      "gross_win_rate": 0.4298245614035088,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.05039100098205377,
+          "lower": -0.12556366935872948,
+          "upper": 0.026679906109027797,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.043372068626161366,
+          "lower": -0.03156145520003045,
+          "upper": 0.1213201905414636,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": 0.0008261908675245822,
+          "lower": -0.0019862123124435253,
+          "upper": 0.0039644787611552755,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.002413910165770198,
+          "lower": -0.0003857312380605705,
+          "upper": 0.005539818342704942,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.09376306960821512,
+      "exit_reason_counts": {
+        "stop": 408,
+        "take_profit": 323,
+        "stop_gap": 38,
+        "time_exit": 29
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.35449226685227303,
+        "win_rate_p50": 0.38022813688212925,
+        "win_rate_p95": 0.4094502972944903,
+        "net_expectancy_r_p5": -0.9488460938318677,
+        "net_expectancy_r_p50": -0.5867662735840806,
+        "net_expectancy_r_p95": -0.45237912079245235,
+        "gross_expectancy_r_p50": -0.06426777011725732,
+        "actual_win_rate_percentile_in_placebo": 0.998,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 236,
+          "n_skipped": 0,
+          "n_long": 112,
+          "n_short": 124,
+          "win_rate": 0.4322033898305085
+        },
+        "ETH-USD": {
+          "n_taken": 233,
+          "n_skipped": 0,
+          "n_long": 119,
+          "n_short": 114,
+          "win_rate": 0.41201716738197425
+        },
+        "SPY": {
+          "n_taken": 68,
+          "n_skipped": 0,
+          "n_long": 37,
+          "n_short": 31,
+          "win_rate": 0.4411764705882353
+        },
+        "QQQ": {
+          "n_taken": 66,
+          "n_skipped": 1,
+          "n_long": 35,
+          "n_short": 31,
+          "win_rate": 0.5303030303030303
+        },
+        "AAPL": {
+          "n_taken": 63,
+          "n_skipped": 1,
+          "n_long": 28,
+          "n_short": 35,
+          "win_rate": 0.2857142857142857
+        },
+        "NVDA": {
+          "n_taken": 70,
+          "n_skipped": 0,
+          "n_long": 40,
+          "n_short": 30,
+          "win_rate": 0.5571428571428572
+        },
+        "TSLA": {
+          "n_taken": 62,
+          "n_skipped": 0,
+          "n_long": 33,
+          "n_short": 29,
+          "win_rate": 0.3709677419354839
+        }
+      },
+      "target_r": 1.5
+    },
+    "V1_strict_5m": {
+      "n_trades": 696,
+      "n_skipped": 0,
+      "win_rate": {
+        "estimate": 0.40086206896551724,
+        "lower": 0.36509359333313457,
+        "upper": 0.43771888903602324
+      },
+      "gross_win_rate": 0.42528735632183906,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.5219584774722195,
+          "lower": -0.6511787878375279,
+          "upper": -0.3963556441130337,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.01218883039387766,
+          "lower": -0.10186338742790434,
+          "upper": 0.08032076601832469,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.0019299710552421235,
+          "lower": -0.0025220295157532295,
+          "upper": -0.0013177805828843607,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.00030640783685131835,
+          "lower": -0.0008977943875714928,
+          "upper": 0.00030135063956964153,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.5097696470783418,
+      "exit_reason_counts": {
+        "stop": 361,
+        "take_profit": 279,
+        "stop_gap": 34,
+        "time_exit": 22
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.23580786026200873,
+        "win_rate_p50": 0.2646198830409357,
+        "win_rate_p95": 0.28909347773890376,
+        "net_expectancy_r_p5": -35.617269138433485,
+        "net_expectancy_r_p50": -3.43249238154924,
+        "net_expectancy_r_p95": -2.2101344075231784,
+        "gross_expectancy_r_p50": -0.12719734402302463,
+        "actual_win_rate_percentile_in_placebo": 1.0,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 233,
+          "n_skipped": 0,
+          "n_long": 119,
+          "n_short": 114,
+          "win_rate": 0.38197424892703863
+        },
+        "ETH-USD": {
+          "n_taken": 201,
+          "n_skipped": 0,
+          "n_long": 100,
+          "n_short": 101,
+          "win_rate": 0.4228855721393035
+        },
+        "SPY": {
+          "n_taken": 58,
+          "n_skipped": 0,
+          "n_long": 30,
+          "n_short": 28,
+          "win_rate": 0.41379310344827586
+        },
+        "QQQ": {
+          "n_taken": 52,
+          "n_skipped": 0,
+          "n_long": 29,
+          "n_short": 23,
+          "win_rate": 0.38461538461538464
+        },
+        "AAPL": {
+          "n_taken": 56,
+          "n_skipped": 0,
+          "n_long": 28,
+          "n_short": 28,
+          "win_rate": 0.3392857142857143
+        },
+        "NVDA": {
+          "n_taken": 53,
+          "n_skipped": 0,
+          "n_long": 22,
+          "n_short": 31,
+          "win_rate": 0.5283018867924528
+        },
+        "TSLA": {
+          "n_taken": 43,
+          "n_skipped": 0,
+          "n_long": 19,
+          "n_short": 24,
+          "win_rate": 0.32558139534883723
+        }
+      },
+      "target_r": 1.5
+    },
+    "V1_strict_daily": {
+      "n_trades": 659,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.38239757207890746,
+        "lower": 0.3460768058853715,
+        "upper": 0.42008145422743004
+      },
+      "gross_win_rate": 0.38239757207890746,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.08260458939320034,
+          "lower": -0.1726259255705606,
+          "upper": 0.007824970043046239,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.06274473099950258,
+          "lower": -0.15391721178001436,
+          "upper": 0.028070496493073853,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.006730220297395486,
+          "lower": -0.017276469940439784,
+          "upper": 0.004393725017574984,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.0055769577784273525,
+          "lower": -0.016096813856205334,
+          "upper": 0.0055546561723827164,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.019859858393697753,
+      "exit_reason_counts": {
+        "stop": 334,
+        "take_profit": 250,
+        "stop_gap": 70,
+        "time_exit": 5
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.3557123986237405,
+        "win_rate_p50": 0.3903993855606759,
+        "win_rate_p95": 0.41981916993092727,
+        "net_expectancy_r_p5": -17.222565527198658,
+        "net_expectancy_r_p50": -0.18493554342135116,
+        "net_expectancy_r_p95": -0.08988326898352972,
+        "gross_expectancy_r_p50": -0.041051425269322615,
+        "actual_win_rate_percentile_in_placebo": 0.354,
+        "actual_net_expectancy_r_percentile_in_placebo": 0.954
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 58,
+          "n_skipped": 0,
+          "n_long": 26,
+          "n_short": 32,
+          "win_rate": 0.3793103448275862
+        },
+        "ETH-USD": {
+          "n_taken": 43,
+          "n_skipped": 0,
+          "n_long": 18,
+          "n_short": 25,
+          "win_rate": 0.37209302325581395
+        },
+        "SPY": {
+          "n_taken": 138,
+          "n_skipped": 0,
+          "n_long": 62,
+          "n_short": 76,
+          "win_rate": 0.34782608695652173
+        },
+        "QQQ": {
+          "n_taken": 115,
+          "n_skipped": 0,
+          "n_long": 53,
+          "n_short": 62,
+          "win_rate": 0.41739130434782606
+        },
+        "AAPL": {
+          "n_taken": 152,
+          "n_skipped": 1,
+          "n_long": 65,
+          "n_short": 87,
+          "win_rate": 0.35526315789473684
+        },
+        "NVDA": {
+          "n_taken": 102,
+          "n_skipped": 1,
+          "n_long": 52,
+          "n_short": 50,
+          "win_rate": 0.4411764705882353
+        },
+        "TSLA": {
+          "n_taken": 51,
+          "n_skipped": 0,
+          "n_long": 23,
+          "n_short": 28,
+          "win_rate": 0.37254901960784315
+        }
+      },
+      "target_r": 1.5
+    },
+    "V1_loose_60m": {
+      "n_trades": 975,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.4358974358974359,
+        "lower": 0.40508357764487435,
+        "upper": 0.4672144345882817
+      },
+      "gross_win_rate": 0.4358974358974359,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.05287974106910869,
+          "lower": -0.1275012352955744,
+          "upper": 0.016597783019899844,
+          "block_len": 20,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.04064131959379611,
+          "lower": -0.03337481679784021,
+          "upper": 0.11004161057272693,
+          "block_len": 20,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": 0.0007642912180502232,
+          "lower": -0.002098405393043846,
+          "upper": 0.0037445122057224284,
+          "block_len": 20,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.002332496346255353,
+          "lower": -0.000503585370062424,
+          "upper": 0.005303439868464911,
+          "block_len": 20,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.0935210606629048,
+      "exit_reason_counts": {
+        "stop": 485,
+        "take_profit": 402,
+        "stop_gap": 57,
+        "time_exit": 31
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.35721332146565793,
+        "win_rate_p50": 0.3811753634475597,
+        "win_rate_p95": 0.405380265587804,
+        "net_expectancy_r_p5": -0.9423255976030122,
+        "net_expectancy_r_p50": -0.5984784239552736,
+        "net_expectancy_r_p95": -0.4588969467521881,
+        "gross_expectancy_r_p50": -0.057757123479817915,
+        "actual_win_rate_percentile_in_placebo": 1.0,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 291,
+          "n_skipped": 0,
+          "n_long": 148,
+          "n_short": 143,
+          "win_rate": 0.4329896907216495
+        },
+        "ETH-USD": {
+          "n_taken": 263,
+          "n_skipped": 0,
+          "n_long": 133,
+          "n_short": 130,
+          "win_rate": 0.41825095057034223
+        },
+        "SPY": {
+          "n_taken": 93,
+          "n_skipped": 0,
+          "n_long": 39,
+          "n_short": 54,
+          "win_rate": 0.4731182795698925
+        },
+        "QQQ": {
+          "n_taken": 86,
+          "n_skipped": 1,
+          "n_long": 38,
+          "n_short": 48,
+          "win_rate": 0.45348837209302323
+        },
+        "AAPL": {
+          "n_taken": 85,
+          "n_skipped": 1,
+          "n_long": 43,
+          "n_short": 42,
+          "win_rate": 0.38823529411764707
+        },
+        "NVDA": {
+          "n_taken": 82,
+          "n_skipped": 0,
+          "n_long": 35,
+          "n_short": 47,
+          "win_rate": 0.45121951219512196
+        },
+        "TSLA": {
+          "n_taken": 75,
+          "n_skipped": 0,
+          "n_long": 36,
+          "n_short": 39,
+          "win_rate": 0.48
+        }
+      },
+      "target_r": 1.5
+    },
+    "V1_loose_5m": {
+      "n_trades": 871,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.39380022962112515,
+        "lower": 0.3618867444658465,
+        "upper": 0.4266463684373942
+      },
+      "gross_win_rate": 0.425947187141217,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.5345565363518453,
+          "lower": -0.6575639108396135,
+          "upper": -0.42156259421691156,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.01939343317516012,
+          "lower": -0.10607434319348903,
+          "upper": 0.0676442320592161,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.0017581082867832124,
+          "lower": -0.0023722323916492627,
+          "upper": -0.0011568234803046198,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.00015650093890720715,
+          "lower": -0.0007672150631500478,
+          "upper": 0.0004405368120283545,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.5151631031766851,
+      "exit_reason_counts": {
+        "stop": 443,
+        "take_profit": 346,
+        "stop_gap": 47,
+        "time_exit": 35
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.24646531464164215,
+        "win_rate_p50": 0.26697892271662765,
+        "win_rate_p95": 0.29157639661255014,
+        "net_expectancy_r_p5": -37.39525523675864,
+        "net_expectancy_r_p50": -4.175983921280855,
+        "net_expectancy_r_p95": -2.2144566850754503,
+        "gross_expectancy_r_p50": -0.1312611434116505,
+        "actual_win_rate_percentile_in_placebo": 1.0,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 279,
+          "n_skipped": 0,
+          "n_long": 132,
+          "n_short": 147,
+          "win_rate": 0.3727598566308244
+        },
+        "ETH-USD": {
+          "n_taken": 245,
+          "n_skipped": 0,
+          "n_long": 108,
+          "n_short": 137,
+          "win_rate": 0.4
+        },
+        "SPY": {
+          "n_taken": 70,
+          "n_skipped": 1,
+          "n_long": 45,
+          "n_short": 25,
+          "win_rate": 0.34285714285714286
+        },
+        "QQQ": {
+          "n_taken": 70,
+          "n_skipped": 1,
+          "n_long": 33,
+          "n_short": 37,
+          "win_rate": 0.35714285714285715
+        },
+        "AAPL": {
+          "n_taken": 67,
+          "n_skipped": 0,
+          "n_long": 37,
+          "n_short": 30,
+          "win_rate": 0.417910447761194
+        },
+        "NVDA": {
+          "n_taken": 67,
+          "n_skipped": 0,
+          "n_long": 29,
+          "n_short": 38,
+          "win_rate": 0.5074626865671642
+        },
+        "TSLA": {
+          "n_taken": 73,
+          "n_skipped": 0,
+          "n_long": 33,
+          "n_short": 40,
+          "win_rate": 0.410958904109589
+        }
+      },
+      "target_r": 1.5
+    },
+    "V1_loose_daily": {
+      "n_trades": 834,
+      "n_skipped": 1,
+      "win_rate": {
+        "estimate": 0.3872901678657074,
+        "lower": 0.35481816664620947,
+        "upper": 0.42079570633565533
+      },
+      "gross_win_rate": 0.3872901678657074,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.07098764520335857,
+          "lower": -0.15215388843999647,
+          "upper": 0.012187109686366542,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.050277704848245036,
+          "lower": -0.13066679822717814,
+          "upper": 0.03301225374779432,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.002822519521311297,
+          "lower": -0.013045445354070371,
+          "upper": 0.007848479611187358,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.0016858288738292827,
+          "lower": -0.011904827848075164,
+          "upper": 0.008970131613039186,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.020709940355113525,
+      "exit_reason_counts": {
+        "stop": 408,
+        "take_profit": 321,
+        "stop_gap": 98,
+        "time_exit": 7
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.35371508654999656,
+        "win_rate_p50": 0.38155382734258525,
+        "win_rate_p95": 0.4085750315258512,
+        "net_expectancy_r_p5": -19.81574372289312,
+        "net_expectancy_r_p50": -0.21777711395402782,
+        "net_expectancy_r_p95": -0.12330656890392377,
+        "gross_expectancy_r_p50": -0.06072212635949279,
+        "actual_win_rate_percentile_in_placebo": 0.642,
+        "actual_net_expectancy_r_percentile_in_placebo": 0.998
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 66,
+          "n_skipped": 0,
+          "n_long": 29,
+          "n_short": 37,
+          "win_rate": 0.4090909090909091
+        },
+        "ETH-USD": {
+          "n_taken": 48,
+          "n_skipped": 0,
+          "n_long": 22,
+          "n_short": 26,
+          "win_rate": 0.4583333333333333
+        },
+        "SPY": {
+          "n_taken": 187,
+          "n_skipped": 0,
+          "n_long": 59,
+          "n_short": 128,
+          "win_rate": 0.31016042780748665
+        },
+        "QQQ": {
+          "n_taken": 156,
+          "n_skipped": 0,
+          "n_long": 64,
+          "n_short": 92,
+          "win_rate": 0.3974358974358974
+        },
+        "AAPL": {
+          "n_taken": 183,
+          "n_skipped": 0,
+          "n_long": 70,
+          "n_short": 113,
+          "win_rate": 0.40437158469945356
+        },
+        "NVDA": {
+          "n_taken": 130,
+          "n_skipped": 1,
+          "n_long": 52,
+          "n_short": 78,
+          "win_rate": 0.4076923076923077
+        },
+        "TSLA": {
+          "n_taken": 64,
+          "n_skipped": 0,
+          "n_long": 32,
+          "n_short": 32,
+          "win_rate": 0.421875
+        }
+      },
+      "target_r": 1.5
+    },
+    "V2_strict_60m": {
+      "n_trades": 759,
+      "n_skipped": 3,
+      "win_rate": {
+        "estimate": 0.37285902503293805,
+        "lower": 0.3391781524361524,
+        "upper": 0.40782039127387865
+      },
+      "gross_win_rate": 0.37549407114624506,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.018765875809695222,
+          "lower": -0.111612044764509,
+          "upper": 0.0747097992819412,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.07636772709522029,
+          "lower": -0.017430405206834202,
+          "upper": 0.1687994140184271,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": 0.0012575256945821518,
+          "lower": -0.0017253299750001289,
+          "upper": 0.004390794251570691,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.00284514097784961,
+          "lower": -0.00013096277957431134,
+          "upper": 0.005999676606659525,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.09513360290491552,
+      "exit_reason_counts": {
+        "stop": 426,
+        "take_profit": 267,
+        "stop_gap": 40,
+        "time_exit": 26
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.3047982563431562,
+        "win_rate_p50": 0.3328903636883801,
+        "win_rate_p95": 0.36139999999999994,
+        "net_expectancy_r_p5": -1.0538958498158089,
+        "net_expectancy_r_p50": -0.573588141411874,
+        "net_expectancy_r_p95": -0.4196037314642101,
+        "gross_expectancy_r_p50": -0.0575534957138755,
+        "actual_win_rate_percentile_in_placebo": 0.984,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 233,
+          "n_skipped": 0,
+          "n_long": 125,
+          "n_short": 108,
+          "win_rate": 0.3648068669527897
+        },
+        "ETH-USD": {
+          "n_taken": 213,
+          "n_skipped": 0,
+          "n_long": 110,
+          "n_short": 103,
+          "win_rate": 0.3286384976525822
+        },
+        "SPY": {
+          "n_taken": 65,
+          "n_skipped": 1,
+          "n_long": 37,
+          "n_short": 28,
+          "win_rate": 0.4153846153846154
+        },
+        "QQQ": {
+          "n_taken": 61,
+          "n_skipped": 1,
+          "n_long": 36,
+          "n_short": 25,
+          "win_rate": 0.4918032786885246
+        },
+        "AAPL": {
+          "n_taken": 57,
+          "n_skipped": 1,
+          "n_long": 26,
+          "n_short": 31,
+          "win_rate": 0.3333333333333333
+        },
+        "NVDA": {
+          "n_taken": 65,
+          "n_skipped": 0,
+          "n_long": 36,
+          "n_short": 29,
+          "win_rate": 0.46153846153846156
+        },
+        "TSLA": {
+          "n_taken": 65,
+          "n_skipped": 0,
+          "n_long": 37,
+          "n_short": 28,
+          "win_rate": 0.3384615384615385
+        }
+      },
+      "target_r": 2.0
+    },
+    "V2_strict_5m": {
+      "n_trades": 668,
+      "n_skipped": 1,
+      "win_rate": {
+        "estimate": 0.3652694610778443,
+        "lower": 0.32962206166312236,
+        "upper": 0.40245758653846364
+      },
+      "gross_win_rate": 0.38173652694610777,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.4543028971251274,
+          "lower": -0.5755024369640052,
+          "upper": -0.33287843677141543,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.07308378189223873,
+          "lower": -0.03656398762227183,
+          "upper": 0.19324986601641628,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.0012615986814505612,
+          "lower": -0.001853108966159338,
+          "upper": -0.0006753095663524477,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.0003536707796272838,
+          "lower": -0.00024229645160879824,
+          "upper": 0.0009473738739818463,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.5273866790173661,
+      "exit_reason_counts": {
+        "stop": 374,
+        "take_profit": 240,
+        "stop_gap": 33,
+        "time_exit": 21
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.21936262680638186,
+        "win_rate_p50": 0.24885496183206107,
+        "win_rate_p95": 0.27635700445876227,
+        "net_expectancy_r_p5": -34.4777595995912,
+        "net_expectancy_r_p50": -3.5096667263128283,
+        "net_expectancy_r_p95": -2.1639013126015962,
+        "gross_expectancy_r_p50": -0.11271237282392005,
+        "actual_win_rate_percentile_in_placebo": 1.0,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 221,
+          "n_skipped": 0,
+          "n_long": 121,
+          "n_short": 100,
+          "win_rate": 0.34841628959276016
+        },
+        "ETH-USD": {
+          "n_taken": 190,
+          "n_skipped": 0,
+          "n_long": 116,
+          "n_short": 74,
+          "win_rate": 0.3684210526315789
+        },
+        "SPY": {
+          "n_taken": 52,
+          "n_skipped": 0,
+          "n_long": 31,
+          "n_short": 21,
+          "win_rate": 0.36538461538461536
+        },
+        "QQQ": {
+          "n_taken": 50,
+          "n_skipped": 0,
+          "n_long": 29,
+          "n_short": 21,
+          "win_rate": 0.38
+        },
+        "AAPL": {
+          "n_taken": 53,
+          "n_skipped": 1,
+          "n_long": 30,
+          "n_short": 23,
+          "win_rate": 0.32075471698113206
+        },
+        "NVDA": {
+          "n_taken": 54,
+          "n_skipped": 0,
+          "n_long": 27,
+          "n_short": 27,
+          "win_rate": 0.46296296296296297
+        },
+        "TSLA": {
+          "n_taken": 48,
+          "n_skipped": 0,
+          "n_long": 27,
+          "n_short": 21,
+          "win_rate": 0.3541666666666667
+        }
+      },
+      "target_r": 2.0
+    },
+    "V2_strict_daily": {
+      "n_trades": 601,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.33610648918469216,
+        "lower": 0.29948735353197525,
+        "upper": 0.3748074602129257
+      },
+      "gross_win_rate": 0.33777038269550747,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.03878341266199886,
+          "lower": -0.16166508124179235,
+          "upper": 0.08673338742141937,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.0205549337356963,
+          "lower": -0.14363232783040303,
+          "upper": 0.10525241014375669,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.00432890129930549,
+          "lower": -0.01837004046837931,
+          "upper": 0.01003782033722231,
+          "block_len": 17,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.0031808147768429278,
+          "lower": -0.01726860185069252,
+          "upper": 0.01122612100748457,
+          "block_len": 17,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.018228478926302555,
+      "exit_reason_counts": {
+        "stop": 327,
+        "take_profit": 197,
+        "stop_gap": 67,
+        "time_exit": 10
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.3161583485951463,
+        "win_rate_p50": 0.34752271025102077,
+        "win_rate_p95": 0.38137082601054484,
+        "net_expectancy_r_p5": -27.25959488775115,
+        "net_expectancy_r_p50": -0.1272229479158331,
+        "net_expectancy_r_p95": -0.009212529927403531,
+        "gross_expectancy_r_p50": -0.0004265549638678501,
+        "actual_win_rate_percentile_in_placebo": 0.256,
+        "actual_net_expectancy_r_percentile_in_placebo": 0.886
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 51,
+          "n_skipped": 0,
+          "n_long": 24,
+          "n_short": 27,
+          "win_rate": 0.43137254901960786
+        },
+        "ETH-USD": {
+          "n_taken": 38,
+          "n_skipped": 0,
+          "n_long": 18,
+          "n_short": 20,
+          "win_rate": 0.3157894736842105
+        },
+        "SPY": {
+          "n_taken": 108,
+          "n_skipped": 1,
+          "n_long": 65,
+          "n_short": 43,
+          "win_rate": 0.3055555555555556
+        },
+        "QQQ": {
+          "n_taken": 92,
+          "n_skipped": 0,
+          "n_long": 49,
+          "n_short": 43,
+          "win_rate": 0.358695652173913
+        },
+        "AAPL": {
+          "n_taken": 147,
+          "n_skipped": 1,
+          "n_long": 69,
+          "n_short": 78,
+          "win_rate": 0.3197278911564626
+        },
+        "NVDA": {
+          "n_taken": 111,
+          "n_skipped": 0,
+          "n_long": 51,
+          "n_short": 60,
+          "win_rate": 0.2882882882882883
+        },
+        "TSLA": {
+          "n_taken": 54,
+          "n_skipped": 0,
+          "n_long": 27,
+          "n_short": 27,
+          "win_rate": 0.42592592592592593
+        }
+      },
+      "target_r": 2.0
+    },
+    "V2_loose_60m": {
+      "n_trades": 900,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.37333333333333335,
+        "lower": 0.3423338466738505,
+        "upper": 0.4054095238310965
+      },
+      "gross_win_rate": 0.37555555555555553,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.03890004015316873,
+          "lower": -0.13463547531036837,
+          "upper": 0.05878375718475121,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.0561118740958582,
+          "lower": -0.03802099641771909,
+          "upper": 0.15104568131793802,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": 0.0015509557760563582,
+          "lower": -0.0014199308857266188,
+          "upper": 0.004951613841914415,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": 0.0031254002205008038,
+          "lower": 0.00016498148900306287,
+          "upper": 0.006528386142975507,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.09501191424902693,
+      "exit_reason_counts": {
+        "stop": 503,
+        "take_profit": 311,
+        "stop_gap": 51,
+        "time_exit": 35
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.3047404063205418,
+        "win_rate_p50": 0.3303370786516854,
+        "win_rate_p95": 0.3579905666570717,
+        "net_expectancy_r_p5": -1.08921217721118,
+        "net_expectancy_r_p50": -0.6019373475393799,
+        "net_expectancy_r_p95": -0.4565509138260998,
+        "gross_expectancy_r_p50": -0.06060359054167015,
+        "actual_win_rate_percentile_in_placebo": 0.998,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 267,
+          "n_skipped": 0,
+          "n_long": 143,
+          "n_short": 124,
+          "win_rate": 0.37453183520599254
+        },
+        "ETH-USD": {
+          "n_taken": 250,
+          "n_skipped": 0,
+          "n_long": 127,
+          "n_short": 123,
+          "win_rate": 0.34
+        },
+        "SPY": {
+          "n_taken": 77,
+          "n_skipped": 1,
+          "n_long": 26,
+          "n_short": 51,
+          "win_rate": 0.38961038961038963
+        },
+        "QQQ": {
+          "n_taken": 81,
+          "n_skipped": 0,
+          "n_long": 41,
+          "n_short": 40,
+          "win_rate": 0.38271604938271603
+        },
+        "AAPL": {
+          "n_taken": 73,
+          "n_skipped": 1,
+          "n_long": 33,
+          "n_short": 40,
+          "win_rate": 0.3972602739726027
+        },
+        "NVDA": {
+          "n_taken": 80,
+          "n_skipped": 0,
+          "n_long": 38,
+          "n_short": 42,
+          "win_rate": 0.3625
+        },
+        "TSLA": {
+          "n_taken": 72,
+          "n_skipped": 0,
+          "n_long": 42,
+          "n_short": 30,
+          "win_rate": 0.4444444444444444
+        }
+      },
+      "target_r": 2.0
+    },
+    "V2_loose_5m": {
+      "n_trades": 828,
+      "n_skipped": 3,
+      "win_rate": {
+        "estimate": 0.3321256038647343,
+        "lower": 0.3008858327097172,
+        "upper": 0.3649158689821868
+      },
+      "gross_win_rate": 0.3526570048309179,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.5381735670793308,
+          "lower": -0.6596867981010688,
+          "upper": -0.41856569255992665,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.021156155920086697,
+          "lower": -0.11590431376754703,
+          "upper": 0.08000310781178903,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.0022041430613138637,
+          "lower": -0.002766835220128701,
+          "upper": -0.0016155636252602463,
+          "block_len": 19,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.0005930319502027523,
+          "lower": -0.0011773765095110362,
+          "upper": 1.1259335060637721e-05,
+          "block_len": 19,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.517017411159244,
+      "exit_reason_counts": {
+        "stop": 478,
+        "take_profit": 263,
+        "time_exit": 45,
+        "stop_gap": 42
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.22480322641612965,
+        "win_rate_p50": 0.24969020875400194,
+        "win_rate_p95": 0.27520119918643904,
+        "net_expectancy_r_p5": -38.55893380146731,
+        "net_expectancy_r_p50": -4.100050025905836,
+        "net_expectancy_r_p95": -2.2025194793390495,
+        "gross_expectancy_r_p50": -0.12053782576752005,
+        "actual_win_rate_percentile_in_placebo": 1.0,
+        "actual_net_expectancy_r_percentile_in_placebo": 1.0
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 260,
+          "n_skipped": 0,
+          "n_long": 111,
+          "n_short": 149,
+          "win_rate": 0.3076923076923077
+        },
+        "ETH-USD": {
+          "n_taken": 246,
+          "n_skipped": 0,
+          "n_long": 123,
+          "n_short": 123,
+          "win_rate": 0.34959349593495936
+        },
+        "SPY": {
+          "n_taken": 59,
+          "n_skipped": 0,
+          "n_long": 36,
+          "n_short": 23,
+          "win_rate": 0.4067796610169492
+        },
+        "QQQ": {
+          "n_taken": 59,
+          "n_skipped": 1,
+          "n_long": 32,
+          "n_short": 27,
+          "win_rate": 0.22033898305084745
+        },
+        "AAPL": {
+          "n_taken": 64,
+          "n_skipped": 1,
+          "n_long": 30,
+          "n_short": 34,
+          "win_rate": 0.3125
+        },
+        "NVDA": {
+          "n_taken": 69,
+          "n_skipped": 1,
+          "n_long": 39,
+          "n_short": 30,
+          "win_rate": 0.4492753623188406
+        },
+        "TSLA": {
+          "n_taken": 71,
+          "n_skipped": 0,
+          "n_long": 34,
+          "n_short": 37,
+          "win_rate": 0.29577464788732394
+        }
+      },
+      "target_r": 2.0
+    },
+    "V2_loose_daily": {
+      "n_trades": 774,
+      "n_skipped": 2,
+      "win_rate": {
+        "estimate": 0.33204134366925064,
+        "lower": 0.2997645927201511,
+        "upper": 0.3659770606057172
+      },
+      "gross_win_rate": 0.33204134366925064,
+      "expectancy_r": {
+        "net": {
+          "estimate": -0.04716692024556715,
+          "lower": -0.1614414782063879,
+          "upper": 0.07271782564074483,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.027740283356496007,
+          "lower": -0.14223229345694105,
+          "upper": 0.09232697302025088,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "expectancy_pct": {
+        "net": {
+          "estimate": -0.0067762091300412495,
+          "lower": -0.018867725373136666,
+          "upper": 0.005769715475480892,
+          "block_len": 18,
+          "n_boot": 5000
+        },
+        "gross": {
+          "estimate": -0.005621170370351325,
+          "lower": -0.017693913635153557,
+          "upper": 0.006927991704935485,
+          "block_len": 18,
+          "n_boot": 5000
+        }
+      },
+      "avg_cost_r": 0.019426636889071158,
+      "exit_reason_counts": {
+        "stop": 417,
+        "take_profit": 251,
+        "stop_gap": 92,
+        "time_exit": 14
+      },
+      "placebo": {
+        "n_reps": 500,
+        "win_rate_p5": 0.2991631650167367,
+        "win_rate_p50": 0.3296928174983319,
+        "win_rate_p95": 0.3559838993655783,
+        "net_expectancy_r_p5": -21.794914327352064,
+        "net_expectancy_r_p50": -0.20229965280785037,
+        "net_expectancy_r_p95": -0.0936204309038329,
+        "gross_expectancy_r_p50": -0.04798743633563629,
+        "actual_win_rate_percentile_in_placebo": 0.586,
+        "actual_net_expectancy_r_percentile_in_placebo": 0.992
+      },
+      "per_instrument": {
+        "BTC-USD": {
+          "n_taken": 72,
+          "n_skipped": 0,
+          "n_long": 33,
+          "n_short": 39,
+          "win_rate": 0.4444444444444444
+        },
+        "ETH-USD": {
+          "n_taken": 48,
+          "n_skipped": 0,
+          "n_long": 22,
+          "n_short": 26,
+          "win_rate": 0.3541666666666667
+        },
+        "SPY": {
+          "n_taken": 157,
+          "n_skipped": 0,
+          "n_long": 55,
+          "n_short": 102,
+          "win_rate": 0.25477707006369427
+        },
+        "QQQ": {
+          "n_taken": 130,
+          "n_skipped": 0,
+          "n_long": 62,
+          "n_short": 68,
+          "win_rate": 0.36923076923076925
+        },
+        "AAPL": {
+          "n_taken": 170,
+          "n_skipped": 1,
+          "n_long": 57,
+          "n_short": 113,
+          "win_rate": 0.27058823529411763
+        },
+        "NVDA": {
+          "n_taken": 131,
+          "n_skipped": 1,
+          "n_long": 51,
+          "n_short": 80,
+          "win_rate": 0.35877862595419846
+        },
+        "TSLA": {
+          "n_taken": 66,
+          "n_skipped": 0,
+          "n_long": 29,
+          "n_short": 37,
+          "win_rate": 0.4090909090909091
+        }
+      },
+      "target_r": 2.0
+    }
+  }
+}

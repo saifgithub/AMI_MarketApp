@@ -1,0 +1,216 @@
+EXPLORATORY -- not pre-registered; written and run after the pre-registered results were seen.
+
+C05 post-hoc diagnostic: gross/percent views and a distance-matched placebo arm
+====================================================================================================
+Seed: 20260917  Placebo reps/cell: 500
+Distance-matched arm dropped for 5-minute cells: False
+Wall time: 1014.0s
+
+--- V1_strict_60m (n=798) ---
+  gross_exp_R: recipe=0.0434  placebo[p5,p50,p95]=[-0.1289,-0.0588,0.0096]  recipe_percentile=0.994
+  gross_win_rate: recipe=0.4298  placebo[p5,p50,p95]=[0.3557,0.3827,0.4084]
+  net_win_rate (recipe, net R>0): 0.4298
+  net_exp_pct: recipe=0.000826  placebo[p5,p50,p95]=[-0.003569,-0.002152,-0.000949]  recipe_percentile=1.000
+  gross_exp_pct: recipe=0.002414  placebo[p5,p50,p95]=[-0.001978,-0.000558,0.000645]
+  stop_dist_pct: recipe[p10,p50]=[0.009331,0.020729]  placebo[p10,p50]=[0.001861,0.008974]
+  avg_cost_R: recipe=0.0938  placebo_p50=0.5259
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-0.4934,-0.2370,-0.1535] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.005069,-0.003295,-0.001484] recipe_percentile=1.000
+                   win_rate placebo[p5,p50,p95]=[0.3649,0.3907,0.4165] recipe_percentile=0.992  n_floor_exhausted_total=78422
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n= 112 net_pct=0.002579 gross_pct=0.004579  short: n= 124 net_pct=-0.002660 gross_pct=-0.000660
+    ETH-USD  long: n= 119 net_pct=0.001054 gross_pct=0.003054  short: n= 114 net_pct=-0.005065 gross_pct=-0.003065
+    SPY      long: n=  37 net_pct=0.005433 gross_pct=0.006433  short: n=  31 net_pct=-0.003626 gross_pct=-0.002626
+    QQQ      long: n=  35 net_pct=0.011094 gross_pct=0.012094  short: n=  31 net_pct=0.000548 gross_pct=0.001548
+    AAPL     long: n=  28 net_pct=-0.005462 gross_pct=-0.004462  short: n=  35 net_pct=-0.011927 gross_pct=-0.010927
+    NVDA     long: n=  40 net_pct=0.028428 gross_pct=0.029428  short: n=  30 net_pct=0.010627 gross_pct=0.011627
+    TSLA     long: n=  33 net_pct=-0.003950 gross_pct=-0.002950  short: n=  29 net_pct=-0.003336 gross_pct=-0.002336
+
+--- V1_strict_5m (n=696) ---
+  gross_exp_R: recipe=-0.0122  placebo[p5,p50,p95]=[-0.2129,-0.1255,-0.0382]  recipe_percentile=0.984
+  gross_win_rate: recipe=0.4253  placebo[p5,p50,p95]=[0.2368,0.2637,0.2927]
+  net_win_rate (recipe, net R>0): 0.4009
+  net_exp_pct: recipe=-0.001930  placebo[p5,p50,p95]=[-0.002388,-0.002002,-0.001642]  recipe_percentile=0.622
+  gross_exp_pct: recipe=-0.000306  placebo[p5,p50,p95]=[-0.000767,-0.000381,-0.000020]
+  stop_dist_pct: recipe[p10,p50]=[0.001808,0.004153]  placebo[p10,p50]=[0.000364,0.002147]
+  avg_cost_R: recipe=0.5098  placebo_p50=3.2118
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-24.4984,-1.0127,-0.7889] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.002661,-0.002209,-0.001792] recipe_percentile=0.842
+                   win_rate placebo[p5,p50,p95]=[0.3184,0.3488,0.3736] recipe_percentile=0.998  n_floor_exhausted_total=66489
+
+--- V1_strict_daily (n=659) ---
+  gross_exp_R: recipe=-0.0625  placebo[p5,p50,p95]=[-0.1167,-0.0361,0.0407]  recipe_percentile=0.308
+  gross_win_rate: recipe=0.3824  placebo[p5,p50,p95]=[0.3595,0.3914,0.4248]
+  net_win_rate (recipe, net R>0): 0.3824
+  net_exp_pct: recipe=-0.006722  placebo[p5,p50,p95]=[-0.006783,-0.001369,0.003854]  recipe_percentile=0.058
+  gross_exp_pct: recipe=-0.005569  placebo[p5,p50,p95]=[-0.005621,-0.000209,0.005017]
+  stop_dist_pct: recipe[p10,p50]=[0.025677,0.078491]  placebo[p10,p50]=[0.006010,0.033483]
+  avg_cost_R: recipe=0.0199  placebo_p50=0.1309
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-11.8988,-0.0726,0.0104] recipe_percentile=0.418
+                   net_exp_pct placebo[p5,p50,p95]=[-0.012577,-0.004772,0.002306] recipe_percentile=0.308
+                   win_rate placebo[p5,p50,p95]=[0.3619,0.3917,0.4213] recipe_percentile=0.308  n_floor_exhausted_total=63864
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n=  26 net_pct=-0.000980 gross_pct=0.001020  short: n=  32 net_pct=-0.049610 gross_pct=-0.047610
+    ETH-USD  long: n=  18 net_pct=0.016132 gross_pct=0.018132  short: n=  25 net_pct=-0.051190 gross_pct=-0.049190
+    SPY      long: n=  62 net_pct=-0.001916 gross_pct=-0.000916  short: n=  76 net_pct=-0.011011 gross_pct=-0.010011
+    QQQ      long: n=  53 net_pct=0.006746 gross_pct=0.007746  short: n=  62 net_pct=-0.009869 gross_pct=-0.008869
+    AAPL     long: n=  65 net_pct=0.015243 gross_pct=0.016243  short: n=  87 net_pct=-0.037910 gross_pct=-0.036910
+    NVDA     long: n=  52 net_pct=0.070908 gross_pct=0.071908  short: n=  50 net_pct=-0.029406 gross_pct=-0.028406
+    TSLA     long: n=  23 net_pct=0.004389 gross_pct=0.005389  short: n=  28 net_pct=-0.022426 gross_pct=-0.021426
+
+--- V1_loose_60m (n=975) ---
+  gross_exp_R: recipe=0.0406  placebo[p5,p50,p95]=[-0.1266,-0.0631,0.0039]  recipe_percentile=0.996
+  gross_win_rate: recipe=0.4359  placebo[p5,p50,p95]=[0.3559,0.3800,0.4065]
+  net_win_rate (recipe, net R>0): 0.4359
+  net_exp_pct: recipe=0.000764  placebo[p5,p50,p95]=[-0.003461,-0.002255,-0.001125]  recipe_percentile=1.000
+  gross_exp_pct: recipe=0.002332  placebo[p5,p50,p95]=[-0.001886,-0.000680,0.000448]
+  stop_dist_pct: recipe[p10,p50]=[0.008829,0.020704]  placebo[p10,p50]=[0.001813,0.008840]
+  avg_cost_R: recipe=0.0935  placebo_p50=0.5368
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-0.4820,-0.2480,-0.1648] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.004973,-0.003348,-0.001758] recipe_percentile=1.000
+                   win_rate placebo[p5,p50,p95]=[0.3609,0.3879,0.4128] recipe_percentile=0.998  n_floor_exhausted_total=96049
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n= 148 net_pct=0.001300 gross_pct=0.003300  short: n= 143 net_pct=-0.001585 gross_pct=0.000415
+    ETH-USD  long: n= 133 net_pct=-0.001056 gross_pct=0.000944  short: n= 130 net_pct=-0.005321 gross_pct=-0.003321
+    SPY      long: n=  39 net_pct=0.005378 gross_pct=0.006378  short: n=  54 net_pct=-0.000345 gross_pct=0.000655
+    QQQ      long: n=  38 net_pct=0.005845 gross_pct=0.006845  short: n=  48 net_pct=-0.002097 gross_pct=-0.001097
+    AAPL     long: n=  43 net_pct=0.000763 gross_pct=0.001763  short: n=  42 net_pct=-0.005945 gross_pct=-0.004945
+    NVDA     long: n=  35 net_pct=0.025400 gross_pct=0.026400  short: n=  47 net_pct=-0.003522 gross_pct=-0.002522
+    TSLA     long: n=  36 net_pct=0.018122 gross_pct=0.019122  short: n=  39 net_pct=0.003592 gross_pct=0.004592
+
+--- V1_loose_5m (n=871) ---
+  gross_exp_R: recipe=-0.0194  placebo[p5,p50,p95]=[-0.1977,-0.1285,-0.0520]  recipe_percentile=0.994
+  gross_win_rate: recipe=0.4259  placebo[p5,p50,p95]=[0.2441,0.2682,0.2921]
+  net_win_rate (recipe, net R>0): 0.3938
+  net_exp_pct: recipe=-0.001758  placebo[p5,p50,p95]=[-0.002346,-0.002014,-0.001736]  recipe_percentile=0.932
+  gross_exp_pct: recipe=-0.000157  placebo[p5,p50,p95]=[-0.000749,-0.000413,-0.000135]
+  stop_dist_pct: recipe[p10,p50]=[0.001666,0.004212]  placebo[p10,p50]=[0.000371,0.002177]
+  avg_cost_R: recipe=0.5152  placebo_p50=4.0070
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-24.0657,-1.0430,-0.7949] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.002677,-0.002252,-0.001818] recipe_percentile=0.976
+                   win_rate placebo[p5,p50,p95]=[0.3221,0.3491,0.3749] recipe_percentile=0.994  n_floor_exhausted_total=82612
+
+--- V1_loose_daily (n=834) ---
+  gross_exp_R: recipe=-0.0500  placebo[p5,p50,p95]=[-0.1345,-0.0619,0.0035]  recipe_percentile=0.638
+  gross_win_rate: recipe=0.3873  placebo[p5,p50,p95]=[0.3528,0.3807,0.4087]
+  net_win_rate (recipe, net R>0): 0.3873
+  net_exp_pct: recipe=-0.002816  placebo[p5,p50,p95]=[-0.006997,-0.002582,0.001941]  recipe_percentile=0.470
+  gross_exp_pct: recipe=-0.001679  placebo[p5,p50,p95]=[-0.005851,-0.001439,0.003085]
+  stop_dist_pct: recipe[p10,p50]=[0.024296,0.075078]  placebo[p10,p50]=[0.005292,0.031636]
+  avg_cost_R: recipe=0.0207  placebo_p50=0.1446
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-10.6797,-0.1021,-0.0299] recipe_percentile=0.724
+                   net_exp_pct placebo[p5,p50,p95]=[-0.012876,-0.007270,-0.000524] recipe_percentile=0.862
+                   win_rate placebo[p5,p50,p95]=[0.3524,0.3798,0.4066] recipe_percentile=0.648  n_floor_exhausted_total=81620
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n=  29 net_pct=0.022188 gross_pct=0.024188  short: n=  37 net_pct=-0.036808 gross_pct=-0.034808
+    ETH-USD  long: n=  22 net_pct=0.042482 gross_pct=0.044482  short: n=  26 net_pct=-0.040930 gross_pct=-0.038930
+    SPY      long: n=  59 net_pct=-0.000426 gross_pct=0.000574  short: n= 128 net_pct=-0.012349 gross_pct=-0.011349
+    QQQ      long: n=  64 net_pct=0.010525 gross_pct=0.011525  short: n=  92 net_pct=-0.013065 gross_pct=-0.012065
+    AAPL     long: n=  70 net_pct=0.041852 gross_pct=0.042852  short: n= 113 net_pct=-0.017441 gross_pct=-0.016441
+    NVDA     long: n=  52 net_pct=0.064868 gross_pct=0.065868  short: n=  78 net_pct=-0.042077 gross_pct=-0.041077
+    TSLA     long: n=  32 net_pct=0.006471 gross_pct=0.007471  short: n=  32 net_pct=-0.019484 gross_pct=-0.018484
+
+--- V2_strict_60m (n=759) ---
+  gross_exp_R: recipe=0.0764  placebo[p5,p50,p95]=[-0.1431,-0.0559,0.0257]  recipe_percentile=0.992
+  gross_win_rate: recipe=0.3755  placebo[p5,p50,p95]=[0.3044,0.3329,0.3604]
+  net_win_rate (recipe, net R>0): 0.3729
+  net_exp_pct: recipe=0.001258  placebo[p5,p50,p95]=[-0.003781,-0.002234,-0.000769]  recipe_percentile=1.000
+  gross_exp_pct: recipe=0.002845  placebo[p5,p50,p95]=[-0.002189,-0.000643,0.000820]
+  stop_dist_pct: recipe[p10,p50]=[0.009672,0.020120]  placebo[p10,p50]=[0.001879,0.008989]
+  avg_cost_R: recipe=0.0951  placebo_p50=0.5210
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-0.4160,-0.2430,-0.1547] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.005265,-0.003290,-0.001317] recipe_percentile=1.000
+                   win_rate placebo[p5,p50,p95]=[0.3111,0.3382,0.3635] recipe_percentile=0.986  n_floor_exhausted_total=75207
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n= 125 net_pct=0.000086 gross_pct=0.002086  short: n= 108 net_pct=-0.001671 gross_pct=0.000329
+    ETH-USD  long: n= 110 net_pct=-0.001506 gross_pct=0.000494  short: n= 103 net_pct=-0.005822 gross_pct=-0.003822
+    SPY      long: n=  37 net_pct=0.009528 gross_pct=0.010528  short: n=  28 net_pct=-0.004611 gross_pct=-0.003611
+    QQQ      long: n=  36 net_pct=0.015437 gross_pct=0.016437  short: n=  25 net_pct=0.003321 gross_pct=0.004321
+    AAPL     long: n=  26 net_pct=0.001475 gross_pct=0.002475  short: n=  31 net_pct=-0.013431 gross_pct=-0.012431
+    NVDA     long: n=  36 net_pct=0.034232 gross_pct=0.035232  short: n=  29 net_pct=-0.004609 gross_pct=-0.003609
+    TSLA     long: n=  37 net_pct=0.008316 gross_pct=0.009316  short: n=  28 net_pct=-0.000037 gross_pct=0.000963
+
+--- V2_strict_5m (n=668) ---
+  gross_exp_R: recipe=0.0731  placebo[p5,p50,p95]=[-0.2174,-0.1215,-0.0261]  recipe_percentile=1.000
+  gross_win_rate: recipe=0.3817  placebo[p5,p50,p95]=[0.2220,0.2470,0.2751]
+  net_win_rate (recipe, net R>0): 0.3653
+  net_exp_pct: recipe=-0.001262  placebo[p5,p50,p95]=[-0.002364,-0.001955,-0.001571]  recipe_percentile=1.000
+  gross_exp_pct: recipe=0.000354  placebo[p5,p50,p95]=[-0.000751,-0.000343,0.000041]
+  stop_dist_pct: recipe[p10,p50]=[0.001756,0.003897]  placebo[p10,p50]=[0.000367,0.002169]
+  avg_cost_R: recipe=0.5274  placebo_p50=3.1704
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-25.3871,-0.9957,-0.7487] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.002700,-0.002157,-0.001567] recipe_percentile=1.000
+                   win_rate placebo[p5,p50,p95]=[0.2741,0.3023,0.3348] recipe_percentile=0.998  n_floor_exhausted_total=65052
+
+--- V2_strict_daily (n=601) ---
+  gross_exp_R: recipe=-0.0204  placebo[p5,p50,p95]=[-0.0848,0.0015,0.0993]  recipe_percentile=0.336
+  gross_win_rate: recipe=0.3378  placebo[p5,p50,p95]=[0.3181,0.3489,0.3826]
+  net_win_rate (recipe, net R>0): 0.3361
+  net_exp_pct: recipe=-0.004323  placebo[p5,p50,p95]=[-0.006210,0.000320,0.007798]  recipe_percentile=0.114
+  gross_exp_pct: recipe=-0.003175  placebo[p5,p50,p95]=[-0.005055,0.001475,0.008952]
+  stop_dist_pct: recipe[p10,p50]=[0.030491,0.076561]  placebo[p10,p50]=[0.007046,0.035943]
+  avg_cost_R: recipe=0.0182  placebo_p50=0.1129
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-17.9374,-0.0549,0.0444] recipe_percentile=0.612
+                   net_exp_pct placebo[p5,p50,p95]=[-0.011448,-0.004145,0.004709] recipe_percentile=0.472
+                   win_rate placebo[p5,p50,p95]=[0.3129,0.3418,0.3725] recipe_percentile=0.372  n_floor_exhausted_total=59347
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n=  24 net_pct=0.033919 gross_pct=0.035919  short: n=  27 net_pct=0.012226 gross_pct=0.014226
+    ETH-USD  long: n=  18 net_pct=-0.009372 gross_pct=-0.007372  short: n=  20 net_pct=-0.044136 gross_pct=-0.042136
+    SPY      long: n=  65 net_pct=0.004068 gross_pct=0.005068  short: n=  43 net_pct=-0.018606 gross_pct=-0.017606
+    QQQ      long: n=  49 net_pct=0.006190 gross_pct=0.007190  short: n=  43 net_pct=-0.001815 gross_pct=-0.000815
+    AAPL     long: n=  69 net_pct=0.020776 gross_pct=0.021776  short: n=  78 net_pct=-0.037140 gross_pct=-0.036140
+    NVDA     long: n=  51 net_pct=0.027201 gross_pct=0.028201  short: n=  60 net_pct=-0.057871 gross_pct=-0.056871
+    TSLA     long: n=  27 net_pct=0.052368 gross_pct=0.053368  short: n=  27 net_pct=-0.009111 gross_pct=-0.008111
+
+--- V2_loose_60m (n=900) ---
+  gross_exp_R: recipe=0.0561  placebo[p5,p50,p95]=[-0.1302,-0.0538,0.0280]  recipe_percentile=0.988
+  gross_win_rate: recipe=0.3756  placebo[p5,p50,p95]=[0.3078,0.3326,0.3601]
+  net_win_rate (recipe, net R>0): 0.3733
+  net_exp_pct: recipe=0.001551  placebo[p5,p50,p95]=[-0.003572,-0.002300,-0.000878]  recipe_percentile=1.000
+  gross_exp_pct: recipe=0.003125  placebo[p5,p50,p95]=[-0.001992,-0.000720,0.000698]
+  stop_dist_pct: recipe[p10,p50]=[0.009055,0.020135]  placebo[p10,p50]=[0.001834,0.008932]
+  avg_cost_R: recipe=0.0950  placebo_p50=0.5274
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-0.4206,-0.2666,-0.1631] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.005473,-0.003559,-0.001454] recipe_percentile=1.000
+                   win_rate placebo[p5,p50,p95]=[0.3066,0.3322,0.3616] recipe_percentile=0.994  n_floor_exhausted_total=89501
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n= 143 net_pct=-0.000479 gross_pct=0.001521  short: n= 124 net_pct=0.000324 gross_pct=0.002324
+    ETH-USD  long: n= 127 net_pct=-0.001552 gross_pct=0.000448  short: n= 123 net_pct=-0.004096 gross_pct=-0.002096
+    SPY      long: n=  26 net_pct=0.010673 gross_pct=0.011673  short: n=  51 net_pct=-0.002268 gross_pct=-0.001268
+    QQQ      long: n=  41 net_pct=0.006235 gross_pct=0.007235  short: n=  40 net_pct=-0.002969 gross_pct=-0.001969
+    AAPL     long: n=  33 net_pct=0.010976 gross_pct=0.011976  short: n=  40 net_pct=-0.005047 gross_pct=-0.004047
+    NVDA     long: n=  38 net_pct=0.019270 gross_pct=0.020270  short: n=  42 net_pct=-0.012230 gross_pct=-0.011230
+    TSLA     long: n=  42 net_pct=0.021663 gross_pct=0.022663  short: n=  30 net_pct=0.017924 gross_pct=0.018924
+
+--- V2_loose_5m (n=828) ---
+  gross_exp_R: recipe=-0.0212  placebo[p5,p50,p95]=[-0.1969,-0.1216,-0.0390]  recipe_percentile=0.978
+  gross_win_rate: recipe=0.3527  placebo[p5,p50,p95]=[0.2251,0.2491,0.2736]
+  net_win_rate (recipe, net R>0): 0.3321
+  net_exp_pct: recipe=-0.002204  placebo[p5,p50,p95]=[-0.002357,-0.001999,-0.001628]  recipe_percentile=0.174
+  gross_exp_pct: recipe=-0.000593  placebo[p5,p50,p95]=[-0.000750,-0.000390,-0.000021]
+  stop_dist_pct: recipe[p10,p50]=[0.001912,0.004244]  placebo[p10,p50]=[0.000378,0.002211]
+  avg_cost_R: recipe=0.5170  placebo_p50=3.7422
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-21.3274,-1.0285,-0.7670] recipe_percentile=1.000
+                   net_exp_pct placebo[p5,p50,p95]=[-0.002763,-0.002293,-0.001780] recipe_percentile=0.620
+                   win_rate placebo[p5,p50,p95]=[0.2729,0.3011,0.3277] recipe_percentile=0.968  n_floor_exhausted_total=80374
+
+--- V2_loose_daily (n=773) ---
+  gross_exp_R: recipe=-0.0303  placebo[p5,p50,p95]=[-0.1318,-0.0530,0.0302]  recipe_percentile=0.666
+  gross_win_rate: recipe=0.3312  placebo[p5,p50,p95]=[0.2997,0.3279,0.3554]
+  net_win_rate (recipe, net R>0): 0.3312
+  net_exp_pct: recipe=-0.006778  placebo[p5,p50,p95]=[-0.008043,-0.002740,0.003268]  recipe_percentile=0.108
+  gross_exp_pct: recipe=-0.005623  placebo[p5,p50,p95]=[-0.006879,-0.001577,0.004434]
+  stop_dist_pct: recipe[p10,p50]=[0.028741,0.073076]  placebo[p10,p50]=[0.005733,0.033217]
+  avg_cost_R: recipe=0.0194  placebo_p50=0.1338
+  distance_matched: net_exp_R placebo[p5,p50,p95]=[-13.7532,-0.1441,-0.0471] recipe_percentile=0.944
+                   net_exp_pct placebo[p5,p50,p95]=[-0.016684,-0.009127,-0.001855] recipe_percentile=0.704
+                   win_rate placebo[p5,p50,p95]=[0.2861,0.3136,0.3390] recipe_percentile=0.866  n_floor_exhausted_total=77415
+  by side / instrument (net_pct, gross_pct, n):
+    BTC-USD  long: n=  33 net_pct=0.074682 gross_pct=0.076682  short: n=  39 net_pct=-0.022758 gross_pct=-0.020758
+    ETH-USD  long: n=  22 net_pct=0.039424 gross_pct=0.041424  short: n=  26 net_pct=-0.052010 gross_pct=-0.050010
+    SPY      long: n=  55 net_pct=-0.000727 gross_pct=0.000273  short: n= 102 net_pct=-0.020882 gross_pct=-0.019882
+    QQQ      long: n=  63 net_pct=0.014112 gross_pct=0.015112  short: n=  67 net_pct=-0.018211 gross_pct=-0.017211
+    AAPL     long: n=  55 net_pct=0.023385 gross_pct=0.024385  short: n= 114 net_pct=-0.043474 gross_pct=-0.042474
+    NVDA     long: n=  51 net_pct=0.063041 gross_pct=0.064041  short: n=  80 net_pct=-0.044573 gross_pct=-0.043573
+    TSLA     long: n=  29 net_pct=0.050964 gross_pct=0.051964  short: n=  37 net_pct=-0.034807 gross_pct=-0.033807
+
