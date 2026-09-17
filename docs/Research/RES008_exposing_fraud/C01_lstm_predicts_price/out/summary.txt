@@ -1,0 +1,67 @@
+C01 -- LSTM predicts price -- SUMMARY
+============================================================
+device=mps  a1_epochs=100  a2_epochs=20
+total_wall_seconds=7209.4
+
+--- A1 ---
+M1 median ratio(model_rmse/naive_rmse) = 1.9796  frac<1 = 0.00  n=30
+M2 pooled corr(tracks tomorrow) = 0.0186  CI=[0.0092, 0.0290]  | pooled corr(echoes yesterday) = 0.8136  CI=[0.7683, 0.8504]
+M3 pooled hit_rate = 0.4848  wilson_ci = [0.4798, 0.4897]  max_base_rate = 0.5419  tickers_exceeding = 0/10
+M4 [same_close] paired diff mean daily return (model - buyhold) = -0.000738  CI=[-0.000921, -0.000562]
+M4 [next_open] paired diff mean daily return (model - buyhold) = -0.000628  CI=[-0.000811, -0.000445]
+
+--- A2 ---
+M1 median ratio(model_rmse/naive_rmse) = 3.7639  frac<1 = 0.00  n=30
+M2 pooled corr(tracks tomorrow) = 0.0133  CI=[0.0013, 0.0252]  | pooled corr(echoes yesterday) = 0.3371  CI=[0.3103, 0.3601]
+M3 pooled hit_rate = 0.4780  wilson_ci = [0.4714, 0.4846]  max_base_rate = 0.5726  tickers_exceeding = 0/10
+M4 [same_close] paired diff mean daily return (model - buyhold) = -0.000911  CI=[-0.001164, -0.000673]
+M4 [next_open] paired diff mean daily return (model - buyhold) = -0.000811  CI=[-0.001075, -0.000561]
+
+--- B-price ---
+M1 median ratio(model_rmse/naive_rmse) = 4.5602  frac<1 = 0.00  n=30
+M2 pooled corr(tracks tomorrow) = 0.0047  CI=[-0.0018, 0.0112]  | pooled corr(echoes yesterday) = 0.8405  CI=[0.8039, 0.8700]
+M3 pooled hit_rate = 0.4766  wilson_ci = [0.4716, 0.4815]  max_base_rate = 0.5426  tickers_exceeding = 0/10
+M4 [same_close] paired diff mean daily return (model - buyhold) = -0.000824  CI=[-0.001018, -0.000634]
+M4 [next_open] paired diff mean daily return (model - buyhold) = -0.000780  CI=[-0.000974, -0.000588]
+
+--- B-return ---
+M1 median ratio(model_rmse/naive_rmse) = 1.0025  frac<1 = 0.30  n=30
+M2 pooled corr(tracks tomorrow) = 0.0035  CI=[-0.0065, 0.0138]  | pooled corr(echoes yesterday) = -0.1050  CI=[-0.1553, -0.0649]
+M3 pooled hit_rate = 0.5086  wilson_ci = [0.5036, 0.5136]  max_base_rate = 0.5419  tickers_exceeding = 0/10
+M4 [same_close] paired diff mean daily return (model - buyhold) = -0.000306  CI=[-0.000430, -0.000190]
+M4 [next_open] paired diff mean daily return (model - buyhold) = -0.000279  CI=[-0.000400, -0.000162]
+
+--- M5 (the leak): A1 vs B-price test RMSE ---
+median RMSE change (B-price - A1) = 2.486952
+
+--- M6 (30-day recursive forecast) sample, A1 per ticker-seed ---
+AAPL seed=0: forecast/realized daily-change std ratio = 0.2997
+AAPL seed=1: forecast/realized daily-change std ratio = 0.1609
+AAPL seed=2: forecast/realized daily-change std ratio = 0.1137
+MSFT seed=0: forecast/realized daily-change std ratio = 0.0786
+MSFT seed=1: forecast/realized daily-change std ratio = 0.1158
+MSFT seed=2: forecast/realized daily-change std ratio = 0.1176
+AMZN seed=0: forecast/realized daily-change std ratio = 0.1252
+AMZN seed=1: forecast/realized daily-change std ratio = 0.1640
+AMZN seed=2: forecast/realized daily-change std ratio = 0.1244
+NVDA seed=0: forecast/realized daily-change std ratio = 0.0556
+NVDA seed=1: forecast/realized daily-change std ratio = 0.0474
+NVDA seed=2: forecast/realized daily-change std ratio = 0.0723
+TSLA seed=0: forecast/realized daily-change std ratio = 0.0956
+TSLA seed=1: forecast/realized daily-change std ratio = 0.0565
+TSLA seed=2: forecast/realized daily-change std ratio = 0.0523
+JPM seed=0: forecast/realized daily-change std ratio = 0.0931
+JPM seed=1: forecast/realized daily-change std ratio = 0.2587
+JPM seed=2: forecast/realized daily-change std ratio = 0.1613
+XOM seed=0: forecast/realized daily-change std ratio = 0.1528
+XOM seed=1: forecast/realized daily-change std ratio = 0.1176
+XOM seed=2: forecast/realized daily-change std ratio = 0.0276
+KO seed=0: forecast/realized daily-change std ratio = 0.4095
+KO seed=1: forecast/realized daily-change std ratio = 0.3836
+KO seed=2: forecast/realized daily-change std ratio = 0.1603
+INTC seed=0: forecast/realized daily-change std ratio = 0.1700
+INTC seed=1: forecast/realized daily-change std ratio = 0.1274
+INTC seed=2: forecast/realized daily-change std ratio = 0.0563
+SPY seed=0: forecast/realized daily-change std ratio = 0.2209
+SPY seed=1: forecast/realized daily-change std ratio = 0.0988
+SPY seed=2: forecast/realized daily-change std ratio = 0.2012
