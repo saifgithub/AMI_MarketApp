@@ -442,9 +442,9 @@ services:
       # sheet. See Settings.room_cashflow_bridge_enabled.
       ROOM_CASHFLOW_BRIDGE_ENABLED: ${ROOM_CASHFLOW_BRIDGE_ENABLED:-false}
       # DEF400 — derive free cash flow from the statements (OCF - capex) instead
-      # of `.info.freeCashflow`. Moves a shipped number; off until CR221 §7 has
-      # measured it. See Settings.fundamentals_fcf_from_statements_enabled.
-      FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED: ${FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED:-false}
+      # of `.info.freeCashflow`. ON since 2026-09-17: §7's measurement arm has
+      # run. See Settings.fundamentals_fcf_from_statements_enabled.
+      FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED: ${FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED:-true}
       # CR221 C2/C5 — multi-year FCF/capex series and the conversion history.
       # See Settings.room_fcf_history_enabled / room_fcf_conversion_enabled.
       ROOM_FCF_HISTORY_ENABLED: ${ROOM_FCF_HISTORY_ENABLED:-false}

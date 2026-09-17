@@ -460,6 +460,16 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
     if ebit_series and interest_series and ebit_series[0] is not None and interest_series[0]:
         out["interest_coverage"] = round(ebit_series[0] / abs(interest_series[0]), 1)
         out["interest_coverage_quarter"] = periods[0] if periods else None
+        # DEF399 — the numerator travels with the ratio so it can be checked
+        # against EDGAR's consolidated interest expense downstream
+        # (`room_runner._gate_interest_coverage`). Not rendered: the quotient
+        # alone cannot distinguish a stub numerator from an unlevered filer,
+        # and for a captive-finance issuer this row is the leftover
+        # non-operating line rather than consolidated interest — CAT's four
+        # quarters sum to $529M against $1,861M filed.
+        out["interest_expense_quarter_usd_m"] = round(
+            abs(interest_series[0]) / 1_000_000, 1
+        )
 
     # ── Own-history annual EPS/EBITDA, for R37's median multiples ─────────
     # A SEPARATE try/except from the quarterly fetch above: `tk.income_stmt`

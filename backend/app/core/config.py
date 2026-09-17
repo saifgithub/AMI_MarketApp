@@ -901,14 +901,19 @@ class Settings(BaseSettings):
     # yield, and CR218's capital-return share) from the statements, OCF minus
     # capex, rather than `.info`'s pre-computed `freeCashflow`.
     #
-    # Flagged because it MOVES a shipped, rendered number, and off by default
-    # until CR221 §7 has measured it. What it moves it to is the checkable one:
-    # measured 2026-09-03, `.info` puts CAT's TTM FCF at $5,049M against a
-    # $8,994M subtraction that the frame's own `Free Cash Flow` row confirms to
-    # the dollar, which turns CR218's capital-return line from 112% of free cash
-    # flow into 200% — and "the 200% FCF payout" is verbatim what the Portfolio
-    # Manager reasoned from in the CR219 corpus.
-    fundamentals_fcf_from_statements_enabled: bool = False
+    # Flagged because it MOVES a shipped, rendered number. What it moves it to
+    # is the checkable one: measured 2026-09-03, `.info` puts CAT's TTM FCF at
+    # $5,049M against a $8,994M subtraction that the frame's own `Free Cash
+    # Flow` row confirms to the dollar, which turns CR218's capital-return line
+    # from 112% of free cash flow into 200% — and "the 200% FCF payout" is
+    # verbatim what the Portfolio Manager reasoned from in the CR219 corpus.
+    #
+    # ON by default since 2026-09-17 (DEF400 closed). It shipped off so CR221
+    # §7's `cash` arm could measure the move against an unchanged control; that
+    # arm has run, and leaving a measured-correct figure behind a default-off
+    # flag is the DEF063 dark-feature shape — the running system kept rendering
+    # the vendor number that four of twelve agents demonstrably reasoned from.
+    fundamentals_fcf_from_statements_enabled: bool = True
 
     # CR221 C2 — multi-year free cash flow and capex, with their averages, off
     # the annual `tk.cashflow` frame. Its own flag from C5's below for the same

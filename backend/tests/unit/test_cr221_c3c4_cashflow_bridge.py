@@ -182,8 +182,12 @@ def _sheet() -> str:
 
 
 def test_the_flag_is_off_by_default() -> None:
+    """C3's RENDER flag only. DEF400's basis flag is a separate switch and is
+    on since 2026-09-17 — see `test_def400_is_on_by_default`. The two were
+    always independent: the bridge is a new block on the sheet, the basis fix
+    moves a number already shipped.
+    """
     assert settings.room_cashflow_bridge_enabled is False
-    assert settings.fundamentals_fcf_from_statements_enabled is False
 
 
 def test_the_same_profile_renders_nothing_with_the_flag_off() -> None:
@@ -256,8 +260,16 @@ def _fundamentals(monkeypatch, *, derived: bool, statements=None) -> dict:
     return fundamentals.fetch_live_fundamentals("CAT") or {}
 
 
-def test_def400_off_leaves_the_shipped_numbers_exactly_where_they_were() -> None:
-    assert settings.fundamentals_fcf_from_statements_enabled is False
+def test_def400_is_on_by_default() -> None:
+    """Flipped 2026-09-17, when DEF400 closed.
+
+    It shipped OFF so CR221 §7's `cash` arm could measure the move against an
+    unchanged control. That arm has run, and a measured-correct figure left
+    behind a default-off flag is the DEF063 dark-feature shape: the running
+    system kept rendering the vendor number that four of twelve agents
+    demonstrably reasoned from in a single convene.
+    """
+    assert settings.fundamentals_fcf_from_statements_enabled is True
 
 
 def test_def400_off_renders_the_vendor_figure(monkeypatch) -> None:

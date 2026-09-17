@@ -152,6 +152,13 @@ _FUND_SENTINEL: dict = {
     # above. Fingerprint chosen not to collide with any figure here.
     "interest_coverage": 9.4,
     "interest_coverage_quarter": "COVQUARTERSENT",
+    # DEF399 — the numerator the ratio above was struck on, carried out of the
+    # fetcher so the coverage figure can be corroborated against EDGAR's
+    # consolidated interest expense. Deliberately unrendered on both surfaces
+    # (see INTENTIONALLY_OMITTED), so this value is never searched for in the
+    # rendered text — it is here because the sentinel must match the fetcher's
+    # key set exactly.
+    "interest_expense_quarter_usd_m": 87.6,
     # CR219 R34 — capital expenditure, from the same `.quarterly_cashflow`
     # call the buyback/dividend rows above already read.
     "capex_ttm": 6543,
@@ -389,6 +396,20 @@ INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
     ),
     ("fundamentals", "one_on_one", "week52_range_live"): (
         "boolean render-control flag, not a data value."
+    ),
+    ("fundamentals", "room", "interest_expense_quarter_usd_m"): (
+        "DEF399 — evidence, not a figure. Carried so "
+        "`room_runner._gate_interest_coverage` can test the coverage numerator "
+        "against EDGAR's consolidated interest expense and WITHDRAW the ratio "
+        "when they diverge past 2x. Rendering it would put the very stub the "
+        "gate exists to catch on the sheet as a fact: for a captive-finance "
+        "filer this row is the leftover non-operating line (CAT's four quarters "
+        "sum to $529M against $1,861M filed)."
+    ),
+    ("fundamentals", "one_on_one", "interest_expense_quarter_usd_m"): (
+        "DEF399 — the corroboration numerator, deliberately unrendered on both "
+        "surfaces for the same reason: it is a stub for exactly the filers the "
+        "gate fires on."
     ),
     # ── technicals ──
     ("technicals", "room", "atr14"): (

@@ -543,6 +543,10 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # same as the buyback/dividend rows above) has no coverage figure, and
     # that absence is normal, not an outage.
     "interest_coverage", "interest_coverage_quarter",
+    # DEF399 — the coverage numerator, carried for corroboration against
+    # EDGAR's consolidated interest expense and never rendered. Listed here
+    # because it rides the same fetch and must share its live/absent state.
+    "interest_expense_quarter_usd_m",
     # CR219 R37 — today's price/EV against each of the last several FYs' own
     # EPS/EBITDA, median'd — NOT a reconstructed historical-price multiple
     # series (no new price-history fetch; see `historical_multiples_line`'s
@@ -684,6 +688,89 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     )
 
 
+# DEF399 — above this ratio between EDGAR's consolidated annual interest and
+# the annualised yfinance row, the row is not the consolidated figure. The
+# measured cases sit far above it: CAT's four quarters sum to $529M against
+# $1,861M filed (3.5x), GM reads $685M against $4,121M (6.0x), HOG $25M
+# against $331M cash paid (13.2x). The 7-of-10 cohort names that read
+# correctly agree to within a few percent.
+#
+# Matches `interest_cost._BASIS_DISAGREEMENT_LIMIT` at 2.0 by coincidence of
+# value, not by derivation — that one compares two EDGAR tags struck on the
+# same filing, this one spans two vendors and two period conventions. The
+# annualisation (×4 on one quarter) is itself lossy for a seasonal borrower,
+# which is the reason for a limit this loose rather than a tight one.
+_COVERAGE_CORROBORATION_LIMIT = 2.0
+
+
+def _gate_interest_coverage(
+    profile: dict[str, Any],
+    field_state: dict[str, str],
+    ticker: str,
+    cost: "interest_cost.InterestCost | None",
+) -> None:
+    """DEF399 — withdraw `interest_coverage` when its numerator is a stub.
+
+    `fundamentals.py` divides EBIT by yfinance's `Interest Expense` row. For
+    most filers that IS consolidated interest expense. For an issuer whose
+    captive finance arm books its interest inside cost of revenue it is the
+    LEFTOVER non-operating line, and the ratio overstates coverage 5-6x —
+    always in the reassuring direction. Caterpillar is the measured proof: the
+    FY2025 10-K carries $1,359M of Financial Products interest plus $502M
+    excluding it, $1,861M consolidated, against a shipped row of $529M, so the
+    sheet read 31.8x where operating profit over real interest is ~6x. CAT is
+    also the ticker the entire CR219 corpus runs on, and this field was added
+    BECAUSE of a solvency argument about it.
+
+    The check is corroboration, not substitution. A3's EDGAR figure is annual
+    and the coverage ratio is one quarter's EBIT, so the two are not
+    interchangeable — a quarterly ratio cannot be rebuilt from an annual
+    numerator without assuming an even spread, which is an assumption wearing
+    a measurement's clothes. What CAN be done honestly is to ask whether the
+    two numerators describe the same company: annualise the quarterly row and
+    compare. Where they agree the shipped figure stands; where they diverge
+    past the limit the figure is WITHDRAWN, not corrected, and the sheet shows
+    the same declared absence it shows for a filer that breaks out no interest
+    line at all. DEF059's rule: a confident wrong number beats a declared
+    absence only in the direction that hurts.
+
+    Silent when the store cannot corroborate either way — no EDGAR interest
+    figure means no evidence the row is wrong, and withdrawing on absence
+    would blank the field for every filer whose facts have not been ingested.
+    """
+    if profile.get("interest_coverage") is None or cost is None:
+        return
+    # The row the ratio was struck on, carried out of `fundamentals.py` for
+    # exactly this comparison — the quotient alone cannot support it, because
+    # a 31.8x reading is equally consistent with a stub numerator and with a
+    # genuinely unlevered filer.
+    quarterly_interest = profile.get("interest_expense_quarter_usd_m")
+    if not quarterly_interest:
+        return
+    annualised = abs(quarterly_interest) * 4
+    consolidated = abs(cost.annual_interest) / 1_000_000
+    if not annualised or not consolidated:
+        return
+    divergence = max(annualised, consolidated) / min(annualised, consolidated)
+    if divergence <= _COVERAGE_CORROBORATION_LIMIT:
+        return
+    # Withdraw, don't correct. The honest output is the absence the sheet
+    # already knows how to render.
+    profile.pop("interest_coverage", None)
+    profile.pop("interest_coverage_quarter", None)
+    field_state["interest_coverage"] = LiveDataState.UNAVAILABLE.value
+    field_state["interest_coverage_quarter"] = LiveDataState.UNAVAILABLE.value
+    logger.warn(
+        "interest_coverage_numerator_uncorroborated",
+        ticker=ticker.upper(),
+        annualised_row=round(annualised),
+        edgar_consolidated=round(consolidated),
+        basis=cost.basis,
+        ratio=round(divergence, 2),
+        withdrawn=True,
+    )
+
+
 def _overlay_debt_structure(
     profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
 ) -> None:
@@ -748,6 +835,8 @@ def _overlay_debt_structure(
         field_state["cost_of_debt"] = LiveDataState.LIVE.value
     else:
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
+
+    _gate_interest_coverage(profile, field_state, ticker, cost)
 
     # CR040 loud degrade. Both blocks absent AND the store holds no row under
     # these tags for any filer means the ingest predates them, not that this
