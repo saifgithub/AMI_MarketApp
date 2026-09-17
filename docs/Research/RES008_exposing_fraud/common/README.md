@@ -215,7 +215,7 @@ the strategy being tested, not a claim about what actually happened intrabar.
 ## Running the tests
 
 ```bash
-cd "/Volumes/Extreme Pro/AMI_MarketApp/docs/Research/RES008_exposing_fraud"
+cd docs/Research/RES008_exposing_fraud                # from the repo root
 .venv/bin/python -m pytest common/tests -q            # network test skipped by default
 .venv/bin/python -m pytest common/tests -q -m network # run the network smoke test explicitly
 ```

@@ -1,0 +1,1526 @@
+C06 -- AI grid bot passive income -- results summary
+wall_time_seconds=807.9
+
+=== Mechanism 1: spot grid -- pooled by arm and leverage ===
+-- hourly|pooled|lev=1.0x --
+    n_runs: 1656
+    share_grid_profit_positive: 0.9963768115942029
+    share_true_pnl_negative: 0.5024154589371981
+    median_true_pnl_frac: -0.0017645882587797132
+    p05_true_pnl_frac: -0.29360667890646064
+    p95_true_pnl_frac: 0.10625279352280936
+    share_beat_buy_hold: 0.6268115942028986
+    share_beat_cash: 0.4975845410628019
+    share_left_range: 0.8278985507246377
+    share_left_range_up: 0.45471014492753625
+    share_left_range_down: 0.5398550724637681
+    share_liquidated: 0.0
+-- hourly|pooled|lev=5.0x --
+    n_runs: 1656
+    share_grid_profit_positive: 0.9885265700483091
+    share_true_pnl_negative: 0.5446859903381642
+    median_true_pnl_frac: -0.16538451058217515
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5194469272075919
+    share_beat_buy_hold: 0.3218599033816425
+    share_beat_cash: 0.4553140096618358
+    share_left_range: 0.8200483091787439
+    share_left_range_up: 0.4311594202898551
+    share_left_range_down: 0.5320048309178744
+    share_liquidated: 0.3888888888888889
+-- daily|pooled|lev=1.0x --
+    n_runs: 9522
+    share_grid_profit_positive: 0.9965343415248897
+    share_true_pnl_negative: 0.36798991808443604
+    median_true_pnl_frac: 0.03354619791370206
+    p05_true_pnl_frac: -0.37202508227186576
+    p95_true_pnl_frac: 0.11478424943986014
+    share_beat_buy_hold: 0.5109220751942869
+    share_beat_cash: 0.632010081915564
+    share_left_range: 0.8771266540642723
+    share_left_range_up: 0.5973534971644613
+    share_left_range_down: 0.47290485192186515
+    share_liquidated: 0.0
+-- daily|pooled|lev=5.0x --
+    n_runs: 9522
+    share_grid_profit_positive: 0.988552825036757
+    share_true_pnl_negative: 0.42953161100609116
+    median_true_pnl_frac: 0.1384509147272347
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.54312262650531
+    share_beat_buy_hold: 0.3145347616047049
+    share_beat_cash: 0.5704683889939088
+    share_left_range: 0.8735559756353707
+    share_left_range_up: 0.5660575509346776
+    share_left_range_down: 0.4694391934467549
+    share_liquidated: 0.3253518168452006
+
+=== Mechanism 1: spot grid -- per setting ===
+-- hourly|BTC-USD|r=0.1|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.45652173913043476
+    median_true_pnl_frac: 0.026346262997372742
+    p05_true_pnl_frac: -0.18255764284567966
+    p95_true_pnl_frac: 0.10269149847736991
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.5434782608695652
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.1|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.4673913043478261
+    median_true_pnl_frac: 0.12587338577440915
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5134574923868496
+    share_beat_buy_hold: 0.44565217391304346
+    share_beat_cash: 0.532608695652174
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.2826086956521739
+-- hourly|BTC-USD|r=0.1|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4891304347826087
+    median_true_pnl_frac: 0.013885246266548803
+    p05_true_pnl_frac: -0.19293099965351304
+    p95_true_pnl_frac: 0.08191102522167287
+    share_beat_buy_hold: 0.6195652173913043
+    share_beat_cash: 0.5108695652173914
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.1|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5
+    median_true_pnl_frac: 0.002936439959858945
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.40955512610836436
+    share_beat_buy_hold: 0.391304347826087
+    share_beat_cash: 0.5
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.32608695652173914
+-- hourly|BTC-USD|r=0.1|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.02023225844853769
+    p05_true_pnl_frac: -0.21013765777751187
+    p95_true_pnl_frac: 0.05311663207428371
+    share_beat_buy_hold: 0.5869565217391305
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.1|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.532608695652174
+    median_true_pnl_frac: -0.1821543477885348
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.26558316037141855
+    share_beat_buy_hold: 0.2608695652173913
+    share_beat_cash: 0.4673913043478261
+    share_left_range: 1.0
+    share_left_range_up: 0.6956521739130435
+    share_left_range_down: 0.6630434782608695
+    share_liquidated: 0.358695652173913
+-- hourly|BTC-USD|r=0.2|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.45652173913043476
+    median_true_pnl_frac: 0.022839522333824788
+    p05_true_pnl_frac: -0.15740905395424298
+    p95_true_pnl_frac: 0.09839711950348154
+    share_beat_buy_hold: 0.6630434782608695
+    share_beat_cash: 0.5434782608695652
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.2|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9782608695652174
+    share_true_pnl_negative: 0.45652173913043476
+    median_true_pnl_frac: 0.11419761166912394
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.49198559751740767
+    share_beat_buy_hold: 0.5
+    share_beat_cash: 0.5434782608695652
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.20652173913043478
+-- hourly|BTC-USD|r=0.2|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.45652173913043476
+    median_true_pnl_frac: 0.014224234807222638
+    p05_true_pnl_frac: -0.1655961529321143
+    p95_true_pnl_frac: 0.09485850294701795
+    share_beat_buy_hold: 0.6521739130434783
+    share_beat_cash: 0.5434782608695652
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.2|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.45652173913043476
+    median_true_pnl_frac: 0.07112117403611319
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4742925147350897
+    share_beat_buy_hold: 0.4673913043478261
+    share_beat_cash: 0.5434782608695652
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.20652173913043478
+-- hourly|BTC-USD|r=0.2|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5
+    median_true_pnl_frac: 0.00035436866043837617
+    p05_true_pnl_frac: -0.17330383249016645
+    p95_true_pnl_frac: 0.07760279187316475
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.5
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.2|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5
+    median_true_pnl_frac: 0.001771843302191883
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.3880139593658238
+    share_beat_buy_hold: 0.44565217391304346
+    share_beat_cash: 0.5
+    share_left_range: 0.75
+    share_left_range_up: 0.30434782608695654
+    share_left_range_down: 0.44565217391304346
+    share_liquidated: 0.25
+-- hourly|BTC-USD|r=0.3|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.4782608695652174
+    median_true_pnl_frac: 0.013138355591602157
+    p05_true_pnl_frac: -0.1319652800577532
+    p95_true_pnl_frac: 0.09194654711442797
+    share_beat_buy_hold: 0.6413043478260869
+    share_beat_cash: 0.5217391304347826
+    share_left_range: 0.31521739130434784
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.14130434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.3|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9456521739130435
+    share_true_pnl_negative: 0.4782608695652174
+    median_true_pnl_frac: 0.06569177795801079
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.45973273557213984
+    share_beat_buy_hold: 0.4782608695652174
+    share_beat_cash: 0.5217391304347826
+    share_left_range: 0.30434782608695654
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.13043478260869565
+    share_liquidated: 0.11956521739130435
+-- hourly|BTC-USD|r=0.3|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4891304347826087
+    median_true_pnl_frac: 0.006585730864714333
+    p05_true_pnl_frac: -0.12931958950241565
+    p95_true_pnl_frac: 0.09367959424747051
+    share_beat_buy_hold: 0.6195652173913043
+    share_beat_cash: 0.5108695652173914
+    share_left_range: 0.31521739130434784
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.14130434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.3|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4891304347826087
+    median_true_pnl_frac: 0.032928654323571664
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.46839797123735255
+    share_beat_buy_hold: 0.4673913043478261
+    share_beat_cash: 0.5108695652173914
+    share_left_range: 0.29347826086956524
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.11956521739130435
+    share_liquidated: 0.14130434782608695
+-- hourly|BTC-USD|r=0.3|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5
+    median_true_pnl_frac: -0.004533975235555591
+    p05_true_pnl_frac: -0.13762658530711128
+    p95_true_pnl_frac: 0.08678841057433281
+    share_beat_buy_hold: 0.5978260869565217
+    share_beat_cash: 0.5
+    share_left_range: 0.31521739130434784
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.14130434782608695
+    share_liquidated: 0.0
+-- hourly|BTC-USD|r=0.3|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5
+    median_true_pnl_frac: -0.02266987617777795
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4339420528716641
+    share_beat_buy_hold: 0.44565217391304346
+    share_beat_cash: 0.5
+    share_left_range: 0.2608695652173913
+    share_left_range_up: 0.17391304347826086
+    share_left_range_down: 0.08695652173913043
+    share_liquidated: 0.14130434782608695
+-- hourly|ETH-USD|r=0.1|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.5108695652173914
+    median_true_pnl_frac: -0.05243680031510921
+    p05_true_pnl_frac: -0.36237889167958304
+    p95_true_pnl_frac: 0.11569112622423759
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4891304347826087
+    share_left_range: 1.0
+    share_left_range_up: 0.6847826086956522
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.1|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.6195652173913043
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.578455631121188
+    share_beat_buy_hold: 0.1956521739130435
+    share_beat_cash: 0.3804347826086957
+    share_left_range: 1.0
+    share_left_range_up: 0.6086956521739131
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.5869565217391305
+-- hourly|ETH-USD|r=0.1|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.06466199275344625
+    p05_true_pnl_frac: -0.38027862522999917
+    p95_true_pnl_frac: 0.09603351653110306
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 1.0
+    share_left_range_up: 0.6847826086956522
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.1|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.6304347826086957
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.48016758265551535
+    share_beat_buy_hold: 0.16304347826086957
+    share_beat_cash: 0.3695652173913043
+    share_left_range: 1.0
+    share_left_range_up: 0.6086956521739131
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.5978260869565217
+-- hourly|ETH-USD|r=0.1|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5543478260869565
+    median_true_pnl_frac: -0.10580186949861553
+    p05_true_pnl_frac: -0.4137188344092378
+    p95_true_pnl_frac: 0.056813647580952496
+    share_beat_buy_hold: 0.5978260869565217
+    share_beat_cash: 0.44565217391304346
+    share_left_range: 1.0
+    share_left_range_up: 0.6847826086956522
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.1|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.6413043478260869
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.2840682379047625
+    share_beat_buy_hold: 0.08695652173913043
+    share_beat_cash: 0.358695652173913
+    share_left_range: 1.0
+    share_left_range_up: 0.6086956521739131
+    share_left_range_down: 0.782608695652174
+    share_liquidated: 0.6304347826086957
+-- hourly|ETH-USD|r=0.2|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9891304347826086
+    share_true_pnl_negative: 0.5108695652173914
+    median_true_pnl_frac: -0.03394914170587117
+    p05_true_pnl_frac: -0.3334661215518075
+    p95_true_pnl_frac: 0.12886461552267747
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4891304347826087
+    share_left_range: 1.0
+    share_left_range_up: 0.4891304347826087
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.2|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.967391304347826
+    share_true_pnl_negative: 0.5869565217391305
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5969317854111469
+    share_beat_buy_hold: 0.2391304347826087
+    share_beat_cash: 0.41304347826086957
+    share_left_range: 1.0
+    share_left_range_up: 0.44565217391304346
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.5434782608695652
+-- hourly|ETH-USD|r=0.2|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5108695652173914
+    median_true_pnl_frac: -0.02901462059223031
+    p05_true_pnl_frac: -0.3506937895702047
+    p95_true_pnl_frac: 0.11119808826638948
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4891304347826087
+    share_left_range: 1.0
+    share_left_range_up: 0.4891304347826087
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.2|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5978260869565217
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5357945752158262
+    share_beat_buy_hold: 0.21739130434782608
+    share_beat_cash: 0.40217391304347827
+    share_left_range: 1.0
+    share_left_range_up: 0.43478260869565216
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.5543478260869565
+-- hourly|ETH-USD|r=0.2|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.053114366612590225
+    p05_true_pnl_frac: -0.37104402625113114
+    p95_true_pnl_frac: 0.08873230435173854
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 1.0
+    share_left_range_up: 0.4891304347826087
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.2|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.6195652173913043
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.42998841872046617
+    share_beat_buy_hold: 0.16304347826086957
+    share_beat_cash: 0.3804347826086957
+    share_left_range: 1.0
+    share_left_range_up: 0.42391304347826086
+    share_left_range_down: 0.6739130434782609
+    share_liquidated: 0.5869565217391305
+-- hourly|ETH-USD|r=0.3|levels=10|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9782608695652174
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.028143166302044123
+    p05_true_pnl_frac: -0.3044448588012416
+    p95_true_pnl_frac: 0.13205997466029737
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 0.9021739130434783
+    share_left_range_up: 0.3804347826086957
+    share_left_range_down: 0.532608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.3|levels=10|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 0.9239130434782609
+    share_true_pnl_negative: 0.5760869565217391
+    median_true_pnl_frac: -0.47644244044146766
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.6524674853249713
+    share_beat_buy_hold: 0.29347826086956524
+    share_beat_cash: 0.42391304347826086
+    share_left_range: 0.8913043478260869
+    share_left_range_up: 0.3695652173913043
+    share_left_range_down: 0.5217391304347826
+    share_liquidated: 0.4782608695652174
+-- hourly|ETH-USD|r=0.3|levels=20|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.029564552536489645
+    p05_true_pnl_frac: -0.3192960511404168
+    p95_true_pnl_frac: 0.12556478568611257
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 0.9021739130434783
+    share_left_range_up: 0.3804347826086957
+    share_left_range_down: 0.532608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.3|levels=20|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5760869565217391
+    median_true_pnl_frac: -0.45532910513455366
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.6046119619535998
+    share_beat_buy_hold: 0.2717391304347826
+    share_beat_cash: 0.42391304347826086
+    share_left_range: 0.8913043478260869
+    share_left_range_up: 0.3695652173913043
+    share_left_range_down: 0.5217391304347826
+    share_liquidated: 0.4782608695652174
+-- hourly|ETH-USD|r=0.3|levels=50|lev=1.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5217391304347826
+    median_true_pnl_frac: -0.04248461146826494
+    p05_true_pnl_frac: -0.3358696143324012
+    p95_true_pnl_frac: 0.10888850186298595
+    share_beat_buy_hold: 0.6304347826086957
+    share_beat_cash: 0.4782608695652174
+    share_left_range: 0.9021739130434783
+    share_left_range_up: 0.3804347826086957
+    share_left_range_down: 0.532608695652174
+    share_liquidated: 0.0
+-- hourly|ETH-USD|r=0.3|levels=50|lev=5.0x --
+    n_runs: 92
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5760869565217391
+    median_true_pnl_frac: -1.0
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5339226508000451
+    share_beat_buy_hold: 0.2608695652173913
+    share_beat_cash: 0.42391304347826086
+    share_left_range: 0.8695652173913043
+    share_left_range_up: 0.3695652173913043
+    share_left_range_down: 0.5
+    share_liquidated: 0.5108695652173914
+-- daily|BTC-USD|r=0.1|levels=10|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9967266775777414
+    share_true_pnl_negative: 0.32733224222585927
+    median_true_pnl_frac: 0.03434455551500614
+    p05_true_pnl_frac: -0.32743873406975277
+    p95_true_pnl_frac: 0.10645575386130876
+    share_beat_buy_hold: 0.5040916530278232
+    share_beat_cash: 0.6726677577741408
+    share_left_range: 1.0
+    share_left_range_up: 0.7479541734860884
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.1|levels=10|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9852700490998363
+    share_true_pnl_negative: 0.3862520458265139
+    median_true_pnl_frac: 0.15911529044315648
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4806809207170877
+    share_beat_buy_hold: 0.32078559738134205
+    share_beat_cash: 0.613747954173486
+    share_left_range: 1.0
+    share_left_range_up: 0.7135842880523732
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.29623567921440264
+-- daily|BTC-USD|r=0.1|levels=20|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9983633387888707
+    share_true_pnl_negative: 0.35515548281505727
+    median_true_pnl_frac: 0.02860113237557707
+    p05_true_pnl_frac: -0.34226680232231155
+    p95_true_pnl_frac: 0.06873264944758056
+    share_beat_buy_hold: 0.4779050736497545
+    share_beat_cash: 0.6448445171849427
+    share_left_range: 1.0
+    share_left_range_up: 0.7479541734860884
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.1|levels=20|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9950900163666121
+    share_true_pnl_negative: 0.41080196399345337
+    median_true_pnl_frac: 0.1355526582396251
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.32676480216349957
+    share_beat_buy_hold: 0.24058919803600654
+    share_beat_cash: 0.5891980360065466
+    share_left_range: 1.0
+    share_left_range_up: 0.7135842880523732
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.3109656301145663
+-- daily|BTC-USD|r=0.1|levels=50|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.40098199672667756
+    median_true_pnl_frac: 0.024164179059772504
+    p05_true_pnl_frac: -0.35885764672745646
+    p95_true_pnl_frac: 0.03565818675621822
+    share_beat_buy_hold: 0.45499181669394434
+    share_beat_cash: 0.5990180032733224
+    share_left_range: 1.0
+    share_left_range_up: 0.7479541734860884
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.1|levels=50|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9983633387888707
+    share_true_pnl_negative: 0.45662847790507366
+    median_true_pnl_frac: 0.11750473411023177
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.17444122287502523
+    share_beat_buy_hold: 0.14893617021276595
+    share_beat_cash: 0.5433715220949263
+    share_left_range: 1.0
+    share_left_range_up: 0.7054009819967266
+    share_left_range_down: 0.6202945990180033
+    share_liquidated: 0.33387888707037644
+-- daily|BTC-USD|r=0.2|levels=10|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9918166939443536
+    share_true_pnl_negative: 0.3011456628477905
+    median_true_pnl_frac: 0.05693664220240298
+    p05_true_pnl_frac: -0.2975595707895349
+    p95_true_pnl_frac: 0.12847288260885542
+    share_beat_buy_hold: 0.5073649754500819
+    share_beat_cash: 0.6988543371522095
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.563011456628478
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.2|levels=10|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9787234042553191
+    share_true_pnl_negative: 0.34206219312602293
+    median_true_pnl_frac: 0.26444816827697376
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5753876839037293
+    share_beat_buy_hold: 0.4451718494271686
+    share_beat_cash: 0.6579378068739771
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.546644844517185
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.23567921440261866
+-- daily|BTC-USD|r=0.2|levels=20|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9983633387888707
+    share_true_pnl_negative: 0.32896890343698854
+    median_true_pnl_frac: 0.051675166954188174
+    p05_true_pnl_frac: -0.308252702124766
+    p95_true_pnl_frac: 0.09797910839498436
+    share_beat_buy_hold: 0.49263502454991814
+    share_beat_cash: 0.6710310965630114
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.563011456628478
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.2|levels=20|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9983633387888707
+    share_true_pnl_negative: 0.37315875613747956
+    median_true_pnl_frac: 0.2519526469537032
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4589777757570769
+    share_beat_buy_hold: 0.36661211129296234
+    share_beat_cash: 0.6268412438625205
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.5433715220949263
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.25040916530278234
+-- daily|BTC-USD|r=0.2|levels=50|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.37315875613747956
+    median_true_pnl_frac: 0.04549824964582894
+    p05_true_pnl_frac: -0.3235648649361854
+    p95_true_pnl_frac: 0.06581365048101188
+    share_beat_buy_hold: 0.46317512274959083
+    share_beat_cash: 0.6268412438625205
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.563011456628478
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.2|levels=50|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.41243862520458263
+    median_true_pnl_frac: 0.19449587871488894
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.32188010999616656
+    share_beat_buy_hold: 0.28805237315875615
+    share_beat_cash: 0.5875613747954174
+    share_left_range: 0.8739770867430442
+    share_left_range_up: 0.5368248772504092
+    share_left_range_down: 0.3993453355155483
+    share_liquidated: 0.2733224222585925
+-- daily|BTC-USD|r=0.3|levels=10|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9885433715220949
+    share_true_pnl_negative: 0.3076923076923077
+    median_true_pnl_frac: 0.07303904551084943
+    p05_true_pnl_frac: -0.2583450211827777
+    p95_true_pnl_frac: 0.14391184067435533
+    share_beat_buy_hold: 0.502454991816694
+    share_beat_cash: 0.6923076923076923
+    share_left_range: 0.646481178396072
+    share_left_range_up: 0.4533551554828151
+    share_left_range_down: 0.2144026186579378
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.3|levels=10|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9590834697217676
+    share_true_pnl_negative: 0.337152209492635
+    median_true_pnl_frac: 0.3459182225263439
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.700426777600303
+    share_beat_buy_hold: 0.5008183306055647
+    share_beat_cash: 0.662847790507365
+    share_left_range: 0.6448445171849427
+    share_left_range_up: 0.44844517184942717
+    share_left_range_down: 0.2127659574468085
+    share_liquidated: 0.18657937806873978
+-- daily|BTC-USD|r=0.3|levels=20|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.32733224222585927
+    median_true_pnl_frac: 0.06473174482844789
+    p05_true_pnl_frac: -0.27050199951189413
+    p95_true_pnl_frac: 0.11750757574501777
+    share_beat_buy_hold: 0.49427168576104746
+    share_beat_cash: 0.6726677577741408
+    share_left_range: 0.646481178396072
+    share_left_range_up: 0.4533551554828151
+    share_left_range_down: 0.2144026186579378
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.3|levels=20|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 0.9967266775777414
+    share_true_pnl_negative: 0.3617021276595745
+    median_true_pnl_frac: 0.2995816425917901
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5672810777132535
+    share_beat_buy_hold: 0.4582651391162029
+    share_beat_cash: 0.6382978723404256
+    share_left_range: 0.6399345335515548
+    share_left_range_up: 0.4451718494271686
+    share_left_range_down: 0.2078559738134206
+    share_liquidated: 0.19967266775777415
+-- daily|BTC-USD|r=0.3|levels=50|lev=1.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.3698854337152209
+    median_true_pnl_frac: 0.050142338893559464
+    p05_true_pnl_frac: -0.2825628096903384
+    p95_true_pnl_frac: 0.08739912843189104
+    share_beat_buy_hold: 0.46153846153846156
+    share_beat_cash: 0.630114566284779
+    share_left_range: 0.646481178396072
+    share_left_range_up: 0.4533551554828151
+    share_left_range_down: 0.2144026186579378
+    share_liquidated: 0.0
+-- daily|BTC-USD|r=0.3|levels=50|lev=5.0x --
+    n_runs: 611
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.3993453355155483
+    median_true_pnl_frac: 0.2241302176124136
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4254241699179556
+    share_beat_buy_hold: 0.37479541734860883
+    share_beat_cash: 0.6006546644844517
+    share_left_range: 0.6252045826513911
+    share_left_range_up: 0.44353518821603927
+    share_left_range_down: 0.19476268412438624
+    share_liquidated: 0.2160392798690671
+-- daily|ETH-USD|r=0.1|levels=10|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9910514541387024
+    share_true_pnl_negative: 0.4004474272930649
+    median_true_pnl_frac: 0.03393767797167202
+    p05_true_pnl_frac: -0.4491781961247658
+    p95_true_pnl_frac: 0.11995914437786626
+    share_beat_buy_hold: 0.5615212527964206
+    share_beat_cash: 0.5995525727069351
+    share_left_range: 1.0
+    share_left_range_up: 0.738255033557047
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.1|levels=10|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9731543624161074
+    share_true_pnl_negative: 0.5011185682326622
+    median_true_pnl_frac: -0.023087116908181087
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5816857501085828
+    share_beat_buy_hold: 0.2371364653243848
+    share_beat_cash: 0.4988814317673378
+    share_left_range: 1.0
+    share_left_range_up: 0.6666666666666666
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.44742729306487694
+-- daily|ETH-USD|r=0.1|levels=20|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4272930648769575
+    median_true_pnl_frac: 0.028070197691581235
+    p05_true_pnl_frac: -0.4670613260710028
+    p95_true_pnl_frac: 0.0730641280284449
+    share_beat_buy_hold: 0.5324384787472036
+    share_beat_cash: 0.5727069351230425
+    share_left_range: 1.0
+    share_left_range_up: 0.738255033557047
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.1|levels=20|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9977628635346756
+    share_true_pnl_negative: 0.5257270693512305
+    median_true_pnl_frac: -0.2456858027534272
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.35910634310832
+    share_beat_buy_hold: 0.15883668903803133
+    share_beat_cash: 0.4742729306487696
+    share_left_range: 1.0
+    share_left_range_up: 0.6644295302013423
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.46756152125279643
+-- daily|ETH-USD|r=0.1|levels=50|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4429530201342282
+    median_true_pnl_frac: 0.021894090664726536
+    p05_true_pnl_frac: -0.4815871218876214
+    p95_true_pnl_frac: 0.03751960222708136
+    share_beat_buy_hold: 0.5033557046979866
+    share_beat_cash: 0.5570469798657718
+    share_left_range: 1.0
+    share_left_range_up: 0.738255033557047
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.1|levels=50|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.5369127516778524
+    median_true_pnl_frac: -0.48214115325327567
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.18331414760970302
+    share_beat_buy_hold: 0.12080536912751678
+    share_beat_cash: 0.46308724832214765
+    share_left_range: 1.0
+    share_left_range_up: 0.6644295302013423
+    share_left_range_down: 0.7360178970917226
+    share_liquidated: 0.4854586129753915
+-- daily|ETH-USD|r=0.2|levels=10|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9821029082774049
+    share_true_pnl_negative: 0.3668903803131991
+    median_true_pnl_frac: 0.06115441998018068
+    p05_true_pnl_frac: -0.41621665964079524
+    p95_true_pnl_frac: 0.16326845843179807
+    share_beat_buy_hold: 0.5749440715883669
+    share_beat_cash: 0.6331096196868009
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5950782997762863
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.2|levels=10|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9619686800894854
+    share_true_pnl_negative: 0.4608501118568233
+    median_true_pnl_frac: 0.23811838353593703
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.7360675318284972
+    share_beat_buy_hold: 0.33557046979865773
+    share_beat_cash: 0.5391498881431768
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5548098434004475
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.40268456375838924
+-- daily|ETH-USD|r=0.2|levels=20|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.38926174496644295
+    median_true_pnl_frac: 0.0514477498626613
+    p05_true_pnl_frac: -0.424979404166524
+    p95_true_pnl_frac: 0.11882011899758377
+    share_beat_buy_hold: 0.5592841163310962
+    share_beat_cash: 0.610738255033557
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5950782997762863
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.2|levels=20|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9977628635346756
+    share_true_pnl_negative: 0.47651006711409394
+    median_true_pnl_frac: 0.1291706086383456
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.5391154679179114
+    share_beat_buy_hold: 0.29082774049217003
+    share_beat_cash: 0.5234899328859061
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5525727069351231
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.4161073825503356
+-- daily|ETH-USD|r=0.2|levels=50|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.4272930648769575
+    median_true_pnl_frac: 0.037318744258724834
+    p05_true_pnl_frac: -0.4461400242653739
+    p95_true_pnl_frac: 0.07468538344212143
+    share_beat_buy_hold: 0.5257270693512305
+    share_beat_cash: 0.5727069351230425
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5950782997762863
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.2|levels=50|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9977628635346756
+    share_true_pnl_negative: 0.5078299776286354
+    median_true_pnl_frac: -0.12255286072982016
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.35280955567725464
+    share_beat_buy_hold: 0.19686800894854586
+    share_beat_cash: 0.49217002237136465
+    share_left_range: 0.9395973154362416
+    share_left_range_up: 0.5480984340044742
+    share_left_range_down: 0.5279642058165548
+    share_liquidated: 0.43847874720357943
+-- daily|ETH-USD|r=0.3|levels=10|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9888143176733781
+    share_true_pnl_negative: 0.36017897091722595
+    median_true_pnl_frac: 0.07890665847580512
+    p05_true_pnl_frac: -0.38717364211908084
+    p95_true_pnl_frac: 0.1729962351222687
+    share_beat_buy_hold: 0.5727069351230425
+    share_beat_cash: 0.639821029082774
+    share_left_range: 0.843400447427293
+    share_left_range_up: 0.4966442953020134
+    share_left_range_down: 0.407158836689038
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.3|levels=10|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9530201342281879
+    share_true_pnl_negative: 0.43847874720357943
+    median_true_pnl_frac: 0.30423316280028756
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.7977215675464816
+    share_beat_buy_hold: 0.40268456375838924
+    share_beat_cash: 0.5615212527964206
+    share_left_range: 0.8411633109619687
+    share_left_range_up: 0.4809843400447427
+    share_left_range_down: 0.40492170022371365
+    share_liquidated: 0.3512304250559284
+-- daily|ETH-USD|r=0.3|levels=20|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.38031319910514544
+    median_true_pnl_frac: 0.06963417802070726
+    p05_true_pnl_frac: -0.39354779678257645
+    p95_true_pnl_frac: 0.14469045565701927
+    share_beat_buy_hold: 0.5637583892617449
+    share_beat_cash: 0.6196868008948546
+    share_left_range: 0.843400447427293
+    share_left_range_up: 0.4966442953020134
+    share_left_range_down: 0.407158836689038
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.3|levels=20|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9977628635346756
+    share_true_pnl_negative: 0.4563758389261745
+    median_true_pnl_frac: 0.17418251423713718
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.6993982851250976
+    share_beat_buy_hold: 0.36465324384787473
+    share_beat_cash: 0.5436241610738255
+    share_left_range: 0.8389261744966443
+    share_left_range_up: 0.4809843400447427
+    share_left_range_down: 0.40268456375838924
+    share_liquidated: 0.37360178970917224
+-- daily|ETH-USD|r=0.3|levels=50|lev=1.0x --
+    n_runs: 447
+    share_grid_profit_positive: 1.0
+    share_true_pnl_negative: 0.41834451901565994
+    median_true_pnl_frac: 0.04255678407920277
+    p05_true_pnl_frac: -0.4110507731333879
+    p95_true_pnl_frac: 0.10090589475339595
+    share_beat_buy_hold: 0.5324384787472036
+    share_beat_cash: 0.5816554809843401
+    share_left_range: 0.843400447427293
+    share_left_range_up: 0.4966442953020134
+    share_left_range_down: 0.407158836689038
+    share_liquidated: 0.0
+-- daily|ETH-USD|r=0.3|levels=50|lev=5.0x --
+    n_runs: 447
+    share_grid_profit_positive: 0.9977628635346756
+    share_true_pnl_negative: 0.4899328859060403
+    median_true_pnl_frac: 0.06283332756694472
+    p05_true_pnl_frac: -1.0
+    p95_true_pnl_frac: 0.4771423725779555
+    share_beat_buy_hold: 0.2953020134228188
+    share_beat_cash: 0.5100671140939598
+    share_left_range: 0.814317673378076
+    share_left_range_up: 0.47874720357941836
+    share_left_range_down: 0.378076062639821
+    share_liquidated: 0.4004474272930649
+
+=== Mechanism 2: band grid -- pooled by arm/sizing/unit ===
+-- hourly|pooled|constant|unit=0.5x --
+    n_runs: 33
+    n_baskets_total: 11390
+    basket_win_rate: 0.7182616330114135
+    median_monthly_return_while_alive: -0.0053063896593452675
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|pooled|constant|unit=1.0x --
+    n_runs: 33
+    n_baskets_total: 11255
+    basket_win_rate: 0.7186139493558419
+    median_monthly_return_while_alive: -0.012682309179617324
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 772.0
+    share_runs_ruined_overall: 0.030303030303030304
+-- hourly|pooled|constant|unit=2.0x --
+    n_runs: 33
+    n_baskets_total: 9547
+    basket_win_rate: 0.7195977794071436
+    median_monthly_return_while_alive: -0.0343648403487295
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.09523809523809523, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 592.0
+    share_runs_ruined_overall: 0.30303030303030304
+-- hourly|pooled|martingale|unit=0.5x --
+    n_runs: 33
+    n_baskets_total: 11390
+    basket_win_rate: 0.7610184372256366
+    median_monthly_return_while_alive: -0.004419312284257182
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|pooled|martingale|unit=1.0x --
+    n_runs: 33
+    n_baskets_total: 9037
+    basket_win_rate: 0.7608719707867655
+    median_monthly_return_while_alive: -0.010666494128078685
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.14285714285714285, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 516.0
+    share_runs_ruined_overall: 0.30303030303030304
+-- hourly|pooled|martingale|unit=2.0x --
+    n_runs: 33
+    n_baskets_total: 5424
+    basket_win_rate: 0.7641961651917404
+    median_monthly_return_while_alive: -0.01646908343508313
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.6190476190476191, 'n_eligible': 21}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 235.0
+    share_runs_ruined_overall: 0.6060606060606061
+-- daily|pooled|constant|unit=0.5x --
+    n_runs: 258
+    n_baskets_total: 26393
+    basket_win_rate: 0.7295873905959913
+    median_monthly_return_while_alive: 0.0023190610343595264
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 198}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|pooled|constant|unit=1.0x --
+    n_runs: 258
+    n_baskets_total: 25471
+    basket_win_rate: 0.7296925915747321
+    median_monthly_return_while_alive: 0.004528000981966374
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.0045045045045045045, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.015151515151515152, 'n_eligible': 198}
+    median_time_to_ruin_days: 2145.0
+    share_runs_ruined_overall: 0.050387596899224806
+-- daily|pooled|constant|unit=2.0x --
+    n_runs: 258
+    n_baskets_total: 16215
+    basket_win_rate: 0.7329633055812519
+    median_monthly_return_while_alive: 0.007038551876839327
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.04065040650406504, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.14864864864864866, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.2878787878787879, 'n_eligible': 198}
+    median_time_to_ruin_days: 1436.0
+    share_runs_ruined_overall: 0.37209302325581395
+-- daily|pooled|martingale|unit=0.5x --
+    n_runs: 258
+    n_baskets_total: 22704
+    basket_win_rate: 0.7644908386187456
+    median_monthly_return_while_alive: 0.0026663418916361703
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.012195121951219513, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.04954954954954955, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.09595959595959595, 'n_eligible': 198}
+    median_time_to_ruin_days: 1497.0
+    share_runs_ruined_overall: 0.12015503875968993
+-- daily|pooled|martingale|unit=1.0x --
+    n_runs: 258
+    n_baskets_total: 15690
+    basket_win_rate: 0.7655194391332059
+    median_monthly_return_while_alive: 0.004704706073184628
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.04065040650406504, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.16216216216216217, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.29292929292929293, 'n_eligible': 198}
+    median_time_to_ruin_days: 1656.0
+    share_runs_ruined_overall: 0.4186046511627907
+-- daily|pooled|martingale|unit=2.0x --
+    n_runs: 258
+    n_baskets_total: 12702
+    basket_win_rate: 0.769248937175248
+    median_monthly_return_while_alive: 0.007258683103613328
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.11382113821138211, 'n_eligible': 246}
+    share_ruined_within_3y: {'share': 0.32882882882882886, 'n_eligible': 222}
+    share_ruined_within_5y: {'share': 0.5151515151515151, 'n_eligible': 198}
+    median_time_to_ruin_days: 840.0
+    share_runs_ruined_overall: 0.46124031007751937
+
+=== Mechanism 2: band grid -- per setting (ticker) ===
+-- hourly|EURUSD=X|constant|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3921
+    basket_win_rate: 0.7319561336393777
+    median_monthly_return_while_alive: -0.004106661530554612
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|EURUSD=X|constant|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 3921
+    basket_win_rate: 0.7319561336393777
+    median_monthly_return_while_alive: -0.009644930284422482
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|EURUSD=X|constant|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 3575
+    basket_win_rate: 0.7283916083916084
+    median_monthly_return_while_alive: -0.021263488223153715
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 666.0
+    share_runs_ruined_overall: 0.2727272727272727
+-- hourly|EURUSD=X|martingale|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3921
+    basket_win_rate: 0.7753124203009436
+    median_monthly_return_while_alive: -0.002351928020670524
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|EURUSD=X|martingale|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 2493
+    basket_win_rate: 0.779783393501805
+    median_monthly_return_while_alive: -0.0036021283992175857
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.2857142857142857, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 321.5
+    share_runs_ruined_overall: 0.36363636363636365
+-- hourly|EURUSD=X|martingale|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 2031
+    basket_win_rate: 0.7804037419990153
+    median_monthly_return_while_alive: 0.002087529470728322
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.5714285714285714, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 247.0
+    share_runs_ruined_overall: 0.45454545454545453
+-- hourly|GBPUSD=X|constant|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3908
+    basket_win_rate: 0.7295291709314228
+    median_monthly_return_while_alive: -0.005581730125076567
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|GBPUSD=X|constant|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 3908
+    basket_win_rate: 0.7295291709314228
+    median_monthly_return_while_alive: -0.014524126038018559
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|GBPUSD=X|constant|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 3520
+    basket_win_rate: 0.73125
+    median_monthly_return_while_alive: -0.037165644342275816
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 665.0
+    share_runs_ruined_overall: 0.2727272727272727
+-- hourly|GBPUSD=X|martingale|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3908
+    basket_win_rate: 0.7666325486182191
+    median_monthly_return_while_alive: -0.006359991416877153
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|GBPUSD=X|martingale|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 3425
+    basket_win_rate: 0.7670072992700729
+    median_monthly_return_while_alive: -0.018574204069509825
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 665.0
+    share_runs_ruined_overall: 0.2727272727272727
+-- hourly|GBPUSD=X|martingale|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 1743
+    basket_win_rate: 0.7699368904188181
+    median_monthly_return_while_alive: -0.026829453520669122
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.7142857142857143, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 190.5
+    share_runs_ruined_overall: 0.5454545454545454
+-- hourly|USDJPY=X|constant|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3561
+    basket_win_rate: 0.6908171861836563
+    median_monthly_return_while_alive: -0.006620228446832077
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|USDJPY=X|constant|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 3426
+    basket_win_rate: 0.690893169877408
+    median_monthly_return_while_alive: -0.017566863791212195
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 772.0
+    share_runs_ruined_overall: 0.09090909090909091
+-- hourly|USDJPY=X|constant|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 2452
+    basket_win_rate: 0.6900489396411092
+    median_monthly_return_while_alive: -0.049574514138122416
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.2857142857142857, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 408.5
+    share_runs_ruined_overall: 0.36363636363636365
+-- hourly|USDJPY=X|martingale|unit=0.5x --
+    n_runs: 11
+    n_baskets_total: 3561
+    basket_win_rate: 0.7391182252176355
+    median_monthly_return_while_alive: -0.003647574344497473
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- hourly|USDJPY=X|martingale|unit=1.0x --
+    n_runs: 11
+    n_baskets_total: 3119
+    basket_win_rate: 0.7390189163193331
+    median_monthly_return_while_alive: -0.008004328822483198
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.14285714285714285, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 794.0
+    share_runs_ruined_overall: 0.2727272727272727
+-- hourly|USDJPY=X|martingale|unit=2.0x --
+    n_runs: 11
+    n_baskets_total: 1650
+    basket_win_rate: 0.7381818181818182
+    median_monthly_return_while_alive: -0.016691573348462052
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.5714285714285714, 'n_eligible': 7}
+    share_ruined_within_3y: {'share': None, 'n_eligible': 0}
+    share_ruined_within_5y: {'share': None, 'n_eligible': 0}
+    median_time_to_ruin_days: 245.0
+    share_runs_ruined_overall: 0.8181818181818182
+-- daily|EURUSD=X|constant|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 8875
+    basket_win_rate: 0.7034366197183098
+    median_monthly_return_while_alive: 0.0021383511202293093
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|EURUSD=X|constant|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 8875
+    basket_win_rate: 0.7034366197183098
+    median_monthly_return_while_alive: 0.004483574184912298
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|EURUSD=X|constant|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 5312
+    basket_win_rate: 0.6920180722891566
+    median_monthly_return_while_alive: 0.006733766537481589
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.05405405405405406, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.25757575757575757, 'n_eligible': 66}
+    median_time_to_ruin_days: 1552.0
+    share_runs_ruined_overall: 0.313953488372093
+-- daily|EURUSD=X|martingale|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 8875
+    basket_win_rate: 0.7563943661971831
+    median_monthly_return_while_alive: 0.0024843870510022903
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|EURUSD=X|martingale|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 5833
+    basket_win_rate: 0.7541573804217384
+    median_monthly_return_while_alive: 0.004270197489706362
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.02702702702702703, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.12121212121212122, 'n_eligible': 66}
+    median_time_to_ruin_days: 2321.5
+    share_runs_ruined_overall: 0.3023255813953488
+-- daily|EURUSD=X|martingale|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 3746
+    basket_win_rate: 0.7613454351308062
+    median_monthly_return_while_alive: 0.0073695823997375065
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.08536585365853659, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.32432432432432434, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.5454545454545454, 'n_eligible': 66}
+    median_time_to_ruin_days: 885.0
+    share_runs_ruined_overall: 0.43023255813953487
+-- daily|GBPUSD=X|constant|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 9358
+    basket_win_rate: 0.7447104082068818
+    median_monthly_return_while_alive: 0.0025731864212237276
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|GBPUSD=X|constant|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 9358
+    basket_win_rate: 0.7447104082068818
+    median_monthly_return_while_alive: 0.004665331736653844
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|GBPUSD=X|constant|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 6890
+    basket_win_rate: 0.7507982583454281
+    median_monthly_return_while_alive: 0.007466778117263373
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.04878048780487805, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.13513513513513514, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.21212121212121213, 'n_eligible': 66}
+    median_time_to_ruin_days: 727.5
+    share_runs_ruined_overall: 0.16279069767441862
+-- daily|GBPUSD=X|martingale|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 9358
+    basket_win_rate: 0.7561444753152383
+    median_monthly_return_while_alive: 0.0029549708562872645
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|GBPUSD=X|martingale|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 6866
+    basket_win_rate: 0.7614331488494028
+    median_monthly_return_while_alive: 0.004853096454670247
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.04878048780487805, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.16216216216216217, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.21212121212121213, 'n_eligible': 66}
+    median_time_to_ruin_days: 658.0
+    share_runs_ruined_overall: 0.16279069767441862
+-- daily|GBPUSD=X|martingale|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 6866
+    basket_win_rate: 0.7614331488494028
+    median_monthly_return_while_alive: 0.0073611745939818896
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.04878048780487805, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.16216216216216217, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.21212121212121213, 'n_eligible': 66}
+    median_time_to_ruin_days: 653.0
+    share_runs_ruined_overall: 0.16279069767441862
+-- daily|USDJPY=X|constant|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 8160
+    basket_win_rate: 0.740686274509804
+    median_monthly_return_while_alive: 0.002166053708500426
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.0, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.0, 'n_eligible': 66}
+    median_time_to_ruin_days: None
+    share_runs_ruined_overall: 0.0
+-- daily|USDJPY=X|constant|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 7238
+    basket_win_rate: 0.742470295661785
+    median_monthly_return_while_alive: 0.004296454344673961
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.0, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.013513513513513514, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.045454545454545456, 'n_eligible': 66}
+    median_time_to_ruin_days: 2145.0
+    share_runs_ruined_overall: 0.1511627906976744
+-- daily|USDJPY=X|constant|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 4013
+    basket_win_rate: 0.7565412409668577
+    median_monthly_return_while_alive: 0.006680639801301624
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.07317073170731707, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.25675675675675674, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.3939393939393939, 'n_eligible': 66}
+    median_time_to_ruin_days: 1691.0
+    share_runs_ruined_overall: 0.6395348837209303
+-- daily|USDJPY=X|martingale|unit=0.5x --
+    n_runs: 86
+    n_baskets_total: 4471
+    basket_win_rate: 0.7980317602326101
+    median_monthly_return_while_alive: 0.002416005451894465
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.036585365853658534, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.14864864864864866, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.2878787878787879, 'n_eligible': 66}
+    median_time_to_ruin_days: 1497.0
+    share_runs_ruined_overall: 0.36046511627906974
+-- daily|USDJPY=X|martingale|unit=1.0x --
+    n_runs: 86
+    n_baskets_total: 2991
+    basket_win_rate: 0.7970578401872284
+    median_monthly_return_while_alive: 0.004684949117205628
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.07317073170731707, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.2972972972972973, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.5454545454545454, 'n_eligible': 66}
+    median_time_to_ruin_days: 1629.0
+    share_runs_ruined_overall: 0.7906976744186046
+-- daily|USDJPY=X|martingale|unit=2.0x --
+    n_runs: 86
+    n_baskets_total: 2090
+    basket_win_rate: 0.8090909090909091
+    median_monthly_return_while_alive: 0.006743934257943507
+    monthly_return_definition: median over calendar months of each run's month-end-equity-over-prior-month-end-equity minus 1, pooled across all runs of this setting, using every month observed while the run was alive (a ruined run simply stops contributing months after ruin)
+    share_ruined_within_1y: {'share': 0.2073170731707317, 'n_eligible': 82}
+    share_ruined_within_3y: {'share': 0.5, 'n_eligible': 74}
+    share_ruined_within_5y: {'share': 0.7878787878787878, 'n_eligible': 66}
+    median_time_to_ruin_days: 924.0
+    share_runs_ruined_overall: 0.7906976744186046

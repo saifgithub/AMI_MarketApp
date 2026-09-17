@@ -1,0 +1,59 @@
+C08 -- 'A chatbot's stock picks beat the market' -- SUMMARY
+======================================================================
+
+PART 1 -- what luck alone does (10,000 random 10-stock portfolios/window,
+236 month-start 12-month windows, 2006-01 -> 2025-08)
+----------------------------------------------------------------------
+  share beating universe equal-weight mean (pooled): 0.4525
+  share beating SPY (pooled):                        0.6833
+  excess vs universe mean, pooled IQR:                11.17pp
+  excess vs universe mean, pooled 5-95 spread:        32.09pp
+  excess vs universe mean, MEDIAN WITHIN-WINDOW 5-95 spread (headline): 28.07pp
+    -- this is the honest 'one year, one draw' number: it answers what spread
+       a single chatbot run in a single actual year faces, not the spread you'd
+       see only by also mixing across 20 different market regimes (2006 vs 2024).
+  analytic P(>=3-of-4 coin-flip portfolios beat SPY at p=0.5): 0.3125
+  same P using MEASURED p=share-beating-SPY (0.6833): 0.6222
+  same P using MEASURED p=share-beating-universe (0.4525): 0.2448
+
+PART 2 -- what chatbots actually pick ('now' prompt, 30 replies: 3 models x 10 runs)
+----------------------------------------------------------------------
+  replies naming >=1 pick: 11/30
+  mean pairwise Jaccard within model: {'opus': 0.6029896029896031, 'sonnet': None}
+  mean pairwise Jaccard across model pairs: {'opus_vs_sonnet': 0.22892156862745097}
+  mean pairwise Jaccard, all picks-giving replies pooled: 0.5350
+  share of picks outside U_LARGE100: 0.3273 (36/110)
+  most-picked names (top 10): [['AVGO', 11], ['LLY', 11], ['TSM', 11], ['AMZN', 10], ['GEV', 10], ['JPM', 10], ['GOOGL', 9], ['BRK-B', 5], ['MSFT', 5], ['V', 4]]
+  trailing 36-month return percentile of in-universe picks: mean=73.87, 95% CI=[71.59, 76.47] (n=11 replies, as of 2026-08-28)
+  trailing 12-month return percentile of in-universe picks: mean=59.42, 95% CI=[56.51, 62.59] (n=11 replies, as of 2026-08-28)
+
+PART 3 -- hindsight (backdated 'as of Jan 2, 2019' prompt, 30 replies: 3 models x 10 runs)
+----------------------------------------------------------------------
+  replies analysed (named >=1 in-universe pick): 20/30
+  random-portfolio pool size (names with data 2019-01-02): 98
+  pooled mean percentile vs 10,000 random n-stock portfolios: 94.30, 95% CI=[91.21, 97.10]
+    opus: mean=93.19, 95% CI=[87.72, 98.63] (n=10)
+    sonnet: mean=95.41, 95% CI=[92.75, 97.94] (n=10)
+  replies explicitly caveating/refusing on future-knowledge grounds: 30/30
+    example (asof2019_haiku_01.json): "I appreciate the interesting question, but I need to be transparent about a limitation: I have knowledge through February 2025, so I can't authentically answer..."
+    example (asof2019_haiku_02.json): "If I made stock recommendations "as of" that date, I'd effectively be: - Either pretending I don't know what happened (misleading) - Or using hindsight..."
+
+REFUSAL / HEDGE RATES (0 picks named) PER MODEL x PROMPT
+----------------------------------------------------------------------
+  asof2019_haiku       10/10 (100%)
+  asof2019_opus        0/10 (0%)
+  asof2019_sonnet      0/10 (0%)
+  now_haiku            10/10 (100%)
+  now_opus             0/10 (0%)
+  now_sonnet           9/10 (90%)
+
+HYPOTHESES vs 'WHAT WOULD SUPPORT THE CLAIM' (measured, stated neutrally)
+----------------------------------------------------------------------
+  H1 (noise): beat_universe_share in [0.40, 0.55]? measured=0.4525 -> inside band
+      median within-window 5-95 spread > 30pp? measured=28.07pp -> not met
+      [claim support condition: spread < 10pp] -> measured 28.07pp -> does not support claim
+  H2 (momentum tilt): mean Jaccard >= 0.4? measured=0.5350 -> met
+      trailing-36m percentile >= 65th? measured=73.87 -> met
+      [claim support condition: Jaccard < 0.2 AND trailing pctile in 45-55] -> measured Jaccard=0.5350, pctile=73.87 -> does not support claim
+  H3 (hindsight): pooled mean percentile >= 90th? measured=94.30 -> met
+      [claim support condition: pooled mean percentile in 35-65] -> measured 94.30 -> does not support claim

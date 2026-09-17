@@ -1,0 +1,300 @@
+{
+  "part2_stability_and_frequency": {
+    "n_replies_with_picks": 11,
+    "mean_jaccard_within_model": {
+      "opus": 0.6029896029896031,
+      "sonnet": null
+    },
+    "mean_jaccard_across_model_pairs": {
+      "opus_vs_sonnet": 0.22892156862745097
+    },
+    "mean_jaccard_overall": 0.5349772331055754,
+    "most_picked_names": [
+      [
+        "AVGO",
+        11
+      ],
+      [
+        "LLY",
+        11
+      ],
+      [
+        "TSM",
+        11
+      ],
+      [
+        "AMZN",
+        10
+      ],
+      [
+        "GEV",
+        10
+      ],
+      [
+        "JPM",
+        10
+      ],
+      [
+        "GOOGL",
+        9
+      ],
+      [
+        "BRK-B",
+        5
+      ],
+      [
+        "MSFT",
+        5
+      ],
+      [
+        "V",
+        4
+      ],
+      [
+        "ISRG",
+        3
+      ],
+      [
+        "VRT",
+        3
+      ],
+      [
+        "CEG",
+        2
+      ],
+      [
+        "CRWD",
+        2
+      ],
+      [
+        "MELI",
+        2
+      ],
+      [
+        "META",
+        2
+      ],
+      [
+        "MU",
+        2
+      ],
+      [
+        "UBER",
+        2
+      ],
+      [
+        "ASML",
+        1
+      ],
+      [
+        "MA",
+        1
+      ]
+    ],
+    "n_total_picks": 110,
+    "n_outside_universe": 36,
+    "share_outside_universe": 0.32727272727272727
+  },
+  "part2_momentum_tilt": {
+    "end_date": "2026-08-28",
+    "36m": {
+      "n_replies": 11,
+      "mean_percentile": 73.87183523547161,
+      "bootstrap_ci": {
+        "lower": 71.58816246884429,
+        "upper": 76.46978442432989
+      }
+    },
+    "12m": {
+      "n_replies": 11,
+      "mean_percentile": 59.42137828501466,
+      "bootstrap_ci": {
+        "lower": 56.511421028466486,
+        "upper": 62.586470768288976
+      }
+    }
+  },
+  "part3_hindsight": {
+    "n_replies_analysed": 20,
+    "n_available_universe_names_at_2019_01_02": 98,
+    "pooled": {
+      "mean_percentile": 94.2975,
+      "bootstrap_ci": {
+        "lower": 91.21374999999999,
+        "upper": 97.10052499999999
+      }
+    },
+    "by_model": {
+      "opus": {
+        "n_replies": 10,
+        "mean_percentile": 93.187,
+        "bootstrap_ci": {
+          "lower": 87.72485,
+          "upper": 98.631
+        }
+      },
+      "sonnet": {
+        "n_replies": 10,
+        "mean_percentile": 95.40799999999999,
+        "bootstrap_ci": {
+          "lower": 92.748975,
+          "upper": 97.939025
+        }
+      }
+    },
+    "per_reply": [
+      {
+        "file": "asof2019_opus_01.json",
+        "model": "opus",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 308.04030360962196,
+        "percentile": 99.01
+      },
+      {
+        "file": "asof2019_opus_02.json",
+        "model": "opus",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 283.31974044596194,
+        "percentile": 98.26
+      },
+      {
+        "file": "asof2019_opus_03.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 161.28499477912834,
+        "percentile": 76.44
+      },
+      {
+        "file": "asof2019_opus_04.json",
+        "model": "opus",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 238.236238936395,
+        "percentile": 93.83
+      },
+      {
+        "file": "asof2019_opus_05.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 147.28363911430696,
+        "percentile": 71.32000000000001
+      },
+      {
+        "file": "asof2019_opus_06.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 303.7627322536052,
+        "percentile": 98.64
+      },
+      {
+        "file": "asof2019_opus_07.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 296.92431887233124,
+        "percentile": 98.65
+      },
+      {
+        "file": "asof2019_opus_08.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 300.7744571891169,
+        "percentile": 98.61
+      },
+      {
+        "file": "asof2019_opus_09.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 289.9428193091305,
+        "percentile": 98.34
+      },
+      {
+        "file": "asof2019_opus_10.json",
+        "model": "opus",
+        "n_in_universe_picks": 9,
+        "pick_return_pct": 314.2494566468742,
+        "percentile": 98.77
+      },
+      {
+        "file": "asof2019_sonnet_01.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 284.18461232134086,
+        "percentile": 98.44
+      },
+      {
+        "file": "asof2019_sonnet_02.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 262.79685527008894,
+        "percentile": 96.83
+      },
+      {
+        "file": "asof2019_sonnet_03.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 290.49423198164646,
+        "percentile": 98.52
+      },
+      {
+        "file": "asof2019_sonnet_04.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 300.0288688840017,
+        "percentile": 98.96000000000001
+      },
+      {
+        "file": "asof2019_sonnet_05.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 266.11891353738076,
+        "percentile": 97.28
+      },
+      {
+        "file": "asof2019_sonnet_06.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 8,
+        "pick_return_pct": 151.715717321035,
+        "percentile": 75.05
+      },
+      {
+        "file": "asof2019_sonnet_07.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 290.3058599627169,
+        "percentile": 98.55
+      },
+      {
+        "file": "asof2019_sonnet_08.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 274.2981521701217,
+        "percentile": 97.71000000000001
+      },
+      {
+        "file": "asof2019_sonnet_09.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 239.10106633276612,
+        "percentile": 94.52
+      },
+      {
+        "file": "asof2019_sonnet_10.json",
+        "model": "sonnet",
+        "n_in_universe_picks": 10,
+        "pick_return_pct": 284.8903527367901,
+        "percentile": 98.22
+      }
+    ],
+    "n_replies_with_future_knowledge_caveat": 30,
+    "n_asof2019_replies_total": 30,
+    "caveat_examples": [
+      {
+        "file": "asof2019_haiku_01.json",
+        "quote": "I appreciate the interesting question, but I need to be transparent about a limitation: I have knowledge through February 2025, so I can't authentically answer..."
+      },
+      {
+        "file": "asof2019_haiku_02.json",
+        "quote": "If I made stock recommendations \"as of\" that date, I'd effectively be: - Either pretending I don't know what happened (misleading) - Or using hindsight..."
+      }
+    ]
+  }
+}

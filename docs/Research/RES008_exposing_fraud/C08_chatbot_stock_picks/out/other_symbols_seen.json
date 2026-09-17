@@ -1,0 +1,16 @@
+{
+  "_comment": "Real, currently-tradable US-listed tickers actually named as buy picks in the 60 replies (out/responses/), reviewed by eye across all six model x prompt combinations before the parser was written. Excludes acronyms/noise seen in the same replies that are NOT tickers (CFP = Certified Financial Planner, EUV/CUDA = technology terms, RSP/QUAL/MTUM = ETFs mentioned only as an aside outside the picks list, VISA = a model's mis-typed parenthetical for the Visa Inc. ticker which is actually V).",
+  "symbols": [
+    "TSM",
+    "GEV",
+    "ASML",
+    "BABA",
+    "MELI",
+    "VRT",
+    "CEG",
+    "UBER",
+    "MU",
+    "CRWD",
+    "SHOP"
+  ]
+}

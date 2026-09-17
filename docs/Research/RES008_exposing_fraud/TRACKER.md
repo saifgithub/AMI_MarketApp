@@ -18,14 +18,14 @@ Last updated: 2026-09-17.
 
 | ID | Claim (as a class — no channels) | Reach measured 2026-09-17 | Status | Verdict | Prereg commit | Results | Video brief |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| C01 | A neural network (LSTM) predicts tomorrow's stock price | 2 videos · 1.95M | prereg | — | _this commit_ | — | — |
-| C02 | A chatbot wrote me a profitable strategy | 3 videos · 3.28M | prereg | — | _this commit_ | — | — |
-| C03 | Keep tweaking until the backtest is spectacular (+10× margin) | within C02's videos + 2 more | prereg | — | _this commit_ | — | — |
-| C04 | A 90% win rate proves the strategy works | 4 videos · 2.99M | prereg | — | _this commit_ | — | — |
-| C05 | The "99% win rate" scalping recipe (ATR trailing stop + Schaff trend cycle) | 2 videos · 2.17M | prereg | — | _this commit_ | — | — |
-| C06 | An "AI" grid / band robot earns passive income in any market | 3 videos · 0.92M | prereg | — | _this commit_ | — | — |
-| C07 | "I gave an AI bot real money" and it beat the market in a week / month | 2 videos · 6.12M | prereg | — | _this commit_ | — | — |
-| C08 | A chatbot's ten stock picks beat the index | 2 videos · 2.76M | prereg | — | _this commit_ | — | — |
+| C01 | A neural network (LSTM) predicts tomorrow's stock price | 2 videos · 1.95M | prereg | — | `3ac320eb` | — | — |
+| C02 | A chatbot wrote me a profitable strategy | 3 videos · 3.28M | prereg | — | `3ac320eb` | — | — |
+| C03 | Keep tweaking until the backtest is spectacular (+10× margin) | within C02's videos + 2 more | prereg | — | `3ac320eb` | — | — |
+| C04 | A 90% win rate proves the strategy works | 4 videos · 2.99M | prereg | — | `3ac320eb` | — | — |
+| C05 | The "99% win rate" scalping recipe (ATR trailing stop + Schaff trend cycle) | 2 videos · 2.17M | prereg | — | `3ac320eb` | — | — |
+| C06 | An "AI" grid / band robot earns passive income in any market | 3 videos · 0.92M | closed 2026-09-17 | `NOT SUPPORTED` — dashboard "grid profit" positive in 99.65% of runs, account down in 36.80%; 5× liquidated in 32.54%; grid ties buy-and-hold (51.09%) — two of our four predictions wrong | `3ac320eb` | [RESULTS](C06_ai_grid_bot_passive_income/RESULTS.md) | [brief](C06_ai_grid_bot_passive_income/VIDEO_BRIEF.md) |
+| C07 | "I gave an AI bot real money" and it beat the market in a week / month | 2 videos · 6.12M | prereg | — | `3ac320eb` | — | — |
+| C08 | A chatbot's ten stock picks beat the index | 2 videos · 2.76M | closed 2026-09-17 | `NOT SUPPORTED` — luck alone spans 28 points in a typical year; 19 of 30 asks declined; back-dated picks at the 94th percentile (hindsight, stated by all 30 replies); one of our spread thresholds missed (28 vs > 30) | `3ac320eb` | [RESULTS](C08_chatbot_stock_picks/RESULTS.md) | [brief](C08_chatbot_stock_picks/VIDEO_BRIEF.md) |
 
 ## P — prior work, reused (not re-tested)
 
