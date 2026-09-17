@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--
+  RES008 episode page — template.
+
+  One page per published episode, served from /tested/<slug>/ on the AMI site.
+  It reuses the site's shared stylesheet and header exactly as the legal pages do;
+  everything page-specific is in the <style> block below, so the page needs no
+  change to site.css.
+
+  Fill every {{PLACEHOLDER}}. Rules (RES008 README "Publication rules"):
+    * every number comes from the claim's RESULTS.md — copy, do not re-derive;
+    * no channel, creator, video title, clip or thumbnail is named or linked;
+    * "we tested this claim" language — never fraud, scam, liar;
+    * the verdict word is the pre-registered one, unchanged;
+    * the install link carries the episode's UTM parameters (CHANNEL_PLAN §8);
+    * EN copy — flag for AR / MS translation at v1.0.
+
+  This file lives with the research until the series has a name and a CR number;
+  moving it under website/ and deploying it is a site change and needs a CR.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PAGE_TITLE}} — AMI Trade</title>
+  <meta name="description" content="{{META_DESCRIPTION_MAX_160}}">
+  <link rel="canonical" href="https://www.agenticmarketintel.ai/tested/{{SLUG}}/">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{PAGE_TITLE}}">
+  <meta property="og:description" content="{{META_DESCRIPTION_MAX_160}}">
+  <meta property="og:image" content="https://www.agenticmarketintel.ai/tested/{{SLUG}}/{{KEY_CHART_FILE}}">
+  <link rel="stylesheet" href="/assets/css/site.css?v=cr072b">
+  <style>
+    .ep-shell { padding: 6.5rem 0 4rem; min-height: 70vh; }
+    .ep-wrap { max-width: 820px; margin: 0 auto; padding: 0 1.5rem; }
+    .ep-eyebrow {
+      font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.18em; color: var(--accent-cyan);
+      margin-bottom: var(--sp-3); display: block;
+    }
+    .ep-title { font-size: clamp(1.9rem, 4vw, 2.7rem); color: var(--text-main); font-weight: 700; line-height: 1.15; margin-bottom: var(--sp-3); }
+    .ep-claim { color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: var(--sp-5); }
+    .ep-verdict {
+      display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: baseline;
+      background: var(--card-bg-alt); border: 1px solid var(--border-color);
+      border-left: 3px solid var(--verdict-color, var(--hex-blue));
+      border-radius: 0 var(--r-md) var(--r-md) 0; padding: var(--sp-4) var(--sp-5); margin-bottom: var(--sp-6);
+    }
+    .ep-verdict .word { font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.08em; color: var(--verdict-color, var(--hex-blue)); }
+    .ep-verdict .why { color: var(--text-muted); font-size: 0.98rem; line-height: 1.6; flex: 1 1 320px; }
+    /* one class per verdict word — the colour is the only thing that changes */
+    .v-disproved     { --verdict-color: var(--accent-red); }
+    .v-not-supported { --verdict-color: var(--accent-amber); }
+    .v-partly-holds  { --verdict-color: var(--accent-purple); }
+    .v-holds         { --verdict-color: var(--accent-green); }
+    .ep-video { position: relative; padding-top: 56.25%; margin-bottom: var(--sp-6); border: 1px solid var(--border-color); border-radius: var(--r-lg); overflow: hidden; background: var(--card-bg-alt); }
+    .ep-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .ep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6); }
+    .ep-kpi { background: var(--card-bg-alt); border: 1px solid var(--border-color); border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5); }
+    .ep-kpi .num { font-family: var(--font-mono); font-weight: 700; font-size: 1.9rem; color: var(--text-main); display: block; }
+    .ep-kpi .lbl { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+    .ep-section { margin-bottom: var(--sp-6); }
+    .ep-section h2 { font-size: 1.3rem; color: var(--text-main); font-weight: 700; margin-bottom: var(--sp-3); }
+    .ep-section p, .ep-section li { color: var(--text-muted); font-size: 1rem; line-height: 1.7; }
+    .ep-section ul, .ep-section ol { margin: var(--sp-3) 0 var(--sp-3) var(--sp-5); }
+    .ep-section li { margin-bottom: 6px; }
+    .ep-section strong { color: var(--text-main); }
+    .ep-section a { color: var(--hex-blue); text-decoration: underline; text-underline-offset: 3px; }
+    .ep-chart { width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: var(--r-lg); display: block; }
+    .ep-chart-cap { color: var(--text-dim); font-size: 0.85rem; margin-top: var(--sp-2); }
+    .ep-cta {
+      background: var(--card-bg-alt); border: 1px solid var(--border-color); border-radius: var(--r-lg);
+      padding: var(--sp-5); margin: var(--sp-7) 0 var(--sp-5);
+    }
+    .ep-cta p { color: var(--text-muted); line-height: 1.7; margin-bottom: var(--sp-4); }
+    .ep-cta a.btn { display: inline-block; background: var(--hex-blue); color: #fff; text-decoration: none; font-weight: 600; padding: 0.7rem 1.3rem; border-radius: var(--r-md); }
+    .ep-cta a.btn:hover { background: var(--hex-blue-600, #2563eb); }
+    .ep-disclaimer { font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.7; color: var(--text-dim); border-top: 1px solid var(--border-color); padding-top: var(--sp-4); }
+    .ep-back { display: inline-block; margin-top: var(--sp-6); color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border-color); padding-bottom: 2px; }
+    .ep-back:hover { color: var(--hex-blue); border-color: var(--hex-blue); }
+  </style>
+</head>
+<body>
+
+<header class="site-header" role="banner">
+  <div class="container">
+    <a href="/" class="header-brand">
+      <img src="/assets/svg/ami_logo_matrix.svg" alt="AMI" width="36" height="36">
+      <div class="brand-text">
+        <span class="brand-name">AMI Trade</span>
+        <span class="brand-sub">Applied AI</span>
+      </div>
+    </a>
+  </div>
+</header>
+
+<main class="ep-shell">
+  <article class="ep-wrap">
+
+    <span class="ep-eyebrow">{{SERIES_NAME}} · Episode {{EPISODE_NUMBER}} · {{PUBLISH_DATE}}</span>
+    <h1 class="ep-title">{{PAGE_TITLE}}</h1>
+    <p class="ep-claim">The claim, as it is usually made: <em>“{{CLAIM_AS_HEARD}}”</em></p>
+
+    <!-- verdict class: v-disproved | v-not-supported | v-partly-holds | v-holds -->
+    <div class="ep-verdict {{VERDICT_CLASS}}">
+      <span class="word">{{VERDICT_WORD}}</span>
+      <span class="why">{{VERDICT_ONE_SENTENCE}}</span>
+    </div>
+
+    <div class="ep-video">
+      <iframe src="https://www.youtube-nocookie.com/embed/{{OUR_VIDEO_ID}}" title="{{PAGE_TITLE}}" loading="lazy" allowfullscreen></iframe>
+    </div>
+
+    <!-- three numbers, each copied from RESULTS.md -->
+    <div class="ep-kpis">
+      <div class="ep-kpi"><span class="num">{{KPI_1_NUMBER}}</span><span class="lbl">{{KPI_1_LABEL}}</span></div>
+      <div class="ep-kpi"><span class="num">{{KPI_2_NUMBER}}</span><span class="lbl">{{KPI_2_LABEL}}</span></div>
+      <div class="ep-kpi"><span class="num">{{KPI_3_NUMBER}}</span><span class="lbl">{{KPI_3_LABEL}}</span></div>
+    </div>
+
+    <section class="ep-section">
+      <h2>What we wrote down before testing</h2>
+      <p>{{PREREG_SUMMARY}} The pre-registration is public and dated: commit <code>{{PREREG_COMMIT}}</code>, {{PREREG_DATE}}.</p>
+    </section>
+
+    <section class="ep-section">
+      <h2>What happened</h2>
+      <img class="ep-chart" src="{{KEY_CHART_FILE}}" alt="{{KEY_CHART_ALT_TEXT}}" width="1920" height="1080">
+      <p class="ep-chart-cap">{{KEY_CHART_CAPTION_WITH_SOURCE_FILE}}</p>
+      <ul>
+        {{RESULT_BULLETS_3_TO_5}}
+      </ul>
+    </section>
+
+    <section class="ep-section">
+      <h2>What is true, and what we cannot say</h2>
+      <ul>
+        {{WHAT_IS_TRUE_AND_LIMITS_BULLETS}}
+      </ul>
+    </section>
+
+    <section class="ep-section">
+      <h2>Check the next one yourself</h2>
+      <ol>
+        {{QUESTIONS_FOR_THE_VIEWER}}
+      </ol>
+      <p>The same five questions apply to any trading claim: <a href="/tested/five-questions/">how to read a trading claim</a>.</p>
+    </section>
+
+    <section class="ep-section">
+      <h2>Reproduce it</h2>
+      <p>Pre-registration, code and every output file: <a href="{{REPO_CLAIM_FOLDER_URL}}">the claim folder</a>. Found an error? Tell us — a verified error gets a correction on this page and a pinned correction under the video.</p>
+    </section>
+
+    <div class="ep-cta">
+      <p>AMI Trade is a simulator. You direct a team of twelve analysts on simulated money, and the record of every decision is kept for you. It is simulation-only and promises no edge.</p>
+      <a class="btn" href="{{STORE_LINK_WITH_UTM}}">Try AMI Trade — free</a>
+    </div>
+
+    <p class="ep-disclaimer">Educational content. AMI Trade is a simulation-only training product and is not licensed to give investment advice; nothing on this page is investment advice. By policy we test claims and name no channel or creator.</p>
+
+    <a class="ep-back" href="/tested/">← All tests</a>
+
+  </article>
+</main>
+
+</body>
+</html>

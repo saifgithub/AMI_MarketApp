@@ -47,8 +47,8 @@ Last updated: 2026-09-17 — all eight C-claims closed; release order in CHANNEL
 | P14 | Neural-SDE daily edge | DISPROVED — smoothing artifact | Aegis CR033 stage 3 (private) | verify primary first |
 | P15 | Gold S/R + RSI reversal | DISPROVED — worse than random entry, IS and OOS | `AMI_FOREX` R-rev-1 (private) | needs evidence re-hosted |
 | P16–P19 | Weak / unfinished items | — | see `01_prior_work.md` §B | no |
-| P20 | Vol is forecastable; regime sizing homogenises risk | HOLDS — as a risk method that costs return | RES001 part 03 | yes — "what is real" episode |
-| P21 | Dispersion rotates with regime | HOLDS — public stylised fact | RES001 part 04 | yes, same episode |
+| P20 | Vol is forecastable; regime sizing homogenises risk | HOLDS — as a risk method that costs return | RES001 part 03 | yes — "what is real" episode · [brief](P_prior_work/P20_P21_what_is_real/VIDEO_BRIEF.md) |
+| P21 | Dispersion rotates with regime | HOLDS — public stylised fact | RES001 part 04 | yes, same episode · [brief](P_prior_work/P20_P21_what_is_real/VIDEO_BRIEF.md) |
 | P22 | Conditioned VIX-futures carry | PARTLY HOLDS — marginal, thin post-2020 | Aegis edge-hunt P2 (private) | no — not for a retail audience |
 | P23 | Crypto funding carry | PARTLY HOLDS — decaying toward kill line | Aegis edge-hunt P4 (private) | no |
 | P24 | Gold overnight drift | UNCONFIRMED here — positive in private work, single instrument | `Forex/research/` (private) | no — needs an RES008-standard re-run |
