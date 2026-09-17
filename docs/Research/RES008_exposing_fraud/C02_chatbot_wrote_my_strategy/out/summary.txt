@@ -1,0 +1,126 @@
+C02 -- 'A chatbot wrote me a profitable trading strategy' -- results summary
+
+Strategies scored: 29 of 30 generated (excluded at gate: 1)
+
+=== H1 (worth doing?) ===
+H1 predicted: at most 6/30 (20%) strategies beat buy-and-hold net on HOLDOUT in more than half their tickers.
+Measured: 0/29 (0.0%) beat buy-and-hold net on HOLDOUT in more than half their tickers.
+H1 met: True
+
+=== H2 (any skill?) ===
+H2 predicted: median S2 (mean placebo percentile) across strategies in [35, 65] on HOLDOUT, and at most 3/30 strategies at/above the 95th placebo percentile (mean-percentile reading, pre-registered).
+Measured median S2 on HOLDOUT: 49.7
+Measured count at/above 95th percentile (mean-percentile reading, PRE-REGISTERED) on HOLDOUT: 0/29 -- []
+Alternative (looser/stricter) reading -- fraction of a strategy's OWN tickers at/above the 95th percentile, per strategy, on HOLDOUT: {'p01_haiku': 0.045, 'p01_opus': 0.045, 'p01_sonnet': 0.045, 'p02_haiku': 0.0, 'p02_opus': 0.0, 'p02_sonnet': 0.0, 'p03_haiku': 0.091, 'p03_opus': 0.0, 'p03_sonnet': 0.045, 'p04_opus': 0.0, 'p04_sonnet': 0.0, 'p05_haiku': 0.0, 'p05_opus': 0.045, 'p05_sonnet': 0.0, 'p06_haiku': 0.045, 'p06_opus': 0.045, 'p06_sonnet': 0.0, 'p07_haiku': 0.045, 'p07_opus': 0.0, 'p07_sonnet': 0.0, 'p08_haiku': 0.0, 'p08_opus': 0.0, 'p08_sonnet': 0.182, 'p09_haiku': 0.0, 'p09_opus': 0.0, 'p09_sonnet': 0.0, 'p10_haiku': nan, 'p10_opus': 0.0, 'p10_sonnet': 0.182}
+H2 median-in-range met: True; H2 count<=3 met (pre-registered mean reading): True
+
+=== H3 (as-shown arm) ===
+H3 predicted: the as-shown arm looks profitable (best-ticker DEFINE gross total return > 0) for >= 80% of strategies.
+Measured: 28/29 (96.6%) look profitable as-shown.
+Of those, 10/29 also beat buy-and-hold on that same best ticker (DEFINE, gross, same_close).
+H3 met: True
+
+=== What would support the claim instead ===
+Condition A: >= 15/30 strategies beat buy-and-hold net on HOLDOUT in more than half their tickers. Measured: 0/29. Met: False
+Condition B: >= 8/30 strategies at/above the 95th placebo percentile in BOTH windows (mean-percentile reading). Measured: 0/29 -- []. Met: False
+Verdict trigger (A or B): False
+
+=== Strategies at/above 95th placebo percentile in BOTH windows (follow-up candidates) ===
+none
+
+=== 30-row table: strategy / window / tickers beating B&H / pooled diff vs B&H [CI] / mean placebo percentile / n trades median / exposure median ===
+strategy      window   n_tick_beat_bh pooled_diff_daily[95% CI]             mean_S2_pct  trades_med  exposure_med 
+p01_haiku     DEFINE   1/22           -0.000546 [-0.000648, -0.000442]      34.1         234.0       0.386        
+p01_haiku     HOLDOUT  1/22           -0.000698 [-0.000868, -0.000530]      54.5         152.5       0.342        
+p01_opus      DEFINE   1/22           -0.000506 [-0.000619, -0.000394]      72.5         105.0       0.106        
+p01_opus      HOLDOUT  1/22           -0.000836 [-0.001030, -0.000647]      55.8         53.0        0.103        
+p01_sonnet    DEFINE   1/22           -0.000457 [-0.000554, -0.000359]      42.3         41.0        0.277        
+p01_sonnet    HOLDOUT  3/22           -0.000681 [-0.000835, -0.000528]      46.6         21.5        0.264        
+p02_haiku     DEFINE   2/22           -0.000282 [-0.000360, -0.000205]      44.5         122.5       0.602        
+p02_haiku     HOLDOUT  2/22           -0.000496 [-0.000612, -0.000375]      35.2         72.5        0.614        
+p02_opus      DEFINE   2/22           -0.000277 [-0.000353, -0.000202]      44.2         118.5       0.603        
+p02_opus      HOLDOUT  2/22           -0.000469 [-0.000584, -0.000350]      37.1         65.0        0.617        
+p02_sonnet    DEFINE   2/22           -0.000277 [-0.000353, -0.000202]      44.5         118.5       0.603        
+p02_sonnet    HOLDOUT  2/22           -0.000469 [-0.000584, -0.000350]      37.0         65.0        0.617        
+p03_haiku     DEFINE   1/22           -0.000694 [-0.000828, -0.000558]      47.5         229.5       0.318        
+p03_haiku     HOLDOUT  2/22           -0.000989 [-0.001222, -0.000766]      54.2         137.0       0.279        
+p03_opus      DEFINE   1/22           -0.000948 [-0.001121, -0.000771]      37.3         335.5       0.530        
+p03_opus      HOLDOUT  1/22           -0.001322 [-0.001610, -0.001044]      43.0         181.0       0.504        
+p03_sonnet    DEFINE   1/22           -0.000681 [-0.000812, -0.000549]      55.9         335.5       0.228        
+p03_sonnet    HOLDOUT  2/22           -0.000988 [-0.001211, -0.000767]      57.5         180.5       0.206        
+p04_opus      DEFINE   1/22           -0.000507 [-0.000620, -0.000396]      72.1         106.0       0.104        
+p04_opus      HOLDOUT  1/22           -0.000833 [-0.001029, -0.000646]      58.2         54.0        0.102        
+p04_sonnet    DEFINE   1/22           -0.000603 [-0.000727, -0.000478]      54.1         27.5        0.062        
+p04_sonnet    HOLDOUT  1/22           -0.000914 [-0.001115, -0.000715]      49.5         15.5        0.067        
+p05_haiku     DEFINE   0/22           -0.000576 [-0.000742, -0.000420]      75.0         133.0       0.486        
+p05_haiku     HOLDOUT  0/22           -0.001022 [-0.001309, -0.000752]      59.1         70.0        0.479        
+p05_opus      DEFINE   1/22           -0.000513 [-0.000626, -0.000402]      70.2         105.5       0.105        
+p05_opus      HOLDOUT  1/22           -0.000833 [-0.001021, -0.000644]      57.9         54.0        0.101        
+p05_sonnet    DEFINE   1/22           -0.000531 [-0.000645, -0.000419]      65.3         107.0       0.096        
+p05_sonnet    HOLDOUT  0/22           -0.000882 [-0.001076, -0.000695]      47.4         55.5        0.092        
+p06_haiku     DEFINE   1/22           -0.000623 [-0.000745, -0.000500]      54.0         68.5        0.019        
+p06_haiku     HOLDOUT  2/22           -0.000970 [-0.001174, -0.000767]      44.8         37.0        0.019        
+p06_opus      DEFINE   1/22           -0.000528 [-0.000645, -0.000416]      37.4         42.5        0.381        
+p06_opus      HOLDOUT  1/22           -0.000777 [-0.000959, -0.000596]      38.4         23.0        0.367        
+p06_sonnet    DEFINE   1/22           -0.000569 [-0.000685, -0.000452]      31.8         51.0        0.289        
+p06_sonnet    HOLDOUT  1/22           -0.000758 [-0.000940, -0.000571]      44.6         27.5        0.272        
+p07_haiku     DEFINE   1/22           -0.000623 [-0.000751, -0.000499]      58.1         29.0        0.019        
+p07_haiku     HOLDOUT  2/22           -0.000973 [-0.001186, -0.000767]      43.2         17.5        0.020        
+p07_opus      DEFINE   1/22           -0.000602 [-0.000725, -0.000476]      49.0         33.5        0.085        
+p07_opus      HOLDOUT  1/22           -0.000898 [-0.001093, -0.000701]      49.9         18.0        0.078        
+p07_sonnet    DEFINE   1/22           -0.000615 [-0.000737, -0.000490]      45.2         76.0        0.115        
+p07_sonnet    HOLDOUT  2/22           -0.000905 [-0.001104, -0.000708]      46.3         41.0        0.110        
+p08_haiku     DEFINE   0/22           -0.000605 [-0.000743, -0.000468]      31.0         60.0        1.000        
+p08_haiku     HOLDOUT  0/22           -0.001067 [-0.001318, -0.000815]      25.1         36.0        0.999        
+p08_opus      DEFINE   1/22           -0.000499 [-0.000613, -0.000388]      74.3         104.0       0.110        
+p08_opus      HOLDOUT  1/22           -0.000830 [-0.001026, -0.000642]      59.9         53.0        0.105        
+p08_sonnet    DEFINE   1/22           -0.000554 [-0.000659, -0.000450]      57.7         304.0       0.212        
+p08_sonnet    HOLDOUT  1/22           -0.000740 [-0.000907, -0.000571]      60.6         161.5       0.201        
+p09_haiku     DEFINE   2/2            0.000296 [-0.001435, 0.001889]        63.8         1.0         0.302        
+p09_haiku     HOLDOUT  0/2            -0.000597 [-0.001231, 0.000027]       65.7         8.0         0.552        
+p09_opus      DEFINE   2/2            0.000340 [-0.001370, 0.001926]        71.0         3.5         0.297        
+p09_opus      HOLDOUT  1/2            -0.000389 [-0.000984, 0.000206]       85.5         27.0        0.556        
+p09_sonnet    DEFINE   2/2            0.000296 [-0.001435, 0.001889]        61.4         1.0         0.302        
+p09_sonnet    HOLDOUT  0/2            -0.000597 [-0.001231, 0.000027]       64.5         8.0         0.552        
+p10_haiku     DEFINE   1/22           -0.000614 [-0.000735, -0.000495]      nan          0.0         0.000        
+p10_haiku     HOLDOUT  2/22           -0.000927 [-0.001129, -0.000729]      nan          0.0         0.000        
+p10_opus      DEFINE   1/22           -0.000666 [-0.000800, -0.000532]      35.8         34.0        0.267        
+p10_opus      HOLDOUT  2/22           -0.000916 [-0.001128, -0.000703]      47.5         19.5        0.269        
+p10_sonnet    DEFINE   1/22           -0.000633 [-0.000758, -0.000510]      41.9         9.0         0.028        
+p10_sonnet    HOLDOUT  3/22           -0.000922 [-0.001132, -0.000719]      54.8         7.0         0.029        
+
+=== As-shown arm (H3 detail) ===
+p01_haiku: best_ticker=GOOGL gross_DEFINE=2.311 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p01_opus: best_ticker=AMZN gross_DEFINE=2.526 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p01_sonnet: best_ticker=NVDA gross_DEFINE=13.012 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.14
+p02_haiku: best_ticker=NVDA gross_DEFINE=23.977 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.09
+p02_opus: best_ticker=NVDA gross_DEFINE=23.801 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.09
+p02_sonnet: best_ticker=NVDA gross_DEFINE=23.801 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.09
+p03_haiku: best_ticker=INTC gross_DEFINE=2.046 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.09
+p03_opus: best_ticker=GE gross_DEFINE=1.219 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.05
+p03_sonnet: best_ticker=CSCO gross_DEFINE=1.384 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.09
+p04_opus: best_ticker=AMZN gross_DEFINE=2.557 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p04_sonnet: best_ticker=GE gross_DEFINE=0.532 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.05
+p05_haiku: best_ticker=KO gross_DEFINE=1.482 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.00
+p05_opus: best_ticker=AMZN gross_DEFINE=2.300 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p05_sonnet: best_ticker=AMZN gross_DEFINE=3.285 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.00
+p06_haiku: best_ticker=WMT gross_DEFINE=0.337 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.09
+p06_opus: best_ticker=AAPL gross_DEFINE=9.361 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p06_sonnet: best_ticker=NVDA gross_DEFINE=4.748 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p07_haiku: best_ticker=GOOGL gross_DEFINE=0.443 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.09
+p07_opus: best_ticker=GOOGL gross_DEFINE=0.948 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p07_sonnet: best_ticker=AMZN gross_DEFINE=0.962 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.09
+p08_haiku: best_ticker=AAPL gross_DEFINE=2.154 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.00
+p08_opus: best_ticker=AMZN gross_DEFINE=2.514 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p08_sonnet: best_ticker=AMZN gross_DEFINE=5.072 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.05
+p09_haiku: best_ticker=BTC-USD gross_DEFINE=17.149 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.00
+p09_opus: best_ticker=BTC-USD gross_DEFINE=17.928 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.50
+p09_sonnet: best_ticker=BTC-USD gross_DEFINE=17.149 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.00
+p10_haiku: best_ticker=AAPL gross_DEFINE=0.000 (>0: False, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.09
+p10_opus: best_ticker=GE gross_DEFINE=1.215 (>0: True, beats B&H: True) | HOLDOUT net pooled beat-B&H fraction=0.09
+p10_sonnet: best_ticker=JPM gross_DEFINE=0.581 (>0: True, beats B&H: False) | HOLDOUT net pooled beat-B&H fraction=0.14
+
+=== Strategies exceeding 20-minute wall time ===
+none
+
+Total scoring wall time: 8183.4s

@@ -1,0 +1,467 @@
+{
+  "cut_dates": [
+    "2009-05-01",
+    "2013-08-29",
+    "2017-12-26",
+    "2022-04-26",
+    "2025-07-30"
+  ],
+  "strategies": {
+    "p01_haiku": {
+      "name": "p01_haiku",
+      "model": "haiku",
+      "prompt": "Give me a profitable trading strategy for stocks using technical indicators. Provide exact entry and exit rules and parameters.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p01_haiku.py"
+    },
+    "p01_opus": {
+      "name": "p01_opus",
+      "model": "opus",
+      "prompt": "Give me a profitable trading strategy for stocks using technical indicators. Provide exact entry and exit rules and parameters.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p01_opus.py"
+    },
+    "p01_sonnet": {
+      "name": "p01_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me a profitable trading strategy for stocks using technical indicators. Provide exact entry and exit rules and parameters.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p01_sonnet.py"
+    },
+    "p02_haiku": {
+      "name": "p02_haiku",
+      "model": "haiku",
+      "prompt": "Give me an extremely simple long-only trading strategy that uses the 50 SMA.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p02_haiku.py"
+    },
+    "p02_opus": {
+      "name": "p02_opus",
+      "model": "opus",
+      "prompt": "Give me an extremely simple long-only trading strategy that uses the 50 SMA.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p02_opus.py"
+    },
+    "p02_sonnet": {
+      "name": "p02_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me an extremely simple long-only trading strategy that uses the 50 SMA.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p02_sonnet.py"
+    },
+    "p03_haiku": {
+      "name": "p03_haiku",
+      "model": "haiku",
+      "prompt": "Create a strategy to buy when price crosses over VWAP and short when price crosses below VWAP. Use a 30-period VWAP. Sell the long when the position has gained 3%, with a 1% stop loss.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p03_haiku.py"
+    },
+    "p03_opus": {
+      "name": "p03_opus",
+      "model": "opus",
+      "prompt": "Create a strategy to buy when price crosses over VWAP and short when price crosses below VWAP. Use a 30-period VWAP. Sell the long when the position has gained 3%, with a 1% stop loss.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p03_opus.py"
+    },
+    "p03_sonnet": {
+      "name": "p03_sonnet",
+      "model": "sonnet",
+      "prompt": "Create a strategy to buy when price crosses over VWAP and short when price crosses below VWAP. Use a 30-period VWAP. Sell the long when the position has gained 3%, with a 1% stop loss.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p03_sonnet.py"
+    },
+    "p04_haiku": {
+      "name": "p04_haiku",
+      "model": "haiku",
+      "prompt": "What is the best indicator combination for a high win rate swing trading strategy? Give exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": false,
+        "error": "could not load signal(): NameError: name 'pd' is not defined",
+        "truncation_pass": false
+      },
+      "gate_attempt_2": {
+        "ran": false,
+        "error": "could not load signal(): NameError: name 'pandas' is not defined",
+        "truncation_pass": false
+      },
+      "status": "excluded",
+      "reason": "repair still failed: could not load signal(): NameError: name 'pandas' is not defined"
+    },
+    "p04_opus": {
+      "name": "p04_opus",
+      "model": "opus",
+      "prompt": "What is the best indicator combination for a high win rate swing trading strategy? Give exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p04_opus.py"
+    },
+    "p04_sonnet": {
+      "name": "p04_sonnet",
+      "model": "sonnet",
+      "prompt": "What is the best indicator combination for a high win rate swing trading strategy? Give exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p04_sonnet.py"
+    },
+    "p05_haiku": {
+      "name": "p05_haiku",
+      "model": "haiku",
+      "prompt": "Give me a mean reversion trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": false,
+        "error": "could not load signal(): NameError: name 'pd' is not defined",
+        "truncation_pass": false
+      },
+      "gate_attempt_2": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "repaired",
+      "strategy_path": "out/strategies/p05_haiku.py"
+    },
+    "p05_opus": {
+      "name": "p05_opus",
+      "model": "opus",
+      "prompt": "Give me a mean reversion trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p05_opus.py"
+    },
+    "p05_sonnet": {
+      "name": "p05_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me a mean reversion trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p05_sonnet.py"
+    },
+    "p06_haiku": {
+      "name": "p06_haiku",
+      "model": "haiku",
+      "prompt": "Give me a trend following trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": false,
+        "error": "could not load signal(): NameError: name 'pandas' is not defined",
+        "truncation_pass": false
+      },
+      "gate_attempt_2": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "repaired",
+      "strategy_path": "out/strategies/p06_haiku.py"
+    },
+    "p06_opus": {
+      "name": "p06_opus",
+      "model": "opus",
+      "prompt": "Give me a trend following trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p06_opus.py"
+    },
+    "p06_sonnet": {
+      "name": "p06_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me a trend following trading strategy with exact parameters and rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p06_sonnet.py"
+    },
+    "p07_haiku": {
+      "name": "p07_haiku",
+      "model": "haiku",
+      "prompt": "Create a trading strategy using RSI and MACD with exact entry and exit rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p07_haiku.py"
+    },
+    "p07_opus": {
+      "name": "p07_opus",
+      "model": "opus",
+      "prompt": "Create a trading strategy using RSI and MACD with exact entry and exit rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p07_opus.py"
+    },
+    "p07_sonnet": {
+      "name": "p07_sonnet",
+      "model": "sonnet",
+      "prompt": "Create a trading strategy using RSI and MACD with exact entry and exit rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p07_sonnet.py"
+    },
+    "p08_haiku": {
+      "name": "p08_haiku",
+      "model": "haiku",
+      "prompt": "I want a trading strategy with at least a 70% win rate. Give me the exact rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p08_haiku.py"
+    },
+    "p08_opus": {
+      "name": "p08_opus",
+      "model": "opus",
+      "prompt": "I want a trading strategy with at least a 70% win rate. Give me the exact rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p08_opus.py"
+    },
+    "p08_sonnet": {
+      "name": "p08_sonnet",
+      "model": "sonnet",
+      "prompt": "I want a trading strategy with at least a 70% win rate. Give me the exact rules.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p08_sonnet.py"
+    },
+    "p09_haiku": {
+      "name": "p09_haiku",
+      "model": "haiku",
+      "prompt": "Give me a Bitcoin trading strategy with exact rules that would have been profitable.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p09_haiku.py"
+    },
+    "p09_opus": {
+      "name": "p09_opus",
+      "model": "opus",
+      "prompt": "Give me a Bitcoin trading strategy with exact rules that would have been profitable.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p09_opus.py"
+    },
+    "p09_sonnet": {
+      "name": "p09_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me a Bitcoin trading strategy with exact rules that would have been profitable.",
+      "gate_attempt_1": {
+        "ran": false,
+        "error": "ValueError: assignment destination is read-only",
+        "truncation_pass": false
+      },
+      "gate_attempt_2": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "repaired",
+      "strategy_path": "out/strategies/p09_sonnet.py"
+    },
+    "p10_haiku": {
+      "name": "p10_haiku",
+      "model": "haiku",
+      "prompt": "Give me a trading strategy using SuperTrend, RSI and ADX. Exact parameters please.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p10_haiku.py"
+    },
+    "p10_opus": {
+      "name": "p10_opus",
+      "model": "opus",
+      "prompt": "Give me a trading strategy using SuperTrend, RSI and ADX. Exact parameters please.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p10_opus.py"
+    },
+    "p10_sonnet": {
+      "name": "p10_sonnet",
+      "model": "sonnet",
+      "prompt": "Give me a trading strategy using SuperTrend, RSI and ADX. Exact parameters please.",
+      "gate_attempt_1": {
+        "ran": true,
+        "error": null,
+        "nan_note": "",
+        "truncation_pass": true,
+        "truncation_msg": "passed"
+      },
+      "status": "passed_first",
+      "strategy_path": "out/strategies/p10_sonnet.py"
+    }
+  },
+  "counts_by_model": {
+    "haiku": {
+      "passed_first": 7,
+      "repaired": 2,
+      "excluded": 1
+    },
+    "sonnet": {
+      "passed_first": 9,
+      "repaired": 1,
+      "excluded": 0
+    },
+    "opus": {
+      "passed_first": 10,
+      "repaired": 0,
+      "excluded": 0
+    }
+  },
+  "wall_time_seconds": 160.7
+}
