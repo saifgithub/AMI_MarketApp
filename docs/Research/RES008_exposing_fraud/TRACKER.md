@@ -20,7 +20,7 @@ Last updated: 2026-09-17.
 |:--|:--|:--|:--|:--|:--|:--|:--|
 | C01 | A neural network (LSTM) predicts tomorrow's stock price | 2 videos · 1.95M | prereg | — | `3ac320eb` | — | — |
 | C02 | A chatbot wrote me a profitable strategy | 3 videos · 3.28M | prereg | — | `3ac320eb` | — | — |
-| C03 | Keep tweaking until the backtest is spectacular (+10× margin) | within C02's videos + 2 more | prereg | — | `3ac320eb` | — | — |
+| C03 | Keep tweaking until the backtest is spectacular (+10× margin) | within C02's videos + 2 more | closed 2026-09-17 | `DISPROVED` (selection without a holdout) — best of 420 lands at the 54.5th percentile afterwards (41.8–66.3); below buy-and-hold on 21 of 23; best of 420 *random* strategies out-backtests the tuned winner on 23 of 23; 10× BTC winner liquidated 26 times in its own tuning window | `3ac320eb` | [RESULTS](C03_tune_until_spectacular/RESULTS.md) | [brief](C03_tune_until_spectacular/VIDEO_BRIEF.md) |
 | C04 | A 90% win rate proves the strategy works | 4 videos · 2.99M | prereg | — | `3ac320eb` | — | — |
 | C05 | The "99% win rate" scalping recipe (ATR trailing stop + Schaff trend cycle) | 2 videos · 2.17M | prereg | — | `3ac320eb` | — | — |
 | C06 | An "AI" grid / band robot earns passive income in any market | 3 videos · 0.92M | closed 2026-09-17 | `NOT SUPPORTED` — dashboard "grid profit" positive in 99.65% of runs, account down in 36.80%; 5× liquidated in 32.54%; grid ties buy-and-hold (51.09%) — two of our four predictions wrong | `3ac320eb` | [RESULTS](C06_ai_grid_bot_passive_income/RESULTS.md) | [brief](C06_ai_grid_bot_passive_income/VIDEO_BRIEF.md) |

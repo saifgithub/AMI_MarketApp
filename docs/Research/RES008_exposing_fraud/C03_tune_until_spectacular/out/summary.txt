@@ -1,0 +1,77 @@
+C03 -- keep tweaking until the backtest is spectacular
+
+Instruments: 23  Grid size: 420
+Pooled mean T1 (holdout percentile of tuning-window winner): 54.52  95% CI [41.80, 66.34] (iid bootstrap over instruments, n_boot=5000, seed=0)
+Median T2 (Spearman tune vs holdout, across instruments): 0.163
+Instruments with T3 < 0 (winner holdout return below buy-and-hold): 21 / 23
+
+Per-instrument T1 / T3:
+  AAPL       T1=  89.8  T2=  0.518  T3=  -3.8991  winner=st14x3_rsi28>50_adxnone
+  MSFT       T1=  30.7  T2=  0.114  T3=  -3.7029  winner=st7x4_rsi14>50_adx14>20
+  AMZN       T1=  59.8  T2=  0.601  T3=  -2.2039  winner=st21x2_rsi14>50_adxnone
+  GOOGL      T1=  70.5  T2=  0.462  T3=  -2.9848  winner=st7x3_rsinone_adxnone
+  META       T1=  92.6  T2=  0.396  T3=   0.4178  winner=st21x3_rsi28>50_adxnone
+  NVDA       T1=  23.3  T2= -0.050  T3= -59.5917  winner=st14x4_rsi28>50_adx14>20
+  TSLA       T1=  67.4  T2=  0.160  T3=  -6.7010  winner=st21x4_rsi14>60_adx7>30
+  JPM        T1=   5.7  T2=  0.055  T3=  -3.4286  winner=st7x3_rsi28>50_adx7>30
+  JNJ        T1=  54.3  T2=  0.007  T3=  -1.2812  winner=st7x3_rsinone_adx14>30
+  XOM        T1=  29.8  T2=  0.182  T3=  -1.8214  winner=st14x2_rsi14>60_adx14>30
+  PG         T1=   1.2  T2= -0.275  T3=  -1.1283  winner=st10x2_rsi28>40_adxnone
+  KO         T1=  56.4  T2= -0.002  T3=  -1.2470  winner=st21x4_rsi14>60_adx7>20
+  WMT        T1=  82.6  T2=  0.610  T3=  -1.5604  winner=st21x4_rsi14>50_adx7>20
+  DIS        T1=  36.7  T2= -0.059  T3=   0.1108  winner=st7x3_rsi28>50_adx7>30
+  INTC       T1=  46.7  T2=  0.180  T3=  -1.2808  winner=st14x2_rsi14>40_adx14>20
+  CSCO       T1=  82.6  T2=  0.614  T3=  -0.9388  winner=st10x4_rsi14>60_adx7>30
+  BA         T1=  19.5  T2= -0.621  T3=  -0.0078  winner=st14x4_rsi14>60_adxnone
+  GE         T1=   1.7  T2= -0.133  T3=  -7.5983  winner=st7x2_rsinone_adx14>30
+  PFE        T1=  73.8  T2= -0.639  T3=  -0.0127  winner=st10x3_rsi14>50_adx14>20
+  T          T1=  90.0  T2=  0.605  T3=  -0.2992  winner=st21x4_rsi14>60_adxnone
+  SPY        T1=  81.0  T2=  0.383  T3=  -1.4125  winner=st21x4_rsi14>50_adx7>30
+  QQQ        T1=  92.4  T2=  0.545  T3=  -1.5876  winner=st14x4_rsi14>50_adx7>30
+  BTC-USD    T1=  65.7  T2=  0.163  T3=  -0.6035  winner=st7x2_rsi14>40_adx7>20
+
+Part 2 -- tuned winner vs best of 420 random long/flat placebos (tuning window):
+  AAPL       tuned_winner=  21.3488  best_random=  38.6607
+  MSFT       tuned_winner=   2.5503  best_random=   6.9503
+  AMZN       tuned_winner=  20.3394  best_random=  38.0818
+  GOOGL      tuned_winner=   6.2381  best_random=  12.7990
+  META       tuned_winner=   1.5771  best_random=   7.1372
+  NVDA       tuned_winner=  36.1018  best_random=  50.5985
+  TSLA       tuned_winner=   7.0182  best_random=  20.0773
+  JPM        tuned_winner=   0.9473  best_random=   8.6047
+  JNJ        tuned_winner=   1.0877  best_random=   3.0532
+  XOM        tuned_winner=   0.5989  best_random=   2.1093
+  PG         tuned_winner=   1.7720  best_random=   2.4920
+  KO         tuned_winner=   0.7456  best_random=   3.4588
+  WMT        tuned_winner=   0.9893  best_random=   2.2826
+  DIS        tuned_winner=   3.8783  best_random=   8.1654
+  INTC       tuned_winner=   2.2412  best_random=   4.6039
+  CSCO       tuned_winner=   0.6872  best_random=   4.5396
+  BA         tuned_winner=   5.0988  best_random=  12.5155
+  GE         tuned_winner=   0.6392  best_random=   1.4508
+  PFE        tuned_winner=   1.6737  best_random=   3.1891
+  T          tuned_winner=   0.9052  best_random=   3.0196
+  SPY        tuned_winner=   1.1938  best_random=   2.0879
+  QQQ        tuned_winner=   1.7822  best_random=   4.0048
+  BTC-USD    tuned_winner= 118.8856  best_random= 135.0737
+
+Part 3 -- BTC tuned winner (st7x2_rsi14>40_adx7>20) at leverage:
+  tuning window:
+    10x as-shown net return: -1.0000  liquidation events: 26  dates: ['2015-01-28', '2015-02-15', '2015-03-18', '2015-11-10', '2015-12-26', '2016-01-15', '2016-06-21', '2017-01-05', '2017-02-09', '2017-05-26', '2017-05-27', '2017-06-12', '2017-06-14', '2017-09-04', '2017-12-08', '2017-12-09', '2017-12-10', '2018-01-08', '2018-01-11', '2018-03-07', '2018-11-14', '2019-05-17', '2019-06-27', '2020-05-10', '2020-09-03', '2020-11-26']
+    10x liquidated-path final equity multiple: 0.000000
+    [extra, not pre-registered] 5x as-shown net return: 6185.9231  liquidation events: 1  dates: ['2017-01-05']
+  holdout window:
+    10x as-shown net return: -1.0000  liquidation events: 14  dates: ['2021-01-04', '2021-01-10', '2021-01-11', '2021-02-22', '2021-02-23', '2021-04-18', '2021-05-12', '2021-06-21', '2021-09-07', '2022-08-19', '2022-09-13', '2022-11-08', '2024-03-05', '2025-10-10']
+    10x liquidated-path final equity multiple: 0.000000
+    [extra, not pre-registered] 5x as-shown net return: -0.9900  liquidation events: 1  dates: ['2021-01-11']
+
+Hypotheses:
+  H1 (mean T1 < 65, CI includes 50): True
+  H2 (T3 < 0 for majority of instruments): True
+  H3 (BTC 10x liquidated at least once in tuning window): True
+
+What would support the claim instead:
+  mean T1 >= 75 with CI excluding 50 AND T3 > 0 majority: False
+  10x path never liquidated in either window: False
+
+Wall time: 2197.4s
