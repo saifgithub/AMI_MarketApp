@@ -19,7 +19,9 @@ Checks, in order of what has actually gone wrong here before:
 
   identity    the container reports the commit and tag that were just promoted
               — F2, because until now nothing recorded what was running
-  readiness   /v1/ready green: DB, schema at head (DEF215), LLM resolved
+  readiness   /v1/ready green: DB, schema at head (DEF215), LLM resolved AND
+              not observed failing (DEF413 — "registered" was reading as
+              "answering", so this passed through an LLM outage)
   config      every populated key in infra/alpha.env reads configured=true in
               the container — DEF038, DEF063, and the class DEF260 belongs to
   market      the quote path is not silently on the mock walk
@@ -451,7 +453,12 @@ def check_migration_heads(
 
 
 def check_readiness(base: str, secret: str, timeout: int) -> list[str]:
-    """DEF215's detector, plus DB and provider resolution."""
+    """DEF215's detector, plus DB and provider resolution.
+
+    The gating-probe detail is printed verbatim below, which is how DEF413's
+    new `liveness` / `liveness_as_of` / `liveness_error` fields reach the
+    operator without this function needing to know about them.
+    """
     status, body = _get(f"{base}/v1/ready", secret, timeout)
     if status == 200 and body.get("ready") is True:
         return []

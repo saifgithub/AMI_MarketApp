@@ -98,24 +98,44 @@ def _probe_schema() -> Probe:
 
 
 def _probe_llm(env: str) -> Probe:
-    """Provider resolution only — never calls the provider.
+    """Resolution AND observed liveness — still never calls the provider.
 
     Gating in `staging`/`prod` because of DEF059: with the LLM down the Room
     fell through to a confident fake APPROVE. A promotion that lands a container
     whose gateway resolves to `mock` has shipped that failure mode.
+
+    DEF413 widened it. Resolution alone could only catch `mock`, because
+    `has_real_provider` is a config fact — it says a provider is registered,
+    never that it answers. Measured 2026-09-17: the vLLM host lost its route
+    and this probe went on returning ok with `failed_probes: []` while the
+    container's own logs read `No route to host`. `mock` and
+    registered-but-dead are the same end state by different routes, and only
+    one of them was being caught.
+
+    So `failed` now fails the probe: the gateway's last call to the active
+    provider did not complete. `unknown` does NOT — a container that has served
+    no traffic has no evidence, and failing on absence of evidence would red
+    every cold start before it answered a single request. That asymmetry is
+    deliberate: this probe's job is to catch a provider we have positively seen
+    fail, not to demand proof of life the process cannot yet have.
     """
     from app.services.llm_gateway import get_llm_gateway
 
     try:
         status = get_llm_gateway().status()
         real = bool(status.get("has_real_provider"))
+        liveness = status.get("active_provider_liveness") or {}
+        state = liveness.get("state")
         return Probe(
             "llm",
-            ok=real,
+            ok=real and state != "failed",
             gating=env in ("staging", "prod"),
             detail={
                 "active_provider": status.get("active_provider"),
                 "has_real_provider": real,
+                "liveness": state,
+                "liveness_as_of": liveness.get("as_of"),
+                "liveness_error": liveness.get("error"),
             },
         )
     except Exception as exc:

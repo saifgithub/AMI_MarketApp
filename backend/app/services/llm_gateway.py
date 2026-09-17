@@ -37,6 +37,7 @@ import asyncio
 import random
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 import httpx
@@ -928,6 +929,12 @@ class LLMGateway:
 
     def __init__(self) -> None:
         self._providers: dict[str, LLMProvider] = {"mock": MockProvider()}
+        # DEF413 — last transport outcome per provider name. In-process and
+        # deliberately not persisted: it describes what THIS container observed,
+        # and a restart genuinely has no evidence yet ("unknown"), which is a
+        # different claim from "unreachable" and must not be able to
+        # masquerade as one by outliving the process that measured it.
+        self._transport: dict[str, dict[str, Any]] = {}
 
         if settings.vllm_base_url:
             self._providers["vllm"] = VLLMProvider(
@@ -1072,7 +1079,61 @@ class LLMGateway:
             )
 
     def has_real_provider(self) -> bool:
+        """Is a non-mock provider REGISTERED.
+
+        Registration is a config fact: a provider registers when its settings
+        are present, never when it answers. DEF413 is what that costs when the
+        two are conflated — the vLLM host lost its route and this kept
+        returning True, so `/v1/llm/status`, `/v1/ready` and a promotion smoke
+        check all read healthy with no model behind them. Kept as-is because
+        callers that fall back to a scripted path (`agent_runner`,
+        `brief_engine`, `portfolio_finding`) genuinely want "is one configured";
+        `provider_liveness()` is the separate question of whether it answers.
+        """
         return any(name != "mock" for name in self._providers)
+
+    def note_transport_outcome(
+        self, provider: str, *, ok: bool, error: str | None = None
+    ) -> None:
+        """Record what the wire just did, for `provider`.
+
+        DEF413. The gateway sees every call's transport outcome already; this
+        keeps the last one per provider so the fact survives to `status()`
+        instead of dying in a log line. Deliberately NOT a health probe: no
+        request is made on its behalf, so a health endpoint can never fan out
+        to a GPU host, and nothing here runs on the read path.
+
+        `ok` is a TRANSPORT judgement, not a quality one. A model that answers
+        badly is reachable; only a failure to complete the exchange counts as
+        unreachable, because the question this answers is "is anything there".
+        """
+        self._transport[provider] = {
+            "ok": ok,
+            "at": datetime.now(timezone.utc),
+            "error": (error or None) if not ok else None,
+        }
+
+    def provider_liveness(self, provider: str | None = None) -> dict[str, object]:
+        """What the last call to `provider` (default: the active one) did.
+
+        Three states, and the third is the point: `ok` / `failed` / **`unknown`**
+        — no call has been made since this process started, so the gateway has
+        no evidence either way. `unknown` must never be read as healthy (that
+        is DEF413 restated) and must never be read as broken either, or every
+        cold container fails its own readiness gate before serving one request.
+        The caller decides what an absence of evidence is worth; see
+        `readiness._probe_llm`, which gates on `failed` alone.
+        """
+        name = provider or self._active_provider_name()
+        seen = self._transport.get(name)
+        if seen is None:
+            return {"provider": name, "state": "unknown", "as_of": None, "error": None}
+        return {
+            "provider": name,
+            "state": "ok" if seen["ok"] else "failed",
+            "as_of": seen["at"].isoformat(),
+            "error": seen["error"],
+        }
 
     async def check_prefix_cache_at_startup(self) -> None:
         """CR077 Phase 0 second guard — no-op when vLLM isn't registered."""
@@ -1118,6 +1179,13 @@ class LLMGateway:
             "providers_registered": sorted(self._providers.keys()),
             "active_provider": active,
             "has_real_provider": self.has_real_provider(),
+            # DEF413 — the second, separate fact. `has_real_provider` says a
+            # provider is CONFIGURED; this says whether the last call to the
+            # active one actually completed. They were one name for two claims,
+            # and the operator surface read healthy through an outage because of
+            # it. Never a call: this is the recorded outcome of traffic that
+            # already happened.
+            "active_provider_liveness": self.provider_liveness(active),
             "tier_to_model": tier_to_model,
         }
 
@@ -1316,6 +1384,17 @@ class LLMGateway:
             # raise: a real exception is the more specific fact and keeps priority.
             if error_str is None and call_meta.get("stream_error"):
                 error_str = f"stream_error: {str(call_meta['stream_error'])[:400]}"
+            # DEF413 — settle the LIVENESS half. Recorded here rather than at
+            # the `except` because a stream error is an in-band failure that
+            # never raises (DEF376's frame), and both shapes mean the same
+            # thing to this question: the exchange did not complete. `buf`
+            # is not consulted — an empty-but-clean answer is a reachable
+            # provider with nothing to say, which is a quality problem, not a
+            # transport one, and conflating the two is how a working host gets
+            # reported dead.
+            self.note_transport_outcome(
+                provider.name, ok=error_str is None, error=error_str
+            )
             # CR141: whatever the provider wrote into call_meta["usage"] (see
             # AnthropicProvider / OpenAICompatibleProvider above). `.get()`
             # on a missing/partial dict yields None per field, never 0 — a
