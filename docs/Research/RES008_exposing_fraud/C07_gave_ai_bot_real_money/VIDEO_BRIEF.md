@@ -23,8 +23,8 @@ A wall of small equity lines, half green, half red, one circled. Text: "2,000 bo
 
 ## Hook (0:00–0:20) — spoken, verbatim
 
-> "AI trading bot, tested with real money: it runs for a week, it beats the market, the video gets
-> six million views. We tested that a different way. We built two thousand bots that have no
+> "AI trading bot, tested with real money: it runs for a week, it beats the market, and videos
+> making that claim have been watched more than six million times. We tested that a different way. We built two thousand bots that have no
 > skill at all — they pick stocks at random — and ran every week since 2005. In any given week,
 > half of them beat the market. One in seven beat it by three points. So what did that winning
 > week tell you?"
