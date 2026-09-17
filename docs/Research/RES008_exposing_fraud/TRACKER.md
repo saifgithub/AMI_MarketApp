@@ -10,7 +10,7 @@ unless new *data* exists (not new enthusiasm). IDs are never reused.
 Status: `prereg` (pre-registration committed, not yet run) · `running` · `closed` · `parked` (blocked, reason given).
 Verdicts: see the vocabulary in [`README.md`](README.md).
 
-Last updated: 2026-09-17.
+Last updated: 2026-09-17 — all eight C-claims closed; release order in CHANNEL_PLAN.md §6a.
 
 ---
 

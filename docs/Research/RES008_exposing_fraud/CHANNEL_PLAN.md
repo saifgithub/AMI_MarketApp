@@ -96,8 +96,44 @@ strategy. It won 4 times in 10."
 
 ## 6. Release order and calendar
 
-See §6a, filled in once verdicts exist — episodes are ordered by verdict strength × reach, and a
-claim that holds changes the line-up.
+Episodes are ordered by verdict strength × reach, and a claim that holds changes the line-up.
+All eight C-claims closed on 2026-09-17; §6a is the resulting order.
+
+### 6a. Release order (verdicts as of 2026-09-17)
+
+**Ordering rule.** `DISPROVED` first, largest measured reach first. Then `NOT SUPPORTED`. The one
+`PARTLY HOLDS` runs after the episode it depends on. Three judgment calls override the sort, each
+stated: C04 leads because it explains the win-rate number that headlines most claim classes; C03 follows C02 because it is the same
+viewer's next step; C01 runs ahead of C08 (smaller reach) because it opens the builders' audience
+(§2) on an evergreen search term. Reach is views of the videos we read, not a forecast of ours.
+
+| Wk | Episode | Verdict | Reach of the claim class | Why here | Depends on |
+|:--|:--|:--|:--|:--|:--|
+| 1 | **C04** — a 90% win rate proves it works | `DISPROVED` | 4 videos · 2.99M | The explainer for the number the other episodes keep meeting. Its brief uses C05, C06 and C07 as worked examples; C02's brief links back to it. Evergreen keyword. | — |
+| 2 | **C07** — "I gave an AI bot real money" | `DISPROVED` | 2 videos · 6.12M | Largest reach in the survey. | — |
+| 3 | **C02** — a chatbot wrote me a profitable strategy | `DISPROVED` | 3 videos · 3.28M | Second-largest reach. | links C04 |
+| 4 | **C03** — keep tweaking until the backtest is spectacular | `DISPROVED` | inside C02's videos + 2 | The sequel to week 3: what the viewer does after the chatbot's first draft. **Review point** (§8) after this one. | C02 out |
+| 5 | **C01** — a neural network predicts tomorrow's price | `NOT SUPPORTED` | 2 videos · 1.95M | Opens the builders' audience; strongest single visual in the series. First episode where one of our predictions missed — say so. | — |
+| 6 | **C08** — a chatbot's ten stock picks beat the index | `NOT SUPPORTED` | 2 videos · 2.76M | Pairs with C07 on "how long luck lasts". | links C07 |
+| 7 | **P20 + P21** — what *is* real: volatility is forecastable, and it costs return | `HOLDS` | — (ours) | Mid-series proof that we publish what holds. Supports message 3 (§3). | **brief not yet written** |
+| 8 | **C05** — the "99% win rate" recipe | `PARTLY HOLDS` | 2 videos · 2.17M | The "what is true and what is not" episode: headline fails (33–44%), a secondary condition scored for the claim under a yardstick we then found flawed. Needs C04's dial first. | C04 out · **Saiful: publish as is, or hold for the B09 re-test** |
+| 9 | **P06** — a contest-winning return proves skill | `NOT SUPPORTED` | — (prior work) | Same idea as C07/C08 from another angle; brief exists. | — |
+| 10 | **C06** — an "AI" grid robot earns passive income | `NOT SUPPORTED` | 3 videos · 0.92M | Smallest reach; two of our four predictions were wrong, which the episode leads with. | — |
+| 11 | **P01** — machine learning predicts stock direction | `DISPROVED` | — (prior work) | Follow-up for the C01 audience; brief exists. | C01 out |
+| 12 | **P04** — stop after k losses | `DISPROVED` mechanically | — (prior work) | Closes on behaviour, the bridge to what AMI Trade trains. | — |
+
+**Cadence.** Weekly is the ceiling (§9); at one a fortnight the order is unchanged and the table
+spans 24 weeks. Each episode's Short goes out 2–3 days after it; the Reddit/X post (result + repo
+link, never the app) goes with C03, C01 and P01, where the builders are.
+
+**Before week 1.** Channel identity, description and pinned-comment templates, store campaign
+links (§8 cannot measure installs without them), lawyer read (§9) — and three episodes finished
+and banked, so a slipped week does not break the run.
+
+**What changes this table.** (a) If C05 is held, P02 + P03 ("volatility signals that do not
+predict direction") take week 8 and C05 returns after B09. (b) A verified error in any closed
+claim pulls its episode until the correction is in the repo. (c) After the week-4 review, title
+pattern and runtime may change; the order does not.
 
 ## 7. Assets to produce
 
@@ -143,6 +179,11 @@ Review after episode 4, then monthly. No targets until then.
 the AMI brand account; lawyer read of the disclaimer + posture; store campaign links for install
 attribution.
 
-**Claude:** close the eight claims; write a `VIDEO_BRIEF.md` for each that fails; chart packs in
-the AMI palette; scripts from the briefs; the five-questions one-pager; episode-page template on
-the site.
+**Saiful, from §6a:** publish C05 (`PARTLY HOLDS`) as written in week 8, or hold it for the B09
+re-test; C02's title 1 uses the genre's search keyword (a vendor's chatbot name) — accept, or use
+titles 2/3.
+
+**Claude — done 2026-09-17:** eight claims closed; a `VIDEO_BRIEF.md` for all eight and for P01,
+P04, P06; the five-questions one-pager ([`FIVE_QUESTIONS.md`](FIVE_QUESTIONS.md)).
+**Claude — next:** P20 + P21 brief (week 7); chart packs in the AMI palette; scripts from the
+briefs; episode-page template on the site; B09 pre-registration if C05 is held.
