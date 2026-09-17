@@ -1,0 +1,6 @@
+# Provenance (video IDs, channel names, transcript index) is internal-only.
+# This repo is public and RES008 never names a channel — see README "Publication rules".
+_internal/
+# Downloaded price caches are reproducible from code and do not belong in git.
+**/cache/
+**/__pycache__/
