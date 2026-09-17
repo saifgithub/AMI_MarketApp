@@ -31,12 +31,12 @@ Last updated: 2026-09-17.
 
 | ID | Claim | Verdict as recorded | Evidence | Episode-ready? |
 |:--|:--|:--|:--|:--|
-| P01 | ML predicts stock direction | DISPROVED — edge negative in 30/32 cells vs always-up; AUC 0.5055 once beta removed | `docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md` | yes — evidence is in this repo |
+| P01 | ML predicts stock direction | DISPROVED — edge negative in 30/32 cells vs always-up; AUC 0.5055 once beta removed | `docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md` | yes — evidence is in this repo · [brief](P_prior_work/P01_ml_predicts_direction/VIDEO_BRIEF.md) |
 | P02 | A volatility/gamma "flip" predicts downside | NOT SUPPORTED — 0 of 18 | RES001 part 04 | yes |
 | P03 | Volatility regime predicts direction | NOT SUPPORTED — sign flips across windows | RES001 part 03 | yes |
-| P04 | Stop after k losses improves results | DISPROVED mechanically (below placebo 10/12); behavioural value only | RES001 part 06 | yes |
+| P04 | Stop after k losses improves results | DISPROVED mechanically (below placebo 10/12); behavioural value only | RES001 part 06 | yes · [brief](P_prior_work/P04_stop_after_k_losses/VIDEO_BRIEF.md) |
 | P05 | Volume-without-progress predicts reversal | NOT SUPPORTED on a daily proxy — cannot speak to tick data | RES001 part 06 | yes, with the resolution caveat |
-| P06 | A contest-winning return proves skill | NOT SUPPORTED — it is the expected maximum of zero-skill entrants | RES001 part 03 §E | yes |
+| P06 | A contest-winning return proves skill | NOT SUPPORTED — it is the expected maximum of zero-skill entrants | RES001 part 03 §E | yes · [brief](P_prior_work/P06_contest_win_proves_skill/VIDEO_BRIEF.md) |
 | P07 | Pre-FOMC drift is tradeable | DISPROVED in 2015–2026; real before | Aegis edge-hunt P1 (private repo) | needs evidence re-hosted |
 | P08 | FX fix / month-end continuation | PARTLY HOLDS — real gross, killed net of costs on a true holdout | Aegis edge-hunt P3/P3b (private) | needs evidence re-hosted |
 | P09 | Regime timing beats buy-and-hold | DISPROVED — 0 of 207 pass | Aegis cemetery T-005, Tier-1 report (private) | verify primary first |
