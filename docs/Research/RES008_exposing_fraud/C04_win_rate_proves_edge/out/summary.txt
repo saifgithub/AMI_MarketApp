@@ -1,0 +1,96 @@
+C04 -- 'A win rate proves the strategy works' -- results summary
+========================================================================
+
+Seed: 20260917
+DEFINE window: 2005-01-01 -> 2018-12-31 (volatility scale s frozen here)
+Full history: 2005-01-01 -> 2026-08-31
+Requested trades per instrument per geometry: 2000
+Max holding period: 60 bars, time exit at close after that
+
+Volatility scale s (median ATR(14)/close over DEFINE):
+  AAPL       s=0.022863  (n_define_atr_obs=3509)
+  MSFT       s=0.018305  (n_define_atr_obs=3509)
+  AMZN       s=0.026494  (n_define_atr_obs=3509)
+  GOOGL      s=0.019644  (n_define_atr_obs=3509)
+  META       s=0.024863  (n_define_atr_obs=1651)
+  NVDA       s=0.033401  (n_define_atr_obs=3509)
+  TSLA       s=0.040142  (n_define_atr_obs=2128)
+  JPM        s=0.019385  (n_define_atr_obs=3509)
+  JNJ        s=0.012042  (n_define_atr_obs=3509)
+  XOM        s=0.017061  (n_define_atr_obs=3509)
+  PG         s=0.013025  (n_define_atr_obs=3509)
+  KO         s=0.012921  (n_define_atr_obs=3509)
+  WMT        s=0.014660  (n_define_atr_obs=3509)
+  DIS        s=0.017475  (n_define_atr_obs=3509)
+  INTC       s=0.021392  (n_define_atr_obs=3509)
+  CSCO       s=0.020104  (n_define_atr_obs=3509)
+  BA         s=0.019135  (n_define_atr_obs=3509)
+  GE         s=0.017223  (n_define_atr_obs=3509)
+  PFE        s=0.016968  (n_define_atr_obs=3509)
+  T          s=0.015295  (n_define_atr_obs=3509)
+  SPY        s=0.010521  (n_define_atr_obs=3509)
+  QQQ        s=0.013413  (n_define_atr_obs=3509)
+  BTC-USD    s=0.041339  (n_define_atr_obs=1553)
+  ETH-USD    s=0.076039  (n_define_atr_obs=404)
+  EURUSD=X   s=0.008565  (n_define_atr_obs=3610)
+  GBPUSD=X   s=0.008361  (n_define_atr_obs=3622)
+  USDJPY=X   s=0.008762  (n_define_atr_obs=3610)
+
+PART 1 -- pooled across all 27 instruments, per geometry
+------------------------------------------------------------------------
+geom        n           win_rate   rw_ref            exp_pct_net        exp_units_s_net     tp/stop/gap/time
+0.5:5   54000 0.892 [0.889,0.895]    0.909 -0.00332 [-0.00387, -0.00280] -0.1326 [-0.1526, -0.1134] 0.89/0.08/0.02/0.01
+1:5     54000 0.808 [0.805,0.811]    0.833 -0.00434 [-0.00513, -0.00356] -0.1655 [-0.1960, -0.1354] 0.81/0.14/0.03/0.02
+1:3     54000 0.732 [0.729,0.736]    0.750 -0.00334 [-0.00385, -0.00282] -0.1423 [-0.1620, -0.1227] 0.73/0.23/0.04/0.01
+1:1     54000 0.493 [0.488,0.497]    0.500 -0.00175 [-0.00199, -0.00152] -0.0914 [-0.1015, -0.0817] 0.49/0.45/0.05/0.00
+2:1     54000 0.335 [0.331,0.339]    0.333 -0.00139 [-0.00175, -0.00103] -0.0872 [-0.1006, -0.0731] 0.33/0.59/0.08/0.00
+3:1     54000 0.261 [0.257,0.265]    0.250 -0.00058 [-0.00109, -0.00009] -0.0602 [-0.0795, -0.0415] 0.26/0.65/0.09/0.01
+5:1     54000 0.189 [0.185,0.192]    0.167 0.00042 [-0.00036, 0.00119] -0.0382 [-0.0683, -0.0086] 0.17/0.71/0.10/0.02
+
+(gross expectancy, net/gross by asset class, and full CIs are in results.json)
+
+PART 1 -- split by asset class
+------------------------------------------------------------------------
+Geometry 0.5:5:
+  equity   n=44000 win_rate=0.898 [0.895,0.901] exp_pct_net=-0.00235 [-0.00278, -0.00190]
+  crypto   n= 4000 win_rate=0.843 [0.831,0.853] exp_pct_net=-0.01738 [-0.02292, -0.01211]
+  fx       n= 6000 win_rate=0.882 [0.874,0.890] exp_pct_net=-0.00111 [-0.00164, -0.00061]
+Geometry 1:5:
+  equity   n=44000 win_rate=0.814 [0.810,0.818] exp_pct_net=-0.00321 [-0.00396, -0.00249]
+  crypto   n= 4000 win_rate=0.744 [0.730,0.757] exp_pct_net=-0.02257 [-0.03023, -0.01514]
+  fx       n= 6000 win_rate=0.806 [0.796,0.816] exp_pct_net=-0.00049 [-0.00122, 0.00020]
+Geometry 1:3:
+  equity   n=44000 win_rate=0.735 [0.731,0.739] exp_pct_net=-0.00266 [-0.00312, -0.00222]
+  crypto   n= 4000 win_rate=0.686 [0.672,0.701] exp_pct_net=-0.01498 [-0.02015, -0.00993]
+  fx       n= 6000 win_rate=0.744 [0.733,0.755] exp_pct_net=-0.00050 [-0.00098, -0.00002]
+Geometry 1:1:
+  equity   n=44000 win_rate=0.492 [0.487,0.497] exp_pct_net=-0.00178 [-0.00200, -0.00155]
+  crypto   n= 4000 win_rate=0.490 [0.474,0.505] exp_pct_net=-0.00330 [-0.00519, -0.00137]
+  fx       n= 6000 win_rate=0.498 [0.485,0.510] exp_pct_net=-0.00052 [-0.00074, -0.00030]
+Geometry 2:1:
+  equity   n=44000 win_rate=0.333 [0.328,0.337] exp_pct_net=-0.00184 [-0.00216, -0.00152]
+  crypto   n= 4000 win_rate=0.363 [0.348,0.378] exp_pct_net=0.00230 [-0.00128, 0.00579]
+  fx       n= 6000 win_rate=0.336 [0.324,0.348] exp_pct_net=-0.00053 [-0.00087, -0.00020]
+Geometry 3:1:
+  equity   n=44000 win_rate=0.257 [0.253,0.262] exp_pct_net=-0.00148 [-0.00190, -0.00104]
+  crypto   n= 4000 win_rate=0.301 [0.287,0.315] exp_pct_net=0.00897 [0.00365, 0.01430]
+  fx       n= 6000 win_rate=0.261 [0.250,0.272] exp_pct_net=-0.00038 [-0.00079, 0.00003]
+Geometry 5:1:
+  equity   n=44000 win_rate=0.182 [0.178,0.185] exp_pct_net=-0.00093 [-0.00159, -0.00024]
+  crypto   n= 4000 win_rate=0.253 [0.240,0.267] exp_pct_net=0.01696 [0.00827, 0.02522]
+  fx       n= 6000 win_rate=0.195 [0.185,0.205] exp_pct_net=-0.00071 [-0.00142, 0.00004]
+
+PART 2 -- analytic, no data
+------------------------------------------------------------------------
+Wilson 95% intervals:
+  2/2      p_hat=1.0000  [0.3424, 1.0000]
+  9/12     p_hat=0.7500  [0.4677, 0.9111]
+  22/25    p_hat=0.8800  [0.7004, 0.9583]
+  31/47    p_hat=0.6596  [0.5167, 0.7783]
+
+P(best of k variants shows >= 22/25 | true p):
+     k p= 0.5 p= 0.6 p= 0.7
+     1 0.0001 0.0024 0.0332
+     5 0.0004 0.0118 0.1555
+    20 0.0016 0.0463 0.4914
+

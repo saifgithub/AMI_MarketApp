@@ -20,6 +20,7 @@ The folder is named as commissioned. The public framing is different — see "Pu
 | [`00_claim_landscape.md`](00_claim_landscape.md) | What is being claimed on YouTube, clustered, with measured reach. No channels named. |
 | [`01_prior_work.md`](01_prior_work.md) | What RES001 and the earlier `saifgithub` repos already tested, so it is reused and not redone. |
 | [`CHANNEL_PLAN.md`](CHANNEL_PLAN.md) | The channel: positioning, episode format, release order, how it points at the app. |
+| [`FIVE_QUESTIONS.md`](FIVE_QUESTIONS.md) | The one-pager behind the series: five questions to ask of any trading claim, each with a measured example from a closed claim. |
 | `C##_<slug>/` | One folder per claim — see below. |
 | `_internal/` | **Git-ignored.** Source video IDs, channel names, transcripts index. Provenance for us; never published, never committed (this repo is public). |
 
@@ -31,7 +32,16 @@ C##_<slug>/
   code/                everything needed to reproduce; imports nothing from backend/app/
   out/                 raw outputs (json/csv) the results quote from
   RESULTS.md           what happened, with windows and intervals; deviations from the prereg stated
-  VIDEO_BRIEF.md       only if the claim failed: hook, claim, test, reveal, why it fails, what to do instead
+  VIDEO_BRIEF.md       for every verdict except HOLDS: hook, claim, test, reveal, why, how to check the next one
+```
+
+Tests are run **per claim, from this folder** — claim code imports `common`, and two claims share a
+test-file name, so a bare folder-wide `pytest` fails at collection:
+
+```bash
+cd docs/Research/RES008_exposing_fraud
+.venv/bin/python -m pytest common -q
+.venv/bin/python -m pytest C05_99pct_scalping_recipe -q    # one claim at a time
 ```
 
 Claim IDs are `C01…`, sequential, never reused — same rule as `RES###`.
