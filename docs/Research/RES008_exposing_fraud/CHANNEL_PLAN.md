@@ -185,5 +185,36 @@ titles 2/3.
 
 **Claude — done 2026-09-17:** eight claims closed; a `VIDEO_BRIEF.md` for all eight and for P01,
 P04, P06; the five-questions one-pager ([`FIVE_QUESTIONS.md`](FIVE_QUESTIONS.md)).
-**Claude — next:** P20 + P21 brief (week 7); chart packs in the AMI palette; scripts from the
-briefs; episode-page template on the site; B09 pre-registration if C05 is held.
+
+**Claude — done 2026-09-18: all twelve episodes are production-ready.** Every episode now has a
+brief, a voice-over script with measured timings, and a chart pack in the AMI palette — linked from
+[`TRACKER.md`](TRACKER.md) row by row.
+
+| Week | Episode | Verdict | Runtime | Figures |
+|--:|:--|:--|--:|--:|
+| 1 | C04 — a 90% win rate proves the strategy works | `DISPROVED` | ≈ 9:25 | 8 |
+| 2 | C07 — "I gave an AI bot real money" | `DISPROVED` | ≈ 8:33 | 5 |
+| 3 | C02 — a chatbot wrote me a profitable strategy | `DISPROVED` | ≈ 9:05 | 5 |
+| 4 | C03 — keep tweaking until the backtest is spectacular | `DISPROVED` | ≈ 10:39 | 7 |
+| 5 | C01 — an LSTM predicts tomorrow's price | `NOT SUPPORTED` | ≈ 9:33 | 5 |
+| 6 | C08 — a chatbot's ten stock picks beat the index | `NOT SUPPORTED` | ≈ 9:04 | 4 |
+| 7 | P20+P21 — what is actually real | `HOLDS` | ≈ 9:14 | 6 |
+| 8 | C05 — the "99% win rate" scalping recipe | `PARTLY HOLDS` | ≈ 9:04 | 5 |
+| 9 | P06 — a contest win proves skill | `NOT SUPPORTED` | ≈ 8:37 | 2 |
+| 10 | C06 — an AI grid robot earns passive income | `NOT SUPPORTED` | ≈ 9:38 | 9 |
+| 11 | P01 — ML predicts stock direction | `DISPROVED` | ≈ 9:07 | 6 |
+| 12 | P04 — stop after two losses | `DISPROVED` mechanically | ≈ 8:06 | 3 |
+
+Every chart pack reads its numbers from the study's own results file at run time and names the file
+and keys in its footer. P01 is the exception and is built differently: its source study published
+only markdown tables, so the pack verifies each transcribed number against its source line and
+exits 1 on any mismatch rather than drawing.
+
+**Claude — next:** fill one example episode page from
+[`episode_page/TEMPLATE.html`](episode_page/TEMPLATE.html) (C04); B09 pre-registration if C05 is
+held. Moving the template into `website/` needs a CR ID — it stays inside RES008 until there is one.
+
+**Still needed before any episode can be recorded** (editor-drawn assets, listed per script under
+"Production notes"): the mock panels and pre-registration scrolls several beats call for, and for
+C01 specifically an overlay redraw, a lag animation and a 30-day recursive forecast, because those
+series are not kept in `out/`.
