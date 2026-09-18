@@ -1,0 +1,183 @@
+{
+  "_comment": "One entry per number charted or spoken in the P01 script. value is transcribed digit for digit from source_file at source_line, inside source_section. make_charts.py asserts the literal string appears on that line before drawing anything. No number here is derived, rounded further, or averaged beyond what the source itself states.",
+  "auc_1d": {
+    "value": "0.5107",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 38
+  },
+  "auc_5d": {
+    "value": "0.5190",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 39
+  },
+  "auc_10d": {
+    "value": "0.5345",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 40
+  },
+  "auc_20d": {
+    "value": "0.5528",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 41
+  },
+  "p_1d": {
+    "value": "0.0490",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 38
+  },
+  "p_5d": {
+    "value": "0.0066",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 39
+  },
+  "p_10d": {
+    "value": "0.0026",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 40
+  },
+  "p_20d": {
+    "value": "0.0005",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 41
+  },
+  "negative_cells_1d": {
+    "value": "7/8",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 38
+  },
+  "negative_cells_5d": {
+    "value": "8/8",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 39
+  },
+  "negative_cells_10d": {
+    "value": "8/8",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 40
+  },
+  "negative_cells_20d": {
+    "value": "7/8",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 41
+  },
+  "overall_auc": {
+    "value": "0.5292",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 45
+  },
+  "overall_edge_negative_cells": {
+    "value": "30/32",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — daily (post-fix, authoritative)",
+    "source_line": 45
+  },
+  "injected_signal_auc_daily": {
+    "value": "0.9497",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Independent leakage audit (and one real bug found)",
+    "source_line": 18
+  },
+  "injected_signal_auc_intraday": {
+    "value": "0.9485",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Independent leakage audit (and one real bug found)",
+    "source_line": 18
+  },
+  "shuffled_label_auc": {
+    "value": "0.4969",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Model shootout — does combining tools help? (No.)",
+    "source_line": 122
+  },
+  "model_accuracy_approx": {
+    "value": "0.54",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "The central finding: real ranking signal, no usable classification edge",
+    "source_line": 52
+  },
+  "baseline_accuracy_approx": {
+    "value": "0.63",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "The central finding: real ranking signal, no usable classification edge",
+    "source_line": 52
+  },
+  "baseline_updays_range": {
+    "value": "59–63%",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "The central finding: real ranking signal, no usable classification edge",
+    "source_line": 52
+  },
+  "cross_sectional_auc": {
+    "value": "0.5055",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Cross-sectional ranking test — the decisive experiment",
+    "source_line": 144
+  },
+  "cross_sectional_p": {
+    "value": "0.6231",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Cross-sectional ranking test — the decisive experiment",
+    "source_line": 144
+  },
+  "cross_sectional_panel_tickers_dates": {
+    "value": "32 large-caps × 2,891 dates",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Cross-sectional ranking test — the decisive experiment",
+    "source_line": 134
+  },
+  "cross_sectional_panel_rows": {
+    "value": "92,512 rows",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Cross-sectional ranking test — the decisive experiment",
+    "source_line": 134
+  },
+  "top_features_20d": {
+    "value": "`vol_60d`, `pct_off_52w_low`, `month`, `px_over_ma200`, `btc_vol20`, `spy_vol20`, `vix_vol20`, `ma20_over_ma50`",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Most important features (20-day horizon, by gain)",
+    "source_line": 94
+  },
+  "intraday_positive_cells": {
+    "value": "21/42",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — intraday",
+    "source_line": 73
+  },
+  "intraday_binomial_p": {
+    "value": "1.000",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — intraday",
+    "source_line": 73
+  },
+  "intraday_mean_auc": {
+    "value": "0.5081",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — intraday",
+    "source_line": 74
+  },
+  "intraday_p": {
+    "value": "0.069",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Headline results — intraday",
+    "source_line": 74
+  },
+  "cross_sectional_top_features": {
+    "value": "`vol_60d`, `pct_off_52w_low`, `px_over_ma200`, `btc_vol20`, `vix_vol20`",
+    "source_file": "docs/Research/Alternatives/Intel/quant_finance/lgbm_results.md",
+    "source_section": "Why this matters most",
+    "source_line": 150
+  }
+}
