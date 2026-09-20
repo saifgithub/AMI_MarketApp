@@ -135,7 +135,6 @@ class _StageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final accent = _stageColor(view.status);
-    final live = view.status == RoomStageStatus.active;
 
     return Semantics(
       button: true,
@@ -182,8 +181,9 @@ class _StageRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     // A desk that has not started explains itself; one that is
-                    // working shows the work. Showing both at once is how the
-                    // row grows back into the wall this replaced.
+                    // working or has finished shows the work. A finished desk
+                    // falling back to its subtitle (DEF414) wiped the analysts'
+                    // headlines the moment the debate began.
                     if (expanded)
                       _Members(
                         view: view,
@@ -191,7 +191,7 @@ class _StageRow extends StatelessWidget {
                         withheldDetail: withheldDetail,
                         full: true,
                       )
-                    else if (live || view.status == RoomStageStatus.interrupted)
+                    else if (view.status != RoomStageStatus.waiting)
                       _Members(
                         view: view,
                         state: state,

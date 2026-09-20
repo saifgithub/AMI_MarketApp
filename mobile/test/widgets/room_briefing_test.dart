@@ -115,6 +115,45 @@ void main() {
             'as data');
   });
 
+  testWidgets('a finished desk keeps its headlines once the next desk starts',
+      (t) async {
+    // DEF414 — every analyst reported, the debate is running. The analyst desk
+    // used to fall back to its static subtitle, wiping the four headlines.
+    await _pump(
+      t,
+      state: RoomState(
+        phase: 'RESEARCHERS',
+        activeAgent: 'bull_researcher',
+        streaming: true,
+        order: const [
+          'fundamentals_analyst',
+          'market_analyst',
+          'news_analyst',
+          'social_media_analyst',
+          'bull_researcher',
+        ],
+        agentStances: {
+          'fundamentals_analyst': _spoke('margins expanding, guidance intact'),
+          'market_analyst': _spoke('consolidating under the 50-day'),
+          'news_analyst': _spoke('export-licence headline is priced in'),
+          'social_media_analyst': _spoke('retail chatter is thin and mixed'),
+        },
+      ),
+    );
+    expect(find.textContaining('4/4 REPORTED'), findsOneWidget);
+    for (final headline in const [
+      'margins expanding',
+      'consolidating under the 50-day',
+      'export-licence headline',
+      'retail chatter is thin',
+    ]) {
+      expect(find.textContaining(headline, findRichText: true), findsOneWidget,
+          reason: 'a reported analyst keeps its line after the desk finishes');
+    }
+    expect(find.textContaining('Four independent reads'), findsNothing,
+        reason: 'the subtitle is for a desk that has not started');
+  });
+
   testWidgets('tapping a desk opens its members, standing-by seats included',
       (t) async {
     await _pump(t);
