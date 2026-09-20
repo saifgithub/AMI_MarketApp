@@ -52,9 +52,11 @@ Two carry something concrete enough to name:
 
 None of the eight is being promoted to `C##` from this pass — none has the tight, single-recipe,
 reach-measured shape that earned C01–C08 their slot (see `00_claim_landscape.md`, "Selection for
-the first batch"). They are logged as backlog (`B10`–`B17` in `TRACKER.md`) so they are not
-rediscovered from scratch, with FinRL and Hummingbot flagged as the only two with anything to
-pre-register if a future batch needs a repo-sourced (rather than video-sourced) claim.
+the first batch"). They are logged as backlog (`B10`–`B13` in `TRACKER.md`), each with its own
+folder and `VERDICT.md` under [`R_oss_stack/`](R_oss_stack/) (R01–R08, one per repo) so a later
+revisit reads the standing verdict and its stated promotion trigger instead of re-surveying from
+scratch. FinRL (R07) and Hummingbot (R05) are the only two with anything to pre-register if a
+future batch needs a repo-sourced (rather than video-sourced) claim.
 
 ## Provenance note
 
