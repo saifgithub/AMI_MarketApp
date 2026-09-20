@@ -13,7 +13,7 @@ desk-review `VERDICT.md`.
 
 | ID | Subject | Verdict |
 |:--|:--|:--|
-| R01 | Wunder Fund RNN Challenge (wundernn.io) | No measurable-edge claim — forecasting-accuracy recruiting contest, not a trading-edge claim |
+| R01 | Wunder Fund RNN Challenge (wundernn.io) | No measurable-edge claim — forecasting-accuracy recruiting contest (WP metric, undisclosed targets); data is a free download, no signup needed |
 | R02 | Numerai | Real, audited fund performance (25.45% net / 2.75 Sharpe, 2024) — not testable by our method, not a debunk candidate; the one counter-example that crowd-sourced ML *can* hold up |
 | R03 | Jane Street / Optiver / Kaggle competitions | Same shape as R01 — no measurable-edge claim, recruiting/PR framing throughout |
 | R04 | Academic LOB-forecasting literature | Not a claim to test — independently corroborates our own C01 finding: high forecast accuracy ≠ actionable trading signal |

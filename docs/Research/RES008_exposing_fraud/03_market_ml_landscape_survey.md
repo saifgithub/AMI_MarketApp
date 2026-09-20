@@ -10,22 +10,31 @@ named sites, competitions, and one operating fund. Verdicts live one-per-item in
 ## What wundernn.io actually is
 
 Not a product making a public trading claim — it's a **recruiting competition** run by Wunder Fund,
-a real high-frequency trading firm operating since 2014. Two generations exist:
+a real high-frequency trading firm operating since 2014. Multiple challenge generations exist on the
+same platform ("Predictorium," the current "Alpha Connectome," and others); **only the current one
+was verified against primary sources** (its own `docs/` folder, pulled from a public fork of the
+starter pack — see correction log in `R01_wunder_fund_challenge/VERDICT.md`).
 
-- **Wunder Challenge (2025)**: predict two next-step price-movement targets from ~28 anonymized LOB
-  features, scored by weighted Pearson correlation.
-- **Wunder Fund RNN challenge (Sept 11 – Dec 1, 2026, live now)**: predict the entire next
-  market-state vector (~200 anonymized features across several interconnected instruments) from
-  sequences of 20,000 states, scored by mean R² across features, cross-validated with
-  sequence-grouped folds. Public leaderboard #1: R²=0.3920; finals winner: R²=0.3964. Multiple public
-  GitHub attempts exist (transformer, GRU/LSTM, ensemble architectures), landing in the 0.25–0.40 R²
-  band depending on approach and feature.
+- **Current — "Alpha Connectome" (Sept 11 – Dec 1, 2026, live now)**: predict two undisclosed-
+  definition future-price-movement indicators (`t0`, `t1`) for one of two tracked instruments, from
+  112 anonymized order-book/trade features, over 20,000-row sequences. Scored by **Weighted Pearson
+  correlation (WP)**, not R² — confirmed directly from the challenge's own `METRIC.md`. Public
+  baseline (a real, runnable 2-layer GRU): 0.5896 WP. **The data itself needs no signup**: the full
+  starter pack is a public, unauthenticated download
+  (`curl -L https://files.wundernn.io/wnn_connectome_starterpack.tar.gz | tar -xz`, ~30+ GB
+  uncompressed) — an account is only required to submit to the leaderboard.
+- **A prior generation ("Predictorium")**: public participant repos describe a similar-shaped
+  task (LOB features → price-movement targets) with R² and different feature counts reported —
+  plausibly a distinct, earlier challenge vintage on the same platform rather than the same
+  challenge as above; not independently re-verified against that vintage's own primary docs, so
+  those specific numbers (R²≈0.39–0.40) should be treated as unconfirmed pending a direct source
+  check, not folded into the current challenge's figures.
 
-**What prior entrants actually tried** (from public repos): transformer-based sequence predictors
-with multi-head attention and learned positional encoding (best found: mean R² 0.396); vanilla
-GRU/LSTM baselines; ensembles. No approach in what we found reports beating the published
-leaderboard ceiling by a wide margin — the task appears to be close to its practical predictability
-limit around R² ≈ 0.40, consistent with heavy microstructure noise.
+**What prior entrants actually tried** (from public repos, architecture-level detail only —
+treat any of *their own* reported scores with the same caution as above): transformer-based sequence
+predictors with multi-head attention and learned positional encoding; vanilla GRU/LSTM baselines;
+ensembles. All are genuine, runnable approaches to a genuinely hard sequence-modeling task on
+autocorrelated microstructure data.
 
 **The load-bearing point**: R² on next-tick features is a forecasting-accuracy metric, not a trading-
 edge claim. Wunder Fund never asserts the winning model would make money — it's scoring raw
