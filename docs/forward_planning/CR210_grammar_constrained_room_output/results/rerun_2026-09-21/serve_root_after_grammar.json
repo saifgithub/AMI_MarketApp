@@ -1,0 +1,14 @@
+{
+ "taken_utc": "2026-09-21T06:35:03Z",
+ "url": "http://192.168.20.74:8000/v1/models",
+ "models": [
+  {
+   "id": "ami-llm",
+   "root": "/models/qwen38-flash-next-abliterated-nvfp4"
+  },
+  {
+   "id": "qwen3.8-flash-next-abliterated",
+   "root": "/models/qwen38-flash-next-abliterated-nvfp4"
+  }
+ ]
+}
