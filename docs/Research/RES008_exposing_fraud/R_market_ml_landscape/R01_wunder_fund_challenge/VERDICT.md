@@ -62,6 +62,44 @@ microstructure data** (order-book state, not neurobiological — see correction 
   `docs/prizes.md` (a first-pass version of this file sourced the figure from a YouTube recap
   instead — see correction log).
 
+## Actual data findings (2026-09-20/21, real `train.parquet`, not docs alone)
+
+Saiful asked to actually pull the data rather than stop at the documentation. Downloaded the full
+starter pack (~31GB extracted: `train.parquet` 29GB / 10,607 sequences, `valid.parquet` 5.6GB) to an
+external drive (kept, not committed — see "Reproducing this" below) and ran a read-only exploration
+(`reference_kit/explore.py`) on a 50-sequence sample (~1M scored-eligible rows):
+
+- **Schema matches `docs/data_overview.md` exactly** — no discrepancy between the documented and
+  actual column layout, confirming the earlier corrected description is accurate.
+- **`t0`/`t1` are skewed negative, not symmetric.** Mean `t0` ≈ −0.28, mean `t1` ≈ −0.30 (std ≈
+  0.94–0.99 each); roughly 58% of rows negative vs. ~19% positive (the rest within 1e-6 of zero).
+  A plain forward-return definition over a large, representative sample would be expected to sit
+  much closer to symmetric around zero — this asymmetry suggests either a directional bias in the
+  sampled period/instrument, or that `t0`/`t1` are constructed quantities (not a raw return) with a
+  built-in sign convention. Still undisclosed which.
+- **`t0` and `t1` are strongly negatively correlated (r ≈ −0.75).** They are not two independent
+  forecasting targets — most of the time they move opposite each other. Consistent with them being
+  two sides of one underlying quantity (e.g. a bid-side/ask-side split, or a spread decomposition)
+  rather than, say, two different horizons of the same return.
+- **No single feature explains much of `t0`.** Best correlation found: `i0_p3` at r ≈ 0.18; the next
+  several cluster at r ≈ 0.10–0.14 (mostly `i0` price-level features); nothing else clears 0.10. This
+  is consistent with — not in tension with — the public baseline's 0.5896 WP: a real, moderately hard
+  prediction task with no simple linear shortcut, matching the "no measurable edge" framing rather
+  than undermining it.
+
+**Effect on the verdict below: none — reinforces it.** Having real rows in hand lets us describe
+`t0`/`t1` statistically, but the load-bearing gap is unchanged: their exact definition (horizon,
+instrument-return mapping, sign convention) is still undisclosed, so there remains no way to convert
+a WP score, or this skew/correlation structure, into a "beats buy-and-hold" or "beats a placebo"
+statement. The data is real and the task is genuinely hard; neither fact turns a forecasting
+correlation contest into a trading-edge claim.
+
+**Reproducing this**: the ~31GB dataset is intentionally *not* committed here (a public,
+unauthenticated download, and not something this repo should carry) — re-fetch with the `curl`
+command above, then run `python3 reference_kit/explore.py [n_sequences]` with `WUNDER_DATA_DIR` (or
+the script's default path) pointed at the extracted `datasets/` folder. The local copy used for this
+analysis was kept on external storage (Saiful, 2026-09-20: "keep the data") for any deeper follow-up.
+
 ## Our verdict
 
 **NO MEASURABLE-EDGE CLAIM TO TEST — it is a forecasting-accuracy contest, not a trading-edge
