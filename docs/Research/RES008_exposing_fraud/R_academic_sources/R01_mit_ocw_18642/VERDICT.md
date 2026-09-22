@@ -206,6 +206,26 @@ the exact "GL ratio" sizing rule, define what "crowd reactive state" means opera
 it's even a candidate; as taught, it's a framework, not a technique. Everything else surveyed is
 either a pure math/stats tool (no claim to test) or unavailable (Lectures 3, 22).
 
+### Outcome: promoted and tested 2026-09-22 — `C09`, `NOT SUPPORTED`
+
+Saiful: "run the full research" (2026-09-22). Full pre-registration and results:
+[`../../C09_pc_neutral_curve_fly/PREREGISTRATION.md`](../../C09_pc_neutral_curve_fly/PREREGISTRATION.md),
+[`RESULTS.md`](../../C09_pc_neutral_curve_fly/RESULTS.md). Built on Andreev's exact construction
+(rolling 2-year PCA on Treasury.gov par yields, PC1/PC2-neutral fly, EWMA mean-reversion signal),
+priced on tradeable `U-RATES` duration-bucket ETFs (a new fixed-income universe) rather than his
+frictionless yield-space accounting.
+
+**Result: does not beat buy-and-hold, does not clearly beat a placebo.** HOLDOUT (2019–2026) total
+return −23.8% (CI [−27.8%, −19.8%]) — but a zero-signal matched-random-entry placebo in the same
+five instruments loses a comparable amount (−19% to −22% per leg), meaning the loss is turnover/
+cost-drag from a 5-leg daily-rebalanced portfolio, not a signal-quality failure. Trails buy-and-hold
+by 27 points. This **corroborates rather than contradicts** Andreev's own honestly-reported weak
+self-reported Sharpe (0.09) — his own slide already signaled this mechanism doesn't clear a
+meaningful bar even before real transaction costs were applied. See `RESULTS.md` §5 for the full
+"what this does and does not say about Andreev's material" discussion — this `NOT SUPPORTED`
+verdict is the rare case that corroborates the source's own honesty rather than exposing an
+overclaim.
+
 ## Our verdict
 
 **Something in between — mostly a rigorous tools course, with one genuine, honestly-disclosed

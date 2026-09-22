@@ -12,7 +12,7 @@ the other two folders' numbering.
 
 | ID | Subject | Verdict |
 |:--|:--|:--|
-| R01 | MIT OCW 18.642, Topics in Mathematics with Applications in Finance (Fall 2024) | Mostly a rigorous math/finance toolkit course, not a claims course — but one guest lecture (Stefan Andreev, Two Sigma, on PCA in fixed income) discloses a concrete, falsifiable trading mechanism with an honestly-reported weak backtest (Sharpe 0.09), making it a genuine promotion candidate to a C## pre-registration |
+| R01 | MIT OCW 18.642, Topics in Mathematics with Applications in Finance (Fall 2024) | Mostly a rigorous math/finance toolkit course, not a claims course — but one guest lecture (Stefan Andreev, Two Sigma, on PCA in fixed income) discloses a concrete, falsifiable trading mechanism with an honestly-reported weak backtest (Sharpe 0.09). **Promoted and tested 2026-09-22 as [C09](../C09_pc_neutral_curve_fly/RESULTS.md) — `NOT SUPPORTED`**: real net-of-cost result matches the placebo, corroborating rather than contradicting Andreev's own weak self-reported number |
 
-Do not re-run this survey from scratch on a later visit — read `R01/VERDICT.md` first; it states
-exactly what would justify promoting its candidate mechanism.
+Do not re-run this survey from scratch on a later visit — read `R01/VERDICT.md` first; the
+candidate mechanism it found has already been tested (see C09).
