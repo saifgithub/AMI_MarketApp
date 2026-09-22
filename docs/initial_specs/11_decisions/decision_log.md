@@ -37,6 +37,7 @@ deprecated.
 - **Source**: Saiful — "I don't want to get sued"
 - **Rationale**: Regulatory firewall. AMI is not licensed to provide investment advice. Avoids licensing complexity entirely. Aligns with educational positioning.
 - **Partially amended by [D-069](#d-069--brokerages-become-customers-white-label-b2b2c--partial-amendment-of-d-004)** (2026-08-09): a brokerage may be a *customer*. "No brokerage integration ever" is unchanged and still controls — it forbids routing orders, not selling to a broker.
+- **Partially amended by [D-071](#d-071--paper-only-brokerage-order-routing-is-permitted-narrow-partial-amendment-of-d-004d-069)** (2026-09-22): a **paper/simulated** brokerage account may receive an order. "No brokerage integration ever" is narrowed to "no *live* brokerage order routing" — a live/production account remains strictly forbidden.
 
 ### D-005 — US equities at MVP
 - **Decided**: US equities only at MVP. GCC/Tadawul + Bursa Malaysia in Phase 2.
@@ -508,3 +509,45 @@ Keep this log honest. The "why" matters more than the "what."
   `False`, so every mandate stored before the field existed reads as not-permitted and no
   user acquired options through a deploy. On 2026-08-24 the count of current mandates
   permitting derivatives was **0 of 42**.
+
+### D-071 — Paper-only brokerage order routing is permitted: narrow partial amendment of D-004/D-069
+
+- **Decided** (2026-09-22, CR227): AMI may route an order to a linked brokerage account
+  **only** when that account is confirmed paper/simulated (for Alpaca: the account
+  resolves through Alpaca's paper endpoint, `https://paper-api.alpaca.markets`, or a
+  user's [CR224](../../forward_planning/CR224_alpaca_endpoint_override/) paper override —
+  never a live/production Alpaca host). A live or production brokerage account remains
+  strictly read-only/unsupported for order placement, unchanged.
+- **Source**: Saiful — *"we need to create a CR to enable trading with the alpaca
+  account,"* clarified in discussion: this is Alpaca's own **paper** simulator, still
+  simulated money, not a live brokerage. Per-order destination choice ("AMI sim, Alpaca
+  paper, or both") was his explicit answer when asked whether this should auto-mirror sim
+  trades or be a separate manual control.
+- **What did NOT change, and this is the point of writing it down.** AMI still never
+  touches real capital and never connects to a **live** execution venue. The mandate/PM
+  compliance safety floor (`check_mandate_compliance`) gates a paper-Alpaca order
+  identically to a sim order — "uncoachable" is not bypassed by picking a different
+  destination. Alpaca credentials remain device-local only, never sent to or stored by
+  the AMI backend ([CR202](../../forward_planning/CR202_alpaca_credentials_on_device/)) —
+  the backend's role stops at a compliance verdict; mobile places the paper order
+  directly. No resting/limit/stop orders, no options, and no live account support are
+  introduced by this decision — market orders only, paper only.
+- **Rationale**: D-004's actual regulatory concern is real capital / real execution
+  venues / advice liability — a paper account fired at Alpaca's own simulator carries
+  none of that; it's a second simulator, not a brokerage integration in the sense D-004
+  was written to forbid. Narrowing "no brokerage integration ever" to "no *live*
+  brokerage order routing" keeps the regulatory firewall intact while unblocking a
+  feature Saiful asked for directly.
+- **Supersedes (partial)**: [D-004](#d-004--training-simulator-simulation-only-forever)'s
+  "no brokerage integration ever" / "never route an order" language, for the paper-only
+  case specifically. [D-069](#d-069--brokerages-become-customers-white-label-b2b2c--partial-amendment-of-d-004)'s
+  restatement of "we never route an order, never connect to an execution venue" is
+  likewise narrowed to mean *live* execution venues — its B2B2C white-label posture is
+  otherwise unchanged. Neither D-004 nor D-069 is marked fully superseded.
+- **Supersedes**: [DEF145](../../defect/_registry/DEF145.row.md) (closed wontfix, "no
+  order to a brokerage, paper or otherwise") for the Alpaca-paper case specifically. Its
+  guard test, `backend/tests/unit/test_def145_alpaca_stays_read_only.py`, is rewritten
+  (not deleted) to assert the narrowed boundary.
+- **Affects**: [`CLAUDE.md`](../../../CLAUDE.md) decision-pointer table ("Endpoint of the
+  journey" row, rewritten by this decision). Filed as
+  [CR227](../../forward_planning/CR227_alpaca_paper_order_routing/CR227_alpaca_paper_order_routing.md).

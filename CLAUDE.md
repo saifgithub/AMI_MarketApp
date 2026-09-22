@@ -96,7 +96,7 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 
 | Topic | Locked decision |
 |---|---|
-| Endpoint of the journey | **Training simulator, simulation-only, forever.** AMI is not licensed to give investment advice; no brokerage integration ever. |
+| Endpoint of the journey | **Training simulator, simulation-only, forever.** AMI is not licensed to give investment advice; no *live* brokerage order routing, ever (D-071 narrowed this from "no brokerage integration ever" — a linked **paper** brokerage account, Alpaca paper only today, may receive market orders under the same mandate/compliance floor as AMI's own sim; a live/production account stays strictly read-only). |
 | Markets | **US equities at MVP.** GCC/Tadawul + Bursa later. |
 | Languages | **EN at alpha, AR + MS at v1.0.** Pluggable i18n. |
 | Platforms | **iOS + Android-GMS at alpha, Huawei AppGallery at v1.1.** |
