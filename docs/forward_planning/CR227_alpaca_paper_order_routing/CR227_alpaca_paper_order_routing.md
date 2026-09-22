@@ -137,23 +137,28 @@ independent cash balance, accepts). Show each destination's outcome separately.
 
 ## Acceptance
 
-- Decision log carries the new D-0xx entry; CLAUDE.md's decision-pointer table
-  reflects the narrowed rule.
-- `test_def145_alpaca_stays_read_only.py` is rewritten (not deleted) to assert the new
-  boundary and passes.
-- Destination selector defaults to AMI Sim; hidden when Alpaca isn't linked.
-- Alpaca-only submission runs mandate compliance via `/v1/sim/preview` and is refused
-  identically to a sim submission when the mandate blocks it — verified by a test that
-  a mandate-violating order produces no Alpaca API call.
-- Alpaca order call refuses (client-side) against any non-paper `baseUrl`, verified by
-  a unit test independent of whatever the UI enforces.
-- "Both" surfaces independent per-destination results when one leg succeeds and the
-  other fails.
-- `flutter analyze` clean; new/changed tests passing; backend unit suite
-  (`pytest backend/tests/unit/ -q`) passing including the rewritten DEF145 test.
+- [x] Decision log carries the new entry (D-071); CLAUDE.md's decision-pointer table
+  reflects the narrowed rule. (commit b2da0fd5)
+- [x] `test_def145_alpaca_stays_read_only.py` is rewritten (not deleted) to assert the new
+  boundary and passes. (commit a04842cc)
+- [x] Destination selector defaults to AMI Sim; hidden when Alpaca isn't linked, and on
+  the cover/sell-from-holding entry paths.
+- [x] Alpaca-only submission runs mandate compliance via `/v1/sim/preview` and is refused
+  identically to a sim submission when the mandate blocks it — verified by
+  `cr227_destination_routing_test.dart`'s "a mandate-blocking preview leaves the Alpaca
+  order call unmade" test.
+- [x] Alpaca order call refuses (client-side) against any non-paper `baseUrl`, verified by
+  `alpaca_client_paper_only_test.dart`, independent of whatever the UI enforces.
+- [x] "Both" surfaces independent per-destination results when one leg succeeds and the
+  other fails (`_DestinationOutcome` list, rendered per-destination in the sheet).
+- [x] `flutter analyze` clean (0 new issues); new/changed tests passing (mobile suite
+  1481/1481); backend unit suite `pytest backend/tests/unit/ -q` 6693 passed / 7 skipped
+  (3 pre-existing failures from other tracks — CR228 row-status typo, DEF412 path check —
+  unrelated to CR227, confirmed by re-running in isolation).
 
 ## Status
 
-`proposed` — filed, not yet implemented. Decision-log amendment + guard-test rewrite
-are prerequisites and should land as their own reviewable step before the order-call
-code, given how directly this crosses a previously locked decision.
+`in_progress` — decision-log amendment, guard-test rewrite, and mobile implementation
+landed 2026-09-22/23 (commits b2da0fd5, a04842cc, 4a0fba94). Routed to the independent
+auditor (CR005 protocol, `orchestration/audit/`) before promotion/release, per Saiful's
+explicit instruction. Moves to `done` once the auditor issues `VERDICT: COMPLETE`.
