@@ -12,6 +12,7 @@
 /// at all) still cannot reach `/v2/orders` on a live host.
 library;
 
+import 'package:ami_trade/features/sim/order_pricing.dart' show SimOrderType;
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
@@ -72,7 +73,11 @@ void main() {
           baseUrl: 'https://api.alpaca.markets');
       final client = AlpacaClient();
       expect(
-        () => client.submitOrder(symbol: 'AAPL', side: 'buy', qty: 1),
+        () => client.submitOrder(
+            symbol: 'AAPL',
+            side: 'buy',
+            qty: 1,
+            orderType: SimOrderType.market),
         throwsA(isA<AlpacaOrderRejected>()),
         reason: 'D-071: a live/production Alpaca account must never receive '
             'an order from this client, whatever the caller believes it '
@@ -83,9 +88,35 @@ void main() {
     test('refuses when unlinked', () async {
       final client = AlpacaClient();
       expect(
-        () => client.submitOrder(symbol: 'AAPL', side: 'buy', qty: 1),
+        () => client.submitOrder(
+            symbol: 'AAPL',
+            side: 'buy',
+            qty: 1,
+            orderType: SimOrderType.market),
         throwsA(isA<AlpacaException>()),
       );
+    });
+
+    test(
+        'refuses a non-market order type before even checking the host or '
+        'link state — auditor round-1 MAJOR-1', () async {
+      // Unlinked AND a live host would both also refuse; this proves the
+      // order-type check fires independently, matching how submitOrder()
+      // now checks orderType before reading AlpacaCredentialStore at all.
+      final client = AlpacaClient();
+      for (final t in [
+        SimOrderType.limit,
+        SimOrderType.stop,
+        SimOrderType.stopLimit,
+      ]) {
+        expect(
+          () => client.submitOrder(
+              symbol: 'AAPL', side: 'buy', qty: 1, orderType: t),
+          throwsA(isA<AlpacaOrderRejected>()),
+          reason: '$t must never reach Alpaca as a silently-converted '
+              'market order (CR227 Non-goals)',
+        );
+      }
     });
   });
 }

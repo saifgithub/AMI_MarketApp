@@ -298,9 +298,23 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
 
   /// CR227 Non-goals — cover-a-short and sell-from-holding are keyed to
   /// AMI's own position sizes, which don't translate to Alpaca's independent
-  /// holdings. Both entry paths force AMI-Sim-only and hide the selector.
+  /// holdings; both entry paths force AMI-Sim-only and hide the selector.
+  ///
+  /// **DEF-CR227-AUDIT-1 (auditor MAJOR-1, round 1):** a non-market order
+  /// type ALSO forces AMI-Sim-only. `AlpacaClient.submitOrder()` only ever
+  /// places a market order — before this fix, a LIMIT or STOP ticket routed
+  /// to Alpaca was silently converted to an immediate market fill with
+  /// nothing telling the user their limit was ignored. The CR doc's own
+  /// Non-goals already said this must not happen ("mixing AMI's resting
+  /// order triggers three days later with Alpaca fills immediately today is
+  /// a correctness problem this CR does not attempt to solve"); this is the
+  /// enforcing check that statement was missing. See also `submitOrder()`'s
+  /// own refusal below — the UI hiding the control is the friendly half, not
+  /// the only guard.
   bool get _destinationLocked =>
-      widget.coverTicker != null || widget.sellTicker != null;
+      widget.coverTicker != null ||
+      widget.sellTicker != null ||
+      _orderType != SimOrderType.market;
 
   /// Close the sheet and give the same confirmation the ordinary path gives.
   void _acknowledgeAdvisory() {
@@ -694,6 +708,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             symbol: typed,
             side: _side,
             qty: qty,
+            orderType: _orderType,
           );
       return _DestinationOutcome(
         label: 'ALPACA PAPER',

@@ -33,8 +33,9 @@ class _RecordingAlpacaClient extends AlpacaClient {
     required String symbol,
     required String side,
     required double qty,
+    required SimOrderType orderType,
   }) async {
-    calls.add('$side $qty $symbol');
+    calls.add('$side $qty $symbol ${orderType.name}');
     return AlpacaOrder(
       id: 'o1',
       symbol: symbol,
@@ -107,6 +108,11 @@ Future<_FixedSim> _pump(
   SimPreviewResult? previewResult,
   SimSubmitResult? submitResult,
   _RecordingAlpacaClient? alpacaClient,
+  // Auditor round-1 MAJOR-1 — the resting-order-book probe must be
+  // controllable per test, since the selector-hiding fix only engages when
+  // this backend capability is on (the LIMIT/STOP picker itself is gated on
+  // it, `trade_ticket_sheet.dart`'s `state.restingOrdersSupported`).
+  bool restingOrdersSupported = false,
 }) async {
   await t.binding.setSurfaceSize(const Size(390, 1600));
   addTearDown(() => t.binding.setSurfaceSize(null));
@@ -114,8 +120,13 @@ Future<_FixedSim> _pump(
   await t.pumpWidget(ProviderScope(
     overrides: [
       simNotifierProvider.overrideWith((ref) {
-        sim = _FixedSim(ref, SimState(portfolio: _portfolio()),
-            previewResult: previewResult, submitResult: submitResult);
+        sim = _FixedSim(
+            ref,
+            SimState(
+                portfolio: _portfolio(),
+                restingOrdersSupported: restingOrdersSupported),
+            previewResult: previewResult,
+            submitResult: submitResult);
         return sim;
       }),
       alpacaLinkedProvider.overrideWith((ref) async => alpacaLinked),
@@ -152,6 +163,29 @@ void main() {
       expect(find.text('AMI SIM'), findsOneWidget);
       expect(find.text('ALPACA PAPER'), findsOneWidget);
       expect(find.text('BOTH'), findsOneWidget);
+    });
+
+    testWidgets(
+        'hidden once a LIMIT order type is picked — auditor round-1 MAJOR-1',
+        (t) async {
+      // Before the fix: AlpacaClient.submitOrder() had no order-type
+      // parameter at all and hard-coded a market order, so a LIMIT/STOP
+      // ticket routed to Alpaca silently filled immediately instead of
+      // resting — with nothing telling the user their limit was ignored.
+      await _pump(t, alpacaLinked: true, restingOrdersSupported: true);
+      expect(find.text('DESTINATION'), findsOneWidget,
+          reason: 'starts visible — this test proves it disappears, not '
+              'that it was never there');
+
+      await t.tap(find.text('LIMIT'));
+      for (var i = 0; i < 3; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(find.text('DESTINATION'), findsNothing,
+          reason: 'a non-market order type must force AMI-Sim-only and hide '
+              'the destination selector entirely — the same treatment as '
+              'the cover/sell entry paths');
     });
 
     testWidgets('defaults to AMI Sim — an unpicked selector changes nothing',

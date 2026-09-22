@@ -25,6 +25,7 @@
 /// remains permanently unreachable for order placement from this client.
 library;
 
+import 'package:ami_trade/features/sim/order_pricing.dart' show SimOrderType;
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:dio/dio.dart';
@@ -144,17 +145,36 @@ class AlpacaClient {
   /// Place a market order against the user's linked Alpaca **paper** account
   /// (CR227, D-071). Callers are expected to have already cleared AMI's
   /// mandate/compliance floor (via `/v1/sim/preview`) before calling this —
-  /// this method only re-enforces the paper-host rule, not the trading
-  /// mandate, which it has no knowledge of.
+  /// this method only re-enforces the paper-host rule and the market-only
+  /// rule, not the trading mandate, which it has no knowledge of.
   ///
   /// Market + day only, matching AMI's own "no partial fill, single price"
   /// semantics — see CR227's Non-goals for why resting order types aren't
   /// modelled here.
+  ///
+  /// **`orderType` is required and checked, not merely unused.** Round-1
+  /// audit (MAJOR-1): before this parameter existed, this method had no way
+  /// to know what the AMI-side ticket actually asked for, hard-coded
+  /// `type: 'market'` unconditionally, and so silently turned a LIMIT/STOP
+  /// order into an immediate market fill the moment it reached Alpaca — with
+  /// nothing telling the user their limit was never honoured. The trade
+  /// ticket's own `_destinationLocked` now also hides the Alpaca option for
+  /// a non-market order, but that UI gate is the friendly half; this is the
+  /// structural one, mirroring how [isAlpacaPaperHost] is re-checked here
+  /// rather than trusted from the caller.
   Future<AlpacaOrder> submitOrder({
     required String symbol,
     required String side,
     required double qty,
+    required SimOrderType orderType,
   }) async {
+    if (orderType != SimOrderType.market) {
+      throw AlpacaOrderRejected(
+        'refusing to place a $orderType order on Alpaca — market orders '
+        'only (CR227 Non-goals); AMI\'s resting order types have no Alpaca '
+        'equivalent yet',
+      );
+    }
     final creds = await AlpacaCredentialStore.read();
     if (creds == null) {
       throw const AlpacaException(null, 'not linked');
