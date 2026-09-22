@@ -834,6 +834,43 @@ class SimSubmitResult {
   }
 }
 
+/// `POST /v1/sim/preview` response (`PreviewTradeResponse`,
+/// `backend/app/api/sim.py:407-414`) — a dry run of the same mandate/
+/// compliance pre-flight `/submit` runs, but nothing is persisted.
+///
+/// CR227 reuses this endpoint as the Alpaca-paper leg's compliance gate: an
+/// "Alpaca only" or "Both" order calls this first, and only proceeds to place
+/// (or additionally place, for "Both") the Alpaca order when [accepted] is
+/// true. Only the fields that gate matters here are modelled — `fill_price`/
+/// `notional`/`cash_available`/`held_quantity`/`price_source` exist on the
+/// wire but have no reader yet, so they're left off rather than guessed at.
+class SimPreviewResult {
+  const SimPreviewResult({
+    required this.accepted,
+    this.violations = const [],
+    this.blockedBy,
+    this.shariaVerdict,
+  });
+
+  final bool accepted;
+  final List<String> violations;
+  final String? blockedBy;
+  final ShariaVerdict? shariaVerdict;
+
+  factory SimPreviewResult.fromJson(Map<String, dynamic> j) {
+    final compliance =
+        (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return SimPreviewResult(
+      accepted: (j['accepted'] as bool?) ?? false,
+      violations:
+          ((compliance['violations'] as List?) ?? const []).cast<String>(),
+      blockedBy: compliance['blocked_by'] as String?,
+      shariaVerdict: ShariaVerdict.fromJson(
+          (compliance['sharia_verdict'] as Map?)?.cast<String, dynamic>()),
+    );
+  }
+}
+
 /// One news article for a ticker. Returned by GET /v1/sim/news/{ticker}.
 class SimNewsArticle {
   const SimNewsArticle({

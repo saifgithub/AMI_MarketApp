@@ -15,16 +15,43 @@
 /// to a third party. A separate instance with no interceptors is the whole
 /// point.
 ///
-/// Read-only by construction: the only two calls are GETs. AMI is
-/// simulation-only by locked decision and places no order on a user's
-/// brokerage account, paper or otherwise (D-004, DEF145) — moving the
-/// credential to the device does not change that, and nothing here should ever
-/// grow a POST.
+/// Read-only except for one narrow exception (CR227, D-071): `submitOrder`
+/// places a **market** order, and only when `creds.baseUrl` resolves to a
+/// confirmed Alpaca *paper* host. It is the sole POST this file is allowed to
+/// grow, and it re-checks the paper-host rule itself rather than trusting
+/// whatever the caller already checked — the backend never sees this call at
+/// all (still true, unchanged by CR227: DEF145's guard test pins that the
+/// backend has no path to `/v2/orders`). A live/production Alpaca account
+/// remains permanently unreachable for order placement from this client.
 library;
 
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:dio/dio.dart';
+
+/// True only when [baseUrl] resolves to a known Alpaca **paper** host.
+///
+/// Alpaca's own convention names the distinction in the hostname itself:
+/// paper endpoints are `paper-api.alpaca.markets` (optionally region/account-
+/// prefixed per CR224 — some users are handed a different subdomain), live
+/// endpoints are `api.alpaca.markets`, no `paper-` segment. Checking by
+/// pattern, not by an equality against the single default, is what makes this
+/// work for a CR224 override too — the alternative, trusting a stored label,
+/// is exactly the failure mode D-071 calls out ("never trust a label, check
+/// the endpoint").
+bool isAlpacaPaperHost(String baseUrl) {
+  final host = Uri.tryParse(baseUrl)?.host.toLowerCase() ?? '';
+  return host.endsWith('.alpaca.markets') && host.contains('paper');
+}
+
+class AlpacaOrderRejected implements Exception {
+  const AlpacaOrderRejected(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'AlpacaOrderRejected: $message';
+}
 
 class AlpacaException implements Exception {
   const AlpacaException(this.statusCode, this.detail);
@@ -113,4 +140,49 @@ class AlpacaClient {
             .map((e) => AlpacaPosition.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+
+  /// Place a market order against the user's linked Alpaca **paper** account
+  /// (CR227, D-071). Callers are expected to have already cleared AMI's
+  /// mandate/compliance floor (via `/v1/sim/preview`) before calling this —
+  /// this method only re-enforces the paper-host rule, not the trading
+  /// mandate, which it has no knowledge of.
+  ///
+  /// Market + day only, matching AMI's own "no partial fill, single price"
+  /// semantics — see CR227's Non-goals for why resting order types aren't
+  /// modelled here.
+  Future<AlpacaOrder> submitOrder({
+    required String symbol,
+    required String side,
+    required double qty,
+  }) async {
+    final creds = await AlpacaCredentialStore.read();
+    if (creds == null) {
+      throw const AlpacaException(null, 'not linked');
+    }
+    if (!isAlpacaPaperHost(creds.baseUrl)) {
+      throw AlpacaOrderRejected(
+        'refusing to place an order against a non-paper Alpaca host: '
+        '${creds.baseUrl}',
+      );
+    }
+    try {
+      final r = await _dio.post<dynamic>(
+        '${creds.baseUrl}/v2/orders',
+        data: {
+          'symbol': symbol,
+          'side': side,
+          'qty': qty.toString(),
+          'type': 'market',
+          'time_in_force': 'day',
+        },
+        options: Options(headers: await _headers(creds)),
+      );
+      return AlpacaOrder.fromJson(r.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AlpacaException(
+        e.response?.statusCode,
+        e.response?.data?.toString() ?? e.message ?? 'network error',
+      );
+    }
+  }
 }

@@ -179,6 +179,34 @@ class SimNotifier extends StateNotifier<SimState> {
     }
   }
 
+  /// CR227 — the Alpaca-paper leg's compliance gate. Unlike [submit], this
+  /// touches no state (`submitting`/`lastSubmit` are unaffected) and persists
+  /// nothing server-side — it exists purely so the trade ticket can ask "would
+  /// AMI's mandate floor allow this?" for an order that may end up filling
+  /// only on Alpaca. Returns null on a network/parse failure, matching
+  /// [submit]'s convention of surfacing failure as null rather than throwing
+  /// into the sheet.
+  Future<SimPreviewResult?> preview({
+    required String ticker,
+    required String side,
+    required double quantity,
+    String? verdictRef,
+  }) async {
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      return await api.simPreview(
+        userId: userId,
+        ticker: ticker,
+        side: side,
+        quantity: quantity,
+        verdictRef: verdictRef,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<SimSubmitResult?> submit({
     required String ticker,
     required String side,

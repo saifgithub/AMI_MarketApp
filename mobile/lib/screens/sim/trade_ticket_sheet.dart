@@ -15,6 +15,8 @@ import 'package:ami_trade/features/sim/short_rules.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/services/alpaca/alpaca_client.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
@@ -25,6 +27,26 @@ import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// CR227 — where a submitted order actually goes. `amiSim` is the default and
+/// today's only behavior; the other two require a linked Alpaca **paper**
+/// account and are hidden from the selector otherwise (see
+/// `_TradeTicketSheetState.build`).
+enum TradeDestination { amiSim, alpacaPaper, both }
+
+/// CR227 — one destination's outcome, shown independently in the result
+/// surfacing so "Both" can report a leg that filled next to one that didn't.
+class _DestinationOutcome {
+  const _DestinationOutcome({
+    required this.label,
+    required this.ok,
+    required this.message,
+  });
+
+  final String label;
+  final bool ok;
+  final String message;
+}
 
 class TradeTicketSheet extends ConsumerStatefulWidget {
   const TradeTicketSheet({
@@ -105,6 +127,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   SimOrderType _orderType = SimOrderType.market;
   SimOrderTif _tif = SimOrderTif.day;
   String _side = 'buy';
+  // CR227 — always AMI Sim on the cover/sell-from-holding entry paths (see
+  // [_destinationLocked]), and the field itself is never mutated there — the
+  // selector is hidden on those paths so there is nothing to set it from.
+  TradeDestination _destination = TradeDestination.amiSim;
+  // CR227 — per-destination results from the last submit, replacing the
+  // single snackbar when more than one leg was attempted.
+  List<_DestinationOutcome> _destinationOutcomes = const [];
   // Bug d5717660: when a trade has no AI verdict, suggest convening first.
   // The user can dismiss the advisory and proceed — the trade is recorded
   // with verdict_ref=null, which the journal renders as "Without AI advice".
@@ -266,6 +295,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   }
 
   bool get _isCover => widget.coverTicker != null;
+
+  /// CR227 Non-goals — cover-a-short and sell-from-holding are keyed to
+  /// AMI's own position sizes, which don't translate to Alpaca's independent
+  /// holdings. Both entry paths force AMI-Sim-only and hide the selector.
+  bool get _destinationLocked =>
+      widget.coverTicker != null || widget.sellTicker != null;
 
   /// Close the sheet and give the same confirmation the ordinary path gives.
   void _acknowledgeAdvisory() {
@@ -535,6 +570,20 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // looking at since they stopped typing.
     if (!await _validator.check(typed)) return;
     if (!mounted) return;
+    setState(() => _destinationOutcomes = const []);
+
+    // CR227 — market-only, Alpaca-side (see Non-goals): a resting/limit/
+    // stop order stays AMI-Sim-only regardless of the selector, since the
+    // selector is hidden whenever `_destinationLocked`, and the Alpaca leg
+    // below only ever places a market order.
+    final destination =
+        _destinationLocked ? TradeDestination.amiSim : _destination;
+
+    if (destination == TradeDestination.alpacaPaper) {
+      await _submitAlpacaOnly(typed, qty);
+      return;
+    }
+
     final result = await ref.read(simNotifierProvider.notifier).submit(
       ticker: typed,
       side: _side,
@@ -560,6 +609,24 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // Now: haptic tick, green background, large checkmark, longer
       // duration so the success is unambiguous.
       HapticFeedback.mediumImpact();
+
+      // CR227 — "Both": the sim leg just went through (ok:true), so place
+      // the Alpaca leg too. A mandate rejection above (result == null ||
+      // !result.ok) never reaches here, so neither leg fires — see this
+      // method's early return path.
+      if (destination == TradeDestination.both) {
+        final alpaca = await _placeAlpacaOrder(typed, qty);
+        if (!mounted) return;
+        setState(() => _destinationOutcomes = [
+              _DestinationOutcome(
+                label: 'AMI SIM',
+                ok: true,
+                message: _simOutcomeMessage(result, typed),
+              ),
+              alpaca,
+            ]);
+      }
+
       // CR171 §6 — hold the sheet open on an advisory. The trade is done
       // either way; this is the only moment at which the notice can be put in
       // front of the person it is about.
@@ -567,9 +634,97 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         setState(() => _pendingAdvisories = result.advisories);
         return;
       }
+      if (destination == TradeDestination.both) return;
       Navigator.of(context).pop();
       _showOutcome(result, typed);
     }
+  }
+
+  /// CR227 — "Alpaca only." Gates through `/v1/sim/preview` (no persist) so
+  /// the mandate/compliance floor applies identically to a trade that never
+  /// touches AMI's own sim — picking this destination must not be a way to
+  /// dodge "uncoachable." Only on an accepted preview does the Alpaca order
+  /// call fire.
+  Future<void> _submitAlpacaOnly(String typed, double qty) async {
+    final preview = await ref.read(simNotifierProvider.notifier).preview(
+          ticker: typed,
+          side: _side,
+          quantity: qty,
+          verdictRef: widget.verdictRef,
+        );
+    if (!mounted) return;
+    if (preview == null || !preview.accepted) {
+      setState(() => _destinationOutcomes = [
+            _DestinationOutcome(
+              label: 'ALPACA PAPER',
+              ok: false,
+              message: preview == null
+                  ? 'Could not reach AMI to check this trade.'
+                  : (preview.violations.isNotEmpty
+                      ? preview.violations.join('; ')
+                      : (preview.blockedBy ?? 'Blocked by your mandate.')),
+            ),
+          ]);
+      return;
+    }
+    final outcome = await _placeAlpacaOrder(typed, qty);
+    if (!mounted) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _destinationOutcomes = [outcome]);
+    if (outcome.ok) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: AmiColors.hexGreen,
+        behavior: SnackBarBehavior.floating,
+        content: Text(outcome.message,
+            style: const TextStyle(
+                color: AmiColors.slate900, fontWeight: FontWeight.w600)),
+      ));
+    }
+  }
+
+  /// The actual `POST /v2/orders` call, from the device, against the user's
+  /// linked Alpaca paper account (CR227, D-071). Never called except after a
+  /// compliance verdict of `accepted: true`/`ok: true` on the matching
+  /// AMI-sim call — see the two call sites above.
+  Future<_DestinationOutcome> _placeAlpacaOrder(String typed, double qty) async {
+    try {
+      final order = await ref.read(alpacaClientProvider).submitOrder(
+            symbol: typed,
+            side: _side,
+            qty: qty,
+          );
+      return _DestinationOutcome(
+        label: 'ALPACA PAPER',
+        ok: true,
+        message: '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
+            '— ${order.status}.',
+      );
+    } on AlpacaOrderRejected catch (e) {
+      return _DestinationOutcome(
+          label: 'ALPACA PAPER', ok: false, message: e.message);
+    } on AlpacaException catch (e) {
+      return _DestinationOutcome(
+          label: 'ALPACA PAPER', ok: false, message: e.detail);
+    } catch (_) {
+      return const _DestinationOutcome(
+          label: 'ALPACA PAPER', ok: false, message: 'Network error.');
+    }
+  }
+
+  String _simOutcomeMessage(SimSubmitResult result, String typed) {
+    final short = result.shortAction;
+    final filled = result.trade;
+    if (short != null) {
+      return '${_side.toUpperCase()} ${(result.shortQuantity ?? 0).toStringAsFixed(0)} '
+          '${result.shortTicker ?? typed}';
+    }
+    if (filled == null) {
+      return '${_side.toUpperCase()} $typed — resting order placed.';
+    }
+    return '${filled.side.toUpperCase()} ${filled.quantity.toStringAsFixed(0)} '
+        '${filled.ticker} @ \$${filled.entryPrice.toStringAsFixed(2)}';
   }
 
   /// The one confirmation, whichever of the four things just happened.
@@ -672,6 +827,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final state = ref.watch(simNotifierProvider);
     final refusal = state.lastSubmit != null && !state.lastSubmit!.ok;
     final l = AppLocalizations.of(context);
+    // CR227 — the destination selector only ever appears for a user with a
+    // linked Alpaca paper account, matching how the Portfolio screen's own
+    // Alpaca section hides itself when unlinked. `hasValue && value == true`
+    // rather than `.value ?? false`, so a still-loading or errored check
+    // reads as "not shown yet" rather than briefly flashing the control on.
+    final alpacaLinked =
+        ref.watch(alpacaLinkedProvider).maybeWhen(data: (v) => v, orElse: () => false);
     // CR171 — the client-side refusals, distinct from `refusal` above, which is
     // the server's verdict on the LAST submit. This one is about the order the
     // user is still typing.
@@ -976,6 +1138,68 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 ),
               ],
             ),
+            // CR227 — destination choice: AMI Sim / Alpaca Paper / Both.
+            // Hidden entirely on the cover/sell-from-holding entry paths
+            // (`_destinationLocked`) and for anyone without a linked Alpaca
+            // paper account — an unlinked user sees exactly today's ticket.
+            if (alpacaLinked && !_destinationLocked) ...[
+              const SizedBox(height: AmiSpacing.m),
+              _PillToggle<TradeDestination>(
+                label: 'DESTINATION',
+                value: _destination,
+                accent: AmiColors.hexBlue,
+                options: const [
+                  (TradeDestination.amiSim, 'AMI SIM'),
+                  (TradeDestination.alpacaPaper, 'ALPACA PAPER'),
+                  (TradeDestination.both, 'BOTH'),
+                ],
+                onChange: (v) => setState(() => _destination = v),
+              ),
+            ],
+            // CR227 — per-destination outcomes from the last submit. Shown
+            // instead of (not alongside) the single snackbar whenever more
+            // than one leg was attempted, or an Alpaca-only leg was refused
+            // and the sheet stayed open to say why.
+            if (_destinationOutcomes.isNotEmpty) ...[
+              const SizedBox(height: AmiSpacing.m),
+              for (final o in _destinationOutcomes)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AmiSpacing.s),
+                    decoration: BoxDecoration(
+                      color: AmiColors.slate900,
+                      borderRadius: BorderRadius.circular(AmiRadii.card),
+                      border: Border.all(
+                          color: o.ok ? AmiColors.hexGreen : AmiColors.hexAmber),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(o.ok ? Icons.check_circle : Icons.error_outline,
+                            size: 16,
+                            color: o.ok ? AmiColors.hexGreen : AmiColors.hexAmber),
+                        const SizedBox(width: AmiSpacing.xs),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(o.label,
+                                  style: AmiTypography.labelMono.copyWith(
+                                      fontSize: 10,
+                                      color: o.ok
+                                          ? AmiColors.hexGreen
+                                          : AmiColors.hexAmber)),
+                              Text(o.message, style: AmiTypography.caption),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
             // DEF207 — not-found takes the price chip's place entirely. A
             // price of ANY kind next to a string that isn't a ticker is the
             // fabrication this defect is about; the two are mutually

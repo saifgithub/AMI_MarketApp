@@ -1065,6 +1065,34 @@ class ApiClient {
     return SimSubmitResult.fromJson(r.data!);
   }
 
+  /// CR227 — the Alpaca-paper leg's compliance gate. Dry-runs the same
+  /// mandate/compliance pre-flight `/submit` runs (sector limits, halal
+  /// universe, drawdown, cooldown-after-loss, bracket validity) without
+  /// persisting a `SimTradeRow` — so picking "Alpaca only" cannot bypass the
+  /// safety floor "uncoachable" promises just because nothing is written to
+  /// AMI's own sim. Market orders only, matching CR227's scope: no
+  /// order-type/limit/trigger/tif params are exposed here.
+  Future<SimPreviewResult> simPreview({
+    required String userId,
+    required String ticker,
+    required String side, // 'buy' | 'sell'
+    required double quantity,
+    String? verdictRef,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/preview',
+      data: {
+        'user_id': userId,
+        'ticker': ticker,
+        'side': side,
+        'quantity': quantity,
+        'order_type': 'market',
+        if (verdictRef != null) 'verdict_ref': verdictRef,
+      },
+    );
+    return SimPreviewResult.fromJson(r.data!);
+  }
+
   /// CR170 — the resting-order book. Working orders plus terminal rows from the
   /// last 24h, so a rejected or expired order never silently vanishes
   /// overnight.

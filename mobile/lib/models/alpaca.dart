@@ -73,6 +73,40 @@ class AlpacaPosition {
       };
 }
 
+/// One Alpaca paper order, as placed by `AlpacaClient.submitOrder` (CR227).
+///
+/// Market orders only (v1) — see CR227's Non-goals. Parsed the same
+/// tolerant way as the other models here: Alpaca returns `filled_qty` as a
+/// string, and an order accepted-but-not-yet-filled reports a null fill
+/// price, which should read as "not yet filled" rather than throw.
+class AlpacaOrder {
+  const AlpacaOrder({
+    required this.id,
+    required this.symbol,
+    required this.side,
+    required this.qty,
+    required this.status,
+    this.filledAvgPrice,
+  });
+
+  final String id;
+  final String symbol;
+  final String side;
+  final double qty;
+  final String status;
+  final double? filledAvgPrice;
+
+  factory AlpacaOrder.fromJson(Map<String, dynamic> j) => AlpacaOrder(
+        id: (j['id'] ?? '') as String,
+        symbol: (j['symbol'] ?? '') as String,
+        side: (j['side'] ?? '') as String,
+        qty: alpacaNum(j['qty']),
+        status: (j['status'] ?? '') as String,
+        filledAvgPrice:
+            j['filled_avg_price'] == null ? null : alpacaNum(j['filled_avg_price']),
+      );
+}
+
 /// What the device sends with a Room convene / 1-on-1 turn so the agents can
 /// see the linked account. Values only — the backend owns the layout of the
 /// block that reaches the prompt.
