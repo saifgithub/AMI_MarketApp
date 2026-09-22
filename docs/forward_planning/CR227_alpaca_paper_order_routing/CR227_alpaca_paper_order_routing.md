@@ -152,13 +152,33 @@ independent cash balance, accepts). Show each destination's outcome separately.
 - [x] "Both" surfaces independent per-destination results when one leg succeeds and the
   other fails (`_DestinationOutcome` list, rendered per-destination in the sheet).
 - [x] `flutter analyze` clean (0 new issues); new/changed tests passing (mobile suite
-  1481/1481); backend unit suite `pytest backend/tests/unit/ -q` 6693 passed / 7 skipped
-  (3 pre-existing failures from other tracks — CR228 row-status typo, DEF412 path check —
-  unrelated to CR227, confirmed by re-running in isolation).
+  1483/1483 at final SHA); backend unit suite `pytest backend/tests/unit/ -q` 6691 passed /
+  9 skipped (3 pre-existing failures from other tracks — CR228 row-status typo, DEF412 path
+  check — unrelated to CR227, independently reproduced by the auditor at the base commit
+  before any CR227 code).
+- [x] Non-market order types (LIMIT/STOP/STOP_LIMIT) never reach the Alpaca leg — added in
+  round 2 after the independent auditor found the gap (round-1 MAJOR-1): the destination
+  selector hides on a non-market order type, and `AlpacaClient.submitOrder()` independently
+  refuses any non-market type before even checking link state. Both proven load-bearing by
+  mutation, both by the builder and independently re-verified by the auditor.
+
+## Independent audit (CR005 protocol)
+
+Routed to the audit handshake (`orchestration/audit/cr/CR227.architect.md` /
+`CR227.auditor.md`) per Saiful's explicit instruction. **Round 1: AWAITING_FIXES** — 1 MAJOR
+(a LIMIT/STOP ticket routed to Alpaca silently converted to an immediate market fill; the
+CR's own stated non-goal had no enforcing check), 1 MINOR (a stray dispatch-layer artifact
+mischaracterized as uncommitted). **Round 2: COMPLETE** — both fixed, neither contested,
+independently re-verified and the attack table widened by the auditor. Full transcript in
+the audit lane files; commits: `a17b33b2` (MAJOR-1 fix), `9a7e810c` (MINOR-1 fix).
 
 ## Status
 
-`in_progress` — decision-log amendment, guard-test rewrite, and mobile implementation
-landed 2026-09-22/23 (commits b2da0fd5, a04842cc, 4a0fba94). Routed to the independent
-auditor (CR005 protocol, `orchestration/audit/`) before promotion/release, per Saiful's
-explicit instruction. Moves to `done` once the auditor issues `VERDICT: COMPLETE`.
+`done` — decision-log amendment (D-071), DEF145 guard-test rewrite, and mobile
+implementation landed 2026-09-22/23 (commits b2da0fd5, a04842cc, 4a0fba94, 30a3a6e3), audit
+round-1 findings fixed (a17b33b2, 9a7e810c), independent auditor verdict `COMPLETE (round 2)`
+2026-09-23 (`orchestration/audit/cr/CR227.auditor.md`). **Not yet promoted or shipped** — no
+backend change exists to promote (mobile-direct design, per CR202); the mobile change awaits
+Saiful's own hands-on acceptance pass before TestFlight/Play submission, per this handshake's
+gap-fill 4 (auditor COMPLETE is not the same checkpoint as Saiful's own device test) and per
+Saiful's own instruction that "ready" means after this audit process has closed.
