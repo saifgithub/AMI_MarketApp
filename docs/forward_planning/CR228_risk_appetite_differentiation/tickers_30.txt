@@ -1,0 +1,36 @@
+# CR228 pilot universe - 30 tickers, proportional stratified sample.
+# Source: CR035 results/consensus.jsonl (yahoo, asof 2026-07-17), 150 names
+# minus the 8 DEF335 post-window split names = 142-name pool.
+# Strata: sell 2 (the entire pool) / hold 10 / buy 14 / strong_buy 4 = 30.
+# Street Buy-or-better: sample 18/30 = 60.0%  vs pool 90/142 = 63.4%.
+# Drawn with seed=2026 (stdlib random.sample over sorted per-bucket lists).
+AAPL
+APD
+BA
+BAC
+BGS
+CAG
+DE
+DHR
+FCEL
+JPM
+LEVI
+MA
+MO
+NKE
+PLD
+PYPL
+RIOT
+RIVN
+SEDG
+SLB
+SNAP
+SO
+SPCE
+T
+TMO
+V
+WFC
+WU
+XPEV
+XRX
