@@ -1,9 +1,13 @@
 /// Direct Alpaca paper-API client (CR202).
 ///
-/// The app talks to `paper-api.alpaca.markets` itself, using credentials that
-/// never leave the device. Flutter's HTTP stack is not a browser, so no CORS
-/// preflight applies — the `APCA-API-*` headers work exactly as they do from a
-/// server.
+/// The app talks to Alpaca itself, using credentials that never leave the
+/// device. Flutter's HTTP stack is not a browser, so no CORS preflight
+/// applies — the `APCA-API-*` headers work exactly as they do from a server.
+///
+/// The host defaults to `paper-api.alpaca.markets` but is user-overridable
+/// (CR224) — Alpaca does not resolve every account to that same host, so the
+/// base URL is read from `AlpacaCredentialStore` per request rather than
+/// fixed at construction time.
 ///
 /// **This deliberately does NOT reuse `api_client.dart`'s Dio.** That instance
 /// carries AMI's base URL and an auth interceptor that attaches the user's AMI
@@ -39,18 +43,13 @@ class AlpacaClient {
   AlpacaClient({Dio? dio})
       : _dio = dio ??
             Dio(BaseOptions(
-              baseUrl: 'https://paper-api.alpaca.markets',
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
             ));
 
   final Dio _dio;
 
-  Future<Map<String, String>> _headers() async {
-    final creds = await AlpacaCredentialStore.read();
-    if (creds == null) {
-      throw const AlpacaException(null, 'not linked');
-    }
+  Future<Map<String, String>> _headers(AlpacaCredentials creds) async {
     // Mirrors the header branch the backend's `_paper_get` used to carry.
     if (creds.mode == AlpacaAuthMode.oauth) {
       return {'Authorization': 'Bearer ${creds.keyId}'};
@@ -62,10 +61,14 @@ class AlpacaClient {
   }
 
   Future<T> _get<T>(String path, T Function(dynamic) parse) async {
+    final creds = await AlpacaCredentialStore.read();
+    if (creds == null) {
+      throw const AlpacaException(null, 'not linked');
+    }
     try {
       final r = await _dio.get<dynamic>(
-        path,
-        options: Options(headers: await _headers()),
+        '${creds.baseUrl}$path',
+        options: Options(headers: await _headers(creds)),
       );
       return parse(r.data);
     } on DioException catch (e) {
@@ -77,13 +80,17 @@ class AlpacaClient {
   }
 
   /// Validate a candidate pair BEFORE storing it, by fetching the account it
-  /// claims to open. Takes the credentials directly rather than reading the
-  /// store, so the connect screen can check a pair the user has not committed
-  /// to yet.
-  Future<void> validate(String keyId, String secret) async {
+  /// claims to open. Takes the credentials (and base URL) directly rather
+  /// than reading the store, so the connect screen can check a pair — and an
+  /// endpoint override (CR224) — the user has not committed to yet.
+  Future<void> validate(
+    String keyId,
+    String secret, {
+    String baseUrl = kDefaultAlpacaBaseUrl,
+  }) async {
     try {
       await _dio.get<dynamic>(
-        '/v2/account',
+        '$baseUrl/v2/account',
         options: Options(headers: {
           'APCA-API-KEY-ID': keyId,
           'APCA-API-SECRET-KEY': secret,

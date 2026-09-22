@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kKeyIdKey = 'ami.alpaca_key_id';
 const _kSecretKey = 'ami.alpaca_secret';
 const _kModeKey = 'ami.alpaca_auth_mode';
+const _kBaseUrlKey = 'ami.alpaca_base_url';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,38 @@ void main() {
       expect(secureData.containsKey(_kKeyIdKey), isFalse);
       expect(secureData.containsKey(_kSecretKey), isFalse);
       expect(secureData.containsKey(_kModeKey), isFalse);
+      expect(secureData.containsKey(_kBaseUrlKey), isFalse);
+    });
+  });
+
+  group('base URL override (CR224)', () {
+    test('defaults to the standard paper-trading host', () async {
+      await AlpacaCredentialStore.save('PKTEST123', 'secret-abc');
+      AlpacaCredentialStore.resetCacheForTest();
+
+      expect((await AlpacaCredentialStore.read())!.baseUrl,
+          kDefaultAlpacaBaseUrl);
+    });
+
+    test('a custom endpoint round-trips through secure storage', () async {
+      await AlpacaCredentialStore.save('PKTEST123', 'secret-abc',
+          baseUrl: 'https://paper-api-shard2.alpaca.markets');
+      AlpacaCredentialStore.resetCacheForTest();
+
+      final creds = await AlpacaCredentialStore.read();
+      expect(creds!.baseUrl, 'https://paper-api-shard2.alpaca.markets');
+      expect(secureData[_kBaseUrlKey], 'https://paper-api-shard2.alpaca.markets');
+    });
+
+    test('a pre-CR224 stored pair with no base URL key reads as the default',
+        () async {
+      // Simulates a user who linked before this field existed.
+      secureData[_kKeyIdKey] = 'PKTEST123';
+      secureData[_kSecretKey] = 'secret-abc';
+      AlpacaCredentialStore.resetCacheForTest();
+
+      expect((await AlpacaCredentialStore.read())!.baseUrl,
+          kDefaultAlpacaBaseUrl);
     });
   });
 

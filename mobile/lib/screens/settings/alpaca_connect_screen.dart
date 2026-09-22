@@ -6,9 +6,11 @@
 /// anywhere to put them. Only the resulting positions are ever uploaded.
 ///
 /// Two modes:
-///   1. API Key — paste key ID + secret. Validated against
-///      `GET /v2/account` before being stored, so a bad pair fails here rather
-///      than silently at the next Room convene.
+///   1. API Key — paste key ID + secret, and (CR224) the API endpoint Alpaca
+///      assigned the account, since it is not the same host for everyone.
+///      Validated against `GET /v2/account` before being stored, so a bad
+///      pair — or a wrong endpoint — fails here rather than silently at the
+///      next Room convene.
 ///   2. OAuth — embedded WebView. Still requires the ALPACA_CLIENT_ID build
 ///      define and Alpaca app approval, so it stays greyed-out. Alpaca's token
 ///      endpoint requires client_secret and documents no PKCE, so that one
@@ -159,6 +161,7 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
   final _formKey = GlobalKey<FormState>();
   final _keyCtrl = TextEditingController();
   final _secretCtrl = TextEditingController();
+  final _baseUrlCtrl = TextEditingController(text: kDefaultAlpacaBaseUrl);
   bool _secretVisible = false;
   bool _loading = false;
   String? _error;
@@ -167,6 +170,7 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
   void dispose() {
     _keyCtrl.dispose();
     _secretCtrl.dispose();
+    _baseUrlCtrl.dispose();
     super.dispose();
   }
 
@@ -178,12 +182,18 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
     });
     final keyId = _keyCtrl.text.trim();
     final secret = _secretCtrl.text.trim();
+    // Trim a trailing slash — the client joins this with paths that already
+    // start with '/', and a stray slash here would double up silently.
+    var baseUrl = _baseUrlCtrl.text.trim();
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+    }
     try {
       // Prove the pair works BEFORE storing it. Storing an unverified
       // credential just defers the failure to the next Room convene, where
       // it is far less obvious what went wrong.
-      await ref.read(alpacaClientProvider).validate(keyId, secret);
-      await AlpacaCredentialStore.save(keyId, secret);
+      await ref.read(alpacaClientProvider).validate(keyId, secret, baseUrl: baseUrl);
+      await AlpacaCredentialStore.save(keyId, secret, baseUrl: baseUrl);
       ref.read(alpacaSnapshotCacheProvider).invalidate();
       // CR203: report the fact of the link, not the key. Deliberately not
       // awaited into the failure path — the credential is already stored and
@@ -230,7 +240,8 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
             const Text(
               'Your key is stored only on this device and is never sent to AMI. '
               'That also means it will not follow you to a new phone or survive '
-              'reinstalling the app — you will paste it again.',
+              'reinstalling the app — you will paste it again. The endpoint '
+              'below is stored the same way.',
               style: TextStyle(color: AmiColors.slate500, fontSize: 12, height: 1.5),
             ),
             const SizedBox(height: AmiSpacing.xl),
@@ -266,6 +277,30 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
               enableSuggestions: false,
               inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: AmiSpacing.l),
+            _label('API ENDPOINT'),
+            const SizedBox(height: AmiSpacing.xs),
+            TextFormField(
+              controller: _baseUrlCtrl,
+              style: const TextStyle(color: AmiColors.textHigh, fontFamily: 'monospace'),
+              decoration: _inputDecoration(kDefaultAlpacaBaseUrl),
+              autocorrect: false,
+              enableSuggestions: false,
+              keyboardType: TextInputType.url,
+              inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+              validator: (v) {
+                final trimmed = v?.trim() ?? '';
+                if (trimmed.isEmpty) return 'Required';
+                if (!trimmed.startsWith('https://')) return 'Must start with https://';
+                return null;
+              },
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+            const Text(
+              'Only change this if Alpaca gave your account a different paper '
+              'trading endpoint than the default.',
+              style: TextStyle(color: AmiColors.slate500, fontSize: 11, height: 1.4),
             ),
             const SizedBox(height: AmiSpacing.xl),
             SizedBox(

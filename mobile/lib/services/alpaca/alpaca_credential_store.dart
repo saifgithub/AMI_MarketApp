@@ -29,11 +29,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// a config change and not a debugging session.
 enum AlpacaAuthMode { apiKey, oauth }
 
+/// Alpaca's default paper-trading REST host. Most users never need to
+/// override this — CR224 exists because Alpaca does not resolve every
+/// account to this same host.
+const String kDefaultAlpacaBaseUrl = 'https://paper-api.alpaca.markets';
+
 class AlpacaCredentials {
   const AlpacaCredentials({
     required this.keyId,
     required this.secret,
     this.mode = AlpacaAuthMode.apiKey,
+    this.baseUrl = kDefaultAlpacaBaseUrl,
   });
 
   /// API-key mode: the key ID. OAuth mode: the bearer access token.
@@ -44,12 +50,18 @@ class AlpacaCredentials {
   final String secret;
 
   final AlpacaAuthMode mode;
+
+  /// The Alpaca REST host this credential talks to (CR224). Alpaca does not
+  /// hand every account the same paper-trading endpoint, so this travels
+  /// with the key pair rather than being a build-time constant.
+  final String baseUrl;
 }
 
 class AlpacaCredentialStore {
   static const String _kKeyIdKey = 'ami.alpaca_key_id';
   static const String _kSecretKey = 'ami.alpaca_secret';
   static const String _kModeKey = 'ami.alpaca_auth_mode';
+  static const String _kBaseUrlKey = 'ami.alpaca_base_url';
 
   /// Identical options to device_user.dart — see CR125. `resetOnError`
   /// recovers a corrupted keystore by wiping it, which surfaces here as
@@ -82,7 +94,19 @@ class AlpacaCredentialStore {
     final mode = await _storage.read(key: _kModeKey) == 'oauth'
         ? AlpacaAuthMode.oauth
         : AlpacaAuthMode.apiKey;
-    _cached = AlpacaCredentials(keyId: keyId, secret: secret, mode: mode);
+    // A missing base URL means "linked before CR224" or "never overridden" —
+    // either way that's the default host, not an unlinked state, so it does
+    // not fold into the null check above.
+    final storedBaseUrl = await _storage.read(key: _kBaseUrlKey);
+    final baseUrl = (storedBaseUrl == null || storedBaseUrl.isEmpty)
+        ? kDefaultAlpacaBaseUrl
+        : storedBaseUrl;
+    _cached = AlpacaCredentials(
+      keyId: keyId,
+      secret: secret,
+      mode: mode,
+      baseUrl: baseUrl,
+    );
     return _cached;
   }
 
@@ -95,6 +119,7 @@ class AlpacaCredentialStore {
     String keyId,
     String secret, {
     AlpacaAuthMode mode = AlpacaAuthMode.apiKey,
+    String baseUrl = kDefaultAlpacaBaseUrl,
   }) async {
     await _storage.write(key: _kKeyIdKey, value: keyId);
     await _storage.write(key: _kSecretKey, value: secret);
@@ -102,7 +127,13 @@ class AlpacaCredentialStore {
       key: _kModeKey,
       value: mode == AlpacaAuthMode.oauth ? 'oauth' : 'apikey',
     );
-    _cached = AlpacaCredentials(keyId: keyId, secret: secret, mode: mode);
+    await _storage.write(key: _kBaseUrlKey, value: baseUrl);
+    _cached = AlpacaCredentials(
+      keyId: keyId,
+      secret: secret,
+      mode: mode,
+      baseUrl: baseUrl,
+    );
   }
 
   /// Unlink. Purely local — there is nothing on the server to tell.
@@ -110,6 +141,7 @@ class AlpacaCredentialStore {
     await _storage.delete(key: _kKeyIdKey);
     await _storage.delete(key: _kSecretKey);
     await _storage.delete(key: _kModeKey);
+    await _storage.delete(key: _kBaseUrlKey);
     _cached = null;
   }
 
