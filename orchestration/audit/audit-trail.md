@@ -8,6 +8,7 @@ at the bottom. Owner: AMI Trade AUDITOR.
 
 | When (KL) | Item | Round | SHA | Verdict | Headline |
 |---|---|---|---|---|---|
+| 2026-09-23 12:43 KL | CR230 | 2 | 56b0839f | COMPLETE | unawaited at all 4 sites; the 3 branches the lane did not mutate driven here and hold; pin bites everywhere |
 | 2026-09-23 12:15 KL | CR230 | 1 | a5ca12e0 | AWAITING_FIXES | trade confirmation is gated on the order_log round-trip (~30s Dio bound) after the order already executed |
 | 2026-09-23 10:16 KL | CR221-SLOT5 | 2 | 7d552cca | COMPLETE | seam re-derives the quotient; pin holds arithmetic not just provenance; full suite bare 6696 passed exit 0 |
 | 2026-09-23 10:02 KL | CR221-SLOT2 | 2 | 7afc93b6 | COMPLETE | full_len floor now pinned; mutation kills only the new test, undercounts floored in every direction |
