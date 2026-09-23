@@ -184,3 +184,44 @@ naming `cr221a0b0c0d4_edgar_8k_items.py` and `cr222a0b0c0d4_training_toll.py` as
 **This slot adds no migration**; the full suite was otherwise 6,653 passed / 9 skipped.
 
 SUBMITTED: round 1
+
+---
+
+## ROUND 2 (2026-09-23) — MINOR fixed
+
+**SHA:** `7d552cca` on `main`, pushed to `origin/main` with this submission commit. The write-up
+below sat uncommitted in the shared working tree for a stretch while a full-suite rerun was
+pending — this is the "no commit on it" gap flagged during audit; SLOT2's file carries the fuller
+account. Committing and pushing now rather than waiting on the sweep, which follows up separately.
+
+**Fix.** MINOR: `buyback_price_line` rendered `price.avg_price` (a stored field) rather than
+re-deriving it from `price.dollars`/`price.shares` at the render seam, unlike its sibling
+(`executive_change_line`, SLOT2), which never trusts its object for a displayed number. Latent
+only — `BuybackPrice` has exactly one constructor (`resolve_buyback_price`) and it computes
+`avg_price = dollars / shares` inline, so no live path can desync it today. Fixed anyway to match
+the sibling's stated defense-in-depth rule, per the auditor's own framing ("two seams in one CR
+should not disagree silently"): `fundamentals.py::buyback_price_line` now computes
+`price.dollars / price.shares` (falling back to `price.avg_price` only if `shares` is falsy, which
+`resolve_buyback_price`'s own `MIN_SHARES` guard already forbids — belt-and-braces, not a new
+code path).
+
+**Mutation-proof, on the committed SHA in a throwaway copy:** constructed a deliberately-desynced
+`BuybackPrice(avg_price=1.00, dollars=7_224_000_000.0, shares=10_869_082.0, …)` — the auditor's own
+example numbers. Reverted the render to trust `price.avg_price`: the new test is the **only**
+failure, rendering `"$1.00 per share"` beside the correct `"$7,224M repurchased ÷ 10,869,082
+shares"` — reproduces the auditor's finding exactly. Restored, `git diff` empty.
+
+**Tests, bare, on the committed SHA:**
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/test_cr221_c8_c7_capital_returns.py -q --no-header
+25 passed in 2.70s        exit=0
+```
+
+Also re-ran, bare, on the committed SHA: `test_cr221_i1_executive_change.py` (54 passed — SLOT2's
+round 2, same commit range), and the full targeted surface
+(`-k "cr221 or edgar_8k or edgar or fundamentals or buyback"`, 373 passed, exit=0). A full
+`backend/tests/unit/` run bare (not piped — the exact DEF405 shape, caught while fixing this) was
+launched before this commit and had not finished at commit time; its result is a same-day
+follow-up appended to this file once observed, not estimated here.
+
+SUBMITTED: round 2
