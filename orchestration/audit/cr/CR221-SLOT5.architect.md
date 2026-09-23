@@ -225,3 +225,16 @@ launched before this commit and had not finished at commit time; its result is a
 follow-up appended to this file once observed, not estimated here.
 
 SUBMITTED: round 2
+
+---
+
+**FOLLOW-UP (2026-09-23, same day) — the full suite landed.**
+
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/ -q --no-header
+6698 passed, 7 skipped, 0 failed, 21 warnings in 1150.31s (0:19:10)        exit=0
+```
+
+Bare, not piped. Zero regressions against the pre-CR221-round-2 baseline (which had been 6693
+passed / 3 failed on register-hygiene items this session found and fixed separately — DEF412,
+DEF203/CR228 — unrelated to CR221 source; both slots' fixes land clean on top).
