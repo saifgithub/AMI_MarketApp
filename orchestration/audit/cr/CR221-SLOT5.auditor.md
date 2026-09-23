@@ -232,3 +232,123 @@ an upstream bound moves the question reopens loudly. That is the opposite of the
 pattern this project keeps filing.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+
+---
+
+# Round 2 — COMPLETE
+
+**VERDICT: COMPLETE (round 2)**
+
+**SHA audited:** `7d552cca`, in a detached worktree at that SHA
+(`.claude/worktrees/slot5r2-u66`), `git status --short` empty throughout,
+`git rev-parse HEAD` = `7d552ccaf5f7e8b381f1b16ab2de0dc7583857c1` (DEF159).
+
+**Scope.** `git show --stat 7d552cca` — two files, +29/−2:
+`backend/app/services/fundamentals.py` (the seam) and
+`backend/tests/unit/test_cr221_c8_c7_capital_returns.py` (its pin). Nothing else.
+
+`buyback_price.py`, `dividend_growth.py` and `room_runner.py` were last touched before this SHA
+(`b45bbda3`, `b45bbda3`, `83e9c6e6`), so round 1's verifications on those surfaces — the M9
+exhaustive-search equivalence, the single-guard isolation, the declared-rate basis, the
+mock-data `UNAVAILABLE` branch — carry forward unchanged and were not re-run.
+
+## MINOR — CLOSED
+
+`buyback_price_line` now computes `price.dollars / price.shares` at the render seam instead of
+rendering the stored `avg_price`, matching the sibling seam (`executive_change_line`) that
+round 1 flagged it for disagreeing with. The displayed quotient and the `÷ shares` line beside it
+are now derived from the same two numbers, so they cannot disagree.
+
+**Mutation.** Reverting the seam to `avg = price.avg_price`:
+
+```
+1 failed, 24 passed
+FAILED ...::test_the_buyback_line_recomputes_the_price_rather_than_trusting_it
+```
+
+Sole failure. Reverted, `git status --short` empty, baseline 25 passed restored.
+
+**The assertion is not tautological — checked, because it computes its expectation with the same
+expression as the source.** That shape can pin "the field went unused" while being blind to a
+wrong formula. So I mutated the *arithmetic* rather than the field:
+`(price.dollars / price.shares) * 1.10` — a consistent but wrong quotient.
+
+```
+2 failed, 23 passed
+```
+
+Caught, by the new test and by `test_both_flags_are_off_by_default...`. The pin holds the
+arithmetic, not merely the provenance.
+
+**Independent probe** on the exact numbers from my round-1 finding:
+
+| object | rendered |
+|---|---|
+| desynced `avg_price=1.00`, dollars/shares → 664.64 | **$664.64** (was $1.00 before the fix) |
+| honest `avg_price=664.64` | $664.64 |
+| `shares=0` (fallback branch) | $1.00 |
+
+The `shares=0` branch is the one place the seam still reads `avg_price`, and it exists only to
+keep the expression total rather than raise `ZeroDivisionError`. I verified it is genuinely
+unreachable rather than taking the claim on trust: `buyback_price.py:51,125` —
+`MIN_SHARES = 1_000.0` and `if dollars <= 0 or shares < MIN_SHARES: return None` at the sole
+construction site. Correctly judged belt-and-braces.
+
+## The full suite — run by me, because the submission left it open
+
+SLOT5's round-2 text ends: *"Full `backend/tests/unit/` run bare (not piped — the exact DEF405
+shape, caught while fixing this) is in progress at submission time; result appended below once it
+lands rather than estimated."* It never landed — the submission ends at that sentence. Declining
+to estimate was right; leaving it unfilled means the number was unverified at submission. I ran
+it myself rather than accept it.
+
+Bare, unpiped, exit code read directly (DEF326 — never the summary prose):
+
+```
+TMPDIR="/Volumes/Extreme Pro/ami_tmp" uv run pytest tests/unit/ -q --no-header
+6696 passed, 9 skipped, 21 warnings in 1111.58s (0:18:31)
+EXIT=0
+```
+
+**Fully green** — no failures at all, which is *cleaner* than the 3 pre-existing register
+failures present at CR227's base (`c8543a12`). I checked why rather than accepting a suite that
+improved on its own: both were fixed between that commit and this SHA, by the tracks that owned
+the rows — `9f6a80b5` (CR228's `'in progress'` free-text status → the vocabulary token
+`in_progress`) and `d923549c` (DEF412's FILES link with one `../` too many). Those are precisely
+the two rows I named in the CR227 round-1 verdict, fixed by their owners rather than swept up by
+a passing lane. Correct outcome.
+
+## Verification performed
+
+```
+worktree:  .claude/worktrees/slot5r2-u66 @ 7d552cca, git status --short empty
+scope:     git show --stat 7d552cca -> 2 files, +29/-2
+provenance: buyback_price.py / dividend_growth.py / room_runner.py untouched by this SHA
+            -> round-1 verifications on those surfaces carry forward
+baseline:  pytest tests/unit/test_cr221_c8_c7_capital_returns.py -q -> 25 passed
+mutation:  seam reverted to trust avg_price      -> 1 failed (the new test); reverted, clean
+mutation:  quotient made wrong by +10%           -> 2 failed (not tautological); reverted, clean
+probe:     desynced object -> $664.64 (was $1.00); shares=0 fallback -> $1.00
+source:    MIN_SHARES=1000 at buyback_price.py:125 -> fallback unreachable, confirmed
+suite:     full backend/tests/unit/ BARE -> 6696 passed, 9 skipped, EXIT=0
+```
+
+Scratch files removed. Worktree `slot5r2-u66` is this instance's and is reaped on verdict.
+
+## Closing note
+
+Round 1 called this lane strong and round 2 does nothing to change that. The MINOR was the
+mildest kind — a latent inconsistency between two seams in the same CR, unreachable from any live
+path — and the response fixed the seam to match its sibling rather than arguing the point was
+moot, which it could fairly have done.
+
+One process note, recorded because it cost eight hours rather than because it reflects on the
+work: both CR221 round-2 submissions sat with their `SUBMITTED: round 2` marker written to disk
+but uncommitted, so the watcher correctly refused to surface them (`watcher.sh:105` — an
+uncommitted submission is never `AWAITING_AUDIT`) and I read the resulting quiet board as "no
+work." The architect committed both markers at `33cc659b` / `393623f2`. The fix commits had been
+on `main` and auditable the whole time. The marker and the code it points at need to land
+together, or the handshake stalls silently on both sides.
+
+VERDICT: COMPLETE (round 2)
