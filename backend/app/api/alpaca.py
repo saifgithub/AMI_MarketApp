@@ -15,6 +15,7 @@ re-introducing host custody.
 
 POST /v1/alpaca/link       — exchange an OAuth code, RETURN the tokens (no storage)
 POST /v1/alpaca/link_state — the device reports WHETHER it holds a credential
+POST /v1/alpaca/order_log  — the device reports the outcome of a submitOrder() call (CR230)
 """
 
 from __future__ import annotations
@@ -28,7 +29,9 @@ from sqlalchemy import select
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import User
+from app.schemas.alpaca import AlpacaOrderLogIn
 from app.services.alpaca_service import AlpacaError, exchange_code
+from app.services.audit import record_alpaca_order
 
 router = APIRouter(prefix="/v1/alpaca", tags=["alpaca"])
 
@@ -109,3 +112,34 @@ def report_link_state(
         s.commit()
 
     return LinkStateResponse(linked=body.linked, linked_at=stamped)
+
+
+@router.post("/order_log", status_code=status.HTTP_204_NO_CONTENT)
+def log_order(
+    body: AlpacaOrderLogIn,
+    current_user: User = Depends(get_current_user),
+) -> None:
+    """CR230 — the device reports the outcome of an `AlpacaClient.submitOrder()`
+    call: accepted, rejected by Alpaca, or refused client-side before ever
+    reaching Alpaca (wrong order type, non-paper host). Fire-and-forget on
+    the client side — the trade ticket's own success/failure banner is
+    already final by the time this call is made; a failure to log here must
+    never surface as a trade failure.
+
+    Same "report, not observation" posture as `report_link_state` above: the
+    backend never holds the Alpaca credential, so it cannot independently
+    confirm this against Alpaca's own order book. Write-only in v1 — no read
+    endpoint yet.
+    """
+    _require_claimed(current_user)
+    record_alpaca_order(
+        user_id=current_user.id,
+        symbol=body.symbol,
+        side=body.side,
+        qty=body.qty,
+        destination=body.destination,
+        outcome=body.outcome,
+        detail=body.detail,
+        alpaca_order_id=body.alpaca_order_id,
+        alpaca_status=body.alpaca_status,
+    )

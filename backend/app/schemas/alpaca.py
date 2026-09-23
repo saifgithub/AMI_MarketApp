@@ -76,3 +76,32 @@ class AlpacaSnapshotIn(BaseModel):
     portfolio_value: FiniteFloat
     buying_power: FiniteFloat
     positions: list[AlpacaPositionIn] = Field(default_factory=list, max_length=MAX_POSITIONS)
+
+
+# CR230 — order-attempt logging. Unlike AlpacaSnapshotIn above, this never
+# reaches an LLM prompt (it's a write-only audit row), so the prompt-injection
+# rationale for the symbol pattern doesn't apply here. The pattern is kept
+# anyway: a DB column is not the place for a client to write arbitrary
+# strings either, and reusing the existing bound keeps one definition of
+# "what a ticker looks like" rather than two.
+class AlpacaOrderLogIn(BaseModel):
+    """One `AlpacaClient.submitOrder()` outcome, as reported by the device.
+
+    CR230 — this is a report, not an observation, in the same sense
+    `LinkStateRequest` (CR203) is: the backend never holds the Alpaca
+    credential (CR202), so it cannot independently verify any of this. It
+    is the device's own account of what happened, logged because Saiful
+    asked for a record of every Alpaca interaction, not because the backend
+    can confirm it against Alpaca's own order book.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    symbol: str = Field(pattern=_SYMBOL_PATTERN)
+    side: str = Field(pattern=r"^(buy|sell)$")
+    qty: FiniteFloat
+    destination: str = Field(pattern=r"^(alpaca_only|both)$")
+    outcome: str = Field(pattern=r"^(submitted|rejected_by_alpaca|refused_client_side)$")
+    detail: str | None = Field(default=None, max_length=500)
+    alpaca_order_id: str | None = Field(default=None, max_length=64)
+    alpaca_status: str | None = Field(default=None, max_length=32)

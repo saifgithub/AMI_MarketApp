@@ -2756,6 +2756,44 @@ class AdminAuditRow(Base):
     )
 
 
+class AlpacaOrderAuditRow(Base):
+    """CR230 — one `AlpacaClient.submitOrder()` outcome, as reported by the
+    device. Written best-effort by `services/alpaca_audit.py`; a write
+    failure never breaks the trade the device is reporting.
+
+    **A report, not an observation** — same posture as `User.alpaca_linked_at`
+    (CR203). The backend never holds the Alpaca credential (CR202), so it
+    cannot independently query Alpaca's order book to confirm any row here;
+    this is the device's own account of what happened.
+
+    Deliberately NOT included in `trim_audit_tables()`'s 90-day sweep, same
+    reasoning as `admin_audit`: volume is per-trade (human-scale, not
+    per-HTTP-request), and Saiful's explicit instruction was to keep a log of
+    every Alpaca interaction — a table designed to auto-delete itself after
+    90 days would work against that intent.
+    """
+
+    __tablename__ = "alpaca_order_audit"
+    __table_args__ = (
+        Index("ix_alpaca_order_audit_created_at", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    symbol: Mapped[str] = mapped_column(String, nullable=False)
+    side: Mapped[str] = mapped_column(String, nullable=False)
+    qty: Mapped[float] = mapped_column(Float, nullable=False)
+    destination: Mapped[str] = mapped_column(String, nullable=False)
+    outcome: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    alpaca_order_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    alpaca_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+
+
 class VerdictOutcomeRow(Base):
     """CR219 R55 — one banked Room verdict, and what the market did afterwards.
 

@@ -39,9 +39,13 @@ placement is the interaction that matters: it is the one action this app
 takes against a real (paper) brokerage account.
 
 1. **New table, `alpaca_order_audit`** — one row per `submitOrder()` call
-   outcome, written by a new endpoint. Same shape/retention posture as
-   `llm_audit`/`http_audit` (90-day trim via `trim_audit_tables`, following
-   the existing pattern in `backend/app/services/audit.py`).
+   outcome, written by a new endpoint. **Retention posture follows
+   `admin_audit`, not `llm_audit`/`http_audit`: permanent, excluded from
+   `trim_audit_tables()`'s 90-day sweep.** Decided during implementation —
+   Saiful's instruction was "keep a log of every interaction," and volume
+   here is per-trade (human-scale, not per-HTTP-request), the same reasoning
+   `admin_audit`'s docstring already gives for its own permanent retention.
+   A 90-day auto-delete would work against the stated intent.
 2. **New endpoint, `POST /v1/alpaca/order_log`** — mobile calls this
    immediately after `submitOrder()` settles, whether it succeeded,
    Alpaca rejected it, or the client refused it before ever calling Alpaca
@@ -79,8 +83,8 @@ class AlpacaOrderLogIn(BaseModel):
     destination: str = Field(pattern=r"^(alpaca_only|both)$")
     outcome: str = Field(pattern=r"^(submitted|rejected_by_alpaca|refused_client_side)$")
     detail: str | None = Field(default=None, max_length=500)
-    alpaca_order_id: str | None = None
-    alpaca_status: str | None = None
+    alpaca_order_id: str | None = Field(default=None, max_length=64)
+    alpaca_status: str | None = Field(default=None, max_length=32)
 ```
 
 `detail` carries the human-readable reason on a refusal/rejection (e.g. the
@@ -111,10 +115,13 @@ report: on success, `outcome: submitted` with the returned `AlpacaOrder.id`/
 `status`; on `AlpacaOrderRejected` (client-side refusal — wrong order type or
 non-paper host), `outcome: refused_client_side` with the exception message;
 on any other thrown error (Alpaca HTTP failure), `outcome: rejected_by_alpaca`
-with whatever detail is available. The report call itself is
-fire-and-forget (`unawaited`, matching the codebase's existing pattern for
-non-blocking telemetry calls) — a failure to log must never surface as a
-failure to trade.
+with whatever detail is available. The report call itself is best-effort —
+wrapped in its own `try { } catch (_) { }` (`_reportOrderLog`), the same
+swallow-on-failure idiom `alpaca_connect_screen.dart`'s `_reportLinked`
+already uses for CR203's link-state report — a failure to log must never
+surface as a failure to trade. Proven by mutation: removing that catch block
+turns `cr230_alpaca_order_log_test.dart`'s "the log call never gates the
+trade outcome" test red (an unhandled exception surfaces where none should).
 
 ## Non-goals (this CR)
 
@@ -130,21 +137,40 @@ failure to trade.
 
 ## Acceptance
 
-- [ ] `AlpacaOrderLogIn` schema added, same bounding posture as
-  `AlpacaSnapshotIn`.
-- [ ] `alpaca_order_audit` table + migration added, included in
-  `trim_audit_tables()`'s retention sweep.
-- [ ] `POST /v1/alpaca/order_log` route added, auth-gated, write-only.
-- [ ] Mobile calls the new endpoint on every `submitOrder()` resolution path
-  (submitted / rejected-by-Alpaca / refused-client-side), fire-and-forget,
+- [x] `AlpacaOrderLogIn` schema added, same bounding posture as
+  `AlpacaSnapshotIn`. (`backend/app/schemas/alpaca.py`)
+- [x] `alpaca_order_audit` table + migration added. **Deliberately excluded**
+  from `trim_audit_tables()`'s retention sweep — see Scope point 1 above for
+  why this diverges from the CR's original `llm_audit`-style assumption.
+  (`backend/app/db/models.py`, `backend/alembic/versions/
+  cr230a0order0log_alpaca_order_audit.py`)
+- [x] `POST /v1/alpaca/order_log` route added, auth-gated
+  (`get_current_user`, `_require_claimed`), write-only, 204 response.
+  (`backend/app/api/alpaca.py`)
+- [x] Mobile calls the new endpoint on every `submitOrder()` resolution path
+  (submitted / rejected-by-Alpaca / refused-client-side), best-effort,
   never blocking or altering the user-visible trade outcome.
-- [ ] Unit test: each of the three outcome states round-trips through the
-  schema and lands a row with the right `outcome` value.
-- [ ] Mobile test: a submitOrder() failure still reports its own outcome and
-  the trade-ticket UI is unaffected by a log-call failure (mock the log call
-  to throw, assert the ticket's own success/failure banner is unchanged).
-- [ ] `flutter analyze` / backend unit suite clean.
+  (`mobile/lib/screens/sim/trade_ticket_sheet.dart`'s `_placeAlpacaOrder`/
+  `_reportOrderLog`, `mobile/lib/services/api/api_client.dart`'s
+  `alpacaReportOrderLog`)
+- [x] Unit test: each of the three outcome states round-trips through the
+  schema and lands a row with the right `outcome` value, plus validation/
+  auth/isolation/retention-posture coverage (16 tests,
+  `backend/tests/unit/test_cr230_alpaca_order_log.py`).
+- [x] Mobile test: a submitOrder() failure still reports its own outcome and
+  the trade-ticket UI is unaffected by a log-call failure — proven by
+  mutation (removing the `try/catch` swallow turns the test red)
+  (`mobile/test/screens/sim/cr230_alpaca_order_log_test.dart`).
+- [x] `flutter analyze` clean (0 issues); mobile suite 1487/1487 (was 1483,
+  +4 new); backend unit suite measured in a clean DEF159 worktree (see
+  Independent audit section once filed).
+
+## Independent audit (CR005 protocol)
+
+Routed to `orchestration/audit/cr/CR230.architect.md` / `CR230.auditor.md`
+per Saiful's instruction ("send it to the auditor").
 
 ## Status
 
-`proposed` — 2026-09-23.
+`in_progress` — implementation landed 2026-09-23, independent audit
+submitted same day. Will move to `done` on a `COMPLETE` verdict.

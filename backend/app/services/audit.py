@@ -20,6 +20,7 @@ from sqlalchemy import delete, update
 
 from app.core.logging import logger
 from app.db.models import (
+    AlpacaOrderAuditRow,
     HTTPAuditRow,
     LLMAuditRow,
     NotificationRow,
@@ -200,6 +201,44 @@ def record_one_on_one_message(
             session.commit()
     except Exception:
         logger.exception("audit_one_on_one_write_failed", session_id=str(session_id))
+
+
+def record_alpaca_order(
+    *,
+    user_id: UUID,
+    symbol: str,
+    side: str,
+    qty: float,
+    destination: str,
+    outcome: str,
+    detail: Optional[str] = None,
+    alpaca_order_id: Optional[str] = None,
+    alpaca_status: Optional[str] = None,
+) -> None:
+    """Persist one Alpaca order-attempt outcome (CR230). Safe to call from
+    any code path — never raises, matching every other `record_*` helper in
+    this module.
+
+    Deliberately NOT swept by `trim_audit_tables()` above — see
+    `AlpacaOrderAuditRow`'s docstring for why (Saiful asked for a permanent
+    log of every Alpaca interaction, not a 90-day rolling one)."""
+    try:
+        with get_session() as session:
+            row = AlpacaOrderAuditRow(
+                user_id=user_id,
+                symbol=symbol,
+                side=side,
+                qty=qty,
+                destination=destination,
+                outcome=outcome,
+                detail=detail,
+                alpaca_order_id=alpaca_order_id,
+                alpaca_status=alpaca_status,
+            )
+            session.add(row)
+            session.commit()
+    except Exception:
+        logger.exception("audit_alpaca_order_write_failed", user_id=str(user_id))
 
 
 def _decode_body(body: Optional[bytes]) -> Optional[str]:

@@ -629,7 +629,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // !result.ok) never reaches here, so neither leg fires — see this
       // method's early return path.
       if (destination == TradeDestination.both) {
-        final alpaca = await _placeAlpacaOrder(typed, qty);
+        final alpaca =
+            await _placeAlpacaOrder(typed, qty, TradeDestination.both);
         if (!mounted) return;
         setState(() => _destinationOutcomes = [
               _DestinationOutcome(
@@ -681,7 +682,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           ]);
       return;
     }
-    final outcome = await _placeAlpacaOrder(typed, qty);
+    final outcome =
+        await _placeAlpacaOrder(typed, qty, TradeDestination.alpacaPaper);
     if (!mounted) return;
     HapticFeedback.mediumImpact();
     setState(() => _destinationOutcomes = [outcome]);
@@ -702,7 +704,16 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// linked Alpaca paper account (CR227, D-071). Never called except after a
   /// compliance verdict of `accepted: true`/`ok: true` on the matching
   /// AMI-sim call — see the two call sites above.
-  Future<_DestinationOutcome> _placeAlpacaOrder(String typed, double qty) async {
+  ///
+  /// CR230 — every resolution path also reports its outcome to
+  /// `/v1/alpaca/order_log`, best-effort (see [_reportOrderLog]). The report
+  /// happens after the outcome is already decided, so a failed report can
+  /// never change what the user sees.
+  Future<_DestinationOutcome> _placeAlpacaOrder(
+    String typed,
+    double qty,
+    TradeDestination destination,
+  ) async {
     try {
       final order = await ref.read(alpacaClientProvider).submitOrder(
             symbol: typed,
@@ -710,6 +721,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             qty: qty,
             orderType: _orderType,
           );
+      await _reportOrderLog(
+        typed: typed,
+        qty: qty,
+        destination: destination,
+        outcome: 'submitted',
+        alpacaOrderId: order.id,
+        alpacaStatus: order.status,
+      );
       return _DestinationOutcome(
         label: 'ALPACA PAPER',
         ok: true,
@@ -717,15 +736,65 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             '— ${order.status}.',
       );
     } on AlpacaOrderRejected catch (e) {
+      await _reportOrderLog(
+        typed: typed,
+        qty: qty,
+        destination: destination,
+        outcome: 'refused_client_side',
+        detail: e.message,
+      );
       return _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: e.message);
     } on AlpacaException catch (e) {
+      await _reportOrderLog(
+        typed: typed,
+        qty: qty,
+        destination: destination,
+        outcome: 'rejected_by_alpaca',
+        detail: e.detail,
+      );
       return _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: e.detail);
     } catch (_) {
+      await _reportOrderLog(
+        typed: typed,
+        qty: qty,
+        destination: destination,
+        outcome: 'rejected_by_alpaca',
+        detail: 'network error',
+      );
       return const _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: 'Network error.');
     }
+  }
+
+  /// CR230 — best-effort report of one Alpaca order attempt. Swallows
+  /// failure by design, same reasoning as `_reportLinked` (CR203) in
+  /// `alpaca_connect_screen.dart`: the trade's own outcome is already
+  /// decided by the time this runs, so a failed report costs a log row,
+  /// never the trade.
+  Future<void> _reportOrderLog({
+    required String typed,
+    required double qty,
+    required TradeDestination destination,
+    required String outcome,
+    String? detail,
+    String? alpacaOrderId,
+    String? alpacaStatus,
+  }) async {
+    try {
+      await ref.read(apiClientProvider).alpacaReportOrderLog(
+            symbol: typed,
+            side: _side,
+            qty: qty,
+            destination:
+                destination == TradeDestination.both ? 'both' : 'alpaca_only',
+            outcome: outcome,
+            detail: detail,
+            alpacaOrderId: alpacaOrderId,
+            alpacaStatus: alpacaStatus,
+          );
+    } catch (_) {}
   }
 
   String _simOutcomeMessage(SimSubmitResult result, String typed) {

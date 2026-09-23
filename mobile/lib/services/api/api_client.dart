@@ -1774,6 +1774,39 @@ class ApiClient {
     );
   }
 
+  /// CR230 — report the outcome of an `AlpacaClient.submitOrder()` call.
+  /// Best-effort at every call site, same as [alpacaReportLinkState]: the
+  /// trade ticket's own success/failure banner is already final by the time
+  /// this runs, so a failed report costs a log row, not the trade.
+  ///
+  /// `outcome` is one of `submitted` / `rejected_by_alpaca` /
+  /// `refused_client_side` — see `AlpacaOrderLogIn` (backend/app/schemas/
+  /// alpaca.py) for the exact contract this mirrors.
+  Future<void> alpacaReportOrderLog({
+    required String symbol,
+    required String side,
+    required double qty,
+    required String destination,
+    required String outcome,
+    String? detail,
+    String? alpacaOrderId,
+    String? alpacaStatus,
+  }) async {
+    await _dio.post<void>(
+      '/v1/alpaca/order_log',
+      data: {
+        'symbol': symbol,
+        'side': side,
+        'qty': qty,
+        'destination': destination,
+        'outcome': outcome,
+        if (detail != null) 'detail': detail,
+        if (alpacaOrderId != null) 'alpaca_order_id': alpacaOrderId,
+        if (alpacaStatus != null) 'alpaca_status': alpacaStatus,
+      },
+    );
+  }
+
   Future<({String accessToken, String refreshToken})> alpacaExchangeOAuthCode(
     String code,
   ) async {
