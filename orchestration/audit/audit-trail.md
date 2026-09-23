@@ -8,6 +8,7 @@ at the bottom. Owner: AMI Trade AUDITOR.
 
 | When (KL) | Item | Round | SHA | Verdict | Headline |
 |---|---|---|---|---|---|
+| 2026-09-23 14:19 KL | CR200-R001 | 2 | `05cce27f` | AWAITING_FIXES | MINOR-1 fixed (3/3 counted, was 1/3); new MINOR-2 — `other` omitted from the ranking key, so an unrecognised-only ticker is truncated out of the response |
 | 2026-09-23 13:09 KL | CR200 | 1 | a5ca12e0 | COMPLETE | first independent look at a month-old live feature; admin auth held against 12 bearer + 6 JWT forgeries |
 | 2026-09-23 13:09 KL | CR200-R001 | 1 | a5ca12e0 | AWAITING_FIXES | an unrecognised order state vanishes from every bucket; 7 documented states all covered today |
 | 2026-09-23 12:43 KL | CR230 | 2 | 56b0839f | COMPLETE | unawaited at all 4 sites; the 3 branches the lane did not mutate driven here and hold; pin bites everywhere |
