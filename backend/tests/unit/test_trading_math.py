@@ -132,7 +132,11 @@ def test_drawdown_contribution_rejects_nonsense():
 
 
 def test_default_policy_matches_enforced_ceilings():
-    assert DEFAULT_RISK_TIER_CAPS == {1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5}
+    # CR228: widened from {1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5} (three
+    # distinct values for five tiers) to five distinct, evenly-spaced values —
+    # see sizing.py's DEFAULT_RISK_TIER_CAPS docstring for the measurement and
+    # the DIVERSIFICATION_FLOOR ceiling that bounds tier 5.
+    assert DEFAULT_RISK_TIER_CAPS == {1: 1.0, 2: 2.0, 3: 3.0, 4: 4.0, 5: 5.0}
     for score, cap in DEFAULT_RISK_TIER_CAPS.items():
         assert risk_tier_cap(score) == cap
 

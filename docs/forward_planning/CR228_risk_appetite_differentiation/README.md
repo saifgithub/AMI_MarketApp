@@ -178,6 +178,37 @@ granted on 402.
    monotonicity regardless of model compliance, and fixes the tie-breaks-to-PASS
    asymmetry (`room_runner.py:6634`).
 
+### Step 2 done (2026-09-23)
+
+**`DEFAULT_RISK_TIER_CAPS`** (`trading_math/sizing.py:22`) widened from
+`{1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5}` (3 distinct values) to
+`{1: 1.0, 2: 2.0, 3: 3.0, 4: 4.0, 5: 5.0}` (5 distinct, evenly spaced).
+Ceiling capped at 5.0, not higher: `DEFAULT_MAX_OPEN_RISK_FRACTION_OF_DRAWDOWN`
+(`risk_limits.py`, left unchanged) couples the single-name cap to
+`DIVERSIFICATION_FLOOR`'s "≥30 names reachable" invariant
+(`test_cr129_risk_limits_from_risk_tolerance.py`) — 5.1+ at tier 5 breaks it.
+The four sibling `risk_limits.py` tables (max_open_positions,
+post_loss_cooldown, trades/day, trades/week) were **not** touched — the pilot
+implicated the single-name cap specifically (via CR197's option-generation
+mechanism), and there's no measurement yet that the others gate approvals the
+same way. `DEFAULT_CONCENTRATION_TOLERANCE_CAPS` already had 5 distinct values
+(25–60pp) and didn't need widening.
+
+**`_derive_risk_score`** (`services/concierge_engine.py:456`) now nudges the
+Q3-Q5 scenario base (still dominant — bounded at ±0.5 per input, ÷ by however
+many of the three are present) with `max_drawdown_pct`, `horizon`, and
+`primary_goal`. Fixes the backwards-causality gap: `q6_text`'s *suggestion* is
+still scenario-only (session.answers has no `max_drawdown_pct` yet — Q6 IS
+that question), but the **readback** score (after Q6+Q7 are answered) now
+reads the user's actual drawdown answer, not just what was suggested to them.
+`compliance` (Q7) was explicitly NOT included, per Saiful's selection.
+
+Not yet re-measured against the pilot's 30-ticker sample — the code-level
+change is in place and unit-tested (`test_concierge_engine.py`,
+`test_trading_math.py`, `test_cr129_risk_limits_from_risk_tolerance.py`); a
+follow-up pilot-shaped run is what Step 2's acceptance actually needs before
+calling the spread claim measured rather than reasoned.
+
 ## Open question for Saiful
 
 The Street's 64% Buy rate is a **biased** baseline (sell-side Buy skew;

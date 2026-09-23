@@ -151,7 +151,11 @@ def _names_reachable(risk_score: int, max_drawdown_pct: float) -> int:
 
 @pytest.mark.parametrize(
     "risk_score,expected_reachable",
-    [(1, 50), (2, 60), (3, 35), (4, 30), (5, 30)],
+    # CR228 widened DEFAULT_RISK_TIER_CAPS (trading_math/sizing.py); these
+    # counts are coupled to that table via _names_reachable's own formula, so
+    # they move even though DEFAULT_MAX_OPEN_POSITIONS and
+    # DEFAULT_MAX_OPEN_RISK_FRACTION_OF_DRAWDOWN (both unchanged) did not.
+    [(1, 65), (2, 45), (3, 35), (4, 30), (5, 30)],
 )
 def test_diversification_floor_guard_names_reachable(
     risk_score: int, expected_reachable: int, base_mandate: Mandate

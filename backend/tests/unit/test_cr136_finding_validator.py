@@ -662,8 +662,8 @@ def test_a_sub_precision_cap_never_renders_level_with_the_weight_breaching_it(
     breach between two identical numbers. That is the shown-vs-enforced
     contradiction R0 exists to remove, one precision level down.
 
-    Not reachable from any shipped preset (the risk-tier caps are 1.5/3.0/4.5
-    and the sector presets 25.0–60.0, all exact at 1 dp), which is why it
+    Not reachable from any shipped preset (the risk-tier caps are
+    1.0/2.0/3.0/4.0/5.0 and the sector presets 25.0–60.0, all exact at 1 dp), which is why it
     graded MINOR — but nothing stops a sub-0.1 override being stored, so it is
     reachable by configuration rather than by accident.
     """

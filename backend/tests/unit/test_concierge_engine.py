@@ -360,6 +360,90 @@ def test_def129_readback_promises_no_briefing():
     assert "halal-compliant only" in last_message.content
 
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# CR228 — _derive_risk_score widened beyond the three Q3-Q5 scenario answers
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def test_cr228_q6_suggestion_uses_scenario_only_base():
+    """The Q6 question is generated BEFORE the user answers it — `max_drawdown_pct`
+    is not in `session.answers` yet, so the suggestion shown in `q6_text` must
+    fall back to the pre-CR228 scenario-only formula rather than crash or use a
+    stale default. Horizon (from Q2) IS present by then; this pins that its
+    presence alone does not require `max_drawdown_pct` too."""
+    session = OnboardingSession()
+    for step, answer in [
+        (ConversationStep.WELCOME, "yes"),
+        (ConversationStep.Q1_GOAL, "Learn to trade short-term"),
+        (ConversationStep.Q2_HORIZON, "<1 year"),
+        (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Hold and wait"),
+        (ConversationStep.Q4_SCENARIO_REGRET, "About the same"),
+        (ConversationStep.Q5_SCENARIO_CONCENTRATION, "30% (balanced)"),
+    ]:
+        _next, message, _readback = process_answer(session, step, answer)
+    assert "max_drawdown_pct" not in session.answers
+    # scenario-only base: drawdown_response=3, concentration=3, regret=0 -> 3
+    assert "30%" in message.content or "sounds like a fit" in message.content
+
+
+def test_cr228_disagreeing_drawdown_answer_nudges_the_score_at_readback():
+    """CR228's target: Q6's actual answer must be able to move the score, not
+    only take a suggestion FROM it (the backwards-causality gap the CR
+    documents). Scenario answers alone give risk_score=3 (as in
+    test_happy_path_retirement_long_only); overriding Q6 to "No cap" (100%,
+    the top drawdown tier) against those same mid scenario answers must push
+    the readback score up from that scenario-only baseline."""
+    session = OnboardingSession()
+    summary = _walk_through_express_path(
+        session,
+        {
+            ConversationStep.WELCOME: "Yes, let's go",
+            ConversationStep.Q1_GOAL: "Save for retirement",
+            ConversationStep.Q2_HORIZON: "10+ years",
+            ConversationStep.Q3_SCENARIO_DRAWDOWN: "Hold and wait",
+            ConversationStep.Q4_SCENARIO_REGRET: "About the same",
+            ConversationStep.Q5_SCENARIO_CONCENTRATION: "30% (balanced)",
+            ConversationStep.Q6_MAX_DRAWDOWN: "No cap",
+            ConversationStep.Q7_CONSTRAINTS: "Long-only",
+        },
+    )
+    assert summary is not None
+    assert summary["max_drawdown_pct"] == 100
+    assert summary["risk_score"] > 3, (
+        "a user who accepted mid scenario answers but then asked for NO drawdown "
+        "cap should read back a higher score than the scenario-only baseline — "
+        "otherwise Q6's actual answer still has no path back into the score"
+    )
+
+
+def test_cr228_scenario_answers_remain_the_dominant_signal():
+    """The nudge must not let goal/horizon/drawdown alone override three
+    scenario answers that all say "very conservative" — bounded influence, not
+    a competing formula. All three new inputs pushed to their most aggressive
+    values against the most conservative scenario answers must not reach the
+    ceiling."""
+    session = OnboardingSession()
+    summary = _walk_through_express_path(
+        session,
+        {
+            ConversationStep.WELCOME: "yes",
+            ConversationStep.Q1_GOAL: "Learn to trade short-term",  # highest goal tier
+            ConversationStep.Q2_HORIZON: "<1 year",  # highest horizon tier
+            ConversationStep.Q3_SCENARIO_DRAWDOWN: "Sell everything",
+            ConversationStep.Q4_SCENARIO_REGRET: "Losing in feels worse",
+            ConversationStep.Q5_SCENARIO_CONCENTRATION: "10% (cautious)",
+            ConversationStep.Q6_MAX_DRAWDOWN: "No cap",  # highest drawdown tier
+            ConversationStep.Q7_CONSTRAINTS: "Long-only",
+        },
+    )
+    assert summary is not None
+    assert summary["risk_score"] <= 2, (
+        "three maximally-aggressive non-scenario inputs pushed a scenario-only "
+        "score of 1 no higher than 2 — the scenario answers must stay dominant"
+    )
+
+
 def test_def129_mandate_carries_no_briefing_field():
     """The field went with the question — nothing will be wired to send it."""
     from app.schemas.mandate import Mandate

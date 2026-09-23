@@ -19,7 +19,21 @@ from __future__ import annotations
 from typing import NamedTuple
 
 # AMI's enforced per-risk-tier single-name cap (% of portfolio).
-DEFAULT_RISK_TIER_CAPS: dict[int, float] = {1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5}
+#
+# CR228: was {1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5} — five slider positions,
+# three enforced values (tier 1≡2, tier 4≡5). Measured (CR228 Step 1 pilot,
+# 30-ticker paired A/B, risk_score 1 vs 5, same narrow table): the cap table is
+# the dominant lever behind the Room's only measured risk-appetite effect
+# (+20.7pp approve rate, p=0.031) — via CR197's option-generation mechanism,
+# not the PM's judgement, which is unchanged. Five distinct, evenly-spaced
+# values so every slider position produces a genuinely different debate
+# spread (`risk_debator_sizes`, below) instead of three. Capped at 5.0 (not
+# higher) so tier 5 still clears DIVERSIFICATION_FLOOR
+# (`trading_math/risk_limits.py`) against the unchanged
+# DEFAULT_MAX_OPEN_RISK_FRACTION_OF_DRAWDOWN table — 5.1+ pushes the
+# risk-budget-reachable name count below 30 (see
+# test_cr129_risk_limits_from_risk_tolerance.py's coupled guard).
+DEFAULT_RISK_TIER_CAPS: dict[int, float] = {1: 1.0, 2: 2.0, 3: 3.0, 4: 4.0, 5: 5.0}
 
 # Absolute single-name ceiling, independent of risk tier. Two roles, and CR101-BE1
 # found they'd quietly diverged: (1) the bound `risk_debator_sizes` spreads the

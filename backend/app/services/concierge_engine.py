@@ -453,13 +453,66 @@ def _parse_constraints(text: str) -> dict[str, Any]:
 # ──────────────────────────────────────────────────────────────────────────
 
 
+# CR228 step 2: `max_drawdown_pct` on a 1-5 scale, same tier boundaries as
+# `q6_text`'s own suggestion table (:101) so the nudge and the suggestion the
+# user was shown agree on what "high" means.
+_DRAWDOWN_PCT_TO_TIER: dict[int, int] = {10: 1, 20: 2, 30: 3, 50: 4, 100: 5}
+# `Horizon.SHORT` implies active/short-term trading (Q1's "learn to trade" path
+# maps here too) — more risk tolerance is needed to accept the swings that
+# horizon trades through, not less. `VERY_LONG` similarly has more room to
+# recover a drawdown. Both nudge up; the middle two are neutral.
+_HORIZON_TIER: dict[str, int] = {"short": 4, "medium": 3, "long": 3, "very_long": 4}
+_GOAL_TIER: dict[str, int] = {
+    "income_now": 2,  # capital preservation, income needs stability
+    "retirement": 3,
+    "long_term_wealth": 3,
+    "specific_goal": 3,
+    "exploring": 3,
+    "learning_to_trade": 4,  # deliberately practicing active risk-taking
+}
+
+
 def _derive_risk_score(session: OnboardingSession) -> int:
+    """The mandate's `risk_score` (1-5).
+
+    Primary signal is the three Q3-Q5 scenario answers (`risk_components`) —
+    deliberately weighted answers to specific loss/regret/concentration
+    scenarios, the most direct risk-preference measurement the interview has.
+    `max_drawdown_pct`, `horizon`, and `primary_goal` (CR228: previously
+    dropped entirely, or — for max_drawdown_pct — only informing a *suggestion*
+    the user could override with no path back into the score) each contribute a
+    small nudge, so a user whose stated loss tolerance or goal disagrees with
+    their scenario answers moves the score without letting one Q6 tap alone
+    swing it past the scenario signal.
+
+    `max_drawdown_pct` and `horizon` are read from `session.answers`, which is
+    empty for both at the Q6-suggestion call site (Q6 IS the drawdown
+    question; `session.answers["horizon"]` is set at Q2 and normally present
+    by then) — `.get` falls back to the scenario-only base, so the suggestion
+    shown before Q6 is answered is unaffected. The readback/mandate call site
+    (after Q7) always has all three.
+    """
     rc = session.risk_components_partial
     a = rc.get("drawdown_response", 3)
     asym = rc.get("regret_asymmetry", 0)
     c = rc.get("concentration_tolerance", 3)
-    base = round((a + c) / 2)
-    return max(1, min(5, base + asym))
+    base = (a + c) / 2 + asym
+
+    nudges: list[float] = []
+    if (dd := session.answers.get("max_drawdown_pct")) is not None:
+        nudges.append(_DRAWDOWN_PCT_TO_TIER.get(dd, 3) - 3)
+    if (h := session.answers.get("horizon")) is not None:
+        nudges.append(_HORIZON_TIER.get(h, 3) - 3)
+    if (g := session.answers.get("primary_goal")) is not None:
+        nudges.append(_GOAL_TIER.get(g, 3) - 3)
+
+    # Each present nudge contributes at most +-0.5, split across however many
+    # of the three are available — bounded total influence regardless of how
+    # many inputs happen to agree, so the scenario base stays primary.
+    if nudges:
+        base += sum(nudges) / len(nudges) / 2
+
+    return max(1, min(5, round(base)))
 
 
 # ──────────────────────────────────────────────────────────────────────────
