@@ -9,6 +9,7 @@ from app.services.concierge_engine import (
     _NEXT_STEP,
     Q7_CHIPS,
     Q7_TEXT,
+    _build_readback_summary,
     _DRAWDOWN_PCT_TO_TIER,
     _GOAL_TIER,
     _HORIZON_TIER,
@@ -484,14 +485,21 @@ def test_cr228_disagreeing_drawdown_answer_nudges_the_score_at_readback():
     documents). Scenario answers alone give risk_score=3 (as in
     test_happy_path_retirement_long_only); overriding Q6 to "No cap" (100%,
     the top drawdown tier) against those same mid scenario answers must push
-    the readback score up from that scenario-only baseline."""
+    the readback score up from that scenario-only baseline.
+
+    Audit round 2 MAJOR-2: this test's Q2 used to be "10+ years" (very_long,
+    itself a +1 nudge tier), so it passed at round 2 for the WRONG reason —
+    Q2 was carrying the movement while Q6's own contribution (after the /2
+    damping) was too weak to cross a rounding boundary on its own. Q2 is now
+    the neutral "3–10 years" so this test isolates Q6's own influence, as its
+    docstring always claimed it did."""
     session = OnboardingSession()
     summary = _walk_through_express_path(
         session,
         {
             ConversationStep.WELCOME: "Yes, let's go",
             ConversationStep.Q1_GOAL: "Save for retirement",
-            ConversationStep.Q2_HORIZON: "10+ years",
+            ConversationStep.Q2_HORIZON: "3–10 years",
             ConversationStep.Q3_SCENARIO_DRAWDOWN: "Hold and wait",
             ConversationStep.Q4_SCENARIO_REGRET: "About the same",
             ConversationStep.Q5_SCENARIO_CONCENTRATION: "30% (balanced)",
@@ -505,6 +513,42 @@ def test_cr228_disagreeing_drawdown_answer_nudges_the_score_at_readback():
         "a user who accepted mid scenario answers but then asked for NO drawdown "
         "cap should read back a higher score than the scenario-only baseline — "
         "otherwise Q6's actual answer still has no path back into the score"
+    )
+
+
+def test_cr228_offered_50_picks_10_the_scores_moves():
+    """Audit round 2 MAJOR-2, the CR's own stated purpose verbatim
+    (README.md: 'A user offered 50% who picks 10% is saying the score is
+    wrong, and nothing listens'). At neutral Q1/Q2 (both nudge-tier 3, the
+    documented do-nothing value) and a scenario base that suggests 50% (risk
+    score 4 -> q6_text's suggestion table maps 4 to 50), picking 10% instead
+    must move the readback score DOWN from the suggestion-implied baseline —
+    the exact behaviour round 1's fix silently made impossible (0/45
+    reachable bases could move at neutral Q1/Q2, per the auditor's
+    measurement) until the /2 damping was removed."""
+    session = OnboardingSession()
+    for step, answer in [
+        (ConversationStep.WELCOME, "yes"),
+        (ConversationStep.Q1_GOAL, "Save for retirement"),
+        (ConversationStep.Q2_HORIZON, "3–10 years"),
+        (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Buy more cautiously"),
+        (ConversationStep.Q4_SCENARIO_REGRET, "About the same"),
+        (ConversationStep.Q5_SCENARIO_CONCENTRATION, "30% (balanced)"),
+    ]:
+        _next, message, _readback = process_answer(session, step, answer)
+    assert "50% sounds like a fit" in message.content, (
+        "fixture must land on a base score of 4 (q6_text suggests 50%) for "
+        "this test to actually probe the CR's own 'offered 50%, picks 10%' case"
+    )
+    baseline_score = _derive_risk_score(session)
+
+    process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "10%")
+    process_answer(session, ConversationStep.Q7_CONSTRAINTS, "Long-only")
+    summary = _build_readback_summary(session)
+    assert summary["max_drawdown_pct"] == 10
+    assert summary["risk_score"] < baseline_score, (
+        f"offered a 50%-implying baseline (score={baseline_score}), picking 10% "
+        f"instead must move the score down — got {summary['risk_score']}, unchanged"
     )
 
 

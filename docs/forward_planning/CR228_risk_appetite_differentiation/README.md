@@ -231,6 +231,28 @@ tables against their source enums/vocabulary — both closed, detail in
 `orchestration/audit/cr/CR228.auditor.md` round 1 and
 `CR228.architect.md` round 2.
 
+**Audit round 2 (2026-09-23) — 1 MAJOR (fixing round 1's own fix) fixed.**
+Fixing MAJOR-1's rounding order made the base an integer, and the
+pre-existing `/2` nudge damping — tuned against round 1's half-integer base
+— became too weak to ever cross an integer's rounding boundary once all
+three inputs are present (the realistic case: Q1/Q2 are always answered by
+Q6/readback time). Measured: **0 of 45 reachable scenario bases could have
+their score moved by Q6's drawdown answer at neutral Q1/Q2, down from 16/45
+at round 1** — the CR's own headline case (README's own words: *"A user
+offered 50% who picks 10% is saying the score is wrong, and nothing
+listens"*) silently reintroduced by fixing a different bug, and invisible
+to the existing readback test because its Q2 fixture ("10+ years") was
+itself carrying the movement. **Fixed by dropping the `/2`** — nudges are
+now averaged but not halved, restoring 43/45 reachable-base coverage while
+the dominance property still holds at both extremes (verified: a
+maximally-conservative scenario base against the most aggressive possible
+nudge still clamps to 1, and the reverse to 5). Pinned with the CR's own
+sentence as a test (`test_cr228_offered_50_picks_10_the_scores_moves`) and
+the existing readback test's Q2 fixture corrected to a genuinely neutral
+value so it tests what its docstring claims. Detail:
+`orchestration/audit/cr/CR228.auditor.md` round 2,
+`CR228.architect.md` round 3.
+
 ### Step 3 done (2026-09-23)
 
 **`_portfolio_manager_block`** (`agents/overlay_generator.py:920`) — the ONE agent that

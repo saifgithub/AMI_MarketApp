@@ -481,9 +481,11 @@ def _derive_risk_score(session: OnboardingSession) -> int:
     `max_drawdown_pct`, `horizon`, and `primary_goal` (CR228: previously
     dropped entirely, or — for max_drawdown_pct — only informing a *suggestion*
     the user could override with no path back into the score) each contribute a
-    small nudge, so a user whose stated loss tolerance or goal disagrees with
-    their scenario answers moves the score without letting one Q6 tap alone
-    swing it past the scenario signal.
+    bounded nudge, so a user whose stated loss tolerance or goal disagrees with
+    their scenario answers moves the score, while the scenario answers remain
+    the dominant signal (the most extreme possible nudge cannot move a
+    maximally-conservative or maximally-aggressive scenario base off the 1/5
+    clamp — see test_cr228_scenario_answers_remain_the_dominant_signal).
 
     `max_drawdown_pct` and `horizon` are read from `session.answers`, which is
     empty for both at the Q6-suggestion call site (Q6 IS the drawdown
@@ -513,12 +515,26 @@ def _derive_risk_score(session: OnboardingSession) -> int:
     if (g := session.answers.get("primary_goal")) is not None:
         nudges.append(_GOAL_TIER.get(g, 3) - 3)
 
-    # Each present nudge contributes at most +-0.5, split across however many
+    # Each present nudge contributes at most +-1, averaged across however many
     # of the three are available — bounded total influence regardless of how
-    # many inputs happen to agree, so the scenario base stays primary.
+    # many inputs happen to agree, so the scenario base stays primary (dominance
+    # is still enforced: the most conservative scenario base clamped against the
+    # most aggressive possible nudge still rounds to 1, and the reverse to 5;
+    # see test_cr228_scenario_answers_remain_the_dominant_signal).
+    #
+    # Audit round 2 MAJOR-2: this used to also divide by 2, which was fine
+    # against round 1's half-integer base (`(a+c)/2 + asym`, no rounding) but
+    # became silently too weak once MAJOR-1 restored the correct integer base
+    # (`round((a+c)/2) + asym`) — `round(int +- 0.333)` can never cross an
+    # integer, so with all three inputs present (the realistic Q1/Q2-already-
+    # answered case at Q6/readback) NO drawdown answer could move the score at
+    # all (0/45 reachable bases, was 16/45 at round 1's buggy formula) — the
+    # exact backwards-causality bug this CR exists to fix, silently reintroduced
+    # by fixing a different bug. Removing the /2 restores 43/45 while the
+    # dominance property (above) still holds at both extremes.
     nudge_total = 0.0
     if nudges:
-        nudge_total = sum(nudges) / len(nudges) / 2
+        nudge_total = sum(nudges) / len(nudges)
 
     return max(1, min(5, round(base + nudge_total)))
 
