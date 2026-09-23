@@ -288,6 +288,47 @@ Not yet measured. Steps 2 and 3 are both in place; a follow-up pilot-shaped run 
 of Step 2's already-measured spread, or whether the sizing mechanism was already doing
 all of the work — the question CR228's Step 1 result explicitly left open.
 
+### Step 4 done (2026-09-23)
+
+**`_vote_pm_samples`** (`services/room_runner.py:6640`) — the mechanical CR197
+aggregator over `pm_self_consistency_samples` independent CIO reads — gets a new
+`_approve_vote_threshold(risk_score, n)` helper and a `risk_score` parameter
+(default 3, so every pre-CR228 caller is unaffected). Before this, APPROVE needed a
+flat strict majority regardless of the mandate's risk appetite, and any tie fell to
+PASS uniformly (`room_runner.py:6634` in the original plan doc's line numbering) —
+the exact "structural bias toward not trading that no risk setting adjusts" the plan
+named. Now the bar itself is graded:
+
+- risk_score ≤2: majority **+1** — needs a clean super-majority, not just more
+  APPROVEs than PASSes.
+- risk_score 3: unchanged — `n // 2 + 1`, i.e. the original strict-majority,
+  tie-to-PASS arithmetic, byte-for-byte.
+- risk_score ≥4: majority **−1** — a near-tie is enough, directly fixing the
+  tie-breaks-to-PASS asymmetry for a user who told AMI they can sit through more
+  drawdown.
+
+At the production default of 5 samples (`Settings().pm_self_consistency_samples`,
+CR214): conservative needs 4/5, neutral needs 3/5, aggressive needs 2/5 — three
+distinct, monotonic bars, verified never to collapse to the same number at that n
+(`test_at_the_production_default_of_five_samples_the_three_tiers_are_distinct`).
+The call site (`room_runner.py:~5533`) passes `ctx.mandate.risk_score` — the same
+mandate the run is for, not a hardcoded neutral value.
+
+Unlike Step 3, this is **structural, not a prompt hope** — it holds regardless of
+how well any model complies with Step 3's new PM prompt line, because it's the
+vote-counting arithmetic itself. Pinned in
+`tests/unit/test_cr228_graded_vote_threshold.py` (10 tests: the threshold table
+across risk_score × n, monotonicity, the tie-break-asymmetry fix at n=5 and n=4,
+unanimous votes at every tier, and an AST-source pin that the call site wires the
+mandate's own risk_score). Mutation-tested: reverting the grading (bar flattened to
+the plain majority for every risk_score) fails exactly the 4 tests that assert
+tier-dependent behaviour and none of the tier-independent ones, as expected.
+
+Not yet measured against the pilot. All of Steps 2–4 are now in place; the
+follow-up pilot-shaped run (same 30 tickers) is what would show the combined
+effect, and whether Step 4 changes the *measured* spread at all given it only
+engages once `pm_self_consistency_samples > 1` (production default 5).
+
 ## Open question for Saiful
 
 The Street's 64% Buy rate is a **biased** baseline (sell-side Buy skew;

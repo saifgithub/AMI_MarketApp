@@ -5527,7 +5527,11 @@ class RoomRunner:
                                     recovered=_recovered,
                                 )
                             if _cands:
-                                _voted = _vote_pm_samples(_cands)
+                                # CR228 Step 4 — the APPROVE bar is graded by the
+                                # mandate's own risk_score, not a flat majority.
+                                _voted = _vote_pm_samples(
+                                    _cands, risk_score=ctx.mandate.risk_score
+                                )
                         else:
                             raw_text = await _stream_pm_response(
                                 run_id=run_id, ctx=ctx, profile=profile,
@@ -6602,8 +6606,40 @@ async def _draw_pm_candidates(
     return cands, raw_text, lost, recovered
 
 
+def _approve_vote_threshold(risk_score: int, n: int) -> int:
+    """CR228 Step 4 — how many of `n` independent APPROVE/PASS reads must land on
+    APPROVE for APPROVE to win, graded by the mandate's risk_score.
+
+    Structural, not prompt-hoped-for: this is the vote-counting arithmetic itself,
+    so it holds regardless of model compliance with the Step 3 prompt branch (which
+    per CLAUDE.md's "prompt instructions are not controls" is a hypothesis, not a
+    guarantee).
+
+    risk_score 3 (neutral) reproduces the pre-CR228 strict majority exactly —
+    `n // 2 + 1`, i.e. a tie falls to PASS (DEF059's safe side). risk_score<=2
+    demands one MORE vote than that majority (a tie is not enough, and neither is
+    a bare majority); risk_score>=4 accepts one FEWER (a near-tie is enough,
+    directly fixing the tie-breaks-to-PASS asymmetry `room_runner.py:6634`
+    used to apply uniformly regardless of the user's stated risk appetite). At the
+    production default of 5 samples this is 3/5 neutral, 4/5 conservative, 2/5
+    aggressive — three distinct, monotonic bars.
+
+    Clamped to `[1, n]`: a threshold above `n` would make APPROVE unwinnable, one
+    below 1 would let PASS-only rounds default to APPROVE.
+    """
+    majority = n // 2 + 1
+    if risk_score <= 2:
+        bar = majority + 1
+    elif risk_score >= 4:
+        bar = majority - 1
+    else:
+        bar = majority
+    return max(1, min(n, bar))
+
+
 def _vote_pm_samples(
     parsed: list[tuple[str, Verdict]],
+    risk_score: int = 3,
 ) -> tuple[str, Verdict, str]:
     """Pick one verdict from N independent CIO samples, mechanically.
 
@@ -6619,21 +6655,36 @@ def _vote_pm_samples(
     with the winning recipe conditional on the aggregation being "mechanical rather
     than consensus-seeking". This is the mechanical half.
 
-    Majority on the action; among the winners, the sample whose size is the MEDIAN,
-    so the narration the user reads belongs to the numbers that ship rather than being
-    stitched from two different answers. Ties go to PASS — the safe side, consistent
-    with DEF059's rule that an uncertain path must never mint a confident buy.
+    CR228 Step 4 — the APPROVE-vs-PASS bar is graded by `risk_score` via
+    `_approve_vote_threshold` (default risk_score=3 reproduces the original strict
+    majority byte-for-byte, so every pre-CR228 caller is unaffected). Any action
+    outside {APPROVE, PASS} — none reach here today, `_PM_ACTION_SYNONYMS` collapses
+    everything else before this point — falls back to the original plain-majority,
+    tie-to-PASS logic untouched.
+
+    Among the winners, the sample whose size is the MEDIAN, so the narration the
+    user reads belongs to the numbers that ship rather than being stitched from two
+    different answers.
 
     Returns (narration, verdict, agreement) where agreement reads "2/3".
     """
     actions = Counter(v.action for _n, v in parsed)
-    top = actions.most_common()
-    winner = top[0][0]
-    if len(top) > 1 and top[0][1] == top[1][1]:
-        tied = {a for a, n in top if n == top[0][1]}
-        winner = VerdictAction.PASS if VerdictAction.PASS in tied else sorted(
-            tied, key=lambda a: a.value
-        )[0]
+    if set(actions) <= {VerdictAction.APPROVE, VerdictAction.PASS}:
+        n = len(parsed)
+        approve_votes = actions.get(VerdictAction.APPROVE, 0)
+        winner = (
+            VerdictAction.APPROVE
+            if approve_votes >= _approve_vote_threshold(risk_score, n)
+            else VerdictAction.PASS
+        )
+    else:
+        top = actions.most_common()
+        winner = top[0][0]
+        if len(top) > 1 and top[0][1] == top[1][1]:
+            tied = {a for a, n in top if n == top[0][1]}
+            winner = VerdictAction.PASS if VerdictAction.PASS in tied else sorted(
+                tied, key=lambda a: a.value
+            )[0]
 
     winners = [(n, v) for n, v in parsed if v.action == winner]
     # Median by size so the chosen narration matches the chosen numbers. A PASS
