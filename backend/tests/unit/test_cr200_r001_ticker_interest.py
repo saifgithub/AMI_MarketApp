@@ -226,6 +226,58 @@ def test_high_volume_unrecognised_ticker_survives_the_limit_cut() -> None:
     assert ghost["other"] == 30
 
 
+def _mk_orders(uid: UUID, pid: UUID, ticker: str, state: str, n: int) -> None:
+    with get_session() as s:
+        for _ in range(n):
+            s.add(SimRestingOrderRow(
+                user_id=uid, portfolio_id=pid, ticker=ticker,
+                side="buy", quantity=1, order_type="limit", limit_price=90,
+                tif="day", expires_at=datetime.now(timezone.utc) + timedelta(hours=8),
+                state=state, placed_at=datetime.now(timezone.utc),
+            ))
+
+
+def test_ticker_orders_ranks_by_total_volume_and_cuts_the_quietest() -> None:
+    """CR200-R001 audit round-3 MINOR-3. The [:limit] cut must keep the
+    busiest and drop the quietest, ranked by total order volume across
+    every bucket -- pins ORDER, not just membership. A ranking key that
+    names a subset of buckets (e.g. only `other`, or a constant) can keep
+    the right rows VISIBLE by accident while returning them in an order
+    that is not "by volume" at all; the prior two findings on this same
+    line were both membership gaps that a membership-only test could not
+    have told apart from a correct fix.
+    """
+    uid = _mk_user()
+    pid = _mk_portfolio(uid)
+    # 30 tickers, strictly descending volume: BUSY0 = 30 orders ... BUSY29 = 1.
+    for i in range(30):
+        _mk_orders(uid, pid, f"BUSY{i}", "working", 30 - i)
+
+    result = ticker_orders(days=30, limit=5)
+    assert [t["ticker"] for t in result["tickers"]] == [
+        "BUSY0", "BUSY1", "BUSY2", "BUSY3", "BUSY4",
+    ]
+
+
+def test_ticker_orders_ranks_across_mixed_buckets_by_total() -> None:
+    """A ticker whose volume is spread across all four buckets must still
+    outrank one with a lower total concentrated in a single bucket -- the
+    ranking key sums the whole row, not just whichever bucket a given
+    order happened to land in.
+    """
+    uid = _mk_user()
+    pid = _mk_portfolio(uid)
+    pid2 = _mk_portfolio(_mk_user())
+    _mk_orders(uid, pid, "MIX", "working", 5)
+    _mk_orders(uid, pid, "MIX", "cancelled", 5)
+    _mk_orders(uid, pid, "MIX", "partially_filled", 5)
+    _mk_orders(uid, pid, "LESS", "working", 10)
+
+    result = ticker_orders(days=30, limit=25)
+    tickers = [t["ticker"] for t in result["tickers"]]
+    assert tickers.index("MIX") < tickers.index("LESS")
+
+
 def test_watchlist_interest_counts_adds() -> None:
     u1, u2 = _mk_user(), _mk_user()
     _mk_watchlist(u1, "AMD")
