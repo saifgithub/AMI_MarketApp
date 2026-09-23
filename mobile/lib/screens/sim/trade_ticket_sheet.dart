@@ -706,9 +706,22 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// AMI-sim call — see the two call sites above.
   ///
   /// CR230 — every resolution path also reports its outcome to
-  /// `/v1/alpaca/order_log`, best-effort (see [_reportOrderLog]). The report
-  /// happens after the outcome is already decided, so a failed report can
-  /// never change what the user sees.
+  /// `/v1/alpaca/order_log`, best-effort (see [_reportOrderLog]).
+  ///
+  /// **The report is fired with `unawaited`, not `await`.** Round-1 audit
+  /// (MAJOR-1): an earlier version of this method awaited the report before
+  /// returning, which meant the user's confirmation (haptic, sheet dismissal,
+  /// green success banner — all downstream of this method's return in
+  /// `_submitAlpacaOnly`) was gated on a round-trip to AMI's own backend. The
+  /// Alpaca order had already executed by then; only *telling the user* was
+  /// waiting — for up to ~30s (`ApiClient`'s `receiveTimeout`) if the backend
+  /// were slow or unreachable. That is the exact user-facing uncertainty
+  /// `bug 9b3a6c2f` already fixed once in this file, reintroduced through a
+  /// new door. A `try/catch` guards against the report *throwing*; it does
+  /// nothing to bound how long it takes, which is the distinct failure mode
+  /// `unawaited` fixes — the outcome the user sees is decided and delivered
+  /// the instant the Alpaca call resolves, and the log report proceeds
+  /// independently in the background.
   Future<_DestinationOutcome> _placeAlpacaOrder(
     String typed,
     double qty,
@@ -721,14 +734,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             qty: qty,
             orderType: _orderType,
           );
-      await _reportOrderLog(
+      unawaited(_reportOrderLog(
         typed: typed,
         qty: qty,
         destination: destination,
         outcome: 'submitted',
         alpacaOrderId: order.id,
         alpacaStatus: order.status,
-      );
+      ));
       return _DestinationOutcome(
         label: 'ALPACA PAPER',
         ok: true,
@@ -736,33 +749,33 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             '— ${order.status}.',
       );
     } on AlpacaOrderRejected catch (e) {
-      await _reportOrderLog(
+      unawaited(_reportOrderLog(
         typed: typed,
         qty: qty,
         destination: destination,
         outcome: 'refused_client_side',
         detail: e.message,
-      );
+      ));
       return _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: e.message);
     } on AlpacaException catch (e) {
-      await _reportOrderLog(
+      unawaited(_reportOrderLog(
         typed: typed,
         qty: qty,
         destination: destination,
         outcome: 'rejected_by_alpaca',
         detail: e.detail,
-      );
+      ));
       return _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: e.detail);
     } catch (_) {
-      await _reportOrderLog(
+      unawaited(_reportOrderLog(
         typed: typed,
         qty: qty,
         destination: destination,
         outcome: 'rejected_by_alpaca',
         detail: 'network error',
-      );
+      ));
       return const _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: 'Network error.');
     }
@@ -770,9 +783,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
 
   /// CR230 — best-effort report of one Alpaca order attempt. Swallows
   /// failure by design, same reasoning as `_reportLinked` (CR203) in
-  /// `alpaca_connect_screen.dart`: the trade's own outcome is already
-  /// decided by the time this runs, so a failed report costs a log row,
-  /// never the trade.
+  /// `alpaca_connect_screen.dart`: a failed report costs a log row, never
+  /// the trade. **Callers fire this with `unawaited`** (round-1 audit
+  /// MAJOR-1) — the `try/catch` here bounds what happens if the call
+  /// throws, but not how long it takes, and the caller's UI confirmation
+  /// must not wait on either.
   Future<void> _reportOrderLog({
     required String typed,
     required double qty,

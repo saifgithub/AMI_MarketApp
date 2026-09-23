@@ -123,6 +123,20 @@ surface as a failure to trade. Proven by mutation: removing that catch block
 turns `cr230_alpaca_order_log_test.dart`'s "the log call never gates the
 trade outcome" test red (an unhandled exception surfaces where none should).
 
+**Fired with `unawaited(...)`, not `await` — round-1 audit MAJOR-1.** The
+first version of `_placeAlpacaOrder` awaited the report before returning,
+which gated the user's confirmation (haptic, sheet dismissal, success
+banner — all downstream of this method's return) on a round-trip to AMI's
+own backend, even though the Alpaca order had already executed. A
+`try/catch` bounds a *throwing* call; it does nothing to bound a *slow*
+one — up to ~30s (`ApiClient`'s `receiveTimeout`) if the backend were
+degraded. That is the exact user-facing uncertainty `bug 9b3a6c2f` already
+fixed once in this file, reintroduced through a new door. Fixed with
+`unawaited(...)` at all four call sites; proven by mutation with a
+`Completer`-gated fake client that never throws but never resolves either
+— the trade ticket sheet is confirmed dismissed while the log call is still
+provably pending.
+
 ## Non-goals (this CR)
 
 - **No logging of `account()`/`positions()` reads.** Only order-placement
@@ -155,22 +169,39 @@ trade outcome" test red (an unhandled exception surfaces where none should).
   `alpacaReportOrderLog`)
 - [x] Unit test: each of the three outcome states round-trips through the
   schema and lands a row with the right `outcome` value, plus validation/
-  auth/isolation/retention-posture coverage (16 tests,
+  auth/isolation/retention-posture coverage (11 tests,
   `backend/tests/unit/test_cr230_alpaca_order_log.py`).
 - [x] Mobile test: a submitOrder() failure still reports its own outcome and
   the trade-ticket UI is unaffected by a log-call failure — proven by
-  mutation (removing the `try/catch` swallow turns the test red)
-  (`mobile/test/screens/sim/cr230_alpaca_order_log_test.dart`).
-- [x] `flutter analyze` clean (0 issues); mobile suite 1487/1487 (was 1483,
-  +4 new); backend unit suite measured in a clean DEF159 worktree (see
-  Independent audit section once filed).
+  mutation (removing the `try/catch` swallow turns the test red). **Round-1
+  audit MAJOR-1 added a second guarantee**: a SLOW (never-throwing) log call
+  must not delay the user's confirmation either — fixed with `unawaited(...)`
+  at all four `_placeAlpacaOrder` call sites (was `await`), proven by
+  mutation the same way.
+  (`mobile/test/screens/sim/cr230_alpaca_order_log_test.dart`, 5 tests).
+- [x] `flutter analyze` clean (0 issues); mobile suite 1488/1488 (was 1483,
+  +5 new); backend unit suite measured in a clean DEF159 worktree (see
+  Independent audit section).
 
 ## Independent audit (CR005 protocol)
 
 Routed to `orchestration/audit/cr/CR230.architect.md` / `CR230.auditor.md`
-per Saiful's instruction ("send it to the auditor").
+per Saiful's instruction ("send it to the auditor"). **Round 1:
+AWAITING_FIXES** — 1 MAJOR (the user's trade confirmation was gated on the
+order-log round-trip; a `try/catch` guarded against the call throwing but
+not against it being slow, reintroducing the exact uncertainty `bug
+9b3a6c2f` already fixed once — found by driving the widget with a
+`Completer`-gated slow fake, not by reasoning about the code), 1 MINOR (the
+submission's own test count was wrong — claimed 16, actual 11; a
+miscount, not a coverage gap, every enumerated behavior was present). Fixed
+round 2: MAJOR-1 via `unawaited(...)` at all four call sites, proven by
+mutation; MINOR-1 by correcting every count in this doc and the
+submission. Neither contested. The submission also self-reported a
+register-drift episode against its own commit (`d7d71755`), independently
+confirmed accurate by the auditor.
 
 ## Status
 
-`in_progress` — implementation landed 2026-09-23, independent audit
-submitted same day. Will move to `done` on a `COMPLETE` verdict.
+`in_progress` — implementation landed 2026-09-23, independent audit round 1
+`AWAITING_FIXES` same day, round-2 fixes landed same day. Will move to
+`done` on a `COMPLETE` verdict.

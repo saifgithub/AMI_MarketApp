@@ -14,7 +14,17 @@
 /// 3. The report call is fire-and-forget: a THROWING log call must never
 ///    change the trade ticket's own success/failure outcome — the log is a
 ///    side effect of an already-decided result, never a gate on it.
+/// 4. The report call is fire-and-forget in the OTHER sense too: a SLOW log
+///    call must never delay the user's confirmation. Round-1 audit MAJOR-1 —
+///    `_placeAlpacaOrder` used to `await` the report before returning, which
+///    meant the outcome row / haptic / success banner were all gated on a
+///    round-trip to AMI's own backend, even though the Alpaca order had
+///    already executed. A `try/catch` only guards against the call
+///    *throwing*; it does nothing to bound how long it *takes*. Fixed with
+///    `unawaited(...)` at all four call sites in `_placeAlpacaOrder`.
 library;
+
+import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/features/sim/order_pricing.dart';
@@ -83,6 +93,33 @@ class _RecordingApiClient extends ApiClient {
     if (throwOnLog) {
       throw Exception('order_log endpoint unreachable (test)');
     }
+  }
+}
+
+/// Never resolves until the test explicitly completes [gate] — models a
+/// backend that is merely SLOW, not down, so the fix under test (`unawaited`)
+/// is isolated from the already-covered throwing case above.
+class _SlowApiClient extends ApiClient {
+  _SlowApiClient() : super(baseUrl: 'test://localhost');
+
+  final Completer<void> gate = Completer<void>();
+  final List<String> orderLogCalls = [];
+  bool logCallResolved = false;
+
+  @override
+  Future<void> alpacaReportOrderLog({
+    required String symbol,
+    required String side,
+    required double qty,
+    required String destination,
+    required String outcome,
+    String? detail,
+    String? alpacaOrderId,
+    String? alpacaStatus,
+  }) async {
+    orderLogCalls.add(outcome);
+    await gate.future;
+    logCallResolved = true;
   }
 }
 
@@ -266,6 +303,66 @@ void main() {
       expect(t.takeException(), isNull,
           reason: 'a throwing best-effort log call must be swallowed, never '
               'surface as an unhandled exception in the widget tree');
+    });
+
+    testWidgets(
+        'a SLOW (never-throwing) order_log call still shows the outcome '
+        'immediately — round-1 audit MAJOR-1', (t) async {
+      final api = _SlowApiClient();
+      await t.binding.setSurfaceSize(const Size(390, 1600));
+      addTearDown(() => t.binding.setSurfaceSize(null));
+      await t.pumpWidget(ProviderScope(
+        overrides: [
+          simNotifierProvider.overrideWith((ref) => _FixedSim(
+                ref,
+                SimState(portfolio: _portfolio()),
+                previewResult: const SimPreviewResult(accepted: true),
+              )),
+          alpacaLinkedProvider.overrideWith((ref) async => true),
+          alpacaClientProvider.overrideWithValue(_AcceptingAlpacaClient()),
+          apiClientProvider.overrideWithValue(api),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+              body: SingleChildScrollView(
+                  child: const TradeTicketSheet(tickerPrefill: 'AAPL'))),
+        ),
+      ));
+      for (var i = 0; i < 4; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      await t.tap(find.text('ALPACA PAPER'));
+      await t.pump(const Duration(milliseconds: 120));
+      await t.tap(find.text('SUBMIT TRADE'));
+      // Pump enough for the Alpaca call + the UI update to land, but the log
+      // call's gate is still deliberately uncompleted — this is the moment
+      // that regresses under `await`: the whole point is that the user's
+      // confirmation must not still be pending here.
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(api.orderLogCalls, hasLength(1),
+          reason: 'the report was attempted — it is in flight, not skipped');
+      expect(api.logCallResolved, isFalse,
+          reason: 'the gate is still closed — the log call has NOT finished');
+      // `_submitAlpacaOnly` only reaches `Navigator.of(context).pop()` after
+      // `outcome.ok` is true — i.e. after _placeAlpacaOrder has already
+      // returned. The trade ticket sheet being gone (popped) WHILE the log
+      // call is still pending is exactly the property under test: the UI
+      // proceeded to completion without waiting for the report.
+      expect(find.byType(TradeTicketSheet), findsNothing,
+          reason: 'the sheet must already be dismissed — a proof the caller '
+              'did not await the still-pending log call before finishing — '
+              'this is exactly what would fail if _placeAlpacaOrder awaited '
+              'the report before returning (the sheet would still be open)');
+
+      api.gate.complete();
+      await t.pump(const Duration(milliseconds: 120));
+      expect(api.logCallResolved, isTrue,
+          reason: 'sanity: the background report does eventually complete');
     });
   });
 }
