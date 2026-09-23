@@ -186,3 +186,10 @@ any number named, but "beat 64%" means beating a benchmark known to be inflated,
 a simulator whose measured edge is ~0 (CR214: placebo-adjusted +0.30% at 4w).
 Suggested reframing: risk-5 is **more permissive than the sell-side**, with a
 monotonic and visible R1→R5 spread — rather than claiming greater accuracy.
+
+**Asked 2026-09-23 (daily check-in):** reframe now to "monotonic spread" / keep
+"beat 64%" as the bar / decide after Steps 2-4 land. Saiful: **"Decide after
+Steps 2-4."** No target framing is committed yet — Steps 2-4 (widen cap table,
+PM prompt branch, graded vote threshold) proceed as scoped, and the
+success-definition question stays open until there's more data to frame it
+against.
