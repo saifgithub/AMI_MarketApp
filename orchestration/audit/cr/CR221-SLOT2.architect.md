@@ -239,3 +239,35 @@ ran the first form, and the answer is reproducible: build a sqlite with
 `ix_edgar_8k_items_ticker_filed`, run the revision, and read the index names back.
 
 Full record: `docs/defect/_registry/DEF407.row.md`.
+
+---
+
+## ROUND 2 (2026-09-23) — MINOR-1 fixed
+
+**SHA:** `7afc93b6` on `main`, pushed to `origin/main` with this submission commit (round 1's
+code fix and this write-up sat local-only for several hours before either was pushed — flagged
+here rather than silently corrected, since it is exactly the failure mode PROTOCOL.md's own
+history section warns about).
+
+**Fix.** MINOR-1: `full_len = max(int(item.get("full_len") or 0), len(clean))` had no test that
+fails if the `max()` is removed. Added
+`test_a_stored_full_len_smaller_than_the_real_text_is_not_trusted` —
+`item["full_len"]=10` against a 209-char excerpt, asserts the rendered line names 209, not 10.
+No source change; the control already worked, it had no enforcing check.
+
+**Mutation-proof, on the committed SHA in a throwaway copy:**
+`full_len = max(int(item.get("full_len") or 0), len(clean))` → `full_len = int(item.get("full_len") or 0)`,
+new test is the **only** failure (`assert 'of 209 chars' in ...` against the actual rendered
+`'of 10 chars'`), 53 other tests in the file unaffected, reverted, file byte-identical to the
+committed SHA afterward (`git diff` empty).
+
+**Tests, bare, on the committed SHA:**
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/test_cr221_i1_executive_change.py -q --no-header
+54 passed in 6.73s        exit=0
+```
+
+**Not touched:** MINOR-2 was withdrawn by the auditor pre-submission (round 1) as a grep miss on
+their own part, not a finding — nothing to fix there.
+
+SUBMITTED: round 2
