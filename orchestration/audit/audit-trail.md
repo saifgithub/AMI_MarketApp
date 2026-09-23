@@ -8,6 +8,7 @@ at the bottom. Owner: AMI Trade AUDITOR.
 
 | When (KL) | Item | Round | SHA | Verdict | Headline |
 |---|---|---|---|---|---|
+| 2026-09-23 12:15 KL | CR230 | 1 | a5ca12e0 | AWAITING_FIXES | trade confirmation is gated on the order_log round-trip (~30s Dio bound) after the order already executed |
 | 2026-09-23 10:16 KL | CR221-SLOT5 | 2 | 7d552cca | COMPLETE | seam re-derives the quotient; pin holds arithmetic not just provenance; full suite bare 6696 passed exit 0 |
 | 2026-09-23 10:02 KL | CR221-SLOT2 | 2 | 7afc93b6 | COMPLETE | full_len floor now pinned; mutation kills only the new test, undercounts floored in every direction |
 | 2026-09-23 01:32 KL | CR227 | 2 | 9a7e810c | COMPLETE | MAJOR-1 closed at both layers; 6/6 attack cells leave the Alpaca call unmade, each guard mutation-proven |
