@@ -8,6 +8,7 @@ at the bottom. Owner: AMI Trade AUDITOR.
 
 | When (KL) | Item | Round | SHA | Verdict | Headline |
 |---|---|---|---|---|---|
+| 2026-09-23 20:28 KL | CR228 | 1 | `f5c5af0c` | AWAITING_FIXES | MAJOR-1 undocumented rounding-order change in `_derive_risk_score` moves risk_score for 22% of reachable scenario profiles with zero new inputs — a loss-averse user's enforced cap rises 1.5%->2.0%, unguarded (243 tests pass reverted); 2 MINOR (vacuous q6 assertion, undefended nudge lookups). Cap table clean; lane's self-flagged diversification gap confirmed pre-existing |
 | 2026-09-23 14:19 KL | CR200-R001 | 2 | `05cce27f` | AWAITING_FIXES | MINOR-1 fixed (3/3 counted, was 1/3); new MINOR-2 — `other` omitted from the ranking key, so an unrecognised-only ticker is truncated out of the response |
 | 2026-09-23 13:09 KL | CR200 | 1 | a5ca12e0 | COMPLETE | first independent look at a month-old live feature; admin auth held against 12 bearer + 6 JWT forgeries |
 | 2026-09-23 13:09 KL | CR200-R001 | 1 | a5ca12e0 | AWAITING_FIXES | an unrecognised order state vanishes from every bucket; 7 documented states all covered today |
