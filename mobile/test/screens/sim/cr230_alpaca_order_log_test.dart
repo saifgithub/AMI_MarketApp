@@ -22,6 +22,12 @@
 ///    already executed. A `try/catch` only guards against the call
 ///    *throwing*; it does nothing to bound how long it *takes*. Fixed with
 ///    `unawaited(...)` at all four call sites in `_placeAlpacaOrder`.
+/// 5. The round-2 audit verified property 4 at the three FAILURE branches
+///    too (`refused_client_side`, `rejected_by_alpaca` x2) via its own
+///    scratch probes, but those never landed as committed tests — flagged
+///    in its closing note as "the one place this CR's guard is thinner than
+///    its guarantee": a future fifth outcome branch that re-introduces
+///    `await` would go unnoticed. These three tests close that gap.
 library;
 
 import 'dart:async';
@@ -164,6 +170,20 @@ class _RejectingAlpacaClient extends AlpacaClient {
     required SimOrderType orderType,
   }) async {
     throw const AlpacaException(422, 'insufficient buying power');
+  }
+}
+
+/// The catch-all branch in `_placeAlpacaOrder` — a throw that is neither
+/// `AlpacaOrderRejected` nor `AlpacaException`.
+class _UnexpectedlyThrowingAlpacaClient extends AlpacaClient {
+  @override
+  Future<AlpacaOrder> submitOrder({
+    required String symbol,
+    required String side,
+    required double qty,
+    required SimOrderType orderType,
+  }) async {
+    throw StateError('unexpected');
   }
 }
 
@@ -363,6 +383,93 @@ void main() {
       await t.pump(const Duration(milliseconds: 120));
       expect(api.logCallResolved, isTrue,
           reason: 'sanity: the background report does eventually complete');
+    });
+
+    /// Round-2 audit closing note: the three failure branches were only
+    /// verified by the auditor's own scratch probes, never committed —
+    /// "the one place this CR's guard is thinner than its guarantee." These
+    /// three close that gap. Unlike the success path, a failure never pops
+    /// the sheet (`_submitAlpacaOnly` only calls `Navigator.pop()` when
+    /// `outcome.ok`), so the observable here is the inline outcome-row
+    /// banner (`_destinationOutcomes`, rendered in the still-open sheet)
+    /// appearing while the slow log call is still provably pending.
+    Future<void> expectOutcomeRendersWhileLogPending(
+      WidgetTester t, {
+      required AlpacaClient alpacaClient,
+      required String expectedText,
+    }) async {
+      final api = _SlowApiClient();
+      await t.binding.setSurfaceSize(const Size(390, 1600));
+      addTearDown(() => t.binding.setSurfaceSize(null));
+      await t.pumpWidget(ProviderScope(
+        overrides: [
+          simNotifierProvider.overrideWith((ref) => _FixedSim(
+                ref,
+                SimState(portfolio: _portfolio()),
+                previewResult: const SimPreviewResult(accepted: true),
+              )),
+          alpacaLinkedProvider.overrideWith((ref) async => true),
+          alpacaClientProvider.overrideWithValue(alpacaClient),
+          apiClientProvider.overrideWithValue(api),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+              body: SingleChildScrollView(
+                  child: const TradeTicketSheet(tickerPrefill: 'AAPL'))),
+        ),
+      ));
+      for (var i = 0; i < 4; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      await t.tap(find.text('ALPACA PAPER'));
+      await t.pump(const Duration(milliseconds: 120));
+      await t.tap(find.text('SUBMIT TRADE'));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(api.orderLogCalls, hasLength(1));
+      expect(api.logCallResolved, isFalse,
+          reason: 'the gate is still closed — the log call has NOT finished');
+      expect(find.textContaining(expectedText), findsWidgets,
+          reason: 'the outcome must already be visible while the unrelated '
+              'log call is still pending — this is exactly what would fail '
+              'if _placeAlpacaOrder awaited the report before returning');
+
+      api.gate.complete();
+      await t.pump(const Duration(milliseconds: 120));
+    }
+
+    testWidgets(
+        'a client-side refusal still renders while the log call is pending',
+        (t) async {
+      await expectOutcomeRendersWhileLogPending(
+        t,
+        alpacaClient: _RefusingAlpacaClient(),
+        expectedText: 'non-paper',
+      );
+    });
+
+    testWidgets(
+        'an Alpaca-side rejection still renders while the log call is pending',
+        (t) async {
+      await expectOutcomeRendersWhileLogPending(
+        t,
+        alpacaClient: _RejectingAlpacaClient(),
+        expectedText: 'insufficient buying power',
+      );
+    });
+
+    testWidgets(
+        'the catch-all branch still renders while the log call is pending',
+        (t) async {
+      await expectOutcomeRendersWhileLogPending(
+        t,
+        alpacaClient: _UnexpectedlyThrowingAlpacaClient(),
+        expectedText: 'Network error.',
+      );
     });
   });
 }
