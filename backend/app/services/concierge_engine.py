@@ -496,7 +496,14 @@ def _derive_risk_score(session: OnboardingSession) -> int:
     a = rc.get("drawdown_response", 3)
     asym = rc.get("regret_asymmetry", 0)
     c = rc.get("concentration_tolerance", 3)
-    base = (a + c) / 2 + asym
+    # Same rounding order as pre-CR228 (round the midpoint, THEN add asym) —
+    # audit round 1 MAJOR-1 found the add-then-round-last order this function
+    # briefly used moved the scenario-only score for 10 of 45 reachable
+    # (a, asym, c) combinations with zero nudge inputs present, undocumented,
+    # including a loss-averse profile (regret_asymmetry=-1) landing a HIGHER
+    # score. Change 2 is the nudges below; this base must stay identical to
+    # what it was before them.
+    base = round((a + c) / 2) + asym
 
     nudges: list[float] = []
     if (dd := session.answers.get("max_drawdown_pct")) is not None:
@@ -509,10 +516,11 @@ def _derive_risk_score(session: OnboardingSession) -> int:
     # Each present nudge contributes at most +-0.5, split across however many
     # of the three are available — bounded total influence regardless of how
     # many inputs happen to agree, so the scenario base stays primary.
+    nudge_total = 0.0
     if nudges:
-        base += sum(nudges) / len(nudges) / 2
+        nudge_total = sum(nudges) / len(nudges) / 2
 
-    return max(1, min(5, round(base)))
+    return max(1, min(5, round(base + nudge_total)))
 
 
 # ──────────────────────────────────────────────────────────────────────────

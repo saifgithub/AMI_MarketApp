@@ -209,6 +209,28 @@ change is in place and unit-tested (`test_concierge_engine.py`,
 follow-up pilot-shaped run is what Step 2's acceptance actually needs before
 calling the spread claim measured rather than reasoned.
 
+**Audit round 1 (2026-09-23) — 1 MAJOR fixed, 2 MINOR fixed.** The
+independent audit caught a real defect the submission itself didn't
+mention: an early version of `_derive_risk_score` changed the ORDER of the
+scenario base's rounding — `round((a+c)/2) + asym` became
+`round((a+c)/2 + asym)` — alongside adding the three nudges. That silently
+moved the scenario-only score (zero nudge inputs present) for 10 of 45
+reachable `(drawdown_response, regret_asymmetry, concentration_tolerance)`
+combinations, including a loss-averse user's enforced single-name cap
+rising 1.5%→2.0% — the wrong direction for a change whose whole point is
+tighter differentiation. **Fixed by restoring the pre-CR228 rounding order**
+(`round((a+c)/2) + asym`) and applying the bounded nudges strictly on top of
+that unchanged base, matching what Change 2 was always described as doing.
+Pinned with a 45-row table test
+(`test_cr228_scenario_only_base_matches_the_pre_widening_rounding_order`)
+so this can't silently drift again. Also fixed: a vacuous test assertion in
+`test_cr228_q6_suggestion_uses_scenario_only_base` (the disjunct
+`"sounds like a fit" in x` was unconditionally true for every risk_score,
+so the test could not fail) and no drift guard on the three nudge lookup
+tables against their source enums/vocabulary — both closed, detail in
+`orchestration/audit/cr/CR228.auditor.md` round 1 and
+`CR228.architect.md` round 2.
+
 ## Open question for Saiful
 
 The Street's 64% Buy rate is a **biased** baseline (sell-side Buy skew;

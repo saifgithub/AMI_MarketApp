@@ -1,6 +1,6 @@
 """Tests for the scripted Concierge engine — full happy path + classifiers."""
 
-from app.schemas.mandate import Compliance
+from app.schemas.mandate import Compliance, Horizon, PrimaryGoal
 from app.schemas.onboarding import (
     ConversationStep,
     OnboardingSession,
@@ -9,6 +9,10 @@ from app.services.concierge_engine import (
     _NEXT_STEP,
     Q7_CHIPS,
     Q7_TEXT,
+    _DRAWDOWN_PCT_TO_TIER,
+    _GOAL_TIER,
+    _HORIZON_TIER,
+    _derive_risk_score,
     _parse_constraints,
     _question_message,
     make_welcome_messages,
@@ -369,14 +373,17 @@ def test_def129_readback_promises_no_briefing():
 def test_cr228_q6_suggestion_uses_scenario_only_base():
     """The Q6 question is generated BEFORE the user answers it — `max_drawdown_pct`
     is not in `session.answers` yet, so the suggestion shown in `q6_text` must
-    fall back to the pre-CR228 scenario-only formula rather than crash or use a
-    stale default. Horizon (from Q2) IS present by then; this pins that its
-    presence alone does not require `max_drawdown_pct` too."""
+    fall back to the scenario score with no drawdown nudge. `horizon` and
+    `primary_goal` (from Q1/Q2) ARE already present at this call site, so this
+    fixture deliberately picks NEUTRAL answers for both (`_HORIZON_TIER["long"]`
+    and `_GOAL_TIER["retirement"]` both resolve to 3, the do-nothing nudge) so
+    the suggestion isolates the scenario-only base rather than also exercising
+    those two nudges."""
     session = OnboardingSession()
     for step, answer in [
         (ConversationStep.WELCOME, "yes"),
-        (ConversationStep.Q1_GOAL, "Learn to trade short-term"),
-        (ConversationStep.Q2_HORIZON, "<1 year"),
+        (ConversationStep.Q1_GOAL, "Save for retirement"),
+        (ConversationStep.Q2_HORIZON, "3–10 years"),
         (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Hold and wait"),
         (ConversationStep.Q4_SCENARIO_REGRET, "About the same"),
         (ConversationStep.Q5_SCENARIO_CONCENTRATION, "30% (balanced)"),
@@ -384,7 +391,91 @@ def test_cr228_q6_suggestion_uses_scenario_only_base():
         _next, message, _readback = process_answer(session, step, answer)
     assert "max_drawdown_pct" not in session.answers
     # scenario-only base: drawdown_response=3, concentration=3, regret=0 -> 3
-    assert "30%" in message.content or "sounds like a fit" in message.content
+    # -> q6_text's suggestion table (:101) maps risk_score 3 to 30%. Audit round
+    # 1 MINOR-1: the old `"30%" in x or "sounds like a fit" in x` was vacuously
+    # true for every risk_score, since the second disjunct is unconditional text
+    # in q6_text — this asserts the exact suggested figure instead.
+    assert "30% sounds like a fit" in message.content
+
+
+def test_cr228_q6_suggestion_differs_for_a_different_scenario_profile():
+    """The other half of the MINOR-1 fix: a single profile passing is not proof
+    the suggestion table is exercised at all. A maximally risk-averse scenario
+    profile (drawdown_response=1, concentration=1, regret=-1 -> base score 1)
+    must suggest a DIFFERENT figure than the balanced profile above. Q2 is
+    "3-10 years" (neutral, not "10+ years"/very_long, which is itself a +1
+    nudge) so this isolates the scenario-only base exactly as the test above
+    does."""
+    session = OnboardingSession()
+    for step, answer in [
+        (ConversationStep.WELCOME, "yes"),
+        (ConversationStep.Q1_GOAL, "Save for retirement"),
+        (ConversationStep.Q2_HORIZON, "3–10 years"),
+        (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Sell everything"),
+        (ConversationStep.Q4_SCENARIO_REGRET, "Losing in feels worse"),
+        (ConversationStep.Q5_SCENARIO_CONCENTRATION, "10% (cautious)"),
+    ]:
+        _next, message, _readback = process_answer(session, step, answer)
+    assert "10% sounds like a fit" in message.content
+    assert "30% sounds like a fit" not in message.content
+
+
+def test_cr228_scenario_only_base_matches_the_pre_widening_rounding_order():
+    """Audit round 1 MAJOR-1: Change 2 was described as adding bounded nudges
+    'around the unchanged scenario-derived base', but an early version rounded
+    (a+c)/2 and added asym in the opposite order, silently moving the score for
+    10 of these 45 combinations with ZERO nudge inputs present — including a
+    loss-averse profile (regret_asymmetry=-1) landing a HIGHER score, the wrong
+    direction for CR228's own stated purpose. Pins the full reachable space
+    (drawdown_response 1-5, regret_asymmetry -1/0/1, concentration_tolerance
+    1/3/5 — the only values `_classify_drawdown_response`/`_classify_regret`/
+    `_classify_concentration` can produce) against the pre-CR228 formula,
+    with `session.answers` empty so no nudge can fire."""
+    expected = {
+        (1, -1, 1): 1, (1, -1, 3): 1, (1, -1, 5): 2,
+        (1, 0, 1): 1, (1, 0, 3): 2, (1, 0, 5): 3,
+        (1, 1, 1): 2, (1, 1, 3): 3, (1, 1, 5): 4,
+        (2, -1, 1): 1, (2, -1, 3): 1, (2, -1, 5): 3,
+        (2, 0, 1): 2, (2, 0, 3): 2, (2, 0, 5): 4,
+        (2, 1, 1): 3, (2, 1, 3): 3, (2, 1, 5): 5,
+        (3, -1, 1): 1, (3, -1, 3): 2, (3, -1, 5): 3,
+        (3, 0, 1): 2, (3, 0, 3): 3, (3, 0, 5): 4,
+        (3, 1, 1): 3, (3, 1, 3): 4, (3, 1, 5): 5,
+        (4, -1, 1): 1, (4, -1, 3): 3, (4, -1, 5): 3,
+        (4, 0, 1): 2, (4, 0, 3): 4, (4, 0, 5): 4,
+        (4, 1, 1): 3, (4, 1, 3): 5, (4, 1, 5): 5,
+        (5, -1, 1): 2, (5, -1, 3): 3, (5, -1, 5): 4,
+        (5, 0, 1): 3, (5, 0, 3): 4, (5, 0, 5): 5,
+        (5, 1, 1): 4, (5, 1, 3): 5, (5, 1, 5): 5,
+    }
+    assert len(expected) == 45
+    for (drawdown_response, regret_asymmetry, concentration_tolerance), score in expected.items():
+        session = OnboardingSession()
+        session.risk_components_partial = {
+            "drawdown_response": drawdown_response,
+            "regret_asymmetry": regret_asymmetry,
+            "concentration_tolerance": concentration_tolerance,
+        }
+        assert session.answers == {}
+        assert _derive_risk_score(session) == score, (
+            f"drawdown_response={drawdown_response} regret_asymmetry={regret_asymmetry} "
+            f"concentration_tolerance={concentration_tolerance}: expected {score}, "
+            f"got {_derive_risk_score(session)}"
+        )
+
+
+def test_cr228_nudge_tables_do_not_drift_from_their_source_vocabulary():
+    """Audit round 1 MINOR-2: each of the three nudge lookup tables
+    hand-restates a vocabulary owned elsewhere (the `Horizon`/`PrimaryGoal`
+    enums, `_parse_drawdown_pct`'s five possible return values), and each
+    lookup is `.get(value, 3)` — a value missing from the table silently
+    becomes a neutral nudge, indistinguishable from a user who genuinely sits
+    mid-scale. A later enum addition (e.g. a new `PrimaryGoal` member) would
+    pass every other test in this file while silently going neutral here.
+    This pins the key sets so that addition fails loudly instead."""
+    assert set(_HORIZON_TIER) == {h.value for h in Horizon}
+    assert set(_GOAL_TIER) == {g.value for g in PrimaryGoal}
+    assert set(_DRAWDOWN_PCT_TO_TIER) == {10, 20, 30, 50, 100}
 
 
 def test_cr228_disagreeing_drawdown_answer_nudges_the_score_at_readback():
