@@ -93,11 +93,12 @@ def test_a_2_of_5_split_passes_at_neutral_but_approves_at_aggressive():
     assert agreement == "2/5"
 
 
-def test_a_flat_2_2_tie_still_falls_to_pass_at_every_tier_n_equals_4():
-    """DEF059's safe side is not weakened at n=4: even the aggressive bar (2)
-    requires the approve side to be AT LEAST that count, and a genuine 2/2 split
-    means both sides are equal — this still resolves the same way the original
-    tie-break did, just via the graded bar rather than a hardcoded PASS-wins rule."""
+def test_a_flat_2_2_tie_approves_at_aggressive_and_passes_below_n_equals_4():
+    """The ONE place DEF059's tie-to-PASS rule genuinely moves. At n=4 the
+    aggressive bar is 2, so a 2-2 split meets it and APPROVEs — deliberately,
+    for a user who told AMI they can sit through more drawdown. Every tier at
+    or below neutral still falls to PASS, and no tier approves on zero
+    APPROVE votes (see test_unanimous_pass_wins_at_every_tier)."""
     parsed = _samples(2, 2)
     for risk_score in (1, 2, 3, 4, 5):
         _n, v, _a = _vote_pm_samples(parsed, risk_score=risk_score)

@@ -303,9 +303,12 @@ named. Now the bar itself is graded:
   APPROVEs than PASSes.
 - risk_score 3: unchanged — `n // 2 + 1`, i.e. the original strict-majority,
   tie-to-PASS arithmetic, byte-for-byte.
-- risk_score ≥4: majority **−1** — a near-tie is enough, directly fixing the
-  tie-breaks-to-PASS asymmetry for a user who told AMI they can sit through more
-  drawdown.
+- risk_score ≥4: majority **−1** — one vote short of a majority is enough, directly
+  fixing the tie-breaks-to-PASS asymmetry for a user who told AMI they can sit
+  through more drawdown. At odd n (the production default is 5) this is a genuine
+  minority — 2 APPROVE vs 3 PASS wins at n=5 — not merely a tie, and the CR040
+  split-disclosure (`room_runner.py:~5584`) says so in the verdict the user reads:
+  *"Your team was split on this — 2/5 of the independent reads landed here."*
 
 At the production default of 5 samples (`Settings().pm_self_consistency_samples`,
 CR214): conservative needs 4/5, neutral needs 3/5, aggressive needs 2/5 — three

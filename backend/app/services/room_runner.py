@@ -6618,11 +6618,12 @@ def _approve_vote_threshold(risk_score: int, n: int) -> int:
     risk_score 3 (neutral) reproduces the pre-CR228 strict majority exactly —
     `n // 2 + 1`, i.e. a tie falls to PASS (DEF059's safe side). risk_score<=2
     demands one MORE vote than that majority (a tie is not enough, and neither is
-    a bare majority); risk_score>=4 accepts one FEWER (a near-tie is enough,
-    directly fixing the tie-breaks-to-PASS asymmetry `room_runner.py:6634`
-    used to apply uniformly regardless of the user's stated risk appetite). At the
-    production default of 5 samples this is 3/5 neutral, 4/5 conservative, 2/5
-    aggressive — three distinct, monotonic bars.
+    a bare majority); risk_score>=4 accepts one FEWER, directly fixing the
+    tie-breaks-to-PASS asymmetry `room_runner.py:6634` used to apply uniformly
+    regardless of the user's stated risk appetite. At odd n (production default 5)
+    this is a genuine MINORITY win, not a tie: 2 APPROVE vs 3 PASS wins at n=5. At
+    the production default this is 3/5 neutral, 4/5 conservative, 2/5 aggressive —
+    three distinct, monotonic bars.
 
     Clamped to `[1, n]`: a threshold above `n` would make APPROVE unwinnable, one
     below 1 would let PASS-only rounds default to APPROVE.
