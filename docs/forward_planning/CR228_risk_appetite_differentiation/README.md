@@ -76,7 +76,57 @@ judgement. The pilot must exclude `overridden_from_llm=true` and null
 DEF230's standing rule also applies: **do not pool.** Its pooled number misled
 twice (benchmark contamination, then tier-mix shift).
 
-## Step 1 — the pilot (this step)
+## Step 1 result (2026-09-22 → 2026-09-23)
+
+**The pilot's own prediction was wrong, and the reason matters more than the
+number.** Predicted: no significant approve-rate difference, size differs. Measured:
+
+| | R1 | R5 | delta |
+|---|---|---|---|
+| approve rate (n=29, FAILSAFE excluded) | 3.4% (1/29) | 24.1% (7/29) | **+20.7pp** |
+| mean `approve_votes` (0–5) | 0.31 | 1.24 | **+0.93** |
+| mean `size_pct` on APPROVE | 1.00% | 4.50% | +3.50pp |
+
+McNemar exact on the 6 discordant pairs (JPM, MO, PYPL, T, V, WFC — all
+PASS→APPROVE, zero the other direction): **p=0.031**. Significant at n=29.
+Full data: `results/runs_cr228-r{1,5}-20260922.jsonl`,
+`results/pilot_scored_2026-09-22.txt`.
+
+**Why this happened despite the PM prompt being unchanged (verified: 987 chars,
+one digit different — `Consider risk_score={1|5}`).** The mechanism is CR197's
+option-generation finding operating through the cap table, not through the PM's
+judgement changing. The Trader is sized at `min(50%, resolved_single_name_cap_pct)`
+per agent — at R1 every proposal is compressed toward ~1.5%, and the risk debate's
+Aggressive/Conservative/Neutral rungs (`aggressive=trader_size+2`,
+`conservative=trader_size-1.5`) collapse into a narrow band around it. At R5 the
+same debate spreads across a genuinely wider band up to 4.5%. The PM is not
+approving more because it was told to be bolder — **it is approving more because
+R5 handed it a bigger, more separated menu of sizes to choose from.** This is the
+same lever CR197 measured (16.3% → 7.4% when the debate was removed), now shown to
+fire across the risk_score axis too, with no prompt change at all.
+
+Six of six flips ran in the predicted direction and zero against it — before any
+of the planned Step 2–4 changes. That is a stronger and cheaper result than the
+pilot was designed to produce: **the existing cap-table spread is already doing
+part of the job Saiful asked for**, just far too narrow (1.5% → 4.5%, both well
+under any Street-beating threshold) and with no signal reaching the one agent that
+decides APPROVE/PASS.
+
+**What this does NOT show:** whether the sizing-driven effect is the same
+mechanism a direct approval-propensity lever (Step 3/4) would add, or whether the
+two stack. n=29 pairs is not enough to rule out a ceiling effect. Both R1 (3.4%)
+and R5 (24.1%) remain far below the Street's 60.0% on this exact 30-ticker sample
+— so "risk-5 beats the Street" is not remotely reached by the cap-table effect
+alone; Steps 2–4 are still the plan, not optional polish.
+
+**Revise the Step 2 framing:** widening the cap table is not just the
+option-generation fix reasoned about in the CR — it is now the *measured*
+differentiation fix. Steps 3–4 (PM prompt branch, graded vote threshold) should
+be scoped and measured as an *addition on top of* this baseline, not as the first
+source of any spread, since this pilot shows the spread already exists without
+them.
+
+## Step 1 — the pilot (as designed, for the record)
 
 **Question:** how large is the R1→R5 difference today, with fail-safe PASSes
 excluded?

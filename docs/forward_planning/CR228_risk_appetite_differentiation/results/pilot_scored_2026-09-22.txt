@@ -1,0 +1,27 @@
+
+=== ARM A risk_score=1  (runs_cr228-r1-20260922.jsonl) ===
+  records=30  {'PASS': 28, 'APPROVE': 1, 'FAILSAFE': 1}
+  judged (excl. FAILSAFE/INCOMPLETE): 29
+  approve rate: 1/29 = 3.4%
+  mean approve_votes: 0.31  (n=29)
+  mean size_pct on APPROVE: 1.00%  (n=1)
+
+=== ARM B risk_score=5  (runs_cr228-r5-20260922.jsonl) ===
+  records=30  {'PASS': 22, 'APPROVE': 7, 'FAILSAFE': 1}
+  judged (excl. FAILSAFE/INCOMPLETE): 29
+  approve rate: 7/29 = 24.1%
+  mean approve_votes: 1.24  (n=29)
+  mean size_pct on APPROVE: 4.50%  (n=7)
+
+=== PAIRED (both arms judged): n=29 ===
+  mean approve_votes  R1=0.31  R5=1.24  delta=+0.93
+  per-ticker vote delta: 9 up, 2 down, 18 unchanged
+  approve rate  R1=1/29 (3.4%)  R5=7/29 (24.1%)
+  verdict flips: 6
+    JPM: PASS -> APPROVE
+    MO: PASS -> APPROVE
+    PYPL: PASS -> APPROVE
+    T: PASS -> APPROVE
+    V: PASS -> APPROVE
+    WFC: PASS -> APPROVE
+  McNemar exact: R5-only APPROVE=6, R1-only APPROVE=0, p=0.031
