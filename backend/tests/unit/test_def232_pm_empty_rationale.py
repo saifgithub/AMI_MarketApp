@@ -122,9 +122,9 @@ def test_a_sized_down_approve_still_says_so_after_the_note():
         '{"action": "APPROVE", "size_pct": 20.0, "entry": 100.0, "stop": 94.0, '
         '"target": 113.0, "narration": ""}'
     )
-    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 1})  # 1.5% ceiling
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 1})  # CR228: 1.0% ceiling
     _, verdict = _parse_pm_verdict(raw, _ctx(mandate))
-    assert verdict.size_pct == 1.5
+    assert verdict.size_pct == 1.0
     assert _PM_NO_RATIONALE in verdict.reason
     assert "mandate risk-tier ceiling" in verdict.reason
 

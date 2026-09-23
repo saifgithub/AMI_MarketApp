@@ -333,14 +333,14 @@ def test_room_pm_size_clamped_to_risk_tier_ceiling():
         ),
     })
     runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
-    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 1})  # ceiling 1.5%
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 1})  # CR228: ceiling 1.0%
     events = _collect(runner.run(
         user_id=uuid4(), ticker="AAPL", mandate=mandate,
         char_delay_min=0.0, char_delay_max=0.0,
     ))
     v = next(e.verdict for e in events if e.kind == "verdict")
     assert v.action == VerdictAction.APPROVE.value
-    assert v.size_pct == 1.5
+    assert v.size_pct == 1.0
 
 
 def test_room_pm_unparseable_reply_fails_safe_to_pass():
@@ -524,7 +524,7 @@ def test_room_pm_modify_and_approve_parses_as_approve_without_reformat():
         ),
     })
     runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
-    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 5})  # ceiling 4.5%
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 5})  # CR228: ceiling 5.0%
     events = _collect(runner.run(
         user_id=uuid4(), ticker="AAPL", mandate=mandate,
         char_delay_min=0.0, char_delay_max=0.0,
@@ -862,14 +862,14 @@ def test_def235_call_site_passes_the_mandate_cap_end_to_end():
     )
     assert "0.96" not in trader_msg.content, "narrated 10% size was used instead of the cap"
 
-    # Same Trader text, a different mandate: risk_score 5 resolves to a 4.5% cap, so
-    # the figure MUST move (4.5% × 9.618% = 0.43 pt). Without this second case a
-    # hardcoded `size_pct=3.0` at the call site passes every other assertion here.
+    # Same Trader text, a different mandate: risk_score 5 resolves to a 5.0% cap (CR228:
+    # was 4.5%), so the figure MUST move (5.0% × 9.618% = 0.48 pt). Without this second
+    # case a hardcoded `size_pct=3.0` at the call site passes every other assertion here.
     runner5, run5, _ = _run_schd_capturing_prompts(risk_score=5)
     trader5 = next(
         m for m in runner5.get_run(run5).transcript if m.agent_id == AgentId.TRADER.value
     )
-    assert "drawdown contribution ≈ 0.43 pt at the mandate's 4.5% single-name cap" in (
+    assert "drawdown contribution ≈ 0.48 pt at the mandate's 5.0% single-name cap" in (
         trader5.content
     )
 
