@@ -8,6 +8,7 @@ at the bottom. Owner: AMI Trade AUDITOR.
 
 | When (KL) | Item | Round | SHA | Verdict | Headline |
 |---|---|---|---|---|---|
+| 2026-09-23 21:52 KL | CR228 | 2 | `7664fe39` | AWAITING_FIXES | All 3 round-1 findings genuinely closed (45-row pin verified independently against the real pre-CR228 fn, 0 disagreements); new MAJOR-2 — the MAJOR-1 fix removed the CR's own headline behaviour: Q6's answer alone now moves 0/45 scenario bases (was 16/45), and the CR README's verbatim case (offered 50%, picks 10%) is unfixed for all 16 qualifying profiles. Integer base + /2 damping bounds a lone nudge at 0.333, can never cross round(). Unguarded — the test named for Q6 passes on a non-neutral Q2 fixture |
 | 2026-09-23 20:28 KL | CR228 | 1 | `f5c5af0c` | AWAITING_FIXES | MAJOR-1 undocumented rounding-order change in `_derive_risk_score` moves risk_score for 22% of reachable scenario profiles with zero new inputs — a loss-averse user's enforced cap rises 1.5%->2.0%, unguarded (243 tests pass reverted); 2 MINOR (vacuous q6 assertion, undefended nudge lookups). Cap table clean; lane's self-flagged diversification gap confirmed pre-existing |
 | 2026-09-23 14:19 KL | CR200-R001 | 2 | `05cce27f` | AWAITING_FIXES | MINOR-1 fixed (3/3 counted, was 1/3); new MINOR-2 — `other` omitted from the ranking key, so an unrecognised-only ticker is truncated out of the response |
 | 2026-09-23 13:09 KL | CR200 | 1 | a5ca12e0 | COMPLETE | first independent look at a month-old live feature; admin auth held against 12 bearer + 6 JWT forgeries |
