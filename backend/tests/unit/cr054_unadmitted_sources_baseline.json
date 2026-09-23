@@ -80,9 +80,6 @@
   "securities commission malaysia's shariah advisory council (sac)": [
     "348_the_business_activity_screen"
   ],
-  "standard option payoff decomposition": [
-    "317_payoff_diagrams_intrinsic_time_value"
-  ],
   "statman, m.": [
     "365_your_risk_limits_in_ami"
   ],
@@ -100,8 +97,5 @@
     "351_purification_tazkiyah",
     "352_sukuk_vs_conventional_bonds",
     "353_islamic_contracts_and_instruments"
-  ],
-  "volatility risk premium": [
-    "320_implied_vs_realized_volatility"
   ]
 }

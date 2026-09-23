@@ -14,12 +14,13 @@ code, and it is more dangerous than an unguarded file because it stops anyone lo
 
 What the test actually does, so this stays honest: resolution is by **surname set**, so
 `Blaise Pascal & Pierre de Fermat` resolves to `Pascal & Fermat` — which also means a new source
-sharing a surname with an admitted one would pass. **29 cited authorities do not resolve today**
-and are frozen in `cr054_unadmitted_sources_baseline.json` as a ratchet: a NEW unadmitted source
-fails the build, the baseline may only shrink, and an entry that stops being cited must leave it.
-The 29 are the "not yet admitted to the allowlist" set this file already describes below, now
-enumerated with the lessons that owe each debt. Nine further lessons carry `sources: []` — the key
-present, the list empty — and are ceilinged so that count cannot grow.
+sharing a surname with an admitted one would pass. **27 cited authorities do not resolve today**
+(29 at the 2026-08-27 baseline; 2 fixed 2026-09-23 — see QF-002/QF-003 below) and are frozen in
+`cr054_unadmitted_sources_baseline.json` as a ratchet: a NEW unadmitted source fails the build, the
+baseline may only shrink, and an entry that stops being cited must leave it. The remaining 27 are
+the "not yet admitted to the allowlist" set this file already describes below, now enumerated with
+the lessons that owe each debt. Nine further lessons carry `sources: []` — the key present, the
+list empty — and are ceilinged so that count cannot grow.
 
 **Internal-only (Saiful, AT:R63):** provenance is owner-facing QA — users never see sources in the
 app. This registry and the `sources`/`verified` fields exist so *we* are certain the content is
@@ -173,11 +174,13 @@ Provenance soft-spots — citations that name no checkable source. Now **subsume
 
 - **QF-001** `304_bond_pricing_and_ytm` (ASST 2) — *"Standard fixed-income present-value pricing…"*
   → cite Hull or a CFA fixed-income reading. *(Lesson also has a market-practice overstatement.)*
-- **QF-002** `317_payoff_diagrams_intrinsic_time_value` (ASST 15) — *"Standard option payoff
-  decomposition…"* → cite Hull or CBOE. *(Lesson also mislabels the at-the-money case.)*
-- **QF-003** `320_implied_vs_realized_volatility` (ASST 18) — *"Volatility risk premium — the
-  documented tendency…"* → cite the VRP literature / CBOE. *(Lesson also mis-frames short-vol as a
-  "coin flip".)*
+- ~~**QF-002** `317_payoff_diagrams_intrinsic_time_value` (ASST 15) — *"Standard option payoff
+  decomposition…"* → cite Hull or CBOE.~~ **Fixed 2026-09-23** (daily check-in, Saiful ruling):
+  `sources` now cites Hull — already Tier 3 — resolves clean, baseline entry removed.
+- ~~**QF-003** `320_implied_vs_realized_volatility` (ASST 18) — *"Volatility risk premium — the
+  documented tendency…"* → cite the VRP literature / CBOE.~~ **Fixed 2026-09-23** (daily check-in,
+  Saiful ruling): `sources` now cites CBOE — already Tier 2 — resolves clean, baseline entry
+  removed.
 
 Log new findings here as verification passes run; resolved items get struck through with the fixing
 commit.
