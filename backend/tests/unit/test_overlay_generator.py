@@ -85,6 +85,47 @@ def test_risk_score_in_overlay(base_mandate: Mandate):
     assert "risk_score=3" in overlay or f"Risk score: {base_mandate.risk_score}" in overlay
 
 
+def test_cr228_pm_overlay_has_a_directional_risk_branch(
+    conservative_mandate: Mandate, base_mandate: Mandate, aggressive_mandate: Mandate,
+):
+    """CR228 step 3 — `_portfolio_manager_block` is the ONE agent that decides
+    APPROVE/PASS; every other agent has a risk branch (:560/:621/:688 for the
+    analysts, :827/:855 for the risk debators) but the PM's only mention of
+    risk_score used to be a bare, directionless `Consider risk_score={n} and
+    current drawdown` — a risk-1 and risk-5 mandate produced byte-identical PM
+    prompts differing only in that one digit (measured, CR228 Step 1 pilot).
+    This pins that the three tiers now produce genuinely different text, not
+    just a different number."""
+    low = generate_overlay(AgentId.PORTFOLIO_MANAGER, conservative_mandate)
+    mid = generate_overlay(AgentId.PORTFOLIO_MANAGER, base_mandate)
+    high = generate_overlay(AgentId.PORTFOLIO_MANAGER, aggressive_mandate)
+    assert len({low, mid, high}) == 3, "all three risk tiers must render distinct PM overlays"
+    assert "genuinely clean case" in low
+    assert "sit through more drawdown to pursue more upside" in high
+    assert "no lean toward either APPROVE or PASS" in mid
+    # the low-tier text must not also appear in the high-tier overlay and vice versa
+    assert "genuinely clean case" not in high
+    assert "sit through more drawdown" not in low
+
+
+def test_cr228_pm_risk_branch_does_not_touch_the_uncoachable_boundary(
+    conservative_mandate: Mandate, aggressive_mandate: Mandate,
+):
+    """The new risk branch is additive inside the coachable decision sequence
+    (step 3 of DECISION SEQUENCE) — it must not alter the compliance-check
+    ordering, the APPROVE/PASS-only vocabulary, or the UNCOACHABLE boundary
+    text, which are the actual controls (the risk branch itself is a
+    hypothesis to be measured, per CLAUDE.md's 'prompt instructions are not
+    controls')."""
+    for mandate in (conservative_mandate, aggressive_mandate):
+        overlay = generate_overlay(AgentId.PORTFOLIO_MANAGER, mandate)
+        assert "Run the deterministic compliance check" in overlay
+        assert "If any compliance violation: PASS" in overlay
+        assert "APPROVE or PASS — there is no third value" in overlay
+        assert "UNCOACHABLE: mandate-enforcement logic" in overlay
+        assert "safety floor below is non-negotiable" in overlay
+
+
 def test_ticker_blocklist_propagates(base_mandate: Mandate):
     mandate = base_mandate.model_copy(
         update={"compliance": base_mandate.compliance.model_copy(update={"ticker_blocklist": ["TSLA"]})}

@@ -880,6 +880,43 @@ def _neutral_block(m: Mandate) -> str:
     )
 
 
+def _pm_risk_appetite_line(m: Mandate) -> str:
+    """CR228 step 3 — the ONE agent that decides APPROVE/PASS never had a risk
+    branch; every other agent in the room does (analysts at :560/:621/:688,
+    the risk debators at :827/:855). The old line here — "Consider
+    risk_score={n} and current drawdown" — names the number with no stated
+    direction, so a risk-5 and risk-1 mandate produced byte-identical PM
+    prompts differing only in that one digit (measured, CR228 Step 1 pilot).
+
+    Per CLAUDE.md ("prompt instructions are not controls"), this is a
+    hypothesis to be measured via ablation (CR197/CR199-style), not assumed
+    to work — CR228's Step 1 pilot already showed the cap-table widening
+    (Step 2) produces a real approve-rate spread through sizing alone, with
+    the PM prompt held byte-identical across risk tiers. This line is
+    additive on top of that, not a replacement for it."""
+    if m.risk_score <= 2:
+        return (
+            f"   - This user's risk_score is {m.risk_score}/5 — the debate needs a "
+            "genuinely clean case before you APPROVE: a well-reasoned thesis with "
+            "an unresolved objection is exactly what PASS is for. Do not read "
+            "'thorough debate happened' as a reason to approve on its own."
+        )
+    if m.risk_score >= 4:
+        return (
+            f"   - This user's risk_score is {m.risk_score}/5 — they have told AMI "
+            "they can sit through more drawdown to pursue more upside. A "
+            "well-argued case that a risk_score=1 user's PM would reasonably "
+            "PASS on is exactly what this user is asking to see approved. Weigh "
+            "the debate on its merits, not against a caution calibrated to a "
+            "more conservative user."
+        )
+    return (
+        f"   - This user's risk_score is {m.risk_score}/5 — weigh the debate at "
+        "face value, with no lean toward either APPROVE or PASS from the "
+        "numeric score alone."
+    )
+
+
 def _portfolio_manager_block(m: Mandate) -> str:
     return f"""## Role guidance — Chief Investment Officer (GATEKEEPER)
 
@@ -898,6 +935,7 @@ DECISION SEQUENCE:
 3. If passes compliance:
    - Weigh the debate
    - Consider risk_score={m.risk_score} and current drawdown
+{_pm_risk_appetite_line(m)}
    - Issue: APPROVE or PASS — there is no third value. To change the Execution Desk's
      numbers, APPROVE with your own and say what you changed.
 4. Log verdict + full reasoning.

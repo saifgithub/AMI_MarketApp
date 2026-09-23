@@ -231,6 +231,41 @@ tables against their source enums/vocabulary — both closed, detail in
 `orchestration/audit/cr/CR228.auditor.md` round 1 and
 `CR228.architect.md` round 2.
 
+### Step 3 done (2026-09-23)
+
+**`_portfolio_manager_block`** (`agents/overlay_generator.py:920`) — the ONE agent that
+decides APPROVE/PASS — gets a directional risk branch via the new
+`_pm_risk_appetite_line` helper, following the same `risk_score<=2` / `>=4` / else
+pattern already used by every other agent (analysts at :560/:621/:688, the risk
+debators at :827/:855). Before this, the PM's only mention of risk_score was `Consider
+risk_score={n} and current drawdown` — a bare number with **no stated direction**
+(verified in Step 1's pilot: byte-identical 987-char PM prompts across risk tiers,
+differing only in that one digit).
+
+The new line, inserted inside DECISION SEQUENCE step 3 (after the compliance-check
+gate, never touching it):
+
+- risk_score ≤2: *"the debate needs a genuinely clean case before you APPROVE... Do
+  not read 'thorough debate happened' as a reason to approve on its own."*
+- risk_score ≥4: *"they have told AMI they can sit through more drawdown to pursue
+  more upside... Weigh the debate on its merits, not against a caution calibrated to
+  a more conservative user."*
+- risk_score 3: unchanged framing, no lean either way.
+
+Per CLAUDE.md ("prompt instructions are not controls"), **this is a hypothesis, not an
+assumed fix** — Step 1's pilot already showed Step 2's cap-table widening produces a
+real approve-rate spread through sizing alone, with the PM prompt held byte-identical.
+This line is additive on top of that mechanism, not a replacement for it, and per
+CR197/CR199's own precedent needs an ablation-style measurement (not just "it reads
+plausibly") before it's credited with any effect. The compliance-check sequence,
+APPROVE/PASS-only vocabulary, and UNCOACHABLE boundary text are all unchanged and
+pinned by a new test (`test_cr228_pm_risk_branch_does_not_touch_the_uncoachable_boundary`).
+
+Not yet measured. Steps 2 and 3 are both in place; a follow-up pilot-shaped run (same
+30 tickers, `score_pilot.py`) is what would show whether Step 3 adds anything on top
+of Step 2's already-measured spread, or whether the sizing mechanism was already doing
+all of the work — the question CR228's Step 1 result explicitly left open.
+
 ## Open question for Saiful
 
 The Street's 64% Buy rate is a **biased** baseline (sell-side Buy skew;
