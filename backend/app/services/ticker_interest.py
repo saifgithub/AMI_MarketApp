@@ -23,10 +23,16 @@ from sqlalchemy import func, select
 from app.db import get_session
 from app.db.models import RoomRunRow, SimRestingOrderRow, SimTradeRow, SimWatchlistRow, User
 from app.services.admin_analytics import _real_users_clause
+from app.services.sim_engine import OPEN_RESTING_STATES, TERMINAL_RESTING_STATES
 
-# SimRestingOrderRow.state values that mean "never became a fill".
-_PENDING_STATES = ("working", "triggered", "filling")
-_TERMINAL_NOT_FILLED_STATES = ("cancelled", "expired", "rejected")
+# CR200-R001 audit MINOR-1: these were hand-restated string literals with no
+# tie to the model's declared vocabulary, so an 8th state (added to
+# sim_engine.py's RestingOrderState/TERMINAL_RESTING_STATES) would silently
+# fall through every bucket below. Derived from sim_engine.py's own tuples
+# instead — the canonical source `SimRestingOrderRow`'s docstring (models.py)
+# describes — so this file changes automatically when that one does.
+_PENDING_STATES = OPEN_RESTING_STATES
+_TERMINAL_NOT_FILLED_STATES = tuple(s for s in TERMINAL_RESTING_STATES if s != "filled")
 
 
 def _utcnow() -> datetime:
@@ -97,18 +103,29 @@ def ticker_orders(days: int = 30, limit: int = 25) -> dict[str, Any]:
             .group_by(SimRestingOrderRow.ticker, SimRestingOrderRow.state)
         ).all()
 
+    def _blank() -> dict[str, int]:
+        return {"filled": 0, "pending": 0, "not_filled": 0, "other": 0}
+
     by_ticker: dict[str, dict[str, int]] = {}
     for ticker, n in filled_rows:
-        by_ticker.setdefault(ticker, {"filled": 0, "pending": 0, "not_filled": 0})
+        by_ticker.setdefault(ticker, _blank())
         by_ticker[ticker]["filled"] += n
     for ticker, state, n in order_rows:
-        by_ticker.setdefault(ticker, {"filled": 0, "pending": 0, "not_filled": 0})
+        by_ticker.setdefault(ticker, _blank())
         if state == "filled":
             by_ticker[ticker]["filled"] += n
         elif state in _PENDING_STATES:
             by_ticker[ticker]["pending"] += n
         elif state in _TERMINAL_NOT_FILLED_STATES:
             by_ticker[ticker]["not_filled"] += n
+        else:
+            # CR200-R001 audit MINOR-1: a state outside the documented seven
+            # (models.py SimRestingOrderRow) must never vanish silently — an
+            # admin reading "12 filled, 3 pending, 1 not filled" has no way
+            # to know a row was dropped. Degrade loudly (CR040) instead:
+            # count it, don't drop it. test_all_states_are_bucketed pins the
+            # vocabulary so an eighth state fails the suite, not this branch.
+            by_ticker[ticker]["other"] += n
 
     ranked = sorted(
         by_ticker.items(),

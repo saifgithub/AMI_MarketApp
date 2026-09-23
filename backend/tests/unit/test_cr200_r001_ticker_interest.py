@@ -31,6 +31,8 @@ from app.db.models import (
 )
 from app.services.admin_analytics import _EXCLUDED_USER_IDS
 from app.services.ticker_interest import (
+    _PENDING_STATES,
+    _TERMINAL_NOT_FILLED_STATES,
     ticker_detail,
     ticker_orders,
     top_tickers,
@@ -141,6 +143,47 @@ def test_ticker_orders_splits_filled_pending_not_filled() -> None:
     assert row["filled"] == 1
     assert row["pending"] == 2
     assert row["not_filled"] == 1
+    assert row["other"] == 0
+
+
+def test_all_seven_resting_order_states_are_bucketed() -> None:
+    """CR200-R001 audit MINOR-1. Pins ticker_orders' three buckets
+    (filled/pending/not_filled) against SimRestingOrderRow's seven documented
+    states (models.py, via sim_engine.RestingOrderState) — an eighth state
+    added to the model without updating this union must fail here, not
+    vanish silently into an admin's totals.
+    """
+    from typing import get_args
+
+    from app.services.sim_engine import RestingOrderState
+
+    documented = set(get_args(RestingOrderState))
+    covered = {"filled"} | set(_PENDING_STATES) | set(_TERMINAL_NOT_FILLED_STATES)
+    assert covered == documented
+
+
+def test_unrecognised_state_is_counted_not_dropped() -> None:
+    """The loud-degrade fallback (CR040): a state outside the three known
+    buckets must still be counted somewhere, never silently disappear from
+    the ticker's total. Constructs the row directly (bypassing the DB
+    constraint that would normally reject an unknown state) to exercise the
+    aggregation function's own defence, independent of whether the model
+    layer could ever actually produce one.
+    """
+    uid = _mk_user()
+    pid = _mk_portfolio(uid)
+    with get_session() as s:
+        s.add(SimRestingOrderRow(
+            user_id=uid, portfolio_id=pid, ticker="ZZZZ",
+            side="buy", quantity=5, order_type="limit", limit_price=90,
+            tif="day", expires_at=datetime.now(timezone.utc) + timedelta(hours=8),
+            state="partially_filled", placed_at=datetime.now(timezone.utc),
+        ))
+
+    result = ticker_orders(days=30, limit=25)
+    row = next(t for t in result["tickers"] if t["ticker"] == "ZZZZ")
+    assert row["other"] == 1
+    assert row["filled"] + row["pending"] + row["not_filled"] + row["other"] == 1
 
 
 def test_watchlist_interest_counts_adds() -> None:
