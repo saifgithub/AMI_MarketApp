@@ -33,7 +33,7 @@ import pytest
 from app.core.config import settings
 from app.schemas.agents import AgentId
 from app.services import room_prompts
-from app.services.buyback_price import MAX_PRICE, MIN_SHARES, resolve_buyback_price
+from app.services.buyback_price import BuybackPrice, MAX_PRICE, MIN_SHARES, resolve_buyback_price
 from app.services.dividend_growth import MIN_YEARS, resolve_dividend_growth
 from app.services.fundamentals import buyback_price_line, dividend_growth_line
 from app.services.market_data import DividendPayment
@@ -469,6 +469,24 @@ def test_the_buyback_line_never_claims_to_be_the_companys_own_figure() -> None:
     assert "AMI's own quotient of two filed figures" in line
     assert "not a company-reported average price" in line
     assert "as filed" in line and "2025-07-01 to 2026-06-30" in line
+
+
+def test_the_buyback_line_recomputes_the_price_rather_than_trusting_it() -> None:
+    # SLOT5 audit round 1, MINOR: buyback_price_line rendered avg_price
+    # without re-deriving it from dollars/shares, so a desynchronised object
+    # (unreachable from resolve_buyback_price's own constructor today, but
+    # not guarded against at the render seam) would print a stale price
+    # beside the correct dollars/shares. The seam now recomputes, matching
+    # the sibling seam's (executive_change_line) never-trust-the-object rule.
+    desynced = BuybackPrice(
+        avg_price=1.00,  # deliberately wrong: would print "$1.00 per share" unguarded
+        dollars=7_224_000_000.0, shares=10_869_082.0,
+        period_start=date(2025, 7, 1), period_end=date(2026, 6, 30), quarters=4,
+    )
+    line = buyback_price_line(desynced)
+    assert line is not None
+    assert "$1.00 per share" not in line
+    assert f"${desynced.dollars / desynced.shares:,.2f} per share" in line
 
 
 def test_the_growth_line_states_which_basis_it_used() -> None:

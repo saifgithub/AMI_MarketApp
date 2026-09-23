@@ -2902,11 +2902,20 @@ def buyback_price_line(price, *, live: bool = True) -> str | None:
     consecutive quarters that carry both. It is AMI's own quotient and the
     line says so: a filer that publishes its own average price computes it on
     its own basis and the two need not agree.
+
+    SLOT2's sibling seam (`executive_change_line`) never trusts its object for
+    a displayed number, re-deriving it at render time instead — this line
+    didn't, and a desynchronised `BuybackPrice` (never possible from its one
+    constructor today, but not guarded against here either) would have printed
+    `avg_price` beside a `dollars`/`shares` pair that disagreed with it. The
+    per-share figure is now recomputed from the filed dollars and shares at
+    the seam, matching the pattern rather than trusting a third field.
     """
     if price is None:
         return None
+    avg = price.dollars / price.shares if price.shares else price.avg_price
     return _labelled(_BUYBACK_PRICE_LABEL, live, [
-        f"${price.avg_price:,.2f} per share",
+        f"${avg:,.2f} per share",
         f"${price.dollars / 1e6:,.0f}M repurchased ÷ {price.shares:,.0f} shares acquired, as filed",
         f"over the {price.quarters} quarters {price.period_start} to {price.period_end}",
         "AMI's own quotient of two filed figures, not a company-reported average price",
