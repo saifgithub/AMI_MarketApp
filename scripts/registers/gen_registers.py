@@ -130,13 +130,25 @@ def _row_ids_by_state(reg: dict) -> tuple[set[str], set[str]]:
 
 
 def _row_id(line: str, prefix: str) -> str | None:
-    """The first cell of a data row is the ID, e.g. '| DEF061 | ...' -> 'DEF061'."""
-    m = re.match(rf"^\|\s*({prefix}\d{{3,}})\b", line)
+    """The first cell of a data row is the ID, e.g. '| DEF061 | ...' -> 'DEF061'.
+
+    Also matches a sub-CR ID, e.g. 'CR200-R001' -- a CR filed as a named
+    slice of a parent CR (grouping the management-console sub-items under
+    CR200 at Saiful's request 2026-09-23, zero-padded to 3 digits like the
+    top-level IDs) rather than its own top-level number. Only the
+    '-R\\d+' shape is recognised; a bare numeric ID is still the default and
+    by far the common case.
+    """
+    m = re.match(rf"^\|\s*({prefix}\d{{3,}}(?:-R\d+)?)\b", line)
     return m.group(1) if m else None
 
 
-def _id_num(item_id: str, prefix: str) -> int:
-    return int(item_id[len(prefix):])
+def _id_num(item_id: str, prefix: str) -> tuple[int, int]:
+    """Sort key: (base number, sub-CR number). A bare ID sorts as sub 0, so
+    CR200 lands immediately before CR200-R001, CR200-R002, ... and CR201."""
+    rest = item_id[len(prefix):]
+    base, _, sub = rest.partition("-R")
+    return (int(base), int(sub) if sub else 0)
 
 
 def extract(reg: dict) -> None:
