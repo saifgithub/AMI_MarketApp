@@ -274,3 +274,82 @@ Whether I1 was worth building is Saiful's call; the lane's reporting of it is ex
 protocol wants.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+
+---
+
+# Round 2 — COMPLETE
+
+**VERDICT: COMPLETE (round 2)**
+
+**SHA audited:** `7afc93b6`, in a detached worktree at that SHA
+(`.claude/worktrees/slot2r2-u66`), `git status --short` empty throughout,
+`git rev-parse HEAD` = `7afc93b6fca34e1d5885c06ade1d885af183230c` (DEF159).
+
+**Scope.** `git show --stat 7afc93b6` is one file, +18 lines, test-only:
+`backend/tests/unit/test_cr221_i1_executive_change.py`. No source change, correctly — round 1's
+MINOR-1 was "the control works but has no enforcing check," and the fix is the check.
+
+(I did not diff `de2f5383..7afc93b6` as a range. That span interleaves several other lanes'
+commits and would attribute their work to this one — the same trap I walked into on SLOT4 round 1
+and corrected there. The lane's own commit is the right unit.)
+
+## MINOR-1 — CLOSED
+
+`full_len = max(int(item.get("full_len") or 0), len(clean))` (`edgar_8k.py:644`) now has
+`test_a_stored_full_len_smaller_than_the_real_text_is_not_trusted`. It asserts both directions —
+the true length is present *and* the lying value is absent — which is the stronger form.
+
+**Mutation, run not read.** Removing the floor
+(`max(int(item.get("full_len") or 0), len(clean))` → `int(item.get("full_len") or 0)`):
+
+```
+1 failed, 53 passed
+FAILED ...::test_a_stored_full_len_smaller_than_the_real_text_is_not_trusted
+```
+
+The new test is the **sole** failure; the other 53 are unaffected. A precisely targeted pin, not
+a blunt one. Reverted, `git status --short` empty, baseline 54 passed restored.
+
+## Independent probe — the floor holds in every undercount direction
+
+The lane tested one undercount (`full_len: 10`). I swept the space:
+
+| stored `full_len` | rendered | real |
+|---|---|---|
+| 10 (undercount) | 209 | 209 |
+| 209 (honest) | 209 | 209 |
+| 0 | 209 | 209 |
+| −5 (negative) | 209 | 209 |
+| 99999 (overcount) | 99,999 | 209 |
+
+Every undercount is floored. The overcount passes through — and I am **not** filing that, because
+a `full_len` larger than the excerpt is the *normal correct case*: it is what truncation means.
+The seam cannot distinguish "legitimately truncated from 99999" from "lying," so a check there
+could not exist. My round-1 finding was specifically that an undercount makes a truncated excerpt
+read as complete; that is what is closed.
+
+Confirmed the genuine truncation path still renders honestly: a 6,999-char filing capped at
+`EXCERPT_CAP`=1200 with `full_len: 0` renders the true 6,999 **and** discloses the truncation.
+
+## Verification performed
+
+```
+worktree:  .claude/worktrees/slot2r2-u66 @ 7afc93b6, git status --short empty
+scope:     git show --stat 7afc93b6 -> 1 file, +18, test-only
+baseline:  pytest tests/unit/test_cr221_i1_executive_change.py -q -> 54 passed
+mutation:  full_len floor removed -> 1 failed (the new test), 53 passed; reverted, clean
+probe:     full_len swept {10, 209, 0, -5, 99999} — every undercount floored
+probe:     6,999-char filing @ cap 1200 -> true total rendered, truncation disclosed
+```
+
+Scratch files removed. Worktree `slot2r2-u66` is this instance's and is reaped on verdict.
+
+## Closing note
+
+Round 1 found one MINOR on this lane and it was the honest kind — a control that worked with
+nothing to stop it silently breaking. The fix adds the check and proves it bites, without
+touching source that was already correct. That is the right shape of response to
+"an entry without an enforcing check is not done."
+
+VERDICT: COMPLETE (round 2)
