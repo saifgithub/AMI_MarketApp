@@ -696,6 +696,24 @@ def test_the_seam_recaps_an_overlong_excerpt() -> None:
     assert f"… {edgar_8k.EXCERPT_CLOSE.strip()}" in line
 
 
+def test_a_stored_full_len_smaller_than_the_real_text_is_not_trusted() -> None:
+    # SLOT2 audit round 1, MINOR-1: the max() floor against len(clean) had no
+    # enforcing test — removing it left all tests green. A stored full_len can
+    # undercount (a stale ingest row, a since-edited value); the seam must
+    # never render a total smaller than the excerpt it is showing beside it.
+    text = ("The board appointed a new officer. " * 6).strip()
+    line = executive_change_line(
+        "filed",
+        [{"accession_no": _CAT_ACC, "form": "8-K", "filed": "2026-04-10", "report_date": None,
+          "age_days": 154, "extract_status": "extracted", "excerpt": text,
+          "truncated": False, "full_len": 10}],
+        "2026-03-15", "2026-09-11",
+    )
+    assert line is not None
+    assert f"of {len(text):,} chars" in line
+    assert "of 10 chars" not in line
+
+
 def test_a_quote_in_the_filing_cannot_close_the_excerpt() -> None:
     # An ASCII-quoted excerpt was closed by the filing's own `"`, and the rest
     # read as sheet-authored prose. The bracket pair is the sheet's, the
