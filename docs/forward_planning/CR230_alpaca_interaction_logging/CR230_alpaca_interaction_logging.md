@@ -193,15 +193,23 @@ not against it being slow, reintroducing the exact uncertainty `bug
 9b3a6c2f` already fixed once — found by driving the widget with a
 `Completer`-gated slow fake, not by reasoning about the code), 1 MINOR (the
 submission's own test count was wrong — claimed 16, actual 11; a
-miscount, not a coverage gap, every enumerated behavior was present). Fixed
-round 2: MAJOR-1 via `unawaited(...)` at all four call sites, proven by
-mutation; MINOR-1 by correcting every count in this doc and the
-submission. Neither contested. The submission also self-reported a
-register-drift episode against its own commit (`d7d71755`), independently
-confirmed accurate by the auditor.
+miscount, not a coverage gap, every enumerated behavior was present).
+**Round 2: COMPLETE** — MAJOR-1 fixed via `unawaited(...)` at all four call
+sites, proven by mutation; the auditor independently re-drove all four
+sites (including the three the lane's own mutation hadn't covered) and
+confirmed each holds. MINOR-1 corrected everywhere. Neither contested. The
+submission also self-reported a register-drift episode against its own
+commit (`d7d71755`), independently confirmed accurate by the auditor. The
+verdict's closing note flagged that the three failure-branch timing
+guarantees were only verified by the auditor's own scratch probes, not
+committed — closed as post-verdict hardening (`25badef0`), three new
+tests mirroring the existing slow-success test, proven by mutation
+(`+4 -4`, matching the auditor's own result exactly).
 
 ## Status
 
-`in_progress` — implementation landed 2026-09-23, independent audit round 1
-`AWAITING_FIXES` same day, round-2 fixes landed same day. Will move to
-`done` on a `COMPLETE` verdict.
+`done` — implementation landed 2026-09-23 (`d7d71755`), independent audit
+round 1 `AWAITING_FIXES` same day, round-2 fixes (`56b0839f`) verdict
+`COMPLETE` same day, post-verdict hardening for the closing note's named
+gap (`25badef0`) same day. **Not yet promoted** — needs `/promote-to-alpha`
+(new migration + endpoint), not attempted yet.
