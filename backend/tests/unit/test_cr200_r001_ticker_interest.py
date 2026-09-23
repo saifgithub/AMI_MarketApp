@@ -186,6 +186,46 @@ def test_unrecognised_state_is_counted_not_dropped() -> None:
     assert row["filled"] + row["pending"] + row["not_filled"] + row["other"] == 1
 
 
+def test_high_volume_unrecognised_ticker_survives_the_limit_cut() -> None:
+    """CR200-R001 audit round-2 MINOR-2. The ranking key used to sum only
+    filled/pending/not_filled, so a ticker whose orders were ALL unrecognised
+    ranked with key 0 -- below every ticker with a single recognised order --
+    and [:limit] silently dropped it from the response. `other` must count
+    toward rank, or the loudest possible vocabulary-drift signal (a ticker
+    generating many unrecognised orders) is exactly the one the admin never
+    sees.
+    """
+    uid = _mk_user()
+    pid = _mk_portfolio(uid)
+    with get_session() as s:
+        for i in range(30):
+            s.add(SimRestingOrderRow(
+                user_id=uid, portfolio_id=pid, ticker="GHOST",
+                side="buy", quantity=1, order_type="limit", limit_price=90,
+                tif="day", expires_at=datetime.now(timezone.utc) + timedelta(hours=8),
+                state="partially_filled", placed_at=datetime.now(timezone.utc),
+            ))
+        s.add(SimRestingOrderRow(
+            user_id=uid, portfolio_id=pid, ticker="QUIET",
+            side="buy", quantity=1, order_type="limit", limit_price=90,
+            tif="day", expires_at=datetime.now(timezone.utc) + timedelta(hours=8),
+            state="working", placed_at=datetime.now(timezone.utc),
+        ))
+        for n in range(30):
+            s.add(SimRestingOrderRow(
+                user_id=uid, portfolio_id=pid, ticker=f"FILLER{n}",
+                side="buy", quantity=1, order_type="limit", limit_price=90,
+                tif="day", expires_at=datetime.now(timezone.utc) + timedelta(hours=8),
+                state="working", placed_at=datetime.now(timezone.utc),
+            ))
+
+    result = ticker_orders(days=30, limit=25)
+    tickers = {t["ticker"] for t in result["tickers"]}
+    assert "GHOST" in tickers, "the 30-order unrecognised-state ticker was truncated out"
+    ghost = next(t for t in result["tickers"] if t["ticker"] == "GHOST")
+    assert ghost["other"] == 30
+
+
 def test_watchlist_interest_counts_adds() -> None:
     u1, u2 = _mk_user(), _mk_user()
     _mk_watchlist(u1, "AMD")

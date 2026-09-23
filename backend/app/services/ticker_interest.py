@@ -129,7 +129,7 @@ def ticker_orders(days: int = 30, limit: int = 25) -> dict[str, Any]:
 
     ranked = sorted(
         by_ticker.items(),
-        key=lambda kv: kv[1]["filled"] + kv[1]["pending"] + kv[1]["not_filled"],
+        key=lambda kv: sum(kv[1].values()),
         reverse=True,
     )[:limit]
 
