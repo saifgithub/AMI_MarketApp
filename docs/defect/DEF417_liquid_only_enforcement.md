@@ -251,3 +251,11 @@ refresh.
 ## Status
 
 `fixed`.
+
+## Saiful's rulings (2026-09-24, after build)
+
+Asked by the Architect after the builder flagged three judgment calls; all three confirm what was built, so no code changed.
+
+1. **Scope** — *"Enforce for all where ON."* `liquid_only` defaults ON on nearly every mandate; the floor enforces it wherever it is ON. Microcap buys are refused with a clear mandate reason; the user can switch the constraint off in their mandate.
+2. **Classification outage** — *"Allow + disclose."* When the daily classification snapshot is stale or unavailable, `liquid_only` does not block; the verdict discloses that liquidity was not checked. (Deliberate divergence from the fossil/sin/ESG flags, which block on UNAVAILABLE but default OFF.)
+3. **Volume floor** — *"$1M/day."* `ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000` confirmed.
