@@ -977,6 +977,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 const SizedBox(width: AmiSpacing.s),
                 Text(l.tradeTicketHeading,
                     style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+                const Spacer(),
+                // DEF415 — the sheet has no AppBar and no drag handle; without
+                // this, a full-height form (esp. with the keypad up) leaves no
+                // discoverable way back to the previous screen.
+                InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close, color: AmiColors.textLow, size: 20),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AmiSpacing.l),
