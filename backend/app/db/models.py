@@ -106,6 +106,36 @@ class EncryptedString(TypeDecorator):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        # DEF416: apple_id/google_id/hms_unionid had NO constraint at all —
+        # not even a plain unique — so two concurrent first-time sign-ins
+        # with the same OIDC `sub` wrote two User rows and nothing raised.
+        # PARTIAL on IS NOT NULL: every column is nullable (a user who has
+        # never linked that provider has NULL), and NULL already doesn't
+        # collide in a unique index on either dialect — the WHERE states the
+        # actual invariant rather than leaning on that incidentally, matching
+        # `uq_journal_dedupe` / `uq_reputation_event_dedup`'s spelling so it
+        # runs identically under test (SQLite) and in production (Postgres).
+        # Migration: def416a0oidc0uq.
+        Index(
+            "uq_users_apple_id", "apple_id",
+            unique=True,
+            sqlite_where=text("apple_id IS NOT NULL"),
+            postgresql_where=text("apple_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_users_google_id", "google_id",
+            unique=True,
+            sqlite_where=text("google_id IS NOT NULL"),
+            postgresql_where=text("google_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_users_hms_unionid", "hms_unionid",
+            unique=True,
+            sqlite_where=text("hms_unionid IS NOT NULL"),
+            postgresql_where=text("hms_unionid IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
@@ -1365,6 +1395,19 @@ class ClassificationUniverseSnapshotRow(Base):
     # (and the migration's back-fill) read as an empty map; a ticker absent from it
     # resolves to "Other" (disclosed, never blocking — the DEF059 inversion guard).
     sectors: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
+    # DEF417: per-ticker liquidity figures captured from the SAME `info` dict the
+    # sector/fossil/sin classifier already reads — `marketCap` (USD, stored in USD
+    # MILLIONS to match `sectors`' sibling numeric fields elsewhere in the app) and
+    # `averageVolume` (shares/day; NOT a dollar figure — the classify pass has no
+    # live price, so dollar volume is derived at resolve time against the caller's
+    # own quote, in `ClassificationUniverse.resolve_liquidity()`). Feeds the
+    # `liquid_only` mandate flag's enforcement in
+    # `safety_floor.check_mandate_compliance()`. Nullable so pre-DEF417 rows read as
+    # empty maps; a ticker absent from either resolves that figure to unknown
+    # (UNKNOWN overall if BOTH are absent — permitted + disclosed, never blocking —
+    # the DEF059 inversion guard).
+    market_caps: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
+    avg_volumes: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
 
 
 class TickerReferenceRow(Base):

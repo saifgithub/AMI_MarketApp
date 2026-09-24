@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.classification import ClassificationVerdict
+from app.schemas.liquidity import LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
 from app.trading_math.portfolio import total_value as _total_value
@@ -246,6 +247,12 @@ class ComplianceResult(BaseModel):
     # UNKNOWN disclosure ("AMI hasn't classified this name") travels even when the
     # trade succeeds. Empty when neither flag is on.
     classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)
+    # DEF417: the sourced liquidity verdict for the `liquid_only` flag. Present on
+    # BOTH a blocked (EXCLUDED/UNAVAILABLE) trade AND a permitted
+    # (PERMITTED/UNKNOWN) one, mirroring `classification_verdicts` — an UNKNOWN
+    # disclosure ("AMI hasn't measured this name") must travel even when the
+    # trade succeeds. None when `liquid_only` is off.
+    liquidity_verdict: LiquidityVerdict | None = None
     # DEF169: checks that COULD NOT run (e.g. the single-name cap when
     # portfolio_value <= 0) — distinct from `violations`. A skipped check must
     # never collapse into either "blocked" or a silent "passed"; the caller reads

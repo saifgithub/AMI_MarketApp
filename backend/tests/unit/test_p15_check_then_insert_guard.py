@@ -78,8 +78,12 @@ _HANDLED_AT_CALLER = {
 _UNREVIEWED = {
     ("auth_service.py", "_claim_or_create", "User"),
     ("auth_service.py", "ensure_anonymous", "User"),
-    ("auth_service.py", "sign_in_with_apple", "User"),
-    ("auth_service.py", "sign_in_with_google", "User"),
+    # sign_in_with_apple / sign_in_with_google: fixed under DEF416 —
+    # uq_users_apple_id / uq_users_google_id (migration def416a0oidc0uq) plus
+    # the begin_nested()/IntegrityError re-read-and-update recovery, same
+    # shape as DEF401. _claim_or_create and ensure_anonymous are unchanged
+    # and still pinned — no constraint yet backs email/phone's fallback path
+    # or device_user_id (that's CR191's remaining scope).
     ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
     ("games_desks.py", "ensure_desk_users", "User"),
     ("games_service.py", "ensure_field", "GameFieldRow"),

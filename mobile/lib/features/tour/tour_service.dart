@@ -2,11 +2,21 @@
 /// exposes a reset method wired to Settings → Restart app tour.
 library;
 
+import 'package:ami_trade/qa/tour_qa_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum TourSection { floor, portfolio, journal, lessons, you }
 
 class TourService {
+  TourService({bool? skipToursForQa})
+      : _skipToursForQa = skipToursForQa ?? TourQaConfig.skipToursForQa;
+
+  /// Overridable only from a test — `tourServiceProvider` always constructs
+  /// with the default, which reads the real dart-define. A test cannot flip
+  /// a compile-time `String.fromEnvironment` constant, so this is the seam
+  /// that lets `hasSeen`'s QA branch be exercised both ways without one.
+  final bool _skipToursForQa;
+
   static const _keys = {
     TourSection.floor: 'tour_floor_seen',
     TourSection.portfolio: 'tour_portfolio_seen',
@@ -21,7 +31,17 @@ class TourService {
   /// CR180 — the one-time notice that the bottom nav was restructured.
   static const _navChangeKey = 'tour_nav_v2_seen';
 
+  /// DEF375 — every call site (`floor_screen.dart`, `portfolio_screen.dart`,
+  /// `journal_screen.dart`, `lessons_screen.dart`, `you_screen.dart`) checks
+  /// this before ever showing a tour, so gating it here covers all five
+  /// without touching a single screen. `TourQaConfig.skipToursForQa` is only
+  /// ever true on a non-production channel with the QA dart-define set — see
+  /// its doc for the structural guarantee. Deliberately checked BEFORE
+  /// `SharedPreferences` is touched: a QA run never reads or writes the
+  /// `tour_*_seen` flags at all, so it cannot leave state a later, non-QA
+  /// check on the same install would misread.
   Future<bool> hasSeen(TourSection section) async {
+    if (_skipToursForQa) return true;
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keys[section]!) ?? false;
   }

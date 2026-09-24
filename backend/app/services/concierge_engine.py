@@ -98,7 +98,7 @@ Q5_CHIPS = ["10% (cautious)", "30% (balanced)", "60% (all-in)"]
 
 
 def q6_text(risk_score: int) -> str:
-    suggestion = {1: 10, 2: 20, 3: 30, 4: 50, 5: 50}[risk_score]
+    suggestion = {1: 10, 2: 20, 3: 30, 4: 40, 5: 50}[risk_score]
     return (
         "Last numbers question. What's the largest temporary loss you could "
         f"stomach before you'd lose sleep?\n\n"
@@ -106,7 +106,7 @@ def q6_text(risk_score: int) -> str:
     )
 
 
-Q6_CHIPS = ["10%", "20%", "30%", "50%", "No cap"]
+Q6_CHIPS = ["10%", "20%", "30%", "40%", "50%", "No cap"]
 
 
 # CR114: this used to ask only what you'd NEVER invest in, while five of its
@@ -377,6 +377,8 @@ def _parse_drawdown_pct(text: str) -> int:
         return 100
     if "50" in t:
         return 50
+    if "40" in t:
+        return 40
     if "30" in t:
         return 30
     if "20" in t:
@@ -455,8 +457,10 @@ def _parse_constraints(text: str) -> dict[str, Any]:
 
 # CR228 step 2: `max_drawdown_pct` on a 1-5 scale, same tier boundaries as
 # `q6_text`'s own suggestion table (:101) so the nudge and the suggestion the
-# user was shown agree on what "high" means.
-_DRAWDOWN_PCT_TO_TIER: dict[int, int] = {10: 1, 20: 2, 30: 3, 50: 4, 100: 5}
+# user was shown agree on what "high" means. DEF418: tiers 4 and 5 previously
+# both mapped to 50%; widened to {10: 1, 20: 2, 30: 3, 40: 4, 50: 5} per Saiful
+# 2026-09-24 ruling: "4→40%, 5→50%".
+_DRAWDOWN_PCT_TO_TIER: dict[int, int] = {10: 1, 20: 2, 30: 3, 40: 4, 50: 5, 100: 5}
 # `Horizon.SHORT` implies active/short-term trading (Q1's "learn to trade" path
 # maps here too) — more risk tolerance is needed to accept the swings that
 # horizon trades through, not less. `VERY_LONG` similarly has more room to
