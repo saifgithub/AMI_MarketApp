@@ -28,6 +28,19 @@ Covers (per the DEF419 brief):
 
 Also guards the "preview never persists" invariant or an account-context
 preview could be a stealth pathway around BL9's dry-run contract.
+
+Round 2 (auditor u66, MAJOR-1/MAJOR-2/MINOR-1) adds:
+  (f) `unmeasured_rules` is empty on the AMI (no-account) path and carries
+      exactly `drawdown` + `existing_open_risk` on the snapshot path — the
+      structural "skipped-and-reported, not zeroed" Saiful's 2026-09-24
+      ruling asks for.
+  (g) the NEW trade's own risk (its own stop, its own notional) still
+      counts against the open-risk cap measured against the ALPACA
+      account's equity — MAJOR-1's fix is not "open risk never applies to
+      Alpaca", it is "AMI's own pre-existing risk isn't carried over at
+      the wrong scale."
+  (h) the no-persistence guard (MINOR-1) counts every trade table
+      (trades, shorts, options), not only the portfolio row.
 """
 
 from __future__ import annotations
@@ -41,7 +54,12 @@ from pydantic import ValidationError
 
 from app.api.sim import router as sim_router
 from app.db import get_session
-from app.db.models import SimPortfolioRow
+from app.db.models import (
+    SimOptionTradeRow,
+    SimPortfolioRow,
+    SimShortPositionRow,
+    SimTradeRow,
+)
 from app.schemas.alpaca import AccountSnapshotIn
 from app.services import sector_allocation as _sector_allocation_module
 from app.services.auth_service import AuthService
@@ -531,17 +549,206 @@ def test_halal_flag_is_evaluated_regardless_of_account(sim_client: TestClient):
     )
 
 
+# ── Round 2 (auditor u66) — unmeasured_rules, and the new trade's own risk
+#    still counting on the snapshot path ───────────────────────────────────
+
+
+def test_unmeasured_rules_empty_on_ami_path(sim_client: TestClient):
+    """The AMI (no-account) path is byte-identical to pre-round-2 behaviour:
+    every rule is measurable against AMI's own ledger, so nothing is
+    reported as unmeasured."""
+    user_id, token = _new_user()
+    r = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=1,
+        mandate_override=_permissive_mandate(),
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["unmeasured_rules"] == []
+
+
+def test_unmeasured_rules_names_drawdown_and_open_risk_on_snapshot_path(
+    sim_client: TestClient,
+):
+    """MAJOR-1 + MAJOR-2 (auditor u66) — Saiful's 2026-09-24 ruling:
+    'Disclose, don't block.' On the account-snapshot path, AMI has no NAV
+    history and no stop data for the named account, so `drawdown` and
+    `existing_open_risk` are explicitly reported as unmeasured — not
+    silently zeroed and not silently carried over from AMI's own ledger at
+    the wrong denominator (the MAJOR-1 defect this closes)."""
+    user_id, token = _new_user()
+    r = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=1,
+        account={"kind": "alpaca_paper", "equity": 100_000.0, "cash": 100_000.0,
+                 "positions": []},
+        mandate_override=_permissive_mandate(),
+    )
+    assert r.status_code == 200, r.text
+    rules = {u["rule"]: u["reason"] for u in r.json()["unmeasured_rules"]}
+    assert set(rules) == {"drawdown", "existing_open_risk"}
+    # Every reason is a non-empty sentence — a rule with an empty reason
+    # would be the same silent-disclosure failure with extra ceremony.
+    assert all(reason.strip() for reason in rules.values())
+
+
+def test_unmeasured_rules_absent_when_every_rule_is_measurable(
+    sim_client: TestClient,
+):
+    """`unmeasured_rules` names RULES that couldn't be checked, not accounts
+    — it must not appear at all when the mandate doesn't even engage
+    drawdown/open-risk caps meaningfully... but per the fix, drawdown and
+    existing_open_risk are ALWAYS unmeasurable on the snapshot path
+    (AMI structurally cannot compute either for an externally-custodied
+    account), so this test instead pins the CONTRAST: the same order run
+    with no account carries no unmeasured_rules, proving the field isn't a
+    generic disclaimer stamped on every response."""
+    user_id, token = _new_user()
+    r_ami = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=1,
+        mandate_override=_permissive_mandate(),
+    )
+    r_alpaca = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=1,
+        account={"kind": "alpaca_paper", "equity": 100_000.0, "cash": 100_000.0,
+                 "positions": []},
+        mandate_override=_permissive_mandate(),
+    )
+    assert r_ami.json()["unmeasured_rules"] == []
+    assert len(r_alpaca.json()["unmeasured_rules"]) == 2
+
+
+def test_open_risk_not_carried_over_from_ami_at_the_wrong_denominator(
+    sim_client: TestClient,
+):
+    """The MAJOR-1 regression itself: a real AMI position pushes AMI's own
+    `existing_open_risk_pct` (a % of the $10k AMI book) well past a tight
+    cap. Previewed against a LARGE Alpaca account with NO existing
+    positions of its own, the trade must be accepted — proving the AMI
+    figure is no longer summed into the Alpaca-denominated check at the
+    wrong scale (pre-round-2: this would have wrongly blocked, the exact
+    complaint DEF419 itself was filed over, recurring in this one rule)."""
+    user_id, token = _new_user()
+    mark = _mock_price("AAPL")
+
+    # Open a real AMI position with a stop, so `existing_open_risk_pct` on
+    # the AMI ledger is large relative to the $10k AMI account: $6,000 is
+    # 60% of the $10k book, x50% stop distance = 30.0 open-risk points —
+    # comfortably over the 5.0pt cap below on ITS OWN, so a preview that
+    # (bug-wise) summed this AMI figure into an Alpaca-denominated check
+    # would block regardless of how large or empty the Alpaca account is.
+    submit = sim_client.post(
+        "/v1/sim/submit",
+        json={
+            "user_id": str(user_id), "ticker": "AAPL", "side": "buy",
+            "quantity": 6000.0 / mark, "order_type": "market",
+            "stop": mark * 0.5,
+            "mandate_override": _permissive_mandate(),
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert submit.status_code == 200, submit.text
+    assert submit.json()["ok"] is True, submit.text
+
+    # A tiny new order against a $500k Alpaca account with no positions of
+    # its own — negligible weight, so even counting its own (stopless, here)
+    # contribution the open-risk cap should not bite. Pre-round-2, AMI's own
+    # ~30pt open-risk figure would have been summed in directly and blocked
+    # this regardless of the Alpaca account's size.
+    r = _preview(
+        sim_client, user_id, token, ticker="MSFT", quantity=1,
+        account={"kind": "alpaca_paper", "equity": 500_000.0, "cash": 500_000.0,
+                 "positions": []},
+        mandate_override=_permissive_mandate(max_open_risk_pct=5.0),
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["accepted"] is True, r.text
+    assert r.json()["compliance"]["blocked_by"] != "open_risk"
+
+
+def test_new_trades_own_risk_still_counts_against_alpaca_equity(
+    sim_client: TestClient,
+):
+    """Saiful's ruling, verbatim: 'the NEW trade's own risk still counts
+    against the open-risk cap measured against the Alpaca equity.' A fresh
+    user (no AMI history, so existing_open_risk_pct would be 0 either way)
+    previews a trade sized/stopped so ITS OWN contribution alone exceeds a
+    tight cap when priced against a SMALL Alpaca account — must still
+    block. The same order against a LARGE Alpaca account (same %, same
+    stop) must NOT block, proving the contribution is genuinely priced
+    against the NAMED account's equity, not a fixed or ignored figure."""
+    user_id, token = _new_user()
+    mark = _mock_price("AAPL")
+    qty = 5000.0 / mark  # $5,000 notional
+    stop = mark * 0.90  # 10% stop distance
+
+    tight_mandate = _permissive_mandate(max_open_risk_pct=3.0)
+
+    # $10k Alpaca account: $5,000 is 50% of equity, x10% stop = 5.0pt > 3.0pt cap.
+    r_small = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=qty,
+        account={"kind": "alpaca_paper", "equity": 10_000.0, "cash": 10_000.0,
+                 "positions": []},
+        mandate_override=tight_mandate,
+        stop=stop,
+    )
+    assert r_small.status_code == 200, r_small.text
+    assert r_small.json()["accepted"] is False, r_small.text
+    assert r_small.json()["compliance"]["blocked_by"] == "open_risk"
+    assert any(
+        "open risk" in v for v in r_small.json()["compliance"]["violations"]
+    )
+
+    # $500k Alpaca account: same $5,000 notional is 1% of equity, x10% stop
+    # = 0.1pt — well under the 3.0pt cap.
+    r_large = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=qty,
+        account={"kind": "alpaca_paper", "equity": 500_000.0, "cash": 500_000.0,
+                 "positions": []},
+        mandate_override=tight_mandate,
+        stop=stop,
+    )
+    assert r_large.status_code == 200, r_large.text
+    assert r_large.json()["accepted"] is True, r_large.text
+    assert r_large.json()["compliance"]["blocked_by"] != "open_risk"
+
+
 # ── Invariant: preview never persists, account-context or not ──────────────
+
+
+def _trade_table_counts(user_id: UUID) -> dict[str, int]:
+    """Row counts across every table an accepted trade could ever land in
+    (MINOR-1, auditor u66) — the pre-round-2 guard counted only
+    `SimPortfolioRow` and DISMISSED the trade tables by comment ("there is
+    no table it even could land in") rather than by checking. This is the
+    auditor's own probe shape: `{'trades': 0, 'shorts': 0, 'options': 0}`
+    before and after."""
+    with get_session() as s:
+        return {
+            "portfolios": len(
+                s.query(SimPortfolioRow)
+                .filter(SimPortfolioRow.user_id == user_id)
+                .all()
+            ),
+            "trades": len(
+                s.query(SimTradeRow).filter(SimTradeRow.user_id == user_id).all()
+            ),
+            "shorts": len(
+                s.query(SimShortPositionRow)
+                .filter(SimShortPositionRow.user_id == user_id)
+                .all()
+            ),
+            "options": len(
+                s.query(SimOptionTradeRow)
+                .filter(SimOptionTradeRow.user_id == user_id)
+                .all()
+            ),
+        }
 
 
 def test_account_context_preview_never_persists(sim_client: TestClient):
     user_id, token = _new_user()
     mark = _mock_price("AAPL")
 
-    with get_session() as s:
-        before_count = len(
-            s.query(SimPortfolioRow).filter(SimPortfolioRow.user_id == user_id).all()
-        )
+    before = _trade_table_counts(user_id)
 
     r = _preview(
         sim_client, user_id, token, ticker="AAPL", quantity=1000.0 / mark,
@@ -552,13 +759,15 @@ def test_account_context_preview_never_persists(sim_client: TestClient):
     assert r.status_code == 200, r.text
     assert r.json()["accepted"] is True
 
-    with get_session() as s:
-        after_count = len(
-            s.query(SimPortfolioRow).filter(SimPortfolioRow.user_id == user_id).all()
-        )
+    after = _trade_table_counts(user_id)
+
     # ensure_portfolio() lazily creates the AMI row on first touch (unrelated
     # to the account-snapshot path) — the invariant is that this call added
     # no MORE than that one lazy-create, and never wrote anything shaped
-    # like the Alpaca snapshot (there is no table it even could land in).
-    assert after_count <= 1
-    assert after_count == before_count or after_count == before_count + 1
+    # like the Alpaca snapshot to ANY trade table, not only the one the
+    # round-1 guard happened to count.
+    assert after["portfolios"] <= 1
+    assert after["portfolios"] in (before["portfolios"], before["portfolios"] + 1)
+    assert after["trades"] == before["trades"] == 0
+    assert after["shorts"] == before["shorts"] == 0
+    assert after["options"] == before["options"] == 0

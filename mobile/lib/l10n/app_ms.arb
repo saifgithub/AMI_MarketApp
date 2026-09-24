@@ -3227,5 +3227,6 @@
     "settingsTickerUnknown": "That ticker isn't in our universe, so it would never match. Check the symbol.",
     "settingsTickerDuplicate": "Already in the list.",
     "settingsTickerRemove": "Remove",
-    "settingsTimezoneSearch": "Search timezones"
+    "settingsTimezoneSearch": "Search timezones",
+    "tradeTicketUnmeasuredRulesNote": "Not checked for this account: {ruleNames} — AMI has no history for your Alpaca account."
 }

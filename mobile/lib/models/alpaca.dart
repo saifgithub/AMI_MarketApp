@@ -149,16 +149,26 @@ class AlpacaSnapshot {
   /// the sim engine's own `shorts=None` on this branch), so sending one would
   /// 422 the whole preview over one position the mandate check does not model
   /// anyway.
+  ///
+  /// DEF419-MOBILE round 2 (MAJOR-1, auditor u66) — the short filter
+  /// (`.where`) now runs BEFORE the position cap (`.take`), not after. The
+  /// old order sorted by `marketValue.abs()`, so a short sorted exactly like
+  /// a same-sized long, could fill the top 100 slots, and was then dropped —
+  /// silently taking real long positions out of the snapshot with it (120
+  /// positions in, 0 out, in the auditor's probe). Filtering first means the
+  /// cap only ever counts positions that will actually be sent, so the
+  /// mandate check's single-name/sector caps see the true (long-only, per
+  /// DEF419's scope) book, truncated only by count, never emptied by an
+  /// unrelated short.
   Map<String, dynamic> toMandateSnapshotJson() {
-    final sorted = [...positions]
+    final longs = positions.where((p) => p.qty >= 0).toList()
       ..sort((a, b) => b.marketValue.abs().compareTo(a.marketValue.abs()));
     return {
       'kind': 'alpaca_paper',
       'equity': portfolio.equity,
       'cash': portfolio.cash,
-      'positions': sorted
+      'positions': longs
           .take(maxPositions)
-          .where((p) => p.qty >= 0)
           .map((p) => {
                 'ticker': p.symbol,
                 'qty': p.qty,

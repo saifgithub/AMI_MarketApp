@@ -7903,6 +7903,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search timezones'**
   String get settingsTimezoneSearch;
+
+  /// DEF419 round 2 — non-alarming disclosure line shown under an ACCEPTED Alpaca-paper (or Both, Alpaca leg) trade outcome in the trade ticket sheet, naming the mandate rules AMI could not evaluate for the linked Alpaca account (drawdown, existing open risk — AMI has no NAV history or stop data for an externally-custodied account). Saiful's 2026-09-24 ruling: 'Disclose, don't block' — every measurable rule still applies; this line says which ones were skipped, not that the trade is risky. {ruleNames} is a comma-joined, human-readable list of rule names (e.g. 'drawdown, existing open risk'), already assembled by the caller. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked for this account: {ruleNames} — AMI has no history for your Alpaca account.'**
+  String tradeTicketUnmeasuredRulesNote(String ruleNames);
 }
 
 class _AppLocalizationsDelegate

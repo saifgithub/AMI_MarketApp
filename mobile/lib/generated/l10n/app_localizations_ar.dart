@@ -4807,4 +4807,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsTimezoneSearch => 'Search timezones';
+
+  @override
+  String tradeTicketUnmeasuredRulesNote(String ruleNames) {
+    return 'Not checked for this account: $ruleNames — AMI has no history for your Alpaca account.';
+  }
 }
