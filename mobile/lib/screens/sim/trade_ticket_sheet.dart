@@ -16,6 +16,7 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/features/sim/short_rules.dart';
@@ -140,6 +141,23 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   // CR227 — per-destination results from the last submit, replacing the
   // single snackbar when more than one leg was attempted.
   List<_DestinationOutcome> _destinationOutcomes = const [];
+
+  // DEF419 — this ticket session's own cache of the linked Alpaca paper
+  // account, so the mandate check run against ALPACA PAPER / BOTH is sized
+  // against the account that will actually receive the order rather than
+  // AMI's own $10k sim portfolio.
+  //
+  // Cached (not re-fetched on every quantity keystroke or every SUBMIT tap)
+  // with a short TTL: a trade ticket is typed over seconds, not minutes, and
+  // Alpaca's paper API is rate-limited — the same reasoning
+  // `AlpacaSnapshotCache` (CR202, `alpaca_providers.dart`) already applies to
+  // the Room-convene overlay fetch. A fresh fetch backing every submit would
+  // turn "adjust quantity three times, then submit" into three-plus Alpaca
+  // calls for an account that has not moved in that window.
+  AlpacaSnapshot? _alpacaSnapshot;
+  DateTime? _alpacaSnapshotAt;
+  static const _alpacaSnapshotTtl = Duration(seconds: 30);
+  Future<AlpacaSnapshot>? _alpacaSnapshotFetch;
   // Bug d5717660: when a trade has no AI verdict, suggest convening first.
   // The user can dismiss the advisory and proceed — the trade is recorded
   // with verdict_ref=null, which the journal renders as "Without AI advice".
@@ -606,6 +624,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       return;
     }
 
+    if (destination == TradeDestination.both) {
+      await _submitBoth(typed, qty);
+      return;
+    }
+
     final result = await ref.read(simNotifierProvider.notifier).submit(
           ticker: typed,
           side: _side,
@@ -632,24 +655,6 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // duration so the success is unambiguous.
       HapticFeedback.mediumImpact();
 
-      // CR227 — "Both": the sim leg just went through (ok:true), so place
-      // the Alpaca leg too. A mandate rejection above (result == null ||
-      // !result.ok) never reaches here, so neither leg fires — see this
-      // method's early return path.
-      if (destination == TradeDestination.both) {
-        final alpaca =
-            await _placeAlpacaOrder(typed, qty, TradeDestination.both);
-        if (!mounted) return;
-        setState(() => _destinationOutcomes = [
-              _DestinationOutcome(
-                label: 'AMI SIM',
-                ok: true,
-                message: _simOutcomeMessage(result, typed),
-              ),
-              alpaca,
-            ]);
-      }
-
       // CR171 §6 — hold the sheet open on an advisory. The trade is done
       // either way; this is the only moment at which the notice can be put in
       // front of the person it is about.
@@ -657,10 +662,63 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         setState(() => _pendingAdvisories = result.advisories);
         return;
       }
-      if (destination == TradeDestination.both) return;
       Navigator.of(context).pop();
       _showOutcome(result, typed);
     }
+  }
+
+  /// DEF419 — the linked Alpaca paper account's current state, cached per
+  /// ticket session ([_alpacaSnapshotTtl]) so ALPACA PAPER / BOTH mandate
+  /// checks are sized against the account that will actually receive the
+  /// order, without re-fetching Alpaca on every quantity keystroke or every
+  /// SUBMIT tap within the same short window.
+  ///
+  /// Concurrent callers (the BOTH path fires the AMI and Alpaca legs at once)
+  /// share one in-flight fetch via [_alpacaSnapshotFetch] rather than each
+  /// starting their own request.
+  ///
+  /// Throws on failure — callers decide what "couldn't read the account"
+  /// means for their leg; this method never guesses.
+  ///
+  /// **Fans out through a [Completer], never hands the same in-flight
+  /// `Future` straight to two callers.** [_submitBoth] awaits this from both
+  /// legs via `Future.wait`, and a `Future` that fails with two listeners
+  /// attached this way trips Dart's "unhandled exception" zone reporting
+  /// even though both listeners DO end up with a `try/catch` around their
+  /// own `await` — `flutter test` surfaced it as an uncaught
+  /// `AlpacaException` despite `_legAlpaca` catching it correctly. Routing
+  /// every caller through its own `completer.future` sidesteps that,
+  /// because each caller is listening to a distinct `Future` the completer
+  /// controls, not the same underlying one.
+  Future<AlpacaSnapshot> _fetchAlpacaSnapshot() {
+    final cached = _alpacaSnapshot;
+    final at = _alpacaSnapshotAt;
+    if (cached != null &&
+        at != null &&
+        DateTime.now().difference(at) < _alpacaSnapshotTtl) {
+      return Future.value(cached);
+    }
+    final inFlight = _alpacaSnapshotFetch;
+    if (inFlight != null) return inFlight;
+    final completer = Completer<AlpacaSnapshot>.sync();
+    _alpacaSnapshotFetch = completer.future;
+    final client = ref.read(alpacaClientProvider);
+    Future.wait([client.account(), client.positions()]).then((results) {
+      final snapshot = AlpacaSnapshot(
+        portfolio: results[0] as AlpacaPortfolio,
+        positions: results[1] as List<AlpacaPosition>,
+      );
+      _alpacaSnapshot = snapshot;
+      _alpacaSnapshotAt = DateTime.now();
+      _alpacaSnapshotFetch = null;
+      completer.complete(snapshot);
+    }, onError: (Object e, StackTrace st) {
+      // Clears on failure too, so the next call starts a fresh fetch rather
+      // than replaying a dead one.
+      _alpacaSnapshotFetch = null;
+      completer.completeError(e, st);
+    });
+    return completer.future;
   }
 
   /// CR227 — "Alpaca only." Gates through `/v1/sim/preview` (no persist) so
@@ -668,12 +726,39 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// touches AMI's own sim — picking this destination must not be a way to
   /// dodge "uncoachable." Only on an accepted preview does the Alpaca order
   /// call fire.
+  ///
+  /// DEF419 — the preview is sized against the LINKED ALPACA ACCOUNT, fetched
+  /// here and passed as the mandate snapshot: reading `preview()` against
+  /// AMI's own portfolio for an order destined for a differently-sized
+  /// Alpaca account is exactly the bug this DEF fixes. If the Alpaca fetch
+  /// itself fails, this NEVER falls back to previewing against AMI — that
+  /// silent substitution is CR040's failure shape (a check that quietly
+  /// measures the wrong thing and says nothing) applied to this DEF's own
+  /// fix, so the loud alternative is to say plainly that the account
+  /// couldn't be read and send nothing.
   Future<void> _submitAlpacaOnly(String typed, double qty) async {
+    final AlpacaSnapshot snapshot;
+    try {
+      snapshot = await _fetchAlpacaSnapshot();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _destinationOutcomes = const [
+            _DestinationOutcome(
+              label: 'ALPACA PAPER',
+              ok: false,
+              message: "Couldn't read your Alpaca paper account — "
+                  'order not sent.',
+            ),
+          ]);
+      return;
+    }
+    if (!mounted) return;
     final preview = await ref.read(simNotifierProvider.notifier).preview(
           ticker: typed,
           side: _side,
           quantity: qty,
           verdictRef: widget.verdictRef,
+          account: snapshot.toMandateSnapshotJson(),
         );
     if (!mounted) return;
     if (preview == null || !preview.accepted) {
@@ -706,6 +791,128 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 color: AmiColors.slate900, fontWeight: FontWeight.w600)),
       ));
     }
+  }
+
+  /// CR227 — "Both", reworked under DEF419: **two independent legs**, each
+  /// gated on its OWN mandate check against its OWN account.
+  ///
+  /// Before this DEF, the AMI leg's `submit()` result gated whether the
+  /// Alpaca leg fired at all — so a rejection on one account vetoed an order
+  /// the other account would have accepted. Saiful's ruling on the backend
+  /// fix applies identically here: *"it may reject for ami and approve for
+  /// alpaca. Or vice versa. This is an expected condition."* So this method
+  /// runs `simNotifierProvider.submit()` (checked against AMI) and this
+  /// sheet's own Alpaca-snapshot preview (checked against the linked Alpaca
+  /// account) **without either gating the other**, and reports both outcomes
+  /// side by side.
+  ///
+  /// The Alpaca leg reuses exactly [_submitAlpacaOnly]'s account-fetch /
+  /// preview / place sequence via [_legAlpaca] — same loud failure on an
+  /// unreadable Alpaca account, same "preview must accept before an order is
+  /// placed" gate, just packaged to return its outcome instead of writing
+  /// state directly, since this method needs both outcomes together before
+  /// it renders either.
+  Future<void> _submitBoth(String typed, double qty) async {
+    final results = await Future.wait([
+      _legAmi(typed, qty),
+      _legAlpaca(typed, qty),
+    ]);
+    if (!mounted) return;
+    final amiOutcome = results[0];
+    final alpacaOutcome = results[1];
+    HapticFeedback.mediumImpact();
+    setState(() => _destinationOutcomes = [amiOutcome, alpacaOutcome]);
+    // CR171 §6 — an advisory on the AMI leg still holds the sheet open; the
+    // outcomes panel above already shows both legs' final state, so there is
+    // nothing else this branch needs to do besides let the advisory render
+    // on the next build via `state.lastSubmit`.
+    final lastSubmit = ref.read(simNotifierProvider).lastSubmit;
+    if (lastSubmit != null &&
+        lastSubmit.ok &&
+        lastSubmit.advisories.isNotEmpty) {
+      setState(() => _pendingAdvisories = lastSubmit.advisories);
+    }
+  }
+
+  /// The AMI-sim leg of [_submitBoth], as an independent outcome rather than
+  /// the gating step it used to be. Runs the ordinary `submit()` — the AMI
+  /// ledger write happens or it doesn't, entirely on its own account's
+  /// mandate check.
+  Future<_DestinationOutcome> _legAmi(String typed, double qty) async {
+    final result = await ref.read(simNotifierProvider.notifier).submit(
+          ticker: typed,
+          side: _side,
+          quantity: qty,
+          orderType: _orderType,
+          limitPrice: _orderType.needsLimitPrice
+              ? double.tryParse(_limit.text.trim())
+              : null,
+          triggerPrice: _orderType.needsTriggerPrice
+              ? double.tryParse(_trigger.text.trim())
+              : null,
+          tif: _tif,
+          stop: double.tryParse(_stop.text.trim()),
+          target: double.tryParse(_target.text.trim()),
+          horizonDays: int.tryParse(_horizon.text.trim()),
+          verdictRef: widget.verdictRef,
+        );
+    if (result == null) {
+      return const _DestinationOutcome(
+        label: 'AMI SIM',
+        ok: false,
+        message: 'Could not reach AMI to place this trade.',
+      );
+    }
+    if (!result.ok) {
+      return _DestinationOutcome(
+        label: 'AMI SIM',
+        ok: false,
+        message: result.violations.isNotEmpty
+            ? result.violations.join('; ')
+            : (result.blockedBy ?? 'Blocked by your mandate.'),
+      );
+    }
+    return _DestinationOutcome(
+      label: 'AMI SIM',
+      ok: true,
+      message: _simOutcomeMessage(result, typed),
+    );
+  }
+
+  /// The Alpaca-paper leg of [_submitBoth] — fetch the linked account
+  /// (DEF419: sized against THAT account, never AMI's), preview against it,
+  /// place only on acceptance. Degrades loudly on a fetch failure, matching
+  /// [_submitAlpacaOnly]: never previews against AMI as a fallback.
+  Future<_DestinationOutcome> _legAlpaca(String typed, double qty) async {
+    final AlpacaSnapshot snapshot;
+    try {
+      snapshot = await _fetchAlpacaSnapshot();
+    } catch (_) {
+      return const _DestinationOutcome(
+        label: 'ALPACA PAPER',
+        ok: false,
+        message: "Couldn't read your Alpaca paper account — order not sent.",
+      );
+    }
+    final preview = await ref.read(simNotifierProvider.notifier).preview(
+          ticker: typed,
+          side: _side,
+          quantity: qty,
+          verdictRef: widget.verdictRef,
+          account: snapshot.toMandateSnapshotJson(),
+        );
+    if (preview == null || !preview.accepted) {
+      return _DestinationOutcome(
+        label: 'ALPACA PAPER',
+        ok: false,
+        message: preview == null
+            ? 'Could not reach AMI to check this trade.'
+            : (preview.violations.isNotEmpty
+                ? preview.violations.join('; ')
+                : (preview.blockedBy ?? 'Blocked by your mandate.')),
+      );
+    }
+    return _placeAlpacaOrder(typed, qty, TradeDestination.both);
   }
 
   /// The actual `POST /v2/orders` call, from the device, against the user's
@@ -933,7 +1140,22 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(simNotifierProvider);
-    final refusal = state.lastSubmit != null && !state.lastSubmit!.ok;
+    // DEF419 — suppressed whenever [_destinationOutcomes] is showing: on
+    // BOTH, the AMI leg's own `submit()` still sets `state.lastSubmit`
+    // (`_legAmi` calls the ordinary notifier method), and before this DEF
+    // the AMI leg's rejection was the ONLY thing that could reach this panel
+    // in that shape — a BOTH submit either both ran or never started the
+    // Alpaca leg at all. Now the two legs are independent, so an AMI
+    // rejection alongside an Alpaca acceptance is an expected, ordinary
+    // outcome (Saiful: *"it may reject for ami and approve for alpaca... "
+    // "this is an expected condition"*) — and `_destinationOutcomes` already
+    // renders that AMI rejection under its own "AMI SIM" label, right next
+    // to the Alpaca leg's own outcome. Without this guard the same violation
+    // sentence rendered twice: once here (unlabelled, reading as if it
+    // blocked the WHOLE order) and once in the per-account panel below.
+    final refusal = _destinationOutcomes.isEmpty &&
+        state.lastSubmit != null &&
+        !state.lastSubmit!.ok;
     final l = AppLocalizations.of(context);
     // CR227 — the destination selector only ever appears for a user with a
     // linked Alpaca paper account, matching how the Portfolio screen's own

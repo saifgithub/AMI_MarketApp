@@ -844,18 +844,27 @@ class SimSubmitResult {
 /// true. Only the fields that gate matters here are modelled — `fill_price`/
 /// `notional`/`cash_available`/`held_quantity`/`price_source` exist on the
 /// wire but have no reader yet, so they're left off rather than guessed at.
+///
+/// DEF419 — [accountKind] echoes the backend's `account_kind`: `null` when the
+/// preview ran against the AMI sim portfolio (no `account` sent), or the
+/// snapshot's `kind` (today only `alpaca_paper`) when it ran against a
+/// client-attested account instead. Lets the ticket label a verdict by the
+/// account it actually checked without re-deriving that from what it itself
+/// sent.
 class SimPreviewResult {
   const SimPreviewResult({
     required this.accepted,
     this.violations = const [],
     this.blockedBy,
     this.shariaVerdict,
+    this.accountKind,
   });
 
   final bool accepted;
   final List<String> violations;
   final String? blockedBy;
   final ShariaVerdict? shariaVerdict;
+  final String? accountKind;
 
   factory SimPreviewResult.fromJson(Map<String, dynamic> j) {
     final compliance =
@@ -867,6 +876,7 @@ class SimPreviewResult {
       blockedBy: compliance['blocked_by'] as String?,
       shariaVerdict: ShariaVerdict.fromJson(
           (compliance['sharia_verdict'] as Map?)?.cast<String, dynamic>()),
+      accountKind: j['account_kind'] as String?,
     );
   }
 }

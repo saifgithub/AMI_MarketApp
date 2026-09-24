@@ -129,7 +129,29 @@ class _SlowApiClient extends ApiClient {
   }
 }
 
-class _AcceptingAlpacaClient extends AlpacaClient {
+/// DEF419 — `_submitAlpacaOnly` now fetches the linked account/positions
+/// before it previews, so every Alpaca-client test double in this file needs
+/// `account()`/`positions()` to resolve rather than hit the real credential
+/// store (which is unlinked under `SharedPreferences.setMockInitialValues`
+/// and would throw `AlpacaException(null, 'not linked')`, sending every test
+/// below down the new "couldn't read your account" branch regardless of what
+/// `submitOrder` does). This file's fixtures are all about `submitOrder`'s
+/// outcome, so the account fetch is fixed at one plausible value common to
+/// all of them.
+class _FakeAccountAlpacaClient extends AlpacaClient {
+  @override
+  Future<AlpacaPortfolio> account() async => const AlpacaPortfolio(
+        cash: 5000,
+        portfolioValue: 10000,
+        equity: 10000,
+        buyingPower: 5000,
+      );
+
+  @override
+  Future<List<AlpacaPosition>> positions() async => const [];
+}
+
+class _AcceptingAlpacaClient extends _FakeAccountAlpacaClient {
   @override
   Future<AlpacaOrder> submitOrder({
     required String symbol,
@@ -147,7 +169,7 @@ class _AcceptingAlpacaClient extends AlpacaClient {
   }
 }
 
-class _RefusingAlpacaClient extends AlpacaClient {
+class _RefusingAlpacaClient extends _FakeAccountAlpacaClient {
   @override
   Future<AlpacaOrder> submitOrder({
     required String symbol,
@@ -161,7 +183,7 @@ class _RefusingAlpacaClient extends AlpacaClient {
   }
 }
 
-class _RejectingAlpacaClient extends AlpacaClient {
+class _RejectingAlpacaClient extends _FakeAccountAlpacaClient {
   @override
   Future<AlpacaOrder> submitOrder({
     required String symbol,
@@ -175,7 +197,7 @@ class _RejectingAlpacaClient extends AlpacaClient {
 
 /// The catch-all branch in `_placeAlpacaOrder` — a throw that is neither
 /// `AlpacaOrderRejected` nor `AlpacaException`.
-class _UnexpectedlyThrowingAlpacaClient extends AlpacaClient {
+class _UnexpectedlyThrowingAlpacaClient extends _FakeAccountAlpacaClient {
   @override
   Future<AlpacaOrder> submitOrder({
     required String symbol,
@@ -200,6 +222,7 @@ class _FixedSim extends SimNotifier {
     required String side,
     required double quantity,
     String? verdictRef,
+    Map<String, dynamic>? account,
   }) async =>
       previewResult;
 }

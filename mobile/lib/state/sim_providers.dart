@@ -186,11 +186,17 @@ class SimNotifier extends StateNotifier<SimState> {
   /// only on Alpaca. Returns null on a network/parse failure, matching
   /// [submit]'s convention of surfacing failure as null rather than throwing
   /// into the sheet.
+  ///
+  /// DEF419 — [account], when supplied, is forwarded as `ApiClient.simPreview`'s
+  /// `account` field, so the mandate is sized against THAT account (the
+  /// Alpaca paper account, when the caller passes one) instead of the AMI sim
+  /// portfolio. Omitted keeps today's behaviour.
   Future<SimPreviewResult?> preview({
     required String ticker,
     required String side,
     required double quantity,
     String? verdictRef,
+    Map<String, dynamic>? account,
   }) async {
     try {
       final api = _ref.read(apiClientProvider);
@@ -201,6 +207,7 @@ class SimNotifier extends StateNotifier<SimState> {
         side: side,
         quantity: quantity,
         verdictRef: verdictRef,
+        account: account,
       );
     } catch (_) {
       return null;

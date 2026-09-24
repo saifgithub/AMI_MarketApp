@@ -1072,12 +1072,20 @@ class ApiClient {
   /// safety floor "uncoachable" promises just because nothing is written to
   /// AMI's own sim. Market orders only, matching CR227's scope: no
   /// order-type/limit/trigger/tif params are exposed here.
+  ///
+  /// DEF419 — [account], when supplied, is the caller's own account snapshot
+  /// (`{kind, equity, cash, positions: [{ticker, qty, market_value}]}` —
+  /// `backend/app/schemas/alpaca.py`'s `AccountSnapshotIn` wire shape
+  /// exactly). The backend then sizes the mandate against THIS account
+  /// instead of the AMI sim portfolio. Omitted (the default) is
+  /// byte-identical to pre-DEF419 behaviour — checked against AMI.
   Future<SimPreviewResult> simPreview({
     required String userId,
     required String ticker,
     required String side, // 'buy' | 'sell'
     required double quantity,
     String? verdictRef,
+    Map<String, dynamic>? account,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/sim/preview',
@@ -1088,6 +1096,7 @@ class ApiClient {
         'quantity': quantity,
         'order_type': 'market',
         if (verdictRef != null) 'verdict_ref': verdictRef,
+        if (account != null) 'account': account,
       },
     );
     return SimPreviewResult.fromJson(r.data!);

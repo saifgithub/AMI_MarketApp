@@ -131,4 +131,40 @@ class AlpacaSnapshot {
       'positions': sorted.take(maxPositions).map((p) => p.toWireJson()).toList(),
     };
   }
+
+  /// DEF419 — the `AccountSnapshotIn` shape `POST /v1/sim/preview`'s `account`
+  /// field expects (`backend/app/schemas/alpaca.py`): `kind`/`equity`/`cash`/
+  /// `positions[{ticker, qty, market_value}]`. Deliberately NOT [toWireJson]
+  /// above — that method serialises the Room-overlay `AlpacaSnapshotIn` shape
+  /// (`portfolio_value`/`buying_power`, `symbol`/`unrealized_pl` on each
+  /// position), a different wire contract for a different endpoint. Mixing
+  /// the two up would 422 on the field names alone (`extra="forbid"` on both
+  /// schemas), which is the loud failure CR040 asks for over a silent
+  /// mismatch — but there is no reason to invite it when the two are this
+  /// easy to keep apart by having one method per contract.
+  ///
+  /// A negative `qty` (a short Alpaca position) is dropped rather than sent
+  /// negative: `AccountPositionIn.qty` is bounded `ge=0` server-side (DEF419's
+  /// schema — shorts are out of scope for the account-snapshot path, same as
+  /// the sim engine's own `shorts=None` on this branch), so sending one would
+  /// 422 the whole preview over one position the mandate check does not model
+  /// anyway.
+  Map<String, dynamic> toMandateSnapshotJson() {
+    final sorted = [...positions]
+      ..sort((a, b) => b.marketValue.abs().compareTo(a.marketValue.abs()));
+    return {
+      'kind': 'alpaca_paper',
+      'equity': portfolio.equity,
+      'cash': portfolio.cash,
+      'positions': sorted
+          .take(maxPositions)
+          .where((p) => p.qty >= 0)
+          .map((p) => {
+                'ticker': p.symbol,
+                'qty': p.qty,
+                'market_value': p.marketValue,
+              })
+          .toList(),
+    };
+  }
 }

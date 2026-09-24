@@ -28,6 +28,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _RecordingAlpacaClient extends AlpacaClient {
   final List<String> calls = [];
 
+  // DEF419 — `_submitAlpacaOnly` fetches the linked account before it
+  // previews, so this fixture needs `account()`/`positions()` to resolve
+  // rather than hit the real (unlinked, under
+  // `SharedPreferences.setMockInitialValues`) credential store and throw.
+  @override
+  Future<AlpacaPortfolio> account() async => const AlpacaPortfolio(
+        cash: 5000,
+        portfolioValue: 10000,
+        equity: 10000,
+        buyingPower: 5000,
+      );
+
+  @override
+  Future<List<AlpacaPosition>> positions() async => const [];
+
   @override
   Future<AlpacaOrder> submitOrder({
     required String symbol,
@@ -54,6 +69,7 @@ class _FixedSim extends SimNotifier {
   final SimPreviewResult? previewResult;
   final SimSubmitResult? submitResult;
   final List<String> previewCalls = [];
+  final List<Map<String, dynamic>?> previewAccounts = [];
 
   @override
   Future<SimPreviewResult?> preview({
@@ -61,8 +77,10 @@ class _FixedSim extends SimNotifier {
     required String side,
     required double quantity,
     String? verdictRef,
+    Map<String, dynamic>? account,
   }) async {
     previewCalls.add('$side $quantity $ticker');
+    previewAccounts.add(account);
     return previewResult;
   }
 
