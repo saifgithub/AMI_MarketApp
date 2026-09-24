@@ -19,6 +19,7 @@ from app.schemas.classification import (
     ClassificationStatus,
     ClassificationVerdict,
 )
+from app.schemas.liquidity import LiquidityStatus, LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
 from app.services.sector_allocation import (
@@ -380,6 +381,58 @@ def check_mandate_compliance(
             violations.append(verdict.message())
             blocked_by = blocked_by or "compliance"
 
+    # 4e) DEF417 — liquid_only. A SOURCED market-cap/volume reading (the SAME
+    #   daily classification snapshot 4b-4d read, extended with the `marketCap`/
+    #   `averageVolume` fields already present in that pass's `info` dict), NOT a
+    #   live request-path fetch. Close to the classification four-state seam:
+    #   EXCLUDED (a REAL, measured microcap or illiquid reading) blocks; UNKNOWN
+    #   is PERMITTED with the disclosure attached (never reaches `violations` —
+    #   DEF059). The verdict travels on the result whether blocked or permitted,
+    #   exactly like `classification_verdicts` above.
+    #
+    #   ONE deliberate divergence: UNAVAILABLE does NOT block here (see
+    #   `LiquidityVerdict.is_blocking`'s docstring in full) — `liquid_only`
+    #   defaults True on `Compliance`, unlike the opt-in classification flags, so
+    #   treating a classification-source outage as blocking would refuse a BUY
+    #   for essentially every mandate in the app rather than only the minority
+    #   who opted into a screen. It still degrades loudly: `is_disclosed_pause`
+    #   routes it to `advisories`, never silence.
+    #
+    #   This was previously prompt-text only (`overlay_generator.py`,
+    #   `concierge_engine.py`) — "prompt instructions are not controls" (CLAUDE.md,
+    #   CR038): an abliterated model holds an emphatic prompt-only instruction
+    #   even less reliably than a well-behaved one.
+    #
+    #   UNKNOWN (not EXCLUDED) is what a ticker outside the classified universe
+    #   resolves to — required precisely BECAUSE `liquid_only` is default-on: the
+    #   alternative would silently reject every name outside the ~503 S&P parent
+    #   constituents this snapshot classifies, the DEF059 inversion trap, and the
+    #   wrong direction for this flag specifically (an unmeasured name skews
+    #   smaller — but AMI did not MEASURE it, so it cannot claim the ruling).
+    #
+    #   A sell is never blocked by liquid_only — like `long_only`, this
+    #   constrains what enters a position, not what leaves one; forcing a user to
+    #   hold a name because it slipped below the floor after they bought it would
+    #   be the sizing-cap-on-sells mistake in a new shape.
+    liquidity_verdict: LiquidityVerdict | None = None
+    if c.liquid_only and proposed.is_buy:
+        resolve_liquidity = getattr(classification_universe, "resolve_liquidity", None)
+        if callable(resolve_liquidity):
+            price_for_liquidity = proposed.limit_price or (quotes or {}).get(t)
+            liquidity_verdict = resolve_liquidity(t, price=price_for_liquidity)
+        else:
+            # None/unavailable universe → paused, same as the halal/classification
+            # paused branches. A bare object with no resolver (legacy test doubles)
+            # degrades the same way rather than raising.
+            liquidity_verdict = LiquidityVerdict(
+                status=LiquidityStatus.UNAVAILABLE, ticker=t,
+            )
+        if liquidity_verdict.is_blocking:
+            violations.append(liquidity_verdict.message())
+            blocked_by = blocked_by or "compliance"
+        elif liquidity_verdict.is_disclosed_pause:
+            advisories.append(liquidity_verdict.message())
+
     # 5) Locale-allowed instruments
     if locale_allowed_universe is not None and t not in {x.upper() for x in locale_allowed_universe}:
         violations.append(f"ticker {t} not available in user's locale ({mandate.locale})")
@@ -648,6 +701,7 @@ def check_mandate_compliance(
         blocked_by=blocked_by,
         sharia_verdict=sharia_verdict,
         classification_verdicts=classification_verdicts,
+        liquidity_verdict=liquidity_verdict,
         not_evaluated=not_evaluated,
         advisories=advisories,
     )

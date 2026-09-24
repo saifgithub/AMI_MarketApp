@@ -33,6 +33,7 @@ inversion trap).
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 from datetime import date, datetime, timezone
 
@@ -46,6 +47,12 @@ from app.schemas.classification import (
     ClassificationKind,
     ClassificationStatus,
     ClassificationVerdict,
+)
+from app.schemas.liquidity import (
+    ILLIQUID_AVG_DOLLAR_VOLUME_USD,
+    MICROCAP_FLOOR_USD_M,
+    LiquidityStatus,
+    LiquidityVerdict,
 )
 from app.services.sharia_universe import latest_snapshot as latest_sharia_snapshot
 
@@ -137,9 +144,17 @@ class ClassificationUniverse:
     (fossil, sin) plus the classified membership, and it is threaded through the
     safety floor as its own `classification_universe` param rather than substituting
     for the `halal_universe` seam.
+
+    DEF417: also carries the per-ticker `market_caps` (USD millions) and
+    `avg_volumes` (shares/day) maps captured in the SAME daily classify pass —
+    `resolve_liquidity()` answers the `liquid_only` mandate flag off them, on the
+    identical four-state shape `resolve()` already uses for fossil/sin/esg_lite.
     """
 
-    __slots__ = ("fossil", "sin", "defense", "classified", "as_of", "source", "stale")
+    __slots__ = (
+        "fossil", "sin", "defense", "classified", "as_of", "source", "stale",
+        "market_caps", "avg_volumes",
+    )
 
     def __init__(
         self,
@@ -151,6 +166,8 @@ class ClassificationUniverse:
         as_of: date | None = None,
         source: str = SOURCE,
         stale: bool = False,
+        market_caps: dict | None = None,
+        avg_volumes: dict | None = None,
     ) -> None:
         up = lambda xs: frozenset(str(x).upper().strip() for x in xs)  # noqa: E731
         self.fossil = up(fossil)
@@ -160,6 +177,19 @@ class ClassificationUniverse:
         self.as_of = as_of
         self.source = source
         self.stale = stale
+        # DEF417: nullable maps (yfinance may return sector/industry but not
+        # marketCap/averageVolume for a name) — a ticker absent from either map
+        # is handled as "that one figure is unknown", not coerced to 0/excluded.
+        self.market_caps = {
+            str(k).upper().strip(): float(v)
+            for k, v in (market_caps or {}).items()
+            if v is not None
+        }
+        self.avg_volumes = {
+            str(k).upper().strip(): float(v)
+            for k, v in (avg_volumes or {}).items()
+            if v is not None
+        }
 
     @property
     def esg(self) -> frozenset:
@@ -189,6 +219,65 @@ class ClassificationUniverse:
             status = ClassificationStatus.UNKNOWN
         return ClassificationVerdict(
             status=status, ticker=t, kind=kind, source=self.source, as_of=self.as_of
+        )
+
+    def resolve_liquidity(
+        self, ticker: str, *, price: float | None = None
+    ) -> LiquidityVerdict:
+        """DEF417 — the `liquid_only` mandate flag's four-state resolver, on the
+        SAME sourced snapshot `resolve()` already reads.
+
+        `price` is the caller's own live mark for this ticker (the safety floor
+        already receives `quotes` for the proposed trade) — this snapshot persists
+        SHARE volume (`avg_volumes`, from yfinance's `averageVolume`, captured in
+        the same classify pass as `sectors`), not a dollar figure, because the
+        classify pass has no live price and a persisted dollar-volume snapshot
+        would go stale against the market the moment it's written. Dollar volume
+        is derived here, at resolve time, against the caller's live price — the
+        same "resolve fresh, persist the source datum" split `single_name_cap_pct`
+        uses for percentages. Without a price, the volume half of the check is
+        skipped (not blocked): a name is excluded on market cap alone, or on
+        dollar volume alone once a price is available, never assumed illiquid for
+        want of a price the caller didn't have.
+
+        UNKNOWN requires BOTH the market cap AND the (price-able) volume check to
+        be unresolvable — a name with a real market-cap reading is judged on it
+        even if volume can't be priced this call, because a real reading below
+        the floor is a real exclusion regardless of what else is missing. A name
+        with neither figure available is genuinely outside what this snapshot
+        measured — that's UNKNOWN, not EXCLUDED (the DEF059 inversion trap)."""
+        t = ticker.upper().strip()
+        if self.stale:
+            return LiquidityVerdict(
+                status=LiquidityStatus.UNAVAILABLE, ticker=t, source=self.source,
+                as_of=self.as_of,
+            )
+        cap = self.market_caps.get(t)
+        vol = self.avg_volumes.get(t)
+        dollar_volume = (
+            vol * price if vol is not None and price is not None and price > 0 else None
+        )
+
+        if cap is None and dollar_volume is None:
+            return LiquidityVerdict(
+                status=LiquidityStatus.UNKNOWN, ticker=t, source=self.source,
+                as_of=self.as_of,
+            )
+
+        cap_breach = cap is not None and cap < MICROCAP_FLOOR_USD_M
+        volume_breach = (
+            dollar_volume is not None and dollar_volume < ILLIQUID_AVG_DOLLAR_VOLUME_USD
+        )
+        if cap_breach or volume_breach:
+            return LiquidityVerdict(
+                status=LiquidityStatus.EXCLUDED, ticker=t,
+                market_cap_usd_m=cap, avg_dollar_volume_usd=dollar_volume,
+                source=self.source, as_of=self.as_of,
+            )
+        return LiquidityVerdict(
+            status=LiquidityStatus.PERMITTED, ticker=t,
+            market_cap_usd_m=cap, avg_dollar_volume_usd=dollar_volume,
+            source=self.source, as_of=self.as_of,
         )
 
 
@@ -271,12 +360,27 @@ def _yf_info(ticker: str) -> dict:
     return yf.Ticker(ticker.upper().replace(".", "-")).info or {}
 
 
+def _num_or_none(v: object) -> float | None:
+    """yfinance's missing-value sentinel is often NaN, not an absent key — a
+    non-finite value must read as absent (DEF052's F1 lesson, applied here the
+    same way `fundamentals.py::_num` applies it)."""
+    if v is None:
+        return None
+    try:
+        result = float(v)
+    except (TypeError, ValueError):
+        return None
+    return result if math.isfinite(result) else None
+
+
 def _network_classify(
     tickers,
     *,
     info_fetcher=None,
     throttle_s: float = _CLASSIFY_THROTTLE_S,
     sectors_out: dict[str, str] | None = None,
+    market_caps_out: dict[str, float] | None = None,
+    avg_volumes_out: dict[str, float] | None = None,
 ) -> tuple[frozenset, frozenset, frozenset, frozenset]:
     """Classify every ticker via yfinance → (classified, fossil, sin, defense).
 
@@ -290,6 +394,13 @@ def _network_classify(
     the same pass that derives fossil/sin also captures the sector map persisted for
     the concentration check + allocation donut. A side-channel out-param keeps the
     4-tuple return contract the DEF061 refresh + tests already depend on.
+
+    `market_caps_out` / `avg_volumes_out` (DEF417): same side-channel shape, one
+    call further along — `marketCap` and `averageVolume` are read from the SAME
+    `info` dict already open for sector/industry, so the `liquid_only` enforcement
+    costs no extra socket. Populated independently of sector/fossil/sin/defense: a
+    name can have a market cap with no sector back (or vice versa), and each is
+    persisted whenever it's present rather than gated on the other succeeding.
 
     Raises `ClassificationSourceError` if fewer than `_CLASSIFIED_MIN_ROWS` classify,
     so a throttled run that lost most calls is treated as broken (CR040) rather than
@@ -307,6 +418,18 @@ def _network_classify(
             failures += 1
             logger.debug("classification_ticker_failed", ticker=t, error=str(exc)[:120])
             info = None
+        if info:
+            # DEF417: captured whenever present, independent of the sector gate
+            # below — a name missing only its sector should not also lose a
+            # market cap / volume reading it DID return.
+            if market_caps_out is not None:
+                cap = _num_or_none(info.get("marketCap"))
+                if cap is not None:
+                    market_caps_out[t] = cap / 1_000_000  # USD -> USD millions
+            if avg_volumes_out is not None:
+                vol = _num_or_none(info.get("averageVolume"))
+                if vol is not None:
+                    avg_volumes_out[t] = vol
         if not info or not info.get("sector"):
             # No sector back ⇒ we didn't classify it. Do NOT add to `classified`.
             if info is not None:
@@ -372,7 +495,8 @@ def latest_sector_map(session) -> dict[str, str]:
 
 
 def write_snapshot(
-    session, *, classified, fossil, sin, defense, fetched_at: datetime, sectors=None
+    session, *, classified, fossil, sin, defense, fetched_at: datetime, sectors=None,
+    market_caps=None, avg_volumes=None,
 ) -> ClassificationUniverseSnapshotRow:
     """Append one snapshot row. Never updates or deletes — the history answers
     "which names did AMI treat as fossil/sin/defense on day X". `as_of` is set to the
@@ -382,7 +506,13 @@ def write_snapshot(
 
     `sectors` (CR026): the per-ticker raw GICS sector map (ticker → sector string).
     Optional so pre-CR026 callers (and DEF061's fixture refresh) store an empty map;
-    the request-path resolver treats an absent ticker as "Other"."""
+    the request-path resolver treats an absent ticker as "Other".
+
+    `market_caps` / `avg_volumes` (DEF417): per-ticker liquidity figures
+    (USD millions / shares-per-day) captured in the same classify pass. Optional
+    for the same reason `sectors` is — a pre-DEF417 row (or a fixture refresh that
+    doesn't care about liquidity) stores empty maps, and `resolve_liquidity`
+    resolves a ticker absent from them as UNKNOWN (permitted + disclosed)."""
     row = ClassificationUniverseSnapshotRow(
         source=SOURCE,
         as_of=fetched_at.date(),
@@ -395,6 +525,16 @@ def write_snapshot(
             str(k).upper().strip(): str(v)
             for k, v in (sectors or {}).items()
             if v
+        },
+        market_caps={
+            str(k).upper().strip(): float(v)
+            for k, v in (market_caps or {}).items()
+            if v is not None
+        },
+        avg_volumes={
+            str(k).upper().strip(): float(v)
+            for k, v in (avg_volumes or {}).items()
+            if v is not None
         },
     )
     session.add(row)
@@ -446,7 +586,9 @@ class ClassificationUniverseProvider:
             logger.info("classification_universe_disabled")
             return self._paused()
         try:
-            classified, fossil, sin, defense, as_of = self._fetcher()
+            classified, fossil, sin, defense, as_of, market_caps, avg_volumes = (
+                self._fetcher()
+            )
         except ClassificationSourceError as exc:
             logger.error("classification_universe_fetch_failed", error=str(exc))
             return self._paused()
@@ -464,9 +606,12 @@ class ClassificationUniverseProvider:
             sin=len(sin),
             defense=len(defense),
             as_of=as_of.isoformat() if as_of else None,
+            market_caps=len(market_caps),
+            avg_volumes=len(avg_volumes),
         )
         return ClassificationUniverse(
-            fossil=fossil, sin=sin, defense=defense, classified=classified, as_of=as_of
+            fossil=fossil, sin=sin, defense=defense, classified=classified, as_of=as_of,
+            market_caps=market_caps, avg_volumes=avg_volumes,
         )
 
     def _refetch_due(self) -> bool:
@@ -497,11 +642,19 @@ class ClassificationUniverseProvider:
 # ── Read path (resolve from the stored row, never a socket) ──────────────────
 
 
-def _snapshot_fetcher() -> tuple[frozenset, frozenset, frozenset, frozenset, date | None]:
+def _snapshot_fetcher() -> tuple[
+    frozenset, frozenset, frozenset, frozenset, date | None, dict, dict
+]:
     """The production read-path 'fetcher' — a cheap LOCAL DB read of the latest
     stored snapshot, NOT a network call. Empty table ⇒ raises (seed path; the daily
     refresh hasn't written a row), which the provider converts into a loudly-paused
-    (UNAVAILABLE) universe."""
+    (UNAVAILABLE) universe.
+
+    DEF417: the two trailing dicts are `market_caps` / `avg_volumes` — `{}` on a
+    pre-DEF417 row (the column defaults to an empty JSON object), which resolves
+    every ticker's liquidity to UNKNOWN (permitted + disclosed) until the next
+    refresh appends a row carrying real figures, same back-compat shape `sectors`
+    already has."""
     with get_session() as session:
         row = latest_snapshot(session)
     if row is None:
@@ -515,6 +668,8 @@ def _snapshot_fetcher() -> tuple[frozenset, frozenset, frozenset, frozenset, dat
         frozenset(row.sin),
         frozenset(row.defense or []),
         row.as_of,
+        dict(row.market_caps or {}),
+        dict(row.avg_volumes or {}),
     )
 
 
@@ -641,9 +796,18 @@ def run_classification_refresh_tick(
     # CR026: the default classify pass captures the per-ticker sector map via the
     # `sectors_out` side-channel (same 4-tuple return DEF061 depends on). An injected
     # fixture classifier stores an empty map — its tests assert only fossil/sin.
+    # DEF417: `market_caps`/`avg_volumes` are captured the same way, from the SAME
+    # `info` dict — no second socket.
     sectors: dict[str, str] = {}
+    market_caps: dict[str, float] = {}
+    avg_volumes: dict[str, float] = {}
     classify = classifier or (
-        lambda: _network_classify(_parent_universe_to_classify(), sectors_out=sectors)
+        lambda: _network_classify(
+            _parent_universe_to_classify(),
+            sectors_out=sectors,
+            market_caps_out=market_caps,
+            avg_volumes_out=avg_volumes,
+        )
     )
     try:
         classified, fossil, sin, defense = classify()
@@ -660,6 +824,8 @@ def run_classification_refresh_tick(
             defense=defense,
             fetched_at=now,
             sectors=sectors,
+            market_caps=market_caps,
+            avg_volumes=avg_volumes,
         )
     reset_refresh_failures()
     logger.info(
@@ -669,6 +835,8 @@ def run_classification_refresh_tick(
         sin=len(sin),
         defense=len(defense),
         sectors=len(sectors),
+        market_caps=len(market_caps),
+        avg_volumes=len(avg_volumes),
         fetched_at=now.isoformat(),
     )
     return "stored"

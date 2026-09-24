@@ -18,6 +18,7 @@ from app.schemas import (
     Path,
     PrimaryGoal,
 )
+from app.schemas.liquidity import MICROCAP_FLOOR_USD_M as _MICROCAP_FLOOR_USD_M
 from app.trading_math.risk_limits import (
     resolved_max_open_positions,
     resolved_max_open_risk_pct,
@@ -209,6 +210,12 @@ def _goal_block(m: Mandate) -> str:
 # Liquidity floor NARRATED to agents (CR046 C-b/C-c) — single-sourced so the prose
 # can't drift from the filter. Narration constant, not the enforcement itself.
 #
+# DEF417: this constant is now IMPORTED from `app.schemas.liquidity`, the SAME
+# module `safety_floor.check_mandate_compliance` enforces `liquid_only` against —
+# there is exactly one `$500M`, never two literals that could drift apart
+# (shown == enforced, CR046 C-a). Before DEF417 this was a bare local literal and
+# the number it narrated was never actually checked by anything.
+#
 # The `halal` flag still has NO narrated ratio cutoff. CR069-BE replaced DEF084's
 # curated demonstration universe with a *sourced allowlist* — the published
 # constituents of the AAOIFI-screened S&P 500 Sharia Industry Exclusions Index — but
@@ -216,7 +223,6 @@ def _goal_block(m: Mandate) -> str:
 # debt-to-equity or interest-income figure is computed anywhere on this path and the
 # overlay must never quote one. What the overlay DOES narrate now is the sourced
 # verdict: standard, source, as-of date, and which of the three states applies.
-_MICROCAP_FLOOR_USD_M = 500
 
 
 def _compliance_block(
