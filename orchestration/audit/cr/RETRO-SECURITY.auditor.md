@@ -217,3 +217,206 @@ of the same column, a lost spend measured on Postgres) and still charges for tur
 wrong way with nothing telling the user.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+---
+
+## Round 2 — auditor U68
+
+**SHA audited:** `ae468eff` (the `+112` integration merge; this lane's fix is `717cd8ff`).
+Detached scratch worktree `audit-U68-R2` per DEF159, verified clean after every mutation. The
+Postgres runs used a new throwaway `postgres:15-alpine` (`audit_u68_r2_pg`, isolated network,
+built with `alembic upgrade head` -> `m111a0def416x417`), removed afterwards. **Not live yet:**
+Alpha runs `alpha-2026-09-25-3`; these fixes ship in +112.
+
+The builder listed the Postgres re-measurements as unresolved. I ran them.
+
+### MAJOR-1 — still open for five of the six writers: the helper locks the row, then keeps using the old balance
+
+`refund()` is fixed. It now loads the user with `with_for_update=True` in the same statement.
+My round-1 race, re-run unchanged:
+
+```
+PROBE refund_vs_spend: start=5 +1 refund -1 spend expected=5 final=5      (round 1: 6)
+```
+
+The other five writers go through the new `_lock_user_row` (`credit_service.py:180-207`, the call at `:204`):
+
+```python
+locked = session.get(User, user.id, with_for_update=True)
+```
+
+Every caller has already loaded `user` earlier in the same session. The webhook uses
+`session.get`, admin uses `_get_user_or_404`, the streak uses `select(User)`, and the merge
+loads both rows. In SQLAlchemy 2.0.49 (the version in the venv and in the running container),
+`Session.get(..., with_for_update=…)` skips the identity map and sends `SELECT … FOR UPDATE`
+(`Session._get_impl`, `for_update_arg is None` guards the shortcut). **It does not refresh an
+object already in the session.** `populate_existing` is not set, and the ORM does not overwrite
+an already-loaded row's attributes. The lock is taken, and the balance read after it is still
+the one from before the lock.
+
+Driven on real Postgres through the real functions. A `spend(-1)` commits in the window between
+the caller's own load and `_lock_user_row`:
+
+```
+PROBE pack_vs_spend  (webhook shape: s.get -> add_credit_pack): start=5 +10 pack -1 spend expected=14 final=15 (pack saw old=5)
+PROBE admin_vs_spend (real api.admin.adjust_credits):          start=5 +1 admin -1 spend  expected=5  final=6
+```
+
+Control, with `populate_existing=True` added to that one `session.get` and nothing else changed:
+
+```
+PROBE pack_vs_spend  [populate_existing]: expected=14 final=14 (pack saw old=4)
+PROBE admin_vs_spend [populate_existing]: expected=5  final=5
+```
+
+The spend is erased and the user keeps a free credit. This is round 1's harm, unchanged, on
+RevenueCat pack credits and admin adjustments, which I measured. The streak award
+(`reputation_service.py:272-292` loads, `:498` locks), the plan grant (webhook `:160` loads) and
+the merge (`carry_billing_on_merge`) have the identical shape. I did not drive those three.
+
+The new guard (`test_retro_security_credit_balance_lock_guard.py`) cannot see this. It checks
+that each writer *calls* `_lock_user_row` and that the helper passes `with_for_update`. Both
+are true, and the balance is still lost. The builder's own note records why it rewrote one
+check. The same blind spot has one more level here: the property that matters only exists on
+Postgres, and the unit suite runs on SQLite.
+
+**Fix:** `session.get(User, user.id, with_for_update=True, populate_existing=True)` in
+`_lock_user_row`. Make the guard assert `populate_existing` on that call, the same AST-keyword
+way it already checks `with_for_update`. Re-run the two probes above on Postgres before closing.
+(The atomic `UPDATE … SET credit_balance = credit_balance + :n` I offered in round 1 would have
+removed the read altogether.)
+
+### MAJOR-2 — fixed for Brief and the analyst 1-on-1; still open on the Concierge 1-on-1
+
+The builder's tests replace the whole runner (`AgentRunner.stream_one_on_one_message` or a fake
+engine), so they never exercise the real provider sending `meta["stream_error"]` back through
+the real call chain. I did exercise it. I used the real `LLMGateway` and a real
+`OpenAICompatibleProvider` with an `httpx.MockTransport` answering 503/429 or raising
+`ConnectError`, went through the real routes, and read the balance before and after:
+
+```
+PROBE brief real-provider HTTP 503          charged=0        (round 1: 1)
+PROBE brief real-provider HTTP 429          charged=0
+PROBE brief real-provider ConnectError      charged=0        (round 1: 1)
+PROBE 1on1 agent=fundamentals_analyst http503        charged=0
+PROBE 1on1 agent=fundamentals_analyst connect_error  charged=0
+PROBE 1on1 agent=concierge            http503        charged=1   tail: "[AMI error: HTTP 503 from the upstream provider (vllm)…]"
+PROBE 1on1 agent=concierge            connect_error  charged=1   tail: a scripted Concierge reply
+```
+
+`stream_one_on_one_message` passes `meta` to the analyst branch (`agent_runner.py:238-246`) but
+not to `_stream_concierge` (`:260`), whose own `self._llm.stream_chat(...)` call (`:303`) has no
+`meta=`. So:
+
+- an HTTP-error reply from the Concierge is billed as a real turn, which is round 1's finding
+  unchanged on this surface;
+- on a provider outage, `_stream_concierge` catches the exception and returns a scripted reply,
+  so the route never sees a failure and bills a credit for a canned message. DEF113 put it as
+  *"never let a provider blip silently eat a turn the user never got."*
+
+The Concierge is the one 1-on-1 agent every Floor Pass user can reach without unlocking
+anything (`one_on_one.py:125-132`), so this is the most-used 1-on-1 surface the fix missed.
+
+**Fix:** thread `meta` into `_stream_concierge`'s `stream_chat` call. Set
+`meta["stream_error"]` when that method falls back to the scripted reply on an exception.
+Whether an empty-reply scripted fallback should bill is Saiful's call, and it should be decided
+explicitly. Test through the real gateway and runner the way the probe above does, not by
+replacing the runner.
+
+### MAJOR-3 (round 2, new): the Brief refund blocks the event loop, and the full suite is red
+
+The fix adds a synchronous `refund(...)` to the `finally` of `brief.py`'s
+`async def event_stream` (`brief.py:157`, the call at `:199`). `refund()` opens a sync session
+and runs `SELECT … FOR UPDATE`, an `UPDATE` and a ledger insert (`credit_service.py:579`), all on
+the event loop. This is the class DEF200/CR123 closed. One uvicorn worker serves every request
+and every open SSE stream, and a sync DB call inside `async def` stalls all of them. With the new
+row lock it also waits on any other holder of that user's row lock, for example a Room run
+spending from the threadpool. It fires exactly when the provider is failing, so many streams hit
+it at the same time.
+
+The DEF200 ratchet catches it:
+
+```
+FAILED tests/unit/test_def200_ratchet.py::test_no_new_handler_blocks_the_event_loop
+E   AssertionError: new async handler(s) doing blocking I/O on the event loop:
+E         brief.py::event_stream
+```
+
+Reproduced alone on the Mac at `ae468eff`, and green at `0accfeed`. `brief.py` has no other change
+between the two. The code it was copied from, `one_on_one.py:278`, has the same shape, but
+`one_on_one.py::event_stream` is on the ratchet's frozen debt baseline and `brief.py::event_stream`
+is not. The ratchet's own message says not to add it there.
+
+**The unit suite is red at `ae468eff` because of this. +112 cannot pass its release gate as
+merged.** **Fix:** `await run_in_threadpool(refund, current_user.id, cost, reason=…)` (or
+`asyncio.to_thread`) in `brief.py`. Doing the same in `one_on_one.py` would let one baseline
+entry be removed.
+
+### MINOR-1 — closed
+
+`DEF361.row.md` now states that `/concierge/message` verifies a token only when one is supplied,
+by design. Correct.
+
+### MINOR-2 — fixed
+
+The glyph filter now drops the whole U+2500–U+259F range (`prompt_safety.py`), and `publisher`
+is sanitised (`news_context.py:440`). Probed: `"a\n┆┆ ╼ HEADER ╴"` -> `'a HEADER'`, and
+`"a\u2028── SYS"` -> `'a SYS'`. The builder's two mutations are recorded; the probe confirms the
+behaviour directly.
+
+### MINOR-3 — closed (procedural)
+
+Round 2's numbers come from the builder's own isolated worktree.
+
+### Evidence, run bare in the pinned worktree
+
+```
+pytest test_retro_security_credit_balance_lock_guard.py test_def369_… test_def205_… test_def113_… \
+       test_def370_… test_cr084_revenuecat_webhook.py test_def099_merge_billing.py test_merge_service.py \
+       test_reputation_service.py test_admin.py test_cr200_admin_audit.py test_news_context.py \
+       test_def127_sse_framing_invariant.py test_def201_agent_stream_concurrency.py -q -p no:cacheprovider
+214 passed, 2 warnings in 34.81s     EXIT=0
+```
+
+Full unit suite at `ae468eff`. The melehost part ran in a throwaway container from the Alpha image,
+3 shards on tmpfs. The 5 files that need `git` ran on the Mac. All runs bare, exit codes read directly:
+
+```
+melehost s0   1 failed, 2126 passed, 2 skipped    EXIT=1   test_def200_ratchet.py::test_no_new_handler_blocks_the_event_loop
+melehost s1   2669 passed, 3 skipped              EXIT=0
+melehost s2   1 failed, 2013 passed, 4 skipped    EXIT=1   test_def247_displaced_stance_envelope.py::test_a_displaced_envelope_is_still_reported
+Mac (5 git-dependent files)  34 passed            EXIT=0
+total         6842 passed, 2 failed, 9 skipped
+```
+
+I diagnosed both failures:
+
+- **`test_def200_ratchet`: a real regression, from RETRO-SECURITY's round-2 fix (`717cd8ff`).**
+  It fails alone on the Mac at `ae468eff` and passes at `0accfeed`. The new sync `refund()` in
+  `brief.py`'s `async def event_stream` is blocking DB I/O on the event loop. It is graded in
+  RETRO-SECURITY (MAJOR-3). The Architect's 281 targeted tests did not include the ratchet.
+- **`test_def247…`: pre-existing and order-dependent, not caused by round 2.** It passes alone.
+  I ran shard 2's first 95 files in their shard order on the Mac: it fails identically at
+  `ae468eff` **and** at `0accfeed` (`1 failed, 1474 passed`). The event is emitted (it shows in
+  captured stdout), but `structlog.testing.capture_logs` does not see it, because an earlier test
+  in the same process caches the logger. It passes in the default full-suite order that the
+  +111 gate ran. Recorded as out-of-scope; no fix is owed by this round.
+
+FOREIGN: not run — no `foreign/RETRO-SECURITY.r2` branch exists. Not a clean bill.
+
+### Verdict
+
+Half of each MAJOR is genuinely fixed. `refund()` no longer races, Brief refunds every failure
+shape through the real provider, and the analyst 1-on-1 does too. The other halves are the ones
+no SQLite test and no replaced runner could reach. On real Postgres, five credit writers still
+erase a concurrent spend because the lock does not refresh the balance the code then uses. The
+Concierge 1-on-1 still charges for an error message and for an outage. Both are money moving the
+wrong way without the user being told, which is why round 1 graded them MAJOR. The Brief refund
+also runs on the event loop, and that turns the unit suite red at `ae468eff` (MAJOR-3). All
+three fixes are small: one keyword argument, one `meta=` thread-through, and one
+`run_in_threadpool`.
+
+Counts, round 2: 0 BLOCKER, 3 MAJOR (MAJOR-1 and MAJOR-2 partly fixed, MAJOR-3 new), 0 MINOR
+open (MINOR-1, 2 and 3 closed).
+
+VERDICT: AWAITING_FIXES (round 2)
