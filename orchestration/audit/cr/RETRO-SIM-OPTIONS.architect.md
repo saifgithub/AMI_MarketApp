@@ -172,7 +172,7 @@ full backend suite myself against the current tree, and hand the auditor a map �
 | DEF353 | Long-only refusal text named a permitted structure (debit spread) as forbidden — a bull call spread is both a debit spread and a sell-to-open, and only the sell-to-open half is actually forbidden (D4). Guard asserts the fixed sentence as a PROPERTY: every structure it claims remains available is run back through `check_option_open` and must pass. | `e79c7e13` | `test_cr172_option_floor.py::test_the_long_only_refusal_does_not_name_a_debit_spread_as_permitted` |
 | DEF354 | Option structures silently offered at 51x the stated risk budget on the default $10,000 portfolio (real numbers from the first live convene: $18 budget vs. ~$920 contract) — the one-contract floor case returned no reason. Fixed to name both dollar figures and the multiple; `not_evaluated` (where the reason lived) was also being dropped by the prompt renderer — fixed alongside. | `701b0d02` | `test_cr172_option_strategist.py`, `test_cr172_room_structure.py` |
 | DEF356 | Safety floor refuses to OPEN an uncovered short call but had no check on the routes that REACH the same state sideways (selling the covering shares; writing two "covered" calls against one lot). `shares_locked` had been computed since slice 1 and never read by anything. | `2bae6d0b` | `test_cr172_option_margin_sweep.py` (force-close sub-pass), `backend/tests/conftest.py` autouse `_ledger_invariant` |
-| DEF357 | The entire slice-2 option lifecycle (expiry, auto-exercise, assignment) had zero production callers — 21 call sites, all in its own test file. Options reaching expiry on live Alpha did nothing: state stuck `open`, collateral never released. Criterion 6 had been scored `met` off builder tests alone. Fix wires `_sweep_option_lifecycle` into `sweep_resting_orders`, the same function both `main.py`'s tick and the app-open evaluate route drive. | `2bae6d0b` | `test_cr172_option_lifecycle.py::test_the_production_sweep_reaches_the_lifecycle` |
+| DEF357 | The entire slice-2 option lifecycle (expiry, auto-exercise, assignment) had zero production callers — 21 call sites, all in its own test file. Options reaching expiry on live Alpha did nothing: state stuck `open`, collateral never released. Criterion 6 had been scored `met` off builder tests alone. Fix wires `_sweep_option_lifecycle` into `sweep_resting_orders`, the same function both `main.py`'s tick and the app-open evaluate route drive. | `2bae6d0b` | `test_cr172_option_margin_sweep.py::test_the_production_sweep_reaches_the_lifecycle` (MINOR-2, RETRO-SIM-OPTIONS round 1 — this row previously cited `test_cr172_option_lifecycle.py`, which does not contain this test; removing the `_sweep_option_lifecycle` call leaves that file green) |
 | DEF363 | Mobile `OptionProposal.fromJson` read `greeks_reason`, a key no server route has ever emitted at structure level (the real key is `greeks_not_evaluated`, one level up). Both covering tests supplied the wrong key themselves, so the "why greeks are missing" line was unreachable on any real payload. Third P18 instance in one CR. | `dfe7dbdd` | `mobile/test/models/option_proposal_test.dart` (round-trip against server-shaped payload) |
 | DEF364 | A game run with only a short position was scored on a mock/fabricated price because the NAV-source override counted `holding_count` only, not shorts or options, even though shorts have been marked since CR171. | `e78d0d92` | `test_def364_priced_position_source.py` |
 | DEF365 | Portfolio option card could never have rendered on a real payload — `PortfolioSnapshot` had no `options` field; Dart parsed `j['options']` regardless. Fourth P18 instance; fixed by a general wire-contract-parity guard rather than a fourth point fix. | `e45553de` | `test_wire_contract_parity.py` (extracts every `j['…']` key Dart reads, fails build if the paired response schema doesn't emit it) |
@@ -380,4 +380,266 @@ Concrete risks worth a blind adversarial pass, not claims of absence:
   arithmetic re-derivation is squarely the auditor's job on a Tier A item, not something the
   builder's own re-run of its own tests can stand in for.
 
-SUBMITTED: round 1
+## Round 2
+
+Fixes for U68's round 1 verdict (1 MAJOR, 3 MINOR). Branch `worktree-agent-abbadc7f8a10b4a87`,
+based on `main` at `68f9c7d0` (that SHA is an ancestor of the current shared `main`, which has
+since moved ahead under other tracks' commits — this lane's own diff is scoped to the 7 files
+below and does not touch anything CR234 or later added). Not yet committed at the time this
+section is written; the report handed back names the commit SHA once made.
+
+### MAJOR-1 — merge no longer moves an option leg without its cash or its cover
+
+**Where:** `backend/app/services/merge_service.py`, the `source_portfolio is not None and
+target_portfolio is not None` branch of `MergeService.execute` (previously lines 232–264,
+now ~239–327 after the fix's added lines and comments).
+
+**The fix, and why this approach over the other one offered.** The auditor's round-1 finding
+gave two paths: carry the leg together with its cash and cover, or drop it like holdings,
+disclosed. Carrying it was rejected — this branch's existing rule for every OTHER per-user
+singleton in the same merge (mandate, the training portfolio's cash, its holdings) is already
+"keep the adopter's, drop the orphan's", and a covered call's cover can be a PARTIAL claim on a
+holding shared with other structures or a plain equity position, so "move the cash and shares
+that back this one structure" is not a well-defined sub-operation of "drop this portfolio's
+holdings" without inventing an allocation rule the ledger has no basis for. Dropping options the
+same way the branch already drops holdings is not a new rule, it is the existing rule applied to
+a table DEF368 had carved out an exception for without noticing the exception broke the ledger
+invariant the general rule was protecting. The drop is counted (`sim_option_legs_dropped`, a new
+key in the `counts` dict `MergeService.execute` returns) and logged (`sim_option_legs_dropped_on_merge`
+at `warning`) rather than happening silently — DEF368's original complaint was the SILENCE of the
+CASCADE, not the fact that something was dropped, and that complaint is preserved as fixed by this
+approach.
+
+`_rekey_options` (the shared helper) is narrowed to only the branch where it is now still
+correct — adopter has no portfolio of its own, so the WHOLE orphan portfolio (cash, holdings,
+options, everything) changes owner as one atomic unit and there is no partial-move invariant to
+violate. Its docstring and the module's own conflict-rules docstring are both updated to state
+the corrected rule and point at this finding.
+
+**A second, sqlite-specific gap found while writing the fix's own tests.** `SimEngine.reset_portfolio`
+carries an explicit comment that sqlite's FK pragma is off by default in this test environment
+(Postgres enforces `ondelete="CASCADE"`; the unit suite's sqlite tempfile does not), and deletes
+`sim_option_legs`/`sim_option_trades` explicitly for that reason. `merge_service.py`'s portfolio
+delete had never done this — it relied purely on the FK CASCADE, meaning the original (pre-DEF368)
+"destructive branch" test only ever exercised the pre-delete re-key, never the CASCADE itself, and
+a naive "just stop re-keying, let the delete cascade" fix would have left orphaned
+`sim_option_legs`/`sim_option_trades` rows in the sqlite test suite (pointing at a deleted
+`portfolio_id`) while looking correct on Postgres. Added explicit `delete(SimOptionLegRow)` /
+`delete(SimOptionTradeRow)` / `delete(SimHoldingRow)` calls before the portfolio delete, matching
+`reset_portfolio`'s precedent — a no-op on Postgres (the CASCADE already covers it) and the only
+thing that actually removes the rows under sqlite.
+
+**Tests — the auditor's own reproduction became the guard.** `backend/tests/unit/test_def368_merge_keeps_options.py`
+rewritten: the two tests whose assertions the round-1 fix broke
+(`test_the_adopter_keeps_the_options_when_both_have_portfolios`,
+`test_the_structure_row_moves_with_its_legs`) are replaced with their corrected-behaviour
+equivalents (`test_both_have_portfolios_drops_the_orphans_options_like_its_holdings`,
+`test_the_structure_row_is_dropped_with_its_legs_not_left_dangling`); the two reporting tests
+(`test_the_merge_reports_what_it_moved`, `test_a_merge_with_no_options_still_reports_zero_not_absent`)
+split into branch-1 and branch-2 variants asserting the NEW `sim_option_legs_dropped` count; and
+two NEW invariant tests reproduce the auditor's own probe (orphan holds 100 AAPL + a covered call
++ a $5,000-collateral cash-secured MSFT put, both users already have a portfolio):
+
+  - `test_merge_never_creates_value_from_nothing_branch_two` — asserts adopter NAV-at-cost does
+    not rise across the merge (`adopter_nav_after <= adopter_nav_before`), using
+    `option_leg_value` (the same identity `sim_options.py`'s own module docstring holds the open
+    path to) rather than re-deriving a second formula.
+  - `test_merge_never_creates_a_naked_short_call_branch_two` — asserts
+    `locked_call_cover_shares − held ≤ 0` on the adopter's book after the merge, i.e. no uncovered
+    short call, using the SAME function (`sim_options.locked_call_cover_shares`) the production
+    margin sweep (`force_close_uncovered_calls`) uses to detect this state, not a re-derivation
+    (DEF098's rule: two derivations of one rule disagree the first time either moves).
+
+**Auditor reproduction confirmed as a failing test first.** Before restoring the fix, the new/changed
+tests were run against the pre-round-2 `merge_service.py` (round 1's own committed state, i.e. the
+DEF368 fix the auditor found wrong): 6 of 8 tests in the file failed, reproducing the auditor's own
+numbers exactly —
+
+```
+AssertionError: adopter NAV must not rise from a merge that drops the orphan's positions:
+before=10000.0 after=13890.0 (orphan carried 23890.0)
+
+AssertionError: a merge must never mint a naked short call on the adopter's book
+assert 100.0 == 0.0
+```
+
+(The dollar figures differ from the auditor's own `$10000 -> $14650`/`+$4650` because the test
+fixture's CSP collateral is $5,000 against a different premium mix than the auditor's live probe,
+not because the defect is different — same shape: NAV rises when it should not, and a 100-share
+naked short call appears.) With the fix restored: `8 passed`.
+
+**Mutation-tested, two vectors, both killed.** (1) Reintroducing the exact original defect — moving
+`SimOptionLegRow` in the both-portfolios branch back into the adopter's portfolio alongside the new
+counting/logging — turns 3 of the 8 tests red (`test_both_have_portfolios_drops_the_orphans_options_like_its_holdings`,
+`test_merge_never_creates_value_from_nothing_branch_two`,
+`test_merge_never_creates_a_naked_short_call_branch_two`). (2) Removing the three new explicit
+`delete(...)` calls (leaving only the FK CASCADE, which sqlite does not enforce here) turns 2 tests
+red (`test_both_have_portfolios_drops_the_orphans_options_like_its_holdings`,
+`test_the_structure_row_is_dropped_with_its_legs_not_left_dangling`) — confirming those lines are
+load-bearing in this test environment, not redundant with the CASCADE.
+
+**Output, targeted:**
+
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/test_def368_merge_keeps_options.py -q -p no:cacheprovider
+8 passed in 2.65s     # exit 0
+```
+
+### MINOR-1 — DEF305 row corrected; the flag has been `true` since 2026-08-26, not still `false`
+
+**Where:** `docs/defect/_registry/DEF305.row.md` (status column left `fixed`, unchanged per the
+task's register rules — only the prose is corrected), regenerated into `docs/defect/def_list.md`
+via `python3 scripts/registers/gen_registers.py gen all`.
+
+The row's closing sentence ("What is NOT done, and it is Saiful's: `SIM_BRACKET_SWEEP_ENABLED=false`
+is still set on Alpha…") was true when written and is now stale: Saiful authorised the flip on
+2026-08-26 (`.deliveryos/checkpoint_history/20260826T111820Z_13fe7252…md:83-85`, verbatim quoted in
+the correction), it was promoted as `alpha-2026-08-26-1` and live-verified the same day, and the
+U68 audit independently re-measured `SIM_BRACKET_SWEEP_ENABLED=true` on 2026-09-25 in the running
+container and `.env`. A correction paragraph is appended to the row (rather than editing the
+original prose in place) so the record shows both what was true in the 2026-08-14→08-26 window and
+what has been true since, per the same append-don't-rewrite convention this lane's own round-2
+section follows. This lane's earlier per-item claims table entry for DEF305 (this file, the CR172
+table above) already stated the flag correctly as a fact the auditor should independently verify,
+not as a stale claim — no change needed there.
+
+**Verification:** `git diff docs/defect/def_list.md` shows exactly the DEF305 row's text changing
+(no other row touched), and `python3 scripts/registers/gen_registers.py gen all` regenerates
+cleanly (only warns, correctly, that DEF305's row carries an uncommitted edit — this session's own).
+
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/test_registers_no_drift.py backend/tests/unit/test_p30_registers_name_things_that_exist.py -q -p no:cacheprovider
+10 passed in 2.57s     # exit 0
+```
+
+### MINOR-2 — DEF357's guard citation corrected to the file that actually contains it
+
+**Where:** this file (`RETRO-SIM-OPTIONS.architect.md`), the CR172-table row for `DEF357` (round 1,
+line ~175): the "Guard tests" cell cited `test_cr172_option_lifecycle.py::test_the_production_sweep_reaches_the_lifecycle`.
+Confirmed by direct read that this test lives in `test_cr172_option_margin_sweep.py:542`, not
+`test_cr172_option_lifecycle.py` — `grep -n "test_the_production_sweep_reaches_the_lifecycle"
+backend/tests/unit/*.py` returns exactly one file. Citation corrected in place (this is the
+architect's own table, not the auditor's verdict file, so it is edited directly rather than
+appended-to) with a note recording the correction and why. `DEF357.row.md` itself was already
+correct — it names source files, not the test file, so no register edit was needed here.
+
+### MINOR-3 — the overrun multiple no longer prints a near-miss as "exactly the budget"
+
+**Where:** `backend/app/services/option_strategist.py`, new `_format_multiple` helper (right before
+`_size_to_budget`), called from `_size_to_budget`'s one `count < 1` branch (`:447`'s one call site,
+per the auditor's own attack-surface note — every strategy shape still sizes through this same
+function, unchanged).
+
+**The fix:** widen from a fixed one decimal to a value-dependent format — one decimal is still the
+default (unchanged for the ordinary case), widened to two decimals only when one decimal alone
+would print a whole `.0` for a value that is not genuinely at that whole multiple (tested via
+`abs(over - round(over)) > 1e-9`, not a fixed threshold on `over` itself, so it does not
+misclassify a value that is genuinely, or effectively, an exact multiple). `over >= 10` is
+unchanged (`.0f`, no decimals) — the auditor's note that DEF354's original 51x/502x cases "never
+had this problem" holds: a double/triple-digit overrun rounding to a whole number is still an
+unmistakably large gap, so the widening only applies below 10x. `9030/9000` (the auditor's and
+DEF354's own repro number) now prints `"1.00x"`, not `"1.0x"`; `920/18 = 51.11...` still prints
+`"51x"`; a genuinely exact `2.0` still prints `"2.0x"`.
+
+**A pre-existing, unrelated test-file corruption found and fixed while writing this guard.**
+`test_cr172_option_strategist.py::test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget`
+was truncated after building its `legs` fixture — no assertions — and its actual two assertions
+(`assert "1.0x" in near`, `assert "502x" in far`) had been spliced, unreachable, INSIDE the body of
+an unrelated `check_option_open` test shim below it, after that shim's own `return` statement. The
+test therefore ran and "passed" while asserting nothing at all — confirmed by running it in
+isolation before this fix (`1 passed`, no assertion executed). This is exactly the auditor's own
+MINOR-3 scenario (a near-miss printing as "1.0x") sitting in a test that could never have caught it
+either way. Restored: the near-miss test now has its own complete body (asserting `"1.0x" not in
+near` and `"1.00x" in near`, plus the unchanged `far`/`"502x"` check), and `check_option_open`'s
+shim is restored to a clean top-level function with the dead code after its `return` removed.
+
+**Auditor reproduction confirmed as a failing test first, mutation-tested.** Ran the corrected test
+against the ORIGINAL formatter (`f"{over:.1f}x" if over < 10 else f"{over:.0f}x"`) via a targeted
+mutation: `test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget` fails
+(`AssertionError: must not read as exactly the budget`, showing `'1.0x' is contained here`) —
+confirming the test reproduces MINOR-3 exactly. Restored the fix: `30 passed`.
+
+```
+backend/.venv/bin/python -m pytest backend/tests/unit/test_cr172_option_strategist.py -q -p no:cacheprovider
+30 passed in 2.92s     # exit 0
+```
+
+### Full re-run after all four fixes
+
+```
+backend/.venv/bin/python -m pytest \
+  backend/tests/unit/test_cr172_health_discloses_options.py \
+  backend/tests/unit/test_cr172_max_loss_budget_is_one_meaning.py \
+  backend/tests/unit/test_cr172_no_behaviour_change.py \
+  backend/tests/unit/test_cr172_option_caps.py \
+  backend/tests/unit/test_cr172_option_chain.py \
+  backend/tests/unit/test_cr172_option_floor.py \
+  backend/tests/unit/test_cr172_option_instruments.py \
+  backend/tests/unit/test_cr172_option_lifecycle.py \
+  backend/tests/unit/test_cr172_option_margin_sweep.py \
+  backend/tests/unit/test_cr172_option_marks_feed.py \
+  backend/tests/unit/test_cr172_option_open_path.py \
+  backend/tests/unit/test_cr172_option_strategist.py \
+  backend/tests/unit/test_cr172_options_routes.py \
+  backend/tests/unit/test_cr172_portfolio_option_card.py \
+  backend/tests/unit/test_cr172_reprice_before_open.py \
+  backend/tests/unit/test_cr172_room_structure.py \
+  backend/tests/unit/test_cr172_trading_math_options.py \
+  backend/tests/unit/test_cr194_trade_price_provenance.py \
+  backend/tests/unit/test_cr204_book_greeks.py \
+  backend/tests/unit/test_cr205_option_lots.py \
+  backend/tests/unit/test_cr206_dividend_feed.py \
+  backend/tests/unit/test_def305_bracket_sweep_kill_switch.py \
+  backend/tests/unit/test_def305_unpriceable_refusal.py \
+  backend/tests/unit/test_def309_retired_at.py \
+  backend/tests/unit/test_def310_stop_limit_phase2.py \
+  backend/tests/unit/test_def311_orphaned_resting_sells.py \
+  backend/tests/unit/test_def312_bracket_side.py \
+  backend/tests/unit/test_def313_sector_total_value.py \
+  backend/tests/unit/test_def364_priced_position_source.py \
+  backend/tests/unit/test_def368_merge_keeps_options.py \
+  backend/tests/unit/test_def377_stored_wrong_side_bracket.py \
+  backend/tests/unit/test_sim_reputation.py \
+  backend/tests/unit/test_wire_contract_parity.py \
+  backend/tests/unit/test_merge_service.py \
+  backend/tests/unit/test_sim_engine.py \
+  backend/tests/unit/test_safety_floor.py \
+  backend/tests/unit/test_registers_no_drift.py \
+  backend/tests/unit/test_p30_registers_name_things_that_exist.py \
+  -q -p no:cacheprovider
+566 passed, 1 warning in 78.32s     # exit 0 — the one warning is the same pre-existing
+                                     # FastAPI HTTP_422 deprecation noted in round 1, unrelated
+```
+
+Full unit suite: not run by the builder this round (would contend with the +111 release gate);
+targeted battery above is the builder evidence; the auditor re-runs the independent suite.
+
+### Unresolved / left as found
+
+- **DEF357's guard test itself is unchanged** — it is a reachability pin (the production sweep
+  reaches the lifecycle), not a correctness re-proof of the underlying settlement arithmetic. The
+  auditor's own round-1 "Verified and sound" section already re-derived that arithmetic by hand;
+  nothing in round 2 touches it, and nothing here re-does that work.
+- **No live Alpha change was made or verified beyond the DEF305 row correction.** The flag's live
+  `true` state was the auditor's own round-1 measurement (`SIM_BRACKET_SWEEP_ENABLED=true` in the
+  running container and `.env`), not re-measured here — round 2 only corrects the STATED record to
+  match it.
+- **The `_format_multiple` widening is capped at two decimals.** A value whose overrun looks round
+  at two decimals as well (vanishingly unlikely from a real dollar division, but not provably
+  impossible) would still print as `.0` at two decimals if it happened to land there — not treated
+  as a real risk given the domain (dollar amounts divided by dollar amounts, not adversarial input),
+  and not guarded further; flagged here rather than silently assumed away.
+- **Attack surfaces 2–6 from the round-1 submission are unchanged** — nothing in round 2 touches
+  DEF356's netting, the lifecycle sweep's reachability, or the four safety-floor call sites; MAJOR-1
+  was specifically the fifth entry point into option state (the merge) that the auditor named as
+  meeting no floor at all, and it is now brought under the SAME rule the rest of the merge already
+  enforces for equity, not a new floor of its own.
+- **The full backend unit suite was not run by the builder this round** — a run was started, then
+  stopped deliberately (Architect coordination) because it was contending with the +111 release
+  gate for the same Mac's CPU. The targeted battery above (566 passed, exit 0, covering every guard
+  test the round-1 verdict named plus the new/changed tests) is the builder's evidence for this
+  round; the auditor's own independent full-suite run remains the authoritative number, per DEF159's
+  standing rule that a number quoted as evidence should be measured against the committed SHA in a
+  clean environment, not carried over from a contended shared run.
+
+SUBMITTED: round 2
