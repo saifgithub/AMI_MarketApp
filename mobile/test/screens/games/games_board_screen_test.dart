@@ -13,6 +13,13 @@
 ///     completed close must draw as a dash, not as 0.00%. Flat and unmeasured
 ///     are different facts, and this feature has now conflated them nine
 ///     separate times in nine different places.
+///
+/// DEF420 adds a second class of assertion — the screen's *chrome*, which was
+/// out of line with the rest of the app (a bare Material `AppBar`, a
+/// `statBig`-sized empty-state heading that wraps at small widths / large
+/// text scales, and a YOU row tinted almost to invisibility). Those checks
+/// live in the `DEF420 — restyle` group below and do not duplicate the rule
+/// tests above: same data, same behaviour, different pixels.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -20,6 +27,9 @@ import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_board_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/theme/ami_window_size.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,6 +88,39 @@ Future<void> _pump(WidgetTester tester, GameBoard board) async {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const GamesBoardScreen(runId: _runId),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+}
+
+/// Same as [_pump], but pins the viewport to [size] and an optional
+/// [textScale] — the DEF420 adaptive-layout sweep's workhorse. Resets the
+/// view via [addTearDown] so one test's size never leaks into the next.
+Future<void> _pumpSized(
+  WidgetTester tester, {
+  required GameBoard board,
+  required Size size,
+  double textScale = 1.0,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        apiClientProvider.overrideWithValue(FakeGamesApiClient(board: board)),
+        gamesBoardProvider(_runId).overrideWith((ref) async => board),
+      ],
+      child: MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const GamesBoardScreen(runId: _runId),
+        ),
       ),
     ),
   );
@@ -277,6 +320,217 @@ void main() {
     testWidgets('an empty field says so', (tester) async {
       await _pump(tester, _board(rows: const [], standingsOpen: false));
       expect(find.text('No one has entered this field yet.'), findsOneWidget);
+    });
+  });
+
+  group('DEF420 — restyle to match the rest of the app', () {
+    testWidgets('wears the shared AmiScreenHeader, not a bare AppBar',
+        (tester) async {
+      await _pump(
+        tester,
+        _board(rows: [_row(handle: 'me', rank: 1, twrPct: 1)]),
+      );
+      expect(find.byType(AmiScreenHeader), findsOneWidget);
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.text('Standings'), findsOneWidget);
+    });
+
+    testWidgets(
+        'the not-ranked-yet empty state does not overflow at 375dp, '
+        '1.0x and 1.3x text scale', (tester) async {
+      for (final scale in [1.0, 1.3]) {
+        await _pumpSized(
+          tester,
+          board: _board(
+            rows: [_row(handle: 'brand-new', isYou: true, closesCounted: 0)],
+            standingsOpen: false,
+          ),
+          size: const Size(375, 812),
+          textScale: scale,
+        );
+
+        expect(find.text('Not ranked yet'), findsOneWidget,
+            reason: 'at scale $scale');
+        expect(tester.takeException(), isNull, reason: 'at scale $scale');
+      }
+    });
+
+    testWidgets('the YOU row renders the accent highlight, not a flat tint',
+        (tester) async {
+      await _pump(
+        tester,
+        _board(
+          rows: [
+            _row(handle: 'Momentum Desk', rank: 1, twrPct: 4.5, isDesk: true),
+            _row(handle: 'careful-vector', rank: 2, twrPct: 2.0, isYou: true),
+          ],
+          yourRank: 2,
+          yourTwrPct: 2.0,
+          deskCount: 1,
+        ),
+      );
+
+      // The YOU row's own container carries a visible cyan wash + border —
+      // the accent-card vocabulary the rest of the screen uses — rather than
+      // the old `slate800` (a colour shared with every OTHER row's own
+      // background, which is how it read as barely-visible).
+      final decoratedBoxes = tester.widgetList<DecoratedBox>(
+          find.descendant(
+              of: find.ancestor(
+                  of: find.text('careful-vector'),
+                  matching: find.byType(Column)),
+              matching: find.byType(DecoratedBox)));
+      final containers = tester.widgetList<Container>(find.descendant(
+          of: find.ancestor(
+              of: find.text('careful-vector'), matching: find.byType(Column)),
+          matching: find.byType(Container)));
+
+      bool carriesCyanAccent(BoxDecoration? d) {
+        if (d == null) return false;
+        final fill = d.color;
+        final border = d.border;
+        final fillIsCyan = fill != null &&
+            fill.toARGB32() ==
+                AmiColors.hexCyan.withValues(alpha: 0.12).toARGB32();
+        final borderIsCyan = border is Border &&
+            border.top.color.toARGB32() ==
+                AmiColors.hexCyan.withValues(alpha: 0.5).toARGB32();
+        return fillIsCyan || borderIsCyan;
+      }
+
+      final found = [
+        ...decoratedBoxes.map((b) => b.decoration).whereType<BoxDecoration>(),
+        ...containers.map((c) => c.decoration).whereType<BoxDecoration>(),
+      ].any(carriesCyanAccent);
+
+      expect(found, isTrue,
+          reason: 'no cyan-accent decoration found around the YOU row');
+    });
+
+    testWidgets('renders a populated board cleanly', (tester) async {
+      await _pump(
+        tester,
+        _board(
+          rows: [
+            _row(handle: 'Momentum Desk', rank: 1, twrPct: 4.5, isDesk: true),
+            _row(handle: 'careful-vector', rank: 2, twrPct: 2.0, isYou: true),
+          ],
+          yourRank: 2,
+          yourTwrPct: 2.0,
+          deskCount: 1,
+        ),
+      );
+      expect(find.text('Momentum Desk'), findsOneWidget);
+      expect(find.text('careful-vector'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('renders the empty board cleanly', (tester) async {
+      await _pump(tester, _board(rows: const [], standingsOpen: false));
+      expect(find.text('No one has entered this field yet.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('DEF420 round 2 — adaptive across window sizes', () {
+    // Architect correction, Saiful: "really it should be adaptive to the
+    // different screen size surely?" — the sweep spans compact phones
+    // through an expanded tablet width, plus one landscape phone, for both
+    // a populated and an empty board.
+    const sizes = <String, Size>{
+      'compact/320 (small phone)': Size(320, 690),
+      'compact/375 (iPhone baseline)': Size(375, 812),
+      'compact/430 (large phone)': Size(430, 932),
+      'medium/600 (foldable/small tablet)': Size(600, 900),
+      'medium/840 boundary': Size(840, 1000),
+      'expanded/1024 (tablet)': Size(1024, 1366),
+      'landscape phone/844x390': Size(844, 390),
+    };
+
+    final populated = _board(
+      rows: [
+        _row(handle: 'Momentum Desk', rank: 1, twrPct: 4.5, isDesk: true),
+        _row(handle: 'careful-vector', rank: 2, twrPct: 2.0, isYou: true),
+        _row(handle: 'Index Desk', rank: 3, twrPct: -0.2, isDesk: true),
+      ],
+      yourRank: 2,
+      yourTwrPct: 2.0,
+      deskCount: 2,
+    );
+    final empty = _board(
+      rows: [_row(handle: 'brand-new', isYou: true, closesCounted: 0)],
+      standingsOpen: false,
+    );
+
+    for (final entry in sizes.entries) {
+      for (final scale in [1.0, 1.3]) {
+        testWidgets(
+            'populated board — no overflow at ${entry.key}, scale $scale',
+            (tester) async {
+          await _pumpSized(tester,
+              board: populated, size: entry.value, textScale: scale);
+          expect(tester.takeException(), isNull,
+              reason: '${entry.key} @ $scale');
+        });
+
+        testWidgets('empty board — no overflow at ${entry.key}, scale $scale',
+            (tester) async {
+          await _pumpSized(tester,
+              board: empty, size: entry.value, textScale: scale);
+          expect(tester.takeException(), isNull,
+              reason: '${entry.key} @ $scale');
+        });
+      }
+    }
+
+    testWidgets('the content column is capped and centred on a wide window',
+        (tester) async {
+      await _pumpSized(tester, board: populated, size: const Size(1024, 1366));
+
+      final constraint = tester.widget<AmiContentWidthConstraint>(
+          find.byType(AmiContentWidthConstraint));
+      expect(constraint.maxWidth, AmiBreakpoints.maxContentWidth);
+
+      // AmiContentWidthConstraint's OWN box (the Align) legitimately fills
+      // its parent's width — Align always does. What must be capped is the
+      // CONTENT inside it, so measure the actual column the screen renders
+      // into, not the Align wrapper.
+      final renderBox = tester.renderObject<RenderBox>(
+          find.byKey(const Key('games_board_content_column')));
+      expect(renderBox.size.width,
+          lessThanOrEqualTo(AmiBreakpoints.maxContentWidth));
+
+      // And centred: equal space on both sides of a 1024-wide window.
+      final topLeft = tester
+          .getTopLeft(find.byKey(const Key('games_board_content_column')));
+      final topRight = tester
+          .getTopRight(find.byKey(const Key('games_board_content_column')));
+      final leftGap = topLeft.dx;
+      final rightGap = 1024 - topRight.dx;
+      expect((leftGap - rightGap).abs(), lessThan(1.0),
+          reason: 'left gap $leftGap vs right gap $rightGap — not centred');
+    });
+
+    testWidgets(
+        'the content column fills the compact window rather than capping',
+        (tester) async {
+      await _pumpSized(tester, board: populated, size: const Size(375, 812));
+
+      final renderBox = tester.renderObject<RenderBox>(
+          find.byKey(const Key('games_board_content_column')));
+      // 375dp is well under AmiBreakpoints.maxContentWidth (640) — the cap
+      // must never SHRINK a compact layout, only ever bound a wide one.
+      expect(renderBox.size.width, greaterThan(300));
+    });
+
+    testWidgets('windowWidthClassOf resolves the three M3 classes correctly',
+        (tester) async {
+      expect(windowWidthClassOf(320), AmiWindowWidthClass.compact);
+      expect(windowWidthClassOf(599.9), AmiWindowWidthClass.compact);
+      expect(windowWidthClassOf(600), AmiWindowWidthClass.medium);
+      expect(windowWidthClassOf(839.9), AmiWindowWidthClass.medium);
+      expect(windowWidthClassOf(840), AmiWindowWidthClass.expanded);
+      expect(windowWidthClassOf(1024), AmiWindowWidthClass.expanded);
     });
   });
 }

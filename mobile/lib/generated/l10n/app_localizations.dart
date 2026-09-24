@@ -5788,6 +5788,12 @@ abstract class AppLocalizations {
   /// **'No one has entered this field yet.'**
   String get gamesBoardEmpty;
 
+  /// DEF420. Shown under the 'not ranked yet' empty state, next to a clock icon — a client-only ESTIMATE of when the next US equity close is (not a server fact, never a scored deadline), so the wait has a sense of scale. {countdown} is a client-formatted duration such as '2h 14m' or '1d 6h', same shape as gamesArcEntryClosesIn's {countdown}. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Next US close in {countdown}'**
+  String gamesBoardNextCloseIn(String countdown);
+
   /// CR109 §11.2. Title of the sheet listing every AMI-run strategy desk and its published rule. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
