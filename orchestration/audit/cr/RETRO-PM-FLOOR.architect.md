@@ -356,3 +356,239 @@ any row's status; that is the auditor's and/or Saiful's call once the verdict la
   range command is given for the auditor to re-derive independently rather than trust my triage.
 
 SUBMITTED: round 1
+
+## Round 2
+
+**Branch:** `worktree-agent-a94c7459e971e99bf` (isolated worktree off `main`). **Commit:**
+`692f9324801816e69230d86570c56977568d0f1b` — `merge-base` against `main` is `68f9c7d0`
+(current `main` HEAD at task start), so this is one commit clean on top, nothing else in flight.
+`diff --stat main...HEAD`:
+
+```
+backend/app/services/llm_json.py                   |  39 ++
+backend/app/services/room_runner.py                | 143 ++++++-
+backend/tests/unit/test_def398_pm_json_contract_break.py |  27 +-
+backend/tests/unit/test_retro_pm_floor_round2.py    | 461 +++++++++++++++++++++
+4 files changed, 657 insertions(+), 13 deletions(-)
+```
+
+New test file: `backend/tests/unit/test_retro_pm_floor_round2.py` (6 tests, one per
+MAJOR/MINOR reproduction except MAJOR-2 which gets a functional test plus a unit-level pin
+on `_build_room_sector_context` itself). Each was written from the auditor's own probe shape,
+confirmed red on pre-fix code, then green after the fix — shown below per finding, plus a
+separate revert-fix/red/restore mutation pass on the shipped fix itself (not the same thing:
+the first proves the test reproduces the bug, the second proves the fix is what makes it pass).
+
+### MAJOR-1 — respawn judged the floor against a fabricated $100k/0%-drawdown portfolio
+
+**Fix:** `backend/app/services/room_runner.py:4532-4606` (`_respawn_run_from_row`). Before
+constructing the event queue or spawning `_pump`, resolve the user's REAL portfolio snapshot
+the same way `api/room.py` does (`sim.valuation_snapshot`, off-loop via `asyncio.to_thread`) and
+pass both values into the eventual `self.run(...)` call (`:4613-4619`, `portfolio_value=`,
+`current_drawdown_pct=` added to the call). If the snapshot read raises, the function logs
+`room_startup_retry_snapshot_failed` at ERROR, marks the row `status="failed"` with a disclosed
+`error_message`, and returns — no `self.run()` call happens at all, so there is no path from
+"snapshot unreadable" to any verdict, fabricated-input or otherwise.
+
+**Tests:**
+`backend/tests/unit/test_retro_pm_floor_round2.py::test_respawn_reads_the_real_portfolio_not_the_run_defaults`
+(control: `api`-shaped call with a real 50%-drawn-down user REJECTs on the drawdown cap; respawn
+path, driven end-to-end through `_respawn_run_from_row` + `subscribe`, must land the same REJECT)
+and `::test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read` (forces
+`sim.valuation_snapshot` to raise; asserts `status="failed"`, no APPROVE, and a non-empty
+`error_message`).
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py::test_respawn_reads_the_real_portfolio_not_the_run_defaults tests/unit/test_retro_pm_floor_round2.py::test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read -q -p no:cacheprovider
+2 passed in 5.25s        EXIT=0
+```
+
+**Confirmed red pre-fix:** run against the code before the fix (`self.run()` called with neither
+kwarg) — `test_respawn_reads_the_real_portfolio_not_the_run_defaults` failed with the respawned
+run landing `APPROVE` (fabricated $100k/0%-drawdown book) where the control REJECTed on the
+user's real 62%(-equivalent) drawdown; `test_respawn_fails_loudly_...` failed with
+`status='completed'`, a full `APPROVE` verdict — the exact "silent fallback to a fabricated
+default" MAJOR-1 names, since pre-fix code never even calls `valuation_snapshot` and so never
+notices the injected failure.
+
+**Mutation (reverted after):** dropped `portfolio_value=`/`current_drawdown_pct=` back off the
+`self.run(...)` call inside `_pump` (the exact pre-fix call shape) —
+`test_respawn_reads_the_real_portfolio_not_the_run_defaults` → **1 failed** (respawn APPROVEd
+against the fabricated $100k/0%). Restored; file diff clean (`git diff --stat` shows no
+`MUTATION-TEST` markers remaining anywhere).
+
+### MAJOR-2 — a sector-context failure silently switched off the max-open-positions cap
+
+**Fix:** `backend/app/services/room_runner.py:1787-1841` (`_build_room_sector_context`). Split
+the single try/except into two: the first reads holdings alone (`sim.ensure_portfolio` +
+`list(portfolio.holdings)`) and returns `None` (not `[]`) for holdings on failure — the floor's
+own "not supplied, block loudly" sentinel per `check_mandate_compliance`'s documented contract.
+The second wraps only the sector-specific work (`current_marks`, `default_sector_map`,
+`allocate_by_sector`) and on failure returns the **already-read** `holdings` unchanged, with
+`sector_map=None`/`weights={}` — a resolver failure now costs the sector cap only, never the
+position-count cap. `user_id is None` (the pre-existing "caller never asked" case) also now
+returns `None` for holdings rather than `[]`, matching `_build_room_risk_limit_context`'s sibling
+sentinel convention. `_RoomContext.sector_holdings` retyped `list | None`; the one direct
+iteration consumer (`_build_room_option_candidates`'s `shares_held` sum, `:5372-5378`) guarded
+with `ctx.sector_holdings or ()` — a cosmetic option-sizing input, never the compliance check, so
+degrading to "no held shares" on `None` is the safe direction.
+
+**Tests:**
+`::test_sector_context_failure_still_blocks_the_max_open_positions_cap` (control: healthy sector
+resolver, 2 real holdings via `SimHoldingRow`, `max_open_positions=2`, PM APPROVEs a 3rd ticker →
+REJECT; failure path: `default_sector_map` forced to raise → must still REJECT, not APPROVE) and
+`::test_sector_context_builder_reports_holdings_as_none_on_failure` (unit-level pin: a holdings
+-read failure — `ensure_portfolio` itself raising — must return `None`, never `[]`).
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py -k sector -q -p no:cacheprovider
+2 passed in ~4s        EXIT=0
+```
+
+**Confirmed red pre-fix:** the failure-path run landed `APPROVE viol=[]` against the exact
+control shape that REJECTs at `viol=['opening MSFT would exceed the max open positions cap
+(2) — 2 already held']` — matching the auditor's own probe verbatim. The unit-level pin failed
+with `assert [] is None`.
+
+**Mutation (reverted after), two of them since the fix has two failure branches:**
+1. Reverted the holdings-read branch's `return None, {}, None, {}` back to `return [], {}, None,
+   {}` → `test_sector_context_builder_reports_holdings_as_none_on_failure` **1 failed**
+   (`assert [] is None`).
+2. Reverted the sector-only branch's `return holdings, {}, None, {}` back to `return [], {}, None,
+   {}` (the ORIGINAL bug shape: a sector-resolver failure discarding already-read holdings) →
+   `test_sector_context_failure_still_blocks_the_max_open_positions_cap` **1 failed** (`APPROVE`
+   where control `REJECT`ed).
+
+Both restored; `git diff --stat` clean of markers.
+
+### MINOR-1 — a zero-readable vote shipped one reformatted draw, unlabelled
+
+**Fix:** `backend/app/services/room_runner.py:5590-5634` tracks a new `_zero_readable_vote` flag,
+set when `pm_self_consistency_samples > 1` and every draw/replacement in `_cands` is unparseable
+but a raw draw exists (so the tail falls into the single-draw reformat path). After that path
+produces `parsed` (`:5755-5776`), if `_zero_readable_vote` and `parsed is not None`, the verdict is
+copied with `samples=_pm_samples`, `approve_votes=0`, and `reason` appended with an explicit
+disclosure ("None of the N independent reads requested for this vote were machine-readable; this
+is a single recovered read, not a vote."), plus a `room_pm_vote_zero_readable` warning log —
+applied before the DEF384 shared decision tail, so the floor still sees the same `parsed` either
+way; only the disclosure metadata changes.
+
+**Test:** `::test_zero_readable_vote_is_labelled_not_a_silent_single_draw` — `samples=5`, a fake
+gateway whose PM never parses on any draw but whose reformat retry recovers an APPROVE (matching
+the auditor's own measurement: `reformat_calls=1`). Asserts `v.samples == 5`, `v.approve_votes ==
+0`, and the disclosure text is present in `v.reason`.
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py::test_zero_readable_vote_is_labelled_not_a_silent_single_draw -q -p no:cacheprovider
+1 passed in 2.18s        EXIT=0
+```
+
+**Confirmed red pre-fix:** `v.samples` was `None` against the code before `_zero_readable_vote`
+existed — the schema's own "self-consistency is off" meaning, false in this case; verdict action
+was already `APPROVE` (an unlabelled single recovered draw), matching the auditor's probe.
+
+**Mutation (reverted after):** short-circuited the disclosure block (`if False and
+_zero_readable_vote and parsed is not None:`) → **1 failed** (`v.samples` back to `None` against
+a still-`APPROVE` verdict). Restored; clean.
+
+### MINOR-2 — a retracted draft APPROVE won on "first object wins"
+
+**Fix:** `backend/app/services/llm_json.py`. New helper `_extract_second_decision` (a plain
+brace-scan + `raw_decode` over the tail after the first parsed object — deliberately not the
+DEF352/DEF398 recovery machinery, since this only answers "is there another decision-shaped
+object here", never "recover a verdict from it"). In `extract_json_object`'s `raw_decode` branch
+(`:176-196`), when the first decoded object has an `"action"` key, the tail is checked for a
+second object; if one exists with a **different** `"action"`, the whole reply is now treated as
+unparseable (`return None`) rather than returning the first (draft) object. Scoped strictly to
+the `"action"` key so: (a) the pre-existing generic "first object wins" contract for non-decision
+JSON is untouched (renamed test below), (b) `brief_engine.py`/`portfolio_finding.py`'s own
+`extract_json_object` calls (payload shapes `overlay_addition`/`f1`/`f2`/`f4`, never `action`) are
+unaffected, and (c) two objects with the SAME `action` (an echoed, not a conflicting, decision)
+still resolve to the first, unchanged.
+
+**Existing test updated:** `test_def398_pm_json_contract_break.py`'s
+`test_the_first_object_wins_not_the_last` — this test's own two-object reply
+(`{"action":"APPROVE"}` then `{"action":"REJECT"}`) is now EXACTLY the case MINOR-2 says must fail
+safe, so per the auditor's own framing ("this is decision fidelity, not a floor bypass... the fix
+is: fail safe when the tail contains a second object with a different action") the test's
+expectation was wrong, not the fix. Split into three: (1) renamed to
+`test_the_first_object_wins_when_the_pair_is_not_a_decision_conflict` using a non-`action` payload
+to keep pinning the general DEF398 rule, (2) `test_two_conflicting_decisions_fail_safe_not_first_wins`
+asserting the auditor's exact reply now returns `None`, (3)
+`test_two_objects_with_the_SAME_action_are_not_a_conflict` pinning the "echoed decision" carve-out.
+
+**New end-to-end test:** `test_retro_pm_floor_round2.py::test_a_retracted_draft_approve_fails_safe_not_ships_as_the_verdict`
+— a fake gateway replaying the auditor's own probe text (`'Draft: {"action": "APPROVE",…} -- on
+reflection I decline. {"action": "PASS",…}'`) through the real `RoomRunner.run()` at `samples=1`
+(the single-draw path, matching the auditor's own reproduction). Asserts the verdict action is
+never `APPROVE`.
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_def398_pm_json_contract_break.py tests/unit/test_retro_pm_floor_round2.py::test_a_retracted_draft_approve_fails_safe_not_ships_as_the_verdict -q -p no:cacheprovider
+10 passed in ~5s        EXIT=0
+```
+
+**Confirmed red pre-fix:** both `test_two_conflicting_decisions_fail_safe_not_first_wins` and
+`test_a_retracted_draft_approve_fails_safe_not_ships_as_the_verdict` failed against code before
+the `"action" in decoded` check existed — `extract_json_object` returned the draft `APPROVE`
+object, and the end-to-end run landed verdict `action='APPROVE'`.
+
+**Mutation (reverted after):** short-circuited the new check (`if False and "action" in decoded:`)
+→ both tests **failed** (2 failed) with the identical pre-fix symptom. Restored; clean.
+
+### Suites run (targeted only — no bare `tests/unit/`)
+
+Per the Architect's note mid-task: **the full backend unit suite was not run by this builder** —
+another track's release-gate suite was running concurrently on the same Mac and bare
+`tests/unit/` contends with its timing-sensitive tests. Only targeted files were run, every time,
+which is what this section reports. The auditor re-runs the independent full suite per its own
+BINDINGS, as it did in round 1 (melehost, sharded).
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py tests/unit/test_room_runner.py tests/unit/test_safety_floor.py tests/unit/test_def384_vote_reaches_safety_floor.py tests/unit/test_sim_engine.py tests/unit/test_config_compose_parity.py -q -p no:cacheprovider
+169 passed, 1 skipped in 106.62s        EXIT=0
+```
+
+Also run for collateral-damage coverage (every test file in the tree referencing
+`extract_json_object`, `_build_room_sector_context`, `_respawn_run_from_row`, or
+`sector_holdings`, beyond the task's own required list) and the 14-file set from the round-1
+verdict's own targeted run:
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_cr026_sector_allocation.py tests/unit/test_cr098_room_analyst_pullback.py tests/unit/test_def110_outcome_liquidates.py tests/unit/test_def136_room_convene_does_not_block_loop.py tests/unit/test_def256_json_control_chars.py tests/unit/test_def258_pm_verdict_truncation.py tests/unit/test_def352_trailing_prose_after_json.py tests/unit/test_no_blocking_io_in_async_routes.py -q -p no:cacheprovider
+106 passed        EXIT=0
+
+cd backend && .venv/bin/python -m pytest tests/unit/test_safety_floor.py tests/unit/test_room_runner.py tests/unit/test_def384_vote_reaches_safety_floor.py tests/unit/test_def398_pm_json_contract_break.py tests/unit/test_def352_trailing_prose_after_json.py tests/unit/test_cr197_pm_self_consistency.py tests/unit/test_cr197_risk_officer.py tests/unit/test_cr197_size_envelope.py tests/unit/test_cr197_option_ladder.py tests/unit/test_cr201_risk_officer_room.py tests/unit/test_cr210_constraint_plumbing.py tests/unit/test_cr210_outcome_taxonomy.py tests/unit/test_cr210_room_wiring.py tests/unit/test_cr210_schemas.py tests/unit/test_retro_pm_floor_round2.py -q -p no:cacheprovider
+341 passed        EXIT=0
+```
+
+(333 from the auditor's own round-1 list + 8: the 6 new tests in
+`test_retro_pm_floor_round2.py` plus a net +2 in `test_def398_pm_json_contract_break.py`, which
+had 1 test split into 3.)
+
+Also re-ran the registers gate since I touched no register rows but the worktree brief requires
+it be green regardless:
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_registers_no_drift.py tests/unit/test_p30_registers_name_things_that_exist.py -q -p no:cacheprovider
+10 passed        EXIT=0
+```
+
+### Disposition per finding
+
+| Finding | Disposition |
+|---|---|
+| MAJOR-1 | **Fixed.** Respawn now resolves the real portfolio snapshot before running; an unreadable snapshot fails the row loudly instead of defaulting. |
+| MAJOR-2 | **Fixed.** Holdings-read failure and sector-resolver failure are now independent; only a genuine holdings-read failure blocks loudly (`None`), a sector-resolver-only failure degrades the sector cap alone. |
+| MINOR-1 | **Fixed.** A zero-readable vote is now labelled (`samples`, `approve_votes=0`, disclosed reason) rather than shipping as an indistinguishable single-draw verdict. |
+| MINOR-2 | **Fixed.** A second, conflicting decision in the tail now fails the whole reply safe rather than "first object wins" silently picking the draft. |
+
+**Unresolved / not attempted this round:** none of the four findings. Everything the auditor
+asked me to fix was fixed, tested from the auditor's own reproductions, and mutation-checked.
+I did not re-verify the architect's round-1 "Attack surface" items the auditor's own verdict
+already closed (compose parity, DEF383's `use_enum_values`, `risk_officer.py`'s absence of a
+`Verdict`-construction path, CR210's `constraint_status` enum) — those were the auditor's own
+round-1 findings-closed list, not open items handed to this fix pass, and re-deriving them was
+outside the four items named in my task.
+
+SUBMITTED: round 2
