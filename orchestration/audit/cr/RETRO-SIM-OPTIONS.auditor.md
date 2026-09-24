@@ -187,3 +187,142 @@ only path into option state that meets no floor at all. It is latent until the f
 permits derivatives — which is exactly when it would fire.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+---
+
+## Round 2 — auditor U68
+
+**SHA audited:** `ae468eff` (the `+112` integration merge; this lane's fix is `3e822fa5`).
+Detached scratch worktree `audit-U68-R2` per DEF159, verified clean after the mutation below.
+**Not live yet:** Alpha runs `alpha-2026-09-25-3`; these fixes ship in +112.
+
+### MAJOR-1 — fixed
+
+When both accounts already have a portfolio, the orphan's option legs and structures are no
+longer re-keyed into the adopter. They are dropped along with the holdings and cash that funded
+and covered them. The drop is counted (`sim_option_legs_dropped`) and logged, and explicit
+deletes make the sqlite suite match Postgres' CASCADE (`merge_service.py:240-337`). My round-1
+probe, re-run unchanged on this tree, plus the other branch:
+
+```
+PROBE adopter_has_portfolio=True  counts={'sim_option_legs': 0, 'sim_option_legs_dropped': 2, …}
+PROBE   adopter_tv 10000.0 -> 10000.0 delta=+0.00; AAPL held=0 locked=0.0; dangling legs=0      (round 1: +4650.00, locked 100 / held 0)
+PROBE adopter_has_portfolio=False counts={'sim_option_legs': 2, 'sim_holdings': 1, …}
+PROBE   adopter_tv 0.0 -> 60814.0 (= orphan_tv 60814.0); AAPL held=100.0 locked=100.0; dangling legs=0
+```
+
+No value is minted and no naked call is created. When the adopter has no portfolio of its own,
+the whole portfolio moves as one unit, and total value and cover both carry over exactly. The
+builder's choice to drop rather than carry the options is one of the two options I offered, and
+its reasoning is sound: the cover can be a partial claim on a shared holding, so "the shares
+behind this one structure" is not a quantity the ledger can produce.
+
+**Mutation, mine:** re-inserted the round-1 re-key (`update(SimOptionLegRow)` and
+`update(SimOptionTradeRow)` into `target_portfolio`) ahead of the count -> `5 failed, 3 passed`.
+This includes both invariant tests, `…never_creates_value_from_nothing…` and
+`…never_creates_a_naked_short_call…`. The invariants are guarded.
+
+### MINOR-4 (round 2, new) — the drop is disclosed to the logs, not to the user
+
+My round-1 fix option was "drop …, *disclosed* (the DEF368 complaint was silence, not loss)".
+What ships records the drop in a log line and in `MergeResult.counts`, which the app does not
+display. The consent sheet the user acts on is built from `/merge/preview`. That preview has no
+option count, and the sheet reads *"Would you like to bring it into your account?"* above a
+**MERGE EVERYTHING** button (`app_en.arb` `mergeSheetBody` / `mergeSheetConfirm`;
+`merge_sheet.dart:90-104,132,196`). A user whose consented structure disappears on claim is still told
+nothing, and that silence is DEF368's own complaint. It is latent: 0 of 54 current mandates
+permit derivatives and 0 option legs exist on Alpha (re-read, 2026-09-25). Hence MINOR, but it has to close **before
+`derivatives_allowed` is turned on for any user.** **Fix:** add the option count to
+`MergePreview`, and have the sheet say what will be dropped. The mandate line already does this:
+*"yours stays — we'll drop the older one"*.
+
+### MINOR-1 — closed
+
+The DEF305 row now carries a dated correction quoting Saiful's 2026-08-26 ruling. Verified in the
+diff.
+
+### MINOR-2 — closed
+
+The DEF357 citation is corrected to `test_cr172_option_margin_sweep.py`.
+
+### MINOR-3 — not fixed: the near-miss now prints `"1.00x"`
+
+```
+_size_to_budget(put 95, budget $9,000) -> 'the risk budget of $9,000 does not cover one contract, whose
+                                          loss is $9,030 — offered at the minimum size of one, which
+                                          risks 1.00x the budget'
+```
+
+`"1.00x"` reads as exactly the budget just as `"1.0x"` did; a 0.3% overrun is simply below
+two-decimal resolution. The restored test now **asserts** that output
+(`assert "1.00x" in near`, `test_cr172_option_strategist.py:369`). It locks in the misleading
+text rather than guarding against it. Separately, `9.999` now prints `"10.00x"` while `10.0`
+prints `"10x"`. The dollar figures beside the multiple still carry the fact, so the message is
+not false. MINOR, carried forward. **Fix:** below 2x, state the overrun as a percentage
+(*"0.3% over the budget"*).
+
+**Worth recording:** the builder found that this test had asserted nothing since it was
+written. Its assertions had been spliced, unreachably, after a `return` in a neighbouring
+helper. That is a real find. No suite run could have shown it.
+
+### OUT-OF-SCOPE (pre-existing, not caused by this round)
+
+- **Holdings are dropped just as silently, and that is live today.** In the both-portfolios
+  branch, the orphan's holdings and cash have always been dropped under the same **MERGE
+  EVERYTHING** sheet, whose only related line lists *"N simulated trades"* as coming across. This
+  is reachable by any user who signs in to an existing account from a device that used the app
+  anonymously.
+- **In that same branch the orphan's open BUY trade rows *are* re-keyed into the adopter's
+  portfolio.** The shares behind them are dropped, so after such a claim the trade ledger and
+  `sim_holdings` disagree (the DEF316 / `def110_backfill` phantom-share shape). I read this; I did
+  not drive it. `evaluate_outcomes`' `_held_quantity` gate keeps those brackets from firing
+  unless the adopter holds the same ticker.
+
+### Evidence, run bare in the pinned worktree
+
+```
+pytest test_def368_merge_keeps_options.py test_cr172_option_strategist.py -q -p no:cacheprovider      (and in the full suite)
+```
+
+Full unit suite at `ae468eff`. The melehost part ran in a throwaway container from the Alpha image,
+3 shards on tmpfs. The 5 files that need `git` ran on the Mac. All runs bare, exit codes read directly:
+
+```
+melehost s0   1 failed, 2126 passed, 2 skipped    EXIT=1   test_def200_ratchet.py::test_no_new_handler_blocks_the_event_loop
+melehost s1   2669 passed, 3 skipped              EXIT=0
+melehost s2   1 failed, 2013 passed, 4 skipped    EXIT=1   test_def247_displaced_stance_envelope.py::test_a_displaced_envelope_is_still_reported
+Mac (5 git-dependent files)  34 passed            EXIT=0
+total         6842 passed, 2 failed, 9 skipped
+```
+
+I diagnosed both failures:
+
+- **`test_def200_ratchet`: a real regression, from RETRO-SECURITY's round-2 fix (`717cd8ff`).**
+  It fails alone on the Mac at `ae468eff` and passes at `0accfeed`. The new sync `refund()` in
+  `brief.py`'s `async def event_stream` is blocking DB I/O on the event loop. It is graded in
+  RETRO-SECURITY (MAJOR-3). The Architect's 281 targeted tests did not include the ratchet.
+- **`test_def247…`: pre-existing and order-dependent, not caused by round 2.** It passes alone.
+  I ran shard 2's first 95 files in their shard order on the Mac: it fails identically at
+  `ae468eff` **and** at `0accfeed` (`1 failed, 1474 passed`). The event is emitted (it shows in
+  captured stdout), but `structlog.testing.capture_logs` does not see it, because an earlier test
+  in the same process caches the logger. It passes in the default full-suite order that the
+  +111 gate ran. Recorded as out-of-scope; no fix is owed by this round.
+
+This lane's own files are green in every run. The one real regression is in another lane.
+**+112 cannot pass its gate until RETRO-SECURITY's MAJOR-3 is fixed.** That does not bear on
+this verdict.
+
+FOREIGN: not run — no `foreign/RETRO-SIM-OPTIONS.r2` branch exists. Not a clean bill.
+
+### Verdict
+
+The MAJOR is fixed the right way. The merge no longer mints value or a forbidden position,
+I re-drove my own reproduction to prove it, and both invariants are now guarded. Two MINORs
+remain, and neither forces a round. The drop needs to reach the user, not just the log, and
+that is a hard condition before options go live. The DEF354 multiple still reads as "exactly the
+budget", now pinned by a test that asserts it.
+
+Counts, round 2: 0 BLOCKER, 0 MAJOR (MAJOR-1 fixed), 2 MINOR open (MINOR-3 carried, MINOR-4
+new). MINOR-1 and MINOR-2 are closed.
+
+VERDICT: COMPLETE (round 2)
