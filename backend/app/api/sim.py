@@ -29,6 +29,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.classification import ClassificationVerdict
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.sharia import ShariaVerdict
@@ -150,6 +151,15 @@ class SubmitTradeRequest(BaseModel):
     invalidation: str | None = None
     verdict_ref: UUID | None = None
     mandate_override: dict | None = None
+    # DEF419 — the account the mandate should be checked against, on
+    # /v1/sim/preview only (`submit_trade` below never reads this field: the
+    # AMI submit persists to the AMI sim portfolio, so checking it against a
+    # DIFFERENT account's equity would approve a fill the AMI ledger cannot
+    # actually support). Absent → the AMI sim portfolio, byte-identical to
+    # pre-DEF419 behaviour. Present → `check_mandate_compliance` runs against
+    # THIS snapshot instead. See `AccountSnapshotIn`'s docstring for the
+    # client-attested-input rationale.
+    account: AccountSnapshotIn | None = None
 
     @model_validator(mode="after")
     def _prices_match_the_order_type(self) -> "SubmitTradeRequest":
@@ -412,6 +422,11 @@ class PreviewTradeResponse(BaseModel):
     cash_available: float
     held_quantity: float
     price_source: str
+    # DEF419 — echoes `req.account.kind` when the caller supplied an account
+    # snapshot, else None (checked against the AMI sim portfolio, today's
+    # behaviour). Lets the client label which account the verdict is about,
+    # rather than the mobile side re-deriving it from what it itself sent.
+    account_kind: str | None = None
 
 
 def _short_out(row, mark: float | None) -> ShortPositionOut:
@@ -676,9 +691,11 @@ async def preview_trade(
         verdict_ref=req.verdict_ref,
         halal_universe=halal_universe,
         classification_universe=classification_universe,
+        account_snapshot=req.account,
     )
     return PreviewTradeResponse(
         accepted=pv.accepted,
+        account_kind=req.account.kind if req.account is not None else None,
         compliance=ComplianceBlock(
             passed=pv.compliance.passed,
             violations=pv.compliance.violations,

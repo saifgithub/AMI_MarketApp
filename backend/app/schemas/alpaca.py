@@ -105,3 +105,55 @@ class AlpacaOrderLogIn(BaseModel):
     detail: str | None = Field(default=None, max_length=500)
     alpaca_order_id: str | None = Field(default=None, max_length=64)
     alpaca_status: str | None = Field(default=None, max_length=32)
+
+
+# DEF419 — per-account mandate checking on /v1/sim/preview. Saiful, from a
+# TestFlight screenshot: an Alpaca-only preview was evaluated against the
+# AMI sim portfolio's equity, so a trade sized fine for the (larger/smaller)
+# Alpaca paper account could be wrongly rejected or wrongly approved. "It
+# does mean that it may reject for ami and approve for alpaca. Or vice
+# versa. This is an expected condition" — the fix is not "make them agree",
+# it's "check against the account actually receiving the order".
+#
+# Client-attested, same custody boundary as `AlpacaSnapshotIn` (CR202): the
+# backend never holds the Alpaca credential, so it cannot independently
+# verify equity/cash/positions against Alpaca's own ledger. Unlike
+# `AlpacaSnapshotIn` this NEVER reaches an LLM prompt — it only feeds the
+# deterministic `check_mandate_compliance` — so the prompt-injection
+# rationale doesn't apply, but the bounding is kept anyway (CR230's same
+# reasoning: a DB column, or here a sizing calculation, is not the place for
+# a client to write arbitrary/non-finite values either). Malformed input is
+# a 422 (FastAPI's standard schema-validation response), never a silent
+# fallback to the AMI account — falling back IS the bug this DEF fixes.
+class AccountPositionIn(BaseModel):
+    """One open position in the account being checked against the mandate."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ticker: str = Field(pattern=_SYMBOL_PATTERN)
+    qty: FiniteFloat = Field(ge=0)
+    market_value: FiniteFloat = Field(ge=0)
+
+
+class AccountSnapshotIn(BaseModel):
+    """The account the proposed trade should be sized against, when it is
+    not AMI's own sim portfolio.
+
+    `kind` is a discriminator for the response echo (so the client can label
+    the outcome, e.g. "checked against your Alpaca paper account") and for
+    future account kinds — only `alpaca_paper` exists today (CR227).
+
+    Optional on `SubmitTradeRequest`: absent means "check against the AMI
+    sim portfolio", byte-identical to pre-DEF419 behaviour. Present means
+    `check_mandate_compliance` runs the SAME mandate against THIS snapshot
+    instead — same function, same rules, different denominator.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: str = Field(pattern=r"^(alpaca_paper)$")
+    equity: FiniteFloat = Field(gt=0)
+    cash: FiniteFloat = Field(ge=0)
+    positions: list[AccountPositionIn] = Field(
+        default_factory=list, max_length=MAX_POSITIONS
+    )

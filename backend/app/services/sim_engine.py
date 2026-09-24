@@ -64,6 +64,7 @@ from app.db.models import (
 )
 from app.services.cost_basis_lots import Lot, compute_lots_fifo
 from app.schemas import Mandate
+from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.trade import (
     ComplianceResult,
     Holding,
@@ -2428,9 +2429,25 @@ class SimEngine:
         halal_universe: set[str] | None = None,
         classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
+        account_snapshot: AccountSnapshotIn | None = None,
     ) -> PreviewResult:
         """Dry-run a trade through the same pre-flight checks as submit() —
         compliance, verdict dedup, cash/holdings — without persisting.
+
+        account_snapshot: DEF419 — a client-attested `AccountSnapshotIn`
+        (equity, cash, positions) for the account that would actually
+        RECEIVE this order, when it isn't AMI's own sim portfolio (e.g. an
+        Alpaca paper account, CR227). When given, sizing/concentration
+        (single-name cap, sector cap, gross exposure, cash sufficiency,
+        held-quantity-for-sell) are evaluated against THIS snapshot instead
+        of the AMI portfolio — same `check_mandate_compliance`, same
+        mandate, different denominator. Per-user limits (post-loss cooldown,
+        over-trading brake, total open-risk) still read the AMI-side trade
+        history regardless: those are about how often/how hard THIS USER
+        trades, not about one account's balance sheet, and AMI is the only
+        place that history exists. `None` (the default) is byte-identical to
+        pre-DEF419 behaviour — every field below falls back to the AMI
+        portfolio exactly as it did before this parameter existed.
         """
         portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
@@ -2477,12 +2494,69 @@ class SimEngine:
         # CR101-BE2: same trade-history context as submit() (no `stop` param on
         # preview(), so the proposed trade's own open-risk contribution can't be
         # priced here — an ALREADY-breached existing_open_risk_pct still blocks).
+        # DEF419: per-USER, always sourced from AMI's own history regardless of
+        # which account the sizing checks below read — see this method's
+        # docstring for why cooldown/over-trading/open-risk don't split by
+        # account the way single-name/sector concentration do.
         ctx = self._compliance_context(user_id, portfolio, ticker)
+
+        if account_snapshot is None:
+            sizing_portfolio_value = ctx.portfolio_value
+            sizing_drawdown_pct = ctx.drawdown_pct
+            sizing_holdings = portfolio.holdings
+            sizing_shorts = portfolio.shorts
+            sizing_quotes = ctx.quotes
+            sizing_cash = portfolio.current_cash
+            sizing_held = next(
+                (h.quantity for h in portfolio.holdings if h.ticker == ticker),
+                0.0,
+            )
+        else:
+            snap = account_snapshot
+            sizing_portfolio_value = float(snap.equity)
+            # DEF419 known limitation — AMI has no NAV history for an
+            # externally-custodied account, so its drawdown cannot be
+            # honestly measured here. 0.0 is this codebase's established
+            # "no data, never a false breach" convention for an unmeasurable
+            # drawdown (see `price_alert_evaluator.py`'s zero-context call),
+            # not a claim that the account has never drawn down.
+            sizing_drawdown_pct = 0.0
+            snapshot_holdings = [
+                Holding(
+                    ticker=p.ticker.upper().strip(),
+                    quantity=float(p.qty),
+                    # No separate cost basis on a position snapshot — mark
+                    # doubles as cost, which only affects unrealised-P&L
+                    # displays this floor never renders; the checks below
+                    # (single-name/sector weight, gross exposure) key off
+                    # `quantity` and the `quotes` dict, not `avg_cost`.
+                    avg_cost=(
+                        float(p.market_value) / float(p.qty)
+                        if float(p.qty) > 1e-9 else 0.0
+                    ),
+                    opened_at=datetime.now(timezone.utc),
+                )
+                for p in snap.positions
+            ]
+            sizing_holdings = snapshot_holdings
+            # No shorts concept on an account snapshot today (CR227 scope is
+            # long-only market orders) — `None`, the same "unknown, don't
+            # invent it" value every pre-CR171 caller of this floor passed.
+            sizing_shorts = None
+            sizing_quotes = {
+                h.ticker: h.avg_cost for h in snapshot_holdings if h.avg_cost > 0
+            }
+            sizing_quotes[ticker] = mark
+            sizing_cash = float(snap.cash)
+            sizing_held = next(
+                (h.quantity for h in snapshot_holdings if h.ticker == ticker),
+                0.0,
+            )
 
         compliance = check_mandate_compliance(
             proposed,
-            portfolio_value=ctx.portfolio_value,
-            current_drawdown_pct=ctx.drawdown_pct,
+            portfolio_value=sizing_portfolio_value,
+            current_drawdown_pct=sizing_drawdown_pct,
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
             classification_universe=(
@@ -2491,35 +2565,33 @@ class SimEngine:
             locale_allowed_universe=locale_allowed_universe,
             # CR026: sector-concentration cap bites the preview gate too, so the
             # trade ticket's "would this be allowed?" reflects it. No request socket.
-            holdings=portfolio.holdings,
+            holdings=sizing_holdings,
             # CR171 §6 — gross concentration. Without this the floor sees
             # the long leg only and reports a hedged pair as no exposure.
-            shorts=portfolio.shorts,
+            shorts=sizing_shorts,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
-            quotes=ctx.quotes,
+            quotes=sizing_quotes,
             sector_map=default_sector_map(),
+            # DEF419 — per-user, not per-account. See docstring.
             last_loss_closed_at=ctx.last_loss_closed_at,
             trade_open_timestamps=ctx.trade_open_timestamps,
             existing_open_risk_pct=ctx.existing_open_risk_pct,
         )
 
         notional = fill_price * quantity
-        held = next(
-            (h.quantity for h in portfolio.holdings if h.ticker == ticker),
-            0.0,
-        )
+        held = sizing_held
 
         accepted = compliance.passed
         if accepted:
             if side == Side.BUY:
-                if notional > portfolio.current_cash + 1e-6:
+                if notional > sizing_cash + 1e-6:
                     accepted = False
                     compliance = ComplianceResult(
                         passed=False,
                         violations=[
                             f"insufficient cash: need ${notional:.2f}, "
-                            f"have ${portfolio.current_cash:.2f}"
+                            f"have ${sizing_cash:.2f}"
                         ],
                         blocked_by=None,
                     )
@@ -2539,7 +2611,7 @@ class SimEngine:
             compliance=compliance,
             fill_price=fill_price,
             notional=notional,
-            cash_available=portfolio.current_cash,
+            cash_available=sizing_cash,
             held_quantity=held,
             price_source=quote.source,
         )
