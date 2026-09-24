@@ -60,6 +60,18 @@ done
 : "${AMI_API_URL_PROD:=}"
 : "${SENTRY_DSN:=}"
 
+# DEF375 — the five first-run coach-mark tours are modal and block the tab
+# behind them; walking them via their own Skip/Next controls was tried and
+# collapses the iOS accessibility tree mid-run (DEF382). This build instead
+# starts with every tour already marked seen, structurally: `TourQaConfig`
+# (mobile/lib/qa/tour_qa_config.dart) only honours AMI_QA_SKIP_TOURS on a
+# NON-production AMI_RELEASE_CHANNEL, and this script deliberately never sets
+# AMI_RELEASE_CHANNEL — same as install_iphone.sh — so it stays at the
+# conservative unset default, which counts as non-production. A store build
+# (build_testflight.sh / build_playstore.sh) never passes AMI_QA_SKIP_TOURS at
+# all, so real users always see the tours regardless of channel.
+: "${AMI_QA_SKIP_TOURS:=true}"
+
 BUNDLE_ID="ai.agenticmarketintel.amiTrade"
 APP_PATH="${MOBILE_DIR}/build/ios/iphonesimulator/Runner.app"
 
@@ -67,11 +79,13 @@ echo "▶ QA iOS Simulator build (CR162)"
 echo "  simulator:  ${SIM_NAME}"
 echo "  alpha URL:  ${AMI_API_URL_ALPHA}"
 echo "  semantics:  AMI_QA_SEMANTICS=true  ← the whole point of this script"
+echo "  tours:      AMI_QA_SKIP_TOURS=${AMI_QA_SKIP_TOURS}  (DEF375, no AMI_RELEASE_CHANNEL ⇒ non-production)"
 echo ""
 
 cd "${MOBILE_DIR}"
 flutter build ios --simulator --debug \
   --dart-define=AMI_QA_SEMANTICS=true \
+  --dart-define=AMI_QA_SKIP_TOURS="${AMI_QA_SKIP_TOURS}" \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=AMI_API_URL_BETA="${AMI_API_URL_BETA}" \
