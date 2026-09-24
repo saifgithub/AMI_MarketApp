@@ -2189,5 +2189,20 @@ becomes provably unnecessary rather than merely discouraged.
 **Enforcing check:** `mobile/test/exit_affordance_structural_test.dart` — walks
 `lib/screens/` and `lib/widgets/`, and fails if any file outside a fixed
 allowlist (inline card/chip dismissals, ad-card close buttons — the CR232 doc
-records which) contains `Icons.close`. A new pushed page that reaches for the
-old pattern fails this test immediately rather than shipping as review-clean.
+records which) constructs an X-shaped exit icon or glyph. A new pushed page
+that reaches for the old pattern fails this test immediately rather than
+shipping as review-clean.
+
+**Round 2 (audit MINOR-1, 2026-09-24).** The guard originally matched only
+`Icons.close` by name — it caught the icon *constant*, not the *affordance*.
+The auditor built a new page whose only exit was `IconButton(icon:
+Icon(Icons.cancel))`, visually the same X, and it passed: `Icons.cancel`
+reads identically to a user but isn't the string `Icons.close`, so the regex
+never saw it. Same class of gap as the original defect, one layer down — a
+check that names the symptom's spelling rather than its shape. Widened to
+match the whole close/cancel/clear family Material and Cupertino both ship,
+plus a bare glyph (`Text('✕')`/`Text('×')`) built with no `Icon` at all — the
+auditor's second demonstrated evasion. A third test pins the
+allowlist-can-only-shrink property directly, so growing the allowlist to
+unblock an unrelated change (rather than fixing the actual exit) fails on its
+own rather than silently widening the hole.

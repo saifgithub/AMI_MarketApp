@@ -174,6 +174,97 @@ fifth call site.
 - No device build was run as part of this CR (per instruction) — Saiful reviews on
   TestFlight per the usual cadence.
 
+## Round 2 (audit findings, 2026-09-24)
+
+Auditor u66 round 1 (`orchestration/audit/cr/CR232.auditor.md`) raised MAJOR-1 (a
+push-notification tap still covered the chrome — the CR's own acceptance sentence) and
+MINOR-1 (the P36 guard matched one icon name, not the affordance). Fixed both; see round
+2 in `orchestration/audit/cr/CR232.architect.md` for commit SHAs, test output and
+mutation evidence.
+
+### MAJOR-1 — the one push entry point the 60-site sweep did not reach
+
+`DeepLinkDispatcher.dispatch` took a raw `NavigatorState`, and its one caller with no
+`BuildContext` — `PushNotificationListener`, reacting to a OneSignal click callback — had
+only `appNavigatorKey` (the app's ROOT navigator, `app.dart`'s `MaterialApp.navigatorKey`)
+to give it. A tapped price-alert push therefore pushed `TickerDetailScreen` on the root
+navigator, landing it as `HomeShell`'s own ancestor and covering the chrome — exactly what
+this CR exists to prevent, on the one path the original sweep couldn't see (it walked
+`Navigator.of(context)` call sites; this one takes an injected `NavigatorState` parameter
+instead, so it was invisible to that method).
+
+**Fix:**
+
+- `DeepLinkRoute` (`deep_link_dispatcher.dart`) now pairs each route string with the
+  `AmiTab` that owns it: `open_holding_detail` → `portfolio`; the four reserved stubs
+  (`open_journal_entry` → `you`, `open_room_verdict` → `floor`, `open_lesson` → `lessons`,
+  `open_game_close` → `game`) get a best-guess tab each — whichever CR eventually fills in
+  the real push should confirm the guess still holds.
+- `dispatch(WidgetRef ref, DeepLink link)` (signature changed from
+  `dispatch(NavigatorState, DeepLink)`) switches `activeTabProvider` to the route's owning
+  tab (the same mechanism DEF190 already uses for an external tab switch), then looks up
+  that tab's own `GlobalKey<NavigatorState>` and pushes there — never the root navigator.
+- The per-tab keys, previously private to `_HomeShellState`, are now also published to a
+  new `homeShellNavKeysProvider` (`features/nav/home_shell_navigation.dart`) —
+  `HomeShell.initState`'s `addPostFrameCallback` writes it, `dispose` clears it back to
+  `null`. `dispatch` reads `null` as "shell not mounted yet" and returns
+  `DeepLinkDispatchResult.deferred` rather than falling back to the root navigator or
+  dropping the link — CR040 degrade-loudly.
+- `PushNotificationListener` queues a `deferred` link (`_pendingLinks`) and flushes it via
+  `ref.listenManual(homeShellNavKeysProvider, ...)` the moment the shell publishes its
+  keys — covers the cold-start race where the notification tap itself launches the app
+  (OneSignal's click listener is registered in `main()` before `runApp`, so
+  `PushNotificationListener`'s stream subscription can exist before `HomeShell` has
+  rendered a first frame).
+- `NotificationCentreScreen`'s tap handler (the CR135 in-app entry point, which already
+  had a `BuildContext` inside a tab and so never had this defect) now goes through the
+  same `WidgetRef`-based `dispatch` too — one route table, one call shape, per CR027's
+  lock, rather than a second special case for the entry point that happened to already be
+  correct.
+
+**Root-push-site classification, redone for round 2** (every `appNavigatorKey` /
+`rootNavigator: true` / root-navigator-reaching site in `mobile/lib`):
+
+| Site | What it does | Classification |
+|---|---|---|
+| `app.dart:50` — `MaterialApp(navigatorKey: appNavigatorKey, ...)` | Binds the key to the app's one root navigator. | Not a push site — the binding itself. Unchanged. |
+| `push_notification_listener.dart` — `_openedSub` → `DeepLinkDispatcher.dispatch` | Was: push on `appNavigatorKey.currentState` directly. | **MAJOR-1, fixed this round** — now goes through `dispatch(ref, link)`, which resolves the owning tab's navigator instead. |
+| `push_notification_listener.dart` — `_foregroundSub` → `HexToast.show(context, ...)` | Reads `appNavigatorKey.currentContext` to find the root `Overlay` for a toast. | Correct as-is — `HexToast.show` inserts an `OverlayEntry` (`Overlay.maybeOf(context, rootOverlay: true)`), never pushes a page, so there is no chrome to cover. Unchanged. |
+| `bug_report_sheet.dart:130` — `Navigator.of(context, rootNavigator: true).context` | Grabs the root overlay context so a toast survives the sheet's own `pop()`. | Correct as-is (round 1 auditor already verified this one). No page push. Unchanged. |
+| `notification_centre_screen.dart` — row tap → `DeepLinkDispatcher.dispatch` | Was already `Navigator.of(context)` (nearest/tab navigator) before this round. | Was already correct — updated this round only to call the new `WidgetRef` signature, for one route table rather than two shapes of the same table. |
+
+No other live `appNavigatorKey` reference or `rootNavigator: true`/root-reaching call
+exists in `mobile/lib` (`grep -rn "appNavigatorKey" mobile/lib` returns the definition
+(`app_navigator_key.dart`), the `MaterialApp` binding (`app.dart:50`), the one remaining
+live read (`push_notification_listener.dart:72`, the toast path above) and three doc
+comments explaining this round's fix; `grep -rn "rootNavigator: true" mobile/lib` returns
+exactly the one `bug_report_sheet.dart:130` site above — both fully accounted for.)
+
+### MINOR-1 — the P36 guard matched a name, not the shape
+
+`exit_affordance_structural_test.dart` matched `Icons.close` by exact name. The auditor
+built a page whose only exit was `IconButton(icon: Icon(Icons.cancel))` — visually the
+same X — and it passed. Widened the guard to the whole close/cancel/clear family Material
+and Cupertino both ship, plus a bare `Text('✕')`/`Text('×')` glyph (the auditor's other
+demonstrated evasion, an icon-less button). A third test now pins the
+allowlist-can-only-shrink property directly. `failure_patterns.md` P36 updated with a
+"Round 2" note. See `orchestration/audit/cr/CR232.architect.md` round 2 for the
+mutation-kill evidence (both evasions built as temporary probes, confirmed caught, then
+removed).
+
+### New test
+
+`mobile/test/screens/notifications/push_notification_deep_link_chrome_test.dart` — the
+test the auditor said MAJOR-1 needed: pumps the real production shape
+(`MaterialApp(navigatorKey: appNavigatorKey) → PushNotificationListener →
+BugResolutionToasts → HomeShell`), fires a `DeepLink` through a fake
+`NotificationService.notificationOpened()` stream, and asserts the pushed
+`TickerDetailScreen` lands as a DESCENDANT of `HomeShell` (not an ancestor covering it) —
+the assertion that actually distinguishes a correct tab-nested push from the root-navigator
+defect, since `find.byType` and widget position alone cannot (an `IndexedStack` never
+unmounts sibling panes, so `HexBottomNav`/`TickerTape` stay structurally "found" and
+positioned identically either way).
+
 ## Status
 
-done
+done — round 2 fixes submitted for re-audit.

@@ -152,8 +152,12 @@ class _NotificationCard extends ConsumerWidget {
       // either way; a failure leaves the row honestly unread.
       ref.read(notificationReadActionsProvider).markRead(row.id);
     }
-    final navigator = Navigator.of(context);
-    DeepLinkDispatcher.dispatch(navigator, row.deepLink);
+    // CR232 round 2 — dispatch now switches to the link's owning tab itself
+    // (see deep_link_dispatcher.dart), so this no longer needs its own
+    // `Navigator.of(context)`; this screen is already inside a tab's nested
+    // Navigator, but going through the shared `WidgetRef` path keeps the
+    // route table's tab-switch behaviour identical for both entry points.
+    DeepLinkDispatcher.dispatch(ref, row.deepLink);
   }
 
   @override
