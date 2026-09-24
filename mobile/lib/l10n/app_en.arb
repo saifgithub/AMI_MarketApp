@@ -4116,6 +4116,16 @@
   "@gamesBoardEmpty": {
     "description": "CR109. Board empty state. NEW key. retranslate:[ar,ms]"
   },
+  "gamesBoardNextCloseIn": "Next US close in {countdown}",
+  "@gamesBoardNextCloseIn": {
+    "description": "DEF420. Shown under the 'not ranked yet' empty state, next to a clock icon — a client-only ESTIMATE of when the next US equity close is (not a server fact, never a scored deadline), so the wait has a sense of scale. {countdown} is a client-formatted duration such as '2h 14m' or '1d 6h', same shape as gamesArcEntryClosesIn's {countdown}. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "countdown": {
+        "type": "String",
+        "example": "6h 12m"
+      }
+    }
+  },
   "gamesDesksTitle": "House desks",
   "@gamesDesksTitle": {
     "description": "CR109 §11.2. Title of the sheet listing every AMI-run strategy desk and its published rule. NEW key. retranslate:[ar,ms]"

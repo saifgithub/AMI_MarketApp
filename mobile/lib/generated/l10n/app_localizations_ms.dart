@@ -3454,6 +3454,11 @@ class AppLocalizationsMs extends AppLocalizations {
   String get gamesBoardEmpty => 'No one has entered this field yet.';
 
   @override
+  String gamesBoardNextCloseIn(String countdown) {
+    return 'Next US close in $countdown';
+  }
+
+  @override
   String get gamesDesksTitle => 'House desks';
 
   @override
