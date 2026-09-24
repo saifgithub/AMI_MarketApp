@@ -1073,3 +1073,63 @@ existing update path; the P15 guard's `_UNREVIEWED` entry retired.
 iOS Appium gate re-run since DEF382) remains the Engagement-gate blocker, unchanged.
 CR219's trailing AC4 is being measured this session (cutoff `alpha-2026-09-03-1`;
 ~7 days of traffic — the short side of the ruled 1–2-week window).
+
+## 2026-09-22
+
+Back-filled by the Architect on 2026-09-24 from session transcripts — no live run of
+this routine happened on 09-22 itself; recorded here so the rulings have a dated
+record rather than only living in commit messages and the CR/DEF rows they produced.
+
+- **CR221** (data-demand sourcing, H1/H3 items) — asked: source from FRED given its
+  ToS carries some redistribution risk, or hold for a cleaner source? → Saiful:
+  **accepted the ToS risk, source from FRED.**
+- **CR229** (BLS/Census direct sourcing) — filed as a non-blocking parallel
+  alternative to the FRED-sourced items above, per CR221's own row: "probe BLS/Census
+  direct as a non-blocking parallel alternative."
+- **CR211** — closed.
+
+## 2026-09-23
+
+Back-filled by the Architect on 2026-09-24 from session transcripts — no live run of
+this routine happened on 09-23 itself.
+
+- **CR228** (risk-appetite differentiation, widened caps) — asked what the success
+  target for the widened dial should be → Saiful: **"decide after Steps 2–4"** — the
+  target is set once the pilot + cap-widening + PM-prompt-branch steps have run, not
+  fixed in advance.
+- **CR054 / DEF379** — two citations in the affected content remain uncited → Saiful:
+  **fix the two uncited items now, "admit rest later"** — the remaining uncited claims
+  in the same content are flagged rather than blocked on, to be sourced in a later
+  pass rather than holding up this fix.
+- **CR227** and **CR230** — both independently audited to a **COMPLETE** verdict by
+  track U and promoted to Alpha in `alpha-2026-09-24-1`.
+
+## 2026-09-24
+
+Back-filled by the Architect on 2026-09-24 from session transcripts, alongside the
+Architect's takeover of the main session (Saiful had been away 3 days; see
+[CR231](../forward_planning/CR231_stabilisation_programme/CR231_stabilisation_programme.md)
+and [D-072](../initial_specs/11_decisions/decision_log.md#d-072--stabilise-before-external-beta-2026-09-24)
+/ [D-073](../initial_specs/11_decisions/decision_log.md#d-073--build-on-the-personal-developer-accounts-migrate-to-the-company-account-at-the-end)).
+
+- **DEF415** (trade-ticket sheets had no close button) — fixed same day; build
+  `0.1.0+108` shipped to TestFlight and Play internal.
+- **Architect takeover.** Saiful read back the 6-week gap (966 commits, 92 checkpoint
+  memos, ~20 sessions, only ~25 of ~200 built IDs with a COMPLETE track-U audit) and
+  ruled on the stabilisation plan: audit scope = 6 risky lanes only; finish
+  CR221/CR222/CR228 then freeze; GTM target = external TestFlight + Play closed
+  testing on the melehost Alpha stack; payments stay parked; auditor = the existing
+  track-U session via the standing `orchestration/audit/` handshake, the one-shot
+  `dispatch_audit.sh` path retired. Recorded as **D-072** and **D-073** in the
+  decision log.
+- **CR231** filed — the stabilisation programme itself, covering the above.
+- **DEF416, DEF417, DEF418** filed — the OIDC unique-constraint race, `liquid_only`'s
+  prompt-only enforcement, and `q6_text`'s tier-4/5 drawdown-suggestion collapse,
+  all surfaced by the takeover's read-only sweep and not previously tracked under any
+  ID.
+
+**Note on process:** the 09-22/09-23/09-24 sections above were written by the
+Architect on 2026-09-24 from session transcripts, not from a live run of this
+routine on each of those days — flagged explicitly per this log's own convention
+(a back-filled entry is not the same evidentiary weight as a live `AskUserQuestion`
+run, but is more useful than a gap).
