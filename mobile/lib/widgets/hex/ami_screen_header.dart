@@ -20,9 +20,17 @@
 /// all — its logo row sits inside a `SingleChildScrollView` and scrolls away —
 /// so giving it one is a visible change to a screen this CR is not otherwise
 /// touching.
+/// CR226 — the title now carries a `maxLines`/ellipsis guard (the subtitle
+/// already had one, added after a caller overflowed the row by 326px; the
+/// title itself had none) and this whole widget's `build` is wrapped in
+/// [clampChromeTextScale]: at accessibility text scales (iOS Dynamic Type
+/// ~3.1×, Android up to 2.0×) the fixed `height: 64` box above does not grow
+/// with the OS setting, so unclamped text would overflow it well before
+/// ellipsis ever had a chance to trigger. See `theme/ami_text_scale.dart`.
 library;
 
 import 'package:ami_trade/qa/semantics_ids.dart';
+import 'package:ami_trade/theme/ami_text_scale.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -58,50 +66,61 @@ class AmiScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: EdgeInsets.only(
-        left: AmiSpacing.m,
-        right: actions.isEmpty ? AmiSpacing.m : AmiSpacing.xs,
-      ),
-      decoration: const BoxDecoration(
-        color: AmiColors.glassChrome,
-        border: Border(bottom: BorderSide(color: AmiColors.slate700)),
-      ),
-      child: Row(
-        children: [
-          if (showBack) ...[
-            Semantics(
-              button: true,
-              identifier: ExitIds.navBack,
-              child: GestureDetector(
-                onTap: onBack ?? () => Navigator.of(context).pop(),
-                child: const Icon(Icons.arrow_back_ios_new,
-                    size: 18, color: AmiColors.textMed),
+    return clampChromeTextScale(
+      child: Container(
+        height: 64,
+        padding: EdgeInsets.only(
+          left: AmiSpacing.m,
+          right: actions.isEmpty ? AmiSpacing.m : AmiSpacing.xs,
+        ),
+        decoration: const BoxDecoration(
+          color: AmiColors.glassChrome,
+          border: Border(bottom: BorderSide(color: AmiColors.slate700)),
+        ),
+        child: Row(
+          children: [
+            if (showBack) ...[
+              Semantics(
+                button: true,
+                identifier: ExitIds.navBack,
+                child: GestureDetector(
+                  onTap: onBack ?? () => Navigator.of(context).pop(),
+                  child: const Icon(Icons.arrow_back_ios_new,
+                      size: 18, color: AmiColors.textMed),
+                ),
               ),
-            ),
-            const SizedBox(width: AmiSpacing.m),
-          ],
-          Text(title,
-              style: AmiTypography.labelMono.copyWith(color: titleColor)),
-          if (subtitle != null) ...[
-            const SizedBox(width: AmiSpacing.s),
-            // Flexible, because the slot is shared and the only subtitle it
-            // had until CR173 was Settings' `MANDATE v7`. A caller with an
-            // ordinary sentence overflowed the row by 326px — the header did
-            // not constrain what it renders, it was just never given anything
-            // long. One ellipsis is a clipped subtitle; an unbounded Row is a
-            // yellow-striped screen.
+              const SizedBox(width: AmiSpacing.m),
+            ],
+            // CR226 — the title had no overflow guard at all (unlike the
+            // subtitle below, which gained one after a real overflow). At an
+            // unclamped accessibility text scale this is the first thing
+            // that would have overflowed the fixed 64dp header.
             Flexible(
-              child: Text(subtitle!,
+              child: Text(title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AmiTypography.caption),
+                  style:
+                      AmiTypography.labelMono.copyWith(color: titleColor)),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(width: AmiSpacing.s),
+              // Flexible, because the slot is shared and the only subtitle it
+              // had until CR173 was Settings' `MANDATE v7`. A caller with an
+              // ordinary sentence overflowed the row by 326px — the header did
+              // not constrain what it renders, it was just never given anything
+              // long. One ellipsis is a clipped subtitle; an unbounded Row is a
+              // yellow-striped screen.
+              Flexible(
+                child: Text(subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AmiTypography.caption),
+              ),
+            ],
+            const Spacer(),
+            ...actions,
           ],
-          const Spacer(),
-          ...actions,
-        ],
+        ),
       ),
     );
   }

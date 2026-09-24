@@ -57,26 +57,46 @@ class FakeInterstitialHandle implements AdMobInterstitialHandle {
   Future<void> show() async => shows++;
 }
 
+/// CR226 — banner fill fake, mirroring [FakeNativeHandle].
+class FakeBannerHandle implements AdMobBannerHandle {
+  bool disposed = false;
+
+  @override
+  Widget build(BuildContext context) =>
+      const ColoredBox(color: Colors.orange, key: Key('sdk-banner-view'));
+
+  @override
+  double heightDp = 50;
+
+  @override
+  Future<void> dispose() async => disposed = true;
+}
+
 /// Facade fake answering AdMob fills, as if consent passed and the network
 /// filled — the render layer under test must not care how.
 class AdMobFillService implements AdsService {
-  AdMobFillService({this.native, this.interstitial});
+  AdMobFillService({this.native, this.interstitial, this.banner});
 
   final FakeNativeHandle? native;
   final FakeInterstitialHandle? interstitial;
+  final FakeBannerHandle? banner;
 
   @override
   String get network => 'admob-fake';
 
   @override
-  Future<AdFill?> requestFill(
-      AdPlacement placement, HouseAdSignals signals) async {
-    if (placement.format == AdFormat.interstitial) {
-      return interstitial == null
-          ? null
-          : AdMobInterstitialFill(interstitial!);
+  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals,
+      {int widthDp = 0}) async {
+    switch (placement.format) {
+      case AdFormat.interstitial:
+        return interstitial == null
+            ? null
+            : AdMobInterstitialFill(interstitial!);
+      case AdFormat.banner:
+        return banner == null ? null : AdMobBannerFill(banner!);
+      case AdFormat.nativeCard:
+        return native == null ? null : AdMobNativeFill(native!);
     }
-    return native == null ? null : AdMobNativeFill(native!);
   }
 }
 

@@ -24,7 +24,15 @@ library;
 import 'package:ami_trade/models/mandate.dart';
 import 'package:flutter/foundation.dart';
 
-enum AdFormat { interstitial, nativeCard }
+/// CR226 — [banner] is the persistent anchored slot between the bottom nav
+/// and the ticker tape: mounted ONCE for the app's lifetime (inside
+/// `HomeShell`'s chrome, not rebuilt per screen), unlike [nativeCard] and
+/// [interstitial], which are discrete, repeated per-screen impressions. That
+/// distinction is why `AdGate.request` exempts it from the `ads.md:59-60`
+/// frequency caps (see the gate's own comment) — a cap designed to bound how
+/// often a NEW impression can appear would otherwise hide the banner after 8
+/// renders/day, which is not what those caps are for.
+enum AdFormat { interstitial, nativeCard, banner }
 
 class AdPlacement {
   const AdPlacement._(this.id, this.format);
@@ -50,7 +58,17 @@ class AdPlacement {
   static const walletAndPlan =
       AdPlacement._('wallet_and_plan', AdFormat.nativeCard);
 
-  /// The six approved placements (`ads.md:39-44`) — the whole allowlist.
+  /// CR226 — the seventh placement: the global anchored banner in
+  /// `HomeShell`'s persistent chrome (nav / ad slot / ticker tape). Unlike
+  /// the six above, it is not screen- or empty-state-specific — it is
+  /// visible on every post-onboarding screen, and it inherits the
+  /// forbidden-context bans structurally from the navigation architecture
+  /// (pushed routes cover this Scaffold) rather than from this allowlist
+  /// alone. See `ads.md`'s "Global anchored banner" row.
+  static const globalBanner =
+      AdPlacement._('global_banner', AdFormat.banner);
+
+  /// The seven approved placements (`ads.md:39-45`) — the whole allowlist.
   static const approved = <AdPlacement>[
     postLessonInterstitial,
     dailyChallengeResults,
@@ -58,6 +76,7 @@ class AdPlacement {
     simPortfolioEmptyState,
     academyHubBottom,
     walletAndPlan,
+    globalBanner,
   ];
 
   @override

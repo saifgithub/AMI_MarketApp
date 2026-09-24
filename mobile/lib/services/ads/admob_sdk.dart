@@ -44,6 +44,29 @@ class AdMobRequestSpec {
   final bool ccpaDoNotSell;
 }
 
+/// CR226 — banner request parameters. Unlike [AdMobRequestSpec], a banner's
+/// size is DERIVED from the width it will render in (the whole point of an
+/// anchored adaptive banner — see `admob_real_sdk.dart`'s
+/// `getCurrentOrientationAnchoredAdaptiveBannerAdSize`), so the width the
+/// caller's `LayoutBuilder` measured rides along with the request rather
+/// than being read back out of a loaded handle.
+@immutable
+class AdMobBannerRequestSpec {
+  const AdMobBannerRequestSpec({
+    required this.adUnitId,
+    required this.ccpaDoNotSell,
+    required this.widthDp,
+  });
+
+  final String adUnitId;
+  final bool ccpaDoNotSell;
+
+  /// The available width in density-independent pixels — `AdSize`'s own
+  /// unit, so this rides straight into the adaptive-size lookup with no
+  /// device-pixel-ratio conversion at the call site.
+  final int widthDp;
+}
+
 /// A loaded, showable interstitial. Disposal after dismiss is the adapter's
 /// job (it owns the underlying SDK object).
 abstract class AdMobInterstitialHandle {
@@ -65,6 +88,20 @@ abstract class AdMobNativeHandle {
   Future<void> dispose();
 }
 
+/// CR226 — a loaded anchored adaptive banner. The SDK renders its own
+/// platform view (a `PlatformView`/`AdWidget`, not composed Flutter chrome
+/// like [AdMobNativeHandle]'s template), so `textScaler` never reaches it —
+/// see `ad_adaptive_research.md` "the banner is the least risky element
+/// here". [heightDp] is what the caller sizes its `SizedBox` to; it comes
+/// from the SDK's own adaptive-size resolution, not a guess.
+abstract class AdMobBannerHandle {
+  Widget build(BuildContext context);
+
+  double get heightDp;
+
+  Future<void> dispose();
+}
+
 /// Loading seam over `google_mobile_ads`.
 abstract class AdMobSdk {
   /// Apply [spec] (test devices + content policy) and initialise the SDK.
@@ -77,6 +114,10 @@ abstract class AdMobSdk {
 
   /// Load a native ad; null when the network has no fill.
   Future<AdMobNativeHandle?> loadNative(AdMobRequestSpec spec);
+
+  /// CR226 — load an anchored adaptive banner sized from [spec.widthDp];
+  /// null when the network has no fill.
+  Future<AdMobBannerHandle?> loadBanner(AdMobBannerRequestSpec spec);
 }
 
 /// Seam over the UMP (User Messaging Platform) consent SDK.
@@ -108,4 +149,9 @@ class AdMobInterstitialFill extends AdFill {
 class AdMobNativeFill extends AdFill {
   const AdMobNativeFill(this.handle);
   final AdMobNativeHandle handle;
+}
+
+class AdMobBannerFill extends AdFill {
+  const AdMobBannerFill(this.handle);
+  final AdMobBannerHandle handle;
 }

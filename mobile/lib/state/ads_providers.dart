@@ -12,7 +12,15 @@
 ///   3. paying-plan latch — once a paying plan is seen this app run, ads stay
 ///      off for the rest of it: an upgrade removes ads immediately
 ///      (`ads.md:113`), a downgrade restores them next session (`ads.md:115`);
-///   4. frequency caps (MOBILE-B) — persisted; unreadable store BLOCKS;
+///   4. frequency caps (MOBILE-B) — persisted; unreadable store BLOCKS.
+///      CR226 EXEMPTS [AdFormat.banner]: the global banner is persistent
+///      chrome mounted once for the app's lifetime (`AnchoredAdBanner`,
+///      inside `HomeShell`), not a discrete per-screen impression — the
+///      `ads.md:59-60` caps exist to bound how often a NEW impression can
+///      appear, which does not describe "the same slot stays visible";
+///      running it through `checkNative`'s 8/day cap would hide the banner
+///      after 8 requests (a resize, a plan-check re-render) rather than
+///      after 8 actual ad SHOWINGS;
 ///   5. network fill via the [AdsService] facade — house by default; with
 ///      the CR122-MOBILE-C `ADMOB_MODE` dart-define set, AdMob behind the
 ///      same facade (consent-gated, house fallback for every unfilled
@@ -21,6 +29,9 @@ library;
 
 import 'package:ami_trade/services/ads/ad_frequency_caps.dart';
 import 'package:ami_trade/services/ads/ad_privacy_prefs.dart';
+import 'package:ami_trade/services/ads/admob_ads_service.dart';
+import 'package:ami_trade/services/ads/admob_config.dart';
+import 'package:ami_trade/services/ads/admob_real_sdk.dart';
 import 'package:ami_trade/services/ads/admob_sdk.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/services/ads/ads_service.dart';
@@ -38,16 +49,22 @@ const plansWithAds = {'floor_pass'};
 /// `ADMOB_MODE` dart-define → `setup` is null → the MOBILE-A house service,
 /// no SDK object ever constructed, no platform channel ever touched — the
 /// store pipelines behave exactly as before this lane landed.
-// DEF351: the `google_mobile_ads` plugin cannot be linked into an iOS release
-// build (its headers import a private header out of the vendored framework,
-// which Clang refuses inside a framework module), so the SDK is UNLINKED and
-// `admob_real_sdk.dart` is deleted rather than left as an orphan import. Every
-// build therefore serves house inventory. `AdMobAdsService` and its config,
-// policy and consent seams are kept and still tested — they are what a working
-// plugin plugs back into, and re-linking is a pubspec line plus restoring one
-// adapter file. Nothing here degrades silently: with no SDK there is no fill to
-// mistake for one.
-final adsServiceProvider = Provider<AdsService>((ref) => HouseAdsService());
+///
+/// CR225 re-links the SDK (DEF351 had unlinked it — see `admob_real_sdk.dart`'s
+/// own header). This provider is exactly what it was before DEF351's fix:
+/// `AdMobConfig.setup == null` still yields the house service with no SDK
+/// object ever constructed, so an unset `ADMOB_MODE` build is unchanged.
+final adsServiceProvider = Provider<AdsService>((ref) {
+  final setup = AdMobConfig.setup;
+  if (setup == null) return HouseAdsService();
+  return AdMobAdsService(
+    setup: setup,
+    sdk: RealAdMobSdk(),
+    consent: RealAdMobUmpConsent(),
+    house: HouseAdsService.asFallback(),
+    privacyPrefs: ref.watch(adPrivacyPrefsProvider),
+  );
+});
 
 final adPrivacyPrefsProvider = Provider<AdPrivacyPrefs>(
     (ref) => AdPrivacyPrefs(SharedPreferencesAdCapStore()));
@@ -56,11 +73,8 @@ final adPrivacyPrefsProvider = Provider<AdPrivacyPrefs>(
 /// AdMob is off, which is also what hides the Settings section (a consent
 /// control for an SDK that isn't in play would be a false claim, the DEF085
 /// class).
-// DEF351: null always, because no SDK is linked — which correctly hides the
-// Settings re-consent row. A consent control for an SDK that isn't in play
-// would be a false claim (the DEF085 class), and that reasoning is exactly why
-// this seam was nullable in the first place.
-final adMobUmpConsentProvider = Provider<AdMobUmpConsent?>((ref) => null);
+final adMobUmpConsentProvider = Provider<AdMobUmpConsent?>(
+    (ref) => AdMobConfig.isConfigured ? RealAdMobUmpConsent() : null);
 
 final adCapStoreProvider =
     Provider<AdCapStore>((ref) => SharedPreferencesAdCapStore());
@@ -89,7 +103,9 @@ class AdGate {
   /// The gate object lives for the app run, so this latch does too.
   bool _sawPayingPlan = false;
 
-  Future<AdDecision> request(AdPlacement placement) async {
+  /// CR226 — [widthDp] is meaningful ONLY for [AdPlacement.globalBanner];
+  /// every other placement ignores it (see [AdsService.requestFill]'s doc).
+  Future<AdDecision> request(AdPlacement placement, {int widthDp = 0}) async {
     if (!AdPlacement.approved.contains(placement)) {
       debugPrint('CR122 AdGate: REFUSED unapproved placement '
           '"${placement.id}" — the allowlist is the six of ads.md:39-44');
@@ -106,11 +122,15 @@ class AdGate {
     if (_sawPayingPlan) {
       return const AdDecision.refused(AdRefusalReason.planHasNoAds);
     }
-    final capBlock = placement.format == AdFormat.interstitial
-        ? await _caps.checkInterstitial()
-        : await _caps.checkNative();
-    if (capBlock != null) return AdDecision.refused(capBlock);
-    final fill = await _service.requestFill(placement, signals);
+    // CR226 — banner is exempt from the frequency caps (see library doc).
+    if (placement.format != AdFormat.banner) {
+      final capBlock = placement.format == AdFormat.interstitial
+          ? await _caps.checkInterstitial()
+          : await _caps.checkNative();
+      if (capBlock != null) return AdDecision.refused(capBlock);
+    }
+    final fill =
+        await _service.requestFill(placement, signals, widthDp: widthDp);
     if (fill == null) {
       return const AdDecision.refused(AdRefusalReason.noInventory);
     }
@@ -118,8 +138,17 @@ class AdGate {
   }
 
   /// Called once when a filled ad actually renders.
-  Future<void> recordShown(AdPlacement placement) =>
-      _caps.recordImpression(placement.format);
+  ///
+  /// CR226 — for [AdFormat.banner] this does NOT record a frequency-cap
+  /// impression (the format is exempt in [request] above; recording one
+  /// here anyway would silently consume the shared day-impression budget
+  /// the six discrete placements rely on, for a slot that isn't a discrete
+  /// impression). [AnchoredAdBanner] still calls this — the call is a no-op
+  /// for banner rather than a call site that has to know to skip it.
+  Future<void> recordShown(AdPlacement placement) {
+    if (placement.format == AdFormat.banner) return Future.value();
+    return _caps.recordImpression(placement.format);
+  }
 
   /// Lesson-completion hook for the 1-per-5-lessons interstitial cap.
   Future<void> recordLessonCompleted() => _caps.recordLessonCompleted();

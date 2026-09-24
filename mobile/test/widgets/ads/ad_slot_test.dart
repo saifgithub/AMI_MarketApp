@@ -44,8 +44,8 @@ class AlwaysFillAdsService implements AdsService {
   String get network => 'always-fill-fake';
 
   @override
-  Future<AdFill?> requestFill(
-          AdPlacement placement, HouseAdSignals signals) async =>
+  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals,
+          {int widthDp = 0}) async =>
       const HouseAdFill(HouseAdCreative(
           slot: HouseAdSlot.genericTrader,
           targetTier: HouseAdTargetTier.trader));

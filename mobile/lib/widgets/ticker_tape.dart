@@ -4,6 +4,11 @@
 /// Scroll direction follows locale: right-to-left for LTR languages (EN),
 /// left-to-right for RTL languages (AR, MS). Ticker symbols are always LTR.
 /// Tapping any item pauses the tape for 2 s then opens the watchlist sheet.
+///
+/// CR226 — `build` is wrapped in [clampChromeTextScale]: `_kTapeHeight` is a
+/// fixed 28dp, the shortest of the app's chrome heights, and the tape's own
+/// price/symbol text is 10pt ticker-face type with no FittedBox of its own —
+/// the tightest overflow risk of the three chrome widgets this CR clamps.
 library;
 
 import 'dart:async';
@@ -11,6 +16,7 @@ import 'dart:ui' as ui;
 
 import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:ami_trade/state/ticker_tape_provider.dart';
+import 'package:ami_trade/theme/ami_text_scale.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/watchlist_sheet.dart';
 import 'package:flutter/material.dart';
@@ -39,21 +45,23 @@ class TickerTape extends ConsumerWidget {
 
     if (hasError) return const SizedBox.shrink();
 
-    return _Shell(
-      bottomInset: bottomInset,
-      child: isFirstLoad
-          ? const _LoadingBar()
-          : (data == null || data.quotes.isEmpty)
-              ? const SizedBox.shrink()
-              : SizedBox(
-                  height: _kTapeHeight,
-                  child: Stack(
-                    children: [
-                      _ScrollingTape(data: data),
-                      _StatusPill(data: data),
-                    ],
+    return clampChromeTextScale(
+      child: _Shell(
+        bottomInset: bottomInset,
+        child: isFirstLoad
+            ? const _LoadingBar()
+            : (data == null || data.quotes.isEmpty)
+                ? const SizedBox.shrink()
+                : SizedBox(
+                    height: _kTapeHeight,
+                    child: Stack(
+                      children: [
+                        _ScrollingTape(data: data),
+                        _StatusPill(data: data),
+                      ],
+                    ),
                   ),
-                ),
+      ),
     );
   }
 }

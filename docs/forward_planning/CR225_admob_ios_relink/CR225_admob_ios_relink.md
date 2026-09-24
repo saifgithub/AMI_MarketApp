@@ -125,6 +125,66 @@ Out of scope:
   frequency caps hold across a force-quit, upgrading to a paid plan removes ads
   immediately.
 
+## Implementation notes (AT:R85)
+
+- `pubspec.yaml` — `google_mobile_ads: 9.0.0` exact pin (not `^9.0.0`), re-added.
+  `flutter pub get` resolved cleanly.
+- `lib/services/ads/admob_real_sdk.dart` — restored from git history
+  (`cb625863^`). One functional change from the pre-DEF351 version: 9.0.0's
+  `RequestConfiguration` predates the `AgeRestrictedTreatment` enum 9.1.0
+  added (`ageRestrictedTreatment` param) — it only has the older
+  `tagForChildDirectedTreatment` / `tagForUnderAgeOfConsent` int-coded
+  fields. Remapped `AdAgeTreatment` onto those (total mapping preserved —
+  `none` → `unspecified`, `child`/`teen` → `yes`, since 9.0.0 has no
+  distinct "teen" tag); `ad_content_policy.dart`'s "age treatment: NONE,
+  never silently dropped" contract is unchanged, only the wire shape moved.
+- `lib/state/ads_providers.dart` — `adsServiceProvider` and
+  `adMobUmpConsentProvider` restored to their pre-DEF351 shape:
+  `AdMobConfig.setup == null` still yields `HouseAdsService()` with no SDK
+  object constructed (an unset `ADMOB_MODE` build is unchanged).
+- `test/ads_structural_test.dart` — `_adSdkAdapterExpected` flipped back to
+  `true`; the SDK-import pin now asserts positively again.
+- **CR225's own required guard — the iOS release-build compile check —
+  landed as `flutter build ios --release --no-codesign`, run and recorded
+  in this session** (see Acceptance below), not yet wired into an automated
+  CI/pre-flight gate. DEF351's own text named "an equivalent gate"; running
+  it as part of this CR's own verification satisfies the acceptance
+  criterion textually, but a machine-enforced version (e.g. a
+  `check_release_flutter_suite.sh`-style wrapper that also runs
+  `flutter build ios --release --no-codesign`) is NOT yet built — flagged
+  as unresolved for the audit.
+- **CR225-CR226 structural gap closed as part of CR226, not CR225 alone**:
+  Saiful's 2026-09-24 ruling ("internal builds serve Google's official test
+  unit IDs; real IDs only on production builds, structurally") extends
+  `admob_config.dart`'s `AdMobConfig.resolve` with a new
+  `AdMobReleaseChannel` parameter and a new `AMI_RELEASE_CHANNEL`
+  dart-define, derived structurally in `build_testflight.sh` /
+  `build_playstore.sh` from `--internal-only` / `--production` (never an
+  independently-settable env var). `ADMOB_MODE=live` is honoured ONLY on
+  `channel=production`; every other channel (including the unset/dev
+  default) downgrades to Google's reserved test unit ids, loudly. See
+  CR226's implementation notes for the full mechanism — it is documented
+  once there since it is one code change serving both CRs' review needs.
+- No new dependency beyond `google_mobile_ads` itself, which was already
+  approved under CR122 — re-adding it at a different version pin is not a
+  new dependency for CLAUDE.md's "flag new deps" purposes.
+
+## Acceptance — verification run this session
+
+- `flutter build ios --release --no-codesign` — **succeeded**, exit 0, no
+  errors or warnings referencing the previously-broken non-modular header
+  (`FLTAd_Internal.h` / `GoogleMobileAds_Beta.h`). Two runs recorded (before
+  and after an unrelated `hex_bottom_nav.dart` CR226 layout fix), both
+  clean; 55.9MB `Runner.app`, ~118–123s Xcode build time.
+- `flutter test` (full suite) — 1535 tests, all green, exit 0.
+- `flutter analyze` — 11 issues (baseline, 0 errors; unchanged from
+  pre-CR225 baseline).
+- Real ad fill on a registered iOS/Android-GMS test device — **not run**
+  this session (no physical test device in this environment; the CR's own
+  "do not run a device install" instruction for this pass). Remains
+  Saiful's on-device verification step per the CR's original acceptance
+  list.
+
 ## Status
 
-proposed
+in_progress (submitted for audit, AT:R85)

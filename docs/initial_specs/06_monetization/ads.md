@@ -42,6 +42,7 @@ This list goes to programmatic networks as a blocklist + manual review for any d
 | Sim Portfolio — empty state (no positions) | Sponsored card | **Yes** |
 | Academy Hub — bottom | Native card | **Yes** |
 | Wallet & Plan screen | Native card | **Yes** (upsell-only) |
+| **Global anchored banner** — every post-onboarding screen, between the bottom nav and the ticker tape | Anchored adaptive banner (width-derived height; 50dp on phones, ~90dp on an unfolded Z Fold 7) | **Yes** (CR226, 2026-09-24) — the one placement visible everywhere rather than screen- or empty-state-specific. A visible separator sits between the nav buttons and the banner (AdMob policy: no ad directly adjacent to tappable controls, per Saiful's ruling). Structurally absent on every forbidden context below: it lives in `HomeShell`'s own `Scaffold`, and Concierge / Room / 1-on-1 / Brief Your Agent / Mandate flows / the trade ticket are all pushed routes that cover that Scaffold — so it inherits the ban from the navigation architecture rather than needing its own suppression list (see `home_shell.dart:125`'s DEF190 note, and CR226's "why option 3 is the only one that's structurally safe"). Same plan gate as the other six: floor_pass only, gone immediately on any paid plan including `trial_trader`. |
 
 | Placement | Why **NO** |
 |---|---|

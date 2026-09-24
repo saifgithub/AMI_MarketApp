@@ -54,6 +54,14 @@
 #   ADMOB_CONSENT_DEBUG_GEOGRAPHY - '' | 'eea' | 'us_state' | 'other' (UMP
 #                                   debug geography for consent-form testing)
 #
+# CR225 — AMI_RELEASE_CHANNEL is derived here, not set by hand: this script
+# computes it from --internal-only / --production (the same flags that
+# already gate the RevenueCat Test-Store key and the CR109 games route above)
+# and forwards it as a dart-define. AdMobConfig.resolve refuses to honour
+# ADMOB_MODE=live unless that channel is 'production', so a Play Internal
+# build downgrades to Google's official test unit ids even with
+# ADMOB_MODE=live and real unit ids set.
+#
 # BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
 # `BillingConfig.isConfigured` is false and the paywall renders the info state
 # with NO buy button — the app cannot take money. Correct for a dev build, a
@@ -137,6 +145,20 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
+# units on, mirroring build_testflight.sh's derivation exactly. Never set
+# independently — derived here from the same --internal-only/--production
+# flags the RevenueCat and CR109 games checks above already use. `production`
+# needs an EXPLICIT --production; a bare --internal-only or neither flag both
+# resolve to `internal`, which AdMobConfig.resolve treats the same as unset
+# for the live→test downgrade — so a forgotten flag still cannot ship real ad
+# units.
+if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
+  AMI_RELEASE_CHANNEL="production"
+else
+  AMI_RELEASE_CHANNEL="internal"
+fi
 
 keystore_props="$HOME/.android-keys/keystore.properties"
 if [[ ! -f "$keystore_props" ]]; then
@@ -443,7 +465,8 @@ flutter build appbundle --release \
   --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \
   --dart-define=ADMOB_NATIVE_AD_UNIT_ID="${ADMOB_NATIVE_AD_UNIT_ID}" \
   --dart-define=ADMOB_TEST_DEVICE_IDS="${ADMOB_TEST_DEVICE_IDS}" \
-  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}"
+  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}" \
+  --dart-define=AMI_RELEASE_CHANNEL="${AMI_RELEASE_CHANNEL}"
 
 aab="${MOBILE_DIR}/build/app/outputs/bundle/release/app-release.aab"
 if [[ ! -f "$aab" ]]; then

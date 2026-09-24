@@ -10,6 +10,17 @@
 /// `authNotifierProvider` — we wait for `state.token != null` before
 /// rendering Onboarding or HomeShell, so feature providers never fire
 /// API calls before the Dio interceptor has a token attached.
+///
+/// CR226 — `builder:` is the app-wide entry point `CR226_adaptive_banner_slot.md`
+/// names for the text-scale clamp. It deliberately does NOT clamp `textScaler`
+/// here for the whole tree (that would defeat the OS accessibility setting for
+/// lesson/agent body content, which must stay free to scale) — the actual
+/// clamp is local, applied inside each fixed-height chrome widget
+/// (`ami_screen_header.dart`, `hex_bottom_nav.dart`, `ticker_tape.dart`) via
+/// `theme/ami_text_scale.dart`'s `clampChromeTextScale`. This builder is the
+/// one place that could apply a DIFFERENT app-wide policy later (e.g. a
+/// global floor/ceiling independent of chrome) without touching every
+/// `MaterialPageRoute`; today it passes `child` through unchanged.
 library;
 
 import 'package:ami_trade/features/games/games_gate.dart';
@@ -58,6 +69,10 @@ class AmiTradeApp extends ConsumerWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,
+      // CR226 — see the library doc above. Body/lesson content stays free to
+      // scale at the OS setting; only the named chrome widgets clamp
+      // themselves locally.
+      builder: (context, child) => child ?? const SizedBox.shrink(),
       home: _VersionGateGate(startOnFloor: startOnFloor),
       routes: {
         '/onboarding': (_) => const OnboardingScreen(),

@@ -22,5 +22,13 @@ abstract class AdsService {
 
   /// Fill [placement], or return null when this network has nothing —
   /// never throw for an empty-inventory case and never render-side-effect.
-  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals);
+  ///
+  /// CR226 — [widthDp] is meaningful ONLY for [AdPlacement.globalBanner]
+  /// ([AdFormat.banner]): the anchored adaptive banner's height is DERIVED
+  /// from the width it is given (`AdSize.getCurrentOrientationAnchored…`),
+  /// so the caller's `LayoutBuilder`-measured width has to reach the network
+  /// layer. Every other placement ignores it — a fixed native template or a
+  /// full-screen interstitial has no such dependency.
+  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals,
+      {int widthDp = 0});
 }

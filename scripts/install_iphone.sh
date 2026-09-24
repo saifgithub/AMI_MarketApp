@@ -23,6 +23,13 @@ set -euo pipefail
 # CR122-MOBILE-C — AdMob dart-defines, all default-empty (house fill only).
 # ADMOB_MODE=test uses Google's reserved test unit ids on the cable build —
 # the pre-launch way to see real SDK fill on the iPhone.
+#
+# CR225 — this script deliberately does NOT forward AMI_RELEASE_CHANNEL, so
+# it stays unset ("unknown" to AdMobConfig.resolve) on every cable install.
+# That is the conservative default: even an operator who sets
+# ADMOB_MODE=live here (e.g. copy-pasting env from a production build) gets
+# Google's test unit ids, never real ones — a cable install to a dev's own
+# phone is never a production channel.
 : "${ADMOB_MODE:=}"
 : "${ADMOB_INTERSTITIAL_AD_UNIT_ID:=}"
 : "${ADMOB_NATIVE_AD_UNIT_ID:=}"
