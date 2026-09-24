@@ -25,6 +25,7 @@ class ConveneSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

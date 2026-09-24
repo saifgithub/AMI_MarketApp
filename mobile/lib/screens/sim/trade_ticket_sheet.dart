@@ -4,6 +4,13 @@
 /// ticket" CTA from a Room verdict (with the verdict's size/entry/stop/
 /// target pre-filled). On submit, PM safety floor runs server-side; any
 /// rejection is surfaced as an amber banner with the specific violations.
+///
+/// **CR232 — a pushed page, not a modal sheet.** Saiful's ruling: trade
+/// tickets become full pages with a back chevron and a "Cancel" text action,
+/// not sheets with a top-right X. `show()` now pushes on the caller's nearest
+/// Navigator (a tab's own nested Navigator, post-CR232 — see
+/// `home_shell.dart`), so the persistent chrome (nav / ad slot / ticker tape)
+/// stays visible underneath exactly as it does for every other pushed page.
 library;
 
 import 'dart:async';
@@ -13,6 +20,7 @@ import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/features/sim/short_rules.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
@@ -21,8 +29,8 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
-import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -84,6 +92,10 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
   @override
   ConsumerState<TradeTicketSheet> createState() => _TradeTicketSheetState();
 
+  /// CR232 — pushes as a page on `Navigator.of(context)`, which post-CR232
+  /// resolves to the caller's nearest Navigator: almost always a tab's own
+  /// nested Navigator (see `home_shell.dart`'s `_TabNavigator`), so the shell
+  /// chrome underneath is never covered and needs no `Icons.close` to escape.
   static Future<void> show(
     BuildContext context, {
     RoomVerdict? prefill,
@@ -94,13 +106,7 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
     String? sellTicker,
     double? sellQuantity,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AmiColors.slate800,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    return Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => TradeTicketSheet(
         prefill: prefill,
         verdictRef: verdictRef,
@@ -110,7 +116,7 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
         sellTicker: sellTicker,
         sellQuantity: sellQuantity,
       ),
-    );
+    ));
   }
 }
 
@@ -159,10 +165,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   void initState() {
     super.initState();
     _ticker = TextEditingController(
-      text: widget.coverTicker ?? widget.sellTicker ?? widget.tickerPrefill ?? '',
+      text:
+          widget.coverTicker ?? widget.sellTicker ?? widget.tickerPrefill ?? '',
     );
     _qty = TextEditingController(
-      text: (widget.coverQuantity ?? widget.sellQuantity)?.toStringAsFixed(0) ?? '1',
+      text: (widget.coverQuantity ?? widget.sellQuantity)?.toStringAsFixed(0) ??
+          '1',
     );
     if (widget.coverTicker != null) _side = 'buy';
     // CR188 slice 2 — the one exit. Everything that used to close a position by
@@ -574,8 +582,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // CR171 — refused here as well as in the disabled CTA, because the sheet
     // can reach this method from a keyboard submit action that never touches
     // the button.
-    if (_localRefusal(AppLocalizations.of(context),
-            ref.read(simNotifierProvider)) !=
+    if (_localRefusal(
+            AppLocalizations.of(context), ref.read(simNotifierProvider)) !=
         null) {
       return;
     }
@@ -599,22 +607,22 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     }
 
     final result = await ref.read(simNotifierProvider.notifier).submit(
-      ticker: typed,
-      side: _side,
-      quantity: qty,
-      orderType: _orderType,
-      limitPrice: _orderType.needsLimitPrice
-          ? double.tryParse(_limit.text.trim())
-          : null,
-      triggerPrice: _orderType.needsTriggerPrice
-          ? double.tryParse(_trigger.text.trim())
-          : null,
-      tif: _tif,
-      stop: double.tryParse(_stop.text.trim()),
-      target: double.tryParse(_target.text.trim()),
-      horizonDays: int.tryParse(_horizon.text.trim()),
-      verdictRef: widget.verdictRef,
-    );
+          ticker: typed,
+          side: _side,
+          quantity: qty,
+          orderType: _orderType,
+          limitPrice: _orderType.needsLimitPrice
+              ? double.tryParse(_limit.text.trim())
+              : null,
+          triggerPrice: _orderType.needsTriggerPrice
+              ? double.tryParse(_trigger.text.trim())
+              : null,
+          tif: _tif,
+          stop: double.tryParse(_stop.text.trim()),
+          target: double.tryParse(_target.text.trim()),
+          horizonDays: int.tryParse(_horizon.text.trim()),
+          verdictRef: widget.verdictRef,
+        );
     if (!mounted) return;
     if (result != null && result.ok) {
       // Strong success feedback (bug 9b3a6c2f): the previous slate800
@@ -858,7 +866,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         background = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexAmber;
       } else {
         message = l.tradeTicketShortOpened(
-          qty, ticker, (_quote?.price ?? 0).toStringAsFixed(2),
+          qty,
+          ticker,
+          (_quote?.price ?? 0).toStringAsFixed(2),
         );
         icon = Icons.trending_down;
         background = AmiColors.hexRed;
@@ -915,9 +925,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final standard = v.standard.toUpperCase();
     if (ticker.isEmpty || standard.isEmpty) return r.violations;
     return r.violations
-        .where((s) =>
-            !(s.toUpperCase().contains(ticker) &&
-                s.toUpperCase().contains(standard)))
+        .where((s) => !(s.toUpperCase().contains(ticker) &&
+            s.toUpperCase().contains(standard)))
         .toList();
   }
 
@@ -931,8 +940,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // Alpaca section hides itself when unlinked. `hasValue && value == true`
     // rather than `.value ?? false`, so a still-loading or errored check
     // reads as "not shown yet" rather than briefly flashing the control on.
-    final alpacaLinked =
-        ref.watch(alpacaLinkedProvider).maybeWhen(data: (v) => v, orElse: () => false);
+    final alpacaLinked = ref
+        .watch(alpacaLinkedProvider)
+        .maybeWhen(data: (v) => v, orElse: () => false);
     // CR171 — the client-side refusals, distinct from `refusal` above, which is
     // the server's verdict on the LAST submit. This one is about the order the
     // user is still typing.
@@ -944,7 +954,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // CR189 acceptance 5 — the buy-side counterpart, under the same refusal
     // suppression. `_sellNotice` is sell-side and `_blendRaiseNotice` buy-side,
     // so `notice` can only ever hold ONE sentence.
-    final blendNotice = localRefusal == null ? _blendRaiseNotice(l, state) : null;
+    final blendNotice =
+        localRefusal == null ? _blendRaiseNotice(l, state) : null;
     final notice = sellNotice ?? blendNotice;
     final opensShort = _opensShort(state);
     // CR069 G3: the Sharia disclosure rides on BOTH outcomes. A screened-out
@@ -956,602 +967,679 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final permittedVerdict = state.lastSubmit != null && state.lastSubmit!.ok
         ? state.lastSubmit!.shariaVerdict
         : null;
-    final blockingVerdict = refusal &&
-            (state.lastSubmit!.shariaVerdict?.isBlocking ?? false)
-        ? state.lastSubmit!.shariaVerdict
-        : null;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
-        // DEF075 — clear keyboard AND nav bar, not just the keyboard.
-        AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.bolt, color: AmiColors.hexCyan, size: 20),
-                const SizedBox(width: AmiSpacing.s),
-                Text(l.tradeTicketHeading,
-                    style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+    final blockingVerdict =
+        refusal && (state.lastSubmit!.shariaVerdict?.isBlocking ?? false)
+            ? state.lastSubmit!.shariaVerdict
+            : null;
+    // CR232 — full page, not a sheet: `AmiScreenHeader` carries the back
+    // chevron, and Cancel is a plain text action beside it (rule 4's "back +
+    // Cancel", not a top-right X). Both pop the same Navigator — the ticket
+    // has no state worth distinguishing "back" from "cancel" over, so the two
+    // controls share one handler.
+    // `AmiScreenHeader` is a `body`/`SafeArea` child, matching every other
+    // screen's usage (`portfolio_screen.dart`, `you_screen.dart`, …) — NOT
+    // `Scaffold.appBar`. A `PreferredSize` widget dropped into `appBar:` is
+    // not covered by `SafeArea`, so it floats directly under the status bar;
+    // Saiful caught this from a TestFlight build (+108): the header rendered
+    // under the iOS clock/signal/battery, overlapping the TICKER field.
+    return Scaffold(
+      backgroundColor: AmiColors.slate900,
+      // CR232 — tapping anywhere on the page dismisses the on-screen
+      // keyboard. The numeric fields below (quantity/stop/target/limit/
+      // trigger) use `TextInputType.numberWithOptions`, whose iOS keypad has
+      // no return key — without this, once a numeric field is focused there
+      // is no way to close the keyboard short of navigating away, and it
+      // covers the rest of the page (also from Saiful's +108 screenshots).
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(children: [
+            AmiScreenHeader(
+              title: l.tradeTicketHeading,
+              titleColor: AmiColors.hexCyan,
+              showBack: true,
+              actions: [
+                Semantics(
+                  button: true,
+                  identifier: ExitIds.tradeTicketCancel,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l.actionCancel,
+                        style: AmiTypography.labelMono
+                            .copyWith(color: AmiColors.textMed)),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: AmiSpacing.l),
-            // No-verdict advisory (bug d5717660). Non-blocking: the user
-            // can dismiss and submit anyway; the resulting trade has
-            // verdict_ref=null so the journal labels it "Without AI advice".
-            if (widget.verdictRef == null && !_advisoryDismissed) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AmiSpacing.s),
-                decoration: BoxDecoration(
-                  color: AmiColors.hexBlue.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  border: Border.all(color: AmiColors.hexBlue.withValues(alpha: 0.5)),
-                ),
+            Expanded(
+              child: SingleChildScrollView(
+                // CR232 — a drag on the scroll view also dismisses the keyboard,
+                // not just a tap: on a long form the numeric field that needs
+                // dismissing is usually off the bottom of the visible page once
+                // the keyboard is up.
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.all(AmiSpacing.l),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.lightbulb_outline,
-                            color: AmiColors.hexBlue, size: 16),
-                        const SizedBox(width: 4),
-                        Text('NO AI VERDICT',
-                            style: AmiTypography.labelMono.copyWith(
-                                color: AmiColors.hexBlue, fontSize: 11)),
-                        const Spacer(),
-                        InkWell(
-                          onTap: () => setState(() => _advisoryDismissed = true),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(Icons.close,
-                                color: AmiColors.textLow, size: 16),
-                          ),
+                    // No-verdict advisory (bug d5717660). Non-blocking: the user
+                    // can dismiss and submit anyway; the resulting trade has
+                    // verdict_ref=null so the journal labels it "Without AI advice".
+                    if (widget.verdictRef == null && !_advisoryDismissed) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AmiSpacing.s),
+                        decoration: BoxDecoration(
+                          color: AmiColors.hexBlue.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          border: Border.all(
+                              color: AmiColors.hexBlue.withValues(alpha: 0.5)),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Convene the Room first to get analysis from your 12 agents. '
-                      'Or proceed — this trade will be marked "without advice".',
-                      style: AmiTypography.body,
-                    ),
-                    const SizedBox(height: AmiSpacing.s),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.lightbulb_outline,
+                                    color: AmiColors.hexBlue, size: 16),
+                                const SizedBox(width: 4),
+                                Text('NO AI VERDICT',
+                                    style: AmiTypography.labelMono.copyWith(
+                                        color: AmiColors.hexBlue,
+                                        fontSize: 11)),
+                                const Spacer(),
+                                InkWell(
+                                  onTap: () =>
+                                      setState(() => _advisoryDismissed = true),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.close,
+                                        color: AmiColors.textLow, size: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Convene the Room first to get analysis from your 12 agents. '
+                              'Or proceed — this trade will be marked "without advice".',
+                              style: AmiTypography.body,
+                            ),
+                            const SizedBox(height: AmiSpacing.s),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AmiColors.hexBlue,
+                                      side: const BorderSide(
+                                          color: AmiColors.hexBlue),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                    ),
+                                    icon: const Icon(Icons.bolt, size: 16),
+                                    label: const Text('Convene the Room'),
+                                    onPressed: _convene,
+                                  ),
+                                ),
+                                const SizedBox(width: AmiSpacing.s),
+                                Expanded(
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AmiColors.textLow,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                    ),
+                                    onPressed: () => setState(
+                                        () => _advisoryDismissed = true),
+                                    child: const Text('Proceed without'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AmiSpacing.m),
+                    ],
+                    // CR171 §6 — the notice on a trade that WENT THROUGH. Saiful's
+                    // ruling: *"our job is only to inform. The user can continue with
+                    // whatever trade they want to do."* So this is amber-bordered but
+                    // never says blocked, carries no way to undo, and the only control
+                    // on it acknowledges. Rendered ABOVE everything else in the sheet
+                    // because the sheet is only still open in order to show it.
+                    if (_pendingAdvisories.isNotEmpty) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AmiSpacing.m),
+                        decoration: BoxDecoration(
+                          color: AmiColors.hexAmber.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          border: Border.all(color: AmiColors.hexAmber),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.info_outline,
+                                    color: AmiColors.hexAmber, size: 16),
+                                const SizedBox(width: 4),
+                                Text(l.tradeTicketAdvisoryLabel,
+                                    style: AmiTypography.labelMono.copyWith(
+                                        color: AmiColors.hexAmber,
+                                        fontSize: 11)),
+                              ],
+                            ),
+                            const SizedBox(height: AmiSpacing.xs),
+                            for (final a in _pendingAdvisories)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(a, style: AmiTypography.body),
+                              ),
+                            const SizedBox(height: AmiSpacing.s),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AmiColors.hexAmber,
+                                  foregroundColor: AmiColors.slate900,
+                                ),
+                                onPressed: _acknowledgeAdvisory,
+                                child: Text(l.tradeTicketAdvisoryAcknowledge,
+                                    style: AmiTypography.labelMono
+                                        .copyWith(color: AmiColors.slate900)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AmiSpacing.m),
+                    ],
+                    if (permittedVerdict != null) ...[
+                      ShariaVerdictBanner(verdict: permittedVerdict),
+                      const SizedBox(height: AmiSpacing.m),
+                    ],
+                    // CR171 — why the quantity on a cover cannot be edited.
+                    if (_isCover) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.swap_vert,
+                              size: 16, color: AmiColors.hexCyan),
+                          const SizedBox(width: AmiSpacing.xs),
+                          Expanded(
+                            child: Text(
+                              l.shortCoverTicketNote(
+                                (widget.coverQuantity ?? 0).toStringAsFixed(0),
+                                widget.coverTicker!,
+                              ),
+                              style: AmiTypography.caption
+                                  .copyWith(color: AmiColors.textMed),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AmiSpacing.m),
+                    ],
+                    if (refusal) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AmiSpacing.s),
+                        decoration: BoxDecoration(
+                          color: AmiColors.slate900,
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          border: Border.all(color: AmiColors.hexAmber),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.lock,
+                                    color: AmiColors.hexAmber, size: 16),
+                                const SizedBox(width: 4),
+                                Text(l.tradeTicketSafetyFloorBlocked,
+                                    style: AmiTypography.labelMono.copyWith(
+                                        color: AmiColors.hexAmber,
+                                        fontSize: 11)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            // The backend composes its violation sentences in English
+                            // (they also feed the agent prompts). When a blocking
+                            // Sharia verdict arrives structured, its localized banner
+                            // is rendered below instead, so drop the English twin here
+                            // rather than showing the same fact twice in two
+                            // languages. The match is on the verdict's own ticker AND
+                            // standard, so a violation from any other rule survives;
+                            // if it ever fails to match, the user sees the English
+                            // sentence as well — duplicated, never missing.
+                            for (final v
+                                in _visibleViolations(state.lastSubmit!))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child:
+                                    Text('• $v', style: AmiTypography.caption),
+                              ),
+                            if (blockingVerdict != null) ...[
+                              const SizedBox(height: AmiSpacing.s),
+                              ShariaVerdictBanner(verdict: blockingVerdict),
+                            ],
+                            const SizedBox(height: 4),
+                            Text(
+                              l.tradeTicketChangeMandate,
+                              style: AmiTypography.caption
+                                  .copyWith(color: AmiColors.textLow),
+                            ),
+                            // CR133 §5 — this line used to end "…via Settings → My
+                            // Mandate", which fired at the exact moment a compliance
+                            // breach had just blocked the trade and then made the user
+                            // walk the path themselves. CR133 moves that path (the
+                            // mandate now sits YOU → SETTINGS), so the instruction was
+                            // about to be both wrong AND a longer walk. Replaced with
+                            // the control rather than renamed: a rename leaves the same
+                            // trap armed for the next nav change. Same pattern the app
+                            // already ships as `floorLockedGoToLessons` → "GO TO
+                            // LESSONS".
+                            const SizedBox(height: AmiSpacing.s),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(0, 32),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () => Navigator.of(context)
+                                    .push(MaterialPageRoute<void>(
+                                  builder: (_) => const SettingsScreen(),
+                                )),
+                                child: Text(
+                                  l.tradeTicketOpenMandate,
+                                  style: AmiTypography.labelMono
+                                      .copyWith(color: AmiColors.hexBlue),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AmiSpacing.m),
+                    ],
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AmiColors.hexBlue,
-                              side: const BorderSide(color: AmiColors.hexBlue),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: TextField(
+                            controller: _ticker,
+                            autofocus: true,
+                            textCapitalization: TextCapitalization.characters,
+                            style: AmiTypography.statMid,
+                            decoration: _decoration(
+                                label: l.tradeTicketLabelTicker,
+                                hint: l.tradeTicketHintTicker),
+                          ),
+                        ),
+                        const SizedBox(width: AmiSpacing.s),
+                        _SideToggle(
+                          value: _side,
+                          onChange: (v) => setState(() {
+                            _side = v;
+                            _prefillSellQuantity(state);
+                            _rebracketForSide();
+                          }),
+                        ),
+                      ],
+                    ),
+                    // CR227 — destination choice: AMI Sim / Alpaca Paper / Both.
+                    // Hidden entirely on the cover/sell-from-holding entry paths
+                    // (`_destinationLocked`) and for anyone without a linked Alpaca
+                    // paper account — an unlinked user sees exactly today's ticket.
+                    if (alpacaLinked && !_destinationLocked) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      _PillToggle<TradeDestination>(
+                        label: 'DESTINATION',
+                        value: _destination,
+                        accent: AmiColors.hexBlue,
+                        options: const [
+                          (TradeDestination.amiSim, 'AMI SIM'),
+                          (TradeDestination.alpacaPaper, 'ALPACA PAPER'),
+                          (TradeDestination.both, 'BOTH'),
+                        ],
+                        onChange: (v) => setState(() => _destination = v),
+                      ),
+                    ],
+                    // CR227 — per-destination outcomes from the last submit. Shown
+                    // instead of (not alongside) the single snackbar whenever more
+                    // than one leg was attempted, or an Alpaca-only leg was refused
+                    // and the sheet stayed open to say why.
+                    if (_destinationOutcomes.isNotEmpty) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      for (final o in _destinationOutcomes)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(AmiSpacing.s),
+                            decoration: BoxDecoration(
+                              color: AmiColors.slate900,
+                              borderRadius:
+                                  BorderRadius.circular(AmiRadii.card),
+                              border: Border.all(
+                                  color: o.ok
+                                      ? AmiColors.hexGreen
+                                      : AmiColors.hexAmber),
                             ),
-                            icon: const Icon(Icons.bolt, size: 16),
-                            label: const Text('Convene the Room'),
-                            onPressed: _convene,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                    o.ok
+                                        ? Icons.check_circle
+                                        : Icons.error_outline,
+                                    size: 16,
+                                    color: o.ok
+                                        ? AmiColors.hexGreen
+                                        : AmiColors.hexAmber),
+                                const SizedBox(width: AmiSpacing.xs),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(o.label,
+                                          style: AmiTypography.labelMono
+                                              .copyWith(
+                                                  fontSize: 10,
+                                                  color: o.ok
+                                                      ? AmiColors.hexGreen
+                                                      : AmiColors.hexAmber)),
+                                      Text(o.message,
+                                          style: AmiTypography.caption),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                    // DEF207 — not-found takes the price chip's place entirely. A
+                    // price of ANY kind next to a string that isn't a ticker is the
+                    // fabrication this defect is about; the two are mutually
+                    // exclusive by construction, not by z-order.
+                    if (_validator.unknownTicker != null) ...[
+                      const SizedBox(height: AmiSpacing.xs),
+                      TickerNotFoundPanel(
+                        typed: _validator.unknownTicker!,
+                        suggestion: _validator.suggestion,
+                        onAccept: (t) {
+                          _ticker.text = t;
+                          _ticker.selection =
+                              TextSelection.collapsed(offset: t.length);
+                        },
+                      ),
+                    ]
+                    // Live price anchor for setting TP / SL when no verdict has
+                    // been convened. Source pill (LIVE / MOCK) reflects what the
+                    // backend actually returned for this ticker — yfinance leaf
+                    // shows LIVE, mock_walk fallback shows MOCK.
+                    else if (_quote != null ||
+                        _quoteLoading ||
+                        _validator.checking) ...[
+                      const SizedBox(height: AmiSpacing.xs),
+                      _QuoteChip(
+                        quote: _quote,
+                        loading: _quoteLoading || _validator.checking,
+                      ),
+                    ],
+                    const SizedBox(height: AmiSpacing.m),
+                    TextField(
+                      controller: _qty,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
+                      style: AmiTypography.body,
+                      decoration: _decoration(
+                          label: l.tradeTicketLabelQuantity,
+                          hint: l.tradeTicketHintQty),
+                    ),
+                    // CR170 — the order-type controls appear ONLY when this backend
+                    // actually has a resting-order book. Against a pre-CR170 server
+                    // `order_type=limit` is accepted and filled instantly at the price
+                    // typed, so offering the picker there would be a control that
+                    // quietly does something else with the user's money (CR040). See
+                    // `SimState.restingOrdersSupported`.
+                    if (state.restingOrdersSupported) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      _PillToggle<SimOrderType>(
+                        label: l.tradeTicketLabelOrderType,
+                        value: _orderType,
+                        accent: AmiColors.hexCyan,
+                        options: [
+                          (SimOrderType.market, l.tradeTicketOrderMarket),
+                          (SimOrderType.limit, l.tradeTicketOrderLimit),
+                          (SimOrderType.stop, l.tradeTicketOrderStop),
+                          (SimOrderType.stopLimit, l.tradeTicketOrderStopLimit),
+                        ],
+                        onChange: (v) => setState(() => _orderType = v),
+                      ),
+                      if (_orderType.needsTriggerPrice) ...[
+                        const SizedBox(height: AmiSpacing.m),
+                        TextField(
+                          controller: _trigger,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          style: AmiTypography.body,
+                          decoration: _decoration(
+                              label: l.tradeTicketLabelTrigger,
+                              hint: l.tradeTicketHintPrice),
+                        ),
+                      ],
+                      if (_orderType.needsLimitPrice) ...[
+                        const SizedBox(height: AmiSpacing.m),
+                        TextField(
+                          controller: _limit,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          style: AmiTypography.body,
+                          decoration: _decoration(
+                              label: l.tradeTicketLabelLimit,
+                              hint: l.tradeTicketHintPrice),
+                        ),
+                      ],
+                      if (_orderType.canRest) ...[
+                        const SizedBox(height: AmiSpacing.m),
+                        _PillToggle<SimOrderTif>(
+                          label: l.tradeTicketLabelTif,
+                          value: _tif,
+                          accent: AmiColors.hexAmber,
+                          options: [
+                            (SimOrderTif.day, l.tradeTicketTifDay),
+                            (SimOrderTif.gtd30, l.tradeTicketTif30),
+                            (SimOrderTif.gtd90, l.tradeTicketTif90),
+                          ],
+                          onChange: (v) => setState(() => _tif = v),
+                        ),
+                      ],
+                      _OrderIntentHint(
+                        side: _side,
+                        ticker:
+                            _quoteTicker ?? _ticker.text.trim().toUpperCase(),
+                        orderType: _orderType,
+                        triggerPrice: double.tryParse(_trigger.text.trim()),
+                        limitPrice: double.tryParse(_limit.text.trim()),
+                        mark: _quote?.price,
+                      ),
+                    ],
+                    const SizedBox(height: AmiSpacing.m),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _stop,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            style: AmiTypography.body,
+                            decoration: _decoration(
+                                label: l.tradeTicketLabelStop,
+                                hint: l.tradeTicketHintOptional),
                           ),
                         ),
                         const SizedBox(width: AmiSpacing.s),
                         Expanded(
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              foregroundColor: AmiColors.textLow,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                            onPressed: () =>
-                                setState(() => _advisoryDismissed = true),
-                            child: const Text('Proceed without'),
+                          child: TextField(
+                            controller: _target,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            style: AmiTypography.body,
+                            decoration: _decoration(
+                                label: l.tradeTicketLabelTarget,
+                                hint: l.tradeTicketHintOptional),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AmiSpacing.m),
-            ],
-            // CR171 §6 — the notice on a trade that WENT THROUGH. Saiful's
-            // ruling: *"our job is only to inform. The user can continue with
-            // whatever trade they want to do."* So this is amber-bordered but
-            // never says blocked, carries no way to undo, and the only control
-            // on it acknowledges. Rendered ABOVE everything else in the sheet
-            // because the sheet is only still open in order to show it.
-            if (_pendingAdvisories.isNotEmpty) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AmiSpacing.m),
-                decoration: BoxDecoration(
-                  color: AmiColors.hexAmber.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  border: Border.all(color: AmiColors.hexAmber),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: AmiColors.hexAmber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(l.tradeTicketAdvisoryLabel,
-                            style: AmiTypography.labelMono.copyWith(
-                                color: AmiColors.hexAmber, fontSize: 11)),
-                      ],
+                    const SizedBox(height: AmiSpacing.m),
+                    TextField(
+                      controller: _horizon,
+                      keyboardType: TextInputType.number,
+                      style: AmiTypography.body,
+                      decoration: _decoration(
+                          label: l.tradeTicketLabelHorizon,
+                          hint: l.tradeTicketHintOptional),
                     ),
-                    const SizedBox(height: AmiSpacing.xs),
-                    for (final a in _pendingAdvisories)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(a, style: AmiTypography.body),
+                    // CR188 — informational, and deliberately in the refusal's slot
+                    // rather than beside it: the two are mutually exclusive, and the
+                    // last thing read before the button should be one sentence about
+                    // this order, never two competing ones. CR189's stop-raise
+                    // disclosure rides the same slot on the same terms — amber, like
+                    // the short notice, because a risk control the user set by hand
+                    // is about to move.
+                    if (notice != null) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            opensShort
+                                ? Icons.trending_down
+                                : Icons.info_outline,
+                            size: 16,
+                            color: opensShort || blendNotice != null
+                                ? AmiColors.hexAmber
+                                : AmiColors.textMed,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              notice,
+                              style: AmiTypography.caption.copyWith(
+                                color: opensShort || blendNotice != null
+                                    ? AmiColors.hexAmber
+                                    : AmiColors.textMed,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    const SizedBox(height: AmiSpacing.s),
+                    ],
+                    if (localRefusal != null) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AmiSpacing.m),
+                        decoration: BoxDecoration(
+                          color: AmiColors.slate900,
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          border: Border.all(color: AmiColors.hexAmber),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.block,
+                                size: 18, color: AmiColors.hexAmber),
+                            const SizedBox(width: AmiSpacing.s),
+                            Expanded(
+                              child: Text(localRefusal,
+                                  style: AmiTypography.caption
+                                      .copyWith(color: AmiColors.hexAmber)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AmiSpacing.l),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AmiColors.hexAmber,
+                          // CR188 — a short is neither a buy nor an ordinary sell, and
+                          // the control says so. CR171 already had the words for it and
+                          // fired them AFTER the fill, which is right for the
+                          // borrow-cost advisory and wrong for "this is a different
+                          // kind of position than you think you are opening". A word on
+                          // the control being pressed is structural; a sentence above it
+                          // is an instruction, and instructions are not controls.
+                          backgroundColor: opensShort
+                              ? AmiColors.hexAmber
+                              : (_side == 'buy'
+                                  ? AmiColors.hexGreen
+                                  : AmiColors.hexRed),
                           foregroundColor: AmiColors.slate900,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AmiSpacing.m),
                         ),
-                        onPressed: _acknowledgeAdvisory,
-                        child: Text(l.tradeTicketAdvisoryAcknowledge,
-                            style: AmiTypography.labelMono
-                                .copyWith(color: AmiColors.slate900)),
+                        icon: (state.submitting || _validator.checking)
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AmiColors.slate900,
+                                ),
+                              )
+                            : Icon(opensShort
+                                ? Icons.trending_down
+                                : (_side == 'buy' ? Icons.add : Icons.remove)),
+                        // CR188 — the LABEL is the structural half, not the colour. A
+                        // user who reads nothing on this sheet still reads the word on
+                        // the button they are pressing, and "SUBMIT TRADE" over an
+                        // order that opens a borrowed position with uncapped loss is
+                        // the sheet's last chance to be honest.
+                        label: Text(state.submitting
+                            ? l.tradeTicketSubmitting
+                            : (opensShort
+                                ? l.tradeTicketSubmitShort
+                                : l.tradeTicketSubmit)),
+                        onPressed: (state.submitting ||
+                                _validator.checking ||
+                                localRefusal != null ||
+                                // The trade this advisory belongs to has already
+                                // executed. A live submit button under an unread
+                                // notice is a second trade one tap away.
+                                _pendingAdvisories.isNotEmpty)
+                            ? null
+                            : _submit,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AmiSpacing.m),
-            ],
-            if (permittedVerdict != null) ...[
-              ShariaVerdictBanner(verdict: permittedVerdict),
-              const SizedBox(height: AmiSpacing.m),
-            ],
-            // CR171 — why the quantity on a cover cannot be edited.
-            if (_isCover) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.swap_vert,
-                      size: 16, color: AmiColors.hexCyan),
-                  const SizedBox(width: AmiSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      l.shortCoverTicketNote(
-                        (widget.coverQuantity ?? 0).toStringAsFixed(0),
-                        widget.coverTicker!,
-                      ),
-                      style: AmiTypography.caption
-                          .copyWith(color: AmiColors.textMed),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AmiSpacing.m),
-            ],
-            if (refusal) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AmiSpacing.s),
-                decoration: BoxDecoration(
-                  color: AmiColors.slate900,
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  border: Border.all(color: AmiColors.hexAmber),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.lock, color: AmiColors.hexAmber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(l.tradeTicketSafetyFloorBlocked,
-                            style: AmiTypography.labelMono.copyWith(
-                                color: AmiColors.hexAmber, fontSize: 11)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    // The backend composes its violation sentences in English
-                    // (they also feed the agent prompts). When a blocking
-                    // Sharia verdict arrives structured, its localized banner
-                    // is rendered below instead, so drop the English twin here
-                    // rather than showing the same fact twice in two
-                    // languages. The match is on the verdict's own ticker AND
-                    // standard, so a violation from any other rule survives;
-                    // if it ever fails to match, the user sees the English
-                    // sentence as well — duplicated, never missing.
-                    for (final v in _visibleViolations(state.lastSubmit!))
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text('• $v', style: AmiTypography.caption),
-                      ),
-                    if (blockingVerdict != null) ...[
-                      const SizedBox(height: AmiSpacing.s),
-                      ShariaVerdictBanner(verdict: blockingVerdict),
-                    ],
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AmiSpacing.xs),
                     Text(
-                      l.tradeTicketChangeMandate,
-                      style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
-                    ),
-                    // CR133 §5 — this line used to end "…via Settings → My
-                    // Mandate", which fired at the exact moment a compliance
-                    // breach had just blocked the trade and then made the user
-                    // walk the path themselves. CR133 moves that path (the
-                    // mandate now sits YOU → SETTINGS), so the instruction was
-                    // about to be both wrong AND a longer walk. Replaced with
-                    // the control rather than renamed: a rename leaves the same
-                    // trap armed for the next nav change. Same pattern the app
-                    // already ships as `floorLockedGoToLessons` → "GO TO
-                    // LESSONS".
-                    const SizedBox(height: AmiSpacing.s),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 32),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () => Navigator.of(context)
-                            .push(MaterialPageRoute<void>(
-                          builder: (_) => const SettingsScreen(),
-                        )),
-                        child: Text(
-                          l.tradeTicketOpenMandate,
-                          style: AmiTypography.labelMono
-                              .copyWith(color: AmiColors.hexBlue),
-                        ),
-                      ),
+                      l.tradeTicketFooterNote,
+                      style: AmiTypography.caption
+                          .copyWith(color: AmiColors.textLow),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AmiSpacing.m),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _ticker,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.characters,
-                    style: AmiTypography.statMid,
-                    decoration: _decoration(
-                        label: l.tradeTicketLabelTicker,
-                        hint: l.tradeTicketHintTicker),
-                  ),
-                ),
-                const SizedBox(width: AmiSpacing.s),
-                _SideToggle(
-                  value: _side,
-                  onChange: (v) => setState(() {
-                    _side = v;
-                    _prefillSellQuantity(state);
-                    _rebracketForSide();
-                  }),
-                ),
-              ],
             ),
-            // CR227 — destination choice: AMI Sim / Alpaca Paper / Both.
-            // Hidden entirely on the cover/sell-from-holding entry paths
-            // (`_destinationLocked`) and for anyone without a linked Alpaca
-            // paper account — an unlinked user sees exactly today's ticket.
-            if (alpacaLinked && !_destinationLocked) ...[
-              const SizedBox(height: AmiSpacing.m),
-              _PillToggle<TradeDestination>(
-                label: 'DESTINATION',
-                value: _destination,
-                accent: AmiColors.hexBlue,
-                options: const [
-                  (TradeDestination.amiSim, 'AMI SIM'),
-                  (TradeDestination.alpacaPaper, 'ALPACA PAPER'),
-                  (TradeDestination.both, 'BOTH'),
-                ],
-                onChange: (v) => setState(() => _destination = v),
-              ),
-            ],
-            // CR227 — per-destination outcomes from the last submit. Shown
-            // instead of (not alongside) the single snackbar whenever more
-            // than one leg was attempted, or an Alpaca-only leg was refused
-            // and the sheet stayed open to say why.
-            if (_destinationOutcomes.isNotEmpty) ...[
-              const SizedBox(height: AmiSpacing.m),
-              for (final o in _destinationOutcomes)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AmiSpacing.s),
-                    decoration: BoxDecoration(
-                      color: AmiColors.slate900,
-                      borderRadius: BorderRadius.circular(AmiRadii.card),
-                      border: Border.all(
-                          color: o.ok ? AmiColors.hexGreen : AmiColors.hexAmber),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(o.ok ? Icons.check_circle : Icons.error_outline,
-                            size: 16,
-                            color: o.ok ? AmiColors.hexGreen : AmiColors.hexAmber),
-                        const SizedBox(width: AmiSpacing.xs),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(o.label,
-                                  style: AmiTypography.labelMono.copyWith(
-                                      fontSize: 10,
-                                      color: o.ok
-                                          ? AmiColors.hexGreen
-                                          : AmiColors.hexAmber)),
-                              Text(o.message, style: AmiTypography.caption),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-            // DEF207 — not-found takes the price chip's place entirely. A
-            // price of ANY kind next to a string that isn't a ticker is the
-            // fabrication this defect is about; the two are mutually
-            // exclusive by construction, not by z-order.
-            if (_validator.unknownTicker != null) ...[
-              const SizedBox(height: AmiSpacing.xs),
-              TickerNotFoundPanel(
-                typed: _validator.unknownTicker!,
-                suggestion: _validator.suggestion,
-                onAccept: (t) {
-                  _ticker.text = t;
-                  _ticker.selection =
-                      TextSelection.collapsed(offset: t.length);
-                },
-              ),
-            ]
-            // Live price anchor for setting TP / SL when no verdict has
-            // been convened. Source pill (LIVE / MOCK) reflects what the
-            // backend actually returned for this ticker — yfinance leaf
-            // shows LIVE, mock_walk fallback shows MOCK.
-            else if (_quote != null || _quoteLoading || _validator.checking) ...[
-              const SizedBox(height: AmiSpacing.xs),
-              _QuoteChip(
-                quote: _quote,
-                loading: _quoteLoading || _validator.checking,
-              ),
-            ],
-            const SizedBox(height: AmiSpacing.m),
-            TextField(
-              controller: _qty,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-              ],
-              style: AmiTypography.body,
-              decoration: _decoration(
-                  label: l.tradeTicketLabelQuantity, hint: l.tradeTicketHintQty),
-            ),
-            // CR170 — the order-type controls appear ONLY when this backend
-            // actually has a resting-order book. Against a pre-CR170 server
-            // `order_type=limit` is accepted and filled instantly at the price
-            // typed, so offering the picker there would be a control that
-            // quietly does something else with the user's money (CR040). See
-            // `SimState.restingOrdersSupported`.
-            if (state.restingOrdersSupported) ...[
-              const SizedBox(height: AmiSpacing.m),
-              _PillToggle<SimOrderType>(
-                label: l.tradeTicketLabelOrderType,
-                value: _orderType,
-                accent: AmiColors.hexCyan,
-                options: [
-                  (SimOrderType.market, l.tradeTicketOrderMarket),
-                  (SimOrderType.limit, l.tradeTicketOrderLimit),
-                  (SimOrderType.stop, l.tradeTicketOrderStop),
-                  (SimOrderType.stopLimit, l.tradeTicketOrderStopLimit),
-                ],
-                onChange: (v) => setState(() => _orderType = v),
-              ),
-              if (_orderType.needsTriggerPrice) ...[
-                const SizedBox(height: AmiSpacing.m),
-                TextField(
-                  controller: _trigger,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  style: AmiTypography.body,
-                  decoration: _decoration(
-                      label: l.tradeTicketLabelTrigger,
-                      hint: l.tradeTicketHintPrice),
-                ),
-              ],
-              if (_orderType.needsLimitPrice) ...[
-                const SizedBox(height: AmiSpacing.m),
-                TextField(
-                  controller: _limit,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  style: AmiTypography.body,
-                  decoration: _decoration(
-                      label: l.tradeTicketLabelLimit,
-                      hint: l.tradeTicketHintPrice),
-                ),
-              ],
-              if (_orderType.canRest) ...[
-                const SizedBox(height: AmiSpacing.m),
-                _PillToggle<SimOrderTif>(
-                  label: l.tradeTicketLabelTif,
-                  value: _tif,
-                  accent: AmiColors.hexAmber,
-                  options: [
-                    (SimOrderTif.day, l.tradeTicketTifDay),
-                    (SimOrderTif.gtd30, l.tradeTicketTif30),
-                    (SimOrderTif.gtd90, l.tradeTicketTif90),
-                  ],
-                  onChange: (v) => setState(() => _tif = v),
-                ),
-              ],
-              _OrderIntentHint(
-                side: _side,
-                ticker: _quoteTicker ?? _ticker.text.trim().toUpperCase(),
-                orderType: _orderType,
-                triggerPrice: double.tryParse(_trigger.text.trim()),
-                limitPrice: double.tryParse(_limit.text.trim()),
-                mark: _quote?.price,
-              ),
-            ],
-            const SizedBox(height: AmiSpacing.m),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _stop,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: AmiTypography.body,
-                    decoration: _decoration(
-                        label: l.tradeTicketLabelStop,
-                        hint: l.tradeTicketHintOptional),
-                  ),
-                ),
-                const SizedBox(width: AmiSpacing.s),
-                Expanded(
-                  child: TextField(
-                    controller: _target,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: AmiTypography.body,
-                    decoration: _decoration(
-                        label: l.tradeTicketLabelTarget,
-                        hint: l.tradeTicketHintOptional),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AmiSpacing.m),
-            TextField(
-              controller: _horizon,
-              keyboardType: TextInputType.number,
-              style: AmiTypography.body,
-              decoration: _decoration(
-                  label: l.tradeTicketLabelHorizon, hint: l.tradeTicketHintOptional),
-            ),
-            // CR188 — informational, and deliberately in the refusal's slot
-            // rather than beside it: the two are mutually exclusive, and the
-            // last thing read before the button should be one sentence about
-            // this order, never two competing ones. CR189's stop-raise
-            // disclosure rides the same slot on the same terms — amber, like
-            // the short notice, because a risk control the user set by hand
-            // is about to move.
-            if (notice != null) ...[
-              const SizedBox(height: AmiSpacing.m),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    opensShort ? Icons.trending_down : Icons.info_outline,
-                    size: 16,
-                    color: opensShort || blendNotice != null
-                        ? AmiColors.hexAmber
-                        : AmiColors.textMed,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      notice,
-                      style: AmiTypography.caption.copyWith(
-                        color: opensShort || blendNotice != null
-                            ? AmiColors.hexAmber
-                            : AmiColors.textMed,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (localRefusal != null) ...[
-              const SizedBox(height: AmiSpacing.m),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AmiSpacing.m),
-                decoration: BoxDecoration(
-                  color: AmiColors.slate900,
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  border: Border.all(color: AmiColors.hexAmber),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.block, size: 18, color: AmiColors.hexAmber),
-                    const SizedBox(width: AmiSpacing.s),
-                    Expanded(
-                      child: Text(localRefusal,
-                          style: AmiTypography.caption
-                              .copyWith(color: AmiColors.hexAmber)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: AmiSpacing.l),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  // CR188 — a short is neither a buy nor an ordinary sell, and
-                  // the control says so. CR171 already had the words for it and
-                  // fired them AFTER the fill, which is right for the
-                  // borrow-cost advisory and wrong for "this is a different
-                  // kind of position than you think you are opening". A word on
-                  // the control being pressed is structural; a sentence above it
-                  // is an instruction, and instructions are not controls.
-                  backgroundColor: opensShort
-                      ? AmiColors.hexAmber
-                      : (_side == 'buy'
-                          ? AmiColors.hexGreen
-                          : AmiColors.hexRed),
-                  foregroundColor: AmiColors.slate900,
-                  padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
-                ),
-                icon: (state.submitting || _validator.checking)
-                    ? const SizedBox(
-                        width: 16, height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AmiColors.slate900,
-                        ),
-                      )
-                    : Icon(opensShort
-                        ? Icons.trending_down
-                        : (_side == 'buy' ? Icons.add : Icons.remove)),
-                // CR188 — the LABEL is the structural half, not the colour. A
-                // user who reads nothing on this sheet still reads the word on
-                // the button they are pressing, and "SUBMIT TRADE" over an
-                // order that opens a borrowed position with uncapped loss is
-                // the sheet's last chance to be honest.
-                label: Text(state.submitting
-                    ? l.tradeTicketSubmitting
-                    : (opensShort
-                        ? l.tradeTicketSubmitShort
-                        : l.tradeTicketSubmit)),
-                onPressed: (state.submitting ||
-                        _validator.checking ||
-                        localRefusal != null ||
-                        // The trade this advisory belongs to has already
-                        // executed. A live submit button under an unread
-                        // notice is a second trade one tap away.
-                        _pendingAdvisories.isNotEmpty)
-                    ? null
-                    : _submit,
-              ),
-            ),
-            const SizedBox(height: AmiSpacing.xs),
-            Text(
-              l.tradeTicketFooterNote,
-              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
-            ),
-          ],
+          ]),
         ),
       ),
     );
@@ -1576,7 +1664,6 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     );
   }
 }
-
 
 class _SideToggle extends StatelessWidget {
   const _SideToggle({required this.value, required this.onChange});
@@ -1692,7 +1779,6 @@ class _PillToggle<T> extends StatelessWidget {
   }
 }
 
-
 /// CR170 §9 calls this the highest-value element in the feature, and the reason
 /// is behavioural rather than decorative: without it a resting order reads as a
 /// **broken button**. The user taps BUY, nothing appears in their holdings, and
@@ -1770,15 +1856,18 @@ class _OrderIntentHint extends StatelessWidget {
   }
 }
 
-
 /// Inline chip under the ticker field — shows the live price, day-change
 /// %, and a LIVE / MOCK pill so the user has a price anchor when setting
 /// TP / SL on a manual trade.
 class _QuoteChip extends StatelessWidget {
   const _QuoteChip({required this.quote, required this.loading});
 
-  final ({double price, double changePct, String source, String marketState})?
-      quote;
+  final ({
+    double price,
+    double changePct,
+    String source,
+    String marketState
+  })? quote;
   final bool loading;
 
   @override
@@ -1798,7 +1887,8 @@ class _QuoteChip extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text('fetching live price…',
-                style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+                style:
+                    AmiTypography.caption.copyWith(color: AmiColors.textLow)),
           ],
         ),
       );
@@ -1807,7 +1897,8 @@ class _QuoteChip extends StatelessWidget {
     if (q == null) return const SizedBox.shrink();
     final isLive = q.source.toLowerCase().contains('yfinance') ||
         q.source.toLowerCase().contains('yahoo');
-    final changeColor = q.changePct >= 0 ? AmiColors.hexGreen : AmiColors.hexAmber;
+    final changeColor =
+        q.changePct >= 0 ? AmiColors.hexGreen : AmiColors.hexAmber;
     final changeSign = q.changePct >= 0 ? '+' : '';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

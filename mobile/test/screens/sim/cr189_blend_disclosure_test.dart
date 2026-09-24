@@ -65,7 +65,8 @@ Future<void> _pump(WidgetTester t, {List<SimHolding> holdings = const []}) async
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(body: SingleChildScrollView(child: TradeTicketSheet())),
+      // CR232 — `TradeTicketSheet` builds its own `Scaffold` now.
+      home: const TradeTicketSheet(),
     ),
   ));
   for (var i = 0; i < 4; i++) {

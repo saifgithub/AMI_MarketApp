@@ -355,6 +355,7 @@ Future<void> showUpgradeSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate800,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

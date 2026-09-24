@@ -28,6 +28,7 @@ class NavChangeSheet extends StatelessWidget {
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
         context: context,
+        useRootNavigator: false,
         backgroundColor: AmiColors.slate800,
         isScrollControlled: true,
         builder: (_) => const NavChangeSheet(),

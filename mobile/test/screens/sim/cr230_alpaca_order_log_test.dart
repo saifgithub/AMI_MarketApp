@@ -242,9 +242,8 @@ Future<void> _pump(
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-          body: SingleChildScrollView(
-              child: const TradeTicketSheet(tickerPrefill: 'AAPL'))),
+      // CR232 — `TradeTicketSheet` builds its own `Scaffold` now.
+      home: const TradeTicketSheet(tickerPrefill: 'AAPL'),
     ),
   ));
   for (var i = 0; i < 4; i++) {
@@ -345,9 +344,8 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-              body: SingleChildScrollView(
-                  child: const TradeTicketSheet(tickerPrefill: 'AAPL'))),
+          // CR232 — `TradeTicketSheet` builds its own `Scaffold` now.
+          home: const TradeTicketSheet(tickerPrefill: 'AAPL'),
         ),
       ));
       for (var i = 0; i < 4; i++) {
@@ -415,9 +413,8 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-              body: SingleChildScrollView(
-                  child: const TradeTicketSheet(tickerPrefill: 'AAPL'))),
+          // CR232 — `TradeTicketSheet` builds its own `Scaffold` now.
+          home: const TradeTicketSheet(tickerPrefill: 'AAPL'),
         ),
       ));
       for (var i = 0; i < 4; i++) {

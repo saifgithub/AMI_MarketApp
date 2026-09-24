@@ -39,6 +39,7 @@ Future<void> showMergeSheet(
   if (!context.mounted) return;
   await showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     isScrollControlled: true,
     backgroundColor: AmiColors.slate900,
     shape: const RoundedRectangleBorder(

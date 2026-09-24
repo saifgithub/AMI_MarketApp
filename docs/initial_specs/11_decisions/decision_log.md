@@ -551,3 +551,73 @@ Keep this log honest. The "why" matters more than the "what."
 - **Affects**: [`CLAUDE.md`](../../../CLAUDE.md) decision-pointer table ("Endpoint of the
   journey" row, rewritten by this decision). Filed as
   [CR227](../../forward_planning/CR227_alpaca_paper_order_routing/CR227_alpaca_paper_order_routing.md).
+
+### D-072 — Stabilise before external beta (2026-09-24)
+
+- **Decided** (2026-09-24): the go-to-market target is an external TestFlight and
+  Play closed-testing beta, launched on the **current melehost Alpha stack** — not
+  the GCP/Supabase Beta environment, which comes later on its own timeline.
+  **Payments stay parked** (unchanged from the 2026-08-21 ruling). Before the beta
+  opens: a **retroactive audit of six risky, previously-unaudited lanes** (the
+  options/sim engine, PM/Room verdict logic, security/credits, the migration chain,
+  the remaining CR221 slots, and CR222's slice C) — trivial UI, copy and content
+  fixes already shipped are accepted as-is and are **not** re-audited. Then **finish
+  CR221, CR222 and CR228** (all three already `in_progress`), then a **feature
+  freeze**: new requests after that point are filed as `proposed`, not built ahead of
+  the freeze. Audits run through the standing track-U `orchestration/audit/`
+  handshake; the **one-shot `dispatch_audit.sh` path is retired** — it produced a
+  false COMPLETE verdict on CR227 and is not trusted for this pass.
+- **Source**: Saiful, 2026-09-24, on returning from 3 days away to find 6 weeks of
+  work (2026-08-13 → 09-24: 966 commits, 92 checkpoint memos, ~20 sessions) he could
+  not account for. His concern was that work had not been finished or validated
+  properly. The Architect ran a read-only sweep (43 CRs + 132 DEFs closed in the
+  window, but only ~25 IDs with a COMPLETE track-U audit out of ~200 built) and
+  brought back a sized plan; the decisions above are Saiful's rulings on that plan.
+- **Rationale**: a codebase this size moving this fast for six unsupervised weeks
+  needs its risk concentrated and checked before it is exposed to testers outside
+  the founder's own device — not a full re-audit of everything shipped (disproportionate,
+  and most of the volume is low-risk UI/copy), but a targeted pass over the load-bearing
+  logic (options/sim, PM compliance floor, security/credits, migrations) that never had
+  independent verification. Freezing before the freeze-worthy work is even finished
+  would strand CR221/CR222/CR228 half-built; finishing them first and freezing after
+  keeps the freeze meaningful instead of arbitrary.
+- **Affects**: [`docs/forward_planning/cr_list.md`](../../forward_planning/cr_list.md)
+  (CR221, CR222, CR228 close out under this programme), the daily review log
+  (`docs/governance/daily_cr_def_review_log.md`, back-filled 09-22 through 09-24 under
+  this decision). Filed as
+  [CR231](../../forward_planning/CR231_stabilisation_programme/CR231_stabilisation_programme.md).
+
+### D-073 — Build on the personal developer accounts, migrate to the company account at the end
+
+- **Decided** (2026-09-22): development continues on Saiful's **personal** Apple and
+  Google developer accounts through the rest of the build. The migration to the
+  **company account** (Agentic Market Intelligence) happens **once, at the end of
+  development** — not mid-development, not incrementally. Personal stays the
+  **testing-only** account throughout; the company account is the **only production
+  release**, with no permanent dual-listing. This is a re-platform, not a transfer —
+  Apple's "Organization Transfer" only moves an app between two existing organization
+  accounts, so both platforms effectively require standing the app up fresh under the
+  company identity (new bundle-ID confirmation, re-registered Sign in with Apple,
+  re-issued APNs certs). A **Phase 0 smoke test** is planned once the company account
+  exists: a throwaway build to verify sign-in and push survive the Team ID change,
+  cheap insurance before the real cutover — it does not pull the migration earlier,
+  it de-risks the single pass at the end. The 105 existing TestFlight builds and
+  their history stay on personal and are not carried over.
+- **Source**: research + decision captured in the "Revenue Setup" founder checklist,
+  preserved in full at
+  [`revenue_setup_research.md`](../../forward_planning/CR231_stabilisation_programme/revenue_setup_research.md)
+  (source: `/private/tmp/claude-501/.../scratchpad/revenue-setup.html`, 2026-09-22).
+  That document also lays out the full path to a working payout once the company
+  account is live (D-U-N-S number, Apple Organization enrolment + Paid Apps
+  Agreement + Small Business Program, Play Console + payments profile, AdMob,
+  RevenueCat product config) — out of scope for this decision, which covers only the
+  account-sequencing call and the Phase 0 smoke test.
+- **Rationale**: matches a pattern the project already uses — `project_plan.md`'s own
+  M6 milestone ("production APNs cert — dev cert was used in Alpha, cut over to
+  production") is the same develop-on-dev/cut-to-production shape, so this isn't a
+  bespoke plan. Migrating incrementally would mean re-testing sign-in and push
+  against a moving Team ID throughout development instead of once, at a chosen point,
+  with a smoke test as insurance.
+- **Affects**: [`docs/forward_planning/CR231_stabilisation_programme/revenue_setup_research.md`](../../forward_planning/CR231_stabilisation_programme/revenue_setup_research.md)
+  (full checklist). Recorded under
+  [CR231](../../forward_planning/CR231_stabilisation_programme/CR231_stabilisation_programme.md).

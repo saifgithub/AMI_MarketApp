@@ -370,6 +370,7 @@ Future<void> showAgentPeekSheet(
   final agent = agentById(voice.agentId);
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate800,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

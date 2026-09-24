@@ -213,6 +213,7 @@ class _HitTile extends StatelessWidget {
 void _openSheet(BuildContext context, CoachQA qa) {
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate900,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

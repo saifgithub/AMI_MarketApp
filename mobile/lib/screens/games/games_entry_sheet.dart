@@ -28,6 +28,7 @@ class GamesEntrySheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context, {required String cadence}) {
     return showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

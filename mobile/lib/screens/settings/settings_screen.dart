@@ -954,6 +954,7 @@ class _ComplianceToggles extends StatelessWidget {
     if (explain == null) return;
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

@@ -22,6 +22,7 @@
 /// touching.
 library;
 
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -70,10 +71,14 @@ class AmiScreenHeader extends StatelessWidget {
       child: Row(
         children: [
           if (showBack) ...[
-            GestureDetector(
-              onTap: onBack ?? () => Navigator.of(context).pop(),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  size: 18, color: AmiColors.textMed),
+            Semantics(
+              button: true,
+              identifier: ExitIds.navBack,
+              child: GestureDetector(
+                onTap: onBack ?? () => Navigator.of(context).pop(),
+                child: const Icon(Icons.arrow_back_ios_new,
+                    size: 18, color: AmiColors.textMed),
+              ),
             ),
             const SizedBox(width: AmiSpacing.m),
           ],

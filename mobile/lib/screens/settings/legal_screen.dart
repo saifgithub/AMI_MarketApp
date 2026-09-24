@@ -4,6 +4,7 @@
 /// Displayed when the user taps a legal link in Settings → Help.
 library;
 
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -50,9 +51,15 @@ class _LegalScreenState extends State<LegalScreen> {
             color: AmiColors.textHigh,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+        // CR232 — back chevron, not a top-right X: this is a pushed full
+        // page.
+        leading: Semantics(
+          button: true,
+          identifier: ExitIds.navBack,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
       ),
       body: Stack(

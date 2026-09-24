@@ -21,6 +21,7 @@ class PriceAlertSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context, {required String ticker}) {
     return showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(

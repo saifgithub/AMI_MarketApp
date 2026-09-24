@@ -18,13 +18,17 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/screens/floor/floor_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
+import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
+import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
+import 'package:ami_trade/widgets/ticker_tape.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/features/games/games_gate.dart';
@@ -125,6 +129,19 @@ Future<void> _pumpHome(WidgetTester tester) async {
 /// state change (a `setState`, a route push) actually land.
 Future<void> _settle(WidgetTester t) async {
   for (var i = 0; i < 10; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
+
+/// CR232 — `_settle`'s 500ms budget isn't always enough for a route's own
+/// pop/push transition (default `MaterialPageRoute` transition + Navigator
+/// bookkeeping) to finish unmounting the old route's subtree, even though
+/// the Navigator's own `canPop()` flips immediately. Measured: 500ms left
+/// the popped route's `Text('PUSHED PAGE')` still in the tree; 1000ms does
+/// not. Used only by the tests that assert on state *after* a pop, not a
+/// blanket replacement for `_settle`.
+Future<void> _settleAfterTransition(WidgetTester t) async {
+  for (var i = 0; i < 20; i++) {
     await t.pump(const Duration(milliseconds: 50));
   }
 }
@@ -233,5 +250,207 @@ void main() {
     expect(container.read(youSegmentProvider), YouSegment.journal);
     expect(container.read(journalVisibleProvider), isTrue);
     expect(t.takeException(), isNull);
+  });
+
+  // CR232 — persistent chrome across pushed pages. Saiful: "The bottom
+  // menu, the ad, and the ticker tape should always be on every screen and
+  // page." These five tests are the shell half of that ruling; the
+  // structural Icons.close guard (`exit_affordance_structural_test.dart`)
+  // is the other half.
+
+  testWidgets(
+      'CR232: a page pushed from inside a tab still shows the bottom nav '
+      'and the ticker tape', (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+
+    // Push exactly the way every real call site does: `Navigator.of(context)`
+    // from a widget living inside the active tab's pane (here, FloorScreen
+    // itself — tab 0 is active by default). Post-CR232 that resolves to the
+    // tab's own nested Navigator (`_TabNavigator`), not the root one, which
+    // is the whole mechanism this CR relies on — see `home_shell.dart`'s
+    // library comment.
+    final floorContext = t.element(find.byType(FloorScreen));
+    Navigator.of(floorContext).push(MaterialPageRoute<void>(
+      builder: (_) => const Scaffold(
+        backgroundColor: AmiColors.slate900,
+        body: Center(child: Text('PUSHED PAGE')),
+      ),
+    ));
+    await _settle(t);
+
+    expect(find.text('PUSHED PAGE'), findsOneWidget,
+        reason: 'the push must have landed — otherwise the rest of this '
+            'test is vacuous');
+    expect(find.byType(HexBottomNav), findsOneWidget,
+        reason: 'CR232: the bottom nav must survive a page pushed from '
+            "inside a tab — before this CR every push covered HomeShell's "
+            'own Scaffold, which is what forced the Icons.close pattern');
+    expect(find.byType(TickerTape), findsOneWidget,
+        reason: 'CR232: the ticker tape is part of the same persistent '
+            'chrome as the bottom nav');
+  });
+
+  testWidgets('CR232: re-tapping the active tab pops its stack to root',
+      (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+
+    final floorContext = t.element(find.byType(FloorScreen));
+    Navigator.of(floorContext).push(MaterialPageRoute<void>(
+      builder: (_) => const Scaffold(
+        backgroundColor: AmiColors.slate900,
+        body: Center(child: Text('PUSHED PAGE')),
+      ),
+    ));
+    await _settle(t);
+    expect(find.text('PUSHED PAGE'), findsOneWidget);
+
+    // Floor is tab 0 — already active. Tapping it again must pop the pushed
+    // page back to Floor's own root, not switch tabs (there is nowhere else
+    // to switch to; Floor is already showing).
+    await t.tap(find.text('FLOOR'));
+    await _settleAfterTransition(t);
+
+    expect(find.text('PUSHED PAGE'), findsNothing,
+        reason: 'CR232 rule 5: tapping the already-selected tab pops that '
+            "tab's stack to its root");
+    expect(find.byType(FloorScreen), findsOneWidget);
+    expect(find.byType(HexBottomNav), findsOneWidget);
+  });
+
+  testWidgets('CR232: the software keyboard hides the persistent chrome',
+      (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+    expect(find.byType(HexBottomNav), findsOneWidget);
+    expect(find.byType(TickerTape), findsOneWidget);
+
+    // Simulate the keyboard opening: a nonzero bottom `viewInsets`, exactly
+    // what the OS reports while the software keyboard covers that much of
+    // the screen. `home_shell.dart` reads this via
+    // `MediaQuery.viewInsetsOf(context)`.
+    t.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(() => t.view.resetViewInsets());
+    await _settle(t);
+
+    expect(find.byType(HexBottomNav), findsNothing,
+        reason: 'CR232 rule 2 exception (a): the keyboard hides the '
+            'persistent chrome rather than fighting it for screen space');
+    expect(find.byType(TickerTape), findsNothing);
+
+    // And it comes back once the keyboard closes.
+    t.view.resetViewInsets();
+    await _settle(t);
+    expect(find.byType(HexBottomNav), findsOneWidget);
+    expect(find.byType(TickerTape), findsOneWidget);
+  });
+
+  testWidgets(
+      'CR232: the trade ticket opens as a page with back + Cancel, no '
+      'Icons.close', (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+
+    // Portfolio tab (index 1) carries a "NEW TRADE"-style CTA in production,
+    // but the ticket is exercised directly here — same as the chrome-
+    // persistence test above — because reaching it through Portfolio's own
+    // UI is unrelated surface this test does not need to depend on.
+    //
+    // `verdictRef` is non-null so the "NO AI VERDICT" advisory (bug
+    // d5717660) does not render — that card carries its OWN inline
+    // `Icons.close` dismiss (CR232 rule 4's allowed exception, not the
+    // page's exit), which would make the blanket `findsNothing` below fail
+    // for a reason unrelated to what this test checks.
+    final floorContext = t.element(find.byType(FloorScreen));
+    TradeTicketSheet.show(floorContext, verdictRef: 'v1');
+    await _settle(t);
+
+    expect(find.byType(TradeTicketSheet), findsOneWidget,
+        reason: 'the ticket must have opened — otherwise the rest of this '
+            'test is vacuous');
+    // CR232 rule 3/4 — a back chevron AND a text "Cancel", not a top-right X.
+    expect(find.bySemanticsIdentifier(ExitIds.navBack), findsOneWidget,
+        reason: 'CR232: the trade ticket is a pushed page, not a sheet — it '
+            "carries AmiScreenHeader's back chevron");
+    expect(find.bySemanticsIdentifier(ExitIds.tradeTicketCancel),
+        findsOneWidget,
+        reason: 'CR232 rule 3: the trade ticket carries a text "Cancel" '
+            'action alongside the back chevron');
+    expect(find.byIcon(Icons.close), findsNothing,
+        reason: 'CR232: DEF415\'s close-button approach is superseded — the '
+            'ticket must not carry a top-right Icons.close any more');
+    // And the shell chrome underneath is still there.
+    expect(find.byType(HexBottomNav), findsOneWidget);
+    expect(find.byType(TickerTape), findsOneWidget);
+  });
+
+  // Saiful, from TestFlight build +108's screenshots: the sim trade ticket's
+  // content rendered under the iOS status bar (clock/signal/battery
+  // overlapping the TICKER field and BUY/SELL toggle). Root cause was
+  // `Scaffold.appBar: PreferredSize(...)` — not covered by `SafeArea`, unlike
+  // every other screen's `AmiScreenHeader`, which sits inside `body:
+  // SafeArea(...)`. Fixed on both trade tickets; these two tests are the
+  // regression net for the sim ticket (the games ticket shares the exact
+  // same structure and fix — see games_trade_ticket_test.dart's own
+  // coverage of the analogous screen).
+  testWidgets(
+      'CR232: the trade ticket header sits below the top safe-area inset',
+      (t) async {
+    // A generous inset — bigger than any real status bar (Dynamic Island
+    // devices run ~59dp) — so the test fails loudly if the header is placed
+    // with no regard for `padding.top` at all, not just marginally wrong.
+    t.view.padding = const FakeViewPadding(top: 80);
+    addTearDown(() => t.view.resetPadding());
+    await _pumpHome(t);
+    await _settle(t);
+
+    final floorContext = t.element(find.byType(FloorScreen));
+    TradeTicketSheet.show(floorContext, verdictRef: 'v1');
+    await _settle(t);
+    expect(find.byType(TradeTicketSheet), findsOneWidget);
+
+    final headerTopLeft = t.getTopLeft(find.text('NEW TRADE').first);
+    expect(headerTopLeft.dy, greaterThanOrEqualTo(80),
+        reason: 'CR232: the header must render below MediaQuery.padding.top '
+            "(80 here) — `Scaffold.appBar` is NOT SafeArea'd, which is "
+            'exactly the defect Saiful caught on device: the header drew '
+            'under the iOS status bar');
+  });
+
+  testWidgets(
+      'CR232: tapping the trade ticket body dismisses the keyboard',
+      (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+
+    final floorContext = t.element(find.byType(FloorScreen));
+    TradeTicketSheet.show(floorContext, verdictRef: 'v1');
+    await _settle(t);
+
+    // Focus the QUANTITY field specifically (identified by its label —
+    // several fields on this ticket share the same numeric keypad, so
+    // matching on `keyboardType` alone is ambiguous). A numeric keypad on
+    // iOS has no return key, so this is the field Saiful's screenshots
+    // showed stuck open, covering the page. `showKeyboard` is flutter_test's
+    // way of asserting focus without a real platform keyboard.
+    await t.showKeyboard(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.labelText == 'QUANTITY'));
+    expect(
+        t.testTextInput.isVisible, isTrue,
+        reason: 'the field must be focused — otherwise the rest of this '
+            'test is vacuous');
+
+    // Tap elsewhere on the page body (a point away from any field or
+    // button — the ticket's own icon/heading area).
+    await t.tapAt(const Offset(200, 20));
+    await _settle(t);
+
+    expect(t.testTextInput.isVisible, isFalse,
+        reason: 'CR232: tapping the page body must dismiss the keyboard — '
+            "an iOS numeric keypad has no return key, so without this "
+            'affordance the keyboard has no way to close and covers the '
+            "rest of the ticket (Saiful's +108 screenshots)");
   });
 }

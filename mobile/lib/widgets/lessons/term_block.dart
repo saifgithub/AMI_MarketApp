@@ -86,6 +86,7 @@ class _TermChip extends StatelessWidget {
 void _openSheet(BuildContext context, GlossaryEntry entry, String locale) {
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate900,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

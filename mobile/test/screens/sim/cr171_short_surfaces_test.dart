@@ -150,7 +150,9 @@ Future<void> _pump(
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: SingleChildScrollView(child: child)),
+      // CR232 — `TradeTicketSheet` builds its own `Scaffold` now; nesting
+      // Scaffolds gave the inner one an unbounded height.
+      home: child,
     ),
   ));
   // Explicit pumps, not pumpAndSettle: the ticket leaves pending Dio timers
