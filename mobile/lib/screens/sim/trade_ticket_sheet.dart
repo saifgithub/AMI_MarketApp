@@ -50,11 +50,28 @@ class _DestinationOutcome {
     required this.label,
     required this.ok,
     required this.message,
+    this.note,
   });
 
   final String label;
   final bool ok;
   final String message;
+  // DEF419 round 2 — a non-alarming line naming the mandate rules AMI could
+  // not check for this account (drawdown, existing open risk on an Alpaca
+  // paper account — see UnmeasuredRule). Null on every outcome except an
+  // accepted ALPACA PAPER leg with a non-empty `unmeasured_rules` on its
+  // preview; never set on a rejected outcome, where the violation message
+  // already carries the user's attention.
+  final String? note;
+}
+
+/// DEF419 round 2 — renders [SimPreviewResult.unmeasuredRules] as one plain,
+/// localized sentence (`tradeTicketUnmeasuredRulesNote`). `null` when the
+/// list is empty so callers can treat it as "nothing to show" directly.
+String? _unmeasuredRulesNote(AppLocalizations l, List<UnmeasuredRule> rules) {
+  if (rules.isEmpty) return null;
+  final names = rules.map((r) => r.rule.replaceAll('_', ' ')).join(', ');
+  return l.tradeTicketUnmeasuredRulesNote(names);
 }
 
 class TradeTicketSheet extends ConsumerStatefulWidget {
@@ -157,7 +174,6 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   AlpacaSnapshot? _alpacaSnapshot;
   DateTime? _alpacaSnapshotAt;
   static const _alpacaSnapshotTtl = Duration(seconds: 30);
-  Future<AlpacaSnapshot>? _alpacaSnapshotFetch;
   // Bug d5717660: when a trade has no AI verdict, suggest convening first.
   // The user can dismiss the advisory and proceed — the trade is recorded
   // with verdict_ref=null, which the journal renders as "Without AI advice".
@@ -673,52 +689,40 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// order, without re-fetching Alpaca on every quantity keystroke or every
   /// SUBMIT tap within the same short window.
   ///
-  /// Concurrent callers (the BOTH path fires the AMI and Alpaca legs at once)
-  /// share one in-flight fetch via [_alpacaSnapshotFetch] rather than each
-  /// starting their own request.
-  ///
   /// Throws on failure — callers decide what "couldn't read the account"
   /// means for their leg; this method never guesses.
   ///
-  /// **Fans out through a [Completer], never hands the same in-flight
-  /// `Future` straight to two callers.** [_submitBoth] awaits this from both
-  /// legs via `Future.wait`, and a `Future` that fails with two listeners
-  /// attached this way trips Dart's "unhandled exception" zone reporting
-  /// even though both listeners DO end up with a `try/catch` around their
-  /// own `await` — `flutter test` surfaced it as an uncaught
-  /// `AlpacaException` despite `_legAlpaca` catching it correctly. Routing
-  /// every caller through its own `completer.future` sidesteps that,
-  /// because each caller is listening to a distinct `Future` the completer
-  /// controls, not the same underlying one.
-  Future<AlpacaSnapshot> _fetchAlpacaSnapshot() {
+  /// DEF419-MOBILE round 2 (MINOR-1, auditor u66) — round 1 fanned every
+  /// caller through its own `Completer`, described as guarding "concurrent
+  /// callers (the BOTH path fires the AMI and Alpaca legs at once)". The
+  /// auditor traced every call site (there are exactly two: this method is
+  /// called only from [_submitAlpacaOnly] and [_legAlpaca], on mutually
+  /// exclusive destination paths — [_submitBoth] runs [_legAmi] and
+  /// [_legAlpaca] together, but [_legAmi] never calls this method) and found
+  /// the scenario the Completer guarded cannot occur: nothing in this file
+  /// ever has two concurrent listeners on one in-flight fetch. Simplified
+  /// back to a plain `await` over the TTL cache; a real concurrent-caller
+  /// need would justify reintroducing the fan-out, but it does not exist
+  /// today and claiming it did was the round-1 defect in the record, not
+  /// in the behaviour.
+  Future<AlpacaSnapshot> _fetchAlpacaSnapshot() async {
     final cached = _alpacaSnapshot;
     final at = _alpacaSnapshotAt;
     if (cached != null &&
         at != null &&
         DateTime.now().difference(at) < _alpacaSnapshotTtl) {
-      return Future.value(cached);
+      return cached;
     }
-    final inFlight = _alpacaSnapshotFetch;
-    if (inFlight != null) return inFlight;
-    final completer = Completer<AlpacaSnapshot>.sync();
-    _alpacaSnapshotFetch = completer.future;
     final client = ref.read(alpacaClientProvider);
-    Future.wait([client.account(), client.positions()]).then((results) {
-      final snapshot = AlpacaSnapshot(
-        portfolio: results[0] as AlpacaPortfolio,
-        positions: results[1] as List<AlpacaPosition>,
-      );
-      _alpacaSnapshot = snapshot;
-      _alpacaSnapshotAt = DateTime.now();
-      _alpacaSnapshotFetch = null;
-      completer.complete(snapshot);
-    }, onError: (Object e, StackTrace st) {
-      // Clears on failure too, so the next call starts a fresh fetch rather
-      // than replaying a dead one.
-      _alpacaSnapshotFetch = null;
-      completer.completeError(e, st);
-    });
-    return completer.future;
+    final results =
+        await Future.wait([client.account(), client.positions()]);
+    final snapshot = AlpacaSnapshot(
+      portfolio: results[0] as AlpacaPortfolio,
+      positions: results[1] as List<AlpacaPosition>,
+    );
+    _alpacaSnapshot = snapshot;
+    _alpacaSnapshotAt = DateTime.now();
+    return snapshot;
   }
 
   /// CR227 — "Alpaca only." Gates through `/v1/sim/preview` (no persist) so
@@ -775,20 +779,42 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           ]);
       return;
     }
-    final outcome =
-        await _placeAlpacaOrder(typed, qty, TradeDestination.alpacaPaper);
+    final outcome = await _placeAlpacaOrder(
+      typed, qty, TradeDestination.alpacaPaper,
+      note: _unmeasuredRulesNote(
+          AppLocalizations.of(context), preview.unmeasuredRules),
+    );
     if (!mounted) return;
     HapticFeedback.mediumImpact();
     setState(() => _destinationOutcomes = [outcome]);
     if (outcome.ok) {
       Navigator.of(context).pop();
+      // DEF419 round 2 — an accepted ALPACA PAPER submit pops the sheet
+      // immediately, so the outcomes panel below (where BOTH's Alpaca leg
+      // renders its note, since BOTH never pops) is never actually seen on
+      // this path. The snackbar is the only surface left, so the disclosure
+      // rides along as a second, visually lighter line rather than being
+      // silently dropped.
+      final note = outcome.note;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 5),
         backgroundColor: AmiColors.hexGreen,
         behavior: SnackBarBehavior.floating,
-        content: Text(outcome.message,
-            style: const TextStyle(
-                color: AmiColors.slate900, fontWeight: FontWeight.w600)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(outcome.message,
+                style: const TextStyle(
+                    color: AmiColors.slate900, fontWeight: FontWeight.w600)),
+            if (note != null) ...[
+              const SizedBox(height: 2),
+              Text(note,
+                  style: const TextStyle(
+                      color: AmiColors.slate900, fontSize: 11)),
+            ],
+          ],
+        ),
       ));
     }
   }
@@ -813,9 +839,16 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// state directly, since this method needs both outcomes together before
   /// it renders either.
   Future<void> _submitBoth(String typed, double qty) async {
+    // Resolved synchronously, before either leg's own `await`, and handed
+    // in rather than read inside [_legAlpaca] after its await — this method
+    // (unlike [_legAlpaca] itself) is `mounted`-checked once both legs
+    // settle, so reading `context` here avoids the "BuildContext across an
+    // async gap" risk `flutter analyze` flags on a read taken deep inside a
+    // helper whose own caller does the mounted check.
+    final l = AppLocalizations.of(context);
     final results = await Future.wait([
       _legAmi(typed, qty),
-      _legAlpaca(typed, qty),
+      _legAlpaca(typed, qty, l),
     ]);
     if (!mounted) return;
     final amiOutcome = results[0];
@@ -883,7 +916,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// (DEF419: sized against THAT account, never AMI's), preview against it,
   /// place only on acceptance. Degrades loudly on a fetch failure, matching
   /// [_submitAlpacaOnly]: never previews against AMI as a fallback.
-  Future<_DestinationOutcome> _legAlpaca(String typed, double qty) async {
+  ///
+  /// `l` is [_submitBoth]'s own `AppLocalizations.of(context)`, resolved
+  /// there before either leg's `await` — this method runs concurrently with
+  /// [_legAmi] via `Future.wait` and is not itself `mounted`-checked, so it
+  /// never reads `context` directly after crossing an async gap.
+  Future<_DestinationOutcome> _legAlpaca(
+      String typed, double qty, AppLocalizations l) async {
     final AlpacaSnapshot snapshot;
     try {
       snapshot = await _fetchAlpacaSnapshot();
@@ -912,7 +951,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 : (preview.blockedBy ?? 'Blocked by your mandate.')),
       );
     }
-    return _placeAlpacaOrder(typed, qty, TradeDestination.both);
+    return _placeAlpacaOrder(
+      typed, qty, TradeDestination.both,
+      note: _unmeasuredRulesNote(l, preview.unmeasuredRules),
+    );
   }
 
   /// The actual `POST /v2/orders` call, from the device, against the user's
@@ -940,8 +982,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   Future<_DestinationOutcome> _placeAlpacaOrder(
     String typed,
     double qty,
-    TradeDestination destination,
-  ) async {
+    TradeDestination destination, {
+    // DEF419 round 2 — the accepted preview's `unmeasuredRules`, rendered
+    // only on a SUCCESSFUL outcome: a rejected order already shows the
+    // violation that blocked it, and this note is about rules that were
+    // skipped on the ACCEPTED path, not about why anything failed.
+    String? note,
+  }) async {
     try {
       final order = await ref.read(alpacaClientProvider).submitOrder(
             symbol: typed,
@@ -962,6 +1009,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         ok: true,
         message: '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
             '— ${order.status}.',
+        note: note,
       );
     } on AlpacaOrderRejected catch (e) {
       unawaited(_reportOrderLog(
@@ -1582,6 +1630,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                                       : AmiColors.hexAmber)),
                                       Text(o.message,
                                           style: AmiTypography.caption),
+                                      // DEF419 round 2 — non-alarming (muted,
+                                      // no icon of its own): this is a
+                                      // disclosure about what AMI could not
+                                      // check, not a warning about the trade.
+                                      if (o.note != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(o.note!,
+                                            style: AmiTypography.caption
+                                                .copyWith(
+                                                    color: AmiColors.slate500)),
+                                      ],
                                     ],
                                   ),
                                 ),

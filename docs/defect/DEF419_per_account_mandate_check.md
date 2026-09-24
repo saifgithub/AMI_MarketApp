@@ -140,10 +140,10 @@ only the account's own balance sheet does.
 | Cash sufficiency (BUY) | **per-account** | "Do you have the money" is a question about the account receiving the order. |
 | Held-quantity-for-sell / long-only short detection | **per-account** | Whether a SELL closes a position or opens a short depends on what THAT account currently holds — an Alpaca account may hold a ticker the AMI sim portfolio has never touched, and vice versa. |
 | Gross exposure on a sell-to-open (CR171 §6) | **per-account** | Same holdings-dependency as above; existing same-ticker exposure in the snapshot is summed into the short's gross value exactly as an AMI holding would be. |
-| Drawdown breach | **per-account, but unmeasurable** | See Known limitation — resolves to "never breaches" rather than a fabricated number. |
+| Drawdown breach | **per-account, but UNMEASURABLE on a snapshot — disclosed, not blocked (round 2)** | AMI has no NAV history for an externally-custodied account. Round 1 resolved this to a silent `0.0` ("never breaches"); round 2 (auditor u66 MAJOR-2) keeps the same `0.0` behaviour but now reports it explicitly via `unmeasured_rules` — see "Round 2" below. |
+| Total open-risk cap | **split: the NEW trade's own risk is per-account; PRE-EXISTING risk from AMI's ledger is unmeasurable for a snapshot account — disclosed, not blocked (round 2)** | `existing_open_risk_pct` (the sum over AMI's own open positions/stops) is a percentage OF THE AMI PORTFOLIO — summing it against a cap measured in a different account's equity was DEF419's own defect, recurring in this one rule (auditor u66 MAJOR-1). Round 2: on the snapshot path this pre-existing figure is treated as unmeasured (0.0, reported), while the PROPOSED trade's own contribution (`proposed_stop` × its own notional) is still priced against the NAMED account's equity and can still breach the cap on its own — see "Round 2" below. |
 | Post-loss cooldown | **per-user** | "Has this user had a recent stop-out" is a property of the person, not the account executing this particular order — and AMI's trade ledger is the only place that history exists at all (Alpaca paper trades placed directly from the device, CR227, leave no AMI trade row). |
 | Over-trading brake (max trades/day, max trades/week) | **per-user** | Same reasoning — it constrains how often the USER trades, and the only trade history this floor can count is AMI's own. |
-| Total open-risk cap | **per-user** | Same reasoning — `existing_open_risk_pct` is derived from the AMI trade ledger's open positions/stops; there's no equivalent derivation available from an Alpaca snapshot (which carries no stop-loss data), and the cap constrains the user's aggregate risk-taking pattern, not one account's line items. |
 | Halal / long-only (as a blanket) / blocklist / allowlist / locale | **mandate-level (neither)** | These are rules about the INSTRUMENT or the USER's mandate, not about either account's balance sheet — they fire identically regardless of which account is named. Proven by `test_halal_flag_is_evaluated_regardless_of_account`. |
 | Pre-registration (thesis/invalidation/horizon) | **mandate-level (neither)** | Same — it's a question about whether the user wrote down a plan, unrelated to account sizing. |
 
@@ -169,6 +169,91 @@ silently permitting on one, and this floor's own convention throughout
 check didn't run — a genuine drawdown circuit-breaker for Alpaca accounts
 would need AMI to start tracking that account's NAV over time, which is a
 future CR, not a schema fix.
+
+**Round 1 shipped the `0.0` but never disclosed it** — round 2 (below) adds
+the disclosure without changing this arithmetic at all.
+
+## Round 2 — auditor u66 round-1 findings (MAJOR-1, MAJOR-2, MINOR-1)
+
+Audit round 1 (`orchestration/audit/cr/DEF419-BE.auditor.md`) returned
+AWAITING_FIXES on two MAJOR findings and asked Saiful for a ruling on both,
+since both are product questions ("what should the preview say/do when it
+cannot measure a rule for this account"), not implementation bugs.
+
+**Saiful's ruling, 2026-09-24, verbatim: "Disclose, don't block."**
+
+> For Alpaca-destination previews, the rules AMI cannot measure for that
+> account — account drawdown and existing open risk (AMI has no NAV history
+> and no stop data for the Alpaca account) — are NOT evaluated against
+> fabricated or foreign-denominated numbers, and the preview response states
+> it explicitly. Every measurable rule still applies; the NEW trade's own
+> risk still counts against the open-risk cap measured against the Alpaca
+> equity.
+
+### MAJOR-1 — open risk was summed at the wrong denominator
+
+`ctx.existing_open_risk_pct` (a percentage OF THE AMI PORTFOLIO, built by
+`SimEngine._risk_limit_context` from AMI's own open trade rows and their
+stops) was being added directly to a cap compared against the ALPACA
+account's equity — the exact defect DEF419 itself was filed to fix,
+recurring in this one rule (`sim_engine.py` `preview()`, pre-round-2).
+
+**Fix:** on the account-snapshot path, `existing_open_risk_pct` passed to
+`check_mandate_compliance` is now `0.0` — explicitly reported via
+`unmeasured_rules` (below), not silently carried over from AMI's ledger at
+the wrong scale. Per the ruling, the NEW trade's own risk still counts:
+`SimEngine.preview()` gained a `stop` parameter (`preview_trade` now
+forwards `req.stop`, previously dropped on every preview path, AMI or
+Alpaca), forwarded to `check_mandate_compliance` as `proposed_stop` — so
+`proposed_contribution` (position size × stop distance, priced against
+`portfolio_value`, which is the snapshot's own equity on this path) is
+still compared against the cap and can still breach it on its own.
+
+### MAJOR-2 — drawdown was silently zeroed
+
+Round 1 passed `current_drawdown_pct=0.0` with no signal to the caller that
+the check had not actually run. **Fix:** same `0.0` arithmetic (see Known
+limitation above — there genuinely is no better number), now paired with an
+explicit entry in `unmeasured_rules`.
+
+### The `unmeasured_rules` field
+
+`PreviewTradeResponse.unmeasured_rules: list[{"rule": str, "reason": str}]`
+— empty on the AMI (no-account) path; on the account-snapshot path, always
+exactly `drawdown` and `existing_open_risk` (the two rules AMI structurally
+cannot measure for an externally-custodied account). Built in
+`SimEngine.preview()`'s account-snapshot branch, forwarded byte-for-byte
+through `PreviewResult.unmeasured_rules` → `PreviewTradeResponse`. Mobile
+(`SimPreviewResult.unmeasuredRules`, `UnmeasuredRule`) renders it as one
+plain sentence — `tradeTicketUnmeasuredRulesNote` — in the ALPACA PAPER
+outcome (a second SnackBar line, since an accepted single-leg Alpaca submit
+pops the ticket sheet before the outcomes panel could show it) and in
+BOTH's Alpaca leg (the outcomes panel, which does not pop). Only rendered
+on an ACCEPTED outcome — a rejected preview shows the violation, not the
+disclosure.
+
+### MINOR-1 — the no-persistence guard was narrower than its claim
+
+`test_account_context_preview_never_persists` counted only
+`SimPortfolioRow` and dismissed the trade tables by comment rather than by
+checking. Widened to also assert zero rows across `sim_trades`,
+`sim_short_positions` and `sim_option_trades`, before and after an
+account-context preview.
+
+### Tests added (round 2)
+
+`test_unmeasured_rules_empty_on_ami_path`,
+`test_unmeasured_rules_names_drawdown_and_open_risk_on_snapshot_path`,
+`test_unmeasured_rules_absent_when_every_rule_is_measurable`,
+`test_open_risk_not_carried_over_from_ami_at_the_wrong_denominator` (the
+MAJOR-1 regression itself — a real, large AMI position no longer blocks an
+unrelated preview against a large, empty Alpaca account),
+`test_new_trades_own_risk_still_counts_against_alpaca_equity` (the ruling's
+own requirement — proves the SAME order/stop blocks against a small Alpaca
+account and clears against a large one, by its own contribution alone).
+`test_account_context_preview_never_persists` widened in place. All five
+new tests were verified to fail when their fix is reverted (mutation
+check, not merely asserted).
 
 ## Malformed input — 422, never a silent fallback
 
@@ -197,11 +282,15 @@ live market quote — no new `get_session()` call, no write. Guarded by
 `SimPortfolioRow` rows for the user before/after an account-context preview
 and asserts the count grows by at most the pre-existing lazy
 `ensure_portfolio()` create (unrelated to this DEF — happens on the very
-first touch of any user's AMI portfolio, account snapshot or not).
+first touch of any user's AMI portfolio, account snapshot or not) — **round
+2 widened this to also assert zero rows across `sim_trades`,
+`sim_short_positions` and `sim_option_trades`** (auditor u66 MINOR-1; see
+"Round 2" above).
 
 ## Tests
 
-`backend/tests/unit/test_def419_per_account_mandate_check.py`, 20 tests:
+`backend/tests/unit/test_def419_per_account_mandate_check.py`, 25 tests
+(20 from round 1 + 5 from round 2):
 
 1. No `account` on the request → byte-identical to pre-DEF419 (AMI portfolio).
 2. Same order rejected against a small account, accepted against a larger
@@ -227,17 +316,28 @@ first touch of any user's AMI portfolio, account snapshot or not).
 7. Per-user: over-trading brake and post-loss cooldown fire/don't-fire
    identically across both the no-account and account-snapshot paths.
 8. Mandate-level: halal fires identically regardless of account.
-9. Preview never persists, account-context or not.
+9. Preview never persists, account-context or not — widened (round 2) to
+   every trade table, not only the portfolio row.
+10. (Round 2) `unmeasured_rules` is empty on the AMI path and carries
+    exactly `drawdown` + `existing_open_risk` on the snapshot path.
+11. (Round 2) The MAJOR-1 regression: a large, real AMI open-risk figure no
+    longer blocks a preview against an unrelated, large, empty Alpaca
+    account.
+12. (Round 2) The ruling's own requirement: the SAME order/stop blocks
+    against a small Alpaca account and clears against a large one, by the
+    new trade's own contribution alone.
 
-All 20 pass. Full existing `sim`/`safety_floor`/ticker-existence-guard/
+All 25 pass. Full existing `sim`/`safety_floor`/ticker-existence-guard/
 wire-contract/CR101-BE2-call-site-guard/CR026-sector/Alpaca-schema suites
-(189 tests total) pass unchanged.
+pass unchanged.
 
-## Mobile follow-up (not yet filed as its own CR — spec only)
+## Mobile follow-up — DELIVERED (was a spec, now implemented; see "Round 2")
 
-Out of scope for this DEF (coder.api's brief is backend-only; mobile follows
-once this lands, as a separate CR the Architect mints when that work is
-picked up). Design, so that CR has a concrete target:
+This section originally specified the mobile work as a forward design (it
+predates the mobile half landing). The mobile half has since been built,
+audited (`DEF419-MOBILE`), and round-2'd alongside this backend round —
+see `orchestration/audit/cr/DEF419-MOBILE.architect.md`. Left below for its
+original design rationale, which still matches the shipped shape:
 
 - **Alpaca-only (`_submitAlpacaOnly`, `trade_ticket_sheet.dart:663`).**
   Before calling `preview()`, fetch the linked account's current state via
@@ -266,7 +366,11 @@ picked up). Design, so that CR has a concrete target:
 
 ## Status
 
-`open` — backend half (this DEF) is implemented and tested; `status: open`
-on the row file reflects that the mobile wiring above (not yet filed as its
-own CR) is the remaining work before the fix is user-visible. Not yet
-promoted to Alpha.
+`fixed` — both halves (backend + mobile) are implemented, tested, and have
+been through round 2 of independent audit (`DEF419-BE`, `DEF419-MOBILE`;
+see `orchestration/audit/cr/`), which found and closed MAJOR-1/MAJOR-2/
+MINOR-1 on the backend side and MAJOR-1/MAJOR-2/MINOR-1 on the mobile side
+(see those two `.architect.md` files' "## Round 2" sections for the
+per-finding fix/test/mutation evidence). Not yet promoted to Alpha —
+`/promote-to-alpha` still owed for the backend half; the mobile build ships
+separately via TestFlight/Play.

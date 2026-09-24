@@ -311,6 +311,139 @@ void main() {
     });
   });
 
+  group('DEF419 round 2 — unmeasured_rules disclosure', () {
+    // Single-leg ALPACA PAPER (unlike BOTH below) pops the sheet the instant
+    // the order is accepted (`_submitAlpacaOnly`, "Navigator.of(context).pop()"
+    // on `outcome.ok`) and reports through a SnackBar instead of the
+    // `_destinationOutcomes` panel — in this widget-test harness (`home:`,
+    // no pushed route to pop back to) that pop tears down the whole tree, so
+    // there is nothing left to inspect text in once the call resolves. The
+    // three cases below are therefore asserted the same way the file's own
+    // pre-existing ALPACA-PAPER-accepted tests already do: by the OBSERVABLE
+    // side effect (whether the order call fired), not by scraping
+    // post-navigation text. The disclosure line's actual rendering (the
+    // Text widget, the note plumbing, the "only on accepted" gating) is
+    // proven by the BOTH case right below, which never pops and so stays
+    // inspectable — same `_unmeasuredRulesNote` / `_DestinationOutcome.note`
+    // code path either way.
+    testWidgets(
+        'ALPACA PAPER: an accepted preview with unmeasured_rules still '
+        'places the order (disclosure never blocks)', (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        previewWithAccount: const SimPreviewResult(
+          accepted: true,
+          unmeasuredRules: [
+            UnmeasuredRule(
+              rule: 'drawdown',
+              reason: 'AMI has no NAV history for your Alpaca paper account.',
+            ),
+            UnmeasuredRule(
+              rule: 'existing_open_risk',
+              reason: 'AMI has no stop-loss data for your Alpaca positions.',
+            ),
+          ],
+        ),
+        tapDestination: TradeDestination.alpacaPaper,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1),
+          reason: 'accepted with two unmeasured rules — the order still '
+              'places; disclosure is informational, never a block '
+              '(Saiful, 2026-09-24: "disclose, don\'t block")');
+    });
+
+    testWidgets(
+        'ALPACA PAPER: an accepted preview with NO unmeasured_rules also '
+        'places the order (the AMI-checked path is unaffected)', (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.alpacaPaper,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+    });
+
+    testWidgets(
+        'ALPACA PAPER: a REJECTED preview with unmeasured_rules never '
+        'places an order — the violation, not the disclosure, decides',
+        (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        previewWithAccount: SimPreviewResult(
+          accepted: false,
+          violations: const ['exceeds single-name cap'],
+          blockedBy: 'single_name_cap',
+          unmeasuredRules: const [
+            UnmeasuredRule(rule: 'drawdown', reason: 'no NAV history'),
+          ],
+        ),
+        tapDestination: TradeDestination.alpacaPaper,
+      );
+
+      expect(alpaca.orderCalls, isEmpty);
+      expect(find.textContaining('exceeds single-name cap'), findsOneWidget);
+      expect(find.textContaining('Not checked for this account'),
+          findsNothing,
+          reason: 'unmeasured_rules is only rendered on the ACCEPTED path — '
+              'this preview never even reaches _placeAlpacaOrder, so its '
+              'note is never even constructed');
+    });
+
+    testWidgets(
+        'BOTH: the Alpaca leg shows its own disclosure line alongside the '
+        "AMI leg's own outcome, unaffected by the AMI leg", (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(
+          accepted: true,
+          unmeasuredRules: [
+            UnmeasuredRule(rule: 'drawdown', reason: 'no NAV history'),
+          ],
+        ),
+        tapDestination: TradeDestination.both,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(find.text('AMI SIM'), findsAtLeastNWidgets(1));
+      expect(find.text('ALPACA PAPER'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('Not checked for this account'),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'BOTH: no unmeasured_rules on either leg means no disclosure line '
+        'anywhere in the outcomes panel', (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.both,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(find.text('AMI SIM'), findsAtLeastNWidgets(1));
+      expect(find.text('ALPACA PAPER'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('Not checked for this account'),
+          findsNothing,
+          reason: 'the AMI leg never carries unmeasured_rules (it has no '
+              'account_kind), and this Alpaca leg preview reported none — '
+              'nothing to disclose on either outcome');
+    });
+  });
+
   group('Alpaca fetch failure degrades loudly — never falls back to AMI',
       () {
     testWidgets(

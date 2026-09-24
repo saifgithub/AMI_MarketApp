@@ -64,3 +64,64 @@ None live yet — this hasn't shipped to a device build. The reproduction for th
 7. **Wire-shape confusion:** `AlpacaSnapshot` now has two serializers — `toWireJson()` (Room-overlay `AlpacaSnapshotIn`) and `toMandateSnapshotJson()` (this DEF's `AccountSnapshotIn`). Confirm no call site was pointed at the wrong one (a mismatch would 422 immediately given both schemas' `extra="forbid"`, so this is a loud-not-silent risk, but worth a specific look).
 
 SUBMITTED: round 1
+
+## Round 2
+
+**SHA:** `a51ea92d` (this branch, `.claude/worktrees/agent-aeb78b50ed54a6a98` — same commit as DEF419-BE round 2, both halves landed together). Not yet built/shipped.
+
+### MAJOR-1 (`.take()` before `.where()` silently drops real long positions)
+
+**Fix:** `mobile/lib/models/alpaca.dart:163-180` (`AlpacaSnapshot.toMandateSnapshotJson()`). Was `[...positions]..sort(...)` then `.take(maxPositions).where((p) => p.qty >= 0)` — cap first, filter after. Now `positions.where((p) => p.qty >= 0).toList()..sort(...)` then `.take(maxPositions)` — filter first, cap after. The cap now only ever counts positions that will actually be sent, so a short-heavy book at the 100-position boundary can no longer empty the snapshot of real longs.
+
+**Tests:** 6 new in `mobile/test/services/alpaca/alpaca_snapshot_wire_test.dart`, group `mandate snapshot shape (toMandateSnapshotJson)`: field/kind shape match `AccountSnapshotIn`, `equity` IS sent (unlike `toWireJson`), a short position is dropped not sent negative, the cap keeps the largest LONGs, **the auditor's own probe reproduced directly** (`filter runs before the cap: shorts at the cap boundary no longer empty the snapshot` — 100 short + 20 long, asserts exactly 20 longs survive, all named `LONG*`), and an under-cap sanity check.
+
+**Mutation evidence:** reverted the method to the round-1 order (cap-then-filter) in a scratch edit — `filter runs before the cap...` failed: `Expected: <20> Actual: <0>` (the exact "120 in, 0 out" shape from the auditor's own probe). Reverted; full file green again (14/14).
+
+### MAJOR-2 (`toMandateSnapshotJson()` had no test)
+
+**Fix:** the 6 tests above — this is the guard itself, not a production-code change. Covers exactly the edges the auditor named: cap ordering, short exclusion, field shape, and the specific 100-short/20-long boundary case that let MAJOR-1 ship unguarded in round 1.
+
+### MINOR-1 (the "concurrent-fetch fix" didn't do what round 1 claimed)
+
+**Fix:** `mobile/lib/screens/sim/trade_ticket_sheet.dart` (`_fetchAlpacaSnapshot`). The auditor traced every call site (`_submitAlpacaOnly` and `_legAlpaca`, on mutually exclusive destination paths — `_legAmi` never calls this method) and found the concurrent-caller scenario the round-1 `Completer` fan-out claimed to guard cannot occur. Simplified to a plain `async`/`await` over the TTL cache; `_alpacaSnapshotFetch` field removed. Docstring corrected to record the finding rather than the round-1 claim — this is the "correct the claim in the lane file" the coordinator's brief asked for.
+
+**Regression check, not a mutation (there is no bug to reintroduce — the auditor found the guard defensive-but-harmless, not broken):** full `flutter test` (below) still shows `BOTH: an unreadable Alpaca account still lets the AMI leg place independently` passing, confirming the simplification didn't reintroduce the round-1 zone-reporting symptom the `Completer` was originally added for. `_legAmi` still never touches `_fetchAlpacaSnapshot` at all, so the two legs remain structurally independent regardless of this method's internals.
+
+### `flutter analyze` regression caught and fixed during this round
+
+Wiring `unmeasured_rules` rendering (DEF419-BE round 2's new response field) into `_legAlpaca` initially read `AppLocalizations.of(context)` directly inside that method, after its own `await` — a new `use_build_context_synchronously` lint (12 issues, baseline is 11). Fixed by resolving the localizations once in `_submitBoth`, before either leg's `await`, and passing it into `_legAlpaca` as a parameter (`_legAlpaca(String typed, double qty, AppLocalizations l)`) rather than reading `context` inside a helper that isn't itself `mounted`-checked. Verified back to 11 issues, 0 errors, matching baseline exactly.
+
+### MINOR-2 (30s TTL) — acknowledged, no change
+
+Auditor found this acceptable and said not to spend a round on it. Unchanged.
+
+### `unmeasured_rules` disclosure (new in this round, not an audit finding — DEF419-BE round 2's field needed a mobile consumer)
+
+`SimPreviewResult.unmeasuredRules` (new `UnmeasuredRule` model) parses the backend's new field. Rendered as one non-alarming line — new ARB key `tradeTicketUnmeasuredRulesNote` (EN only; `retranslate:[ar,ms]` flagged per the content-change-flags-translation convention, added to `app_ar.arb`/`app_ms.arb` with the English string as placeholder, matching how every other not-yet-translated key in those files reads) — via `_unmeasuredRulesNote(AppLocalizations, List<UnmeasuredRule>)`. Renders only on an ACCEPTED outcome (never alongside a violation): in the `_destinationOutcomes` panel for BOTH's Alpaca leg (verified directly — that panel doesn't pop), and as a second SnackBar line for the single-leg ALPACA PAPER path, because an accepted `_submitAlpacaOnly` pops the ticket sheet immediately and the outcomes panel is never actually seen on that path in practice (confirmed in this widget-test harness: after `Navigator.of(context).pop()`, the entire widget tree tears down since there's no pushed route to pop back to — `home:` in the test scaffold).
+
+**Tests:** 8 new/changed in `mobile/test/screens/sim/def419_per_account_test.dart` — 3 for the single-leg ALPACA PAPER path (asserted by observable side effect, i.e. the order still places, since the post-pop text is structurally unobservable in the harness, not by scraping the SnackBar), 2 for BOTH (disclosure line present with rules, absent with none), 1 for the rejected-path negative (no disclosure ever leaks onto a violation message).
+
+**Mutation evidence:** commented out the `if (o.note != null) ...` rendering block in `trade_ticket_sheet.dart`'s outcomes-panel `Column` — `BOTH: the Alpaca leg shows its own disclosure line...` failed (`Found 0 widgets with text containing Not checked for this account`). Reverted; suite green again.
+
+### Evidence, run bare on this branch
+
+```
+cd mobile && flutter test
+06:06 +1516: All tests passed!        EXIT=0
+```
+
+```
+cd mobile && flutter analyze
+11 issues found.        EXIT=1 (nonzero-on-any-issue), 0 errors — matches baseline exactly
+```
+
+```
+cd mobile && flutter test test/services/alpaca/alpaca_snapshot_wire_test.dart test/screens/sim/def419_per_account_test.dart test/l10n_key_parity_test.dart test/screens/sim/cr227_destination_routing_test.dart test/screens/sim/cr230_alpaca_order_log_test.dart
+38 + 14 (subset) passed, all green        EXIT=0
+```
+
+### Governance
+
+New ARB key added to all three locale files (`app_en.arb`/`app_ar.arb`/`app_ms.arb`) with `retranslate:[ar,ms]` in the description per the content-change-flags-translation convention; `test/l10n_key_parity_test.dart` passes (key present, placeholder preserved, in all three). `docs/defect/DEF419_per_account_mandate_check.md` updated to reflect the mobile half is DELIVERED (round 1's "Mobile follow-up" section was written as a forward spec before this half existed; corrected to point at this round's evidence instead of re-describing it as unbuilt work).
+
+SUBMITTED: round 2

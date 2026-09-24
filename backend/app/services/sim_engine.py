@@ -40,7 +40,7 @@ import math
 from collections import defaultdict
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import Literal
@@ -509,6 +509,16 @@ class PreviewResult:
     cash_available: float
     held_quantity: float  # current holding for the ticker; 0.0 if none
     price_source: str  # "yfinance" or "mock_walk"
+    # DEF419 round 2 — rules this preview could NOT evaluate for the named
+    # account, each `{"rule": str, "reason": str}`. Empty on the AMI path
+    # (every rule is always measurable against AMI's own ledger). Populated
+    # on the account-snapshot path for exactly the two rules AMI has no data
+    # for on an externally-custodied account: existing open risk (no stop
+    # data for Alpaca positions) and drawdown (no NAV history for an account
+    # AMI doesn't custody). Saiful's ruling, 2026-09-24: "Disclose, don't
+    # block" — these two rules are explicitly SKIPPED, not evaluated against
+    # a fabricated or foreign-denominated number, and the response says so.
+    unmeasured_rules: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -2430,6 +2440,7 @@ class SimEngine:
         classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
         account_snapshot: AccountSnapshotIn | None = None,
+        stop: float | None = None,
     ) -> PreviewResult:
         """Dry-run a trade through the same pre-flight checks as submit() —
         compliance, verdict dedup, cash/holdings — without persisting.
@@ -2442,12 +2453,22 @@ class SimEngine:
         held-quantity-for-sell) are evaluated against THIS snapshot instead
         of the AMI portfolio — same `check_mandate_compliance`, same
         mandate, different denominator. Per-user limits (post-loss cooldown,
-        over-trading brake, total open-risk) still read the AMI-side trade
-        history regardless: those are about how often/how hard THIS USER
-        trades, not about one account's balance sheet, and AMI is the only
-        place that history exists. `None` (the default) is byte-identical to
-        pre-DEF419 behaviour — every field below falls back to the AMI
-        portfolio exactly as it did before this parameter existed.
+        over-trading brake) still read the AMI-side trade history regardless:
+        those are about how often THIS USER trades, not about one account's
+        balance sheet, and AMI is the only place that history exists. `None`
+        (the default) is byte-identical to pre-DEF419 behaviour — every field
+        below falls back to the AMI portfolio exactly as it did before this
+        parameter existed.
+
+        stop: DEF419 round 2 — the proposed trade's own stop, forwarded to
+        `check_mandate_compliance` as `proposed_stop` on BOTH paths (an
+        additive fix to the pre-existing "no stop param on preview()" gap
+        this method's compliance-context comment below used to document —
+        harmless on the AMI path, where it only lets a previously-silent
+        `0.0` contribution become a real one, and load-bearing on the
+        snapshot path: it is what lets "the new trade's own risk" be priced
+        against the ALPACA account's equity per Saiful's 2026-09-24 ruling,
+        see the account_snapshot branch below).
         """
         portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
@@ -2491,14 +2512,16 @@ class SimEngine:
             limit_price=limit_price,
         )
 
-        # CR101-BE2: same trade-history context as submit() (no `stop` param on
-        # preview(), so the proposed trade's own open-risk contribution can't be
-        # priced here — an ALREADY-breached existing_open_risk_pct still blocks).
-        # DEF419: per-USER, always sourced from AMI's own history regardless of
-        # which account the sizing checks below read — see this method's
-        # docstring for why cooldown/over-trading/open-risk don't split by
-        # account the way single-name/sector concentration do.
+        # CR101-BE2: same trade-history context as submit(). DEF419: per-USER
+        # (cooldown, over-trading), always sourced from AMI's own history
+        # regardless of which account the sizing checks below read — see this
+        # method's docstring for why those don't split by account the way
+        # single-name/sector concentration do. `ctx.existing_open_risk_pct` is
+        # AMI-denominated and is used as-is on the AMI path; the snapshot path
+        # below does NOT reuse it (DEF419 round 2 MAJOR-1 — see there).
         ctx = self._compliance_context(user_id, portfolio, ticker)
+
+        unmeasured_rules: list[dict] = []
 
         if account_snapshot is None:
             sizing_portfolio_value = ctx.portfolio_value
@@ -2507,6 +2530,7 @@ class SimEngine:
             sizing_shorts = portfolio.shorts
             sizing_quotes = ctx.quotes
             sizing_cash = portfolio.current_cash
+            sizing_existing_open_risk_pct = ctx.existing_open_risk_pct
             sizing_held = next(
                 (h.quantity for h in portfolio.holdings if h.ticker == ticker),
                 0.0,
@@ -2514,13 +2538,50 @@ class SimEngine:
         else:
             snap = account_snapshot
             sizing_portfolio_value = float(snap.equity)
-            # DEF419 known limitation — AMI has no NAV history for an
-            # externally-custodied account, so its drawdown cannot be
-            # honestly measured here. 0.0 is this codebase's established
-            # "no data, never a false breach" convention for an unmeasurable
-            # drawdown (see `price_alert_evaluator.py`'s zero-context call),
-            # not a claim that the account has never drawn down.
+            # DEF419 round 2 (MAJOR-2, auditor u66) — AMI has no NAV history
+            # for an externally-custodied account, so its drawdown cannot be
+            # honestly measured here. Saiful's ruling, 2026-09-24: "Disclose,
+            # don't block" — 0.0 is passed to the floor (it never fires a
+            # false breach, same numeric contract as before), but this is now
+            # an EXPLICIT, reported skip via `unmeasured_rules`, not a silent
+            # zero the response never mentioned. Round 1 justified the 0.0 by
+            # analogy to `price_alert_evaluator.py`'s zero-context call; the
+            # auditor correctly distinguished that call zeroes EVERYTHING for
+            # a narrowed check, while this is a full sizing check with one
+            # rule silently neutralised — the fix is the disclosure, not a
+            # different number (there is no better number: AMI genuinely
+            # cannot compute this account's drawdown).
             sizing_drawdown_pct = 0.0
+            unmeasured_rules.append({
+                "rule": "drawdown",
+                "reason": (
+                    "AMI has no NAV history for your Alpaca paper account, "
+                    "so a drawdown breach can't be measured for it."
+                ),
+            })
+            # DEF419 round 2 (MAJOR-1, auditor u66) — `ctx.existing_open_risk_pct`
+            # is a percentage of the AMI portfolio's equity (built by
+            # `_risk_limit_context` from AMI's own open trade rows and their
+            # stops). Summing it against a cap compared to Alpaca equity was
+            # the exact defect DEF419 was filed to fix, recurring in this one
+            # rule. AMI has no stop data for Alpaca positions, so the
+            # PRE-EXISTING component of open risk for this account is
+            # unmeasurable — reported, not carried over at the wrong scale.
+            # The NEW trade's OWN risk still counts (Saiful's ruling): `stop`
+            # (now forwarded to `check_mandate_compliance` as `proposed_stop`
+            # below) prices `proposed_contribution` against THIS account's
+            # own equity (`sizing_portfolio_value` = Alpaca equity), so a
+            # oversized new position still breaches the cap on its own.
+            sizing_existing_open_risk_pct = 0.0
+            unmeasured_rules.append({
+                "rule": "existing_open_risk",
+                "reason": (
+                    "AMI has no stop-loss data for your existing Alpaca "
+                    "positions, so this trade's own risk is checked against "
+                    "your Alpaca account's cap, but risk already open in "
+                    "that account isn't included."
+                ),
+            })
             snapshot_holdings = [
                 Holding(
                     ticker=p.ticker.upper().strip(),
@@ -2573,10 +2634,18 @@ class SimEngine:
             # cannot value a first-time buy of a name not already held.
             quotes=sizing_quotes,
             sector_map=default_sector_map(),
-            # DEF419 — per-user, not per-account. See docstring.
+            # DEF419 — cooldown/over-trading are per-user, not per-account.
+            # See docstring. `existing_open_risk_pct` is per-BRANCH as of
+            # round 2 — AMI's own figure on the AMI path, an explicit 0.0
+            # (reported in `unmeasured_rules`) on the snapshot path, never
+            # the AMI figure summed against a foreign denominator.
             last_loss_closed_at=ctx.last_loss_closed_at,
             trade_open_timestamps=ctx.trade_open_timestamps,
-            existing_open_risk_pct=ctx.existing_open_risk_pct,
+            existing_open_risk_pct=sizing_existing_open_risk_pct,
+            # DEF419 round 2 — the new trade's own stop, so its own
+            # contribution to open risk is priced against `portfolio_value`
+            # (Alpaca equity on the snapshot path) rather than always 0.0.
+            proposed_stop=stop,
         )
 
         notional = fill_price * quantity
@@ -2614,6 +2683,7 @@ class SimEngine:
             cash_available=sizing_cash,
             held_quantity=held,
             price_source=quote.source,
+            unmeasured_rules=unmeasured_rules,
         )
 
     def _cover_short_fill(

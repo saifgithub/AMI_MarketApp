@@ -851,6 +851,24 @@ class SimSubmitResult {
 /// client-attested account instead. Lets the ticket label a verdict by the
 /// account it actually checked without re-deriving that from what it itself
 /// sent.
+/// DEF419 round 2 — one mandate rule the preview could not evaluate for the
+/// named account (`{"rule": str, "reason": str}` on the wire). Saiful's
+/// 2026-09-24 ruling: "Disclose, don't block" — AMI has no NAV history and no
+/// stop data for a linked Alpaca account, so drawdown and existing open risk
+/// are skipped rather than checked against a fabricated or foreign-
+/// denominated number, and the ticket must say so plainly.
+class UnmeasuredRule {
+  const UnmeasuredRule({required this.rule, required this.reason});
+
+  final String rule;
+  final String reason;
+
+  factory UnmeasuredRule.fromJson(Map<String, dynamic> j) => UnmeasuredRule(
+        rule: j['rule'] as String? ?? '',
+        reason: j['reason'] as String? ?? '',
+      );
+}
+
 class SimPreviewResult {
   const SimPreviewResult({
     required this.accepted,
@@ -858,6 +876,7 @@ class SimPreviewResult {
     this.blockedBy,
     this.shariaVerdict,
     this.accountKind,
+    this.unmeasuredRules = const [],
   });
 
   final bool accepted;
@@ -865,6 +884,7 @@ class SimPreviewResult {
   final String? blockedBy;
   final ShariaVerdict? shariaVerdict;
   final String? accountKind;
+  final List<UnmeasuredRule> unmeasuredRules;
 
   factory SimPreviewResult.fromJson(Map<String, dynamic> j) {
     final compliance =
@@ -877,6 +897,9 @@ class SimPreviewResult {
       shariaVerdict: ShariaVerdict.fromJson(
           (compliance['sharia_verdict'] as Map?)?.cast<String, dynamic>()),
       accountKind: j['account_kind'] as String?,
+      unmeasuredRules: ((j['unmeasured_rules'] as List?) ?? const [])
+          .map((e) => UnmeasuredRule.fromJson((e as Map).cast<String, dynamic>()))
+          .toList(),
     );
   }
 }

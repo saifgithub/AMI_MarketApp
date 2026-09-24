@@ -427,6 +427,11 @@ class PreviewTradeResponse(BaseModel):
     # behaviour). Lets the client label which account the verdict is about,
     # rather than the mobile side re-deriving it from what it itself sent.
     account_kind: str | None = None
+    # DEF419 round 2 — rules this preview could not evaluate for the named
+    # account (each `{"rule": str, "reason": str}`), per Saiful's 2026-09-24
+    # "disclose, don't block" ruling. Empty on the AMI path. See
+    # `SimEngine.preview`'s docstring and `docs/defect/DEF419_per_account_mandate_check.md`.
+    unmeasured_rules: list[dict] = Field(default_factory=list)
 
 
 def _short_out(row, mark: float | None) -> ShortPositionOut:
@@ -692,6 +697,10 @@ async def preview_trade(
         halal_universe=halal_universe,
         classification_universe=classification_universe,
         account_snapshot=req.account,
+        # DEF419 round 2 — forwarded so the snapshot path can price the new
+        # trade's own open-risk contribution against the NAMED account's
+        # equity (see SimEngine.preview's docstring).
+        stop=req.stop,
     )
     return PreviewTradeResponse(
         accepted=pv.accepted,
@@ -708,6 +717,7 @@ async def preview_trade(
         cash_available=pv.cash_available,
         held_quantity=pv.held_quantity,
         price_source=pv.price_source,
+        unmeasured_rules=pv.unmeasured_rules,
     )
 
 
