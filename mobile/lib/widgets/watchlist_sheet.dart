@@ -27,6 +27,7 @@ void showWatchlistSheet(
   final l = AppLocalizations.of(context);
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate800,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

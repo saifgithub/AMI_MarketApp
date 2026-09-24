@@ -120,6 +120,7 @@ void openHouseAdPaywall(BuildContext context, WidgetRef ref) {
           '${resetAt.day.toString().padLeft(2, '0')}';
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     isScrollControlled: true,
     backgroundColor: AmiColors.slate800,
     shape: const RoundedRectangleBorder(

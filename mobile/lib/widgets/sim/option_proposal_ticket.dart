@@ -84,6 +84,7 @@ class OptionProposalTicket extends StatefulWidget {
   static Future<bool?> show(BuildContext context, OptionProposal proposal) {
     return showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: false,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => OptionProposalTicket(

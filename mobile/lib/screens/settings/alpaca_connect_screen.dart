@@ -22,6 +22,7 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -122,9 +123,17 @@ class _AlpacaConnectScreenState extends ConsumerState<AlpacaConnectScreen>
           'Connect Alpaca Paper',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AmiColors.textHigh),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(false),
+        // CR232 — back chevron, not a top-right X: this is a pushed full
+        // page. `pop(false)` keeps the caller's existing contract
+        // (`settings_screen.dart` reads `result == true` for "linked") —
+        // leaving via back means the same "not linked" as the old close did.
+        leading: Semantics(
+          button: true,
+          identifier: ExitIds.navBack,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
         ),
         bottom: TabBar(
           controller: _tabController,

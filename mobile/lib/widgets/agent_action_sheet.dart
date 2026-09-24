@@ -21,6 +21,7 @@ class AgentActionSheet extends StatelessWidget {
   static Future<void> show(BuildContext context, Agent agent) {
     return showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

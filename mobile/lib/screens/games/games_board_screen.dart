@@ -429,6 +429,7 @@ void _showDeskRule(BuildContext context, GameBoardRow row) {
   final l = AppLocalizations.of(context);
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate800,
     isScrollControlled: true,
     builder: (_) => SafeArea(

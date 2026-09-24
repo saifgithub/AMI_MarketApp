@@ -155,3 +155,21 @@ class TourIds {
   static const String skip = 'ami.tour.skip';
   static const String next = 'ami.tour.next';
 }
+
+/// CR232 — the exit affordances a pushed full page carries, now that a
+/// top-right `Icons.close` is no longer how any of them exit.
+///
+/// [navBack] is the single identifier for `AmiScreenHeader`'s back chevron —
+/// one id for every screen that shows it, the same reasoning [TourIds] gives
+/// for sharing one id across every `TourCard`: the harness needs "go back
+/// from wherever I am," not a per-screen name for a control that always does
+/// the same thing. [tradeTicketCancel] is separate because the trade tickets
+/// (CR232 rule 3) carry BOTH a back chevron and a text "Cancel" action in the
+/// same header, and the harness must be able to address the one that does not
+/// also exist on every other pushed page.
+class ExitIds {
+  const ExitIds._();
+
+  static const String navBack = 'ami.nav.back';
+  static const String tradeTicketCancel = 'ami.trade_ticket.cancel';
+}

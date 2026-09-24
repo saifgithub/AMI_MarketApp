@@ -77,6 +77,7 @@ class OptionRepriceSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: false,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => OptionRepriceSheet(result: result, ticker: ticker),

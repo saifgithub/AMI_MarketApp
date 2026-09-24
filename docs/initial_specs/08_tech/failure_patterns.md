@@ -2144,3 +2144,50 @@ swallow the file, and the promotion now ends red instead of green.
 pins that every `exit` in the gate script is preceded by a `record_verdict`,
 that the commit is captured before the suite runs, and that the postflight check
 names every non-green state and runs first in the driver.
+
+## P36 — every pushed page owns its own exit, because there was nowhere else for it to live
+
+**Class:** a piece of chrome (nav, a persistent status strip, an ad slot) is
+declared once at the app's root, and every screen that gets pushed *on top of*
+that root — full-screen, covering the chrome — has no way to reach it. Each
+such screen then re-invents its own way back, independently, because the one
+that would have been reused was never reachable from there.
+
+**Instance.** CR232 (2026-09-24). `HomeShell`'s bottom nav and ticker tape sat
+in its own `Scaffold`'s `bottomNavigationBar` (`home_shell.dart`), and every
+`Navigator.of(context).push(...)` — ~56 sites — resolved to the single ROOT
+`Navigator`, which sits *above* `HomeShell` in the widget tree (it's
+`MaterialApp`'s own). A pushed detail page therefore covered the whole shell,
+chrome included, and had nothing to pop back to except itself — so it grew a
+`Icons.close` in the corner. Saiful, from outside: *"Some pages are simply
+using an 'X' to exit — obscure and not in line with the app's aesthetics."*
+Thirteen files had independently grown one; DEF415 (one commit earlier, AT:R84)
+had just added a *second* one to the trade tickets specifically, treating each
+sighting as its own defect rather than reading the shared cause.
+
+**Why a review pass could not have caught this reliably.** Every individual
+`Icons.close` looked locally correct — a modal-shaped screen needs *some* way
+out, and a top-right X is a completely ordinary pattern in isolation. The
+defect is only visible one level up, in the fact that ~56 push sites all shared
+the same structural cause and none of the ~13 close buttons were a design
+choice so much as the only tool available from where each screen's author was
+standing. A per-screen review checks "does this screen have an exit" and
+passes every time; it does not check "is this the SAME exit every other pushed
+screen has," which is the question whose answer was no.
+
+**What generalises.** When N independent screens grow the same workaround, the
+question is not "does each workaround work" (P11's sweep) but "why did the
+mechanism that should have made a workaround unnecessary not reach them." Here:
+give every screen a *nested* `Navigator` scoped to its own tab
+(`_TabNavigator` in `home_shell.dart`) so `Navigator.of(context)` — unchanged
+at every call site — resolves to a Navigator that sits *below* the chrome
+instead of one that sits above it. The chrome becomes reachable *by
+construction* rather than by every pushed screen remembering to route around
+its own absence, and the escape hatch every screen invented independently
+becomes provably unnecessary rather than merely discouraged.
+
+**Enforcing check:** `mobile/test/exit_affordance_structural_test.dart` — walks
+`lib/screens/` and `lib/widgets/`, and fails if any file outside a fixed
+allowlist (inline card/chip dismissals, ad-card close buttons — the CR232 doc
+records which) contains `Icons.close`. A new pushed page that reaches for the
+old pattern fails this test immediately rather than shipping as review-clean.

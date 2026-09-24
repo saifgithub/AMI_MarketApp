@@ -14,6 +14,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ticker_chart.dart';
 import 'package:flutter/material.dart';
@@ -66,11 +67,21 @@ class _ChartFullscreenScreenState extends State<ChartFullscreenScreen> {
                   child: Row(
                     children: [
                       const SizedBox(width: 8),
+                      // CR232 — back chevron, not a top-right X: this is a
+                      // pushed full page (reached via the expand button or a
+                      // device rotation — see the library comment). The
+                      // tooltip string still reads correctly; it describes
+                      // the action ("close fullscreen chart"), not the icon.
                       Tooltip(
                         message: l.tickerDetailChartClose,
-                        child: IconButton(
-                          icon: const Icon(Icons.close, color: AmiColors.hexCyan),
-                          onPressed: () => Navigator.of(context).pop(),
+                        child: Semantics(
+                          button: true,
+                          identifier: ExitIds.navBack,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new,
+                                color: AmiColors.hexCyan, size: 18),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),

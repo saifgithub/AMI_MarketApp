@@ -33,6 +33,7 @@ Future<void> showBugReportSheet(BuildContext context, WidgetRef ref) {
   final route = ModalRoute.of(context)?.settings.name ?? 'unknown';
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     isScrollControlled: true,
     backgroundColor: AmiColors.slate800,
     shape: const RoundedRectangleBorder(
@@ -82,6 +83,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
   Future<void> _showAttachOptions() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

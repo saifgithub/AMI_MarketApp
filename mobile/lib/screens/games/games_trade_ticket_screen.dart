@@ -9,17 +9,24 @@
 /// only from the State-B run card's "Trade" action
 /// (`games_home_screen.dart`) — the sole place this ticket is reachable
 /// this slice.
+///
+/// **CR232 — a pushed page, not a modal sheet.** Same ruling as
+/// `trade_ticket_sheet.dart`: back chevron + "Cancel" text action in
+/// `AmiScreenHeader`, no top-right X. `show()` pushes on the caller's
+/// nearest Navigator, which post-CR232 is the active tab's own nested
+/// Navigator (see `home_shell.dart`), so the shell chrome stays visible.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/games/games_queue_note.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
-import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +69,7 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
   /// Shares short in [coverTicker] — the exact quantity the cover buys back.
   final double? coverQuantity;
 
+  /// CR232 — pushes as a page. See the library comment.
   static Future<void> show(
     BuildContext context, {
     required String runId,
@@ -70,13 +78,7 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
     String? coverTicker,
     double? coverQuantity,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AmiColors.slate800,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    return Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => GamesTradeTicketScreen(
         runId: runId,
         sellTicker: sellTicker,
@@ -84,7 +86,7 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
         coverTicker: coverTicker,
         coverQuantity: coverQuantity,
       ),
-    );
+    ));
   }
 
   @override
@@ -146,282 +148,329 @@ class _GamesTradeTicketScreenState
     // `valueOrNull` returns the value a refresh is carrying forward, so the
     // ticket keeps showing the cash it last knew about instead of pretending
     // there is none.
-    final runDetail = ref.watch(gamesRunDetailProvider(widget.runId)).valueOrNull;
+    final runDetail =
+        ref.watch(gamesRunDetailProvider(widget.runId)).valueOrNull;
     final watchlist = ref.watch(watchlistNotifierProvider).items;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AmiSpacing.l,
-        AmiSpacing.l,
-        AmiSpacing.l,
-        AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // The queue-first rule used to print as a three-line paragraph
-            // here AND again on the confirm card — twice on one ticket.
-            // Standing copy that never changes stops being read, so it is now
-            // one tap away behind the ⓘ rather than permanently occupying the
-            // top of the sheet. Same string, same widget file: one source of
-            // copy, two presentations, so they cannot drift.
-            if (_isSell) ...[
-              Text(
-                l.gamesSellTitle(widget.sellTicker!),
-                style: AmiTypography.h4.copyWith(color: AmiColors.textHigh),
-              ),
-              const SizedBox(height: AmiSpacing.xs),
-              if (widget.heldQuantity != null)
-                // The denominator, made visible. A percentage with no stated
-                // base is the same defect as the slider that said 25% while
-                // the confirm card said 11.9% — two numbers, two bases, one
-                // screen.
-                Text(
-                  l.gamesSellHeld(widget.heldQuantity!.toStringAsFixed(4)),
-                  style: AmiTypography.caption,
+    // CR232 — full page, not a sheet: back chevron + Cancel text action,
+    // both popping the same Navigator (the ticket carries no state worth
+    // distinguishing the two over).
+    //
+    // `AmiScreenHeader` is a `body`/`SafeArea` child, matching every other
+    // screen's usage — NOT `Scaffold.appBar`, which is not covered by
+    // `SafeArea` and floats under the status bar (caught on
+    // `trade_ticket_sheet.dart`'s sibling from a TestFlight build; fixed
+    // here at the same time rather than shipping the same defect twice).
+    return Scaffold(
+      backgroundColor: AmiColors.slate900,
+      // Tap-to-dismiss for the keyboard, matching `trade_ticket_sheet.dart`.
+      // This ticket's only `TextField` (manual ticker entry) has a normal
+      // text keyboard with a return key, so it isn't the numeric-keypad
+      // trap the sim ticket had — kept for consistency across the two
+      // trade-ticket pages rather than diverging on a distinction the user
+      // does not see.
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(children: [
+            AmiScreenHeader(
+              title: l.gamesTicketHeading,
+              titleColor: AmiColors.hexGreen,
+              showBack: true,
+              actions: [
+                Semantics(
+                  button: true,
+                  identifier: ExitIds.tradeTicketCancel,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l.actionCancel,
+                        style: AmiTypography.labelMono
+                            .copyWith(color: AmiColors.textMed)),
+                  ),
                 ),
-              const SizedBox(height: AmiSpacing.xs),
-              // Stated here rather than discovered as a rejected order: the
-              // fill path refuses a sell beyond the held quantity, so one
-              // order can never close this and open a short in its place.
-              // Since Amendment F shorting DOES exist — the note now points
-              // at how to do it instead of saying it cannot be done.
-              Text(l.gamesSellClosesOnlyNote, style: AmiTypography.caption),
-              const SizedBox(height: AmiSpacing.s),
-            ],
-            if (_isCover) ...[
-              Text(
-                l.gamesCoverTitle(widget.coverTicker!),
-                style: AmiTypography.h4.copyWith(color: AmiColors.textHigh),
-              ),
-              const SizedBox(height: AmiSpacing.xs),
-              if (widget.coverQuantity != null)
-                Text(
-                  l.gamesCoverShortOf(
-                      widget.coverQuantity!.toStringAsFixed(4)),
-                  style: AmiTypography.caption,
-                ),
-              const SizedBox(height: AmiSpacing.xs),
-              // Why there is no size picker below. Without this the missing
-              // step reads as a bug rather than as the rule it is.
-              Text(l.gamesCoverWholeOnlyNote, style: AmiTypography.caption),
-              const SizedBox(height: AmiSpacing.s),
-            ],
-            Row(
-              children: [
-                Text(
-                  (_isSell || _isCover) ? '' : l.gamesTicketHeading,
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.hexGreen),
-                ),
-                const SizedBox(width: AmiSpacing.xs),
-                const GamesQueueInfoIcon(),
               ],
             ),
-            const SizedBox(height: AmiSpacing.l),
-
-            // What you are sizing AGAINST, before you size anything. This
-            // figure used to appear only on the step-3 confirm card, so a
-            // player had to commit to a percentage to discover what the
-            // percentage was of.
-            _CashHeader(detail: runDetail),
-            const SizedBox(height: AmiSpacing.l),
-
-            // TAP 0 — direction. Not a step in the §5.4 sense (it has a
-            // default and never blocks progress), but it must sit ABOVE the
-            // ticker: which way you are going changes what the size chips
-            // mean, and a control that retroactively reinterprets a number
-            // the player already chose is the defect this ordering avoids.
-            if (!_isSell && !_isCover) ...[
-              Text(l.gamesTicketStepDirection, style: AmiTypography.caption),
-              const SizedBox(height: AmiSpacing.xs),
-              Row(
-                children: [
-                  _pickerChip(
-                    label: l.gamesDirectionLong,
-                    selected: ticket.mode == 'buy',
-                    onTap: () => notifier.pickMode('buy'),
-                  ),
-                  const SizedBox(width: AmiSpacing.s),
-                  _pickerChip(
-                    label: l.gamesDirectionShort,
-                    selected: ticket.mode == 'short',
-                    onTap: () => notifier.pickMode('short'),
-                  ),
-                ],
-              ),
-              if (ticket.mode == 'short') ...[
-                const SizedBox(height: AmiSpacing.xs),
-                // The cost, before the size is picked rather than on the
-                // confirm card alone. 0.3% is three times the ordinary fee,
-                // and a player who discovers that at the confirm step has
-                // already decided.
-                Text(l.gamesShortFeeNote, style: AmiTypography.caption),
-                const SizedBox(height: AmiSpacing.xs),
-                // A short posts its FULL value — the sentence that explains
-                // why the slider below divides cash exactly as a buy's does,
-                // which is the thing Saiful read as the ticket behaving "as
-                // if I am buying" (DEF272). It is not a bug, it is the
-                // no-leverage rule, and it was nowhere on this screen.
-                Text(l.gamesShortCollateralNote, style: AmiTypography.caption),
-                const SizedBox(height: AmiSpacing.xs),
-                // The one thing about a short that is not true of anything
-                // else in this app. Said plainly, once.
-                //
-                // REWRITTEN for Amendment I. It used to read "A short can
-                // lose more than it ties up. There is no floor." — which the
-                // forced buy-in made FALSE the day it shipped. That is the
-                // same trap `gamesNoShortingNote` fell into: copy asserting a
-                // rule as a fact, left behind by the amendment that changed
-                // the rule. There is a floor now; it is stated with the gap
-                // that can still jump it, because promising a hard cap we do
-                // not have would be the worse error of the two.
-                Text(
-                  l.gamesShortRiskNote,
-                  style: AmiTypography.caption
-                      .copyWith(color: AmiColors.hexRed),
-                ),
-              ],
-              const SizedBox(height: AmiSpacing.l),
-            ],
-
-            // TAP 1 — ticker.
-            Text(l.gamesTicketStepTicker, style: AmiTypography.caption),
-            const SizedBox(height: AmiSpacing.xs),
-            Wrap(
-              spacing: AmiSpacing.s,
-              runSpacing: AmiSpacing.s,
-              children: [
-                for (final w in watchlist.take(6))
-                  _pickerChip(
-                    label: w.ticker,
-                    selected: ticket.ticker == w.ticker,
-                    onTap: () => notifier.pickTicker(w.ticker),
-                  ),
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                    controller: _manualTicker,
-                    textCapitalization: TextCapitalization.characters,
-                    style: AmiTypography.bodySm,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: l.gamesTicketTickerHint,
-                      hintStyle: AmiTypography.caption,
-                      filled: true,
-                      fillColor: AmiColors.slate900,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AmiRadii.card),
-                        borderSide:
-                            const BorderSide(color: AmiColors.slate700),
+            Expanded(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.all(AmiSpacing.l),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // The queue-first rule used to print as a three-line paragraph
+                    // here AND again on the confirm card — twice on one ticket.
+                    // Standing copy that never changes stops being read, so it is now
+                    // one tap away behind the ⓘ rather than permanently occupying the
+                    // top of the sheet. Same string, same widget file: one source of
+                    // copy, two presentations, so they cannot drift.
+                    if (_isSell) ...[
+                      Text(
+                        l.gamesSellTitle(widget.sellTicker!),
+                        style: AmiTypography.h4
+                            .copyWith(color: AmiColors.textHigh),
                       ),
+                      const SizedBox(height: AmiSpacing.xs),
+                      if (widget.heldQuantity != null)
+                        // The denominator, made visible. A percentage with no stated
+                        // base is the same defect as the slider that said 25% while
+                        // the confirm card said 11.9% — two numbers, two bases, one
+                        // screen.
+                        Text(
+                          l.gamesSellHeld(
+                              widget.heldQuantity!.toStringAsFixed(4)),
+                          style: AmiTypography.caption,
+                        ),
+                      const SizedBox(height: AmiSpacing.xs),
+                      // Stated here rather than discovered as a rejected order: the
+                      // fill path refuses a sell beyond the held quantity, so one
+                      // order can never close this and open a short in its place.
+                      // Since Amendment F shorting DOES exist — the note now points
+                      // at how to do it instead of saying it cannot be done.
+                      Text(l.gamesSellClosesOnlyNote,
+                          style: AmiTypography.caption),
+                      const SizedBox(height: AmiSpacing.s),
+                    ],
+                    if (_isCover) ...[
+                      Text(
+                        l.gamesCoverTitle(widget.coverTicker!),
+                        style: AmiTypography.h4
+                            .copyWith(color: AmiColors.textHigh),
+                      ),
+                      const SizedBox(height: AmiSpacing.xs),
+                      if (widget.coverQuantity != null)
+                        Text(
+                          l.gamesCoverShortOf(
+                              widget.coverQuantity!.toStringAsFixed(4)),
+                          style: AmiTypography.caption,
+                        ),
+                      const SizedBox(height: AmiSpacing.xs),
+                      // Why there is no size picker below. Without this the missing
+                      // step reads as a bug rather than as the rule it is.
+                      Text(l.gamesCoverWholeOnlyNote,
+                          style: AmiTypography.caption),
+                      const SizedBox(height: AmiSpacing.s),
+                    ],
+                    // CR232 — the "TRADE TICKET" label used to live here, standing in
+                    // for a header this ticket didn't have as a sheet. It's the page
+                    // title now (`AmiScreenHeader` above), so only the info icon
+                    // remains — still needed on the sell/cover paths, which skip the
+                    // label but not the queue-first explainer it sits next to.
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: GamesQueueInfoIcon(),
                     ),
-                    onSubmitted: notifier.pickTicker,
-                  ),
+                    const SizedBox(height: AmiSpacing.l),
+
+                    // What you are sizing AGAINST, before you size anything. This
+                    // figure used to appear only on the step-3 confirm card, so a
+                    // player had to commit to a percentage to discover what the
+                    // percentage was of.
+                    _CashHeader(detail: runDetail),
+                    const SizedBox(height: AmiSpacing.l),
+
+                    // TAP 0 — direction. Not a step in the §5.4 sense (it has a
+                    // default and never blocks progress), but it must sit ABOVE the
+                    // ticker: which way you are going changes what the size chips
+                    // mean, and a control that retroactively reinterprets a number
+                    // the player already chose is the defect this ordering avoids.
+                    if (!_isSell && !_isCover) ...[
+                      Text(l.gamesTicketStepDirection,
+                          style: AmiTypography.caption),
+                      const SizedBox(height: AmiSpacing.xs),
+                      Row(
+                        children: [
+                          _pickerChip(
+                            label: l.gamesDirectionLong,
+                            selected: ticket.mode == 'buy',
+                            onTap: () => notifier.pickMode('buy'),
+                          ),
+                          const SizedBox(width: AmiSpacing.s),
+                          _pickerChip(
+                            label: l.gamesDirectionShort,
+                            selected: ticket.mode == 'short',
+                            onTap: () => notifier.pickMode('short'),
+                          ),
+                        ],
+                      ),
+                      if (ticket.mode == 'short') ...[
+                        const SizedBox(height: AmiSpacing.xs),
+                        // The cost, before the size is picked rather than on the
+                        // confirm card alone. 0.3% is three times the ordinary fee,
+                        // and a player who discovers that at the confirm step has
+                        // already decided.
+                        Text(l.gamesShortFeeNote, style: AmiTypography.caption),
+                        const SizedBox(height: AmiSpacing.xs),
+                        // A short posts its FULL value — the sentence that explains
+                        // why the slider below divides cash exactly as a buy's does,
+                        // which is the thing Saiful read as the ticket behaving "as
+                        // if I am buying" (DEF272). It is not a bug, it is the
+                        // no-leverage rule, and it was nowhere on this screen.
+                        Text(l.gamesShortCollateralNote,
+                            style: AmiTypography.caption),
+                        const SizedBox(height: AmiSpacing.xs),
+                        // The one thing about a short that is not true of anything
+                        // else in this app. Said plainly, once.
+                        //
+                        // REWRITTEN for Amendment I. It used to read "A short can
+                        // lose more than it ties up. There is no floor." — which the
+                        // forced buy-in made FALSE the day it shipped. That is the
+                        // same trap `gamesNoShortingNote` fell into: copy asserting a
+                        // rule as a fact, left behind by the amendment that changed
+                        // the rule. There is a floor now; it is stated with the gap
+                        // that can still jump it, because promising a hard cap we do
+                        // not have would be the worse error of the two.
+                        Text(
+                          l.gamesShortRiskNote,
+                          style: AmiTypography.caption
+                              .copyWith(color: AmiColors.hexRed),
+                        ),
+                      ],
+                      const SizedBox(height: AmiSpacing.l),
+                    ],
+
+                    // TAP 1 — ticker.
+                    Text(l.gamesTicketStepTicker, style: AmiTypography.caption),
+                    const SizedBox(height: AmiSpacing.xs),
+                    Wrap(
+                      spacing: AmiSpacing.s,
+                      runSpacing: AmiSpacing.s,
+                      children: [
+                        for (final w in watchlist.take(6))
+                          _pickerChip(
+                            label: w.ticker,
+                            selected: ticket.ticker == w.ticker,
+                            onTap: () => notifier.pickTicker(w.ticker),
+                          ),
+                        SizedBox(
+                          width: 100,
+                          child: TextField(
+                            controller: _manualTicker,
+                            textCapitalization: TextCapitalization.characters,
+                            style: AmiTypography.bodySm,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: l.gamesTicketTickerHint,
+                              hintStyle: AmiTypography.caption,
+                              filled: true,
+                              fillColor: AmiColors.slate900,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AmiRadii.card),
+                                borderSide:
+                                    const BorderSide(color: AmiColors.slate700),
+                              ),
+                            ),
+                            onSubmitted: notifier.pickTicker,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // NOTHING LEFT TO DEPLOY. Distinct from "cash is still loading":
+                    // `runDetail` is non-null here, so this figure is known, and it is
+                    // zero. Every step past ticker-picking is meaningless — there is
+                    // no size to pick and no quote to fetch.
+                    //
+                    // Saiful hit the earlier version of this: he had 10,003.29
+                    // committed to 8 queued orders, 0.00 available, and the confirm
+                    // card sat spinning. That spinner came from THIS MORNING's fix,
+                    // which taught `fetchQuote` to stay in the loading state rather
+                    // than fire a request that must 422 — correct while cash is
+                    // ARRIVING, and a lie once it has arrived and is zero. The two
+                    // cases look identical to a function that only receives a double,
+                    // which is why the screen now decides and the notifier takes a
+                    // nullable value.
+                    // A SELL is never blocked by an empty cash balance — that is
+                    // precisely the state a player most needs to close a position
+                    // from, and gating it behind cash is what made the book one-way.
+                    //
+                    // A SHORT is gated the same way a buy is: it ties up the full
+                    // notional (no leverage — see the backend's
+                    // `trading_math/shorts.py`), so an empty balance means it cannot
+                    // be opened either. A COVER never is, for the same reason a sell
+                    // never is: the cash to buy back was posted when the short was
+                    // opened, and a player with an unbounded-loss position open must
+                    // always be able to close it.
+                    if (!_isSell &&
+                        !_isCover &&
+                        runDetail != null &&
+                        runDetail.cashAvailable <= 0)
+                      _NoCashPanel(detail: runDetail)
+                    else if (_isCover)
+                      const SizedBox.shrink()
+                    else if (ticket.ticker != null) ...[
+                      const SizedBox(height: AmiSpacing.l),
+                      // TAP 2 — size, % of current cash (§5.4: priced locally,
+                      // zero round trips). The chips are quick presets; the slider
+                      // is the real control, because 10/25/50/100 could not express
+                      // "a bit" — the smallest possible order was a tenth of the
+                      // book.
+                      Text(
+                        _isSell
+                            ? l.gamesTicketStepSizeSell
+                            : (ticket.mode == 'short'
+                                ? l.gamesTicketStepSizeShort
+                                : l.gamesTicketStepSize),
+                        style: AmiTypography.caption,
+                      ),
+                      const SizedBox(height: AmiSpacing.xs),
+                      _SizePicker(
+                        sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
+                        cashAvailable: runDetail?.cashAvailable ?? 0,
+                        // Only a SELL divides a position. A short divides cash, like
+                        // a buy — passing the held quantity here would size it
+                        // against a position that does not exist yet.
+                        heldQuantity: _isSell ? widget.heldQuantity : null,
+                        // DEF272 — the readout said "{pct}% · {amount} AMI Cash" for
+                        // a short, which reads as money SPENT. Nothing is spent: the
+                        // amount is posted as collateral and comes back on the cover.
+                        // Same number, and the wrong noun for it.
+                        isShort: ticket.mode == 'short',
+                        onChanged: notifier.pickSize,
+                      ),
+                    ],
+
+                    if (ticket.step == 3) ...[
+                      const SizedBox(height: AmiSpacing.l),
+                      // TAP 3 — confirm.
+                      Text(l.gamesTicketStepConfirm,
+                          style: AmiTypography.caption),
+                      const SizedBox(height: AmiSpacing.s),
+                      _ConfirmCard(
+                        ticket: ticket,
+                        notifier: notifier,
+                        cashAvailable: runDetail?.cashAvailable,
+                        heldQuantity: _positionQuantity,
+                      ),
+                    ],
+
+                    if (ticket.error != null) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      Text(
+                        ticket.error!,
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.hexRed),
+                      ),
+                    ],
+
+                    if (ticket.result != null) ...[
+                      const SizedBox(height: AmiSpacing.m),
+                      _ResultBanner(result: ticket.result!),
+                    ],
+                  ],
                 ),
-              ],
+              ),
             ),
-
-            // NOTHING LEFT TO DEPLOY. Distinct from "cash is still loading":
-            // `runDetail` is non-null here, so this figure is known, and it is
-            // zero. Every step past ticker-picking is meaningless — there is
-            // no size to pick and no quote to fetch.
-            //
-            // Saiful hit the earlier version of this: he had 10,003.29
-            // committed to 8 queued orders, 0.00 available, and the confirm
-            // card sat spinning. That spinner came from THIS MORNING's fix,
-            // which taught `fetchQuote` to stay in the loading state rather
-            // than fire a request that must 422 — correct while cash is
-            // ARRIVING, and a lie once it has arrived and is zero. The two
-            // cases look identical to a function that only receives a double,
-            // which is why the screen now decides and the notifier takes a
-            // nullable value.
-            // A SELL is never blocked by an empty cash balance — that is
-            // precisely the state a player most needs to close a position
-            // from, and gating it behind cash is what made the book one-way.
-            //
-            // A SHORT is gated the same way a buy is: it ties up the full
-            // notional (no leverage — see the backend's
-            // `trading_math/shorts.py`), so an empty balance means it cannot
-            // be opened either. A COVER never is, for the same reason a sell
-            // never is: the cash to buy back was posted when the short was
-            // opened, and a player with an unbounded-loss position open must
-            // always be able to close it.
-            if (!_isSell &&
-                !_isCover &&
-                runDetail != null &&
-                runDetail.cashAvailable <= 0)
-              _NoCashPanel(detail: runDetail)
-            else if (_isCover)
-              const SizedBox.shrink()
-            else if (ticket.ticker != null) ...[
-              const SizedBox(height: AmiSpacing.l),
-              // TAP 2 — size, % of current cash (§5.4: priced locally,
-              // zero round trips). The chips are quick presets; the slider
-              // is the real control, because 10/25/50/100 could not express
-              // "a bit" — the smallest possible order was a tenth of the
-              // book.
-              Text(
-                _isSell
-                    ? l.gamesTicketStepSizeSell
-                    : (ticket.mode == 'short'
-                        ? l.gamesTicketStepSizeShort
-                        : l.gamesTicketStepSize),
-                style: AmiTypography.caption,
-              ),
-              const SizedBox(height: AmiSpacing.xs),
-              _SizePicker(
-                sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
-                cashAvailable: runDetail?.cashAvailable ?? 0,
-                // Only a SELL divides a position. A short divides cash, like
-                // a buy — passing the held quantity here would size it
-                // against a position that does not exist yet.
-                heldQuantity: _isSell ? widget.heldQuantity : null,
-                // DEF272 — the readout said "{pct}% · {amount} AMI Cash" for
-                // a short, which reads as money SPENT. Nothing is spent: the
-                // amount is posted as collateral and comes back on the cover.
-                // Same number, and the wrong noun for it.
-                isShort: ticket.mode == 'short',
-                onChanged: notifier.pickSize,
-              ),
-            ],
-
-            if (ticket.step == 3) ...[
-              const SizedBox(height: AmiSpacing.l),
-              // TAP 3 — confirm.
-              Text(l.gamesTicketStepConfirm, style: AmiTypography.caption),
-              const SizedBox(height: AmiSpacing.s),
-              _ConfirmCard(
-                ticket: ticket,
-                notifier: notifier,
-                cashAvailable: runDetail?.cashAvailable,
-                heldQuantity: _positionQuantity,
-              ),
-            ],
-
-            if (ticket.error != null) ...[
-              const SizedBox(height: AmiSpacing.s),
-              Text(
-                ticket.error!,
-                style:
-                    AmiTypography.caption.copyWith(color: AmiColors.hexRed),
-              ),
-            ],
-
-            if (ticket.result != null) ...[
-              const SizedBox(height: AmiSpacing.m),
-              _ResultBanner(result: ticket.result!),
-            ],
-          ],
+          ]),
         ),
       ),
     );
   }
-
 }
 
 /// The fee as a percentage of this order's own notional, or null when it is
@@ -550,6 +599,7 @@ class _SizePicker extends StatefulWidget {
   /// collateral rather than spent, and calling it the same thing as a buy is
   /// what made the ticket read as "behaving as if I am buying" (DEF272).
   final bool isShort;
+
   /// Non-null puts the picker in SELL mode: the percentage divides the
   /// POSITION rather than the cash, and the readout is shares rather than
   /// AMI Cash. Showing a dollar figure here would be actively misleading —
@@ -644,8 +694,10 @@ class _ConfirmCard extends ConsumerStatefulWidget {
 
   final GamesTicketState ticket;
   final GamesTicketNotifier notifier;
+
   /// Shares held, on a sell. The notifier sizes the order from this.
   final double? heldQuantity;
+
   /// Null means the run detail has not arrived yet — NOT that cash is zero.
   /// The difference decides between a spinner and a refusal.
   final double? cashAvailable;
@@ -742,8 +794,8 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
           child: HexButton(
             label: l.gamesRetry.toUpperCase(),
             color: AmiColors.hexGreen,
-            onPressed: () => widget.notifier
-                .fetchQuote(cashAvailable: widget.cashAvailable),
+            onPressed: () =>
+                widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
           ),
         ),
       );

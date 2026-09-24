@@ -96,6 +96,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     if (!mounted) return;
     final start = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: false,
       backgroundColor: AmiColors.slate800,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -159,6 +160,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       if (!mounted) return;
       final start = await showModalBottomSheet<bool>(
         context: context,
+        useRootNavigator: false,
         backgroundColor: AmiColors.slate800,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

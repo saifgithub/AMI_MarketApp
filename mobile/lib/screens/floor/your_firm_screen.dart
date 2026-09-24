@@ -110,6 +110,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
   final l = AppLocalizations.of(context);
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: false,
     backgroundColor: AmiColors.slate800,
     // DEF075 — scroll-controlled + scrollable so the "GO TO LESSONS" CTA isn't
     // overflowed past the 9/16 cap (and under the nav bar) when an agent has a

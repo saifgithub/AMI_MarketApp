@@ -1,4 +1,5 @@
-/// Post-onboarding home — the bottom nav (CR133 §2).
+/// Post-onboarding home — the bottom nav (CR133 §2), now with persistent
+/// chrome across pushed pages (CR232).
 ///
 /// `FLOOR · PORTFOLIO · GAME · LESSONS · YOU`, or the same four without GAME
 /// when the compile-time `AMI_GAMES` gate is off. Journal and Settings left the
@@ -11,6 +12,28 @@
 /// measured what the alternative costs: three of the five old integer literals
 /// kept working through the reorder, so a smoke test would have passed while
 /// "Review in Journal" opened the game.
+///
+/// **CR232 — a nested `Navigator` per tab.** Saiful: *"Some pages are simply
+/// using an 'X' to exit — obscure and not in line with the app's aesthetics.
+/// The bottom menu, the ad, and the ticker tape should always be on every
+/// screen."* Before CR232, every `Navigator.of(context).push` resolved to the
+/// single ROOT navigator, which sat ABOVE this Scaffold in the tree (it's
+/// `MaterialApp`'s own navigator) — so a pushed detail page covered this
+/// entire Scaffold, chrome included, and needed its own exit affordance (the
+/// `Icons.close` buttons this CR removes). Giving each [AmiTab] its own
+/// `Navigator` (via [_TabNavigator]) fixes that structurally rather than by
+/// convention: `Navigator.of(context)` resolves to the *nearest* ancestor
+/// Navigator, and a push from inside a tab's pane now finds that tab's own
+/// nested Navigator first — landing the pushed page inside the `IndexedStack`
+/// cell, below the chrome, which therefore never gets covered. No call-site
+/// changes were needed for the ~56 ordinary `Navigator.of(context).push`
+/// sites; only genuinely modal sheets and the two trade tickets needed
+/// attention (see CR232 doc's site-classification table).
+///
+/// The chrome itself — nav / ad slot / ticker tape (CR226 §Scope 1 order) —
+/// stays a sibling of the `IndexedStack`, in this Scaffold's own
+/// `bottomNavigationBar`, so it is structurally unreachable by anything a tab
+/// pushes on its own nested Navigator.
 library;
 
 import 'dart:async' show unawaited;
@@ -29,6 +52,7 @@ import 'package:ami_trade/screens/you/you_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/shell_banner_slot.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:ami_trade/widgets/ticker_tape.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +75,15 @@ class _HomeShellState extends ConsumerState<HomeShell>
   /// inactive↔resumed flapping around permission sheets and app-switcher
   /// peeks never inflates the bounce denominator.
   AppLifecycleState? _lastLifecycle;
+
+  /// CR232 — one nested-Navigator key per [AmiTab], keyed on the full enum
+  /// (not just [AmiTab.visible]) so a key exists even for `game` in a
+  /// gated-off build — nothing reads it there, but a `Map` built from
+  /// `visible` alone would need a null-check at every lookup instead of one
+  /// at construction.
+  final Map<AmiTab, GlobalKey<NavigatorState>> _navKeys = {
+    for (final tab in AmiTab.values) tab: GlobalKey<NavigatorState>(),
+  };
 
   /// One pane per entry of [AmiTab.visible], in the same order.
   ///
@@ -114,6 +147,30 @@ class _HomeShellState extends ConsumerState<HomeShell>
     }
   }
 
+  /// CR232 rule 5 — tapping the already-selected tab pops its stack to root.
+  /// Switching tabs never touches the other tab's stack — each tab's history
+  /// is its own, which is why this can only fire on a same-tab tap.
+  void _onNavTap(AmiTab tab) {
+    if (tab == _tab) {
+      _navKeys[tab]!.currentState?.popUntil((r) => r.isFirst);
+      return;
+    }
+    setState(() => _tab = tab);
+    ref.read(activeTabProvider.notifier).state = tab;
+  }
+
+  /// CR232 rule 5 — Android system back pops within the active tab first.
+  /// Only when that tab's own Navigator cannot pop (it's already at its
+  /// root pane) does the system default (leaving the shell) apply.
+  Future<bool> _onWillPop() async {
+    final nav = _navKeys[_tab]!.currentState;
+    if (nav != null && nav.canPop()) {
+      nav.pop();
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -134,44 +191,79 @@ class _HomeShellState extends ConsumerState<HomeShell>
       // substituting a different tab, because landing the user somewhere they
       // did not ask for is the failure this whole CR is about.
       if (!tabs.contains(next)) {
-        assert(false, 'activeTabProvider was set to $next, which this build '
+        assert(
+            false,
+            'activeTabProvider was set to $next, which this build '
             'does not render (AMI_GAMES=$kGamesEnabled)');
         return;
       }
       if (next != _tab) setState(() => _tab = next);
     });
-    return Scaffold(
-      backgroundColor: AmiColors.slate900,
-      body: IndexedStack(index: tabs.indexOf(_tab), children: _panes),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: AmiColors.glassChrome,
-              border: Border(top: BorderSide(color: AmiColors.slate700)),
-            ),
-            // Strip the bottom inset from MediaQuery so the nav doesn't absorb
-            // it internally — TickerTape owns that space.
-            child: MediaQuery.removePadding(
-              context: context,
-              removeBottom: true,
-              child: HexBottomNav(
-                currentIndex: tabs.indexOf(_tab),
-                onTap: (i) {
-                  // The bar hands back a position; `AmiTab.visible` is the one
-                  // place that position becomes a tab, so the mapping cannot
-                  // drift from the pane order above.
-                  final tab = tabs[i];
-                  setState(() => _tab = tab);
-                  ref.read(activeTabProvider.notifier).state = tab;
-                },
-                items: [for (final tab in tabs) _itemFor(tab, l)],
+    // CR232 rule 2 exception (a) — the keyboard hides the persistent chrome.
+    // `viewInsetsOf` rebuilds this widget on every inset change (open/close),
+    // which is exactly the signal: a nonzero bottom inset means the software
+    // keyboard is covering that much of the screen.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (await _onWillPop()) {
+          // The active tab's own Navigator cannot pop any further — fall
+          // through to whatever this shell's own ancestor (if any) does with
+          // a pop. HomeShell is normally the MaterialApp's `home`/`/floor`
+          // route, so in practice this is a no-op and the OS handles the
+          // back gesture (Android: minimize) — see PopScope docs on the
+          // no-parent-route case.
+          if (context.mounted) {
+            final nav = Navigator.of(context);
+            if (nav.canPop()) nav.pop(result);
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AmiColors.slate900,
+        body: IndexedStack(
+          index: tabs.indexOf(_tab),
+          // `tabs` and `_panes` are both filtered/declared in bar order by the
+          // same `kGamesEnabled` condition (see `_panes`'s own comment) — so
+          // `tabs[i]` and `_panes[i]` name the same tab at every index, and
+          // wrapping each pane in its own `_TabNavigator` here cannot
+          // introduce a mismatch that indexing separately would risk.
+          children: [
+            for (var i = 0; i < tabs.length; i++)
+              _TabNavigator(navigatorKey: _navKeys[tabs[i]]!, child: _panes[i]),
+          ],
+        ),
+        bottomNavigationBar: keyboardOpen
+            ? null
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: AmiColors.glassChrome,
+                      border:
+                          Border(top: BorderSide(color: AmiColors.slate700)),
+                    ),
+                    // Strip the bottom inset from MediaQuery so the nav doesn't
+                    // absorb it internally — TickerTape owns that space.
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeBottom: true,
+                      child: HexBottomNav(
+                        currentIndex: tabs.indexOf(_tab),
+                        onTap: (i) => _onNavTap(tabs[i]),
+                        items: [for (final tab in tabs) _itemFor(tab, l)],
+                      ),
+                    ),
+                  ),
+                  // CR226 §Scope 1 order: nav / ad slot / ticker tape.
+                  // Zero height until CR226 lands the real AdMob banner.
+                  const ShellBannerSlot(),
+                  const TickerTape(),
+                ],
               ),
-            ),
-          ),
-          const TickerTape(),
-        ],
       ),
     );
   }
@@ -200,5 +292,32 @@ class _HomeShellState extends ConsumerState<HomeShell>
       AmiTab.you => HexNavItem(
           icon: Icons.person_outline, label: l.youTabUpper, id: NavIds.you),
     };
+  }
+}
+
+/// CR232 — one tab's own navigation stack.
+///
+/// `Navigator(key: ..., onGenerateRoute: ...)` rather than the `pages:`/
+/// `Navigator.pages` API: every existing call site already pushes with
+/// `Navigator.of(context).push(MaterialPageRoute(...))`, and
+/// `onGenerateRoute`'s single root route is exactly what that imperative API
+/// needs to land on — the tab's `child` (its `HomeShell` pane) becomes route
+/// zero, and everything the pane itself pushes stacks on top of it, still
+/// inside this Navigator, still below the shell's own chrome.
+class _TabNavigator extends StatelessWidget {
+  const _TabNavigator({required this.navigatorKey, required this.child});
+
+  final GlobalKey<NavigatorState> navigatorKey;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navigatorKey,
+      onGenerateRoute: (settings) => MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => child,
+      ),
+    );
   }
 }

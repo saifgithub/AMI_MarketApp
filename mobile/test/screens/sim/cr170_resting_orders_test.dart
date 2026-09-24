@@ -117,7 +117,11 @@ Future<void> _pump(
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: SingleChildScrollView(child: child)),
+      // CR232 — `TradeTicketSheet` builds its own `Scaffold` now (it's a
+      // pushed page, not a sheet body), so it goes straight to `home:`
+      // rather than being wrapped in another Scaffold/SingleChildScrollView
+      // — nesting Scaffolds gave the inner one an unbounded height.
+      home: child,
     ),
   ));
   // Explicit pumps rather than pumpAndSettle: the sheet's own providers leave
