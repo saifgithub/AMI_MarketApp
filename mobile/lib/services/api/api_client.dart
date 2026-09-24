@@ -1075,11 +1075,17 @@ class ApiClient {
   /// CR233 — [orderType]/[limitPrice]/[triggerPrice] widen this beyond
   /// market. `order_type` was always sent as `'market'` unconditionally
   /// before this; now it carries whatever the ticket's own order type is,
-  /// same wire values `simSubmit` already uses. See
-  /// `SimNotifier.preview()`'s docstring for the backend-side gap this does
-  /// NOT fix: `trigger_price` is forwarded on the wire but the current
-  /// `preview_trade` handler does not read it, so a STOP preview still
-  /// sizes at the live mark.
+  /// same wire values `simSubmit` already uses.
+  ///
+  /// CR233 round-2 gap closure — [stop]/[target] now forwarded too. The
+  /// backend's `preview_trade` handler previously dropped `trigger_price`
+  /// on the floor entirely (`SimEngine.preview()` had no such parameter)
+  /// and ran no bracket-validity check, so a STOP/STOP_LIMIT preview sized
+  /// at the live mark instead of its own trigger price, and a wrong-side
+  /// bracket previewed as accepted even though `/submit` would refuse it.
+  /// Both are now read server-side — see `SimEngine.preview()`'s docstring
+  /// (backend) — so this call's `trigger_price`/`stop`/`target` are no
+  /// longer forwards-compatible placeholders; they are honoured today.
   ///
   /// DEF419 — [account], when supplied, is the caller's own account snapshot
   /// (`{kind, equity, cash, positions: [{ticker, qty, market_value}]}` —
@@ -1095,6 +1101,8 @@ class ApiClient {
     String orderType = 'market',
     double? limitPrice,
     double? triggerPrice,
+    double? stop,
+    double? target,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -1108,6 +1116,8 @@ class ApiClient {
         'order_type': orderType,
         if (limitPrice != null) 'limit_price': limitPrice,
         if (triggerPrice != null) 'trigger_price': triggerPrice,
+        if (stop != null) 'stop': stop,
+        if (target != null) 'target': target,
         if (verdictRef != null) 'verdict_ref': verdictRef,
         if (account != null) 'account': account,
       },

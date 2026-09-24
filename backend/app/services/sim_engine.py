@@ -2435,12 +2435,14 @@ class SimEngine:
         mandate: Mandate,
         order_type: OrderType = OrderType.MARKET,
         limit_price: float | None = None,
+        trigger_price: float | None = None,
         verdict_ref: UUID | None = None,
         halal_universe: set[str] | None = None,
         classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
         account_snapshot: AccountSnapshotIn | None = None,
         stop: float | None = None,
+        target: float | None = None,
     ) -> PreviewResult:
         """Dry-run a trade through the same pre-flight checks as submit() —
         compliance, verdict dedup, cash/holdings — without persisting.
@@ -2469,6 +2471,31 @@ class SimEngine:
         snapshot path: it is what lets "the new trade's own risk" be priced
         against the ALPACA account's equity per Saiful's 2026-09-24 ruling,
         see the account_snapshot branch below).
+
+        trigger_price / target: CR233 round-2 gap closure. Before this,
+        `preview()` had no `trigger_price` parameter at all, so a STOP /
+        STOP_LIMIT preview sized cash-sufficiency and concentration at the
+        live mark — `named_price_for()`/`order_pricing.py`'s own module
+        docstring is explicit that a resting order's cash commitment is
+        computed off its OWN named price (`commitment_for()` does exactly
+        this at read time), and `preview()` was the one caller of this
+        module's pricing rules that had not been taught it. `fill_price`
+        below is now `named_price_for(order_type, ...) or mark` — the
+        order's own price when it names one (LIMIT/STOP/STOP_LIMIT), the
+        mark for MARKET or a resting order with no named price yet (should
+        not happen — `SubmitTradeRequest`'s validator 422s that combination
+        before this method ever runs, but `preview()` has no such validator
+        of its own, so the fallback stays defensive). This mirrors
+        `submit()`'s own `fill_price = mark` UNLESS the order rests, in
+        which case the eventual fill is priced off `named`/`mark` by Rule 2
+        — preview cannot know whether a resting order will trigger
+        immediately (Rule 1) or later (Rule 2's worse-of), so it reports
+        sizing at the order's own named price, the same conservative
+        anchor `commitment_for()` already uses for cash-committed
+        reporting on the portfolio read. `target` is forwarded alongside
+        `stop` so preview can run the same submit-time bracket-validity
+        refusal (`bracket_is_wrong_side`, DEF312/DEF377) rather than
+        silently previewing a bracket the ticket would refuse to submit.
         """
         portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
@@ -2498,18 +2525,38 @@ class SimEngine:
 
         quote = self.current_quote(ticker)
         mark = quote.price
-        # CR170 §3 — the third and last copy of the P10 ternary. Preview reports
-        # what a fill WOULD cost, and after this CR a non-marketable order does
-        # not fill at all, so naming the user's own limit as the price was the
-        # one answer that could never be right. The mark is the price a fill
-        # would book at right now; whether it fills is `submit()`'s branch.
-        fill_price = mark
+        # CR233 round-2 gap closure — `named_price_for()` is `None` for a
+        # MARKET order (nothing to name) and for a LIMIT/STOP/STOP_LIMIT
+        # order the caller left unpriced (defensive only: `SubmitTradeRequest`
+        # 422s that combination before this ever runs). Falls back to `mark`
+        # in both cases, so a MARKET preview is byte-identical to before this
+        # CR. For STOP/STOP_LIMIT, `named` reads `trigger_price` — the same
+        # field `commitment_for()` sums for a resting order's committed cash
+        # — so a STOP preview now sizes cash-sufficiency and concentration at
+        # the price the order actually names, not the live mark it may be far
+        # from. This is NOT the third copy of the P10 ternary CR170 §3 killed
+        # below (that ternary read `order_type` to CHOOSE a price for every
+        # type, including LIMIT-fills-at-its-own-price); this reads one
+        # specific named price for the one purpose `commitment_for()` already
+        # established: what this order would tie up if it rested.
+        named = named_price_for(
+            order_type, trigger_price=trigger_price, limit_price=limit_price,
+        )
+        fill_price = named if named is not None else mark
         proposed = ProposedTrade(
             ticker=ticker,
             side=side,
             order_type=order_type,
             quantity=quantity,
-            limit_price=limit_price,
+            # `check_mandate_compliance`'s `unit_price = proposed.limit_price
+            # or quotes.get(t) or 0.0` (safety_floor.py) is the ONE place
+            # every sizing/concentration rule reads its per-share price from
+            # (DEF153) — passing `named` here, not the raw `limit_price` this
+            # method received, is what makes a STOP order's `trigger_price`
+            # reach that same chokepoint. A plain LIMIT order's `named` IS its
+            # `limit_price`, so this is additive for LIMIT/MARKET and only
+            # changes STOP/STOP_LIMIT's answer.
+            limit_price=named,
         )
 
         # CR101-BE2: same trade-history context as submit(). DEF419: per-USER
@@ -2652,6 +2699,29 @@ class SimEngine:
         held = sizing_held
 
         accepted = compliance.passed
+        # CR233 round-2 gap closure — `_execute_fill`'s DEF312/DEF377
+        # wrong-side-bracket refusal, run here too. `preview()` used to run
+        # NO bracket-validity check at all (`stop`/`target` were not even
+        # parameters on this method before this CR): a ticket could preview
+        # as "accepted" a bracket that `submit()` would refuse outright,
+        # which is not a preview at all — it is a wrong answer to "would this
+        # trade be allowed?" `account_snapshot is None` scopes this to the
+        # AMI path, matching `_execute_fill`'s own `kind == "training"` gate
+        # (an Alpaca-snapshot preview has no AMI short-position concept —
+        # `sizing_shorts` is `None` on that path — so "opens a short" is not
+        # decidable there; Alpaca's own bracket validation runs client-side
+        # in `validateAlpacaOrder`, CR233's mobile half).
+        if accepted and account_snapshot is None:
+            opens_short = side != Side.BUY and held <= 1e-9
+            if side == Side.BUY or opens_short:
+                wrong_side = bracket_is_wrong_side(
+                    is_short=opens_short, entry=fill_price, stop=stop, target=target,
+                )
+                if wrong_side is not None:
+                    accepted = False
+                    compliance = ComplianceResult(
+                        passed=False, violations=[wrong_side], blocked_by=None,
+                    )
         if accepted:
             if side == Side.BUY:
                 if notional > sizing_cash + 1e-6:

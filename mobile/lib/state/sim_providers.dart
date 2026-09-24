@@ -198,19 +198,16 @@ class SimNotifier extends StateNotifier<SimState> {
   /// rather than always at the live mark. Defaults to `market`/`null`,
   /// byte-identical to pre-CR233 behaviour.
   ///
-  /// **Known backend gap, not fixed here (mobile-only change) — see
-  /// `trigger_price`.** `POST /v1/sim/preview`'s handler forwards
-  /// `limit_price` to `SimEngine.preview()` but not `trigger_price` (that
-  /// engine method has no `trigger_price` parameter at all today — only
-  /// `submit_trade`'s call path does), so a STOP/STOP_LIMIT Alpaca-leg
-  /// preview is still sized against the live mark, not the stop price, and
-  /// preview carries no `stop`/`target` bracket-validity check either
-  /// (`submit_trade` validates the bracket; `preview_trade` does not size or
-  /// validate one at all). `triggerPrice` is still sent on the wire below —
-  /// forwards-compatible with a future backend fix, and Pydantic accepts the
-  /// extra field harmlessly today (`SubmitTradeRequest` has no
-  /// `extra="forbid"`) — but nothing on the client should assume it is
-  /// currently honoured server-side.
+  /// CR233 round-2 gap closure — [stop]/[target] are now forwarded too, and
+  /// the backend gap this docstring used to describe is closed:
+  /// `POST /v1/sim/preview`'s handler now forwards `trigger_price` through
+  /// to `SimEngine.preview()` (which gained the parameter), and preview
+  /// runs the same DEF312/DEF377 wrong-side-bracket refusal `/submit` does.
+  /// A STOP/STOP_LIMIT Alpaca-leg preview is sized at its own trigger price,
+  /// and an invalid bracket is refused at preview time — not silently
+  /// accepted only to have `/submit` (or Alpaca's own order call) refuse it
+  /// a moment later. See `SimEngine.preview()`'s docstring (backend) for the
+  /// arithmetic.
   Future<SimPreviewResult?> preview({
     required String ticker,
     required String side,
@@ -218,6 +215,8 @@ class SimNotifier extends StateNotifier<SimState> {
     SimOrderType orderType = SimOrderType.market,
     double? limitPrice,
     double? triggerPrice,
+    double? stop,
+    double? target,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -232,6 +231,8 @@ class SimNotifier extends StateNotifier<SimState> {
         orderType: orderType.wire,
         limitPrice: limitPrice,
         triggerPrice: triggerPrice,
+        stop: stop,
+        target: target,
         verdictRef: verdictRef,
         account: account,
       );

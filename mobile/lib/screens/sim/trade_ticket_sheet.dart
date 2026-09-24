@@ -764,8 +764,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           quantity: qty,
           // CR233 — sized at the order's own named price (limit/trigger),
           // same as AMI's own preview does for a resting order, not always
-          // at the live mark. See `SimNotifier.preview()`'s docstring for
-          // the backend-side gap on the trigger_price/stop leg.
+          // at the live mark. CR233 round-2 gap closure — stop/target now
+          // forwarded too, so the backend also runs the bracket-validity
+          // refusal (DEF312/DEF377) at preview, not just at submit. See
+          // `SimNotifier.preview()`'s docstring.
           orderType: _orderType,
           limitPrice: _orderType.needsLimitPrice
               ? double.tryParse(_limit.text.trim())
@@ -773,6 +775,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           triggerPrice: _orderType.needsTriggerPrice
               ? double.tryParse(_trigger.text.trim())
               : null,
+          stop: double.tryParse(_stop.text.trim()),
+          target: double.tryParse(_target.text.trim()),
           verdictRef: widget.verdictRef,
           account: snapshot.toMandateSnapshotJson(),
         );
@@ -956,6 +960,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           triggerPrice: _orderType.needsTriggerPrice
               ? double.tryParse(_trigger.text.trim())
               : null,
+          stop: double.tryParse(_stop.text.trim()),
+          target: double.tryParse(_target.text.trim()),
           verdictRef: widget.verdictRef,
           account: snapshot.toMandateSnapshotJson(),
         );
