@@ -106,6 +106,36 @@ class EncryptedString(TypeDecorator):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        # DEF416: apple_id/google_id/hms_unionid had NO constraint at all —
+        # not even a plain unique — so two concurrent first-time sign-ins
+        # with the same OIDC `sub` wrote two User rows and nothing raised.
+        # PARTIAL on IS NOT NULL: every column is nullable (a user who has
+        # never linked that provider has NULL), and NULL already doesn't
+        # collide in a unique index on either dialect — the WHERE states the
+        # actual invariant rather than leaning on that incidentally, matching
+        # `uq_journal_dedupe` / `uq_reputation_event_dedup`'s spelling so it
+        # runs identically under test (SQLite) and in production (Postgres).
+        # Migration: def416a0oidc0uq.
+        Index(
+            "uq_users_apple_id", "apple_id",
+            unique=True,
+            sqlite_where=text("apple_id IS NOT NULL"),
+            postgresql_where=text("apple_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_users_google_id", "google_id",
+            unique=True,
+            sqlite_where=text("google_id IS NOT NULL"),
+            postgresql_where=text("google_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_users_hms_unionid", "hms_unionid",
+            unique=True,
+            sqlite_where=text("hms_unionid IS NOT NULL"),
+            postgresql_where=text("hms_unionid IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)

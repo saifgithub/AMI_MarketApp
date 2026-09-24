@@ -604,6 +604,25 @@ class AuthService:
         # screen. Persisted into users.display_name on first sight,
         # never overwritten (same rule as email).
         full_name = (full_name or "").strip() or None
+
+        def _attach_apple_sub(row: User) -> None:
+            row.apple_id = apple_sub
+            # Never overwrite a populated email — protects against a
+            # user who first claimed via magic-link (real email) and
+            # later linked Apple (might be the relay address).
+            if apple_email and not row.email:
+                row.email = apple_email
+            # Same don't-overwrite rule for display_name.
+            if full_name and not row.display_name:
+                row.display_name = full_name
+            if row.is_anonymous:
+                now = datetime.now(timezone.utc)
+                row.is_anonymous = False
+                row.claimed_at = now
+                if row.trial_started_at is None:
+                    row.trial_started_at = now
+                    row.trial_expires_at = now + timedelta(days=7)
+
         with get_session() as s:
             # Prefer matching an existing apple_id row.
             row = s.execute(
@@ -642,25 +661,31 @@ class AuthService:
                     trial_started_at=now,
                     trial_expires_at=now + timedelta(days=7),
                 )
-                s.add(row)
-                s.flush()
+                try:
+                    with s.begin_nested():
+                        s.add(row)
+                        s.flush()
+                except IntegrityError:
+                    # DEF416 — uq_users_apple_id: another caller's read-to-
+                    # commit window overlapped ours and it won. Same shape as
+                    # DEF401's bank_verdict_outcome: re-SELECT by the column
+                    # the constraint fired on and take the found-row path,
+                    # so the loser signs into the winner's account instead
+                    # of raising or forking an orphaned row.
+                    logger.info(
+                        "apple_sign_in_race_lost", apple_sub=apple_sub,
+                    )
+                    row = s.execute(
+                        select(User).where(User.apple_id == apple_sub)
+                    ).scalar_one_or_none()
+                    if row is None:
+                        # The constraint fired, so a row must exist; a miss
+                        # here means something stranger than a race — let it
+                        # propagate rather than guessing.
+                        raise
+                    _attach_apple_sub(row)
             else:
-                row.apple_id = apple_sub
-                # Never overwrite a populated email — protects against a
-                # user who first claimed via magic-link (real email) and
-                # later linked Apple (might be the relay address).
-                if apple_email and not row.email:
-                    row.email = apple_email
-                # Same don't-overwrite rule for display_name.
-                if full_name and not row.display_name:
-                    row.display_name = full_name
-                if row.is_anonymous:
-                    now = datetime.now(timezone.utc)
-                    row.is_anonymous = False
-                    row.claimed_at = now
-                    if row.trial_started_at is None:
-                        row.trial_started_at = now
-                        row.trial_expires_at = now + timedelta(days=7)
+                _attach_apple_sub(row)
             if adopted_from is not None:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,
@@ -704,6 +729,21 @@ class AuthService:
         full_name = str(full_name).strip() if full_name else None
         if not full_name:
             full_name = None
+
+        def _attach_google_sub(row: User) -> None:
+            row.google_id = google_sub
+            if google_email and not row.email:
+                row.email = google_email
+            if full_name and not row.display_name:
+                row.display_name = full_name
+            if row.is_anonymous:
+                now = datetime.now(timezone.utc)
+                row.is_anonymous = False
+                row.claimed_at = now
+                if row.trial_started_at is None:
+                    row.trial_started_at = now
+                    row.trial_expires_at = now + timedelta(days=7)
+
         with get_session() as s:
             # Prefer matching an existing google_id row.
             row = s.execute(
@@ -738,21 +778,26 @@ class AuthService:
                     trial_started_at=now,
                     trial_expires_at=now + timedelta(days=7),
                 )
-                s.add(row)
-                s.flush()
+                try:
+                    with s.begin_nested():
+                        s.add(row)
+                        s.flush()
+                except IntegrityError:
+                    # DEF416 — uq_users_google_id: same recovery as the
+                    # Apple path above (DEF401's shipped shape). The loser
+                    # re-reads by the column the constraint fired on and
+                    # signs into the winner's account.
+                    logger.info(
+                        "google_sign_in_race_lost", google_sub=google_sub,
+                    )
+                    row = s.execute(
+                        select(User).where(User.google_id == google_sub)
+                    ).scalar_one_or_none()
+                    if row is None:
+                        raise
+                    _attach_google_sub(row)
             else:
-                row.google_id = google_sub
-                if google_email and not row.email:
-                    row.email = google_email
-                if full_name and not row.display_name:
-                    row.display_name = full_name
-                if row.is_anonymous:
-                    now = datetime.now(timezone.utc)
-                    row.is_anonymous = False
-                    row.claimed_at = now
-                    if row.trial_started_at is None:
-                        row.trial_started_at = now
-                        row.trial_expires_at = now + timedelta(days=7)
+                _attach_google_sub(row)
             if adopted_from is not None:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,
