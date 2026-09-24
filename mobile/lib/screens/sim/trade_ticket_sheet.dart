@@ -326,21 +326,22 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// AMI's own position sizes, which don't translate to Alpaca's independent
   /// holdings; both entry paths force AMI-Sim-only and hide the selector.
   ///
-  /// **DEF-CR227-AUDIT-1 (auditor MAJOR-1, round 1):** a non-market order
-  /// type ALSO forces AMI-Sim-only. `AlpacaClient.submitOrder()` only ever
-  /// places a market order — before this fix, a LIMIT or STOP ticket routed
-  /// to Alpaca was silently converted to an immediate market fill with
-  /// nothing telling the user their limit was ignored. The CR doc's own
-  /// Non-goals already said this must not happen ("mixing AMI's resting
-  /// order triggers three days later with Alpaca fills immediately today is
-  /// a correctness problem this CR does not attempt to solve"); this is the
-  /// enforcing check that statement was missing. See also `submitOrder()`'s
-  /// own refusal below — the UI hiding the control is the friendly half, not
-  /// the only guard.
+  /// **CR233 — the order-type lock came off.** Round-1 audit (MAJOR-1) on
+  /// CR227 found that `AlpacaClient.submitOrder()` only ever placed a
+  /// market order, so a LIMIT/STOP ticket routed to Alpaca was silently
+  /// converted to an immediate market fill with nothing telling the user
+  /// their limit was ignored — the fix then was to lock the destination
+  /// picker to AMI-Sim-only for any non-market order type, since the CR227
+  /// client had no way to honour one. CR233 gives `submitOrder()` the other
+  /// three order types (and an optional bracket) natively — see
+  /// `alpaca_client.dart`'s `buildAlpacaOrderPayload`/`validateAlpacaOrder`
+  /// — so that silent-conversion risk is gone and the lock is no longer
+  /// earning its keep for order type. The cover/sell-from-holding lock
+  /// stays: it is about AMI's own position sizes not translating to
+  /// Alpaca's independent holdings, unrelated to order type, and CR233 does
+  /// not touch it.
   bool get _destinationLocked =>
-      widget.coverTicker != null ||
-      widget.sellTicker != null ||
-      _orderType != SimOrderType.market;
+      widget.coverTicker != null || widget.sellTicker != null;
 
   /// Close the sheet and give the same confirmation the ordinary path gives.
   void _acknowledgeAdvisory() {
@@ -757,6 +758,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           ticker: typed,
           side: _side,
           quantity: qty,
+          // CR233 — sized at the order's own named price (limit/trigger),
+          // same as AMI's own preview does for a resting order, not always
+          // at the live mark. See `SimNotifier.preview()`'s docstring for
+          // the backend-side gap on the trigger_price/stop leg.
+          orderType: _orderType,
+          limitPrice: _orderType.needsLimitPrice
+              ? double.tryParse(_limit.text.trim())
+              : null,
+          triggerPrice: _orderType.needsTriggerPrice
+              ? double.tryParse(_trigger.text.trim())
+              : null,
           verdictRef: widget.verdictRef,
           account: snapshot.toMandateSnapshotJson(),
         );
@@ -898,6 +910,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           ticker: typed,
           side: _side,
           quantity: qty,
+          orderType: _orderType,
+          limitPrice: _orderType.needsLimitPrice
+              ? double.tryParse(_limit.text.trim())
+              : null,
+          triggerPrice: _orderType.needsTriggerPrice
+              ? double.tryParse(_trigger.text.trim())
+              : null,
           verdictRef: widget.verdictRef,
           account: snapshot.toMandateSnapshotJson(),
         );
@@ -915,13 +934,37 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     return _placeAlpacaOrder(typed, qty, TradeDestination.both);
   }
 
+  /// CR233 — the bracket this ticket's stop/target fields describe, in
+  /// Alpaca's own terms. `null`/empty when neither field is set — a plain
+  /// order, exactly today's shape. Read once per submit so the log report
+  /// and the order call cannot disagree about what was sent (DEF098).
+  AlpacaBracket? get _alpacaBracket {
+    final stop = double.tryParse(_stop.text.trim());
+    final target = double.tryParse(_target.text.trim());
+    if ((stop == null || stop <= 0) && (target == null || target <= 0)) {
+      return null;
+    }
+    return AlpacaBracket(
+      stopLoss: (stop != null && stop > 0) ? stop : null,
+      takeProfit: (target != null && target > 0) ? target : null,
+    );
+  }
+
   /// The actual `POST /v2/orders` call, from the device, against the user's
-  /// linked Alpaca paper account (CR227, D-071). Never called except after a
-  /// compliance verdict of `accepted: true`/`ok: true` on the matching
-  /// AMI-sim call — see the two call sites above.
+  /// linked Alpaca paper account (CR227, D-071; widened CR233). Never called
+  /// except after a compliance verdict of `accepted: true`/`ok: true` on the
+  /// matching AMI-sim call — see the two call sites above.
+  ///
+  /// CR233 — carries the ticket's own order type, limit/trigger price, TIF,
+  /// and bracket (via [_alpacaBracket]) through to `AlpacaClient
+  /// .submitOrder()`. `validateAlpacaOrder` inside that call refuses loudly
+  /// (as [AlpacaOrderRejected], caught below) rather than silently
+  /// converting anything Alpaca could not take as asked.
   ///
   /// CR230 — every resolution path also reports its outcome to
-  /// `/v1/alpaca/order_log`, best-effort (see [_reportOrderLog]).
+  /// `/v1/alpaca/order_log`, best-effort (see [_reportOrderLog]), now
+  /// including the order type/prices/TIF/bracket in `detail` so the
+  /// permanent log records what was actually sent, not just symbol/side/qty.
   ///
   /// **The report is fired with `unawaited`, not `await`.** Round-1 audit
   /// (MAJOR-1): an earlier version of this method awaited the report before
@@ -942,26 +985,51 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     double qty,
     TradeDestination destination,
   ) async {
+    final limitPrice =
+        _orderType.needsLimitPrice ? double.tryParse(_limit.text.trim()) : null;
+    final triggerPrice = _orderType.needsTriggerPrice
+        ? double.tryParse(_trigger.text.trim())
+        : null;
+    final bracket = _alpacaBracket;
+    final orderDetail = _alpacaOrderLogDetail(
+      limitPrice: limitPrice,
+      triggerPrice: triggerPrice,
+      bracket: bracket,
+    );
     try {
       final order = await ref.read(alpacaClientProvider).submitOrder(
             symbol: typed,
             side: _side,
             qty: qty,
             orderType: _orderType,
+            limitPrice: limitPrice,
+            triggerPrice: triggerPrice,
+            tif: _tif,
+            bracket: bracket,
           );
       unawaited(_reportOrderLog(
         typed: typed,
         qty: qty,
         destination: destination,
         outcome: 'submitted',
+        detail: orderDetail,
         alpacaOrderId: order.id,
         alpacaStatus: order.status,
       ));
+      // CR233 — "accepted / resting" for an order that hasn't crossed the
+      // market yet, never "filled": the server (Alpaca) states this via
+      // `order.status`, the client never infers it from order type alone —
+      // the same rule `_showOutcome` already applies to AMI's own `resting`
+      // field, since a marketable limit can come back already filled.
+      final message = order.isResting
+          ? '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
+              '— accepted, resting at Alpaca (${order.status}).'
+          : '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
+              '— ${order.status}.';
       return _DestinationOutcome(
         label: 'ALPACA PAPER',
         ok: true,
-        message: '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
-            '— ${order.status}.',
+        message: message,
       );
     } on AlpacaOrderRejected catch (e) {
       unawaited(_reportOrderLog(
@@ -994,6 +1062,40 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       return const _DestinationOutcome(
           label: 'ALPACA PAPER', ok: false, message: 'Network error.');
     }
+  }
+
+  /// CR233 — the extra facts CR230's permanent log should carry beyond
+  /// symbol/side/qty: order type, limit/trigger price, TIF, and bracket
+  /// legs. `AlpacaOrderLogIn.detail` (backend/app/schemas/alpaca.py) is a
+  /// free-text field capped at 500 chars with no schema change needed —
+  /// widening it structurally (new columns) is future work if this needs to
+  /// be queried rather than just read, out of scope for this mobile-only
+  /// change. `null` for a plain market order with no bracket, matching
+  /// CR230's original shape exactly (nothing new to say).
+  String? _alpacaOrderLogDetail({
+    double? limitPrice,
+    double? triggerPrice,
+    AlpacaBracket? bracket,
+  }) {
+    final parts = <String>[];
+    if (_orderType != SimOrderType.market) {
+      parts.add('order_type=${_orderType.wire}');
+      parts.add('tif=${alpacaTimeInForce(_tif)}');
+    }
+    if (limitPrice != null) parts.add('limit=${limitPrice.toStringAsFixed(2)}');
+    if (triggerPrice != null) {
+      parts.add('stop_trigger=${triggerPrice.toStringAsFixed(2)}');
+    }
+    if (bracket != null && !bracket.isEmpty) {
+      if (bracket.stopLoss != null) {
+        parts.add('bracket_stop_loss=${bracket.stopLoss!.toStringAsFixed(2)}');
+      }
+      if (bracket.takeProfit != null) {
+        parts.add(
+            'bracket_take_profit=${bracket.takeProfit!.toStringAsFixed(2)}');
+      }
+    }
+    return parts.isEmpty ? null : parts.join(' ');
   }
 
   /// CR230 — best-effort report of one Alpaca order attempt. Swallows

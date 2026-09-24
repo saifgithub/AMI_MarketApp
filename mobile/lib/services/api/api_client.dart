@@ -1070,8 +1070,16 @@ class ApiClient {
   /// universe, drawdown, cooldown-after-loss, bracket validity) without
   /// persisting a `SimTradeRow` — so picking "Alpaca only" cannot bypass the
   /// safety floor "uncoachable" promises just because nothing is written to
-  /// AMI's own sim. Market orders only, matching CR227's scope: no
-  /// order-type/limit/trigger/tif params are exposed here.
+  /// AMI's own sim.
+  ///
+  /// CR233 — [orderType]/[limitPrice]/[triggerPrice] widen this beyond
+  /// market. `order_type` was always sent as `'market'` unconditionally
+  /// before this; now it carries whatever the ticket's own order type is,
+  /// same wire values `simSubmit` already uses. See
+  /// `SimNotifier.preview()`'s docstring for the backend-side gap this does
+  /// NOT fix: `trigger_price` is forwarded on the wire but the current
+  /// `preview_trade` handler does not read it, so a STOP preview still
+  /// sizes at the live mark.
   ///
   /// DEF419 — [account], when supplied, is the caller's own account snapshot
   /// (`{kind, equity, cash, positions: [{ticker, qty, market_value}]}` —
@@ -1084,6 +1092,9 @@ class ApiClient {
     required String ticker,
     required String side, // 'buy' | 'sell'
     required double quantity,
+    String orderType = 'market',
+    double? limitPrice,
+    double? triggerPrice,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -1094,7 +1105,9 @@ class ApiClient {
         'ticker': ticker,
         'side': side,
         'quantity': quantity,
-        'order_type': 'market',
+        'order_type': orderType,
+        if (limitPrice != null) 'limit_price': limitPrice,
+        if (triggerPrice != null) 'trigger_price': triggerPrice,
         if (verdictRef != null) 'verdict_ref': verdictRef,
         if (account != null) 'account': account,
       },

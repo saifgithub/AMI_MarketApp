@@ -158,6 +158,10 @@ class _AcceptingAlpacaClient extends _FakeAccountAlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     return AlpacaOrder(
       id: 'ord_test_1',
@@ -176,6 +180,10 @@ class _RefusingAlpacaClient extends _FakeAccountAlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     throw const AlpacaOrderRejected(
       'refusing to place an order against a non-paper Alpaca host: test',
@@ -190,6 +198,10 @@ class _RejectingAlpacaClient extends _FakeAccountAlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     throw const AlpacaException(422, 'insufficient buying power');
   }
@@ -204,6 +216,10 @@ class _UnexpectedlyThrowingAlpacaClient extends _FakeAccountAlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     throw StateError('unexpected');
   }
@@ -221,6 +237,9 @@ class _FixedSim extends SimNotifier {
     required String ticker,
     required String side,
     required double quantity,
+    SimOrderType orderType = SimOrderType.market,
+    double? limitPrice,
+    double? triggerPrice,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async =>

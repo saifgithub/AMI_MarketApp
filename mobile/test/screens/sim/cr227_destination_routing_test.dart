@@ -49,6 +49,10 @@ class _RecordingAlpacaClient extends AlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     calls.add('$side $qty $symbol ${orderType.name}');
     return AlpacaOrder(
@@ -76,6 +80,9 @@ class _FixedSim extends SimNotifier {
     required String ticker,
     required String side,
     required double quantity,
+    SimOrderType orderType = SimOrderType.market,
+    double? limitPrice,
+    double? triggerPrice,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -183,26 +190,30 @@ void main() {
     });
 
     testWidgets(
-        'hidden once a LIMIT order type is picked — auditor round-1 MAJOR-1',
-        (t) async {
-      // Before the fix: AlpacaClient.submitOrder() had no order-type
-      // parameter at all and hard-coded a market order, so a LIMIT/STOP
-      // ticket routed to Alpaca silently filled immediately instead of
-      // resting — with nothing telling the user their limit was ignored.
+        'CR233 — stays visible once a LIMIT order type is picked, now that '
+        'AlpacaClient.submitOrder() supports it', (t) async {
+      // CR227 round-1 audit (MAJOR-1) found that AlpacaClient.submitOrder()
+      // had no order-type parameter at all and hard-coded a market order, so
+      // a LIMIT/STOP ticket routed to Alpaca silently filled immediately
+      // instead of resting. The fix at the time was to hide this selector
+      // for any non-market order type (see this file's git history for the
+      // test that used to assert exactly the opposite of this one). CR233
+      // gave submitOrder() the other order types natively
+      // (buildAlpacaOrderPayload/validateAlpacaOrder in alpaca_client.dart),
+      // so the destination lock came off order type — see
+      // TradeTicketSheet's `_destinationLocked`, which now only locks on
+      // coverTicker/sellTicker.
       await _pump(t, alpacaLinked: true, restingOrdersSupported: true);
-      expect(find.text('DESTINATION'), findsOneWidget,
-          reason: 'starts visible — this test proves it disappears, not '
-              'that it was never there');
+      expect(find.text('DESTINATION'), findsOneWidget);
 
       await t.tap(find.text('LIMIT'));
       for (var i = 0; i < 3; i++) {
         await t.pump(const Duration(milliseconds: 120));
       }
 
-      expect(find.text('DESTINATION'), findsNothing,
-          reason: 'a non-market order type must force AMI-Sim-only and hide '
-              'the destination selector entirely — the same treatment as '
-              'the cover/sell entry paths');
+      expect(find.text('DESTINATION'), findsOneWidget,
+          reason: 'CR233 — a LIMIT order can now be routed to Alpaca, so '
+              'the destination selector must stay available');
     });
 
     testWidgets('defaults to AMI Sim — an unpicked selector changes nothing',

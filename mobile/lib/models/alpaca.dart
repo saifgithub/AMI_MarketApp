@@ -73,12 +73,13 @@ class AlpacaPosition {
       };
 }
 
-/// One Alpaca paper order, as placed by `AlpacaClient.submitOrder` (CR227).
+/// One Alpaca paper order, as placed by `AlpacaClient.submitOrder` (CR227;
+/// widened to limit/stop/stop_limit/bracket by CR233).
 ///
-/// Market orders only (v1) — see CR227's Non-goals. Parsed the same
-/// tolerant way as the other models here: Alpaca returns `filled_qty` as a
-/// string, and an order accepted-but-not-yet-filled reports a null fill
-/// price, which should read as "not yet filled" rather than throw.
+/// Parsed the same tolerant way as the other models here: Alpaca returns
+/// `filled_qty` as a string, and an order accepted-but-not-yet-filled
+/// reports a null fill price, which should read as "not yet filled" rather
+/// than throw.
 class AlpacaOrder {
   const AlpacaOrder({
     required this.id,
@@ -95,6 +96,24 @@ class AlpacaOrder {
   final double qty;
   final String status;
   final double? filledAvgPrice;
+
+  /// CR233 — a market order's own `status` on the response to `POST
+  /// /v2/orders` is usually already `filled` (paper fills are near-
+  /// instant); a limit/stop/stop_limit order that hasn't crossed the market
+  /// comes back `new`/`accepted`/`pending_new` instead — it is resting at
+  /// Alpaca, not filled. The result panel reads this rather than inferring
+  /// from order type alone, because a marketable limit (e.g. a buy limit
+  /// placed at or above the current ask) can come back already `filled`
+  /// too — the same "server states it, client never infers it" rule
+  /// `trade_ticket_sheet.dart`'s own `_showOutcome` already applies to
+  /// AMI's `resting` field.
+  bool get isResting => const {
+        'new',
+        'accepted',
+        'pending_new',
+        'accepted_for_bidding',
+        'held',
+      }.contains(status.toLowerCase());
 
   factory AlpacaOrder.fromJson(Map<String, dynamic> j) => AlpacaOrder(
         id: (j['id'] ?? '') as String,

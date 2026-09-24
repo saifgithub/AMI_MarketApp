@@ -98,24 +98,76 @@ void main() {
     });
 
     test(
-        'refuses a non-market order type before even checking the host or '
-        'link state — auditor round-1 MAJOR-1', () async {
+        'refuses an unrecognised order type before even checking the host '
+        'or link state', () async {
       // Unlinked AND a live host would both also refuse; this proves the
       // order-type check fires independently, matching how submitOrder()
-      // now checks orderType before reading AlpacaCredentialStore at all.
+      // checks orderType before reading AlpacaCredentialStore at all.
+      final client = AlpacaClient();
+      expect(
+        () => client.submitOrder(
+            symbol: 'AAPL',
+            side: 'buy',
+            qty: 1,
+            orderType: SimOrderType.unknown),
+        throwsA(isA<AlpacaOrderRejected>()),
+        reason: 'an order type this build does not recognise must never be '
+            'guessed at',
+      );
+    });
+
+    test(
+        'refuses a LIMIT order with no limit price set, before checking the '
+        'host or link state', () async {
+      final client = AlpacaClient();
+      expect(
+        () => client.submitOrder(
+            symbol: 'AAPL',
+            side: 'buy',
+            qty: 1,
+            orderType: SimOrderType.limit),
+        throwsA(isA<AlpacaOrderRejected>()),
+      );
+    });
+
+    test(
+        'refuses a STOP order with no trigger price set, before checking '
+        'the host or link state', () async {
+      final client = AlpacaClient();
+      expect(
+        () => client.submitOrder(
+            symbol: 'AAPL', side: 'buy', qty: 1, orderType: SimOrderType.stop),
+        throwsA(isA<AlpacaOrderRejected>()),
+      );
+    });
+
+    test(
+        'CR233 — a LIMIT/STOP/STOP_LIMIT order with valid prices is no '
+        'longer refused by order type alone (still refused on link state, '
+        'proving the order-type gate from CR227 is gone)', () async {
       final client = AlpacaClient();
       for (final t in [
-        SimOrderType.limit,
-        SimOrderType.stop,
-        SimOrderType.stopLimit,
+        (SimOrderType.limit, 100.0, null),
+        (SimOrderType.stop, null, 90.0),
+        (SimOrderType.stopLimit, 100.0, 90.0),
       ]) {
-        expect(
-          () => client.submitOrder(
-              symbol: 'AAPL', side: 'buy', qty: 1, orderType: t),
-          throwsA(isA<AlpacaOrderRejected>()),
-          reason: '$t must never reach Alpaca as a silently-converted '
-              'market order (CR227 Non-goals)',
-        );
+        try {
+          await client.submitOrder(
+            symbol: 'AAPL',
+            side: 'buy',
+            qty: 1,
+            orderType: t.$1,
+            limitPrice: t.$2,
+            triggerPrice: t.$3,
+          );
+          fail('expected an AlpacaException for an unlinked account');
+        } on AlpacaOrderRejected catch (e) {
+          fail('${t.$1} with valid prices must not be refused by order '
+              'type alone — got: $e');
+        } on AlpacaException {
+          // Expected: unlinked, so it fails on credential lookup, past the
+          // order-type/price validation this test is really about.
+        }
       }
     });
   });
