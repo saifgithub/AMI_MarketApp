@@ -156,3 +156,157 @@ But the serializer that feeds the safety floor drops real positions at the cap b
 has no test of its own. Both are one round's work.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+---
+
+## Round 2 — auditor u66
+
+**SHA audited:** `a51ea92d`, in a detached scratch worktree `DEF419MOB-r2-u66` per DEF159 — the
+same commit as DEF419-BE round 2, both halves landed together. Worktree verified clean after
+every probe and mutation was reverted.
+
+All four round-1 items are resolved. Verified by re-running my own round-1 probes and my own
+mutations, not from the submission's transcript.
+
+### MAJOR-1 — fixed
+
+`toMandateSnapshotJson()` is now filter → sort → take (`alpaca.dart:163-180`), so the cap counts
+only positions that will actually be sent. My round-1 probe, re-run verbatim with the fixture
+size asserted:
+
+```
+PROBE: 120 in (100 short + 20 long) -> 20 sent
+PROBE: round-1 MAJOR-1 is fixed — all 20 longs present
+```
+
+20 sent where round 1 sent **0**, every one a real long. Two edges I added this round also hold:
+
+```
+PROBE short-only book -> 0 sent (expect 0)        # empty, not wrong
+PROBE 150 longs -> 100 sent, largest=149.0, smallest=50.0   # cap keeps the largest
+```
+
+### MAJOR-2 — fixed, and the new guard is load-bearing
+
+`toMandateSnapshotJson()` now has its own test group. I checked it does real work by mutating
+the method back to round 1's cap-then-filter order:
+
+```
+Expected: <20>
+  Actual: <0>
+00:00 +13 -1: Some tests failed.
+```
+
+It reproduces my round-1 finding exactly and fails on it. That is the guard that would have
+stopped MAJOR-1 shipping.
+
+### MINOR-1 — fixed, and the claim corrected rather than defended
+
+`_fetchAlpacaSnapshot` is now a plain `async`/`await` over the TTL cache; the `Completer`
+fan-out and `_alpacaSnapshotFetch` are gone, and the docstring records the finding instead of
+repeating the round-1 claim. That is the right resolution — the guarded scenario could not
+occur, so removing it is better than keeping defensive scaffolding that reads as a guarantee.
+
+One behaviour I checked rather than assumed: the old `onError` branch cleared the cache on
+failure, and the new code has no such branch. It does not need one — the cache is written
+**only** on success (`:723-724`) and every read is TTL-gated (`:709-713`), so a failed fetch
+leaves behind only data that was itself successfully fetched inside the last 30s. No stale-cache
+path opens up.
+
+The legs remain structurally independent: `_legAmi` never calls `_fetchAlpacaSnapshot` at all,
+which is what actually guarantees the round-1 property, and the
+`BOTH: an unreadable Alpaca account still lets the AMI leg place independently` test still
+passes.
+
+### MINOR-2 (30s TTL) — unchanged, as agreed
+
+### The disclosure reaches the user — verified at every hop
+
+This was the open question I carried over from DEF419-BE round 2: a disclosure that stops at the
+response model is the same defect one layer out. It does not stop there.
+
+`UnmeasuredRule` (`sim.dart:860-870`) parses both `rule` and `reason`; `_unmeasuredRulesNote`
+(`trade_ticket_sheet.dart:71-75`) renders a localized line on the accepted-outcome paths. I
+silenced the renderer:
+
+```
+Expected: exactly one matching candidate
+  Actual: Found 0 widgets with text containing "Not checked for this"
+00:01 +10 -1: Some tests failed.
+```
+
+A widget test asserts the rendered text, so the chain is closed end to end — backend computes,
+wire carries, model parses, **UI renders** — with a guard at the last hop.
+
+Two judgement calls I looked at and agree with:
+
+- **Only the rule NAMES are rendered, not the backend's `reason` prose.** A trade ticket is not
+  the place for two sentences. The `reason` is parsed onto the model and available for a later
+  surface (tooltip, tap-to-expand) with no further backend round. Sound layering, not a gap.
+- **The disclosure renders only on an ACCEPTED outcome**, never beside a violation — correct, a
+  rejected trade's reason is the violation, and adding "also, two rules weren't checked" there
+  would muddy it. The negative test for this exists.
+
+### Carried, not re-charged — the i18n guard failure
+
+`tradeTicketUnmeasuredRulesNote` is hand-copied English in `app_ar.arb` / `app_ms.arb` and fails
+DEF295's guard. **Already charged as MINOR-2 on DEF419-BE round 2** (same commit, `a51ea92d`);
+recorded here for completeness rather than counted twice.
+
+One correction to this submission's stated reasoning, because it would mislead the next reader:
+
+> *"added to `app_ar.arb`/`app_ms.arb` with the English string as placeholder, matching how every
+> other not-yet-translated key in those files reads"*
+
+Measured, that is not how the others read. DEF295's mechanism is an `@@x-ami-seeds` map holding
+`key → sha256[:12]` of each seeded value:
+
+```
+app_ar.arb: @@x-ami-seeds holds 825 entries — tradeTicketUnmeasuredRulesNote present? False
+app_ms.arb: @@x-ami-seeds holds 841 entries — tradeTicketUnmeasuredRulesNote present? False
+```
+
+Every other untranslated key **is** registered there; this one alone is not, which is exactly
+the state DEF295 exists to catch ("skipped by the translator forever ... the key is present, the
+parity guard is green, and the Arabic screen renders English"). `l10n_key_parity_test.dart`
+passing does not cover it — that is DEF137's guard, and DEF295's whole filing was that DEF137's
+guard is satisfied by the very hand-copy it cannot see. `--seed-missing` is the one supported
+route.
+
+### Evidence, run bare in the pinned worktree
+
+```
+cd mobile && flutter test test/screens/sim/def419_per_account_test.dart \
+                         test/services/alpaca/alpaca_snapshot_wire_test.dart \
+                         test/l10n_key_parity_test.dart
+00:02 +38: All tests passed!          EXIT=0
+
+cd mobile && flutter analyze
+11 issues found. (ran in 8.6s)        EXIT=1, 0 errors — baseline exactly
+```
+
+The analyze count confirms their `use_build_context_synchronously` fix held: resolving
+`AppLocalizations` in `_submitBoth` before either leg's `await` and passing it in, rather than
+reading `context` inside a helper with no `mounted` check, is the right shape.
+
+Full mobile suite, pinned worktree, run bare:
+
+```
+cd mobile && flutter test
+01:28 +1516: All tests passed!        EXIT=0
+```
+
+Matches the submission exactly. 1516 = round 1's 1505 plus this round's 6 serializer tests and
+the disclosure/rendering cases.
+
+### Verdict
+
+Both MAJORs are properly fixed: the serializer sends real longs again, and the test that would
+have caught the original defect now exists and fails on it. MINOR-1 was resolved by removing the
+machinery and correcting the claim rather than defending it, which is the harder and better
+choice. And the disclosure this round wired up is verifiable at every hop to the user's screen.
+
+The i18n seeding is owed before this ships — it is one command, and it is charged on the backend
+half of the same commit rather than twice.
+
+VERDICT: COMPLETE (round 2)
