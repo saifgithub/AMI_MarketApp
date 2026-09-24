@@ -40,6 +40,7 @@ import 'dart:async' show unawaited;
 
 import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/nav/home_shell_navigation.dart';
 import 'package:ami_trade/features/tour/nav_change_sheet.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -101,9 +102,37 @@ class _HomeShellState extends ConsumerState<HomeShell>
     YouScreen(),
   ];
 
+  /// CR232 round 2 — the notifier itself, captured once in [initState] while
+  /// `ref` is still valid, so [dispose] can clear the published keys WITHOUT
+  /// touching `ref`. `ConsumerStatefulElement.unmount()` invalidates `ref`
+  /// before calling this `State`'s own `dispose()` (confirmed by a `Bad
+  /// state: Cannot use "ref" after the widget was disposed` thrown from
+  /// exactly that call site the first time this used `ref.read(...)` in
+  /// `dispose` directly) — an uncaught exception there aborts the rest of
+  /// the widget-tree unmount, including sibling providers' own `onDispose`
+  /// (e.g. `telemetryProvider`'s flush-timer cleanup), which is why the
+  /// regression this caused surfaced as an unrelated "Timer is still
+  /// pending" failure in `home_shell_test.dart` rather than pointing at
+  /// itself. A `StateController` reference stays valid after the widget
+  /// that read it is gone (it's owned by the provider, not the widget).
+  late final StateController<Map<AmiTab, GlobalKey<NavigatorState>>?>
+      _navKeysController;
+
   @override
   void initState() {
     super.initState();
+    _navKeysController = ref.read(homeShellNavKeysProvider.notifier);
+    // CR232 round 2 (MAJOR-1) — publish the real nav keys once the first
+    // frame lands. Same `addPostFrameCallback` shape as the nav-change-sheet
+    // callback below (and Riverpod forbids writing a provider mid-build,
+    // which `initState` still is) — a stream event a listener subscribed to
+    // in ITS OWN `initState` can only fire asynchronously, never before this
+    // callback, so there is no frame where the shell is mounted but a
+    // dispatcher reading this provider would still see null.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _navKeysController.state = _navKeys;
+    });
     // CR181 — the bounce denominator: reaching the shell IS "opened the
     // app". Fire-and-forget; the emitter owns batching and failure.
     WidgetsBinding.instance.addObserver(this);
@@ -127,6 +156,11 @@ class _HomeShellState extends ConsumerState<HomeShell>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // CR232 round 2 — the shell is gone; a dispatch that raced past this
+    // point must see null and queue/log, not push through a stale key whose
+    // NavigatorState no longer exists. Goes through the captured
+    // [_navKeysController], NOT `ref` (see its doc comment for why).
+    _navKeysController.state = null;
     super.dispose();
   }
 
