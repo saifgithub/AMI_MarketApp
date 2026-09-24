@@ -7,6 +7,7 @@ from app.schemas.onboarding import (
 )
 from app.services.concierge_engine import (
     _NEXT_STEP,
+    Q6_CHIPS,
     Q7_CHIPS,
     Q7_TEXT,
     _build_readback_summary,
@@ -18,6 +19,7 @@ from app.services.concierge_engine import (
     _question_message,
     make_welcome_messages,
     process_answer,
+    q6_text,
     session_to_mandate_dict,
 )
 
@@ -476,7 +478,7 @@ def test_cr228_nudge_tables_do_not_drift_from_their_source_vocabulary():
     This pins the key sets so that addition fails loudly instead."""
     assert set(_HORIZON_TIER) == {h.value for h in Horizon}
     assert set(_GOAL_TIER) == {g.value for g in PrimaryGoal}
-    assert set(_DRAWDOWN_PCT_TO_TIER) == {10, 20, 30, 50, 100}
+    assert set(_DRAWDOWN_PCT_TO_TIER) == {10, 20, 30, 40, 50, 100}
 
 
 def test_cr228_disagreeing_drawdown_answer_nudges_the_score_at_readback():
@@ -521,7 +523,7 @@ def test_cr228_offered_50_picks_10_the_scores_moves():
     (README.md: 'A user offered 50% who picks 10% is saying the score is
     wrong, and nothing listens'). At neutral Q1/Q2 (both nudge-tier 3, the
     documented do-nothing value) and a scenario base that suggests 50% (risk
-    score 4 -> q6_text's suggestion table maps 4 to 50), picking 10% instead
+    score 5 -> q6_text's suggestion table maps 5 to 50), picking 10% instead
     must move the readback score DOWN from the suggestion-implied baseline —
     the exact behaviour round 1's fix silently made impossible (0/45
     reachable bases could move at neutral Q1/Q2, per the auditor's
@@ -531,13 +533,13 @@ def test_cr228_offered_50_picks_10_the_scores_moves():
         (ConversationStep.WELCOME, "yes"),
         (ConversationStep.Q1_GOAL, "Save for retirement"),
         (ConversationStep.Q2_HORIZON, "3–10 years"),
-        (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Buy more cautiously"),
+        (ConversationStep.Q3_SCENARIO_DRAWDOWN, "Buy aggressively — it's on sale"),
         (ConversationStep.Q4_SCENARIO_REGRET, "About the same"),
-        (ConversationStep.Q5_SCENARIO_CONCENTRATION, "30% (balanced)"),
+        (ConversationStep.Q5_SCENARIO_CONCENTRATION, "60% (all-in)"),
     ]:
         _next, message, _readback = process_answer(session, step, answer)
     assert "50% sounds like a fit" in message.content, (
-        "fixture must land on a base score of 4 (q6_text suggests 50%) for "
+        "fixture must land on a base score of 5 (q6_text suggests 50%) for "
         "this test to actually probe the CR's own 'offered 50%, picks 10%' case"
     )
     baseline_score = _derive_risk_score(session)
@@ -584,3 +586,34 @@ def test_def129_mandate_carries_no_briefing_field():
     from app.schemas.mandate import Mandate
 
     assert "daily_briefing" not in Mandate.model_fields
+
+
+def test_def418_all_five_risk_tiers_have_distinct_suggestions_in_q6_chips():
+    """DEF418: tiers 4 and 5 previously both suggested 50%, violating CR228's
+    requirement for five distinct tiers. Saiful ruled 2026-09-24: '4→40%, 5→50%'.
+    This test pins that all five suggestions (1→10%, 2→20%, 3→30%, 4→40%, 5→50%)
+    are (a) strictly increasing, (b) each present in Q6_CHIPS, and (c) that the
+    40% parser accepts the new chip."""
+    import re
+    suggestions = {}
+    for risk_score in range(1, 6):
+        text = q6_text(risk_score)
+        m = re.search(r"(\d+)% sounds like a fit", text)
+        assert m, f"could not find suggestion in q6_text({risk_score}): {text}"
+        suggestions[risk_score] = int(m.group(1))
+
+    assert suggestions == {1: 10, 2: 20, 3: 30, 4: 40, 5: 50}, (
+        f"expected {{1: 10, 2: 20, 3: 30, 4: 40, 5: 50}}, got {suggestions}"
+    )
+    # All suggestions must be in the chip options (minus "No cap" which is parsed as 100)
+    for risk_score, pct in suggestions.items():
+        chip = f"{pct}%"
+        assert chip in Q6_CHIPS, (
+            f"tier {risk_score} suggests {pct}% but {chip} not in Q6_CHIPS={Q6_CHIPS}"
+        )
+    # Parser must accept the new 40% chip
+    from app.services.concierge_engine import _parse_drawdown_pct
+    assert _parse_drawdown_pct("40%") == 40
+    assert _parse_drawdown_pct("40") == 40
+    # Verify 40% maps to tier 4 in the nudge table
+    assert _DRAWDOWN_PCT_TO_TIER[40] == 4
