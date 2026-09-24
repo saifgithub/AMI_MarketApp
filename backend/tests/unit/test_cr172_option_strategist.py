@@ -348,14 +348,28 @@ def test_a_budget_that_covers_contracts_is_divided_and_says_nothing():
 
 
 def test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget():
-    """A $9,030 loss against a $9,000 budget is a 0.3% overrun. Rounded to a
-    whole multiple it prints as "1x the budget", which reads as *exactly* the
-    budget — the opposite of what the disclosure exists to say. Both ends of
-    the range have to survive the same formatter."""
+    """A $9,030 loss against a $9,000 budget is a 0.3% overrun. MINOR-3
+    (RETRO-SIM-OPTIONS round 1, U68) — this test used to end here, one
+    statement short of asserting anything; its own two assertions had been
+    spliced, unreachable, inside `check_option_open`'s body below, after that
+    helper's own `return` — so this test passed vacuously no matter what the
+    formatter printed. Restored, and updated for MINOR-3's fix: a fixed one
+    decimal used to print this exact case as "1.0x", which reads as *exactly*
+    the budget — the opposite of what the disclosure exists to say. Both ends
+    of the range (a near-miss and DEF354's original 502x) have to survive the
+    same formatter."""
     legs = (
         StrategyLeg(right="put", strike=95.0, quantity=-1.0, premium=4.7,
                     expiry="2026-10-16"),
     )
+
+    _c, near = st._size_to_budget(legs, budget_usd=9_000.0, shares_held=0.0)
+    assert near is not None
+    assert "1.0x" not in near, "must not read as exactly the budget"
+    assert "1.00x" in near, "widened precision carries the near-miss"
+
+    _c2, far = st._size_to_budget(legs, budget_usd=18.0, shares_held=0.0)
+    assert far is not None and "502x" in far
 
 
 # CR172 §9 — these tests predate the four book-level caps and ask about the
@@ -367,14 +381,6 @@ def test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget():
 def check_option_open(legs, mandate, **kw):
     from app.agents.safety_floor import check_option_open as _check_option_open
 
-
     kw.setdefault("portfolio_value", None)
     kw.setdefault("existing_structures", ())
     return _check_option_open(legs, mandate, **kw)
-
-
-    _c, near = st._size_to_budget(legs, budget_usd=9_000.0, shares_held=0.0)
-    assert near is not None and "1.0x" in near
-
-    _c2, far = st._size_to_budget(legs, budget_usd=18.0, shares_held=0.0)
-    assert far is not None and "502x" in far

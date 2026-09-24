@@ -13,10 +13,17 @@ Conflict rules (kept deliberately simple for the alpha MVP):
   - **mandate**: if the adopting user already has a mandate, keep it,
     delete the orphan's. Otherwise re-key the orphan's mandate rows.
   - **sim_portfolio**: each user owns at most one (UNIQUE on user_id).
-    If the adopting user has none, re-key the orphan's portfolio. If
-    both have one, keep the adopting user's and re-key only the orphan's
-    sim_trades into it (we drop the orphan's holdings — too messy to
-    sum without a UI for it).
+    If the adopting user has none, re-key the orphan's portfolio — trades,
+    holdings and open option positions all arrive with it, because the
+    whole portfolio (cash included) changes owner as one unit. If both have
+    one, keep the adopting user's and re-key only the orphan's sim_trades
+    into it; the orphan's holdings AND open option positions are dropped
+    along with the orphan portfolio cascade (too messy to sum without a UI
+    for it, and — MAJOR-1, RETRO-SIM-OPTIONS round 1 — an option position
+    cannot move on its own without the cash that paid for it or the shares
+    that cover it, both of which belong to the portfolio being dropped).
+    The drop is counted (`sim_option_legs_dropped`) and logged, never
+    silent.
   - **lessons_progress / agent_activations / sim_watchlists**: UNIQUE on
     (user_id, ...). Skip rows that would conflict; the orphan's "extra"
     rows move over, but a (lesson_id) already on the target stays as-is.
@@ -204,6 +211,7 @@ class MergeService:
             sim_trades_moved = 0
             sim_holdings_moved = 0
             sim_options_moved = 0
+            sim_options_dropped = 0
             if source_portfolio is not None and target_portfolio is None:
                 # Adopter has no portfolio — move orphan's wholesale.
                 s.execute(
@@ -229,10 +237,13 @@ class MergeService:
                         SimHoldingRow.portfolio_id == source_portfolio.id
                     )
                 ).scalar_one()
-            elif source_portfolio is not None and target_portfolio is not None:
+            if source_portfolio is not None and target_portfolio is not None:
                 # Both have portfolios — keep adopter's. Re-key only the
-                # trades into the adopter's portfolio. Holdings get dropped
-                # along with the orphan portfolio cascade.
+                # trades into the adopter's portfolio. Holdings AND open
+                # option positions get dropped along with the orphan
+                # portfolio (counted + logged below for options; see
+                # MAJOR-1 just below for why options can no longer be
+                # re-keyed here).
                 #
                 # Scoped to `SimTradeRow.portfolio_id == source_portfolio.id`
                 # rather than `user_id == from_user_id` (the pre-CR109-slice-2
@@ -245,19 +256,71 @@ class MergeService:
                     .values(user_id=to_user_id, portfolio_id=target_portfolio.id)
                 )
                 sim_trades_moved = int(trades_moved.rowcount or 0)
-                # DEF368 — THE DESTRUCTIVE BRANCH. Equity trades are re-keyed
-                # to the adopter's portfolio just above; option legs were not,
-                # and `sim_option_legs.portfolio_id` is ondelete=CASCADE, so
-                # the delete below removed every one of them. The user
-                # consented to a structure, saw it on the portfolio card,
-                # claimed their account, and it was gone — silently, because a
-                # CASCADE is not a failure. Re-key BEFORE the delete.
-                sim_options_moved = _rekey_options(
-                    s, source_portfolio.id, to_user_id,
-                    portfolio_id=target_portfolio.id,
+                # MAJOR-1 (RETRO-SIM-OPTIONS round 1) — DEF368's own fix
+                # re-keyed option legs into the adopter's portfolio in THIS
+                # branch too, but a leg's collateral and net cost were paid
+                # out of the ORPHAN portfolio's `current_cash` at open
+                # (`sim_options.open_structure`: `current_cash = available -
+                # needed`), and a covered call's cover is the ORPHAN's
+                # `sim_holdings` row for that underlying. Both the cash and
+                # the holdings are dropped by this branch's existing rule
+                # (the cascade a few lines down) — so re-keying only the legs
+                # moved a position without what paid for it or what covers
+                # it. Measured: adopter total-value rose by the full
+                # collateral with cash unchanged (phantom NAV), and a covered
+                # call arrived with no covering shares on the adopter's book
+                # (a naked short call minted by claiming an account — the
+                # one position D3 forbids outright, reached with no floor at
+                # all).
+                #
+                # This branch's existing rule for every OTHER per-user
+                # singleton (mandate, training portfolio, holdings) is "keep
+                # the adopter's, drop the orphan's" — options now follow the
+                # same rule, not a new one, and the drop is counted and
+                # logged rather than a silent CASCADE (DEF368's actual
+                # complaint was the silence, not the loss: "a merge that
+                # names what it carried while silently dropping a table is
+                # the same class of failure one layer up"). The rows
+                # themselves are left for `ondelete="CASCADE"` below to
+                # remove, same as holdings — counted and logged here so the
+                # drop is on the record, not silently absorbed into the
+                # portfolio-delete a few lines down.
+                sim_options_dropped = s.execute(
+                    select(func.count()).select_from(SimOptionLegRow).where(
+                        SimOptionLegRow.portfolio_id == source_portfolio.id,
+                        SimOptionLegRow.state == "open",
+                    )
+                ).scalar_one()
+                if sim_options_dropped:
+                    logger.warning(
+                        "sim_option_legs_dropped_on_merge",
+                        from_user_id=str(from_user_id),
+                        to_user_id=str(to_user_id),
+                        legs_dropped=sim_options_dropped,
+                    )
+                # `sim_option_legs.portfolio_id` / `sim_option_trades.portfolio_id`
+                # are `ondelete="CASCADE"` on Postgres, same as `sim_holdings`,
+                # but Postgres is not the only place this runs: sqlite's FK
+                # pragma is off by default here (see `SimEngine.reset_portfolio`'s
+                # own explicit deletes for the identical reason), so the unit
+                # suite would silently leave these rows behind pointing at a
+                # deleted portfolio_id — not a CASCADE gap in production, but a
+                # real gap in what the test proves. Delete explicitly; on
+                # Postgres this is a no-op (the CASCADE already ran, or would
+                # have) and on sqlite it is the only thing that actually removes
+                # the rows.
+                s.execute(
+                    delete(SimOptionLegRow)
+                    .where(SimOptionLegRow.portfolio_id == source_portfolio.id)
                 )
-                # CASCADE on sim_holdings.portfolio_id wipes the orphan's
-                # holdings when we delete the orphan portfolio.
+                s.execute(
+                    delete(SimOptionTradeRow)
+                    .where(SimOptionTradeRow.portfolio_id == source_portfolio.id)
+                )
+                s.execute(
+                    delete(SimHoldingRow)
+                    .where(SimHoldingRow.portfolio_id == source_portfolio.id)
+                )
                 s.execute(
                     delete(SimPortfolioRow)
                     .where(SimPortfolioRow.id == source_portfolio.id)
@@ -268,6 +331,10 @@ class MergeService:
             # carried while silently dropping a table is the same class of
             # failure one layer up.
             counts["sim_option_legs"] = sim_options_moved
+            # MAJOR-1 — reported for the same reason, the other direction:
+            # a merge that stays silent about what it DROPPED is DEF368's
+            # complaint again, one layer up.
+            counts["sim_option_legs_dropped"] = sim_options_dropped
 
             # ── Game portfolios + trades (CR109 slice 2) ─────────────
             # Every game portfolio is its own row keyed by run_id — unlike
@@ -545,34 +612,39 @@ def _has_mandate(s, user_id: UUID) -> bool:
     ).scalar_one_or_none() is not None
 
 
-def _rekey_options(s, source_portfolio_id, to_user_id, *, portfolio_id=None) -> int:
+def _rekey_options(s, source_portfolio_id, to_user_id) -> int:
     """DEF368 — move an orphan's option legs and structures to the adopter.
 
-    Both tables carry `user_id` AND `portfolio_id`, so both must move: the
-    first keeps user-scoped queries correct, the second is what keeps the rows
-    alive when the orphan portfolio is deleted (`ondelete="CASCADE"`).
+    Only called from the branch where the adopter has NO portfolio of its
+    own: the orphan's `SimPortfolioRow` changes owner (its id is unchanged)
+    and every other per-user table moves wholesale alongside it, cash and
+    holdings included, so there is no invariant to guard here — the whole
+    portfolio, and everything that pays for or covers a position in it,
+    arrives together. `user_id` is the only column that needs re-keying;
+    `portfolio_id` was already correct.
 
-    `portfolio_id` is passed only in the both-have-portfolios branch, where
-    the orphan portfolio is about to be deleted and the rows must be adopted
-    into the target. In the other branch the portfolio row itself changes
-    owner, so its id is still correct and only `user_id` moves.
+    MAJOR-1 (RETRO-SIM-OPTIONS round 1) — this function used to also serve
+    the OTHER branch (both users already have a portfolio), re-keying legs
+    into the adopter's surviving portfolio while the branch's own rule
+    dropped the orphan's cash and covering shares along with its portfolio.
+    That moved a position without what paid for it or what covers it —
+    phantom NAV, and a naked short call reachable with no floor at all. That
+    branch now drops its option positions the same way it already drops
+    holdings (see `MergeService.execute`), so this helper no longer needs a
+    `portfolio_id` override.
 
     Returns the number of LEGS moved — the unit a user would recognise as
     "my positions". Structures move with them and are not double-counted.
     """
-    values = {"user_id": to_user_id}
-    if portfolio_id is not None:
-        values["portfolio_id"] = portfolio_id
-
     legs = s.execute(
         update(SimOptionLegRow)
         .where(SimOptionLegRow.portfolio_id == source_portfolio_id)
-        .values(**values)
+        .values(user_id=to_user_id)
     )
     s.execute(
         update(SimOptionTradeRow)
         .where(SimOptionTradeRow.portfolio_id == source_portfolio_id)
-        .values(**values)
+        .values(user_id=to_user_id)
     )
     return int(legs.rowcount or 0)
 

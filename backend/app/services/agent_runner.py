@@ -92,8 +92,18 @@ class AgentRunner:
         history: list[ChatMsg],
         user_message: str,
         alpaca_snapshot: str | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         """Build the prompt, stream the LLM response.
+
+        RETRO-SECURITY MAJOR-2 (round 2): `meta`, when the caller supplies
+        one, is threaded straight to `self._llm.stream_chat`'s own `meta=` —
+        the same DEF125/DEF376 channel `room_runner.py` already reads
+        (`stream_meta.get("stream_error")`) to tell a real reply from an
+        in-band or transport error apart, structurally, never by
+        string-matching the `[AMI error: …]` sentinel prose. `one_on_one.py`
+        passes a dict in and inspects it after the stream ends to decide
+        whether to refund.
 
         Concierge (the 13th agent, post-onboarding Floor surface) takes
         a different path: prompt is enriched with the user's journal /
@@ -233,6 +243,7 @@ class AgentRunner:
                 audit_user_id=session.user_id,
                 audit_agent_id=agent_id_str,
                 audit_flow="one_on_one",
+                meta=meta,
             ):
                 buf.append(chunk)
                 yield chunk

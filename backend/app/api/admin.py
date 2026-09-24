@@ -611,6 +611,12 @@ def adjust_credits(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "delta must be non-zero")
     with get_session() as s:
         user = _get_user_or_404(s, user_id)
+        # RETRO-SECURITY MAJOR-1 (round 2) — admin's manual adjustment was
+        # one of six credit_balance writers with no lock; an admin credit
+        # nudge racing a live spend/refund could silently clobber either.
+        from app.services.credit_service import _lock_user_row
+
+        user = _lock_user_row(s, user)
         old_balance = user.credit_balance
         new_balance = max(0, old_balance + req.delta)
         user.credit_balance = new_balance

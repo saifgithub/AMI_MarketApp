@@ -489,6 +489,13 @@ class ReputationService:
             is_permanent_flair=milestone in PERMANENT_FLAIR_MILESTONES,
         )
 
+        # RETRO-SECURITY MAJOR-1 (round 2) — `credit_service._lock_user_row`.
+        # This read-modify-write on `credit_balance` was one of six unlocked
+        # writers the round-1 audit found racing DEF369's locked `spend()`;
+        # locked here the same way, before the balance is read.
+        from app.services.credit_service import _lock_user_row
+
+        user = _lock_user_row(session, user)
         credits = STREAK_CREDITS[milestone]
         old_balance = user.credit_balance or 0
         user.credit_balance = old_balance + credits

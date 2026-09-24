@@ -245,6 +245,46 @@ def test_llm_failure_after_spend_refunds_at_a_non_zero_price(client, monkeypatch
     assert kinds.count("credits_refunded") == 1
 
 
+# ── RETRO-SECURITY MAJOR-2 (round 2) — the auditor's second finding on the
+# same MAJOR: a non-200 transport reply never raises, so a route that only
+# refunds on a raised exception still bills for it. `agent_runner.py` now
+# threads a caller-supplied `meta` dict into `LLMGateway.stream_chat`'s own
+# `meta=`, and `llm_gateway.py` writes `stream_error` into it on this exact
+# shape (RETRO-SECURITY MAJOR-2 round 2) — this test drives that contract
+# through the real route with a fake `stream_one_on_one_message` that
+# reproduces it, rather than asserting on the sentinel's own wording.
+
+def test_an_http_error_sentinel_reply_is_refunded_not_billed(client, monkeypatch):
+    from app.core import config as config_mod
+    from app.services import agent_runner as agent_runner_mod
+    monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
+
+    async def _sentinel_no_raise(self, *, meta=None, **_kwargs):
+        if meta is not None:
+            meta["stream_error"] = "HTTP 503: vLLM host unreachable"
+        yield "[AMI error: HTTP 503 from the upstream provider (vllm). Check backend logs.]"
+
+    monkeypatch.setattr(
+        agent_runner_mod.AgentRunner, "stream_one_on_one_message", _sentinel_no_raise
+    )
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open_session(client, headers)
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200
+    assert "AMI error" in r.text
+    assert balance_for(user_id)[0] == before, (
+        "an HTTP-error-sentinel reply must be refunded, not billed as a "
+        "successful turn"
+    )
+
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 1
+
+
 # ── Config-check reports the configured price ────────────────────────────
 
 def test_config_check_reports_the_one_on_one_price(monkeypatch):

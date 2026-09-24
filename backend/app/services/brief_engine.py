@@ -239,7 +239,15 @@ class BriefEngine:
         session: BriefSession,
         history: list[ChatMsg],
         user_message: str,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
+        # RETRO-SECURITY MAJOR-2 (round 2): `meta`, when supplied, threads to
+        # `self._llm.stream_chat`'s own `meta=` — same DEF125/DEF376 channel
+        # `room_runner.py` reads to tell a real reply from an in-band or
+        # transport error apart structurally. `brief.py` passes a dict in and
+        # inspects `meta.get("stream_error")` after the stream ends to decide
+        # whether to refund, instead of string-matching the `[AMI error: …]`
+        # sentinel prose the provider yields as ordinary-looking chunks.
         mandate = Mandate.model_validate(session.mandate_used)
         agent_id = _coerce_agent_id(session.agent_id)
         base = load_base_prompt(agent_id)
@@ -266,6 +274,7 @@ class BriefEngine:
             audit_user_id=session.user_id,
             audit_agent_id=agent_id.value if hasattr(agent_id, "value") else str(agent_id),
             audit_flow="coach_chat",
+            meta=meta,
         ):
             yield chunk
 

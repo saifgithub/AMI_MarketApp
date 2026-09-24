@@ -230,7 +230,7 @@ class _RaisingEngine:
     def get_session(self, _sid):
         return self._sess
 
-    async def stream_chat(self, *, session, history, user_message):
+    async def stream_chat(self, *, session, history, user_message, meta=None):
         yield "partial "
         raise self._exc
 

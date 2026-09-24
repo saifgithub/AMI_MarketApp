@@ -3,6 +3,7 @@
 import asyncio
 import json
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -210,6 +211,15 @@ async def send_message(
         total_chars = 0
         buffer: list[str] = []
         failed = False
+        # RETRO-SECURITY MAJOR-2 (round 2) — both surfaces charged for a
+        # reply that was really the provider's own "[AMI error: HTTP 503 …]"
+        # sentinel, rendered as an ordinary token chunk (a non-200 transport
+        # response and DEF376's in-band HTTP-200 error frame both do this).
+        # `stream_meta` is `llm_gateway.py`'s structural channel for exactly
+        # that — `stream_error` is set on both failure shapes — so `failed`
+        # below is derived from the key, never from matching the sentinel's
+        # own prose.
+        stream_meta: dict[str, Any] = {}
         try:
             # CR219 R59-F5: the raw text is buffered to completion — not
             # streamed chunk-by-chunk as it used to be — because
@@ -228,8 +238,11 @@ async def send_message(
                 history=req.history,
                 user_message=req.user_message,
                 alpaca_snapshot=render_snapshot(req.alpaca),
+                meta=stream_meta,
             ):
                 buffer.append(chunk)
+            if stream_meta.get("stream_error"):
+                failed = True
             mandate = Mandate.model_validate(session.mandate_used)
             reference_close = await _one_on_one_reference_close(
                 req.user_message, req.history

@@ -370,7 +370,11 @@ class _RoomContext:
     # feed the deterministic cap check the PM verdict is vetoed against; `sector_weights`
     # is the computed donut injected into the PM prompt context.
     sector_map: object | None = None
-    sector_holdings: list = field(default_factory=list)
+    # RETRO-PM-FLOOR round 1 (MAJOR-2): `None` on a holdings-read failure (the
+    # safety floor's "not supplied, block loudly" sentinel — see
+    # `_build_room_sector_context`'s docstring), never `[]`'s pre-fix
+    # real-looking-empty-book default.
+    sector_holdings: list | None = field(default_factory=list)
     sector_marks: dict[str, float] = field(default_factory=dict)
     sector_weights: dict[str, float] = field(default_factory=dict)
     # CR101-BE2 round 2: the same cooldown/over-trading/open-risk trade-history
@@ -1782,17 +1786,47 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
 
 def _build_room_sector_context(
     user_id: UUID | None,
-) -> tuple[list, dict[str, float], object | None, dict[str, float]]:
+) -> tuple[list | None, dict[str, float], object | None, dict[str, float]]:
     """The user's sim holdings + marks + snapshot-backed sector resolver + computed
-    sector weights (CR026), built once per run. Degrades to empties on any failure —
-    the sector cap simply doesn't fire (never blocks on an outage; an unclassified
-    sector is 'Other', never a block — the DEF059 guard). No request-path socket."""
+    sector weights (CR026), built once per run.
+
+    RETRO-PM-FLOOR round 1 (auditor U68, MAJOR-2): this used to return `[], {},
+    None, {}` on ANY exception, including one from the sector resolver
+    (`default_sector_map`) or `allocate_by_sector` that has nothing to do with
+    whether the user's holdings could be read. `check_mandate_compliance`'s own
+    contract (`safety_floor.py`): `holdings=None` means "not supplied, block
+    loudly"; a real value is never `None` — an empty book is `[]`. Returning
+    `[]` for a holdings-read FAILURE made rule 6d (max open positions) count
+    zero held tickers and silently pass, where the sector cap is *meant* to
+    degrade (an unclassified/unresolvable sector never blocks — DEF059) but
+    the position-count cap is not.
+
+    Fixed by fetching holdings independently of the sector resolver: a
+    resolver failure (or a marks-fetch/`allocate_by_sector` failure) now costs
+    the sector cap ONLY (`sector_map=None`, `weights={}`, unchanged from
+    before) — holdings, once genuinely read, are never discarded because of a
+    LATER failure in an unrelated helper. Only a failure to read holdings
+    itself reports `None` (the loud-block sentinel), never `[]`.
+
+    `user_id is None` is the pre-existing "caller never asked" case (no
+    request-path socket without one) — also `None` for holdings, the same
+    "omitted" contract `_build_room_risk_limit_context` uses for its own
+    sentinel, not `[]` (which would silently pass 6d for a caller that simply
+    never supplied a user)."""
     if user_id is None:
-        return [], {}, None, {}
+        return None, {}, None, {}
     try:
         sim = get_sim_engine()
         portfolio = sim.ensure_portfolio(user_id)
-        holdings = list(portfolio.holdings)
+        holdings: list | None = list(portfolio.holdings)
+    except Exception as exc:  # noqa: BLE001 — a holdings-read failure blocks loudly
+        logger.warning(
+            "room_sector_context_holdings_failed", user_id=str(user_id), error=str(exc)[:200],
+        )
+        return None, {}, None, {}
+
+    try:
+        sim = get_sim_engine()
         marks = sim.current_marks([h.ticker for h in holdings]) if holdings else {}
         smap = default_sector_map()
         # DEF149: cash is part of the denominator, so the weights the agents reason
@@ -1801,9 +1835,9 @@ def _build_room_sector_context(
             holdings, marks, cash=portfolio.current_cash, sector_of=smap.sector,
         )
         return holdings, marks, smap, weights
-    except Exception as exc:  # noqa: BLE001 — degrade, never sink the run
+    except Exception as exc:  # noqa: BLE001 — degrade the SECTOR cap only, never sink the run
         logger.warning("room_sector_context_failed", user_id=str(user_id), error=str(exc)[:200])
-        return [], {}, None, {}
+        return holdings, {}, None, {}
 
 
 def _build_room_option_candidates(
@@ -4507,6 +4541,22 @@ class RoomRunner:
         version doesn't exist — typical for users who never customised
         their mandate, where mandate_version=1 is just a default-hydrated
         placeholder that was never persisted to the mandates table.
+
+        RETRO-PM-FLOOR round 1 (auditor U68, MAJOR-1): this used to call
+        `self.run()` without `portfolio_value`/`current_drawdown_pct`, so
+        `run()`'s defaults ($100,000 / 0% drawdown) were what the safety floor
+        judged the resumed convene against — a user genuinely over their
+        drawdown cap (or with real exposure the $100k denominator understated
+        by ~10x for a $10k account) got APPROVE on the respawned path where
+        `api/room.py`'s normal call (which resolves the real snapshot via
+        `sim.valuation_snapshot`, DEF051's rule: never trust a fabricated
+        override for a compliance-check input) gives REJECT.
+        Fixed the same way DEF051 fixed the request path: resolve the REAL
+        snapshot here too (off-loop, `sim.valuation_snapshot` — the identical
+        call `api/room.py` makes), before ever starting the run. If that
+        genuinely cannot be read, the run must not proceed to a convene an
+        always-APPROVE-capable PM could clear against a fabricated number —
+        it fails loudly instead, with the reason on the row (CR040).
         """
         from app.services.mandate_store import get_mandate_store, resolve_mandate
 
@@ -4522,6 +4572,34 @@ class RoomRunner:
                 mandate_version=p.mandate_version,
             )
 
+        try:
+            portfolio_value, current_drawdown_pct = await asyncio.to_thread(
+                get_sim_engine().valuation_snapshot, p.user_id,
+            )
+        except Exception as exc:
+            # Never fall back to run()'s $100k/0%-drawdown defaults — that IS
+            # the fabricated-number failure this fix closes. Fail the row
+            # loudly instead (same shape _sweep_stuck_runs uses for a
+            # retry-exhausted row) and never start a run at all.
+            logger.error(
+                "room_startup_retry_snapshot_failed",
+                run_id=str(p.run_id),
+                user_id=str(p.user_id),
+                error=str(exc)[:200],
+            )
+            with get_session() as s:
+                row = s.execute(
+                    select(RoomRunRow).where(RoomRunRow.id == p.run_id)
+                ).scalar_one_or_none()
+                if row is not None:
+                    row.status = "failed"
+                    row.error_message = (
+                        "respawn abandoned: could not resolve the real portfolio "
+                        f"snapshot ({str(exc)[:150]}) — never re-run against a "
+                        "fabricated default"
+                    )
+            return
+
         key = (p.user_id, p.ticker.upper())
         q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
         self._active_queues[p.run_id] = q
@@ -4534,6 +4612,8 @@ class RoomRunner:
                     user_id=p.user_id,
                     ticker=p.ticker,
                     mandate=mandate,
+                    portfolio_value=portfolio_value,
+                    current_drawdown_pct=current_drawdown_pct,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -5285,8 +5365,13 @@ class RoomRunner:
             stop=ctx.trader_stop,
             target=ctx.trader_target,
             horizon_days=ctx.trader_horizon_weeks * 7,
+            # RETRO-PM-FLOOR MAJOR-2: `sector_holdings` is `None` on a holdings
+            # -read failure now (not `[]`) — `or ()` here is cosmetic sizing
+            # for the option menu, never the compliance check, so degrading to
+            # "no held shares of this ticker" is the safe direction (a smaller
+            # option budget, never a larger one).
             shares_held=sum(
-                float(h.quantity) for h in ctx.sector_holdings
+                float(h.quantity) for h in (ctx.sector_holdings or ())
                 if getattr(h, "ticker", None) == ctx.ticker
             ),
         )
@@ -5504,6 +5589,18 @@ class RoomRunner:
                         # another premium-tier call on the run's costliest agent.
                         _pm_samples = max(1, int(settings.pm_self_consistency_samples))
                         _voted: tuple[str, Verdict, str] | None = None
+                        # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-1): with
+                        # samples>1, if every draw AND every replacement is
+                        # unparseable, `_cands` is `[]` and the tail below used
+                        # to fall into the single-draw branch and ship the
+                        # FIRST raw draw's reformatted read — unlabelled. The
+                        # verdict's `samples`/`approve_votes` stayed `None`
+                        # (the schema's OWN "self-consistency is off" meaning
+                        # — false here) and DEF397's short-vote disclosure
+                        # never fires for N=0 readable. Tracked here so the
+                        # eventual `parsed` (however it is produced) can be
+                        # corrected before the DEF384 shared tail.
+                        _zero_readable_vote = False
                         if _pm_samples > 1:
                             # DEF397 — lost draws are replaced, not silently
                             # dropped from the denominator; see the helper.
@@ -5532,6 +5629,8 @@ class RoomRunner:
                                 _voted = _vote_pm_samples(
                                     _cands, risk_score=ctx.mandate.risk_score
                                 )
+                            elif raw_text:
+                                _zero_readable_vote = True
                         else:
                             raw_text = await _stream_pm_response(
                                 run_id=run_id, ctx=ctx, profile=profile,
@@ -5651,6 +5750,30 @@ class RoomRunner:
                                             "room_pm_reformat_downgrade_rejected",
                                             run_id=str(run_id),
                                         )
+
+                        if _zero_readable_vote and parsed is not None:
+                            # MINOR-1 — every one of the `_pm_samples` independent
+                            # reads (draws + replacements) was unparseable; what
+                            # shipped is the FIRST raw draw's own reformatted read,
+                            # not a vote. Label it as such rather than leaving
+                            # `samples`/`approve_votes` at `None` (the schema's own
+                            # "self-consistency is off" meaning) and say so in the
+                            # reason the user reads (CR040) — DEF397's short-vote
+                            # disclosure never fires for N=0 readable without this.
+                            logger.warning(
+                                "room_pm_vote_zero_readable",
+                                run_id=str(run_id), samples=_pm_samples,
+                            )
+                            parsed = parsed.model_copy(update={
+                                "samples": _pm_samples,
+                                "approve_votes": 0,
+                                "reason": (
+                                    f"{parsed.reason} (None of the {_pm_samples} "
+                                    "independent reads requested for this vote "
+                                    "were machine-readable; this is a single "
+                                    "recovered read, not a vote.)"
+                                ),
+                            })
 
                         # DEF384 — ONE decision tail for every branch above. The vote arrives
                         # here as `parsed` exactly like a single draw does, so an APPROVE meets

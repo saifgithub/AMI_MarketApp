@@ -370,4 +370,346 @@ Concrete risks worth a blind adversarial pass, not claims of absence:
   covered under CR202's own row instead, to avoid double-counting the same file's tests under two
   IDs.
 
-SUBMITTED: round 1
+## Round 2
+
+Fixes `orchestration/audit/cr/RETRO-SECURITY.auditor.md`'s round-1 verdict
+(`AWAITING_FIXES` — 2 MAJOR, 3 MINOR). Worked in isolated worktree
+`.claude/worktrees/agent-ae7ac93b2e756db70`, branch `worktree-agent-ae7ac93b2e756db70`,
+based on `main` at `68f9c7d0`. No push/merge/promote from here — the coordinator
+integrates.
+
+### MAJOR-1 — six other unlocked `credit_balance` writers (fixed)
+
+**The claim.** DEF369 row-locked exactly one of eight read-modify-write sites on
+`users.credit_balance` (`credit_service.spend()`). The auditor found and
+measured on real Postgres (round 1 run report) that a `refund(+1)` racing a
+`spend(-1)` from a balance of 5 landed the final balance on 6 — the spend's
+write silently evaporated. Their enumerated writers:
+
+```
+credit_service.py:554  refund()                          old + amount
+credit_service.py:438  add_credit_pack()   (RevenueCat)  old + amount
+credit_service.py:412  set_plan_and_grant_allowance()    = allowance
+credit_service.py:508  carry_billing_on_merge()          = merged
+credit_service.py:217  _ensure_period() via balance_for() = allowance (no lock on that path)
+reputation_service.py:494  streak award                  old + credits
+api/admin.py:616       admin set                          = new
+```
+
+**My own search, independent of the list above, before fixing anything:**
+`grep -rn "\.credit_balance\s*=" backend/app --include="*.py"` — nine
+assignment sites total, matching the auditor's seven plus `spend()`'s own two
+branches (`old_balance - cost` and the winzip reset `= cost`), both of which
+were already inside DEF369's lock. All seven of the auditor's unlocked sites
+confirmed present; no eighth site found.
+
+**Fix.** One new helper, `credit_service._lock_user_row(session, user)`
+(`backend/app/services/credit_service.py:180-206`): a thin
+`session.get(User, user.id, with_for_update=True)` re-select, taken inside the
+CALLER's own already-open transaction (every call site is already inside a
+`with get_session()` block or receives that block's `session` parameter — this
+re-acquires the transaction's own lock, which Postgres permits without
+self-deadlock; SQLite makes it a no-op, same as DEF369). Every one of the
+seven writers now calls it before its read-modify-write:
+
+| Site | Fix |
+|---|---|
+| `credit_service.py::_ensure_period` (line ~217, was 200) | `user = _lock_user_row(session, user)` before reading `old_balance` |
+| `credit_service.py::set_plan_and_grant_allowance` | locked at function entry, before `old_plan`/`old_balance`/period reads |
+| `credit_service.py::add_credit_pack` | locked after `_ensure_period`, before its own `old_balance` read |
+| `credit_service.py::carry_billing_on_merge` | BOTH `source_user` and `target_user` locked before either balance is read (the write depends on both) |
+| `credit_service.py::refund` | locked at load — `s.get(User, user_id, with_for_update=True)`, same shape as DEF369's `spend()` fix (this is the exact writer the round-1 Postgres probe measured racing `spend()`) |
+| `reputation_service.py::_grant_milestone` | `from app.services.credit_service import _lock_user_row; user = _lock_user_row(session, user)` before the streak-credit read |
+| `api/admin.py::adjust_credits` | same import + call, before `old_balance` |
+
+`spend()` itself is unchanged — its existing `s.get(User, user_id,
+with_for_update=True)` (line 309, DEF369) is the exact string
+`test_def369_spend_takes_a_row_lock.py` pins, left untouched.
+
+**Structural guard (new).**
+`backend/tests/unit/test_retro_security_credit_balance_lock_guard.py` — an AST
+scan over every `.py` file under `backend/app/`, collecting every function
+that assigns `<name>.credit_balance = ...` anywhere in its body, then asserting
+each one's source calls `_lock_user_row(` (or, for the two functions that load
+fresh from a bare `user_id` rather than an already-loaded `User`, contains
+`with_for_update=True` directly). Modeled on the repo's existing
+`test_p15_check_then_insert_guard.py` shape (scan the AST for the PATTERN, not
+an allowlist of known-safe function names) so a ninth, future writer is caught
+by construction rather than by remembering to update an inventory. Four tests:
+
+- `test_the_guard_finds_something_to_check` — vacuity guard.
+- `test_every_credit_balance_writer_locks_the_row_first` — parametrized over
+  every discovered writer, the regression itself.
+- `test_lock_user_row_itself_uses_with_for_update` — the helper's own
+  contract, checked against the parsed `ast.Call` node's keyword arguments
+  (not `inspect.getsource(...)` substring matching — the function's own
+  docstring quotes the call verbatim for documentation, so a naive substring
+  check is satisfied by the docstring even after the real line has the keyword
+  deleted; caught this exact false-negative via my own mutation pass below and
+  rewrote the test to inspect the executable node instead of prose describing
+  it).
+- `test_known_writer_inventory_is_exact` — exact pin (P15's rationale: a new
+  writer should stop the build, a removed one should have its stale entry
+  removed so it doesn't hide the next real gap).
+
+**Tests + output** (`backend/.venv/bin/python -m pytest … -q -p no:cacheprovider`,
+run bare from `backend/`):
+
+```
+tests/unit/test_retro_security_credit_balance_lock_guard.py
+11 passed in 2.54s     EXIT=0
+
+tests/unit/test_def369_spend_takes_a_row_lock.py
+tests/unit/test_def205_brief_credit_gate.py
+tests/unit/test_def113_one_on_one_credit_gate.py
+21 passed in 14.83s    EXIT=0   (unchanged pass count — no regression)
+
+tests/unit/test_cr084_revenuecat_webhook.py
+tests/unit/test_def099_merge_billing.py
+tests/unit/test_merge_service.py
+tests/unit/test_reputation_service.py
+tests/unit/test_sim_reputation.py
+82 passed, 2 warnings (pre-existing HTTP_422 deprecation, unrelated) in 7.98s   EXIT=0
+
+tests/unit/test_admin.py
+tests/unit/test_cr200_admin_audit.py
+33 passed in 3.60s     EXIT=0
+```
+
+**Mutation evidence (each reverted immediately after).**
+
+1. Dropped the lock from `refund()` (reverted `with_for_update=True` back to a
+   bare `s.get(User, user_id)`): `test_every_credit_balance_writer_locks_the_row_first[credit_service.py::refund]`
+   → `1 failed, 10 passed` — the exact writer the round-1 Postgres probe
+   measured racing `spend()`.
+2. Dropped `with_for_update=True` from `_lock_user_row`'s own `session.get(...)`
+   call: `test_lock_user_row_itself_uses_with_for_update` initially STILL
+   PASSED (the docstring's own prose quotes the call verbatim, so a
+   source-substring check couldn't discriminate) — rewrote the test to walk
+   the parsed AST `Call` node's `keywords` instead of `inspect.getsource(...)`
+   substring matching; re-ran the same mutation: `1 failed` with the intended
+   message. This is recorded because it is exactly the kind of blind spot a
+   review pass would not catch either — the docstring READS as the guarantee
+   holding, and only running the mutation against the test showed it wasn't.
+
+**What the auditor should re-measure on real Postgres** (unit tests cannot
+exercise `FOR UPDATE` — SQLite makes it a no-op, same DEF369 limitation): the
+round-1 `refund_vs_spend` probe (start=5, `+1 refund` racing `-1 spend`,
+expect final=5) should now hold under the lock, the same way the round-1
+`spend_spend`/`spend_spend_nolock` pair demonstrated DEF369's fix. Suggest
+extending the same throwaway-Postgres procedure to a `_grant_milestone` (streak
+award) racing a `spend()`, and an `admin.adjust_credits` racing a `spend()`,
+since those are the two writers reached from outside the credit_service module
+proper.
+
+### MAJOR-2 — Brief never refunds a failed turn; both surfaces bill an HTTP-error sentinel as a real reply (fixed)
+
+**The claim, in two parts.** (1) `brief.py`'s `event_stream` caught a failure,
+emitted an SSE `error` event, and refunded nothing — DEF205 ported 1-on-1's
+CHARGE to Brief but not 1-on-1's REFUND (DEF113: *"never let a provider blip
+silently eat a turn the user never got"*). (2) On a non-200 transport response,
+`llm_gateway.py`'s `OpenAICompatibleProvider.stream_chat` (and
+`AnthropicProvider.stream_chat`) never raise — they yield an
+`"[AMI error: HTTP {status} …]"` string as an ORDINARY chunk and return
+cleanly, so a route with no structural signal bills a credit for an error
+message rendered as the answer. Measured by the auditor through the real
+route: `brief mode=raise` and `brief mode=http_error_sentinel` both
+`charged_for_failed_turn=1`; `1on1 http_error_sentinel` also `charged=1`.
+
+**Root cause, precisely.** `llm_gateway.py` already had a structural channel
+for exactly this — `meta["stream_error"]`, DEF376's in-band-error-frame fix —
+but it was only ever written on the IN-BAND (HTTP 200, malformed SSE frame)
+error shape, never on the TOP-LEVEL non-200 transport-response shape, even
+though both shapes yield the identical `[AMI error: …]` sentinel text. And
+neither `agent_runner.py::stream_one_on_one_message` nor
+`brief_engine.py::BriefEngine.stream_chat` accepted a caller-supplied `meta`
+to plumb through to the gateway in the first place — so even the in-band case
+was invisible to both routes before this fix, only ever reaching
+`room_runner.py`'s own local `stream_meta`.
+
+**Fix — four changes, one channel, no string-matching anywhere:**
+
+1. `backend/app/services/llm_gateway.py` — both `AnthropicProvider.stream_chat`
+   (`~line 444`) and `OpenAICompatibleProvider.stream_chat` (`~line 700`) now
+   write `meta["stream_error"] = f"HTTP {status}: {detail}"` on the non-200
+   branch, before yielding the sentinel text — the same key the in-band branch
+   already set 40-60 lines below each. One structural fact, one place callers
+   check, regardless of which of the two failure shapes fired.
+2. `backend/app/services/agent_runner.py::stream_one_on_one_message` — gained
+   an optional `meta: dict[str, Any] | None = None` parameter, threaded to
+   `self._llm.stream_chat(..., meta=meta)`.
+3. `backend/app/services/brief_engine.py::BriefEngine.stream_chat` — same:
+   optional `meta`, threaded to `self._llm.stream_chat(..., meta=meta)`.
+4. `backend/app/api/brief.py::brief_message` and
+   `backend/app/api/one_on_one.py::send_message` — both now open a
+   `stream_meta: dict[str, Any] = {}`, pass it into the engine/runner call, and
+   set `failed = True` when `stream_meta.get("stream_error")` is truthy AFTER
+   the stream completes cleanly (in addition to the existing `except
+   Exception: failed = True` for a raised error) — then refund exactly like
+   `one_on_one.py` already did for DEF113/DEF201: released concurrency slot in
+   `finally`, best-effort `refund(...)` when `failed and cost > 0`.
+   `brief.py` needed the import (`refund`) and the whole refund branch added
+   fresh; `one_on_one.py` only needed the `stream_meta` detection added to its
+   existing refund branch.
+
+No caller anywhere string-matches `"[AMI error"` or any other prose — the
+sentinel text is exactly as free to change wording as it was before, and
+detection would not care.
+
+**Tests + output.** Two new tests in `test_def205_brief_credit_gate.py`
+(`test_a_raised_provider_failure_after_spend_is_refunded`,
+`test_an_http_error_sentinel_reply_is_refunded_not_billed` — the latter is the
+auditor's exact probe, reproduced via a fake gateway that writes
+`meta["stream_error"]` and yields the sentinel, dependency-overriding
+`get_brief_engine`) and one new test in `test_def113_one_on_one_credit_gate.py`
+(`test_an_http_error_sentinel_reply_is_refunded_not_billed`, via
+`monkeypatch.setattr(AgentRunner, "stream_one_on_one_message", ...)` same
+pattern as the file's existing DEF113 refund test). 1-on-1's raised-exception
+refund twin already existed pre-round-2
+(`test_llm_failure_after_spend_refunds_at_a_non_zero_price`) — confirmed still
+green, unchanged.
+
+```
+tests/unit/test_def205_brief_credit_gate.py
+8 passed in 10.68s     EXIT=0   (was 6 before round 2 — 2 new)
+
+tests/unit/test_def113_one_on_one_credit_gate.py
+11 passed in 3.98s     EXIT=0   (was 10 before round 2 — 1 new)
+```
+
+**Failing-first, proven by reverting to pre-fix code via a tagged stash**
+(`git stash push -u -m "retro-security-round2-verify-…" -- backend/app/api/brief.py backend/app/services/brief_engine.py backend/app/services/llm_gateway.py`,
+captured the entry's own SHA from `git stash list --format='%H %gs'`, restored
+with `git stash apply <sha>` — never bare `stash pop`, per this worktree's
+shared-stash-stack rule — then dropped by the same disambiguated `stash@{0}`
+once confirmed restored):
+
+```
+test_a_raised_provider_failure_after_spend_is_refunded            FAILED (10 == 13, not refunded)
+test_an_http_error_sentinel_reply_is_refunded_not_billed (brief)  FAILED (10 == 13, not refunded)
+```
+
+Repeated for the 1-on-1 sentinel test (stashed `one_on_one.py` +
+`agent_runner.py` + `llm_gateway.py`):
+
+```
+test_an_http_error_sentinel_reply_is_refunded_not_billed (1on1)   FAILED (10 == 13, not refunded)
+```
+
+All three failed against the pre-round-2 tree and pass against the fix —
+confirming they reproduce the auditor's exact findings rather than merely
+exercising the new code path.
+
+**Mutation evidence:** the failing-first proof above IS the mutation test for
+this MAJOR — reverting the actual fix (not a synthetic mutation) reproduces
+both the auditor's `brief mode=raise`/`mode=http_error_sentinel` and
+`1on1 http_error_sentinel` probes exactly, and the fix closes all three.
+
+**What the auditor should re-measure on real infrastructure:** the round-1 run
+report's exact probe — TestClient + a fake gateway that raises, and one that
+yields the HTTP-error sentinel without raising — should now both show
+`charged_for_failed_turn=0` (refunded) on both surfaces. A live vLLM-outage
+probe against Alpha (DEF413's actual failure shape) would additionally confirm
+the real `OpenAICompatibleProvider` branch, not just the fake-gateway
+reproduction here.
+
+### MINOR-1 — DEF361 row correction (not a code bug; row corrected, no code changed)
+
+Confirmed by reading `website_api/app/routes/concierge.py`: the route's own
+docstring already states Turnstile is verified *"when a token is supplied
+(defense in depth) but not required"*, with the 5/min/IP rate limiter as the
+primary control — a multi-turn chat can't gate every turn on a single-use
+token the way `/contact`/`/data-request`'s one-shot submit can. The DEF361 fix
+(fail-closed when the secret is unset) is correct and unchanged; what was
+imprecise was the row's claim that all three routes "would have accepted every
+caller as human-verified" — true for `/contact`/`/data-request` (which
+hard-require a token), not true for `/concierge/message` in the sense of "this
+route's normal behavior changed", since a caller sending no token was already
+accepted before and after the bug, by design. Corrected
+`docs/defect/_registry/DEF361.row.md` in place (one sentence replaced with a
+precise correction paragraph), regenerated with
+`python3 scripts/registers/gen_registers.py gen def`, verified with
+`test_registers_no_drift.py` + `test_p30_registers_name_things_that_exist.py`
+(10 passed). No source file touched.
+
+### MINOR-2 — DEF370: `publisher` left raw, glyph list incomplete (fixed)
+
+**Fix.** `backend/app/services/prompt_safety.py`: `_STRUCTURE_GLYPHS` (a
+hand-enumerated tuple) replaced with `_STRUCTURE_GLYPH_RANGES = ((0x2500,
+0x259F),)` plus `_is_structure_glyph`, dropping the WHOLE Unicode Box Drawing
++ Block Elements range by code point rather than by name — the auditor's three
+escapees (U+2506 "┆", U+257C "╼", U+2574 "╴") are all in this range and none
+were individually enumerated in the old tuple.
+`backend/app/services/news_context.py::format_headline` (`~line 433`): added
+`publisher = sanitize_for_prompt(item.publisher) or "unknown publisher"`,
+replacing the raw `item.publisher or 'unknown publisher'` interpolation that
+sat unsanitised beside the already-sanitised `title` and `summary` on the same
+line.
+
+**Tests + output.** Three new tests in
+`test_def370_prompt_injection_sanitiser.py`:
+`test_the_auditors_specific_escapees_are_now_dropped` (the three named
+glyphs), `test_the_whole_box_drawing_and_block_elements_ranges_are_dropped`
+(every code point 0x2500-0x259F, not just named ones),
+`test_the_publisher_field_is_sanitised_the_same_as_title_and_summary`
+(constructs a `LiveHeadline` with a forged-header `publisher` and confirms
+`format_headline`'s output carries neither the box-drawing run nor the
+newline).
+
+```
+tests/unit/test_def370_prompt_injection_sanitiser.py
+12 passed in 1.93s     EXIT=0   (was 9 before round 2 — 3 new)
+
+tests/unit/test_cr090_live_data_surcharge.py
+tests/unit/test_cr090_room_live_data_surcharge.py
+tests/unit/test_cr098_room_analyst_pullback.py
+tests/unit/test_cr148_cr147_feed_depth.py
+tests/unit/test_cr179_catalyst_relevance.py
+tests/unit/test_cr219_availability_guard.py
+tests/unit/test_news_context.py
+tests/unit/test_prompt_data_parity.py
+tests/unit/test_social_context.py
+242 passed in 53.19s   EXIT=0   (full news/social/room blast-radius sweep, no regression)
+```
+
+**Mutation evidence (each reverted immediately after):**
+
+1. Reverted `_is_structure_glyph`'s range check back to the old enumerated
+   tuple: `test_the_auditors_specific_escapees_are_now_dropped` and
+   `test_the_whole_box_drawing_and_block_elements_ranges_are_dropped` →
+   `2 failed, 10 passed`, failing on `0x2506` exactly as the auditor's own
+   probe did.
+2. Reverted `format_headline`'s `publisher` line back to the raw
+   `item.publisher or 'unknown publisher'`:
+   `test_the_publisher_field_is_sanitised_the_same_as_title_and_summary` →
+   `1 failed` — the forged header glyphs and newline surfaced in the rendered
+   line exactly as the auditor described.
+
+### MINOR-3 — DEF159 shared-tree "68 passed" (procedural note, not code; not this submission's number to fix)
+
+The auditor's point was that the round-1 BUILDER's "68 passed" was measured on
+the shared Mac checkout, not an isolated worktree/SHA, so it could not be
+vouched for as belonging to `8c43c88e` specifically. This round-2 submission's
+own numbers above were all measured inside this session's OWN isolated
+worktree (`.claude/worktrees/agent-ae7ac93b2e756db70`, based on `main` at
+`68f9c7d0`) — a disjoint tree from any other track's concurrent work — so
+DEF159's specific concern does not apply to them the same way. No code or
+process change is being made under this MINOR in this lane; it is a
+measurement-provenance note for whoever reads the round-1 evidence, and I have
+not touched `test_def328_alpha_env_names_are_read_by_something.py` or its
+live-file skip behavior.
+
+**Full unit suite: not run by the builder (release gate contention)** — the
+coordinator flagged that another track is running the full `tests/unit/`
+suite on the same Mac for the +111 release gate, and timing-sensitive tests
+break under contention. All evidence above is targeted test files, run bare,
+exit codes read directly. The auditor re-runs the independent suite (melehost,
+per BINDINGS) as the trustworthy full-suite number, same as round 1.
+
+**Unresolved / left for the auditor:** the real-Postgres re-measurements named
+under MAJOR-1 (refund-vs-spend now holding under the lock; the two new writer
+paths — streak award, admin adjust — racing a spend) and under MAJOR-2 (the
+same TestClient probes against the fix, plus a live vLLM-outage confirmation
+on Alpha). Nothing else identified as open.
+
+SUBMITTED: round 2

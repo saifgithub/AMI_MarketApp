@@ -164,6 +164,26 @@ def _scale(legs: tuple[StrategyLeg, ...], contracts: int) -> tuple[StrategyLeg, 
     )
 
 
+def _format_multiple(over: float) -> str:
+    """MINOR-3 — print an overrun multiple that never rounds to a whole
+    number it isn't. A fixed one decimal reads `9030/9000 = 1.003...` as
+    `"1.0x"`, which is indistinguishable from an exact 1x — the double-digit
+    and triple-digit cases (DEF354's original 51x, 502x) never had this
+    problem, because a >=10x overrun rounding to a whole number is still an
+    unmistakably large gap. Scoped to `over < 10` for exactly that reason:
+    one decimal is the default (CR179 Leg 4 — nobody should have to divide),
+    widened to two only when one decimal would print a whole `.0` for a
+    value that is not genuinely at (or effectively at, within a tenth of a
+    cent's worth of rounding) that whole multiple.
+    """
+    if over >= 10:
+        return f"{over:.0f}"
+    one_decimal = f"{over:.1f}"
+    if one_decimal.endswith(".0") and abs(over - round(over)) > 1e-9:
+        return f"{over:.2f}"
+    return one_decimal
+
+
 def _size_to_budget(
     legs: tuple[StrategyLeg, ...], budget_usd: float, shares_held: float
 ) -> tuple[int, str | None]:
@@ -200,14 +220,22 @@ def _size_to_budget(
         return 1, "no risk budget was supplied"
     count = int(budget_usd // risk)
     if count < 1:
-        # One decimal under 10x, none above: a $9,030 loss against a $9,000
-        # budget is a 0.3% overrun, and printing it as a flat "1x" reads as
-        # "exactly the budget" — the opposite of the disclosure's job. The two
-        # dollar figures carry the fact; the multiple is there so nobody has to
-        # divide (CR179 Leg 4's reasoning), and it has to survive both ends of
-        # its own range to be worth printing.
+        # MINOR-3 (RETRO-SIM-OPTIONS round 1, U68) — one fixed decimal under
+        # 10x used to print a near-miss as a round number: a $9,030 loss
+        # against a $9,000 budget is a 0.3% overrun, and `f"{1.003...:.1f}x"`
+        # is `"1.0x"` — which reads as *exactly* the budget, the opposite of
+        # what this disclosure exists to say. The two dollar figures beside
+        # it still carry the fact (the disclosure was never FALSE), but the
+        # multiple stopped doing the one job it has: let nobody have to
+        # divide (CR179 Leg 4's reasoning).
+        #
+        # Fixed by widening precision instead of fixing it at one decimal:
+        # `_format_multiple` adds decimals only until the printed string
+        # stops rounding to a whole number it isn't (1.003x -> "1.00x", not
+        # "1.0x"), and still collapses to "51x"/"502x" for the ordinary
+        # large-overrun case, which must survive unchanged.
         over = risk / budget_usd
-        gap = f"{over:.1f}x" if over < 10 else f"{over:.0f}x"
+        gap = f"{_format_multiple(over)}x"
         return 1, (
             f"the risk budget of ${budget_usd:,.0f} does not cover one "
             f"contract, whose loss is ${risk:,.0f} — offered at the minimum "
