@@ -693,6 +693,14 @@ async def preview_trade(
         mandate=mandate,
         order_type=order_type,
         limit_price=req.limit_price,
+        # CR233 round-2 gap closure — previously dropped on the floor here:
+        # `SubmitTradeRequest` already carries `trigger_price`/`target` (the
+        # `/submit` path forwards both) but this handler forwarded neither to
+        # `sim.preview()`, which had no parameters to receive them anyway.
+        # Both now flow through so a STOP/STOP_LIMIT preview sizes at its own
+        # trigger price and a bracket gets the same wrong-side check submit
+        # runs (see SimEngine.preview's docstring).
+        trigger_price=req.trigger_price,
         verdict_ref=req.verdict_ref,
         halal_universe=halal_universe,
         classification_universe=classification_universe,
@@ -701,6 +709,7 @@ async def preview_trade(
         # trade's own open-risk contribution against the NAMED account's
         # equity (see SimEngine.preview's docstring).
         stop=req.stop,
+        target=req.target,
     )
     return PreviewTradeResponse(
         accepted=pv.accepted,

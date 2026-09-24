@@ -145,23 +145,50 @@ When the order has no named entry (a plain market order), the bracket price
 relationship is not judged — the same "nothing to check yet" convention
 `stopIsWrongSide` uses for a null entry.
 
-## Known gap — not fixed by this CR (mobile-only change)
+## Known gap — CLOSED round 2 (backend, this session)
 
-`POST /v1/sim/preview`'s handler (`backend/app/api/sim.py::preview_trade`) forwards
-`limit_price` to `SimEngine.preview()`, but that engine method has no `trigger_price`
-parameter at all today (only `submit_trade`'s call path does) — so a STOP/STOP_LIMIT
-Alpaca-leg preview still sizes cash sufficiency against the live mark, not the stop
-price. `preview()` also runs no bracket-validity check at all (`stop`/`target` are not
-parameters on it; only `submit_trade` validates a bracket). Mobile sends
-`trigger_price` on the wire regardless — Pydantic accepts it harmlessly today
-(`SubmitTradeRequest` has no `extra="forbid"`), so this is forwards-compatible with a
-future backend fix, but nothing on the client should assume it is currently honoured.
-A backend follow-up CR is needed to close this; flagged to the Architect, not
-attempted here since this worktree's brief is mobile-only.
+**Round 1 gap, as originally filed:** `POST /v1/sim/preview`'s handler
+(`backend/app/api/sim.py::preview_trade`) forwarded `limit_price` to
+`SimEngine.preview()`, but that engine method had no `trigger_price` parameter at
+all (only `submit_trade`'s call path did) — so a STOP/STOP_LIMIT Alpaca-leg preview
+sized cash sufficiency against the live mark, not the stop price. `preview()` also
+ran no bracket-validity check at all (`stop`/`target` were not parameters on it;
+only `submit_trade` validated a bracket). Mobile sent `trigger_price` on the wire
+regardless — Pydantic accepted it harmlessly (`SubmitTradeRequest` has no
+`extra="forbid"`), so it was forwards-compatible, but nothing on the client could
+assume it was honoured.
+
+**Round 2 fix (backend + mobile, this session):**
+
+- `SimEngine.preview()` gained `trigger_price`/`target` parameters
+  (`backend/app/services/sim_engine.py`). Its `fill_price` is now
+  `named_price_for(order_type, trigger_price=..., limit_price=...) or mark` — the
+  order's own named price for LIMIT/STOP/STOP_LIMIT, the mark only for MARKET —
+  reusing the exact pricing rule `commitment_for()` (`sim_resting_orders.py`)
+  already applies to a resting order's committed cash at read time. The SAME
+  `named` value is passed as `ProposedTrade.limit_price`, so
+  `check_mandate_compliance`'s `unit_price` chokepoint (DEF153) also sizes the
+  single-name/sector caps and the open-risk contribution off the order's own
+  price, not the mark, for a STOP/STOP_LIMIT preview.
+- `preview()` now runs the same DEF312/DEF377 wrong-side-bracket refusal
+  `_execute_fill` already runs on `submit()` — scoped to the AMI (no-account)
+  path, matching `_execute_fill`'s own `kind == "training"` gate (the Alpaca
+  snapshot path has no AMI short-position concept to decide "opens a short"
+  from; Alpaca's own bracket validation runs client-side in
+  `validateAlpacaOrder`, this CR's round-1 mobile half).
+- `backend/app/api/sim.py::preview_trade` forwards `req.trigger_price`/`req.target`
+  to `sim.preview()` (previously dropped both on the floor).
+- Mobile: `ApiClient.simPreview` gained `stop`/`target` params;
+  `SimNotifier.preview()` forwards them; both trade-ticket call sites
+  (`_submitAlpacaOnly`, the BOTH Alpaca leg in `_legAlpaca`) now send the
+  ticket's own `_stop`/`_target` fields, matching the pattern already used at
+  the `/submit` call sites.
+
+Full detail, tests, and mutation evidence: `orchestration/audit/cr/CR233-BE.architect.md`.
 
 ## Non-goals
 
-- No backend change (see **Known gap**).
+- Round 1: no backend change (see **Known gap** — closed round 2, backend included).
 - No change to `toMandateSnapshotJson` or DEF419's account-snapshot wiring — that is a
   concurrently-edited surface per the dispatch brief, left untouched.
 - No new order-log schema column — `detail` (free text) carries the new facts.
@@ -194,8 +221,35 @@ attempted here since this worktree's brief is mobile-only.
   fails 8 of the 10 tests in `cr233_ticket_order_types_test.dart` (verified, then
   reverted).
 
+**Round 2 (backend gap closure):**
+
+- [x] A STOP/STOP_LIMIT preview sizes cash-sufficiency and concentration at the
+  order's own `trigger_price`, not the live mark — on both the AMI path and the
+  DEF419 Alpaca-snapshot path (`backend/tests/unit/test_sim_engine.py`,
+  `backend/tests/unit/test_cr233_preview_price_basis.py`).
+- [x] A MARKET preview is unaffected — still sizes at the live mark, byte-identical
+  to before round 2.
+- [x] `preview()` refuses a wrong-side bracket (DEF312/DEF377) the same way
+  `submit()` does, on the AMI path.
+- [x] Mobile forwards the ticket's `stop`/`target` fields on both preview call sites
+  (`_submitAlpacaOnly`, `_legAlpaca`) — widget-level assertions in
+  `cr233_ticket_order_types_test.dart`.
+- [x] `flutter analyze` clean at the pre-existing baseline (11 info-level issues, 0
+  errors — unchanged).
+- [x] Full `flutter test` suite green (1589/1589 — 1575 baseline + 14 new).
+- [x] Mutation checks (one backend, one mobile): reverting the `named_price_for`
+  fallback in `SimEngine.preview()` back to always-mark fails 6 tests across
+  `test_sim_engine.py` + `test_cr233_preview_price_basis.py`; reverting the
+  bracket-validity check fails 2 more; dropping `stop`/`target` from
+  `_submitAlpacaOnly`'s preview call fails the round-2 mobile tests in
+  `cr233_ticket_order_types_test.dart`. All three verified, then reverted.
+
+Full detail: `orchestration/audit/cr/CR233-BE.architect.md`.
+
 ## Status
 
-`in_progress` — mobile implementation + tests landed this session (round 1, submitted
-to the CR005 audit handshake per `orchestration/audit/cr/CR233.architect.md`). Not yet
-promoted to Alpha; the backend gap above is unresolved and flagged for a follow-up CR.
+`in_progress` — mobile implementation + tests landed round 1, submitted to the CR005
+audit handshake per `orchestration/audit/cr/CR233.architect.md` (mid-review, not
+touched this round). The round-1 backend gap is now CLOSED — see above and
+`orchestration/audit/cr/CR233-BE.architect.md` (new lane, submitted round 1 of its
+own review). Not yet promoted to Alpha.

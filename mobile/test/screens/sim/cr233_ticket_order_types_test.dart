@@ -92,6 +92,8 @@ class _RecordingSim extends SimNotifier {
         SimOrderType orderType,
         double? limitPrice,
         double? triggerPrice,
+        double? stop,
+        double? target,
         Map<String, dynamic>? account,
       })> previewCalls = [];
 
@@ -103,6 +105,8 @@ class _RecordingSim extends SimNotifier {
     SimOrderType orderType = SimOrderType.market,
     double? limitPrice,
     double? triggerPrice,
+    double? stop,
+    double? target,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -113,6 +117,8 @@ class _RecordingSim extends SimNotifier {
       orderType: orderType,
       limitPrice: limitPrice,
       triggerPrice: triggerPrice,
+      stop: stop,
+      target: target,
       account: account,
     ));
     return const SimPreviewResult(accepted: true);
@@ -253,6 +259,24 @@ Future<void> _enterTriggerPrice(WidgetTester t, String value) async {
   await t.pump(const Duration(milliseconds: 120));
 }
 
+Future<void> _enterStop(WidgetTester t, String value) async {
+  final field = find.ancestor(
+    of: find.text('STOP'),
+    matching: find.byType(TextField),
+  );
+  await t.enterText(field, value);
+  await t.pump(const Duration(milliseconds: 120));
+}
+
+Future<void> _enterTarget(WidgetTester t, String value) async {
+  final field = find.ancestor(
+    of: find.text('TARGET'),
+    matching: find.byType(TextField),
+  );
+  await t.enterText(field, value);
+  await t.pump(const Duration(milliseconds: 120));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -358,6 +382,52 @@ void main() {
     });
 
     testWidgets(
+        'CR233 round-2 — Alpaca-only preview sends stop/target from the '
+        'ticket fields, not just limit/trigger price', (t) async {
+      final r = await _pump(
+        t,
+        restingOrdersSupported: true,
+        tapOrderType: 'LIMIT',
+        tapDestination: 'ALPACA PAPER',
+      );
+      await _enterLimitPrice(t, '150.00');
+      await _enterStop(t, '140.00');
+      await _enterTarget(t, '170.00');
+      await t.tap(find.text('SUBMIT TRADE'));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(r.sim.previewCalls, hasLength(1));
+      final call = r.sim.previewCalls.single;
+      expect(call.stop, 140.0,
+          reason: 'so the backend can run the same bracket-validity '
+              'refusal /submit runs, before the Alpaca order is ever sent');
+      expect(call.target, 170.0);
+    });
+
+    testWidgets(
+        'CR233 round-2 — an empty stop/target sends null, not 0, to preview',
+        (t) async {
+      final r = await _pump(
+        t,
+        restingOrdersSupported: true,
+        tapOrderType: 'LIMIT',
+        tapDestination: 'ALPACA PAPER',
+      );
+      await _enterLimitPrice(t, '150.00');
+      await t.tap(find.text('SUBMIT TRADE'));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(r.sim.previewCalls, hasLength(1));
+      final call = r.sim.previewCalls.single;
+      expect(call.stop, isNull);
+      expect(call.target, isNull);
+    });
+
+    testWidgets(
         'an accepted LIMIT preview places a LIMIT order on Alpaca, not '
         'market', (t) async {
       final r = await _pump(
@@ -442,6 +512,30 @@ void main() {
       expect(find.textContaining('resting at Alpaca'), findsOneWidget,
           reason: 'the Alpaca leg reports its own resting state too — two '
               'independent resting orders, not one mirrored twice');
+    });
+
+    testWidgets(
+        'CR233 round-2 — the BOTH Alpaca leg also sends stop/target to '
+        'preview, same as Alpaca-only', (t) async {
+      final r = await _pump(
+        t,
+        restingOrdersSupported: true,
+        tapOrderType: 'LIMIT',
+        tapDestination: 'BOTH',
+        submitResult: _amiResting(limit: 150.0),
+      );
+      await _enterLimitPrice(t, '150.00');
+      await _enterStop(t, '140.00');
+      await _enterTarget(t, '170.00');
+      await t.tap(find.text('SUBMIT TRADE'));
+      for (var i = 0; i < 8; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+      }
+
+      expect(r.sim.previewCalls, hasLength(1));
+      final call = r.sim.previewCalls.single;
+      expect(call.stop, 140.0);
+      expect(call.target, 170.0);
     });
   });
 }

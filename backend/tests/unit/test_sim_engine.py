@@ -371,6 +371,146 @@ def test_preview_rejects_on_insufficient_cash():
     )
 
 
+class _ConstProvider:
+    """A settable, always-available quote — lets a test move the MARK
+    independently of the order's own named price (CR233 round-2 gap
+    closure), the thing `MockWalkProvider`'s per-tick drift cannot give a
+    deterministic test."""
+
+    name = "fixed"
+
+    def __init__(self, price: float) -> None:
+        self.price = price
+
+    def quote(self, ticker: str) -> Quote:
+        return Quote(price=self.price, source=self.name)
+
+    def get_price(self, ticker: str) -> float:
+        return self.price
+
+
+def test_preview_stop_buy_sizes_cash_at_trigger_not_mark():
+    """CR233 round-2 gap closure — a BUY STOP (breakout entry) previewed
+    with the mark BELOW the trigger must size cash-sufficiency at the
+    TRIGGER price, not the (currently cheaper) mark. Before this fix,
+    `preview()` had no `trigger_price` parameter at all and always sized at
+    `mark` — this order would have wrongly PASSED cash-sufficiency on a
+    mark that will not be the fill price once it actually triggers."""
+    sim = SimEngine(provider=_ConstProvider(90.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 150.0})
+
+    # $10k cash. 100 shares @ $90 mark = $9,000 (passes at mark). 100 shares
+    # @ $110 trigger = $11,000 (breaches the $10k cash the account holds).
+    # single_name_cap_pct raised to 150% so the position-size cap (also fed
+    # by the same fixed `unit_price`, DEF153) does not fire first and mask
+    # the cash check this test is actually about.
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
+        mandate=mandate, order_type=OrderType.STOP, trigger_price=110.0,
+    )
+    assert not pv.accepted
+    assert any("insufficient cash" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
+    assert pv.fill_price == 110.0
+    assert pv.notional == 110.0 * 100
+
+
+def test_preview_stop_buy_passes_at_trigger_even_though_mark_would_breach():
+    """The inverse of the above — proves the trigger price is genuinely
+    READ, not just no-longer-mark: a mark that alone would breach cash must
+    NOT block a stop order whose named trigger is affordable."""
+    sim = SimEngine(provider=_ConstProvider(150.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
+
+    # $10k cash. 100 shares @ $150 mark = $15,000 (would breach). 100 shares
+    # @ $80 trigger = $8,000 (affordable) — a sell-stop-style breakdown entry
+    # priced well under the current mark.
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
+        mandate=mandate, order_type=OrderType.STOP, trigger_price=80.0,
+    )
+    assert pv.accepted, pv.compliance.violations
+    assert pv.fill_price == 80.0
+    assert pv.notional == 80.0 * 100
+
+
+def test_preview_stop_limit_sizes_at_trigger_price():
+    """A STOP_LIMIT previewed the same way — `named_price_for` reads
+    `trigger_price` for STOP_LIMIT too (the limit only takes over once
+    triggered), so `preview()` must size against the trigger, matching
+    `commitment_for()`'s read-time reservation for a resting STOP_LIMIT."""
+    sim = SimEngine(provider=_ConstProvider(50.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 150.0})
+
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
+        mandate=mandate, order_type=OrderType.STOP_LIMIT,
+        trigger_price=120.0, limit_price=121.0,
+    )
+    assert not pv.accepted
+    assert any("insufficient cash" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
+    assert pv.fill_price == 120.0
+
+
+def test_preview_market_order_still_sizes_at_mark_unchanged():
+    """AMI no-account path, MARKET order — byte-identical to pre-CR233:
+    no `trigger_price` is named, so `fill_price` falls back to the mark
+    exactly as before this gap closure."""
+    sim = SimEngine(provider=_ConstProvider(200.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
+
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert pv.accepted
+    assert pv.fill_price == 200.0
+    assert pv.notional == 400.0
+
+
+def test_preview_refuses_wrong_side_bracket_on_a_buy():
+    """CR233 round-2 gap closure — `preview()` ran NO bracket-validity check
+    at all before this fix. A long's stop must sit BELOW entry (DEF312);
+    naming one above must be refused at preview, not just at submit, or the
+    ticket tells the user "accepted" for an order `/submit` would then
+    reject outright."""
+    sim = SimEngine(provider=_ConstProvider(100.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
+
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+        mandate=mandate, order_type=OrderType.MARKET,
+        stop=105.0,  # wrong side — above the $100 entry
+    )
+    assert not pv.accepted
+    assert any("must be BELOW the entry price" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
+
+
+def test_preview_accepts_right_side_bracket_on_a_buy():
+    """The positive twin — a correctly-sided bracket must not be refused by
+    the new check."""
+    sim = SimEngine(provider=_ConstProvider(100.0))
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
+
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+        mandate=mandate, order_type=OrderType.MARKET,
+        stop=95.0, target=110.0,
+    )
+    assert pv.accepted, pv.compliance.violations
+
+
 class _FixedPrice:
     """Quotes one settable price for every ticker, so P&L is decidable."""
 

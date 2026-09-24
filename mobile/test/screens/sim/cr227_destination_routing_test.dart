@@ -83,6 +83,8 @@ class _FixedSim extends SimNotifier {
     SimOrderType orderType = SimOrderType.market,
     double? limitPrice,
     double? triggerPrice,
+    double? stop,
+    double? target,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
