@@ -53,10 +53,31 @@ def test_many_braces_in_the_tail_still_recover():
     assert extract_json_object('{"a": 1}' + tail) == {"a": 1}
 
 
-def test_the_first_object_wins_not_the_last():
-    """Two objects in one reply: the verdict is the one the contract asked for."""
+def test_the_first_object_wins_when_the_pair_is_not_a_decision_conflict():
+    """Two objects, neither shaped like a verdict: the first still wins — this
+    is the general DEF398 "first complete object" rule, unrelated to the
+    MINOR-2 carve-out below (which keys specifically on a conflicting
+    `action`)."""
+    raw = '{"note": "draft"}\n\nFor contrast: {"note": "final"}'
+    assert extract_json_object(raw) == {"note": "draft"}
+
+
+def test_two_conflicting_decisions_fail_safe_not_first_wins():
+    """RETRO-PM-FLOOR round 1 (auditor U68, MINOR-2). This used to pin
+    "first object wins" even across a genuine retraction — a draft
+    `{"action":"APPROVE"}` followed by a different final `{"action":"REJECT"}`
+    read as APPROVE. Two conflicting decisions in one reply is an uncertain
+    decision, and DEF059's direction for those is to fail safe (unparseable),
+    never to silently pick the first."""
     raw = '{"action": "APPROVE"}\n\nFor contrast: {"action": "REJECT"}'
-    assert extract_json_object(raw) == {"action": "APPROVE"}
+    assert extract_json_object(raw) is None
+
+
+def test_two_objects_with_the_SAME_action_are_not_a_conflict():
+    """A repeated/echoed decision (same `action` twice) is not the ambiguous
+    case MINOR-2 targets — only a DIFFERING second `action` fails safe."""
+    raw = '{"action": "APPROVE", "size_pct": 3.0}\n\nConfirmed: {"action": "APPROVE"}'
+    assert extract_json_object(raw) == {"action": "APPROVE", "size_pct": 3.0}
 
 
 def test_DEF352_and_DEF256_paths_are_untouched():

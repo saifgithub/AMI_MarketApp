@@ -82,6 +82,26 @@ def _close_truncated_object(candidate: str) -> str | None:
     return repaired
 
 
+def _extract_second_decision(tail: str) -> dict | None:
+    """MINOR-2 helper — is there ANOTHER complete `{"action": …}`-shaped
+    object anywhere in `tail`? Deliberately simple (a plain brace-scan +
+    `raw_decode`, not the DEF352/DEF398 recovery machinery above): this only
+    ever answers "is a second decision sitting in the part we didn't use",
+    never "recover a verdict from that second object" — a genuinely malformed
+    tail correctly returns None here, which is `extract_json_object`'s cue to
+    keep the FIRST decision (no ambiguity found), not to manufacture one from
+    a scrap.
+    """
+    first = tail.find("{")
+    if first == -1:
+        return None
+    try:
+        decoded, _end = json.JSONDecoder(strict=False).raw_decode(tail[first:])
+    except json.JSONDecodeError:
+        return None
+    return decoded if isinstance(decoded, dict) and "action" in decoded else None
+
+
 def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | None:
     """Extract the first JSON object found in `text`, tolerating ```json
     fences and surrounding prose. Returns None if nothing parses.
@@ -153,6 +173,25 @@ def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | 
         except json.JSONDecodeError:
             decoded = None
         if isinstance(decoded, dict):
+            # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-2) — `raw_decode`
+            # reads the FIRST complete object and stops there (DEF398's own
+            # fix), so a reply carrying a draft decision, a retraction, and a
+            # DIFFERENT final decision — e.g. `Draft: {"action":"APPROVE",…}
+            # -- on reflection I decline. {"action":"PASS",…}` — reads as the
+            # draft. Before DEF398 the same reply was unparseable and failed
+            # safe to PASS (DEF059); "first object wins" must not turn that
+            # into "first DECISION wins" when a second, conflicting decision
+            # is sitting right there in the tail. Scoped narrowly to `action`
+            # (the PM/CIO verdict shape) so the generic two-object case
+            # `test_the_first_object_wins_when_the_pair_is_not_a_decision_conflict`
+            # pins (no `action` key at all) is untouched, as are
+            # brief_engine's/portfolio_finding's non-verdict JSON shapes,
+            # which never carry this key.
+            if "action" in decoded:
+                _tail = candidate[_end:]
+                _second = _extract_second_decision(_tail)
+                if _second is not None and _second.get("action") != decoded.get("action"):
+                    return None
             return decoded
         last = candidate.rfind("}")
         if last > 0 and last + 1 < len(candidate):
