@@ -431,7 +431,14 @@ def format_headline(item: LiveHeadline) -> str:
     # not the box-drawing glyphs our own section headers are made of. One rule
     # for both feeds now; a headline is as attacker-authorable as a Reddit post.
     title = sanitize_for_prompt(item.title)
-    line = f"\"{title}\" ({item.publisher or 'unknown publisher'}, {_relative_age(item.published_at)})"
+    # RETRO-SECURITY MINOR-2 (round 2) — `item.publisher` sat here unsanitised
+    # beside the sanitised title and summary. It is aggregator-supplied rather
+    # than headline-authored, so less attacker-controlled in practice, but it
+    # is still third-party text from the same feed item and the auditor named
+    # it explicitly: the same rule now covers all three fields this renderer
+    # interpolates.
+    publisher = sanitize_for_prompt(item.publisher) or "unknown publisher"
+    line = f"\"{title}\" ({publisher}, {_relative_age(item.published_at)})"
     if item.sentiment:
         line += f" — sentiment: {item.sentiment}"
     summary = sanitize_for_prompt(getattr(item, "summary", ""))

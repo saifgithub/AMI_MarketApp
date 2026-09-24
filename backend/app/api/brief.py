@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -54,7 +55,7 @@ from app.services.overlay_store import (
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
-from app.services.credit_service import InsufficientCredits, brief_cost, spend
+from app.services.credit_service import InsufficientCredits, brief_cost, refund, spend
 from app.services.rate_limit import agent_stream_concurrency_limit, brief_message_rate_limit
 
 
@@ -155,23 +156,49 @@ async def brief_message(
 
     async def event_stream():
         total = 0
+        # RETRO-SECURITY MAJOR-2 (round 2) — a failed Brief turn was charged
+        # and never refunded (one_on_one.py got DEF113's refund; brief.py
+        # never did), and BOTH surfaces charged for a reply that was really
+        # the provider's own "[AMI error: HTTP 503 …]" sentinel, rendered as
+        # ordinary token text. `stream_meta` is the structural channel:
+        # `llm_gateway.py` writes `stream_error` into it on a raised
+        # exception's sibling failure shapes — a top-level non-200 transport
+        # response AND an in-band HTTP-200 SSE error frame (DEF376) — so
+        # `failed` below is set from that key, never from matching the
+        # sentinel's own prose (which would only ever catch the exact string
+        # this build happens to yield today).
+        stream_meta: dict[str, Any] = {}
+        failed = False
         try:
             async for chunk in engine.stream_chat(
                 session=session,
                 history=req.history,
                 user_message=req.user_message,
+                meta=stream_meta,
             ):
                 total += len(chunk)
                 yield sse_text("token", chunk)
+            if stream_meta.get("stream_error"):
+                failed = True
         except Exception as e:  # pragma: no cover — surfaced to client
             # DEF127: framed, not interpolated. A pydantic ValidationError's
             # message is always multi-line, which used to truncate this event
             # at its first line — and a blank line in it forged a new event.
+            failed = True
             yield sse_text("error", str(e)[:300])
         finally:
             # DEF201: release on every exit — success, in-stream error, or
             # client disconnect.
             agent_stream_concurrency_limit.release(concurrency_key)
+            # DEF113's refund, ported to Brief: charged-then-failed is a real
+            # user-visible wrong on a money path even at price 0 (the ledger
+            # row persists regardless of price). Best-effort — a refund
+            # failure must not mask the original stream outcome.
+            if failed and cost > 0:
+                try:
+                    refund(current_user.id, cost, reason=f"brief_failed:{req.session_id}")
+                except Exception:  # pragma: no cover
+                    pass
             yield sse_json("done", json.dumps({"chars": total}))
 
     try:

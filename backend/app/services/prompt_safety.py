@@ -25,13 +25,26 @@ prompt-level instruction is not a control.
 from __future__ import annotations
 
 # Characters that let third-party text impersonate our own prompt structure.
-# U+2500 is the glyph our own section headers are drawn with; the rest are the
-# box-drawing and block forms an attacker would reach for next.
-_STRUCTURE_GLYPHS = (
-    "\u2500\u2501\u2502\u2503\u2504\u2505\u2508\u2509\u254c\u254d"
-    "\u2550\u2551\u2554\u2557\u255a\u255d\u2560\u2563\u2566\u2569"
-    "\u256c\u2580\u2584\u2588\u258c\u2590\u2591\u2592\u2593"
+# U+2500 is the glyph our own section headers are drawn with; the rest of the
+# Unicode "Box Drawing" (U+2500-U+257F), "Block Elements" (U+2580-U+259F)
+# blocks are exactly the family an attacker would reach for next.
+#
+# RETRO-SECURITY MINOR-2 (round 2, DEF370) \u2014 this used to be a hand-enumerated
+# tuple of individual code points. The auditor threw three glyphs from the SAME
+# two Unicode blocks that the list simply hadn't named \u2014 U+2506 "\u2506", U+257C
+# "\u257c", U+2574 "\u2574" \u2014 and all three survived. An enumerated allowlist-of-what-
+# to-strip has the identical shape as an allowlist-of-what-to-permit: it is
+# only as complete as whoever typed it remembered to be. Dropping the whole
+# range by CODE POINT rather than by NAME means a glyph nobody thought to type
+# is caught by construction, not by being remembered.
+_STRUCTURE_GLYPH_RANGES: tuple[tuple[int, int], ...] = (
+    (0x2500, 0x259F),  # Box Drawing + Block Elements
 )
+
+def _is_structure_glyph(ch: str) -> bool:
+    cp = ord(ch)
+    return any(lo <= cp <= hi for lo, hi in _STRUCTURE_GLYPH_RANGES)
+
 
 def sanitize_for_prompt(text: object, *, limit: int | None = None) -> str:
     """One line of safe-to-interpolate text, or "".
@@ -47,7 +60,7 @@ def sanitize_for_prompt(text: object, *, limit: int | None = None) -> str:
     if text is None:
         return ""
     s = str(text)
-    s = s.translate({ord(g): None for g in _STRUCTURE_GLYPHS})
+    s = "".join(ch for ch in s if not _is_structure_glyph(ch))
     # `str.split()` with no argument splits on EVERY Unicode whitespace, which
     # is verified to include the separators an injection would reach for past
     # a naive newline strip: U+2028 LINE SEPARATOR, U+2029 PARAGRAPH

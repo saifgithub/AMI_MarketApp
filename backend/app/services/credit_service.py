@@ -177,6 +177,36 @@ def _next_month_start(dt: datetime) -> datetime:
     )
 
 
+def _lock_user_row(session, user: User) -> User:
+    """RETRO-SECURITY MAJOR-1 (round 2) — the single choke point every
+    `credit_balance` writer must pass through before reading-then-writing it.
+
+    DEF369 row-locked exactly one of eight read-modify-write sites
+    (`spend()`). The other seven read `user.credit_balance` unlocked and
+    wrote a Python-computed literal back — same lost-update shape DEF369
+    fixed, just through six other doors. Measured on real Postgres (round 1
+    run report): a `refund(+1)` racing a `spend(-1)` from a balance of 5
+    landed on 6, not 5 — the spend's write evaporated.
+
+    `session.get(User, user.id, with_for_update=True)` re-executes
+    `SELECT ... FOR UPDATE` against the row `user` already names, inside the
+    caller's OWN open transaction — every call site below is already inside
+    a `with get_session() as s:` block (or receives that block's `session`
+    parameter), so this is the transaction re-acquiring its own lock, not a
+    second one: Postgres permits that without blocking on itself. On SQLite
+    (the unit-test engine) `FOR UPDATE` is a silent no-op, same as DEF369 —
+    `test_def369_spend_takes_a_row_lock.py`'s reasoning for why the guard
+    pins compiled SQL rather than racing sessions applies here unchanged.
+
+    Returns the (same, now-locked) `User` so callers can reassign in place:
+    `user = _lock_user_row(s, user)`.
+    """
+    locked = session.get(User, user.id, with_for_update=True)
+    if locked is None:
+        raise LookupError(f"user {user.id} not found")
+    return locked
+
+
 def _record(
     session,
     user: User,
@@ -213,6 +243,7 @@ def _ensure_period(session, user: User) -> Plan:
     if not (window_rolled or plan_drifted):
         return eff
 
+    user = _lock_user_row(session, user)
     old_balance = user.credit_balance or 0
     user.credit_balance = ALLOWANCE[eff]
     user.credits_period_start = month_start
@@ -392,6 +423,7 @@ def set_plan_and_grant_allowance(session, user: User, target_plan: Plan) -> Allo
     re-grant it still re-tags `credits_plan_at_grant`, so `_ensure_period`'s
     drift detector won't re-grant on the next balance read.
     """
+    user = _lock_user_row(session, user)
     old_plan = user.plan
     old_balance = user.credit_balance or 0
     user.plan = target_plan.value
@@ -434,6 +466,7 @@ def add_credit_pack(session, user: User, amount: int) -> tuple[int, int]:
     Returns (old_balance, new_balance). No plan change.
     """
     _ensure_period(session, user)
+    user = _lock_user_row(session, user)
     old_balance = user.credit_balance or 0
     user.credit_balance = old_balance + amount
     return old_balance, user.credit_balance
@@ -495,6 +528,13 @@ def carry_billing_on_merge(session, source_user: User, target_user: User) -> Bil
     Writes ONE `subscription_events` audit row (source="app") so the carry is
     reconstructable — a wrong entitlement move here is real money (D-5).
     """
+    # RETRO-SECURITY MAJOR-1 (round 2): `target_user.credit_balance` is
+    # written below from a read of BOTH rows — lock both before reading
+    # either, so a concurrent spend/refund/grant on the source (still live
+    # until the caller deletes it later in this same transaction) or the
+    # target can't be clobbered by this merge's write.
+    source_user = _lock_user_row(session, source_user)
+    target_user = _lock_user_row(session, target_user)
     old_target_plan = target_user.plan
     source_plan = _plan_from_str(source_user.plan)
     target_plan = _plan_from_str(target_user.plan)
@@ -547,7 +587,11 @@ def refund(user_id: UUID, amount: int, *, reason: str) -> None:
     toward the user on our own failure is the right side to err on.
     """
     with get_session() as s:
-        user = s.get(User, user_id)
+        # RETRO-SECURITY MAJOR-1 (round 2): locked at load, same shape as
+        # DEF369's `spend()` fix — this is the exact writer whose unlocked
+        # race the round-1 audit measured on real Postgres (a refund racing
+        # a spend from 5 landed on 6, erasing the spend).
+        user = s.get(User, user_id, with_for_update=True)
         if user is None:
             return
         old_balance = user.credit_balance or 0
