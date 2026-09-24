@@ -153,6 +153,113 @@ def test_a_402_does_not_leak_a_concurrency_slot(client, monkeypatch):
     agent_stream_concurrency_limit.release(key)
 
 
+# ── RETRO-SECURITY MAJOR-2 (round 2): charged-then-failed is refunded ─────
+#
+# Mirrors test_def113_one_on_one_credit_gate.py's
+# `test_llm_failure_after_spend_refunds_at_a_non_zero_price` — until round 2,
+# `brief.py` had no twin: a failed Brief turn was charged and never refunded.
+# These also cover the auditor's SECOND finding on the same MAJOR: a reply
+# that is really the provider's own "[AMI error: HTTP 503 …]" sentinel,
+# rendered as an ordinary token chunk, must be detected the same way a raised
+# exception is — via `llm_gateway.py`'s structural `stream_error` channel,
+# never by matching the sentinel text.
+
+class _FakeGatewayRaises:
+    """A raised exception during the stream — DEF113's exact shape, ported."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, **_kwargs):
+        yield "partial "
+        raise RuntimeError("simulated provider failure")
+
+
+class _FakeGatewayHttpErrorSentinel:
+    """The auditor's probe: a non-200 transport response never raises — the
+    OpenAI-compatible provider yields the `[AMI error: HTTP 503 …]` sentinel
+    as an ordinary chunk and returns cleanly. Structural detection means
+    writing `meta["stream_error"]`, exactly as `llm_gateway.py` now does on
+    this path (RETRO-SECURITY MAJOR-2 round 2) — this fake reproduces that
+    same contract rather than the sentinel text alone, so the test proves the
+    route reads the key and not the prose."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, meta=None, **_kwargs):
+        if meta is not None:
+            meta["stream_error"] = "HTTP 503: vLLM host unreachable"
+        yield "[AMI error: HTTP 503 from the upstream provider (vllm). Check backend logs.]"
+
+
+def _engine_with(fake_gateway) -> "BriefEngine":
+    from app.services.brief_engine import BriefEngine
+    from app.services.overlay_store import get_overlay_store
+
+    return BriefEngine(fake_gateway, get_overlay_store())
+
+
+def test_a_raised_provider_failure_after_spend_is_refunded(monkeypatch):
+    from app.api.brief import router as brief_router
+    from app.services.brief_engine import get_brief_engine
+    from app.core import config as config_mod
+
+    monkeypatch.setattr(config_mod.settings, "brief_credit_cost", 3)
+
+    engine = _engine_with(_FakeGatewayRaises())
+    a = FastAPI()
+    a.include_router(brief_router)
+    a.dependency_overrides[get_brief_engine] = lambda: engine
+    client = TestClient(a, raise_server_exceptions=False)
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open(client, user_id, headers)
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200  # the error is an in-band SSE event
+    assert balance_for(user_id)[0] == before, "charged-then-failed must be refunded"
+
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 1
+
+
+def test_an_http_error_sentinel_reply_is_refunded_not_billed(monkeypatch):
+    """The auditor's exact probe (round 1 run report): a non-200 transport
+    reply never raises, so BEFORE round 2's fix the route's only "did this
+    fail" signal was absent and the turn was billed for an error message
+    rendered as the answer."""
+    from app.api.brief import router as brief_router
+    from app.services.brief_engine import get_brief_engine
+    from app.core import config as config_mod
+
+    monkeypatch.setattr(config_mod.settings, "brief_credit_cost", 3)
+
+    engine = _engine_with(_FakeGatewayHttpErrorSentinel())
+    a = FastAPI()
+    a.include_router(brief_router)
+    a.dependency_overrides[get_brief_engine] = lambda: engine
+    client = TestClient(a, raise_server_exceptions=False)
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open(client, user_id, headers)
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200
+    assert "AMI error" in r.text
+    assert balance_for(user_id)[0] == before, (
+        "an HTTP-error-sentinel reply must be refunded, not billed as a "
+        "successful turn"
+    )
+
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 1
+
+
 def test_a_zero_price_turn_is_still_a_charge(client, monkeypatch):
     """Same property DEF113 pins for 1-on-1: at price 0 the full spend() path
     must still run, so moving the price stays a config change."""

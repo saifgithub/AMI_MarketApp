@@ -444,11 +444,25 @@ class AnthropicProvider(LLMProvider):
         async with self._client.stream("POST", "/v1/messages", json=body) as resp:
             if resp.status_code != 200:
                 err_body = await resp.aread()
+                detail = err_body.decode()[:500]
                 logger.error(
                     "anthropic_error",
                     status=resp.status_code,
-                    body=err_body.decode()[:500],
+                    body=detail,
                 )
+                # RETRO-SECURITY MAJOR-2 (round 2) — this top-level transport
+                # failure used to yield only the `[AMI error: …]` sentinel
+                # TEXT with no `meta["stream_error"]` write, so a caller could
+                # only detect the failure by string-matching the reply (the
+                # in-band SSE error frame branch below already did this
+                # correctly; this HTTP-status branch did not). Detection must
+                # be structural, not prose-matching — same `stream_error` key
+                # DEF376's in-band frame writes, so every caller that already
+                # checks it (room_runner's per-agent fallback, and now
+                # brief.py/one_on_one.py's refund gate) sees this failure
+                # shape too, with no second code path to keep in sync.
+                if meta is not None:
+                    meta["stream_error"] = f"HTTP {resp.status_code}: {detail}"
                 yield (
                     f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider. "
                     "Falling back. Check backend logs.]"
@@ -686,11 +700,22 @@ class OpenAICompatibleProvider(LLMProvider):
         async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
             if resp.status_code != 200:
                 err_body = await resp.aread()
+                detail = err_body.decode()[:500]
                 logger.error(
                     f"{self.name}_error",
                     status=resp.status_code,
-                    body=err_body.decode()[:500],
+                    body=detail,
                 )
+                # RETRO-SECURITY MAJOR-2 (round 2) — the auditor's exact
+                # probe: this is the branch that fires on a real vLLM/OpenAI-
+                # compatible outage (DEF413's shape), and it used to yield
+                # only the sentinel TEXT with no `meta["stream_error"]` write
+                # — Brief and 1-on-1 charged a credit for it because neither
+                # route had anything structural to check. Same key the
+                # in-band frame below already sets, so one check downstream
+                # covers both shapes.
+                if meta is not None:
+                    meta["stream_error"] = f"HTTP {resp.status_code}: {detail}"
                 yield (
                     f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider "
                     f"({self.name}). Check backend logs.]"
