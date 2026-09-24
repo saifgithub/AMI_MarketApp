@@ -3388,6 +3388,50 @@
   "@alpacaNoPositions": {
     "description": "Empty state shown when a linked Alpaca account has no open positions."
   },
+  "alpacaOrdersNone": "No open Alpaca orders",
+  "@alpacaOrdersNone": {
+    "description": "CR234 — empty state when the linked Alpaca account has no open orders (as opposed to the section not rendering at all when no account is linked). NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrdersLoadError": "Couldn't load Alpaca orders",
+  "@alpacaOrdersLoadError": {
+    "description": "CR234 — CR040 degrade-loudly row shown when the Alpaca open-orders fetch fails; must never render as an empty list, which would read as 'no orders'. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaHistoryLoadError": "Couldn't load Alpaca order history",
+  "@alpacaHistoryLoadError": {
+    "description": "CR234 — CR040 degrade-loudly row shown when the Alpaca closed-orders fetch fails. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrderCancelTitle": "Cancel this Alpaca order?",
+  "@alpacaOrderCancelTitle": {
+    "description": "CR234 — confirm-dialog title before cancelling a resting Alpaca order. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrderCancelBody": "{side} {qty} {ticker} resting at Alpaca will be cancelled.",
+  "@alpacaOrderCancelBody": {
+    "description": "CR234 — confirm-dialog body naming the order about to be cancelled. Placeholders: side (BUY/SELL, already uppercased), qty (share count as a string), ticker.",
+    "placeholders": {
+      "side": {"type": "String"},
+      "qty": {"type": "String"},
+      "ticker": {"type": "String"}
+    }
+  },
+  "alpacaOrderKeep": "KEEP ORDER",
+  "@alpacaOrderKeep": {
+    "description": "CR234 — 'don't cancel' button on the Alpaca order cancel-confirm dialog, matching restingOrderKeep's copy for the AMI equivalent. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrderCancelConfirm": "CANCEL ORDER",
+  "@alpacaOrderCancelConfirm": {
+    "description": "CR234 — 'yes, cancel' button label, and the action button on each cancellable Alpaca order row. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrderCancelled": "Alpaca order cancelled.",
+  "@alpacaOrderCancelled": {
+    "description": "CR234 — snackbar shown after a successful cancel. NEW key. retranslate:[ar,ms]"
+  },
+  "alpacaOrderCancelFailed": "Couldn't cancel that order — {detail}",
+  "@alpacaOrderCancelFailed": {
+    "description": "CR234 — snackbar shown when the DELETE call fails (network error, or Alpaca refused the race — already filled/cancelled). Placeholder: detail, a short human-readable reason.",
+    "placeholders": {
+      "detail": {"type": "String"}
+    }
+  },
   "disclaimerShort": "Educational simulation. Not investment advice.",
   "@disclaimerShort": {
     "description": "Short legal disclaimer strip printed on every share card. Simulation-only framing — keep the 'not investment advice' clause in every locale."

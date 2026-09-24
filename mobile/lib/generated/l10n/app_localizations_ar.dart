@@ -2958,6 +2958,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get alpacaNoPositions => 'لا توجد مراكز مفتوحة';
 
   @override
+  String get alpacaOrdersNone => 'No open Alpaca orders';
+
+  @override
+  String get alpacaOrdersLoadError => 'Couldn\'t load Alpaca orders';
+
+  @override
+  String get alpacaHistoryLoadError => 'Couldn\'t load Alpaca order history';
+
+  @override
+  String get alpacaOrderCancelTitle => 'Cancel this Alpaca order?';
+
+  @override
+  String alpacaOrderCancelBody(String side, String qty, String ticker) {
+    return '$side $qty $ticker resting at Alpaca will be cancelled.';
+  }
+
+  @override
+  String get alpacaOrderKeep => 'KEEP ORDER';
+
+  @override
+  String get alpacaOrderCancelConfirm => 'CANCEL ORDER';
+
+  @override
+  String get alpacaOrderCancelled => 'Alpaca order cancelled.';
+
+  @override
+  String alpacaOrderCancelFailed(String detail) {
+    return 'Couldn\'t cancel that order — $detail';
+  }
+
+  @override
   String get disclaimerShort => 'محاكاة تعليمية. ليست نصيحة استثمارية.';
 
   @override

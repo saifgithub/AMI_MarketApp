@@ -119,6 +119,29 @@ class TestEachOutcomeStateRoundTrips:
         assert rows[0].detail == "insufficient buying power"
         assert rows[0].alpaca_order_id is None
 
+    def test_cancelled_lands_a_row_with_the_alpaca_order_id(self, client):
+        """CR234 — the device reports a successful DELETE /v2/orders/{id}
+        the same way it reports a submit; the audit table gets one row per
+        Alpaca interaction, cancels included."""
+        user, token = _claimed()
+        resp = client.post(
+            "/v1/alpaca/order_log",
+            json={
+                **_BASE_BODY,
+                "outcome": "cancelled",
+                "alpaca_order_id": "ord_123",
+                "alpaca_status": "canceled",
+            },
+            headers=_auth(token),
+        )
+        assert resp.status_code == 204
+
+        rows = _rows_for(user.id)
+        assert len(rows) == 1
+        assert rows[0].outcome == "cancelled"
+        assert rows[0].alpaca_order_id == "ord_123"
+        assert rows[0].alpaca_status == "canceled"
+
     def test_refused_client_side_lands_a_row_with_no_alpaca_fields(self, client):
         """This is the case that never reached Alpaca at all — a non-market
         order type or a non-paper host, refused by `AlpacaClient.submitOrder()`

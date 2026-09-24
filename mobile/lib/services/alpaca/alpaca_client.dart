@@ -36,6 +36,18 @@
 /// converts" split of authority `order_pricing.dart` already uses: this
 /// module builds the exact wire body or refuses loudly, and Alpaca's own API
 /// is the final word on whether the order is accepted).
+///
+/// **CR234 — a way to SEE and CANCEL what CR233 made it possible to place.**
+/// Saiful, from a TestFlight report: a limit buy reached Alpaca (confirmed
+/// resting via the CR230 audit table) but never appeared in the Portfolio's
+/// Orders/History sections, because this client had `submitOrder` and
+/// nothing else — no read path at all. `orders()` (`GET /v2/orders`) and
+/// `cancelOrder()` (`DELETE /v2/orders/{id}`) close that gap. `cancelOrder`
+/// is the second POST-like exception this file grows beyond `submitOrder`
+/// (a DELETE is a write, same D-071 stakes as placing one) and re-checks the
+/// paper-host rule itself for the same reason `submitOrder` does — a live
+/// account must never receive a write from this client, whatever the caller
+/// already believes it validated.
 library;
 
 import 'package:ami_trade/features/sim/order_pricing.dart'
@@ -290,7 +302,11 @@ class AlpacaClient {
     };
   }
 
-  Future<T> _get<T>(String path, T Function(dynamic) parse) async {
+  Future<T> _get<T>(
+    String path,
+    T Function(dynamic) parse, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     final creds = await AlpacaCredentialStore.read();
     if (creds == null) {
       throw const AlpacaException(null, 'not linked');
@@ -298,6 +314,7 @@ class AlpacaClient {
     try {
       final r = await _dio.get<dynamic>(
         '${creds.baseUrl}$path',
+        queryParameters: queryParameters,
         options: Options(headers: await _headers(creds)),
       );
       return parse(r.data);
@@ -342,6 +359,39 @@ class AlpacaClient {
         (d) => (d as List<dynamic>)
             .map((e) => AlpacaPosition.fromJson(e as Map<String, dynamic>))
             .toList(),
+      );
+
+  /// `GET /v2/orders` (CR234) — list the user's Alpaca paper orders.
+  ///
+  /// `status` follows Alpaca's own vocabulary: `open` (the Orders tab's
+  /// need), `closed` (History's need), or `all`. `limit` bounds how many
+  /// come back (Alpaca's own API default is 50, max 500) — History passes a
+  /// small number deliberately, Orders leaves it unbounded since a working
+  /// book has no natural cap the way closed history does.
+  ///
+  /// `nested: true` (the default here) asks Alpaca to return a bracket
+  /// order's child legs (stop-loss / take-profit) inlined under the parent
+  /// via its own `legs` field, rather than as separate top-level rows with
+  /// no visible parent — see `AlpacaOrder.legs`. Without it, a bracket's
+  /// stop/target would either not come back at all in the `open` list (the
+  /// legs are themselves `held`/`new` child orders) or show up as
+  /// unexplained standalone rows with no indication they belong to the
+  /// order above them.
+  Future<List<AlpacaOrder>> orders({
+    String status = 'open',
+    int? limit,
+    bool nested = true,
+  }) =>
+      _get(
+        '/v2/orders',
+        (d) => (d as List<dynamic>)
+            .map((e) => AlpacaOrder.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        queryParameters: {
+          'status': status,
+          'nested': nested,
+          if (limit != null) 'limit': limit,
+        },
       );
 
   /// Place an order against the user's linked Alpaca **paper** account
@@ -415,6 +465,47 @@ class AlpacaClient {
         options: Options(headers: await _headers(creds)),
       );
       return AlpacaOrder.fromJson(r.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AlpacaException(
+        e.response?.statusCode,
+        e.response?.data?.toString() ?? e.message ?? 'network error',
+      );
+    }
+  }
+
+  /// `DELETE /v2/orders/{id}` (CR234) — cancel a resting Alpaca order.
+  ///
+  /// Same paper-only posture as [submitOrder]: a cancel is a write, and
+  /// D-071/D-074 draw the line at writes, not at which HTTP verb carries
+  /// them — a live/production Alpaca account must stay unreachable for this
+  /// call exactly as it is for placing one, and this method re-checks the
+  /// rule itself rather than trusting the caller (the Orders tab already
+  /// gates the cancel button on `alpacaLinkedProvider`, but that is the
+  /// friendly half; this is the structural half, same split `submitOrder`
+  /// documents).
+  ///
+  /// Alpaca returns `204 No Content` on a successful cancel — nothing to
+  /// parse, so this resolves to `void`. A `422`/`404` (already filled,
+  /// already cancelled, unknown id — Alpaca's own documented races) surfaces
+  /// as an [AlpacaException] the same way any other failed call does; the
+  /// caller decides what to tell the user and whether to refresh regardless
+  /// (a lost race means the order is no longer open either way).
+  Future<void> cancelOrder(String orderId) async {
+    final creds = await AlpacaCredentialStore.read();
+    if (creds == null) {
+      throw const AlpacaException(null, 'not linked');
+    }
+    if (!isAlpacaPaperHost(creds.baseUrl)) {
+      throw AlpacaOrderRejected(
+        'refusing to cancel an order against a non-paper Alpaca host: '
+        '${creds.baseUrl}',
+      );
+    }
+    try {
+      await _dio.delete<dynamic>(
+        '${creds.baseUrl}/v2/orders/$orderId',
+        options: Options(headers: await _headers(creds)),
+      );
     } on DioException catch (e) {
       throw AlpacaException(
         e.response?.statusCode,
