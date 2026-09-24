@@ -27,6 +27,8 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/anchored_ad_banner.dart';
+import 'package:ami_trade/widgets/ads/shell_banner_slot.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:ami_trade/widgets/ticker_tape.dart';
 import 'package:flutter/material.dart';
@@ -344,6 +346,55 @@ void main() {
     await _settle(t);
     expect(find.byType(HexBottomNav), findsOneWidget);
     expect(find.byType(TickerTape), findsOneWidget);
+  });
+
+  // CR226 — the banner slot's place in the chrome order, and the keyboard
+  // rule extended to it.
+
+  testWidgets(
+      'CR226: the ad slot sits between the bottom nav and the ticker tape',
+      (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+
+    // ShellBannerSlot (which renders AnchoredAdBanner) must exist as a
+    // sibling of HexBottomNav and TickerTape inside the SAME chrome Column
+    // — CR226 §Scope 1's nav / ad slot / ticker tape order, not merely
+    // "somewhere on screen".
+    expect(find.byType(ShellBannerSlot), findsOneWidget,
+        reason: 'CR232 reserved the slot; CR226 must still be filling it '
+            'with AnchoredAdBanner, not leaving home_shell.dart pointed at '
+            'a dangling reference');
+    expect(find.byType(AnchoredAdBanner), findsOneWidget);
+
+    final navY = t.getBottomLeft(find.byType(HexBottomNav)).dy;
+    final slotY = t.getTopLeft(find.byType(ShellBannerSlot)).dy;
+    final tapeY = t.getTopLeft(find.byType(TickerTape)).dy;
+    expect(slotY, greaterThanOrEqualTo(navY),
+        reason: 'CR226 §Scope 1: the ad slot is BELOW the nav');
+    expect(tapeY, greaterThanOrEqualTo(slotY),
+        reason: 'CR226 §Scope 1: the ticker tape is BELOW the ad slot — '
+            'nav / ad slot / ticker tape, top to bottom');
+  });
+
+  testWidgets('CR226: the keyboard hides the ad slot along with the rest '
+      'of the chrome', (t) async {
+    await _pumpHome(t);
+    await _settle(t);
+    expect(find.byType(ShellBannerSlot), findsOneWidget);
+
+    t.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(() => t.view.resetViewInsets());
+    await _settle(t);
+
+    expect(find.byType(ShellBannerSlot), findsNothing,
+        reason: 'CR226/CR232: the ad slot is part of the SAME persistent '
+            'chrome Column as the nav and tape — it must disappear with '
+            'them, not linger as a banner floating above the keyboard');
+
+    t.view.resetViewInsets();
+    await _settle(t);
+    expect(find.byType(ShellBannerSlot), findsOneWidget);
   });
 
   testWidgets(

@@ -79,8 +79,14 @@ dependencies:
   # Share cards (CR012 / C4) — offscreen-rendered PNG → OS share sheet
   share_plus: ^10.1.4
   path_provider: ^2.1.5
-  # google_mobile_ads: UNLINKED — see DEF351. The plugin breaks every iOS
-  # release compile; re-add with the adapter file when that is resolved.
+  # CR225: re-linked after DEF351 unlinked it. EXACT pin to 9.0.0, not
+  # ^9.1.0 and not ^9.0.0 — 9.1.0 ships FLTAdPreloader.h with a non-modular
+  # `#import <GoogleMobileAds/GoogleMobileAds_Beta.h>` inside
+  # FLTAd_Internal.h that trips -Wnon-modular-include-in-framework-module on
+  # every `flutter build ios --release` archive. 9.0.0 does not have that
+  # header. A caret range would happily resolve back into 9.1.x on the next
+  # `pub upgrade`. See CR225_admob_ios_relink.md "Root cause".
+  google_mobile_ads: 9.0.0
 
 dev_dependencies:
   flutter_test:

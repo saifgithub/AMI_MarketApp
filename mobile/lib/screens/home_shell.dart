@@ -259,7 +259,10 @@ class _HomeShellState extends ConsumerState<HomeShell>
                     ),
                   ),
                   // CR226 §Scope 1 order: nav / ad slot / ticker tape.
-                  // Zero height until CR226 lands the real AdMob banner.
+                  // ShellBannerSlot renders AnchoredAdBanner, which draws its
+                  // own AdMob-policy separator directly above its content and
+                  // collapses to zero height with it (paid plan, no fill) —
+                  // see anchored_ad_banner.dart.
                   const ShellBannerSlot(),
                   const TickerTape(),
                 ],

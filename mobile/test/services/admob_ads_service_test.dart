@@ -54,15 +54,31 @@ class FakeNativeHandle implements AdMobNativeHandle {
   Future<void> dispose() async => disposed = true;
 }
 
+/// CR226 — banner fill fake, mirroring [FakeNativeHandle].
+class FakeBannerHandle implements AdMobBannerHandle {
+  bool disposed = false;
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(height: 50);
+
+  @override
+  double heightDp = 50;
+
+  @override
+  Future<void> dispose() async => disposed = true;
+}
+
 class FakeSdk implements AdMobSdk {
   int initCalls = 0;
   AdMobSdkConfigSpec? lastConfig;
   final interstitialSpecs = <AdMobRequestSpec>[];
   final nativeSpecs = <AdMobRequestSpec>[];
+  final bannerSpecs = <AdMobBannerRequestSpec>[];
   bool fill = true;
   bool throwOnLoad = false;
 
-  int get loadCalls => interstitialSpecs.length + nativeSpecs.length;
+  int get loadCalls =>
+      interstitialSpecs.length + nativeSpecs.length + bannerSpecs.length;
 
   @override
   Future<void> configureAndInitialize(AdMobSdkConfigSpec spec) async {
@@ -83,6 +99,13 @@ class FakeSdk implements AdMobSdk {
     nativeSpecs.add(spec);
     if (throwOnLoad) throw StateError('adapter blew up');
     return fill ? FakeNativeHandle() : null;
+  }
+
+  @override
+  Future<AdMobBannerHandle?> loadBanner(AdMobBannerRequestSpec spec) async {
+    bannerSpecs.add(spec);
+    if (throwOnLoad) throw StateError('adapter blew up');
+    return fill ? FakeBannerHandle() : null;
   }
 }
 
@@ -207,6 +230,27 @@ void main() {
       expect(fill, isA<AdMobNativeFill>());
       expect(sdk.nativeSpecs.single.adUnitId, 'unit-native');
       expect(sdk.interstitialSpecs, isEmpty);
+    });
+  });
+
+  group('CR226 — banner placement', () {
+    test('routes through loadBanner with the measured width, native unit id',
+        () async {
+      final sdk = FakeSdk();
+      final fill = await service(sdk: sdk, consent: FakeConsent())
+          .requestFill(AdPlacement.globalBanner, _signals, widthDp: 390);
+      expect(fill, isA<AdMobBannerFill>());
+      expect(sdk.bannerSpecs.single.widthDp, 390);
+      expect(sdk.bannerSpecs.single.adUnitId, 'unit-native');
+      expect(sdk.interstitialSpecs, isEmpty);
+      expect(sdk.nativeSpecs, isEmpty);
+    });
+
+    test('no banner fill → house fallback, never a blank slot', () async {
+      final sdk = FakeSdk()..fill = false;
+      final fill = await service(sdk: sdk, consent: FakeConsent())
+          .requestFill(AdPlacement.globalBanner, _signals, widthDp: 390);
+      expect(fill, isA<HouseAdFill>());
     });
   });
 

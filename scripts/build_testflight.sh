@@ -53,6 +53,17 @@
 #   ADMOB_CONSENT_DEBUG_GEOGRAPHY - '' | 'eea' | 'us_state' | 'other' (UMP
 #                                   debug geography for consent-form testing)
 #
+# CR225 — AMI_RELEASE_CHANNEL is NOT a var you set: this script derives it
+# structurally from --internal-only / --production (the same flags that
+# already gate the RevenueCat Test-Store key and the CR109 games route) and
+# forwards it as a dart-define. AdMobConfig.resolve refuses to honour
+# ADMOB_MODE=live unless that channel is 'production' — a TestFlight
+# Internal build downgrades to Google's official test unit ids even if
+# ADMOB_MODE=live and real unit ids are set, so the two ways to get real ad
+# units onto an internal build (forgetting a flag, or copy-pasting env from a
+# production build) are both structurally closed rather than left as an
+# operator instruction.
+#
 # BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
 # `BillingConfig.isConfigured` is false and the paywall renders the info state
 # with NO buy button — the app cannot take money. That is the correct fallback
@@ -131,6 +142,23 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
+# units on. Derived HERE from the same --internal-only/--production flags
+# already used for the RevenueCat Test-Store-key and CR109 games checks
+# above — never independently settable, so a build cannot claim
+# --internal-only for those gates while separately telling AdMobConfig it is
+# production. `production` requires an EXPLICIT --production (matching
+# DO_PRODUCTION's own use above); everything else, including a bare
+# --internal-only or neither flag, resolves to `internal` — the conservative
+# default AdMobConfig.resolve treats identically to "unset" for the live→test
+# downgrade, so an operator who forgets both flags still cannot ship real ad
+# units.
+if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
+  AMI_RELEASE_CHANNEL="production"
+else
+  AMI_RELEASE_CHANNEL="internal"
+fi
 
 key_file="$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_API_KEY_ID}.p8"
 if [[ ! -f "$key_file" ]]; then
@@ -486,7 +514,8 @@ flutter build ios --release --no-codesign \
   --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \
   --dart-define=ADMOB_NATIVE_AD_UNIT_ID="${ADMOB_NATIVE_AD_UNIT_ID}" \
   --dart-define=ADMOB_TEST_DEVICE_IDS="${ADMOB_TEST_DEVICE_IDS}" \
-  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}"
+  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}" \
+  --dart-define=AMI_RELEASE_CHANNEL="${AMI_RELEASE_CHANNEL}"
 
 echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"
 cd "$IOS_DIR"

@@ -1,13 +1,16 @@
-/// CR122-MOBILE-C — the AdMob build-time switch.
+/// CR122-MOBILE-C — the AdMob build-time switch. CR225 adds the channel gate.
 ///
-/// Two guards live here:
+/// Three guards live here:
 ///   * the define-off pin: this suite runs with NO dart-defines, so
 ///     `AdMobConfig.setup` must be null and the facade provider must yield
 ///     the house service — the store pipelines' behaviour cannot change
 ///     unless ADMOB_MODE is passed;
 ///   * the reserved-test-unit-id literals: Google's published constants,
 ///     pinned verbatim so nobody can quietly swap in a fabricated or
-///     account-real id under the 'test' mode.
+///     account-real id under the 'test' mode;
+///   * CR225 — `mode=live` must be honoured ONLY on `channel=production`;
+///     `internal` and the unset default both downgrade to Google's test ids
+///     rather than either serving real units or refusing to house fill.
 library;
 
 import 'package:ami_trade/services/ads/admob_config.dart';
@@ -24,6 +27,7 @@ AdMobSetup? resolve({
   String testDeviceIdsRaw = '',
   String debugGeographyRaw = '',
   AdMobOs os = AdMobOs.ios,
+  AdMobReleaseChannel channel = AdMobReleaseChannel.production,
 }) =>
     AdMobConfig.resolve(
       mode: mode,
@@ -32,6 +36,7 @@ AdMobSetup? resolve({
       testDeviceIdsRaw: testDeviceIdsRaw,
       debugGeographyRaw: debugGeographyRaw,
       os: os,
+      channel: channel,
     );
 
 void main() {
@@ -102,6 +107,85 @@ void main() {
       expect(resolve(mode: 'live', liveNativeId: 'ca-app-pub-X/nat'), isNull);
       expect(resolve(mode: 'live', liveInterstitialId: 'ca-app-pub-X/int'),
           isNull);
+    });
+  });
+
+  group('CR225 — live unit ids are gated on the release channel', () {
+    test('mode=live on channel=production → live setup (unchanged)', () {
+      final s = resolve(
+        mode: 'live',
+        liveInterstitialId: 'ca-app-pub-X/int',
+        liveNativeId: 'ca-app-pub-X/nat',
+        channel: AdMobReleaseChannel.production,
+      )!;
+      expect(s.isTestMode, isFalse);
+      expect(s.interstitialAdUnitId, 'ca-app-pub-X/int');
+      expect(s.nativeAdUnitId, 'ca-app-pub-X/nat');
+    });
+
+    test(
+        'mode=live on channel=internal → DOWNGRADED to Google test ids, '
+        'never the live ones', () {
+      final s = resolve(
+        mode: 'live',
+        liveInterstitialId: 'ca-app-pub-X/int',
+        liveNativeId: 'ca-app-pub-X/nat',
+        channel: AdMobReleaseChannel.internal_,
+        os: AdMobOs.ios,
+      )!;
+      expect(s.isTestMode, isTrue,
+          reason: 'CR225: an internal build must never serve real ad units');
+      expect(
+          s.interstitialAdUnitId, 'ca-app-pub-3940256099942544/4411468910');
+      expect(s.nativeAdUnitId, 'ca-app-pub-3940256099942544/3986624511');
+    });
+
+    test(
+        'mode=live on channel=unknown (unset) → also downgraded — the '
+        'conservative default', () {
+      final s = resolve(
+        mode: 'live',
+        liveInterstitialId: 'ca-app-pub-X/int',
+        liveNativeId: 'ca-app-pub-X/nat',
+        channel: AdMobReleaseChannel.unknown,
+        os: AdMobOs.android,
+      )!;
+      expect(s.isTestMode, isTrue,
+          reason: 'CR225: an unrecognised/absent channel must not be read '
+              'as permission to ship real ad units');
+      expect(
+          s.interstitialAdUnitId, 'ca-app-pub-3940256099942544/1033173712');
+      expect(s.nativeAdUnitId, 'ca-app-pub-3940256099942544/2247696110');
+    });
+
+    test('the internal-channel downgrade never leaks the live unit ids', () {
+      final s = resolve(
+        mode: 'live',
+        liveInterstitialId: 'ca-app-pub-SAIFULS-REAL-ACCOUNT/int',
+        liveNativeId: 'ca-app-pub-SAIFULS-REAL-ACCOUNT/nat',
+        channel: AdMobReleaseChannel.internal_,
+      )!;
+      expect(s.interstitialAdUnitId, isNot(contains('SAIFULS-REAL-ACCOUNT')));
+      expect(s.nativeAdUnitId, isNot(contains('SAIFULS-REAL-ACCOUNT')));
+    });
+
+    test('mode=test is unaffected by channel (already test ids)', () {
+      for (final c in AdMobReleaseChannel.values) {
+        final s = resolve(mode: 'test', channel: c)!;
+        expect(s.isTestMode, isTrue);
+      }
+    });
+
+    test('parseChannel: empty → unknown, exact matches, junk → unknown', () {
+      expect(AdMobConfig.parseChannel(''), AdMobReleaseChannel.unknown);
+      expect(AdMobConfig.parseChannel('internal'),
+          AdMobReleaseChannel.internal_);
+      expect(AdMobConfig.parseChannel('production'),
+          AdMobReleaseChannel.production);
+      expect(AdMobConfig.parseChannel('PRODUCTION'),
+          AdMobReleaseChannel.unknown);
+      expect(
+          AdMobConfig.parseChannel('prod'), AdMobReleaseChannel.unknown);
     });
   });
 

@@ -158,6 +158,145 @@ rather than hard-coding.
 - Manual, on-device (Saiful): banner visible on Floor/Portfolio/Lessons/Journal, gone inside
   Concierge and the trade ticket, gone after upgrading to a paid plan.
 
+## Implementation notes (AT:R85)
+
+**Seam additions (AdMob-agnostic, no `google_mobile_ads` import outside
+`admob_real_sdk.dart`):**
+
+- `services/ads/ads_models.dart` — `AdFormat.banner`, `AdPlacement.globalBanner`
+  (the 7th entry in `AdPlacement.approved`).
+- `services/ads/admob_sdk.dart` — `AdMobBannerRequestSpec` (carries `widthDp`,
+  unlike the fixed-size interstitial/native specs), `AdMobBannerHandle`,
+  `AdMobSdk.loadBanner`, `AdMobBannerFill`.
+- `services/ads/admob_real_sdk.dart` — `RealAdMobSdk.loadBanner` calls
+  `AdSize.getLargeAnchoredAdaptiveBannerAdSize(widthDp)` — 9.0.0's
+  non-deprecated resolver (the SDK's own deprecation notice on
+  `getCurrentOrientationAnchoredAdaptiveBannerAdSize` points here; same
+  native adaptive-size call). Returns null (⇒ house fallback) when the SDK
+  can't resolve a size for the given width.
+- `services/ads/ads_service.dart` / `admob_ads_service.dart` /
+  `house_ads_service.dart` — `AdsService.requestFill` gained an optional
+  `widthDp` parameter (default 0, ignored by every non-banner placement).
+  `AdMobAdsService` reuses the NATIVE unit id for banner requests — no
+  4th build-time ad-unit-id define; flagged in the doc for Saiful's console
+  setup, revisit if a dedicated banner unit id is wanted.
+- `state/ads_providers.dart` — `AdGate.request` gained `widthDp`; banner is
+  EXEMPT from the `ads.md:59-60` frequency caps and from `recordShown`'s
+  impression counter (see the library doc's job 4: the banner is persistent
+  chrome mounted once for the app's lifetime, not a discrete per-screen
+  impression — running it through the 8/day native-card cap would hide it
+  after 8 re-renders, not after 8 actual ad SHOWINGS). Still goes through
+  the SAME plan gate as every other placement.
+
+**Rendering:**
+
+- `widgets/ads/anchored_ad_banner.dart` (new) — the actual widget.
+  `LayoutBuilder` measures width (not `MediaQuery.of(context).size.width`,
+  per §Scope 2); disposes + re-requests on width change (verified by test:
+  a simulated unfold from 390dp→984dp triggers a fresh request at the new
+  width). Renders `AdMobBannerFill` via the SDK's own `AdWidget`-backed
+  `build()`, `HouseAdFill` via the new `HouseAdBannerStrip`, and draws the
+  AdMob-policy separator (a `slate700` top border) directly around its OWN
+  content so the separator collapses to zero height with the banner rather
+  than being a shell-level fixed gap that could appear with nothing under
+  it on a paid-tier screen.
+- `widgets/ads/house_ad_banner_strip.dart` (new) — compact single-row house
+  fallback (badge, one-line headline, text CTA), reusing `HouseAdCard`'s
+  existing `copyFor` targeting table rather than a second copy of the
+  upsell strings. No dismiss X: `ads.md`'s "remove ads lives in Wallet &
+  Plan" already covers that, and a persistent chrome slot self-dismissing
+  mid-session would contradict "visible on every post-onboarding page".
+- `widgets/ads/shell_banner_slot.dart` — now renders `AnchoredAdBanner`
+  (was `SizedBox.shrink()` under CR232).
+- `screens/home_shell.dart` — comment updated; no structural change to the
+  chrome `Column` itself (CR232 already placed the slot in the right order).
+
+**CR225's structural test-vs-live gate, landed here** (Saiful's 2026-09-24
+ruling on internal vs. production ad units applies to both CRs' surface —
+documented once, here, since CR226 is what actually renders a banner an
+internal build could accidentally leak a real unit id through):
+
+- `services/ads/admob_config.dart` — new `AdMobReleaseChannel` enum
+  (`unknown` | `internal_` | `production`) and `AMI_RELEASE_CHANNEL`
+  dart-define. `AdMobConfig.resolve` takes a `channel` parameter;
+  `ADMOB_MODE=live` is honoured ONLY when `channel == production` — every
+  other channel (including the unset/dev default, the conservative
+  reading) downgrades to Google's reserved test unit ids, loudly logged,
+  rather than either serving real units or refusing to house fill.
+- `scripts/build_testflight.sh` / `scripts/build_playstore.sh` — derive
+  `AMI_RELEASE_CHANNEL` STRUCTURALLY from the same `--internal-only` /
+  `--production` flags that already gate the RevenueCat Test-Store-key and
+  CR109 games checks (never an independently-settable env var an operator
+  could forget to unset), forward it as a dart-define.
+- `scripts/install_iphone.sh` — deliberately does NOT forward
+  `AMI_RELEASE_CHANNEL` at all, so a cable install always resolves
+  `unknown` — the same conservative downgrade applies even if
+  `ADMOB_MODE=live` is set locally (e.g. copy-pasted from a production
+  build's env).
+- Real unit ids: no placeholder needed beyond what already existed —
+  `ADMOB_INTERSTITIAL_AD_UNIT_ID` / `ADMOB_NATIVE_AD_UNIT_ID` already
+  default to empty string and `AdMobConfig.resolve`'s `mode=live` branch
+  already refuses (house fallback, loud log) on an empty id. The banner
+  reuses the native id (see above), so it inherits that same "empty id ⇒
+  refuse, never silently serve nothing that looks like success" guarantee.
+
+**Text-scale clamp:**
+
+- `theme/ami_text_scale.dart` (new) — `kChromeMaxTextScaleFactor = 1.3`
+  (the doc's recommended bound) and `clampChromeTextScale`, a thin wrapper
+  over `MediaQuery.withClampedTextScaling`.
+- `widgets/hex/ami_screen_header.dart` — `build` wrapped in the clamp; the
+  title gained the `maxLines: 1` + ellipsis guard the subtitle already had
+  (wrapped in `Flexible` to make the ellipsis effective inside the `Row`).
+- `widgets/hex/hex_bottom_nav.dart` — `build` wrapped in the clamp. **Found
+  and fixed a real overflow the clamp alone did not prevent**: the label's
+  `FittedBox(scaleDown)` only scales down against a BOUNDED constraint: as
+  the last child of a `mainAxisSize: min` Column it was sizing to its own
+  natural height, so at 3.1× scale (even clamped to 1.3×) the label's
+  intrinsic line height still exceeded the 15dp left in the 64dp cell after
+  the fixed 33dp icon zone — a genuine `RenderFlex` overflow the CR226
+  widget test caught on a real pump, not a hypothetical. Fixed by giving
+  the label row an explicit `SizedBox(height: 15)` so `FittedBox` has an
+  actual box to scale into.
+- `widgets/ticker_tape.dart` — `TickerTape.build`'s return wrapped in the
+  clamp (not the `bottomInset` read above it, which correctly uses the
+  ambient unclamped `MediaQuery`).
+- `app.dart` — `builder:` added on `MaterialApp`, the entry point the CR
+  doc names; deliberately a pass-through (`child ?? SizedBox.shrink()`),
+  not a global clamp — clamping app-wide would defeat the OS accessibility
+  setting for lesson/agent body content, which is exactly why the actual
+  clamps are local to the three chrome widgets instead.
+- `docs/initial_specs/06_monetization/ads.md` — 7th placement row added to
+  "Where ads appear", with the structural-inheritance rationale recorded so
+  a later reader doesn't re-litigate why this placement is allowed to be
+  global when the other six aren't (per the CR's own "Why" section).
+
+**Out of scope, confirmed untouched:** two-pane/foldable layout (still
+`main.dart:69`'s open item), Android-HMS, rewarded ads, direct-deal
+inventory, any change to the six existing placements' caps/policy/targeting.
+
+## Acceptance — verification run this session
+
+- `flutter build ios --release --no-codesign` — succeeded (see CR225's own
+  acceptance notes; this is the same binary CR226's banner code compiles
+  into).
+- `flutter build appbundle --release` — succeeded, exit 0, 62.1MB AAB,
+  278.9s. (Beyond this task's strict requirement — the task said skip if
+  signing keys are unavailable; a keystore was present at
+  `~/.android-keys/keystore.properties`, so it was run and is clean.)
+- `flutter test` (full suite) — 1535 tests, all green, exit 0. New/changed
+  coverage: `test/services/admob_config_test.dart` (CR225 channel-gate
+  group, 7 tests), `test/services/admob_ads_service_test.dart` (CR226
+  banner-routing group, 2 tests), `test/widgets/ads/anchored_ad_banner_test.dart`
+  (new, 11 tests: plan gating, adaptive width, dispose/reload on resize,
+  never-a-blank-slot, policy separator), `test/widgets/ami_text_scale_test.dart`
+  (new, 9 tests: chrome at 1.0×/2.0×/3.1×, title ellipsis, clamp does not
+  fight a smaller-than-default scale), `test/screens/home_shell_test.dart`
+  (2 new tests: slot position in chrome order, keyboard hides it).
+- `flutter analyze` — 11 issues (baseline, 0 errors).
+- Manual on-device verification (Saiful) — not run this session, per the
+  task's own instruction not to run a device install.
+
 ## Status
 
-proposed
+in_progress (submitted for audit, AT:R85)

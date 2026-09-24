@@ -61,21 +61,38 @@ class AdMobAdsService implements AdsService {
   String get network => 'admob';
 
   @override
-  Future<AdFill?> requestFill(
-      AdPlacement placement, HouseAdSignals signals) async {
+  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals,
+      {int widthDp = 0}) async {
     if (!await _ensureReady()) {
-      return _house.requestFill(placement, signals);
+      return _house.requestFill(placement, signals, widthDp: widthDp);
     }
     try {
-      final spec = AdMobRequestSpec(
-        adUnitId: placement.format == AdFormat.interstitial
-            ? _setup.interstitialAdUnitId
-            : _setup.nativeAdUnitId,
-        ccpaDoNotSell: await _privacyPrefs.doNotSell(),
-      );
-      final AdFill? fill = placement.format == AdFormat.interstitial
-          ? await _loadInterstitial(spec)
-          : await _loadNative(spec);
+      final ccpaDoNotSell = await _privacyPrefs.doNotSell();
+      final AdFill? fill;
+      switch (placement.format) {
+        case AdFormat.interstitial:
+          fill = await _loadInterstitial(AdMobRequestSpec(
+            adUnitId: _setup.interstitialAdUnitId,
+            ccpaDoNotSell: ccpaDoNotSell,
+          ));
+        case AdFormat.nativeCard:
+          fill = await _loadNative(AdMobRequestSpec(
+            adUnitId: _setup.nativeAdUnitId,
+            ccpaDoNotSell: ccpaDoNotSell,
+          ));
+        case AdFormat.banner:
+          // CR226 — no distinct banner unit id in AdMobSetup: a bannerAdUnitId
+          // would be the fourth build-time id (interstitial/native/banner)
+          // for what is, in the AdMob console, ordinarily one more ad unit —
+          // reusing the native slot's id keeps the CR225 dart-define surface
+          // unchanged for this CR. Revisit if Saiful's console setup wants a
+          // dedicated banner unit id.
+          fill = await _loadBanner(AdMobBannerRequestSpec(
+            adUnitId: _setup.nativeAdUnitId,
+            ccpaDoNotSell: ccpaDoNotSell,
+            widthDp: widthDp,
+          ));
+      }
       if (fill != null) return fill;
       debugPrint(
           'CR122 AdMob: no fill for ${placement.id} — house fallback');
@@ -83,7 +100,7 @@ class AdMobAdsService implements AdsService {
       debugPrint('CR122 AdMob: load failed for ${placement.id} — house '
           'fallback ($e)');
     }
-    return _house.requestFill(placement, signals);
+    return _house.requestFill(placement, signals, widthDp: widthDp);
   }
 
   Future<AdFill?> _loadInterstitial(AdMobRequestSpec spec) async {
@@ -94,6 +111,11 @@ class AdMobAdsService implements AdsService {
   Future<AdFill?> _loadNative(AdMobRequestSpec spec) async {
     final handle = await _sdk.loadNative(spec);
     return handle == null ? null : AdMobNativeFill(handle);
+  }
+
+  Future<AdFill?> _loadBanner(AdMobBannerRequestSpec spec) async {
+    final handle = await _sdk.loadBanner(spec);
+    return handle == null ? null : AdMobBannerFill(handle);
   }
 
   Future<bool> _ensureReady() {

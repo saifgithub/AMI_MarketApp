@@ -11,8 +11,15 @@
 /// as an elongated pill, and the label kept `labelMono`'s 1.8 tracking so
 /// `PORTFOLIO` wrapped to two lines. This version uses a genuine hexagon and
 /// single-line labels.
+/// CR226 — `build` is wrapped in [clampChromeTextScale]: the existing
+/// `FittedBox(scaleDown)` on the label (added for DEF043's letter-spacing
+/// overflow) absorbs text scaling as a side effect, not by design — at a
+/// large enough OS scale the 64dp row itself still doesn't grow, so the
+/// clamp bounds the input the FittedBox has to shrink, rather than relying
+/// on FittedBox alone to cover an unbounded range.
 library;
 
+import 'package:ami_trade/theme/ami_text_scale.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -47,20 +54,22 @@ class HexBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 64,
-      child: Row(
-        // M1: stretch so each cell's tap target fills the full bar height
-        // (no dead strips top/bottom) — width already fills via Expanded.
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            Expanded(child: _Cell(
-              item: items[i],
-              active: i == currentIndex,
-              onTap: () => onTap(i),
-            )),
-        ],
+    return clampChromeTextScale(
+      child: SizedBox(
+        height: 64,
+        child: Row(
+          // M1: stretch so each cell's tap target fills the full bar height
+          // (no dead strips top/bottom) — width already fills via Expanded.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < items.length; i++)
+              Expanded(child: _Cell(
+                item: items[i],
+                active: i == currentIndex,
+                onTap: () => onTap(i),
+              )),
+          ],
+        ),
       ),
     );
   }
@@ -96,19 +105,33 @@ class _Cell extends StatelessWidget {
               : Center(child: iconWidget),
         ),
         const SizedBox(height: 4),
-        // FittedBox + tight tracking → the label always renders on one line
+        // CR226 — a bounded height, not just FittedBox alone. FittedBox only
+        // scales its child down to fit constraints it is GIVEN; as the last
+        // child of a `mainAxisSize: min` Column it was asking for its own
+        // natural (unbounded) size, so at an unclamped/high text scale the
+        // label's intrinsic line height could still exceed the 64dp cell's
+        // remaining budget after the fixed 33dp icon zone — a real overflow
+        // the CR226 text-scale widget test caught (`chrome at 3.1x`), not
+        // hypothetical. 15dp is what's left of the 52dp content budget
+        // (64dp cell − 2×6dp vertical padding − 33dp icon zone − 4dp gap)
+        // — FittedBox now has a real box to scale the text DOWN into rather
+        // than sizing to content, which is what actually makes scaleDown
+        // trigger for tall text the way it already did for wide text
         // (DEF043: PORTFOLIO used to wrap because labelMono's 1.8 tracking
-        // overflowed the cell). scaleDown only shrinks the rare too-wide label.
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            item.label,
-            maxLines: 1,
-            softWrap: false,
-            style: AmiTypography.labelMono.copyWith(
-              fontSize: 9,
-              letterSpacing: 0.4,
-              color: active ? AmiColors.textHigh : AmiColors.textLow,
+        // overflowed the cell horizontally).
+        SizedBox(
+          height: 15,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              item.label,
+              maxLines: 1,
+              softWrap: false,
+              style: AmiTypography.labelMono.copyWith(
+                fontSize: 9,
+                letterSpacing: 0.4,
+                color: active ? AmiColors.textHigh : AmiColors.textLow,
+              ),
             ),
           ),
         ),

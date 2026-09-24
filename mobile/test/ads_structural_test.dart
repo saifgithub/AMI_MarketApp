@@ -29,15 +29,11 @@ const _adSdkImports = ['google_mobile_ads', 'huawei_ads'];
 /// The single file allowed to import an ad SDK. If the adapter moves, move
 /// this pin with it — the positive assertion below fails on a silent orphan.
 ///
-/// DEF351: the adapter is currently DELETED and no file imports an ad SDK —
-/// `google_mobile_ads` cannot be linked into an iOS release build. The
-/// no-file-imports-an-SDK half below still holds and is the half that matters
-/// (an SDK import anywhere else is still a defect); the positive
-/// "the adapter does import one" assertion is suspended until the plugin is
-/// re-linkable, guarded by [_adSdkAdapterExpected] so re-linking flips one
-/// boolean rather than rewriting the test.
+/// CR225: re-linked — `google_mobile_ads` is pinned to `9.0.0` exactly (the
+/// DEF351 archive-build break was 9.1.0-only) and `admob_real_sdk.dart` is
+/// restored, so the positive assertion is back in force.
 const _adSdkAdapterFile = 'lib/services/ads/admob_real_sdk.dart';
-const _adSdkAdapterExpected = false;
+const _adSdkAdapterExpected = true;
 
 /// The only files allowed to contain an `AdSlot(` instantiation: the widget's
 /// own definition plus the wired approved placements (`ads.md:39-44`).
