@@ -70,6 +70,10 @@ class _FixedAlpacaClient extends AlpacaClient {
     required String side,
     required double qty,
     required SimOrderType orderType,
+    double? limitPrice,
+    double? triggerPrice,
+    SimOrderTif tif = SimOrderTif.day,
+    AlpacaBracket? bracket,
   }) async {
     orderCalls.add('$side $qty $symbol');
     return AlpacaOrder(
@@ -112,6 +116,9 @@ class _ScriptedSim extends SimNotifier {
     required String ticker,
     required String side,
     required double quantity,
+    SimOrderType orderType = SimOrderType.market,
+    double? limitPrice,
+    double? triggerPrice,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {

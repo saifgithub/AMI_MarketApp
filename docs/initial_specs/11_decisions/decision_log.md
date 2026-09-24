@@ -621,3 +621,67 @@ Keep this log honest. The "why" matters more than the "what."
 - **Affects**: [`docs/forward_planning/CR231_stabilisation_programme/revenue_setup_research.md`](../../forward_planning/CR231_stabilisation_programme/revenue_setup_research.md)
   (full checklist). Recorded under
   [CR231](../../forward_planning/CR231_stabilisation_programme/CR231_stabilisation_programme.md).
+
+### D-074 — Alpaca paper may receive limit, stop, stop-limit and bracket orders (2026-09-24)
+
+- **Decided** (2026-09-24, CR233): D-071 narrowed D-004/D-069 to permit **market**
+  orders against a linked Alpaca **paper** account. This decision narrows the
+  order-type restriction further, from "market only" to "market, limit, stop,
+  stop-limit, and an optional bracket (stop-loss + take-profit legs)" — still
+  paper-only, still behind the identical mandate/compliance floor D-071 already
+  requires per destination account
+  ([DEF419](../../defect/_registry/DEF419.row.md)), and a live/production Alpaca
+  account stays strictly read-only, unchanged.
+- **Source**: Saiful, 2026-09-24 — *"During trading, the 'destination' AMI, Alpaca,
+  both, only appears when 'market' is selected. Everything else does not show it.
+  Fix it please."* The cause was structural, not cosmetic: CR227's round-1 audit
+  found `AlpacaClient.submitOrder()` silently converted any LIMIT/STOP ticket
+  routed to Alpaca into an immediate market fill, so CR227's fix was to hide the
+  destination picker for every non-market order type rather than build the real
+  thing. This decision is that follow-through — `submitOrder()` now builds the
+  actual Alpaca order (limit/stop/stop_limit fields, an optional bracket via
+  Alpaca's `order_class: bracket`) instead of refusing, so the destination lock
+  no longer needs to cover order type.
+- **What did NOT change, and this is the point of writing it down.** Paper-only
+  (D-071's `isAlpacaPaperHost` check is untouched and still re-verified inside
+  `submitOrder()` independent of the caller). The mandate/compliance floor still
+  gates every destination identically — the Alpaca-leg preview
+  (`POST /v1/sim/preview`) is now sized at the order's own named price
+  (limit/trigger) the same way AMI's own preview sizes a resting order, rather
+  than always at the live mark, but the floor itself is unchanged. The cover-a-
+  short and sell-from-holding entry paths stay AMI-Sim-only — that lock was
+  always about AMI's own position sizes not translating to Alpaca's independent
+  holdings, unrelated to order type, and this decision does not touch it. A type
+  or price relationship Alpaca could not take is still refused loudly by the
+  client (`validateAlpacaOrder`, mirroring
+  [DEF312](../../defect/_registry/DEF312.row.md)/[DEF377](../../defect/_registry/DEF377.row.md)'s
+  wrong-side-bracket rule) — never silently converted or dropped, the same CR227
+  Non-goals principle applied to the wider order-type surface.
+- **Known gap, not closed by this decision**: `POST /v1/sim/preview`'s backend
+  handler forwards `limit_price` to `SimEngine.preview()` but that method has no
+  `trigger_price`/`stop`/`target` parameters at all today — a STOP/STOP_LIMIT
+  Alpaca-leg preview still sizes against the live mark, not the stop price, and
+  preview runs no bracket-validity check (only `submit_trade`'s path does). Mobile
+  sends `trigger_price` on the wire regardless (harmless — `SubmitTradeRequest`
+  has no `extra="forbid"`), forwards-compatible with a future backend fix, but
+  nothing should assume it is honoured server-side yet. A backend follow-up CR is
+  needed to close this; out of scope for this mobile-only change.
+- **Rationale**: the regulatory boundary D-004/D-071 protect (real capital, real
+  execution venues, advice liability) is about the account being paper vs. live,
+  not about which order types a paper simulator accepts — Alpaca's own paper API
+  natively supports all of these. Restricting order type was a stopgap forced by
+  an unfinished client, not a deliberate compliance boundary; closing that gap is
+  the fix CR227's own round-1 audit already called for.
+- **Supersedes (partial)**: [D-071](#d-071--paper-only-brokerage-order-routing-is-permitted-narrow-partial-amendment-of-d-004d-069)'s
+  "market orders only" language and CR227's Non-goals ("No resting/limit/stop
+  orders on the Alpaca leg... AMI's LIMIT/STOP/STOP_LIMIT tickets remain
+  AMI-sim-only until a follow-up CR designs the cross-system resting-order
+  story") — this is that follow-up CR. Every other part of D-071 (paper-only,
+  identical mandate floor, device-local credentials, no live account support) is
+  unchanged and not superseded.
+- **Affects**: [`CLAUDE.md`](../../../CLAUDE.md) is not changed by this decision —
+  its decision-pointer table already states the D-071 narrowing at the level of
+  "a linked paper brokerage account... may receive market orders," which this
+  decision widens; the table row is left as-is since it does not enumerate order
+  types. Filed as
+  [CR233](../../forward_planning/CR233_alpaca_order_types/CR233_alpaca_order_types.md).

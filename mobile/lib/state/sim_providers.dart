@@ -191,10 +191,33 @@ class SimNotifier extends StateNotifier<SimState> {
   /// `account` field, so the mandate is sized against THAT account (the
   /// Alpaca paper account, when the caller passes one) instead of the AMI sim
   /// portfolio. Omitted keeps today's behaviour.
+  ///
+  /// CR233 — [orderType]/[limitPrice] are forwarded too, so a resting
+  /// order's Alpaca-leg preview sizes cash sufficiency at the order's own
+  /// named price the same way AMI's own preview does for a resting order,
+  /// rather than always at the live mark. Defaults to `market`/`null`,
+  /// byte-identical to pre-CR233 behaviour.
+  ///
+  /// **Known backend gap, not fixed here (mobile-only change) — see
+  /// `trigger_price`.** `POST /v1/sim/preview`'s handler forwards
+  /// `limit_price` to `SimEngine.preview()` but not `trigger_price` (that
+  /// engine method has no `trigger_price` parameter at all today — only
+  /// `submit_trade`'s call path does), so a STOP/STOP_LIMIT Alpaca-leg
+  /// preview is still sized against the live mark, not the stop price, and
+  /// preview carries no `stop`/`target` bracket-validity check either
+  /// (`submit_trade` validates the bracket; `preview_trade` does not size or
+  /// validate one at all). `triggerPrice` is still sent on the wire below —
+  /// forwards-compatible with a future backend fix, and Pydantic accepts the
+  /// extra field harmlessly today (`SubmitTradeRequest` has no
+  /// `extra="forbid"`) — but nothing on the client should assume it is
+  /// currently honoured server-side.
   Future<SimPreviewResult?> preview({
     required String ticker,
     required String side,
     required double quantity,
+    SimOrderType orderType = SimOrderType.market,
+    double? limitPrice,
+    double? triggerPrice,
     String? verdictRef,
     Map<String, dynamic>? account,
   }) async {
@@ -206,6 +229,9 @@ class SimNotifier extends StateNotifier<SimState> {
         ticker: ticker,
         side: side,
         quantity: quantity,
+        orderType: orderType.wire,
+        limitPrice: limitPrice,
+        triggerPrice: triggerPrice,
         verdictRef: verdictRef,
         account: account,
       );
