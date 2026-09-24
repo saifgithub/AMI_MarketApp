@@ -32,6 +32,7 @@ from app.core.config import settings
 from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.classification import ClassificationVerdict
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
+from app.schemas.liquidity import LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
@@ -407,6 +408,10 @@ class ComplianceBlock(BaseModel):
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
     classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)
+    # DEF417: the `liquid_only` flag's sourced verdict, same reasoning as the two
+    # fields above — a field that only exists on the service object never reaches
+    # the client.
+    liquidity_verdict: LiquidityVerdict | None = None
     # CR171 §6 — informational notices on a trade that PROCEEDS. Declared here
     # for the same reason the two verdict fields are: a field that only exists
     # on the service object is a field the client never receives, and an
@@ -711,6 +716,7 @@ async def preview_trade(
             blocked_by=pv.compliance.blocked_by,
             sharia_verdict=pv.compliance.sharia_verdict,
             classification_verdicts=pv.compliance.classification_verdicts,
+            liquidity_verdict=pv.compliance.liquidity_verdict,
         ),
         fill_price=pv.fill_price,
         notional=pv.notional,
@@ -922,6 +928,12 @@ def _compliance_json(compliance) -> dict:
         "classification_verdicts": [
             v.model_dump(mode="json") for v in compliance.classification_verdicts
         ],
+        # DEF417 — same `getattr` reasoning as `advisories` below: the games
+        # lane's compliance object has no liquidity_verdict concept either.
+        "liquidity_verdict": (
+            compliance.liquidity_verdict.model_dump(mode="json")
+            if getattr(compliance, "liquidity_verdict", None) is not None else None
+        ),
         # CR171 §6. `getattr` because this dict is also built from the games
         # lane's compliance object, which has no advisories concept.
         "advisories": list(getattr(compliance, "advisories", []) or []),

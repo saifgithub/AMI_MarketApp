@@ -274,7 +274,10 @@ def test_flags_off_is_a_noop(base_mandate: Mandate):
 
 
 def _fetcher_ok():
-    return (_CLASSIFIED, _FOSSIL, _SIN, _DEFENSE, date(2026, 7, 25))
+    # DEF417: the fetcher contract grew two trailing maps (market_caps,
+    # avg_volumes) — empty here since this fixture only exercises fossil/sin/
+    # esg_lite classification, not liquidity.
+    return (_CLASSIFIED, _FOSSIL, _SIN, _DEFENSE, date(2026, 7, 25), {}, {})
 
 
 def test_provider_disabled_pauses_without_fetch():
@@ -299,7 +302,7 @@ def test_provider_enabled_loads_and_resolves():
 def test_provider_stale_row_pauses():
     p = ClassificationUniverseProvider(
         hold_window_days=40, enabled=True,
-        fetcher=lambda: (_CLASSIFIED, _FOSSIL, _SIN, _DEFENSE, date(2026, 1, 1)),
+        fetcher=lambda: (_CLASSIFIED, _FOSSIL, _SIN, _DEFENSE, date(2026, 1, 1), {}, {}),
     )
     u = p.get(now=date(2026, 7, 26))  # classify date 200+ days old > 40-day window
     assert u.stale

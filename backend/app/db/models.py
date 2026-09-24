@@ -1365,6 +1365,19 @@ class ClassificationUniverseSnapshotRow(Base):
     # (and the migration's back-fill) read as an empty map; a ticker absent from it
     # resolves to "Other" (disclosed, never blocking — the DEF059 inversion guard).
     sectors: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
+    # DEF417: per-ticker liquidity figures captured from the SAME `info` dict the
+    # sector/fossil/sin classifier already reads — `marketCap` (USD, stored in USD
+    # MILLIONS to match `sectors`' sibling numeric fields elsewhere in the app) and
+    # `averageVolume` (shares/day; NOT a dollar figure — the classify pass has no
+    # live price, so dollar volume is derived at resolve time against the caller's
+    # own quote, in `ClassificationUniverse.resolve_liquidity()`). Feeds the
+    # `liquid_only` mandate flag's enforcement in
+    # `safety_floor.check_mandate_compliance()`. Nullable so pre-DEF417 rows read as
+    # empty maps; a ticker absent from either resolves that figure to unknown
+    # (UNKNOWN overall if BOTH are absent — permitted + disclosed, never blocking —
+    # the DEF059 inversion guard).
+    market_caps: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
+    avg_volumes: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
 
 
 class TickerReferenceRow(Base):
