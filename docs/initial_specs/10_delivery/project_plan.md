@@ -27,14 +27,16 @@ Where we are right now (as of 2026-07-12, end of AT:R54 — **470 commits, 590 b
 
 ## Delivery status — Alpha snapshot
 
+**Status as of 2026-09-24** — Latest Alpha tag `alpha-2026-09-25-1`. Build 0.1.0+109 on TestFlight and Play internal testing.
+
 Alpha (A1–A29, plus A6b pulled forward from MVP M4):
 - **✅ Done**: A1, A2, **A6**, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 16 items (A6 closed AT:R29 with Phase 3 JWKS verification).
-- **⚡ Partial**: A3, A21, A22, A28, A29, **A6b** — 6 items (**A17 left this list 2026-07-29** — it was never partial; see its row) (A3 SMTP wired but DNS pending; A6b AT:R36 code landed; GCP OAuth Web client_id + Android client + upload keystore all created AT:R39 and `alpha-2026-05-24-1` carries the backend; awaits Play Console approval + first AAB upload; others: mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
-- **⏳ Blocked on external**: A13, A15 — 2 items (TTS, OneSignal+APNs).
-- **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of A3/A13/A15).
+- **⚡ Partial**: A3, A21, A22, A28, A29, **A6b** — 6 items (**A17 left this list 2026-07-29** — it was never partial; see its row) (A3 SMTP wired but DNS pending; A6b AT:R36 code landed; GCP OAuth Web client_id + Android client + upload keystore all created AT:R39 and `alpha-2026-05-24-1` carries the backend; awaits Play Console approval + first AAB upload; A15/A16 push notifications work end-to-end — CR027 audited COMPLETE 2026-08-01, CR193 console validated 2026-08-19 with real delivery on Android; others: mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
+- **⏳ Blocked on external**: A13 — 1 item (TTS provider account).
+- **◯ Unstarted**: A4, A5, A14 — 3 items (all downstream of A3/A13).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
-**Alpha is ~77% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, Google OAuth, legal copy, Play Console identity verification) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward and code landed AT:R36; M1 partial because CR039 pulled its entitlement half forward AT:R60).
+**Alpha is ~79% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS provider, legal copy, device matrix verification) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward and code landed AT:R36; M1 partial because CR039 pulled its entitlement half forward AT:R60).
 
 **Status legend** (used in every table below): `✅ done` · `⚡ partial` · `⏳ blocked` · `◯ unstarted` · `✖ superseded`. AT:R\<N\> tags in the status cell point to the session that delivered it — cross-reference with `git log` + the newest [.deliveryos/checkpoint_history/](../../../.deliveryos/checkpoint_history/) memo / [history/](../../../history/) (the `HANDOVER_*` docs were retired in CR097).
 
