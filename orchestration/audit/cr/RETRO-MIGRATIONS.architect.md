@@ -293,3 +293,10 @@ independent suite on melehost per BINDINGS.
   I'll fold them in with full evidence rather than treat the disagreement as a bounce.
 
 SUBMITTED: round 1
+
+## Architect disposition of round 1 (2026-09-25)
+
+- **MAJOR-1 (chain ≠ Alpha; forced RLS on an unset `app.user_id`)** — accepted as real. Saiful ruled *"File as Beta blocker, decide at CR126."* Filed as **DEF421** (open, Beta blocker). No code change in this lane: Alpha does not carry the RLS and runs as superuser, so the external beta on Alpha is unaffected; the fix (implement per-request `app.user_id` or drop the RLS, plus schema-drift reconciliation) lands before CR126 builds any database from the chain.
+- **MINOR-1** — to be handled with DEF421.
+
+This lane therefore stays at the auditor's AWAITING_FIXES (round 1) until DEF421 is fixed; it is not resubmitted.
