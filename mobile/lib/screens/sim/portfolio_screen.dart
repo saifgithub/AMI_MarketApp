@@ -35,15 +35,19 @@ import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/widgets/alpaca/alpaca_account_card.dart';
+import 'package:ami_trade/widgets/alpaca/alpaca_position_card.dart';
+import 'package:ami_trade/widgets/sim/alpaca_orders_section.dart';
+import 'package:ami_trade/widgets/sim/position_card.dart';
 import 'package:ami_trade/widgets/sim/resting_orders_section.dart';
 import 'package:ami_trade/widgets/sim/option_positions_section.dart';
 import 'package:ami_trade/widgets/sim/short_positions_section.dart';
+import 'package:ami_trade/widgets/sim/value_card.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -220,6 +224,9 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
         ref.invalidate(alpacaLinkedProvider);
         ref.invalidate(alpacaPortfolioProvider);
         ref.invalidate(alpacaPositionsProvider);
+        // CR234 — Orders/History's Alpaca sections.
+        ref.invalidate(alpacaOpenOrdersProvider);
+        ref.invalidate(alpacaClosedOrdersProvider);
       },
       child: Column(
         children: [
@@ -232,6 +239,18 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             ),
             child: _ValueCard(key: _valueCardKey, portfolio: p),
           ),
+          // CR234 (scope addition, item 4) — these three counts are AMI-only,
+          // unchanged by the Alpaca group each tab now also renders.
+          // DECIDED, not an oversight: Alpaca's counts come from async
+          // `FutureProvider`s (`alpacaPositionsProvider`/
+          // `alpacaOpenOrdersProvider`/`alpacaClosedOrdersProvider`), so a
+          // combined badge would have to read as "some number, plus maybe
+          // more once Alpaca loads" or silently omit Alpaca's contribution
+          // on every loading/error frame — exactly the kind of quietly-wrong
+          // count CR040 exists to prevent. Each tab already states which
+          // book a row belongs to via the ALPACA PAPER badge immediately
+          // above the Alpaca group, so the split is visible without the
+          // badge number itself having to carry it.
           _PortfolioTabBar(
             watchlistTabKey: _watchlistTabKey,
             selected: _selectedTab,
@@ -281,6 +300,10 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
   }
 }
 
+/// CR234 — now built on the shared `ValueCard` shell
+/// (`widgets/sim/value_card.dart`) so AMI's own card and Alpaca's account
+/// card render from one component; every fact and every threshold below is
+/// unchanged from the pre-CR234 version.
 class _ValueCard extends StatelessWidget {
   const _ValueCard({super.key, required this.portfolio});
   final SimPortfolio portfolio;
@@ -295,141 +318,126 @@ class _ValueCard extends StatelessWidget {
       '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
       '(${pnlPct >= 0 ? '+' : ''}${pnlPct.toStringAsFixed(2)}%)',
     );
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.sheet),
-        border: Border.all(color: AmiColors.slate700),
+    return ValueCard(
+      title: AppLocalizations.of(context).portfolioTotalValue,
+      titleColor: AmiColors.hexCyan,
+      trailing: _QuoteSourcePill(portfolio: portfolio),
+      // CR014/D3: count-up on change, unchanged — `ValueCard.headline` is a
+      // widget slot rather than a plain string precisely so this animation
+      // stays owned by the caller instead of being flattened into a string.
+      headline: TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: portfolio.totalValue),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, _) => Text('\$${fmt.format(value)}',
+            maxLines: 1,
+            style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(AppLocalizations.of(context).portfolioTotalValue,
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.hexCyan)),
-              const Spacer(),
-              _QuoteSourcePill(portfolio: portfolio),
-            ],
-          ),
+      extra: [
+        const SizedBox(height: AmiSpacing.s),
+        Row(
+          children: [
+            Icon(
+              pnl >= 0 ? Icons.trending_up : Icons.trending_down,
+              color: accent,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            // CR120/§9 acceptance 9 — a bare Text here has no width bound; a
+            // Spacer only claims leftover space, it does not shrink its
+            // siblings, so a long P&L run (or 1.15 text scale) overflowed
+            // the row instead of clipping cleanly. Flexible + ellipsis
+            // keeps this row from ever throwing a RenderFlex error.
+            Flexible(
+              child: Text(
+                pnlText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AmiTypography.statSmall.copyWith(color: accent),
+              ),
+            ),
+            const SizedBox(width: AmiSpacing.s),
+            Text(AppLocalizations.of(context).portfolioCash,
+                style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '\$${fmt.format(portfolio.currentCash)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: AmiTypography.statSmall,
+              ),
+            ),
+          ],
+        ),
+        // CR170 §6 — cash the resting book has spoken for. Shown only when
+        // there IS a book: on a portfolio with no working orders, COMMITTED
+        // $0 / AVAILABLE $x is two labels restating the cash figure directly
+        // above them.
+        if (portfolio.restingOrderCount > 0) ...[
           const SizedBox(height: AmiSpacing.xs),
-          // CR014/D3: count-up on change. No `begin` ⇒ no sweep on first open;
-          // a changed total animates from the previous frame's value.
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(end: portfolio.totalValue),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, _) => Text('\$${fmt.format(value)}',
-                style:
-                    AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
-          ),
-          const SizedBox(height: AmiSpacing.s),
           Row(
             children: [
-              Icon(
-                pnl >= 0 ? Icons.trending_up : Icons.trending_down,
-                color: accent,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              // CR120/§9 acceptance 9 — a bare Text here has no width bound;
-              // a Spacer only claims leftover space, it does not shrink its
-              // siblings, so a long P&L run (or 1.15 text scale) overflowed
-              // the row instead of clipping cleanly. Flexible + ellipsis
-              // keeps this row from ever throwing a RenderFlex error.
-              Flexible(
-                child: Text(
-                  pnlText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AmiTypography.statSmall.copyWith(color: accent),
-                ),
-              ),
-              const SizedBox(width: AmiSpacing.s),
-              Text(AppLocalizations.of(context).portfolioCash,
+              Text(AppLocalizations.of(context).portfolioCashCommitted,
                   style: AmiTypography.labelMono.copyWith(fontSize: 10)),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  '\$${fmt.format(portfolio.currentCash)}',
+                  '\$${fmt.format(portfolio.cashCommitted)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmiTypography.caption
+                      .copyWith(color: AmiColors.hexCyan),
+                ),
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              Text(AppLocalizations.of(context).portfolioCashAvailable,
+                  style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '\$${fmt.format(portfolio.cashAvailable)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
-                  style: AmiTypography.statSmall,
+                  style: AmiTypography.caption.copyWith(
+                    color: portfolio.isOverCommitted
+                        ? AmiColors.hexAmber
+                        : AmiColors.textHigh,
+                  ),
                 ),
               ),
             ],
           ),
-          // CR170 §6 — cash the resting book has spoken for. Shown only when
-          // there IS a book: on a portfolio with no working orders, COMMITTED
-          // $0 / AVAILABLE $x is two labels restating the cash figure directly
-          // above them.
-          if (portfolio.restingOrderCount > 0) ...[
-            const SizedBox(height: AmiSpacing.xs),
-            Row(
-              children: [
-                Text(AppLocalizations.of(context).portfolioCashCommitted,
-                    style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    '\$${fmt.format(portfolio.cashCommitted)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AmiTypography.caption
-                        .copyWith(color: AmiColors.hexCyan),
-                  ),
-                ),
-                const SizedBox(width: AmiSpacing.s),
-                Text(AppLocalizations.of(context).portfolioCashAvailable,
-                    style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    '\$${fmt.format(portfolio.cashAvailable)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: AmiTypography.caption.copyWith(
-                      color: portfolio.isOverCommitted
-                          ? AmiColors.hexAmber
-                          : AmiColors.textHigh,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // The server deliberately does not floor `cash_available` at zero,
-            // so that this state is reachable and visible rather than hidden
-            // behind a clamp. Saying nothing here would waste that.
-            if (portfolio.isOverCommitted) ...[
-              const SizedBox(height: AmiSpacing.xs),
-              Text(
-                AppLocalizations.of(context).portfolioOverCommitted(
-                  fmt.format(portfolio.cashAvailable.abs()),
-                ),
-                style:
-                    AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
-              ),
-            ],
-          ],
-          if (portfolio.drawdownPct > 0) ...[
+          // The server deliberately does not floor `cash_available` at zero,
+          // so that this state is reachable and visible rather than hidden
+          // behind a clamp. Saying nothing here would waste that.
+          if (portfolio.isOverCommitted) ...[
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              AppLocalizations.of(context).portfolioDrawdown(
-                portfolio.drawdownPct.toStringAsFixed(1),
+              AppLocalizations.of(context).portfolioOverCommitted(
+                fmt.format(portfolio.cashAvailable.abs()),
               ),
-              style: AmiTypography.caption.copyWith(
-                color: portfolio.drawdownPct > 20
-                    ? AmiColors.hexAmber
-                    : AmiColors.textLow,
-              ),
+              style:
+                  AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
             ),
           ],
         ],
-      ),
+        if (portfolio.drawdownPct > 0) ...[
+          const SizedBox(height: AmiSpacing.xs),
+          Text(
+            AppLocalizations.of(context).portfolioDrawdown(
+              portfolio.drawdownPct.toStringAsFixed(1),
+            ),
+            style: AmiTypography.caption.copyWith(
+              color: portfolio.drawdownPct > 20
+                  ? AmiColors.hexAmber
+                  : AmiColors.textLow,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -646,7 +654,13 @@ class _NewTraderHint extends StatelessWidget {
 /// position-level level — blended across live lots, server-derived off the same
 /// `blended_bracket` the sweep fires on. Its absence is information too: a
 /// position with no stop shows no chip, and says so when opened.
-class _HoldingCard extends StatefulWidget {
+///
+/// CR234 — the visual SHELL (ticker/subtitle/chip/pct/chevron/expand) moved
+/// to `PositionCard` (`widgets/sim/position_card.dart`) so Alpaca's own
+/// positions render from the same component rather than a bare-text fork.
+/// This widget now only supplies AMI-specific facts (mark/value/pnl,
+/// stop+target distance, the sell/per-lot actions) into that shell.
+class _HoldingCard extends StatelessWidget {
   const _HoldingCard({required this.holding, this.committed = 0});
   final SimHolding holding;
 
@@ -654,15 +668,8 @@ class _HoldingCard extends StatefulWidget {
   final double committed;
 
   @override
-  State<_HoldingCard> createState() => _HoldingCardState();
-}
-
-class _HoldingCardState extends State<_HoldingCard> {
-  bool _open = false;
-
-  @override
   Widget build(BuildContext context) {
-    final h = widget.holding;
+    final h = holding;
     final l = AppLocalizations.of(context);
     final pnl = h.unrealisedPnl;
     final pct =
@@ -670,67 +677,15 @@ class _HoldingCardState extends State<_HoldingCard> {
     final accent = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
     final fmt = NumberFormat('#,##0.00');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: InkWell(
-        onTap: () => setState(() => _open = !_open),
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AmiSpacing.m,
-            vertical: AmiSpacing.s,
-          ),
-          decoration: BoxDecoration(
-            color: AmiColors.slate800,
-            borderRadius: BorderRadius.circular(AmiRadii.card),
-            border: Border.all(
-              color: _open ? AmiColors.hexCyan.withValues(alpha: 0.45)
-                           : AmiColors.slate700,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  SizedBox(
-                    width: 66,
-                    child: Text(h.ticker,
-                        style: AmiTypography.statMid
-                            .copyWith(color: AmiColors.textHigh)),
-                  ),
-                  Expanded(
-                    child: Text(
-                      '${h.quantity.toStringAsFixed(0)} sh · \$${fmt.format(h.avgCost)}',
-                      style: AmiTypography.caption,
-                    ),
-                  ),
-                  if (h.stop != null) ...[
-                    HexChip(
-                      label:
-                          '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)}',
-                      color: AmiColors.hexAmber,
-                      variant: HexChipVariant.tinted,
-                      fontSize: 10,
-                    ),
-                    const SizedBox(width: AmiSpacing.s),
-                  ],
-                  Text(
-                    _isolateNumeric(
-                      '${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%',
-                    ),
-                    style: AmiTypography.labelMono
-                        .copyWith(color: accent, fontSize: 12),
-                  ),
-                  Icon(_open ? Icons.expand_more : Icons.chevron_right,
-                      color: AmiColors.textLow, size: 18),
-                ],
-              ),
-              if (_open) ..._detail(context, h, l, fmt, accent, pnl),
-            ],
-          ),
-        ),
-      ),
+    return PositionCard(
+      ticker: h.ticker,
+      subtitle: '${h.quantity.toStringAsFixed(0)} sh · \$${fmt.format(h.avgCost)}',
+      pctChange: pct,
+      stopLabel: h.stop == null
+          ? null
+          : '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)}',
+      detailBuilder: (context) =>
+          _detail(context, h, l, fmt, accent, pnl),
     );
   }
 
@@ -783,9 +738,9 @@ class _HoldingCardState extends State<_HoldingCard> {
       if (!h.isProtected)
         Text(l.positionUnprotected,
             style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
-      if (widget.committed > 0)
+      if (committed > 0)
         Text(
-          l.portfolioSharesCommitted(widget.committed.toStringAsFixed(0)),
+          l.portfolioSharesCommitted(committed.toStringAsFixed(0)),
           style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
         ),
       const SizedBox(height: AmiSpacing.s),
@@ -1267,6 +1222,12 @@ class _OrdersTab extends ConsumerWidget {
           padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
           sliver: SliverToBoxAdapter(child: RestingOrdersSection()),
         ),
+        // CR234 — Alpaca's own open orders, alongside AMI's resting book
+        // above. Renders nothing when no Alpaca account is linked.
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+          sliver: SliverToBoxAdapter(child: AlpacaOpenOrdersSection()),
+        ),
       ],
     );
   }
@@ -1629,6 +1590,12 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
               ),
             ),
           ),
+          // CR234 — a user with zero AMI trades can still have Alpaca order
+          // history; the empty-AMI-history state must not hide it.
+          const SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+            sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
+          ),
         ],
       );
     }
@@ -1709,6 +1676,13 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
               ),
             ),
           ),
+        // CR234 — recently-closed Alpaca orders (filled/cancelled/expired),
+        // its own section so a limit order that just filled is visible here
+        // rather than nowhere. Renders nothing when unlinked or empty.
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+          sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AmiSpacing.m,
@@ -1901,6 +1875,9 @@ class _JournalPointer extends ConsumerWidget {
 
 // ── Alpaca paper portfolio section (AT:R45) ────────────────────────────
 
+/// CR234 — the Alpaca group inside the Positions tab, now built on the same
+/// shared components (`ValueCard`, `PositionCard`, `AlpacaBadge`) AMI's own
+/// account/positions use, in place of the pre-CR234 bespoke text rows.
 class _AlpacaPortfolioSection extends ConsumerWidget {
   const _AlpacaPortfolioSection();
 
@@ -1912,66 +1889,14 @@ class _AlpacaPortfolioSection extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (linked) {
         if (!linked) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AmiSpacing.l),
-            Row(
-              children: [
-                Text('ALPACA PAPER', style: AmiTypography.labelMono),
-                const SizedBox(width: AmiSpacing.s),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AmiColors.hexGreen,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AmiSpacing.s),
-            _AlpacaAccountSummary(),
-            const SizedBox(height: AmiSpacing.s),
-            _AlpacaPositionsList(),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AlpacaAccountSummary extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final portfolioAsync = ref.watch(alpacaPortfolioProvider);
-    return portfolioAsync.when(
-      loading: () => const LinearProgressIndicator(
-        backgroundColor: AmiColors.slate800,
-        color: AmiColors.hexCyan,
-      ),
-      error: (_, __) => Text(
-        'Could not load Alpaca account',
-        style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
-      ),
-      data: (p) {
-        final fmt = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
-        return Container(
-          padding: const EdgeInsets.all(AmiSpacing.m),
-          decoration: BoxDecoration(
-            color: AmiColors.glassChrome,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AmiColors.slate700),
-          ),
-          child: Row(
-            children: [
-              _AlpacaStat(label: 'CASH', value: fmt.format(p.cash)),
-              const SizedBox(width: AmiSpacing.m),
-              _AlpacaStat(
-                  label: 'PORTFOLIO', value: fmt.format(p.portfolioValue)),
-              const SizedBox(width: AmiSpacing.m),
-              _AlpacaStat(
-                  label: 'BUYING PWR', value: fmt.format(p.buyingPower)),
+        return Padding(
+          padding: const EdgeInsets.only(top: AmiSpacing.l),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              _AlpacaAccountSummary(),
+              SizedBox(height: AmiSpacing.s),
+              _AlpacaPositionsList(),
             ],
           ),
         );
@@ -1980,29 +1905,30 @@ class _AlpacaAccountSummary extends ConsumerWidget {
   }
 }
 
-class _AlpacaStat extends StatelessWidget {
-  const _AlpacaStat({required this.label, required this.value});
-  final String label;
-  final String value;
+class _AlpacaAccountSummary extends ConsumerWidget {
+  const _AlpacaAccountSummary();
 
   @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: AmiTypography.caption.copyWith(color: AmiColors.slate500)),
-          Text(value,
-              style:
-                  AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
-        ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final portfolioAsync = ref.watch(alpacaPortfolioProvider);
+    return portfolioAsync.when(
+      loading: () => const LinearProgressIndicator(
+        backgroundColor: AmiColors.slate800,
+        color: AmiColors.hexCyan,
       ),
+      // CR040 — a visible error, never a silently-missing account card.
+      error: (_, __) => Text(
+        'Could not load Alpaca account',
+        style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
+      ),
+      data: (p) => AlpacaAccountCard(portfolio: p),
     );
   }
 }
 
 class _AlpacaPositionsList extends ConsumerWidget {
+  const _AlpacaPositionsList();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final positionsAsync = ref.watch(alpacaPositionsProvider);
@@ -2017,51 +1943,11 @@ class _AlpacaPositionsList extends ConsumerWidget {
           );
         }
         return Column(
-          children:
-              positions.map((p) => _AlpacaPositionTile(position: p)).toList(),
+          children: positions
+              .map((p) => AlpacaPositionCard(position: p))
+              .toList(),
         );
       },
-    );
-  }
-}
-
-class _AlpacaPositionTile extends StatelessWidget {
-  const _AlpacaPositionTile({required this.position});
-  final AlpacaPosition position;
-
-  @override
-  Widget build(BuildContext context) {
-    final pl = position.unrealizedPl;
-    final plColor = pl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
-    final plSign = pl >= 0 ? '+' : '';
-    final fmt = NumberFormat.currency(symbol: r'$', decimalDigits: 0);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              position.symbol,
-              style:
-                  AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
-            ),
-          ),
-          Text(
-            '×${position.qty.toStringAsFixed(position.qty == position.qty.floorToDouble() ? 0 : 2)}',
-            style: AmiTypography.caption.copyWith(color: AmiColors.slate500),
-          ),
-          const SizedBox(width: AmiSpacing.s),
-          Text(
-            fmt.format(position.marketValue),
-            style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
-          ),
-          const SizedBox(width: AmiSpacing.s),
-          Text(
-            '$plSign${fmt.format(pl)}',
-            style: AmiTypography.caption.copyWith(color: plColor),
-          ),
-        ],
-      ),
     );
   }
 }

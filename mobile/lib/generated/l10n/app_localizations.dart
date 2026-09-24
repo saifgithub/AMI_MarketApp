@@ -4984,6 +4984,60 @@ abstract class AppLocalizations {
   /// **'No open positions'**
   String get alpacaNoPositions;
 
+  /// CR234 — empty state when the linked Alpaca account has no open orders (as opposed to the section not rendering at all when no account is linked). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No open Alpaca orders'**
+  String get alpacaOrdersNone;
+
+  /// CR234 — CR040 degrade-loudly row shown when the Alpaca open-orders fetch fails; must never render as an empty list, which would read as 'no orders'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load Alpaca orders'**
+  String get alpacaOrdersLoadError;
+
+  /// CR234 — CR040 degrade-loudly row shown when the Alpaca closed-orders fetch fails. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load Alpaca order history'**
+  String get alpacaHistoryLoadError;
+
+  /// CR234 — confirm-dialog title before cancelling a resting Alpaca order. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this Alpaca order?'**
+  String get alpacaOrderCancelTitle;
+
+  /// CR234 — confirm-dialog body naming the order about to be cancelled. Placeholders: side (BUY/SELL, already uppercased), qty (share count as a string), ticker.
+  ///
+  /// In en, this message translates to:
+  /// **'{side} {qty} {ticker} resting at Alpaca will be cancelled.'**
+  String alpacaOrderCancelBody(String side, String qty, String ticker);
+
+  /// CR234 — 'don't cancel' button on the Alpaca order cancel-confirm dialog, matching restingOrderKeep's copy for the AMI equivalent. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'KEEP ORDER'**
+  String get alpacaOrderKeep;
+
+  /// CR234 — 'yes, cancel' button label, and the action button on each cancellable Alpaca order row. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL ORDER'**
+  String get alpacaOrderCancelConfirm;
+
+  /// CR234 — snackbar shown after a successful cancel. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Alpaca order cancelled.'**
+  String get alpacaOrderCancelled;
+
+  /// CR234 — snackbar shown when the DELETE call fails (network error, or Alpaca refused the race — already filled/cancelled). Placeholder: detail, a short human-readable reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel that order — {detail}'**
+  String alpacaOrderCancelFailed(String detail);
+
   /// Short legal disclaimer strip printed on every share card. Simulation-only framing — keep the 'not investment advice' clause in every locale.
   ///
   /// In en, this message translates to:

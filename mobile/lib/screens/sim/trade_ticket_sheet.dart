@@ -30,6 +30,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/alpaca/alpaca_badge.dart' show kAlpacaPaperLabel;
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
 import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
@@ -749,7 +750,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       if (!mounted) return;
       setState(() => _destinationOutcomes = const [
             _DestinationOutcome(
-              label: 'ALPACA PAPER',
+              label: kAlpacaPaperLabel,
               ok: false,
               message: "Couldn't read your Alpaca paper account — "
                   'order not sent.',
@@ -784,7 +785,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     if (preview == null || !preview.accepted) {
       setState(() => _destinationOutcomes = [
             _DestinationOutcome(
-              label: 'ALPACA PAPER',
+              label: kAlpacaPaperLabel,
               ok: false,
               message: preview == null
                   ? 'Could not reach AMI to check this trade.'
@@ -944,7 +945,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       snapshot = await _fetchAlpacaSnapshot();
     } catch (_) {
       return const _DestinationOutcome(
-        label: 'ALPACA PAPER',
+        label: kAlpacaPaperLabel,
         ok: false,
         message: "Couldn't read your Alpaca paper account — order not sent.",
       );
@@ -967,7 +968,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         );
     if (preview == null || !preview.accepted) {
       return _DestinationOutcome(
-        label: 'ALPACA PAPER',
+        label: kAlpacaPaperLabel,
         ok: false,
         message: preview == null
             ? 'Could not reach AMI to check this trade.'
@@ -1080,7 +1081,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           : '${_side.toUpperCase()} ${qty.toStringAsFixed(0)} $typed '
               '— ${order.status}.';
       return _DestinationOutcome(
-        label: 'ALPACA PAPER',
+        label: kAlpacaPaperLabel,
         ok: true,
         message: message,
         note: note,
@@ -1094,7 +1095,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         detail: e.message,
       ));
       return _DestinationOutcome(
-          label: 'ALPACA PAPER', ok: false, message: e.message);
+          label: kAlpacaPaperLabel, ok: false, message: e.message);
     } on AlpacaException catch (e) {
       unawaited(_reportOrderLog(
         typed: typed,
@@ -1104,7 +1105,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         detail: e.detail,
       ));
       return _DestinationOutcome(
-          label: 'ALPACA PAPER', ok: false, message: e.detail);
+          label: kAlpacaPaperLabel, ok: false, message: e.detail);
     } catch (_) {
       unawaited(_reportOrderLog(
         typed: typed,
@@ -1114,7 +1115,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         detail: 'network error',
       ));
       return const _DestinationOutcome(
-          label: 'ALPACA PAPER', ok: false, message: 'Network error.');
+          label: kAlpacaPaperLabel, ok: false, message: 'Network error.');
     }
   }
 
@@ -1685,7 +1686,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                         accent: AmiColors.hexBlue,
                         options: const [
                           (TradeDestination.amiSim, 'AMI SIM'),
-                          (TradeDestination.alpacaPaper, 'ALPACA PAPER'),
+                          (TradeDestination.alpacaPaper, kAlpacaPaperLabel),
                           (TradeDestination.both, 'BOTH'),
                         ],
                         onChange: (v) => setState(() => _destination = v),

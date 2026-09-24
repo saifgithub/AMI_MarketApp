@@ -8,6 +8,8 @@
 /// alpacaPortfolioProvider / alpacaPositionsProvider — live paper account data.
 /// alpacaSnapshotCacheProvider — the short-lived cache the Room convene and
 ///   1-on-1 message calls read before uploading positions to the backend.
+/// alpacaOpenOrdersProvider / alpacaClosedOrdersProvider — CR234, the Alpaca
+///   halves of Portfolio's Orders/History sections.
 library;
 
 import 'package:ami_trade/models/alpaca.dart';
@@ -27,6 +29,22 @@ final alpacaPortfolioProvider = FutureProvider.autoDispose<AlpacaPortfolio>((ref
 
 final alpacaPositionsProvider = FutureProvider.autoDispose<List<AlpacaPosition>>((ref) async {
   return ref.watch(alpacaClientProvider).positions();
+});
+
+/// CR234 — Alpaca's own OPEN orders (resting, not yet filled/cancelled/
+/// expired), nested so a bracket's stop/target legs come back with their
+/// parent. Feeds the Orders tab's Alpaca section.
+final alpacaOpenOrdersProvider = FutureProvider.autoDispose<List<AlpacaOrder>>((ref) async {
+  return ref.watch(alpacaClientProvider).orders(status: 'open');
+});
+
+/// CR234 — Alpaca's own recently-CLOSED orders (filled / cancelled /
+/// expired / rejected), most-recent-first per Alpaca's own default
+/// ordering. Capped at 50 — History already caps AMI's own transaction log
+/// (`_closedTradeCap`) rather than fetching every trade ever made, same
+/// "view default with data intact server-side" posture.
+final alpacaClosedOrdersProvider = FutureProvider.autoDispose<List<AlpacaOrder>>((ref) async {
+  return ref.watch(alpacaClientProvider).orders(status: 'closed', limit: 50);
 });
 
 /// Supplies the snapshot uploaded with a Room convene or a 1-on-1 turn.

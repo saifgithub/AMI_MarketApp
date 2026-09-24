@@ -50,6 +50,7 @@ class AlpacaPosition {
     required this.qty,
     required this.marketValue,
     required this.unrealizedPl,
+    this.avgEntryPrice,
   });
 
   final String symbol;
@@ -57,11 +58,21 @@ class AlpacaPosition {
   final double marketValue;
   final double unrealizedPl;
 
+  /// CR234 — Alpaca's `avg_entry_price`, so the Portfolio Positions tab can
+  /// show "qty · avg cost" for an Alpaca position the same way it does for
+  /// an AMI holding (`SimHolding.avgCost`), via the shared `PositionCard`.
+  /// Optional/null on a fixture or an older response shape rather than
+  /// defaulting to 0 — 0 would render as a real (wrong) avg cost.
+  final double? avgEntryPrice;
+
   factory AlpacaPosition.fromJson(Map<String, dynamic> j) => AlpacaPosition(
         symbol: (j['symbol'] ?? '') as String,
         qty: alpacaNum(j['qty']),
         marketValue: alpacaNum(j['market_value']),
         unrealizedPl: alpacaNum(j['unrealized_pl']),
+        avgEntryPrice: j['avg_entry_price'] == null
+            ? null
+            : alpacaNum(j['avg_entry_price']),
       );
 
   /// The upload shape the backend accepts (`schemas/alpaca.AlpacaPositionIn`).
@@ -74,7 +85,8 @@ class AlpacaPosition {
 }
 
 /// One Alpaca paper order, as placed by `AlpacaClient.submitOrder` (CR227;
-/// widened to limit/stop/stop_limit/bracket by CR233).
+/// widened to limit/stop/stop_limit/bracket by CR233) or listed/read back by
+/// `AlpacaClient.orders` (CR234).
 ///
 /// Parsed the same tolerant way as the other models here: Alpaca returns
 /// `filled_qty` as a string, and an order accepted-but-not-yet-filled
@@ -88,6 +100,13 @@ class AlpacaOrder {
     required this.qty,
     required this.status,
     this.filledAvgPrice,
+    this.type,
+    this.filledQty,
+    this.limitPrice,
+    this.stopPrice,
+    this.timeInForce,
+    this.submittedAt,
+    this.legs = const [],
   });
 
   final String id;
@@ -96,6 +115,37 @@ class AlpacaOrder {
   final double qty;
   final String status;
   final double? filledAvgPrice;
+
+  /// CR234 — Alpaca's own `type` (`market`/`limit`/`stop`/`stop_limit`),
+  /// read back verbatim rather than re-derived from which price fields are
+  /// present: a stop_limit order carries both `limit_price` and
+  /// `stop_price`, which would be ambiguous with a limit-only or stop-only
+  /// order if inferred instead of read.
+  final String? type;
+
+  /// Alpaca's `filled_qty` — how much of [qty] has actually filled. A
+  /// resting order reports `0`; a partial fill something between `0` and
+  /// [qty]. Distinct from [qty] itself (the ORDERED quantity), so the
+  /// Orders/History rows can show "3 of 10 filled" rather than just "10".
+  final double? filledQty;
+
+  final double? limitPrice;
+  final double? stopPrice;
+
+  /// Alpaca's own time-in-force string (`day`/`gtc`/...), read back as-is —
+  /// see `alpacaTimeInForce`'s docstring for why AMI's GTD tiers both map to
+  /// `gtc` on the way out; this is what comes back in, unchanged.
+  final String? timeInForce;
+
+  final DateTime? submittedAt;
+
+  /// A bracket's child legs (stop-loss / take-profit), present only when
+  /// this order was placed with `order_class: bracket` AND the request that
+  /// fetched it asked for `nested=true` — see `AlpacaClient.orders`'s
+  /// docstring. Each leg is itself an `AlpacaOrder` (Alpaca nests the full
+  /// child-order object, not a stripped-down summary), so a leg's own
+  /// `type`/`status`/prices read the same way the parent's do.
+  final List<AlpacaOrder> legs;
 
   /// CR233 — a market order's own `status` on the response to `POST
   /// /v2/orders` is usually already `filled` (paper fills are near-
@@ -115,6 +165,26 @@ class AlpacaOrder {
         'held',
       }.contains(status.toLowerCase());
 
+  /// CR234 — Orders tab shows OPEN orders; History shows CLOSED ones.
+  /// Alpaca's own order lifecycle names these as the terminal states — a
+  /// cancel request that raced the sweep and lost (`pending_cancel`) is
+  /// still open by this definition, matching how the AMI resting-order book
+  /// treats an in-flight cancel.
+  bool get isClosed => const {
+        'filled',
+        'canceled',
+        'cancelled',
+        'expired',
+        'rejected',
+        'replaced',
+        'done_for_day',
+      }.contains(status.toLowerCase());
+
+  /// CR234 — an Alpaca order can be cancelled while it is still open and not
+  /// already mid-cancel. `pending_cancel` is excluded so the UI does not
+  /// offer a second cancel on top of one already in flight.
+  bool get isCancellable => !isClosed && status.toLowerCase() != 'pending_cancel';
+
   factory AlpacaOrder.fromJson(Map<String, dynamic> j) => AlpacaOrder(
         id: (j['id'] ?? '') as String,
         symbol: (j['symbol'] ?? '') as String,
@@ -123,7 +193,25 @@ class AlpacaOrder {
         status: (j['status'] ?? '') as String,
         filledAvgPrice:
             j['filled_avg_price'] == null ? null : alpacaNum(j['filled_avg_price']),
+        type: j['type'] as String?,
+        filledQty: j['filled_qty'] == null ? null : alpacaNum(j['filled_qty']),
+        limitPrice: j['limit_price'] == null ? null : alpacaNum(j['limit_price']),
+        stopPrice: j['stop_price'] == null ? null : alpacaNum(j['stop_price']),
+        timeInForce: j['time_in_force'] as String?,
+        submittedAt: _parseTime(j['submitted_at']),
+        legs: (j['legs'] as List<dynamic>?)
+                ?.map((e) => AlpacaOrder.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            const [],
       );
+}
+
+/// Tolerant timestamp parse: a missing/garbage field reads as null (unknown
+/// submit time) rather than throwing — the same posture `alpacaNum` takes
+/// for a malformed numeric field.
+DateTime? _parseTime(dynamic v) {
+  if (v == null) return null;
+  return DateTime.tryParse(v.toString());
 }
 
 /// What the device sends with a Room convene / 1-on-1 turn so the agents can

@@ -101,7 +101,15 @@ class AlpacaOrderLogIn(BaseModel):
     side: str = Field(pattern=r"^(buy|sell)$")
     qty: FiniteFloat
     destination: str = Field(pattern=r"^(alpaca_only|both)$")
-    outcome: str = Field(pattern=r"^(submitted|rejected_by_alpaca|refused_client_side)$")
+    # CR234 — `cancelled` added: the device reports a successful cancel of a
+    # resting Alpaca order (via `AlpacaClient.cancelOrder`, mobile-only — see
+    # DEF145's guard test on why this file never names the Alpaca REST path
+    # itself) the same way it reports a submit outcome, so the CR230 audit
+    # table has one place holding every Alpaca order-attempt outcome rather
+    # than submits only.
+    outcome: str = Field(
+        pattern=r"^(submitted|rejected_by_alpaca|refused_client_side|cancelled)$"
+    )
     detail: str | None = Field(default=None, max_length=500)
     alpaca_order_id: str | None = Field(default=None, max_length=64)
     alpaca_status: str | None = Field(default=None, max_length=32)
