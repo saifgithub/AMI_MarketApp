@@ -289,3 +289,162 @@ fed a real-looking value in place of a missing one — CR101-BE2's round-1 BLOCK
 on two call paths it did not reach.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+---
+
+## Round 2 — auditor U68
+
+**SHA audited:** `ae468eff` — the `+112` integration merge, which carries this lane's fix
+(`692f9324`) together with the SECURITY and SIM-OPTIONS round-2 fixes. Detached scratch
+worktree `audit-U68-R2` per DEF159, verified clean after every mutation; my probe files were
+untracked scratch, deleted with the worktree. **Not live yet:** Alpha runs `alpha-2026-09-25-3`
+(`0accfeed`), which does not carry these fixes (they ship in +112). Round 1's live
+measurements (samples=5, grammar enforced) still describe what is running.
+
+I re-ran my own round-1 probes against this tree, not the builder's reproductions of them.
+
+### MAJOR-1 — fixed
+
+`_respawn_run_from_row` now resolves `sim.valuation_snapshot` off-loop before the run and passes
+both values (`room_runner.py:4575-4617`, call at `:4613-4616`). My round-1 respawn probe, re-run against this tree:
+
+```
+PROBE respawn drawn-down user -> status=completed action=REJECT      (round 1: APPROVE)
+```
+
+When the snapshot cannot be read, the run is refused outright and the row is marked `failed` with
+the reason stated, so no verdict of any kind is produced:
+
+```
+PROBE respawn snapshot failure -> status=failed action=None
+      err='respawn abandoned: could not resolve the real portfolio snapshot (marks store unreachable) …'
+```
+
+**Mutation, mine:** removed the two new kwargs from the `self.run(...)` call ->
+`FAILED test_respawn_reads_the_real_portfolio_not_the_run_defaults`, `1 failed, 5 passed`.
+
+### MAJOR-2 — fixed
+
+Holdings are now read on their own; a failure in the sector resolver keeps them
+(`room_runner.py:1787-1840`), and a failure to read the holdings themselves returns `None`, which
+makes the floor block loudly. All three cases, driven:
+
+```
+PROBE sector_map_fails=False -> REJECT ['opening MSFT would exceed the max open positions cap (2) — 2 already held']
+PROBE sector_map_fails=True  -> REJECT ['opening MSFT would exceed the max open positions cap (2) — 2 already held']   (round 1: APPROVE)
+PROBE holdings-read failure  -> REJECT ['max open positions cap is set on the mandate but the caller did not supply holdings — blocked rather than silently skipped (CR040)']
+```
+
+Every consumer of `ctx.sector_holdings` was checked for the new `None`. Two are floor calls
+(`:4054`, `:5827`), where `None` means block. The third is the option-menu share count
+(`:5374`), which falls back to `or ()` — a smaller option budget, which is the safe direction.
+**Mutation, mine:** made the sector-only failure branch return `[]` again ->
+`FAILED test_sector_context_failure_still_blocks_the_max_open_positions_cap`.
+
+The 24-run matrix from round 1 (samples, reply shape, grammar, Risk Officer) still returns
+`REJECT` in every cell on this tree.
+
+### MINOR-1 — fixed
+
+```
+PROBE zero-readable vote (risk 2) -> APPROVE samples=5 approve_votes=0 reformat=1
+PROBE reason: PM: APPROVE. (…) (None of the 5 independent reads requested for this vote were machine-readable; this is a single recovered read, not a vote.)
+```
+
+This is the fix shape I offered: the verdict now says it is not a vote. It still does not apply
+CR228's graded bar to a single recovered read (a risk-2 user above still gets an APPROVE with
+zero readable votes). That is recorded here and not re-raised.
+
+### MINOR-2 — partly fixed; two residuals (MINOR, round 2)
+
+The exact reply I reported now parses as `None`. Two ways still reach the draft APPROVE:
+
+```
+PROBE two-decision draft_then_pass,       reformatter says nothing -> PASS
+PROBE two-decision draft_then_pass,       reformatter says APPROVE -> APPROVE   (reformat_calls=1)
+PROBE two-decision draft_quote_then_pass                           -> APPROVE   (reformat_calls=0)
+PROBE extract quoted-brace-tail        -> APPROVE
+PROBE extract non-action-object-first  -> APPROVE
+```
+
+1. **"Unparseable" is not the same as "fail safe" on this path.** A reply that parses as `None`
+   goes to DEF058's reformat retry. DEF067 lets that retry *upgrade* to APPROVE and never
+   downgrade, so the model's second read decides the conflict, and only in the APPROVE
+   direction. My round-1 suggestion ("treat as unparseable") caused this, so the fault is
+   partly mine. **Fix:** on a detected conflict, return a PASS directly with the conflict
+   disclosed, rather than `None`.
+2. **`_extract_second_decision` looks only at the first `{` after the first object**
+   (`llm_json.py:95-102`). A stray brace in prose, or a non-decision object placed first, hides
+   the conflicting decision behind it. The stray-brace case is DEF398's own measured shape (the
+   PM quoting "begin with '{' and end with '}'"). **Fix:** scan every object in the tail, not
+   just the first one.
+
+The floor still judges every one of these APPROVEs, and live grammar enforcement makes a
+two-object reply unreachable today. Hence MINOR.
+**Mutation, mine:** disabled the conflict check -> 2 failed
+(`test_a_retracted_draft_approve…`, `test_two_conflicting_decisions…`).
+
+### MINOR-3 (round 2, new) — the new respawn-failure path keeps the user's credits
+
+The fix's new branch marks the row `failed` and returns without refunding. The same PROBE as
+above:
+
+```
+PROBE respawn snapshot failure -> status=failed … refunded=0 (credit_cost 3)
+```
+
+Credits are charged when the run first starts. Every other failure inside `run()` refunds them
+(`room_runner.py:6074-6090`, CR039). This new branch does not, and neither does
+`_sweep_stuck_runs`' retry-exhausted `failed`, which the fix cites as its model (a pre-existing
+gap). The path needs a double failure, so it is rare. **Fix:** refund `row.credit_cost` on both
+paths.
+
+### Evidence, run bare in the pinned worktree
+
+```
+pytest test_retro_pm_floor_round2.py -q -p no:cacheprovider                 6 passed
+pytest <round-1's 14 files> + test_retro_pm_floor_round2.py                 (in the full suite below)
+```
+
+Full unit suite at `ae468eff`. The melehost part ran in a throwaway container from the Alpha image,
+3 shards on tmpfs. The 5 files that need `git` ran on the Mac. All runs bare, exit codes read directly:
+
+```
+melehost s0   1 failed, 2126 passed, 2 skipped    EXIT=1   test_def200_ratchet.py::test_no_new_handler_blocks_the_event_loop
+melehost s1   2669 passed, 3 skipped              EXIT=0
+melehost s2   1 failed, 2013 passed, 4 skipped    EXIT=1   test_def247_displaced_stance_envelope.py::test_a_displaced_envelope_is_still_reported
+Mac (5 git-dependent files)  34 passed            EXIT=0
+total         6842 passed, 2 failed, 9 skipped
+```
+
+I diagnosed both failures:
+
+- **`test_def200_ratchet`: a real regression, from RETRO-SECURITY's round-2 fix (`717cd8ff`).**
+  It fails alone on the Mac at `ae468eff` and passes at `0accfeed`. The new sync `refund()` in
+  `brief.py`'s `async def event_stream` is blocking DB I/O on the event loop. It is graded in
+  RETRO-SECURITY (MAJOR-3). The Architect's 281 targeted tests did not include the ratchet.
+- **`test_def247…`: pre-existing and order-dependent, not caused by round 2.** It passes alone.
+  I ran shard 2's first 95 files in their shard order on the Mac: it fails identically at
+  `ae468eff` **and** at `0accfeed` (`1 failed, 1474 passed`). The event is emitted (it shows in
+  captured stdout), but `structlog.testing.capture_logs` does not see it, because an earlier test
+  in the same process caches the logger. It passes in the default full-suite order that the
+  +111 gate ran. Recorded as out-of-scope; no fix is owed by this round.
+
+This lane's own files are green in every run. The one real regression is in another lane.
+**+112 cannot pass its gate until RETRO-SECURITY's MAJOR-3 is fixed.** That does not bear on
+this verdict.
+
+FOREIGN: not run — no `foreign/RETRO-PM-FLOOR.r2` branch exists. Not a clean bill.
+
+### Verdict
+
+Both MAJORs are fixed at the root, and I re-proved each with my own round-1 probe on this tree
+and my own mutation. The respawn now refuses to run rather than invent inputs. A resolver
+failure now costs only the sector cap. MINOR-1 is closed. What remains is MINOR: two ways
+around MINOR-2's conflict check, both floor-checked and unreachable under live grammar, and a
+refund the new failure branch forgets. None of them forces another round.
+
+Counts, round 2: 0 BLOCKER, 0 MAJOR (MAJOR-1 and MAJOR-2 fixed), 2 MINOR open (MINOR-2's two
+residuals, and MINOR-3 new). MINOR-1 is closed.
+
+VERDICT: COMPLETE (round 2)
