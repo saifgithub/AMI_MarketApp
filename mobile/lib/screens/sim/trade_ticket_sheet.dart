@@ -75,6 +75,30 @@ String? _unmeasuredRulesNote(AppLocalizations l, List<UnmeasuredRule> rules) {
   return l.tradeTicketUnmeasuredRulesNote(names);
 }
 
+/// CR233 round 2 (MINOR-1) — `alpacaTimeInForce` maps AMI's `gtd30`/`gtd90`
+/// to Alpaca's own `gtc` (good-till-cancelled): Alpaca's simple orders
+/// endpoint has no N-day GTD. Left undisclosed, a user who chose a 30/90-day
+/// expiry gets an Alpaca leg that silently outlives AMI's own mirror. `null`
+/// for `day` (no approximation) so callers can treat it as "nothing to show".
+String? _alpacaGtdNote(AppLocalizations l, SimOrderTif tif) {
+  if (tif != SimOrderTif.gtd30 && tif != SimOrderTif.gtd90) return null;
+  return l.tradeTicketAlpacaGtdBecomesGtc;
+}
+
+/// Joins the two possible disclosure lines an accepted Alpaca leg can carry
+/// (DEF419's unmeasured-rules note, this CR's GTD-approximation note) into
+/// the single [_DestinationOutcome.note] slot, so neither call site has to
+/// know both exist. `null` when neither applies.
+String? _alpacaOutcomeNote(
+    AppLocalizations l, List<UnmeasuredRule> rules, SimOrderTif tif) {
+  final parts = [
+    _unmeasuredRulesNote(l, rules),
+    _alpacaGtdNote(l, tif),
+  ].whereType<String>().toList();
+  if (parts.isEmpty) return null;
+  return parts.join(' ');
+}
+
 class TradeTicketSheet extends ConsumerStatefulWidget {
   const TradeTicketSheet({
     super.key,
@@ -798,8 +822,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     }
     final outcome = await _placeAlpacaOrder(
       typed, qty, TradeDestination.alpacaPaper,
-      note: _unmeasuredRulesNote(
-          AppLocalizations.of(context), preview.unmeasuredRules),
+      note: _alpacaOutcomeNote(
+          AppLocalizations.of(context), preview.unmeasuredRules, _tif),
     );
     if (!mounted) return;
     HapticFeedback.mediumImpact();
@@ -979,7 +1003,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     }
     return _placeAlpacaOrder(
       typed, qty, TradeDestination.both,
-      note: _unmeasuredRulesNote(l, preview.unmeasuredRules),
+      note: _alpacaOutcomeNote(l, preview.unmeasuredRules, _tif),
     );
   }
 

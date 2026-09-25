@@ -6166,5 +6166,9 @@
         "type": "String"
       }
     }
+  },
+  "tradeTicketAlpacaGtdBecomesGtc": "Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it.",
+  "@tradeTicketAlpacaGtdBecomesGtc": {
+    "description": "CR233 round-2 audit fix (MINOR-1): disclosure shown whenever an Alpaca-bound order (ALPACA PAPER or BOTH's Alpaca leg) uses AMI's 30- or 90-day time-in-force. AlpacaClient.alpacaTimeInForce maps gtd30/gtd90 to Alpaca's own 'gtc' (good-till-cancelled) — Alpaca's simple orders endpoint has no N-day GTD — so the Alpaca leg silently outlives AMI's own mirror unless told otherwise. Shown as a second line under the ticket's Alpaca outcome, same slot the DEF419 unmeasured-rules note uses. retranslate:[ar,ms]"
   }
 }

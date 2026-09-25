@@ -332,6 +332,23 @@ void main() {
         );
       });
 
+      test(
+          'a SELL (short) with a take-profit ABOVE entry is refused — the '
+          'round-1 audit MINOR-2 gap: only the stop side had short-side '
+          'coverage before this test', () {
+        expect(
+          () => validateAlpacaOrder(
+            side: 'sell',
+            orderType: SimOrderType.stopLimit,
+            limitPrice: 100,
+            triggerPrice: 100,
+            bracket:
+                const AlpacaBracket(takeProfit: 106), // wrong side for a short
+          ),
+          throwsA(isA<AlpacaOrderRejected>()),
+        );
+      });
+
       test('a bracket on a MARKET order (no named entry) is not judged',
           () {
         // No limit/trigger price to compare against — the same "nothing to

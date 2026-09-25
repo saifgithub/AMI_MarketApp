@@ -193,16 +193,24 @@ Future<_ScriptedSim> _pump(
   SimSubmitResult? submitResult,
   required AlpacaClient alpacaClient,
   TradeDestination? tapDestination,
+  SimOrderTif? tapTif,
 }) async {
   await t.binding.setSurfaceSize(const Size(390, 1600));
   addTearDown(() => t.binding.setSurfaceSize(null));
   late _ScriptedSim sim;
+  // A TIF pill other than DAY only renders for a resting order type
+  // (`SimOrderType.canRest`), which itself only renders when the book
+  // supports resting orders — same two-gate shape `cr233_ticket_order_
+  // types_test.dart` already established.
+  final needsLimit = tapTif != null;
   await t.pumpWidget(ProviderScope(
     overrides: [
       simNotifierProvider.overrideWith((ref) {
         sim = _ScriptedSim(
           ref,
-          SimState(portfolio: _portfolio()),
+          SimState(
+              portfolio: _portfolio(),
+              restingOrdersSupported: needsLimit),
           previewWithAccount: previewWithAccount,
           previewWithoutAccount: previewWithoutAccount,
           submitResult: submitResult,
@@ -221,11 +229,28 @@ Future<_ScriptedSim> _pump(
   for (var i = 0; i < 4; i++) {
     await t.pump(const Duration(milliseconds: 120));
   }
+  if (needsLimit) {
+    await t.tap(find.text('LIMIT').first);
+    await t.pump(const Duration(milliseconds: 120));
+    final field = find.ancestor(
+      of: find.text('LIMIT PRICE'),
+      matching: find.byType(TextField),
+    );
+    await t.enterText(field, '100');
+    await t.pump(const Duration(milliseconds: 120));
+  }
   if (tapDestination == TradeDestination.alpacaPaper) {
     await t.tap(find.text('ALPACA PAPER'));
     await t.pump(const Duration(milliseconds: 120));
   } else if (tapDestination == TradeDestination.both) {
     await t.tap(find.text('BOTH'));
+    await t.pump(const Duration(milliseconds: 120));
+  }
+  if (tapTif == SimOrderTif.gtd30) {
+    await t.tap(find.text('30 DAYS'));
+    await t.pump(const Duration(milliseconds: 120));
+  } else if (tapTif == SimOrderTif.gtd90) {
+    await t.tap(find.text('90 DAYS'));
     await t.pump(const Duration(milliseconds: 120));
   }
   await t.tap(find.text('SUBMIT TRADE'));
@@ -450,6 +475,94 @@ void main() {
           reason: 'the AMI leg never carries unmeasured_rules (it has no '
               'account_kind), and this Alpaca leg preview reported none — '
               'nothing to disclose on either outcome');
+    });
+  });
+
+  group('CR233 round 2 (MINOR-1) — GTD-30/90 becomes GTC at Alpaca, disclosed',
+      () {
+    // Same BOTH-stays-inspectable rationale as the unmeasured_rules group
+    // above: ALPACA-PAPER-only pops the sheet on acceptance, so BOTH is used
+    // to actually read the disclosure text from the outcomes panel.
+    testWidgets(
+        'BOTH + 30-day TIF: the Alpaca leg discloses the GTC approximation',
+        (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.both,
+        tapTif: SimOrderTif.gtd30,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(
+          find.textContaining(
+              'Alpaca has no 30/90-day expiry — this order stays open at '
+              'Alpaca until filled or you cancel it.'),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'BOTH + 90-day TIF: the Alpaca leg discloses the GTC approximation',
+        (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.both,
+        tapTif: SimOrderTif.gtd90,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(
+          find.textContaining('Alpaca has no 30/90-day expiry'),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'BOTH + DAY TIF: no GTD disclosure — the approximation only applies '
+        'to gtd30/gtd90', (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.both,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(find.textContaining('Alpaca has no 30/90-day expiry'),
+          findsNothing);
+    });
+
+    testWidgets(
+        'BOTH + 30-day TIF + unmeasured_rules: both disclosure lines are '
+        'shown together, not one overwriting the other', (t) async {
+      final alpaca = _FixedAlpacaClient();
+      await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        previewWithAccount: const SimPreviewResult(
+          accepted: true,
+          unmeasuredRules: [
+            UnmeasuredRule(rule: 'drawdown', reason: 'no NAV history'),
+          ],
+        ),
+        tapDestination: TradeDestination.both,
+        tapTif: SimOrderTif.gtd30,
+      );
+
+      expect(alpaca.orderCalls, hasLength(1));
+      expect(find.textContaining('Not checked for this account'),
+          findsOneWidget);
+      expect(find.textContaining('Alpaca has no 30/90-day expiry'),
+          findsOneWidget);
     });
   });
 
