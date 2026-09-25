@@ -85,8 +85,12 @@ def _check(
     mandate: Mandate, ticker: str, universe, *, side: Side = Side.BUY, price=None,
     holdings=(),
 ):
+    # Real callers fetch into the cache first (SimEngine: `ensure_liquidity_cached`;
+    # the Room: its pre-warm) and the floor only reads it, so the helper does too.
+    proposed = ProposedTrade(ticker=ticker, side=side, quantity=1, limit_price=price or 10.0)
+    _liq.ensure_liquidity_cached(universe, proposed, mandate)
     return check_mandate_compliance(
-        ProposedTrade(ticker=ticker, side=side, quantity=1, limit_price=price or 10.0),
+        proposed,
         portfolio_value=10_000,
         current_drawdown_pct=0,
         mandate=mandate,
@@ -528,6 +532,31 @@ def test_on_demand_lookup_failure_is_permitted_and_disclosed():
     assert "couldn't get an answer" in v.message().lower()
 
 
+def test_the_floor_itself_never_fetches_and_a_miss_is_disclosed(base_mandate: Mandate):
+    """The Room runs the floor ON the event loop, so the floor may only read the
+    cache. With nothing fetched beforehand, a name outside the snapshot must come
+    back LOOKUP_FAILED (permitted, disclosed) and the fetcher must never run."""
+    calls: list[str] = []
+
+    def _fetcher(t: str):
+        calls.append(t)
+        return {"market_cap_usd_m": 85.0, "avg_volume": 250_000.0}
+
+    set_on_demand_fetcher(_fetcher)
+    res = check_mandate_compliance(
+        ProposedTrade(ticker="GNS", side=Side.BUY, quantity=1, limit_price=3.0),
+        portfolio_value=10_000, current_drawdown_pct=0,
+        mandate=_mandate(base_mandate, liquid_only=True),
+        classification_universe=_universe(),
+        holdings=[], last_loss_closed_at=None, trade_open_timestamps=[],
+        existing_open_risk_pct=0.0,
+    )
+    assert calls == []
+    assert res.passed
+    assert res.liquidity_verdict.status is LiquidityStatus.LOOKUP_FAILED
+    assert any("couldn't get an answer" in a.lower() for a in res.advisories)
+
+
 def test_on_demand_lookup_timeout_is_permitted_and_disclosed(monkeypatch):
     """The other half of Saiful's ruling — a fetch that never returns within
     the bounded timeout must degrade exactly like an outright error, never
@@ -725,6 +754,41 @@ def test_sim_engine_fill_resting_order_rejects_a_microcap_at_fill_time(base_mand
     assert not result.accepted
     assert result.compliance.blocked_by == "compliance"
     assert result.compliance.liquidity_verdict is not None
+    assert result.compliance.liquidity_verdict.status is LiquidityStatus.EXCLUDED
+
+
+def test_fill_resting_order_fetches_an_unmeasured_name_before_its_check(base_mandate: Mandate):
+    """A resting order can outlive the lookup cache, so the fill-time check must
+    fetch for itself rather than rely on the cache its submit warmed. GNS is
+    outside the snapshot and the cache is empty: the fill must look it up and
+    refuse the microcap."""
+    from datetime import datetime, timezone
+    from uuid import uuid4 as _uuid4
+
+    calls: list[str] = []
+
+    def _fetcher(t: str):
+        calls.append(t)
+        return {"market_cap_usd_m": 85.0, "avg_volume": 250_000.0}
+
+    set_on_demand_fetcher(_fetcher)
+    _liq.clear_on_demand_liquidity_cache()
+    sim = SimEngine(provider=_PinnedPriceProvider(3.0))
+    user_id = _uuid4()
+    order = SimRestingOrder(
+        id=_uuid4(), user_id=user_id, portfolio_id=sim.ensure_portfolio(user_id).id,
+        ticker="GNS", side=Side.BUY, quantity=10, order_type=OrderType.LIMIT,
+        state="working", tif="day",
+        expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+        placed_at=datetime(2026, 9, 25, tzinfo=timezone.utc),
+        limit_price=3.0,
+    )
+    result = sim.fill_resting_order(
+        order=order, mark=3.0, mandate=_mandate(base_mandate, liquid_only=True),
+        classification_universe=_universe(),
+    )
+    assert calls == ["GNS"]
+    assert not result.accepted
     assert result.compliance.liquidity_verdict.status is LiquidityStatus.EXCLUDED
 
 

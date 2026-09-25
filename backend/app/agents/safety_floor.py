@@ -22,7 +22,7 @@ from app.schemas.classification import (
 from app.schemas.liquidity import LiquidityStatus, LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
-from app.services.liquidity_lookup import resolve_liquidity_with_lookup
+from app.services.liquidity_lookup import resolve_liquidity_cached
 from app.services.sector_allocation import (
     sector_cap_breach as _sector_cap_breach,
 )
@@ -408,11 +408,13 @@ def check_mandate_compliance(
     #   used to resolve to unconditionally. DEF417 round 2 (Saiful, 2026-09-25:
     #   "Look it up on demand"): 96% of tradable symbols sit outside the ~503
     #   S&P names this snapshot classifies, so UNKNOWN=permitted meant the
-    #   filter could never refuse a real microcap. `resolve_liquidity_with_lookup`
-    #   (`app.services.liquidity_lookup`) now fetches market cap + average
-    #   volume ON DEMAND for exactly that UNKNOWN case — same source
-    #   (`yf.Ticker(t).info`), 24h-cached, off the event loop — and judges it
-    #   against the SAME two floors. Only when the on-demand read ITSELF fails
+    #   filter could never refuse a real microcap. Market cap + average volume
+    #   are now fetched ON DEMAND for exactly that UNKNOWN case — same source
+    #   (`yf.Ticker(t).info`), 24h-cached — BEFORE this floor runs and off the
+    #   event loop (SimEngine's `ensure_liquidity_cached`, the Room's pre-warm).
+    #   This floor only reads that cache (`resolve_liquidity_cached`), because
+    #   the Room calls it on the loop; a miss is disclosed, never fetched here.
+    #   The figures are judged against the SAME two floors. Only when the on-demand read ITSELF fails
     #   or times out does the old "permitted, no ruling" disclosure apply
     #   (`LiquidityStatus.LOOKUP_FAILED`, the DEF059 inversion trap otherwise) —
     #   never a silent block on a name the snapshot legitimately never measured
@@ -426,14 +428,14 @@ def check_mandate_compliance(
     if c.liquid_only and proposed.is_buy:
         if classification_universe is not None:
             price_for_liquidity = proposed.limit_price or (quotes or {}).get(t)
-            liquidity_verdict = resolve_liquidity_with_lookup(
+            liquidity_verdict = resolve_liquidity_cached(
                 classification_universe, t, price=price_for_liquidity
             )
         else:
             # None/unavailable universe → paused, same as the halal/classification
             # paused branches. A bare object with no resolver (legacy test doubles)
             # degrades the same way rather than raising —
-            # `resolve_liquidity_with_lookup` itself returns UNAVAILABLE when
+            # `resolve_liquidity_cached` itself returns UNAVAILABLE when
             # `getattr(universe, "resolve_liquidity", None)` isn't callable, so a
             # non-None-but-bare double still routes through it correctly; `None`
             # is short-circuited here only to avoid the import/call overhead.

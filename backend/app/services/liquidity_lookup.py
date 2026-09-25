@@ -214,23 +214,33 @@ def _cached_lookup_sync(ticker: str) -> dict[str, float] | None | _LookupFailed:
     return result
 
 
-def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None = None):
-    """DEF417 round 2 — `resolve_liquidity`, extended with the on-demand path.
+_MISS = object()
 
-    SYNC. Safe wherever `check_mandate_compliance`/`enforce_safety_floor` is
-    already proven to run off the event loop (every `SimEngine` call site,
-    each reached via `asyncio.to_thread` from its API route or the resting-
-    order sweep tick) — never call this directly from a coroutine running on
-    the loop; use `prewarm_on_demand_liquidity` first there instead (see
-    module docstring).
 
-    Only fires the on-demand path when the SNAPSHOT resolved the ticker
-    UNKNOWN (outside the ~503-name classified universe) — a stale/absent
-    snapshot already resolves UNAVAILABLE upstream in `resolve_liquidity`
-    itself and is left exactly as round 1 shipped it (Saiful's ruling 2,
-    unchanged): the on-demand path is about tickers the snapshot never
-    covers, not about a broken snapshot.
-    """
+def _cache_peek(ticker: str):
+    """Cache read only — never fetches. `_MISS` when absent or expired."""
+    with _lock:
+        hit = _cache.get(ticker)
+    if hit is None or hit[1] <= time.time():
+        return _MISS
+    return hit[0]
+
+
+def _snapshot_verdict(universe, ticker: str, price: float | None):
+    """The snapshot's own ruling, or None when it resolved UNKNOWN and the
+    on-demand figures should decide."""
+    from app.schemas.liquidity import LiquidityStatus, LiquidityVerdict
+
+    resolve = getattr(universe, "resolve_liquidity", None)
+    if not callable(resolve):
+        return LiquidityVerdict(status=LiquidityStatus.UNAVAILABLE, ticker=ticker.upper().strip())
+    verdict = resolve(ticker, price=price)
+    if verdict.status is not LiquidityStatus.UNKNOWN:
+        return verdict
+    return None
+
+
+def _verdict_from_info(info, t: str, price: float | None):
     from app.schemas.liquidity import (
         ILLIQUID_AVG_DOLLAR_VOLUME_USD,
         MICROCAP_FLOOR_USD_M,
@@ -239,15 +249,6 @@ def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None 
         LiquidityVerdict,
     )
 
-    resolve = getattr(universe, "resolve_liquidity", None)
-    if not callable(resolve):
-        return LiquidityVerdict(status=LiquidityStatus.UNAVAILABLE, ticker=ticker.upper().strip())
-    verdict = resolve(ticker, price=price)
-    if verdict.status is not LiquidityStatus.UNKNOWN:
-        return verdict
-
-    t = ticker.upper().strip()
-    info = _cached_lookup_sync(t)
     if isinstance(info, _LookupFailed):
         logger.info("liquidity_on_demand_permitted_lookup_failed", ticker=t)
         return LiquidityVerdict(status=LiquidityStatus.LOOKUP_FAILED, ticker=t, source=ON_DEMAND_SOURCE)
@@ -264,10 +265,6 @@ def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None 
         vol * price if vol is not None and price is not None and price > 0 else None
     )
     if cap is None and dollar_volume is None:
-        # yfinance answered but returned neither field (a genuinely un-priced
-        # / delisted-adjacent name) — same UNKNOWN semantics `resolve_liquidity`
-        # itself uses when the snapshot has nothing: AMI asked and still has no
-        # ruling, so this is not a ruling either way.
         return LiquidityVerdict(status=LiquidityStatus.UNKNOWN, ticker=t, source=ON_DEMAND_SOURCE)
 
     cap_breach = cap is not None and cap < MICROCAP_FLOOR_USD_M
@@ -283,6 +280,50 @@ def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None 
     )
 
 
+def resolve_liquidity_cached(universe, ticker: str, *, price: float | None = None):
+    """What the safety floor calls. It NEVER fetches, so it is safe on the event
+    loop (the Room runs its compliance checks there). The fetch happens before
+    the floor, off the loop: `ensure_liquidity_cached` in SimEngine (already
+    run via `asyncio.to_thread`), `prewarm_on_demand_liquidity` in the Room.
+    A miss — never fetched, or its short failure window has lapsed — resolves
+    LOOKUP_FAILED: permitted and disclosed, never a blocking call and never a
+    silent permit."""
+    snapshot = _snapshot_verdict(universe, ticker, price)
+    if snapshot is not None:
+        return snapshot
+    t = ticker.upper().strip()
+    info = _cache_peek(t)
+    if info is _MISS:
+        logger.info("liquidity_on_demand_cache_miss", ticker=t)
+        info = _LOOKUP_FAILED
+    return _verdict_from_info(info, t, price)
+
+
+def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None = None):
+    """Fetching variant: snapshot, then cache, then a bounded live fetch.
+    Blocking — off the event loop only."""
+    snapshot = _snapshot_verdict(universe, ticker, price)
+    if snapshot is not None:
+        return snapshot
+    t = ticker.upper().strip()
+    return _verdict_from_info(_cached_lookup_sync(t), t, price)
+
+
+def ensure_liquidity_cached(universe, proposed, mandate) -> None:
+    """Fetch into the cache before the floor runs, for a liquid_only BUY of a
+    name the snapshot doesn't cover. Blocking — SimEngine calls it from methods
+    that already run off the loop."""
+    if mandate is None or not mandate.compliance.liquid_only or not proposed.is_buy:
+        return
+    from app.schemas.liquidity import LiquidityStatus
+
+    resolve = getattr(universe, "resolve_liquidity", None)
+    if not callable(resolve):
+        return
+    if resolve(proposed.ticker, price=None).status is LiquidityStatus.UNKNOWN:
+        _cached_lookup_sync(proposed.ticker.upper().strip())
+
+
 async def prewarm_on_demand_liquidity(ticker: str) -> None:
     """Async pre-warm for the two on-loop call sites (`room_runner.py`'s
     live-PM + scripted paths). Populates the SAME cache
@@ -292,11 +333,10 @@ async def prewarm_on_demand_liquidity(ticker: str) -> None:
     applied to a ticker-keyed fetch instead of the whole-snapshot read.
 
     Never raises and returns nothing: the caller doesn't need the result here,
-    only the cache being warm by the time the sync compliance call runs a few
-    lines later. A cache MISS at that later sync call (this pre-warm itself
-    timed out, or was never reached) still resolves correctly — just via a
-    same-thread bounded fetch inside `resolve_liquidity_with_lookup`'s own
-    `ThreadPoolExecutor`, at worst repeating the bounded wait once more.
+    only the cache being warm by the time the floor runs. The floor's resolver
+    is cache-only, so a miss there (this pre-warm failed and its short failure
+    window lapsed before the CIO's check) resolves LOOKUP_FAILED — disclosed,
+    never a blocking fetch on the loop.
     """
     import asyncio
 

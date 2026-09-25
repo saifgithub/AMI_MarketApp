@@ -83,6 +83,7 @@ from app.services.market_data import (
     get_market_data_provider,
 )
 from app.services.classification_universe import default_classification_universe
+from app.services.liquidity_lookup import ensure_liquidity_cached
 from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
 from app.trading_math.quote_fillability import is_fillable, refusal_reason
@@ -1486,6 +1487,9 @@ class SimEngine:
 
         ctx = self._compliance_context(user_id, portfolio, ticker)
 
+        ensure_liquidity_cached(
+            classification_universe or default_classification_universe(), proposed, mandate,
+        )
         compliance = check_mandate_compliance(
             proposed,
             portfolio_value=ctx.portfolio_value,
@@ -2014,6 +2018,9 @@ class SimEngine:
             limit_price=resting_fill_price,
         )
         ctx = self._compliance_context(user_id, portfolio, order.ticker)
+        ensure_liquidity_cached(
+            classification_universe or default_classification_universe(), proposed, mandate,
+        )
         compliance = check_mandate_compliance(
             proposed,
             portfolio_value=ctx.portfolio_value,
@@ -2683,6 +2690,9 @@ class SimEngine:
                 0.0,
             )
 
+        ensure_liquidity_cached(
+            classification_universe or default_classification_universe(), proposed, mandate,
+        )
         compliance = check_mandate_compliance(
             proposed,
             portfolio_value=sizing_portfolio_value,
