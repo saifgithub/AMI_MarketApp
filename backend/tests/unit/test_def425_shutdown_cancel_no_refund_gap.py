@@ -459,6 +459,103 @@ def test_shutdown_cancel_skips_on_complete_no_running_journal_entry():
     )
 
 
+# ── round 3, MINOR-1: the RESPAWN pump's own journal write ────────────────
+
+
+def test_respawn_pump_skips_journal_write_on_second_shutdown_mid_retry():
+    """Round 3 (auditor U68, round-2 MINOR-1): `start_run()`'s `_pump` got the
+    `not self._shutting_down` guard in round 2, but `_respawn_run_from_row`'s
+    OWN `_pump` — the one that drives an already-retried run — has its own
+    separate `finally` block that writes the journal entry directly (not via
+    `on_complete`), with no such guard. Auditor's drill C: a SECOND SIGTERM
+    lands mid-retry. Before this fix that `finally` still fired and wrote
+    "Room on TICKER — running ... without reaching a verdict" for a row that
+    is still RUNNING and will be retried (or failed-with-refund) again on the
+    NEXT boot — round 1's drill-3 finding, reached through the retry path
+    instead of the first attempt. If retries are then exhausted, this false
+    "running" entry is left as the ONLY record of a run that is actually
+    failed and refunded.
+
+    Fix: the same `if self._shutting_down: return` guard `start_run()`'s
+    `_pump` uses for `on_complete`, applied to this `finally` block's own
+    journal-write section.
+    """
+    from app.services.journal_store import get_journal_store
+    from app.services.mandate_store import get_mandate_store
+
+    async def _run():
+        user_id = _billed_user()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        get_mandate_store().upsert(user_id, mandate)
+
+        stale_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        run_id = uuid4()
+        with get_session() as s:
+            s.add(RoomRunRow(
+                id=run_id,
+                user_id=user_id,
+                ticker="AAPL",
+                triggered_at=stale_at,
+                started_at=stale_at,
+                mandate_version=1,
+                model_tier="mid",
+                rounds=1,
+                transcript=[],
+                verdict=None,
+                credit_cost=8,
+                status="running",
+                retry_count=0,
+            ))
+
+        # Boot 1: sweep claims the stuck row (retry_count 0 -> 1, still
+        # running) and queues it. Boot 2 respawns it — this IS the retry
+        # whose OWN _pump is under test, not the original attempt's.
+        runner = RoomRunner()
+        assert len(runner._pending_retry) == 1
+
+        await runner.resume_pending_retries()
+
+        agents_done = 0
+        async for ev in runner.subscribe(run_id):
+            if ev.kind == "agent_done":
+                agents_done += 1
+                if agents_done >= 2:
+                    break
+
+        # The SECOND shutdown, mid-retry: mark first (main.py's lifespan
+        # ordering), then cancel the respawn's background _pump task
+        # directly — the same thing asyncio's own teardown does to every
+        # outstanding task at process exit.
+        runner.mark_shutting_down()
+        pump_task = next(
+            t for t in asyncio.all_tasks()
+            if t is not asyncio.current_task() and not t.done()
+        )
+        pump_task.cancel()
+        await asyncio.gather(pump_task, return_exceptions=True)
+
+        return run_id, user_id
+
+    run_id, user_id = asyncio.run(_run())
+
+    row = _row(run_id)
+    assert row.status == "running", (
+        "still mid-retry when the second shutdown landed — the row stays "
+        "RUNNING (marked interrupted_at) for the NEXT boot's sweep, exactly "
+        "like the first attempt's shutdown-cancel path"
+    )
+    assert row.interrupted_at is not None
+    assert row.retry_count == 1
+
+    entries, _total, _retention = get_journal_store().list_for_user(user_id)
+    assert not any(e.reference_id == run_id for e in entries), (
+        "the respawn's own _pump must not journal a run that has not "
+        "reached a terminal state — this is round-2 MINOR-1's false "
+        "'running' entry, reached through the retry path instead of the "
+        "original attempt"
+    )
+
+
 def _ledger(user_id) -> list[SubscriptionEventRow]:
     with get_session() as s:
         return list(s.execute(

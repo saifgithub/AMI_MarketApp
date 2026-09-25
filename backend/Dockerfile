@@ -92,4 +92,21 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/v1/health || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# DEF425 round 3 (auditor U68, round-2 MAJOR-1) — uvicorn 0.47 waits for
+# in-flight connections to close BEFORE it runs the ASGI lifespan shutdown
+# phase ("Waiting for connections to close"), and that wait is unbounded by
+# default. Any client watching a Room/Brief/1-on-1 SSE stream at SIGTERM
+# keeps the connection open, so `lifespan()`'s `finally:` (which calls
+# `RoomRunner.mark_shutting_down()` — see room_runner.py's shutdown-cancel
+# branch) never runs; Docker SIGKILLs the process at its stop grace period
+# instead, the row is never marked `interrupted_at`, and DEF425's original
+# bug (a restart mid-Room charges full price with no refund) returns for
+# every Room a user is actively watching. Proved on a throwaway melehost
+# stack: with this flag, `room_cancelled_shutdown` logs and the row is
+# marked; without it, SIGKILL wins the race every time.
+#
+# 5s, well under docker-compose.yml's `api-alpha.stop_grace_period` (15s) —
+# see that file's comment for why the gap is deliberate, not default-implied.
+# `test_config_compose_parity.py::test_uvicorn_graceful_shutdown_timeout_is_below_stop_grace_period`
+# fails the build if this flag is removed or raised to/above the grace period.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "5"]

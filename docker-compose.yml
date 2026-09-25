@@ -584,6 +584,20 @@ services:
     mem_limit: 4g
     networks: [ami_internal]
     restart: unless-stopped
+    # DEF425 round 3 (auditor U68, round-2 MAJOR-1) — stated explicitly rather
+    # than left to Docker's default (10s), so the relationship to the
+    # Dockerfile CMD's `--timeout-graceful-shutdown 5` is a fact in this file,
+    # not an implied one two files away. Must stay ABOVE that flag's value:
+    # uvicorn needs its own bounded window to finish "waiting for connections
+    # to close" (see Dockerfile's CMD comment) and run the ASGI lifespan
+    # shutdown (`main.py`'s `lifespan()` finally, which stamps
+    # `interrupted_at` on any running Room via `RoomRunner.mark_shutting_down`)
+    # BEFORE Docker's SIGKILL lands — if this ever drops to/below 5s, Docker
+    # kills the process at the same moment uvicorn is still waiting, and
+    # DEF425's original bug (restart mid-Room, no refund) returns.
+    # `test_config_compose_parity.py::test_uvicorn_graceful_shutdown_timeout_is_below_stop_grace_period`
+    # fails the build if this gap closes or inverts.
+    stop_grace_period: 15s
 
   # Cloudflare Tunnel (A7) — token-mode connector. Ingress rules,
   # hostname, and Access policy all live in the CF dashboard:
