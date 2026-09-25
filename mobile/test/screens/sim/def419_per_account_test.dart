@@ -602,13 +602,17 @@ void main() {
       expect(sim.submitCalls, 0,
           reason: "the AMI /submit path must not fire either — this is an "
               'Alpaca-only destination');
+      // DEF442 — a null-status-code AlpacaException (no HTTP response, same
+      // shape as a real network/timeout failure) now gets the specific
+      // "couldn't reach Alpaca" line via `alpacaReadFailureMessage`, not the
+      // old catch-all "couldn't read your account" text.
       expect(
-        find.textContaining("Couldn't read your Alpaca paper account"),
+        find.textContaining("Couldn't reach Alpaca"),
         findsOneWidget,
         reason: 'the failure must be loud and specific, not a generic '
             'error or a silently-accepted trade',
       );
-      expect(find.textContaining('order not sent'), findsOneWidget);
+      expect(find.textContaining('Order not sent'), findsOneWidget);
     });
 
     testWidgets(
@@ -630,8 +634,10 @@ void main() {
       expect(alpaca.orderCalls, isEmpty);
       expect(find.text('AMI SIM'), findsAtLeastNWidgets(1));
       expect(find.text('ALPACA PAPER'), findsAtLeastNWidgets(1));
+      // DEF442 — see the ALPACA PAPER case above: a null-status-code failure
+      // now reads as "couldn't reach Alpaca", not the old generic line.
       expect(
-        find.textContaining("Couldn't read your Alpaca paper account"),
+        find.textContaining("Couldn't reach Alpaca"),
         findsOneWidget,
       );
     });
