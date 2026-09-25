@@ -4749,6 +4749,24 @@ class RoomRunner:
                 await q.put(None)
                 self._active_queues.pop(p.run_id, None)
                 self._active_by_key.pop(key, None)
+                # DEF425 round 3 (auditor U68, round-2 MINOR-1): this
+                # `finally` runs even when `self.run()` re-raised
+                # CancelledError/GeneratorExit on a SECOND shutdown landing
+                # mid-retry (a BaseException, not caught by the `except
+                # Exception` above) — the respawned run is still RUNNING, not
+                # finished, at that point. Without this guard the journal
+                # entry below wrote "Room on TICKER — running ... without
+                # reaching a verdict" for a run the very next boot's sweep
+                # will retry-or-fail-with-refund, leaving that false
+                # "running" line as the ONLY record if retries are then
+                # exhausted (round 2's drill C). Same guard
+                # `start_run()`'s own `_pump` already applies to `on_complete`
+                # — skip the write entirely on the shutdown path; the next
+                # retry (this same replay, next boot) or the sweep's
+                # retry-exhausted `failed` branch writes the real, terminal
+                # entry once the run actually finishes.
+                if self._shutting_down:
+                    return
                 # Re-fire the journal write the original request's
                 # on_complete would have done — the closure is gone after
                 # restart, so we replay it here. Same 3× retry shape as

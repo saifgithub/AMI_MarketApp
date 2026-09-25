@@ -337,3 +337,94 @@ def test_the_inline_default_exemptions_carry_reasons():
     assert not unexplained, (
         f"_INLINE_DEFAULT_EXEMPT entries need a reason: {unexplained}"
     )
+
+
+# ── A fourth direction: the uvicorn graceful-shutdown window (DEF425) ─────────
+#
+# None of the three directions above says anything about *when* shutdown code
+# runs versus when Docker gives up waiting for it. DEF425 round 2 (auditor
+# U68, MAJOR-1) found exactly that gap, live: uvicorn 0.47 waits for in-flight
+# connections to close BEFORE it runs the ASGI lifespan shutdown phase, and
+# that wait is unbounded unless `--timeout-graceful-shutdown` is passed. With
+# a user watching a Room/Brief/1-on-1 SSE stream at SIGTERM, the wait never
+# ends on its own — Docker SIGKILLs the process at `stop_grace_period`
+# (default 10s) first, `main.py`'s `lifespan()` `finally:` (which calls
+# `RoomRunner.mark_shutting_down()`, the DEF425 fix) never runs, and the
+# original DEF425 bug — a restart mid-Room charges full price with no refund
+# — returns for every Room actively being watched.
+#
+# The auditor proved the fix on a throwaway melehost stack: with
+# `--timeout-graceful-shutdown 5` on uvicorn's own command, shutdown reaches
+# the lifespan phase and the row is marked; without it, SIGKILL wins the race
+# every time. This guard pins the two numbers so they cannot drift back apart:
+# the flag must be PRESENT, and it must stay strictly BELOW the container's
+# stop grace period (Docker's implicit default of 10s when
+# `stop_grace_period` is unset in compose, which is why round 2's compose had
+# no explicit value to disagree with in the first place).
+
+_DOCKERFILE = _REPO_ROOT / "backend" / "Dockerfile"
+_DOCKER_DEFAULT_STOP_GRACE_SECONDS = 10
+
+
+def _uvicorn_cmd_line() -> str:
+    m = re.search(r'^CMD\s*\[(.*?)\]\s*$', _DOCKERFILE.read_text(), re.M)
+    assert m, "backend/Dockerfile has no CMD instruction"
+    return m.group(1)
+
+
+def _uvicorn_graceful_shutdown_seconds() -> int | None:
+    """None means the flag is absent — uvicorn's own default is unbounded."""
+    cmd = _uvicorn_cmd_line()
+    m = re.search(r'"--timeout-graceful-shutdown"\s*,\s*"(\d+)"', cmd)
+    return int(m.group(1)) if m else None
+
+
+def _api_alpha_stop_grace_period_seconds() -> int:
+    """Docker's own default (10s) when the compose service sets none —
+    unset is a real, meaningful value here, not a parsing gap."""
+    service = re.search(
+        r"^  api-alpha:\n(.*?)(?=^  [a-z_-]+:\n)", _COMPOSE.read_text(), re.S | re.M
+    )
+    assert service, "api-alpha service not found in docker-compose.yml"
+    m = re.search(r"^\s+stop_grace_period:\s*(\d+)s\s*$", service.group(1), re.M)
+    return int(m.group(1)) if m else _DOCKER_DEFAULT_STOP_GRACE_SECONDS
+
+
+def test_uvicorn_graceful_shutdown_timeout_is_below_stop_grace_period():
+    """DEF425 round 3: the flag must exist, and must leave uvicorn a real
+    window to reach the ASGI lifespan shutdown phase before Docker's SIGKILL
+    lands. Missing entirely, or raised to/above the stop grace period, both
+    reopen the round-2 MAJOR-1 gap this test exists to close."""
+    timeout = _uvicorn_graceful_shutdown_seconds()
+    assert timeout is not None, (
+        "backend/Dockerfile's uvicorn CMD has no --timeout-graceful-shutdown — "
+        "without it, uvicorn waits UNBOUNDED for open connections (any live "
+        "Room/Brief/1-on-1 SSE stream) before running the ASGI lifespan "
+        "shutdown phase that marks an interrupted Room for the next boot's "
+        "sweep. Docker's SIGKILL wins that race every time a user is "
+        "watching — this is exactly DEF425 round 2's MAJOR-1."
+    )
+    grace = _api_alpha_stop_grace_period_seconds()
+    assert timeout < grace, (
+        f"uvicorn's --timeout-graceful-shutdown ({timeout}s) must be strictly "
+        f"below api-alpha's stop_grace_period ({grace}s) in docker-compose.yml "
+        "— otherwise Docker's SIGKILL can still land before uvicorn finishes "
+        "its own bounded wait and reaches the lifespan shutdown phase, which "
+        "is the same race DEF425 round 2's MAJOR-1 found live."
+    )
+
+
+def test_api_alpha_states_its_stop_grace_period_explicitly():
+    """DEF425 round 3: the relationship between the two timeouts must be a
+    fact IN docker-compose.yml, not implied by Docker's undocumented-at-a-
+    glance 10s default two files away from the Dockerfile CMD it constrains."""
+    service = re.search(
+        r"^  api-alpha:\n(.*?)(?=^  [a-z_-]+:\n)", _COMPOSE.read_text(), re.S | re.M
+    )
+    assert service, "api-alpha service not found in docker-compose.yml"
+    assert re.search(r"^\s+stop_grace_period:\s*\d+s\s*$", service.group(1), re.M), (
+        "api-alpha has no explicit stop_grace_period in docker-compose.yml — "
+        "add one (e.g. `stop_grace_period: 15s`) so it isn't silently relying "
+        "on Docker's implicit 10s default staying above the Dockerfile's "
+        "--timeout-graceful-shutdown value"
+    )
