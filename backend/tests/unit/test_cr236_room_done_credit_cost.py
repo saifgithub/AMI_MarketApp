@@ -71,6 +71,7 @@ class _FakeRunner:
 
 def _make_run(
     *, credit_cost: int, status: RoomStatus, verdict: Verdict | None = None,
+    refund_recorded: bool = False,
 ) -> RoomRun:
     from datetime import datetime, timezone
 
@@ -86,6 +87,11 @@ def _make_run(
         verdict=verdict,
         credit_cost=credit_cost,
         status=status,
+        # DEF432 MINOR-1 — `run_was_refunded` reads this GROUND-TRUTH flag
+        # for a `completed` run rather than inferring "refunded" from the
+        # verdict's shape; a hand-built RoomRun in a test must set it
+        # explicitly to represent a run that was genuinely refunded.
+        refund_recorded=refund_recorded,
     )
 
 
@@ -179,7 +185,11 @@ def test_def432_outage_no_verdict_reports_refunded_true(
     NO_VERDICT was refunded in full (room_runner.py's COMPLETED branch), so
     `done` must say so — via `run_was_refunded`, the same predicate that
     decided the refund, not a re-derived `status == "failed"` check that
-    would read `false` here and tell the client it was charged."""
+    would read `false` here and tell the client it was charged.
+
+    DEF432 MINOR-1: `run_was_refunded` now reads the ground-truth
+    `refund_recorded` flag rather than the verdict's shape, so this
+    hand-built run must set it to represent a genuinely-refunded run."""
     user_id, token = _new_user()
     outage_verdict = Verdict(
         action=VerdictAction.NO_VERDICT,
@@ -189,6 +199,7 @@ def test_def432_outage_no_verdict_reports_refunded_true(
     )
     fake = _FakeRunner(_make_run(
         credit_cost=8, status=RoomStatus.COMPLETED, verdict=outage_verdict,
+        refund_recorded=True,
     ))
 
     done = _done_line(_stream(client, app, user_id, token, fake))
@@ -206,6 +217,31 @@ def test_normal_completed_verdict_still_reports_refunded_false(
     approve_verdict = Verdict(action=VerdictAction.APPROVE, reason="Clears.")
     fake = _FakeRunner(_make_run(
         credit_cost=8, status=RoomStatus.COMPLETED, verdict=approve_verdict,
+    ))
+
+    done = _done_line(_stream(client, app, user_id, token, fake))
+
+    assert '"credit_cost": 8' in done
+    assert '"refunded": false' in done
+
+
+def test_def432_minor1_outage_shaped_verdict_with_failed_refund_reports_refunded_false(
+    app: FastAPI, client: TestClient,
+):
+    """DEF432 MINOR-1 (auditor U68, round 1) — an outage-SHAPED verdict
+    (`is_llm_outage_verdict`/`room_verdict_is_incomplete` both true) whose
+    `refund()` call actually FAILED must report `refunded: false`, not a
+    `true` inferred from the verdict's shape alone. `refund_recorded`
+    defaults to False (the real column default) when never explicitly set —
+    exactly the state a failed refund leaves the row in."""
+    user_id, token = _new_user()
+    outage_verdict = Verdict(
+        action=VerdictAction.NO_VERDICT,
+        reason=f"{PM_ROOM_INCOMPLETE_REASON} 8 of 12 desks responded.",
+        overridden_from_llm=True,
+    )
+    fake = _FakeRunner(_make_run(
+        credit_cost=8, status=RoomStatus.COMPLETED, verdict=outage_verdict,
     ))
 
     done = _done_line(_stream(client, app, user_id, token, fake))

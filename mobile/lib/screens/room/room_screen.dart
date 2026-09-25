@@ -160,6 +160,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                                 verdict: state.verdict!,
                                 ticker: widget.ticker,
                                 runId: state.runId,
+                                cioRetryAvailable: state.cioRetryAvailable,
+                                retryingCio: state.retryingCio,
                               ),
                       )
                     else ...[
@@ -267,6 +269,7 @@ class _RoomResultCostRow extends StatelessWidget {
       cost: state.creditCost,
       refunded: state.refunded,
       balanceAfter: state.balanceAfter,
+      cioRetried: state.cioRetried,
     );
   }
 }
@@ -1501,6 +1504,61 @@ class _VerdictCard extends ConsumerWidget {
   }
 }
 
+/// CR237 — "Ask the CIO again": the CIO-outage PASS's own primary action.
+/// Free and reuses the analysts' saved work — never a second Room. Disabled
+/// (with a spinner in place of the icon) while `retrying` — the server's own
+/// in-flight guard is authoritative, but a disabled button avoids a pointless
+/// double-tap round trip that the server would refuse anyway.
+class _AskCioAgainButton extends ConsumerWidget {
+  const _AskCioAgainButton({required this.ticker, required this.retrying});
+
+  final String ticker;
+  final bool retrying;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AmiColors.hexCyan,
+              foregroundColor: AmiColors.slate900,
+              padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+            ),
+            icon: retrying
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: HexPulseLoader(size: 16, color: AmiColors.slate900),
+                  )
+                : const Icon(Icons.forum_outlined),
+            label: Text(
+              retrying
+                  ? l.roomVerdictAskCioAgainInProgress
+                  : l.roomVerdictAskCioAgain,
+            ),
+            onPressed: retrying
+                ? null
+                : () => ref.read(roomNotifierProvider(ticker).notifier).retryCio(),
+          ),
+        ),
+        if (!retrying) ...[
+          const SizedBox(height: 2),
+          Text(
+            l.roomVerdictAskCioAgainSubtitle,
+            style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 /// The board's action footer on the LIVE Room: share, the trade ticket when
 /// there is a trade to place, the NO_VERDICT upgrade CTA, and SEE CHART.
 ///
@@ -1512,11 +1570,21 @@ class _VerdictActions extends ConsumerWidget {
     required this.verdict,
     required this.ticker,
     this.runId,
+    this.cioRetryAvailable = false,
+    this.retryingCio = false,
   });
 
   final RoomVerdict verdict;
   final String ticker;
   final String? runId;
+
+  /// CR237 — server-computed (`RoomState.cioRetryAvailable`, off the `done`
+  /// event's `cio_retry_available` field). Never derived from `verdict.reason`
+  /// text here — the button's presence is entirely the backend's call.
+  final bool cioRetryAvailable;
+
+  /// CR237 — true while THIS device has a retry in flight for this run.
+  final bool retryingCio;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1529,6 +1597,15 @@ class _VerdictActions extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // CR237 — the CIO-outage PASS's primary action, ahead of everything
+        // else in this footer: the honest alternative to reconvening the
+        // whole Room. Gated on the server flag alone (never on
+        // `verdict.isPass` plus text-matching `verdict.reason`), so a
+        // reasoned PASS or the desks-unreachable NO_VERDICT never shows it.
+        if (cioRetryAvailable) ...[
+          _AskCioAgainButton(ticker: ticker, retrying: retryingCio),
+          const SizedBox(height: AmiSpacing.s),
+        ],
         if (verdict.isApprove)
           if (existingTrade != null)
             Container(

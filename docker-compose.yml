@@ -410,6 +410,9 @@ services:
       # from "no AMI" to "not enough AMI"; 0 disables the degrade (the
       # disclosure still renders). See Settings.room_max_scripted_turns.
       ROOM_MAX_SCRIPTED_TURNS: ${ROOM_MAX_SCRIPTED_TURNS:-4}
+      # CR237 — how long (minutes) after a CIO-outage PASS "Ask the CIO
+      # again" stays offered. See Settings.room_cio_retry_max_age_minutes.
+      ROOM_CIO_RETRY_MAX_AGE_MINUTES: ${ROOM_CIO_RETRY_MAX_AGE_MINUTES:-240}
       # CR197 — computed sized-option ladder in the CIO's prompt. Off: it is a
       # measured behaviour change (approvals 16.3% → 21.1% over 136 replayed
       # convenes), not a pure fix. See Settings.pm_option_ladder_enabled.

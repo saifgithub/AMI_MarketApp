@@ -315,6 +315,56 @@ class JournalStore:
             ).scalar_one_or_none()
             return _row_to_entry(row) if row else None
 
+    def update_by_reference(
+        self,
+        user_id: UUID,
+        entry_type: EntryType | str,
+        reference_id: UUID,
+        draft: JournalEntryCreate,
+    ) -> JournalEntry | None:
+        """CR237 — overwrite the LIVE entry for `(user_id, entry_type,
+        reference_id)` in place with `draft`'s fields. Returns the updated
+        entry, or `None` if no live entry exists for that reference (the
+        caller's job to have created one first via `append`).
+
+        Exists for "Ask the CIO again": a successful retry replaces a Room
+        run's outage-PASS verdict with a real one on the SAME run id, and its
+        Decision Journal entry must be updated in place, never duplicated —
+        `append` would create a second ROOM_RUN row for one run, and the
+        journal has no per-run dedupe key (`dedupe_key` is CR136-only, see
+        `uq_journal_dedupe`'s own comment). `id`/`created_at`/`reference_id`
+        are never touched — this is a content overwrite of an existing row,
+        not a new event.
+
+        Soft-deleted rows are excluded, matching every other read here: a
+        user who deleted their Room's journal entry gets no entry
+        resurrected by a later CIO retry.
+        """
+        et = entry_type if isinstance(entry_type, EntryType) else EntryType(entry_type)
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.entry_type == et.value,
+                    JournalEntryRow.reference_id == reference_id,
+                    JournalEntryRow.deleted_at.is_(None),
+                )
+                .order_by(JournalEntryRow.created_at.asc())
+                .limit(1)
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            row.title = draft.title
+            row.summary = draft.summary
+            row.ticker = draft.ticker
+            row.agents_involved = list(draft.agents_involved)
+            row.mandate_version = draft.mandate_version
+            row.tags = list(draft.tags)
+            row.outcome = draft.outcome
+            row.payload = dict(draft.payload)
+            s.flush()
+            return _row_to_entry(row)
+
     def get(self, user_id: UUID, entry_id: UUID) -> JournalEntry | None:
         with get_session() as s:
             row = s.execute(

@@ -257,3 +257,52 @@ class RoomRun(BaseModel):
 
     error_message: str | None = None
     duration_ms: int | None = None
+
+    # CR237 — set True at the exact moment DEF432's outage refund (or CR039's
+    # failed-run refund) actually fires, and never cleared afterward. Read by
+    # `run_was_refunded` INSTEAD of re-deriving "was this refunded" from the
+    # CURRENT verdict shape, so a successful "Ask the CIO again" retry (which
+    # replaces the outage PASS with a real verdict on the SAME run) cannot
+    # flip the answer to False for a run that genuinely was refunded — the
+    # exact DEF437-class fabrication CR237's own trap warns about ("This Room
+    # used N credits" on a run that was never charged net of the refund).
+    # `False` for every run before this field shipped, which is correct:
+    # nothing before CR237 could be retried, so nothing needs the override.
+    refund_recorded: bool = False
+
+    # CR237 — a snapshot of the pre-CIO `_RoomContext` fields the CIO step
+    # reads that are PRODUCTS OF THE DESK PHASES (bull/bear thesis is on the
+    # transcript already, not duplicated here — this is the scalar/structured
+    # fields: trader levels, sizing, withheld/scripted rosters, option menu)
+    # plus the `profile` fact sheet the desks argued from. Written once, at
+    # the point `run()` would otherwise discard `ctx`/`profile`, ONLY when
+    # the run ends in the CIO-outage PASS (`is_llm_outage_verdict`) — every
+    # other terminal run leaves this `None`, same absence convention as
+    # `sheet_state`/`next_convene_delta` above (T-BACKFILL: never
+    # backfilled or inferred for a run that predates or didn't need it).
+    #
+    # The retry (`retry_cio_step`) rebuilds everything SAFETY-RELEVANT fresh
+    # from `user_id`/`ticker` (current mandate, portfolio value/drawdown,
+    # sector context, risk-limit context, halal/classification/locale
+    # universes) — this snapshot supplies only what the desks already argued
+    # and cannot be re-derived without re-running them.
+    cio_context_snapshot: dict | None = None
+
+    # CR237 — True once a "Ask the CIO again" retry has SUCCEEDED on this run
+    # (replaced the outage verdict with a real one). Never cleared. Drives
+    # the mobile cost line's `cioRetried` branch: a retried run finished (so
+    # `roomResultRefunded`'s "didn't reach a verdict" text would be false),
+    # but it was also never net-charged (the original outage refund stands,
+    # and the retry itself is free) — the client needs a THIRD truthful
+    # sentence, not a re-derivation from `refunded`/`verdict` alone. See
+    # `retry_cio_step`'s success branch, the only place this is ever set.
+    cio_retried: bool = False
+
+    # CR237 — server-computed, NEVER persisted (always False on a value read
+    # straight from `_row_to_room_run`; the API routes that serve this model
+    # to a client overwrite it via `cio_retry_eligible(...)` before
+    # responding). The client must never string-match `verdict.reason` to
+    # infer this — the whole point of a server-computed flag is that the
+    # eligibility rule (mandate unchanged, snapshot present, within the age
+    # window, no retry in flight) lives in exactly one place.
+    cio_retry_available: bool = False

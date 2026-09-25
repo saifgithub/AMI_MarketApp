@@ -57,6 +57,7 @@ from app.services.room_runner import (
     PM_LLM_UNAVAILABLE_REASON,
     PM_ROOM_INCOMPLETE_REASON,
     RoomRunner,
+    build_journal_entry_for_run,
     is_llm_outage_verdict,
     room_verdict_is_incomplete,
     run_was_refunded,
@@ -113,8 +114,15 @@ def _run_room(user_id, fail_n, monkeypatch, cap=4, credit_cost=CREDIT_COST):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    assert len(verdicts) == 1
-    return verdicts[0].verdict
+    # DEF432 MINOR-1 — a run whose refund SUCCEEDS re-emits a second
+    # `verdict` event carrying the "wasn't charged" text (see `run()`'s
+    # COMPLETED branch): the first event streams from inside the phase loop,
+    # necessarily before completion/refund can happen at all. A run whose
+    # verdict never needed a refund (or whose refund failed) still emits
+    # exactly one. Callers that want the FINAL, accurate verdict — what a
+    # client ends up displaying and what gets persisted — read the last one.
+    assert len(verdicts) in (1, 2)
+    return verdicts[-1].verdict
 
 
 # ── the outage NO_VERDICT is refunded ────────────────────────────────────────
@@ -180,7 +188,76 @@ def test_refund_fires_exactly_once_even_if_swept_or_retried_later(monkeypatch):
     assert len(calls) == 1
     assert calls[0][0] == user_id
     assert calls[0][1] == CREDIT_COST
-    assert balance_for(user_id)[0] == before
+
+
+def test_a_failed_refund_never_claims_the_room_was_not_charged(monkeypatch):
+    """DEF432 MINOR-1 (auditor U68, round 1) — the exact bug: `refund()` is
+    best-effort (a failure must not turn a delivered verdict into a hard
+    error), but the OLD code baked "This Room wasn't charged." into the
+    verdict's reason at CONSTRUCTION time, unconditionally — before whether
+    a refund would even be attempted (let alone succeed) was known. A
+    `refund()` failure therefore left a run that was still fully charged
+    telling the user, in the verdict text AND the Decision Journal summary
+    (which reads `verdict.reason` verbatim) AND the `done` SSE event's
+    `refunded` field, that it was free.
+
+    Probe: `refund` raises for this run's user_id. Assert, ALL of:
+      - the user's balance nets to the POST-CHARGE figure (not refunded);
+      - the verdict's `reason` does NOT contain "wasn't charged";
+      - the Decision Journal summary built from that run (verbatim from
+        `verdict.reason`) does not contain it either;
+      - `run_was_refunded(run)` reads False for the persisted row;
+      - `run.refund_recorded` is False.
+    """
+    user_id = _billed_user()
+    before = balance_for(user_id)[0]
+    spend(user_id, CREDIT_COST, reason="room:AAPL:test-charge")
+    after_charge = balance_for(user_id)[0]
+    assert after_charge == before - CREDIT_COST
+
+    def _raising_refund(uid, amount, *, reason):
+        raise RuntimeError("ledger unavailable")
+
+    monkeypatch.setattr(room_runner_mod, "refund", _raising_refund)
+    monkeypatch.setattr(real_settings, "room_max_scripted_turns", 4)
+    monkeypatch.setattr(room_runner_mod.settings, "room_max_scripted_turns", 4)
+
+    gateway = _PartialOutageGateway(fail_n=4)
+    runner = RoomRunner(llm=gateway)  # type: ignore[arg-type]
+    run_id = uuid4()
+
+    async def go():
+        return [ev async for ev in runner.run(
+            run_id=run_id,
+            user_id=user_id, ticker="AAPL",
+            mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3}),
+            char_delay_min=0.0, char_delay_max=0.0,
+            credit_cost=CREDIT_COST,
+        )]
+
+    events = asyncio.run(go())
+    verdicts = [ev for ev in events if ev.kind == "verdict"]
+    # Exactly ONE verdict event: the refund failed, so `run()` never reaches
+    # the re-emit branch (that branch is inside the refund's own `else:`,
+    # reached only on success).
+    assert len(verdicts) == 1
+    verdict = verdicts[0].verdict
+
+    assert room_verdict_is_incomplete(verdict.model_dump())
+    assert "wasn't charged" not in verdict.reason
+
+    run = runner.get_run(run_id)
+    assert run is not None
+    assert run.refund_recorded is False
+    assert run_was_refunded(run) is False
+    assert "wasn't charged" not in run.verdict.reason
+
+    draft = build_journal_entry_for_run(run, user_id)
+    assert "wasn't charged" not in draft.summary
+
+    # The credits were never given back — balance stays at the post-charge
+    # figure, not the pre-charge one.
+    assert balance_for(user_id)[0] == after_charge
 
 
 # ── the refund is scoped to the outage cause, never a normal verdict ────────
@@ -282,7 +359,9 @@ def test_a_zero_threshold_room_is_never_refunded_even_with_all_scripted(monkeypa
 #    the one that was actually decided ────────────────────────────────────
 
 
-def _bare_run(*, status: RoomStatus, verdict: Verdict | None) -> RoomRun:
+def _bare_run(
+    *, status: RoomStatus, verdict: Verdict | None, refund_recorded: bool = False,
+) -> RoomRun:
     from datetime import datetime, timezone
 
     return RoomRun(
@@ -290,6 +369,7 @@ def _bare_run(*, status: RoomStatus, verdict: Verdict | None) -> RoomRun:
         triggered_at=datetime.now(timezone.utc),
         mandate_version=1, model_tier="mid", rounds=1,
         transcript=[], verdict=verdict, credit_cost=12, status=status,
+        refund_recorded=refund_recorded,
     )
 
 
@@ -298,13 +378,35 @@ def test_run_was_refunded_true_for_failed_status_regardless_of_verdict():
 
 
 def test_run_was_refunded_true_for_completed_outage_no_verdict():
+    # DEF432 MINOR-1 — `run_was_refunded` no longer infers "refunded" from
+    # verdict SHAPE alone for a `completed` run; it reads the ground-truth
+    # `refund_recorded` flag, set only once `refund()` has actually
+    # succeeded (see `run()`'s COMPLETED branch and `run_was_refunded`'s own
+    # docstring). This test asserts the "genuinely refunded" case.
     outage = Verdict(
         action=VerdictAction.NO_VERDICT,
         reason=f"{PM_ROOM_INCOMPLETE_REASON} 8 of 12 desks responded. "
                "This Room wasn't charged.",
         overridden_from_llm=True,
     )
-    assert run_was_refunded(_bare_run(status=RoomStatus.COMPLETED, verdict=outage))
+    assert run_was_refunded(
+        _bare_run(status=RoomStatus.COMPLETED, verdict=outage, refund_recorded=True)
+    )
+
+
+def test_run_was_refunded_false_for_completed_outage_shaped_verdict_when_refund_failed():
+    """DEF432 MINOR-1 — the whole point of the fix: an outage-SHAPED verdict
+    whose `refund()` call actually failed must report `refunded: False`, not
+    `True` inferred from the verdict's shape. `refund_recorded` defaults to
+    False (the real column default) when the caller never sets it."""
+    outage = Verdict(
+        action=VerdictAction.NO_VERDICT,
+        reason=f"{PM_ROOM_INCOMPLETE_REASON} 8 of 12 desks responded.",
+        overridden_from_llm=True,
+    )
+    assert not run_was_refunded(
+        _bare_run(status=RoomStatus.COMPLETED, verdict=outage)
+    )
 
 
 def test_run_was_refunded_false_for_completed_normal_approve():
@@ -362,8 +464,9 @@ def _run_room_cio_down(user_id):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    assert len(verdicts) == 1
-    return verdicts[0].verdict
+    # DEF432 MINOR-1 — see `_run_room`'s identical comment above.
+    assert len(verdicts) in (1, 2)
+    return verdicts[-1].verdict
 
 
 def test_cio_outage_pass_is_refunded_and_says_so():
@@ -384,12 +487,28 @@ def test_cio_outage_pass_is_refunded_and_says_so():
 
 
 def test_run_was_refunded_true_for_completed_cio_outage_pass():
+    # DEF432 MINOR-1 — see the sibling NO_VERDICT test's comment above.
     outage = Verdict(
         action=VerdictAction.PASS,
         reason=f"{PM_LLM_UNAVAILABLE_REASON} This Room wasn't charged.",
         overridden_from_llm=True,
     )
-    assert run_was_refunded(_bare_run(status=RoomStatus.COMPLETED, verdict=outage))
+    assert run_was_refunded(
+        _bare_run(status=RoomStatus.COMPLETED, verdict=outage, refund_recorded=True)
+    )
+
+
+def test_run_was_refunded_false_for_completed_cio_outage_pass_when_refund_failed():
+    """DEF432 MINOR-1 — the DEF059 CIO-outage PASS shape, same failed-refund
+    case the NO_VERDICT sibling test covers above."""
+    outage = Verdict(
+        action=VerdictAction.PASS,
+        reason=PM_LLM_UNAVAILABLE_REASON,
+        overridden_from_llm=True,
+    )
+    assert not run_was_refunded(
+        _bare_run(status=RoomStatus.COMPLETED, verdict=outage)
+    )
 
 
 def test_run_was_refunded_false_for_a_reasoned_pass():

@@ -1412,6 +1412,18 @@
   "@roomVerdictSeeChart": {
     "description": "Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject)."
   },
+  "roomVerdictAskCioAgain": "ASK THE CIO AGAIN",
+  "@roomVerdictAskCioAgain": {
+    "description": "CR237 — primary action on a CIO-outage PASS (AMI's analyst room lost its model connection before the Chief Investment Officer could rule). Shown ONLY when the server's cio_retry_available flag is true — never on the desks-unreachable NO_VERDICT case (DEF432's other outage shape) or a reasoned PASS, and never driven by matching verdict text. Retries only the CIO's own turn against the analysts' saved work. retranslate:[ar,ms]"
+  },
+  "roomVerdictAskCioAgainSubtitle": "Free — uses the analysts' existing work",
+  "@roomVerdictAskCioAgainSubtitle": {
+    "description": "CR237 — the one-line explanation under roomVerdictAskCioAgain: no new charge, and the eleven other desks are not re-run. AMI named by role (the analysts), never 'the AI'. retranslate:[ar,ms]"
+  },
+  "roomVerdictAskCioAgainInProgress": "Asking the CIO again…",
+  "@roomVerdictAskCioAgainInProgress": {
+    "description": "CR237 — replaces roomVerdictAskCioAgain's label while a retry is in flight (RoomState.retryingCio), same pattern as the Footer's own 'deliberating' copy. retranslate:[ar,ms]"
+  },
   "actionCancel": "CANCEL",
   "@actionCancel": {
     "description": "Generic cancel button in dialogs and sheets."
@@ -2419,6 +2431,10 @@
   "roomResultRefunded": "Not charged — AMI couldn't finish this Room",
   "@roomResultRefunded": {
     "description": "CR236 round 2 (auditor MINOR-1) — shown instead of roomResultCost when the done event's refunded flag is true. This covers two shapes: a FAILED run refunded per CR039/DEF425 (no verdict at all), and DEF432's CIO-outage PASS (a real PASS verdict IS shown, refunded because AMI couldn't finish the Room's own analysis). The old copy ('this Room didn't reach a verdict') contradicted the PASS case, which does show a verdict. States no cause the client can't know. Never phrased as the user's fault."
+  },
+  "roomResultCioRetried": "Not charged — the CIO's retry was free, and the original Room was refunded",
+  "@roomResultCioRetried": {
+    "description": "CR237 — shown instead of roomResultRefunded when a successful 'Ask the CIO again' retry replaced a CIO-outage verdict with a real one on the same run. The run DID finish (unlike roomResultRefunded's case), so that line would read false here; this one stays truthful: the retry itself cost nothing, and the run's original charge was already given back by the DEF432 outage refund. AMI named by role (CIO), never 'the AI'. Driven by the run's own cio_retried server field, never inferred from verdict text."
   },
   "roomResultCostNoBalance": "This Room used {cost} credits",
   "@roomResultCostNoBalance": {

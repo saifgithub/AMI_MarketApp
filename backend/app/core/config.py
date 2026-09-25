@@ -776,6 +776,19 @@ class Settings(BaseSettings):
     # counting and telling the user are not the part that needs an off switch).
     room_max_scripted_turns: int = Field(default=4, ge=0, le=12)
 
+    # CR237 — how long after a CIO-outage PASS "Ask the CIO again" stays
+    # offered. The desks' saved work is a snapshot of the mandate/portfolio/
+    # sector/risk context at the ORIGINAL run's time; the retry rebuilds the
+    # safety-relevant pieces fresh (current mandate, portfolio value/
+    # drawdown, sector + risk-limit context, halal/classification/locale
+    # universes) but the desk arguments themselves (bull thesis, bear case,
+    # sizes, Execution Desk levels) are frozen at the original convene. Past
+    # this window the market has plausibly moved enough that arguing the
+    # CIO's vote over a stale board is worse than telling the user to
+    # reconvene. 240 min (4h) is a first cut, not a measurement — nothing
+    # has run long enough on Alpha yet to size it from a real distribution.
+    room_cio_retry_max_age_minutes: int = 240
+
     # CR197 — hand the CIO a computed ladder of sized options (trim / reference /
     # press) with each rung's drawdown contribution, remaining headroom and
     # reward:risk, instead of leaving that arithmetic to the risk officers' prose.
