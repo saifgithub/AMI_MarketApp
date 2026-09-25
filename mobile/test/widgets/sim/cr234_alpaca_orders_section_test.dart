@@ -414,6 +414,23 @@ void main() {
               'reach the snackbar verbatim');
       expect(find.textContaining('not a paper account'), findsOneWidget,
           reason: 'user-actionable copy in its place');
+      // DEF439 round 2 (auditor u66 MINOR-3) — round 1's "user-actionable
+      // copy in its place" was itself a hard-coded English literal in
+      // alpaca_orders_section.dart, unreachable for AR/MS translation
+      // (`retranslate:[ar,ms]` never applies to a string ARB never sees).
+      // Pin that the snackbar now renders exactly
+      // AppLocalizations.alpacaOrderCancelNonPaperDetail's value, so this
+      // string lives in ONE place (the ARB) rather than two independently
+      // driftable ones. Mutation: hard-coding a different literal back into
+      // alpaca_orders_section.dart, or changing only the ARB value, must
+      // fail this assertion.
+      final l = AppLocalizations.of(t.element(find.byType(AlpacaOpenOrdersSection)));
+      expect(
+        find.textContaining(l.alpacaOrderCancelNonPaperDetail),
+        findsOneWidget,
+        reason: 'the snackbar detail must come from the ARB key, not a '
+            'second, independently-hand-written English copy of it',
+      );
       // Nothing was sent to Alpaca, so nothing to audit-log.
       expect(api.calls, isEmpty);
     });

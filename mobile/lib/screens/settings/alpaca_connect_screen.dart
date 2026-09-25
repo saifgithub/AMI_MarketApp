@@ -32,13 +32,21 @@
 ///      define and Alpaca app approval, so it stays greyed-out. Alpaca's token
 ///      endpoint requires client_secret and documents no PKCE, so that one
 ///      exchange cannot run on-device; the backend performs it and hands the
-///      token straight back without storing it. DEF439: Alpaca's
-///      `/oauth/authorize` documents no `env=paper` selector — which account
-///      the token resolves to is decided by whichever Alpaca account the user
-///      was logged into in the browser, not by anything in the authorize
-///      request — so the token itself is verified against the paper host
-///      (`AlpacaClient.validateOAuthToken`) before it is stored, the OAuth
-///      counterpart of (c) above.
+///      token straight back without storing it. DEF439 round 2 (auditor u66
+///      MAJOR-1): round 1 claimed Alpaca's `/oauth/authorize` "documents no
+///      env=paper selector" — wrong. Alpaca's OAuth guide
+///      (docs.alpaca.markets/docs/using-oauth2-and-trading-api) documents
+///      `env` as an optional authorize parameter: "must be one of `live` or
+///      `paper`. If not specified, the user will be prompted to authorized
+///      both a live and a paper account" — and a token can authorize a live
+///      account and a paper account together. `buildAuthUrl` now sends
+///      `env=paper`, which is what actually keeps the consent screen from
+///      asking for the live account at all. `AlpacaClient.validateOAuthToken`
+///      stays as the second, structural layer — it verifies the resulting
+///      token against the paper host before storing it, catching a token
+///      minted by an older client build or a provider that ignores the hint;
+///      it was never itself sufficient against the *default* grant, since a
+///      default (no-`env`) token is valid on the paper host regardless.
 ///
 /// Returns `true` to the caller if linking succeeded, `false` otherwise.
 library;
@@ -110,6 +118,20 @@ String buildAuthUrl(String state) => Uri(
         'redirect_uri': _redirectUri,
         'scope': 'account:write trading',
         'state': state,
+        // DEF439 round 2 (auditor u66 MAJOR-1) — Alpaca's OAuth guide
+        // (docs.alpaca.markets/docs/using-oauth2-and-trading-api,
+        // "Authorization Request" parameter table) documents `env` as
+        // optional: "If provided, must be one of `live` or `paper`. If not
+        // specified, the user will be prompted to authorized both a live and
+        // a paper account." Without it, the consent screen asked for BOTH
+        // accounts and the resulting token carried live-account trading
+        // authority too — `validateOAuthToken`'s paper-host check passed
+        // because the token was ALSO valid for paper, not because it wasn't
+        // also valid for live. Pinning `env=paper` here is what actually
+        // keeps a live grant out; `validateOAuthToken` remains the second,
+        // structural layer for a token minted by an older client build or a
+        // provider that ignores the hint.
+        'env': 'paper',
       },
     ).toString();
 
@@ -604,11 +626,25 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
       // credential is persisted here, on the device, like the API key pair.
       final api = ref.read(apiClientProvider);
       final tokens = await api.alpacaExchangeOAuthCode(code);
-      // DEF439 — Alpaca's authorize request carries no paper/live selector
-      // (see the file docstring), so the token itself is the only thing that
-      // can be checked: verify it against the paper host BEFORE storing,
-      // the OAuth counterpart of the API-key tab's `validate()` call. A live
-      // token is rejected here with a 401, same as a live key pair would be.
+      // DEF439 round 2 — `buildAuthUrl` sends `env=paper` (see the file
+      // docstring for what Alpaca actually documents), so the grant itself
+      // should already exclude the live account. Still verify the resulting
+      // token against the paper host BEFORE storing, the OAuth counterpart of
+      // the API-key tab's `validate()` call — this is the structural backstop
+      // for a token minted by an older client build or a provider that
+      // ignores the `env` hint. A token that fails here is rejected with a
+      // 401, same as a live key pair would be.
+      //
+      // NOTE (auditor u66 round-1 fix 3, not implemented): this
+      // validate-then-save ORDER is not independently pinned by a mutation
+      // test. `buildAuthUrl`'s `env=paper` test (DEF373 test file) and
+      // `validateOAuthToken`'s own tests cover the two calls individually;
+      // extracting this exchange→validate→save sequence into a top-level,
+      // widget-free function to pin the order would mean threading
+      // `ApiClient`/`AlpacaClient`/`AlpacaCredentialStore` through a new
+      // seam this screen doesn't otherwise need, for a path that is already
+      // dormant (`_clientId` requires a build define nothing in this repo
+      // sets). Flagging plainly rather than doing that refactor now.
       await ref
           .read(alpacaClientProvider)
           .validateOAuthToken(tokens.accessToken);

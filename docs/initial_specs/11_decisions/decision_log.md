@@ -692,13 +692,26 @@ Keep this log honest. The "why" matters more than the "what."
   **linked** at all, not merely refused a write. The connect screen refuses a
   recognisably-live key ID ("AK...") before any network call, restricts the
   [CR224](../../forward_planning/CR224_alpaca_endpoint_override/) endpoint field to a
-  confirmed paper host (`isAlpacaPaperHost`), and verifies an OAuth token against the
-  paper host before ever storing it — Alpaca's `/oauth/authorize` documents no
-  `env=paper` selector, so the token itself is the only thing that can be checked.
-  `alpacaLinkedProvider` now means "linked to a confirmed paper account"; a credential
-  stored before this fix that resolves to a non-paper host reads as **not linked**, with
-  a "relink" prompt in Settings and on the Portfolio screen, rather than silently
-  rendering as an ordinary paper link.
+  confirmed paper host (`isAlpacaPaperHost`), sends `env=paper` on the OAuth authorize
+  request, and verifies the resulting OAuth token against the paper host before ever
+  storing it. `alpacaLinkedProvider` now means "linked to a confirmed paper account"; a
+  credential stored before this fix that resolves to a non-paper host reads as **not
+  linked**, with a "relink" prompt in Settings and on the Portfolio screen, rather than
+  silently rendering as an ordinary paper link.
+- **Round 2 correction (2026-09-25, auditor u66 MAJOR-1):** round 1 of this decision
+  claimed Alpaca's `/oauth/authorize` "documents no `env=paper` selector" and that "a
+  token minted against a live account is rejected by the paper host with a 401." Both
+  are wrong. Alpaca's OAuth guide
+  (`docs.alpaca.markets/docs/using-oauth2-and-trading-api`) documents `env` as an
+  optional authorize parameter — "must be one of `live` or `paper`. If not specified,
+  the user will be prompted to authorized both a live and a paper account" — and states
+  a single token may authorize a live account and a paper account together. Omitting
+  `env` (round 1's behaviour) triggered exactly that default dual-account grant: the
+  resulting token passed the paper-host validation check because it was *also* valid for
+  paper, not because it excluded live. The connect screen now sends `env=paper` on the
+  authorize request, which is what actually keeps the live account out of the grant;
+  the paper-host token verification stays as a structural second layer for a token
+  minted by an older client build or a provider that ignores the `env` hint.
 - **Source**: Saiful — *"DEF439 - add key validation. Check out alpaca key format."*
   Prompted by [DEF439](../../defect/_registry/DEF439.row.md) (auditor u66, CR234 round 2):
   a live Alpaca account was labelled "ALPACA PAPER" on the Portfolio screen, because
