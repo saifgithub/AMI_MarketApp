@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import delete, update
+from sqlalchemy import and_, delete, update
 
 from app.core.logging import logger
 from app.db.models import (
@@ -30,6 +30,20 @@ from app.db.models import (
 from app.db.session import get_session
 
 AUDIT_RETENTION_DAYS = 90
+
+# DEF430 MAJOR-2: `policy_notice.notify_policy_update_v2_1()`'s "exactly once,
+# ever" promise rests entirely on the earlier `notifications` row still
+# existing — idempotency is `uq_notifications_dedupe` on (user_id, type,
+# source_ref), which only blocks a re-send while that row is present. This
+# sweep runs on every boot and, before this exemption, deleted `notifications`
+# rows (policy_update included) once they passed 90 days old, so ~90 days
+# after the first send the row was gone and the NEXT boot told every linked
+# user again that "Privacy Policy updated (v2.1)" — repeating forever, once
+# per retention window. A policy notice is also exactly the record a user
+# should be able to find later, unlike a transient price alert. Exempted by
+# `type`, not by moving the row to a separate un-trimmed table, so every other
+# notification type (price_alert, daily_challenge, ...) still trims normally.
+_NOTIFICATION_TYPES_EXEMPT_FROM_TRIM = {"policy_update"}
 
 
 def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
@@ -45,12 +59,21 @@ def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
             (LLMAuditRow, "llm_audit"),
             (HTTPAuditRow, "http_audit"),
             (OneOnOneMessageRow, "one_on_one_messages"),
-            (NotificationRow, "notifications"),
         ):
             result = s.execute(
                 delete(model).where(model.created_at < cutoff)
             )
             counts[label] = result.rowcount
+
+        result = s.execute(
+            delete(NotificationRow).where(
+                and_(
+                    NotificationRow.created_at < cutoff,
+                    NotificationRow.type.notin_(_NOTIFICATION_TYPES_EXEMPT_FROM_TRIM),
+                )
+            )
+        )
+        counts["notifications"] = result.rowcount
 
         # Mark room_runs rows stuck in 'running' for > 30 min as aborted.
         # These arise when the api-alpha container restarts mid-run; the

@@ -83,16 +83,17 @@ def test_a_second_run_never_creates_a_second_row_for_the_same_user():
     assert second["already_notified"] == 1
 
 
-def test_a_user_who_links_after_the_sweep_is_not_retroactively_notified():
+def test_a_user_who_links_after_the_sweep_is_notified_once_on_the_next_sweep():
     # Not linked at sweep time.
     user = _make_user(alpaca_linked_at=None)
     policy_notice.notify_policy_update_v2_1()
     assert _policy_rows_for(user.id) == []
 
-    # Links afterwards — DEF430's mobile link-screen disclosure is that
-    # user's consent-at-collection moment; a backend notice for them would
-    # be redundant, not missing, so a later sweep must still skip them
-    # unless this module is deliberately re-run with a different intent.
+    # Links afterwards — the sweep runs on every boot, so this user is picked
+    # up and notified once at the NEXT sweep. That is deliberate: a user
+    # linking from an app build older than the DEF430 disclosure never saw
+    # the mobile link-screen notice, so the backend notice is still their
+    # first exposure to it, not a redundant repeat.
     with get_session() as s:
         row = s.execute(select(User).where(User.id == user.id)).scalar_one()
         row.alpaca_linked_at = datetime(2026, 9, 26, tzinfo=timezone.utc)
