@@ -385,7 +385,16 @@ def test_concierge_real_provider_http_503_is_refunded_not_billed(
     The gateway's own `stream_chat` writes `meta["stream_error"]` on a
     non-200 reply (`llm_gateway.py`'s `OpenAICompatibleProvider.stream_chat`)
     — round 3's fix threads that same `meta` into `_stream_concierge`, which
-    round 2 never did."""
+    round 2 never did.
+
+    DEF433 — this assertion is UPDATED IN PLACE (not added-alongside): round
+    3 only wired `meta` through so the REFUND fired; it never stopped the raw
+    `[AMI error: HTTP 503 from the upstream provider (vllm). Check backend
+    logs.]` sentinel from reaching the user, so `"AMI error" in r.text` was
+    the then-correct assertion for a real leak. DEF433 fixes the leak itself
+    (see `test_def433_concierge_error_sentinel_branded_fallback.py`) — the
+    sentinel is now swapped for the Concierge's own scripted/branded reply,
+    so this control asserts the leak is GONE, not that it was present."""
     from app.core import config as config_mod
     monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
 
@@ -397,7 +406,11 @@ def test_concierge_real_provider_http_503_is_refunded_not_billed(
 
     r = _send(client, headers, session_id)
     assert r.status_code == 200, r.text
-    assert "AMI error" in r.text
+    lower = r.text.lower()
+    assert "vllm" not in lower
+    assert "503" not in r.text
+    assert "backend logs" not in lower
+    assert "AMI error" not in r.text
     assert balance_for(user_id)[0] == before, (
         "Concierge must not bill for an HTTP-error-sentinel reply"
     )
@@ -413,7 +426,12 @@ def test_concierge_real_provider_connect_error_is_refunded_not_billed(
     charged=1  tail: a scripted Concierge reply`. Before round 3,
     `_stream_concierge`'s `except Exception` swallowed the transport error
     and yielded a scripted fallback with no `stream_error` signal at all —
-    so the caller billed a real turn for a fallback the user never chose."""
+    so the caller billed a real turn for a fallback the user never chose.
+
+    DEF433: also pins that the scripted fallback text (not the raw
+    `ConnectError`) is what actually reaches the wire — a mutation on the
+    `if not buf:` guard here (skip yielding the fallback) survived every
+    other assertion in this file, since none of them read `r.text`."""
     from app.core import config as config_mod
     monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
 
@@ -425,6 +443,9 @@ def test_concierge_real_provider_connect_error_is_refunded_not_billed(
 
     r = _send(client, headers, session_id)
     assert r.status_code == 200, r.text
+    assert "connection refused" not in r.text.lower()
+    assert "ConnectError" not in r.text
+    assert "AMI" in r.text, "the Concierge's own scripted reply must be on the wire"
     assert balance_for(user_id)[0] == before, (
         "Concierge must not bill for a provider outage answered by the "
         "scripted fallback reply"
