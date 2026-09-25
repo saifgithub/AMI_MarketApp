@@ -56,9 +56,9 @@ AMI Trade gives you three Risk Officers who press the sizing question from three
 |---|---|---|
 | **Aggressive** | Bigger size, full conviction | High-asymmetry setups, smaller account |
 | **Conservative** | Smaller size, capital preservation | Drawdown already large, mandate tight |
-| **Neutral** | Statistical middle | Most days, most trades |
+| **Balanced** | Statistical middle | Most days, most trades |
 
-The PM doesn't pick one — they listen to all three and weigh them against your mandate. If your `risk_score` is 1 (very conservative), the Conservative Risk Officer's voice carries more weight. If 5, the Aggressive's case gets a boost.
+The CIO doesn't pick one — they listen to all three and weigh them against your mandate. If your `risk_score` is 1 (very conservative), the Conservative Risk Officer's voice carries more weight. If 5, the Aggressive's case gets a boost.
 
 ## Sizing caps you can't override
 
@@ -68,7 +68,7 @@ Even at the largest size on the table, the <Term id="ami_pm_safety_floor" /> enf
 - **<Term id="ami_mandate" /> drawdown cap.** If your portfolio is already at the drawdown limit, no new long-only buy.
 - **Compliance flags.** Halal, ESG-lite, blocklist, allowlist — these don't bend for sizing.
 
-You'll see the safety floor in action whenever you <Term id="ami_convene_the_room" />. Watch for the PM's "mandate check" line.
+You'll see the safety floor in action whenever you <Term id="ami_convene_the_room" />. Watch for the CIO's "mandate check" line.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -82,7 +82,7 @@ You'll see the safety floor in action whenever you <Term id="ami_convene_the_roo
 />
 
 <Quiz
-  question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Risk Officer wants to size up. What's the PM's most likely response?"
+  question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Risk Officer wants to size up. What's the CIO's most likely response?"
   options={[
     "Defer to the user's mandate alone",
     "Approve at any size",
@@ -90,5 +90,5 @@ You'll see the safety floor in action whenever you <Term id="ami_convene_the_roo
     "Size up — Aggressive is correct"
   ]}
   answer={2}
-  explanation="An asymmetric R:R of roughly 0.5:1 (you risk $2 to make $1) is a bad bet over enough samples. The PM will likely overrule the Aggressive case here regardless of conviction."
+  explanation="An asymmetric R:R of roughly 0.5:1 (you risk $2 to make $1) is a bad bet over enough samples. The CIO will likely overrule the Aggressive case here regardless of conviction."
 />

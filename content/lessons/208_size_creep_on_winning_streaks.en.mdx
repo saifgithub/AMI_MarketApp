@@ -28,7 +28,7 @@ The falsifiable size-creep fingerprint: rolling per-trade risk over the last 10 
 
 ## The trap
 
-The trap is that size creep does not feel like rule-breaking. Each individual trade is "only slightly larger than the last one," and each is justified by a high-conviction note — "this setup is the cleanest one this month." The cumulative drift, across 20 trades, is invisible at any single decision point because the comparison the trader makes is between the *current* trade and the *last* trade, not between the current trade and the *mandate*. The correct mental model: the mandate is the only valid baseline for comparison, and per-trade risk should be a function of *setup quality measured against pre-written criteria*, not of recent outcomes. If you cannot point to a written setup-criteria change that justifies the size shift, the shift is creep — regardless of how well-justified each individual trade felt in isolation. The PM's <Term id="ami_pm_safety_floor" /> should refuse any single trade above the mandate, and the trader should refuse any *trend* above the mandate even if no single trade has crossed it.
+The trap is that size creep does not feel like rule-breaking. Each individual trade is "only slightly larger than the last one," and each is justified by a high-conviction note — "this setup is the cleanest one this month." The cumulative drift, across 20 trades, is invisible at any single decision point because the comparison the trader makes is between the *current* trade and the *last* trade, not between the current trade and the *mandate*. The correct mental model: the mandate is the only valid baseline for comparison, and per-trade risk should be a function of *setup quality measured against pre-written criteria*, not of recent outcomes. If you cannot point to a written setup-criteria change that justifies the size shift, the shift is creep — regardless of how well-justified each individual trade felt in isolation. The CIO's <Term id="ami_pm_safety_floor" /> should refuse any single trade above the mandate, and the trader should refuse any *trend* above the mandate even if no single trade has crossed it.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -59,9 +59,9 @@ The trap is that size creep does not feel like rule-breaking. Each individual tr
 />
 
 <Quiz
-  question="Your account is up 31% YTD against a 20% max-drawdown mandate. The PM flags that rolling per-trade risk over the last 10 trades is 1.9% versus 1.0% prior 10 — a 90% increase. No single trade has breached. Your strategy criteria have not been rewritten. Synthesis answer?"
+  question="Your account is up 31% YTD against a 20% max-drawdown mandate. The CIO flags that rolling per-trade risk over the last 10 trades is 1.9% versus 1.0% prior 10 — a 90% increase. No single trade has breached. Your strategy criteria have not been rewritten. Synthesis answer?"
   options={[
-    "Override the PM flag — your equity curve confirms the new sizing is correct.",
+    "Override the CIO flag — your equity curve confirms the new sizing is correct.",
     "Continue current sizing but tighten stops to reduce dollar risk while preserving the new size.",
     "Freeze new entries at 1.0% mandate level until a 30-day audit confirms the existing larger positions close cleanly; document the creep trend in the Decision Journal as a process failure; only consider a mandate change after a written criteria revision, never during a streak.",
     "Raise the mandate to 2.0% — your data supports it."

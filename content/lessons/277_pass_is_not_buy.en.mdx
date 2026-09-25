@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # PASS is not BUY — the verdict is conditional
 
-When the PM stamps PASS on a simulated <Term id="ami_verdict" />, it is reporting one thing only: inside the training scenario, the proposed trade fits inside your <Term id="ami_mandate" />. PASS is not "AMI thinks you should take this trade". PASS is not "the trade will be profitable". PASS is not "the drawdown is capped at the stop". PASS is "compliance: clear, within the simulator". The trading team's BUY line is a separate <Term id="training_artifact" /> — not investment advice, not a recommendation to act on outside the app. <Term id="ami" /> is a <Term id="training_simulator" />, not a licensed advisor: BUY is not what AMI is offering you. AMI is offering you training in evaluating a simulated BUY artifact. Reading PASS as buy-approval is the single most common misreading of the Verdict structure. By the end of this lesson you will be able to articulate the difference cleanly.
+When the CIO stamps PASS on a simulated <Term id="ami_verdict" />, it is reporting one thing only: inside the training scenario, the proposed trade fits inside your <Term id="ami_mandate" />. PASS is not "AMI thinks you should take this trade". PASS is not "the trade will be profitable". PASS is not "the drawdown is capped at the stop". PASS is "compliance: clear, within the simulator". The trading team's BUY line is a separate <Term id="training_artifact" /> — not investment advice, not a recommendation to act on outside the app. <Term id="ami" /> is a <Term id="training_simulator" />, not a licensed advisor: BUY is not what AMI is offering you. AMI is offering you training in evaluating a simulated BUY artifact. Reading PASS as buy-approval is the single most common misreading of the Verdict structure. By the end of this lesson you will be able to articulate the difference cleanly.
 
 ## How this plays out in real markets
 
@@ -33,20 +33,20 @@ Four distinct statements are bundled here, and each is conditional on different 
 1. **BUY.** The trading team's *simulated training output*. Conditional on the analysis being right within the scenario. Hallucinations, regime changes, and surprises can all invalidate it. It is not a recommendation to take anywhere.
 2. **Size 3%.** The Execution Desk's proposal, blessed by the Risk Officers' synthesis. Conditional on the cap your `risk_score` sets. At risk_score 2 the cap is 1.5% and the same debate would land at 1.5%.
 3. **Entry/stop/target/horizon.** The trade *plan inside the simulator*. Each level is conditional — entry triggers if price reaches $418; stop fires if price hits $402; target locks profit if reached within 5 weeks. None of these are predictions and none are advice.
-4. **PM: PASS.** Compliance result. Conditional on the *proposed* trade fitting your stated Mandate — nothing more. Same trade re-proposed at 6% would BLOCK without anything else changing.
+4. **CIO: PASS.** Compliance result. Conditional on the *proposed* trade fitting your stated Mandate — nothing more. Same trade re-proposed at 6% would BLOCK without anything else changing.
 
-Now consider the failure mode. A user reads "PM: PASS" as "AMI approves" and treats the BUY as a green light. They are conflating two separate training signals: a simulated BUY (from the trading team) and a compliance PASS (from the PM) — and then converting both into something AMI does not offer, which is an instruction to act. The PM never had a view on whether MSFT is a good trade. It had a view on whether *the proposed-size trade fits your Mandate inside this training scenario*. Even a terrible trade can pass compliance if size is small enough; even a brilliant trade can be blocked if size is oversize.
+Now consider the failure mode. A user reads "CIO: PASS" as "AMI approves" and treats the BUY as a green light. They are conflating two separate training signals: a simulated BUY (from the trading team) and a compliance PASS (from the CIO) — and then converting both into something AMI does not offer, which is an instruction to act. The CIO never had a view on whether MSFT is a good trade. It had a view on whether *the proposed-size trade fits your Mandate inside this training scenario*. Even a terrible trade can pass compliance if size is small enough; even a brilliant trade can be blocked if size is oversize.
 
 ## The trap
 
-The trap is reading "PASS" through the lens of approval. In everyday language, "the boss passed it" means "the boss agreed". The PM is not a boss; it is a simulated compliance officer. Compliance officers don't sign off on whether the trade is *wise*; they sign off on whether it is *within the rules*. A compliance officer who approved every trade that fit policy and rejected the ones that didn't has done their job perfectly — and has expressed no opinion on outcome. Same with the PM. The Verdict's BUY/SELL/HOLD line is a training artifact for evaluation; the PM's PASS/BLOCK line is the compliance result inside the scenario. Mixing them collapses two training signals into one fake approval and you lose the structure that makes the simulator worth running.
+The trap is reading "PASS" through the lens of approval. In everyday language, "the boss passed it" means "the boss agreed". The CIO is not a boss; it is a simulated compliance officer. Compliance officers don't sign off on whether the trade is *wise*; they sign off on whether it is *within the rules*. A compliance officer who approved every trade that fit policy and rejected the ones that didn't has done their job perfectly — and has expressed no opinion on outcome. Same with the CIO. The Verdict's BUY/SELL/HOLD line is a training artifact for evaluation; the CIO's PASS/BLOCK line is the compliance result inside the scenario. Mixing them collapses two training signals into one fake approval and you lose the structure that makes the simulator worth running.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="A simulated Verdict comes back: 'BUY NVDA · 3% · PM: PASS.' What is the PM actually telling you with PASS?"
+  question="A simulated Verdict comes back: 'BUY NVDA · 3% · CIO: PASS.' What is the CIO actually telling you with PASS?"
   options={[
     "The trade has been placed in simulation and is now live",
     "Inside the training scenario, the proposed 3% NVDA position fits your Mandate's hard floors. Nothing more. Whether the scenario taught you something useful is a separate evaluation",
@@ -54,24 +54,24 @@ The trap is reading "PASS" through the lens of approval. In everyday language, "
     "AMI has approved the trade — you should take it"
   ]}
   answer={1}
-  explanation="PASS = compliance: clear, within the simulator. It is silent on wisdom, outcome, and anything outside the app. The headline BUY is the trading team's simulated training output; the PM's PASS is the compliance result; they are independent training signals about different questions. The most tempting wrong answer is the 'AMI has approved' one — sounds intuitive but collapses two distinct training signals into a fake recommendation AMI is not licensed to give."
+  explanation="PASS = compliance: clear, within the simulator. It is silent on wisdom, outcome, and anything outside the app. The headline BUY is the trading team's simulated training output; the CIO's PASS is the compliance result; they are independent training signals about different questions. The most tempting wrong answer is the 'AMI has approved' one — sounds intuitive but collapses two distinct training signals into a fake recommendation AMI is not licensed to give."
 />
 
 <Quiz
-  question="The PM PASSes a 2% trade on a stock with deteriorating fundamentals (clear Bear case in the transcript, Bull lean only 0.51). What's the correct reading?"
+  question="The CIO PASSes a 2% trade on a stock with deteriorating fundamentals (clear Bear case in the transcript, Bull lean only 0.51). What's the correct reading?"
   options={[
-    "The PM has no opinion on the thesis — it confirmed only that 2% sits inside your Mandate. The weak Bull lean is the trading team's signal, separate from the compliance result",
-    "The PM disagrees with the Bear case",
-    "The Bear case must be wrong since PM passed",
+    "The CIO has no opinion on the thesis — it confirmed only that 2% sits inside your Mandate. The weak Bull lean is the trading team's signal, separate from the compliance result",
+    "The CIO disagrees with the Bear case",
+    "The Bear case must be wrong since CIO passed",
     "PASS overrides the Bear case"
   ]}
   answer={0}
-  explanation="The PM and the trading team are independent layers. PASS at 2% means size fits Mandate; it does not endorse the thesis. A weak 0.51 lean is the Room's way of telling you the conviction is borderline — that signal is preserved alongside PASS, not erased by it. The tempting wrong answers all conflate compliance with thesis-endorsement."
+  explanation="The CIO and the trading team are independent layers. PASS at 2% means size fits Mandate; it does not endorse the thesis. A weak 0.51 lean is the Room's way of telling you the conviction is borderline — that signal is preserved alongside PASS, not erased by it. The tempting wrong answers all conflate compliance with thesis-endorsement."
 />
 
 ## Try it
 
-<Term id="ami_convene_the_room" /> on a <Term id="ami_watchlist" /> ticker. When the Verdict appears, read the PM compliance line and *do not* read the BUY/SELL headline yet. Ask yourself: *if the PM blocked, would I want this trade anyway? If the PM passed, would I take it without reading the debate?* Then read the rest. Notice how the PM result and the trading-team verdict are doing different jobs.
+<Term id="ami_convene_the_room" /> on a <Term id="ami_watchlist" /> ticker. When the Verdict appears, read the CIO compliance line and *do not* read the BUY/SELL headline yet. Ask yourself: *if the CIO blocked, would I want this trade anyway? If the CIO passed, would I take it without reading the debate?* Then read the rest. Notice how the CIO result and the trading-team verdict are doing different jobs.
 
 ## Takeaway
 

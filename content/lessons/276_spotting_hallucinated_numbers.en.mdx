@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Spotting hallucinated numbers in a verdict
 
-The PM compliance check protects against <Term id="ami_mandate" /> violations. It does not fact-check every number an agent quotes. That job is yours — and it is a smaller job than it sounds, because most hallucinations show up in the same few places: stale ratios, off-by-quarter financials, made-up technical levels, and wrong dividend yields. By the end of this lesson you will know where to look first when a <Term id="ami_verdict" /> feels off, and how to use <Term id="ami_one_on_one" /> with the Fundamentals Analyst to cross-check a suspicious number in under a minute.
+The CIO compliance check protects against <Term id="ami_mandate" /> violations. It does not fact-check every number an agent quotes. That job is yours — and it is a smaller job than it sounds, because most hallucinations show up in the same few places: stale ratios, off-by-quarter financials, made-up technical levels, and wrong dividend yields. By the end of this lesson you will know where to look first when a <Term id="ami_verdict" /> feels off, and how to use <Term id="ami_one_on_one" /> with the Fundamentals Analyst to cross-check a suspicious number in under a minute.
 
 ## How this plays out in real markets
 
@@ -53,7 +53,7 @@ The trap is over-trusting <Term id="ami" /> on data because the verdict is struc
     "Trust the verdict — AMI's twelve agents would have caught any errors"
   ]}
   answer={1}
-  explanation="The CEO job is to verify load-bearing numbers, not to trust or reject blindly. Cross-checking is a 60-second 1-on-1. Coaching does not retroactively fix the Verdict you already have. The tempting wrong answer is the 'twelve agents would have caught it' one — assumes peer-review across agents, which is not how the architecture works; the PM checks Mandate compliance, not factual accuracy."
+  explanation="The CEO job is to verify load-bearing numbers, not to trust or reject blindly. Cross-checking is a 60-second 1-on-1. Coaching does not retroactively fix the Verdict you already have. The tempting wrong answer is the 'twelve agents would have caught it' one — assumes peer-review across agents, which is not how the architecture works; the CIO checks Mandate compliance, not factual accuracy."
 />
 
 <Quiz
@@ -61,11 +61,11 @@ The trap is over-trusting <Term id="ami" /> on data because the verdict is struc
   options={[
     "AMI never hallucinates because the agents cross-verify each other",
     "The Research Manager catches all hallucinations by comparing Bull and Bear claims",
-    "The PM fact-checks every number in every Verdict",
-    "The PM enforces Mandate compliance deterministically. Factual hallucinations on company data are an LLM-layer reality that the user (you, as CEO) is expected to spot-check on load-bearing claims using 1-on-1"
+    "The CIO fact-checks every number in every Verdict",
+    "The CIO enforces Mandate compliance deterministically. Factual hallucinations on company data are an LLM-layer reality that the user (you, as CEO) is expected to spot-check on load-bearing claims using 1-on-1"
   ]}
   answer={3}
-  explanation="The safety floor and the fact-check are different jobs. The PM binds Mandate compliance (size, drawdown, exclusions); factual accuracy is a CEO responsibility supported by 1-on-1 cross-checks. The tempting wrong answer is 'Research Manager catches all hallucinations' — the synthesiser weights cases, it does not run ground-truth verification across the corpus."
+  explanation="The safety floor and the fact-check are different jobs. The CIO binds Mandate compliance (size, drawdown, exclusions); factual accuracy is a CEO responsibility supported by 1-on-1 cross-checks. The tempting wrong answer is 'Research Manager catches all hallucinations' — the synthesiser weights cases, it does not run ground-truth verification across the corpus."
 />
 
 ## Try it
@@ -74,4 +74,4 @@ The trap is over-trusting <Term id="ami" /> on data because the verdict is struc
 
 ## Takeaway
 
-The PM binds Mandate; the CEO binds facts. Cross-check load-bearing numbers in 1-on-1 before the headline drives an evaluation. AMI is a <Term id="training_simulator" /> — spotting hallucinations is the skill it is built to drill, not a step toward executing the Verdict elsewhere.
+The CIO binds Mandate; the CEO binds facts. Cross-check load-bearing numbers in 1-on-1 before the headline drives an evaluation. AMI is a <Term id="training_simulator" /> — spotting hallucinations is the skill it is built to drill, not a step toward executing the Verdict elsewhere.

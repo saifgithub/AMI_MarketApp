@@ -33,7 +33,7 @@ The RM does **four** things that no other agent does:
 
 1. **Score the asymmetry.** A 30% upside vs a 50% downside is bad asymmetry, even if you lean bullish. The RM is the only agent whose job is to *measure both sides on the same axis*.
 2. **Translate view into size.** "We're cautiously bullish" is not a position. "Buy 3% with a stop at $148, target $192, horizon 6 months" is a position. The RM is the bridge from opinion to action.
-3. **Reconcile the mandate.** The user's mandate sets risk_score, max_drawdown, single-name cap, halal screen. The RM is the first place those constraints touch the trade. (The PM enforces them at the gate; the RM internalises them upstream.)
+3. **Reconcile the mandate.** The user's mandate sets risk_score, max_drawdown, single-name cap, halal screen. The RM is the first place those constraints touch the trade. (The CIO enforces them at the gate; the RM internalises them upstream.)
 4. **Flag debate quality.** If the Bear is strawmanning, the RM calls it. If the Bull's evidence is just narrative, the RM calls it. The RM is the room's quality bar.
 
 ## Asymmetry, in numbers
@@ -75,7 +75,7 @@ A real Research Manager will sometimes return "no trade." Specifically:
 - <Term id="ami_mandate" /> conflicts — the user is long-only and the only edge is on the short side.
 - Debate quality was poor — neither side built a falsifiable case.
 
-"No trade" is a real answer. The PM downstream will respect it. (And if the RM is forced into a trade they don't believe in, the <Term id="ami_pm_safety_floor" /> will catch it anyway — that's the redundancy.)
+"No trade" is a real answer. The CIO downstream will respect it. (And if the RM is forced into a trade they don't believe in, the <Term id="ami_pm_safety_floor" /> will catch it anyway — that's the redundancy.)
 
 ## Quiz
 
@@ -112,5 +112,5 @@ A real Research Manager will sometimes return "no trade." Specifically:
     "Flag the debate quality and return 'no trade'"
   ]}
   answer={3}
-  explanation="The RM is the room's quality bar. If neither side built an honest case, there's no real signal. 'No trade' is a legitimate output — and the PM will respect it downstream."
+  explanation="The RM is the room's quality bar. If neither side built an honest case, there's no real signal. 'No trade' is a legitimate output — and the CIO will respect it downstream."
 />
