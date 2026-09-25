@@ -713,3 +713,280 @@ same TestClient probes against the fix, plus a live vLLM-outage confirmation
 on Alpha). Nothing else identified as open.
 
 SUBMITTED: round 2
+
+## Round 3
+
+Fixes `orchestration/audit/cr/RETRO-SECURITY.auditor.md`'s round-2 verdict
+(`AWAITING_FIXES` — 3 MAJOR, 0 MINOR). Worked in isolated worktree
+`.claude/worktrees/agent-a43668ab4d5d5dd41`, branch
+`worktree-agent-a43668ab4d5d5dd41`, based on `main` at `700ee1d9`. No
+push/merge/promote from here — the coordinator integrates.
+
+### MAJOR-1 — `_lock_user_row` took the lock, then kept the pre-lock balance (fixed)
+
+**The claim.** `_lock_user_row` (`credit_service.py`, the call at line ~204)
+called `session.get(User, user.id, with_for_update=True)` without
+`populate_existing=True`. In SQLAlchemy 2.0.49, `Session.get(...,
+with_for_update=True)` on an ID already present in the session's identity map
+takes the row lock on the wire but returns the SAME Python object, with its
+attributes from whenever it was first loaded — the balance read immediately
+after "locking" the row is the pre-lock value. Measured by the auditor on
+real Postgres: `pack_vs_spend` landed on 15 (expected 14), `admin_vs_spend`
+on 6 (expected 5) — a concurrent spend's write erased, round 1's exact harm
+surviving through the new helper.
+
+**Fix.** One keyword, `credit_service.py::_lock_user_row`:
+
+```python
+locked = session.get(
+    User, user.id, with_for_update=True, populate_existing=True
+)
+```
+
+`populate_existing=True` forces the ORM to overwrite the already-loaded
+object's attributes from the fresh `SELECT … FOR UPDATE` result, so the
+caller's balance read after the lock sees the row as it stands NOW, not as
+it stood when the caller first loaded it.
+
+**Structural guard extended.**
+`test_retro_security_credit_balance_lock_guard.py::test_lock_user_row_itself_uses_with_for_update`
+now also asserts `populate_existing=True` on the same parsed `ast.Call`
+node's keywords, the same way it already asserted `with_for_update=True` —
+so a future edit that drops either keyword fails the build, not just a
+security review.
+
+**New sqlite-runnable regression** (the round-2 auditor's exact gap: "the
+property that matters only exists on Postgres, and the unit suite runs on
+SQLite" — but `populate_existing` is an ORM identity-map behaviour, not a
+database lock, so it IS exercisable on SQLite without a real Postgres):
+`test_lock_user_row_re_reads_the_balance_after_a_concurrent_write` — loads a
+user in session `s1`, commits a balance change to the same row via a SECOND
+session `s2` (reproducing `add_credit_pack`'s/`adjust_credits`'s exact
+shape — load, then `_lock_user_row`), then asserts `_lock_user_row(s1,
+loaded)` returns the NEW balance, not the one `loaded` was created with.
+
+**Tests + output**
+(`backend/.venv/bin/python -m pytest tests/unit/test_retro_security_credit_balance_lock_guard.py -q -p no:cacheprovider`,
+run bare from `backend/`):
+
+```
+12 passed in 2.65s     EXIT=0   (was 11 at round 2 — 1 new: the sqlite re-read regression;
+                                  the populate_existing AST assertion is inside the existing
+                                  test_lock_user_row_itself_uses_with_for_update, not a new test)
+```
+
+**Mutation evidence (reverted immediately after, restored file re-verified green):**
+
+Removed `populate_existing=True` from `_lock_user_row`'s `session.get(...)`
+call, nothing else changed:
+
+```
+test_lock_user_row_itself_uses_with_for_update                          FAILED
+test_lock_user_row_re_reads_the_balance_after_a_concurrent_write         FAILED
+2 failed, 10 passed
+```
+
+Both fail with the intended message — the AST guard names the missing
+keyword by name, and the sqlite regression shows the returned object's
+`credit_balance` is the pre-write value (`0 == 0 - 1`) exactly as the
+auditor's Postgres probe showed (`15` instead of `14`, `6` instead of `5`).
+Restored, re-ran: `12 passed in 2.65s, EXIT=0`.
+
+**What the auditor should re-measure on real Postgres:** the round-2
+`pack_vs_spend`/`admin_vs_spend` probes, unchanged, should now both read the
+expected value (14 and 5) instead of the pre-fix 15/6 — this submission's own
+evidence is the sqlite regression above plus the AST guard; it does not
+itself re-drive the two named Postgres races.
+
+### MAJOR-2 — the Concierge 1-on-1 still charged for an error sentinel and for an outage (fixed)
+
+**The claim, in two parts.** (1) `AgentRunner.stream_one_on_one_message`
+threads a caller-supplied `meta` to the analyst branch's `stream_chat` call
+(round 2's fix) but never passed it into `_stream_concierge` at all — so an
+in-band `[AMI error: HTTP 503 …]` sentinel from the Concierge's own
+`stream_chat` call left `meta["stream_error"]` unset, and `one_on_one.py`'s
+refund check (`stream_meta.get("stream_error")`) never fired. (2)
+`_stream_concierge`'s `except Exception` (a provider outage, e.g.
+`ConnectError`) caught the exception and yielded a scripted fallback reply
+with NO signal of any kind — not even a raised exception for the route's
+`except Exception: failed = True` to catch. Measured by the auditor through
+the REAL `LLMGateway` + a real `OpenAICompatibleProvider` with an
+`httpx.MockTransport`: `1on1 agent=concierge http503 charged=1`, `1on1
+agent=concierge connect_error charged=1 (tail: a scripted Concierge reply)`
+— both other surfaces (Brief, the analyst 1-on-1 path) already read 0 from
+the same probe.
+
+**Root cause, precisely.** The `meta=` passthrough round 2 gave the analyst
+branch (`agent_runner.py`, then `:238-246`) was never mirrored onto the
+Concierge branch's own, separate `stream_chat` call
+(`_stream_concierge`, then `:303`) — two different call sites in the same
+function, one fixed, one not. And the Concierge branch's own `try/except`
+around that call had no `meta`-writing counterpart to the gateway's
+transport-level `meta["stream_error"]` write for the exception case, because
+the exception never reaches the gateway's own `finally` block at all — it
+propagates straight into `_stream_concierge`'s own handler.
+
+**Fix — `backend/app/services/agent_runner.py`:**
+
+1. `stream_one_on_one_message`'s call into `_stream_concierge` now passes
+   `meta=meta` (previously omitted entirely).
+2. `_stream_concierge` gained the `meta: dict[str, Any] | None = None`
+   parameter and threads it to its own `self._llm.stream_chat(..., meta=meta)`
+   call — the same gateway that already writes `meta["stream_error"]` on a
+   non-200 reply (round 2's fix), now reachable from THIS call site too.
+3. The `except Exception as exc:` branch (the outage/ConnectError case) now
+   also writes `meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]`
+   before yielding the scripted fallback — so a swallowed transport failure
+   sets the same structural signal an in-band error already would, and
+   `one_on_one.py`'s existing refund check (unchanged) fires on both.
+
+No string-matching added anywhere; the fix extends the existing
+`stream_error` channel to a call site and a failure branch it previously
+never reached.
+
+**Tests + output.** Four new tests added to
+`test_def113_one_on_one_credit_gate.py`, all driving the REAL `LLMGateway` +
+a REAL `OpenAICompatibleProvider` (registered as `VLLMProvider`, the live
+provider preference) with `httpx.MockTransport` — the auditor's exact probe
+shape, not a monkeypatched `stream_one_on_one_message` (which round 2's own
+tests used and which the auditor noted "never exercise the real provider…
+they never exercise the real call chain"):
+
+- `test_concierge_real_provider_http_503_is_refunded_not_billed` — HTTP 503,
+  charged=0 (was 1).
+- `test_concierge_real_provider_connect_error_is_refunded_not_billed` —
+  `httpx.ConnectError`, charged=0 (was 1).
+- `test_concierge_real_provider_success_still_bills_normally` — control: a
+  real, successful streamed reply still bills normally, proving the `meta`
+  thread-through cannot turn a genuine success into a false refund.
+
+```
+tests/unit/test_def113_one_on_one_credit_gate.py
+14 passed in 5.65s     EXIT=0   (was 11 at round 2 — 3 new; 1 pre-existing
+                                  round-2 sentinel test in this file is unchanged)
+```
+
+**Mutation evidence (reverted immediately after, restored file re-verified green):**
+
+Reverted both changes to `agent_runner.py` (dropped `meta=meta` from the
+call into `_stream_concierge`; dropped the parameter and the
+`meta["stream_error"]` write inside it — i.e. exactly round 2's code):
+
+```
+test_concierge_real_provider_http_503_is_refunded_not_billed          FAILED (10 == 13, not refunded)
+test_concierge_real_provider_connect_error_is_refunded_not_billed     FAILED (10 == 13, not refunded)
+2 failed, 12 passed
+```
+
+Both fail reproducing the auditor's exact numbers (balance short by the
+3-credit cost, i.e. charged not refunded). Restored, re-ran:
+`14 passed in 5.65s, EXIT=0`.
+
+### MAJOR-3 — the Brief refund blocked the event loop; the DEF200 ratchet was red (fixed)
+
+**The claim.** Round 2's fix added a synchronous `refund(...)` call inside
+`brief.py`'s `async def event_stream`'s `finally` block. `refund()` opens a
+sync DB session and runs `SELECT … FOR UPDATE` + an `UPDATE` + a ledger
+insert — real blocking I/O, now additionally able to WAIT on another holder
+of the same user's row lock (round 3's own MAJOR-1 fix made the lock
+meaningful) — directly on the single uvicorn worker's event loop, stalling
+every other request and every other open SSE stream, worst exactly when the
+provider is failing and many streams hit the refund branch simultaneously.
+`test_def200_ratchet.py::test_no_new_handler_blocks_the_event_loop` failed at
+`ae468eff` (`brief.py::event_stream` newly flagged) and passed at `0accfeed`
+— **the DEF200 ratchet was red on `main` before this fix.**
+
+**Fix — `backend/app/api/brief.py`:**
+
+1. The `refund(...)` call in `event_stream`'s `finally` is now
+   `await run_in_threadpool(refund, current_user.id, cost,
+   reason=f"brief_failed:{req.session_id}")` — same idiom `auth.py`'s DEF183
+   fix already uses in this codebase.
+2. **Extended beyond the letter of the assignment, and why:** the census
+   (`backend/scripts/def200_sync_io_census.py`) marks a WHOLE handler
+   "mitigated" the moment it contains ANY `run_in_threadpool(...)` call
+   anywhere in its body (including inside a nested closure) —
+   `_already_threadpooled` walks the entire `AsyncFunctionDef` node, not a
+   per-callsite check. Wrapping only `refund()` would have made the census
+   stop flagging `brief.py::brief_message` entirely — silencing the ALSO
+   pre-existing, ALSO-unwrapped `spend()` call earlier in the same handler
+   (`brief.py:141`, present since DEF205, not introduced by this round) by
+   accident of the guard's blind spot, not because it was fixed. Wrapped
+   `spend(...)` the same way for the same reason it protects `refund(...)`,
+   rather than "fix" the ratchet number by exploiting a gap in how it counts.
+3. `tests/unit/test_def200_ratchet.baseline.json` — removed
+   `"brief.py::brief_message"` from `flagged` (20 entries now, `<= 21` bound
+   still holds); the census no longer flags it because BOTH sync DB calls in
+   the handler are now genuinely off the loop, not because the guard stopped
+   looking.
+
+`one_on_one.py`'s own `refund()`/`spend()` call sites have the identical
+shape (`send_message`/`event_stream`, both still on the ratchet's frozen
+debt baseline) — checked, per the assignment, and left as pre-existing debt:
+fixing them was not required by any MAJOR here and the auditor's own note
+frames it as optional cleanup ("would let one baseline entry be removed"),
+not part of this round's scope.
+
+**Tests + output**
+(`backend/.venv/bin/python -m pytest tests/unit/test_def200_ratchet.py tests/unit/test_def205_brief_credit_gate.py -q -p no:cacheprovider`):
+
+```
+12 passed in 11.00s    EXIT=0
+```
+
+`test_def200_ratchet.py` alone: `4 passed in 0.86s, EXIT=0` — all four,
+including `test_the_baseline_shrinks_when_a_handler_is_fixed` (the baseline
+edit above is what makes this one pass rather than fail).
+
+**Mutation evidence (reverted immediately after, restored files re-verified green):**
+
+1. Reverted `refund(...)` back to a bare synchronous call (round 2's exact
+   code), `spend(...)` still wrapped:
+   `test_no_new_handler_blocks_the_event_loop` → `FAILED`, flagging
+   `brief.py::brief_message` and `brief.py::event_stream` both newly added
+   (the census now sees BOTH unwrapped calls, since neither remaining
+   `run_in_threadpool` call in the function masks it once `spend()` is also
+   reverted) — `1 failed`.
+2. Reverted `spend(...)` back to a bare synchronous call too (both calls now
+   exactly as round 2 shipped them): same test, same failure, this time
+   reproducing the auditor's own finding verbatim
+   (`brief.py::event_stream` newly flagged).
+
+Restored both, re-ran the full pair above: `12 passed in 11.00s, EXIT=0`.
+
+### Full mandated test list, this round
+
+```
+backend/.venv/bin/python -m pytest \
+  tests/unit/test_def200_ratchet.py \
+  tests/unit/test_retro_security_credit_balance_lock_guard.py \
+  tests/unit/test_def369_spend_takes_a_row_lock.py \
+  tests/unit/test_def205_brief_credit_gate.py \
+  tests/unit/test_def113_one_on_one_credit_gate.py \
+  tests/unit/test_retro_pm_floor_round2.py \
+  tests/unit/test_room_runner.py \
+  tests/unit/test_safety_floor.py \
+  tests/unit/test_def398_pm_json_contract_break.py \
+  tests/unit/test_p15_check_then_insert_guard.py \
+  tests/unit/test_config_compose_parity.py \
+  tests/unit/test_registers_no_drift.py \
+  tests/unit/test_p30_registers_name_things_that_exist.py \
+  tests/unit/test_concierge_context_router.py \
+  tests/unit/test_concierge_engine.py \
+  tests/unit/test_concierge_live.py \
+  tests/unit/test_brief_engine.py \
+  -q -p no:cacheprovider
+
+275 passed, 1 skipped in 140.57s     EXIT=0
+```
+
+**Unresolved / left for the auditor:** the real-Postgres re-measurement of
+`pack_vs_spend`/`admin_vs_spend` under `populate_existing=True` (MAJOR-1);
+the same real-provider MockTransport probes against the fix, run
+independently (MAJOR-2); confirmation on melehost that the full suite is now
+green at the promoted SHA, MAJOR-3's own claim being that it was NOT green at
+`ae468eff` (MAJOR-3). `one_on_one.py`'s identical unwrapped
+`spend()`/`refund()` shape is flagged above as checked-but-out-of-scope, not
+silently missed.
+
+SUBMITTED: round 3

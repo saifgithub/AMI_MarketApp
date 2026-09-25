@@ -592,3 +592,137 @@ round-1 findings-closed list, not open items handed to this fix pass, and re-der
 outside the four items named in my task.
 
 SUBMITTED: round 2
+
+## Post-COMPLETE minor fixes
+
+The lane's round-2 verdict is `COMPLETE` (0 BLOCKER, 0 MAJOR, 2 MINOR open — MINOR-2's two
+residuals, and MINOR-3 new). Fixed anyway, per assignment, since all three are cheap and
+load-bearing for the floor's own promise. Worked in isolated worktree
+`.claude/worktrees/agent-a43668ab4d5d5dd41`, branch `worktree-agent-a43668ab4d5d5dd41`, based on
+`main` at `700ee1d9`.
+
+### MINOR-2 residual 1 — a detected conflict fell through to the reformat retry, which could upgrade it to APPROVE
+
+**The claim.** Round 2's fix made `extract_json_object` return bare `None` when it found two
+conflicting `action`-carrying objects in a reply. `None` is indistinguishable, at the call site,
+from "genuinely unparseable" — and `room_runner.py`'s `_parse_pm_verdict` caller treats a `None`
+verdict as DEF058's cue to run ONE reformat retry. DEF067's own rule is that the retry can only
+ever RECOVER an APPROVE, never downgrade one — so a reply carrying a retracted draft APPROVE and
+a final PASS could still be re-asked, and the model's SECOND read (not the room's floor) decided
+the conflict, in the one direction the retraction argued against. Auditor's probe:
+`two-decision draft_then_pass, reformatter says APPROVE -> APPROVE (reformat_calls=1)`.
+
+**Fix.** `backend/app/services/llm_json.py` — a new `ConflictingDecision` sentinel class, distinct
+from `None`, returned by `extract_json_object` for this case (carries `.first`/`.second`, the two
+conflicting decoded objects — used for logging only, no behaviour of its own). Scoped narrowly:
+only reachable for text containing an `action` key (the PM/CIO verdict shape), so
+`brief_engine.py`'s and the Risk Officer's own `extract_json_object` calls — neither shape carries
+`action` — can never receive one.
+
+`backend/app/services/room_runner.py::_parse_pm_verdict` — checks `isinstance(parsed,
+ConflictingDecision)` immediately after the first `extract_json_object(text)` call and, when true,
+returns a real `Verdict(action=PASS, reason=_PM_CONFLICTING_DECISION, overridden_from_llm=True)`
+directly — never `None`. Because the call site's DEF058 gate is `if parsed is None:`, a real
+`Verdict` here means the reformat retry is never invoked at all for a detected conflict — not
+"invoked but its APPROVE is discarded", but structurally unreachable.
+
+**Tests + output.** `test_def398_pm_json_contract_break.py::test_two_conflicting_decisions_fail_safe_not_first_wins`
+updated to assert `isinstance(result, ConflictingDecision)` with the two decoded halves, instead of
+`is None`. Two new end-to-end tests in `test_retro_pm_floor_round2.py`, both driving the real
+`RoomRunner.run()`:
+
+- `test_a_conflicting_decision_never_reaches_the_reformatter_at_all` — a fake gateway whose
+  reformatter, if ever called, answers APPROVE (the auditor's exact upgrade shape); asserts
+  `reformat_calls == 0` AND the verdict is PASS.
+- `test_a_quoted_brace_before_the_real_conflict_is_still_caught` — see residual 2 below (same test
+  covers both).
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_def398_pm_json_contract_break.py tests/unit/test_retro_pm_floor_round2.py -q -p no:cacheprovider
+17 passed in 16.29s     EXIT=0
+```
+
+**Mutation evidence (reverted immediately after, restored and re-verified green):** changed
+`extract_json_object`'s conflict branch to `return None` instead of `return
+ConflictingDecision(...)` (round 2's exact code) — `test_two_conflicting_decisions_fail_safe_not_first_wins`
+and `test_a_conflicting_decision_never_reaches_the_reformatter_at_all` both **failed**
+(`2 failed, 15 passed`), the latter reproducing the auditor's exact bug end-to-end: log line
+`room_pm_verdict_reformatted`, verdict `action=APPROVE`, `reformat_calls=1`.
+
+### MINOR-2 residual 2 — `_extract_second_decision` only scanned the first `{`, missing a real conflict behind a stray quoted brace
+
+**The claim.** DEF398's own measured shape: the PM quotes its own "begin with `{` and end with
+`}`" contract back at us inside trailing prose. That quoted brace is not itself a decision object,
+but round 2's `_extract_second_decision` stopped at the FIRST `{` in the tail, failed to decode a
+dict with `action` there, and returned `None` — hiding a REAL second, conflicting decision sitting
+later in the same tail. Auditor's probe: `extract quoted-brace-tail -> APPROVE`.
+
+**Fix.** `backend/app/services/llm_json.py::_extract_second_decision` — rewritten from a single
+`tail.find("{")` + one `raw_decode` attempt into a loop that scans every `{` position in the tail:
+on a `JSONDecodeError` at one position (a stray/quoted/incomplete brace), it advances one character
+and tries again, rather than giving up; on a successful decode of a dict WITHOUT `action`, it
+advances past that object and keeps scanning rather than stopping. Only a genuine absence of any
+decision-shaped object anywhere in the tail returns `None`.
+
+**Tests + output.** `test_retro_pm_floor_round2.py::test_a_quoted_brace_before_the_real_conflict_is_still_caught`
+— a fake gateway reproducing the exact DEF398 shape (draft APPROVE, then a `DATA I LACKED:` section
+quoting the JSON-contract braces, then the real conflicting PASS) through the real
+`RoomRunner.run()`; asserts the verdict is never APPROVE.
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py tests/unit/test_def398_pm_json_contract_break.py -q -p no:cacheprovider
+17 passed in 16.29s     EXIT=0
+```
+
+**Mutation evidence (reverted immediately after, restored and re-verified green):** reverted
+`_extract_second_decision` to round 2's single-first-brace version (multi-object scan removed,
+`ConflictingDecision` sentinel from residual 1 left in place) —
+`test_a_quoted_brace_before_the_real_conflict_is_still_caught` **failed**
+(`assert 'APPROVE' != 'APPROVE'`), reproducing the auditor's exact probe result.
+
+### MINOR-3 — the respawn-failure branch kept the user's credits
+
+**The claim.** The round-2 MAJOR-1 fix added a branch to `_respawn_run_from_row`: when
+`sim.valuation_snapshot` cannot be read, the row is marked `failed` with a disclosed reason and the
+function returns — but never refunds `row.credit_cost`, charged when the run first started
+(CR039's own rule: a failure on our side gives the credits back). Auditor's probe: `PROBE respawn
+snapshot failure -> status=failed … refunded=0 (credit_cost 3)`.
+
+**Fix.** `backend/app/services/room_runner.py::_respawn_run_from_row` — the snapshot-failure branch
+now reads `row.credit_cost` inside the same `with get_session() as s:` block that marks the row
+failed, then (outside that block) calls `await asyncio.to_thread(refund, p.user_id, credit_cost,
+reason=f"room_respawn_abandoned:{p.run_id}")` — off the event loop, via the locked credit path
+(`credit_service.refund` → `_lock_user_row`, this session's own MAJOR-1 fix), best-effort (a
+refund failure is logged, never masks the original abandonment). The identical gap in
+`_sweep_stuck_runs`' own retry-exhausted `failed` branch (the auditor's own note: "neither does
+`_sweep_stuck_runs`'... a pre-existing gap") is NOT fixed here — out of scope for this MINOR, which
+names only the new branch this round's own MAJOR-1 fix introduced.
+
+**Tests + output.**
+`test_retro_pm_floor_round2.py::test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read`
+extended: the test's user is now created via `AuthService().ensure_anonymous()` (a real `users`
+row is required to observe a refund at all — `credit_service.refund` silently no-ops when no such
+row exists, which would have passed this test for the wrong reason), and asserts
+`balance_for(user_id)[0] == before_balance + credit_cost` after the abandoned respawn.
+
+```
+cd backend && .venv/bin/python -m pytest tests/unit/test_retro_pm_floor_round2.py -q -p no:cacheprovider
+8 passed in 15.59s     EXIT=0
+```
+
+**Mutation evidence (reverted immediately after, restored and re-verified green):** removed the
+refund block from the snapshot-failure branch entirely (bare `return`, round 2's exact code) —
+`test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read` **failed**
+(`assert 13 == (13 + 8)`), balance unchanged, reproducing the auditor's `refunded=0` finding
+exactly. Restored, re-ran: `8 passed in 15.59s, EXIT=0`.
+
+### SHAs
+
+Fixes for these three MINORs live in the same worktree/commits as this session's RETRO-SECURITY
+round-3 work (`backend/app/services/llm_json.py`, `backend/app/services/room_runner.py`,
+`backend/tests/unit/test_def398_pm_json_contract_break.py`,
+`backend/tests/unit/test_retro_pm_floor_round2.py`) — see the commit(s) tagged `CR231` on branch
+`worktree-agent-a43668ab4d5d5dd41` for exact SHAs; this lane and RETRO-SECURITY round 3 touch
+overlapping files (`room_runner.py`, both PM-verdict-adjacent) but disjoint functions
+(`_parse_pm_verdict`/`_extract_second_decision`/`_respawn_run_from_row` here vs
+`_lock_user_row`/`brief.py`/`agent_runner.py` there).
