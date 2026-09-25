@@ -660,6 +660,26 @@ def test_def428_parse_drawdown_pct_rejects_garbage_and_out_of_range():
     assert _parse_drawdown_pct("-10%") is None
 
 
+def test_def428_round3_sub_one_percent_is_unparseable_not_truncated_to_zero():
+    """U66 round-2 MAJOR-1: `int()` truncation used to turn any answer
+    strictly between 0 and 1 into a stored 0 — a value the schema's `ge=1`
+    floor then rejects at claim, on every retry, because the session is
+    already marked complete. `_parse_drawdown_pct` must treat `0 < pct < 1`
+    as unparseable (None), exactly like any other out-of-range input, so the
+    interview re-asks instead of storing a value it cannot honour. It must
+    NOT round up to 1 — that would be a fabrication the architect explicitly
+    ruled against."""
+    from app.services.concierge_engine import _parse_drawdown_pct
+
+    assert _parse_drawdown_pct("0.5%") is None
+    assert _parse_drawdown_pct("0.9 percent") is None
+    assert _parse_drawdown_pct("0.1") is None
+    assert _parse_drawdown_pct("0.99%") is None
+    # 1.0 and above are unaffected by this fix.
+    assert _parse_drawdown_pct("1%") == 1
+    assert _parse_drawdown_pct("1.5%") == 1
+
+
 def test_def428_money_and_loose_numbers_are_not_read_as_a_percentage():
     """A number only becomes a drawdown when it is marked as a percentage or is
     the entire answer. Money and incidental numbers must re-ask, not become a
@@ -814,7 +834,13 @@ def test_def428_round2_every_q6_chip_and_offgrid_value_survives_model_validate()
     """Parser-output-subset-schema, driven as a property: every Q6 chip value
     AND a spread of off-grid values (including the "40%" chip, which the
     audit's 'Recorded, not scored' finding flagged as never persistable
-    before this fix) must construct a valid Mandate."""
+    before this fix) must construct a valid Mandate.
+
+    Round 3 (U66 round-2 MAJOR-1): also covers the sub-1% range ("0.5%",
+    "0.9 percent", "0.1") — these must never reach `session.answers` at all
+    (the re-ask keeps Q6 pending), so `_run_q6_then_q7` cannot be used for
+    them; see `test_def428_round3_sub_one_percent_q6_answer_re_asks` for the
+    end-to-end guarantee that they never advance."""
     from uuid import uuid4
 
     from app.schemas.mandate import Mandate
@@ -832,6 +858,30 @@ def test_def428_round2_every_q6_chip_and_offgrid_value_survives_model_validate()
         mandate = Mandate.model_validate(mandate_dict)
 
         assert mandate.max_drawdown_pct == expected, f"answer={answer!r}"
+
+
+def test_def428_round3_sub_one_percent_q6_answer_re_asks():
+    """U66 round-2 MAJOR-1, driven end-to-end: a sub-1% typed answer must
+    re-ask Q6 (never advance to Q7, never write `max_drawdown_pct`), exactly
+    like any other unparseable answer — not silently store 0 and let a later
+    claim/restart hit `Mandate.model_validate`'s `ge=1` floor as a 500 on
+    every retry."""
+    for answer in ("0.5%", "0.9 percent", "0.1", "0.99%"):
+        session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+        next_step, message, readback = process_answer(
+            session, ConversationStep.Q6_MAX_DRAWDOWN, answer
+        )
+
+        assert next_step == ConversationStep.Q6_MAX_DRAWDOWN, (
+            f"sub-1% answer {answer!r} must re-ask Q6, not advance to Q7"
+        )
+        assert readback is None
+        assert "max_drawdown_pct" not in session.answers, (
+            f"sub-1% answer {answer!r} must never be stored (not even as 0)"
+        )
+        assert message.step == ConversationStep.Q6_MAX_DRAWDOWN
+        assert message.chips == Q6_CHIPS
 
 
 def test_def428_round2_max_drawdown_pct_out_of_bounds_still_rejected():

@@ -421,6 +421,17 @@ def _parse_drawdown_pct(text: str) -> int | None:
     via `int()` truncation (valid here because `pct` is always positive) —
     the stricter cap, since a drawdown ceiling should never round in the
     user's favour.
+
+    Round 3 (U66 round-2 MAJOR-1): `int()` truncation meant an answer
+    strictly between 0 and 1 ("0.5%", "0.9 percent", "0.1") passed the old
+    `pct <= 0` check and was then truncated to 0 — a value the schema's
+    `ge=1` floor rejects at claim/restart, so the interview accepted an
+    answer it could never actually honour. `0 < pct < 1` is now rejected
+    up front as unparseable, same as any other out-of-range value: the
+    caller re-asks rather than storing a mandate that will fail downstream.
+    Per the architect's ruling, this is NOT rounded up to 1 — an answer
+    this function cannot honour exactly must be re-asked, not silently
+    substituted.
     """
     t = text.lower().strip()
     if "no cap" in t or "no limit" in t or "uncapped" in t:
@@ -444,7 +455,7 @@ def _parse_drawdown_pct(text: str) -> int | None:
     if not m:
         return None
     pct = float(m.group(1))
-    if pct <= 0 or pct > 100:
+    if pct < 1 or pct > 100:
         return None
     return int(pct)
 
