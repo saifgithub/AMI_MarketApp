@@ -4476,6 +4476,7 @@ async def _run_cio_step(
     char_delay_min: float,
     char_delay_max: float,
     agent_timeout_s: float,
+    defer_outage_verdict_event: bool = False,
 ) -> AsyncIterator["RoomEvent"]:
     """CR237 — the CIO's own turn: build the PM prompt (or the CR098
     Amendment 2 no-parse NO_VERDICT), sample/vote, parse, run the
@@ -4498,6 +4499,15 @@ async def _run_cio_step(
     context, halal/classification/locale universes) rather than reusing
     anything from the outaged run — the floor must judge the user's position
     NOW, not at the original run's stale snapshot (CR237 ruling #2).
+
+    `defer_outage_verdict_event` (CR237 round 2): when True and the verdict
+    is outage-shaped (`is_outage_shaped_verdict`), `run.verdict` is set but
+    the `verdict` event is NOT yielded here — the caller yields it exactly
+    once, after its refund attempt, so the one event a live listener sees
+    carries "This Room wasn't charged." only if the refund actually
+    succeeded (DEF432 MINOR-1) while the Room still emits ONE verdict event
+    (CR219 R51). `run()` passes True; the retry route leaves it False (it
+    never refunds, so it has nothing to wait for).
     """
     if AgentId.MARKET_ANALYST in ctx.withheld:
         verdict = _assemble_no_verdict(ctx)
@@ -4894,6 +4904,8 @@ async def _run_cio_step(
         )
         verdict = verdict.model_copy(update={"reason": _reason})
     run.verdict = verdict
+    if defer_outage_verdict_event and is_outage_shaped_verdict(verdict.model_dump()):
+        return
     yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
 
 
@@ -6436,6 +6448,10 @@ class RoomRunner:
 
         gateway = self._llm or get_llm_gateway()
         live = gateway.has_real_provider()
+        # CR237 round 2 — an outage-shaped verdict's single `verdict` event is
+        # held until after the refund attempt below (see `_run_cio_step`'s
+        # `defer_outage_verdict_event`).
+        _deferred_verdict: Verdict | None = None
 
         try:
             for phase in PHASES:
@@ -6590,8 +6606,13 @@ class RoomRunner:
                         char_delay_min=char_delay_min,
                         char_delay_max=char_delay_max,
                         agent_timeout_s=agent_timeout_s,
+                        defer_outage_verdict_event=True,
                     ):
                         yield ev
+                    if run.verdict is not None and is_outage_shaped_verdict(
+                        run.verdict.model_dump()
+                    ):
+                        _deferred_verdict = run.verdict
                 await asyncio.sleep(_PHASE_GAP_S)
 
             run.status = RoomStatus.COMPLETED
@@ -6716,22 +6737,6 @@ class RoomRunner:
                     run.verdict = run.verdict.model_copy(update={
                         "reason": f"{run.verdict.reason} {_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}",
                     })
-                    # DEF432 MINOR-1 — re-emit the verdict event so a LIVE
-                    # SSE listener also sees the corrected reason. The first
-                    # `verdict` event (`_run_cio_step`, inside the phase
-                    # loop) necessarily streamed BEFORE `refund()` could be
-                    # attempted — completion has to happen before a refund
-                    # decision can be made. The mobile client's `verdict`
-                    # handler is a plain overwrite (`state.copyWith(verdict:
-                    # ev['verdict'])`, `room_providers.dart`), so this second
-                    # event simply replaces the displayed text; a client that
-                    # disconnected before this point instead reads the
-                    # corrected text on any later GET/replay, since
-                    # `_persist_run` right below writes the same corrected
-                    # `run.verdict`.
-                    yield RoomEvent(
-                        kind="verdict", run_id=run_id, verdict=run.verdict,
-                    )
                     # CR237 — snapshot the pre-CIO desk-phase context ONLY on
                     # the DEF059 outage PASS (`is_llm_outage_verdict`), the
                     # one case "Ask the CIO again" can retry. The R51 partial-
@@ -6750,6 +6755,22 @@ class RoomRunner:
                         ticker=ticker,
                         credits=run.credit_cost,
                     )
+            # CR237 round 2 — the outage-shaped verdict's ONE `verdict` event
+            # (CR219 R51: a Room emits exactly one), held back by
+            # `_run_cio_step` so it streams only now, after the refund
+            # attempt: its reason carries "This Room wasn't charged." iff the
+            # refund above succeeded (DEF432 MINOR-1), never before `refund()`
+            # has returned. Built from the verdict the CIO step produced (not
+            # the R60-enriched `run.verdict`), so the event's shape is what
+            # `run()` has always streamed; only the reason is taken from the
+            # post-refund record.
+            if _deferred_verdict is not None:
+                yield RoomEvent(
+                    kind="verdict", run_id=run_id,
+                    verdict=_deferred_verdict.model_copy(update={
+                        "reason": run.verdict.reason if run.verdict else _deferred_verdict.reason,
+                    }),
+                )
             # CR219 R55 — bank this verdict in the calibration ledger.
             #
             # `_reference_close(profile)` is the price the Room was actually

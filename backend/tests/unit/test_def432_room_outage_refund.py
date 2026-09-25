@@ -114,15 +114,12 @@ def _run_room(user_id, fail_n, monkeypatch, cap=4, credit_cost=CREDIT_COST):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    # DEF432 MINOR-1 — a run whose refund SUCCEEDS re-emits a second
-    # `verdict` event carrying the "wasn't charged" text (see `run()`'s
-    # COMPLETED branch): the first event streams from inside the phase loop,
-    # necessarily before completion/refund can happen at all. A run whose
-    # verdict never needed a refund (or whose refund failed) still emits
-    # exactly one. Callers that want the FINAL, accurate verdict — what a
-    # client ends up displaying and what gets persisted — read the last one.
-    assert len(verdicts) in (1, 2)
-    return verdicts[-1].verdict
+    # CR219 R51 — a Room emits exactly ONE `verdict` event. DEF432 MINOR-1
+    # still holds: for an outage-shaped verdict `run()` defers that one event
+    # until after its refund attempt, so it carries "wasn't charged" only if
+    # the refund succeeded (CR237 round 2 — round 1 re-emitted a second one).
+    assert len(verdicts) == 1
+    return verdicts[0].verdict
 
 
 # ── the outage NO_VERDICT is refunded ────────────────────────────────────────
@@ -237,9 +234,8 @@ def test_a_failed_refund_never_claims_the_room_was_not_charged(monkeypatch):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    # Exactly ONE verdict event: the refund failed, so `run()` never reaches
-    # the re-emit branch (that branch is inside the refund's own `else:`,
-    # reached only on success).
+    # Exactly ONE verdict event (CR219 R51), emitted after the failed refund
+    # attempt and therefore WITHOUT the "wasn't charged" sentence.
     assert len(verdicts) == 1
     verdict = verdicts[0].verdict
 
@@ -464,9 +460,9 @@ def _run_room_cio_down(user_id):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    # DEF432 MINOR-1 — see `_run_room`'s identical comment above.
-    assert len(verdicts) in (1, 2)
-    return verdicts[-1].verdict
+    # CR219 R51 / DEF432 MINOR-1 — see `_run_room`'s identical comment above.
+    assert len(verdicts) == 1
+    return verdicts[0].verdict
 
 
 def test_cio_outage_pass_is_refunded_and_says_so():

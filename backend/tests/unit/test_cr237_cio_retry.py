@@ -158,8 +158,9 @@ def _run_outage_room(user_id, mandate, gateway) -> tuple[RoomRunner, "uuid.UUID"
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    assert len(verdicts) in (1, 2)
-    final = verdicts[-1].verdict
+    # CR219 R51 — exactly one verdict event, even on the refunded outage path.
+    assert len(verdicts) == 1
+    final = verdicts[0].verdict
     assert final.action == VerdictAction.PASS
     assert is_llm_outage_verdict(final.model_dump())
     return runner, run_id
@@ -972,9 +973,9 @@ def test_def432_minor1_failed_refund_on_cio_outage_pass_direct_run(monkeypatch):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    # Exactly ONE verdict event: the refund's re-emit branch is inside its
-    # own `else:` (success only) — a failed refund never reaches it, same
-    # as test_def432_room_outage_refund.py's identical NO_VERDICT case.
+    # Exactly ONE verdict event (CR219 R51), emitted after the failed refund
+    # attempt and so without the "wasn't charged" sentence — same as
+    # test_def432_room_outage_refund.py's identical NO_VERDICT case.
     assert len(verdicts) == 1
     verdict = verdicts[0].verdict
 
