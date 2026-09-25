@@ -1073,3 +1073,205 @@ green at the promoted SHA, MAJOR-3's own claim being that it was NOT green at
 silently missed.
 
 SUBMITTED: round 3
+
+## Round 4
+
+Fixes `orchestration/audit/cr/RETRO-SECURITY.auditor.md`'s round-3 verdict
+(`AWAITING_FIXES` — 1 MAJOR open, 0 MINOR). Worked in isolated worktree
+`.claude/worktrees/agent-a6fc3edd13c6d8ade`, branch
+`worktree-agent-a6fc3edd13c6d8ade`, based on `main` at `5308b1b5`. Fix commit
+`90a3af56`. No push/merge/promote from here — the coordinator integrates.
+
+### MAJOR-1 (residual) — `_ensure_period` decided the re-grant before taking the lock (fixed)
+
+**The claim.** `_ensure_period` (`credit_service.py`, then `~:261-285`)
+computed `eff` / `window_rolled` / `plan_drifted` from the CALLER's pre-lock
+`user` snapshot, called `_lock_user_row` (which refreshes the BALANCE via
+round 3's `flush()` + `populate_existing`), then wrote `ALLOWANCE[eff]`
+UNCONDITIONALLY — the lock refreshed what the code read, but not the
+DECISION of whether to write at all. Measured by the auditor on real
+Postgres: a `GET /mandate` balance read (`balance_for` → `_ensure_period`)
+racing a RevenueCat pack webhook (`add_credit_pack` → `_ensure_period` →
+`add_credit_pack`'s own pack-add) at month rollover erased the
+just-delivered paid pack — `rollover_balance_for_vs_pack` expected 160,
+landed 150. This is the same lost-update property MAJOR-1 has been about
+across all three prior rounds (a credit writer must never erase a
+concurrent write), on the one writer of the six the round-3 fix did not
+reach, because the AST guard can see that the lock is CALLED but not that
+the decision to write was made before it.
+
+**Root cause, precisely.** The pre-lock `window_rolled`/`plan_drifted`
+check exists as a cheap early-out — most calls to `_ensure_period` (every
+`balance_for` read in a month that already rolled) hit neither condition
+and return `eff` immediately, never touching the lock at all. That early
+out is correct and stays. The bug was trusting the SAME two booleans again
+after the lock was taken, instead of re-deriving them from the now-current
+row. A concurrent writer that rolls the window (or re-tags the plan) in
+the gap between this call's own load and its `_lock_user_row` call gets its
+own re-grant re-granted straight over.
+
+**Fix — `backend/app/services/credit_service.py::_ensure_period`
+(`:261-330` after the change):** after `user = _lock_user_row(session,
+user)`, recompute `eff`, `month_start`, `period`, `window_rolled`,
+`plan_drifted` from the LOCKED row (the exact same three lines the pre-lock
+check already runs, repeated against the post-lock `user`) and `return eff`
+immediately if neither condition still holds — mirroring the "lock first,
+decide from the locked row" shape every other one of the six writers
+round 3 fixed already has. `_lock_user_row`'s own `session.flush()` +
+`populate_existing=True` behaviour (round 3) is untouched — this fix adds a
+decision re-check after that call returns, nothing inside it.
+
+```python
+user = _lock_user_row(session, user)
+
+# Re-derive from the LOCKED row — a concurrent writer may have already
+# rolled the window or re-tagged the plan while this call waited for the
+# lock. Deciding again here (not trusting the pre-lock check above) is
+# what makes this writer's decision, not just its write, race-safe.
+eff = effective_plan(_plan_of(user), user.trial_expires_at)
+month_start = _month_start(_utcnow())
+period = _as_utc(user.credits_period_start)
+window_rolled = period is None or period < month_start
+plan_drifted = user.credits_plan_at_grant != eff.value
+if not (window_rolled or plan_drifted):
+    return eff
+
+old_balance = user.credit_balance or 0
+user.credit_balance = ALLOWANCE[eff]
+...
+```
+
+**Tests + output**
+(`backend/.venv/bin/python -m pytest tests/unit/test_retro_security_credit_balance_lock_guard.py -q -p no:cacheprovider`,
+run bare from `backend/`):
+
+```
+14 passed in 2.74s     EXIT=0   (was 12 at round 3 — 2 new)
+```
+
+Two new sqlite-runnable regressions added to
+`test_retro_security_credit_balance_lock_guard.py`, same style as round 3's
+own `test_lock_user_row_re_reads_the_balance_after_a_concurrent_write`
+(load in one session, commit a concurrent write via a second session
+between the load and the call, assert the concurrent write survives):
+
+- `test_ensure_period_does_not_re_grant_over_a_concurrent_rollover` — the
+  rollover branch the auditor measured directly. `s1` loads a row stamped
+  for last month with balance 3; a concurrent `s2` commits the rollover
+  (fresh `ALLOWANCE[FLOOR_PASS]`, re-tagged period) and then spends 1
+  against it, committing at `ALLOWANCE[FLOOR_PASS] - 1`; `_ensure_period(s1,
+  loaded)` must return without re-granting, leaving the concurrent spend
+  intact.
+- `test_ensure_period_does_not_re_grant_over_a_concurrent_plan_drift` — the
+  drift branch, which the round-3 auditor named ("plan drift … goes through
+  the same branch, but I did not drive it") but did not exercise. Same
+  shape: `s1` loads a row still tagged `credits_plan_at_grant=trader` while
+  `plan=floor_pass` (stale); a concurrent `s2` commits the drift
+  resolution (re-tags to `floor_pass`, grants its allowance, spends 2)
+  before `_ensure_period(s1, loaded)` runs; must not re-grant over it.
+
+Both tests set up the "stale" state in a session that commits BEFORE `s1`
+loads (not inside `s1`'s own open transaction) — SQLite's single-writer
+lock means a same-process second session cannot commit against a row `s1`
+has already flushed a pending change to, so the concurrent-commit shape has
+to be staged this way to be driven on SQLite at all; this mirrors how a
+real concurrent Postgres transaction would interleave (two independent
+transactions, not one transaction's own unflushed edit).
+
+**Mutation evidence (reverted immediately after, restored file re-verified
+green):** removed the entire post-lock re-check block (the `eff = …`
+through `return eff` lines quoted above), leaving `_lock_user_row`'s call
+immediately followed by the unconditional write (byte-for-byte round-3's
+code):
+
+```
+test_ensure_period_does_not_re_grant_over_a_concurrent_rollover      FAILED (13 == 13 - 1, not 11)
+test_ensure_period_does_not_re_grant_over_a_concurrent_plan_drift    FAILED (13 == 13 - 2, not 11)
+2 failed, 12 passed
+```
+
+Both fail with the intended message, reproducing the auditor's exact class
+of loss (a fresh, full `ALLOWANCE[eff]` overwrites the concurrent writer's
+own already-granted-and-partially-spent balance). Restored, re-ran:
+`14 passed in 2.74s, EXIT=0`.
+
+**Full mandated test list, this round**
+(`backend/.venv/bin/python -m pytest … -q -p no:cacheprovider`, run bare from `backend/`):
+
+```
+tests/unit/test_retro_security_credit_balance_lock_guard.py
+tests/unit/test_def369_spend_takes_a_row_lock.py
+tests/unit/test_cr084_revenuecat_webhook.py
+tests/unit/test_def099_merge_billing.py
+tests/unit/test_merge_service.py
+tests/unit/test_reputation_service.py
+tests/unit/test_admin.py
+tests/unit/test_def205_brief_credit_gate.py
+tests/unit/test_def113_one_on_one_credit_gate.py
+tests/unit/test_def200_ratchet.py
+tests/unit/test_registers_no_drift.py
+tests/unit/test_p30_registers_name_things_that_exist.py
+162 passed, 2 warnings in 31.54s   EXIT=0   (warnings are the pre-existing
+                                              HTTP_422 deprecation, unrelated)
+```
+
+Also re-ran every other test file this session found referencing
+`credit_service` (a superset of the mandated list, since a change to a
+shared low-level helper's caller — round 3's own note on how it caught its
+own flush bug — is worth the wider net):
+
+```
+tests/unit/test_cr039_room_credit_gate.py
+tests/unit/test_cr090_live_data_surcharge.py
+tests/unit/test_cr090_room_live_data_surcharge.py
+tests/unit/test_cr098_room_analyst_pullback.py
+tests/unit/test_cr128_ticker_existence_validation.py
+tests/unit/test_cr148_cr147_feed_depth.py
+tests/unit/test_retro_pm_floor_round2.py
+140 passed, 4 warnings in 78.21s   EXIT=0   (warnings are the same
+                                              pre-existing HTTP_422 deprecation)
+```
+
+`diff --stat` vs `main` (`5308b1b5`):
+
+```
+backend/app/services/credit_service.py                                    |  28 +++
+backend/tests/unit/test_retro_security_credit_balance_lock_guard.py       | 138 +++++++++
+2 files changed, 166 insertions(+)
+```
+
+**What the auditor should re-measure on real Postgres:**
+
+- **Rollover, read-vs-pack (the exact defect this round closes):**
+  `rollover_balance_for_vs_pack` — a `balance_for` read racing a
+  `add_credit_pack` webhook at month rollover — should now read **160**
+  (the pack survives), not the pre-fix 150.
+- **Rollover, read-vs-spend:** `rollover_balance_for_vs_spend` should now
+  read **149** (the concurrent spend survives), not the pre-fix 150.
+- **Plan-drift variant:** the round-3 auditor named this branch but did not
+  drive it on Postgres ("Plan drift … goes through the same branch, but I
+  did not drive it"). Suggest the analogous probe: a stale-tagged `user`
+  (still `credits_plan_at_grant` for the OLD effective plan) calling
+  `_ensure_period` while a concurrent writer has already resolved the SAME
+  drift (re-tagged + granted + spent some of it) — expect the concurrent
+  writer's post-spend balance to survive, not a fresh full `ALLOWANCE[eff]`
+  overwrite. This round's sqlite regression proves the Python-level
+  decision logic is race-safe; a Postgres run would additionally confirm
+  the `FOR UPDATE` wait actually serialises the two real transactions
+  (SQLite cannot exercise that half, same limitation every prior round's
+  writer-lock claims have carried).
+- The round-3 control probes
+  (`rollover_balance_for_vs_spend_recheck_control`,
+  `rollover_pack_vs_spend_recheck_control`, both already reading 149/159
+  correctly under a hand-rolled recheck) are exactly what this fix now does
+  inside `_ensure_period` itself, rather than as an external control — the
+  auditor's own round-3 evidence already demonstrates the shape works;
+  this round wires it into the real function.
+
+**Unresolved / left for the auditor:** the three real-Postgres
+re-measurements named immediately above (rollover read-vs-pack expect 160,
+read-vs-spend expect 149, the plan-drift variant). Nothing else identified
+as open — round 3's MAJOR-2 and MAJOR-3 were already closed and untouched
+by this round's diff.
+
+SUBMITTED: round 4
