@@ -630,6 +630,16 @@ def _forward_pe_clause(profile: dict[str, Any]) -> str:
 # the only way to detect it was to match prose; a CR164 sweep recorded 450
 # consecutive outage PASSes as a completed batch because nothing could.
 PM_LLM_UNAVAILABLE_REASON = (
+    "AMI's analyst room lost its model connection before the Chief "
+    "Investment Officer could rule. No trade — reconvene the room in a "
+    "little while."
+)
+
+# DEF423 round 2 — the pre-rename wording of the sentinel above, kept as a
+# named legacy constant (not inlined) so a verdict row written before this
+# change is still recognised as an outage by `is_llm_outage_verdict`. Never
+# used to mint a new verdict; equality-only, for stored-row compatibility.
+_PM_LLM_UNAVAILABLE_REASON_LEGACY = (
     "AMI's analyst room lost its model connection before the Portfolio "
     "Manager could rule. No trade — reconvene the room in a little while."
 )
@@ -687,9 +697,10 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     """
     if not verdict:
         return False
-    return (
-        bool(verdict.get("overridden_from_llm"))
-        and (verdict.get("reason") or "").strip() == PM_LLM_UNAVAILABLE_REASON
+    _reason = (verdict.get("reason") or "").strip()
+    return bool(verdict.get("overridden_from_llm")) and _reason in (
+        PM_LLM_UNAVAILABLE_REASON,
+        _PM_LLM_UNAVAILABLE_REASON_LEGACY,
     )
 
 
@@ -2134,8 +2145,8 @@ _PM_TRUNCATED_NARRATION = (
 _PM_TRUNCATED_NO_NARRATION = (
     "[AMI: the Chief Investment Officer hit its length limit before its explanation "
     "reached us. The decision and its numbers above are complete and are the "
-    "PM's own; the reasoning was cut off in transmission, not withheld. Treat "
-    "this as an explanation we lost, not one the PM declined to give.]"
+    "CIO's own; the reasoning was cut off in transmission, not withheld. Treat "
+    "this as an explanation we lost, not one the CIO declined to give.]"
 )
 
 # RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — the reply carried a real,
@@ -2651,13 +2662,13 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     _defaulted = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None and entry is not None]
     if _defaulted:
         reason += (
-            f" ({'/'.join(_defaulted)} not stated by the PM — defaulted to a "
-            f"~6%/13%-from-entry protective level, not a PM-chosen price.)"
+            f" ({'/'.join(_defaulted)} not stated by the CIO — defaulted to a "
+            f"~6%/13%-from-entry protective level, not a CIO-chosen price.)"
         )
     _unavailable = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None and entry is None]
     if _unavailable:
         reason += (
-            f" ({'/'.join(_unavailable)} not stated by the PM, and no entry "
+            f" ({'/'.join(_unavailable)} not stated by the CIO, and no entry "
             f"price was available to derive a protective level from.)"
         )
     # DEF240: last, and on the APPROVED size — after the risk-tier clamp above, so

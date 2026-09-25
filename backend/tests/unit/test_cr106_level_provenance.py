@@ -108,7 +108,7 @@ def test_the_prose_disclosure_is_still_emitted_alongside_the_field():
     by deleting the sentence that used to be the only disclosure would be a net
     loss of honesty, so the field is ADDITIVE — both must be present."""
     verdict, _ = _run_with_pm(_PM_NO_STOP_NO_TARGET)
-    assert "not stated by the PM" in verdict.reason
+    assert "not stated by the CIO" in verdict.reason
     assert "stop/target" in verdict.reason
 
 

@@ -786,7 +786,7 @@ def _research_manager_block(m: Mandate) -> str:
 def _trader_block(m: Mandate) -> str:
     max_pos = _max_position_pct(m)
     parts = [
-        "## Role guidance — Trader",
+        "## Role guidance — Execution Desk",
         "You translate synthesis into a trade idea. Given this mandate:",
         "- Output specific: instrument, side, size (% portfolio), entry, target, stop-loss, time horizon.",
         f"- Position size capped at {max_pos}% per name (risk_score={m.risk_score}).",
@@ -911,7 +911,7 @@ def _pm_risk_appetite_line(m: Mandate) -> str:
         return (
             f"   - This user's risk_score is {m.risk_score}/5 — they have told AMI "
             "they can sit through more drawdown to pursue more upside. A "
-            "well-argued case that a risk_score=1 user's PM would reasonably "
+            "well-argued case that a risk_score=1 user's CIO would reasonably "
             "PASS on is exactly what this user is asking to see approved. Weigh "
             "the debate on its merits, not against a caution calibrated to a "
             "more conservative user."
@@ -929,7 +929,7 @@ def _portfolio_manager_block(m: Mandate) -> str:
 You are the gatekeeper. You approve or reject the proposed trade.
 
 INPUTS:
-- Trader's proposal
+- Execution Desk's proposal
 - Research Manager's synthesis
 - 3 Risk Officers' arguments
 - Current portfolio state

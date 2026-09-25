@@ -403,3 +403,33 @@ def test_the_outage_verdict_the_room_actually_builds_is_detected() -> None:
         overridden_from_llm=True,
     )
     assert is_llm_outage_verdict(built.model_dump())
+
+
+def test_outage_detection_survives_the_def423_round2_title_rename() -> None:
+    """DEF423 round 2 reworded `PM_LLM_UNAVAILABLE_REASON` from "the Portfolio
+    Manager" to "the Chief Investment Officer" (CR160 title rename residue).
+    A verdict row banked BEFORE that rename still carries the old sentence
+    verbatim in storage, so `is_llm_outage_verdict` must keep recognising it —
+    the exact failure this function exists to prevent, one layer up: renaming
+    the sentinel string must not itself create a batch of unrecognised
+    outages the way the original inline literal did (DEF336)."""
+    from app.services.room_runner import (
+        _PM_LLM_UNAVAILABLE_REASON_LEGACY,
+        PM_LLM_UNAVAILABLE_REASON,
+        is_llm_outage_verdict,
+    )
+
+    assert "Chief Investment Officer" in PM_LLM_UNAVAILABLE_REASON
+    assert "Portfolio Manager" in _PM_LLM_UNAVAILABLE_REASON_LEGACY
+    assert PM_LLM_UNAVAILABLE_REASON != _PM_LLM_UNAVAILABLE_REASON_LEGACY
+
+    # A pre-rename row, exactly as it sits in storage today.
+    assert is_llm_outage_verdict(
+        {"action": "PASS", "overridden_from_llm": True,
+         "reason": _PM_LLM_UNAVAILABLE_REASON_LEGACY}
+    )
+    # A post-rename row, minted going forward.
+    assert is_llm_outage_verdict(
+        {"action": "PASS", "overridden_from_llm": True,
+         "reason": PM_LLM_UNAVAILABLE_REASON}
+    )
