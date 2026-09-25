@@ -54,8 +54,10 @@ from app.services import room_runner as room_runner_mod
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.credit_service import balance_for, spend
 from app.services.room_runner import (
+    PM_LLM_UNAVAILABLE_REASON,
     PM_ROOM_INCOMPLETE_REASON,
     RoomRunner,
+    is_llm_outage_verdict,
     room_verdict_is_incomplete,
     run_was_refunded,
 )
@@ -326,3 +328,85 @@ def test_run_was_refunded_false_for_cancelled_and_running_and_queued():
 
 def test_run_was_refunded_false_for_none_row():
     assert not run_was_refunded(None)
+
+
+# ── the CIO-only outage PASS is refunded too ────────────────────────────────
+# Saiful, 2026-09-25, asked whether a Room whose desks all answered but whose
+# CIO was unreachable (the DEF059 fail-safe PASS) should be refunded:
+# "Refund it". Same outage rule; the user never got the CIO's ruling.
+
+
+class _CioDownGateway:
+    """Every desk answers; the CIO's stream is empty (the DEF059 shape)."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        if "speak as the chief investment officer" in system_prompt.lower():
+            return
+        yield "AMI agent live reply with a real contribution."
+
+
+def _run_room_cio_down(user_id):
+    runner = RoomRunner(llm=_CioDownGateway())  # type: ignore[arg-type]
+
+    async def go():
+        return [ev async for ev in runner.run(
+            user_id=user_id, ticker="AAPL",
+            mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3}),
+            char_delay_min=0.0, char_delay_max=0.0,
+            credit_cost=CREDIT_COST,
+        )]
+
+    events = asyncio.run(go())
+    verdicts = [ev for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1
+    return verdicts[0].verdict
+
+
+def test_cio_outage_pass_is_refunded_and_says_so():
+    user_id = _billed_user()
+    before = balance_for(user_id)[0]
+    spend(user_id, CREDIT_COST, reason="room:AAPL:test-charge")
+
+    verdict = _run_room_cio_down(user_id)
+
+    assert verdict.action == VerdictAction.PASS
+    assert verdict.reason.startswith(PM_LLM_UNAVAILABLE_REASON)
+    assert "wasn't charged" in verdict.reason
+    assert is_llm_outage_verdict(verdict.model_dump()), (
+        "the appended sentence must not stop the outage PASS being "
+        "recognised as an outage (batch analysis excludes it by this check)"
+    )
+    assert balance_for(user_id)[0] == before
+
+
+def test_run_was_refunded_true_for_completed_cio_outage_pass():
+    outage = Verdict(
+        action=VerdictAction.PASS,
+        reason=f"{PM_LLM_UNAVAILABLE_REASON} This Room wasn't charged.",
+        overridden_from_llm=True,
+    )
+    assert run_was_refunded(_bare_run(status=RoomStatus.COMPLETED, verdict=outage))
+
+
+def test_run_was_refunded_false_for_a_reasoned_pass():
+    reasoned = Verdict(
+        action=VerdictAction.PASS,
+        reason="Chief Investment Officer: the thesis does not clear the "
+               "mandate at this size.",
+    )
+    assert not run_was_refunded(_bare_run(status=RoomStatus.COMPLETED, verdict=reasoned))
+
+
+def test_outage_text_without_the_override_flag_is_not_refunded():
+    """The check is the sentinel AND `overridden_from_llm`, so a CIO reply
+    that happened to quote the outage wording is still charged."""
+    quoted = Verdict(
+        action=VerdictAction.PASS,
+        reason=f"{PM_LLM_UNAVAILABLE_REASON} (quoted)",
+        overridden_from_llm=False,
+    )
+    assert not run_was_refunded(_bare_run(status=RoomStatus.COMPLETED, verdict=quoted))

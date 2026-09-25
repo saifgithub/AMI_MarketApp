@@ -704,14 +704,18 @@ def run_was_refunded(run: RoomRun | None) -> bool:
     drift from the decision — exactly the DEF437-class bug a second,
     independently-recomputed "was this refunded" check would risk.
 
-    True for exactly two shapes, both decided elsewhere in this file:
+    True for exactly three shapes, all decided elsewhere in this file:
 
     - `status == "failed"` — CR039's refund, taken unconditionally in
       `run()`'s `except Exception` branch for every failed run.
     - `status == "completed"` AND the verdict is the DEF432 outage
       NO_VERDICT (`room_verdict_is_incomplete`) — this predicate's new case.
-      A normal completed verdict (APPROVE/PASS/REJECT, or CR098's
-      withheld-analyst NO_VERDICT) is charged and reports `False` here.
+    - `status == "completed"` AND the verdict is the DEF059 CIO-outage PASS
+      (`is_llm_outage_verdict`). Saiful, 2026-09-25: "Refund it" — the user
+      never got the CIO's ruling, so the same outage rule applies.
+
+    A normal completed verdict (APPROVE/PASS/REJECT, or CR098's
+    withheld-analyst NO_VERDICT) is charged and reports `False` here.
 
     CANCELLED is never refunded (room_runner's cancel branch charges stand)
     and reports `False`, same as QUEUED/RUNNING mid-flight. DEF425's
@@ -726,9 +730,8 @@ def run_was_refunded(run: RoomRun | None) -> bool:
     if status == "failed":
         return True
     if status == "completed":
-        return room_verdict_is_incomplete(
-            run.verdict.model_dump() if run.verdict is not None else None
-        )
+        v = run.verdict.model_dump() if run.verdict is not None else None
+        return room_verdict_is_incomplete(v) or is_llm_outage_verdict(v)
     return False
 
 
@@ -743,10 +746,12 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     if not verdict:
         return False
     _reason = (verdict.get("reason") or "").strip()
-    return bool(verdict.get("overridden_from_llm")) and _reason in (
+    # Prefix, not equality: DEF432 appends "This Room wasn't charged." to the
+    # live sentinel. The legacy wording predates that and matches either way.
+    return bool(verdict.get("overridden_from_llm")) and _reason.startswith((
         PM_LLM_UNAVAILABLE_REASON,
         _PM_LLM_UNAVAILABLE_REASON_LEGACY,
-    )
+    ))
 
 
 # DEF399 — above this ratio between EDGAR's consolidated annual interest and
@@ -5950,7 +5955,10 @@ class RoomRunner:
                             _pm_outage = True
                             verdict = Verdict(
                                 action=VerdictAction.PASS,
-                                reason=PM_LLM_UNAVAILABLE_REASON,
+                                reason=(
+                                    f"{PM_LLM_UNAVAILABLE_REASON} "
+                                    f"{_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}"
+                                ),
                                 overridden_from_llm=True,
                             )
                             logger.error("room_pm_llm_unavailable", run_id=str(run_id))
