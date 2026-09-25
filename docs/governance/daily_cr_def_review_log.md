@@ -1133,3 +1133,9 @@ Architect on 2026-09-24 from session transcripts, not from a live run of this
 routine on each of those days — flagged explicitly per this log's own convention
 (a back-filled entry is not the same evidentiary weight as a live `AskUserQuestion`
 run, but is more useful than a gap).
+
+## 2026-09-25
+
+Not run. Saiful, after 13:00 Riyadh when the Architect offered it: *"Skip the run. Build CR237"*.
+No proposed CR or open Defect was reviewed today. **CR237** moved `proposed` → `in_progress`
+on that instruction (its earlier "After +113" timing brought forward).
