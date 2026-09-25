@@ -85,6 +85,12 @@ router = APIRouter(
 _build_journal_entry = build_journal_entry_for_run
 
 
+CIO_RETRY_CRASHED_MESSAGE = (
+    "The Chief Investment Officer couldn't be asked again — something failed "
+    "on our side. Retries are free; nothing was charged."
+)
+
+
 def _compute_cio_retry_available(run: RoomRun | None, user_id: UUID) -> bool:
     """CR237 — `cio_retry_eligible` needs the CURRENT mandate version, which
     is a store read; every call site in this file already has a `run` and a
@@ -473,39 +479,55 @@ def cio_retry(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
     async def event_stream():
-        async for ev in runner.retry_cio_step(run_id, user_id=current_user.id):
-            if ev.kind == "phase":
-                yield sse_json("phase", json.dumps({"label": ev.phase}))
-            elif ev.kind == "agent_token":
-                safe = escape_sse_text(ev.text or "")
-                payload = json.dumps({
-                    "agent_id": ev.agent_id.value if ev.agent_id else None,
-                    "text": safe,
-                })
-                yield sse_json("agent_token", payload)
-            elif ev.kind == "agent_done":
-                payload = json.dumps({
-                    "agent_id": ev.agent_id.value if ev.agent_id else None,
-                    "stance": ev.stance,
-                    "conviction": ev.conviction,
-                    "headline": ev.headline,
-                    "argued_size_pct": ev.argued_size_pct,
-                })
-                yield sse_json("agent_done", payload)
-            elif ev.kind == "verdict":
-                if ev.verdict is not None:
-                    yield sse_json("verdict", ev.verdict.model_dump_json())
-            elif ev.kind == "error":
-                # DEF127: framed through sse_text, not interpolated — see
-                # stream_room's identical comment.
-                yield sse_text("error", ev.text or "unknown")
+        # CR237 round 3 (auditor U66 MAJOR-B) — an exception inside the retry
+        # used to abort the SSE body with neither `error` nor `done`, so the
+        # client spun and the button stayed on offer (CR040: degrade loudly).
+        # Every exception now ends in an `error` event and the `done` event
+        # below, whose flags are re-read from the row. The retry never
+        # persists before its CIO step finishes, so a crash leaves the row as
+        # it was: the refunded outage PASS.
+        try:
+            async for ev in runner.retry_cio_step(run_id, user_id=current_user.id):
+                if ev.kind == "phase":
+                    yield sse_json("phase", json.dumps({"label": ev.phase}))
+                elif ev.kind == "agent_token":
+                    safe = escape_sse_text(ev.text or "")
+                    payload = json.dumps({
+                        "agent_id": ev.agent_id.value if ev.agent_id else None,
+                        "text": safe,
+                    })
+                    yield sse_json("agent_token", payload)
+                elif ev.kind == "agent_done":
+                    payload = json.dumps({
+                        "agent_id": ev.agent_id.value if ev.agent_id else None,
+                        "stance": ev.stance,
+                        "conviction": ev.conviction,
+                        "headline": ev.headline,
+                        "argued_size_pct": ev.argued_size_pct,
+                    })
+                    yield sse_json("agent_done", payload)
+                elif ev.kind == "verdict":
+                    if ev.verdict is not None:
+                        yield sse_json("verdict", ev.verdict.model_dump_json())
+                elif ev.kind == "error":
+                    # DEF127: framed through sse_text, not interpolated — see
+                    # stream_room's identical comment.
+                    yield sse_text("error", ev.text or "unknown")
+        except Exception:
+            logger.exception("room_cio_retry_crashed", run_id=str(run_id))
+            yield sse_text("error", CIO_RETRY_CRASHED_MESSAGE)
         # CR237 — same computed-flag discipline as stream_room's `done`
         # event: a plain re-read of the persisted row, never a second,
         # possibly-drifted decision. `credit_cost`/`refunded` are included so
         # the client can refresh its cost line from one event without a
         # follow-up GET, matching `run_was_refunded`'s "not charged" case
-        # exactly (the retry never spends or refunds).
-        _final = runner.get_run(run_id)
+        # exactly (the retry never spends or refunds). A row that cannot be
+        # read degrades to null/false, same as `stream_room`'s `done`.
+        try:
+            _final = runner.get_run(run_id)
+        except Exception:
+            logger.exception("room_cio_retry_final_read_failed", run_id=str(run_id))
+            _final = None
         yield sse_json("done", json.dumps({
             "run_id": str(run_id),
             "credit_cost": _final.credit_cost if _final is not None else None,
