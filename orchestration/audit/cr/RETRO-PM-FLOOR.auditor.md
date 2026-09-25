@@ -448,3 +448,43 @@ Counts, round 2: 0 BLOCKER, 0 MAJOR (MAJOR-1 and MAJOR-2 fixed), 2 MINOR open (M
 residuals, and MINOR-3 new). MINOR-1 is closed.
 
 VERDICT: COMPLETE (round 2)
+
+---
+
+## Post-COMPLETE spot-check — auditor U68 (no verdict owed)
+
+**SHA:** `685dbdd0` (the minors fix is `429682c1`). Same scratch worktree as RETRO-SECURITY round 3.
+The round-2 verdict above stands. This section records what I re-drove against the three
+minor fixes. It is not a new round.
+
+- **MINOR-2, both residuals: fixed.** `extract_json_object` now returns a `ConflictingDecision`
+  sentinel, and the room turns that directly into `PASS` with the conflict disclosed
+  (`_PM_CONFLICTING_DECISION`, `room_runner.py:2148,2466`; sentinel at `llm_json.py:85`), without going through the DEF067 reformat retry. My round-2 probes:
+
+  ```
+  two-decision draft_then_pass, reformatter says APPROVE -> PASS  reformat_calls=0   (round 2: APPROVE)
+  two-decision draft_quote_then_pass                     -> PASS  reformat_calls=0   (round 2: APPROVE)
+  extract quoted-brace-tail / non-action-object-first    -> ConflictingDecision      (round 2: APPROVE)
+  extract same-action-echo                               -> dict APPROVE              (no false conflict)
+  extract case-variant "APPROVE" then "approve"          -> ConflictingDecision      (fails safe, to PASS)
+  ```
+
+- **MINOR-3: fixed.** The respawn-failure branch now refunds `row.credit_cost` off-loop
+  (`room_runner.py:4626-4661`).
+
+  ```
+  PROBE respawn snapshot failure -> status=failed action=None refunded=3 (credit_cost 3)
+  ```
+
+  **Mutation, mine:** refund disabled -> probe `refunded=0`, and
+  `FAILED test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read`.
+
+  **A correction to my round-2 evidence:** that round's `refunded=0` probe line was not
+  discriminating. The probe user had no `users` row, so `refund()` was a silent no-op, and a
+  correct refund would also have printed 0. The finding itself stood on the code: there was
+  no refund call. The line above uses a real user row, and the mutation shows it can tell
+  the two cases apart. `_sweep_stuck_runs`' retry-exhausted branch still does not refund; the
+  builder disclosed this as pre-existing and out of scope.
+
+- **Unchanged:** the 24-run matrix is still all `REJECT`, and the respawn, sector-failure and
+  holdings-failure probes still give `REJECT` / `failed` at `685dbdd0` (`33 passed`).
