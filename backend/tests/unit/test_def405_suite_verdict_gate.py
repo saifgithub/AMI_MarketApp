@@ -99,9 +99,75 @@ def test_a_malformed_record_is_treated_as_no_gate(postflight, tmp_path) -> None:
 
 def test_the_suite_check_runs_first_in_the_driver(postflight) -> None:
     src = _POSTFLIGHT.read_text()
-    order = [m.group(1) for m in re.finditer(r'\("(suite|identity|tree|readiness|config|market)", lambda', src)]
-    assert order[0] == "suite" and len(order) == 6, order
+    # Every check name is discovered from the driver itself, not hand-listed here —
+    # a hand-list is exactly how CR235's own `local_gate` addition would have gone
+    # unnoticed by this test (it did, once, while writing it: see the assertion
+    # below, added after that near-miss).
+    order = [m.group(1) for m in re.finditer(r'\("(\w+)", lambda', src)]
+    assert order[0] == "suite" and order[1] == "local_gate", order
+    assert len(order) == 8, order
+    assert set(order) == {"suite", "local_gate", "migrations", "identity", "tree",
+                          "readiness", "config", "market"}, order
     assert "--suite-verdict" in src
+    assert "--local-gate-verdict" in src
+
+
+# ── CR235 — the local release gate's own verdict record ─────────────────────
+# Same DEF405 shape, one gate over: `preflight_local_gate.sh` (Flutter test +
+# harness offline self-tests) writes `.deliveryos/local_gate_verdict.json`, and
+# `check_local_gate_verdict` reads it after the deploy. Its record has no
+# `target`/`passed`/`failed`/`errors` (it runs two independent suites, not one
+# pytest invocation), so it gets its own record helper rather than reusing `_record`.
+
+
+def _local_gate_record(tmp_path: Path, **over) -> Path:
+    rec = {"sha": _SHA, "verdict": "PASS", "flutter": "PASS", "harness": "PASS",
+           "at": _NOW.isoformat().replace("+00:00", "Z")}
+    rec.update(over)
+    path = tmp_path / "local_gate_verdict.json"
+    path.write_text(json.dumps(rec))
+    return path
+
+
+def _check_local_gate(postflight, path: Path, sha: str = _SHA) -> list[str]:
+    return postflight.check_local_gate_verdict(path, sha, now=_NOW.timestamp() + 600)
+
+
+def test_local_gate_fresh_full_pass_on_the_promoted_commit_is_clean(postflight, tmp_path) -> None:
+    assert _check_local_gate(postflight, _local_gate_record(tmp_path)) == []
+    assert _check_local_gate(postflight, _local_gate_record(tmp_path), sha=_SHA[:12]) == []
+
+
+def test_local_gate_missing_record_is_a_failure_not_an_unknown(postflight, tmp_path) -> None:
+    problems = postflight.check_local_gate_verdict(tmp_path / "absent.json", _SHA)
+    assert len(problems) == 1 and "did not run" in problems[0]
+
+
+@pytest.mark.parametrize("over,needle", [
+    ({"verdict": "FAIL", "flutter": "FAIL", "harness": "PASS"}, "recorded FAIL"),
+    ({"verdict": "COULD_NOT_RUN"}, "recorded COULD_NOT_RUN"),
+    ({"verdict": ""}, "recorded nothing"),
+    ({"sha": "deadbeef" + "0" * 32}, "not the shipped tree"),
+    ({"at": "2026-09-10T18:00:00Z"}, "old"),
+    ({"at": "not-a-date"}, "old"),
+])
+def test_local_gate_every_non_green_state_is_named(postflight, tmp_path, over, needle) -> None:
+    assert any(needle in p for p in _check_local_gate(postflight, _local_gate_record(tmp_path, **over)))
+
+
+def test_local_gate_malformed_record_is_treated_as_no_gate(postflight, tmp_path) -> None:
+    path = tmp_path / "local_gate_verdict.json"
+    path.write_text("{not json")
+    problems = postflight.check_local_gate_verdict(path, _SHA)
+    assert len(problems) == 1 and "unreadable" in problems[0]
+
+
+def test_local_gate_record_lives_where_git_ignores_it() -> None:
+    rc = subprocess.run(["git", "check-ignore", "-q", ".deliveryos/local_gate_verdict.json"],
+                        cwd=_ROOT, check=False).returncode
+    assert rc == 0, "the local gate verdict record must be ignored by git"
+    assert '.deliveryos/local_gate_verdict.json' in \
+        (_ROOT / "scripts" / "promotion" / "preflight_local_gate.sh").read_text()
 
 
 # ── the shell half ──────────────────────────────────────────────────────────

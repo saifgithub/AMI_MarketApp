@@ -2276,3 +2276,78 @@ props/fenced code. `trader` is excluded from the scan (ordinary English
 vocabulary throughout this corpus, same ambiguity CR160's own guard already
 documents for the label "Trader"); `concierge` is excluded because it is
 simultaneously the id and the correct display name.
+
+---
+
+## P38 — a gate whose result nobody reads
+
+**Symptom.** A CI workflow (or any automated check) runs on every push,
+produces a real verdict, and that verdict sits unread. The check is not
+broken — it is correctly reporting red — but nothing downstream ever looks
+at it, so the red state persists indefinitely and is discovered, if at all,
+by accident.
+
+**Instance.** GitHub Actions' `tests.yml` on `main` last went green
+2026-08-10 (measured by the Architect, 2026-09-25). The harness job (`qa-harness`)
+was red every run since 08-11 — first a stale `MANIFEST.sha256`, then 8 stale
+containment tests, both fixed the same day this was measured (DEF431). The
+backend and Flutter jobs flapped 08-14→08-25, and the backend job alone took
+5h13m on a single 09-17 run. Every push cancels the previous run's jobs
+(measured: 11 consecutive cancels the day this was found), so most runs never
+even finished. Nothing in `/promote-to-alpha` or `promotion_protocol.md` ever
+queried GitHub Actions for a result — the workflow existed, ran, and reported,
+entirely disconnected from the one process that ships code. 46 days of red sat
+unseen not because the check lied, but because no process consumed its output.
+
+**Why this is the same class as DEF326/DEF405, one layer up.** DEF326 was a
+gate (`pytest`) whose failing state was invisible in the summary line a human
+read. DEF405 was that gate's own exit code, correctly signalling failure,
+consumed by a `| tail` wrapper before a human saw it. P38 is the same shape
+one more layer out: a gate (CI) that correctly ran and correctly reported, with
+**no wrapper and no consumer at all** — the promotion process simply never
+asked. A check with no reader is indistinguishable, in its effect on the
+codebase, from a check that does not exist.
+
+**The fix (CR235).** Two halves, matching how the other two instances of this
+shape were closed — move what must gate to where it is read, and make the
+thing that still isn't read impossible to misread when it does surface:
+
+1. The tests that must actually **block** a promotion — the Flutter suite and
+   the `qa/appium` harness offline self-tests — moved out of CI entirely and
+   into `scripts/promotion/preflight_local_gate.sh`, run bare at promotion time
+   with the exact DEF405 discipline (one `VERDICT:` line, an exit code, and a
+   `.deliveryos/local_gate_verdict.json` record `postflight.py`'s `local_gate`
+   check reads after the deploy — so a wrapper swallowing the exit code still
+   cannot swallow the record).
+2. CI itself was cut down to a **clean-checkout check in minutes** (the 5-hour
+   backend job removed; `.github/workflows/tests.yml` now runs only the Flutter
+   and harness jobs) and its result is printed by `/promote-to-alpha` via
+   `scripts/promotion/ci_status.py`, which looks up the exact commit being
+   promoted and prints `CI: GREEN` / `CI: RED — <jobs>` / `CI: PENDING` / `CI:
+   CANCELLED` / `CI: NOT RUN` / `CI: UNAVAILABLE`, in capitals, on its own line.
+   This is a deliberate **warning, not a gate** (Saiful's explicit ruling) — the
+   point is not to add a second blocking check but to make sure the result is
+   at minimum *seen* every time, which step (1) makes cheap enough to keep
+   green.
+
+**Enforcing check:** `backend/tests/unit/test_cr235_ci_status.py` pins
+`ci_status.py`'s parsing/formatting against canned `gh` JSON for every state
+(GREEN/RED/PENDING/CANCELLED/NOT RUN/UNAVAILABLE), including that a RED result
+always names the failing job(s). `backend/tests/unit/test_def405_suite_verdict_gate.py`
+extends its existing suite-verdict tests to cover `check_local_gate_verdict` the
+same way, and asserts the postflight driver's own check list is discovered
+programmatically rather than hand-counted — the same "don't hand-list what the
+source can enumerate" reasoning P37's own fix applies to a corpus walk. Neither
+test can protect against a *third* gate being added and never wired to a
+reader; that is what this pattern entry is for.
+
+**What generalises.** A CI job, a scheduled report, a lint step in a pre-commit
+hook nobody has installed — any of these can be simultaneously "working" (it
+runs, it computes the right answer) and "useless" (nothing acts on the answer).
+Before trusting the existence of an automated check as evidence of anything,
+ask who — a person or another mechanical check — reads its result, and how
+recently that reading happened. A check with a `passed`/`failed` bit and no
+consumer is not a safety net; it is a log line an operator would have to go
+looking for, on the same premise P1's config-forwarding gap and DEF326's
+buried "errors" bucket both share: the failure mode isn't the mechanism being
+wrong, it's the mechanism being unread.

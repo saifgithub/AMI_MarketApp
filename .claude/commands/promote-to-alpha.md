@@ -105,6 +105,26 @@ scripts/promotion/preflight_suite.sh || {
 }
 
 flutter analyze --no-fatal-infos
+
+# LOCAL RELEASE GATE (AT:R85 CR235) — runs FIFTH. Flutter test + the qa/appium
+# harness offline self-tests used to run only in GitHub Actions, which last went
+# green 2026-08-10 and had nothing here reading its result — 46 days of red sat
+# unseen because no promotion ever looked. Saiful's ruling: move the tests that
+# must GATE to where a human actually reads the exit code — here — and let CI
+# shrink to a clean-checkout check (step 1c below). Same DEF405 discipline as
+# the suite gate: run bare, read the VERDICT line, never through a pipe or a
+# background task that reports its own exit code.
+scripts/promotion/preflight_local_gate.sh || {
+  echo "LOCAL RELEASE GATE — Flutter test or the harness offline self-tests did not exit 0. Aborting."
+  exit 1
+}
+
+# CI STATUS (AT:R85 CR235) — runs SIXTH, and is the only WARNING in this list.
+# Saiful's explicit choice: CI's result for this exact commit is printed, never
+# blocks. The tests that must gate now run in the two steps above; this line is
+# purely "does the clean-checkout job on GitHub agree" — informational, and it
+# is written so a RED result cannot be misread as anything but RED.
+python3 scripts/promotion/ci_status.py --sha "$(git rev-parse HEAD)"
 ```
 
 **The audit-lane gate is not advisory either, and it exists because of a
@@ -154,6 +174,28 @@ user clears a hold, and only against the precondition the hold names.
   `assets/icons/ doesn't exist` warning is OK; only block on real
   issues. (If `flutter` isn't installed or available at the path, ask
   the user how they want to handle that — usually `cd mobile` first.)
+- **The local release gate is enforced, not narrated (CR235).** Read its
+  `VERDICT:` line. It runs `flutter test` (the ~1700-case Flutter suite) and
+  `qa/appium`'s offline self-tests (`tests_offline/` — locator dispatch, locale-
+  vs-ARB, crawler logic; no device needed). These used to run only in GitHub
+  Actions, where the workflow was red or flapping for 46 days with nothing
+  reading the result; they gate here now because this is where a human actually
+  reads the exit code. If `qa/appium/.venv` is missing, the gate fails loudly
+  and prints the exact bootstrap command (`cd qa/appium && python3 -m venv
+  .venv && .venv/bin/pip install -r requirements.txt`) rather than skipping —
+  degrade loudly (CR040). **Run the gate bare**, same DEF405 discipline as the
+  suite gate: it writes `.deliveryos/local_gate_verdict.json`, and step 7c's
+  `local_gate` check fails the promotion if that record is missing, stale, or
+  not PASS.
+- **CI status is a WARNING, never a blocker (CR235, Saiful's explicit
+  choice).** `ci_status.py` looks up GitHub Actions' `tests.yml` result for the
+  exact commit being promoted and prints one line: `CI: GREEN`, `CI: RED —
+  <failing jobs>`, `CI: PENDING`, `CI: CANCELLED`, `CI: NOT RUN`, or `CI:
+  UNAVAILABLE` if `gh` isn't usable. A RED result prints in capitals on its own
+  line so it cannot be scrolled past unnoticed, but its exit code is never
+  read as a reason to abort — the tests that must gate already ran, above, as
+  local gates. Read it, don't act on it unless something about it surprises
+  you enough to ask the user.
 
 Then **ask the user one yes/no question** (don't auto-confirm):
 
@@ -484,16 +526,18 @@ python3 scripts/promotion/postflight.py \
   --expect-sha "${GIT_SHA}" --expect-tag "${ALPHA_TAG}"
 ```
 
-Six checks, one exit code:
+Eight checks, one exit code:
 
 | check | what it answers | why it exists |
 |---|---|---|
+| `suite` | did `preflight_suite.sh` record PASS, on this commit, for the whole suite, within 6h? (runs first, local) | DEF405 — the gate's exit code was consumed by a `\| tail` in a background task and a red suite shipped; the record survives the wrapper |
+| `local_gate` | did `preflight_local_gate.sh` record PASS — Flutter test AND the harness offline self-tests, on this commit, within 6h? (runs second, local) | CR235 — same DEF405 shape, one gate over: these moved out of CI (46 days unread red) into here, where a wrapper could still swallow the exit code without this record |
+| `migrations` | does the merged tree have exactly one alembic head? | DEF406 — two lanes can each verify "single head" on their own branch and still fork once merged; only the merged tree can show it |
 | `identity` | is the container running the commit + tag you just promoted? | CR175 F2 — nothing recorded this, so every diagnosis began by assuming it |
 | `tree` | does melehost hold what this worktree holds? (`rsync --dry-run`) | the stamp describes the **image**; `./backend/app` and `./content` are bind-mounted, so the running Python is the host filesystem. Only this catches a partial rsync |
 | `readiness` | `/v1/ready`: DB, schema at head, LLM resolved | DEF215's outage state is one `/v1/health` returns 200 for |
 | `config` | every populated key in `infra/alpha.env` reads `configured: true` | DEF038, DEF063 — the set-diff no human performs reliably |
 | `market` | quote source is not `mock_walk` | a silent fall-through to a random walk |
-| `suite` | did `preflight_suite.sh` record PASS, on this commit, for the whole suite, within 6h? (runs first, local) | DEF405 — the gate's exit code was consumed by a `\| tail` in a background task and a red suite shipped; the record survives the wrapper |
 
 **Exit codes are three, not two, and the distinction is load-bearing:**
 
@@ -525,12 +569,14 @@ Print a short summary like:
 
 ```
 Promoted to Alpha — alpha-2026-05-12-3 (a1b2c3d — "fix(compose): pass vLLM env")
+  • local gate: PASS (flutter test · qa/appium tests_offline)
+  • CI: GREEN — all jobs passed (https://github.com/.../actions/runs/...)
   • rsync (code): 28s
   • scp infra/alpha.env: <1s, 4/4 keys verified
   • build + recreate: 47s
   • migrations: no changes
   • smoke: /v1/health 200 · /v1/llm/status vllm · /v1/sim/quote AAPL $221.27 (source=yahoo)
-  • postflight: PASSED (identity · tree · readiness · config · market)
+  • postflight: PASSED (suite · local_gate · migrations · identity · tree · readiness · config · market)
   • tree at promote time: 0 blocking, 25 shipped-not-runtime (recorded)
 Total elapsed: 1m 23s
 ```

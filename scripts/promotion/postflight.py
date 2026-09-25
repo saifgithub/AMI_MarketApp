@@ -50,6 +50,8 @@ _DEFAULT_BASE = "https://api-alpha.agenticmarketintel.ai"
 _SUITE_VERDICT = _REPO_ROOT / ".deliveryos" / "suite_verdict.json"
 _FULL_SUITE_TARGET = "backend/tests/unit/"
 _SUITE_VERDICT_MAX_AGE_H = 6
+_LOCAL_GATE_VERDICT = _REPO_ROOT / ".deliveryos" / "local_gate_verdict.json"
+_LOCAL_GATE_VERDICT_MAX_AGE_H = 6
 
 # Keys that live in the env file and are legitimately NOT `Settings` fields.
 #
@@ -398,6 +400,58 @@ def check_suite_verdict(path: Path, expect_sha: str, *, now: float | None = None
     return problems
 
 
+def check_local_gate_verdict(path: Path, expect_sha: str, *, now: float | None = None,
+                             max_age_h: float = _LOCAL_GATE_VERDICT_MAX_AGE_H) -> list[str]:
+    """CR235 — was the LOCAL release gate (Flutter test + harness offline self-tests) green,
+    on THIS commit?
+
+    CR235 moved the tests that must GATE out of CI (last green 2026-08-10, red or flapping
+    every run since, nothing in `/promote-to-alpha` ever reading the result) into
+    `scripts/promotion/preflight_local_gate.sh`, run bare at promotion time — same
+    DEF405 shape as the suite gate: the exit code is the gate, and an exit code does not
+    survive a wrapper. So this gate also writes a verdict record, and this check reads it,
+    on the exact same reasoning `check_suite_verdict` already applies one gate over.
+
+    Deliberately its own function rather than a call to `check_suite_verdict`: the local
+    gate's record has no single `target` (it runs two independent suites, `flutter` and
+    `harness`) and no pass/fail/error counts, so reusing the suite-shaped checker would
+    either silently skip the target check or fail on a shape mismatch that was never a
+    real problem.
+    """
+    import datetime as _dt
+    import time as _time
+
+    if not path.exists():
+        return [f"no local gate verdict at {path} — preflight_local_gate.sh did not run "
+                "before this promotion (or ran from another checkout). Flutter test and "
+                "the harness offline self-tests are supposed to gate here now (CR235); a "
+                "promotion without this record ran neither."]
+    try:
+        rec = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [f"local gate verdict at {path} is unreadable ({exc}) — treat as no gate"]
+    problems: list[str] = []
+    verdict = str(rec.get("verdict", ""))
+    if verdict != "PASS":
+        problems.append(
+            f"the local gate recorded {verdict or 'nothing'} "
+            f"(flutter={rec.get('flutter')} harness={rec.get('harness')}) and this "
+            "promotion went ahead anyway")
+    sha = str(rec.get("sha", ""))
+    if not expect_sha or not sha or not (sha.startswith(expect_sha) or expect_sha.startswith(sha)):
+        problems.append(f"the local gate ran on {sha[:12] or '?'} but {expect_sha[:12]} was "
+                        "promoted — the tested tree is not the shipped tree")
+    try:
+        at = _dt.datetime.fromisoformat(str(rec.get("at", "")).replace("Z", "+00:00"))
+        age_h = ((now if now is not None else _time.time()) - at.timestamp()) / 3600
+    except ValueError:
+        age_h = float("inf")
+    if age_h > max_age_h:
+        problems.append(f"the local gate verdict is {age_h:.1f}h old (limit {max_age_h}h) — "
+                        "re-run preflight_local_gate.sh; a stale pass covers a different tree")
+    return problems
+
+
 _REVISION_LINE = re.compile(r"^revision\s*(?::[^=]+)?=\s*['\"]([^'\"]+)['\"]",
                             re.MULTILINE)
 _DOWN_REVISION_LINE = re.compile(r"^down_revision\s*(?::[^=]+)?=(.*)$", re.MULTILINE)
@@ -556,6 +610,8 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=20)
     ap.add_argument("--suite-verdict", default=str(_SUITE_VERDICT),
                     help="the record preflight_suite.sh writes (DEF405)")
+    ap.add_argument("--local-gate-verdict", default=str(_LOCAL_GATE_VERDICT),
+                    help="the record preflight_local_gate.sh writes (CR235)")
     args = ap.parse_args()
 
     env_path = Path(args.env_file)
@@ -569,6 +625,10 @@ def main() -> int:
         # First, and local: it answers "should this promotion have happened",
         # which the four live checks cannot.
         ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
+        # CR235 — same question, for the tests that moved out of CI: Flutter test +
+        # the harness offline self-tests.
+        ("local_gate", lambda: check_local_gate_verdict(
+            Path(args.local_gate_verdict), args.expect_sha)),
         # Also local, also "should this have happened": a migration fork only
         # exists in the merged tree, so no lane's own gate can see it (DEF406).
         ("migrations", lambda: check_migration_heads()),
