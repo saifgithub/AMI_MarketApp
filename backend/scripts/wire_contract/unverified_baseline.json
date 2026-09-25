@@ -1,6 +1,6 @@
 {
   "_comment": "ISS002/CR208 \u2014 surfaces with no observable response during the backend suite. DEF367. This list is meant to SHRINK: a new entry fails the gate, and removing one is the celebration. Do not add an entry to get a build past the gate.",
-  "count": 31,
+  "count": 30,
   "unverified": [
     "GET /v1/ai_coach/search -> CoachSearchHit",
     "GET /v1/brief/history/$userId/$agentId -> BriefHistory",
@@ -19,7 +19,6 @@
     "GET /v1/journal/$userId/trash -> JournalListResponse",
     "GET /v1/lessons/progress/$userId/by_lesson -> LessonStatus",
     "GET /v1/lessons/requirements/$userId -> AgentUnlockRequirement",
-    "GET /v1/room/$runId -> RoomRunSnapshot",
     "GET /v1/room/user/$userId -> RoomRunSnapshot",
     "GET /v1/sim/orders/$userId -> SimRestingOrder",
     "POST /v1/brief/propose -> BriefProposal",
