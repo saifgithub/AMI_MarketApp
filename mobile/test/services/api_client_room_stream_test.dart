@@ -97,4 +97,51 @@ void main() {
       expect(done!['kind'], 'done');
     });
   });
+
+  group('CR236 — done event carries credit_cost/refunded', () {
+    // Transcribed from `backend/app/api/room.py`'s `done` event build (the
+    // single place the stream's final event is constructed): {"run_id": ...,
+    // "credit_cost": <int|null>, "refunded": <bool>}.
+    test('a completed run: cost present, refunded false', () {
+      const data = '{"run_id": "abc123", "credit_cost": 8, "refunded": false}';
+      final parsed = parseRoomSseEvent('done', data);
+
+      expect(parsed, isNotNull);
+      expect(parsed!['kind'], 'done');
+      expect(parsed['run_id'], 'abc123');
+      expect(parsed['credit_cost'], 8);
+      expect(parsed['refunded'], false);
+    });
+
+    test('a FAILED run refunded by CR039/DEF425/DEF432: cost present, refunded true', () {
+      const data = '{"run_id": "abc123", "credit_cost": 8, "refunded": true}';
+      final parsed = parseRoomSseEvent('done', data);
+
+      expect(parsed!['credit_cost'], 8);
+      expect(parsed['refunded'], true);
+    });
+
+    test('a run whose row could not be read back: both fields absent, DEF437 class', () {
+      // The backend degrades to omitting both keys rather than fabricating a
+      // number nobody was charged — key ABSENCE, not a null value, is what
+      // must reach the notifier so it can tell "unknown" from "charged zero".
+      const data = '{"run_id": "abc123", "credit_cost": null, "refunded": false}';
+      final parsed = parseRoomSseEvent('done', data);
+
+      // credit_cost is still explicitly present (as null) on this backend
+      // shape — parseRoomSseEvent forwards it via containsKey, so a present
+      // null key is carried, distinct from an absent one.
+      expect(parsed!.containsKey('credit_cost'), isTrue);
+      expect(parsed['credit_cost'], isNull);
+    });
+
+    test('a pre-CR236 backend sending neither key: parser adds neither', () {
+      const data = '{"run_id": "abc123"}';
+      final parsed = parseRoomSseEvent('done', data);
+
+      expect(parsed!['kind'], 'done');
+      expect(parsed.containsKey('credit_cost'), isFalse);
+      expect(parsed.containsKey('refunded'), isFalse);
+    });
+  });
 }

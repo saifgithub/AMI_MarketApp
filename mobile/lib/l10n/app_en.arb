@@ -2360,6 +2360,82 @@
   "conveneTickerHint": "e.g. NVDA",
   "conveneOrPickOne": "OR PICK ONE",
   "conveneCta": "CONVENE",
+  "creditsLineCost": "Room: {cost} credits · you have {balance}",
+  "@creditsLineCost": {
+    "description": "CR236 — compact credits chip on the Convene sheet, no reset date known. {cost} is the Room's price for this plan (mandate.room_cost); {balance} is the user's current credit_balance, both plain integers formatted by the caller (e.g. '8', '63').",
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsLineCostWithReset": "Room: {cost} credits · you have {balance} · resets {date}",
+  "@creditsLineCostWithReset": {
+    "description": "CR236 — same as creditsLineCost, with the credits_reset_at date appended once known. {date} is a localized short date (e.g. '1 Oct'), never a hard-coded 'the 1st'.",
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsLineInsufficient": "Not enough — the Room refuses at convene",
+  "@creditsLineInsufficient": {
+    "description": "CR236 — appended to the compact credits line on the Convene sheet when balance < cost, said plainly rather than silently. The actual refusal still happens server-side (402); this is a heads-up, not the wall itself."
+  },
+  "creditsLineUnknown": "Checking your credits…",
+  "@creditsLineUnknown": {
+    "description": "CR236/DEF437 — shown in place of the credits line while the mandate has not loaded yet, or when the balance came back unknown. Never a guessed number."
+  },
+  "oneOnOneCreditsBalance": "You have {balance} credits",
+  "@oneOnOneCreditsBalance": {
+    "description": "CR236 — compact credits line above the 1-on-1 composer (1-on-1 turns are billed the same credit ledger as the Room). {balance} is the current credit_balance, plain integer as a string.",
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "roomResultCost": "This Room used {cost} credits · {left} left",
+  "@roomResultCost": {
+    "description": "CR236 — quiet line under a settled Room's verdict card stating what the run actually charged, read back off the done event's credit_cost. {left} is the mandate's refreshed credit_balance after the run.",
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "roomResultRefunded": "Not charged — the desks were unreachable",
+  "@roomResultRefunded": {
+    "description": "CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425/DEF432). Never phrased as the user's fault."
+  },
+  "settingsProfileCreditsWithReset": "{balance} · resets {date}",
+  "@settingsProfileCreditsWithReset": {
+    "description": "CR236 — Settings → Profile → Credits row value, once the reset date is known. {balance} and {date} are both pre-formatted strings from the caller (date is a localized short date, e.g. '1 Oct').",
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsProfileCreditsUnknown": "—",
+  "@settingsProfileCreditsUnknown": {
+    "description": "DEF437 — Settings → Profile → Credits row value when the balance came back null/unknown from the server. Never a fabricated number."
+  },
   "roomHeadingPrefix": "CONVENE ›",
   "roomStandingBy": "standing by",
   "roomAgentThinking": "thinking…",

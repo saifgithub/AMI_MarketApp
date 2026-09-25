@@ -7,14 +7,24 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _suggestedTickers = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'TSLA', 'AMZN'];
+const _suggestedTickers = [
+  'AAPL',
+  'MSFT',
+  'NVDA',
+  'GOOGL',
+  'META',
+  'TSLA',
+  'AMZN'
+];
 
 class ConveneSheet extends ConsumerStatefulWidget {
   const ConveneSheet({super.key});
@@ -83,106 +93,128 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
-        // DEF075 — clear keyboard AND nav bar, not just the keyboard.
-        AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.bolt, color: AmiColors.hexGreen, size: 20),
-              const SizedBox(width: AmiSpacing.s),
-              Text(l.conveneHeading,
-                  style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
-            ],
-          ),
-          const SizedBox(height: AmiSpacing.s),
-          Text(
-            l.convenePickTicker,
-            style: AmiTypography.body,
-          ),
-          const SizedBox(height: AmiSpacing.l),
-          TextField(
-            controller: _ctrl,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            style: AmiTypography.statMid,
-            onSubmitted: _go,
-            decoration: InputDecoration(
-              hintText: l.conveneTickerHint,
-              hintStyle: AmiTypography.statMid.copyWith(color: AmiColors.textLow),
-              filled: true,
-              fillColor: AmiColors.slate900,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AmiRadii.card),
-                borderSide: const BorderSide(color: AmiColors.slate700),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AmiRadii.card),
-                borderSide: const BorderSide(color: AmiColors.hexGreen),
+    // CR236 — the mandate is the single source for both numbers; read once
+    // here rather than in the line widget so a rebuild of just the field
+    // (typing) doesn't re-derive it.
+    final mandate = ref.watch(mandateNotifierProvider).mandate;
+    return SingleChildScrollView(
+      // CR236: the sheet's fixed-height Column could overflow at large text
+      // scale once the credits line's extra row of content is added (caught
+      // at 320dp/1.3x — the pre-existing heading Row's own narrower overflow
+      // is unrelated and untouched by this CR). A `min`-height Column inside
+      // a scroll view still sizes to content on any screen tall enough, and
+      // simply becomes scrollable on the ones that aren't.
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
+          // DEF075 — clear keyboard AND nav bar, not just the keyboard.
+          AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bolt, color: AmiColors.hexGreen, size: 20),
+                const SizedBox(width: AmiSpacing.s),
+                Text(l.conveneHeading,
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.hexGreen)),
+              ],
+            ),
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              l.convenePickTicker,
+              style: AmiTypography.body,
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+            ConveneCreditsLine(
+              cost: mandate?.roomCost,
+              balance: mandate?.creditBalance,
+              resetsAt: mandate?.creditsResetAt,
+            ),
+            const SizedBox(height: AmiSpacing.l),
+            TextField(
+              controller: _ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              style: AmiTypography.statMid,
+              onSubmitted: _go,
+              decoration: InputDecoration(
+                hintText: l.conveneTickerHint,
+                hintStyle:
+                    AmiTypography.statMid.copyWith(color: AmiColors.textLow),
+                filled: true,
+                fillColor: AmiColors.slate900,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  borderSide: const BorderSide(color: AmiColors.slate700),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  borderSide: const BorderSide(color: AmiColors.hexGreen),
+                ),
               ),
             ),
-          ),
-          // DEF208 — the one not-found surface, same widget and same
-          // placement (directly under the ticker field) as the trade ticket
-          // and watchlist add.
-          if (_validator.unknownTicker != null) ...[
+            // DEF208 — the one not-found surface, same widget and same
+            // placement (directly under the ticker field) as the trade ticket
+            // and watchlist add.
+            if (_validator.unknownTicker != null) ...[
+              const SizedBox(height: AmiSpacing.s),
+              TickerNotFoundPanel(
+                typed: _validator.unknownTicker!,
+                suggestion: _validator.suggestion,
+                onAccept: (t) {
+                  _ctrl.text = t;
+                  _ctrl.selection = TextSelection.collapsed(offset: t.length);
+                },
+              ),
+            ],
+            const SizedBox(height: AmiSpacing.m),
+            Text(l.conveneOrPickOne,
+                style: AmiTypography.labelMono.copyWith(fontSize: 11)),
             const SizedBox(height: AmiSpacing.s),
-            TickerNotFoundPanel(
-              typed: _validator.unknownTicker!,
-              suggestion: _validator.suggestion,
-              onAccept: (t) {
-                _ctrl.text = t;
-                _ctrl.selection = TextSelection.collapsed(offset: t.length);
-              },
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final t in _suggestedTickers)
+                  ActionChip(
+                    label: Text(t,
+                        style: AmiTypography.labelMono
+                            .copyWith(color: AmiColors.textHigh)),
+                    backgroundColor: AmiColors.slate900,
+                    side: const BorderSide(color: AmiColors.slate700),
+                    onPressed: _validator.checking ? null : () => _go(t),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AmiSpacing.l),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AmiColors.hexGreen,
+                  foregroundColor: AmiColors.slate900,
+                  padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
+                ),
+                icon: _validator.checking
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AmiColors.slate900,
+                        ),
+                      )
+                    : const Icon(Icons.bolt),
+                label: Text(l.conveneCta),
+                onPressed: _validator.checking ? null : () => _go(_ctrl.text),
+              ),
             ),
           ],
-          const SizedBox(height: AmiSpacing.m),
-          Text(l.conveneOrPickOne,
-              style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-          const SizedBox(height: AmiSpacing.s),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final t in _suggestedTickers)
-                ActionChip(
-                  label: Text(t,
-                      style: AmiTypography.labelMono.copyWith(
-                          color: AmiColors.textHigh)),
-                  backgroundColor: AmiColors.slate900,
-                  side: const BorderSide(color: AmiColors.slate700),
-                  onPressed: _validator.checking ? null : () => _go(t),
-                ),
-            ],
-          ),
-          const SizedBox(height: AmiSpacing.l),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AmiColors.hexGreen,
-                foregroundColor: AmiColors.slate900,
-                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
-              ),
-              icon: _validator.checking
-                  ? const SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AmiColors.slate900,
-                      ),
-                    )
-                  : const Icon(Icons.bolt),
-              label: Text(l.conveneCta),
-              onPressed: _validator.checking ? null : () => _go(_ctrl.text),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

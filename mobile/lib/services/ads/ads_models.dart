@@ -134,17 +134,30 @@ class HouseAdSignals {
   final bool nearCreditCap;
   final bool halalMandate;
 
-  factory HouseAdSignals.fromMandate(UserMandate m) => HouseAdSignals(
-        effectivePlan: m.plan,
-        // The client sees only the credit ledger, not per-feature quota rows,
-        // so "out of 1-on-1s" is read as "credit balance exhausted" — the
-        // conservative reading that can only under-fire, never over-fire.
-        outOfFreeOneOnOnes: m.creditBalance <= 0,
-        usedFreeRoom: m.roomCost > 0 && m.creditBalance < m.roomCost,
-        nearCreditCap:
-            m.creditAllowance > 0 && m.creditBalance * 5 <= m.creditAllowance,
-        halalMandate: m.compliance.halal,
-      );
+  factory HouseAdSignals.fromMandate(UserMandate m) {
+    // DEF437 — `creditBalance`/`creditAllowance`/`roomCost` are nullable
+    // (UNKNOWN, not "0" or the old fabricated "75"). Every comparison below
+    // must fail CLOSED on unknown: a credit-usage signal this class cannot
+    // actually read must never fire, the same "under-fire, never over-fire"
+    // discipline the class already applies to per-feature quota rows it
+    // can't see. Unknown reads as false for every signal here, exactly like
+    // an unset value did before the fields could even carry `null`.
+    final balance = m.creditBalance;
+    final allowance = m.creditAllowance;
+    final roomCost = m.roomCost;
+    return HouseAdSignals(
+      effectivePlan: m.plan,
+      // The client sees only the credit ledger, not per-feature quota rows,
+      // so "out of 1-on-1s" is read as "credit balance exhausted" — the
+      // conservative reading that can only under-fire, never over-fire.
+      outOfFreeOneOnOnes: balance != null && balance <= 0,
+      usedFreeRoom: balance != null && roomCost != null &&
+          roomCost > 0 && balance < roomCost,
+      nearCreditCap: balance != null && allowance != null &&
+          allowance > 0 && balance * 5 <= allowance,
+      halalMandate: m.compliance.halal,
+    );
+  }
 }
 
 /// One piece of filled inventory. House is the only concrete kind in this

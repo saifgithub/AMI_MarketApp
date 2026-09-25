@@ -31,6 +31,7 @@ import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
@@ -213,6 +214,26 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                               style: AmiTypography.body),
                         ),
                     ],
+                    // CR236 — what this run cost, once it's actually finished.
+                    // Shared by both the board and the transcript surface
+                    // above (whichever `showBoard` picked) rather than
+                    // duplicated into each, so there is one place this line
+                    // can render. Gated on `creditCost != null` (not just
+                    // `done`) so a `done` event that carried no cost — an
+                    // older backend, mainly, but also every existing test
+                    // fixture that constructs `RoomState(done: true)` without
+                    // it — renders nothing and never mounts the mandate
+                    // watch below at all: `_RoomResultCostRow` reads
+                    // `mandateNotifierProvider`, and merely creating that
+                    // provider schedules a real network refresh
+                    // (`MandateNotifier`'s `Future.microtask(n.refresh)`) —
+                    // exactly the pending-Dio-timer regression this gate
+                    // exists to avoid in every settled-Room test that has no
+                    // reason to know about mandates at all.
+                    if (state.done && state.creditCost != null) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      _RoomResultCostRow(state: state),
+                    ],
                     const SizedBox(height: AmiSpacing.xxl),
                   ],
                 ),
@@ -234,12 +255,35 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     ref.read(roomViewModeProvider.notifier).setMode(m);
   }
 
-  /// The strip's leading half. `duration_ms` and `credit_cost` live on
-  /// `RoomRun` server-side but never reach the live stream, so the Room shows
-  /// what it does know: how many of the twelve spoke.
+  /// The strip's leading half. `duration_ms` still lives on `RoomRun`
+  /// server-side only; `credit_cost` now rides the `done` event too (CR236),
+  /// but that cost is shown as its own quiet line under the verdict
+  /// (`_RoomResultCostRow`), not folded into this strip — so the strip keeps
+  /// showing what it always has: how many of the twelve spoke.
   String _stripMeta(BuildContext context, RoomState state) {
     final l = AppLocalizations.of(context);
     return l.roomTranscriptHint(state.transcript.length);
+  }
+}
+
+/// CR236 — "This Room used 8 credits · 55 left" (or the refunded variant),
+/// shared by both settled surfaces (`showBoard`'s RoomBoard and the
+/// transcript view) so the fact renders once regardless of which the user
+/// has open. `state.creditCost` is null until `done` carries it — an older
+/// backend, or a row read that raced away server-side — and the underlying
+/// [RoomResultCostLine] renders nothing at all in that case (never a guess).
+class _RoomResultCostRow extends ConsumerWidget {
+  const _RoomResultCostRow({required this.state});
+  final RoomState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balanceAfter = ref.watch(mandateNotifierProvider).mandate?.creditBalance;
+    return RoomResultCostLine(
+      cost: state.creditCost,
+      refunded: state.refunded,
+      balanceAfter: balanceAfter,
+    );
   }
 }
 
