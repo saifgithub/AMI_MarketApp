@@ -52,6 +52,51 @@ enum TradeDestination { amiSim, alpacaPaper, both }
 const String _nonPaperAccountDetail =
     'refusing to read a non-paper Alpaca account for preview';
 
+/// DEF442 — one place that turns a failed [_fetchAlpacaSnapshot] into the
+/// specific line the user sees, used by both [_submitAlpacaOnly] and
+/// [_legAlpaca] so they cannot drift apart.
+///
+/// Before this, both catch sites collapsed every failure to the same
+/// "couldn't read your account" line — a 401 (keys rejected), a network
+/// blip, a 404 (bad stored base URL), and a 429/5xx (Alpaca busy) all read
+/// identically, so a user who just needed to retry was told to re-link, and
+/// vice versa (CR040: a fallback that fires constantly and silently misleads
+/// is worse than no fallback). The DEF439 non-paper case is checked FIRST by
+/// both callers via `_nonPaperAccountDetail` and never reaches this
+/// function — kept that way rather than folded in here, so that message
+/// (the account was refused, not unreachable) can't be accidentally
+/// swallowed by a status-code branch below.
+///
+/// Never surfaces [AlpacaException.detail] or any other raw response body —
+/// only these five fixed, reviewed lines.
+String alpacaReadFailureMessage(Object e) {
+  if (e is! AlpacaException) {
+    return "Couldn't read your Alpaca paper account — order not sent.";
+  }
+  final status = e.statusCode;
+  if (e.isAuthFailure) {
+    return 'Alpaca rejected your keys — re-link your paper account in '
+        'Settings. Order not sent.';
+  }
+  if (e.detail == kAlpacaNotLinkedDetail) {
+    return 'No Alpaca paper account is linked — link one in Settings. '
+        'Order not sent.';
+  }
+  if (status == null) {
+    return "Couldn't reach Alpaca — check your connection and try again. "
+        'Order not sent.';
+  }
+  if (status == 404) {
+    return "Alpaca couldn't find that account — check the account URL in "
+        'Settings. Order not sent.';
+  }
+  if (status == 429 || status >= 500) {
+    return 'Alpaca is busy or down right now — try again shortly. '
+        'Order not sent.';
+  }
+  return "Couldn't read your Alpaca paper account — order not sent.";
+}
+
 /// CR227 — one destination's outcome, shown independently in the result
 /// surfacing so "Both" can report a leg that filled next to one that didn't.
 class _DestinationOutcome {
@@ -816,14 +861,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // to read it. The generic "couldn't read" copy used to cover this case
       // too, which told a live-account user their account was unreachable
       // when it was in fact just refused.
+      //
+      // DEF442 — every other failure (auth, network, 404, 5xx/429) now gets
+      // its own specific line via `alpacaReadFailureMessage` instead of
+      // collapsing to that same generic line regardless of cause.
       setState(() => _destinationOutcomes = [
             _DestinationOutcome(
               label: kAlpacaPaperLabel,
               ok: false,
               message: e is AlpacaException && e.detail == _nonPaperAccountDetail
                   ? 'AMI links Alpaca paper accounts only — order not sent.'
-                  : "Couldn't read your Alpaca paper account — "
-                      'order not sent.',
+                  : alpacaReadFailureMessage(e),
             ),
           ]);
       return;
@@ -1015,13 +1063,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       snapshot = await _fetchAlpacaSnapshot();
     } catch (e) {
       // DEF439 / DEF430 round-1 MINOR-1 — see `_submitAlpacaOnly`'s matching
-      // branch for why the non-paper case gets its own message.
+      // branch for why the non-paper case gets its own message. DEF442 — see
+      // `alpacaReadFailureMessage` for every other cause's specific line.
       return _DestinationOutcome(
         label: kAlpacaPaperLabel,
         ok: false,
         message: e is AlpacaException && e.detail == _nonPaperAccountDetail
             ? 'AMI links Alpaca paper accounts only — order not sent.'
-            : "Couldn't read your Alpaca paper account — order not sent.",
+            : alpacaReadFailureMessage(e),
       );
     }
     final preview = await ref.read(simNotifierProvider.notifier).preview(

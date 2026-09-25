@@ -80,6 +80,11 @@ class AlpacaOrderRejected implements Exception {
   String toString() => 'AlpacaOrderRejected: $message';
 }
 
+/// DEF442 — the detail thrown when no credentials are stored. Shared with the
+/// ticket's failure mapper so "not linked" never reads as a network error
+/// (both carry a null status code).
+const kAlpacaNotLinkedDetail = 'not linked';
+
 class AlpacaException implements Exception {
   const AlpacaException(this.statusCode, this.detail);
 
@@ -309,7 +314,7 @@ class AlpacaClient {
   }) async {
     final creds = await AlpacaCredentialStore.read();
     if (creds == null) {
-      throw const AlpacaException(null, 'not linked');
+      throw const AlpacaException(null, kAlpacaNotLinkedDetail);
     }
     try {
       final r = await _dio.get<dynamic>(
@@ -494,7 +499,7 @@ class AlpacaClient {
     );
     final creds = await AlpacaCredentialStore.read();
     if (creds == null) {
-      throw const AlpacaException(null, 'not linked');
+      throw const AlpacaException(null, kAlpacaNotLinkedDetail);
     }
     if (!isAlpacaPaperHost(creds.baseUrl)) {
       throw AlpacaOrderRejected(
@@ -546,7 +551,7 @@ class AlpacaClient {
   Future<void> cancelOrder(String orderId) async {
     final creds = await AlpacaCredentialStore.read();
     if (creds == null) {
-      throw const AlpacaException(null, 'not linked');
+      throw const AlpacaException(null, kAlpacaNotLinkedDetail);
     }
     if (!isAlpacaPaperHost(creds.baseUrl)) {
       throw AlpacaOrderRejected(
