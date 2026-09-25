@@ -59,7 +59,7 @@ If you use the in-app bug reporter, we collect:
 - The route in the app where the bug was reported and your app version and platform
 - Any screenshot or photo you choose to attach
 
-Photo attachments are uploaded to our servers and stored for the duration of the support ticket plus a 30-day grace window, after which they are deleted automatically.
+Photo attachments are uploaded to our servers and kept with your support ticket.
 
 > _Inspired by: novel — pattern borrowed from generic SaaS support tooling._
 
@@ -108,9 +108,7 @@ AMI Trade is built around a self-hosted AI infrastructure model: the large major
 
 ## 9. How long we keep your agent conversations
 
-Prompts you send to AMI agents, and the responses returned, are retained in our LLM audit log for **90 days** for safety and quality review, and are then deleted. This retention period applies to chat messages, Convene-the-Room sessions, and Brief Your Agent feedback. The record of orders you send to a linked Alpaca paper account (clause 3) is kept for as long as your account exists, not on this 90-day cycle.
-
-> _Inspired by: tighter than the open-ended "as necessary" wording in [Character.AI's policy](https://character.ai/privacy); the explicit 90-day cap is an AMI commitment._
+Prompts you send to AMI agents, and the responses returned, are kept in our LLM audit log for safety and quality review. This applies to chat messages, Convene-the-Room sessions, and Brief Your Agent feedback. The analysis from each Room you convene is also kept in your account, so you can review it in your Decision Journal. The record of orders you send to a linked Alpaca paper account (clause 3) is kept for as long as your account exists.
 
 ## 10. How long we keep your account data
 
@@ -120,9 +118,7 @@ Account-level data (your sign-in identifier, journal entries, simulated portfoli
 
 ## 11. Inactive anonymous accounts
 
-Anonymous accounts that are never claimed and have been inactive for 12 months are purged automatically. All associated data (journal, simulated portfolio, agent conversations) is deleted at the same time.
-
-> _Inspired by: [StockTrak Privacy Policy](https://www.stocktrak.com/privacy-policy/) — 12-month inactivity rule._
+An anonymous account that you never claim is kept like any other account (clause 10). Claim it with an email address or a sign-in to keep your progress if you change device.
 
 ## 12. Your rights — GDPR, PDPA, CCPA / CPRA
 
@@ -171,7 +167,7 @@ We may update this Privacy Policy from time to time. For **material changes** �
 
 ## § Version history
 
-- **v2.1** — effective 25 September 2026. Clause 3 now describes the account summary sent when you link an Alpaca paper-trading account; a linked live account is never sent. This corrects the policy to match what the app did from CR202 (about 2026-09-22) and narrows it to paper accounts at the same time. Users who had already linked are told once in the app, and the link screen discloses it before linking. Clauses 3 and 9 also describe the permanent record kept of orders sent to a linked Alpaca paper account. Saiful's rulings (2026-09-25): "Publish + link-screen notice", "Paper only". Filed as [DEF430](../../docs/defect/_registry/DEF430.row.md). Prior version archived at [`../history/privacy_policy/v2.0_2026-07-23.md`](../history/privacy_policy/v2.0_2026-07-23.md).
+- **v2.1** — effective 25 September 2026. Clause 3 now describes the account summary sent when you link an Alpaca paper-trading account; a linked live account is never sent. This corrects the policy to match what the app did from CR202 (about 2026-09-22) and narrows it to paper accounts at the same time. Users who had already linked are told once in the app, and the link screen discloses it before linking. Clauses 3 and 9 also describe the permanent record kept of orders sent to a linked Alpaca paper account. Clauses 3, 9 and 11 now state what is kept, matching what the service does (DEF440, DEF441). Saiful's rulings (2026-09-25): "Publish + link-screen notice", "Paper only". Filed as [DEF430](../../docs/defect/_registry/DEF430.row.md). Prior version archived at [`../history/privacy_policy/v2.0_2026-07-23.md`](../history/privacy_policy/v2.0_2026-07-23.md).
 - **v2.0** — effective 23 July 2026. Corrected clauses 7 and 8: v1.0 stated prompts "are not sent to any third-party AI vendor," an absolute claim that conflicted with internal sub-processor records (Anthropic fallback, per `stack.md` and `disclaimers_and_privacy.md`). v2.0 accurately describes self-hosted-primary / contracted-third-party-fallback routing, without naming a specific vendor. Added a direct link to the new [Data Deletion Policy](data_deletion_policy.md) in clause 12. Filed as [DEF085](../../docs/defect/DEF085_privacy_ai_vendor_claim/DEF085_privacy_ai_vendor_claim.md) (the inaccuracy) under [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md) (the broader legal-docs pass).
 - **v1.0** — effective 18 May 2026. Initial alpha-stage policy published with AMI Trade closed alpha. Earlier versions: none. Archived at [`../history/privacy_policy/v1.0_2026-05-18.md`](../history/privacy_policy/v1.0_2026-05-18.md).
 
