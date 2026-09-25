@@ -576,8 +576,14 @@ class _RiskSlider extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(l.settingsRiskScore, style: AmiTypography.body),
-            const Spacer(),
+            // DEF435 — `Expanded` + ellipsis so a label that outgrows the Row
+            // at a large text scale shrinks instead of overflowing it; the
+            // value stays a fixed-width sibling since it's short by
+            // construction and the more important of the two to keep intact.
+            Expanded(
+              child: Text(l.settingsRiskScore,
+                  style: AmiTypography.body, overflow: TextOverflow.ellipsis),
+            ),
             Text(l.settingsRiskScoreValue(value),
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           ],
@@ -634,8 +640,11 @@ class _DrawdownPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(l.settingsMaxDrawdown, style: AmiTypography.body),
-            const Spacer(),
+            // DEF435 — same fix as `_RiskSlider`'s label/value row above.
+            Expanded(
+              child: Text(l.settingsMaxDrawdown,
+                  style: AmiTypography.body, overflow: TextOverflow.ellipsis),
+            ),
             Text('$value%',
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
           ],
@@ -1005,8 +1014,20 @@ class _ReadOnlyRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(label, style: AmiTypography.body)),
-          Text(value,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
+          // DEF435 — the label already gave way via `Expanded`, but a long
+          // VALUE (e.g. "Guest (anonymous)" for account status) had no flex
+          // at all, so it alone could still outgrow the Row at a 1.3x text
+          // scale once the label had shrunk to its minimum. `Flexible` +
+          // ellipsis lets the value give way too, as the last resort rather
+          // than the first: `Expanded`'s own default flex keeps the label
+          // taking only its fair share, so in practice the value still gets
+          // whatever room the label doesn't need.
+          Flexible(
+            child: Text(value,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
+          ),
         ],
       ),
     );
@@ -1239,13 +1260,28 @@ class _LanguageRow extends StatelessWidget {
               size: 20,
             ),
             const SizedBox(width: AmiSpacing.s),
-            Text(option.nativeName, style: AmiTypography.body),
-            const SizedBox(width: AmiSpacing.s),
-            if (option.nativeName != option.englishName)
-              Text(
-                '· ${option.englishName}',
-                style: AmiTypography.caption,
+            // DEF435 — surfaced by the same overflow class as
+            // `_RiskSlider`/`_DrawdownPicker`: at a 1.3x text scale the
+            // native + English name pair can outgrow the Row. `Flexible`
+            // (not `Expanded`) on the native name lets it take only what it
+            // needs when short, still ellipsizing if it can't; the English
+            // name is dropped from the layout (not just visually clipped)
+            // when there's truly no room, via a second `Flexible` with
+            // `FlexFit.loose` sized last.
+            Flexible(
+              child: Text(option.nativeName,
+                  style: AmiTypography.body, overflow: TextOverflow.ellipsis),
+            ),
+            if (option.nativeName != option.englishName) ...[
+              const SizedBox(width: AmiSpacing.s),
+              Flexible(
+                child: Text(
+                  '· ${option.englishName}',
+                  style: AmiTypography.caption,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+            ],
           ],
         ),
       ),
@@ -1759,21 +1795,47 @@ class _TimezoneRow extends StatelessWidget {
     ];
     return Row(
       children: [
-        Expanded(child: Text(l.settingsProfileTimezone, style: AmiTypography.body)),
-        DropdownButton<String>(
-          key: const Key('timezoneField'),
-          value: value,
-          isDense: true,
-          dropdownColor: AmiColors.slate800,
-          underline: const SizedBox.shrink(),
-          style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
-          items: [
-            for (final z in options)
-              DropdownMenuItem(value: z, child: Text(z)),
-          ],
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
+        Flexible(
+          child: Text(l.settingsProfileTimezone,
+              style: AmiTypography.body, overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: AmiSpacing.s),
+        // DEF435-adjacent hardening: the longest IANA zone strings
+        // ("America/Los_Angeles") could in principle outgrow the Row at a
+        // 1.3x text scale. `selectedItemBuilder` renders a SEPARATE widget
+        // for the closed state so it can ellipsize independently of the
+        // popup's own item text (deliberately left unclipped there — the
+        // open menu has the full screen width). `alignedDropdown: false`
+        // drops `DropdownButton`'s built-in ~20px alignment padding, and the
+        // icon is set explicitly smaller, both purely to give the closed
+        // state more room to work with.
+        Expanded(
+          child: ButtonTheme(
+            alignedDropdown: false,
+            child: DropdownButton<String>(
+              key: const Key('timezoneField'),
+              value: value,
+              isDense: true,
+              isExpanded: true,
+              iconSize: 18,
+              dropdownColor: AmiColors.slate800,
+              underline: const SizedBox.shrink(),
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
+              selectedItemBuilder: (context) => [
+                for (final z in options)
+                  Text(z,
+                      overflow: TextOverflow.ellipsis,
+                      style: AmiTypography.labelMono
+                          .copyWith(color: AmiColors.hexAmber)),
+              ],
+              items: [
+                for (final z in options) DropdownMenuItem(value: z, child: Text(z)),
+              ],
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+            ),
+          ),
         ),
       ],
     );
