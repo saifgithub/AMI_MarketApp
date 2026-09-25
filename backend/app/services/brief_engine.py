@@ -148,7 +148,7 @@ def heuristic_refusal_check(text: str, agent_id: AgentId, mandate: Mandate) -> B
             return BriefRefusal(
                 reason="safety_floor",
                 message="The Chief Investment Officer's mandate enforcement is uncoachable — proposals can't modify how compliance, drawdown caps, or single-name caps are enforced.",
-                suggestion="You can shape PM's tone, priorities, and how it explains decisions — but not what it enforces. To change what's enforced, edit your Mandate.",
+                suggestion="You can shape the CIO's tone, priorities, and how it explains decisions — but not what it enforces. To change what's enforced, edit your Mandate.",
             )
 
     for pattern, reason_key in _REFUSAL_PATTERNS:

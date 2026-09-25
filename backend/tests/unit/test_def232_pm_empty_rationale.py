@@ -113,7 +113,7 @@ def test_the_disclosure_suffixes_still_append_to_the_note():
     raw = '{"action": "APPROVE", "size_pct": 3.0, "entry": 100.0, "narration": ""}'
     _, verdict = _parse_pm_verdict(raw, _ctx())
     assert _PM_NO_RATIONALE in verdict.reason
-    assert "not stated by the PM" in verdict.reason
+    assert "not stated by the CIO" in verdict.reason
     assert verdict.level_provenance["stop"] == "ami_default"
 
 
