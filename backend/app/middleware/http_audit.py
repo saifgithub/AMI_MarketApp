@@ -112,6 +112,45 @@ _PATH_SCOPED_PRIVATE_FIELDS: dict[str, re.Pattern[str]] = {
     "/v1/sim/preview": re.compile(r"^account$", re.IGNORECASE),
 }
 
+# DEF430 round 2 MAJOR-A: the request-side fix above (`_PATH_SCOPED_PRIVATE_FIELDS`)
+# only redacts the `account` key ON THE REQUEST. `preview_trade`'s RESPONSE also
+# echoes part of that same Alpaca paper snapshot back — `cash_available` (the
+# account's own cash) and `held_quantity` (a held position's own size), plus the
+# same numbers folded into free-text `violations` strings (e.g. "insufficient
+# cash: need $X, have $50000.00"; a concentration % next to the notional, from
+# which equity is recoverable). Per-key redaction can't reach the violation
+# strings, so — same posture as `SCRUB_PATHS` — the WHOLE response body is
+# replaced with `[REDACTED]` instead, but only when the matching request
+# actually carried the scoped key (i.e. only for a snapshot-path preview; a
+# preview with no `account` is AMI's own sim and keeps its normal response).
+# Keyed by path -> the request-body key whose presence triggers the response
+# blackout; deliberately the SAME key as `_PATH_SCOPED_PRIVATE_FIELDS` above
+# (today), but a distinct table because the two are different questions: "is
+# this key sensitive" vs "does this response need to go dark".
+_PATH_SCOPED_RESPONSE_SCRUB_ON_REQUEST_FIELD: dict[str, str] = {
+    "/v1/sim/preview": "account",
+}
+
+
+def _normalize_scrub_path(path: str) -> str:
+    """`_PATH_SCOPED_PRIVATE_FIELDS` / `_PATH_SCOPED_RESPONSE_SCRUB_ON_REQUEST_FIELD`
+    are keyed by exact path. A trailing-slash variant of a scoped route (e.g. a
+    proxy or future client build POSTing `/v1/sim/preview/`) 307-redirects at the
+    route layer, but THIS middleware sees the pre-redirect path — an exact dict
+    lookup would miss it and store the unredacted body. Strip exactly one
+    trailing slash (never the bare root `/`) before every scoped lookup."""
+    if len(path) > 1 and path.endswith("/"):
+        return path.rstrip("/")
+    return path
+
+
+def _request_json_has_key(body: bytes, key: str) -> bool:
+    try:
+        parsed = json.loads(body)
+    except Exception:
+        return False
+    return isinstance(parsed, dict) and key in parsed
+
 
 def _scrub_secret_fields(body: bytes, path: str | None = None) -> bytes:
     """Redact values of secret-shaped and privacy-sensitive JSON keys,
@@ -127,7 +166,9 @@ def _scrub_secret_fields(body: bytes, path: str | None = None) -> bytes:
     except Exception:
         return body
 
-    scoped_re = _PATH_SCOPED_PRIVATE_FIELDS.get(path) if path else None
+    scoped_re = (
+        _PATH_SCOPED_PRIVATE_FIELDS.get(_normalize_scrub_path(path)) if path else None
+    )
 
     def _walk(node):
         if isinstance(node, dict):
@@ -179,12 +220,23 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
 
         # Capture request body — Starlette body() caches so downstream handlers
         # still see it. For huge bodies (file upload), truncate.
-        scrub = path in SCRUB_PATHS
+        normalized_path = _normalize_scrub_path(path)
+        scrub = path in SCRUB_PATHS or normalized_path in SCRUB_PATHS
         content_type = request.headers.get("content-type", "")
         # DEF184: multipart bodies (file uploads) are never buffered here —
         # the handler streams them with its own cap. Reading them into RAM
         # in this middleware first would defeat that cap.
         is_multipart = content_type.lower().startswith("multipart/form-data")
+
+        # DEF430 round 2 MAJOR-A: does this route's response need to go dark
+        # if-and-only-if the request itself carried the scoped field (e.g. a
+        # snapshot preview vs. AMI's own sim, both on `/v1/sim/preview`)?
+        # Computed from the RAW request bytes, before request-side scrubbing
+        # below, since scrubbing replaces the key's value but not its presence.
+        response_scrub_field = _PATH_SCOPED_RESPONSE_SCRUB_ON_REQUEST_FIELD.get(
+            normalized_path
+        )
+        scrub_response_for_request_field = False
 
         if scrub:
             captured_request = b"[REDACTED]"
@@ -195,6 +247,10 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
                 body_bytes = await request.body()
             except Exception:
                 body_bytes = b""
+            if response_scrub_field is not None:
+                scrub_response_for_request_field = _request_json_has_key(
+                    body_bytes, response_scrub_field
+                )
             body_bytes = _scrub_secret_fields(body_bytes, path)
             if len(body_bytes) > MAX_BODY_BYTES:
                 captured_request = body_bytes[:MAX_BODY_BYTES]
@@ -243,7 +299,7 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
         captured_response: Optional[bytes] = None
         response_truncated = False
 
-        if scrub:
+        if scrub or scrub_response_for_request_field:
             captured_response = b"[REDACTED]"
         elif not is_streaming:
             # Consume the underlying body iterator, buffer it, return a fresh
