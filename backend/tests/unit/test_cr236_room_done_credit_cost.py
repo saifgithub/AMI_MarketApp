@@ -26,8 +26,9 @@ from fastapi.testclient import TestClient
 
 from app.api.room import router as room_router
 from app.api.room import get_room_runner
-from app.schemas.room import RoomRun, RoomStatus
+from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.services.auth_service import AuthService
+from app.services.room_runner import PM_ROOM_INCOMPLETE_REASON
 
 
 @pytest.fixture
@@ -68,7 +69,9 @@ class _FakeRunner:
         return self._run
 
 
-def _make_run(*, credit_cost: int, status: RoomStatus) -> RoomRun:
+def _make_run(
+    *, credit_cost: int, status: RoomStatus, verdict: Verdict | None = None,
+) -> RoomRun:
     from datetime import datetime, timezone
 
     return RoomRun(
@@ -80,7 +83,7 @@ def _make_run(*, credit_cost: int, status: RoomStatus) -> RoomRun:
         model_tier="mid",
         rounds=1,
         transcript=[],
-        verdict=None,
+        verdict=verdict,
         credit_cost=credit_cost,
         status=status,
     )
@@ -162,6 +165,48 @@ def test_cancelled_run_is_not_reported_as_refunded(
     never happened."""
     user_id, token = _new_user()
     fake = _FakeRunner(_make_run(credit_cost=8, status=RoomStatus.CANCELLED))
+
+    done = _done_line(_stream(client, app, user_id, token, fake))
+
+    assert '"credit_cost": 8' in done
+    assert '"refunded": false' in done
+
+
+def test_def432_outage_no_verdict_reports_refunded_true(
+    app: FastAPI, client: TestClient,
+):
+    """DEF432 — a COMPLETED run whose verdict is the CR219 R51 outage
+    NO_VERDICT was refunded in full (room_runner.py's COMPLETED branch), so
+    `done` must say so — via `run_was_refunded`, the same predicate that
+    decided the refund, not a re-derived `status == "failed"` check that
+    would read `false` here and tell the client it was charged."""
+    user_id, token = _new_user()
+    outage_verdict = Verdict(
+        action=VerdictAction.NO_VERDICT,
+        reason=f"{PM_ROOM_INCOMPLETE_REASON} 8 of 12 desks responded. "
+               "This Room wasn't charged.",
+        overridden_from_llm=True,
+    )
+    fake = _FakeRunner(_make_run(
+        credit_cost=8, status=RoomStatus.COMPLETED, verdict=outage_verdict,
+    ))
+
+    done = _done_line(_stream(client, app, user_id, token, fake))
+
+    assert '"credit_cost": 8' in done
+    assert '"refunded": true' in done
+
+
+def test_normal_completed_verdict_still_reports_refunded_false(
+    app: FastAPI, client: TestClient,
+):
+    """Control for the DEF432 case above: an ordinary APPROVE on a COMPLETED
+    run must not be reported as refunded."""
+    user_id, token = _new_user()
+    approve_verdict = Verdict(action=VerdictAction.APPROVE, reason="Clears.")
+    fake = _FakeRunner(_make_run(
+        credit_cost=8, status=RoomStatus.COMPLETED, verdict=approve_verdict,
+    ))
 
     done = _done_line(_stream(client, app, user_id, token, fake))
 
