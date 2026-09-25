@@ -739,12 +739,14 @@ def _f3_behaviour(context: dict) -> str | None:
         lines.append(
             f"Disposition ratio (Odean 1998): this user realised "
             f"{_pct(pgr, 1)}% of their available gains and "
-            f"{_pct(plr, 1)}% of their available losses."
+            f"{_pct(plr, 1)}% of their available losses, counted on each "
+            f"sale day on which two or more stocks were held."
         )
     else:
         lines.append(
-            "Disposition ratio: not measured this run (no priced gain or "
-            "loss, open or closed, on record)."
+            "Disposition ratio: not measured this run (Odean's measure counts "
+            "only sale days on which two or more stocks were held, and needs "
+            "both a gain and a loss, sold or still held, on those days)."
         )
     baselines = block.get("baselines") or {}
     turnover_baseline = baselines.get("barber_odean_2000_turnover") or {}
@@ -759,12 +761,12 @@ def _f3_behaviour(context: dict) -> str | None:
         )
     if disposition_baseline:
         lines.append(
-            f"Published baseline (Odean 1998): the measured account population "
-            f"realised "
-            f"{_pct(disposition_baseline['proportion_gains_realised'], 1)}% "
-            f"of available gains and "
-            f"{_pct(disposition_baseline['proportion_losses_realised'], 1)}% "
-            f"of available losses."
+            f"Published baseline (Odean 1998, average of per-account ratios): "
+            f"the average measured account realised "
+            f"{_pct(disposition_baseline['average_account_pgr'], 1)}% "
+            f"of its available gains and "
+            f"{_pct(disposition_baseline['average_account_plr'], 1)}% "
+            f"of its available losses."
         )
     return "\n".join(lines)
 
@@ -1030,7 +1032,7 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
             for key in (
                 "realised_gains_count", "paper_gains_count",
                 "realised_losses_count", "paper_losses_count",
-                "priced_lots_excluded",
+                "unpriced_positions_excluded",
             ):
                 value = disposition.get(key)
                 if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -1046,7 +1048,7 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
                 if isinstance(value, (int, float)) and not isinstance(value, bool):
                     _register_number(float(value), PCT, allow, already_percent=True)
             disposition_baseline = baselines.get("odean_1998_disposition") or {}
-            for key in ("proportion_gains_realised", "proportion_losses_realised"):
+            for key in ("average_account_pgr", "average_account_plr"):
                 value = disposition_baseline.get(key)
                 if isinstance(value, (int, float)) and not isinstance(value, bool):
                     _register_number(float(value), PCT, allow)
