@@ -204,7 +204,7 @@
     "question": "Which agent said this?",
     "options": ["portfolio_manager", "trader", "bear_researcher", "conservative_debator"],
     "answer": 0,
-    "explanation": "Mandate enforcement — and specifically the deterministic drawdown gate — is the portfolio_manager's uncoachable safety-floor responsibility. The trader executes inside the floor; the bear_researcher and conservative_debator dissent on theses. Only the PM owns 'hard stop, no override'.",
+    "explanation": "Mandate enforcement — and specifically the deterministic drawdown gate — is the portfolio_manager's uncoachable safety-floor responsibility. The trader executes inside the floor; the bear_researcher and conservative_debator dissent on theses. Only the CIO owns 'hard stop, no override'.",
     "related_lesson": "018_drawdown_management",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "drawdown", "safety_floor"]
@@ -232,7 +232,7 @@
     "question": "Whose input is conspicuously absent?",
     "options": ["The Conservative Risk Officer", "The Bear Researcher", "The Chief Investment Officer and the deterministic compliance check — an 18% allocation breaches the 10% mandate cap and should have been hard-blocked before the verdict reached the user", "The Fundamentals Analyst"],
     "answer": 2,
-    "explanation": "The PM's mandate enforcement is the safety floor — it is uncoachable and runs deterministically. An 18% allocation against a 10% cap must hard-block. Bear/Conservative dissent is useful but the PM compliance check is the structural backstop. Missing PM is a critical safety-floor failure.",
+    "explanation": "The CIO's mandate enforcement is the safety floor — it is uncoachable and runs deterministically. An 18% allocation against a 10% cap must hard-block. Bear/Conservative dissent is useful but the CIO compliance check is the structural backstop. Missing CIO is a critical safety-floor failure.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "mandate", "safety_floor"]
@@ -344,7 +344,7 @@
     "question": "Whose contribution is conspicuously absent?",
     "options": ["The Conservative Risk Officer", "The Macro & Events desk", "The Chief Investment Officer", "The Execution Desk — the analytical thesis is complete but there is no executable plan (entry, stop, size, target), which is the Execution Desk's job"],
     "answer": 3,
-    "explanation": "The Execution Desk converts thesis to executable plan: entry, stop, target, size. Without that, the verdict is unactionable. The Chief Investment Officer would set mandate-fit caps but not the trade plan itself. The most tempting wrong answer (PM) confuses two distinct roles.",
+    "explanation": "The Execution Desk converts thesis to executable plan: entry, stop, target, size. Without that, the verdict is unactionable. The Chief Investment Officer would set mandate-fit caps but not the trade plan itself. The most tempting wrong answer (CIO) confuses two distinct roles.",
     "related_lesson": "015_stop_loss_basics",
     "related_agent": "trader",
     "tags": ["room", "trader", "execution"]

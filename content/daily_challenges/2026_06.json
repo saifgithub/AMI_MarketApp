@@ -89,7 +89,7 @@
       "Balanced Risk Officer"
     ],
     "answer": 1,
-    "explanation": "The Chief Investment Officer is the safety-floor gate — every verdict must pass a mandate-compliance check before it ships to the user. The verdict above proposes BUY 8% of NAV without any sign that sizing, concentration, or stop placement were validated against the user's mandate. The tempting wrong answer 'Flow & Positioning' fails because that input is helpful but not load-bearing; the PM is structurally required, not optional.",
+    "explanation": "The Chief Investment Officer is the safety-floor gate — every verdict must pass a mandate-compliance check before it ships to the user. The verdict above proposes BUY 8% of NAV without any sign that sizing, concentration, or stop placement were validated against the user's mandate. The tempting wrong answer 'Flow & Positioning' fails because that input is helpful but not load-bearing; the CIO is structurally required, not optional.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "safety_floor", "module_3"]
@@ -241,7 +241,7 @@
       "Leverage rule"
     ],
     "answer": 0,
-    "explanation": "The single-position cap is fine on each holding, but the *sector* cap is the load-bearing rule here. 18% + 7% = 25%, which hits the cap. Any further bank exposure breaches it — and the PM's job is to surface that aggregation risk even when each individual position looks compliant. The tempting wrong answer 'no violation' is what the user feels because they checked the single-position rule and stopped. The PM never stops there.",
+    "explanation": "The single-position cap is fine on each holding, but the *sector* cap is the load-bearing rule here. 18% + 7% = 25%, which hits the cap. Any further bank exposure breaches it — and the CIO's job is to surface that aggregation risk even when each individual position looks compliant. The tempting wrong answer 'no violation' is what the user feels because they checked the single-position rule and stopped. The CIO never stops there.",
     "related_lesson": "017_portfolio_exposure_and_correlation",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "sector_concentration", "safety_floor", "bursa", "module_3"]
@@ -260,7 +260,7 @@
       "Research Manager"
     ],
     "answer": 1,
-    "explanation": "The agent is pushing the team to act on conviction and size *up* within the allowed band, framing inaction as the bigger error. That is the Aggressive Risk Officer's voice. The tempting wrong answer 'Chief Investment Officer' fails because the PM never recommends sizing up — the PM enforces the mandate ceiling. Recommending 7% within the band is advocacy, which is what risk officers do.",
+    "explanation": "The agent is pushing the team to act on conviction and size *up* within the allowed band, framing inaction as the bigger error. That is the Aggressive Risk Officer's voice. The tempting wrong answer 'Chief Investment Officer' fails because the CIO never recommends sizing up — the CIO enforces the mandate ceiling. Recommending 7% within the band is advocacy, which is what risk officers do.",
     "related_lesson": "052_trend_following",
     "related_agent": "aggressive_debator",
     "tags": ["agents", "risk officers", "module_9"]
@@ -270,7 +270,7 @@
     "type": "whats_missing",
     "difficulty": 1,
     "locale": "en",
-    "scenario": "Room verdict on AMZN: 'Fundamentals Analyst — AWS revenue +21%, op margin expanding. Technical Strategist — uptrend intact above $185. Macro & Events — positive Prime Day commentary. Flow & Positioning — retail bullish. Bull Researcher — 25% upside to $235. Aggressive Risk Officer — size at top of band. Research Manager — HIGH conviction 0.81. Execution Desk — entry $188, stop $176. PM — within mandate. Verdict: BUY 9% of NAV.'",
+    "scenario": "Room verdict on AMZN: 'Fundamentals Analyst — AWS revenue +21%, op margin expanding. Technical Strategist — uptrend intact above $185. Macro & Events — positive Prime Day commentary. Flow & Positioning — retail bullish. Bull Researcher — 25% upside to $235. Aggressive Risk Officer — size at top of band. Research Manager — HIGH conviction 0.81. Execution Desk — entry $188, stop $176. CIO — within mandate. Verdict: BUY 9% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
       "Chief Investment Officer",
@@ -279,7 +279,7 @@
       "Technical Strategist"
     ],
     "answer": 2,
-    "explanation": "Every voice in the verdict is constructive. A 9% sizing call without a Bear Researcher counter-thesis is structurally one-sided — the Room is supposed to debate, not cheerlead. The tempting wrong answer 'Chief Investment Officer' fails because the PM IS present ('within mandate'). Bear research is the missing voice; an absent counter-thesis is a verdict-quality red flag.",
+    "explanation": "Every voice in the verdict is constructive. A 9% sizing call without a Bear Researcher counter-thesis is structurally one-sided — the Room is supposed to debate, not cheerlead. The tempting wrong answer 'Chief Investment Officer' fails because the CIO IS present ('within mandate'). Bear research is the missing voice; an absent counter-thesis is a verdict-quality red flag.",
     "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": ["room", "bear_case", "module_10"]
@@ -365,16 +365,16 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room verdict on TSLA: 'Fundamentals Analyst — auto margins compressing to 17.4%, energy storage +89% YoY. Macro & Events — robotaxi event next month. Flow & Positioning — retail euphoric. Bull Researcher — energy is the new compute. Bear Researcher — auto deceleration. Research Manager — conviction 0.55. PM — within mandate at 5%. Verdict: BUY 5% of NAV at market, no stop specified.'",
+    "scenario": "Room verdict on TSLA: 'Fundamentals Analyst — auto margins compressing to 17.4%, energy storage +89% YoY. Macro & Events — robotaxi event next month. Flow & Positioning — retail euphoric. Bull Researcher — energy is the new compute. Bear Researcher — auto deceleration. Research Manager — conviction 0.55. CIO — within mandate at 5%. Verdict: BUY 5% of NAV at market, no stop specified.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "PM",
+      "CIO",
       "Bull Researcher",
       "Technical Strategist — there is no read on price level, trend, or where stops/targets should sit",
       "Bear Researcher"
     ],
     "answer": 2,
-    "explanation": "The verdict has fundamentals, news, sentiment, and synthesis covered — but no technical read on price, trend, or stop placement. That's why the verdict says 'at market, no stop specified' — the Technical Strategist's input would normally provide a stop level and target. The tempting wrong answer 'PM' fails because the PM IS present and signed off on sizing. The missing voice is the technical one.",
+    "explanation": "The verdict has fundamentals, news, sentiment, and synthesis covered — but no technical read on price, trend, or stop placement. That's why the verdict says 'at market, no stop specified' — the Technical Strategist's input would normally provide a stop level and target. The tempting wrong answer 'CIO' fails because the CIO IS present and signed off on sizing. The missing voice is the technical one.",
     "related_lesson": "022_trend_direction",
     "related_agent": "market_analyst",
     "tags": ["room", "technicals", "module_4"]
@@ -450,7 +450,7 @@
       "Concierge"
     ],
     "answer": 3,
-    "explanation": "Onboarding, education, and scam-protection conversations live with the Concierge. The user isn't asking for a market call — they're asking for guidance on a red-flag situation, which is the Concierge's lane. The tempting wrong answer 'Chief Investment Officer' fails because the PM enforces *mandate* rules on existing trades inside AMI; they don't field external scam questions. The Concierge does.",
+    "explanation": "Onboarding, education, and scam-protection conversations live with the Concierge. The user isn't asking for a market call — they're asking for guidance on a red-flag situation, which is the Concierge's lane. The tempting wrong answer 'Chief Investment Officer' fails because the CIO enforces *mandate* rules on existing trades inside AMI; they don't field external scam questions. The Concierge does.",
     "related_lesson": "065_guaranteed_return_scams",
     "related_agent": "concierge",
     "tags": ["agents", "scams", "concierge", "module_11"]
@@ -460,10 +460,10 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room verdict on a meme-adjacent micro-cap that has run +180% in 3 weeks: 'Fundamentals Analyst — no revenue change. Technical Strategist — parabolic. Macro & Events — no fundamental catalyst found. Bull Researcher — momentum is the case. Bear Researcher — pure flow trade. Research Manager — low conviction 0.32. Execution Desk — would not touch. PM — would be at sector cap. Verdict: NO ACTION.'",
+    "scenario": "Room verdict on a meme-adjacent micro-cap that has run +180% in 3 weeks: 'Fundamentals Analyst — no revenue change. Technical Strategist — parabolic. Macro & Events — no fundamental catalyst found. Bull Researcher — momentum is the case. Bear Researcher — pure flow trade. Research Manager — low conviction 0.32. Execution Desk — would not touch. CIO — would be at sector cap. Verdict: NO ACTION.'",
     "question": "Whose input is conspicuously absent from this verdict — and would have been the most useful?",
     "options": [
-      "PM",
+      "CIO",
       "Execution Desk",
       "Fundamentals Analyst",
       "Flow & Positioning — a 180%-in-3-weeks move on no fundamentals or news is by definition a crowd-driven flow event; the social read is the missing signal"
@@ -479,7 +479,7 @@
     "type": "predict_the_call",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room has agreed BUY on AAPL, sizing 5% of NAV ($5,000 on a $100k account). Current price $192.40. Technical Strategist flagged support at $188 (recent base) and resistance at $205 (prior swing high). PM mandate allows max -8% stop. The Execution Desk is asked to specify entry, stop, and target.",
+    "scenario": "Room has agreed BUY on AAPL, sizing 5% of NAV ($5,000 on a $100k account). Current price $192.40. Technical Strategist flagged support at $188 (recent base) and resistance at $205 (prior swing high). CIO mandate allows max -8% stop. The Execution Desk is asked to specify entry, stop, and target.",
     "question": "What is the Execution Desk most likely to specify?",
     "options": [
       "Entry $192.40, stop $187.50 (just under $188 support, -2.5% from entry), target $205 (resistance) — risk/reward ~2.6x",
@@ -522,11 +522,11 @@
     "options": [
       "Stop-loss rule",
       "Cooling-off rule",
-      "The PM's mandate enforcement is the uncoachable safety floor; users cannot override position-size caps via coaching, regardless of conviction",
+      "The CIO's mandate enforcement is the uncoachable safety floor; users cannot override position-size caps via coaching, regardless of conviction",
       "No violation — the user can customise any agent however they want"
     ],
     "answer": 2,
-    "explanation": "AMI's safety floor is the one part of the system the user cannot brief away. The PM's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Brief Your Agent — that's the product's bedrock. The briefing edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
+    "explanation": "AMI's safety floor is the one part of the system the user cannot brief away. The CIO's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Brief Your Agent — that's the product's bedrock. The briefing edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
     "related_lesson": "074_ai_hallucinations_and_amis_safety_floor",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "coaching", "uncoachable", "module_12"]
@@ -555,10 +555,10 @@
     "type": "whats_missing",
     "difficulty": 1,
     "locale": "en",
-    "scenario": "Room verdict on XLP (consumer staples ETF): 'Technical Strategist — sideways range, 50-day flat. Macro & Events — no macro catalyst. Flow & Positioning — sentiment neutral. Bull Researcher — defensive flows into staples on VIX 22. Bear Researcher — no growth. Research Manager — conviction 0.48. Execution Desk — wait for range break. PM — sizing fine. Verdict: HOLD.'",
+    "scenario": "Room verdict on XLP (consumer staples ETF): 'Technical Strategist — sideways range, 50-day flat. Macro & Events — no macro catalyst. Flow & Positioning — sentiment neutral. Bull Researcher — defensive flows into staples on VIX 22. Bear Researcher — no growth. Research Manager — conviction 0.48. Execution Desk — wait for range break. CIO — sizing fine. Verdict: HOLD.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "PM",
+      "CIO",
       "Bull Researcher",
       "Technical Strategist",
       "Fundamentals Analyst — no read on the underlying earnings, margins, or yield of the staples basket"

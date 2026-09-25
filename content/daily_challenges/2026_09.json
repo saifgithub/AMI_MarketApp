@@ -70,7 +70,7 @@
       "Sector concentration — tech is already 36.5% of NAV against the 30% cap, and adding AMZN pushes it to 41.5%"
     ],
     "answer": 3,
-    "explanation": "Single-position size is fine (5% < 8%) and a stop is attached, so those checks pass. The trip-wire is sector concentration: AAPL+MSFT+GOOGL+NVDA+META already total 36.5% of NAV, breaching the 30% sector cap. AMZN is another mega-cap tech name, pushing the sector to 41.5%. The PM blocks on concentration. The tempting wrong answer 'single-position cap' is what someone half-reading the mandate picks because the line is the most familiar — but the math says 5% is within 8%, so that rule isn't breached.",
+    "explanation": "Single-position size is fine (5% < 8%) and a stop is attached, so those checks pass. The trip-wire is sector concentration: AAPL+MSFT+GOOGL+NVDA+META already total 36.5% of NAV, breaching the 30% sector cap. AMZN is another mega-cap tech name, pushing the sector to 41.5%. The CIO blocks on concentration. The tempting wrong answer 'single-position cap' is what someone half-reading the mandate picks because the line is the most familiar — but the math says 5% is within 8%, so that rule isn't breached.",
     "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "concentration", "safety_floor", "module_3"]
@@ -165,7 +165,7 @@
       "Concentration rule — TSLA is a tech name"
     ],
     "answer": 2,
-    "explanation": "Single-position size is at the cap but not over (6.0% of NAV against a 6% cap). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the PM cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: $4,797 is under the $4,800 cap, not over it.",
+    "explanation": "Single-position size is at the cap but not over (6.0% of NAV against a 6% cap). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the CIO cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: $4,797 is under the $4,800 cap, not over it.",
     "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stop_loss", "safety_floor", "module_3"]
@@ -279,7 +279,7 @@
       "No options/derivatives — the mandate explicitly prohibits options, and 'covered' doesn't override the rule when the user has set a no-derivatives floor"
     ],
     "answer": 3,
-    "explanation": "The user's mandate explicitly bans options and derivatives. A covered call is still an option position; 'covered' describes the risk profile, not the instrument category. When the user has set a no-derivatives floor — uncoachable in the AMI safety floor design — the PM must block, full stop. The tempting wrong answer 'margin rule' confuses a covered call (no margin required) with a naked one. The right read is: the rule says no options, this is an option, blocked.",
+    "explanation": "The user's mandate explicitly bans options and derivatives. A covered call is still an option position; 'covered' describes the risk profile, not the instrument category. When the user has set a no-derivatives floor — uncoachable in the AMI safety floor design — the CIO must block, full stop. The tempting wrong answer 'margin rule' confuses a covered call (no margin required) with a naked one. The right read is: the rule says no options, this is an option, blocked.",
     "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "options", "safety_floor", "module_3"]
@@ -355,7 +355,7 @@
       "The Research Manager, synthesising Bull vs Bear into a sized, conditional recommendation"
     ],
     "answer": 3,
-    "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Chief Investment Officer' fails because the PM applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the PM checks it against the user's rules.",
+    "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Chief Investment Officer' fails because the CIO applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the CIO checks it against the user's rules.",
     "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "research_manager",
     "tags": ["room", "synthesis", "module_5"]
@@ -412,7 +412,7 @@
       "Stop-loss rule — 9.5% is too wide a stop"
     ],
     "answer": 1,
-    "explanation": "The single-position cap is 5%. The current BRK-B position is 4.8% (within cap), but adding $3,696 pushes the combined position to $10,896, or 7.3% — over the cap by 2.3pp. The PM blocks the add. The tempting wrong answer 'sector concentration' fails because BRK-B alone (10,896 / 150,000 = 7.3%) doesn't get the financials sector to 25%, and there are no other holdings in the sector. Read the actual numbers; don't jump to the most familiar rule.",
+    "explanation": "The single-position cap is 5%. The current BRK-B position is 4.8% (within cap), but adding $3,696 pushes the combined position to $10,896, or 7.3% — over the cap by 2.3pp. The CIO blocks the add. The tempting wrong answer 'sector concentration' fails because BRK-B alone (10,896 / 150,000 = 7.3%) doesn't get the financials sector to 25%, and there are no other holdings in the sector. Read the actual numbers; don't jump to the most familiar rule.",
     "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
@@ -450,7 +450,7 @@
       "The Research Manager, recommending a portfolio"
     ],
     "answer": 0,
-    "explanation": "The Concierge is the onboarding agent — they run the conversational interview and propose a starter mandate at the end. The quote shows exactly that: synthesising the interview answers into a draft mandate and offering to explain it. The tempting wrong answer 'Chief Investment Officer' fails because the PM enforces an *existing* mandate; they don't create one from a conversation with a brand-new user. Concierge proposes, PM enforces.",
+    "explanation": "The Concierge is the onboarding agent — they run the conversational interview and propose a starter mandate at the end. The quote shows exactly that: synthesising the interview answers into a draft mandate and offering to explain it. The tempting wrong answer 'Chief Investment Officer' fails because the CIO enforces an *existing* mandate; they don't create one from a conversation with a brand-new user. Concierge proposes, CIO enforces.",
     "related_lesson": null,
     "related_agent": "concierge",
     "tags": ["onboarding", "mandate", "module_1"]
@@ -517,7 +517,7 @@
     "type": "spot_the_violation",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "User's mandate: max single-position 5%, stop required, daily portfolio VaR cap 1.5% of NAV. NAV $250,000. The user submits a buy of AAPL: 50 shares at $238 ($11,900, 4.76% of NAV), stop at $222 (6.7% from fill). The PM's pre-trade VaR engine reports that AFTER adding this position, expected daily VaR rises from 1.2% to 1.7% because AAPL is highly correlated with existing META, MSFT, GOOGL holdings.",
+    "scenario": "User's mandate: max single-position 5%, stop required, daily portfolio VaR cap 1.5% of NAV. NAV $250,000. The user submits a buy of AAPL: 50 shares at $238 ($11,900, 4.76% of NAV), stop at $222 (6.7% from fill). The CIO's pre-trade VaR engine reports that AFTER adding this position, expected daily VaR rises from 1.2% to 1.7% because AAPL is highly correlated with existing META, MSFT, GOOGL holdings.",
     "question": "Which mandate rule does the Chief Investment Officer flag as violated?",
     "options": [
       "Portfolio VaR cap — adding AAPL pushes daily VaR from 1.2% to 1.7%, breaching the 1.5% portfolio-VaR limit, even though the individual position passes the sizing and stop checks",
@@ -545,7 +545,7 @@
       "The Aggressive Risk Officer, pushing to size up on high conviction"
     ],
     "answer": 3,
-    "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Risk Officer's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Chief Investment Officer' fails because the PM applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Risk Officer wants more; the PM decides whether the user's rules even allow it.",
+    "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Risk Officer's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Chief Investment Officer' fails because the CIO applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Risk Officer wants more; the CIO decides whether the user's rules even allow it.",
     "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "aggressive_debator",
     "tags": ["debate", "position_sizing", "module_5"]

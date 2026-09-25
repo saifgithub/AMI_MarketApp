@@ -241,7 +241,7 @@
       "Research Manager"
     ],
     "answer": 3,
-    "explanation": "Research Manager synthesises Bull/Bear/Fundamentals/Technicals/News/Social into a conviction number and adjusts for regime context. The quote names every analyst, scores them, integrates them, and outputs a moderated conviction with a size implication. That is the Research Manager job description. The tempting wrong answer 'Chief Investment Officer' fails because the PM applies the mandate floor (sizing limits, stop checks) — it does not score Bull vs Bear conviction. Synthesis is the Research Manager; compliance is the PM.",
+    "explanation": "Research Manager synthesises Bull/Bear/Fundamentals/Technicals/News/Social into a conviction number and adjusts for regime context. The quote names every analyst, scores them, integrates them, and outputs a moderated conviction with a size implication. That is the Research Manager job description. The tempting wrong answer 'Chief Investment Officer' fails because the CIO applies the mandate floor (sizing limits, stop checks) — it does not score Bull vs Bear conviction. Synthesis is the Research Manager; compliance is the CIO.",
     "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": ["agents", "synthesis", "module_9"]
@@ -469,7 +469,7 @@
       "Chief Investment Officer"
     ],
     "answer": 2,
-    "explanation": "N&M 1's bull-regime checklist — rising index + wide breadth + cyclical leadership + supportive macro — is the Bull Researcher's structural argument. The quote chains all four confirmations into a 'scale longs' conclusion, and explicitly pushes back on the recency-bias temptation to trim. That is the Bull Researcher signature. The tempting wrong answer 'Chief Investment Officer' fails because the PM doesn't argue directional theses; the PM checks the trade against the mandate. Bull-thesis construction is the Bull Researcher's lane.",
+    "explanation": "N&M 1's bull-regime checklist — rising index + wide breadth + cyclical leadership + supportive macro — is the Bull Researcher's structural argument. The quote chains all four confirmations into a 'scale longs' conclusion, and explicitly pushes back on the recency-bias temptation to trim. That is the Bull Researcher signature. The tempting wrong answer 'Chief Investment Officer' fails because the CIO doesn't argue directional theses; the CIO checks the trade against the mandate. Bull-thesis construction is the Bull Researcher's lane.",
     "related_lesson": "059_bull_markets",
     "related_agent": "bull_researcher",
     "tags": ["bull_market", "agents", "module_10"]

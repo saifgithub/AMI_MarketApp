@@ -14,7 +14,7 @@
     "category": "ai_meta",
     "question": "Is AMI an AI?",
     "short_answer": "Yes — AMI is an AI-based training simulator that gives you practice running a multi-agent analyst team, packaged as twelve role-specific agents you run as CEO. The architecture detail (what powers each agent) is in the long answer.",
-    "long_answer": "Each agent has a distinct role, prompt, and surface. The Concierge greets and routes; the analysts pull data; the researchers debate; the PM enforces your Mandate. They are powered by the underlying language models, but you should think of them as roles on a simulated analyst desk, not as one chatbot wearing twelve hats. The whole stack is a training environment — nothing it produces is investment advice.",
+    "long_answer": "Each agent has a distinct role, prompt, and surface. The Concierge greets and routes; the analysts pull data; the researchers debate; the CIO enforces your Mandate. They are powered by the underlying language models, but you should think of them as roles on a simulated analyst desk, not as one chatbot wearing twelve hats. The whole stack is a training environment — nothing it produces is investment advice.",
     "related_lessons": ["072"],
     "related_agents": ["concierge"],
     "tags": ["llm", "agents", "architecture"]
@@ -54,7 +54,7 @@
     "category": "ai_meta",
     "question": "What can AMI do?",
     "short_answer": "AMI simulates a research desk: it pulls fundamentals, reads charts, summarises news and sentiment, runs a 12-agent bull/bear debate, stress-tests against your Mandate, and produces a structured Verdict for you to practice evaluating.",
-    "long_answer": "Think of it as a simulated research desk you can convene on any ticker. The output is a Verdict with entry, stop, target, horizon, confidence, the full debate transcript, and the PM's compliance check. The Verdict is a training artifact, not a tip and not investment advice — its value is in giving you practice walking the reasoning chain, not in the headline BUY/HOLD/SELL.",
+    "long_answer": "Think of it as a simulated research desk you can convene on any ticker. The output is a Verdict with entry, stop, target, horizon, confidence, the full debate transcript, and the CIO's compliance check. The Verdict is a training artifact, not a tip and not investment advice — its value is in giving you practice walking the reasoning chain, not in the headline BUY/HOLD/SELL.",
     "related_lessons": ["072"],
     "related_agents": ["concierge", "research_manager"],
     "tags": ["capabilities", "verdict", "convene_the_room"]
@@ -154,7 +154,7 @@
     "category": "ai_meta",
     "question": "Why won't AMI just tell me what to buy?",
     "short_answer": "Because AMI is a training simulator, not a licensed adviser. It produces a debated Verdict as a training artifact; the skill being trained is your evaluation, not blind obedience to a headline.",
-    "long_answer": "AMI will absolutely produce a simulated BUY, HOLD, or SELL Verdict with size, entry, stop, and target. That output is a training artifact — the result of a process you ran — not a tip and not investment advice. Skipping the debate transcript and treating the headline as a directive throws away the entire skill the simulator is teaching. Read the dissent, read the PM's compliance line, then practice making the call.",
+    "long_answer": "AMI will absolutely produce a simulated BUY, HOLD, or SELL Verdict with size, entry, stop, and target. That output is a training artifact — the result of a process you ran — not a tip and not investment advice. Skipping the debate transcript and treating the headline as a directive throws away the entire skill the simulator is teaching. Read the dissent, read the CIO's compliance line, then practice making the call.",
     "related_lessons": ["072", "076"],
     "related_agents": ["concierge"],
     "tags": ["advisory_only", "verdict", "framing"]
@@ -264,7 +264,7 @@
     "category": "ai_meta",
     "question": "Why did AMI say HOLD when I wanted BUY?",
     "short_answer": "AMI didn't say HOLD in the sense of advising you to hold — it produced a simulated Verdict of HOLD for you to evaluate. The 12-agent debate ended with the bull/bear balance and your Mandate constraints pointing that way; the training artifact reflects the work, not your preference.",
-    "long_answer": "Open the debate transcript. The Bear Researcher likely flagged something the Bull case did not fully answer; the Research Manager weighted the result; the PM may have noted a mandate constraint. The simulated HOLD does not mean 'don't ever buy this' and it is not investment advice — it means the current setup, conditional on your Mandate, did not clear the bar inside the training exercise. The point is to practice evaluating the call yourself; AMI just refuses to manufacture a BUY to match your prior.",
+    "long_answer": "Open the debate transcript. The Bear Researcher likely flagged something the Bull case did not fully answer; the Research Manager weighted the result; the CIO may have noted a mandate constraint. The simulated HOLD does not mean 'don't ever buy this' and it is not investment advice — it means the current setup, conditional on your Mandate, did not clear the bar inside the training exercise. The point is to practice evaluating the call yourself; AMI just refuses to manufacture a BUY to match your prior.",
     "related_lessons": ["072", "075"],
     "related_agents": ["research_manager", "portfolio_manager"],
     "tags": ["verdict", "hold", "explanation"]
@@ -272,9 +272,9 @@
   {
     "id": "qa_aim_why_pm_blocked_trade",
     "category": "ai_meta",
-    "question": "Why did the PM block my trade?",
+    "question": "Why did the CIO block my trade?",
     "short_answer": "Because the proposed simulated trade failed your Mandate's compliance check — most commonly position size, drawdown floor, or an exclusion (halal, no_fossil, long_only, region).",
-    "long_answer": "The PM runs a deterministic check against the Mandate you set inside the training simulation. If the Execution Desk proposes 7% size when your max_position_pct is 5, the function blocks regardless of how confident any agent sounds. Open the PM's compliance line in the Verdict footer — it names the exact clause that triggered the block. To change the outcome inside the scenario, either reduce the proposed size, modify your Mandate (your call, not the PM's), or reject the simulated trade. The block is training feedback, not investment advice.",
+    "long_answer": "The CIO runs a deterministic check against the Mandate you set inside the training simulation. If the Execution Desk proposes 7% size when your max_position_pct is 5, the function blocks regardless of how confident any agent sounds. Open the CIO's compliance line in the Verdict footer — it names the exact clause that triggered the block. To change the outcome inside the scenario, either reduce the proposed size, modify your Mandate (your call, not the CIO's), or reject the simulated trade. The block is training feedback, not investment advice.",
     "related_lessons": ["074", "013"],
     "related_agents": ["portfolio_manager"],
     "tags": ["pm_block", "mandate", "compliance"]
@@ -294,7 +294,7 @@
     "category": "ai_meta",
     "question": "Why are the agents arguing with each other?",
     "short_answer": "Because the debate is the training material. The Bull and Bear Researchers — and the three Risk Officers — are meant to pull in different directions so the simulated Verdict reflects pressure-tested reasoning you can practice evaluating, not consensus theatre.",
-    "long_answer": "If every agent agreed instantly, the Verdict would be a single perspective dressed up as twelve and the simulator would be teaching you nothing. The argument is where weaknesses in the thesis surface — and reading them is the skill being trained. The Research Manager synthesises into a position and the PM compliance-checks the Execution Desk's proposal, but the disagreement above that is feature, not bug. Read the dissent before you read the headline.",
+    "long_answer": "If every agent agreed instantly, the Verdict would be a single perspective dressed up as twelve and the simulator would be teaching you nothing. The argument is where weaknesses in the thesis surface — and reading them is the skill being trained. The Research Manager synthesises into a position and the CIO compliance-checks the Execution Desk's proposal, but the disagreement above that is feature, not bug. Read the dissent before you read the headline.",
     "related_lessons": ["072"],
     "related_agents": ["research_manager"],
     "tags": ["debate", "agents", "design"]
@@ -304,7 +304,7 @@
     "category": "ai_meta",
     "question": "What does the confidence number on a Verdict mean?",
     "short_answer": "It is the Room's weighted lean toward the verdict — not a calibrated probability of being right.",
-    "long_answer": "A confidence of 0.62 means the bull/bear balance and Risk Officers leaned that way after the simulated debate, not that the trade has a 62% chance of profit. Read it as 'lean, not lock'. Two Verdicts with the same confidence can have very different risk profiles — the number is a training-exercise summary, not investment advice. Always read the transcript and the PM's compliance line alongside the headline number.",
+    "long_answer": "A confidence of 0.62 means the bull/bear balance and Risk Officers leaned that way after the simulated debate, not that the trade has a 62% chance of profit. Read it as 'lean, not lock'. Two Verdicts with the same confidence can have very different risk profiles — the number is a training-exercise summary, not investment advice. Always read the transcript and the CIO's compliance line alongside the headline number.",
     "related_lessons": ["077"],
     "related_agents": ["research_manager"],
     "tags": ["confidence", "verdict", "probability"]
@@ -334,7 +334,7 @@
     "category": "ai_meta",
     "question": "Why are there three Risk Officers?",
     "short_answer": "Because risk is best stress-tested from multiple angles. Aggressive, Conservative, and Balanced push the proposed position size in different directions before the Execution Desk finalises.",
-    "long_answer": "The Aggressive Risk Officer argues for larger positions when the setup is strong; the Conservative Risk Officer pushes for smaller sizing or skipping; the Balanced Risk Officer holds the middle. The three perspectives resolve to a sizing view the Execution Desk then proposes — and the PM checks against your Mandate. Three voices keep the sizing question honest as a training exercise.",
+    "long_answer": "The Aggressive Risk Officer argues for larger positions when the setup is strong; the Conservative Risk Officer pushes for smaller sizing or skipping; the Balanced Risk Officer holds the middle. The three perspectives resolve to a sizing view the Execution Desk then proposes — and the CIO checks against your Mandate. Three voices keep the sizing question honest as a training exercise.",
     "related_lessons": ["072", "014"],
     "related_agents": [],
     "tags": ["risk_debators", "sizing", "agents"]
@@ -344,7 +344,7 @@
     "category": "ai_meta",
     "question": "Who are the 12 agents?",
     "short_answer": "Four Analysts (Fundamentals, Market, News, Social), two Researchers (Bull, Bear), the Research Manager, three Risk Officers (Aggressive, Conservative, Balanced), the Execution Desk, and the Chief Investment Officer.",
-    "long_answer": "The Concierge sits outside the Room — it greets, routes, and handles onboarding. Inside the simulated Room, the four Analysts gather inputs, the two Researchers debate the case, the Research Manager synthesises, the three Risk Officers stress-test sizing, the Execution Desk assembles a trade plan, and the PM enforces your Mandate. That is the full team — a training simulator that gives you practice working with an analyst desk.",
+    "long_answer": "The Concierge sits outside the Room — it greets, routes, and handles onboarding. Inside the simulated Room, the four Analysts gather inputs, the two Researchers debate the case, the Research Manager synthesises, the three Risk Officers stress-test sizing, the Execution Desk assembles a trade plan, and the CIO enforces your Mandate. That is the full team — a training simulator that gives you practice working with an analyst desk.",
     "related_lessons": ["072"],
     "related_agents": ["concierge", "research_manager", "portfolio_manager"],
     "tags": ["agents", "roster"]
@@ -353,8 +353,8 @@
     "id": "qa_aim_what_does_pm_do",
     "category": "ai_meta",
     "question": "What does the Chief Investment Officer do?",
-    "short_answer": "The PM enforces your Mandate. It compliance-checks every Verdict against your stated rules — size, drawdown, exclusions — and blocks anything that breaches them.",
-    "long_answer": "The PM is your safety floor inside the training simulation. Its check is a deterministic function reading the Mandate fields you set, not a prompt that can be talked around. PASS means the simulated trade fits your floors; BLOCK names the exact clause that failed. The PM does not fact-check the analysts and does not predict outcomes — its job is mandate compliance inside the training exercise, full stop.",
+    "short_answer": "The CIO enforces your Mandate. It compliance-checks every Verdict against your stated rules — size, drawdown, exclusions — and blocks anything that breaches them.",
+    "long_answer": "The CIO is your safety floor inside the training simulation. Its check is a deterministic function reading the Mandate fields you set, not a prompt that can be talked around. PASS means the simulated trade fits your floors; BLOCK names the exact clause that failed. The CIO does not fact-check the analysts and does not predict outcomes — its job is mandate compliance inside the training exercise, full stop.",
     "related_lessons": ["074", "076", "013"],
     "related_agents": ["portfolio_manager"],
     "tags": ["pm", "mandate", "safety_floor"]
@@ -384,7 +384,7 @@
     "category": "ai_meta",
     "question": "What's the difference between the Aggressive and Conservative Risk Officers?",
     "short_answer": "The Aggressive Risk Officer pushes for larger position sizing when the setup is strong; the Conservative Risk Officer pushes for smaller sizing or skipping. The Balanced Risk Officer lands the middle.",
-    "long_answer": "They both work on the same proposed simulated trade after the Research Manager's synthesis. Their job is to argue position size and risk allocation — not whether the thesis is right, but how much capital the simulated position deserves. The Execution Desk assembles their argument into a concrete proposal which the PM then compliance-checks against your Mandate, all as part of the training exercise.",
+    "long_answer": "They both work on the same proposed simulated trade after the Research Manager's synthesis. Their job is to argue position size and risk allocation — not whether the thesis is right, but how much capital the simulated position deserves. The Execution Desk assembles their argument into a concrete proposal which the CIO then compliance-checks against your Mandate, all as part of the training exercise.",
     "related_lessons": ["072", "014"],
     "related_agents": [],
     "tags": ["risk_debators", "sizing"]
@@ -394,7 +394,7 @@
     "category": "ai_meta",
     "question": "What does the Execution Desk agent do?",
     "short_answer": "The Execution Desk assembles the trade plan — entry, stop, target, horizon, size — from the Research Manager's synthesis and the Risk Officers' sizing argument.",
-    "long_answer": "The Execution Desk is the last step before the PM. It takes the weighted thesis and the sizing debate and produces a concrete simulated proposal. That proposal is then compliance-checked by the PM. The Execution Desk does not execute anything — there is no execution surface — and it cannot be coached to auto-execute. The trade-plan output is a training artifact, not investment advice, like the rest of AMI.",
+    "long_answer": "The Execution Desk is the last step before the CIO. It takes the weighted thesis and the sizing debate and produces a concrete simulated proposal. That proposal is then compliance-checked by the CIO. The Execution Desk does not execute anything — there is no execution surface — and it cannot be coached to auto-execute. The trade-plan output is a training artifact, not investment advice, like the rest of AMI.",
     "related_lessons": ["072", "073"],
     "related_agents": [],
     "tags": ["trader", "trade_plan"]
@@ -413,8 +413,8 @@
     "id": "qa_aim_does_ami_hallucinate",
     "category": "ai_meta",
     "question": "Does AMI hallucinate?",
-    "short_answer": "Yes — AMI is built on large language models, and any LLM-based system can produce plausible-but-wrong text. The structural defence is the PM's mandate compliance check.",
-    "long_answer": "An agent might cite a stale P/E, mis-describe a chart pattern, or paraphrase a headline incorrectly. The defence is not 'prompt the model harder'. The defence is that the PM's compliance check is a deterministic function reading your Mandate fields directly — it never passes through the model layer, so it cannot be hallucinated around. The mandate-sensitive parts of a Verdict (size, drawdown, exclusions) are guarded. Other facts in the transcript are part of your CEO training: practising the skill of cross-checking analyst output is exactly what the simulator is for.",
+    "short_answer": "Yes — AMI is built on large language models, and any LLM-based system can produce plausible-but-wrong text. The structural defence is the CIO's mandate compliance check.",
+    "long_answer": "An agent might cite a stale P/E, mis-describe a chart pattern, or paraphrase a headline incorrectly. The defence is not 'prompt the model harder'. The defence is that the CIO's compliance check is a deterministic function reading your Mandate fields directly — it never passes through the model layer, so it cannot be hallucinated around. The mandate-sensitive parts of a Verdict (size, drawdown, exclusions) are guarded. Other facts in the transcript are part of your CEO training: practising the skill of cross-checking analyst output is exactly what the simulator is for.",
     "related_lessons": ["074"],
     "related_agents": ["portfolio_manager"],
     "tags": ["hallucinations", "safety_floor", "llm"]
@@ -424,7 +424,7 @@
     "category": "ai_meta",
     "question": "Can AMI be wrong?",
     "short_answer": "Yes. Individual agents can be wrong on facts, the debate can lean the wrong way, and a passing Verdict can still lose money in the simulated book. AMI is a training simulator, not omniscience and not investment advice.",
-    "long_answer": "Treat every Verdict as a training artifact — a structured opinion to evaluate, not a directive. The PM compliance check protects against mandate violations inside the simulation; it does not guarantee any trade would be profitable. Read the transcript, cross-check the load-bearing numbers, and use the Decision Journal to track where AMI's simulated read held up and where it did not. Being able to be wrong is what makes the training honest.",
+    "long_answer": "Treat every Verdict as a training artifact — a structured opinion to evaluate, not a directive. The CIO compliance check protects against mandate violations inside the simulation; it does not guarantee any trade would be profitable. Read the transcript, cross-check the load-bearing numbers, and use the Decision Journal to track where AMI's simulated read held up and where it did not. Being able to be wrong is what makes the training honest.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],
     "tags": ["fallibility", "honest", "judgment"]
@@ -433,8 +433,8 @@
     "id": "qa_aim_bad_info_what_now",
     "category": "ai_meta",
     "question": "What if AMI gives me bad info?",
-    "short_answer": "The PM's mandate compliance check is the structural safeguard. Beyond that, cross-check load-bearing facts yourself and flag errors so the prompts and data feeds can improve.",
-    "long_answer": "AMI is built on the underlying language models, so individual factual slips happen. The PM blocks mandate-violating simulated trades regardless of any agent's confidence. For non-mandate facts — a cited P/E, a paraphrased headline — read the transcript and verify the numbers the case actually hinges on; that verification is the skill the training simulator is teaching. If you find a clear error, report it; that feedback shapes the next iteration. Nothing AMI says is investment advice.",
+    "short_answer": "The CIO's mandate compliance check is the structural safeguard. Beyond that, cross-check load-bearing facts yourself and flag errors so the prompts and data feeds can improve.",
+    "long_answer": "AMI is built on the underlying language models, so individual factual slips happen. The CIO blocks mandate-violating simulated trades regardless of any agent's confidence. For non-mandate facts — a cited P/E, a paraphrased headline — read the transcript and verify the numbers the case actually hinges on; that verification is the skill the training simulator is teaching. If you find a clear error, report it; that feedback shapes the next iteration. Nothing AMI says is investment advice.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],
     "tags": ["error_handling", "safety_floor", "cross_check"]
@@ -443,8 +443,8 @@
     "id": "qa_aim_safety_floor_explained",
     "category": "ai_meta",
     "question": "What is AMI's safety floor?",
-    "short_answer": "The safety floor is a deterministic function the PM runs against your Mandate — it blocks any Verdict that breaches your stated size, drawdown, or exclusion rules, regardless of what any agent says.",
-    "long_answer": "Your Mandate fields (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, etc.) are stored as your data, not the model's parameters. The PM's compliance function reads that data directly inside the training simulation. It is not a prompt that can be softened by Brief Your Agent, nor a guideline an agent can argue around. Change your Mandate and the floor moves; until then, the floor is the floor.",
+    "short_answer": "The safety floor is a deterministic function the CIO runs against your Mandate — it blocks any Verdict that breaches your stated size, drawdown, or exclusion rules, regardless of what any agent says.",
+    "long_answer": "Your Mandate fields (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, etc.) are stored as your data, not the model's parameters. The CIO's compliance function reads that data directly inside the training simulation. It is not a prompt that can be softened by Brief Your Agent, nor a guideline an agent can argue around. Change your Mandate and the floor moves; until then, the floor is the floor.",
     "related_lessons": ["074", "013"],
     "related_agents": ["portfolio_manager"],
     "tags": ["safety_floor", "deterministic", "mandate"]
@@ -453,8 +453,8 @@
     "id": "qa_aim_can_i_change_agents",
     "category": "ai_meta",
     "question": "Can I change what the agents say?",
-    "short_answer": "Brief Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the PM's safety floor.",
-    "long_answer": "You can brief the Bull Researcher to weight long-term catalysts more, the Technical Strategist to focus on weekly timeframes, or the Execution Desk to prefer tighter stops. Those briefing changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the PM's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
+    "short_answer": "Brief Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the CIO's safety floor.",
+    "long_answer": "You can brief the Bull Researcher to weight long-term catalysts more, the Technical Strategist to focus on weekly timeframes, or the Execution Desk to prefer tighter stops. Those briefing changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the CIO's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],
     "tags": ["brief", "briefing", "limits"]
@@ -462,9 +462,9 @@
   {
     "id": "qa_aim_coach_pm_less_strict",
     "category": "ai_meta",
-    "question": "Can I make the PM less strict?",
-    "short_answer": "No. The PM's mandate enforcement is uncoachable by design. The only way to change what the PM blocks is to change your Mandate yourself.",
-    "long_answer": "Coaching changes apply to coachable surfaces — tone, weighting, skepticism. The PM's compliance check is a deterministic function reading your Mandate data inside the training simulation, not a prompt to be softened. If you want more headroom in the scenario, edit the Mandate (e.g. raise max_position_pct from 5 to 7); the PM will then enforce the new floor. The safety floor moves with your Mandate, not with coaching.",
+    "question": "Can I make the CIO less strict?",
+    "short_answer": "No. The CIO's mandate enforcement is uncoachable by design. The only way to change what the CIO blocks is to change your Mandate yourself.",
+    "long_answer": "Coaching changes apply to coachable surfaces — tone, weighting, skepticism. The CIO's compliance check is a deterministic function reading your Mandate data inside the training simulation, not a prompt to be softened. If you want more headroom in the scenario, edit the Mandate (e.g. raise max_position_pct from 5 to 7); the CIO will then enforce the new floor. The safety floor moves with your Mandate, not with coaching.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],
     "tags": ["pm_uncoachable", "safety_floor", "mandate"]
@@ -483,8 +483,8 @@
     "id": "qa_aim_mandate_explained",
     "category": "ai_meta",
     "question": "What is the Mandate?",
-    "short_answer": "The Mandate is your contract with the simulator. You set the rules — position size cap, drawdown floor, exclusions, region — and the PM enforces them on every simulated Verdict inside the training environment.",
-    "long_answer": "Typical fields: max_position_pct (e.g. 5), max_drawdown_pct (e.g. 20), halal (true/false), no_fossil (true/false), long_only (true/false), region (e.g. us_equities). The Mandate is yours to edit; the PM treats it as ground truth inside the training scenario. Change a field and the next Verdict's compliance ceiling moves with it. This is also why coaching cannot soften the floor — the floor is your data, not the model's. The Mandate scopes the training exercise, not real-world investment policy.",
+    "short_answer": "The Mandate is your contract with the simulator. You set the rules — position size cap, drawdown floor, exclusions, region — and the CIO enforces them on every simulated Verdict inside the training environment.",
+    "long_answer": "Typical fields: max_position_pct (e.g. 5), max_drawdown_pct (e.g. 20), halal (true/false), no_fossil (true/false), long_only (true/false), region (e.g. us_equities). The Mandate is yours to edit; the CIO treats it as ground truth inside the training scenario. Change a field and the next Verdict's compliance ceiling moves with it. This is also why coaching cannot soften the floor — the floor is your data, not the model's. The Mandate scopes the training exercise, not real-world investment policy.",
     "related_lessons": ["074", "013", "076"],
     "related_agents": ["portfolio_manager"],
     "tags": ["mandate", "contract", "ceo"]
@@ -494,7 +494,7 @@
     "category": "ai_meta",
     "question": "Why 12 agents and not just one?",
     "short_answer": "Because a single voice hides its own blind spots, and the simulator is teaching the skill of seeing those blind spots. Twelve role-specific agents argue from different angles, which is how the weaknesses in any thesis surface in the training exercise.",
-    "long_answer": "One agent answering 'walk me through NVDA' would produce something coherent and confident — and you would have no way to tell where it skipped a question. Splitting the work across Analysts, Researchers, Risk Officers, the Execution Desk, and the PM forces the simulated case to clear multiple bars: data, debate, sizing, compliance. The dissent is the audit trail. The Verdict is the synthesis. You practice reading both — that's the training, not investment advice.",
+    "long_answer": "One agent answering 'walk me through NVDA' would produce something coherent and confident — and you would have no way to tell where it skipped a question. Splitting the work across Analysts, Researchers, Risk Officers, the Execution Desk, and the CIO forces the simulated case to clear multiple bars: data, debate, sizing, compliance. The dissent is the audit trail. The Verdict is the synthesis. You practice reading both — that's the training, not investment advice.",
     "related_lessons": ["072", "076"],
     "related_agents": ["research_manager"],
     "tags": ["agents", "design", "debate"]

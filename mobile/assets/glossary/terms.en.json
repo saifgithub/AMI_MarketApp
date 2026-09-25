@@ -1602,7 +1602,7 @@
   },
   {
     "id": "ami_pm_safety_floor",
-    "term": "PM safety floor",
+    "term": "CIO safety floor",
     "definition": "A hard, uncoachable enforcement layer in the Chief Investment Officer prompt and a deterministic compliance check function. Blocks any agent output that violates the user's Mandate or simulator-wide constraints.",
     "category": "platform",
     "see_also": ["ami_mandate", "ami_coach_your_agent"],

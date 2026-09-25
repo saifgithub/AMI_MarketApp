@@ -150,12 +150,12 @@
     "question": "What step is missing from the user's reasoning about how the halal flag actually works?",
     "options": [
       "Nothing — if no analyst in the debate raises a Sharia objection, the trade is halal by default",
-      "The PM's deterministic business-activity-plus-ratio check, which runs as a separate step AFTER the debate finishes and can still block the trade regardless of how convincing the bullish debate was — it is not something any analyst's opinion inside the debate settles",
+      "The CIO's deterministic business-activity-plus-ratio check, which runs as a separate step AFTER the debate finishes and can still block the trade regardless of how convincing the bullish debate was — it is not something any analyst's opinion inside the debate settles",
       "A vote among all 12 agents on whether the ticker is halal",
       "A manual override the user must click before the trade can be blocked"
     ],
     "answer": 1,
-    "explanation": "The halal Mandate flag is not a topic the analyst debate resolves by consensus — it's the PM's uncoachable, deterministic check (the same architecture as the PM's other compliance floors), which runs the actual two-stage screen after the debate produces its Verdict and can block the trade regardless of how bullish or persuasive the debate was. There's no 12-agent vote and no manual step required to trigger the block; the debate not raising an objection tells you nothing about the separate deterministic result.",
+    "explanation": "The halal Mandate flag is not a topic the analyst debate resolves by consensus — it's the CIO's uncoachable, deterministic check (the same architecture as the CIO's other compliance floors), which runs the actual two-stage screen after the debate produces its Verdict and can block the trade regardless of how bullish or persuasive the debate was. There's no 12-agent vote and no manual step required to trigger the block; the debate not raising an objection tells you nothing about the separate deterministic result.",
     "related_lesson": "355_how_amis_halal_flag_maps_to_real_screening",
     "related_agent": "portfolio_manager",
     "tags": [
