@@ -111,8 +111,8 @@ Q6_CHIPS = ["10%", "20%", "30%", "40%", "50%", "No cap"]
 
 def _q6_clarify_text() -> str:
     return (
-        "I didn't catch a number there — what percentage loss could you stomach "
-        "before it costs you sleep? Give me a number like \"20%\", or pick a chip, "
+        "I need that as a percentage of your portfolio — what percentage loss could "
+        "you stomach before it costs you sleep? Give me a number like \"20%\", or pick a chip, "
         "or say \"no cap\" if there isn't one."
     )
 
@@ -420,7 +420,19 @@ def _parse_drawdown_pct(text: str) -> float | None:
 
     import re
 
-    m = re.search(r"(-?\d+(?:\.\d+)?)\s*(?:%|percent)?", t)
+    # A number is a percentage only when it says so ("%"/"percent"), or when it
+    # is the whole answer. "I could lose $10,000" or "5k" is money, not 10% or
+    # 5% — reading the first number anywhere would store a mandate the user
+    # never gave, which is the defect this function exists to prevent.
+    # A range ("10-15%", "10 to 15 percent") takes its lower, stricter bound.
+    m = re.search(
+        r"(?<![\d.$])(\d+(?:\.\d+)?)\s*%?\s*(?:-|–|to)\s*\d+(?:\.\d+)?\s*(?:%|percent\b)",
+        t,
+    )
+    if not m:
+        m = re.search(r"(?<![\d.$])(-?\d+(?:\.\d+)?)\s*(?:%|percent\b)", t)
+    if not m:
+        m = re.fullmatch(r"(-?\d+(?:\.\d+)?)", t)
     if not m:
         return None
     pct = float(m.group(1))

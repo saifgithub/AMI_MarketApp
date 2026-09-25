@@ -653,6 +653,26 @@ def test_def428_parse_drawdown_pct_rejects_garbage_and_out_of_range():
     assert _parse_drawdown_pct("-10%") is None
 
 
+def test_def428_money_and_loose_numbers_are_not_read_as_a_percentage():
+    """A number only becomes a drawdown when it is marked as a percentage or is
+    the entire answer. Money and incidental numbers must re-ask, not become a
+    silent 10% or 5% mandate."""
+    from app.services.concierge_engine import _parse_drawdown_pct
+
+    assert _parse_drawdown_pct("I could lose $10,000") is None
+    assert _parse_drawdown_pct("5k") is None
+    assert _parse_drawdown_pct("maybe 2 or 3 months of salary") is None
+    assert _parse_drawdown_pct("about 20") is None
+    assert _parse_drawdown_pct("$15%") is None
+    assert _parse_drawdown_pct("I'd say 25%") == 25
+    assert _parse_drawdown_pct("somewhere around 15 percent") == 15
+    assert _parse_drawdown_pct("between 20% and 30%") == 20
+    assert _parse_drawdown_pct("10-15%") == 10
+    assert _parse_drawdown_pct("10% to 15%") == 10
+    assert _parse_drawdown_pct("10 to 15 percent") == 10
+    assert _parse_drawdown_pct(" 45 ") == 45
+
+
 def test_def428_unparseable_q6_answer_re_asks_instead_of_defaulting_to_30():
     """The end-to-end fix: an unparseable Q6 answer must NOT silently become
     a 30% mandate. `process_answer` must keep the user on Q6 (current_step
