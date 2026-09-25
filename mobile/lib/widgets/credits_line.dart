@@ -100,21 +100,34 @@ class OneOnOneCreditsLine extends StatelessWidget {
 }
 
 /// The post-Room quiet line: "This Room used 8 credits · 55 left" ("This
-/// Room used 8 credits" until the refreshed balance arrives), or the refunded
-/// variant when CR039/DEF425/DEF432 gave the charge back. Renders nothing
-/// when [cost] is null (a backend predating CR236, or the done event's row
-/// read raced away) — silence, not a guess.
+/// Room used 8 credits" until the refreshed balance arrives), the refunded
+/// variant when CR039/DEF425/DEF432 gave the charge back, or (CR237) the
+/// third, truthful branch for a run whose "Ask the CIO again" retry
+/// succeeded. Renders nothing when [cost] is null (a backend predating
+/// CR236, or the done event's row read raced away) — silence, not a guess.
 class RoomResultCostLine extends StatelessWidget {
   const RoomResultCostLine({
     super.key,
     required this.cost,
     required this.refunded,
     required this.balanceAfter,
+    this.cioRetried = false,
   });
 
   final int? cost;
   final bool refunded;
   final int? balanceAfter;
+
+  /// CR237 — true once a successful "Ask the CIO again" retry has replaced
+  /// this run's outage PASS with a real verdict. The run DID finish (so
+  /// [roomResultRefunded]'s "didn't reach a verdict" framing would read
+  /// false here) but was never net-charged (the original DEF432 refund
+  /// stands and the retry itself is free) — a fact [refunded]/[cost] alone
+  /// cannot distinguish from an ordinary charged completion, which is why
+  /// this needs its own flag rather than reusing [refunded]. Takes priority
+  /// over both other branches: a retried run is neither the plain-refunded
+  /// case nor a normal charge.
+  final bool cioRetried;
 
   @override
   Widget build(BuildContext context) {
@@ -122,11 +135,13 @@ class RoomResultCostLine extends StatelessWidget {
     if (c == null) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
     final left = balanceAfter;
-    final text = refunded
-        ? l.roomResultRefunded
-        : left == null
-            ? l.roomResultCostNoBalance(c.toString())
-            : l.roomResultCost(c.toString(), left.toString());
+    final text = cioRetried
+        ? l.roomResultCioRetried
+        : refunded
+            ? l.roomResultRefunded
+            : left == null
+                ? l.roomResultCostNoBalance(c.toString())
+                : l.roomResultCost(c.toString(), left.toString());
     return Text(
       text,
       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),

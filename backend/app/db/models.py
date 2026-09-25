@@ -745,6 +745,24 @@ class RoomRunRow(Base):
     interrupted_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    # CR237 — set True exactly once, at the moment a refund (DEF432 outage or
+    # CR039 failed-run) actually fires for this run, and never cleared. See
+    # `RoomRun.refund_recorded`'s docstring for why `run_was_refunded` reads
+    # this instead of re-deriving the answer from the current verdict shape.
+    refund_recorded: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default=text("false"),
+    )
+    # CR237 — nullable snapshot of the pre-CIO desk-phase products (trader
+    # levels/sizing, withheld/scripted rosters, option menu, the `profile`
+    # fact sheet), written only on a CIO-outage PASS so "Ask the CIO again"
+    # can replay the CIO step without re-running the eleven other desks. See
+    # `RoomRun.cio_context_snapshot`'s docstring.
+    cio_context_snapshot: Mapped[Optional[dict]] = mapped_column(JsonB(), nullable=True)
+    # CR237 — True once a CIO retry has SUCCEEDED on this run. See
+    # `RoomRun.cio_retried`'s docstring.
+    cio_retried: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default=text("false"),
+    )
 
 
 class SimWatchlistRow(Base):

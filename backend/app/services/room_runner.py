@@ -697,6 +697,24 @@ def room_verdict_is_incomplete(verdict: dict | None) -> bool:
     return verdict.get("reason", "").startswith(PM_ROOM_INCOMPLETE_REASON)
 
 
+def is_outage_shaped_verdict(verdict: dict | None) -> bool:
+    """CR237 (DEF432 MINOR-1) — does this verdict's SHAPE call for a refund,
+    independent of whether one actually succeeded?
+
+    True for the DEF432 R51 partial-outage NO_VERDICT (`room_verdict_is_incomplete`)
+    or the DEF059 CIO-outage PASS (`is_llm_outage_verdict`). This is the
+    DECISION input — `run()`'s COMPLETED branch calls this to decide whether
+    to ATTEMPT a refund at all. It is deliberately NOT the same predicate as
+    `run_was_refunded`: the auditor's MINOR-1 finding is exactly that
+    conflating "looks like an outage" with "was refunded" let a failed
+    `refund()` call still report `refunded: true` (and, before this fix, the
+    verdict text still said "This Room wasn't charged." even though it was).
+    """
+    if not verdict:
+        return False
+    return room_verdict_is_incomplete(verdict) or is_llm_outage_verdict(verdict)
+
+
 def run_was_refunded(run: RoomRun | None) -> bool:
     """DEF432 — the ONE predicate for "was this run's charge given back",
     shared by the refund decision (`RoomRunner.run()`'s COMPLETED branch,
@@ -704,18 +722,42 @@ def run_was_refunded(run: RoomRun | None) -> bool:
     drift from the decision — exactly the DEF437-class bug a second,
     independently-recomputed "was this refunded" check would risk.
 
-    True for exactly three shapes, all decided elsewhere in this file:
+    DEF432 MINOR-1 (auditor U68, round 1) — this predicate USED TO answer
+    from the verdict's SHAPE alone (`is_outage_shaped_verdict`) for a
+    `completed` run, which is a claim about what the Room LOOKS like it
+    should have done, not about whether `refund()` actually ran and
+    returned. `refund()` is explicitly best-effort (a failure must not turn
+    a delivered verdict into a hard error) — so a failed refund left a
+    `completed` outage-shaped run reporting `refunded: true` (and, before
+    the matching fix at the two verdict-construction sites, the verdict text
+    itself still said "This Room wasn't charged.") while the user's credits
+    never moved. Fixed by keying the `completed` branch on `run.refund_recorded`
+    — the GROUND TRUTH flag set ONLY inside the `else:` of the refund's own
+    `try/except`, i.e. only once `refund()` has actually returned — instead
+    of re-deriving the answer from the verdict shape.
 
-    - `status == "failed"` — CR039's refund, taken unconditionally in
-      `run()`'s `except Exception` branch for every failed run.
-    - `status == "completed"` AND the verdict is the DEF432 outage
-      NO_VERDICT (`room_verdict_is_incomplete`) — this predicate's new case.
-    - `status == "completed"` AND the verdict is the DEF059 CIO-outage PASS
-      (`is_llm_outage_verdict`). Saiful, 2026-09-25: "Refund it" — the user
-      never got the CIO's ruling, so the same outage rule applies.
+    True for exactly TWO shapes:
+
+    - `status == "failed"` — CR039's refund, taken UNCONDITIONALLY in
+      `run()`'s `except Exception` branch for every failed run, before this
+      predicate exists to be consulted for that branch (the refund is
+      attempted regardless of what this returns). Left exactly as before
+      DEF432 MINOR-1: this is CR039's pre-existing shape, not the bug the
+      auditor found, and `refund_recorded` is set here too (belt-and-braces)
+      but is not what this branch's `True` depends on.
+    - `run.refund_recorded` is True — sufficient on its own for every other
+      status. Set once, at the instant a refund actually SUCCEEDS (DEF432
+      outage or CR039 failed-run), and never cleared afterward — including
+      across a later successful "Ask the CIO again" retry, which replaces
+      the outage PASS with a real verdict on the SAME run and would
+      otherwise flip a verdict-shape-based check to False for a run that
+      genuinely was refunded (the DEF437 shape CR237 ruling #5 guards
+      against).
 
     A normal completed verdict (APPROVE/PASS/REJECT, or CR098's
-    withheld-analyst NO_VERDICT) is charged and reports `False` here.
+    withheld-analyst NO_VERDICT), an outage-shaped verdict whose refund
+    FAILED, and every run from before `refund_recorded` shipped (reads
+    `False` by column default) all report `False` here.
 
     CANCELLED is never refunded (room_runner's cancel branch charges stand)
     and reports `False`, same as QUEUED/RUNNING mid-flight. DEF425's
@@ -729,10 +771,7 @@ def run_was_refunded(run: RoomRun | None) -> bool:
     status = run.status if isinstance(run.status, str) else run.status.value
     if status == "failed":
         return True
-    if status == "completed":
-        v = run.verdict.model_dump() if run.verdict is not None else None
-        return room_verdict_is_incomplete(v) or is_llm_outage_verdict(v)
-    return False
+    return bool(run.refund_recorded)
 
 
 def is_llm_outage_verdict(verdict: dict | None) -> bool:
@@ -746,12 +785,75 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     if not verdict:
         return False
     _reason = (verdict.get("reason") or "").strip()
-    # Prefix, not equality: DEF432 appends "This Room wasn't charged." to the
-    # live sentinel. The legacy wording predates that and matches either way.
+    # Prefix, not equality: `run()` appends "This Room wasn't charged." to
+    # the live sentinel ONLY on a successful refund (DEF432 MINOR-1), so the
+    # same verdict reads with or without that suffix depending on whether
+    # `refund()` succeeded — either shape must still be recognised as the
+    # outage it is. The legacy wording predates the suffix entirely and
+    # matches either way too.
     return bool(verdict.get("overridden_from_llm")) and _reason.startswith((
         PM_LLM_UNAVAILABLE_REASON,
         _PM_LLM_UNAVAILABLE_REASON_LEGACY,
     ))
+
+
+def cio_retry_eligible(
+    run: RoomRun | None,
+    *,
+    requesting_user_id: UUID,
+    current_mandate_version: int,
+    now: datetime | None = None,
+) -> bool:
+    """CR237 — the ONE predicate for "can 'Ask the CIO again' run on this
+    run", used by both the route (to decide whether to actually retry) and
+    the client-facing `cio_retry_available` flag on the run payload / `done`
+    event. Never string-match `verdict.reason` on the client — this is the
+    single source of truth, same discipline `run_was_refunded` already
+    established for the refund question.
+
+    True only when ALL of:
+    - the run belongs to `requesting_user_id`;
+    - `status == "completed"` AND the verdict is the DEF059 CIO-outage PASS
+      (`is_llm_outage_verdict`) — never the R51 partial-outage NO_VERDICT
+      (too few live desks to re-argue from — reconvene is the only honest
+      offer there) and never a reasoned verdict;
+    - a `cio_context_snapshot` was actually persisted (every run before
+      CR237 shipped has none, and is therefore never eligible — CR237
+      ruling #2: "Runs without a snapshot ... are not eligible");
+    - `mandate_version` on the run matches `current_mandate_version` — the
+      desks argued under a specific mandate; if the user has since edited
+      it, the debate is stale in a way the CIO step alone cannot repair,
+      and the honest offer is reconvene, not retry;
+    - the run finished within `settings.room_cio_retry_max_age_minutes` of
+      `now` (default `datetime.now(timezone.utc)`, overridable for tests).
+
+    In-flight de-duplication (no concurrent retry on the same run) is a
+    SEPARATE guard (`RoomRunner._retrying_runs`) — this predicate is pure
+    and stateless so it can be reused to compute a read-only flag on every
+    run payload without touching the runner's own in-memory state.
+    """
+    if run is None:
+        return False
+    if run.user_id != requesting_user_id:
+        return False
+    status = run.status if isinstance(run.status, str) else run.status.value
+    if status != "completed":
+        return False
+    if not is_llm_outage_verdict(run.verdict.model_dump() if run.verdict else None):
+        return False
+    if not run.cio_context_snapshot:
+        return False
+    if run.mandate_version != current_mandate_version:
+        return False
+    finished_at = run.finished_at
+    if finished_at is None:
+        return False
+    if finished_at.tzinfo is None:
+        finished_at = finished_at.replace(tzinfo=timezone.utc)
+    _now = now or datetime.now(timezone.utc)
+    age = _now - finished_at
+    max_age = timedelta(minutes=settings.room_cio_retry_max_age_minutes)
+    return age <= max_age
 
 
 # DEF399 — above this ratio between EDGAR's consolidated annual interest and
@@ -4191,6 +4293,610 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
     )
 
 
+# CR237 — the `_RoomContext` fields the CIO step's own call graph reads
+# (`_run_cio_step`, `_stream_pm_response`, `_parse_pm_verdict`,
+# `_reformat_pm_response`, `_assemble_verdict`/`_assemble_no_verdict`,
+# `enforce_safety_floor`'s own kwargs) that are PRODUCTS OF THE DESK PHASES —
+# never re-derivable without re-running the eleven other desks — rather than
+# a live read of the user's current mandate/portfolio/market state. Verified
+# by grepping every `ctx.` reference reachable from `_run_cio_step` (see
+# CR237.architect.md); this tuple is deliberately exhaustive, not a superset.
+#
+# Held OUT of this list, and rebuilt fresh by `retry_cio_step` instead (per
+# CR237 ruling #2 — "the floor judges the user's position now, not at the
+# original run"): `mandate`, `portfolio_value`, `current_drawdown_pct`,
+# `halal_universe`, `classification_universe`, `locale_allowed_universe`,
+# `sector_holdings`/`sector_marks`/`sector_map`/`sector_weights`,
+# `risk_last_loss_closed_at`/`risk_trade_open_timestamps`/
+# `risk_existing_open_risk_pct`, `portfolio_snapshot`, `next_convene_delta`.
+#
+# Also held out: `option_candidates`/`option_spot`/`option_priced_at`. These
+# LOOK like desk products (the Execution Desk's menu) but
+# `_build_room_option_candidates` is a pure function of scalars already in
+# this snapshot (ticker, mandate, portfolio_value, the trader levels, shares
+# held) plus a live option-chain read — so it is cheaper and safer to
+# RE-RUN it on retry than to serialize `OptionCandidate` (a frozen dataclass
+# tree with no JSON codec, nested under `CandidateSet`) into JSONB. A retry
+# therefore prices a fresh menu against the current chain, same "judge now"
+# principle as the sector/risk context.
+_CIO_SNAPSHOT_SCALAR_FIELDS = (
+    "trader_entry", "trader_stop", "trader_target", "trader_horizon_weeks",
+    "trader_size_pct", "aggressive_size_pct", "conservative_size_pct",
+    "neutral_size_pct",
+)
+
+
+def _build_cio_context_snapshot(
+    ctx: "_RoomContext", profile: dict[str, Any],
+) -> dict[str, Any]:
+    """CR237 — everything `retry_cio_step` needs that only the ORIGINAL run's
+    desk phases produced. Written once, only on a CIO-outage PASS (see the
+    call site in `run()`). JSON-safe: every value is a plain str/float/int/
+    list or the `profile` dict itself (already JSON-safe — it round-trips
+    through `RoomRun.verdict.sheet_state`'s `dict(profile["field_state"])`
+    copy elsewhere in this file).
+    """
+    snapshot: dict[str, Any] = {
+        field_name: getattr(ctx, field_name)
+        for field_name in _CIO_SNAPSHOT_SCALAR_FIELDS
+    }
+    snapshot["ticker"] = ctx.ticker
+    snapshot["withheld"] = [a.value for a in ctx.withheld]
+    snapshot["scripted_turns"] = [a.value for a in ctx.scripted_turns]
+    snapshot["profile"] = profile
+    return snapshot
+
+
+def _rebuild_ctx_from_snapshot(
+    snapshot: dict[str, Any],
+    *,
+    user_id: UUID,
+    mandate: Mandate,
+    portfolio_value: float,
+    current_drawdown_pct: float,
+    halal_universe: set[str],
+    classification_universe: object | None,
+    sector_holdings: list | None,
+    sector_marks: dict[str, float],
+    sector_map: object | None,
+    sector_weights: dict[str, float],
+    risk_last_loss_closed_at: object,
+    risk_trade_open_timestamps: list | None,
+    risk_existing_open_risk_pct: float | None,
+    portfolio_snapshot: str | None,
+) -> "_RoomContext":
+    """CR237 — the retry's own context build: desk products come from
+    `snapshot` (`_build_cio_context_snapshot`'s output), everything
+    safety-relevant is passed in already rebuilt FRESH by the caller
+    (`retry_cio_step`), using the SAME builders `run()` uses. Mirrors
+    `run()`'s own `_RoomContext(...)` construction; kept as its own function
+    so the field list is asserted in one place rather than copy-pasted at
+    the route/service call site.
+
+    `locale_allowed_universe` is always `None` here, matching every call
+    `run()` itself has ever received one from (`api/room.py` never resolves
+    a real locale allowlist — verified by grep, see CR237.architect.md) —
+    not a retry-only shortcut.
+    """
+    ctx = _RoomContext(
+        ticker=snapshot["ticker"],
+        mandate=mandate,
+        portfolio_value=portfolio_value,
+        current_drawdown_pct=current_drawdown_pct,
+        halal_universe=halal_universe,
+        classification_universe=classification_universe,
+        locale_allowed_universe=None,
+        user_id=user_id,
+        portfolio_snapshot=portfolio_snapshot,
+        sector_map=sector_map,
+        sector_holdings=sector_holdings,
+        sector_marks=sector_marks,
+        sector_weights=sector_weights,
+        risk_last_loss_closed_at=risk_last_loss_closed_at,
+        risk_trade_open_timestamps=risk_trade_open_timestamps,
+        risk_existing_open_risk_pct=risk_existing_open_risk_pct,
+        withheld=tuple(AgentId(v) for v in snapshot["withheld"]),
+        profile=snapshot["profile"],
+    )
+    for field_name in _CIO_SNAPSHOT_SCALAR_FIELDS:
+        setattr(ctx, field_name, snapshot[field_name])
+    ctx.scripted_turns = [AgentId(v) for v in snapshot["scripted_turns"]]
+    return ctx
+
+
+def _build_pm_formatter(
+    ctx: "_RoomContext", profile: dict[str, Any], mandate: Mandate,
+) -> dict[str, Any]:
+    """The scripted-`_TEMPLATES` formatter dict, built once from `profile` +
+    the desk-phase trader levels on `ctx` + the mandate's risk_score.
+
+    CR237 — pulled out of `run()`'s inline block (it used to run once,
+    inline, right before the phase loop) so the CIO retry path can rebuild
+    the identical dict from a snapshot's `profile`/trader-level fields and a
+    freshly-resolved `mandate`, without a second copy of this arithmetic.
+    Pure function of its three arguments — no I/O, no run-scoped state.
+    """
+    # Derived figures — computed in trading_math, never left to the scripted
+    # f-strings to (mis-)do: R:R (M06), upside/downside asymmetry (M08).
+    _rr = risk_reward(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
+    _asym = trade_asymmetry(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
+    _net_phrase = net_position_phrase(profile.get("net_cash")) or "net cash n/a"
+
+    # Run-context sent into f-string formatters; we merge per-template
+    formatter = dict(profile)
+    # CR104: the scripted `_TEMPLATES` fallback (used only when no real
+    # LLM is reachable — never the LLM-facing prompt, which is
+    # `_format_profile`) still names these fields positionally in its
+    # canned sentences. They're no longer guaranteed live, so backfill
+    # an honest "not available" for `.format()` rather than a KeyError.
+    for _field in (
+        "pe", "rev_growth", "profit_margin", "rsi", "rsi_tone", "trend",
+        "support", "breakout", "last_close", "low", "high", "volume_tone",
+        "base_price",
+    ):
+        formatter.setdefault(_field, "not available")
+    formatter.update({
+        "ticker": ctx.ticker,
+        "forward_pe_clause": _forward_pe_clause(profile),
+        "risk_score": mandate.risk_score,
+        "action": "BUY",
+        "entry": ctx.trader_entry,
+        "stop": ctx.trader_stop,
+        "target": ctx.trader_target,
+        "horizon_weeks": ctx.trader_horizon_weeks,
+        "size_pct": f"{ctx.trader_size_pct:.1f}",
+        # The scripted stop is a fixed ~6% protective stop, not a 20-day low —
+        # don't claim a level-basis the number wasn't derived from (audit F8).
+        "stop_basis": "~6% protective stop",
+        "rr": f"{_rr:.1f}" if _rr is not None else "n/a",
+        "net_cash_phrase": _net_phrase,
+        "agg_size": f"{ctx.aggressive_size_pct:.1f}",
+        "cons_size": f"{ctx.conservative_size_pct:.1f}",
+        "neu_size": f"{ctx.neutral_size_pct:.1f}",
+        "synth_size": f"{ctx.trader_size_pct:.1f}",
+    })
+    if _asym is not None:
+        # Replace the fixed "28% vs 18%" seed constants with the real
+        # asymmetry of the reference levels (M08).
+        formatter["upside"] = _asym.upside_pct
+        formatter["downside"] = _asym.downside_pct
+    return formatter
+
+
+async def _run_cio_step(
+    *,
+    run_id: UUID,
+    ctx: "_RoomContext",
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    run: "RoomRun",
+    mandate: Mandate,
+    gateway: LLMGateway,
+    live: bool,
+    char_delay_min: float,
+    char_delay_max: float,
+    agent_timeout_s: float,
+) -> AsyncIterator["RoomEvent"]:
+    """CR237 — the CIO's own turn: build the PM prompt (or the CR098
+    Amendment 2 no-parse NO_VERDICT), sample/vote, parse, run the
+    deterministic safety floor / compliance / sizing, and assemble the final
+    verdict (scripted-turns disclosure + DEF231 direction-coherence
+    annotation). ONE function, called from both `RoomRunner.run()`'s VERDICT
+    phase and the `cio-retry` route — no second copy of the floor, the
+    compliance check, the sizing math, or either annotation pass.
+
+    Behaviour-preserving extraction of what was previously inlined in
+    `run()`'s VERDICT phase (see CR237.md): every input here is exactly what
+    that block read from the enclosing scope, and every mutation (append to
+    `run.transcript`, set `run.verdict`, yield `agent_done`/`verdict` events)
+    is identical. `run()` still does everything before and after this step
+    (persistence, refund, journal, ledger banking) — this function owns only
+    the CIO's own turn.
+
+    A retry rebuilds `ctx`/`profile`/`formatter`/`mandate`/`gateway`/`live`
+    FRESH (current mandate, portfolio value/drawdown, sector/risk-limit
+    context, halal/classification/locale universes) rather than reusing
+    anything from the outaged run — the floor must judge the user's position
+    NOW, not at the original run's stale snapshot (CR237 ruling #2).
+    """
+    if AgentId.MARKET_ANALYST in ctx.withheld:
+        verdict = _assemble_no_verdict(ctx)
+        pm_text = verdict.reason
+        async for ev in _typewriter(
+            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+            char_delay_min, char_delay_max,
+        ):
+            yield ev
+    # Phase 6 — PM: the LLM decides, informed by the full
+    # 11-agent debate; the deterministic safety floor then
+    # vetoes/validates that decision afterward — it never
+    # invents it beforehand. See DEF056.
+    elif live:
+        # CR197 — optional self-consistency. At the default of 1
+        # this is exactly the single call it has always been; the
+        # branch below only engages when an operator raises
+        # PM_SELF_CONSISTENCY_SAMPLES, because each extra sample is
+        # another premium-tier call on the run's costliest agent.
+        _pm_samples = max(1, int(settings.pm_self_consistency_samples))
+        _voted: tuple[str, Verdict, str] | None = None
+        # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-1): with
+        # samples>1, if every draw AND every replacement is
+        # unparseable, `_cands` is `[]` and the tail below used
+        # to fall into the single-draw branch and ship the
+        # FIRST raw draw's reformatted read — unlabelled. The
+        # verdict's `samples`/`approve_votes` stayed `None`
+        # (the schema's OWN "self-consistency is off" meaning
+        # — false here) and DEF397's short-vote disclosure
+        # never fires for N=0 readable. Tracked here so the
+        # eventual `parsed` (however it is produced) can be
+        # corrected before the DEF384 shared tail.
+        _zero_readable_vote = False
+        if _pm_samples > 1:
+            # DEF397 — lost draws are replaced, not silently
+            # dropped from the denominator; see the helper.
+            _cands, raw_text, _lost, _recovered = (
+                await _draw_pm_candidates(
+                    _pm_samples,
+                    lambda: _stream_pm_response(
+                        run_id=run_id, ctx=ctx, profile=profile,
+                        formatter=formatter, run=run,
+                        gateway=gateway,
+                        agent_timeout_s=agent_timeout_s,
+                    ),
+                    lambda _rt: _parse_pm_verdict(_rt, ctx),
+                )
+            )
+            if _lost:
+                logger.warning(
+                    "room_pm_draws_replaced",
+                    run_id=str(run_id),
+                    lost=_lost,
+                    recovered=_recovered,
+                )
+            if _cands:
+                # CR228 Step 4 — the APPROVE bar is graded by the
+                # mandate's own risk_score, not a flat majority.
+                _voted = _vote_pm_samples(
+                    _cands, risk_score=ctx.mandate.risk_score
+                )
+            elif raw_text:
+                _zero_readable_vote = True
+        else:
+            raw_text = await _stream_pm_response(
+                run_id=run_id, ctx=ctx, profile=profile,
+                formatter=formatter, run=run, gateway=gateway,
+                agent_timeout_s=agent_timeout_s,
+            )
+        # DEF384 — `parsed` and the outage flag are declared here because the
+        # three branches below all feed ONE decision tail. They used to feed
+        # three: the self-consistency branch assigned `verdict` directly and
+        # returned, so it never reached `enforce_safety_floor` — every mandate
+        # check (post-loss cooldown, over-trading brake, open-risk cap, sector
+        # cap, halal + locale universes, drawdown cap) was skipped the moment
+        # pm_self_consistency_samples went above 1. The floor is uncoachable by
+        # design; a sampling knob must not be able to switch it off.
+        parsed: Verdict | None = None
+        _pm_outage = False
+        if _voted is not None:
+            pm_text, parsed, _agreement = _voted
+            # CR214 — how many of the independent reads wanted in,
+            # regardless of which side won. The agreement string
+            # counts the WINNER ("3/5" on a PASS), so it cannot be
+            # read as conviction: 2-of-5-approve and 0-of-5-approve
+            # are both a PASS, and only this field tells them apart.
+            # Persisted so a backtest can rank on it instead of on a
+            # binary that spends 90% of its convenes in one bucket.
+            _approve_votes = sum(
+                1 for _n, _v in _cands
+                if _v.action in (
+                    VerdictAction.APPROVE, VerdictAction.MODIFY
+                )
+            )
+            parsed = parsed.model_copy(update={
+                "approve_votes": _approve_votes,
+                "samples": len(_cands),
+            })
+            logger.info(
+                "room_pm_self_consistency",
+                run_id=str(run_id),
+                agreement=_agreement,
+                samples=_pm_samples,
+                approve_votes=_approve_votes,
+                # DEF383: Verdict sets use_enum_values=True, so
+                # `action` is already a plain str here. `.value`
+                # raised AttributeError and took the whole convene
+                # down — latent since CR197 because the branch only
+                # runs when pm_self_consistency_samples > 1, and the
+                # default was 1 until CR214 raised it.
+                action=str(parsed.action),
+            )
+            if not _agreement.startswith(f"{len(_cands)}/"):
+                # CR040 — a split team is a real finding about how
+                # marginal this call is, and hiding it behind
+                # confident prose is the failure mode the whole CR
+                # is about. Said in the verdict the user reads.
+                parsed = parsed.model_copy(update={
+                    "reason": (
+                        f"{parsed.reason} (Your team was split on "
+                        f"this — {_agreement} of the independent "
+                        f"reads landed here.)"
+                    )
+                })
+            if len(_cands) < _pm_samples:
+                # DEF397 — the vote ran short even after the
+                # replacement round. A "4/4" that was really
+                # 4-of-5-requested must say so where the user
+                # reads it (CR040), not only in a log line.
+                parsed = parsed.model_copy(update={
+                    "reason": (
+                        f"{parsed.reason} (Only {len(_cands)} of "
+                        f"{_pm_samples} independent reads were "
+                        f"readable for this vote.)"
+                    )
+                })
+        elif not raw_text:
+            # DEF059: LLM unreachable — fail SAFE to PASS.
+            # The scripted _assemble_verdict APPROVE belongs
+            # to the non-live demo path only; an outage must
+            # never mint a confident buy verdict.
+            _pm_outage = True
+            # DEF432 MINOR-1 (auditor U68 round 1) — the reason is built
+            # WITHOUT the "wasn't charged" claim here. That sentence is
+            # appended by `run()`, and only AFTER `refund()` has actually
+            # returned successfully — never at construction time, when
+            # whether the refund will even be attempted (let alone succeed)
+            # is not yet known. See `run()`'s COMPLETED branch.
+            verdict = Verdict(
+                action=VerdictAction.PASS,
+                reason=PM_LLM_UNAVAILABLE_REASON,
+                overridden_from_llm=True,
+            )
+            logger.error("room_pm_llm_unavailable", run_id=str(run_id))
+            pm_text = verdict.reason
+        else:
+            pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
+            if parsed is None:
+                # DEF058: the PM's shape slipped past the parser.
+                # One reformat retry re-expresses the same
+                # decision as the JSON schema (nulls for unstated
+                # numbers — never invented) before failing safe.
+                reformatted = await _reformat_pm_response(
+                    raw_text, ctx=ctx, gateway=gateway,
+                    agent_timeout_s=agent_timeout_s,
+                )
+                if reformatted:
+                    narration, reparsed = _parse_pm_verdict(reformatted, ctx)
+                    # DEF067: the reformatter exists only to
+                    # RECOVER an APPROVE the parser missed. Accept
+                    # its output only when it does so. A
+                    # reformatter PASS recovered nothing — never
+                    # let its narration (often a schema-complaint
+                    # like "'MODIFY-AND-APPROVE' is not a valid
+                    # enum value") become the user's verdict;
+                    # fall through to the clean fail-safe below.
+                    if reparsed is not None and reparsed.action == VerdictAction.APPROVE:
+                        parsed = reparsed
+                        pm_text = pm_text or narration
+                        logger.info(
+                            "room_pm_verdict_reformatted",
+                            run_id=str(run_id),
+                        )
+                    elif reparsed is not None and _raw_is_affirmative(raw_text):
+                        logger.warning(
+                            "room_pm_reformat_downgrade_rejected",
+                            run_id=str(run_id),
+                        )
+
+        if _zero_readable_vote and parsed is not None:
+            # MINOR-1 — every one of the `_pm_samples` independent
+            # reads (draws + replacements) was unparseable; what
+            # shipped is the FIRST raw draw's own reformatted read,
+            # not a vote. Label it as such rather than leaving
+            # `samples`/`approve_votes` at `None` (the schema's own
+            # "self-consistency is off" meaning) and say so in the
+            # reason the user reads (CR040) — DEF397's short-vote
+            # disclosure never fires for N=0 readable without this.
+            logger.warning(
+                "room_pm_vote_zero_readable",
+                run_id=str(run_id), samples=_pm_samples,
+            )
+            parsed = parsed.model_copy(update={
+                "samples": _pm_samples,
+                "approve_votes": 0,
+                "reason": (
+                    f"{parsed.reason} (None of the {_pm_samples} "
+                    "independent reads requested for this vote "
+                    "were machine-readable; this is a single "
+                    "recovered read, not a vote.)"
+                ),
+            })
+
+        # DEF384 — ONE decision tail for every branch above. The vote arrives
+        # here as `parsed` exactly like a single draw does, so an APPROVE meets
+        # the same floor with the same kwargs. Do not re-inline this per branch:
+        # CR101-BE2 round 1 shipped a call site missing five of them, and a
+        # second copy is how that happens again.
+        if not _pm_outage:
+            if parsed is None:
+                verdict = Verdict(
+                    action=VerdictAction.PASS,
+                    reason=(
+                        "Chief Investment Officer did not return a "
+                        "machine-readable verdict; defaulting "
+                        "to no trade for safety."
+                    ),
+                    overridden_from_llm=True,
+                )
+                logger.warning("room_pm_verdict_parse_failed", run_id=str(run_id))
+                if not pm_text:
+                    pm_text = verdict.reason
+            elif parsed.action == VerdictAction.APPROVE:
+                proposed = ProposedTrade(
+                    ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
+                    quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
+                    limit_price=parsed.entry,
+                )
+                # CR046 M06 / DEF095: flag (never veto) an APPROVE whose
+                # narrated R:R contradicts its own levels, and SURFACE it —
+                # rewrite the PM's verdict narration so the ratio the user
+                # reads is AMI's computed one, not a log nobody sees. The
+                # safety floor still owns vetoes; this only corrects text.
+                _rr_sig = _pm_rr_coherence_signal(
+                    pm_text, parsed.entry, parsed.stop, parsed.target
+                )
+                if _rr_sig is not None:
+                    logger.warning(
+                        "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
+                    )
+                    pm_text, _ = _annotate_rr_against_levels(
+                        pm_text, parsed.entry, parsed.stop,
+                        parsed.target, parsed.size_pct,
+                    )
+                verdict = enforce_safety_floor(
+                    llm_verdict=parsed, proposed=proposed,
+                    portfolio_value=ctx.portfolio_value,
+                    current_drawdown_pct=ctx.current_drawdown_pct,
+                    mandate=mandate, halal_universe=ctx.halal_universe,
+                    classification_universe=ctx.classification_universe,
+                    locale_allowed_universe=ctx.locale_allowed_universe,
+                    # CR026: veto a PM APPROVE that breaches the sector cap.
+                    holdings=ctx.sector_holdings,
+                    quotes=ctx.sector_marks,
+                    sector_map=ctx.sector_map,
+                    # CR101-BE2 round 2: same trade-history context
+                    # sim_engine.py supplies at submit()/preview() —
+                    # previously omitted here, so a set post-loss
+                    # cooldown / over-trading brake / open-risk cap
+                    # was silently unenforced on the live PM's own
+                    # APPROVE (round-1 BLOCKER).
+                    last_loss_closed_at=ctx.risk_last_loss_closed_at,
+                    trade_open_timestamps=ctx.risk_trade_open_timestamps,
+                    existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+                    proposed_stop=parsed.stop,
+                )
+            else:
+                verdict = parsed  # PASS — nothing to check compliance on
+        async for ev in _restream_for_ui(
+            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+            char_delay_min, char_delay_max,
+        ):
+            yield ev
+    else:
+        verdict = _assemble_verdict(ctx, profile)
+        mandate_check = (
+            "PASS" if verdict.action == VerdictAction.APPROVE
+            else f"FAIL — {', '.join(verdict.violations)}"
+        )
+        pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
+            **formatter, verdict_action=verdict.action,
+            verdict_rationale=verdict.reason, mandate_check=mandate_check,
+        )
+        async for ev in _typewriter(
+            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+            char_delay_min, char_delay_max,
+        ):
+            yield ev
+
+    run.transcript.append(AgentMessage(
+        agent_id=AgentId.PORTFOLIO_MANAGER,
+        role="agent",
+        content=pm_text,
+        timestamp=datetime.now(timezone.utc),
+    ))
+    yield RoomEvent(
+        kind="agent_done", run_id=run_id,
+        agent_id=AgentId.PORTFOLIO_MANAGER,
+    )
+    # CR098 acceptance #8 — deterministic even when the LLM
+    # says nothing about it; applies to EVERY path above
+    # (APPROVE/PASS/NO_VERDICT/fail-safe), one insertion point.
+    verdict = verdict.model_copy(
+        update={"opinions_not_included": [a.value for a in ctx.withheld]}
+    )
+    # CR219 R51 — the same insertion point, for the same reason
+    # CR098 chose it: this applies to EVERY path above
+    # (APPROVE / PASS / NO_VERDICT / fail-safe), and a check
+    # hung off one branch would miss the others. A thin Room can
+    # produce any of them.
+    #
+    # `live` gates it: on the scripted demo path every turn is
+    # scripted by design and nothing degraded, so the field stays
+    # None (absence, not a zero — see the schema note).
+    if live:
+        _scripted = list(ctx.scripted_turns)
+        # The denominator is the roster that actually ran, not a
+        # hardcoded 12: CR098's tenure pull-back withholds
+        # analysts on FLOOR_PASS, and counting a withheld desk
+        # as "did not respond" would blame a provider for a
+        # product decision the user was already told about.
+        _roster = len(run.transcript)
+        verdict = verdict.model_copy(update={
+            "scripted_turns": len(_scripted),
+            "scripted_agents": [a.value for a in _scripted],
+        })
+        if _scripted:
+            _disclosure = _scripted_disclosure(_scripted, _roster)
+            logger.warning(
+                "room_partial_outage",
+                run_id=str(run_id),
+                ticker=ctx.ticker,
+                scripted=len(_scripted),
+                roster=_roster,
+                threshold=settings.room_max_scripted_turns,
+                agents=[a.value for a in _scripted],
+            )
+            _cap = settings.room_max_scripted_turns
+            if _cap and len(_scripted) >= _cap:
+                # DEF059's rule, extended from "no AMI" to "not
+                # enough AMI". The decision is DISCARDED, not
+                # annotated: a verdict argued from N canned turns
+                # is not a call AMI can stand behind, and leaving
+                # an APPROVE in place with a caveat appended is
+                # exactly the confident-prose-plus-disclaimer
+                # shape CR040 forbids.
+                # DEF432 MINOR-1 — no "wasn't charged" claim here either;
+                # see the sibling DEF059 site's comment above. `run()`
+                # appends it only after a successful refund.
+                verdict = verdict.model_copy(update={
+                    "action": VerdictAction.NO_VERDICT,
+                    "reason": f"{PM_ROOM_INCOMPLETE_REASON} {_disclosure}",
+                    "overridden_from_llm": True,
+                    "size_pct": None, "entry": None,
+                    "stop": None, "target": None,
+                    "time_horizon_days": None,
+                })
+            else:
+                # Below the threshold the call stands, but the
+                # user is told what it was argued from.
+                verdict = verdict.model_copy(update={
+                    "reason": f"{verdict.reason} ({_disclosure})"
+                })
+    # DEF231 — the same insertion point, for the same reason:
+    # BOTH live instances were PASS verdicts, so a check hung
+    # off the APPROVE branch (where the R:R coherence check
+    # lives) would have caught neither. The narration has
+    # already streamed by here; `reason` is the string CR106
+    # renders as the justification and is what both instances
+    # landed in.
+    _reason, _dir_signals = _annotate_direction_against_price(
+        verdict.reason,
+        _reference_close(profile),
+        _structured_levels(profile, verdict),
+    )
+    if _dir_signals:
+        logger.warning(
+            "room_pm_direction_incoherent",
+            run_id=str(run_id),
+            ticker=ctx.ticker,
+            action=str(verdict.action),
+            count=len(_dir_signals),
+            **_dir_signals[0],
+        )
+        verdict = verdict.model_copy(update={"reason": _reason})
+    run.verdict = verdict
+    yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
+
+
 # ── Streaming the contributions ───────────────────────────────────────────
 
 
@@ -4295,6 +5001,9 @@ def _row_to_room_run(row: RoomRunRow) -> RoomRun:
         status=RoomStatus(row.status),
         error_message=row.error_message,
         duration_ms=row.duration_ms,
+        refund_recorded=bool(row.refund_recorded),
+        cio_context_snapshot=row.cio_context_snapshot,
+        cio_retried=bool(row.cio_retried),
     )
 
 
@@ -4323,6 +5032,9 @@ def _persist_run(run: RoomRun) -> None:
                 status=run.status if isinstance(run.status, str) else run.status.value,
                 error_message=run.error_message,
                 duration_ms=run.duration_ms,
+                refund_recorded=run.refund_recorded,
+                cio_context_snapshot=run.cio_context_snapshot,
+                cio_retried=run.cio_retried,
             ))
         else:
             row.ticker = run.ticker
@@ -4337,6 +5049,9 @@ def _persist_run(run: RoomRun) -> None:
             row.status = run.status if isinstance(run.status, str) else run.status.value
             row.error_message = run.error_message
             row.duration_ms = run.duration_ms
+            row.refund_recorded = run.refund_recorded
+            row.cio_context_snapshot = run.cio_context_snapshot
+            row.cio_retried = run.cio_retried
 
 
 def _checkpoint_run(run: RoomRun) -> None:
@@ -4551,6 +5266,18 @@ class RoomRunner:
         # runs from the FastAPI lifespan — splitting sync claim from async
         # respawn so __init__ doesn't need a live event loop.
         self._pending_retry: list[_PendingRetry] = []
+        # CR237 — "Ask the CIO again" in-flight guard: run_ids currently
+        # replaying the CIO step. NOT the run's own `status` column — a
+        # retry must NEVER set the row back to "running", because
+        # `_sweep_stuck_runs` (above) claims exactly that status on the next
+        # boot and would respawn or fail+refund a run that is really mid-
+        # retry, not stuck (see `retry_cio_step`'s docstring). An in-memory
+        # set is sufficient because uvicorn runs this process with no
+        # `--workers` flag (verified: `backend/Dockerfile`'s CMD) — a single
+        # process is the only place a retry for a given run_id can be
+        # in flight. A restart clears this set, which is correct: nothing
+        # was actually running across the restart to guard.
+        self._retrying_runs: set[UUID] = set()
         self._sweep_stuck_runs()
 
     def mark_shutting_down(self) -> None:
@@ -5705,50 +6432,7 @@ class RoomRunner:
             ),
         )
 
-        # Derived figures — computed in trading_math, never left to the scripted
-        # f-strings to (mis-)do: R:R (M06), upside/downside asymmetry (M08).
-        _rr = risk_reward(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
-        _asym = trade_asymmetry(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
-        _net_phrase = net_position_phrase(profile.get("net_cash")) or "net cash n/a"
-
-        # Run-context sent into f-string formatters; we merge per-template
-        formatter = dict(profile)
-        # CR104: the scripted `_TEMPLATES` fallback (used only when no real
-        # LLM is reachable — never the LLM-facing prompt, which is
-        # `_format_profile`) still names these fields positionally in its
-        # canned sentences. They're no longer guaranteed live, so backfill
-        # an honest "not available" for `.format()` rather than a KeyError.
-        for _field in (
-            "pe", "rev_growth", "profit_margin", "rsi", "rsi_tone", "trend",
-            "support", "breakout", "last_close", "low", "high", "volume_tone",
-            "base_price",
-        ):
-            formatter.setdefault(_field, "not available")
-        formatter.update({
-            "ticker": ctx.ticker,
-            "forward_pe_clause": _forward_pe_clause(profile),
-            "risk_score": mandate.risk_score,
-            "action": "BUY",
-            "entry": ctx.trader_entry,
-            "stop": ctx.trader_stop,
-            "target": ctx.trader_target,
-            "horizon_weeks": ctx.trader_horizon_weeks,
-            "size_pct": f"{ctx.trader_size_pct:.1f}",
-            # The scripted stop is a fixed ~6% protective stop, not a 20-day low —
-            # don't claim a level-basis the number wasn't derived from (audit F8).
-            "stop_basis": "~6% protective stop",
-            "rr": f"{_rr:.1f}" if _rr is not None else "n/a",
-            "net_cash_phrase": _net_phrase,
-            "agg_size": f"{ctx.aggressive_size_pct:.1f}",
-            "cons_size": f"{ctx.conservative_size_pct:.1f}",
-            "neu_size": f"{ctx.neutral_size_pct:.1f}",
-            "synth_size": f"{ctx.trader_size_pct:.1f}",
-        })
-        if _asym is not None:
-            # Replace the fixed "28% vs 18%" seed constants with the real
-            # asymmetry of the reference levels (M08).
-            formatter["upside"] = _asym.upside_pct
-            formatter["downside"] = _asym.downside_pct
+        formatter = _build_pm_formatter(ctx, profile, mandate)
 
         gateway = self._llm or get_llm_gateway()
         live = gateway.has_real_provider()
@@ -5889,408 +6573,25 @@ class RoomRunner:
                             ):
                                 yield ev
                 else:
-                    # CR098 Amendment 2 — Market withheld ⇒ NO_VERDICT, built
-                    # in code and NEVER passed through the LLM parser at all
-                    # (stronger than a post-hoc contradiction check: there is
-                    # no LLM narration in this path for a recommendation to
-                    # contradict — see the hand-off for why this deliberately
-                    # narrows the spec's "narrow-prompt + post-check" design).
-                    # This runs AFTER EXECUTION/RISK (FLAG #2 — kept per the
-                    # spec's recommendation; the debate still happens, the
-                    # wall lands at the very end).
-                    if AgentId.MARKET_ANALYST in ctx.withheld:
-                        verdict = _assemble_no_verdict(ctx)
-                        pm_text = verdict.reason
-                        async for ev in _typewriter(
-                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
-                            char_delay_min, char_delay_max,
-                        ):
-                            yield ev
-                    # Phase 6 — PM: the LLM decides, informed by the full
-                    # 11-agent debate; the deterministic safety floor then
-                    # vetoes/validates that decision afterward — it never
-                    # invents it beforehand. See DEF056.
-                    elif live:
-                        # CR197 — optional self-consistency. At the default of 1
-                        # this is exactly the single call it has always been; the
-                        # branch below only engages when an operator raises
-                        # PM_SELF_CONSISTENCY_SAMPLES, because each extra sample is
-                        # another premium-tier call on the run's costliest agent.
-                        _pm_samples = max(1, int(settings.pm_self_consistency_samples))
-                        _voted: tuple[str, Verdict, str] | None = None
-                        # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-1): with
-                        # samples>1, if every draw AND every replacement is
-                        # unparseable, `_cands` is `[]` and the tail below used
-                        # to fall into the single-draw branch and ship the
-                        # FIRST raw draw's reformatted read — unlabelled. The
-                        # verdict's `samples`/`approve_votes` stayed `None`
-                        # (the schema's OWN "self-consistency is off" meaning
-                        # — false here) and DEF397's short-vote disclosure
-                        # never fires for N=0 readable. Tracked here so the
-                        # eventual `parsed` (however it is produced) can be
-                        # corrected before the DEF384 shared tail.
-                        _zero_readable_vote = False
-                        if _pm_samples > 1:
-                            # DEF397 — lost draws are replaced, not silently
-                            # dropped from the denominator; see the helper.
-                            _cands, raw_text, _lost, _recovered = (
-                                await _draw_pm_candidates(
-                                    _pm_samples,
-                                    lambda: _stream_pm_response(
-                                        run_id=run_id, ctx=ctx, profile=profile,
-                                        formatter=formatter, run=run,
-                                        gateway=gateway,
-                                        agent_timeout_s=agent_timeout_s,
-                                    ),
-                                    lambda _rt: _parse_pm_verdict(_rt, ctx),
-                                )
-                            )
-                            if _lost:
-                                logger.warning(
-                                    "room_pm_draws_replaced",
-                                    run_id=str(run_id),
-                                    lost=_lost,
-                                    recovered=_recovered,
-                                )
-                            if _cands:
-                                # CR228 Step 4 — the APPROVE bar is graded by the
-                                # mandate's own risk_score, not a flat majority.
-                                _voted = _vote_pm_samples(
-                                    _cands, risk_score=ctx.mandate.risk_score
-                                )
-                            elif raw_text:
-                                _zero_readable_vote = True
-                        else:
-                            raw_text = await _stream_pm_response(
-                                run_id=run_id, ctx=ctx, profile=profile,
-                                formatter=formatter, run=run, gateway=gateway,
-                                agent_timeout_s=agent_timeout_s,
-                            )
-                        # DEF384 — `parsed` and the outage flag are declared here because the
-                        # three branches below all feed ONE decision tail. They used to feed
-                        # three: the self-consistency branch assigned `verdict` directly and
-                        # returned, so it never reached `enforce_safety_floor` — every mandate
-                        # check (post-loss cooldown, over-trading brake, open-risk cap, sector
-                        # cap, halal + locale universes, drawdown cap) was skipped the moment
-                        # pm_self_consistency_samples went above 1. The floor is uncoachable by
-                        # design; a sampling knob must not be able to switch it off.
-                        parsed: Verdict | None = None
-                        _pm_outage = False
-                        if _voted is not None:
-                            pm_text, parsed, _agreement = _voted
-                            # CR214 — how many of the independent reads wanted in,
-                            # regardless of which side won. The agreement string
-                            # counts the WINNER ("3/5" on a PASS), so it cannot be
-                            # read as conviction: 2-of-5-approve and 0-of-5-approve
-                            # are both a PASS, and only this field tells them apart.
-                            # Persisted so a backtest can rank on it instead of on a
-                            # binary that spends 90% of its convenes in one bucket.
-                            _approve_votes = sum(
-                                1 for _n, _v in _cands
-                                if _v.action in (
-                                    VerdictAction.APPROVE, VerdictAction.MODIFY
-                                )
-                            )
-                            parsed = parsed.model_copy(update={
-                                "approve_votes": _approve_votes,
-                                "samples": len(_cands),
-                            })
-                            logger.info(
-                                "room_pm_self_consistency",
-                                run_id=str(run_id),
-                                agreement=_agreement,
-                                samples=_pm_samples,
-                                approve_votes=_approve_votes,
-                                # DEF383: Verdict sets use_enum_values=True, so
-                                # `action` is already a plain str here. `.value`
-                                # raised AttributeError and took the whole convene
-                                # down — latent since CR197 because the branch only
-                                # runs when pm_self_consistency_samples > 1, and the
-                                # default was 1 until CR214 raised it.
-                                action=str(parsed.action),
-                            )
-                            if not _agreement.startswith(f"{len(_cands)}/"):
-                                # CR040 — a split team is a real finding about how
-                                # marginal this call is, and hiding it behind
-                                # confident prose is the failure mode the whole CR
-                                # is about. Said in the verdict the user reads.
-                                parsed = parsed.model_copy(update={
-                                    "reason": (
-                                        f"{parsed.reason} (Your team was split on "
-                                        f"this — {_agreement} of the independent "
-                                        f"reads landed here.)"
-                                    )
-                                })
-                            if len(_cands) < _pm_samples:
-                                # DEF397 — the vote ran short even after the
-                                # replacement round. A "4/4" that was really
-                                # 4-of-5-requested must say so where the user
-                                # reads it (CR040), not only in a log line.
-                                parsed = parsed.model_copy(update={
-                                    "reason": (
-                                        f"{parsed.reason} (Only {len(_cands)} of "
-                                        f"{_pm_samples} independent reads were "
-                                        f"readable for this vote.)"
-                                    )
-                                })
-                        elif not raw_text:
-                            # DEF059: LLM unreachable — fail SAFE to PASS.
-                            # The scripted _assemble_verdict APPROVE belongs
-                            # to the non-live demo path only; an outage must
-                            # never mint a confident buy verdict.
-                            _pm_outage = True
-                            verdict = Verdict(
-                                action=VerdictAction.PASS,
-                                reason=(
-                                    f"{PM_LLM_UNAVAILABLE_REASON} "
-                                    f"{_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}"
-                                ),
-                                overridden_from_llm=True,
-                            )
-                            logger.error("room_pm_llm_unavailable", run_id=str(run_id))
-                            pm_text = verdict.reason
-                        else:
-                            pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
-                            if parsed is None:
-                                # DEF058: the PM's shape slipped past the parser.
-                                # One reformat retry re-expresses the same
-                                # decision as the JSON schema (nulls for unstated
-                                # numbers — never invented) before failing safe.
-                                reformatted = await _reformat_pm_response(
-                                    raw_text, ctx=ctx, gateway=gateway,
-                                    agent_timeout_s=agent_timeout_s,
-                                )
-                                if reformatted:
-                                    narration, reparsed = _parse_pm_verdict(reformatted, ctx)
-                                    # DEF067: the reformatter exists only to
-                                    # RECOVER an APPROVE the parser missed. Accept
-                                    # its output only when it does so. A
-                                    # reformatter PASS recovered nothing — never
-                                    # let its narration (often a schema-complaint
-                                    # like "'MODIFY-AND-APPROVE' is not a valid
-                                    # enum value") become the user's verdict;
-                                    # fall through to the clean fail-safe below.
-                                    if reparsed is not None and reparsed.action == VerdictAction.APPROVE:
-                                        parsed = reparsed
-                                        pm_text = pm_text or narration
-                                        logger.info(
-                                            "room_pm_verdict_reformatted",
-                                            run_id=str(run_id),
-                                        )
-                                    elif reparsed is not None and _raw_is_affirmative(raw_text):
-                                        logger.warning(
-                                            "room_pm_reformat_downgrade_rejected",
-                                            run_id=str(run_id),
-                                        )
-
-                        if _zero_readable_vote and parsed is not None:
-                            # MINOR-1 — every one of the `_pm_samples` independent
-                            # reads (draws + replacements) was unparseable; what
-                            # shipped is the FIRST raw draw's own reformatted read,
-                            # not a vote. Label it as such rather than leaving
-                            # `samples`/`approve_votes` at `None` (the schema's own
-                            # "self-consistency is off" meaning) and say so in the
-                            # reason the user reads (CR040) — DEF397's short-vote
-                            # disclosure never fires for N=0 readable without this.
-                            logger.warning(
-                                "room_pm_vote_zero_readable",
-                                run_id=str(run_id), samples=_pm_samples,
-                            )
-                            parsed = parsed.model_copy(update={
-                                "samples": _pm_samples,
-                                "approve_votes": 0,
-                                "reason": (
-                                    f"{parsed.reason} (None of the {_pm_samples} "
-                                    "independent reads requested for this vote "
-                                    "were machine-readable; this is a single "
-                                    "recovered read, not a vote.)"
-                                ),
-                            })
-
-                        # DEF384 — ONE decision tail for every branch above. The vote arrives
-                        # here as `parsed` exactly like a single draw does, so an APPROVE meets
-                        # the same floor with the same kwargs. Do not re-inline this per branch:
-                        # CR101-BE2 round 1 shipped a call site missing five of them, and a
-                        # second copy is how that happens again.
-                        if not _pm_outage:
-                            if parsed is None:
-                                verdict = Verdict(
-                                    action=VerdictAction.PASS,
-                                    reason=(
-                                        "Chief Investment Officer did not return a "
-                                        "machine-readable verdict; defaulting "
-                                        "to no trade for safety."
-                                    ),
-                                    overridden_from_llm=True,
-                                )
-                                logger.warning("room_pm_verdict_parse_failed", run_id=str(run_id))
-                                if not pm_text:
-                                    pm_text = verdict.reason
-                            elif parsed.action == VerdictAction.APPROVE:
-                                proposed = ProposedTrade(
-                                    ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
-                                    quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
-                                    limit_price=parsed.entry,
-                                )
-                                # CR046 M06 / DEF095: flag (never veto) an APPROVE whose
-                                # narrated R:R contradicts its own levels, and SURFACE it —
-                                # rewrite the PM's verdict narration so the ratio the user
-                                # reads is AMI's computed one, not a log nobody sees. The
-                                # safety floor still owns vetoes; this only corrects text.
-                                _rr_sig = _pm_rr_coherence_signal(
-                                    pm_text, parsed.entry, parsed.stop, parsed.target
-                                )
-                                if _rr_sig is not None:
-                                    logger.warning(
-                                        "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
-                                    )
-                                    pm_text, _ = _annotate_rr_against_levels(
-                                        pm_text, parsed.entry, parsed.stop,
-                                        parsed.target, parsed.size_pct,
-                                    )
-                                verdict = enforce_safety_floor(
-                                    llm_verdict=parsed, proposed=proposed,
-                                    portfolio_value=ctx.portfolio_value,
-                                    current_drawdown_pct=ctx.current_drawdown_pct,
-                                    mandate=mandate, halal_universe=ctx.halal_universe,
-                                    classification_universe=ctx.classification_universe,
-                                    locale_allowed_universe=ctx.locale_allowed_universe,
-                                    # CR026: veto a PM APPROVE that breaches the sector cap.
-                                    holdings=ctx.sector_holdings,
-                                    quotes=ctx.sector_marks,
-                                    sector_map=ctx.sector_map,
-                                    # CR101-BE2 round 2: same trade-history context
-                                    # sim_engine.py supplies at submit()/preview() —
-                                    # previously omitted here, so a set post-loss
-                                    # cooldown / over-trading brake / open-risk cap
-                                    # was silently unenforced on the live PM's own
-                                    # APPROVE (round-1 BLOCKER).
-                                    last_loss_closed_at=ctx.risk_last_loss_closed_at,
-                                    trade_open_timestamps=ctx.risk_trade_open_timestamps,
-                                    existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
-                                    proposed_stop=parsed.stop,
-                                )
-                            else:
-                                verdict = parsed  # PASS — nothing to check compliance on
-                        async for ev in _restream_for_ui(
-                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
-                            char_delay_min, char_delay_max,
-                        ):
-                            yield ev
-                    else:
-                        verdict = _assemble_verdict(ctx, profile)
-                        mandate_check = (
-                            "PASS" if verdict.action == VerdictAction.APPROVE
-                            else f"FAIL — {', '.join(verdict.violations)}"
-                        )
-                        pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
-                            **formatter, verdict_action=verdict.action,
-                            verdict_rationale=verdict.reason, mandate_check=mandate_check,
-                        )
-                        async for ev in _typewriter(
-                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
-                            char_delay_min, char_delay_max,
-                        ):
-                            yield ev
-
-                    run.transcript.append(AgentMessage(
-                        agent_id=AgentId.PORTFOLIO_MANAGER,
-                        role="agent",
-                        content=pm_text,
-                        timestamp=datetime.now(timezone.utc),
-                    ))
-                    yield RoomEvent(
-                        kind="agent_done", run_id=run_id,
-                        agent_id=AgentId.PORTFOLIO_MANAGER,
-                    )
-                    # CR098 acceptance #8 — deterministic even when the LLM
-                    # says nothing about it; applies to EVERY path above
-                    # (APPROVE/PASS/NO_VERDICT/fail-safe), one insertion point.
-                    verdict = verdict.model_copy(
-                        update={"opinions_not_included": [a.value for a in ctx.withheld]}
-                    )
-                    # CR219 R51 — the same insertion point, for the same reason
-                    # CR098 chose it: this applies to EVERY path above
-                    # (APPROVE / PASS / NO_VERDICT / fail-safe), and a check
-                    # hung off one branch would miss the others. A thin Room can
-                    # produce any of them.
-                    #
-                    # `live` gates it: on the scripted demo path every turn is
-                    # scripted by design and nothing degraded, so the field stays
-                    # None (absence, not a zero — see the schema note).
-                    if live:
-                        _scripted = list(ctx.scripted_turns)
-                        # The denominator is the roster that actually ran, not a
-                        # hardcoded 12: CR098's tenure pull-back withholds
-                        # analysts on FLOOR_PASS, and counting a withheld desk
-                        # as "did not respond" would blame a provider for a
-                        # product decision the user was already told about.
-                        _roster = len(run.transcript)
-                        verdict = verdict.model_copy(update={
-                            "scripted_turns": len(_scripted),
-                            "scripted_agents": [a.value for a in _scripted],
-                        })
-                        if _scripted:
-                            _disclosure = _scripted_disclosure(_scripted, _roster)
-                            logger.warning(
-                                "room_partial_outage",
-                                run_id=str(run_id),
-                                ticker=ctx.ticker,
-                                scripted=len(_scripted),
-                                roster=_roster,
-                                threshold=settings.room_max_scripted_turns,
-                                agents=[a.value for a in _scripted],
-                            )
-                            _cap = settings.room_max_scripted_turns
-                            if _cap and len(_scripted) >= _cap:
-                                # DEF059's rule, extended from "no AMI" to "not
-                                # enough AMI". The decision is DISCARDED, not
-                                # annotated: a verdict argued from N canned turns
-                                # is not a call AMI can stand behind, and leaving
-                                # an APPROVE in place with a caveat appended is
-                                # exactly the confident-prose-plus-disclaimer
-                                # shape CR040 forbids.
-                                verdict = verdict.model_copy(update={
-                                    "action": VerdictAction.NO_VERDICT,
-                                    "reason": (
-                                        f"{PM_ROOM_INCOMPLETE_REASON} {_disclosure} "
-                                        f"{_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}"
-                                    ),
-                                    "overridden_from_llm": True,
-                                    "size_pct": None, "entry": None,
-                                    "stop": None, "target": None,
-                                    "time_horizon_days": None,
-                                })
-                            else:
-                                # Below the threshold the call stands, but the
-                                # user is told what it was argued from.
-                                verdict = verdict.model_copy(update={
-                                    "reason": f"{verdict.reason} ({_disclosure})"
-                                })
-                    # DEF231 — the same insertion point, for the same reason:
-                    # BOTH live instances were PASS verdicts, so a check hung
-                    # off the APPROVE branch (where the R:R coherence check
-                    # lives) would have caught neither. The narration has
-                    # already streamed by here; `reason` is the string CR106
-                    # renders as the justification and is what both instances
-                    # landed in.
-                    _reason, _dir_signals = _annotate_direction_against_price(
-                        verdict.reason,
-                        _reference_close(profile),
-                        _structured_levels(profile, verdict),
-                    )
-                    if _dir_signals:
-                        logger.warning(
-                            "room_pm_direction_incoherent",
-                            run_id=str(run_id),
-                            ticker=ctx.ticker,
-                            action=str(verdict.action),
-                            count=len(_dir_signals),
-                            **_dir_signals[0],
-                        )
-                        verdict = verdict.model_copy(update={"reason": _reason})
-                    run.verdict = verdict
-                    yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
+                    # CR237 — the CIO's own turn, extracted into
+                    # `_run_cio_step` so a "Ask the CIO again" retry can
+                    # call the exact same function (same floor, same
+                    # compliance check, same sizing, same annotations) on a
+                    # freshly-rebuilt context. See that function's docstring.
+                    async for ev in _run_cio_step(
+                        run_id=run_id,
+                        ctx=ctx,
+                        profile=profile,
+                        formatter=formatter,
+                        run=run,
+                        mandate=mandate,
+                        gateway=gateway,
+                        live=live,
+                        char_delay_min=char_delay_min,
+                        char_delay_max=char_delay_max,
+                        agent_timeout_s=agent_timeout_s,
+                    ):
+                        yield ev
                 await asyncio.sleep(_PHASE_GAP_S)
 
             run.status = RoomStatus.COMPLETED
@@ -6347,14 +6648,20 @@ class RoomRunner:
             # outage, not a decision, and an outage never costs the user —
             # same rule DEF424 already applies to Brief and 1-on-1.
             #
-            # Decided through `run_was_refunded(run)` — the SAME predicate
-            # `api/room.py`'s `done` event reports back to the client — so the
-            # decision to refund and the claim that it happened can never
-            # drift apart. `run.status` is already COMPLETED here, so this
-            # reduces to `room_verdict_is_incomplete`'s check (the
-            # `PM_ROOM_INCOMPLETE_REASON` sentinel), never `action ==
-            # NO_VERDICT` alone: `_assemble_no_verdict` (CR098 Amendment 2,
-            # Market withheld) also produces NO_VERDICT, and that one is a
+            # Decided through `is_outage_shaped_verdict(run.verdict)` — a
+            # SHAPE check, deliberately NOT `run_was_refunded` (DEF432
+            # MINOR-1, auditor U68 round 1): this line is what DECIDES
+            # whether to attempt a refund, so it cannot also be the ground
+            # truth for "was one given" without conflating "looks like an
+            # outage" with "the refund succeeded" — exactly the bug where a
+            # failed `refund()` still reported `refunded: true` and the
+            # verdict text still claimed "wasn't charged." `run.status` is
+            # already COMPLETED here, so this reduces to
+            # `room_verdict_is_incomplete`'s check (the
+            # `PM_ROOM_INCOMPLETE_REASON` sentinel) or `is_llm_outage_verdict`
+            # (the DEF059 CIO-outage PASS), never `action == NO_VERDICT`
+            # alone: `_assemble_no_verdict` (CR098 Amendment 2, Market
+            # withheld) also produces NO_VERDICT, and that one is a
             # deliberate professional-discipline refusal argued from a FULL
             # fundamentals case, not a provider outage — the roster answered,
             # the PM chose not to price a trade. That run is charged, same as
@@ -6372,13 +6679,21 @@ class RoomRunner:
             # Best-effort, same shape as the CR039 failed-run refund a few
             # lines down in the except block: a refund failure must not turn
             # a delivered (if outage-abstained) verdict into a hard error.
-            if run_was_refunded(run):
+            _outage_verdict_dict = run.verdict.model_dump() if run.verdict else None
+            if is_outage_shaped_verdict(_outage_verdict_dict):
                 try:
                     refund(
                         user_id, run.credit_cost,
                         reason=f"room_outage_no_verdict:{run_id}",
                     )
                 except Exception as refund_exc:
+                    # DEF432 MINOR-1 — a failed refund leaves `refund_recorded`
+                    # False (its column default) and the verdict text exactly
+                    # as constructed: WITHOUT "This Room wasn't charged.".
+                    # `run_was_refunded`/the `done` event both report `False`
+                    # for this run until a later "Ask the CIO again" retry
+                    # (if eligible) or a manual reconcile fixes it — never a
+                    # confident "not charged" claim the ledger disagrees with.
                     logger.error(
                         "room_outage_refund_failed",
                         run_id=str(run_id),
@@ -6386,6 +6701,49 @@ class RoomRunner:
                         error=str(refund_exc)[:200],
                     )
                 else:
+                    # CR237 — persisted so `run_was_refunded` still reads True
+                    # after a later successful CIO retry replaces this
+                    # outage verdict with a real one (see that predicate's
+                    # docstring). Set only on a SUCCESSFUL refund, matching
+                    # the log line right below.
+                    run.refund_recorded = True
+                    # DEF432 MINOR-1 — the "wasn't charged" sentence is
+                    # appended to the verdict's OWN reason only NOW, after
+                    # `refund()` has actually returned, never at verdict-
+                    # construction time. `run.verdict.reason` at this point
+                    # is exactly what `_run_cio_step` built — the outage
+                    # sentinel prose with no charge claim attached.
+                    run.verdict = run.verdict.model_copy(update={
+                        "reason": f"{run.verdict.reason} {_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}",
+                    })
+                    # DEF432 MINOR-1 — re-emit the verdict event so a LIVE
+                    # SSE listener also sees the corrected reason. The first
+                    # `verdict` event (`_run_cio_step`, inside the phase
+                    # loop) necessarily streamed BEFORE `refund()` could be
+                    # attempted — completion has to happen before a refund
+                    # decision can be made. The mobile client's `verdict`
+                    # handler is a plain overwrite (`state.copyWith(verdict:
+                    # ev['verdict'])`, `room_providers.dart`), so this second
+                    # event simply replaces the displayed text; a client that
+                    # disconnected before this point instead reads the
+                    # corrected text on any later GET/replay, since
+                    # `_persist_run` right below writes the same corrected
+                    # `run.verdict`.
+                    yield RoomEvent(
+                        kind="verdict", run_id=run_id, verdict=run.verdict,
+                    )
+                    # CR237 — snapshot the pre-CIO desk-phase context ONLY on
+                    # the DEF059 outage PASS (`is_llm_outage_verdict`), the
+                    # one case "Ask the CIO again" can retry. The R51 partial-
+                    # outage NO_VERDICT is also refunded here but is NOT
+                    # retryable (too few live desks to re-argue from — the
+                    # user's only offer there is reconvene), so it gets no
+                    # snapshot, same as every other refunded shape.
+                    if is_llm_outage_verdict(_outage_verdict_dict):
+                        run.cio_context_snapshot = _build_cio_context_snapshot(
+                            ctx, profile,
+                        )
+                    _persist_run(run)
                     logger.info(
                         "room_outage_refunded",
                         run_id=str(run_id),
@@ -6538,8 +6896,263 @@ class RoomRunner:
                     credits=run.credit_cost,
                     error=str(refund_exc)[:200],
                 )
+            else:
+                # CR237 — same persisted marker as the DEF432 outage refund
+                # above, for the same reason: a failed run is not retryable
+                # today, but the flag should reflect ground truth uniformly
+                # rather than relying solely on `status == "failed"` staying
+                # true forever (it already does, this is belt-and-braces).
+                run.refund_recorded = True
+                _persist_run(run)
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
+
+    def is_retrying(self, run_id: UUID) -> bool:
+        """CR237 — True while a retry for `run_id` is in flight. Read by the
+        route to refuse a concurrent second retry on the same run without a
+        DB round trip."""
+        return run_id in self._retrying_runs
+
+    async def retry_cio_step(self, run_id: UUID, *, user_id: UUID) -> AsyncIterator[RoomEvent]:
+        """CR237 — "Ask the CIO again": replay ONLY the CIO step
+        (`_run_cio_step`) for a run whose verdict is the DEF059 CIO-outage
+        PASS, on the SAME desk arguments (via `run.cio_context_snapshot`)
+        but a FRESHLY rebuilt mandate/portfolio/sector/risk/universe context
+        — the floor judges the user's position now, not at the original
+        run's stale snapshot.
+
+        Callers MUST check `cio_retry_eligible(...)` before calling this —
+        this method re-checks eligibility itself (never trusts a caller's
+        earlier check to still hold) but does not, by itself, know the
+        caller's identity claim is legitimate; the route is what enforces
+        "the user's own run" via `get_current_user`.
+
+        Free: no `spend()`/`refund()` call anywhere in this method. The
+        original run was already charged (and, being an outage, already
+        refunded by DEF432) — a retry neither re-charges nor double-refunds.
+
+        In-flight guard: `self._retrying_runs` (an in-memory set — see
+        `__init__`'s comment on why that is sufficient for this process
+        topology), NOT the row's `status` column. Setting `status` back to
+        "running" would make `_sweep_stuck_runs`' next-boot claim treat a
+        mid-retry run as abandoned and respawn or fail+refund it — this
+        method leaves `status` at "completed" throughout, so a restart
+        mid-retry leaves the outage PASS exactly as it was, untouched, with
+        no credit movement (the guard is cleared by the restart, which is
+        correct: nothing survives a restart to still be "in flight").
+
+        Yields the SAME `RoomEvent` shapes `run()` yields for its own
+        VERDICT phase (`phase`, `agent_token`, `agent_done`, `verdict`) plus
+        a synthetic terminal event distinguishing "replaced with a real
+        verdict" from "still down" — see the route for how these become SSE.
+        """
+        if run_id in self._retrying_runs:
+            yield RoomEvent(
+                kind="error", run_id=run_id,
+                text="Another retry is already in progress for this Room.",
+            )
+            return
+        self._retrying_runs.add(run_id)
+        try:
+            run = self.get_run(run_id)
+            from app.services.mandate_store import resolve_mandate
+
+            mandate = resolve_mandate(user_id, None)
+            if not cio_retry_eligible(
+                run, requesting_user_id=user_id,
+                current_mandate_version=mandate.version,
+            ):
+                yield RoomEvent(
+                    kind="error", run_id=run_id,
+                    text=(
+                        "This Room can no longer ask the Chief Investment "
+                        "Officer again — reconvene the Room for a fresh read."
+                    ),
+                )
+                return
+
+            assert run is not None  # cio_retry_eligible already checked
+            snapshot = run.cio_context_snapshot or {}
+
+            # CR237 ruling #2 — rebuild everything safety-relevant FRESH,
+            # the same builders `run()` itself calls, off THIS user/ticker,
+            # never off the original run's own stale numbers.
+            portfolio_value, current_drawdown_pct = await asyncio.to_thread(
+                get_sim_engine().valuation_snapshot, user_id,
+            )
+            halal = await default_halal_universe_async()
+            classification = await default_classification_universe_async()
+            ticker = snapshot.get("ticker", run.ticker)
+            sim_block = await asyncio.to_thread(_build_sim_holdings_block, user_id, ticker)
+            portfolio_snapshot = _compose_portfolio_block(sim_block, None)
+            sector_holdings, sector_marks, sector_map, sector_weights = (
+                await asyncio.to_thread(_build_room_sector_context, user_id)
+            )
+            risk_last_loss_closed_at, risk_trade_open_timestamps, risk_existing_open_risk_pct = (
+                await asyncio.to_thread(
+                    _build_room_risk_limit_context,
+                    user_id, portfolio_value=portfolio_value, quotes=sector_marks,
+                )
+            )
+
+            ctx = _rebuild_ctx_from_snapshot(
+                snapshot,
+                user_id=user_id,
+                mandate=mandate,
+                portfolio_value=portfolio_value,
+                current_drawdown_pct=current_drawdown_pct,
+                halal_universe=halal,
+                classification_universe=classification,
+                sector_holdings=sector_holdings,
+                sector_marks=sector_marks,
+                sector_map=sector_map,
+                sector_weights=sector_weights,
+                risk_last_loss_closed_at=risk_last_loss_closed_at,
+                risk_trade_open_timestamps=risk_trade_open_timestamps,
+                risk_existing_open_risk_pct=risk_existing_open_risk_pct,
+                portfolio_snapshot=portfolio_snapshot,
+            )
+            # CR172 §10 — a fresh option menu against the CURRENT chain, off
+            # the snapshot's own trader levels (see the field's own
+            # docstring for why this is rebuilt rather than deserialized).
+            (
+                ctx.option_candidates,
+                ctx.option_spot,
+                ctx.option_priced_at,
+            ) = await asyncio.to_thread(
+                _build_room_option_candidates,
+                ticker=ctx.ticker,
+                mandate=mandate,
+                portfolio_value=portfolio_value,
+                size_pct=ctx.trader_size_pct,
+                entry=ctx.trader_entry,
+                stop=ctx.trader_stop,
+                target=ctx.trader_target,
+                horizon_days=ctx.trader_horizon_weeks * 7,
+                shares_held=sum(
+                    float(h.quantity) for h in (ctx.sector_holdings or ())
+                    if getattr(h, "ticker", None) == ctx.ticker
+                ),
+            )
+            ctx.next_convene_delta = _build_next_convene_delta(
+                self._room_delta_context(user_id, ticker), this_profile=ctx.profile,
+            )
+
+            profile = ctx.profile
+            formatter = _build_pm_formatter(ctx, profile, mandate)
+            gateway = self._llm or get_llm_gateway()
+            live = gateway.has_real_provider()
+
+            # Drop the outage PASS's transcript entry — `_run_cio_step`
+            # appends a NEW one, and the old outage narration must not sit
+            # alongside the real verdict's narration in the same transcript.
+            # Every OTHER desk's turn (fundamentals/market/news/social,
+            # bull/bear, synthesis, trader, the three risk debators) stays
+            # exactly as `run()` persisted it — this retry never re-runs
+            # them, so their transcript entries are untouched.
+            if run.transcript and run.transcript[-1].agent_id == AgentId.PORTFOLIO_MANAGER:
+                run.transcript = run.transcript[:-1]
+
+            async for ev in _run_cio_step(
+                run_id=run_id,
+                ctx=ctx,
+                profile=profile,
+                formatter=formatter,
+                run=run,
+                mandate=mandate,
+                gateway=gateway,
+                live=live,
+                char_delay_min=_CHAR_DELAY_MIN,
+                char_delay_max=_CHAR_DELAY_MAX,
+                agent_timeout_s=_AGENT_LLM_TIMEOUT_S,
+            ):
+                yield ev
+
+            still_down = is_llm_outage_verdict(
+                run.verdict.model_dump() if run.verdict else None
+            )
+            if still_down:
+                # Outage PASS kept in place, untouched apart from the
+                # transcript-entry swap above (same narration shape as
+                # before — DEF059's fail-safe text). No journal change, no
+                # credit movement (already refunded; `refund_recorded` is
+                # already True from the original run and is never re-set
+                # here). `cio_context_snapshot`/`refund_recorded` both stay
+                # as they were, so a further retry remains offerable within
+                # the same age window.
+                _persist_run(run)
+                logger.info("room_cio_retry_still_down", run_id=str(run_id))
+                yield RoomEvent(
+                    kind="error", run_id=run_id,
+                    text=(
+                        "The Chief Investment Officer is still unreachable. "
+                        "Your analysts' work is saved — try again shortly."
+                    ),
+                )
+                return
+
+            # Success: the outage PASS is replaced by a real verdict on the
+            # SAME run id. `refund_recorded` is left True (CR237 ruling #5 —
+            # the original charge was already given back; this run must
+            # keep reporting "not charged" even though `run.verdict` no
+            # longer LOOKS like an outage). The snapshot is cleared: a
+            # SECOND retry on an already-resolved run has nothing left to
+            # be eligible against (`cio_retry_eligible` also requires
+            # `is_llm_outage_verdict`, which is now false, so clearing the
+            # snapshot is belt-and-braces, not the only guard).
+            run.cio_context_snapshot = None
+            # CR237 (coordinator follow-up) — `cio_retried` is the client's
+            # cue for its OWN third cost-line sentence ("the CIO's retry was
+            # free, and the original Room was refunded"): a retried run
+            # FINISHED (unlike the outage PASS `roomResultRefunded` covers)
+            # but was never net-charged (the original refund stands, the
+            # retry itself is free) — a fact `refunded`/`verdict` alone
+            # cannot distinguish from an ordinary charged completion.
+            run.cio_retried = True
+            _persist_run(run)
+            logger.info(
+                "room_cio_retry_succeeded", run_id=str(run_id),
+                action=str(run.verdict.action if run.verdict else "n/a"),
+            )
+            # CR237 ruling #6 — bank the real verdict once. `bank_verdict_outcome`
+            # is idempotent per run_id (upserts on `uq_verdict_outcomes_room_run`)
+            # and refuses to un-score an already-SCORED row, so re-calling it
+            # here for a row the original outage banked as `unscorable` simply
+            # updates it to the retry's real, scorable verdict — consistent
+            # with CR219's own intent for outage rows (count what actually
+            # happened, not the moment it happened to be observed).
+            bank_verdict_outcome(
+                room_run_id=run_id,
+                user_id=user_id,
+                ticker=ctx.ticker,
+                verdict=run.verdict,
+                reference_price=_reference_close(profile),
+                reference_at=run.finished_at,
+                mandate_horizon=getattr(mandate.horizon, "value", mandate.horizon),
+            )
+            # CR237 ruling #6 — update the Decision Journal entry IN PLACE,
+            # never a duplicate. `build_journal_entry_for_run` already knows
+            # how to render any verdict shape; `update_by_reference` is the
+            # only new primitive (see its own docstring).
+            try:
+                draft = build_journal_entry_for_run(run, user_id)
+                updated = get_journal_store().update_by_reference(
+                    user_id, EntryType.ROOM_RUN, run_id, draft,
+                )
+                if updated is None:
+                    # No prior journal entry to update (should not happen —
+                    # every terminal run journals on_complete — but a missing
+                    # entry is not a reason to fail the retry that already
+                    # succeeded). Append one so the retry's verdict is not
+                    # lost from the Journal entirely.
+                    get_journal_store().append(draft)
+            except Exception as exc:
+                logger.error(
+                    "room_cio_retry_journal_failed",
+                    run_id=str(run_id), error=str(exc)[:200],
+                )
+        finally:
+            self._retrying_runs.discard(run_id)
 
     def clear(self) -> None:
         from sqlalchemy import delete as _delete

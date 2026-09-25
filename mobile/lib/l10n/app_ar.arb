@@ -2842,6 +2842,7 @@
         "roomLiveModeFloor": "64945638462e",
         "roomMetricSize": "4512fe0408d7",
         "roomMetricTicker": "277e62199cff",
+        "roomResultCioRetried": "fbd2c7d3fafa",
         "roomResultCost": "340ae1ea1fea",
         "roomResultCostNoBalance": "305d4ac31dc7",
         "roomResultRefunded": "fa6aad2a42d9",
@@ -2857,6 +2858,9 @@
         "roomStageRiskReviewSubtitle": "430f84c52e63",
         "roomStageStatusSemantic": "6759d1fe2bc3",
         "roomStageWorking": "7e5068cf6602",
+        "roomVerdictAskCioAgain": "f702c3a0a896",
+        "roomVerdictAskCioAgainInProgress": "46d285b3fe66",
+        "roomVerdictAskCioAgainSubtitle": "4a88dee3d59c",
         "settingsAdsConsentFailed": "a34d132db408",
         "settingsAdsConsentRow": "49814ddfed89",
         "settingsAdsDoNotSell": "4603e3653d3f",
@@ -3274,5 +3278,9 @@
     "roomResultCostNoBalance": "This Room used {cost} credits",
     "alpacaConnectDisclosure": "Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn't stored as its own record. A live account is shown on this phone only and never receives orders.",
     "notifTypePolicyUpdate": "Policy updates",
-    "roomResultRefunded": "Not charged — AMI couldn't finish this Room"
+    "roomResultRefunded": "Not charged — AMI couldn't finish this Room",
+    "roomVerdictAskCioAgain": "ASK THE CIO AGAIN",
+    "roomVerdictAskCioAgainSubtitle": "Free — uses the analysts' existing work",
+    "roomVerdictAskCioAgainInProgress": "Asking the CIO again…",
+    "roomResultCioRetried": "Not charged — the CIO's retry was free, and the original Room was refunded"
 }

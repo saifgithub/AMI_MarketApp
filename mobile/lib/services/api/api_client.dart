@@ -325,12 +325,21 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         // sends neither key, and `containsKey` — not a `?? 0` default — is
         // what tells the notifier "unknown" from "charged nothing" (DEF437
         // class: never fabricate a number nobody was charged).
+        //
+        // CR237 — `cio_retry_available`/`cio_retried` ride the same event,
+        // same `containsKey` discipline: a backend that predates CR237 sends
+        // neither key, and the client must never infer either from the
+        // verdict's text (the server's `cio_retry_eligible` is the one
+        // source of truth — see api/room.py's own comment on this field).
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {
           'kind': 'done',
           'run_id': j['run_id'],
           if (j.containsKey('credit_cost')) 'credit_cost': j['credit_cost'],
           if (j.containsKey('refunded')) 'refunded': j['refunded'],
+          if (j.containsKey('cio_retry_available'))
+            'cio_retry_available': j['cio_retry_available'],
+          if (j.containsKey('cio_retried')) 'cio_retried': j['cio_retried'],
         };
       case 'error':
         return {'kind': 'error', 'message': unescapeSseText(data)};
@@ -985,6 +994,60 @@ class ApiClient {
     if (response.statusCode != 200) {
       _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from room stream');
+    }
+    String buffer = '';
+    await for (final chunk in response.stream.transform(utf8.decoder)) {
+      buffer += chunk;
+      while (buffer.contains('\n\n')) {
+        final idx = buffer.indexOf('\n\n');
+        final event = buffer.substring(0, idx);
+        buffer = buffer.substring(idx + 2);
+
+        String? eventType;
+        final dataLines = <String>[];
+        for (final line in event.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+          } else if (line.startsWith('data: ')) {
+            dataLines.add(line.substring(6));
+          }
+        }
+        final data = dataLines.join('\n');
+        if (eventType == null) continue;
+        final parsed = parseRoomSseEvent(eventType, data);
+        if (parsed == null) continue;
+        yield parsed;
+        if (parsed['kind'] == 'done' || parsed['kind'] == 'error') return;
+      }
+    }
+  }
+
+  /// CR237 — "Ask the CIO again": stream a live retry of ONLY the CIO step
+  /// for a run stuck on the DEF059 CIO-outage PASS. Same event shape as
+  /// [streamRoom]'s own VERDICT phase (`phase`/`agent_token`/`agent_done`/
+  /// `verdict`/`error`/`done`) minus `started`/`live_data_notice`/
+  /// `agent_withheld` — the backend never emits those on this route (see
+  /// `api/room.py::cio_retry`). Free: no request body, no credit wall to
+  /// catch.
+  ///
+  /// 403/404 (someone else's run, or a run that no longer exists) are real
+  /// HTTP statuses the backend raises BEFORE any SSE body — surfaced here as
+  /// a plain `Exception`, same as `streamRoom`'s non-200/402/5xx fallback.
+  /// Every OTHER refusal (wrong verdict shape, stale mandate, in-flight,
+  /// still down) is an in-band `error` event the caller renders the same way
+  /// it already renders `streamRoom`'s `error` kind.
+  Stream<Map<String, dynamic>> retryCioStep(String runId) async* {
+    final uri = Uri.parse('$baseUrl/v1/room/runs/$runId/cio-retry');
+    final response = await _httpClient.send(_sseRequest(uri, '{}'));
+    if (response.statusCode == 403 || response.statusCode == 404) {
+      throw Exception('HTTP ${response.statusCode} from cio-retry');
+    }
+    if (response.statusCode >= 500) {
+      throw ServerUnavailableException(response.statusCode);
+    }
+    if (response.statusCode != 200) {
+      _notifyIfUnauthorized(response.statusCode);
+      throw Exception('HTTP ${response.statusCode} from cio-retry');
     }
     String buffer = '';
     await for (final chunk in response.stream.transform(utf8.decoder)) {

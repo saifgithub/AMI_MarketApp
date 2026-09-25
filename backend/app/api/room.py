@@ -51,6 +51,7 @@ from app.services.mandate_store import resolve_mandate
 from app.services.room_runner import (
     RoomRunner,
     build_journal_entry_for_run,
+    cio_retry_eligible,
     get_room_runner,
     run_was_refunded,
 )
@@ -82,6 +83,27 @@ router = APIRouter(
 # eeeb866f) can re-fire the journal write after a container restart
 # without an upward import from services → api.
 _build_journal_entry = build_journal_entry_for_run
+
+
+def _compute_cio_retry_available(run: RoomRun | None, user_id: UUID) -> bool:
+    """CR237 — `cio_retry_eligible` needs the CURRENT mandate version, which
+    is a store read; every call site in this file already has a `run` and a
+    `user_id` in hand, so this wraps the one extra lookup rather than
+    repeating it. Never raises: a mandate-store hiccup degrades the flag to
+    `False` (no retry offered) rather than 500ing an otherwise-fine
+    GET/SSE — the same "a read must not fail the response" discipline
+    `run_was_refunded` and the journal retry loop already apply in this file.
+    """
+    if run is None:
+        return False
+    try:
+        current_mandate = resolve_mandate(user_id, None)
+    except Exception:
+        return False
+    return cio_retry_eligible(
+        run, requesting_user_id=user_id,
+        current_mandate_version=current_mandate.version,
+    )
 
 
 class RoomStartRequest(BaseModel):
@@ -365,6 +387,18 @@ async def stream_room(
             'run_id': str(run_id),
             'credit_cost': _final.credit_cost if _final is not None else None,
             'refunded': run_was_refunded(_final),
+            # CR237 — same computed-flag discipline as `refunded` above: the
+            # client never string-matches `verdict.reason` to decide whether
+            # to show "Ask the CIO again"; this is the one source of truth.
+            'cio_retry_available': _compute_cio_retry_available(
+                _final, req.user_id,
+            ),
+            # CR237 (coordinator follow-up) — the client's cue for its own
+            # third cost-line sentence ("the CIO's retry was free"): a
+            # retried run finished (unlike `refunded`'s outage-PASS case)
+            # but was never net-charged. Plain re-read of the persisted row,
+            # same discipline as every other field on this event.
+            'cio_retried': bool(_final.cio_retried) if _final is not None else False,
         }))
 
     headers = {"X-Room-Run-Id": str(run_id)}
@@ -392,7 +426,96 @@ def get_room(
     # user's transcript / verdict by guessing or harvesting their run_id.
     if run.user_id != current_user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+    # CR237 — computed at read time, never persisted (see the field's own
+    # docstring on RoomRun).
+    run.cio_retry_available = _compute_cio_retry_available(run, current_user.id)
     return run
+
+
+@router.post("/runs/{run_id}/cio-retry")
+def cio_retry(
+    run_id: UUID,
+    current_user: User = Depends(get_current_user),
+    runner: RoomRunner = Depends(get_room_runner),
+) -> StreamingResponse:
+    """CR237 — "Ask the CIO again": stream a live retry of ONLY the CIO step
+    for a run stuck on the DEF059 CIO-outage PASS, replaying the same 11 desk
+    arguments (`run.cio_context_snapshot`) against a freshly rebuilt
+    mandate/portfolio/sector/risk context. Free — never spends or refunds a
+    second time; see `RoomRunner.retry_cio_step`'s own docstring.
+
+    Plain `def`, not `async def` (DEF200 ratchet, `test_def200_ratchet.py`):
+    the only work this handler body does directly is the ownership/existence
+    check below, which is sync DB I/O (`runner.get_run`) — Starlette runs a
+    plain `def` handler in its threadpool, so that read never blocks the
+    single uvicorn worker's event loop. The actual retry's own I/O
+    (`retry_cio_step`, an async generator) runs later, inside the
+    `StreamingResponse` body, off this call stack entirely — same shape as
+    `stream_room` above, whose handler IS `async def` only because it awaits
+    `start_run`/`asyncio.to_thread` directly in the handler body before
+    returning.
+
+    Ownership and existence are checked here, synchronously, before any SSE
+    body is sent — same discipline as `stream_room`'s pre-stream 402: a
+    refusal the caller can know about up front (404/403) must be a real HTTP
+    status, never a body-level SSE `error` event the client has to sniff for.
+    `cio_retry_eligible` itself (wrong verdict shape, no snapshot, stale
+    mandate, aged out) and the in-flight guard are surfaced as SSE `error`
+    events inside the stream, mirroring `retry_cio_step`'s own refusal
+    shape — those are "the retry ran and declined", not "the request was
+    malformed".
+    """
+    run = runner.get_run(run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "room run not found")
+    if run.user_id != current_user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+    async def event_stream():
+        async for ev in runner.retry_cio_step(run_id, user_id=current_user.id):
+            if ev.kind == "phase":
+                yield sse_json("phase", json.dumps({"label": ev.phase}))
+            elif ev.kind == "agent_token":
+                safe = escape_sse_text(ev.text or "")
+                payload = json.dumps({
+                    "agent_id": ev.agent_id.value if ev.agent_id else None,
+                    "text": safe,
+                })
+                yield sse_json("agent_token", payload)
+            elif ev.kind == "agent_done":
+                payload = json.dumps({
+                    "agent_id": ev.agent_id.value if ev.agent_id else None,
+                    "stance": ev.stance,
+                    "conviction": ev.conviction,
+                    "headline": ev.headline,
+                    "argued_size_pct": ev.argued_size_pct,
+                })
+                yield sse_json("agent_done", payload)
+            elif ev.kind == "verdict":
+                if ev.verdict is not None:
+                    yield sse_json("verdict", ev.verdict.model_dump_json())
+            elif ev.kind == "error":
+                # DEF127: framed through sse_text, not interpolated — see
+                # stream_room's identical comment.
+                yield sse_text("error", ev.text or "unknown")
+        # CR237 — same computed-flag discipline as stream_room's `done`
+        # event: a plain re-read of the persisted row, never a second,
+        # possibly-drifted decision. `credit_cost`/`refunded` are included so
+        # the client can refresh its cost line from one event without a
+        # follow-up GET, matching `run_was_refunded`'s "not charged" case
+        # exactly (the retry never spends or refunds).
+        _final = runner.get_run(run_id)
+        yield sse_json("done", json.dumps({
+            "run_id": str(run_id),
+            "credit_cost": _final.credit_cost if _final is not None else None,
+            "refunded": run_was_refunded(_final),
+            "cio_retried": bool(_final.cio_retried) if _final is not None else False,
+            "cio_retry_available": _compute_cio_retry_available(
+                _final, current_user.id,
+            ),
+        }))
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @router.get("/user/{user_id}", response_model=list[RoomRun])
@@ -404,4 +527,12 @@ def list_user_rooms(
 ) -> list[RoomRun]:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    return runner.list_runs_for_user(user_id, limit=limit)
+    runs = runner.list_runs_for_user(user_id, limit=limit)
+    # CR237 — same computed flag as the single-run GET, applied per row. A
+    # list endpoint is a natural place for the Room history screen to learn
+    # "this old outage run can still be retried" without a follow-up GET per
+    # row; cheap because `resolve_mandate` reads a cached-in-process store,
+    # not a fetch, and the eligibility check itself is pure/local.
+    for run in runs:
+        run.cio_retry_available = _compute_cio_retry_available(run, current_user.id)
+    return runs

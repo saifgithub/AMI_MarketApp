@@ -1873,10 +1873,16 @@ def test_room_agent_timeout_falls_back_to_scripted():
     spoke = {e.agent_id for e in events if e.kind == "agent_done"}
     assert len(spoke) == 12
 
-    # The run must still produce a verdict.
+    # The run must still produce a verdict. DEF432 MINOR-1 — every desk
+    # timed out here, so this run is the R51 partial-outage NO_VERDICT and
+    # its refund succeeds; `run()` re-emits a second `verdict` event with
+    # the "wasn't charged" text once the refund actually completes (see that
+    # branch's own comment). Either one or two events is a valid outcome
+    # depending on whether the refund path fires; the LAST one is always the
+    # accurate, persisted verdict.
     verdicts = [e for e in events if e.kind == "verdict"]
-    assert len(verdicts) == 1
-    assert verdicts[0].verdict is not None
+    assert len(verdicts) in (1, 2)
+    assert verdicts[-1].verdict is not None
 
 
 def test_room_cancelled_mid_run_persists_partial_transcript():

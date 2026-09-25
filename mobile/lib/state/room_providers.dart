@@ -106,6 +106,9 @@ class RoomState {
     this.creditCost,
     this.refunded = false,
     this.balanceAfter,
+    this.cioRetryAvailable = false,
+    this.cioRetried = false,
+    this.retryingCio = false,
   });
 
   final String? phase;
@@ -162,6 +165,29 @@ class RoomState {
   /// never shows the balance cached before the Room ("used 8 · 63 left").
   final int? balanceAfter;
 
+  /// CR237 — server-computed: true when this run is a CIO-outage PASS
+  /// eligible for "Ask the CIO again" right now (own run, snapshot present,
+  /// mandate unchanged, within the age window, no retry already in flight).
+  /// Driven ENTIRELY by this flag off the `done` event — never inferred from
+  /// `verdict.reason` text on the client (see `cio_retry_eligible`'s own
+  /// docstring on the backend: that predicate is the one source of truth).
+  /// False (the default) for a backend predating CR237, which sends no key.
+  final bool cioRetryAvailable;
+
+  /// CR237 — true once a retry has SUCCEEDED on this run: the outage PASS
+  /// was replaced by a real verdict, free, with the original DEF432 refund
+  /// still standing. Drives `RoomResultCostLine`'s third, truthful branch —
+  /// see that widget's own docstring for why `refunded`/`creditCost` alone
+  /// cannot distinguish this from an ordinary charged completion.
+  final bool cioRetried;
+
+  /// CR237 — true while THIS device has an "Ask the CIO again" retry
+  /// in-flight for this run. Client-local UI state (mirrors the Footer's
+  /// existing `streaming` spinner pattern) — the SERVER's own in-flight
+  /// guard (`RoomRunner._retrying_runs`) is authoritative; this only drives
+  /// the button's own disabled/spinner look on this device.
+  final bool retryingCio;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -183,6 +209,9 @@ class RoomState {
     int? creditCost,
     bool? refunded,
     int? balanceAfter,
+    bool? cioRetryAvailable,
+    bool? cioRetried,
+    bool? retryingCio,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -203,6 +232,9 @@ class RoomState {
       creditCost: creditCost ?? this.creditCost,
       refunded: refunded ?? this.refunded,
       balanceAfter: balanceAfter ?? this.balanceAfter,
+      cioRetryAvailable: cioRetryAvailable ?? this.cioRetryAvailable,
+      cioRetried: cioRetried ?? this.cioRetried,
+      retryingCio: retryingCio ?? this.retryingCio,
     );
   }
 }
@@ -352,12 +384,21 @@ class RoomNotifier extends StateNotifier<RoomState> {
             // CR was written alongside.
             final rawCost = ev['credit_cost'];
             final rawRefunded = ev['refunded'];
+            // CR237 — same wire-optional/`containsKey` discipline: a backend
+            // predating CR237 sends neither key, and both must default to
+            // "not offered" / "not retried", never inferred from anything
+            // else on the payload.
+            final rawCioRetryAvailable = ev['cio_retry_available'];
+            final rawCioRetried = ev['cio_retried'];
             state = state.copyWith(
               streaming: false,
               done: true,
               runId: ev['run_id'] as String?,
               creditCost: rawCost is num ? rawCost.toInt() : null,
               refunded: rawRefunded is bool ? rawRefunded : false,
+              cioRetryAvailable:
+                  rawCioRetryAvailable is bool ? rawCioRetryAvailable : false,
+              cioRetried: rawCioRetried is bool ? rawCioRetried : false,
             );
             // Refresh dependent surfaces — journal got a new entry, and the
             // mandate's credit balance just moved (CR236: every surface that
@@ -418,6 +459,122 @@ class RoomNotifier extends StateNotifier<RoomState> {
             streaming: false,
             error: friendlyError(e, action: 'run the Room'));
       }
+    }
+  }
+
+  /// CR237 — "Ask the CIO again": replay ONLY the CIO's own turn against
+  /// this run's saved desk arguments. Reuses the existing streaming/loading
+  /// state shape (`retryingCio` mirrors `streaming`'s Footer spinner) rather
+  /// than inventing a new one; the CIO's response typewriters into the SAME
+  /// transcript slot the original outage PASS occupied, so the board updates
+  /// in place instead of resetting to a blank run.
+  ///
+  /// A no-op while a retry is already in flight on this device, or once the
+  /// run is no longer eligible — the button that calls this is itself gated
+  /// on `state.cioRetryAvailable`, so this is belt-and-braces against a
+  /// double-tap racing the first request's own state update.
+  Future<void> retryCio() async {
+    final runId = state.runId;
+    if (runId == null || state.retryingCio || !state.cioRetryAvailable) return;
+    state = state.copyWith(retryingCio: true, clearError: true);
+    try {
+      final api = _ref.read(apiClientProvider);
+      final stream = api.retryCioStep(runId);
+      await for (final ev in stream) {
+        switch (ev['kind']) {
+          case 'phase':
+            state = state.copyWith(phase: ev['label'] as String?);
+            break;
+          case 'agent_token':
+            // The retry's CIO turn types into the SAME transcript slot the
+            // outage PASS's narration occupied — `_run_cio_step` appends a
+            // fresh Portfolio Manager entry server-side (the old outage line
+            // is dropped from the persisted transcript, see
+            // `retry_cio_step`'s own comment), so overwriting rather than
+            // appending here keeps the client's copy in step with that.
+            final agentId = ev['agent_id'] as String;
+            final text = ev['text'] as String;
+            final isFirstTokenThisRetry = state.activeAgent != agentId;
+            final next = Map<String, String>.from(state.transcript);
+            next[agentId] =
+                (isFirstTokenThisRetry ? '' : (next[agentId] ?? '')) + text;
+            final order = state.order.contains(agentId)
+                ? state.order
+                : [...state.order, agentId];
+            state = state.copyWith(
+              transcript: next,
+              order: order,
+              activeAgent: agentId,
+            );
+            break;
+          case 'agent_done':
+            final doneId = ev['agent_id'];
+            if (doneId is String && doneId.isNotEmpty) {
+              final rawStance = ev['stance'];
+              final rawConviction = ev['conviction'];
+              final rawHeadline = ev['headline'];
+              final stances =
+                  Map<String, AgentStance>.from(state.agentStances);
+              stances[doneId] = AgentStance(
+                stance: rawStance is String ? rawStance : null,
+                conviction: rawConviction is String ? rawConviction : null,
+                headline: rawHeadline is String ? rawHeadline : null,
+                recorded: ev.containsKey('stance'),
+              );
+              state = state.copyWith(activeAgent: null, agentStances: stances);
+            } else {
+              state = state.copyWith(activeAgent: null);
+            }
+            break;
+          case 'verdict':
+            state = state.copyWith(verdict: ev['verdict'] as RoomVerdict);
+            break;
+          case 'done':
+            final rawCost = ev['credit_cost'];
+            final rawRefunded = ev['refunded'];
+            final rawCioRetryAvailable = ev['cio_retry_available'];
+            final rawCioRetried = ev['cio_retried'];
+            state = state.copyWith(
+              retryingCio: false,
+              creditCost: rawCost is num ? rawCost.toInt() : null,
+              refunded: rawRefunded is bool ? rawRefunded : false,
+              cioRetryAvailable:
+                  rawCioRetryAvailable is bool ? rawCioRetryAvailable : false,
+              cioRetried: rawCioRetried is bool ? rawCioRetried : false,
+            );
+            // Same "every credits/journal surface reflects this run" refresh
+            // `start()`'s own `done` handler does — a successful retry both
+            // updates the Journal entry in place and (never here, but
+            // belt-and-braces) leaves the balance exactly where it was.
+            await _ref.read(journalNotifierProvider.notifier).refresh();
+            await _ref.read(mandateNotifierProvider.notifier).refresh();
+            if (!mounted) break;
+            final m = _ref.read(mandateNotifierProvider);
+            if (m.error == null && m.mandate?.creditBalance != null) {
+              state = state.copyWith(balanceAfter: m.mandate!.creditBalance);
+            }
+            break;
+          case 'error':
+            // Covers every refusal shape the route can emit in-band: still
+            // down, no longer eligible (stale mandate, aged out), or a
+            // concurrent retry already in flight — all rendered through the
+            // Room's existing error banner, same as `start()`'s own.
+            state = state.copyWith(
+              retryingCio: false,
+              error: (ev['message'] as String?) ?? 'unknown',
+            );
+            break;
+          default:
+            debugPrint('cio-retry stream: unhandled event kind "${ev['kind']}"');
+            break;
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(
+        retryingCio: false,
+        error: friendlyError(e, action: 'ask the CIO again'),
+      );
     }
   }
 
