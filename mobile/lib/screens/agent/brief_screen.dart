@@ -446,7 +446,9 @@ class _DiffCard extends StatelessWidget {
                     foregroundColor: AmiColors.textMed,
                     side: const BorderSide(color: AmiColors.slate700),
                   ),
-                  onPressed: onRefine,
+                  // DEF443 — a refusal has nothing to refine: Dismiss clears
+                  // it and leaves the composer alone.
+                  onPressed: isRefused ? onReject : onRefine,
                   child: Text(isRefused ? l.briefDismiss : l.briefRefine),
                 ),
               ),
