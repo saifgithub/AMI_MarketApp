@@ -1,0 +1,25 @@
+{
+  "generated": "2026-09-25T20:51:48.163396+00:00",
+  "provider": "vllm",
+  "audit_row_id": "937ed335-73d0-4ca5-bdcd-17017aa47553",
+  "tier": "cheap",
+  "seed_neutral_response": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 1% growth, 17% op margin]\n\nIBM offers durable cash generation but stagnant top-line growth, with margins narrowing YoY. The valuation is rich relative to its own history, and the Street is cutting estimates.\n\n- **Growth & Margins**: TTM revenue growth is just **1%**. Operating margin sits at **17%**, down **160bps** YoY (Q2 2026 vs Q2 2025). Gross margin also contracted **104bps**. This is a cost/efficiency problem, not a pricing one, given the wide **58%** gross margin.\n- **Valuation & History**: Trailing P/E is **20.1x**, but pricing today's price against the last 4 FYs' own EPS yields a median of **31.4x**. This suggests current earnings are depressed relative to historical levels, making the current multiple look elevated against its own past. Forward P/E is **17.2x**, but consensus EPS estimates have been cut **2.0%** over the last 90 days.\n- **Balance Sheet & Cash**: Net debt is **$57,140M** with a debt/equity ratio of **1.89x**. Interest coverage is **5.9x** (Q2 2026). FCF is **$13,144M** (TTM), yielding **6.2%**. Capital returned (dividends + buybacks) is **$7,355M**, consuming **56%** of FCF. Buybacks are modest at **$1,046M** (0.5% of market cap).\n\nGAPS: 5-year historical P/E band; peer-average operating margin; segment-level revenue growth",
+  "follow_up_question": "Setting aside what you just wrote \u2014 answer this directly, as a distinct question, not a restatement of your analysis above.\n\nYou just took a NEUTRAL stance. Name the SINGLE most decision-relevant fact on the sheet above that, if it were meaningfully different (state the direction and an approximate threshold), would move you from NEUTRAL to FOR. Do not name a fact that is already favorable in the sheet as-is \u2014 name what is currently working AGAINST a FOR stance, and the change that would flip it. One fact, one threshold, 2-3 sentences maximum. Do not repeat your GAPS line or your STANCE/CONVICTION/HEADLINE tag.",
+  "answers": [
+    {
+      "n": 1,
+      "text": "Revenue growth of **1%** is the primary headwind. A sustained return to **mid-single-digit** top-line expansion (5%+) would demonstrate the software/AI pivot is driving real scale, justifying the **20.1x** trailing multiple despite the **160bps** operating margin compression.",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "The **1% TTM revenue growth** is the primary drag on the long-term wealth mandate, signaling a lack of durable expansion. If revenue growth accelerated above **5%**, it would validate the high margins and justify a **FOR** stance by proving the moat drives volume, not just cost-cutting.",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "Revenue growth stuck at **1%** prevents a FOR stance. I would flip to FOR if TTM revenue growth accelerated above **5%**, signaling the core business is re-accelerating rather than just optimizing costs.",
+      "error": null
+    }
+  ]
+}

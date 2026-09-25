@@ -1,0 +1,25 @@
+{
+  "generated": "2026-09-25T20:51:23.686500+00:00",
+  "provider": "vllm",
+  "audit_row_id": "c73d2b57-f551-4ee5-acc6-bf3b2bb5d13e",
+  "tier": "premium",
+  "seed_neutral_response": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 1% growth, 56% FCF payout]\n\n**1% TTM revenue growth** caps the durability thesis; the Street's **2.0% consensus EPS downgrade** over 90 days confirms slowing momentum.\n\n**56% of TTM FCF** returned via dividends and buybacks leaves limited reinvestment headroom, though **$13.1B FCF** and **6.2% yield** provide a floor.\n\n**Net debt $57.1B** and **1.89x debt/equity** are heavy, but **5.9x interest coverage** (Q2 2026) and **0.79 current ratio** suggest liquidity is tight but manageable.\n\nGAPS: 5-year historical P/E band; segment-level revenue growth; peer-average EV/EBITDA",
+  "follow_up_question": "Setting aside what you just wrote \u2014 answer this directly, as a distinct question, not a restatement of your analysis above.\n\nYou just took a NEUTRAL stance. Name the SINGLE most decision-relevant fact on the sheet above that, if it were meaningfully different (state the direction and an approximate threshold), would move you from NEUTRAL to FOR. Do not name a fact that is already favorable in the sheet as-is \u2014 name what is currently working AGAINST a FOR stance, and the change that would flip it. One fact, one threshold, 2-3 sentences maximum. Do not repeat your GAPS line or your STANCE/CONVICTION/HEADLINE tag.",
+  "answers": [
+    {
+      "n": 1,
+      "text": "TTM revenue growth must accelerate to **5%** or higher to justify a FOR stance. The current **1%** is insufficient to offset the **$57.1B** net debt burden and supports the neutral view on durability.",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "IBM's **1% TTM revenue growth** is the primary drag, reflecting a low-cyclical, services-heavy model where top-line stagnation limits the durability thesis. To shift to FOR, TTM revenue growth would need to accelerate to **at least 4-5%**, signaling that the AI consulting and hybrid cloud segments are actually driving structural re-rating rather than just cost-cutting.",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "TTM revenue growth must accelerate above **5%** to justify a FOR stance, as **1%** indicates stagnation. Without meaningful top-line expansion, the neutral rating holds.",
+      "error": null
+    }
+  ]
+}

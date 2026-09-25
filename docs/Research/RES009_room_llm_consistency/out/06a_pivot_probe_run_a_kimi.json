@@ -1,0 +1,25 @@
+{
+  "generated": "2026-09-25T20:48:51.606991+00:00",
+  "provider": "kimi",
+  "audit_row_id": "c73d2b57-f551-4ee5-acc6-bf3b2bb5d13e",
+  "tier": "premium",
+  "seed_neutral_response": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 1% growth]\n\nIBM is a cash machine with a growth problem \u2014 the fundamentals pay you to wait, not to hurry.\n\n- **Cash generation is real and disciplined**: TTM FCF **$13,144M** on **$212,725M** market cap = **6.2% FCF yield**; capital returned **$7,355M** (dividends **$6,309M** + buybacks **$1,046M**) is **56% of FCF** \u2014 covered, not stretched. Dividend yields **2.98%** trailing with a **60%** payout ratio.\n- **Growth and margins are flat-to-soft**: TTM revenue growth **1%**; margins compressed YoY (Q2 2026 vs Q2 2025) \u2014 gross **-104bps**, operating **-160bps**, net **-31bps**. Two points, not a trend line, but the direction between those quarters was down. Estimate revisions confirm the drift: consensus EPS cut **2.0%** over 90 days to **$2.87**.\n- **Valuation is fair, not cheap**: trailing P/E **20.1x**, forward **17.2x** \u2014 below the **31.4x** median of today's price against the last four fiscal years' own EPS, meaning current earnings are elevated relative to that history, not the multiple. Leverage is the watch item: net debt **$57,140M**, D/E **1.89x**, current ratio **0.79** \u2014 though interest coverage **5.9x** (Q2 2026) is comfortable. Street: buy, mean target **$240.59**, range **$174\u2013$297** \u2014 only ~6% above the **$225.79** reference.\n\nGAPS: segment revenue mix (software vs consulting vs infrastructure); 5-year FCF history; debt maturity schedule",
+  "follow_up_question": "Setting aside what you just wrote \u2014 answer this directly, as a distinct question, not a restatement of your analysis above.\n\nYou just took a NEUTRAL stance. Name the SINGLE most decision-relevant fact on the sheet above that, if it were meaningfully different (state the direction and an approximate threshold), would move you from NEUTRAL to FOR. Do not name a fact that is already favorable in the sheet as-is \u2014 name what is currently working AGAINST a FOR stance, and the change that would flip it. One fact, one threshold, 2-3 sentences maximum. Do not repeat your GAPS line or your STANCE/CONVICTION/HEADLINE tag.",
+  "answers": [
+    {
+      "n": 1,
+      "text": "TTM revenue growth at **1%** is the blocker \u2014 a durable business at 20x trailing needs to actually grow. If that figure were meaningfully higher, say **5%+** on the same TTM basis, the 6.2% FCF yield and covered dividend would compound on top of expansion rather than merely offset stagnation, and that combination flips me to FOR.",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "TTM revenue growth at **1%** is the blocker \u2014 a durable business at 20x trailing needs to actually grow. If that figure were meaningfully higher \u2014 say **5%+** \u2014 the 6.2% FCF yield and covered dividend would shift from compensation for stagnation to genuine value, and I'd move to FOR.",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "**TTM revenue growth at 1%** is the blocker. If it were meaningfully higher \u2014 say **5%+** \u2014 the 6.2% FCF yield and 17.2x forward P/E would read as undervaluation rather than fair pricing for a flat business, and that flips me to FOR. Everything else on the sheet (coverage, payout, revisions) is secondary to the growth rate.",
+      "error": null
+    }
+  ]
+}

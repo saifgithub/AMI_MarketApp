@@ -1,0 +1,25 @@
+{
+  "generated": "2026-09-25T20:49:58.622969+00:00",
+  "provider": "kimi",
+  "audit_row_id": "937ed335-73d0-4ca5-bdcd-17017aa47553",
+  "tier": "cheap",
+  "seed_neutral_response": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% of FCF returned]\n\nIBM is a durable cash machine priced at a modest premium to its own recent earnings history \u2014 the fundamentals fit a long-horizon income-and-hold, but flat growth and margin drift cap the upside case.\n\n- **FCF $13,144M TTM** on **$212,706M** market cap = **6.2% FCF yield**; capital returned **$7,355M** (56% of FCF) funds a **2.98%** dividend at a **60% payout** \u2014 covered, not stretched. Capex is only **$1,744M** against **$14,888M** operating cash flow.\n- Valuation is fair, not cheap: **20.1x trailing / 17.2x forward** P/E against a **31.4x** median when today's price is set against the last 4 FYs' own EPS \u2014 i.e., this year's earnings are elevated relative to recent history, so the multiple understates how much recovery is already priced. **PEG 2.19** on **1% TTM revenue growth** confirms you're paying for stability, not expansion.\n- Watch items: margins narrowed across the board between Q2-2025 and Q2-2026 (**gross -104bps, operating -160bps, net -31bps** \u2014 two points only, no trend past 2026-06-30), and the balance sheet carries **$57,140M net debt** (D/E **1.89x**, current ratio **0.79**), though **5.9x** interest coverage keeps it serviceable. Consensus EPS estimates slipped **2.0%** over 90 days.\n\nGAPS: segment revenue mix (software vs. consulting vs. infrastructure); debt maturity schedule; 5-year FCF history",
+  "follow_up_question": "Setting aside what you just wrote \u2014 answer this directly, as a distinct question, not a restatement of your analysis above.\n\nYou just took a NEUTRAL stance. Name the SINGLE most decision-relevant fact on the sheet above that, if it were meaningfully different (state the direction and an approximate threshold), would move you from NEUTRAL to FOR. Do not name a fact that is already favorable in the sheet as-is \u2014 name what is currently working AGAINST a FOR stance, and the change that would flip it. One fact, one threshold, 2-3 sentences maximum. Do not repeat your GAPS line or your STANCE/CONVICTION/HEADLINE tag.",
+  "answers": [
+    {
+      "n": 1,
+      "text": "The growth line: **1% TTM revenue growth** against a **2.19 PEG** is what blocks a FOR \u2014 at that growth rate you're buying a bond proxy, not a compounding business. If TTM revenue growth were meaningfully higher \u2014 roughly **5%+**, enough to pull PEG toward ~1 or below at the current 20.1x trailing multiple \u2014 the valuation would be paying for actual expansion rather than stability, and that flips me to FOR.",
+      "error": null
+    },
+    {
+      "n": 2,
+      "text": "Revenue growth. TTM growth is **1%**, which is what makes a **20.1x trailing** P/E and **PEG 2.19** hard to argue *for* \u2014 you're paying a market-multiple for a no-growth cash stream. If TTM revenue growth were meaningfully higher \u2014 call it **5%+**, the level where the forward **17.2x** starts looking like a genuine discount to durably expanding earnings rather than a bet on margin recovery \u2014 that flips the stance.",
+      "error": null
+    },
+    {
+      "n": 3,
+      "text": "The **1% TTM revenue growth** is the blocker \u2014 at that rate the **PEG 2.19** says you're paying a growth multiple for a flatline top line, so the position is pure yield-and-multiple-hold. If TTM revenue growth were meaningfully higher \u2014 say **4\u20135%** sustained \u2014 the forward **17.2x** P/E would price a genuine compounder rather than a cash cow, and that flips me to FOR. Everything else (FCF yield, payout coverage, balance sheet) already clears the bar; growth is the single missing leg.",
+      "error": null
+    }
+  ]
+}

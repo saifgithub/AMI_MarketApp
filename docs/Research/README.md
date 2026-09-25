@@ -34,6 +34,7 @@ become one.
 |:---|:---|:---|
 | [RES001](RES001_finding_the_edge/) | Finding the edge — FinRL-X, three practitioners, and ~50 pre-registered tests | done — no edge found; several publishable nulls |
 | [RES008](RES008_exposing_fraud/) | Testing the "AI trading edge" claims popular on YouTube; failed claims become video briefs. Register: [`TRACKER.md`](RES008_exposing_fraud/TRACKER.md) | running — 8 claims pre-registered 2026-09-17 |
+| [RES009](RES009_room_llm_consistency/) | Room LLM consistency — same prompt, different answer; traced to unpinned sampling, cross-checked against a second model, and a model's own stated decision threshold tested and found not to hold | done — DEF445 filed separately; findings on self-report reliability |
 
 ## Pre-existing folders
 

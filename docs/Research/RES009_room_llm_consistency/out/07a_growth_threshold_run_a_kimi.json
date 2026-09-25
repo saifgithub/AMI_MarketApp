@@ -1,0 +1,337 @@
+{
+  "generated": "2026-09-25T21:17:13.112971+00:00",
+  "provider": "kimi",
+  "audit_row_id": "c73d2b57-f551-4ee5-acc6-bf3b2bb5d13e",
+  "tier": "premium",
+  "original_line": "TTM revenue growth: 1%",
+  "growth_values_tested": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "growth_values_completed": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "results": {
+    "2": {
+      "draws": [
+        {
+          "n": 1,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield, 2% growth",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 2% growth]\n\nIBM is a cash machine priced fairly, not cheaply \u2014 the fundamentals support holding for income, not a compelling new entry at **$225.79**.\n\n- **Valuation vs. own history**: trailing P/E **20.1x** sits well below the **31.4x** median of today's price against the last 4 FYs' EPS \u2014 this year's earnings are elevated relative to recent history, which flatters the multiple. EV/EBITDA **16.5x** vs. own-history median **20.3x** tells the same story. PEG **2.19** (trailing) on **2%** TTM revenue growth is not a growth bargain.\n- **Cash generation and returns**: FCF **$13,144M** TTM (OCF **$14,888M** \u2212 capex **$1,744M**), a **6.2%** FCF yield. Capital returned **$7,355M** = **56%** of FCF, mostly dividends (**$6,309M**; yield **2.98%**, payout **60%** \u2014 covered). Buybacks are token at **$1,046M** (0.5% of cap) and pacing is steady-to-fading (**$414M \u2192 $115M** quarterly).\n- **Balance sheet and margin direction**: net debt **$57,140M**, current ratio **0.79**, D/E **1.89x** \u2014 leveraged, though interest coverage **5.9x** (Q2 2026) is adequate. Margins narrowed YoY (Q2 2026 vs Q2 2025): gross **-104bps**, operating **-160bps** to **17%**, net **-31bps** to **16%** \u2014 one comparison, not a trend, but it leans the wrong way. Consensus EPS estimate cut **2.0%** over 90 days; last quarter was a fractional miss (**-0.1%**) after three beats.\n\nGAPS: debt split (industrial vs. captive finance); segment revenue mix; multi-year margin series",
+          "error": null
+        },
+        {
+          "n": 2,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\nIBM is a slow-growth cash machine priced for exactly that \u2014 the fundamentals support holding for income and FCF durability, not for growth.\n\n- Cash engine: **$13,144M TTM FCF** on **$69,095M** revenue, a **6.2% FCF yield**; capex is light at **$1,744M**. Capital returned **$7,355M** = **56% of FCF**, dividend covered at a **60% payout** with a **2.98% yield**. That fits a long-horizon wealth mandate.\n- The discount is real but so is the reason: trailing **P/E 20.1** vs forward **17.2**, yet today's price against the last 4 FYs' own EPS medians **31.4x** \u2014 this year's earnings are elevated versus its own history. Growth is **2% TTM**, margins narrowed YoY (operating **-160bps**, Q2-2026 vs Q2-2025), and consensus EPS was cut **2.0%** over 90 days.\n- Balance sheet is the watch item: **net debt $57,140M**, **current ratio 0.79**, **D/E 1.89x** \u2014 but **interest coverage 5.9x** (Q2-2026) and the FCF base make it serviceable. No industrial/finance debt split is supplied, so the blended figure is all we can stand on.\n\nGAPS: debt split (industrial vs captive finance); segment revenue mix; multi-year margin series",
+          "error": null
+        },
+        {
+          "n": 3,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% of FCF returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% of FCF returned]\n\nIBM is a durable, cash-generative franchise priced reasonably against its own history \u2014 a fit for a long-horizon wealth mandate, with leverage the main watch item.\n\n- Cash engine: **$13,144M TTM FCF** off **$14,888M** operating cash flow against only **$1,744M** capex \u2014 a **6.2% FCF yield**. Capital returned is **$7,355M** (dividends **$6,309M** + buybacks **$1,046M**), **56% of FCF**, so the **2.98%** trailing yield at a **60%** payout is covered with room.\n- Valuation: **20.1x trailing / 17.2x forward** earnings, **EV/EBITDA 16.5x** \u2014 all below the own-history medians (**31.4x P/E, 20.3x EV/EBITDA** vs. the last 4 FYs' fundamentals at today's price). Price sits **-32.1%** off the 52-week high. Street: buy (2.2), target **$240.59** mean, range **$174\u2013$297**.\n- The flags: margins compressed YoY (gross **-104bps**, operating **-160bps**, net **-31bps**, Q2 2026 vs. Q2 2025) on just **2%** TTM revenue growth; net debt **$57,140M** with **debt/equity 1.89x** and a **0.79** current ratio \u2014 though interest coverage is **5.9x** (Q2 2026) and revisions are only **-2.0%** over 90 days.\n\nGAPS: debt split (industrial vs. captive finance); multi-year FCF series; segment revenue mix",
+          "error": null
+        },
+        {
+          "n": 4,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield, 56% returned to shareholders",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned to shareholders]\n\nIBM trades at a reasonable valuation with strong cash generation, but the heavy debt load and thin liquidity temper enthusiasm for a full-throated endorsement.\n\n- **Cash engine intact**: **$13,144M** TTM FCF on **$212,725M** market cap yields **6.2%**; the company returned **$7,355M** to shareholders (56% of FCF) via dividends and buybacks, with capex of just **$1,744M** leaving ample room for debt paydown or increased returns.\n\n- **Balance sheet strain**: Net debt of **$57,140M** against a current ratio of **0.79** and quick ratio of **0.61** creates refinancing dependency; interest coverage of **5.9x** is adequate but not comfortable for a company with **$65,272M** gross debt.\n\n- **Valuation vs. own history**: Today's trailing **P/E of 20.1x** sits well below the 4-year median of **31.4x** (today's price against past years' EPS), while EV/EBITDA of **16.5x** compares to a median of **20.3x** \u2014 suggesting the market prices in the margin compression seen in the **-160bps** operating margin trend (Q2 2026 vs Q2 2025).\n\nGAPS: 5-year historical P/E band; segment-level FCF breakdown; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 5,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned to holders",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned to holders]\n\nIBM is a durable cash machine trading at a reasonable price for long-term wealth: **$13,144M** TTM free cash flow, a **6.2%** FCF yield, and **56%** of that cash returned to shareholders \u2014 the quality profile fits the mandate even if growth is thin.\n\n- Cash generation and capital returns: **$14,888M** operating cash flow minus **$1,744M** capex leaves **$13,144M** FCF; **$7,355M** went out as dividends (**$6,309M**) plus buybacks (**$1,046M**). Dividend yields **2.98%** trailing with a **60%** payout \u2014 covered, not stretched.\n- Valuation: **20.1x** trailing / **17.2x** forward earnings against **2%** TTM revenue growth \u2014 the forward basis implies the Street expects modest EPS progress. Today's price prices the last four fiscal years' own EPS at a median **31.4x**, so current earnings are *depressed* versus the company's own recent history, not the multiple being cheap. EV/EBITDA **16.5x** vs own-history median **20.3x** says the same on EBITDA.\n- Balance sheet is the watch item: net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 but interest coverage **5.9x** (Q2 2026) and the FCF base service it. Margins narrowed YoY (operating **-160bps**, quarter ending 2026-06-30 vs 2025-06-30) \u2014 a two-quarter comparison, not a trend, and levels remain healthy at gross **58%** / operating **17%** / net **16%**.\n\nGAPS: debt maturity schedule; segment revenue mix; multi-year FCF history",
+          "error": null
+        },
+        {
+          "n": 6,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield, but leverage is heavy",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, but leverage is heavy]\n\nIBM is a durable, cash-generative franchise trading at a reasonable multiple, but a leveraged balance sheet and flat growth cap the upside for a long-horizon hold.\n\n- **Earnings power & valuation**: Trailing EPS **$11.26**, trailing P/E **20.1**, forward P/E **17.2** (consensus estimate). FCF yield **6.2%** on **$13,144M** TTM free cash flow. Against its own history, today's price sits at a median **31.4x** past-years' EPS \u2014 this year's earnings are not elevated versus recent history, they're the high point.\n- **Margins & growth**: Gross **58%**, operating **17%**, net **16%** \u2014 a wide gross-to-net spread that signals heavy operating/financing costs below the line. Margin trend YoY (Q2 2026 vs Q2 2025): gross **-104bps**, operating **-160bps**, net **-31bps** \u2014 all three narrowed between those two quarters. TTM revenue growth just **2%**.\n- **Balance sheet & capital returns**: Net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 thin liquidity. Interest coverage **5.9x** (Q2 2026) is adequate, not comfortable. Capital returned **$7,355M** (56% of TTM FCF), mostly dividends (**$6,309M**, payout **60%** of earnings, yield **2.98%**); buybacks are token at **$1,046M** (0.5% of cap), pacing steady. ROE **34%** is flattered by buyback-shrunk book equity; ROA is **5%**. Street: buy (2.2), 22 analysts, target **$240.59** mean but a wide **$174\u2013$297** range.\n\nGAPS: debt maturity schedule; segment revenue mix; multi-year FCF series",
+          "error": null
+        },
+        {
+          "n": 7,
+          "stance": "FOR",
+          "headline": "FCF yield 6.2% funds 56% payout",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: FCF yield 6.2% funds 56% payout]\n\nIBM is a durable, cash-generative franchise trading at a reasonable multiple, though leverage and thin liquidity warrant respect.\n\n- **FCF $13,144M TTM** (6.2% yield) covers **$7,355M** returned to shareholders (56% of FCF) \u2014 dividends **$6,309M** (2.98% yield, 60% payout) plus modest buybacks **$1,046M** (0.5% of mkt cap). Capex is light at **$1,744M**, leaving ample cash for debt service.\n- **Margins are wide but compressing**: gross **58%**, operating **17%**, net **16%** \u2014 yet YoY trend shows gross **-104bps**, operating **-160bps**, net **-31bps** (Q2 2026 vs Q2 2025). Two-point comparison only; direction stops at June.\n- **Balance sheet is leveraged**: net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79**. Interest coverage **5.9x** (Q2 2026) is adequate but not generous. ROE **34%** is inflated by buyback-shrunk book equity; ROA **5%** is the cleaner read.\n\nValuation sits at **20.1x trailing / 17.2x forward** \u2014 below its own 4-year median P/E of **31.4x** \u2014 with consensus at **buy (2.2)** and target **$240.59** (range **$174\u2013$297**). Fits a long-horizon, income-tolerant mandate.\n\nGAPS: 5-year historical P/E band; segment revenue breakdown; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 8,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs 1.89x leverage",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs 1.89x leverage]\nIBM is a durable cash machine priced cheap against its own history, but the balance sheet and shrinking margins cap the quality case.\n\n- **Cash generation is real**: **$13,144M** TTM FCF (**6.2%** yield), capex light at **$1,744M**, and **56%** of FCF returned to shareholders \u2014 **$6,309M** dividends + **$1,046M** buybacks. Dividend covered at **60%** payout, yield **2.98%**.\n- **Valuation is undemanding**: **20.1x** trailing / **17.2x** forward earnings vs a **31.4x** median when today's price is set against the last 4 fiscal years' own EPS \u2014 this year's earnings are priced below the company's own recent history. Street: buy (**2.2**), target **$240.59** mean but a wide **$174\u2013$297** range.\n- **The offsets are structural**: net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 though interest coverage is adequate at **5.9x** (Q2 2026). Margins narrowed YoY (operating **-160bps**, Q2 2026 vs Q2 2025), growth is only **2%** TTM, and the latest quarter was a fractional miss (**-0.1%**) with estimates cut **2.0%** over 90 days. **ROE 34%** is flattered by buyback-shrunk book equity against **ROA 5%**.\n\nGAPS: debt maturity schedule; segment revenue mix; 5-year FCF history",
+          "error": null
+        },
+        {
+          "n": 9,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs 2% growth",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs 2% growth]\n\nIBM is a cash-generative, shareholder-return story with a leveraged balance sheet and near-flat growth \u2014 durable enough for a long-horizon income position, but not a compounding machine at this multiple.\n\n- Cash engine is real: **FCF $13,144M TTM** on **$212,725M** market cap = **6.2% FCF yield**, with **56% of FCF returned** (**$7,355M**: $6,309M dividends + $1,046M buybacks). Dividend **$6.76/yr, 2.98% yield, 60% payout** \u2014 covered, not stretched. Capex only **$1,744M** against **$14,888M** operating cash flow.\n- Growth and margins are the weak side: **TTM revenue growth 2%**, and margins narrowed YoY (Q2 2026 vs Q2 2025) \u2014 **gross -104bps, operating -160bps, net -31bps** to **58/17/16%**. Two-point comparison only; no trend past 2026-06-30. Trailing **P/E 20.1x** vs forward **17.2x** \u2014 but today's price sits at a **median 31.4x** against the last 4 FYs' own EPS, meaning this year's earnings are elevated relative to the company's own recent history, which flatters the trailing multiple.\n- Balance sheet is the constraint: **net debt $57,140M**, **D/E 1.89x**, **current ratio 0.79**, interest coverage **5.9x** (Q2 2026) \u2014 serviceable, but leverage plus **2% growth** caps the margin of safety. Street is mildly constructive: **buy, score 2.2, 22 analysts, targets $174\u2013$297** around a **$240.59 mean** \u2014 modest upside from **$225.79**. Note EPS revisions **down 2.0% over 90 days** and last quarter was a **0.1% miss** after three beats.\n\nGAPS: debt split (industrial vs captive finance); segment revenue mix; multi-year FCF series",
+          "error": null
+        },
+        {
+          "n": 10,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs 2% growth",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs 2% growth]\n\nThesis: IBM is a durable cash machine priced fairly, not cheaply \u2014 **6.2% FCF yield** and a covered **2.98% dividend** suit a long-horizon hold, but **2% TTM revenue growth** and shrinking margins cap the upside case.\n\n- Cash generation is the strength: **$13,144M TTM FCF** on **$212,725M** market cap, capex light at **$1,744M**, and **56% of FCF** returned to shareholders (**$7,355M**, mostly dividends \u2014 buybacks are a token **0.5% of market cap**). Payout ratio **60%** \u2014 the dividend is covered.\n- The balance sheet is the weakness: **net debt $57,140M**, debt/equity **1.89x**, current ratio **0.79**. Interest coverage **5.9x** (Q2 2026) is serviceable but not roomy. **ROE 34%** is flattered by a buyback-shrunk equity base \u2014 ROA is just **5%**.\n- Valuation is full for the growth on offer: **20.1x trailing / 17.2x forward** P/E against **2%** growth and margins that narrowed YoY (operating **-160bps**, Q2 2026 vs Q2 2025). Today's price sits at **31.4x** the last four years' own median EPS \u2014 this year's earnings are the cheap part of that comparison, not the multiple. Consensus EPS estimates are drifting **down 2.0%** over 90 days, and the last quarter was an effective miss (**-0.1%**).\n\nGAPS: segment revenue mix (software vs consulting vs infrastructure); net debt trend over prior quarters; peer-basket valuation comparison",
+          "error": null
+        }
+      ],
+      "distribution": {
+        "FOR": 4,
+        "NEUTRAL": 6
+      },
+      "n_draws": 10
+    },
+    "3": {
+      "draws": [
+        {
+          "n": 1,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% of FCF returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% of FCF returned]\n\nIBM is a durable cash machine trading at a reasonable multiple, suited to a long-horizon hold \u2014 the leverage is the one real check on that.\n\n- **Cash generation and returns:** **$13,144M** TTM FCF on **$212,725M** market cap = **6.2% FCF yield**; **$7,355M** returned over the trailing 4 quarters (**56% of FCF** \u2014 AMI's own sum), mostly via the **$6.76/share** dividend (**2.98%** trailing yield, **60%** payout \u2014 covered). Capex is light at **$1,744M** against **$14,888M** operating cash flow.\n- **Valuation vs. own history:** trailing P/E **20.1** (forward **17.2**, a consensus estimate) sits well below the **31.4x** median of today's price against the last 4 FYs' own EPS \u2014 current earnings are elevated relative to recent history, not the price. EV/EBITDA **16.5x** vs. own-history median **20.3x** says the same. Estimates have slipped **2.0%** over 90 days, and the last quarter was a fractional miss (**0.1%**) after three beats.\n- **Balance sheet is the weak leg:** **$57,140M net debt**, debt/equity **1.89x**, current ratio **0.79** \u2014 but interest coverage is **5.9x** (Q2 2026) and margins hold at gross **58%** / operating **17%** / net **16%**, with the YoY move between Q2 2025 and Q2 2026 a narrowing of **160bps** at the operating line. Growth is thin at **3%** TTM \u2014 this is a yield-and-durability case, not a growth case.\n\nGAPS: debt split (industrial vs. captive finance); 5-year FCF history; segment revenue mix",
+          "error": null
+        },
+        {
+          "n": 2,
+          "stance": "NEUTRAL",
+          "headline": "FCF $13.1B, net debt $57.1B",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: FCF $13.1B, net debt $57.1B]\n\nIBM is a cash-generative, dividend-heavy compounder priced at **20.1x trailing / 17.2x forward** earnings, but the balance sheet carries **$57,140M net debt** against a business growing revenue only **3%** TTM \u2014 a hold-quality profile, not an obvious entry.\n\n- Earnings power is real: **$13,144M TTM FCF** (bridge: $14,888M operating \u2212 $1,744M capex), **6.2% FCF yield**, EPS **$11.26** trailing. Margins are wide at gross (**58%**) but compress to **17% operating / 16% net**, and the YoY trend is negative across the stack \u2014 gross **\u2212104bps**, operating **\u2212160bps**, net **\u221231bps** (Q2 2026 vs Q2 2025). Two points, so direction stops there, but the operating line is the one to watch.\n- Leverage is the constraint: **$65,272M gross debt**, debt/equity **1.89x**, current ratio **0.79**, interest coverage **5.9x** (Q2 2026). Coverage is adequate, not comfortable. ROE of **34%** flatters a shrunken equity base; ROA is **5%**.\n- Capital return is disciplined but dividend-dominated: **$7,355M** returned (56% of FCF), of which **$6,309M** is dividends at a **60% payout** \u2014 covered, with a **2.98%** trailing yield. Buybacks are token at **$1,046M** (0.5% of cap), pacing steady but fading to **$115M** last quarter. Consensus is buy (2.2, 22 analysts) but the target spread **$174\u2013$297** around a **$240.59** mean \u2014 barely above the $225.79 reference \u2014 says the Street sees limited upside; EPS estimates have been cut **2.0%** over 90 days.\n\nGAPS: segment revenue mix (software vs consulting vs infra); debt maturity schedule; 5-yr FCF trend",
+          "error": null
+        },
+        {
+          "n": 3,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\n\nIBM is a durable cash machine trading at a reasonable price \u2014 **6.2% FCF yield** on **$13,144M** TTM free cash flow, with **56% of that FCF returned** to shareholders (**$7,355M**: $6,309M dividends + $1,046M buybacks).\n\n- **Cash generation and coverage**: Operating cash flow **$14,888M** less capex **$1,744M** leaves **$13,144M** FCF. The dividend (**2.98% trailing yield**, **$6.76/share** indicated) is covered \u2014 **60% payout** of earnings, and interest coverage is **5.9x** (Q2 2026). Four straight quarters of buybacks, pacing steady.\n- **Balance sheet is the weak point**: **net debt $57,140M**, debt/equity **1.89x**, current ratio **0.79**. ROE of **34%** is flattered by a shrunken equity base \u2014 ROA is only **5%**. Serviceable given the cash flow, but it caps the margin of safety.\n- **Growth and margin direction are flat-to-soft**: TTM revenue growth just **3%**; margins narrowed YoY (Q2 2026 vs Q2 2025: gross **-104bps**, operating **-160bps**, net **-31bps**), and consensus EPS was revised **down 2.0%** over 90 days. At **20.1x trailing / 17.2x forward** \u2014 below its own 4-year median of **31.4x** priced at today's level \u2014 the market is not paying up for that, which suits a long-horizon hold.\n\nGAPS: segment revenue mix (software vs consulting vs infrastructure); net debt/EBITDA leverage trend; 5-year dividend growth rate",
+          "error": null
+        },
+        {
+          "n": 4,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield funds 56% payout",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield funds 56% payout]\n\nIBM offers durable cash generation and shareholder returns at a reasonable trailing multiple, though leverage and recent margin compression warrant monitoring.\n\n- **Earnings power vs. valuation**: Trailing P/E of **20.1x** sits below the **31.4x** median multiple of the last four fiscal years' earnings priced at today's level, while the **6.2% FCF yield** on **$13,144M** TTM free cash flow provides substantial coverage for the **$7,355M** returned to shareholders (**56%** of FCF).\n- **Margin trajectory**: Gross, operating, and net margins contracted **-104bps**, **-160bps**, and **-31bps** respectively between the quarters ending **2025-06-30** and **2026-06-30**, though absolute levels remain robust at **58%** gross and **17%** operating.\n- **Balance sheet & returns**: **ROE** of **34%** is elevated by a **debt/equity** ratio of **1.89x** and **$57,140M** net debt, though **5.9x** interest coverage (Q2 2026) and **$13,144M** annual FCF service the obligation; liquidity is tight with a **0.79** current ratio.\n\nGAPS: 5-year historical P/E band; segment-level revenue breakdown; net debt/EBITDA ratio",
+          "error": null
+        },
+        {
+          "n": 5,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield funds 2.98% dividend",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield funds 2.98% dividend]\n\nIBM trades at **20.1x trailing** earnings against its own 4-year median of **31.4x**, offering a **6.2% FCF yield** that funds a **2.98% dividend** with room to spare, though heavy leverage caps the margin of safety.\n\n- **Valuation dislocation**: Today's price against the last 4 years' own earnings sits at **31.4x median**, yet the trailing P/E is **20.1x** \u2014 the multiple has compressed even as the business grew EPS to **$11.26**. Forward P/E of **17.2x** implies the Street expects this to persist.\n- **Cash engine**: **$13,144M** TTM free cash flow on **$212,725M** market cap. Capex is light at **$1,744M**, leaving **$7,355M** returned to shareholders (56% of FCF) \u2014 mostly dividends (**$6,309M**) with modest buybacks (**$1,046M**, 0.5% of cap).\n- **Balance sheet drag**: **$57,140M** net debt and **1.89x** debt/equity constrain flexibility. Interest coverage is adequate at **5.9x**, but the **0.79** current ratio and **-160bps** operating margin trend (Q2 2026 vs Q2 2025) signal the leverage is funding returns, not growth.\n\nGAPS: 5-year historical P/E band; segment-level FCF conversion; net debt/EBITDA trend",
+          "error": null
+        },
+        {
+          "n": 6,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs. 1.89x debt/equity",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs. 1.89x debt/equity]\n\nIBM trades at a reasonable **20.1x trailing** earnings with a solid **6.2% FCF yield**, but the balance sheet carries significant leverage that tempers the appeal for a long-term hold.\n\n- Valuation is undemanding: **20.1x trailing** and **17.2x forward** P/E sit well below the **31.4x** median multiple this stock has commanded against its own 2022-2025 earnings history, while the **$13,144M** TTM free cash flow supports a **56%** capital-return payout ratio.\n- Margin structure shows stress: gross margin compressed **104bps** and operating margin fell **160bps** YoY (Q2 2026 vs Q2 2025), leaving net margin at **16%**; the **3%** TTM revenue growth is modest for a name trading at **3.1x** sales.\n- Leverage is the constraint: **$57,140M** net debt, **1.89x** debt/equity, and a **0.79** current ratio limit flexibility, though **5.9x** interest coverage (Q2 2026) and **$6,309M** in annual dividends indicate the burden is currently serviceable.\n\nGAPS: 5-year historical P/E band; segment-level revenue breakdown; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 7,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield funds 56% payout",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield funds 56% payout]\n\nIBM offers durable free-cash-flow generation and a covered dividend at a reasonable trailing multiple, though margin compression and elevated leverage temper the upside.\n\n- **FCF yield 6.2%** on **$13,144M** TTM free cash flow, with **$1,744M** capex leaving ample coverage for the **$7,355M** returned to shareholders (56% of FCF). The **2.98%** dividend yield carries a **60%** payout ratio \u2014 sustainable, not stretched.\n- Valuation sits below recent history: **20.1x** trailing and **17.2x** forward P/E against a **31.4x** median when pricing the last four years' EPS at today's price. **EV/EBITDA 16.5x** vs. **20.3x** historical median.\n- Margin structure is the watch item: **gross 58%**, **operating 17%**, **net 16%**, with YoY compression of **-104bps**, **-160bps**, and **-31bps** respectively (Q2 2026 vs. Q2 2025). **ROE 34%** is inflated by buybacks shrinking book equity; **ROA 5%** is the cleaner read. Balance sheet carries **$57,140M** net debt, **debt/equity 1.89x**, and **current ratio 0.79** \u2014 manageable given **5.9x** interest coverage, but not pristine.\n\nGAPS: 5-year historical P/E band; segment-level FCF breakdown; net debt / EBITDA ratio",
+          "error": null
+        },
+        {
+          "n": 8,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned to owners",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned to owners]\n\nDurable cash machine trading at a discount to its own history, with a covered dividend and modest buybacks \u2014 fits the long-horizon mandate.\n\n- **Cash generation**: **$13,144M** TTM FCF on **$212,725M** market cap = **6.2% FCF yield**. Capex is light at **$1,744M**, leaving **$7,355M** returned to shareholders (56% of FCF) via **$6,309M** dividends and **$1,046M** buybacks. Dividend payout is **60%** of earnings \u2014 covered, not stretched.\n- **Valuation vs. own history**: Trailing P/E **20.1x** and EV/EBITDA **16.5x** sit well below the median multiples of the last four fiscal years (**31.4x** P/E, **20.3x** EV/EBITDA). Either this year's earnings are depressed, or the market is pricing in the margin compression.\n- **Margin pressure**: Gross **58%**, operating **17%**, net **16%** \u2014 but all three narrowed YoY (**-104bps**, **-160bps**, **-31bps** between 2025-06-30 and 2026-06-30). Leverage is real: **$57,140M** net debt, **1.89x** debt/equity, **0.79** current ratio. Interest coverage **5.9x** is adequate, not ample.\n\nGAPS: 5-year historical P/E band; segment-level FCF conversion; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 9,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\n\nIBM is a durable cash machine trading at a discount to its own recent earnings history \u2014 a fit for a long-horizon, quality-and-income mandate.\n\n- Valuation: **P/E 20.1 trailing / 17.2 forward** against a **31.4x median** when today's price is priced against the last 4 FYs' own EPS \u2014 this year's earnings are cheap versus the company's own history. **FCF yield 6.2%**, **EV/EBITDA 16.5x** vs. own-history median **20.3x**.\n- Cash engine: **FCF $13,144M TTM** on only **$1,744M capex**; **capital returned $7,355M** (AMI's sum of **$1,046M buybacks + $6,309M dividends**) = **56% of FCF**, leaving retention headroom. Dividend **2.98% trailing yield**, **60% payout** \u2014 covered, not stretched.\n- Watch items: margins narrowed between the two named quarters (**operating -160bps, Q2-2026 vs Q2-2025** \u2014 a two-point comparison, not a trajectory), leverage is real (**net debt $57,140M**, D/E **1.89x**, current ratio **0.79**) though **interest coverage 5.9x** (Q2-2026) is comfortable, and **consensus EPS revised down 2.0% over 90 days**. Growth is modest (**TTM revenue +3%**), so this is a yield-and-durability case, not a growth case.\n\nGAPS: segment revenue mix; net debt/EBITDA trend; 5-year dividend growth rate",
+          "error": null
+        },
+        {
+          "n": 10,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned to shareholders",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned to shareholders]\n\nDurable cash generator trading at a discount to its own recent earnings history, with a covered dividend and manageable leverage \u2014 fits the long-horizon wealth mandate.\n\n- **Cash and returns:** **$13,144M** TTM FCF on **$212,725M** market cap = **6.2% FCF yield**; **$7,355M** returned over the trailing 4 quarters (buybacks **$1,046M** + dividends **$6,309M**), consuming **56% of FCF** \u2014 covered, not stretched. Dividend yields **2.98%** trailing at a **60% payout**.\n- **Valuation vs. own history:** trailing P/E **20.1** and EV/EBITDA **16.5** against a median **31.4x**/**20.3x** when today's price is priced against the last 4 FYs' own fundamentals \u2014 current earnings are not the elevated vintage; the price has de-rated (**-32.1%** off the 52-week high). Forward P/E **17.2** (consensus estimate) with a **buy** consensus, mean target **$240.59**, range **$174\u2013$297**.\n- **Watch items:** leverage is real \u2014 net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 though interest coverage is **5.9x** (Q2 2026). Margins narrowed between Q2 2025 and Q2 2026 (operating **-160bps** to **17%**), revenue growth is only **3%** TTM, and the consensus EPS estimate was cut **2.0%** over 90 days. High ROE (**34%**) sits on buyback-shrunk book equity, so it overstates quality.\n\nGAPS: segment revenue mix (software vs. consulting vs. infra); debt maturity schedule; multi-year FCF series",
+          "error": null
+        }
+      ],
+      "distribution": {
+        "FOR": 8,
+        "NEUTRAL": 2
+      },
+      "n_draws": 10
+    },
+    "4": {
+      "draws": [
+        {
+          "n": 1,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs. 1.89x D/E",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs. 1.89x D/E]\n\nIBM is a durable cash generator trading at a reasonable price, but the balance sheet leverage and soft margin trend keep it from being a clean long-term compounder.\n\n- **Valuation vs. cash flow:** Trailing P/E **20.1x**, forward **17.2x**, FCF yield **6.2%**, P/S **3.1x**. Not expensive for the cash generation, but PEG **2.19** flags limited growth relative to price. TTM revenue growth is just **4%**.\n- **Balance sheet strain:** Net debt **$57.1B** against **$212.7B** market cap; debt/equity **1.89x**, current ratio **0.79**. Interest coverage is adequate at **5.9x** (Q2 2026), but the leverage limits flexibility. ROE **34%** is inflated by the small equity base \u2014 ROA is only **5%**.\n- **Capital returns vs. margin drift:** Returned **$7.4B** to shareholders over the trailing 4 quarters (**56%** of FCF), mostly via dividends (**$6.3B**, payout **60%**). Buybacks are minimal at **0.5%** of market cap. Margins compressed YoY to Q2 2026: gross **-104bps**, operating **-160bps**, net **-31bps** \u2014 a two-point comparison, not a trend, but worth watching.\n\nGAPS: 5-year historical P/E band; debt maturity schedule; segment-level revenue breakdown",
+          "error": null
+        },
+        {
+          "n": 2,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield funds 2.98% dividend",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield funds 2.98% dividend]\n\nIBM trades at a reasonable forward multiple with durable free cash flow that covers its capital return, though margin compression and high leverage temper the quality.\n\n- **Valuation & Cash Flow**: **17.2x forward P/E** and **6.2% FCF yield** against **$13,144M** TTM free cash flow. The **$7,355M** returned to shareholders (dividends + buybacks) consumes **56% of FCF**, leaving adequate coverage for the **2.98%** dividend yield.\n- **Leverage & Liquidity**: **$57,140M net debt** with **debt/equity 1.89x** and **current ratio 0.79**. Interest coverage is **5.9x** \u2014 manageable, but the balance sheet carries real leverage that limits flexibility.\n- **Margin Trend**: Gross **58%**, operating **17%**, net **16%** \u2014 but all three compressed YoY (**-104bps**, **-160bps**, **-31bps** respectively, Q2 2026 vs Q2 2025). The **34% ROE** is inflated by the leveraged equity base, not operational superiority.\n\nGAPS: 5-year historical P/E band; segment-level FCF breakdown; net debt/EBITDA ratio",
+          "error": null
+        },
+        {
+          "n": 3,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% of FCF returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% of FCF returned]\n\nIBM is a durable cash machine trading at a reasonable multiple \u2014 the long-horizon wealth profile fits, with leverage the one thing to respect.\n\n- Earnings power and valuation: **$13,144M TTM FCF** on a **$212,725M** market cap is a **6.2% FCF yield**; **20.1x trailing / 17.2x forward** P/E sits well below the **31.4x** median of today's price against the last 4 FYs' own EPS \u2014 this year's earnings are elevated versus its own history, so the multiple is cheaper than it looks. **EV/EBITDA 16.5x** vs. own-history median **20.3x** says the same.\n- Capital allocation suits the mandate: **$7,355M returned** over the trailing 4 quarters (dividends **$6,309M** + buybacks **$1,046M**, AMI's own sum), **56% of TTM FCF** \u2014 covered, with a **2.98%** trailing yield at a **60%** payout. Capex is light at **$1,744M** against **$14,888M** operating cash flow. Four straight quarters of EPS beats before a flat **-0.1%** miss in Q2 2026; revisions are down only **2.0%** over 90 days.\n- The watch items: **$57,140M net debt** (gross **$65,272M**, D/E **1.89x**) with **0.79** current ratio \u2014 interest coverage **5.9x** (Q2 2026) is adequate, not generous. Margins narrowed between the two named quarters (operating **-160bps**, Q2 2026 vs Q2 2025), though levels remain healthy at **58%/17%/16%** gross/operating/net. Growth is thin at **4%** TTM \u2014 this is a yield-and-durability hold, not a compounder.\n\nGAPS: debt split (industrial vs. captive finance); segment revenue mix; 5-year FCF history",
+          "error": null
+        },
+        {
+          "n": 4,
+          "stance": "NEUTRAL",
+          "headline": "FCF yield 6.2%, debt/equity 1.89x",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: FCF yield 6.2%, debt/equity 1.89x]\n\nIBM screens as a cash-generative, shareholder-returning franchise trading at a modest forward multiple, but the balance sheet is heavily levered and margins compressed year-over-year.\n\n- **Valuation & earnings power**: Trailing P/E **20.1x** against forward **17.2x** implies expected EPS growth, yet the PEG of **2.19** (trailing basis) suggests the growth premium is thin. The stock trades at **16.5x EV/EBITDA** versus a **20.3x** median when pricing the last four years' EBITDA at today's EV \u2014 indicating current earnings are elevated relative to recent history. FCF yield stands at **6.2%** with **$13,144M** TTM free cash flow.\n\n- **Margin trajectory**: Gross margin **58%**, operating **17%**, net **16%**. The two-point YoY comparison shows compression across the stack: gross **-104bps**, operating **-160bps**, net **-31bps** (quarter ending 2026-06-30 vs. 2025-06-30). This is a cost problem, not a pricing problem, given the wide gross-to-operating spread.\n\n- **Balance sheet & capital allocation**: Debt/equity **1.89x** with net debt **$57,140M** and interest coverage **5.9x** (quarter ending 2026-06-30). Liquidity is tight \u2014 current ratio **0.79**, quick ratio **0.61**. The company returned **$7,355M** to shareholders over the trailing four quarters (**56%** of FCF), split between **$6,309M** dividends (payout **60%** of earnings, yield **2.98%**) and **$1,046M** buybacks (**0.5%** of market cap). Capex is light at **$1,744M**, preserving cash for debt service and distributions.\n\nGAPS: 5-year historical P/E band; debt maturity schedule; segment-level revenue breakdown",
+          "error": null
+        },
+        {
+          "n": 5,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\n\nIBM is a durable cash machine trading at a reasonable multiple \u2014 the fundamentals fit a long-horizon wealth mandate, with leverage the main watch item.\n\n- Cash generation and returns: **$13,144M TTM FCF** on a **$212,725M** market cap = **6.2% FCF yield**; **$7,355M** returned to shareholders over the trailing 4 quarters (dividends **$6,309M** + buybacks **$1,046M**), which is **56% of TTM FCF** \u2014 covered, not stretched. Dividend yields **2.98%** trailing with a **60%** payout ratio. Capex is light at **$1,744M** against **$14,888M** operating cash flow.\n- Valuation vs. own history: trailing P/E **20.1**, forward **17.2** (consensus estimate), EV/EBITDA **16.5x** \u2014 all below the median of today's price/EV against the last 4 fiscal years' own fundamentals (**31.4x** P/E, **20.3x** EV/EBITDA), meaning current earnings are elevated relative to price, not the reverse. Street: buy, mean score **2.2**, target mean **$240.59** but range **$174\u2013$297**.\n- The watch items: margins narrowed between Q2 2025 and Q2 2026 (gross **-104bps**, operating **-160bps**, net **-31bps**) \u2014 a two-quarter comparison, not a trend; TTM revenue growth is only **4%**; and the balance sheet is leveraged \u2014 net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 though interest coverage of **5.9x** (Q2 2026) and the FCF base service it. Earnings quality is steady: three beats and one 0.1% miss across the last four reported quarters, with revisions down **2.0%** over 90 days.\n\nGAPS: debt split (industrial vs. captive finance); multi-year FCF series; segment revenue mix",
+          "error": null
+        },
+        {
+          "n": 6,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% of FCF returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% of FCF returned]\nIBM is a durable cash machine trading at a reasonable price: **FCF yield 6.2%** on **$13,144M** TTM free cash flow, with **$7,355M** returned to shareholders over the trailing 4 quarters \u2014 **56% of TTM FCF** \u2014 split between a covered dividend (**payout 60%** of earnings, **yield 2.98%** trailing) and modest buybacks (**$1,046M**, 0.5% of market cap, pacing steady).\n\n- Valuation is not stretched on a trailing basis: **P/E 20.1x trailing** vs. **17.2x forward** (consensus estimate), **EV/EBITDA 16.5x**, and **FCF yield 6.2%** \u2014 all below the company's own recent-history multiples (today's price against the last 4 FYs' own EPS medians **31.4x**, EBITDA **20.3x**), meaning this year's earnings are not elevated versus its own history.\n- The balance sheet is the watch item: **net debt $57,140M**, **debt/equity 1.89x**, **current ratio 0.79**, **quick ratio 0.61** \u2014 but **interest coverage 5.9x** (quarter ending 2026-06-30) and **ROE 34%** (on book equity, which buybacks shrink) show the leverage is serviceable; **ROA 5%** is thin.\n- Margins are wide at the top and compress through the stack \u2014 **gross 58%**, **operating 17%**, **net 16%** \u2014 and the YoY trend (quarter ending 2026-06-30 vs. 2025-06-30) narrowed at every level: **gross -104bps**, **operating -160bps**, **net -31bps**. That's a two-point comparison, not a trajectory, but it bears watching against the **4% TTM revenue growth**.\n\nGAPS: 5-year historical P/E band; peer-basket EV/EBITDA; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 7,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\nIBM is a durable cash machine priced below its own recent history \u2014 a fit for a long-horizon wealth mandate, with leverage the main watch item.\n\n- **Cash generation and returns**: **$13,144M** TTM FCF (**6.2% yield**) on **$69,095M** revenue; capex is light at **$1,744M**. **56%** of that FCF went back to holders (**$7,355M** \u2014 dividends $6,309M + buybacks $1,046M, AMI's own sum), and the **2.98%** dividend yield is covered at a **60%** payout.\n- **Valuation vs. own history**: trailing P/E **20.1x** and EV/EBITDA **16.5x** against a 4-year median of **31.4x** / **20.3x** priced at today's levels \u2014 today's earnings are not the elevated ones. Growth is modest (**4%** TTM) and estimates slipped **2.0%** over 90 days, so this is a yield-and-durability case, not a growth case.\n- **Balance sheet is the cost**: net debt **$57,140M**, current ratio **0.79**, debt/equity **1.89x**. Interest coverage **5.9x** (Q2 2026) is adequate, and margins hold at gross **58%** / operating **17%** / net **16%** \u2014 though all three narrowed YoY (**-104 / -160 / -31 bps**, Q2 2026 vs Q2 2025), a two-quarter comparison, not a trend.\n\nGAPS: debt maturity schedule; segment revenue mix; multi-year FCF series",
+          "error": null
+        },
+        {
+          "n": 8,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\n\nIBM is a durable cash machine trading at a reasonable multiple, suited to a long-horizon wealth mandate \u2014 the case rests on free cash flow, not growth.\n\n- Earnings power and valuation: **$13,144M TTM FCF** on a **$212,725M** market cap = **6.2% FCF yield**; **P/E 20.1 trailing / 17.2 forward**, both below the **31.4x** median at which today's price would tag the last four fiscal years' own EPS \u2014 current earnings are not depressed relative to history. TTM revenue growth is only **4%**, so this is a yield-and-durability holding, not a compounder.\n- Cash generation and capital return: operating cash flow **$14,888M** less capex of just **$1,744M** (very light) leaves the FCF above; **$7,355M** returned over the trailing 4 quarters (dividends **$6,309M** + buybacks **$1,046M**, AMI's own sum) = **56% of TTM FCF** \u2014 covered, with headroom. Dividend **2.98%** trailing yield, **60%** payout. Buybacks are small (**0.5%** of market cap) and pacing is steady but decelerating in dollars: **$414M \u2192 $115M** per quarter across the four named quarters.\n- Balance sheet is the watch item: net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 leveraged, though interest coverage of **5.9x** (Q2 2026) is serviceable. Margins are wide at gross (**58%**) but narrowed YoY in the two named quarters (operating **-160bps**, Q2 2026 vs Q2 2025) \u2014 a two-quarter comparison, not a trend. Street is at **buy (2.2)**, target range **$174\u2013$297**.\n\nGAPS: debt maturity schedule; segment revenue mix; multi-year FCF series",
+          "error": null
+        },
+        {
+          "n": 9,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\nIBM is a durable cash machine trading at a discount to its own recent earnings history \u2014 the case for a long-horizon holder rests on free cash flow, not growth.\n\n- **Cash generation and returns:** **$13,144M TTM FCF** on a **$212,725M** market cap is a **6.2% FCF yield**; capex is light at **$1,744M** against **$14,888M** operating cash flow. **56% of FCF** went back to holders (**$7,355M**: dividends **$6,309M** + buybacks **$1,046M**, pacing steady), and the **2.98%** dividend yield is covered at a **60%** payout. That is the durability profile this mandate weights.\n- **Valuation vs. own history:** trailing P/E **20.1x**, forward **17.2x** \u2014 today's price against the last 4 FYs' own EPS medians **31.4x**, so this year's earnings are priced cheap versus the company's own recent history; EV/EBITDA **16.5x** vs. own-history median **20.3x** says the same. PEG **2.19** (trailing) flags the cost: TTM revenue growth is only **4%**.\n- **Watch items:** margins narrowed YoY \u2014 operating **-160bps**, gross **-104bps** (Q2 2026 vs. Q2 2025; two points, no further trend claim) \u2014 to **58%/17%/16%**. Leverage is real: net debt **$57,140M**, debt/equity **1.89x**, current ratio **0.79** \u2014 though interest coverage is **5.9x** (Q2 2026). Consensus EPS estimate slipped **2.0%** over 90 days, and the last quarter was a **0.1%** miss after three beats.\n\nGAPS: segment revenue mix (software vs. consulting vs. infra); net debt/EBITDA trend; 5-year FCF history",
+          "error": null
+        },
+        {
+          "n": 10,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield on 20x trailing",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield on 20x trailing]\n\nIBM offers durable cash generation and shareholder returns at a reasonable multiple, though the balance sheet carries meaningful leverage that warrants monitoring.\n\n- **Valuation vs. cash flow**: Trailing P/E of **20.1x** against a **6.2% FCF yield** and **$13,144M** TTM free cash flow. The multiple sits below the company's own recent history (median **31.4x** against 2022\u20132025 earnings), suggesting the current price is not elevated relative to its own earnings power.\n- **Margin structure**: Gross margin of **58%** converts to **17%** operating and **16%** net. However, the two-quarter comparison shows compression: operating margin down **160bps** and gross down **104bps** YoY (Q2 2026 vs. Q2 2025). Revenue growth is modest at **4%** TTM.\n- **Capital allocation & leverage**: Returned **$7,355M** to shareholders (56% of FCF) via dividends (**$6.76/share**, 60% payout) and buybacks. Net debt stands at **$57,140M** with interest coverage of **5.9x**; current ratio of **0.79** indicates reliance on operating cash flow to service obligations.\n\nGAPS: 5-year historical FCF conversion trend; segment-level margin breakdown; debt maturity schedule",
+          "error": null
+        }
+      ],
+      "distribution": {
+        "FOR": 8,
+        "NEUTRAL": 2
+      },
+      "n_draws": 10
+    },
+    "5": {
+      "draws": [
+        {
+          "n": 1,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned to shareholders",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned to shareholders]\n\nIBM offers durable cash generation and shareholder returns at a reasonable valuation, though leverage and margin compression warrant monitoring.\n\n- **Valuation & earnings power**: Trailing P/E **20.1** vs. forward **17.2**; FCF yield **6.2%** on **$13.1B** TTM free cash flow. Price sits **32%** below the 52-week high, **13%** above the low.\n\n- **Capital allocation & balance sheet**: Returned **$7.4B** to shareholders (56% of FCF) via dividends (**$6.3B**, 2.98% yield, 60% payout) and buybacks (**$1.0B**). However, net debt is **$57.1B** with debt/equity **1.89x** and current ratio **0.79**; interest coverage **5.9x** provides adequate cushion.\n\n- **Margin structure & trend**: Gross **58%**, operating **17%**, net **16%** \u2014 but YoY compression across all three (gross **-104bps**, operating **-160bps**, net **-31bps** Q2 2026 vs. Q2 2025). Revenue growth **5%** TTM; consensus EPS estimate down **2.0%** over 90 days to **$2.87**.\n\nGAPS: 5-year historical P/E band; segment-level FCF breakdown; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 2,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield, 56% returned, but margins slipping",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned, but margins slipping]\n\nIBM is a durable cash machine trading at a reasonable **17.2x forward** earnings, but the balance sheet is leveraged and margins are contracting.\n\n- **Cash generation and returns**: **$13,144M** TTM free cash flow (**6.2%** yield) funds a **2.98%** dividend and buybacks; **56%** of FCF is returned to shareholders (**$7,355M**), leaving room for debt paydown or reinvestment. ROE is **34%**, though inflated by buybacks shrinking book equity.\n- **Valuation vs. history**: Trailing **P/E 20.1x** sits well below the **31.4x** median of the last four fiscal years' earnings priced at today's level, suggesting current earnings are depressed relative to recent history or the market is pricing in slower growth. Forward **17.2x** implies modest EPS expansion.\n- **Leverage and margin pressure**: Net debt of **$57,140M** against a **1.89x** debt/equity ratio and weak liquidity (current ratio **0.79**) limits flexibility. Margins narrowed across the board in Q2 2026 vs. Q2 2025 (gross **-104bps**, operating **-160bps**), and consensus EPS estimates fell **2.0%** over the last 90 days.\n\nGAPS: 5-year historical P/E band; segment-level revenue growth; net debt/EBITDA ratio",
+          "error": null
+        },
+        {
+          "n": 3,
+          "stance": "FOR",
+          "headline": "FCF yield 6.2% with 56% payout coverage",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: FCF yield 6.2% with 56% payout coverage]\n\nIBM offers durable free cash flow and shareholder returns at a reasonable valuation, though leverage and recent margin pressure warrant monitoring.\n\n- **FCF yield 6.2%** on **$13,144M** TTM free cash flow, with **$7,355M** returned to shareholders (56% of FCF) via dividends and buybacks. Dividend coverage is solid at **60% payout ratio** against **$11.26** trailing EPS.\n- Valuation is not stretched: **20.1x trailing / 17.2x forward** P/E versus a **31.4x** median when pricing today's stock against the last four years' own earnings; **EV/EBITDA 16.5x** sits below the **20.3x** historical median.\n- Balance sheet carries **$57,140M** net debt (**1.89x** debt/equity) and liquidity is tight (**current ratio 0.79**), though **5.9x** interest coverage provides cushion. Margins compressed YoY (**gross -104bps, operating -160bps**) between Q2 2025 and Q2 2026; revenue growth is modest at **5%** TTM.\n\nGAPS: 5-year historical P/E band; segment-level FCF breakdown; net debt/EBITDA trend",
+          "error": null
+        },
+        {
+          "n": 4,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield, 60% payout, 1.89x D/E",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 60% payout, 1.89x D/E]\n\nIBM is a durable cash generator trading at a reasonable forward multiple, but the balance sheet is leveraged and margins are drifting down \u2014 a hold-quality name, not a compelling entry.\n\n- **Cash generation is real and well-allocated**: **$13,144M TTM FCF** on **$212,725M** market cap = **6.2% FCF yield**. Capital returned is **$7,355M** (56% of FCF), split **$6,309M dividends / $1,046M buybacks**. The **2.98% yield** is covered at a **60% payout ratio**. Capex is light at **$1,744M** against **$14,888M** operating cash flow \u2014 this is a mature, low-reinvestment model that funds the dividend comfortably.\n\n- **Valuation is undemanding but not cheap vs. own history**: **17.2x forward / 20.1x trailing** against **5% TTM revenue growth** gives a **PEG of 2.19** \u2014 full for the growth rate. Today's price against the last 4 fiscal years' own earnings medians **31.4x**, meaning current EPS is elevated relative to recent history; the **16.5x EV/EBITDA** sits below the **20.3x** own-history median, so EBITDA has grown into the EV. Street is at **buy (2.2)**, target range **$174\u2013$297** \u2014 a wide band that signals real disagreement.\n\n- **Balance sheet and margin direction are the watch items**: **$57,140M net debt**, **debt/equity 1.89x**, **current ratio 0.79** \u2014 leveraged and short-term illiquid, though **5.9x interest coverage** (Q2 2026) is serviceable. Margins narrowed across the board YoY (Q2 2026 vs. Q2 2025): gross **-104bps**, operating **-160bps**, net **-31bps** \u2014 a two-quarter comparison, not a trend, but the direction is wrong. Consensus EPS was revised **down 2.0%** over 90 days. **ROE 34%** is inflated by the leveraged, buyback-shrunk equity base; **ROA 5%** is the more honest read on asset productivity.\n\nGAPS: segment revenue mix (software vs. consulting vs. infrastructure); debt maturity schedule; 5-year FCF history",
+          "error": null
+        },
+        {
+          "n": 5,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield covers 56% payout",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield covers 56% payout]\n\nIBM offers durable cash generation and shareholder returns at a reasonable entry multiple, though leverage and margin drift require monitoring.\n\n- **FCF yield 6.2%** with **$13,144M** TTM free cash flow funds **$7,355M** returned to shareholders (**56%** of FCF) \u2014 **$6,309M** dividends (**2.98%** yield) plus **$1,046M** buybacks \u2014 while capex runs only **$1,744M**, leaving ample reinvestment capacity.\n- Balance sheet carries **$57,140M** net debt and **1.89x** debt/equity, but **5.9x** interest coverage (Q2 2026) and **0.79** current ratio indicate manageable, if tight, liquidity.\n- Margins compressed YoY (operating **-160bps** to **17%**, net **-31bps** to **16%** between Q2 2025 and Q2 2026) and consensus EPS estimates fell **2.0%** over 90 days to **$2.87**, yet the **20.1x** trailing P/E sits below the **31.4x** median multiple of the last four fiscal years' earnings priced at today's level.\n\nGAPS: 5-year historical P/E band; segment-level revenue growth; debt maturity schedule",
+          "error": null
+        },
+        {
+          "n": 6,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\nIBM is a durable cash machine trading at a reasonable multiple \u2014 the fundamentals fit a long-horizon wealth mandate, with leverage the main watch item.\n\n- Cash generation: **FCF $13,144M TTM** on a **$212,725M** market cap \u2014 **6.2% FCF yield**. Capex is only **$1,744M** against **$14,888M** operating cash flow, so the cash conversion is not capex-starved. **Capital returned $7,355M** (AMI's own sum: **$1,046M** buybacks + **$6,309M** dividends) = **56% of TTM FCF**, leaving real retention headroom. Dividend **2.98%** trailing yield, **60%** payout \u2014 covered.\n- Valuation: **P/E 20.1x trailing / 17.2x forward** against **5%** TTM revenue growth \u2014 **PEG 2.19** (trailing basis) says you're paying for quality, not growth. Today's price against the last 4 FYs' own EPS medians **31.4x**, so current earnings are *elevated* versus the company's own recent history \u2014 the trailing 20.1x is cheaper than it looks only if those earnings hold. Street: **buy (2.2)**, 22 analysts, target **$240.59 mean / $174\u2013$297 range** \u2014 modest upside to the mean from **$225.79**.\n- The watch items: margins narrowed across the board \u2014 **gross -104bps, operating -160bps, net -31bps**, Q2 2026 vs Q2 2025 (two points, not a trend). Balance sheet is leveraged: **net debt $57,140M**, **debt/equity 1.89x**, **current ratio 0.79** \u2014 though **interest coverage 5.9x** (Q2 2026) is comfortable. Revisions drifting down (**-2.0%** over 90 days) and the last quarter was a fractional miss (**-0.1%**) after three beats.\n\nGAPS: debt split (industrial vs. captive finance); multi-year margin series; segment revenue mix",
+          "error": null
+        },
+        {
+          "n": 7,
+          "stance": "FOR",
+          "headline": "6.2% FCF yield, 56% returned",
+          "text": "[STANCE: for | CONVICTION: medium | HEADLINE: 6.2% FCF yield, 56% returned]\n\nIBM is a durable cash machine trading at a discount to its own recent earnings history, with a covered dividend and modest buybacks \u2014 the leverage is the watch item, not the business.\n\n- **Cash generation and return:** **$13,144M** TTM FCF on **$212,725M** market cap = **6.2% FCF yield**. Capital returned **$7,355M** (dividends **$6,309M** + buybacks **$1,046M**) is **56% of FCF** \u2014 covered, not stretched. Dividend **2.98%** trailing yield, payout **60%** of earnings. Capex only **$1,744M** against **$14,888M** operating cash flow.\n- **Valuation vs. own history:** trailing P/E **20.1x**, forward **17.2x** \u2014 today's price against the last 4 FYs' own EPS medians **31.4x**, and EV/EBITDA **16.5x** vs. own-history median **20.3x**. This year's earnings are not elevated versus its recent past. PEG **2.19** (trailing) flags the **5%** TTM revenue growth as the ceiling on the story.\n- **Margin and balance sheet:** gross **58%** \u2192 operating **17%** \u2192 net **16%**; between Q2 2025 and Q2 2026 margins narrowed \u2014 gross **-104bps**, operating **-160bps**, net **-31bps**. Net debt **$57,140M**, debt/equity **1.89x**, interest coverage **5.9x** (Q2 2026), current ratio **0.79**. ROE **34%** is inflated by a buyback-shrunk equity base; ROA **5%** is the honest read. EPS estimate revised **down 2.0%** over 90 days; last quarter missed by **0.1%** after three beats.\n\nGAPS: debt split (industrial vs. captive finance); segment revenue mix; multi-year margin series",
+          "error": null
+        },
+        {
+          "n": 8,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs 1.89x D/E",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs 1.89x D/E]\n\nIBM is a durable cash generator trading at a discount to its own recent earnings history, but the leveraged balance sheet and shrinking margins cap the conviction for a long-horizon wealth mandate.\n\n- **Cash flow and capital return**: **$13,144M** TTM FCF on **$212,725M** market cap = **6.2% FCF yield**. **56%** of that FCF went back to holders (**$7,355M**: **$6,309M** dividends + **$1,046M** buybacks). Dividend **$6.76/yr**, yield **2.98%**, payout **60%** \u2014 covered. Capex only **$1,744M**, so the FCF is not capex-starved.\n- **Valuation vs. own history**: trailing P/E **20.1x** against a **31.4x** median when today's price is priced against the last 4 FYs' own EPS \u2014 this year's earnings are cheap relative to IBM's own recent base. Forward P/E **17.2x** on consensus. But the Street cut estimates **2.0%** over 90 days (now **$2.87**), and the last quarter (2026-06-30) was a **0.1% miss** after three beats.\n- **The constraint**: net debt **$57,140M**, D/E **1.89x**, current ratio **0.79** \u2014 thin liquidity, though interest coverage **5.9x** (Q2 2026) is serviceable. Margins narrowed across the board YoY (Q2 2026 vs Q2 2025): gross **-104bps**, operating **-160bps**, net **-31bps** \u2014 a two-quarter comparison only, not a trajectory. ROE **34%** is flattered by the leveraged, buyback-shrunk equity base; ROA is **5%**.\n\nGAPS: debt maturity schedule; segment revenue mix (software vs consulting vs infra); multi-year margin series",
+          "error": null
+        },
+        {
+          "n": 9,
+          "stance": "NEUTRAL",
+          "headline": "20x trailing P/E for 5% growth",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 20x trailing P/E for 5% growth]\n\nIBM is a cash-generative, shareholder-return story priced at a premium to its own growth rate \u2014 solid hold quality, but the entry math at **20.1x trailing** against **5%** TTM revenue growth is thin.\n\n- Earnings power is real: **$13,144M TTM FCF** on **$69,095M** revenue, a **6.2% FCF yield**, with capex light at **$1,744M**. Margins are wide at gross (**58%**) but the trend is negative \u2014 operating margin down **160bps** YoY (Q2 2026 vs Q2 2025), and the trailing P/E of **20.1x** sits well under the **31.4x** median of today's price against the last 4 FYs' EPS, meaning this year's earnings are elevated versus its own history.\n- The balance sheet is the weak leg: **$57,140M net debt**, current ratio **0.79**, debt/equity **1.89x** \u2014 coverage is adequate at **5.9x** EBIT/interest (Q2 2026), but this is not a fortress, and ROE of **34%** is flattered by shrunken book equity (ROA is just **5%**).\n- Capital return is dependable but mostly the dividend: **$7,355M** returned (56% of FCF), yield **2.98%** with a **60%** payout, buybacks small at **$1,046M** (0.5% of cap) and steady. Consensus is a buy with target **$240.59** vs. **$225.79** \u2014 modest upside, and EPS estimates have been cut **2.0%** over 90 days.\n\nGAPS: debt split (industrial vs. captive finance); dividend growth rate by year; segment revenue mix",
+          "error": null
+        },
+        {
+          "n": 10,
+          "stance": "NEUTRAL",
+          "headline": "6.2% FCF yield vs 1.89x D/E",
+          "text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: 6.2% FCF yield vs 1.89x D/E]\n\nDurable cash generator at a fair price, but leverage and shrinking margins cap the upside \u2014 this is a hold-quality name, not a compelling new buy at $225.79.\n\n- Cash engine is real: **FCF $13,144M TTM** on **$212,725M** market cap = **6.2% FCF yield**, with **56% of FCF returned** ($7,355M: dividends $6,309M + buybacks $1,046M). Dividend covered at **60% payout**, yield **2.98%**. Capex light at **$1,744M**. This fits the long-horizon wealth mandate.\n- Balance sheet is the concern: **net debt $57,140M**, **debt/equity 1.89x**, **current ratio 0.79**. Interest coverage **5.9x** (Q2 2026) is adequate, not comfortable. ROE **34%** is inflated by the leveraged equity base \u2014 ROA **5%** is the honest read on asset productivity.\n- Valuation is undemanding but not cheap: **P/E 20.1 trailing / 17.2 forward** against **5% TTM revenue growth** gives **PEG 2.19**. Today's price sits at **31.4x** the last 4 FYs' own median EPS \u2014 so current earnings are *depressed* relative to price, meaning the market is already paying for recovery. Margins narrowed YoY (operating **-160bps**, Q2 2026 vs Q2 2025) and consensus EPS was cut **2.0%** over 90 days \u2014 two points, not a trend, but the direction between those quarters is wrong.\n\nGAPS: segment revenue mix (software vs consulting vs infrastructure); debt maturity schedule; 5-yr FCF history",
+          "error": null
+        }
+      ],
+      "distribution": {
+        "FOR": 5,
+        "NEUTRAL": 5
+      },
+      "n_draws": 10
+    }
+  }
+}
