@@ -445,7 +445,12 @@ def check_mandate_compliance(
         if liquidity_verdict.is_blocking:
             violations.append(liquidity_verdict.message())
             blocked_by = blocked_by or "compliance"
-        elif liquidity_verdict.is_disclosed_pause:
+        elif (
+            liquidity_verdict.is_disclosed_pause
+            or liquidity_verdict.status is LiquidityStatus.UNKNOWN
+        ):
+            # UNKNOWN is permitted too, but the user opted into a screen that
+            # could not rule on this name — say so rather than pass silently.
             advisories.append(liquidity_verdict.message())
 
     # 5) Locale-allowed instruments

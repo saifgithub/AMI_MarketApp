@@ -201,9 +201,9 @@ class LiquidityVerdict(BaseModel):
             )
         if self.status is LiquidityStatus.UNKNOWN:
             return (
-                f"AMI hasn't measured {t}'s market cap or trading volume for the "
-                "liquidity filter — it isn't in AMI's classified universe. That's "
-                "not a ruling either way; the trade is permitted."
+                f"AMI couldn't find a market cap or trading volume for {t}, so "
+                "your liquidity filter couldn't check it. That's not a ruling "
+                "either way; the trade is permitted."
             )
         if self.status is LiquidityStatus.LOOKUP_FAILED:
             # DEF417 round 2 — the snapshot didn't have this ticker, AMI tried an

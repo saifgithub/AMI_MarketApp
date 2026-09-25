@@ -126,6 +126,16 @@ def _num_or_none(v: object) -> float | None:
     return result if math.isfinite(result) else None
 
 
+def _yahoo_symbol(ticker: str) -> str:
+    """Our symbol → Yahoo's: class shares use a hyphen (BRK.B → BRK-B) and
+    NASDAQ-style preferreds are written `-P` (BAC$L → BAC-PL)."""
+    t = ticker.upper().strip()
+    if "$" in t:
+        base, series = t.split("$", 1)
+        t = f"{base}-P{series}"
+    return t.replace(".", "-")
+
+
 def _fetch_liquidity_info_uncached(ticker: str) -> dict[str, float] | None:
     """One live `yf.Ticker(t).info` read for market cap + average volume —
     the SAME fields `classification_universe._network_classify` already reads
@@ -148,7 +158,7 @@ def _fetch_liquidity_info_uncached(ticker: str) -> dict[str, float] | None:
     """
     import yfinance as yf
 
-    info = yf.Ticker(ticker.upper().replace(".", "-")).info or {}
+    info = yf.Ticker(_yahoo_symbol(ticker)).info or {}
     out: dict[str, float] = {}
     cap = _num_or_none(info.get("marketCap"))
     if cap is not None:

@@ -250,7 +250,7 @@ class ComplianceResult(BaseModel):
     # DEF417: the sourced liquidity verdict for the `liquid_only` flag. Present on
     # BOTH a blocked (EXCLUDED/UNAVAILABLE) trade AND a permitted
     # (PERMITTED/UNKNOWN) one, mirroring `classification_verdicts` — an UNKNOWN
-    # disclosure ("AMI hasn't measured this name") must travel even when the
+    # disclosure ("AMI couldn't find a market cap or trading volume") must travel even when the
     # trade succeeds. None when `liquid_only` is off.
     liquidity_verdict: LiquidityVerdict | None = None
     # DEF169: checks that COULD NOT run (e.g. the single-name cap when

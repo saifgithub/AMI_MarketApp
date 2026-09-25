@@ -222,7 +222,7 @@ def test_unknown_is_permitted_with_disclosure_not_blocked(base_mandate: Mandate,
     assert not res.violations
     assert res.liquidity_verdict is not None
     assert res.liquidity_verdict.status is LiquidityStatus.UNKNOWN
-    assert "hasn't measured" in res.liquidity_verdict.message().lower()
+    assert "liquidity filter couldn't check" in res.liquidity_verdict.message().lower()
 
 
 def test_sell_never_blocked_by_liquid_only(base_mandate: Mandate):
@@ -530,6 +530,25 @@ def test_on_demand_lookup_failure_is_permitted_and_disclosed():
     assert not v.is_blocking
     assert v.is_disclosed_pause
     assert "couldn't get an answer" in v.message().lower()
+
+
+def test_an_unmeasurable_name_is_permitted_but_never_silently(base_mandate: Mandate):
+    """UNKNOWN (the lookup ran and Yahoo had neither figure) is permitted, but
+    the user opted into a screen that could not rule — it must reach the
+    advisories, not pass in silence (DEF417 round 2 MINOR-1)."""
+    set_on_demand_fetcher(lambda t: None)
+    res = _check(_mandate(base_mandate, liquid_only=True), "NEVR", _universe(), price=10.0)
+    assert res.passed
+    assert res.liquidity_verdict.status is LiquidityStatus.UNKNOWN
+    assert any("liquidity filter couldn't check" in a for a in res.advisories)
+
+
+def test_yahoo_symbol_maps_class_shares_and_nasdaq_preferreds():
+    from app.services.liquidity_lookup import _yahoo_symbol
+
+    assert _yahoo_symbol("brk.b") == "BRK-B"
+    assert _yahoo_symbol("BAC$L") == "BAC-PL"
+    assert _yahoo_symbol("AAPL") == "AAPL"
 
 
 def test_the_floor_itself_never_fetches_and_a_miss_is_disclosed(base_mandate: Mandate):
