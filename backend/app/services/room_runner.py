@@ -657,6 +657,16 @@ PM_ROOM_INCOMPLETE_REASON = (
 )
 
 
+# DEF432 — Saiful, 2026-09-25, verbatim: "Refund it." Same rule as Brief and
+# 1-on-1 (DEF424): an outage never costs the user. Appended to
+# `PM_ROOM_INCOMPLETE_REASON` at its one construction site below, so the same
+# sentence that tells the user the Room was unreachable also tells them it
+# wasn't charged — both the SSE `reason` the client renders and the Decision
+# Journal summary (`build_journal_entry_for_run` reads `verdict.reason`
+# verbatim) carry it with no second insertion point to keep in sync.
+_ROOM_OUTAGE_NOT_CHARGED_SUFFIX = "This Room wasn't charged."
+
+
 def _scripted_disclosure(scripted: list[AgentId], roster: int) -> str:
     """The user-visible sentence naming how thin this Room was.
 
@@ -685,6 +695,41 @@ def room_verdict_is_incomplete(verdict: dict | None) -> bool:
     if not verdict:
         return False
     return verdict.get("reason", "").startswith(PM_ROOM_INCOMPLETE_REASON)
+
+
+def run_was_refunded(run: RoomRun | None) -> bool:
+    """DEF432 — the ONE predicate for "was this run's charge given back",
+    shared by the refund decision (`RoomRunner.run()`'s COMPLETED branch,
+    below) and `api/room.py`'s `done` SSE event, so the report can never
+    drift from the decision — exactly the DEF437-class bug a second,
+    independently-recomputed "was this refunded" check would risk.
+
+    True for exactly two shapes, both decided elsewhere in this file:
+
+    - `status == "failed"` — CR039's refund, taken unconditionally in
+      `run()`'s `except Exception` branch for every failed run.
+    - `status == "completed"` AND the verdict is the DEF432 outage
+      NO_VERDICT (`room_verdict_is_incomplete`) — this predicate's new case.
+      A normal completed verdict (APPROVE/PASS/REJECT, or CR098's
+      withheld-analyst NO_VERDICT) is charged and reports `False` here.
+
+    CANCELLED is never refunded (room_runner's cancel branch charges stand)
+    and reports `False`, same as QUEUED/RUNNING mid-flight. DEF425's
+    shutdown path never reaches a terminal status at all — it leaves the row
+    RUNNING for `_sweep_stuck_runs` — so it is outside this predicate's
+    domain entirely until the sweep resolves it to `failed` (refunded) or a
+    respawned `completed` (not, unless the respawn itself outages).
+    """
+    if run is None:
+        return False
+    status = run.status if isinstance(run.status, str) else run.status.value
+    if status == "failed":
+        return True
+    if status == "completed":
+        return room_verdict_is_incomplete(
+            run.verdict.model_dump() if run.verdict is not None else None
+        )
+    return False
 
 
 def is_llm_outage_verdict(verdict: dict | None) -> bool:
@@ -6114,7 +6159,8 @@ class RoomRunner:
                                 verdict = verdict.model_copy(update={
                                     "action": VerdictAction.NO_VERDICT,
                                     "reason": (
-                                        f"{PM_ROOM_INCOMPLETE_REASON} {_disclosure}"
+                                        f"{PM_ROOM_INCOMPLETE_REASON} {_disclosure} "
+                                        f"{_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}"
                                     ),
                                     "overridden_from_llm": True,
                                     "size_pct": None, "entry": None,
@@ -6201,6 +6247,57 @@ class RoomRunner:
                     "next_convene_delta": ctx.next_convene_delta,
                 })
             _persist_run(run)
+            # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
+            # COMPLETED but whose verdict is the CR219 R51 outage NO_VERDICT
+            # (too many desks scripted for AMI to stand behind a call) is an
+            # outage, not a decision, and an outage never costs the user —
+            # same rule DEF424 already applies to Brief and 1-on-1.
+            #
+            # Decided through `run_was_refunded(run)` — the SAME predicate
+            # `api/room.py`'s `done` event reports back to the client — so the
+            # decision to refund and the claim that it happened can never
+            # drift apart. `run.status` is already COMPLETED here, so this
+            # reduces to `room_verdict_is_incomplete`'s check (the
+            # `PM_ROOM_INCOMPLETE_REASON` sentinel), never `action ==
+            # NO_VERDICT` alone: `_assemble_no_verdict` (CR098 Amendment 2,
+            # Market withheld) also produces NO_VERDICT, and that one is a
+            # deliberate professional-discipline refusal argued from a FULL
+            # fundamentals case, not a provider outage — the roster answered,
+            # the PM chose not to price a trade. That run is charged, same as
+            # any other verdict.
+            #
+            # Reachable exactly once per run: this line sits on the single
+            # `COMPLETED` path `run()` ever takes, entirely separate from the
+            # `except (asyncio.CancelledError, GeneratorExit)` shutdown branch
+            # below (DEF425) and `_sweep_stuck_runs`'s own retry-exhausted
+            # refund — those fire on a DIFFERENT status transition
+            # (RUNNING -> left running / -> failed) that this run never
+            # reaches once it gets here, so the two refund paths cannot both
+            # fire for the same run_id.
+            #
+            # Best-effort, same shape as the CR039 failed-run refund a few
+            # lines down in the except block: a refund failure must not turn
+            # a delivered (if outage-abstained) verdict into a hard error.
+            if run_was_refunded(run):
+                try:
+                    refund(
+                        user_id, run.credit_cost,
+                        reason=f"room_outage_no_verdict:{run_id}",
+                    )
+                except Exception as refund_exc:
+                    logger.error(
+                        "room_outage_refund_failed",
+                        run_id=str(run_id),
+                        credits=run.credit_cost,
+                        error=str(refund_exc)[:200],
+                    )
+                else:
+                    logger.info(
+                        "room_outage_refunded",
+                        run_id=str(run_id),
+                        ticker=ticker,
+                        credits=run.credit_cost,
+                    )
             # CR219 R55 — bank this verdict in the calibration ledger.
             #
             # `_reference_close(profile)` is the price the Room was actually

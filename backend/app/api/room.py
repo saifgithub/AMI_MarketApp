@@ -52,6 +52,7 @@ from app.services.room_runner import (
     RoomRunner,
     build_journal_entry_for_run,
     get_room_runner,
+    run_was_refunded,
 )
 from app.api.dependencies import get_current_user
 from app.api.sse import escape_sse_text, sse_json, sse_text
@@ -350,18 +351,20 @@ async def stream_room(
         # is a plain re-read of the persisted row — the exact same billed
         # amount whether this is a fresh completion, a FAILED run (CR039
         # refunds the same `credit_cost` on failure, never a partial or
-        # zeroed amount), or a dedup replay of an already-terminal run.
-        # `refunded` is derived from `status`, not re-computed: FAILED is the
-        # ONLY status this file refunds against (`room_runner.py`'s
-        # `except Exception` branch, DEF425/DEF432) — reading it back here is
-        # strictly reporting, never a second refund decision. A run that
-        # cannot be read back (row raced away) degrades to `null`/`false`
+        # zeroed amount), a DEF432 outage NO_VERDICT, or a dedup replay of an
+        # already-terminal run. `refunded` is derived through
+        # `run_was_refunded`, not re-computed here — the SAME predicate
+        # `room_runner.run()` uses to DECIDE whether to refund a completed
+        # outage run, so this can only ever REPORT that decision, never make
+        # a second, possibly-drifted one of its own (the exact DEF437 shape:
+        # a client told "used 8 credits" for a Room that cost nothing). A run
+        # that cannot be read back (row raced away) degrades to `null`/`false`
         # rather than fabricating a number nobody was charged (DEF437 class).
         _final = runner.get_run(run_id)
         yield sse_json("done", json.dumps({
             'run_id': str(run_id),
             'credit_cost': _final.credit_cost if _final is not None else None,
-            'refunded': _final.status == "failed" if _final is not None else False,
+            'refunded': run_was_refunded(_final),
         }))
 
     headers = {"X-Room-Run-Id": str(run_id)}
