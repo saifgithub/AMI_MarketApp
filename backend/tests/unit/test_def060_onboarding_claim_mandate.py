@@ -255,3 +255,59 @@ def test_claim_does_not_clobber_an_existing_mandate(client: TestClient) -> None:
     # Still the pre-existing mandate's value (halal=True), not the session's
     # (halal=False) — hydration was skipped because a row already existed.
     assert r.json()["compliance"]["halal"] is True
+
+
+def test_bind_onboarding_session_does_not_claim_when_mandate_build_fails() -> None:
+    """U66 round-2 MINOR-1: the round-2 submission reordered
+    `_bind_onboarding_session` to build/persist the mandate BEFORE marking
+    `claimed_user_id`, but shipped with no committed test — the auditor moved
+    the claim back above the build and 13 tests stayed green. Pin the
+    ordering directly against `_bind_onboarding_session` (not just through
+    the HTTP claim routes, which wrap it in `_bind_onboarding_session_or_409`
+    and would only show a 409/500 either way):
+
+    1. A mandate build that raises at claim must leave `claimed_user_id`
+       unset (the session is not marked claimed).
+    2. No mandate row is written.
+    3. A retry after the underlying cause is fixed must persist the mandate.
+    """
+    from app.api.auth import _bind_onboarding_session
+    from app.services.concierge_engine import MissingMandateAnswerError
+
+    user_id, _token = _new_user()
+
+    # A completed session with no `max_drawdown_pct` recorded — the same
+    # "somehow reached claim with an incomplete answer set" shape
+    # `MissingMandateAnswerError` exists to catch (see its docstring).
+    answers = dict(_completed_session().answers)
+    del answers["max_drawdown_pct"]
+    session = _completed_session(answers=answers)
+    asyncio.run(get_session_store().create(session))
+
+    with pytest.raises(MissingMandateAnswerError):
+        asyncio.run(_bind_onboarding_session(session.id, user_id))
+
+    reloaded = asyncio.run(get_session_store().get(session.id))
+    assert reloaded is not None
+    assert reloaded.claimed_user_id is None, (
+        "a mandate build that raised must not leave the session claimed — "
+        "otherwise the idempotency check short-circuits every retry and the "
+        "mandate can never be built (round 1's permanent-lockout mechanism)"
+    )
+    assert get_mandate_store().get(user_id) is None, (
+        "no mandate row should exist when the build raised"
+    )
+
+    # Retry after the cause is fixed (the answer is now present) must
+    # succeed: claim the session and persist the mandate.
+    reloaded.answers["max_drawdown_pct"] = 20
+    asyncio.run(get_session_store().save(reloaded))
+
+    asyncio.run(_bind_onboarding_session(session.id, user_id))
+
+    refetched = asyncio.run(get_session_store().get(session.id))
+    assert refetched is not None
+    assert refetched.claimed_user_id == user_id
+    mandate = get_mandate_store().get(user_id)
+    assert mandate is not None
+    assert mandate.max_drawdown_pct == 20
