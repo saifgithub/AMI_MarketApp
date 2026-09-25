@@ -492,6 +492,63 @@ def test_the_walk_dismisses_the_keyboard_instead_of_typing_on_it(monkeypatch):
     assert driver.chip.taps == 1
 
 
+def test_a_successful_turn_prints_progress_naming_the_turn_number(monkeypatch, capsys):
+    """DEF436 — E5-U3 could not tell an 11-turn interview in progress from a
+    genuine stall because the walk printed nothing between "shell not up" and
+    either landing on Floor or the final timeout. A tapped turn must now say
+    so, with a turn number, so a captured log names what advanced and when."""
+    driver = KeyboardedInterviewDriver()
+    monkeypatch.setattr(onboarding, "_SHELL_BUDGET_S", 0.0)
+    monkeypatch.setattr(shell, "MAX_BACK_OUTS", 0)
+    monkeypatch.setattr(onboarding.time, "sleep", lambda seconds: None)
+
+    onboarding.ensure_onboarded(driver, timeout_s=5.0)
+
+    out = capsys.readouterr().out
+    assert "turn 1" in out, f"no per-turn progress line in output:\n{out}"
+
+
+class NeverTappableDriver:
+    """A screen where the walk is fully awake but nothing is ever tappable —
+    the shape E5-U3 could not distinguish from a real stall: `ensure_onboarded`
+    prints "shell not up" once and then, before this fix, nothing at all until
+    the 480s timeout fired."""
+
+    def __init__(self):
+        self.capabilities = {"platformName": "iOS", "bundleId": "ai.agenticmarketintel.amiTrade"}
+
+    def query_app_state(self, app_id):
+        return onboarding._FOREGROUND
+
+    def is_keyboard_shown(self):
+        return False
+
+    def back(self):
+        pass
+
+    def find_elements(self, by, value):
+        return []  # nothing on screen at all: no shell, no chips, no candidates
+
+
+def test_a_genuine_stall_emits_a_heartbeat_and_a_message_naming_zero_progress(monkeypatch, capsys):
+    """The opposite case from the test above: a walk that never advances a
+    single turn must say so explicitly in its timeout — "0 turns advanced" is
+    a different diagnosis from "died mid-interview at turn 7", and E5-U3
+    needed exactly this distinction and did not have it."""
+    driver = NeverTappableDriver()
+    monkeypatch.setattr(onboarding, "_SHELL_BUDGET_S", 0.0)
+    monkeypatch.setattr(shell, "MAX_BACK_OUTS", 0)
+    monkeypatch.setattr(onboarding, "_STALL_LOG_EVERY_S", 0.0)
+    monkeypatch.setattr(onboarding.time, "sleep", lambda seconds: None)
+
+    with pytest.raises(TimeoutError) as excinfo:
+        onboarding.ensure_onboarded(driver, timeout_s=0.05)
+
+    assert "0 turn(s) advanced" in str(excinfo.value)
+    out = capsys.readouterr().out
+    assert "no tappable candidate found this pass" in out
+
+
 def test_waiting_for_the_shell_gives_up_rather_than_hanging():
     driver = ShellDriver(texts={"nothing useful"})
     assert shell.wait_for_shell(driver, "FLOOR", timeout_s=0.0) is False

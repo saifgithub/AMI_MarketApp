@@ -123,23 +123,73 @@ def flags(run_dir) -> FlagCollector:
     )
 
 
+#: DEF436 — the live driver, kept outside any fixture's return value.
+#:
+#: `pytest_runtest_makereport` used to read `item.funcargs.get("driver")`,
+#: which is populated only once the `driver` fixture has *returned* — a
+#: fixture that raises while setting itself up (exactly `ensure_onboarded`
+#: timing out inside this fixture, DEF436's shape) never populates
+#: `funcargs` at all, so the hook had nothing to capture evidence with and
+#: silently produced none. A session-level holder, set the moment the
+#: session exists rather than after setup completes, survives that case: it
+#: is the same object `item.funcargs` would have held on success, just
+#: written earlier. Overwritten per module (one Appium session per test
+#: file), so the hook is always looking at whichever driver is actually
+#: live right now, not a stale one from an earlier module.
+_LIVE_DRIVER: dict[str, object] = {}
+
+
 @pytest.fixture(scope="module")
 def driver(device_profile):
     drv = new_driver(device_profile)
-    # Every Phase 1 test assumes a landed-on-shell session (see
-    # test_00_smoke_hierarchy.py's test_floor_tab_is_default_landing docstring) —
-    # a fresh install starts on the Concierge interview instead, so make that
-    # precondition true rather than just assumed. Cheap no-op once onboarding
-    # has completed once, thanks to noReset=True.
-    _require_unlocked(drv)
-    # DEF426 — clear a native alert before the onboarding walk even starts.
-    # noReset=True persists app state across the whole run, so a permission
-    # decision (or prompt) from an earlier module's session can still be
-    # sitting on screen when this module's driver attaches.
-    dismiss_system_alert_if_present(drv)
-    ensure_onboarded(drv)
+    _LIVE_DRIVER["driver"] = drv
+    try:
+        # Every Phase 1 test assumes a landed-on-shell session (see
+        # test_00_smoke_hierarchy.py's test_floor_tab_is_default_landing
+        # docstring) — a fresh install starts on the Concierge interview
+        # instead, so make that precondition true rather than just assumed.
+        # Cheap no-op once onboarding has completed once, thanks to
+        # noReset=True.
+        _require_unlocked(drv)
+        # DEF426 — clear a native alert before the onboarding walk even
+        # starts. noReset=True persists app state across the whole run, so a
+        # permission decision (or prompt) from an earlier module's session
+        # can still be sitting on screen when this module's driver attaches.
+        dismiss_system_alert_if_present(drv)
+        ensure_onboarded(drv)
+    except Exception:
+        # DEF436 — a setup-phase failure here (most often `ensure_onboarded`
+        # timing out) is exactly the case `_LIVE_DRIVER` exists for: capture
+        # evidence now, before `pytest_runtest_makereport` even runs, because
+        # nothing else downstream will get a chance to see this screen.
+        _capture_setup_failure_evidence(drv)
+        raise
     yield drv
     drv.quit()
+    _LIVE_DRIVER.pop("driver", None)
+
+
+def _capture_setup_failure_evidence(drv) -> None:
+    """Best-effort screenshot + page source for a `driver`-fixture setup
+    failure, taken from inside the fixture itself.
+
+    `pytest_runtest_makereport` cannot always do this after the fact: by the
+    time it runs, the screen that caused the failure may already be gone
+    (the fixture's `except` re-raises immediately, but a later retry/teardown
+    elsewhere could still change what's on screen), and on the very first
+    module of a run there's a moment where `_LIVE_DRIVER` is the only place
+    the failing session is recorded at all. Capturing right here, at the
+    moment of failure, is strictly more reliable than reconstructing it from
+    hook state afterwards.
+    """
+    run_dir = _report_dir()
+    try:
+        (run_dir / "screenshots").mkdir(parents=True, exist_ok=True)
+        (run_dir / "page_source").mkdir(parents=True, exist_ok=True)
+        snap(drv, run_dir, "FAILURE_driver_fixture_setup", "state")
+        dump_page_source(drv, run_dir, "FAILURE_driver_fixture_setup")
+    except Exception as exc:  # best-effort evidence capture, never mask the real failure
+        print(f"(setup-failure evidence capture also failed: {exc})")
 
 
 def _require_unlocked(drv) -> None:
@@ -285,15 +335,44 @@ def dump_page_source(driver, run_dir: Path, screen: str) -> Path:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
+    """Capture failure evidence for both a failing test body AND a failing
+    fixture setup (DEF436).
+
+    The original guard only fired on `rep.when == "call"` — a failure inside
+    the test function itself. E5's iOS runs showed every one of 11 errors
+    happening in *setup* instead: `ensure_onboarded` (called from the
+    `driver` fixture) timing out before the test body ever started. `call`
+    reports don't exist for those at all — pytest reports `setup` as failed
+    and never generates a `call` report — so the old condition was simply
+    never true for this entire failure class, and 11 errors left zero
+    screenshots or page sources to diagnose from (E5-U3).
+
+    `item.funcargs` is also unreliable exactly when it matters most: it is
+    populated as each fixture *returns*, so a fixture that raises while
+    setting itself up never gets added to it — `item.funcargs.get("driver")`
+    is `None` in precisely the case this hook now exists to cover. Fall back
+    to the module-level `_LIVE_DRIVER` holder (set the instant the driver
+    exists, before any of the setup that might fail) and to `_report_dir()`
+    directly (mirrors the session-scoped `run_dir` fixture's own logic, and
+    needs no fixture to have completed) so neither piece of evidence depends
+    on the very setup that just failed.
+    """
     outcome = yield
     rep = outcome.get_result()
-    if rep.when == "call" and rep.failed:
-        drv = item.funcargs.get("driver")
-        run_dir = item.funcargs.get("run_dir")
-        if drv is not None and run_dir is not None:
-            safe_name = item.nodeid.replace("/", "_").replace("::", "__")
-            try:
-                snap(drv, run_dir, f"FAILURE_{safe_name}", "state")
-                dump_page_source(drv, run_dir, f"FAILURE_{safe_name}")
-            except Exception as exc:  # best-effort evidence capture, never mask the real failure
-                print(f"(failure-evidence capture also failed: {exc})")
+    if rep.when not in ("call", "setup") or not rep.failed:
+        return
+
+    drv = item.funcargs.get("driver") or _LIVE_DRIVER.get("driver")
+    run_dir = item.funcargs.get("run_dir") or _report_dir()
+    if drv is None or run_dir is None:
+        return
+
+    (run_dir / "screenshots").mkdir(parents=True, exist_ok=True)
+    (run_dir / "page_source").mkdir(parents=True, exist_ok=True)
+    safe_name = item.nodeid.replace("/", "_").replace("::", "__")
+    label = f"FAILURE_{rep.when}_{safe_name}" if rep.when == "setup" else f"FAILURE_{safe_name}"
+    try:
+        snap(drv, run_dir, label, "state")
+        dump_page_source(drv, run_dir, label)
+    except Exception as exc:  # best-effort evidence capture, never mask the real failure
+        print(f"(failure-evidence capture also failed: {exc})")

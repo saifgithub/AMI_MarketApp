@@ -66,6 +66,11 @@ _MAX_ESCAPES = 3
 # harness is blind and every later observation is worthless.
 _MAX_BLIND = 10
 
+# DEF436 — how often to print a heartbeat while no turn has advanced. Frequent
+# enough that a 480s budget produces several data points instead of one final
+# timeout; sparse enough not to flood the log every 1-1.5s loop iteration.
+_STALL_LOG_EVERY_S = 15.0
+
 # How long to let the shell appear before concluding the app needs onboarding.
 # Generous on purpose: a cold start on the Android rig renders blank for several
 # seconds, and deciding "not onboarded" too early is what set the walk loose on
@@ -368,9 +373,30 @@ def ensure_onboarded(
     backend_error_retries = 0
     escapes = 0
     blind = 0
+    turn = 0
     app_id = _app_id(driver)
 
+    # DEF436 — the walk had no output at all between "shell not up" and either
+    # landing on Floor or the final timeout, so an 11-turn interview and a
+    # genuine stall looked identical from the log: silence. `last_progress_at`
+    # marks the last time ANY branch below actually advanced the interview
+    # (a tap, a retry, a recovered escape); `_STALL_LOG_EVERY_S` prints a
+    # heartbeat when that has gone quiet too long, naming what the walk is
+    # currently doing (which branch, if any candidates are even on screen) so
+    # a hang reads as "stuck here, seeing this" instead of a blank 480s.
+    last_progress_at = time.monotonic()
+    last_stall_log_at = last_progress_at
+
     while time.monotonic() < deadline:
+        now = time.monotonic()
+        if now - last_stall_log_at >= _STALL_LOG_EVERY_S:
+            last_stall_log_at = now
+            print(
+                f"    [onboarding] turn {turn} — no progress for "
+                f"{now - last_progress_at:.0f}s ({deadline - now:.0f}s left in "
+                f"budget)"
+            )
+
         # Are we even still in the app? The walk taps whatever the accessibility
         # tree offers, and the tree is the *foreground app's*, not ours — so one
         # stray tap that fires an external intent, or a probe that runs before
@@ -441,16 +467,25 @@ def ensure_onboarded(
                     "this is a real backend-connectivity failure, not a locator problem"
                 )
             wait_visible_text(driver, _TRY_AGAIN, timeout_s=5).click()
+            turn += 1
+            last_progress_at = time.monotonic()
+            print(f"    [onboarding] turn {turn} — tapped {_TRY_AGAIN!r} (retry {backend_error_retries})")
             time.sleep(2)
             continue
 
         if exists_text(driver, _SKIP_FOR_NOW, retry=False):
             wait_visible_text(driver, _SKIP_FOR_NOW, timeout_s=3).click()
+            turn += 1
+            last_progress_at = time.monotonic()
+            print(f"    [onboarding] turn {turn} — tapped {_SKIP_FOR_NOW!r}")
             time.sleep(1.5)
             continue
 
         if exists_text(driver, _LOOKS_RIGHT_CONTINUE, retry=False):
             wait_visible_text(driver, _LOOKS_RIGHT_CONTINUE, timeout_s=3).click()
+            turn += 1
+            last_progress_at = time.monotonic()
+            print(f"    [onboarding] turn {turn} — tapped {_LOOKS_RIGHT_CONTINUE!r}")
             time.sleep(1.5)
             continue
 
@@ -473,6 +508,9 @@ def ensure_onboarded(
         if chips:
             try:
                 tap_element(driver, chips[0])
+                turn += 1
+                last_progress_at = time.monotonic()
+                print(f"    [onboarding] turn {turn} — tapped answer chip ({len(chips)} on screen)")
             except StaleElementReferenceException:
                 print("    [onboarding] the chip went stale before the tap — re-observing")
             time.sleep(1.5)
@@ -498,6 +536,11 @@ def ensure_onboarded(
         candidates = [c for c in candidates if not _is_expensive(driver, c)]
         candidates = _selectable(driver, candidates)
         if not candidates:
+            # DEF436 — this is the one branch with no fallback: nothing
+            # tappable was found at all. Worth naming explicitly in a stall,
+            # since it is a different diagnosis from "found candidates but
+            # they keep going stale" or "found the wrong screen entirely".
+            print("    [onboarding] no tappable candidate found this pass")
             time.sleep(1.0)
             continue
         try:
@@ -508,9 +551,16 @@ def ensure_onboarded(
             continue
         try:
             tap_element(driver, chip)
+            turn += 1
+            last_progress_at = time.monotonic()
+            print(f"    [onboarding] turn {turn} — tapped fallback candidate ({len(candidates)} on screen)")
         except StaleElementReferenceException:
             print("    [onboarding] the chosen chip went stale before the tap — re-observing")
             continue
         time.sleep(1.5)
 
-    raise TimeoutError(f"onboarding did not reach Floor within {timeout_s}s")
+    raise TimeoutError(
+        f"onboarding did not reach Floor within {timeout_s}s — {turn} turn(s) "
+        f"advanced, last progress {time.monotonic() - last_progress_at:.0f}s "
+        f"before timeout"
+    )
