@@ -7,10 +7,10 @@ account. `notify_policy_update()` is that notice, sent exactly once per
 qualifying user.
 
 Targeting: every `User` row with `alpaca_linked_at IS NOT NULL` — the exact
-predicate the DEF430 row names. A user who links AFTER this runs never
-qualifies retroactively; they already see the DEF430 link-screen disclosure
-at the point of linking (the "consent at collection" half of Saiful's
-ruling), so a backend notice for them would be redundant, not missing.
+predicate the DEF430 row names. The sweep runs on every boot, so someone who
+links later is also told once, at the next restart. That is deliberate: a
+user linking from an app build older than the DEF430 disclosure never saw
+it, and for one who did, a second pointer to the policy costs nothing.
 
 Idempotency is the same three-legged shape `daily_reminder.py` documents,
 minus the recompute-under-a-changing-clock leg that module needs and this
