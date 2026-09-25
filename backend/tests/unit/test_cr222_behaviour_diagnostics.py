@@ -393,21 +393,39 @@ def test_disposition_ratio_hand_built_fixture_matches_odean_by_hand():
     """Two tickers, AAA and BBB, each bought once at $100/share, 10 shares.
 
     Day 0: buy 10 AAA @ $100, buy 10 BBB @ $100.
-    Day 10: AAA closes (self-close, won) at $120 -> realised gain = $200.
+    Day 10: AAA closes (self-close, won) at $120 -> realised gain, one event.
             At this instant BBB is still open, entered at $100. BBB's price
-            on day 10 is $90 (seeded) -> paper LOSS of (90-100)*10 = -$100.
-    Day 20: BBB closes (self-close, lost) at $80 -> realised loss = $200.
+            on day 10 is $90 (seeded) -> paper LOSS event (90 < 100), NOT a
+            paper gain.
+    Day 20: BBB closes (self-close, lost) at $80 -> realised loss, one event.
             At this instant AAA is already closed (no longer open), so it
             contributes nothing to this sale's paper terms.
 
-    By hand:
-      realised_gains = 200 (AAA's close)
-      realised_losses = 200 (BBB's close)
-      paper_gains = 0 (BBB's day-10 mark was a paper LOSS, not a gain)
-      paper_losses = 100 (BBB's day-10 mark, at AAA's sale instant)
-      pgr = realised_gains / (realised_gains + paper_gains) = 200/200 = 1.0
-      plr = realised_losses / (realised_losses + paper_losses)
-          = 200/300 = 0.6666...
+    Odean (1998) defines PGR/PLR as COUNT proportions — number of realised
+    gain/loss EVENTS over number of (realised + paper) gain/loss EVENTS of
+    the same sign, not a dollar-weighted average. By hand, counting events
+    from AAA/BBB alone:
+      AAA/BBB realised_gains_count = 1 (AAA's close)
+      AAA/BBB realised_losses_count = 1 (BBB's close)
+      paper_gains_count = 0 (BBB's day-10 mark was a paper LOSS event, not a
+          paper gain event)
+      paper_losses_count = 1 (BBB's day-10 mark, at AAA's sale instant)
+
+    The padding block below (8 independent CCC round trips, each a small
+    realised WIN, on a ticker with no price history) adds 8 more realised
+    gain events and 8 `priced_lots_excluded` (CCC itself has no price row,
+    and AAA/BBB are both closed or not-yet-open at each CCC sale instant, so
+    they contribute no paper terms there) — it does not touch
+    realised_losses_count, paper_gains_count or paper_losses_count. So,
+    counting the whole fixture:
+      realised_gains_count = 1 (AAA) + 8 (CCC) = 9
+      realised_losses_count = 1 (BBB)
+      paper_gains_count = 0
+      paper_losses_count = 1
+      pgr = realised_gains_count / (realised_gains_count + paper_gains_count)
+          = 9 / (9 + 0) = 1.0
+      plr = realised_losses_count / (realised_losses_count + paper_losses_count)
+          = 1 / (1 + 1) = 0.5
     """
     user_id = uuid4()
     portfolio_id = _make_portfolio(user_id)
@@ -451,8 +469,79 @@ def test_disposition_ratio_hand_built_fixture_matches_odean_by_hand():
     result = compute_behaviour_diagnostics(user_id, now=now)
     assert result["status"] == STATUS_READY
     disposition = result["disposition"]
+    assert disposition["realised_gains_count"] == 9
+    assert disposition["paper_gains_count"] == 0
+    assert disposition["realised_losses_count"] == 1
+    assert disposition["paper_losses_count"] == 1
     assert disposition["pgr"] == pytest.approx(1.0, abs=1e-4)
-    assert disposition["plr"] == pytest.approx(200.0 / 300.0, abs=1e-4)
+    assert disposition["plr"] == pytest.approx(0.5, abs=1e-4)
+
+
+def test_disposition_ratio_uses_count_basis_not_dollar_basis():
+    """One $900 realised gain plus nine $100 paper gains: dollar-weighted PGR
+    would read 900 / (900 + 900) = 0.50; Odean's own count-weighted PGR reads
+    1 / (1 + 9) = 0.10. This pins the count basis directly against a fixture
+    engineered so the two bases diverge sharply — a regression to the dollar
+    basis would fail this test even if every other PGR/PLR assertion in this
+    file happened not to notice (most use unit qty/price so the two bases
+    coincide by construction). Padding trades are closed LOSSES on a
+    no-price-history ticker so they clear the trade-count floor without
+    perturbing realised_gains_count or paper_gains_count."""
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    day10 = day0 + timedelta(days=10)
+
+    days = [day0.date() + timedelta(days=i) for i in range(15)]
+
+    # BIG: bought at $100, 10 shares -> $900 realised gain on close at $190.
+    big_prices = {d: 100.0 for d in days}
+    big_prices[day10.date()] = 190.0
+    _seed_prices("BIG", big_prices)
+
+    # Nine SMALL tickers, each bought at $100/1 share, each up $10/share
+    # (a $100 paper gain each) and still open at BIG's sale instant.
+    small_tickers = [f"SM{i}" for i in range(9)]
+    for tk in small_tickers:
+        prices = {d: 100.0 for d in days}
+        prices[day10.date()] = 110.0
+        _seed_prices(tk, prices)
+
+    _insert_trade(
+        user_id, portfolio_id, ticker="BIG", side="buy",
+        quantity=10.0, entry_price=100.0, opened_at=day0,
+        status="won", closed_at=day10, closed_price=190.0, realised_pnl=900.0,
+    )
+    for tk in small_tickers:
+        _insert_trade(
+            user_id, portfolio_id, ticker=tk, side="buy",
+            quantity=1.0, entry_price=100.0, opened_at=day0,
+            status="open",
+        )
+    # Padding to clear the trade-count floor (need closed_lot_count >= 10;
+    # BIG contributes 1, so 9 more here). Losses on a no-price-history
+    # ticker, opened+closed entirely BEFORE day0 (BIG/SM's own open date),
+    # so at their own sale instants BIG and every SM ticker are not yet
+    # opened (`_open_lots_as_of` filters on `opened_at <= as_of`) and cannot
+    # be counted as an "other open lot" — and at BIG's/SM's later sale
+    # instants PAD is already fully closed, so it contributes nothing back
+    # either way.
+    for i in range(9):
+        opened = day0 - timedelta(days=20 + i)
+        closed = opened + timedelta(days=1)
+        _insert_trade(
+            user_id, portfolio_id, ticker="PAD", side="buy",
+            quantity=1.0, entry_price=50.0, opened_at=opened,
+            status="lost", closed_at=closed, closed_price=49.0, realised_pnl=-1.0,
+        )
+
+    result = compute_behaviour_diagnostics(user_id, now=now)
+    assert result["status"] == STATUS_READY
+    disposition = result["disposition"]
+    assert disposition["realised_gains_count"] == 1
+    assert disposition["paper_gains_count"] == 9
+    assert disposition["pgr"] == pytest.approx(0.10, abs=1e-4)
 
 
 def test_disposition_ratio_is_none_when_no_closed_lot_has_a_priced_paper_leg():
@@ -495,21 +584,27 @@ def _rules_empty():
     return []
 
 
-def test_behaviour_block_passes_validator_ready_shape():
-    context = _metric_context()
-    context["behaviour"] = {
+def _ready_behaviour_block_no_fixed_literals() -> dict:
+    """A `ready`-shape behaviour block where NO numeric field equals 1, 5, or
+    10 (or any other token in `VALIDATOR_FIXED_RAW`/`VALIDATOR_FIXED_PCT`) —
+    unlike the old fixture, whose `realised_gains_count = 5` only passed
+    because "5" happens to be independently registered for the CR222 §4
+    attention-trade sentence's fixed prose (`ATTENTION_MOVE_LOOKBACK_
+    TRADING_DAYS`). A fixture built this way would have caught THAT
+    coincidence, and is designed to catch the next one."""
+    return {
         "status": STATUS_READY,
         "first_trade_at": "2026-01-01T00:00:00+00:00",
-        "window_days": 150.0,
-        "closed_lot_count": 12,
-        "turnover_pct": 62.3,
-        "turnover_pct_annualised": 151.8,
-        "median_holding_period_days": 4.5,
-        "attention_trade_share_pct": 33.3,
+        "window_days": 147.0,
+        "closed_lot_count": 23,
+        "turnover_pct": 68.4,
+        "turnover_pct_annualised": 169.7,
+        "median_holding_period_days": 7.8,
+        "attention_trade_share_pct": 24.6,
         "disposition": {
-            "pgr": 0.62, "plr": 0.21,
-            "realised_gains_count": 5, "paper_gains_count": 2,
-            "realised_losses_count": 3, "paper_losses_count": 4,
+            "pgr": 0.57, "plr": 0.34,
+            "realised_gains_count": 17, "paper_gains_count": 13,
+            "realised_losses_count": 9, "paper_losses_count": 17,
             "priced_lots_excluded": 0,
         },
         "baselines": {
@@ -523,11 +618,77 @@ def test_behaviour_block_passes_validator_ready_shape():
             },
         },
     }
+
+
+def test_behaviour_block_passes_validator_ready_shape():
+    context = _metric_context()
+    context["behaviour"] = _ready_behaviour_block_no_fixed_literals()
     rules = _rules_empty()
     sections = render_deterministic_sections(context, rules)
     allowlist = build_allowlist(context, rules)
     assert validate_sections(sections, allowlist) is None
     assert "How this book has been traded" in sections["f3"]
+
+
+_BANNED_TOKENS = (
+    "underperform", "outperform", "you should", "well done", "poor",
+    "good", "bad", "beat the market", "lagging", "the ai",
+    "should", "recommend", "advice", "warning", "great", "excellent",
+    "concerning", "worrying", "healthy", "unhealthy", "too much",
+    "too little", "excessive",
+)
+
+
+def _assert_no_grade_no_warning_no_verdict(rendered_text: str) -> None:
+    lowered = rendered_text.lower()
+    for banned in _BANNED_TOKENS:
+        assert banned not in lowered, banned
+
+
+def test_the_behaviour_block_carries_no_grade_no_warning_no_verdict():
+    """CR131's honesty rules, checked on the RENDERED text rather than only
+    on the payload — the payload is not what a user reads. Mirrors
+    `test_the_twin_block_carries_no_grade_no_warning_no_verdict`
+    (test_cr222_passive_twin.py:499) for the behaviour block, covering every
+    rendered branch: too_early; the full ready block; and each of the three
+    independent not-measured variants (no closed lot -> median None, no buy
+    on record -> attention None, no priced gain/loss -> disposition None)."""
+    context = _metric_context()
+    rules = _rules_empty()
+
+    # too_early.
+    context["behaviour"] = {"status": STATUS_TOO_EARLY, "message": "not enough data"}
+    sections = render_deterministic_sections(context, rules)
+    _assert_no_grade_no_warning_no_verdict(sections["f3"])
+
+    # ready, every field populated.
+    context["behaviour"] = _ready_behaviour_block_no_fixed_literals()
+    sections = render_deterministic_sections(context, rules)
+    _assert_no_grade_no_warning_no_verdict(sections["f3"])
+
+    # ready, median_holding_period_days not measured (no closed lot).
+    block = _ready_behaviour_block_no_fixed_literals()
+    block["median_holding_period_days"] = None
+    context["behaviour"] = block
+    sections = render_deterministic_sections(context, rules)
+    assert "Median holding period: not measured this run" in sections["f3"]
+    _assert_no_grade_no_warning_no_verdict(sections["f3"])
+
+    # ready, attention_trade_share_pct not measured (no buy on record).
+    block = _ready_behaviour_block_no_fixed_literals()
+    block["attention_trade_share_pct"] = None
+    context["behaviour"] = block
+    sections = render_deterministic_sections(context, rules)
+    assert "Attention-triggered buys: not measured this run" in sections["f3"]
+    _assert_no_grade_no_warning_no_verdict(sections["f3"])
+
+    # ready, disposition not measured (no priced gain or loss on record).
+    block = _ready_behaviour_block_no_fixed_literals()
+    block["disposition"] = {"pgr": None, "plr": None}
+    context["behaviour"] = block
+    sections = render_deterministic_sections(context, rules)
+    assert "Disposition ratio: not measured this run" in sections["f3"]
+    _assert_no_grade_no_warning_no_verdict(sections["f3"])
 
 
 def test_behaviour_block_passes_validator_too_early_shape():
