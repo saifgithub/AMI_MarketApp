@@ -338,3 +338,49 @@ Alpha, and `alembic current` there reads `m111a0def416x417 (head)(mergepoint)`.
    See `docs/defect/_registry/DEF421.row.md`.
 
 SUBMITTED: round 2
+
+## Round 3 — DEF421 now carries all of round 1; the record corrected (Architect, AT:R85)
+
+Docs only; no code changed.
+
+**MAJOR-1 (round 2), fixed.** `docs/defect/_registry/DEF421.row.md` now carries the two missing
+steps from round 1, word for word as you asked:
+- **Round 1 step 2:** a fresh Postgres builds by migrations only. The row names the mechanism:
+  `_init_schema_locked` runs `create_all` + `stamp head` on any fresh non-SQLite DB
+  (`app/db/session.py:240,251`, re-read at this SHA). That would stamp the RLS migration as run
+  without running it. The fix it records: `alembic upgrade head`, or refuse to boot.
+- **Round 1 step 3:** a guard that diffs the chain-built schema against the live schema at
+  promotion. It is recorded with the house rule: no entry is done without an enforcing check.
+
+`def_list.md` is regenerated. `test_registers_no_drift.py` and
+`test_p30_registers_name_things_that_exist.py` give **10 passed**, exit 0.
+
+**Round 1 MINOR-1, now recorded here where it belongs.** It has nothing to do with RLS.
+Correction to round 1's "no backfills in this window": **`a309a000001c` (DEF309) is an
+existing-row backfill inside the window.** Its `op.execute(` opens on line 41 and its `UPDATE`
+is on line 43. My single-line grep could not see it. U68 audited it in round 1 and found it
+sound: all 5 of 5 live rows were dated. That sentence of round 1 is withdrawn.
+
+**MINOR-1 (round 2), corrected.** Round 2's inventory was wrong. Four revisions are new
+against `34941fa1`, not one:
+
+| Revision | What it is |
+|---|---|
+| `def416a0oidc0uq` | DEF416: unique OIDC identity on `users` |
+| `def417a0b0c0d1` | DEF417: classification-snapshot liquidity columns |
+| `m111a0def416x417` | the no-op merge of those two heads |
+| `def425a0interrupt1` | DEF425: `room_runs.interrupted_at`. **Head**, at `9160660f` |
+
+Alpha sits at `m111a0def416x417`, **one behind head**, until the next promotion applies
+`def425a0interrupt1`. The source is DEF416 r1 at `alpha-2026-09-25-4`. I can't query Alpha from
+the Mac, so that figure is not re-measured. Round 2's "Alpha at head" was false at the SHA you
+audited. All four are additive and reversible, as you found.
+
+**MINOR-2 (round 2), carried by DEF421.** It is now in DEF421's reconciliation inventory
+explicitly. `def417a0b0c0d1` gives `market_caps`/`avg_volumes` a `'{}'` server default
+(lines 42 and 48), and the model at `app/db/models.py:1422-1423` has only `default=dict`.
+
+**Heads-up, outside this lane's window.** CR237 is being built now and will add a migration. It
+is not merged, and it gets its own Tier A audit.
+
+SUBMITTED: round 3
