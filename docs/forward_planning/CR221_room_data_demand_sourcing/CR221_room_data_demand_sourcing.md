@@ -1670,3 +1670,11 @@ ingest renders the loud-unavailable state, not a number.
 
 The unbuilt batches (slots 6–9) moved to
 [CR238](../CR238_cr221_unbuilt_data_batches/CR238.md), proposed and not built during the freeze.
+
+**Decided 2026-09-25 (Saiful, AskUserQuestion):** flip **the 5 strong ones** (#1 debt split, #2 cost of debt, #3 executive change, #4 buyback price, #5 debt maturity), **with the CR237 promotion**, before the CR228 pilot starts, so the pilot runs on the final setup. #6–#7 (weak) stay off with #8–#11; #12 still needs data.
+
+Order at promotion:
+1. After `up -d`, run in the container `ingest_edgar_facts.py --force` (prerequisite for #2, #4 and #5) and `ingest_edgar_8k.py` (prerequisite for #3). Read each summary; a named failure stops the flip for that flag.
+2. Set the five `ROOM_*_ENABLED=true` in `infra/alpha.env` (already forwarded in `docker-compose.yml`), re-ship the env, `up -d` again, then check each flag in the container env.
+
+Follow-up, not built: no scheduled 8-K re-scan exists. #3's line marks itself unavailable when the scan is 180 days old, so it goes dark in the open rather than stale in silence. Needs a daily re-scan (a melehost cron, which needs its own go, or an in-app tick) before about 2027-03-24.
