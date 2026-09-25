@@ -295,6 +295,17 @@ VALIDATOR_FIXED_RAW = {
     "2020", "2022",              # scenario-episode display years
     "0",                         # "no commissions, spreads, or taxes" adjacents
     "1998", "2000",              # CR222 §4 citation years: Odean; Barber & Odean
+    "5",                         # CR222 §4 attention-trade sentence's fixed "5
+                                  # trading days" (ATTENTION_MOVE_LOOKBACK_
+                                  # TRADING_DAYS) — "1" (ATTENTION_CONVENE_
+                                  # LOOKBACK_CALENDAR_DAYS) and "10" pct
+                                  # (ATTENTION_MOVE_THRESHOLD_PCT) were already
+                                  # covered above/below for unrelated reasons
+                                  # ("1-in-20", the fat-tail range), which is
+                                  # exactly the coincidence DEF-shaped bugs hide
+                                  # behind — "5" had no such luck and was an
+                                  # unregistered_number failure waiting on any
+                                  # fixture without an incidental 5.
 }
 VALIDATOR_FIXED_PCT = {
     "95",                        # 95% CI
