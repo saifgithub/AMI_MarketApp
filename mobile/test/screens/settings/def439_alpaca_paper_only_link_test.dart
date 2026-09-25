@@ -162,6 +162,31 @@ void main() {
     });
 
     testWidgets(
+        'a real-shaped 26-char PK key ID with a 44-char secret is accepted '
+        '— no length rule, only the prefix/host checks', (tester) async {
+      // Architect data point (2026-09-25): a real Alpaca paper key ID
+      // measured 26 characters, its secret 44 — and lengths vary between
+      // key generations, so nothing in this screen may assume a fixed
+      // length for either field. This pins that directly, at exactly those
+      // measured lengths, so a future length check would fail here first.
+      const keyId26 = 'PK1234567890ABCDEFGHIJKLMN'; // 26 chars
+      const secret44 =
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnop12'; // 44 chars
+      expect(keyId26.length, 26);
+      expect(secret44.length, 44);
+
+      final client = _RecordingAlpacaClient();
+      await _pump(tester, client);
+
+      await _fillAndSubmit(tester, keyId: keyId26, secret: secret44);
+
+      expect(client.validateCalls, 1);
+      expect(client.lastKeyId, keyId26);
+      expect(find.textContaining("That's a live-account key"), findsNothing);
+      expect(find.textContaining('Required'), findsNothing);
+    });
+
+    testWidgets(
         'an unknown-prefix key ID is not refused outright — it reaches '
         'the endpoint check rather than being hard-blocked', (tester) async {
       final client = _RecordingAlpacaClient();
