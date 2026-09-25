@@ -40,15 +40,27 @@ class _FixedAlpacaClient extends AlpacaClient {
     ),
     this.fixedPositions = const [],
     this.fails = false,
+    this.paperLinked = true,
   });
 
   final AlpacaPortfolio portfolio;
   final List<AlpacaPosition> fixedPositions;
   final bool fails;
 
+  /// DEF430 — this fake never touches `AlpacaCredentialStore` (no secure
+  /// storage mock is registered in this file), so the real
+  /// `isLinkedToPaperAccount()` would throw here. Defaults `true` because
+  /// most of this suite is about which account a preview is sized against,
+  /// not the paper/live host gate itself — `false` drives the
+  /// "live-linked account" group below, which IS about that gate.
+  final bool paperLinked;
+
   int accountCalls = 0;
   int positionsCalls = 0;
   final List<String> orderCalls = [];
+
+  @override
+  Future<bool> isLinkedToPaperAccount() async => paperLinked;
 
   @override
   Future<AlpacaPortfolio> account() async {
@@ -622,6 +634,57 @@ void main() {
         find.textContaining("Couldn't read your Alpaca paper account"),
         findsOneWidget,
       );
+    });
+  });
+
+  group('DEF430 — a live-linked account never reaches the preview', () {
+    testWidgets(
+        'ALPACA PAPER: a live host sends no order, calls no preview, and '
+        'never fetches the account at all', (t) async {
+      final alpaca = _FixedAlpacaClient(paperLinked: false);
+      final sim = await _pump(
+        t,
+        alpacaClient: alpaca,
+        previewWithAccount: const SimPreviewResult(accepted: true),
+        previewWithoutAccount: const SimPreviewResult(accepted: true),
+        tapDestination: TradeDestination.alpacaPaper,
+      );
+
+      expect(alpaca.accountCalls, 0,
+          reason: 'DEF430: a live account\'s summary must never even be '
+              'fetched, let alone sent — the host check must short-circuit '
+              'before any Alpaca call');
+      expect(alpaca.positionsCalls, 0);
+      expect(sim.previewCalls, isEmpty,
+          reason: 'no preview may run against a live account\'s data');
+      expect(alpaca.orderCalls, isEmpty);
+      expect(sim.submitCalls, 0);
+      expect(
+        find.textContaining("Couldn't read your Alpaca paper account"),
+        findsOneWidget,
+        reason: 'same loud, specific failure as the offline/unlinked case — '
+            'a live account must not look "successfully skipped"',
+      );
+    });
+
+    testWidgets(
+        'BOTH: a live Alpaca host still lets the AMI leg place '
+        'independently, and still fetches nothing from Alpaca', (t) async {
+      final alpaca = _FixedAlpacaClient(paperLinked: false);
+      final sim = await _pump(
+        t,
+        alpacaClient: alpaca,
+        submitResult: _amiAccepted(),
+        tapDestination: TradeDestination.both,
+      );
+
+      expect(sim.submitCalls, 1,
+          reason: 'the AMI leg is independent of the Alpaca host and must '
+              'still run');
+      expect(alpaca.accountCalls, 0);
+      expect(alpaca.positionsCalls, 0);
+      expect(sim.previewCalls, isEmpty);
+      expect(alpaca.orderCalls, isEmpty);
     });
   });
 

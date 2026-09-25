@@ -23,6 +23,9 @@ from pydantic import BaseModel, field_validator
 #                             game_settled | game_rank_move
 #   sim_order_push         -> resting_order_filled | resting_order_triggered |
 #                             resting_order_rejected
+#   policy_update_notice   -> policy_update (DEF430 — one-time, per user with
+#                             alpaca_linked_at set, announcing Privacy Policy
+#                             v2.1)
 NOTIFICATION_TYPES: tuple[str, ...] = (
     "price_alert",
     "daily_reminder",
@@ -33,6 +36,7 @@ NOTIFICATION_TYPES: tuple[str, ...] = (
     "resting_order_filled",
     "resting_order_triggered",
     "resting_order_rejected",
+    "policy_update",
 )
 
 

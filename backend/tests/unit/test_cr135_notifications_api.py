@@ -260,7 +260,7 @@ def test_vocabulary_matches_every_emitter() -> None:
     """DEF210 class, backend side: the canonical vocabulary must contain the
     exact constant every emitter passes to notify(). The Dart-enum half of the
     parity check ships with the CR135 mobile lane."""
-    from app.services import daily_reminder, games_push, sim_order_push
+    from app.services import daily_reminder, games_push, policy_notice, sim_order_push
 
     emitted = {
         "price_alert",  # price_alert_evaluator passes the literal inline
@@ -272,5 +272,6 @@ def test_vocabulary_matches_every_emitter() -> None:
         sim_order_push.TYPE_FILLED,
         sim_order_push.TYPE_TRIGGERED,
         sim_order_push.TYPE_REJECTED,
+        policy_notice._NOTIFICATION_TYPE,  # DEF430
     }
     assert emitted == set(NOTIFICATION_TYPES)

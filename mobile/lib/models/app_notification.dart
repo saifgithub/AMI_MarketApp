@@ -24,6 +24,7 @@ enum NotificationType {
   restingOrderFilled,
   restingOrderTriggered,
   restingOrderRejected,
+  policyUpdate,
 }
 
 extension NotificationTypeJson on NotificationType {
@@ -47,6 +48,8 @@ extension NotificationTypeJson on NotificationType {
         return 'resting_order_triggered';
       case NotificationType.restingOrderRejected:
         return 'resting_order_rejected';
+      case NotificationType.policyUpdate:
+        return 'policy_update';
     }
   }
 
@@ -70,6 +73,8 @@ extension NotificationTypeJson on NotificationType {
         return NotificationType.restingOrderTriggered;
       case 'resting_order_rejected':
         return NotificationType.restingOrderRejected;
+      case 'policy_update':
+        return NotificationType.policyUpdate;
       default:
         return null;
     }

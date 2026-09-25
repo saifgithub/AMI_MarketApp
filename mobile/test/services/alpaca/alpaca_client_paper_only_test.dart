@@ -171,4 +171,32 @@ void main() {
       }
     });
   });
+
+  group('AlpacaClient.isLinkedToPaperAccount — DEF430', () {
+    setUp(() {
+      FlutterSecureStoragePlatform.instance =
+          TestFlutterSecureStoragePlatform(<String, String>{});
+      SharedPreferences.setMockInitialValues({});
+      AlpacaCredentialStore.resetCacheForTest();
+    });
+
+    test('false when unlinked', () async {
+      final client = AlpacaClient();
+      expect(await client.isLinkedToPaperAccount(), isFalse);
+    });
+
+    test('true for the default paper host', () async {
+      await AlpacaCredentialStore.save('key', 'secret',
+          baseUrl: kDefaultAlpacaBaseUrl);
+      final client = AlpacaClient();
+      expect(await client.isLinkedToPaperAccount(), isTrue);
+    });
+
+    test('false for a stored live host — the DEF430 gate', () async {
+      await AlpacaCredentialStore.save('key', 'secret',
+          baseUrl: 'https://api.alpaca.markets');
+      final client = AlpacaClient();
+      expect(await client.isLinkedToPaperAccount(), isFalse);
+    });
+  });
 }

@@ -484,6 +484,21 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("prompt_version_warm_failed")
 
+    # DEF430 — one-time Privacy Policy v2.1 notice for every user who had
+    # already linked an Alpaca account. `notify_policy_update_v2_1`'s own
+    # fixed `source_ref` + `notify()`'s `uq_notifications_dedupe` constraint
+    # make a re-run on every boot safe (already-notified users come back as
+    # `already_notified`, not a second row) — see that module's docstring.
+    # `asyncio.to_thread` because it is a synchronous DB sweep, same as
+    # `daily_reminder`'s own tick just below.
+    try:
+        from app.services.policy_notice import notify_policy_update_v2_1
+
+        stats = await asyncio.to_thread(notify_policy_update_v2_1)
+        logger.info("policy_update_notice_v2_1_complete", **stats)
+    except Exception:
+        logger.exception("policy_update_notice_v2_1_failed")
+
     tasks = [
         asyncio.create_task(_nightly_audit_trim()),
         asyncio.create_task(_sharia_universe_refresh()),

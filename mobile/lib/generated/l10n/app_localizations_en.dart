@@ -4521,6 +4521,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifTypeRestingOrderRejected => 'Order rejected';
 
   @override
+  String get notifTypePolicyUpdate => 'Policy updates';
+
+  @override
   String get adBadge => 'AD';
 
   @override
@@ -4948,4 +4951,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tradeTicketAlpacaGtdBecomesGtc =>
       'Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it.';
+
+  @override
+  String get alpacaConnectDisclosure =>
+      'Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record. A live account is shown on this phone only and never receives orders.';
 }

@@ -2210,6 +2210,7 @@
         "adInterstitialSkip": "28d03596d24e",
         "adInterstitialSkipIn": "7ce41b4c70bc",
         "aiCoachEmptyStateHint": "32bfb3df8fde",
+        "alpacaConnectDisclosure": "448e7ef988fe",
         "alpacaHistoryLoadError": "cee7df9b3da2",
         "alpacaOrderCancelBody": "41936cb0ee9b",
         "alpacaOrderCancelConfirm": "8248b20900d6",
@@ -2615,6 +2616,7 @@
         "notifTypeGameFinalStretch": "2497fdb7c1ea",
         "notifTypeGameRankMove": "8073259b6875",
         "notifTypeGameSettled": "ba73e9df4286",
+        "notifTypePolicyUpdate": "5218683b853e",
         "notifTypePriceAlert": "da1bea091959",
         "notifTypeRestingOrderFilled": "a5ce6ae9e707",
         "notifTypeRestingOrderRejected": "003ae77440cc",
@@ -3270,5 +3272,7 @@
     "settingsProfileCreditsUnknown": "—",
     "creditsLineInsufficient": "not enough to convene",
     "roomResultRefunded": "Not charged — this Room didn't reach a verdict",
-    "roomResultCostNoBalance": "This Room used {cost} credits"
+    "roomResultCostNoBalance": "This Room used {cost} credits",
+    "alpacaConnectDisclosure": "Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn't stored as its own record. A live account is shown on this phone only and never receives orders.",
+    "notifTypePolicyUpdate": "Policy updates"
 }

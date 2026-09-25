@@ -49,7 +49,7 @@ final alpacaClosedOrdersProvider = FutureProvider.autoDispose<List<AlpacaOrder>>
 
 /// Supplies the snapshot uploaded with a Room convene or a 1-on-1 turn.
 ///
-/// Two behaviours worth stating, because both are deliberate:
+/// Three behaviours worth stating, because all are deliberate:
 ///
 /// **It never blocks the run.** Any failure — unlinked, offline, Alpaca down,
 /// credential revoked — yields null, and null means the prompt simply carries
@@ -65,6 +65,15 @@ final alpacaClosedOrdersProvider = FutureProvider.autoDispose<List<AlpacaOrder>>
 /// and each turn would otherwise re-fetch the account and positions — two
 /// Alpaca calls per typed sentence, against a rate-limited API, for data that
 /// does not move that fast.
+///
+/// **DEF430 (Saiful, 2026-09-25: "paper only") — a live/production account's
+/// summary must never leave the device.** The agents only ever see a paper
+/// account's cash/positions; a live account's holdings still render on the
+/// Portfolio screen, they just never get uploaded. Checked with
+/// [isAlpacaPaperHost] — the exact same predicate `AlpacaClient.submitOrder`/
+/// `cancelOrder` use to refuse a write against a live host — rather than a
+/// second copy of the host check, so the two can never drift apart on what
+/// counts as "paper."
 class AlpacaSnapshotCache {
   AlpacaSnapshotCache(this._client);
 
@@ -75,7 +84,8 @@ class AlpacaSnapshotCache {
   AlpacaSnapshot? _cached;
   DateTime? _fetchedAt;
 
-  /// Best-effort current snapshot; null when unavailable for any reason.
+  /// Best-effort current snapshot; null when unavailable for any reason,
+  /// including a live (non-paper) linked account (DEF430).
   ///
   /// EVERYTHING is inside the try, including the credential read. That is not
   /// defensive padding: `AlpacaCredentialStore.isLinked()` reaches the
@@ -93,6 +103,15 @@ class AlpacaSnapshotCache {
     }
     try {
       if (!await AlpacaCredentialStore.isLinked()) {
+        _cached = null;
+        return null;
+      }
+      // DEF430 — a live/production account's summary must never leave the
+      // device. Routed through the injected `_client` (mockable via
+      // `alpacaClientProvider`, same as the `account()`/`positions()` calls
+      // just below) rather than a second, ungated read of
+      // `AlpacaCredentialStore` — see `AlpacaClient.isLinkedToPaperAccount`.
+      if (!await _client.isLinkedToPaperAccount()) {
         _cached = null;
         return null;
       }
