@@ -132,6 +132,18 @@ async def generate_alert_commentary(alert: _AlertSnapshot, current_price: float,
         plan = effective_plan_for_user(alert.user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
         chunks: list[str] = []
+        # DEF424 post-COMPLETE — a provider that is reachable but REFUSES
+        # (HTTP 503 etc.) never raises: `llm_gateway.py` sets
+        # `stream_meta["stream_error"]` and yields its own in-band `[AMI
+        # error: HTTP … from the upstream provider (…). Check backend
+        # logs.]` sentinel as an ordinary chunk. Undetected, that sentinel
+        # text would win the `text or fallback` fallback check below (it is
+        # non-empty) and go out verbatim as the push notification body —
+        # provider name, HTTP status, operator instruction, on the user's
+        # phone. Same structural signal Brief/1-on-1 use: a dict passed as
+        # `meta=` so this call site can tell a real reply from an in-band
+        # sentinel apart, never by matching the sentinel's own prose.
+        stream_meta: dict[str, object] = {}
         async for chunk in get_llm_gateway().stream_chat(
             system_prompt=system_prompt,
             messages=[ChatMessage(role="user", content=user_msg)],
@@ -140,9 +152,10 @@ async def generate_alert_commentary(alert: _AlertSnapshot, current_price: float,
             audit_user_id=alert.user_id,
             audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
             audit_flow="price_alert",
+            meta=stream_meta,
         ):
             chunks.append(chunk)
-        text = "".join(chunks).strip()
+        text = "" if stream_meta.get("stream_error") else "".join(chunks).strip()
     except Exception:
         logger.exception("price_alert_commentary_failed", alert_id=str(alert.id))
         text = ""

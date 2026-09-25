@@ -247,6 +247,19 @@ class AgentRunner:
             # (the same key `one_on_one.py` already reads to decide whether
             # to refund — RETRO-SECURITY MAJOR-2's contract, untouched here),
             # and yield branded AMI fallback copy instead of the exception.
+            #
+            # DEF424 post-COMPLETE MINOR-1 — a provider that is reachable but
+            # REFUSES (HTTP 503 etc.) never raises: `llm_gateway.py` sets
+            # `meta["stream_error"]` and yields its own in-band `[AMI error:
+            # HTTP … from the upstream provider (…). Check backend logs.]`
+            # sentinel as an ordinary chunk. That text carries the provider
+            # name, an HTTP status, and an operator instruction — none of it
+            # fit for a user-facing surface. Detected structurally (the
+            # `stream_error` key going from unset to set on THIS chunk),
+            # never by matching the sentinel's own prose. Only swapped while
+            # nothing else has been yielded yet — mirrors MINOR-2's `if not
+            # buf` semantics for a mid-stream failure below.
+            had_stream_error = bool(meta and meta.get("stream_error"))
             try:
                 async for chunk in self._llm.stream_chat(
                     system_prompt=system_prompt,
@@ -258,6 +271,15 @@ class AgentRunner:
                     audit_flow="one_on_one",
                     meta=meta,
                 ):
+                    newly_errored = (
+                        meta is not None
+                        and meta.get("stream_error")
+                        and not had_stream_error
+                    )
+                    if newly_errored:
+                        had_stream_error = True
+                        if not buf:
+                            chunk = canned_agent_fallback(agent_id)
                     buf.append(chunk)
                     yield chunk
             except Exception as exc:  # pragma: no cover — defensive, mirrors _stream_concierge
@@ -270,6 +292,22 @@ class AgentRunner:
                     fallback = canned_agent_fallback(agent_id)
                     buf.append(fallback)
                     yield fallback
+                else:
+                    # DEF424 post-COMPLETE MINOR-2 — the provider had already
+                    # streamed real content before dying mid-reply. The `if
+                    # not buf` branch above correctly avoids concatenating
+                    # branded fallback copy after partial real content, but
+                    # that left the user with a reply that just stops, no
+                    # signal it was cut off or that the turn wasn't charged.
+                    # This turn IS refunded (same `stream_error` write above,
+                    # same key `one_on_one.py` already reads) — the line
+                    # below only says so.
+                    notice = (
+                        "\n\n— AMI lost the connection mid-reply; this turn "
+                        "wasn't charged."
+                    )
+                    buf.append(notice)
+                    yield notice
 
         if session.user_id is not None and buf:
             record_one_on_one_message(
