@@ -29,7 +29,6 @@
     "POST /v1/games/runs/$runId/trade -> GameTradeResult",
     "POST /v1/games/runs/$runId/trade/quote -> GameTradeQuote",
     "POST /v1/journal/$userId/entry/$entryId/note -> JournalEntry",
-    "POST /v1/onboarding/answer -> AnswerResponse",
     "POST /v1/onboarding/start -> StartOnboardingResponse",
     "POST /v1/sim/orders/$userId/$orderId/cancel -> RestingOrderCancelResult",
     "POST /v1/sim/submit -> SimSubmitResult",
