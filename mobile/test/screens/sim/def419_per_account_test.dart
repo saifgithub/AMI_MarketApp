@@ -65,14 +65,14 @@ class _FixedAlpacaClient extends AlpacaClient {
   @override
   Future<AlpacaPortfolio> account() async {
     accountCalls++;
-    if (fails) throw const AlpacaException(null, 'not linked');
+    if (fails) throw const AlpacaException(null, kAlpacaNotLinkedDetail);
     return portfolio;
   }
 
   @override
   Future<List<AlpacaPosition>> positions() async {
     positionsCalls++;
-    if (fails) throw const AlpacaException(null, 'not linked');
+    if (fails) throw const AlpacaException(null, kAlpacaNotLinkedDetail);
     return fixedPositions;
   }
 
@@ -602,12 +602,11 @@ void main() {
       expect(sim.submitCalls, 0,
           reason: "the AMI /submit path must not fire either — this is an "
               'Alpaca-only destination');
-      // DEF442 — a null-status-code AlpacaException (no HTTP response, same
-      // shape as a real network/timeout failure) now gets the specific
-      // "couldn't reach Alpaca" line via `alpacaReadFailureMessage`, not the
+      // DEF442 — the fake throws the client's own "not linked" failure, which
+      // now gets its specific line via `alpacaReadFailureMessage`, not the
       // old catch-all "couldn't read your account" text.
       expect(
-        find.textContaining("Couldn't reach Alpaca"),
+        find.textContaining('No Alpaca paper account is linked'),
         findsOneWidget,
         reason: 'the failure must be loud and specific, not a generic '
             'error or a silently-accepted trade',
@@ -634,10 +633,10 @@ void main() {
       expect(alpaca.orderCalls, isEmpty);
       expect(find.text('AMI SIM'), findsAtLeastNWidgets(1));
       expect(find.text('ALPACA PAPER'), findsAtLeastNWidgets(1));
-      // DEF442 — see the ALPACA PAPER case above: a null-status-code failure
-      // now reads as "couldn't reach Alpaca", not the old generic line.
+      // DEF442 — see the ALPACA PAPER case above: "not linked" now reads as
+      // such, not the old generic line.
       expect(
-        find.textContaining("Couldn't reach Alpaca"),
+        find.textContaining('No Alpaca paper account is linked'),
         findsOneWidget,
       );
     });

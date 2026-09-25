@@ -48,6 +48,18 @@ void main() {
       );
     });
 
+    test('"not linked" says so — it must not read as a network failure', () {
+      // Both carry a null status code; only the detail tells them apart.
+      final message = alpacaReadFailureMessage(
+        const AlpacaException(null, kAlpacaNotLinkedDetail),
+      );
+      expect(
+        message,
+        'No Alpaca paper account is linked — link one in Settings. '
+        'Order not sent.',
+      );
+    });
+
     test('404 names the account URL in Settings', () {
       final message =
           alpacaReadFailureMessage(const AlpacaException(404, 'not found'));

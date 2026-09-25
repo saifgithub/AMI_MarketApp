@@ -78,6 +78,10 @@ String alpacaReadFailureMessage(Object e) {
     return 'Alpaca rejected your keys — re-link your paper account in '
         'Settings. Order not sent.';
   }
+  if (e.detail == kAlpacaNotLinkedDetail) {
+    return 'No Alpaca paper account is linked — link one in Settings. '
+        'Order not sent.';
+  }
   if (status == null) {
     return "Couldn't reach Alpaca — check your connection and try again. "
         'Order not sent.';
