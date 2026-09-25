@@ -360,7 +360,35 @@ class AgentRunner:
         )
         tier = pick_tier(plan, AgentId.CONCIERGE)
 
+        def _scripted_fallback() -> str:
+            return concierge_scripted_reply(
+                user_message=user_message,
+                mandate=mandate,
+                recent_journal=journal,
+                unlocked_agents=unlocked,
+                available_lessons=lessons,
+            )
+
         buf: list[str] = []
+        # DEF433 — the in-band `[AMI error: HTTP … from the upstream provider
+        # (…). Check backend logs.]` sentinel (`llm_gateway.py`'s non-200 /
+        # in-band-SSE-error branches) never raises: it sets
+        # `meta["stream_error"]` and yields its own sentinel text as an
+        # ordinary chunk. This `try/except` only ever caught a RAISED
+        # exception (the transport-down shape below), so the sentinel used
+        # to sail straight into `buf` and out to the user — provider name,
+        # HTTP status, operator instruction, verbatim, in the Concierge chat.
+        # The trailing empty-buffer check a few lines down never fired
+        # because `buf` wasn't empty once the sentinel text landed in it.
+        #
+        # Same DEF424-MINOR-1 fix shape as `agent_runner.py`'s non-Concierge
+        # branch and `brief_engine.py::stream_chat` — detected structurally
+        # (the `stream_error` key going from unset to set on THIS chunk,
+        # never by matching the sentinel's own prose) — but the Concierge
+        # keeps its OWN branded copy (`concierge_scripted_reply`, not
+        # `canned_agent_fallback`), since it already has a distinct,
+        # context-aware fallback design.
+        had_stream_error = bool(meta and meta.get("stream_error"))
         try:
             async for chunk in self._llm.stream_chat(
                 system_prompt=system_prompt,
@@ -372,6 +400,32 @@ class AgentRunner:
                 audit_flow="concierge_floor",
                 meta=meta,
             ):
+                newly_errored = (
+                    meta is not None
+                    and meta.get("stream_error")
+                    and not had_stream_error
+                )
+                if newly_errored:
+                    had_stream_error = True
+                    if not buf:
+                        chunk = _scripted_fallback()
+                    else:
+                        # The sentinel chunk itself still carries the
+                        # provider name / HTTP status / operator text (e.g.
+                        # "...refused this request mid-stream. Check backend
+                        # logs.]") — unlike the raised-exception branch below,
+                        # THIS chunk is on the wire, not a Python exception,
+                        # so there is no separate "the chunk never happened"
+                        # option. Swap it for the same short branded cut-off
+                        # line the exception handler uses, rather than
+                        # concatenating scripted_reply() after real partial
+                        # content (same "don't concatenate branded copy after
+                        # real content" call DEF424 made) or letting the raw
+                        # sentinel prose ride the wire unchanged.
+                        chunk = (
+                            "\n\n— AMI lost the connection mid-reply; this "
+                            "turn wasn't charged."
+                        )
                 buf.append(chunk)
                 yield chunk
         except Exception as exc:  # pragma: no cover — defensive
@@ -387,23 +441,27 @@ class AgentRunner:
             if meta is not None:
                 meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]
             if not buf:
-                yield concierge_scripted_reply(
-                    user_message=user_message,
-                    mandate=mandate,
-                    recent_journal=journal,
-                    unlocked_agents=unlocked,
-                    available_lessons=lessons,
+                yield _scripted_fallback()
+            else:
+                # DEF433, mirroring DEF424 post-COMPLETE MINOR-2 — the
+                # provider had already streamed real content before dying
+                # mid-reply. Concatenating the scripted fallback after real
+                # partial content would read as nonsense, but leaving the
+                # user with a reply that just stops gives no signal it was
+                # cut off or that the turn wasn't charged. This turn IS
+                # refunded (same `stream_error` write above, same key
+                # `one_on_one.py` already reads) — the line below only says
+                # so.
+                notice = (
+                    "\n\n— AMI lost the connection mid-reply; this turn "
+                    "wasn't charged."
                 )
+                buf.append(notice)
+                yield notice
             return
 
         if not "".join(buf).strip():
-            yield concierge_scripted_reply(
-                user_message=user_message,
-                mandate=mandate,
-                recent_journal=journal,
-                unlocked_agents=unlocked,
-                available_lessons=lessons,
-            )
+            yield _scripted_fallback()
 
 
 _runner: AgentRunner | None = None
