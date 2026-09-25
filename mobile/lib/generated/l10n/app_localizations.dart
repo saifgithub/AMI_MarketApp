@@ -5140,6 +5140,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t cancel that order — {detail}'**
   String alpacaOrderCancelFailed(String detail);
 
+  /// DEF439 round 2 (auditor u66 MINOR-3) — the {detail} passed to alpacaOrderCancelFailed when cancelOrder()'s structural paper-host check refuses the request client-side, before any network call. CR234 round-2 MINOR-4 originally found this interpolating cancelOrder()'s raw English developer string (naming the live host URL) straight into user-facing copy; the fix stopped naming the URL but the replacement was still a hard-coded English literal in alpaca_orders_section.dart, unreachable for AR/MS translation. Reachable only for a credential stored before DEF439 (the connect screen no longer lets a live link be saved). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'this account is not a paper account — relink in Settings'**
+  String get alpacaOrderCancelNonPaperDetail;
+
   /// Short legal disclaimer strip printed on every share card. Simulation-only framing — keep the 'not investment advice' clause in every locale.
   ///
   /// In en, this message translates to:

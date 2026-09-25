@@ -354,17 +354,24 @@ class AlpacaClient {
   /// DEF439 — validate an OAuth bearer token against Alpaca's **paper** host
   /// BEFORE storing it, the OAuth-mode counterpart to [validate].
   ///
-  /// Alpaca's `/oauth/authorize` documents no `env=paper` selector — which
-  /// Alpaca account (paper or live) the token resolves to is decided by
-  /// whichever account the user was logged into in the browser when they
-  /// approved the app, not by anything AMI's authorize-request URL can pass.
-  /// So the only structural way to keep a live-account token from ever being
-  /// linked is to test the token itself: hit the paper host's `GET
-  /// /v2/account` with it and require success. A token minted against a live
-  /// account is rejected by the paper host with a 401, the same signal
-  /// [AlpacaException.isAuthFailure] already carries for the API-key path —
-  /// this method never inspects the token's contents (it is opaque), only
-  /// what Alpaca's paper endpoint does with it.
+  /// DEF439 round 2 (auditor u66 MAJOR-1): the round-1 docstring here claimed
+  /// "a token minted against a live account is rejected by the paper host
+  /// with a 401" as if that already followed from Alpaca's OAuth design —
+  /// wrong. Alpaca's OAuth guide
+  /// (docs.alpaca.markets/docs/using-oauth2-and-trading-api) documents that a
+  /// single token CAN authorize both a live account and a paper account
+  /// together, and that this is exactly what happens by default when the
+  /// authorize request omits `env`: "the user will be prompted to authorized
+  /// both a live and a paper account." A token from that default grant is
+  /// valid on the paper host and gets a 200 here, live authority and all.
+  /// `buildAuthUrl` now sends `env=paper`, which is what actually keeps that
+  /// default grant from happening. This method is the second, structural
+  /// layer: it hits the paper host's `GET /v2/account` with the token and
+  /// requires success, catching a token minted by an older client build or a
+  /// provider that ignores the `env` hint. A token that fails here surfaces
+  /// the same [AlpacaException.isAuthFailure] signal the API-key path already
+  /// carries — this method never inspects the token's contents (it is
+  /// opaque), only what Alpaca's paper endpoint does with it.
   Future<void> validateOAuthToken(
     String accessToken, {
     String baseUrl = kDefaultAlpacaBaseUrl,

@@ -3062,6 +3062,10 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get alpacaOrderCancelNonPaperDetail =>
+      'this account is not a paper account — relink in Settings';
+
+  @override
   String get disclaimerShort => 'Simulasi pendidikan. Bukan nasihat pelaburan.';
 
   @override

@@ -792,6 +792,87 @@ void main() {
     });
   });
 
+  // DEF439 round 2 (auditor u66 MINOR-2) — round 1 wired a relink prompt into
+  // the Positions tab (`_AlpacaRelinkPrompt`, gated on
+  // `alpacaStoredNonPaperProvider`) for a credential stored before this fix
+  // that resolves to a non-paper host, but nothing tested it: mutation M15
+  // (deleting `if (storedNonPaper) return const _AlpacaRelinkPrompt();`,
+  // `portfolio_screen.dart:2039`) survived all 170 targeted tests. Without
+  // this test, a stale live credential's Alpaca card would silently vanish
+  // from Portfolio instead of explaining why — a CR040 degrade-loudly break
+  // on this surface specifically (the Settings row already had coverage via
+  // `def439_alpaca_relink_prompt_test.dart`).
+  group('DEF439 round 2 — Portfolio relink prompt (mutation M15 guard)', () {
+    testWidgets(
+        'a stored non-paper credential shows the relink prompt on Positions, '
+        'not a silently-empty Alpaca section', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            simNotifierProvider.overrideWith(
+                (ref) => _FixedSimNotifier(ref, _lightSimState())),
+            watchlistNotifierProvider.overrideWith(
+                (ref) => _FixedWatchlistNotifier(ref, const WatchlistState())),
+            journalNotifierProvider.overrideWith(
+                (ref) => _FixedJournalNotifier(ref, const JournalState())),
+            portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
+            sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
+                  allocation: {},
+                  totalValue: 0,
+                  compliance: SectorCompliance(
+                    maxSector: 0, maxAllowed: 0.4, compliant: true,
+                  ),
+                )),
+            portfolioHistoryProvider
+                .overrideWith((ref) async => _equityHistoryFixture()),
+            alpacaLinkedProvider.overrideWith((ref) async => false),
+            alpacaStoredNonPaperProvider.overrideWith((ref) async => true),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PortfolioScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      // The relink prompt sits below the equity chart / sector allocation /
+      // health card / holdings on the Positions tab's own scroll view — not
+      // on the initial 844pt viewport, same reason
+      // `def439_alpaca_relink_prompt_test.dart` scrolls Settings first.
+      await _scrollUntil(
+        tester,
+        'portfolioPositionsScroll',
+        find.textContaining('AMI now links Alpaca paper accounts only'),
+      );
+
+      expect(
+        find.textContaining('AMI now links Alpaca paper accounts only'),
+        findsOneWidget,
+        reason: 'a stale live-linked credential must explain itself, not '
+            'render as though Alpaca were never linked',
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'no credential stored at all shows neither the relink prompt nor '
+        'the Alpaca section', (tester) async {
+      await _pump(tester, sim: _lightSimState(), watchlist: const WatchlistState());
+
+      expect(
+        find.textContaining('AMI now links Alpaca paper accounts only'),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('DEF422 — honest intermediate states, never a silently-final number', () {
     Future<void> pumpLoading(
       WidgetTester tester, {

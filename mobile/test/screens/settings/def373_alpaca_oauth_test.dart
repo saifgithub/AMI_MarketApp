@@ -48,6 +48,19 @@ void main() {
         'amitrade://alpaca/callback',
       );
     });
+
+    // DEF439 round 2 (auditor u66 MAJOR-1) — round 1 sent no `env` parameter,
+    // so Alpaca's consent screen asked for BOTH a live and a paper account
+    // (Alpaca's OAuth guide, docs.alpaca.markets/docs/using-oauth2-and-trading-api:
+    // "If not specified, the user will be prompted to authorized both a live
+    // and a paper account"), and the resulting token carried live-account
+    // trading authority too. `env=paper` is what actually keeps the live
+    // account out of the grant. Mutation: deleting the `'env': 'paper'` entry
+    // from `buildAuthUrl` must fail this test.
+    test('the authorize url requests env=paper — DEF439 round 2 MAJOR-1', () {
+      final uri = Uri.parse(buildAuthUrl('x'));
+      expect(uri.queryParameters['env'], 'paper');
+    });
   });
 
   group('DEF373 — the navigation allowlist', () {

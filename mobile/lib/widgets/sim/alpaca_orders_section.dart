@@ -284,13 +284,18 @@ class _AlpacaOrderCard extends ConsumerWidget {
       // cancel an order against a non-paper Alpaca host: <url>"), straight
       // into user-facing copy. Fixed copy names the actual, user-actionable
       // fact instead.
+      //
+      // DEF439 round 2 (auditor u66 MINOR-3) — that fixed copy was still a
+      // hard-coded English literal here, so AR/MS users got an English
+      // clause inside an otherwise-translated sentence (half of MINOR-4's
+      // original complaint). Now an ARB key (`alpacaOrderCancelNonPaperDetail`)
+      // like every other piece of user-facing copy in this file.
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AmiColors.hexAmber,
         content: Text(
-            l.alpacaOrderCancelFailed(
-                'this account is not a paper account — relink in Settings'),
+            l.alpacaOrderCancelFailed(l.alpacaOrderCancelNonPaperDetail),
             style: const TextStyle(color: AmiColors.slate900)),
       ));
     }
