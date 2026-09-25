@@ -24,7 +24,7 @@ types so the Flutter console can colour-code by phase + agent.
   data: {<Verdict JSON>}
 
   event: done
-  data: {"run_id": "..."}
+  data: {"run_id": "...", "credit_cost": 8, "refunded": false}
 
   event: error
   data: <error string>
@@ -344,7 +344,25 @@ async def stream_room(
         # task's finally block, not here — so it runs even on disconnect.
         # For cached replays there's no _pump task, hence no on_complete; the
         # original journal entry from the first run is the canonical record.
-        yield sse_json("done", json.dumps({'run_id': str(run_id)}))
+        #
+        # CR236 — the client never learned what a Room cost (Saiful: "the
+        # Room would then say what it cost when it finishes"). `credit_cost`
+        # is a plain re-read of the persisted row — the exact same billed
+        # amount whether this is a fresh completion, a FAILED run (CR039
+        # refunds the same `credit_cost` on failure, never a partial or
+        # zeroed amount), or a dedup replay of an already-terminal run.
+        # `refunded` is derived from `status`, not re-computed: FAILED is the
+        # ONLY status this file refunds against (`room_runner.py`'s
+        # `except Exception` branch, DEF425/DEF432) — reading it back here is
+        # strictly reporting, never a second refund decision. A run that
+        # cannot be read back (row raced away) degrades to `null`/`false`
+        # rather than fabricating a number nobody was charged (DEF437 class).
+        _final = runner.get_run(run_id)
+        yield sse_json("done", json.dumps({
+            'run_id': str(run_id),
+            'credit_cost': _final.credit_cost if _final is not None else None,
+            'refunded': _final.status == "failed" if _final is not None else False,
+        }))
 
     headers = {"X-Room-Run-Id": str(run_id)}
     if cached:

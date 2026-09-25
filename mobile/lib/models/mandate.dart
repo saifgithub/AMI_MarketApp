@@ -337,9 +337,9 @@ class UserMandate {
     required this.compliance,
     required this.plan,
     this.trialExpiresAt,
-    required this.creditBalance,
-    this.creditAllowance = 0,
-    this.roomCost = 0,
+    this.creditBalance,
+    this.creditAllowance,
+    this.roomCost,
     this.creditsResetAt,
     this.roomCooldownUntil,
     this.createdAt,
@@ -406,10 +406,15 @@ class UserMandate {
   final int? minDaysToExpiry;
   final String plan;
   final DateTime? trialExpiresAt;
-  final int creditBalance;
+  // DEF437 — null means UNKNOWN (missing/malformed on the wire), never "0" or
+  // any other fabricated number. The backend always stamps these three from
+  // `users` (CLAUDE.md CR040: an absent value must fail visibly), so null
+  // here means something upstream broke — every consumer must show "—"/
+  // "unavailable" rather than assume a balance nobody actually has.
+  final int? creditBalance;
   // CR039/CR047 credit state (stamped by the mandate API from `users`).
-  final int creditAllowance;
-  final int roomCost;
+  final int? creditAllowance;
+  final int? roomCost;
   final DateTime? creditsResetAt;
   // CR047 "The Winzip": when set and in the future, the next Room convene is in
   // cooldown — the UI can pre-empt with the countdown card. NULL/past = clear.
@@ -473,9 +478,13 @@ class UserMandate {
       trialExpiresAt: j['trial_expires_at'] != null
           ? DateTime.parse(j['trial_expires_at'] as String)
           : null,
-      creditBalance: (j['credit_balance'] as num?)?.toInt() ?? 75,
-      creditAllowance: (j['credit_allowance'] as num?)?.toInt() ?? 0,
-      roomCost: (j['room_cost'] as num?)?.toInt() ?? 0,
+      // DEF437: a missing/null balance used to render as a fabricated `75` —
+      // a number the user never had. Unknown stays unknown; the backend
+      // always sends a real int (CLAUDE.md CR040 degrade-loudly), so a null
+      // here is itself the loud signal that something upstream is broken.
+      creditBalance: (j['credit_balance'] as num?)?.toInt(),
+      creditAllowance: (j['credit_allowance'] as num?)?.toInt(),
+      roomCost: (j['room_cost'] as num?)?.toInt(),
       creditsResetAt: j['credits_reset_at'] != null
           ? DateTime.parse(j['credits_reset_at'] as String).toLocal()
           : null,

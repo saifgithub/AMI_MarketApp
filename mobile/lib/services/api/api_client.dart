@@ -319,8 +319,19 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};
       case 'done':
+        // CR236 — the run's actual charge (and whether CR039/DEF425/DEF432
+        // refunded it) rides the terminal event so the Room can say what it
+        // cost. Both fields are wire-optional: a backend that predates CR236
+        // sends neither key, and `containsKey` — not a `?? 0` default — is
+        // what tells the notifier "unknown" from "charged nothing" (DEF437
+        // class: never fabricate a number nobody was charged).
         final j = jsonDecode(data) as Map<String, dynamic>;
-        return {'kind': 'done', 'run_id': j['run_id']};
+        return {
+          'kind': 'done',
+          'run_id': j['run_id'],
+          if (j.containsKey('credit_cost')) 'credit_cost': j['credit_cost'],
+          if (j.containsKey('refunded')) 'refunded': j['refunded'],
+        };
       case 'error':
         return {'kind': 'error', 'message': unescapeSseText(data)};
       default:

@@ -2165,6 +2165,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get conveneCta => 'اجتماع';
 
   @override
+  String creditsLineCost(String cost, String balance) {
+    return 'Room: $cost credits · you have $balance';
+  }
+
+  @override
+  String creditsLineCostWithReset(String cost, String balance, String date) {
+    return 'Room: $cost credits · you have $balance · resets $date';
+  }
+
+  @override
+  String get creditsLineInsufficient =>
+      'Not enough — the Room refuses at convene';
+
+  @override
+  String get creditsLineUnknown => 'Checking your credits…';
+
+  @override
+  String oneOnOneCreditsBalance(String balance) {
+    return 'You have $balance credits';
+  }
+
+  @override
+  String roomResultCost(String cost, String left) {
+    return 'This Room used $cost credits · $left left';
+  }
+
+  @override
+  String get roomResultRefunded => 'Not charged — the desks were unreachable';
+
+  @override
+  String settingsProfileCreditsWithReset(String balance, String date) {
+    return '$balance · resets $date';
+  }
+
+  @override
+  String get settingsProfileCreditsUnknown => '—';
+
+  @override
   String get roomHeadingPrefix => 'CONVENE ›';
 
   @override

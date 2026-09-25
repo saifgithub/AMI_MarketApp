@@ -5,10 +5,12 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/brief_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/one_on_one_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
+import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -251,7 +253,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 
-class _InputBar extends StatelessWidget {
+class _InputBar extends ConsumerWidget {
   const _InputBar({
     required this.controller,
     required this.disabled,
@@ -263,7 +265,11 @@ class _InputBar extends StatelessWidget {
   final VoidCallback onSend;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // CR236 — 1-on-1 turns bill the same credit ledger as the Room
+    // (`one_on_one_credit_cost`, `api/one_on_one.py`), so the composer gets
+    // the same compact balance line the Convene sheet and Settings show.
+    final balance = ref.watch(mandateNotifierProvider).mandate?.creditBalance;
     return Container(
       decoration: const BoxDecoration(
         color: AmiColors.slate900,
@@ -275,48 +281,60 @@ class _InputBar extends StatelessWidget {
         AmiSpacing.m,
         AmiSpacing.m + MediaQuery.of(context).viewInsets.bottom / 4,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
-              minLines: 1,
-              maxLines: 4,
-              enabled: !disabled,
-              onSubmitted: (_) => onSend(),
-              decoration: InputDecoration(
-                hintText: disabled
-                    ? AppLocalizations.of(context).oneOnOneStreaming
-                    : AppLocalizations.of(context).oneOnOneHint,
-                hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
-                filled: true,
-                fillColor: AmiColors.slate800,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AmiSpacing.m,
-                  vertical: 12,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  borderSide: const BorderSide(color: AmiColors.slate700),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                  borderSide: const BorderSide(color: AmiColors.hexBlue),
-                ),
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AmiSpacing.xs),
+            child: OneOnOneCreditsLine(balance: balance),
           ),
-          const SizedBox(width: AmiSpacing.s),
-          IconButton(
-            onPressed: disabled ? null : onSend,
-            icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
-            style: IconButton.styleFrom(
-              backgroundColor: AmiColors.slate800,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(AmiRadii.card)),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
+                  minLines: 1,
+                  maxLines: 4,
+                  enabled: !disabled,
+                  onSubmitted: (_) => onSend(),
+                  decoration: InputDecoration(
+                    hintText: disabled
+                        ? AppLocalizations.of(context).oneOnOneStreaming
+                        : AppLocalizations.of(context).oneOnOneHint,
+                    hintStyle:
+                        AmiTypography.body.copyWith(color: AmiColors.textLow),
+                    filled: true,
+                    fillColor: AmiColors.slate800,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AmiSpacing.m,
+                      vertical: 12,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AmiRadii.card),
+                      borderSide: const BorderSide(color: AmiColors.slate700),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AmiRadii.card),
+                      borderSide: const BorderSide(color: AmiColors.hexBlue),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: AmiSpacing.s),
+              IconButton(
+                onPressed: disabled ? null : onSend,
+                icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
+                style: IconButton.styleFrom(
+                  backgroundColor: AmiColors.slate800,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.all(Radius.circular(AmiRadii.card)),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

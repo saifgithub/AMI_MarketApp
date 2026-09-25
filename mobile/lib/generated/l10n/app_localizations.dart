@@ -3644,6 +3644,60 @@ abstract class AppLocalizations {
   /// **'CONVENE'**
   String get conveneCta;
 
+  /// CR236 — compact credits chip on the Convene sheet, no reset date known. {cost} is the Room's price for this plan (mandate.room_cost); {balance} is the user's current credit_balance, both plain integers formatted by the caller (e.g. '8', '63').
+  ///
+  /// In en, this message translates to:
+  /// **'Room: {cost} credits · you have {balance}'**
+  String creditsLineCost(String cost, String balance);
+
+  /// CR236 — same as creditsLineCost, with the credits_reset_at date appended once known. {date} is a localized short date (e.g. '1 Oct'), never a hard-coded 'the 1st'.
+  ///
+  /// In en, this message translates to:
+  /// **'Room: {cost} credits · you have {balance} · resets {date}'**
+  String creditsLineCostWithReset(String cost, String balance, String date);
+
+  /// CR236 — appended to the compact credits line on the Convene sheet when balance < cost, said plainly rather than silently. The actual refusal still happens server-side (402); this is a heads-up, not the wall itself.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough — the Room refuses at convene'**
+  String get creditsLineInsufficient;
+
+  /// CR236/DEF437 — shown in place of the credits line while the mandate has not loaded yet, or when the balance came back unknown. Never a guessed number.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your credits…'**
+  String get creditsLineUnknown;
+
+  /// CR236 — compact credits line above the 1-on-1 composer (1-on-1 turns are billed the same credit ledger as the Room). {balance} is the current credit_balance, plain integer as a string.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {balance} credits'**
+  String oneOnOneCreditsBalance(String balance);
+
+  /// CR236 — quiet line under a settled Room's verdict card stating what the run actually charged, read back off the done event's credit_cost. {left} is the mandate's refreshed credit_balance after the run.
+  ///
+  /// In en, this message translates to:
+  /// **'This Room used {cost} credits · {left} left'**
+  String roomResultCost(String cost, String left);
+
+  /// CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425/DEF432). Never phrased as the user's fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Not charged — the desks were unreachable'**
+  String get roomResultRefunded;
+
+  /// CR236 — Settings → Profile → Credits row value, once the reset date is known. {balance} and {date} are both pre-formatted strings from the caller (date is a localized short date, e.g. '1 Oct').
+  ///
+  /// In en, this message translates to:
+  /// **'{balance} · resets {date}'**
+  String settingsProfileCreditsWithReset(String balance, String date);
+
+  /// DEF437 — Settings → Profile → Credits row value when the balance came back null/unknown from the server. Never a fabricated number.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get settingsProfileCreditsUnknown;
+
   /// No description provided for @roomHeadingPrefix.
   ///
   /// In en, this message translates to:

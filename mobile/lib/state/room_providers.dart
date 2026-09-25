@@ -18,6 +18,7 @@ import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
@@ -102,6 +103,8 @@ class RoomState {
     this.liveDataNotice,
     this.withheldAgents = const {},
     this.agentStances = const {},
+    this.creditCost,
+    this.refunded = false,
   });
 
   final String? phase;
@@ -139,6 +142,20 @@ class RoomState {
   /// finished yet; present with a null `stance` = it finished and stated none.
   final Map<String, AgentStance> agentStances;
 
+  /// CR236 — what this run actually cost, read back off the `done` event.
+  /// Null means unknown: either the run has not finished, or the backend
+  /// predates CR236 and sent no `credit_cost` on `done` — the result card
+  /// must show no number rather than assume the mandate's `roomCost` still
+  /// applies (a run can straddle a plan change or a live-data surcharge).
+  final int? creditCost;
+
+  /// CR236 — true when [creditCost] was refunded (a FAILED run, DEF425/
+  /// DEF432). False is also the default for "unknown" — the result card only
+  /// renders the refund line when [done] is true AND [creditCost] is
+  /// non-null, so a false here is never shown as "definitely charged" on its
+  /// own.
+  final bool refunded;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -157,6 +174,8 @@ class RoomState {
     RoomLiveDataNotice? liveDataNotice,
     Map<String, WithheldAgentInfo>? withheldAgents,
     Map<String, AgentStance>? agentStances,
+    int? creditCost,
+    bool? refunded,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -174,6 +193,8 @@ class RoomState {
       liveDataNotice: liveDataNotice ?? this.liveDataNotice,
       withheldAgents: withheldAgents ?? this.withheldAgents,
       agentStances: agentStances ?? this.agentStances,
+      creditCost: creditCost ?? this.creditCost,
+      refunded: refunded ?? this.refunded,
     );
   }
 }
@@ -316,14 +337,26 @@ class RoomNotifier extends StateNotifier<RoomState> {
             state = state.copyWith(verdict: ev['verdict'] as RoomVerdict);
             break;
           case 'done':
+            // CR236 — `credit_cost`/`refunded` are wire-optional (a backend
+            // that predates CR236 sends neither), so `containsKey`, not a
+            // `?? 0`/`?? false` default, is what tells the result card
+            // "unknown" from "charged nothing" — the exact DEF437 class this
+            // CR was written alongside.
+            final rawCost = ev['credit_cost'];
+            final rawRefunded = ev['refunded'];
             state = state.copyWith(
               streaming: false,
               done: true,
               runId: ev['run_id'] as String?,
+              creditCost: rawCost is num ? rawCost.toInt() : null,
+              refunded: rawRefunded is bool ? rawRefunded : false,
             );
-            // Refresh dependent surfaces — journal got a new entry
+            // Refresh dependent surfaces — journal got a new entry, and the
+            // mandate's credit balance just moved (CR236: every surface that
+            // shows credits must reflect this run's charge/refund).
             await _ref.read(journalNotifierProvider.notifier).refresh();
             await _ref.read(lessonsNotifierProvider.notifier).refresh();
+            await _ref.read(mandateNotifierProvider.notifier).refresh();
             break;
           case 'error':
             state = state.copyWith(

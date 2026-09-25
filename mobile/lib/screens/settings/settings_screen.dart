@@ -37,6 +37,7 @@ import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/confirm_restart_onboarding.dart';
+import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
@@ -421,7 +422,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: AmiSpacing.s),
                     _ReadOnlyRow(label: l.settingsProfilePlan, value: m.plan),
-                    _ReadOnlyRow(label: l.settingsProfileCredits, value: '${m.creditBalance}'),
+                    _ReadOnlyRow(
+                      label: l.settingsProfileCredits,
+                      value: _creditsRowValue(l, m),
+                    ),
                     _ReadOnlyRow(label: l.settingsProfileLocale, value: m.locale),
                     const SizedBox(height: AmiSpacing.s),
                     MandateTextRow(
@@ -1016,6 +1020,19 @@ class _ComplianceToggles extends StatelessWidget {
   }
 }
 
+
+/// CR236/DEF437 — the Profile → Credits row value: "63 · resets 1 Oct" once
+/// the reset date is known, else just "63". A null balance (unknown, never
+/// the old fabricated `75`) renders `settingsProfileCreditsUnknown` ("—")
+/// instead of inventing a number.
+String _creditsRowValue(AppLocalizations l, UserMandate m) {
+  final balance = m.creditBalance;
+  if (balance == null) return l.settingsProfileCreditsUnknown;
+  final reset = m.creditsResetAt;
+  if (reset == null) return balance.toString();
+  return l.settingsProfileCreditsWithReset(
+      balance.toString(), creditsResetDateLabel(reset));
+}
 
 class _ReadOnlyRow extends StatelessWidget {
   const _ReadOnlyRow({required this.label, required this.value});
