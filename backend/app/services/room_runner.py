@@ -43,7 +43,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from app.agents.safety_floor import (
     CONTEXT_NOT_SUPPLIED,
@@ -4521,6 +4521,17 @@ class RoomRunner:
             abandoned-snapshot branch already uses), never left uncredited
             the way `run()`'s old unconditional-CANCELLED path left it.
 
+        DEF425 round 2 (auditor U68, MAJOR-1): a row the shutdown branch
+        marked `interrupted_at` is claimed at ANY age — a restart comes back
+        in seconds, long before the 30-minute `room_dedup_running_minutes`
+        age cutoff would ever see it. The age cutoff stays, unioned in, for
+        UNMARKED rows: a bare crash/SIGKILL never reaches the shutdown
+        branch, so age is still the only signal a genuinely-stuck row of
+        that kind can offer. `started_at < process_start` was rejected here
+        (see DEF425.architect.md round 2) — correct only for today's single
+        uvicorn worker; it would let one instance's boot steal a still-live
+        run from a sibling once CR126 (Cloud Run, multi-instance) lands.
+
         Pure DB work — no event loop needed, runs from __init__. The
         respawn happens later in resume_pending_retries() from the
         lifespan startup hook.
@@ -4535,7 +4546,10 @@ class RoomRunner:
                 rows = s.execute(
                     select(RoomRunRow)
                     .where(RoomRunRow.status == "running")
-                    .where(RoomRunRow.started_at < cutoff)
+                    .where(or_(
+                        RoomRunRow.interrupted_at.is_not(None),
+                        RoomRunRow.started_at < cutoff,
+                    ))
                 ).scalars().all()
                 retried = 0
                 failed = 0
@@ -4546,6 +4560,13 @@ class RoomRunner:
                         row.transcript = []
                         row.verdict = None
                         row.error_message = None
+                        # DEF425 round 2: clear the mark on claim — this row
+                        # is now a fresh retry, not still the interrupted one.
+                        # Left set, the very next boot's sweep (this branch
+                        # keeps status="running") would re-claim it
+                        # immediately regardless of the age it just reset,
+                        # double-retrying a run still legitimately in flight.
+                        row.interrupted_at = None
                         self._pending_retry.append(_PendingRetry(
                             run_id=row.id,
                             user_id=row.user_id,
@@ -4768,6 +4789,13 @@ class RoomRunner:
         Catches the mobile-retry case where a client resubmits because the
         SSE connection dropped — instead of starting a fresh run, the new
         SSE consumer attaches to the one already executing.
+
+        DEF425 round 2 (auditor U68, MAJOR-1): a row the shutdown branch
+        marked `interrupted_at` is NOT active — no process is executing it,
+        and it stays that way until the next boot's sweep claims it. Before
+        this exclusion, a re-convene of the same ticker attached to the dead
+        row for the whole `room_dedup_running_minutes` window (30 min) and
+        streamed nothing but replayed agent_done events with no verdict.
         """
         cutoff = datetime.now(timezone.utc) - timedelta(
             minutes=settings.room_dedup_running_minutes
@@ -4778,6 +4806,7 @@ class RoomRunner:
                 .where(RoomRunRow.user_id == user_id)
                 .where(RoomRunRow.ticker == ticker)
                 .where(RoomRunRow.status == "running")
+                .where(RoomRunRow.interrupted_at.is_(None))
                 .where(RoomRunRow.started_at >= cutoff)
                 .order_by(RoomRunRow.triggered_at.desc())
                 .limit(1)
@@ -5173,7 +5202,22 @@ class RoomRunner:
                 await q.put(None)  # sentinel — unblocks any waiting subscribe() call
                 self._active_queues.pop(run_id, None)
                 self._active_by_key.pop(key, None)  # deregister dedup key
-                if on_complete is not None:
+                # DEF425 round 2 (auditor U68, MINOR-1): `run()` re-raises
+                # CancelledError/GeneratorExit on shutdown — a BaseException,
+                # not caught by the `except Exception` above — so this
+                # `finally` still ran unconditionally and `on_complete`
+                # (`_finalise_to_journal`) journaled the RUNNING row as
+                # "Room on AAPL — running ... without reaching a verdict" for
+                # a run that has not finished. ROOM_RUN entries carry no
+                # dedupe key, so a later retry's real verdict entry landed
+                # ALONGSIDE this false one, or — if retries were exhausted —
+                # this false "running" entry was left as the sole record of a
+                # run that is actually failed and refunded. Skip on_complete
+                # entirely on the shutdown path: the retry (respawn's own
+                # journal replay) or the sweep's failed-branch is what writes
+                # the real entry once the run actually reaches a terminal
+                # state.
+                if on_complete is not None and not self._shutting_down:
                     try:
                         await on_complete(run_id)
                     except Exception as exc:
@@ -6206,15 +6250,40 @@ class RoomRunner:
             # disconnected mid-run" — the label this comment used to apply
             # unconditionally.
             if self._shutting_down:
+                # DEF425 round 2 (auditor U68, MAJOR-1): leaving the row at
+                # plain RUNNING isn't enough — `_sweep_stuck_runs` only
+                # claims `running` rows older than
+                # `room_dedup_running_minutes` (30 min), and a restart comes
+                # back in seconds. Stamp `interrupted_at` directly on the row
+                # (not through `_persist_run`/`RoomRun` — this is a
+                # sweep-only bookkeeping field, same treatment `retry_count`
+                # already gets) so the NEXT boot's sweep claims it
+                # immediately regardless of age, and `_find_active_run` stops
+                # treating it as live. Best-effort: a failure here must not
+                # stop the CancelledError/GeneratorExit propagating (shutdown
+                # cannot be blocked on this write succeeding).
+                try:
+                    with get_session() as s:
+                        row = s.execute(
+                            select(RoomRunRow).where(RoomRunRow.id == run_id)
+                        ).scalar_one_or_none()
+                        if row is not None and row.status == "running":
+                            row.interrupted_at = datetime.now(timezone.utc)
+                except Exception:
+                    logger.exception(
+                        "room_shutdown_mark_interrupted_failed",
+                        run_id=str(run_id),
+                    )
                 logger.info(
                     "room_cancelled_shutdown",
                     run_id=str(run_id),
                     ticker=ticker,
                     agents_completed=len(run.transcript),
                     detail=(
-                        "server shutdown mid-run — row left RUNNING for "
-                        "_sweep_stuck_runs to claim on next boot; NOT marked "
-                        "CANCELLED, NOT refunded here"
+                        "server shutdown mid-run — row left RUNNING and "
+                        "marked interrupted_at for _sweep_stuck_runs to claim "
+                        "immediately on next boot; NOT marked CANCELLED, NOT "
+                        "refunded here"
                     ),
                 )
                 raise

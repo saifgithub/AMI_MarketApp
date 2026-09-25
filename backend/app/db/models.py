@@ -732,6 +732,19 @@ class RoomRunRow(Base):
     # giving up. retry_count tracks how many times the row has been
     # re-spawned by _sweep_stuck_runs after a container restart.
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # DEF425 round 2: set (to "now") by the shutdown-cancel branch in
+    # `RoomRunner.run()`'s except clause — NOT by anything else. NULL means
+    # "not known to be shutdown-interrupted" (the common case: a completed
+    # run, a genuinely-cancelled one, or a row a bare crash/SIGKILL left
+    # behind with no chance to mark it). `_sweep_stuck_runs` claims a marked
+    # row immediately regardless of `started_at` age; an unmarked `running`
+    # row still needs the 30-minute age rule since a SIGKILL never marks.
+    # `_find_active_run` treats a marked row as not active so a re-convene
+    # of the same ticker does not attach to a dead run while it waits for
+    # the next boot's sweep.
+    interrupted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
 
 
 class SimWatchlistRow(Base):

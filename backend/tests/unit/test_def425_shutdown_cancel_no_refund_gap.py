@@ -163,11 +163,13 @@ def test_shutdown_cancel_leaves_row_running_not_cancelled():
     assert balance_for(user_id)[0] == before
 
 
-def test_shutdown_cancelled_row_is_claimed_by_the_sweep_on_next_boot():
-    """End-to-end: the row DEF425's fix leaves RUNNING is exactly the shape
-    `_sweep_stuck_runs` already knows how to claim — construct a second
-    `RoomRunner()` (simulating the next boot) and confirm it queues the row
-    for auto-retry, per `_sweep_stuck_runs`'s own pre-existing contract."""
+def test_shutdown_cancel_marks_interrupted_at():
+    """Round 2 (auditor U68, MAJOR-1): plain RUNNING isn't enough —
+    `_sweep_stuck_runs` only claims rows older than
+    `room_dedup_running_minutes` (30 min), and a real restart comes back in
+    seconds. The shutdown branch must stamp `interrupted_at` on the row so
+    the NEXT boot's sweep can tell "just started" apart from "was
+    interrupted" and claim it immediately regardless of age."""
     runner = RoomRunner()
     runner.mark_shutting_down()
     mandate = hydrate_coach_mandate({"plan": "trader"})
@@ -177,26 +179,79 @@ def test_shutdown_cancelled_row_is_claimed_by_the_sweep_on_next_boot():
         runner, user_id=user_id, ticker="AAPL", mandate=mandate,
     ))
 
-    # Backdate started_at past the dedup-running cutoff so the NEXT
-    # RoomRunner's __init__ sweep (which only claims rows older than
-    # `room_dedup_running_minutes`) picks it up immediately rather than
-    # waiting out the real window.
-    with get_session() as s:
-        row = s.execute(
-            select(RoomRunRow).where(RoomRunRow.id == run_id)
-        ).scalar_one()
-        row.started_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    row = _row(run_id)
+    assert row.status == "running"
+    assert row.interrupted_at is not None
+
+
+def test_shutdown_cancelled_row_is_claimed_by_the_sweep_on_next_boot_with_fresh_started_at():
+    """End-to-end, round 2: NO backdating — `started_at` is left exactly as
+    the run set it (seconds old, the way a real restart actually happens).
+    The `interrupted_at` mark (not row age) is what lets the very next
+    `RoomRunner()` (simulating the reboot right after the restart) claim the
+    row immediately. Round 1's version of this test backdated `started_at`
+    by an hour, which is exactly what let the MAJOR-1 gap (30-minute-old
+    sweep window vs. a restart that returns in seconds) pass unnoticed."""
+    runner = RoomRunner()
+    runner.mark_shutting_down()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    user_id = _billed_user()
+
+    run_id = asyncio.run(_run_until_two_agents_then_gen_exit(
+        runner, user_id=user_id, ticker="AAPL", mandate=mandate,
+    ))
+
+    row = _row(run_id)
+    assert row.started_at is not None
+    started_at = row.started_at
+    if started_at.tzinfo is None:
+        started_at = started_at.replace(tzinfo=timezone.utc)
+    age = datetime.now(timezone.utc) - started_at
+    assert age < timedelta(minutes=1), (
+        "sanity: started_at must still be fresh — this test's whole point "
+        "is that a fresh row is still claimed"
+    )
 
     next_boot_runner = RoomRunner()
     pending_ids = [p.run_id for p in next_boot_runner._pending_retry]
     assert run_id in pending_ids, (
-        "the row DEF425 leaves RUNNING must be exactly the shape the "
-        "pre-existing startup sweep already claims for auto-retry"
+        "a shutdown-interrupted row must be claimed on the very next boot "
+        "regardless of how young started_at still is — that is the whole "
+        "point of the interrupted_at mark"
     )
 
     row = _row(run_id)
     assert row.status == "running"
     assert row.retry_count == 1
+    assert row.interrupted_at is None, (
+        "the sweep must clear the mark on claim — this is now a fresh "
+        "retry, not still the interrupted run; leaving it set would make "
+        "the very next boot re-claim it again immediately"
+    )
+
+
+def test_find_active_run_does_not_attach_to_an_interrupted_row():
+    """Round 2 (auditor U68, MAJOR-1): before the sweep claims it,
+    `_find_active_run` must not treat a shutdown-interrupted row as live —
+    otherwise a re-convene of the same ticker right after boot attaches to
+    the dead run and streams nothing but replayed events with no verdict,
+    for the whole `room_dedup_running_minutes` window."""
+    runner = RoomRunner()
+    runner.mark_shutting_down()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    user_id = _billed_user()
+
+    run_id = asyncio.run(_run_until_two_agents_then_gen_exit(
+        runner, user_id=user_id, ticker="AAPL", mandate=mandate,
+    ))
+
+    row = _row(run_id)
+    assert row.interrupted_at is not None  # sanity
+
+    assert runner._find_active_run(user_id, "AAPL") is None, (
+        "an interrupted row is not active — a re-convene must start a new "
+        "run (or attach to a subsequent retry), never attach to the dead row"
+    )
 
 
 # ── non-shutdown cancellation: unchanged defensive fallback ──────────────
@@ -328,6 +383,80 @@ def test_sweep_still_queues_retry_for_a_fresh_row_with_no_refund():
     pending_ids = [p.run_id for p in runner._pending_retry]
     assert run_id in pending_ids
     assert balance_for(user_id)[0] == before, "a queued retry must not refund"
+
+
+# ── MINOR-1: on_complete must not fire on the shutdown path ──────────────
+
+
+def test_shutdown_cancel_skips_on_complete_no_running_journal_entry():
+    """Round 2 (auditor U68, MINOR-1): `run()` re-raises
+    CancelledError/GeneratorExit on shutdown — a BaseException, so it is
+    NOT caught by `_pump`'s `except Exception`, and its `finally` used to
+    call `on_complete` (`_finalise_to_journal` in production) unconditionally
+    anyway. That journaled the still-RUNNING row as "Room on AAPL — running
+    ... without reaching a verdict" for a run that has not finished — wrong
+    on its own, and duplicated once the retry's own real verdict entry
+    lands. Fix: `_pump` skips `on_complete` entirely when
+    `self._shutting_down` is set; the retry (or the sweep's failed branch)
+    writes the real entry once the run actually reaches a terminal state.
+    """
+    from app.services.journal_store import get_journal_store
+
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = _billed_user()
+        on_complete_calls: list["UUID"] = []
+
+        async def _on_complete(run_id) -> None:
+            on_complete_calls.append(run_id)
+
+        run_id = await runner.start_run(
+            user_id=user_id,
+            ticker="AAPL",
+            mandate=mandate,
+            char_delay_min=0.0,
+            char_delay_max=0.0,
+            on_complete=_on_complete,
+        )
+
+        # Let two agents speak, then simulate the real shutdown sequence:
+        # mark_shutting_down() first (main.py's lifespan ordering), THEN
+        # cancel the background _pump task directly — the same thing
+        # asyncio's own teardown does to every outstanding task.
+        agents_done = 0
+        async for ev in runner.subscribe(run_id):
+            if ev.kind == "agent_done":
+                agents_done += 1
+                if agents_done >= 2:
+                    break
+
+        runner.mark_shutting_down()
+        pump_task = next(
+            t for t in asyncio.all_tasks()
+            if t is not asyncio.current_task() and not t.done()
+        )
+        pump_task.cancel()
+        await asyncio.gather(pump_task, return_exceptions=True)
+
+        return run_id, on_complete_calls
+
+    run_id, on_complete_calls = asyncio.run(_run())
+
+    assert on_complete_calls == [], (
+        "on_complete must not fire on the shutdown path — the run has not "
+        "reached a terminal state, and the retry/sweep own writing the real "
+        "journal entry"
+    )
+    row = _row(run_id)
+    assert row.status == "running"
+    assert row.interrupted_at is not None
+
+    entries, _total, _retention = get_journal_store().list_for_user(row.user_id)
+    assert not any(e.reference_id == run_id for e in entries), (
+        "no journal entry may exist for a run that has not reached a "
+        "terminal state"
+    )
 
 
 def _ledger(user_id) -> list[SubscriptionEventRow]:
