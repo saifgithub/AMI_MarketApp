@@ -180,6 +180,9 @@ class RoomRunSnapshot {
     this.verdict,
     this.creditCost,
     this.durationMs,
+    this.refunded = false,
+    this.cioRetryAvailable = false,
+    this.cioRetried = false,
   });
 
   final String id;
@@ -191,6 +194,15 @@ class RoomRunSnapshot {
   final RoomVerdict? verdict;
   final int? creditCost;
   final int? durationMs;
+
+  /// CR237 round 2 (auditor MAJOR-3) — the same three server-computed flags
+  /// the `done` SSE event carries, read off the GET payload so a dropped-socket
+  /// recovery (`_recoverViaPolling`) still offers "Ask the CIO again" and keeps
+  /// the cost line truthful. Absent or non-bool ⇒ false, exactly like the
+  /// `done` handler — never inferred from `verdict.reason`.
+  final bool refunded;
+  final bool cioRetryAvailable;
+  final bool cioRetried;
 
   factory RoomRunSnapshot.fromJson(Map<String, dynamic> j) {
     return RoomRunSnapshot(
@@ -217,6 +229,11 @@ class RoomRunSnapshot {
           : RoomVerdict.fromJson(j['verdict'] as Map<String, dynamic>),
       creditCost: (j['credit_cost'] as num?)?.toInt(),
       durationMs: (j['duration_ms'] as num?)?.toInt(),
+      refunded: j['refunded'] is bool ? j['refunded'] as bool : false,
+      cioRetryAvailable: j['cio_retry_available'] is bool
+          ? j['cio_retry_available'] as bool
+          : false,
+      cioRetried: j['cio_retried'] is bool ? j['cio_retried'] as bool : false,
     );
   }
 }

@@ -306,3 +306,9 @@ class RoomRun(BaseModel):
     # eligibility rule (mandate unchanged, snapshot present, within the age
     # window, no retry in flight) lives in exactly one place.
     cio_retry_available: bool = False
+
+    # CR237 round 2 (auditor MAJOR-3) — `run_was_refunded(run)`, computed by
+    # the same GET/list routes as `cio_retry_available` and NEVER persisted.
+    # The `done` SSE event already carries it; the GET payload did not, so a
+    # client recovering a dropped stream by polling had no truthful cost line.
+    refunded: bool = False

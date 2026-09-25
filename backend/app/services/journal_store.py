@@ -65,6 +65,19 @@ class RestoreOutcome(str, Enum):
     SUPERSEDED = "superseded"
 
 
+class ReferenceUpdateOutcome(str, Enum):
+    """What `update_by_reference` found (CR237 round 2, auditor MAJOR-2).
+
+    `DELETED` and `NOT_FOUND` must stay distinct: the caller appends a fresh
+    entry only when none ever existed. Collapsing the two resurrected an
+    entry the user had deleted.
+    """
+
+    UPDATED = "updated"
+    DELETED = "deleted"
+    NOT_FOUND = "not_found"
+
+
 def _as_utc(value: datetime) -> datetime:
     """SQLite (test fixtures) drops tzinfo; Postgres keeps it. Comparing the two
     shapes raises, so every stored timestamp is normalised on read — the same
@@ -321,11 +334,12 @@ class JournalStore:
         entry_type: EntryType | str,
         reference_id: UUID,
         draft: JournalEntryCreate,
-    ) -> JournalEntry | None:
+    ) -> tuple[ReferenceUpdateOutcome, JournalEntry | None]:
         """CR237 — overwrite the LIVE entry for `(user_id, entry_type,
-        reference_id)` in place with `draft`'s fields. Returns the updated
-        entry, or `None` if no live entry exists for that reference (the
-        caller's job to have created one first via `append`).
+        reference_id)` in place with `draft`'s fields. Returns
+        `(UPDATED, entry)`; `(DELETED, None)` when the only rows for that
+        reference are soft-deleted (the user removed it — the caller must NOT
+        append a replacement); `(NOT_FOUND, None)` when no row ever existed.
 
         Exists for "Ask the CIO again": a successful retry replaces a Room
         run's outage-PASS verdict with a real one on the SAME run id, and its
@@ -353,7 +367,17 @@ class JournalStore:
                 .limit(1)
             ).scalar_one_or_none()
             if row is None:
-                return None
+                deleted = s.execute(
+                    select(JournalEntryRow.id).where(
+                        JournalEntryRow.user_id == user_id,
+                        JournalEntryRow.entry_type == et.value,
+                        JournalEntryRow.reference_id == reference_id,
+                        JournalEntryRow.deleted_at.is_not(None),
+                    ).limit(1)
+                ).first()
+                if deleted is not None:
+                    return ReferenceUpdateOutcome.DELETED, None
+                return ReferenceUpdateOutcome.NOT_FOUND, None
             row.title = draft.title
             row.summary = draft.summary
             row.ticker = draft.ticker
@@ -363,7 +387,7 @@ class JournalStore:
             row.outcome = draft.outcome
             row.payload = dict(draft.payload)
             s.flush()
-            return _row_to_entry(row)
+            return ReferenceUpdateOutcome.UPDATED, _row_to_entry(row)
 
     def get(self, user_id: UUID, entry_id: UUID) -> JournalEntry | None:
         with get_session() as s:

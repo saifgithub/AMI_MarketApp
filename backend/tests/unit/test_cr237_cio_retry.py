@@ -158,8 +158,9 @@ def _run_outage_room(user_id, mandate, gateway) -> tuple[RoomRunner, "uuid.UUID"
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    assert len(verdicts) in (1, 2)
-    final = verdicts[-1].verdict
+    # CR219 R51 — exactly one verdict event, even on the refunded outage path.
+    assert len(verdicts) == 1
+    final = verdicts[0].verdict
     assert final.action == VerdictAction.PASS
     assert is_llm_outage_verdict(final.model_dump())
     return runner, run_id
@@ -972,9 +973,9 @@ def test_def432_minor1_failed_refund_on_cio_outage_pass_direct_run(monkeypatch):
 
     events = asyncio.run(go())
     verdicts = [ev for ev in events if ev.kind == "verdict"]
-    # Exactly ONE verdict event: the refund's re-emit branch is inside its
-    # own `else:` (success only) — a failed refund never reaches it, same
-    # as test_def432_room_outage_refund.py's identical NO_VERDICT case.
+    # Exactly ONE verdict event (CR219 R51), emitted after the failed refund
+    # attempt and so without the "wasn't charged" sentence — same as
+    # test_def432_room_outage_refund.py's identical NO_VERDICT case.
     assert len(verdicts) == 1
     verdict = verdicts[0].verdict
 
@@ -1124,3 +1125,167 @@ def test_def432_minor1_failed_refund_on_respawned_cio_outage_pass(monkeypatch):
 
     # Never refunded — balance stays at the post-charge figure.
     assert balance_for(user_id)[0] == after_charge
+
+
+# ── round 2 — auditor U69 findings ───────────────────────────────────────────
+
+
+def _convene(runner: RoomRunner, user_id, mandate):
+    async def go():
+        return [ev async for ev in runner.run(
+            user_id=user_id, ticker=TICKER, mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0, credit_cost=CREDIT_COST,
+        )]
+    return asyncio.run(go())
+
+
+def test_major1_successful_retry_keeps_the_next_convene_basis():
+    """MAJOR-1 — `run()` stamps `sheet_state`/`reference_price`/
+    `next_convene_delta` onto every completed verdict; the next convene's
+    delta line reads them back. A retry that replaces the verdict must carry
+    the same three, and `next_convene_delta` must be THIS run's comparison
+    against the convene BEFORE it — not against its own outage PASS."""
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    gateway = _CioDownThenApproveGateway(_pm_json(action="APPROVE"))
+
+    gateway.down = False
+    _convene(RoomRunner(llm=gateway), user_id, mandate)  # the real prior: APPROVE
+    gateway.down = True
+    runner, run_id = _run_outage_room(user_id, mandate, gateway)
+    original = runner.get_run(run_id).verdict
+    assert original.sheet_state, "guard: the outage verdict was stamped"
+    assert original.next_convene_delta is not None, "guard: a prior convene exists"
+    assert original.next_convene_delta.prior_action == "APPROVE"
+
+    gateway.down = False
+    _retry(runner, run_id, user_id)
+
+    retried = runner.get_run(run_id).verdict
+    assert retried.action == VerdictAction.APPROVE
+    assert retried.sheet_state == original.sheet_state
+    assert retried.reference_price == original.reference_price
+    assert retried.next_convene_delta == original.next_convene_delta
+    assert retried.next_convene_delta.prior_action == "APPROVE", (
+        "the retry compared the run against its own outage PASS"
+    )
+    row = _row(run_id)
+    assert row.verdict.get("sheet_state") == original.sheet_state
+
+
+def test_major1_still_down_retry_keeps_the_original_verdict_intact():
+    """The still-down path used to persist `_run_cio_step`'s fresh outage
+    verdict: no R60 stamps and no "wasn't charged" sentence, although the
+    refund stands."""
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    runner, run_id = _run_outage_room(user_id, mandate, _AlwaysDownGateway())
+    original = runner.get_run(run_id).verdict
+    assert "wasn't charged" in original.reason
+    assert original.sheet_state
+
+    _retry(runner, run_id, user_id)
+
+    after = runner.get_run(run_id).verdict
+    assert after == original
+
+
+def test_major2_retry_never_resurrects_a_deleted_journal_entry():
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    gateway = _CioDownThenApproveGateway(_pm_json(action="APPROVE"))
+    runner, run_id = _run_outage_room(user_id, mandate, gateway)
+    gateway.down = False
+
+    store = get_journal_store()
+    entry = store.append(build_journal_entry_for_run(runner.get_run(run_id), user_id))
+    assert store.soft_delete(user_id, entry.id)
+
+    _retry(runner, run_id, user_id)
+
+    assert runner.get_run(run_id).verdict.action == VerdictAction.APPROVE
+    assert store.first_for_reference(user_id, EntryType.ROOM_RUN, run_id) is None
+    _, live_total, _ = store.list_for_user(user_id, plan="trader", limit=100)
+    assert live_total == 0, "the user's deleted entry came back"
+
+
+def test_major2_update_by_reference_tells_deleted_from_missing():
+    from app.services.journal_store import ReferenceUpdateOutcome
+
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    runner, run_id = _run_outage_room(user_id, mandate, _AlwaysDownGateway())
+    draft = build_journal_entry_for_run(runner.get_run(run_id), user_id)
+    store = get_journal_store()
+
+    assert store.update_by_reference(
+        user_id, EntryType.ROOM_RUN, run_id, draft,
+    ) == (ReferenceUpdateOutcome.NOT_FOUND, None)
+
+    entry = store.append(draft)
+    outcome, updated = store.update_by_reference(
+        user_id, EntryType.ROOM_RUN, run_id, draft,
+    )
+    assert outcome is ReferenceUpdateOutcome.UPDATED
+    assert updated is not None and updated.id == entry.id
+
+    store.soft_delete(user_id, entry.id)
+    assert store.update_by_reference(
+        user_id, EntryType.ROOM_RUN, run_id, draft,
+    ) == (ReferenceUpdateOutcome.DELETED, None)
+
+
+def test_major2_a_missing_entry_is_still_appended():
+    """The append fallback survives for the case it was written for."""
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    gateway = _CioDownThenApproveGateway(_pm_json(action="APPROVE"))
+    runner, run_id = _run_outage_room(user_id, mandate, gateway)
+    gateway.down = False
+
+    _retry(runner, run_id, user_id)
+
+    entry = get_journal_store().first_for_reference(user_id, EntryType.ROOM_RUN, run_id)
+    assert entry is not None
+
+
+class _NoProviderGateway:
+    def has_real_provider(self) -> bool:
+        return False
+
+    async def stream_chat(self, **_kwargs):  # pragma: no cover - must not be called
+        raise AssertionError("a retry with no live provider called the LLM")
+        yield ""
+
+
+def test_minor1_retry_refuses_without_a_live_provider(monkeypatch):
+    """MINOR-1 — without a live provider `_run_cio_step` takes the scripted
+    branch and would bank a canned APPROVE as the CIO's answer. Refuse:
+    nothing persisted, nothing banked, no credits, still retryable."""
+    user_id = _billed_user()
+    before = balance_for(user_id)[0]
+    spend(user_id, CREDIT_COST, reason="room:AAPL:test-charge")
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    runner, run_id = _run_outage_room(user_id, mandate, _AlwaysDownGateway())
+    original = runner.get_run(run_id)
+    row_before = _row(run_id).verdict
+
+    banked: list = []
+    monkeypatch.setattr(
+        room_runner_mod, "bank_verdict_outcome", lambda **kw: banked.append(kw),
+    )
+    runner._llm = _NoProviderGateway()  # type: ignore[assignment]
+
+    events = _retry(runner, run_id, user_id)
+
+    assert [ev for ev in events if ev.kind == "verdict"] == []
+    errors = [ev for ev in events if ev.kind == "error"]
+    assert len(errors) == 1
+    assert "unavailable" in errors[0].text.lower()
+    assert banked == []
+    after = runner.get_run(run_id)
+    assert after.verdict == original.verdict
+    assert after.cio_retried is False
+    assert after.cio_context_snapshot is not None, "still retryable later"
+    assert _row(run_id).verdict == row_before
+    assert balance_for(user_id)[0] == before

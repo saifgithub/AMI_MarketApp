@@ -429,6 +429,7 @@ def get_room(
     # CR237 — computed at read time, never persisted (see the field's own
     # docstring on RoomRun).
     run.cio_retry_available = _compute_cio_retry_available(run, current_user.id)
+    run.refunded = run_was_refunded(run)
     return run
 
 
@@ -535,4 +536,5 @@ def list_user_rooms(
     # not a fetch, and the eligibility check itself is pure/local.
     for run in runs:
         run.cio_retry_available = _compute_cio_retry_available(run, current_user.id)
+        run.refunded = run_was_refunded(run)
     return runs

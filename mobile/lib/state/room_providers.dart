@@ -630,6 +630,12 @@ class RoomNotifier extends StateNotifier<RoomState> {
             verdict: snap.verdict,
             activeAgent: null,
             agentStances: stances,
+            // CR237 round 2 (auditor MAJOR-3) — the `done` event never
+            // arrived on this path, so its flags come from the GET payload.
+            creditCost: snap.creditCost,
+            refunded: snap.refunded,
+            cioRetryAvailable: snap.cioRetryAvailable,
+            cioRetried: snap.cioRetried,
           );
           await _ref.read(journalNotifierProvider.notifier).refresh();
           await _ref.read(lessonsNotifierProvider.notifier).refresh();
