@@ -570,3 +570,93 @@ Counts, round 3: 0 BLOCKER, 1 MAJOR open (MAJOR-1, on `_ensure_period` only), 0 
 MAJOR-3 are fixed.
 
 VERDICT: AWAITING_FIXES (round 3)
+
+---
+
+## Round 4 — auditor U68
+
+**SHA audited:** `6d3be5fc` (fix `90a3af56`). Detached scratch worktree `audit-U68-R4` per DEF159,
+clean after every mutation. Postgres runs used a new throwaway `postgres:15-alpine`
+(`audit_u68_r4_pg`, isolated network, `alembic upgrade head` -> `m111a0def416x417`), removed
+afterwards. The round-3 tree (`685dbdd0`) ran next to it, so the same probes could be seen
+failing before the fix. **Not live yet:** Alpha runs `alpha-2026-09-25-4` (`685dbdd0`).
+
+### MAJOR-1 (residual, `_ensure_period`) — fixed
+
+After `_lock_user_row`, `_ensure_period` now works out `eff`, `window_rolled` and `plan_drifted`
+again from the locked row, and returns if a re-grant is no longer due
+(`credit_service.py:292` lock, `:298-304` re-check, `:307` write). This is the same shape as my round-3 control.
+
+On real Postgres, through the real functions, with a concurrent writer committing between the
+caller's load and its lock:
+
+```
+                                                        685dbdd0 (r3)   6d3be5fc (r4)   expected
+rollover  balance_for vs pack webhook                   150             160             160
+rollover  balance_for vs spend                          150             149             149
+rollover  webhook _ensure_period+pack vs spend          160             159             159
+drift     balance_for vs pack webhook   (expired trial) 13              23              23
+drift     balance_for vs spend          (expired trial) 13              12              12
+drift     webhook _ensure_period+pack vs spend          23              22              22
+drift     sequential control                            —               23 (re-tagged floor_pass)   23
+```
+
+The plan-drift variant is new this round: an admin-granted `trial_trader` whose trial has just
+expired, so `eff` is `floor_pass` while the period is still tagged `trial_trader`. Before the
+fix, the balance read wiped the paid pack out (13 instead of 23), the same loss as the rollover
+case. After the fix, the balance is correct on both branches.
+
+Nothing regressed. I re-ran every round-3 writer probe on the `6d3be5fc` tree:
+
+- `refund` gives 5, `pack` 14, `admin` 5, `streak` 9 and `plan_renew` 4.
+- A real `MergeService.execute` gives 11.
+- `rollover_pack_sequential` gives 160 and `revoke_sequential` gives 13.
+
+**Mutations, mine** (each reverted, tree re-checked clean):
+
+- Kept the re-derived values but ignored them (`if False: return eff`): 2 failed, 12 passed.
+  These are the builder's two new tests, for rollover and for drift.
+- Dropped `plan_drifted` from the check after the lock: the guard file stays green (14 passed),
+  because both of its race tests reach a rolled-or-resolved state on which the mutant still
+  returns early. The mutant is caught one level up. Across the 24 credit-related test files it
+  gives 1 failed, 420 passed, via
+  `test_cr039_room_credit_gate.py::test_trial_lapse_regrants_immediately_not_at_month_rollover`.
+  The full suite does guard it. Recorded, not scored.
+
+### Evidence, run bare in the pinned worktree
+
+```
+pytest test_retro_security_credit_balance_lock_guard.py -q -p no:cacheprovider        14 passed   EXIT=0
+```
+
+Full unit suite at `6d3be5fc`. The melehost part ran in a throwaway container from the Alpha
+image, 3 shards on tmpfs. The 5 git-dependent files ran on the Mac. All runs were bare, and I
+read the exit codes directly:
+
+```
+melehost s0   2130 passed, 2 skipped              EXIT=0
+melehost s1   2672 passed, 3 skipped              EXIT=0
+melehost s2   1 failed, 2015 passed, 4 skipped    EXIT=1   test_def247_displaced_stance_envelope.py::test_a_displaced_envelope_is_still_reported
+Mac (5 git-dependent files)  34 passed            EXIT=0
+total         6851 passed, 1 failed, 9 skipped
+```
+
+The one failure is the same `test_def247` I diagnosed in round 2. It is already there at
+`0accfeed`, fails only in shard order, passes alone and in the default order, and is recorded
+there as out of scope. None of the failures comes from this round's change.
+
+FOREIGN: not run — no `foreign/RETRO-SECURITY.r4` branch exists. Not a clean bill.
+
+### Verdict
+
+The last open MAJOR is fixed. The fix follows the pattern my control proved: lock the row,
+then decide. I drove both branches on real Postgres. The rollover case the builder asked me to
+re-measure now reads 160 and 149. The plan-drift case, which I had not driven before, erased a
+pack before the fix and now keeps it. It fails on the round-3 tree and passes on this one, so
+the probe does tell the two apart. Across four rounds, all six credit writers now serialise
+against a concurrent write, and so does the re-grant decision. The Concierge and Brief no longer
+bill a failure, and the event loop is clear. Nothing in the suite fails because of this round.
+
+Counts, round 4: 0 BLOCKER, 0 MAJOR, 0 MINOR open.
+
+VERDICT: COMPLETE (round 4)
