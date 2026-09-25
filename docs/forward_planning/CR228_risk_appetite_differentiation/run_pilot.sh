@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# CR228 Step 1 pilot — R1 vs R5 over the same 30 tickers.
+# CR228 pilot — risk_score arms over the same 30 tickers. ARMS="1 2 3 4 5" runs the
+# full dial (2026-09-25 re-run); the default "1 5" is the original Step 1 pilot.
 #
 # Runs INSIDE ami_api_alpha (CR035's ops lesson: run in-container, not from the
 # Mac). Strictly one convene in flight, arms sequential — the documented vLLM
@@ -28,7 +29,7 @@ base_mandate() {  # $1 = risk_score
 JSON
 }
 
-for RS in 1 5; do
+for RS in ${ARMS:-1 5}; do
   BATCH="cr228-r${RS}-${STAMP}"
   echo "=== arm risk_score=${RS} · batch=${BATCH} · $(date -u +%H:%M:%SZ) ==="
   python -m scripts.room_benchmark "$TICKERS" \

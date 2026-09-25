@@ -347,3 +347,13 @@ Steps 2-4."** No target framing is committed yet — Steps 2-4 (widen cap table,
 PM prompt branch, graded vote threshold) proceed as scoped, and the
 success-definition question stays open until there's more data to frame it
 against.
+
+**Decided 2026-09-25.** Saiful: **"Test as per recommendation"** — the success target is
+the **monotonic R1→R5 spread**, not "beat 64%". Measured by a full-dial re-run
+(`ARMS="1 2 3 4 5" run_pilot.sh`, same 30 tickers, batches `cr228-r{1..5}-20260925`),
+scored by `score_dial.py`, whose PASS criterion is fixed in its docstring and committed
+before the run starts: Page's L trend test on per-ticker `approve_votes`, one-sided
+p < 0.05, **and** mean `approve_votes` never falling from one arm to the next. The
+verdict is read by that letter. Honest caveat recorded up front: at n≈30 with CR214's
+12–20% verdict noise, criterion 2 can fail on a single noisy adjacent step even when the
+trend is real — if that happens it is a FAIL, reported as such, with the step named.
