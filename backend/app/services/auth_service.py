@@ -685,7 +685,40 @@ class AuthService:
                         raise
                     _attach_apple_sub(row)
             else:
-                _attach_apple_sub(row)
+                # DEF416 post-COMPLETE minor fix (auditor U68 MINOR-1) — the
+                # branch the REAL route actually takes: `get_current_user`
+                # always resolves a live row for the Bearer-authenticated
+                # caller, so `user_id` here is never a miss and `row` is
+                # found at line 650, not created fresh. `row.apple_id =
+                # apple_sub` below is an UPDATE, and a unique index is
+                # violated by an UPDATE exactly as it is by an INSERT — two
+                # devices claiming the same Apple `sub` for the first time,
+                # milliseconds apart, both read their own anon row before
+                # either commits, and the loser's UPDATE hits
+                # `uq_users_apple_id` with no guard, surfacing as an
+                # unhandled 500 (`api/auth.py` maps only `ValueError`). Same
+                # SAVEPOINT-insert/catch/re-select shape as the fresh-insert
+                # branch above (DEF401's shape) — re-SELECT by `apple_id`
+                # and hand off to the WINNER's row instead of raising.
+                try:
+                    with s.begin_nested():
+                        _attach_apple_sub(row)
+                        s.flush()
+                except IntegrityError:
+                    logger.info(
+                        "apple_sign_in_attach_race_lost", apple_sub=apple_sub,
+                    )
+                    winner = s.execute(
+                        select(User).where(User.apple_id == apple_sub)
+                    ).scalar_one_or_none()
+                    if winner is None:
+                        raise
+                    if user_id is not None and winner.id != row.id:
+                        _rekey_devices_to(
+                            s, from_user_id=row.id, to_user_id=winner.id,
+                        )
+                        adopted_from = row.id
+                    row = winner
             if adopted_from is not None:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,
@@ -797,7 +830,30 @@ class AuthService:
                         raise
                     _attach_google_sub(row)
             else:
-                _attach_google_sub(row)
+                # DEF416 post-COMPLETE minor fix (auditor U68 MINOR-1) — same
+                # shape as the Apple branch above: the real route always
+                # resolves a live row for `user_id`, so this UPDATE branch is
+                # the one two concurrent first-time sign-ins on the same
+                # Google `sub` actually race on. Guard it the same way.
+                try:
+                    with s.begin_nested():
+                        _attach_google_sub(row)
+                        s.flush()
+                except IntegrityError:
+                    logger.info(
+                        "google_sign_in_attach_race_lost", google_sub=google_sub,
+                    )
+                    winner = s.execute(
+                        select(User).where(User.google_id == google_sub)
+                    ).scalar_one_or_none()
+                    if winner is None:
+                        raise
+                    if user_id is not None and winner.id != row.id:
+                        _rekey_devices_to(
+                            s, from_user_id=row.id, to_user_id=winner.id,
+                        )
+                        adopted_from = row.id
+                    row = winner
             if adopted_from is not None:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,

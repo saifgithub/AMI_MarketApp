@@ -63,3 +63,174 @@ None live yet — unpromoted. `docs/forward_planning/CR233_alpaca_order_types/CR
 6. **Mobile override-signature drift.** Four test-double subclasses of `SimNotifier` needed `stop`/`target` added to stay valid overrides. Confirm no FIFTH override exists elsewhere in the mobile test tree that this lane's `flutter analyze` sweep might have missed (the analyzer surfaced all four as compile errors, which is a strong signal, but grep independently: `grep -rn "Future<SimPreviewResult?> preview(" mobile/`).
 
 SUBMITTED: round 1
+
+## Round 2 — fix for MAJOR-1
+
+**SHA:** `c082e4dd` on branch `worktree-agent-a3d411df720d206a1`, based on `main`'s
+`b5de455c`. Fix commit is `472905e8` ("fix: preview() and submit() size STOP/STOP_LIMIT
+orders identically (AT:R85 CR233)"); `c082e4dd` is a separate, unrelated DEF416 commit
+made in the same session — review CR233-BE with `git diff b5de455c..472905e8` or
+`git show 472905e8`.
+
+### The fix
+
+**One shared helper, used everywhere a non-market order's compliance-sizing price is
+needed.** `committed_price_for()` (`backend/app/trading_math/order_pricing.py`, new
+function, ~85 lines with docstring) takes `(side, order_type, mark, trigger_price,
+limit_price)` and returns:
+
+- **MARKET** — always `mark`.
+- **Already triggered** (`is_triggered(...)` true at the current mark) — always `mark`,
+  no matter the order type. This is the auditor's exact P1/P2 finding: `submit()` books
+  a marketable order (any type) at `mark` unconditionally (CR170 §3 acceptance 1,
+  `sim_engine.py`'s `fill_price = mark` set BEFORE the rest-vs-fill branch even runs),
+  so the compliance check must size at that same price, not the order's stale named
+  price.
+- **Resting STOP or LIMIT** — the order's own named price (`trigger_price` /
+  `limit_price`), the same conservative anchor `commitment_for()`
+  (`sim_resting_orders.py`) already uses for a resting order's committed cash at read
+  time.
+- **Resting STOP_LIMIT** — the order's own **LIMIT**, never the trigger alone (the
+  auditor's P3: once resting, a stop-limit can fill anywhere up to its limit —
+  `stop_limit_becomes_limit`'s "the trigger converts it into a resting LIMIT, then
+  Rule 1/2 re-apply against `limit_price`" is the exact mechanism).
+
+**Three call sites now use it, not two — the auditor's fix note said "preview and
+submit"; a third instance of the identical bug class was found and fixed in the same
+pass:**
+
+1. `SimEngine.preview()` (`sim_engine.py:2551-2565`, was `named_price_for(...) or
+   mark`) — `fill_price = committed_price_for(...)`, passed as `ProposedTrade.limit_price`
+   into `check_mandate_compliance` exactly as round 1 already did with the wrong value.
+2. `SimEngine.submit()` (`sim_engine.py:1452-1481`) — a NEW `committed_price` local,
+   computed the same way, passed as `ProposedTrade.limit_price` for the compliance
+   check ONLY. `fill_price` (what the order actually books at if it fills now) stays
+   `mark` unconditionally, unchanged — the two are different questions and round 2 had
+   conflated them by never touching `submit()`'s `ProposedTrade` construction at all
+   (it passed the raw `limit_price` parameter, `None` for a plain STOP, silently
+   falling back to `quotes.get(ticker)` — the live mark — inside `safety_floor.py`'s
+   `unit_price` chokepoint). This was a second, previously-unmeasured instance of the
+   SAME bug class MAJOR-1 named, on `submit()`'s own resting-order compliance check —
+   found by an agent I dispatched to verify whether `submit()` had this gap too before
+   writing the parity test; confirmed via direct call (`app/services/sim_engine.py:1453`,
+   `app/agents/safety_floor.py:451`) before fixing it.
+3. `SimEngine.fill_resting_order()` (`sim_engine.py:1992-2015`) — the fill-time re-run
+   of `check_mandate_compliance` (CR170's no-time-delayed-bypass guarantee) had the
+   identical shape: `ProposedTrade(limit_price=order.limit_price)`, `None` for a plain
+   STOP. Fixed by computing `resting_fill_price` (Rule 2's worse-of, `fill_price_for`)
+   BEFORE the compliance check runs instead of after, and passing it as
+   `ProposedTrade.limit_price` — the re-check now sizes against the exact price the
+   order is about to book at, not a stale value.
+
+### Tests (Architect ran on this worktree, bare)
+
+```
+cd backend && .venv/bin/python -m pytest \
+  tests/unit/test_sim_engine.py \
+  tests/unit/test_cr233_preview_price_basis.py \
+  tests/unit/test_cr233be_preview_submit_price_parity.py \
+  tests/unit/test_def419_per_account_mandate_check.py \
+  tests/unit/test_safety_floor.py \
+  tests/unit/test_wire_contract_parity.py \
+  tests/unit/test_config_compose_parity.py \
+  -q -p no:cacheprovider
+117 passed, 1 skipped     EXIT=0
+```
+
+Full targeted list from the dispatch brief (adds DEF416's files, registers, ratchet):
+`test_sim_engine.py`, `test_cr233_preview_price_basis.py`,
+`test_cr233be_preview_submit_price_parity.py`, `test_def419_per_account_mandate_check.py`,
+`test_safety_floor.py`, `test_wire_contract_parity.py`, `test_def416_oidc_unique_race.py`,
+`test_auth_service.py`, `test_auth_google.py`, `test_p15_check_then_insert_guard.py`,
+`test_def200_ratchet.py`, `test_config_compose_parity.py`, `test_registers_no_drift.py`,
+`test_p30_registers_name_things_that_exist.py` — 179 passed, 1 skipped, EXIT=0.
+
+**Existing round-1 tests updated, not just added to.** Two round-1 tests in
+`test_sim_engine.py` and one in `test_cr233_preview_price_basis.py` pinned the OLD
+(wrong) basis and had to be corrected to the new one — each rewritten as a marketable
+vs. resting PAIR rather than dropped, so the old claim ("sizes at trigger") is still
+checked, now scoped to the case where it is actually true (still resting):
+
+- `test_preview_stop_buy_passes_at_trigger_even_though_mark_would_breach` — round 1's
+  version put the trigger UNDER the mark (already triggered), which the docstring
+  itself said was testing "a trigger under the mark" while the numbers described a
+  marketable order (flagged by the auditor as not pinning what it claimed to). Fixed to
+  a genuinely-resting shape (trigger above mark); a new sibling test,
+  `test_preview_stop_buy_marketable_sizes_at_mark_not_trigger`, pins the
+  now-correctly-refused marketable case with the ORIGINAL numbers.
+- `test_preview_stop_limit_sizes_at_trigger_price` → split into
+  `test_preview_stop_limit_resting_sizes_at_limit_not_trigger` (resting, sizes at the
+  limit) and `test_preview_stop_limit_marketable_sizes_at_mark_not_trigger_or_limit`
+  (marketable, sizes at mark).
+- `test_stop_limit_preview_sizes_at_trigger_on_alpaca_snapshot_path` (wire-level) →
+  `test_stop_limit_preview_resting_sizes_at_limit_on_alpaca_snapshot_path` (resting) +
+  `test_stop_marketable_preview_sizes_at_mark_on_alpaca_snapshot_path` (marketable,
+  matching the auditor's own measured P2 numbers: 1% trigger, 10% cap, ~$408 mock mark).
+
+**New file**, `backend/tests/unit/test_cr233be_preview_submit_price_parity.py` (26
+tests):
+
+1. `test_committed_price_for_table` — 14-row parametrized table pinning the helper's
+   own arithmetic directly (every order type x side x triggered/untriggered
+   combination named in the fix brief).
+2. `test_preview_submit_agree_buy_ami_path` / `..._alpaca_snapshot_path` — call
+   `preview()` and `submit()` with IDENTICAL order parameters and assert they refuse at
+   the exact same `position_pct` (parsed out of the single-name-cap violation string,
+   not just "both refused" — a weaker accepted==accepted check can pass by coincidence
+   when two different wrong prices both happen to breach the same cap; extracting the
+   number closes that hole). Cash-sufficiency was deliberately NOT used as the shared
+   probe for a resting order: `_rest_order()` never reserves cash (documented, §6 of its
+   own docstring), so `submit()` returning `accepted=True` for a resting order means
+   "parked", not "affordable" — comparing it against `preview()`'s bespoke cash check
+   would compare two different questions. The single-name cap runs on every path
+   (marketable fill, resting placement, preview) and reads the exact `unit_price`
+   chokepoint this fix targets.
+3. `test_preview_submit_agree_sell_stop_marketable_ami_path` — the SELL side, mirroring
+   the BUY-side parity from the other side of the book.
+4. `test_fill_resting_order_sizes_cap_check_at_actual_fill_price` — the third call
+   site: places a resting STOP_LIMIT, gaps the mark past both trigger and limit, and
+   confirms `fill_resting_order()`'s re-run compliance check sizes at the ACTUAL Rule-2
+   fill price, not the stale stored limit (isolated from the cash-sufficiency check by
+   keeping both prices well under available cash, so only the cap check's own number is
+   being probed).
+
+### Mutation evidence (each reverted via `Edit`, `git diff` confirmed byte-identical after)
+
+| Mutation | Result |
+|---|---|
+| `preview()`'s `committed_price_for(...)` call reverted to round 2's `named_price_for(...) or mark` | 11 failed across `test_cr233be_preview_submit_price_parity.py`, `test_sim_engine.py`, `test_cr233_preview_price_basis.py` |
+| `submit()`'s new `committed_price` passed to `ProposedTrade` reverted to the raw `limit_price` parameter | 3 failed in the parity suite (the resting-order cases, where the two values differ) |
+| `fill_resting_order()`'s `resting_fill_price` (computed early) reverted to `order.limit_price` in the `ProposedTrade` | the dedicated fill-time parity test failed (accepted `True` where it must refuse) |
+
+One dead end worth recording: my FIRST attempt at the `submit()` mutation used
+cash-sufficiency as the probe and found NOTHING (0 failures) — `_rest_order()` never
+checks cash, so a resting order's `submit()` call returns `accepted=True` regardless of
+price. Rewrote the probe around the single-name cap (which DOES run on every path)
+before re-attempting the mutation, which is when it correctly killed. Recorded because
+it is the same class of false-negative the auditor's own P1 finding warns about:
+picking the wrong invariant to probe looks like a passing test and proves nothing.
+
+### Attack surface — my own answers to round 1's numbered items
+
+1. **Preview/submit price-basis divergence** — closed. `committed_price_for()` is now
+   the single source both call, and `test_committed_price_for_table` pins its answer
+   for every combination named in the fix brief.
+2. **Bracket validation parity (AMI-path-only scoping)** — untouched by this round;
+   round 1's `account_snapshot is None` scoping is orthogonal to the price-basis fix.
+3. **`stop`/`target` omitted** — untouched; still falls through to `bracket_is_wrong_side`
+   as a no-op, unaffected by the price-basis change.
+4. **Snapshot-path open-risk with/without `stop`** — `test_stop_marketable_preview_sizes_at_mark_on_alpaca_snapshot_path`
+   and the resting sibling both exercise `account_snapshot`'s branch explicitly (a
+   non-`None` `AccountSnapshotIn`), not the AMI fallback.
+5. **`ProposedTrade.limit_price=named` reuse** — extended, not changed in kind:
+   `preview()` still passes ONE value into that chokepoint; it is now
+   `committed_price_for(...)`'s answer rather than round 2's `named_price_for(...) or
+   mark`. LIMIT/MARKET's answer is unchanged for the resting case (LIMIT's committed
+   price is still its own `limit_price` when resting) and now ALSO correctly matches
+   `mark` for a marketable LIMIT (round 2 left this gap open too — a marketable buy
+   limit was sized at its limit rather than the mark it actually fills at, which this
+   round's `committed_price_for` closes as a side effect of the general fix, pinned by
+   `test_committed_price_for_table`'s LIMIT rows).
+6. **Mobile override-signature drift** — out of scope for this round (backend-only fix).
+
+SUBMITTED: round 2

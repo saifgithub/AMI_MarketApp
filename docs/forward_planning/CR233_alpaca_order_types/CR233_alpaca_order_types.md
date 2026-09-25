@@ -145,7 +145,7 @@ When the order has no named entry (a plain market order), the bracket price
 relationship is not judged — the same "nothing to check yet" convention
 `stopIsWrongSide` uses for a null entry.
 
-## Known gap — CLOSED round 2 (backend, this session)
+## Known gap — CLOSED round 2, price basis CORRECTED round 3 (backend)
 
 **Round 1 gap, as originally filed:** `POST /v1/sim/preview`'s handler
 (`backend/app/api/sim.py::preview_trade`) forwarded `limit_price` to
@@ -184,7 +184,33 @@ assume it was honoured.
   ticket's own `_stop`/`_target` fields, matching the pattern already used at
   the `/submit` call sites.
 
-Full detail, tests, and mutation evidence: `orchestration/audit/cr/CR233-BE.architect.md`.
+**Round 3 fix (backend, this session — auditor U68 MAJOR-1 on the round-2 lane):**
+
+The round-2 basis above (`named_price_for(...) or mark`) was itself wrong for two
+shapes the auditor measured through the real routes: a marketable stop/limit (one
+whose named price the mark has ALREADY crossed) fills at once, at the mark
+(`submit()`'s own unconditional `fill_price = mark` before its rest-vs-fill branch —
+CR170 §3 acceptance 1, no order-type exception) — sizing it at the named price
+instead understated a BUY STOP set 1% below the mark as 1% of its real notional,
+passing a single-name cap the identical market order failed at 30%. And a
+STOP_LIMIT that still rests can fill anywhere up to its own LIMIT once triggered,
+never just the trigger — sizing it at the trigger alone understated a 17.8%-of-
+equity commitment as 9.0%. Both diverged in a way `submit()` did not, which matters
+because on the Alpaca-snapshot path `preview()` is the ONLY mandate check an order
+ever meets.
+
+Fix: `SimEngine.preview()` and `SimEngine.submit()` now both size their compliance
+check through ONE shared helper, `committed_price_for()`
+(`backend/app/trading_math/order_pricing.py`) — mark when already triggered
+(matching what `submit()` actually books), the order's own trigger when a STOP
+still rests, and a STOP_LIMIT's own LIMIT (never the trigger alone) when it still
+rests. `fill_resting_order()`'s own re-run of the compliance check (CR170's
+no-time-delayed-bypass guarantee) got the same fix, for the same reason — it used
+to size against the stale `order.limit_price` (`None` for a plain STOP) rather than
+the price Rule 2 is about to actually book the fill at.
+
+Full detail, tests, and mutation evidence: `orchestration/audit/cr/CR233-BE.architect.md`
+(round 2 of that lane's own review).
 
 ## Non-goals
 
@@ -244,12 +270,41 @@ Full detail, tests, and mutation evidence: `orchestration/audit/cr/CR233-BE.arch
   `_submitAlpacaOnly`'s preview call fails the round-2 mobile tests in
   `cr233_ticket_order_types_test.dart`. All three verified, then reverted.
 
-Full detail: `orchestration/audit/cr/CR233-BE.architect.md`.
+**Round 3 (auditor U68 MAJOR-1 fix — preview/submit price-basis parity):**
+
+- [x] A STOP/STOP_LIMIT already marketable (mark has crossed its named price) sizes
+  cash-sufficiency/concentration at the MARK, matching what `submit()` actually
+  books — on both the AMI path and the DEF419 Alpaca-snapshot path
+  (`test_sim_engine.py`, `test_cr233_preview_price_basis.py`).
+  A STOP_LIMIT still resting sizes at its own LIMIT, never the trigger alone.
+- [x] `SimEngine.preview()` and `SimEngine.submit()` share ONE pricing helper
+  (`committed_price_for()`, `backend/app/trading_math/order_pricing.py`) so the two
+  cannot diverge again — `test_cr233be_preview_submit_price_parity.py` pins the
+  helper's own table (every order type x side x triggered/untriggered) and proves
+  `preview()`/`submit()` agree at the exact single-name-cap boundary, on both the
+  AMI and Alpaca-snapshot paths.
+- [x] `fill_resting_order()`'s own re-run of the compliance check (the fill-time
+  re-check CR170 added so a resting order is never a time-delayed bypass) sizes at
+  the SAME price Rule 2 is about to book the fill at, not the stale `order.limit_price`.
+- [x] Full targeted backend suite green: `test_sim_engine.py`,
+  `test_cr233_preview_price_basis.py`, `test_cr233be_preview_submit_price_parity.py`,
+  `test_def419_per_account_mandate_check.py`, `test_safety_floor.py`,
+  `test_wire_contract_parity.py` — 131 passed, 1 pre-existing skip.
+- [x] Mutation checks: reverting `preview()`'s `committed_price_for` call back to
+  round-2's `named_price_for(...) or mark` fails 11 tests across three files;
+  reverting `submit()`'s compliance-sizing back to raw `limit_price` fails 3 parity
+  tests; reverting `fill_resting_order()`'s compliance-sizing back to
+  `order.limit_price` fails the dedicated fill-time parity test. All three verified,
+  then reverted (`git diff` confirmed clean after each).
+
+Full detail: `orchestration/audit/cr/CR233-BE.architect.md` (round 2 of that lane's
+own review).
 
 ## Status
 
 `in_progress` — mobile implementation + tests landed round 1, submitted to the CR005
 audit handshake per `orchestration/audit/cr/CR233.architect.md` (mid-review, not
-touched this round). The round-1 backend gap is now CLOSED — see above and
-`orchestration/audit/cr/CR233-BE.architect.md` (new lane, submitted round 1 of its
-own review). Not yet promoted to Alpha.
+touched this round). The round-1 backend gap was closed round 2; round 2's own price
+basis had a MAJOR finding (auditor U68), fixed round 3 — see above and
+`orchestration/audit/cr/CR233-BE.architect.md` (round 2 of that lane's own review,
+submitted). Not yet promoted to Alpha.

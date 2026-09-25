@@ -11,6 +11,18 @@ concentration at the live mark, not the order's own trigger price, and
 `preview()` ran no bracket-validity check whatsoever (only `submit_trade`'s
 path did, via `_execute_fill`'s DEF312/DEF377 refusal).
 
+**Round 2 (this file, updated) — auditor U68 MAJOR-1.** The round-1 fix
+above sized every STOP/STOP_LIMIT at its named `trigger_price`
+unconditionally, which is wrong the moment the order is already
+marketable (a buy stop below the mark fills AT ONCE, at the mark — sizing
+it at 1% of the mark passed a cap `/submit` immediately refused), and wrong
+for STOP_LIMIT specifically (which can fill anywhere up to its own LIMIT
+once resting, never just the trigger). `SimEngine.preview()` and
+`SimEngine.submit()` now both size through one shared
+`committed_price_for()` helper (`trading_math/order_pricing.py`) so the two
+cannot diverge again — see `test_cr233be_preview_submit_price_parity.py`
+for the direct preview-vs-submit parity guard.
+
 This file is the WIRE-LEVEL guard — `test_sim_engine.py`'s
 `test_preview_stop_*`/`test_preview_*bracket*` tests already pin the
 `SimEngine.preview()` arithmetic directly; this proves the route actually
@@ -19,11 +31,13 @@ end to end over `/v1/sim/preview`, on both the AMI path and the DEF419
 account-snapshot path.
 
 Covers:
-  (a) a STOP preview sizes cash-sufficiency at `trigger_price`, not mark —
-      on the AMI (no-account) path.
-  (b) the same, on the Alpaca-snapshot path (proves `trigger_price` reaches
-      `check_mandate_compliance`'s `unit_price` regardless of which
-      denominator is being sized against).
+  (a) a STOP preview sizes cash-sufficiency at `trigger_price` while it
+      still rests, and at `mark` the moment it is marketable — on the AMI
+      (no-account) path.
+  (b) the same, on the Alpaca-snapshot path — both the resting STOP_LIMIT
+      case (sized at its own limit) and the marketable-now case (sized at
+      the mark), since this path is the ONLY mandate check an Alpaca order
+      ever meets.
   (c) a wrong-side bracket (`stop`/`target`) is refused at PREVIEW, not
       just at `/submit` — the ticket must not say "accepted" for an order
       `/submit` would then reject outright.
@@ -162,19 +176,21 @@ def test_stop_preview_accepted_when_trigger_affordable_even_if_mark_is_not(
 # ── (b) same, on the DEF419 account-snapshot path ───────────────────────────
 
 
-def test_stop_limit_preview_sizes_at_trigger_on_alpaca_snapshot_path(
+def test_stop_limit_preview_resting_sizes_at_limit_on_alpaca_snapshot_path(
     sim_client: TestClient,
 ):
     """The snapshot path reads `check_mandate_compliance`'s `unit_price` off
     the same `proposed.limit_price` chokepoint the AMI path does — a
-    STOP_LIMIT previewed against a small Alpaca account must be sized at
-    the trigger there too."""
+    STOP_LIMIT that still RESTS (trigger above the mock mark, ~$408)
+    previewed against a small Alpaca account must be sized at its own
+    LIMIT there too (CR233-BE round 2 MAJOR-1 fix — never the trigger
+    alone, the auditor's P3)."""
     user_id, token = _new_user()
 
     r = _preview(
         sim_client, user_id, token, ticker="AAPL", quantity=100,
-        order_type="stop_limit", trigger_price=100.0, limit_price=101.0,
-        account={"kind": "alpaca_paper", "equity": 5_000.0, "cash": 5_000.0,
+        order_type="stop_limit", trigger_price=500.0, limit_price=501.0,
+        account={"kind": "alpaca_paper", "equity": 60_000.0, "cash": 60_000.0,
                  "positions": []},
         # single_name_cap_pct raised well past 200% so the concentration
         # cap (fed by the same `unit_price` chokepoint) doesn't fire first
@@ -183,10 +199,40 @@ def test_stop_limit_preview_sizes_at_trigger_on_alpaca_snapshot_path(
     )
     assert r.status_code == 200, r.text
     body = r.json()
-    # 100 shares @ $100 trigger = $10,000 > $5,000 Alpaca cash.
+    # 100 shares @ $501 limit = $50,100 < $60,000 Alpaca cash — accepted.
+    assert body["accepted"] is True, body
+    assert body["fill_price"] == 501.0
+
+
+def test_stop_marketable_preview_sizes_at_mark_on_alpaca_snapshot_path(
+    sim_client: TestClient,
+):
+    """CR233-BE round 2 (MAJOR-1 fix) — the case that matters most: on the
+    Alpaca-snapshot path, `/v1/sim/preview` is the ONLY mandate check an
+    order ever meets (the backend never sees it again once the client
+    submits straight to Alpaca). A BUY STOP whose trigger is already below
+    the mock mark (~$408) is marketable NOW and must be sized at the mark,
+    not its trigger — the auditor's measured P2: a buy stop entered at 1%
+    of the mark passed this exact cap at a fraction of its real cost."""
+    user_id, token = _new_user()
+
+    r = _preview(
+        sim_client, user_id, token, ticker="AAPL", quantity=100,
+        order_type="stop", trigger_price=4.08,
+        account={"kind": "alpaca_paper", "equity": 100_000.0, "cash": 100_000.0,
+                 "positions": []},
+        mandate_override=_permissive_mandate(single_name_cap_pct=10.0),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # 100 shares @ ~$408 mark is ~40.8% of $100k equity, breaching the 10%
+    # single-name cap — sized at the trigger ($4.08) this would be ~0.4%
+    # and wrongly pass.
     assert body["accepted"] is False, body
-    assert any("insufficient cash" in v for v in body["compliance"]["violations"]), body
-    assert body["fill_price"] == 100.0
+    assert any(
+        "exceeds single-name cap" in v for v in body["compliance"]["violations"]
+    ), body
+    assert body["fill_price"] > 400.0, body
 
 
 # ── (c) bracket wrong-side refused on preview ───────────────────────────────

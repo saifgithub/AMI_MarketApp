@@ -94,6 +94,7 @@ from app.trading_math.order_pricing import (
     bracket_hit,
     bracket_is_wrong_side,
     can_rest,
+    committed_price_for,
     fill_price_for,
     is_triggered,
     named_price_for,
@@ -1449,12 +1450,35 @@ class SimEngine:
         # and it is not a price — see the branch below. Two duties, two
         # constructs.
         fill_price = mark
+        # CR233-BE round 2 (MAJOR-1 fix) — the compliance check below must be
+        # sized the SAME way `preview()` sizes it, via the one shared
+        # `committed_price_for()` helper, or the two can silently diverge
+        # again (the auditor's exact finding: a STOP/STOP_LIMIT priced at its
+        # trigger alone on one path and at the mark on the other). This is
+        # NOT `fill_price` above — `fill_price` stays `mark` unconditionally
+        # because that is genuinely what a MARKETABLE order books at
+        # (CR170 §3 acceptance 1); `committed_price` is what the MANDATE
+        # CHECK sizes cash-sufficiency/concentration against, which for a
+        # resting order must be its own named price (trigger, or a
+        # STOP_LIMIT's limit), not the mark it has not filled at yet.
+        committed_price = committed_price_for(
+            side=side, order_type=order_type, mark=mark,
+            trigger_price=trigger_price, limit_price=limit_price,
+        )
         proposed = ProposedTrade(
             ticker=ticker,
             side=side,
             order_type=order_type,
             quantity=quantity,
-            limit_price=limit_price,
+            # `check_mandate_compliance`'s `unit_price = proposed.limit_price
+            # or quotes.get(t) or 0.0` (safety_floor.py) is the one chokepoint
+            # every sizing/concentration rule reads its per-share price from
+            # (DEF153). Passing `committed_price` here — not the raw
+            # `limit_price` parameter, which is `None` for a plain STOP — is
+            # what makes a resting STOP's own trigger (or a STOP_LIMIT's own
+            # limit) reach that chokepoint instead of silently falling back
+            # to `quotes.get(ticker)` (the live mark) inside `safety_floor`.
+            limit_price=committed_price,
             thesis=thesis,
             invalidation=invalidation,
             horizon_days=horizon_days,
@@ -1965,12 +1989,29 @@ class SimEngine:
         # time-delayed bypass of the requirement, which is exactly what this
         # method's docstring exists to prevent. Carrying registration onto the
         # book is CR222's mobile follow-on slice, with the columns it needs.
+        named = order.named_price
+        # A stop-limit that has triggered evaluates as a limit from here on, so
+        # the price it books at is its LIMIT, not the trigger it passed.
+        if order.order_type == OrderType.STOP_LIMIT:
+            named = order.limit_price
+        assert named is not None  # every resting order names a price
+        # CR222 §1 — a resting order that fills IS a fill, so it pays the toll
+        # on the price it actually books at, not the one it named days earlier.
+        # Charged here rather than at rest for the same reason cash is never
+        # reserved (§6 above): a debit at rest is indistinguishable from a loss
+        # in the NAV series, and the order may never fill at all. Computed
+        # BEFORE the compliance check below (CR233-BE round 2 follow-on, same
+        # MAJOR-1 shape) so the mandate check can size against the SAME price
+        # this order is about to book at, not the raw `order.limit_price`
+        # (`None` for a plain STOP), which used to silently fall back to the
+        # live mark inside `safety_floor.py`'s `unit_price` chokepoint.
+        resting_fill_price = fill_price_for(side=order.side, named=named, mark=mark)
         proposed = ProposedTrade(
             ticker=order.ticker,
             side=order.side,
             order_type=order.order_type,
             quantity=order.quantity,
-            limit_price=order.limit_price,
+            limit_price=resting_fill_price,
         )
         ctx = self._compliance_context(user_id, portfolio, order.ticker)
         compliance = check_mandate_compliance(
@@ -2006,19 +2047,6 @@ class SimEngine:
                 accepted=False, trade=None,
                 compliance=compliance, portfolio_snapshot=portfolio,
             )
-
-        named = order.named_price
-        # A stop-limit that has triggered evaluates as a limit from here on, so
-        # the price it books at is its LIMIT, not the trigger it passed.
-        if order.order_type == OrderType.STOP_LIMIT:
-            named = order.limit_price
-        assert named is not None  # every resting order names a price
-        # CR222 §1 — a resting order that fills IS a fill, so it pays the toll
-        # on the price it actually books at, not the one it named days earlier.
-        # Charged here rather than at rest for the same reason cash is never
-        # reserved (§6 above): a debit at rest is indistinguishable from a loss
-        # in the NAV series, and the order may never fill at all.
-        resting_fill_price = fill_price_for(side=order.side, named=named, mark=mark)
         toll = _training_toll_for(resting_fill_price * order.quantity)
         return self._execute_fill(
             user_id=user_id,
@@ -2475,27 +2503,24 @@ class SimEngine:
         trigger_price / target: CR233 round-2 gap closure. Before this,
         `preview()` had no `trigger_price` parameter at all, so a STOP /
         STOP_LIMIT preview sized cash-sufficiency and concentration at the
-        live mark — `named_price_for()`/`order_pricing.py`'s own module
-        docstring is explicit that a resting order's cash commitment is
-        computed off its OWN named price (`commitment_for()` does exactly
-        this at read time), and `preview()` was the one caller of this
-        module's pricing rules that had not been taught it. `fill_price`
-        below is now `named_price_for(order_type, ...) or mark` — the
-        order's own price when it names one (LIMIT/STOP/STOP_LIMIT), the
-        mark for MARKET or a resting order with no named price yet (should
-        not happen — `SubmitTradeRequest`'s validator 422s that combination
-        before this method ever runs, but `preview()` has no such validator
-        of its own, so the fallback stays defensive). This mirrors
-        `submit()`'s own `fill_price = mark` UNLESS the order rests, in
-        which case the eventual fill is priced off `named`/`mark` by Rule 2
-        — preview cannot know whether a resting order will trigger
-        immediately (Rule 1) or later (Rule 2's worse-of), so it reports
-        sizing at the order's own named price, the same conservative
-        anchor `commitment_for()` already uses for cash-committed
-        reporting on the portfolio read. `target` is forwarded alongside
-        `stop` so preview can run the same submit-time bracket-validity
-        refusal (`bracket_is_wrong_side`, DEF312/DEF377) rather than
-        silently previewing a bracket the ticket would refuse to submit.
+        live mark. Round 2 taught it `named_price_for(...) or mark`, but the
+        auditor (U68, MAJOR-1) found THAT basis wrong too: it sized a STOP
+        at its trigger even when the order would fill AT ONCE at the mark
+        (a buy stop below the market), and it sized a STOP_LIMIT at its
+        trigger alone, never its limit — the actual worst case once it
+        rests. `fill_price` below is now `committed_price_for(...)`
+        (`trading_math/order_pricing.py`) — the SAME helper `submit()` uses
+        (below) to decide what a non-market order would be sized/booked at,
+        so preview and submit cannot diverge: triggered-now sizes at
+        `mark` (submit's own unconditional `fill_price = mark` before its
+        rest-vs-fill branch), a resting STOP sizes at its trigger (the
+        conservative anchor `commitment_for()` already uses at read time),
+        and a resting STOP_LIMIT sizes at its own limit — the most it can
+        ever commit at once resting — never the trigger alone. `target` is
+        forwarded alongside `stop` so preview can run the same submit-time
+        bracket-validity refusal (`bracket_is_wrong_side`, DEF312/DEF377)
+        rather than silently previewing a bracket the ticket would refuse
+        to submit.
         """
         portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
@@ -2525,24 +2550,20 @@ class SimEngine:
 
         quote = self.current_quote(ticker)
         mark = quote.price
-        # CR233 round-2 gap closure — `named_price_for()` is `None` for a
-        # MARKET order (nothing to name) and for a LIMIT/STOP/STOP_LIMIT
-        # order the caller left unpriced (defensive only: `SubmitTradeRequest`
-        # 422s that combination before this ever runs). Falls back to `mark`
-        # in both cases, so a MARKET preview is byte-identical to before this
-        # CR. For STOP/STOP_LIMIT, `named` reads `trigger_price` — the same
-        # field `commitment_for()` sums for a resting order's committed cash
-        # — so a STOP preview now sizes cash-sufficiency and concentration at
-        # the price the order actually names, not the live mark it may be far
-        # from. This is NOT the third copy of the P10 ternary CR170 §3 killed
-        # below (that ternary read `order_type` to CHOOSE a price for every
-        # type, including LIMIT-fills-at-its-own-price); this reads one
-        # specific named price for the one purpose `commitment_for()` already
-        # established: what this order would tie up if it rested.
-        named = named_price_for(
-            order_type, trigger_price=trigger_price, limit_price=limit_price,
+        # CR233-BE round 2 (MAJOR-1 fix) — `committed_price_for()` is the
+        # SAME helper `submit()` calls below, so preview and submit price a
+        # non-market order identically: `mark` when it would fill at once
+        # (a marketable stop/limit falls through to `_execute_fill` at
+        # `mark`, no order-type exception — CR170 §3 acceptance 1), the
+        # order's own trigger when a STOP still rests, and a STOP_LIMIT's
+        # own LIMIT — never the trigger alone — when it still rests (the
+        # most it can ever commit at once resting). MARKET is unaffected:
+        # `committed_price_for` returns `mark` for it unconditionally, so a
+        # MARKET preview is byte-identical to before this CR.
+        fill_price = committed_price_for(
+            side=side, order_type=order_type, mark=mark,
+            trigger_price=trigger_price, limit_price=limit_price,
         )
-        fill_price = named if named is not None else mark
         proposed = ProposedTrade(
             ticker=ticker,
             side=side,
@@ -2551,12 +2572,13 @@ class SimEngine:
             # `check_mandate_compliance`'s `unit_price = proposed.limit_price
             # or quotes.get(t) or 0.0` (safety_floor.py) is the ONE place
             # every sizing/concentration rule reads its per-share price from
-            # (DEF153) — passing `named` here, not the raw `limit_price` this
-            # method received, is what makes a STOP order's `trigger_price`
-            # reach that same chokepoint. A plain LIMIT order's `named` IS its
-            # `limit_price`, so this is additive for LIMIT/MARKET and only
-            # changes STOP/STOP_LIMIT's answer.
-            limit_price=named,
+            # (DEF153) — passing `fill_price` here, not the raw `limit_price`
+            # this method received, is what makes a STOP order's committed
+            # price reach that same chokepoint. A plain LIMIT order's
+            # `fill_price` IS its `limit_price` when resting (and `mark` when
+            # marketable, matching submit), so this is additive for
+            # LIMIT/MARKET and only changes STOP/STOP_LIMIT's answer.
+            limit_price=fill_price,
         )
 
         # CR101-BE2: same trade-history context as submit(). DEF419: per-USER
