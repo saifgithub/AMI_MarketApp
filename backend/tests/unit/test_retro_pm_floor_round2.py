@@ -177,7 +177,7 @@ def test_respawn_reads_the_real_portfolio_not_the_run_defaults(
     async def _respawn_and_wait():
         await runner._respawn_run_from_row(_PendingRetry(
             run_id=run_id, user_id=user_id, ticker="MSFT",
-            mandate_version=mandate.version,
+            mandate_version=mandate.version, credit_cost=8,
         ))
         async for _ in runner.subscribe(run_id):
             pass
@@ -254,7 +254,7 @@ def test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read(
     async def _respawn_and_wait():
         await runner._respawn_run_from_row(_PendingRetry(
             run_id=run_id, user_id=user_id, ticker="MSFT",
-            mandate_version=mandate.version,
+            mandate_version=mandate.version, credit_cost=8,
         ))
         async for _ in runner.subscribe(run_id):
             pass
