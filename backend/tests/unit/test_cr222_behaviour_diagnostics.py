@@ -585,8 +585,10 @@ def test_disposition_p2_two_winners_closed_the_same_day_are_not_each_others_pape
     now = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day0 = now - timedelta(days=200)
     sale = day0 + timedelta(days=20)
-    for tk in ("AAA", "BBB"):
-        _flat_prices(tk, day0.date(), 25, {})
+    # AAA/BBB closes on the sale day sit above cost too, so a tally that
+    # also counted a sold stock as paper would read 2 / (2 + 3) = 0.4.
+    _flat_prices("AAA", day0.date(), 25, {sale.date(): 110.0})
+    _flat_prices("BBB", day0.date(), 25, {sale.date(): 115.0})
     _flat_prices("CCC", day0.date(), 25, {sale.date(): 108.0})
 
     for tk, hour, px in (("AAA", 10, 110.0), ("BBB", 15, 115.0)):
