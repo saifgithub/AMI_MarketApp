@@ -5471,18 +5471,15 @@ class RoomRunner:
         classification = (
             classification_universe or await default_classification_universe_async()
         )
-        # DEF417 round 2 — pre-warm the on-demand liquidity cache for THIS
-        # ticker, off the event loop via asyncio.to_thread, BEFORE the sync
-        # compliance call. `check_mandate_compliance` (`_assemble_verdict`,
-        # the scripted path) and `enforce_safety_floor` (the live-PM path)
-        # both run directly on this Task's event loop — never inside
-        # `asyncio.to_thread` the way every SimEngine call site is — so a
-        # cache-miss inside their own `resolve_liquidity_with_lookup` call
-        # would block every concurrent Room stream on this loop for up to
-        # `_ON_DEMAND_TIMEOUT_S`. Warming here, at the SAME async boundary
-        # `default_classification_universe_async()` already uses one line up,
-        # means that sync call is a guaranteed cache hit (real answer or a
-        # cached LOOKUP_FAILED) by the time either path reaches it. Gated on
+        # DEF417 — pre-warm the on-demand liquidity cache for THIS ticker, off
+        # the event loop via asyncio.to_thread, BEFORE the compliance calls.
+        # `check_mandate_compliance` (`_assemble_verdict`, the scripted path)
+        # and `enforce_safety_floor` (the live-CIO path) both run directly on
+        # this Task's event loop, so the floor only READS the cache
+        # (`resolve_liquidity_cached`) and never fetches. This pre-warm is how
+        # the Room gets a real answer into that cache. It is not a guaranteed
+        # hit: if it failed or the entry lapsed, the floor sees a miss and
+        # discloses LOOKUP_FAILED rather than blocking the loop. Gated on
         # `liquid_only` so a mandate that doesn't use the flag never pays for
         # a fetch nothing will read.
         if mandate.compliance.liquid_only:

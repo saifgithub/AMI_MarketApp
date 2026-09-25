@@ -811,6 +811,52 @@ def test_fill_resting_order_fetches_an_unmeasured_name_before_its_check(base_man
     assert result.compliance.liquidity_verdict.status is LiquidityStatus.EXCLUDED
 
 
+def _gns_microcap_fetcher() -> list[str]:
+    calls: list[str] = []
+
+    def _fetcher(t: str):
+        calls.append(t)
+        return {"market_cap_usd_m": 85.0, "avg_volume": 250_000.0}
+
+    set_on_demand_fetcher(_fetcher)
+    _liq.clear_on_demand_liquidity_cache()
+    return calls
+
+
+def test_submit_fetches_an_unmeasured_name_before_its_check(base_mandate: Mandate):
+    """DEF417 r3 MINOR-1 (u66): the submit/preview microcap tests above use NANO,
+    which is inside the snapshot, so dropping `ensure_liquidity_cached` from
+    submit left every test green and reopened every microcap outside the
+    snapshot. GNS is outside it and the cache is empty: submit must look it up
+    and refuse."""
+    calls = _gns_microcap_fetcher()
+    sim = SimEngine(provider=_PinnedPriceProvider(3.0))
+    result = sim.submit(
+        user_id=uuid4(), ticker="GNS", side=Side.BUY, quantity=10,
+        mandate=_mandate(base_mandate, liquid_only=True),
+        order_type=OrderType.LIMIT, limit_price=3.0,
+        classification_universe=_universe(),
+    )
+    assert calls == ["GNS"]
+    assert not result.accepted
+    assert result.compliance.liquidity_verdict.status is LiquidityStatus.EXCLUDED
+
+
+def test_preview_fetches_an_unmeasured_name_before_its_check(base_mandate: Mandate):
+    """The preview twin of the test above: the dry-run gate must fetch too."""
+    calls = _gns_microcap_fetcher()
+    sim = SimEngine(provider=_PinnedPriceProvider(3.0))
+    preview = sim.preview(
+        user_id=uuid4(), ticker="GNS", side=Side.BUY, quantity=10,
+        mandate=_mandate(base_mandate, liquid_only=True),
+        order_type=OrderType.LIMIT, limit_price=3.0,
+        classification_universe=_universe(),
+    )
+    assert calls == ["GNS"]
+    assert not preview.accepted
+    assert preview.compliance.liquidity_verdict.status is LiquidityStatus.EXCLUDED
+
+
 def test_sim_engine_fill_resting_order_wiring_fails_red_if_the_check_is_removed(
     base_mandate: Mandate, monkeypatch: pytest.MonkeyPatch,
 ):

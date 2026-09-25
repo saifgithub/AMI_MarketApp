@@ -18,24 +18,29 @@ that itself fails or times out falls back to "allow + disclose"
 (`LiquidityStatus.LOOKUP_FAILED`) — never a silent permit, and never a block on
 a name AMI never actually measured.
 
-Two entry points, same cache, same fetch:
-  * `resolve_liquidity_with_lookup(universe, ticker, price=...)` — SYNC. Safe
-    to call from any of the THREE call sites already proven to run off the
-    event loop via `asyncio.to_thread` (`SimEngine.submit` / `.preview` /
-    `.fill_resting_order`, each wrapped by their API route or the resting-order
-    sweep tick). Bounds the blocking network call with a worker-thread timeout
-    (`concurrent.futures`) so a hung yfinance call cannot pin the calling
-    `to_thread` thread forever.
-  * `prewarm_on_demand_liquidity(ticker)` — ASYNC. For the two call sites that
-    run `check_mandate_compliance` / `enforce_safety_floor` directly ON the
-    event loop (`room_runner.py`'s live-PM path and its scripted
-    `_assemble_verdict` path — both inside `RoomRunner.run()`, an
-    `asyncio.Task`, never `to_thread`-wrapped). Awaited BEFORE the sync
-    compliance call, so the cache is already warm (hit or cached failure) by
-    the time the sync path calls `resolve_liquidity_with_lookup` a few lines
-    later — the sync call site never blocks the loop because it never misses.
-    Mirrors the existing `default_classification_universe_async()` seam
-    (`asyncio.to_thread` at the async boundary, never inside the sync core).
+Round 3 split the fetch from the floor. One cache, one fetch, three functions:
+  * `resolve_liquidity_cached(universe, ticker, price=...)` — what the safety
+    floor calls. It NEVER fetches, so it is safe on the event loop, where the
+    Room runs its compliance checks. A miss (never fetched, or its short
+    failure window has lapsed) resolves LOOKUP_FAILED: permitted and
+    disclosed, never a blocking call and never a silent permit.
+  * `ensure_liquidity_cached(universe, proposed, mandate)` — SYNC, blocking.
+    Fetches into the cache before the floor runs, for a `liquid_only` BUY of a
+    name the snapshot doesn't cover. SimEngine calls it in `submit`,
+    `preview` and `fill_resting_order`, which already run off the loop
+    (`asyncio.to_thread` in their route or the resting-order sweep tick). The
+    network call is bounded by a worker-thread timeout (`concurrent.futures`),
+    so a hung yfinance call cannot pin the calling thread.
+  * `prewarm_on_demand_liquidity(ticker)` — ASYNC. The Room's equivalent:
+    `RoomRunner.run()` awaits it (via `asyncio.to_thread`) before its on-loop
+    compliance calls, the live-CIO path and the scripted `_assemble_verdict`
+    path. The floor still only reads the cache: if the pre-warm failed or the
+    entry has lapsed, the check sees a miss and discloses it. It is NOT a
+    guaranteed hit, and the floor must never be switched to a fetching
+    resolver to "fix" that.
+`resolve_liquidity_with_lookup` is the fetching variant (snapshot, cache,
+bounded fetch). No app code path calls it; it is blocking, so never put it on
+the floor path.
 
 Cache: an in-process `dict[str, tuple[dict | None, float]]` + `RLock`, TTL
 24h — the SAME shape `fundamentals.py::_statements_cache` and
@@ -337,7 +342,7 @@ def ensure_liquidity_cached(universe, proposed, mandate) -> None:
 async def prewarm_on_demand_liquidity(ticker: str) -> None:
     """Async pre-warm for the two on-loop call sites (`room_runner.py`'s
     live-PM + scripted paths). Populates the SAME cache
-    `resolve_liquidity_with_lookup` reads, off the event loop via
+    `resolve_liquidity_cached` reads, off the event loop via
     `asyncio.to_thread` — the established seam
     (`default_classification_universe_async`, `default_halal_universe_async`)
     applied to a ticker-keyed fetch instead of the whole-snapshot read.
