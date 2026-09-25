@@ -27,13 +27,44 @@
 // wrapped in a `ConstrainedBox(minHeight: available)` + `Center`, which is a
 // no-op scroll physically when there's slack, and becomes a real scroll only
 // when there is not.
+//
+// ROUND 2 (U66 MAJOR-1): round 1's harness pumped `JournalScreen(embedded:
+// true)` alone, inside a `SizedBox(height: size.height)` — the Journal's
+// full screen height, with no header/segment bar/nav/insets ahead of it —
+// and pumped twice with NO elapsed time. `AdSlot` resolves its fill via
+// `scheduleMicrotask` + `await gate.request(...)`, so at that point it was
+// still `SizedBox.shrink()`: the ad sibling that the root-cause analysis
+// itself names as the thing stealing height from the `Expanded` never
+// rendered, and the harness gave the Journal far more room than it actually
+// gets in the app. Both "iPhone 17 (E5-U2)" cases passed on the UNFIXED
+// code as a result (u66 confirmed this by reverting to b5de455c and running
+// this file: 7 passed, 5 failed — the E5-U2 cases were among the 7 that
+// passed).
+//
+// Fixed by pumping the REAL `YouScreen` (the exact parent chain the Journal
+// lives in per CR133 §4: `AmiScreenHeader` (64pt) + `AmiSegmentBar` (44pt)
+// + SafeArea insets ahead of the Journal's own `_FilterRow`/`_SearchBar`),
+// on the `floor_pass` mandate (the one plan the ad gate serves), with the
+// ads service forced to always fill so the `HouseAdCard` sibling is
+// deterministic rather than racing a microtask. `_pumpEmbeddedJournal`
+// settles with real elapsed time (`pump(50ms)` x N, not `pump()` with none)
+// until the `HouseAdCard` is actually in the tree, then asserts on that —
+// never on an unresolved `AdSlot`.
+library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/mandate.dart';
-import 'package:ami_trade/screens/journal/journal_screen.dart';
+import 'package:ami_trade/screens/you/insights_data.dart';
+import 'package:ami_trade/screens/you/insights_providers.dart';
+import 'package:ami_trade/screens/you/you_providers.dart';
+import 'package:ami_trade/screens/you/you_screen.dart';
+import 'package:ami_trade/services/ads/ads_models.dart';
+import 'package:ami_trade/services/ads/ads_service.dart';
+import 'package:ami_trade/state/ads_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
+import 'package:ami_trade/widgets/ads/house_ad_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -73,6 +104,9 @@ class _FixedMandateNotifier extends MandateNotifier {
         maxDrawdownPct: 30,
         learningStyle: 'quick',
         compliance: const ComplianceFlags(),
+        // floor_pass — the one plan the ad gate serves (ads_providers.dart's
+        // `plansWithAds`). Round 1 used this plan too, but the harness never
+        // let the resulting ad actually render before asserting.
         plan: 'floor_pass',
         creditBalance: 0,
       ),
@@ -83,11 +117,28 @@ class _FixedMandateNotifier extends MandateNotifier {
   Future<void> refresh() async {}
 }
 
-/// Pins the viewport to [size] and [textScale]. `embedded: true` matches how
-/// `YouScreen` actually mounts `JournalScreen` (CR133 §4) — the Scaffold and
-/// SafeArea belong to the parent there, and the overflow this DEF is about
-/// happens inside that embedded body, not inside a screen-owned Scaffold.
-Future<void> _pumpEmptyState(
+/// Always-fill network fake (mirrors `ad_slot_test.dart`'s own), so the
+/// `HouseAdCard` sibling is deterministic rather than racing the real house
+/// inventory service or its frequency caps.
+class _AlwaysFillAdsService implements AdsService {
+  @override
+  String get network => 'always-fill-fake';
+
+  @override
+  Future<AdFill?> requestFill(AdPlacement placement, HouseAdSignals signals,
+          {int widthDp = 0}) async =>
+      const HouseAdFill(HouseAdCreative(
+          slot: HouseAdSlot.genericTrader,
+          targetTier: HouseAdTargetTier.trader));
+}
+
+/// Pumps the REAL `YouScreen` — `AmiScreenHeader` + `AmiSegmentBar` + the
+/// embedded `JournalScreen`, exactly the parent chain the Journal lives in
+/// (CR133 §4) — pinned to [size]/[textScale], switches to the JOURNAL
+/// segment, and settles with real elapsed time until the `AdSlot` sibling
+/// has resolved its fill. Returns the `ProviderContainer` so callers can
+/// assert against it directly.
+Future<ProviderContainer> _pumpEmbeddedJournal(
   WidgetTester tester, {
   required Size size,
   double textScale = 1.0,
@@ -98,39 +149,57 @@ Future<void> _pumpEmptyState(
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
 
+  final container = ProviderContainer(overrides: [
+    journalNotifierProvider.overrideWith(
+      (ref) => _ScriptedJournalNotifier(
+        ref,
+        searchQuery: searching ? 'nonexistent query' : '',
+      ),
+    ),
+    mandateNotifierProvider.overrideWith((ref) => _FixedMandateNotifier(ref)),
+    adsServiceProvider.overrideWithValue(_AlwaysFillAdsService()),
+    // The INSIGHTS pane is built (not painted) by YouScreen's IndexedStack,
+    // so without this its fetch fires on every pump and leaves a pending
+    // timer (same reason `you_screen_test.dart` overrides it).
+    insightsProvider
+        .overrideWith((ref) async => const InsightsData(entryCount: 0)),
+  ]);
+  addTearDown(container.dispose);
+
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        journalNotifierProvider.overrideWith(
-          (ref) => _ScriptedJournalNotifier(
-            ref,
-            searchQuery: searching ? 'nonexistent query' : '',
-          ),
-        ),
-        mandateNotifierProvider
-            .overrideWith((ref) => _FixedMandateNotifier(ref)),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: MediaQuery(
         data: MediaQueryData(
           size: size,
           textScaler: TextScaler.linear(textScale),
         ),
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SizedBox(
-              height: size.height,
-              width: size.width,
-              child: const JournalScreen(embedded: true),
-            ),
-          ),
+          home: YouScreen(),
         ),
       ),
     ),
   );
-  await tester.pump();
-  await tester.pump();
+  // Real elapsed time, not a zero-duration `pump()`: `AdSlot` resolves its
+  // fill via `scheduleMicrotask` + `await gate.request(...)`, and the
+  // JOURNAL segment switch itself needs a frame before the tap lands.
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  // `IndexedStack` lays out every pane every frame regardless of which is
+  // selected (that's how it keeps them all alive) — including the SETTINGS
+  // pane's own pre-existing, unrelated overflow at large text scales
+  // (`_RiskSlider`/`_DrawdownPicker` rows in settings_screen.dart). That is
+  // real but not this DEF: draining it here keeps this file's assertions
+  // scoped to what DEF427 is actually about, the JOURNAL segment.
+  tester.takeException();
+  container.read(youSegmentProvider.notifier).state = YouSegment.journal;
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  return container;
 }
 
 void main() {
@@ -151,11 +220,17 @@ void main() {
       for (final scale in [1.0, 1.3]) {
         testWidgets('no overflow at ${entry.key}, scale $scale',
             (tester) async {
-          await _pumpEmptyState(tester, size: entry.value, textScale: scale);
+          await _pumpEmbeddedJournal(tester,
+              size: entry.value, textScale: scale);
+          // Prove the ad sibling that caused the defect actually rendered —
+          // asserting "no overflow" against an unresolved AdSlot is exactly
+          // the gap round 1 shipped (U66 MAJOR-1).
+          expect(find.byType(HouseAdCard), findsOneWidget,
+              reason: '${entry.key} @ $scale — the ad must actually render '
+                  'for this test to mean anything');
           expect(find.text('No entries yet.'), findsOneWidget,
               reason: '${entry.key} @ $scale');
-          expect(tester.takeException(), isNull,
-              reason: '${entry.key} @ $scale');
+          expect(tester.takeException(), isNull, reason: '${entry.key} @ $scale');
         });
       }
     }
@@ -165,12 +240,13 @@ void main() {
       // Shorter copy (no body line, see journal_screen.dart's `!isSearching`
       // guard) but worth pinning at the tightest size regardless — a future
       // edit adding a body line here should trip this, not ship silently.
-      await _pumpEmptyState(
+      await _pumpEmbeddedJournal(
         tester,
         size: const Size(320, 690),
         textScale: 1.3,
         searching: true,
       );
+      expect(find.byType(HouseAdCard), findsOneWidget);
       expect(find.text('No entries match your search.'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -184,12 +260,13 @@ void main() {
       // purpose ("screens that do not scroll when they need to") — not a
       // silent RenderFlex clip that would hide the same content instead of
       // fixing the overflow.
-      await _pumpEmptyState(
+      await _pumpEmbeddedJournal(
         tester,
         size: const Size(320, 568),
         textScale: 1.3,
       );
       expect(tester.takeException(), isNull);
+      expect(find.byType(HouseAdCard), findsOneWidget);
       expect(find.byType(Scrollable), findsWidgets);
       expect(find.text('No entries yet.'), findsOneWidget);
       final body = find.textContaining('Talk to an agent');
