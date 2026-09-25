@@ -80,7 +80,7 @@ from app.services import (
     interest_cost,
 )
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
-from app.services.journal_store import get_journal_store
+from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
@@ -3563,6 +3563,20 @@ def _reference_close(profile: dict[str, Any]) -> float | None:
         return None
 
 
+def _stamp_next_convene_basis(
+    verdict: "Verdict", profile: dict[str, Any], next_convene_delta: Any,
+) -> "Verdict":
+    """CR219 R60 — the fields the NEXT convene's `_room_delta_context` reads
+    back off this run's verdict. One copy, used by `run()` on completion and
+    by `retry_cio_step` when a retry replaces the verdict (CR237 round 2,
+    auditor MAJOR-1 — the retry used to persist a verdict without them)."""
+    return verdict.model_copy(update={
+        "sheet_state": dict(profile.get("field_state") or {}),
+        "reference_price": _reference_close(profile),
+        "next_convene_delta": next_convene_delta,
+    })
+
+
 # How a matched level is named back to the user. Being able to say WHICH level
 # the instruction referred to is the point of matching against the run's own
 # numbers rather than against any figure in the sentence — the annotation stops
@@ -6657,11 +6671,9 @@ class RoomRunner:
             # without a verdict degrades to "nothing persisted", never a
             # crash on the way to COMPLETED.
             if run.verdict is not None:
-                run.verdict = run.verdict.model_copy(update={
-                    "sheet_state": dict(profile.get("field_state") or {}),
-                    "reference_price": _reference_close(profile),
-                    "next_convene_delta": ctx.next_convene_delta,
-                })
+                run.verdict = _stamp_next_convene_basis(
+                    run.verdict, profile, ctx.next_convene_delta,
+                )
             _persist_run(run)
             # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
             # COMPLETED but whose verdict is the CR219 R51 outage NO_VERDICT
@@ -6993,6 +7005,26 @@ class RoomRunner:
                 return
 
             assert run is not None  # cio_retry_eligible already checked
+
+            # CR237 round 2 (auditor MINOR-1) — no live provider means
+            # `_run_cio_step` would take the scripted demo branch and bank a
+            # canned verdict as the CIO's real answer. The retry exists
+            # because a non-live answer was not acceptable the first time, so
+            # refuse before touching anything: no rebuild, no persist, no
+            # credit movement, and the outage PASS stays retryable.
+            gateway = self._llm or get_llm_gateway()
+            live = gateway.has_real_provider()
+            if not live:
+                logger.warning("room_cio_retry_no_live_provider", run_id=str(run_id))
+                yield RoomEvent(
+                    kind="error", run_id=run_id,
+                    text=(
+                        "The Chief Investment Officer is unavailable right "
+                        "now. Your analysts' work is saved — try again shortly."
+                    ),
+                )
+                return
+
             snapshot = run.cio_context_snapshot or {}
 
             # CR237 ruling #2 — rebuild everything safety-relevant FRESH,
@@ -7055,14 +7087,20 @@ class RoomRunner:
                     if getattr(h, "ticker", None) == ctx.ticker
                 ),
             )
-            ctx.next_convene_delta = _build_next_convene_delta(
-                self._room_delta_context(user_id, ticker), this_profile=ctx.profile,
+            # CR237 round 2 — THIS run's comparison against ITS prior, exactly
+            # as `run()` computed and stamped it at the original convene.
+            # Recomputing here self-matched: `_room_delta_context` returns the
+            # latest completed run for this user+ticker, which is this very
+            # outage PASS, so the CIO was shown its own outage as "the last
+            # convene". Not floor-relevant, so ruling #2's rebuild-fresh rule
+            # does not apply to it.
+            original_verdict = run.verdict
+            ctx.next_convene_delta = (
+                original_verdict.next_convene_delta if original_verdict else None
             )
 
             profile = ctx.profile
             formatter = _build_pm_formatter(ctx, profile, mandate)
-            gateway = self._llm or get_llm_gateway()
-            live = gateway.has_real_provider()
 
             # Drop the outage PASS's transcript entry — `_run_cio_step`
             # appends a NEW one, and the old outage narration must not sit
@@ -7093,6 +7131,11 @@ class RoomRunner:
                 run.verdict.model_dump() if run.verdict else None
             )
             if still_down:
+                # CR237 round 2 — keep the ORIGINAL outage verdict in place
+                # (its R60 stamps and, when refunded, its "wasn't charged"
+                # sentence), not the fresh one `_run_cio_step` just built.
+                if original_verdict is not None:
+                    run.verdict = original_verdict
                 # Outage PASS kept in place, untouched apart from the
                 # transcript-entry swap above (same narration shape as
                 # before — DEF059's fail-safe text). No journal change, no
@@ -7122,6 +7165,12 @@ class RoomRunner:
             # `is_llm_outage_verdict`, which is now false, so clearing the
             # snapshot is belt-and-braces, not the only guard).
             run.cio_context_snapshot = None
+            # CR237 round 2 (auditor MAJOR-1) — the replacement verdict gets
+            # the same R60 stamps `run()` puts on every completed verdict;
+            # without them the next convene's delta line read an absence.
+            run.verdict = _stamp_next_convene_basis(
+                run.verdict, profile, ctx.next_convene_delta,
+            )
             # CR237 (coordinator follow-up) — `cio_retried` is the client's
             # cue for its OWN third cost-line sentence ("the CIO's retry was
             # free, and the original Room was refunded"): a retried run
@@ -7157,15 +7206,17 @@ class RoomRunner:
             # only new primitive (see its own docstring).
             try:
                 draft = build_journal_entry_for_run(run, user_id)
-                updated = get_journal_store().update_by_reference(
+                outcome, _ = get_journal_store().update_by_reference(
                     user_id, EntryType.ROOM_RUN, run_id, draft,
                 )
-                if updated is None:
-                    # No prior journal entry to update (should not happen —
+                if outcome is ReferenceUpdateOutcome.NOT_FOUND:
+                    # No prior journal entry ever existed (should not happen —
                     # every terminal run journals on_complete — but a missing
                     # entry is not a reason to fail the retry that already
                     # succeeded). Append one so the retry's verdict is not
-                    # lost from the Journal entirely.
+                    # lost from the Journal entirely. A DELETED entry is the
+                    # user's own removal and is never resurrected (CR237
+                    # round 2, auditor MAJOR-2).
                     get_journal_store().append(draft)
             except Exception as exc:
                 logger.error(
