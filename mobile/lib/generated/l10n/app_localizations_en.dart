@@ -2965,6 +2965,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alpacaHistoryLoadError => 'Couldn\'t load Alpaca order history';
 
   @override
+  String get portfolioTabCountLoading =>
+      'Still loading Alpaca\'s count for this tab';
+
+  @override
+  String get portfolioTabCountError =>
+      'Couldn\'t load Alpaca\'s count for this tab';
+
+  @override
   String get alpacaOrderCancelTitle => 'Cancel this Alpaca order?';
 
   @override

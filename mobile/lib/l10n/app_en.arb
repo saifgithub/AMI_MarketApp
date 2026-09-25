@@ -3400,6 +3400,14 @@
   "@alpacaHistoryLoadError": {
     "description": "CR234 — CR040 degrade-loudly row shown when the Alpaca closed-orders fetch fails. NEW key. retranslate:[ar,ms]"
   },
+  "portfolioTabCountLoading": "Still loading Alpaca's count for this tab",
+  "@portfolioTabCountLoading": {
+    "description": "DEF422 — semantics label for the small spinner shown next to a Portfolio tab's count (POSITIONS/ORDERS/HISTORY) while that tab's Alpaca provider is still resolving. The visible number in that state is the AMI-only count; this label is what a screen reader announces for the spinner beside it, so the honest 'not final yet' state is conveyed non-visually too. NEW key. retranslate:[ar,ms]"
+  },
+  "portfolioTabCountError": "Couldn't load Alpaca's count for this tab",
+  "@portfolioTabCountError": {
+    "description": "DEF422 — semantics label for the small warning glyph shown next to a Portfolio tab's count (POSITIONS/ORDERS/HISTORY) when that tab's Alpaca provider failed. The visible number in that state is the AMI-only count, undercounting real Alpaca positions/orders; this label is what a screen reader announces for the glyph beside it. NEW key. retranslate:[ar,ms]"
+  },
   "alpacaOrderCancelTitle": "Cancel this Alpaca order?",
   "@alpacaOrderCancelTitle": {
     "description": "CR234 — confirm-dialog title before cancelling a resting Alpaca order. NEW key. retranslate:[ar,ms]"

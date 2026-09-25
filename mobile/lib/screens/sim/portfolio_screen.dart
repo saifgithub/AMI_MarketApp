@@ -239,18 +239,19 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             ),
             child: _ValueCard(key: _valueCardKey, portfolio: p),
           ),
-          // CR234 (scope addition, item 4) — these three counts are AMI-only,
-          // unchanged by the Alpaca group each tab now also renders.
-          // DECIDED, not an oversight: Alpaca's counts come from async
-          // `FutureProvider`s (`alpacaPositionsProvider`/
-          // `alpacaOpenOrdersProvider`/`alpacaClosedOrdersProvider`), so a
-          // combined badge would have to read as "some number, plus maybe
-          // more once Alpaca loads" or silently omit Alpaca's contribution
-          // on every loading/error frame — exactly the kind of quietly-wrong
-          // count CR040 exists to prevent. Each tab already states which
-          // book a row belongs to via the ALPACA PAPER badge immediately
-          // above the Alpaca group, so the split is visible without the
-          // badge number itself having to carry it.
+          // CR234 (scope addition, item 4) shipped these three counts
+          // AMI-only, on the reasoning that Alpaca's counts are async and a
+          // combined badge would read as "some number, plus maybe more once
+          // Alpaca loads". DEF422 (Saiful, TestFlight +111, 2026-09-25)
+          // reversed that call: *"The 'order' header was showing '0'
+          // orders. But I still have one order open in alpaca."* A count
+          // that omits real open orders is the worse lie (CR040 — a
+          // quietly wrong number beats an honestly-loading one). The tab
+          // bar now combines each AMI count with its Alpaca counterpart
+          // (watches the Alpaca providers itself, gated on
+          // `alpacaLinkedProvider`) and renders an explicit loading/error
+          // marker rather than a number that looks final on every
+          // loading/error frame — see `_PortfolioTabBar` below.
           _PortfolioTabBar(
             watchlistTabKey: _watchlistTabKey,
             selected: _selectedTab,
@@ -450,7 +451,43 @@ class _ValueCard extends StatelessWidget {
 // report this same shape produced on the Room's BOARD|TRANSCRIPT toggle.
 // `room_view_mode_toggle.dart` is the worked example this copies.
 
-class _PortfolioTabBar extends StatelessWidget {
+/// DEF422 — one tab's count, before it is rendered. `ami` is always known
+/// (it comes from `SimState`, already loaded by the time this bar can be on
+/// screen). `alpaca` is null when no Alpaca paper account is linked — the
+/// tab is then AMI-only and renders exactly like pre-DEF422. When linked, it
+/// carries the live `AsyncValue<int>` off the same provider the tab's own
+/// body reads, so the badge can never disagree with what's rendered below
+/// it: loading shows the AMI count plus a small spinner (never a combined
+/// number that would look final while still growing), an error shows the
+/// AMI count plus a warning glyph (never a combined number that silently
+/// dropped Alpaca's side), and data adds the two counts together.
+class _TabCount {
+  const _TabCount({required this.ami, this.alpaca});
+
+  final int ami;
+  final AsyncValue<int>? alpaca;
+
+  /// The number to print in the label. Combined once Alpaca's count has
+  /// actually loaded; the AMI count alone otherwise — loading/error state is
+  /// carried by [marker], never folded into this number, so the label is
+  /// never a combined-looking figure that is actually partial.
+  int get displayCount => ami + (alpaca?.valueOrNull ?? 0);
+
+  /// null (nothing), `_TabCountMarker.loading`, or `_TabCountMarker.error` —
+  /// read once, so `_TabSegment` doesn't have to re-derive it from the
+  /// `AsyncValue` itself.
+  _TabCountMarker? get marker {
+    final a = alpaca;
+    if (a == null) return null;
+    if (a.isLoading) return _TabCountMarker.loading;
+    if (a.hasError) return _TabCountMarker.error;
+    return null;
+  }
+}
+
+enum _TabCountMarker { loading, error }
+
+class _PortfolioTabBar extends ConsumerWidget {
   const _PortfolioTabBar({
     required this.watchlistTabKey,
     required this.selected,
@@ -464,14 +501,48 @@ class _PortfolioTabBar extends StatelessWidget {
   final GlobalKey watchlistTabKey;
   final int selected;
   final ValueChanged<int> onSelect;
+
+  /// AMI-only counts, as computed by `_body` from `SimState`/`sim_trades`.
   final int positionsCount;
   final int watchlistCount;
   final int historyCount;
   final bool hasOpenTrade;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+
+    // Gate on link status first: an unlinked device shows AMI-only counts
+    // with no marker at all, same as before DEF422 — "only include Alpaca
+    // terms when an account is linked". `linked.valueOrNull` defaults to
+    // false while `alpacaLinkedProvider` itself is still resolving, which is
+    // the correct posture here too (nothing to combine yet, and the AMI
+    // count alone is never wrong).
+    final linked = ref.watch(alpacaLinkedProvider).valueOrNull ?? false;
+
+    final positions = _TabCount(
+      ami: positionsCount,
+      alpaca: linked
+          ? ref.watch(alpacaPositionsProvider).whenData((p) => p.length)
+          : null,
+    );
+    final orders = _TabCount(
+      ami: watchlistCount,
+      alpaca: linked
+          ? ref.watch(alpacaOpenOrdersProvider).whenData((o) => o.length)
+          : null,
+    );
+    // History's Alpaca side must count exactly what `AlpacaHistorySection`
+    // renders on that tab — every closed order, uncapped (unlike AMI's own
+    // 25-cap default view, which is a view default with its own SHOW ALL
+    // escape hatch, not a fetch limit either).
+    final history = _TabCount(
+      ami: historyCount,
+      alpaca: linked
+          ? ref.watch(alpacaClosedOrdersProvider).whenData((o) => o.length)
+          : null,
+    );
+
     return Container(
       height: 44,
       padding:
@@ -486,9 +557,14 @@ class _PortfolioTabBar extends StatelessWidget {
           children: [
             Expanded(
               child: _TabSegment(
-                label: '${l.portfolioTabPositions} $positionsCount',
+                label: '${l.portfolioTabPositions} ${positions.displayCount}',
                 active: selected == 0,
                 onTap: () => onSelect(0),
+                marker: positions.marker,
+                // The live pip is a SEPARATE indicator (money at risk right
+                // now) from the count marker (Alpaca fetch state) — both
+                // can be present at once, so both render, never one
+                // replacing the other.
                 trailing: hasOpenTrade ? _LivePip(active: selected == 0) : null,
               ),
             ),
@@ -496,17 +572,19 @@ class _PortfolioTabBar extends StatelessWidget {
             Expanded(
               key: watchlistTabKey,
               child: _TabSegment(
-                label: '${l.portfolioTabOrders} $watchlistCount',
+                label: '${l.portfolioTabOrders} ${orders.displayCount}',
                 active: selected == 1,
                 onTap: () => onSelect(1),
+                marker: orders.marker,
               ),
             ),
             Container(width: 1, height: 32, color: AmiColors.slate700),
             Expanded(
               child: _TabSegment(
-                label: '${l.portfolioTabHistory} $historyCount',
+                label: '${l.portfolioTabHistory} ${history.displayCount}',
                 active: selected == 2,
                 onTap: () => onSelect(2),
+                marker: history.marker,
               ),
             ),
           ],
@@ -522,12 +600,19 @@ class _TabSegment extends StatelessWidget {
     required this.active,
     required this.onTap,
     this.trailing,
+    this.marker,
   });
 
   final String label;
   final bool active;
   final VoidCallback onTap;
   final Widget? trailing;
+
+  /// DEF422 — this tab's Alpaca count-fetch state, or null once it has
+  /// data (or there's nothing to combine). Rendered ahead of [trailing]
+  /// (the live pip) so reading order matches visual order: count, then
+  /// "is that count still settling", then "is there live risk".
+  final _TabCountMarker? marker;
 
   @override
   Widget build(BuildContext context) {
@@ -537,9 +622,16 @@ class _TabSegment extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        // DEF146 — no clipper, no border, no FittedBox here. The parent
-        // clips the whole bar; shrinking the label to fit is CR108's
-        // failure over again — the bar is sized so it does not have to.
+        // DEF146 — no PER-SEGMENT clipper or border here: the parent clips
+        // the whole bar as one shape, and cutting each segment
+        // independently is the exact "two chips" regression DEF146 fixed.
+        // That rule is about GEOMETRY, not about the label's own text size:
+        // DEF422 makes a 3-digit combined count (AMI + Alpaca) reachable on
+        // every tab, which the bar was never sized for pre-DEF422 (§9
+        // acceptance 7b only ever measured 1–2 digit AMI-only counts). A
+        // `FittedBox` scoped to the label text alone — never touching the
+        // segment's fill, divider, or the bar's shared clip — shrinks the
+        // text uniformly instead of overflowing the segment.
         child: AnimatedContainer(
           duration: AmiMotion.normal,
           curve: AmiMotion.easeOut,
@@ -551,17 +643,23 @@ class _TabSegment extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.visible,
-                  style: AmiTypography.labelMono.copyWith(
-                    fontSize: 10,
-                    color: active ? Colors.white : AmiColors.textMed,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: AmiTypography.labelMono.copyWith(
+                      fontSize: 10,
+                      color: active ? Colors.white : AmiColors.textMed,
+                    ),
                   ),
                 ),
               ),
+              if (marker != null) ...[
+                const SizedBox(width: 4),
+                _TabCountMarkerIcon(marker: marker!),
+              ],
               if (trailing != null) ...[
                 const SizedBox(width: 4),
                 trailing!,
@@ -571,6 +669,45 @@ class _TabSegment extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// DEF422 — the honest-intermediate-state glyph beside a tab's count: a tiny
+/// spinner while Alpaca's contribution is still loading, a small warning
+/// triangle if it failed. Deliberately NOT [HexPulseLoader] (this app's
+/// usual loading motif) — that widget is sized for a card body (28px+); at
+/// this 32px-tall tab-bar segment a spinner that size would itself overflow
+/// the bar it sits in, so this is a bespoke, much smaller mark instead.
+class _TabCountMarkerIcon extends StatelessWidget {
+  const _TabCountMarkerIcon({required this.marker});
+  final _TabCountMarker marker;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    switch (marker) {
+      case _TabCountMarker.loading:
+        return Semantics(
+          label: l.portfolioTabCountLoading,
+          child: const SizedBox(
+            width: 8,
+            height: 8,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              valueColor: AlwaysStoppedAnimation<Color>(AmiColors.hexCyan),
+            ),
+          ),
+        );
+      case _TabCountMarker.error:
+        return Semantics(
+          label: l.portfolioTabCountError,
+          child: const Icon(
+            Icons.warning_amber_rounded,
+            size: 10,
+            color: AmiColors.hexAmber,
+          ),
+        );
+    }
   }
 }
 
