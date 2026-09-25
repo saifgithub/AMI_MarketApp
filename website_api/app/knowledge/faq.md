@@ -36,7 +36,7 @@ jobs in expert domains. Our first product is **AMI Trade**.
 AMI Trade is a mobile app where you act as the CEO of an AI analyst team. You pick a stock,
 and a team of **12 specialist AI analyst agents — coordinated by a 13th, the Concierge —**
 research and debate it (fundamentals, technicals/market, news, social sentiment, a Bull and
-a Bear, a research manager, risk debaters, a Trader, and a Portfolio Manager). They hand you
+a Bear, a research manager, risk officers, an Execution Desk, and a Chief Investment Officer). They hand you
 a synthesized view; **you make the final call.**
 
 ## Simulation only — always
@@ -47,7 +47,7 @@ reason about markets. **It does not and will not give investment advice.**
 ## How it works
 1. Pick a stock (US equities at launch).
 2. The analyst agents each do their job and debate the thesis.
-3. The Portfolio Manager runs a compliance + judgment review against the mandate you set.
+3. The Chief Investment Officer runs a compliance + judgment review against the mandate you set.
 4. You get a clear, synthesized decision — and you decide what to do in the simulation.
 
 ## Getting started
