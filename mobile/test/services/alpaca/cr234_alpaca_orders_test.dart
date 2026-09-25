@@ -246,8 +246,8 @@ void main() {
       final dio = Dio()..httpClientAdapter = adapter;
       final client = AlpacaClient(dio: dio);
 
-      expect(
-        () => client.cancelOrder('ord_123'),
+      await expectLater(
+        client.cancelOrder('ord_123'),
         throwsA(isA<AlpacaOrderRejected>()),
         reason: 'D-071/D-074: a cancel is a write, same as submitOrder — a '
             'live/production Alpaca account must never receive one from '

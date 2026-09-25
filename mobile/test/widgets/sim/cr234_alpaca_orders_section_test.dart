@@ -51,6 +51,9 @@ class _FixedOrdersAlpacaClient extends AlpacaClient {
   final List<AlpacaOrder> closedOrders;
   final List<String> cancelledIds = [];
   bool throwOnCancel = false;
+  bool rejectCancelAsLiveHost = false;
+  int openFetchCount = 0;
+  int closedFetchCount = 0;
 
   @override
   Future<List<AlpacaOrder>> orders({
@@ -58,11 +61,20 @@ class _FixedOrdersAlpacaClient extends AlpacaClient {
     int? limit,
     bool nested = true,
   }) async {
-    return status == 'open' ? openOrders : closedOrders;
+    if (status == 'open') {
+      openFetchCount++;
+      return openOrders;
+    }
+    closedFetchCount++;
+    return closedOrders;
   }
 
   @override
   Future<void> cancelOrder(String orderId) async {
+    if (rejectCancelAsLiveHost) {
+      throw const AlpacaOrderRejected(
+          'refusing to cancel an order against a non-paper Alpaca host');
+    }
     if (throwOnCancel) {
       throw const AlpacaException(422, 'order already filled');
     }
@@ -96,6 +108,39 @@ Future<void> _pumpOpenOrders(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: const Scaffold(body: AlpacaOpenOrdersSection()),
+    ),
+  ));
+  for (var i = 0; i < 4; i++) {
+    await t.pump(const Duration(milliseconds: 60));
+  }
+}
+
+/// Pumps `AlpacaOpenOrdersSection` alongside `AlpacaHistorySection` in one
+/// tree, the way `_OrdersTab`/`_HistoryTab` both keep an Alpaca provider
+/// alive in the real app (History is a separate tab, but the two providers
+/// are independent and CR234's cancel path invalidates both regardless of
+/// which tab is on screen). Needed to observe `alpacaClosedOrdersProvider`
+/// actually refetch: it is `autoDispose`, so with nothing watching it,
+/// `ref.invalidate` has nothing to refresh.
+Future<void> _pumpOpenOrdersAndHistory(
+  WidgetTester t, {
+  required AlpacaClient alpacaClient,
+  ApiClient? apiClient,
+}) async {
+  await t.pumpWidget(ProviderScope(
+    overrides: [
+      alpacaLinkedProvider.overrideWith((ref) async => true),
+      alpacaClientProvider.overrideWithValue(alpacaClient),
+      if (apiClient != null) apiClientProvider.overrideWithValue(apiClient),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: ListView(
+          children: const [AlpacaOpenOrdersSection(), AlpacaHistorySection()],
+        ),
+      ),
     ),
   ));
   for (var i = 0; i < 4; i++) {
@@ -290,6 +335,77 @@ void main() {
 
       expect(find.textContaining("Couldn't cancel"), findsOneWidget);
       expect(api.calls.single.outcome, 'rejected_by_alpaca');
+    });
+
+    testWidgets(
+        'a failed cancel still refreshes both the open and closed providers',
+        (t) async {
+      final client = _FixedOrdersAlpacaClient(openOrders: [
+        const AlpacaOrder(
+          id: 'ord_1',
+          symbol: 'ASML',
+          side: 'buy',
+          qty: 10,
+          status: 'new',
+        ),
+      ])..throwOnCancel = true;
+      final api = _RecordingApiClient();
+      await _pumpOpenOrdersAndHistory(t, alpacaClient: client, apiClient: api);
+
+      // Both providers resolve once on initial build.
+      expect(client.openFetchCount, 1);
+      expect(client.closedFetchCount, 1);
+
+      await t.tap(find.text('CANCEL ORDER'));
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tap(find.text('CANCEL ORDER').last);
+      for (var i = 0; i < 4; i++) {
+        await t.pump(const Duration(milliseconds: 60));
+      }
+
+      // A lost race (already filled) still means the order is no longer
+      // open — the catch block must refresh both providers regardless of
+      // whether the cancel itself "succeeded", so a stale cancel button
+      // doesn't linger for an order that's already gone.
+      expect(client.openFetchCount, greaterThan(1),
+          reason: 'open-orders provider must be refreshed after a failed '
+              'cancel, not just a successful one');
+      expect(client.closedFetchCount, greaterThan(1),
+          reason: 'closed-orders provider must be refreshed after a failed '
+              'cancel, not just a successful one');
+    });
+
+    testWidgets(
+        'a refused cancel on a live-linked account shows a clear message, '
+        'not a silent failure', (t) async {
+      final client = _FixedOrdersAlpacaClient(openOrders: [
+        const AlpacaOrder(
+          id: 'ord_1',
+          symbol: 'ASML',
+          side: 'buy',
+          qty: 10,
+          status: 'new',
+        ),
+      ])..rejectCancelAsLiveHost = true;
+      final api = _RecordingApiClient();
+      await _pumpOpenOrders(t, alpacaClient: client, apiClient: api);
+
+      await t.tap(find.text('CANCEL ORDER'));
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tap(find.text('CANCEL ORDER').last);
+      for (var i = 0; i < 4; i++) {
+        await t.pump(const Duration(milliseconds: 60));
+      }
+
+      // MINOR-2 (CR234 round 1): AlpacaOrderRejected is a different type
+      // from AlpacaException, so a naive catch-only-AlpacaException handler
+      // lets this escape as an unhandled async error — no snackbar, no
+      // audit row, and the button just does nothing when tapped.
+      expect(find.textContaining("Couldn't cancel"), findsOneWidget,
+          reason: 'a structural refusal must surface a clear message, not '
+              'fail silently');
+      // Nothing was sent to Alpaca, so nothing to audit-log.
+      expect(api.calls, isEmpty);
     });
 
     testWidgets('a closed order (filled) offers no cancel action', (t) async {

@@ -4859,4 +4859,8 @@ class AppLocalizationsMs extends AppLocalizations {
   String tradeTicketUnmeasuredRulesNote(String ruleNames) {
     return 'Not checked for this account: $ruleNames — AMI has no history for your Alpaca account.';
   }
+
+  @override
+  String get tradeTicketAlpacaGtdBecomesGtc =>
+      'Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it.';
 }

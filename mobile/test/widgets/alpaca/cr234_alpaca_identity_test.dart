@@ -18,6 +18,7 @@
 library;
 
 import 'package:ami_trade/models/alpaca.dart';
+import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/alpaca/alpaca_account_card.dart';
 import 'package:ami_trade/widgets/alpaca/alpaca_badge.dart';
 import 'package:ami_trade/widgets/sim/position_card.dart';
@@ -59,6 +60,50 @@ void main() {
         home: Scaffold(body: AlpacaBadge(dot: true)),
       ));
       expect(find.text(kAlpacaPaperLabel), findsOneWidget);
+    });
+
+    test(
+        'CR234 round 2 MINOR-3: alpacaAccent does not collide with any '
+        'accent already load-bearing on the Portfolio screen', () {
+      // The two collisions the round-1 audit found for the original
+      // `hexPurple` pick, ON the portfolio screen specifically:
+      //  - the sector-allocation palette (portfolio_screen.dart), where an
+      //    AMI sector slice can render this colour;
+      //  - RestingOrderState.unknown (resting_orders_section.dart), AMI's
+      //    own resting-order book directly above the Alpaca open-orders
+      //    section on the same Orders tab.
+      // Plus every other accent load-bearing somewhere in that same widget
+      // tree (gain/loss, stop/warning, primary/live, health-card, sector
+      // palette entries) — alpacaAccent must be distinct from all of them,
+      // not just the two the audit happened to name.
+      const sectorPalette = [
+        AmiColors.hexCyan,
+        AmiColors.hexPurple,
+        AmiColors.hexAmber,
+        AmiColors.hexGreen,
+        AmiColors.hexPink,
+        AmiColors.hexBlue,
+        AmiColors.hexOrange500,
+        AmiColors.hexIndigo600,
+      ];
+      const restingOrderUnknown = AmiColors.hexPurple;
+      const otherPortfolioAccents = [
+        AmiColors.hexCyan, // primary/live, resting "working"
+        AmiColors.hexAmber, // stop/warning, resting "triggered"/"filling"
+        AmiColors.hexGreen, // gain, resting "filled"
+        AmiColors.hexRed, // loss, resting "rejected"
+        AmiColors.hexBlue, // health-card accent, active tab
+      ];
+
+      for (final c in [
+        ...sectorPalette,
+        restingOrderUnknown,
+        ...otherPortfolioAccents,
+      ]) {
+        expect(alpacaAccent, isNot(equals(c)),
+            reason: 'alpacaAccent must not collide with an accent already '
+                'meaning something else on the Portfolio screen (color: $c)');
+      }
     });
   });
 
