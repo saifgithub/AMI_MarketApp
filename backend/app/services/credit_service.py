@@ -264,6 +264,21 @@ def _ensure_period(session, user: User) -> Plan:
 
     `credits_period_start` is always stamped to the month it belongs to, so a
     mid-month plan change doesn't shift the window — it only re-grants.
+
+    RETRO-SECURITY MAJOR-1 (round 4) — the pre-lock check above is only a
+    cheap early-out ("is a re-grant even plausible"), never the decision of
+    record. The round-3 auditor measured the bug this used to have: this
+    function used to decide `eff` / `window_rolled` / `plan_drifted` from the
+    CALLER's pre-lock `user` snapshot, take the lock, and then write
+    `ALLOWANCE[eff]` unconditionally — so a concurrent writer that rolled the
+    window (or drifted the plan) in the gap between the caller's load and the
+    lock got its own write re-granted straight over. Measured on real
+    Postgres: a `GET /mandate` balance read (this function, via `balance_for`)
+    racing a RevenueCat pack webhook (`add_credit_pack`, which also calls this
+    function first) at month rollover erased the just-delivered paid pack —
+    160 expected, 150 delivered. The fix is to re-derive the decision from the
+    LOCKED row and bail out if a re-grant is no longer due, mirroring every
+    other writer's "lock first, decide from the locked row" shape.
     """
     eff = effective_plan(_plan_of(user), user.trial_expires_at)
     month_start = _month_start(_utcnow())
@@ -275,6 +290,19 @@ def _ensure_period(session, user: User) -> Plan:
         return eff
 
     user = _lock_user_row(session, user)
+
+    # Re-derive from the LOCKED row — a concurrent writer may have already
+    # rolled the window or re-tagged the plan while this call waited for the
+    # lock. Deciding again here (not trusting the pre-lock check above) is
+    # what makes this writer's decision, not just its write, race-safe.
+    eff = effective_plan(_plan_of(user), user.trial_expires_at)
+    month_start = _month_start(_utcnow())
+    period = _as_utc(user.credits_period_start)
+    window_rolled = period is None or period < month_start
+    plan_drifted = user.credits_plan_at_grant != eff.value
+    if not (window_rolled or plan_drifted):
+        return eff
+
     old_balance = user.credit_balance or 0
     user.credit_balance = ALLOWANCE[eff]
     user.credits_period_start = month_start

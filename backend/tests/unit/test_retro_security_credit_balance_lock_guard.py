@@ -252,6 +252,144 @@ def test_lock_user_row_re_reads_the_balance_after_a_concurrent_write() -> None:
         )
 
 
+def test_ensure_period_does_not_re_grant_over_a_concurrent_rollover() -> None:
+    """Round 4 sqlite-runnable regression for MAJOR-1's last open path.
+
+    `_ensure_period` (round 3) still decided `eff` / `window_rolled` /
+    `plan_drifted` from the CALLER's pre-lock `user`, took the lock via
+    `_lock_user_row`, then wrote `ALLOWANCE[eff]` unconditionally. The lock's
+    `populate_existing` refreshes the balance the code then USES for the old
+    baseline, but nothing re-checked whether a re-grant was still due — so a
+    concurrent writer that already rolled the window (or re-tagged the plan)
+    in the gap between this call's load and its lock gets its own write
+    re-granted straight over the top.
+
+    Reproduced live on Postgres by the round-3 auditor: a `GET /mandate`
+    balance read racing a RevenueCat pack webhook at month rollover erased
+    the just-delivered paid pack (160 expected, 150 delivered) — because
+    `_ensure_period`, called first inside `add_credit_pack`, saw the rolled
+    window on the LOCKED row (good, thanks to `populate_existing`) but wrote
+    the plain allowance again even though the concurrent caller's own
+    `_ensure_period` had already granted it for this period.
+
+    This test drives the same shape without needing Postgres's `FOR UPDATE`
+    semantics: the property under test — "don't re-grant when a concurrent
+    writer already brought the period up to date" — is a pure Python decision
+    made from ORM-visible state (`populate_existing`'s refresh), exercisable
+    on SQLite exactly like `test_lock_user_row_re_reads_the_balance_after_a_-
+    concurrent_write` above.
+    """
+    from datetime import timedelta
+
+    from app.db import get_session
+    from app.db.models import User
+    from app.schemas.mandate import Plan
+    from app.services.auth_service import AuthService
+    from app.services.credit_service import ALLOWANCE, _ensure_period, _month_start, _utcnow
+
+    user, _token, _ = AuthService().ensure_anonymous(device_user_id=None)
+    last_month = _month_start(_utcnow()) - timedelta(days=1)
+
+    # Stale, last-period bookkeeping committed first — as if this row was
+    # last touched before anyone rolled it for the new month.
+    with get_session() as setup:
+        row = setup.get(User, user.id)
+        assert row is not None
+        row.credit_balance = 3
+        row.credits_period_start = last_month
+        row.credits_plan_at_grant = Plan.FLOOR_PASS.value
+
+    with get_session() as s1:
+        # s1 loads the same stale snapshot a real caller's `_ensure_period`
+        # would (e.g. `balance_for`'s `s.get(User, user_id)`), READ ONLY —
+        # nothing pending on this transaction yet.
+        loaded = s1.get(User, user.id)
+        assert loaded is not None
+        assert loaded.credits_period_start.replace(tzinfo=None) == last_month.replace(tzinfo=None)
+
+        # A concurrent writer (the real race: another request's own
+        # `_ensure_period`, e.g. from a pack webhook) commits the rollover
+        # AND spends against the fresh allowance, all before s1 takes its
+        # lock — s1's transaction has made no writes yet, so this commits
+        # cleanly on SQLite instead of deadlocking against s1.
+        with get_session() as s2:
+            other = s2.get(User, user.id)
+            assert other is not None
+            other.credit_balance = ALLOWANCE[Plan.FLOOR_PASS] - 1  # granted, then spent 1
+            other.credits_period_start = _month_start(_utcnow())
+            other.credits_plan_at_grant = Plan.FLOOR_PASS.value
+
+        eff = _ensure_period(s1, loaded)
+        s1.flush()
+        assert eff == Plan.FLOOR_PASS
+        refreshed = s1.get(User, user.id, populate_existing=True)
+        assert refreshed.credit_balance == ALLOWANCE[Plan.FLOOR_PASS] - 1, (
+            "_ensure_period must not re-grant the allowance a concurrent "
+            "writer already brought this period up to date for — it "
+            "overwrote the concurrent spend with a fresh ALLOWANCE, "
+            "reproducing the round-3 MAJOR-1 gap (decision made pre-lock)"
+        )
+
+
+def test_ensure_period_does_not_re_grant_over_a_concurrent_plan_drift() -> None:
+    """Round 4 — the plan-drift branch of the same gap, which the round-3
+    auditor named but did not drive (it drove only the rollover branch).
+
+    Same shape: this session's `user` is stale (still tagged for the OLD
+    effective plan), a concurrent writer already re-tags the row for the NEW
+    effective plan (e.g. a trial expiring, caught by a Room run's own
+    `_ensure_period` call) and grants that plan's allowance, then THIS call's
+    `_ensure_period` must see the drift is already resolved on the locked row
+    and must not clobber the concurrent grant with its own recomputation.
+    """
+    from app.db import get_session
+    from app.db.models import User
+    from app.schemas.mandate import Plan
+    from app.services.auth_service import AuthService
+    from app.services.credit_service import ALLOWANCE, _ensure_period, _month_start, _utcnow
+
+    user, _token, _ = AuthService().ensure_anonymous(device_user_id=None)
+    month_start = _month_start(_utcnow())
+
+    # Same period, but still tagged for trader — stale relative to what a
+    # concurrent caller is about to do. Committed first, like the rollover
+    # test above, so s1's own load is read-only until `_ensure_period` runs.
+    with get_session() as setup:
+        row = setup.get(User, user.id)
+        assert row is not None
+        row.plan = Plan.FLOOR_PASS.value
+        row.credit_balance = 3
+        row.credits_period_start = month_start
+        row.credits_plan_at_grant = Plan.TRADER.value
+
+    with get_session() as s1:
+        loaded = s1.get(User, user.id)
+        assert loaded is not None
+        assert loaded.credits_plan_at_grant == Plan.TRADER.value
+
+        # Concurrent writer: the drift is real (plan really did change to
+        # floor_pass) and it already re-granted + re-tagged for it, then the
+        # user spent some of the fresh allowance.
+        with get_session() as s2:
+            other = s2.get(User, user.id)
+            assert other is not None
+            other.plan = Plan.FLOOR_PASS.value
+            other.credit_balance = ALLOWANCE[Plan.FLOOR_PASS] - 2
+            other.credits_period_start = month_start
+            other.credits_plan_at_grant = Plan.FLOOR_PASS.value
+
+        eff = _ensure_period(s1, loaded)
+        s1.flush()
+        assert eff == Plan.FLOOR_PASS
+        refreshed = s1.get(User, user.id, populate_existing=True)
+        assert refreshed.credit_balance == ALLOWANCE[Plan.FLOOR_PASS] - 2, (
+            "_ensure_period must not re-grant over a concurrent writer that "
+            "already resolved the same plan drift — it re-decided from the "
+            "pre-lock plan_drifted=True instead of re-checking the locked "
+            "row, reproducing the round-3 MAJOR-1 gap on the drift branch"
+        )
+
+
 def test_known_writer_inventory_is_exact() -> None:
     """An exact pin, not a floor — same P15 rationale: a NEW unlocked-looking
     writer should stop the build until someone has looked at it, and a writer
