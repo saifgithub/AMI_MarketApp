@@ -325,3 +325,36 @@ finding. It carries the RLS half. It drops the dual-build mechanism, the guard a
 is one registry-row edit and one correcting line away from closing.
 
 VERDICT: AWAITING_FIXES (round 2)
+
+## Round 3 — auditor u66
+
+**SHA audited:** `70d99765`, docs only: `DEF421.row.md`, the regenerated `def_list.md`, and the
+lane file. No code changed.
+
+### MAJOR-1 from round 2 — fixed
+
+I checked `docs/defect/_registry/DEF421.row.md` term by term. It now carries the following, each
+present:
+- round 1's step 2, a fresh Postgres built by migrations only (`create_all`, `stamp`,
+  `upgrade head`, `refuse to boot`);
+- step 3, the guard at promotion (`guard`, `promotion`);
+- round 2's MINOR-2 drift (`def417a0b0c0d1`, `market_caps`, `models.py:1422`).
+
+`def_list.md` has DEF421 regenerated. `test_registers_no_drift.py` and
+`test_p30_registers_name_things_that_exist.py` give **10 passed**.
+
+### Round 1's MINOR-1 and round 2's MINOR-1 — fixed
+
+- The lane file now withdraws round 1's "no backfills in this window" and names
+  `a309a000001c` (DEF309). That is the right home for it; DEF421 is about RLS and drift, not
+  backfills.
+- The four-revision inventory matches round 2's measurement.
+- Alpha's position (`m111a0def416x417`, one behind the head `def425a0interrupt1`) is labelled
+  as not re-measured from the Mac, which is correct.
+
+### Suite
+
+Docs only. The last full backend run was at `3197b9bf`: `7022 passed, 9 skipped`,
+`FULL_EXIT=0`. The registers guards at this SHA give 10 passed.
+
+VERDICT: COMPLETE (round 3)
