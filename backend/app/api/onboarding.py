@@ -21,6 +21,7 @@ from app.schemas.onboarding import (
     StartOnboardingResponse,
 )
 from app.services.concierge_engine import (
+    MissingMandateAnswerError,
     make_welcome_messages,
     process_answer,
     session_to_mandate_dict,
@@ -73,10 +74,34 @@ async def submit_answer(
     req: AnswerRequest,
     store: InMemorySessionStore = Depends(get_session_store),
 ) -> AnswerResponse:
-    """User submits an answer to the current question. Returns the next Concierge message."""
+    """User submits an answer to the current question. Returns the next Concierge message.
+
+    DEF428 round 2, MINOR-1: `req.step` used to be forwarded to `process_answer`
+    unchecked — a client that posted a step ahead of `session.current_step`
+    (e.g. skipping Q6 straight to Q7) advanced the session with no
+    `max_drawdown_pct` ever recorded, and `_build_readback_summary`'s
+    `.get("max_drawdown_pct", 30)` fabricated a 30% mandate that looked like a
+    real answer. The shipped mobile client always posts the session's own
+    current step, so this guards a misbehaving/adversarial client, not normal
+    use — but the fabricated default is the same DEF428 defect class, so it's
+    closed here rather than left as a theoretical gap.
+    """
     session = await store.get(req.session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found or expired")
+
+    if req.step != session.current_step:
+        # `OnboardingSession` has `use_enum_values=True`, so
+        # `session.current_step` is a plain `str` on the loaded model, not
+        # the `ConversationStep` enum member `req.step` is (str-enum equality
+        # still holds either way, so the comparison above is unaffected) —
+        # `ConversationStep(...)` normalises both sides to `.value` for the
+        # message.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"session is on {ConversationStep(session.current_step).value}, "
+            f"not {req.step.value} — re-fetch the session and answer its current question",
+        )
 
     # Record the user's message in the transcript
     session.messages.append(
@@ -140,19 +165,30 @@ async def confirm_readback(
     session.current_step = ConversationStep.COMPLETE
     await store.save(session)
 
-    if req.restart and current_user is not None:
-        # Explicit + authenticated: replace the caller's current mandate
-        # outright. upsert() bumps the version and keeps prior rows for
-        # history/journal replay.
-        mandate_dict = session_to_mandate_dict(session, user_id=current_user.id)
-        applied = get_mandate_store().upsert(
-            current_user.id, Mandate.model_validate(mandate_dict)
-        )
-        mandate_preview = applied.model_dump(mode="json")
-    else:
-        # In a real flow this is where account claim is offered; in V0 we
-        # just produce a mandate preview for the next screen.
-        mandate_preview = session_to_mandate_dict(session, user_id="anonymous-pending-claim")
+    # DEF428 round 2: `session_to_mandate_dict` now refuses to fabricate a
+    # missing `max_drawdown_pct` (MissingMandateAnswerError) instead of
+    # silently defaulting to 30 — see MissingMandateAnswerError's docstring.
+    # The step-mismatch guard on `submit_answer` should make this
+    # unreachable via the normal flow, but a session that reaches readback
+    # with no Q6 answer some other way must fail loudly (CR040), not 500.
+    try:
+        if req.restart and current_user is not None:
+            # Explicit + authenticated: replace the caller's current mandate
+            # outright. upsert() bumps the version and keeps prior rows for
+            # history/journal replay.
+            mandate_dict = session_to_mandate_dict(session, user_id=current_user.id)
+            applied = get_mandate_store().upsert(
+                current_user.id, Mandate.model_validate(mandate_dict)
+            )
+            mandate_preview = applied.model_dump(mode="json")
+        else:
+            # In a real flow this is where account claim is offered; in V0 we
+            # just produce a mandate preview for the next screen.
+            mandate_preview = session_to_mandate_dict(
+                session, user_id="anonymous-pending-claim"
+            )
+    except MissingMandateAnswerError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
     follow_up = Message(
         author=Author.CONCIERGE,

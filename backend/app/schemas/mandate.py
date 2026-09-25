@@ -5,7 +5,6 @@ See docs/initial_specs/03_onboarding/mandate_schema.md for the full spec.
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -200,8 +199,20 @@ class Mandate(BaseModel):
     risk_score: int = Field(..., ge=1, le=5)
     risk_components: RiskComponents
     risk_quotes: list[str] = Field(default_factory=list)
-    max_drawdown_pct: Literal[10, 20, 30, 50, 100] = Field(
-        ..., json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    # DEF428 round 2: was `Literal[10, 20, 30, 50, 100]`. The onboarding
+    # interview's Q6 is free text ("what's the largest temporary loss you
+    # could stomach") and the round-1 fix taught `_parse_drawdown_pct` to
+    # honour ANY explicit 1-100 percentage the user typed rather than
+    # snapping to a chip — but the Literal never widened, so an off-grid
+    # answer (e.g. "45%") raised `ValidationError` at claim/restart, which
+    # `_bind_onboarding_session` swallowed into a permanent, silent 30%
+    # (the exact outcome DEF428 exists to remove — see U66 round-1 MAJOR-1).
+    # A whole-number percentage 1-100 is the schema now; `_parse_drawdown_pct`
+    # itself still rounds any fractional input DOWN to the whole percent
+    # (stricter cap) before it ever reaches this field, so this bound is
+    # never itself exercised with a fraction.
+    max_drawdown_pct: int = Field(
+        ..., ge=1, le=100, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
     )
 
     # CR101-BE1: the two ALREADY-enforced risk caps (sector concentration, single-name

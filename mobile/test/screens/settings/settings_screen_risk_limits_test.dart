@@ -79,6 +79,7 @@ class _ScriptedMandateNotifier extends MandateNotifier {
 
 UserMandate _mandate({
   int riskScore = 3,
+  int maxDrawdownPct = 30,
   double? sectorCapPct,
   double? singleNameCapPct,
   double? postLossCooldownHours,
@@ -100,7 +101,7 @@ UserMandate _mandate({
     riskComponents: const RiskComponents(
       drawdownResponse: 3, regretAsymmetry: 0, concentrationTolerance: 3,
     ),
-    maxDrawdownPct: 30,
+    maxDrawdownPct: maxDrawdownPct,
     sectorCapPct: sectorCapPct,
     singleNameCapPct: singleNameCapPct,
     postLossCooldownHours: postLossCooldownHours,
@@ -162,6 +163,42 @@ Future<AppLocalizations> _l(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+      'DEF428 round 2: an off-grid maxDrawdownPct (45) renders as a labelled, '
+      'selected custom chip instead of matching no fixed chip', (tester) async {
+    // A mandate hydrated from a typed onboarding answer (e.g. "45%") no
+    // longer matches any of the five fixed chips (10/20/30/50/100) now that
+    // the schema is any whole 1-100 — the picker must show it, not silently
+    // deselect every chip or snap to one.
+    final initial = _mandate(maxDrawdownPct: 45);
+    await _pump(tester, initial);
+    final l = await _l(tester);
+
+    expect(find.text('45%'), findsWidgets); // header readout + custom chip
+    final customChip = tester.widget<ChoiceChip>(
+      find.byKey(const Key('drawdownCustomChip')),
+    );
+    expect(customChip.selected, isTrue);
+    expect(find.text(l.settingsMaxDrawdownCustom('45')), findsOneWidget);
+
+    // None of the five fixed chips is selected for an off-grid value.
+    for (final pct in [10, 20, 30, 50, 100]) {
+      final chip = tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, '$pct%'));
+      expect(chip.selected, isFalse, reason: '$pct% must not be selected for 45');
+    }
+  });
+
+  testWidgets(
+      'DEF428 round 2: an on-grid maxDrawdownPct (30) shows no custom chip',
+      (tester) async {
+    final initial = _mandate(maxDrawdownPct: 30);
+    await _pump(tester, initial);
+
+    expect(find.byKey(const Key('drawdownCustomChip')), findsNothing);
+    final chip = tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, '30%'));
+    expect(chip.selected, isTrue);
+  });
+
   testWidgets('acceptance 2: save renders the SERVER value, not the locally-typed one',
       (tester) async {
     final initial = _mandate(maxOpenPositions: null);

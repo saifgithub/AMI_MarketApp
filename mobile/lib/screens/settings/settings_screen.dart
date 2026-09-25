@@ -629,6 +629,14 @@ class _DrawdownPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // DEF428 round 2: `max_drawdown_pct` is any whole 1-100 now (was a fixed
+    // 5-value Literal), so a mandate hydrated from a typed onboarding answer
+    // (e.g. "45%") no longer matches any of the five chips below. Rather
+    // than silently deselecting every chip (looks broken) or snapping to
+    // the nearest one (loses the exact value the user typed, the same
+    // fabrication class DEF428 exists to remove), an extra chip is shown
+    // for the off-grid value, labelled with its exact number and selected.
+    final isCustom = !_options.contains(value);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -658,6 +666,22 @@ class _DrawdownPicker extends StatelessWidget {
                 side: BorderSide(
                   color: o == value ? AmiColors.hexAmber : AmiColors.slate700,
                 ),
+              ),
+            if (isCustom)
+              ChoiceChip(
+                key: const Key('drawdownCustomChip'),
+                label: Text(l.settingsMaxDrawdownCustom(value.toString())),
+                labelStyle: AmiTypography.labelMono.copyWith(
+                  fontSize: 11,
+                  color: AmiColors.hexAmber,
+                ),
+                selected: true,
+                // No-op: this chip mirrors the current (already-selected)
+                // custom value, it does not offer a new one to pick.
+                onSelected: (_) {},
+                selectedColor: AmiColors.hexAmber.withValues(alpha: 0.2),
+                backgroundColor: AmiColors.slate900,
+                side: const BorderSide(color: AmiColors.hexAmber),
               ),
           ],
         ),

@@ -624,18 +624,25 @@ def test_def428_parse_drawdown_pct_reads_any_explicit_percentage():
     values and silently default to 30 for anything else — a typed "5%" or
     "45%" became an undisclosed 30% mandate. It must now parse ANY explicit
     1-100 percentage the user types, with or without "%"/"percent", decimals
-    included."""
+    included.
+
+    Round 2: a fractional answer rounds DOWN to a whole `int` (12.5 -> 12,
+    not 12.5) — `Mandate.max_drawdown_pct` is now a whole-number percentage
+    (U66 round-1 MAJOR-1: the old `Literal[10, 20, 30, 50, 100]` rejected
+    every off-grid value, including every fraction, at claim/restart)."""
     from app.services.concierge_engine import _parse_drawdown_pct
 
     assert _parse_drawdown_pct("5%") == 5
     assert _parse_drawdown_pct("45%") == 45
     assert _parse_drawdown_pct("45") == 45
-    assert _parse_drawdown_pct("12.5%") == 12.5
-    assert _parse_drawdown_pct("12.5 percent") == 12.5
+    assert _parse_drawdown_pct("12.5%") == 12
+    assert _parse_drawdown_pct("12.5 percent") == 12
+    assert _parse_drawdown_pct("12.9%") == 12  # floors, never rounds up
     assert _parse_drawdown_pct("83 percent") == 83
     assert _parse_drawdown_pct("no cap") == 100
     assert _parse_drawdown_pct("No Cap") == 100
     assert _parse_drawdown_pct("no limit") == 100
+    assert isinstance(_parse_drawdown_pct("12.5%"), int)
 
 
 def test_def428_parse_drawdown_pct_rejects_garbage_and_out_of_range():
@@ -714,14 +721,17 @@ def test_def428_explicit_percentage_45_is_honoured_not_snapped_to_40_or_50():
     assert session.answers["max_drawdown_pct"] == 45
 
 
-def test_def428_decimal_percentage_12_5_rounds_as_documented():
-    """12.5% is accepted and preserved at one decimal place — this test pins
-    that documented rounding behaviour."""
+def test_def428_decimal_percentage_12_5_rounds_down_to_whole_percent():
+    """Round 2: 12.5% floors to 12 (the stricter cap), not 12.5 — a
+    fractional `max_drawdown_pct` can never be persisted (the schema is a
+    whole-number int; U66 round-1 MAJOR-1 found the Literal rejecting it
+    outright at claim/restart, which was worse: a silent fallback to 30%)."""
     session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
 
     process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "12.5%")
 
-    assert session.answers["max_drawdown_pct"] == 12.5
+    assert session.answers["max_drawdown_pct"] == 12
+    assert isinstance(session.answers["max_drawdown_pct"], int)
 
 
 def test_def428_no_cap_still_gives_100_after_the_fix():
@@ -763,3 +773,121 @@ def test_def428_re_ask_then_valid_answer_completes_the_interview():
     next_step, _message, _readback = process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "25%")
     assert next_step == ConversationStep.Q7_CONSTRAINTS
     assert session.answers["max_drawdown_pct"] == 25
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# DEF428 round 2 — U66 round-1 MAJOR-1: the parser accepted any 1-100 value
+# but `Mandate.max_drawdown_pct` stayed `Literal[10, 20, 30, 50, 100]`, so an
+# off-grid answer (including the pre-existing "40%" chip) raised
+# ValidationError at claim/restart, silently reached as a permanent 30%. Fix:
+# widen the schema to `int, ge=1, le=100`. These tests drive an off-grid Q6
+# answer all the way through `session_to_mandate_dict` -> `Mandate.model_validate`
+# — the "parser output subset schema" property U66 asked for, so a future
+# reader can no longer just eyeball the parser and assume it's covered.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _run_q6_then_q7(session: OnboardingSession, q6_answer: str) -> OnboardingSession:
+    process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, q6_answer)
+    process_answer(session, ConversationStep.Q7_CONSTRAINTS, "no hard rules")
+    return session
+
+
+def test_def428_round2_offgrid_45_survives_mandate_model_validate():
+    """The exact regression U66 drove for real: '45%' must become a real,
+    persistable Mandate — not a ValidationError swallowed into a silent 30%."""
+    from uuid import uuid4
+
+    from app.schemas.mandate import Mandate
+
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+    _run_q6_then_q7(session, "45%")
+    session.completed = True
+
+    mandate_dict = session_to_mandate_dict(session, user_id=uuid4())
+    mandate = Mandate.model_validate(mandate_dict)  # must not raise
+
+    assert mandate.max_drawdown_pct == 45
+
+
+def test_def428_round2_every_q6_chip_and_offgrid_value_survives_model_validate():
+    """Parser-output-subset-schema, driven as a property: every Q6 chip value
+    AND a spread of off-grid values (including the "40%" chip, which the
+    audit's 'Recorded, not scored' finding flagged as never persistable
+    before this fix) must construct a valid Mandate."""
+    from uuid import uuid4
+
+    from app.schemas.mandate import Mandate
+
+    for answer, expected in [
+        ("10%", 10), ("20%", 20), ("30%", 30), ("40%", 40), ("50%", 50),
+        ("No cap", 100), ("5%", 5), ("45%", 45), ("12.5%", 12), ("83%", 83),
+        ("1%", 1), ("100%", 100),
+    ]:
+        session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+        _run_q6_then_q7(session, answer)
+        session.completed = True
+
+        mandate_dict = session_to_mandate_dict(session, user_id=uuid4())
+        mandate = Mandate.model_validate(mandate_dict)
+
+        assert mandate.max_drawdown_pct == expected, f"answer={answer!r}"
+
+
+def test_def428_round2_max_drawdown_pct_out_of_bounds_still_rejected():
+    """Widening the schema must not remove its floor/ceiling — 0 and 101 are
+    still invalid `max_drawdown_pct` values (a PATCH client could try either
+    even though the interview itself can never produce them)."""
+    import pytest
+    from pydantic import ValidationError
+    from uuid import uuid4
+
+    from app.schemas.mandate import Mandate
+
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+    _run_q6_then_q7(session, "25%")
+    session.completed = True
+    mandate_dict = session_to_mandate_dict(session, user_id=uuid4())
+
+    for bad in (0, 101, -5, 999):
+        with pytest.raises(ValidationError):
+            Mandate.model_validate({**mandate_dict, "max_drawdown_pct": bad})
+
+
+def test_def428_round2_offgrid_drawdown_nudges_by_nearest_lower_tier():
+    """`_DRAWDOWN_PCT_TO_TIER.get(dd, 3)` used to send EVERY off-grid value to
+    a flat neutral tier-3 nudge, indifferent to whether the user typed 11% or
+    99%. It must now nudge by the tier of the nearest chip AT OR BELOW the
+    typed value — the more conservative neighbour."""
+    from app.services.concierge_engine import _drawdown_tier
+
+    assert _drawdown_tier(10) == 1  # exact chip
+    assert _drawdown_tier(15) == 1  # between 10 (tier 1) and 20 (tier 2) -> lower
+    assert _drawdown_tier(19) == 1
+    assert _drawdown_tier(20) == 2  # exact chip
+    assert _drawdown_tier(45) == 4  # between 40 (tier 4) and 50 (tier 5) -> lower
+    assert _drawdown_tier(99) == 5  # above the highest chip below 100
+    assert _drawdown_tier(100) == 5  # exact chip
+    assert _drawdown_tier(5) == 1  # below the lowest chip -> floors to tier 1
+    assert _drawdown_tier(1) == 1
+
+
+def test_def428_round2_readback_never_fabricates_a_missing_drawdown():
+    """MINOR-1: `_build_readback_summary` must refuse to invent a default
+    `max_drawdown_pct` (the old `.get(..., 30)`) — a session that somehow
+    reaches it with no recorded answer must raise loudly, not silently
+    manufacture a real mandate value nobody typed."""
+    import pytest
+
+    from app.services.concierge_engine import (
+        MissingMandateAnswerError,
+        _build_readback_summary,
+    )
+
+    session = OnboardingSession(current_step=ConversationStep.READBACK)
+    session.answers["primary_goal"] = "retirement"
+    session.answers["horizon"] = "long"
+    # max_drawdown_pct deliberately never set.
+
+    with pytest.raises(MissingMandateAnswerError):
+        _build_readback_summary(session)
