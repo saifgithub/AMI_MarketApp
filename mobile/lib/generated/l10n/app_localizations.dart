@@ -3680,10 +3680,10 @@ abstract class AppLocalizations {
   /// **'This Room used {cost} credits · {left} left'**
   String roomResultCost(String cost, String left);
 
-  /// CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425, or an outage NO_VERDICT per DEF432). States no cause the client can't know. Never phrased as the user's fault.
+  /// CR236 round 2 (auditor MINOR-1) — shown instead of roomResultCost when the done event's refunded flag is true. This covers two shapes: a FAILED run refunded per CR039/DEF425 (no verdict at all), and DEF432's CIO-outage PASS (a real PASS verdict IS shown, refunded because AMI couldn't finish the Room's own analysis). The old copy ('this Room didn't reach a verdict') contradicted the PASS case, which does show a verdict. States no cause the client can't know. Never phrased as the user's fault.
   ///
   /// In en, this message translates to:
-  /// **'Not charged — this Room didn\'t reach a verdict'**
+  /// **'Not charged — AMI couldn\'t finish this Room'**
   String get roomResultRefunded;
 
   /// CR236 — roomResultCost without the balance clause, shown until the post-Room balance refresh succeeds (never the balance cached before the run). {cost} is the run's credit_cost as a plain integer string.

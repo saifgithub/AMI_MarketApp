@@ -2192,7 +2192,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomResultRefunded =>
-      'Not charged — this Room didn\'t reach a verdict';
+      'Not charged — AMI couldn\'t finish this Room';
 
   @override
   String roomResultCostNoBalance(String cost) {

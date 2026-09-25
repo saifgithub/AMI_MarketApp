@@ -2416,9 +2416,9 @@
       }
     }
   },
-  "roomResultRefunded": "Not charged — this Room didn't reach a verdict",
+  "roomResultRefunded": "Not charged — AMI couldn't finish this Room",
   "@roomResultRefunded": {
-    "description": "CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425, or an outage NO_VERDICT per DEF432). States no cause the client can't know. Never phrased as the user's fault."
+    "description": "CR236 round 2 (auditor MINOR-1) — shown instead of roomResultCost when the done event's refunded flag is true. This covers two shapes: a FAILED run refunded per CR039/DEF425 (no verdict at all), and DEF432's CIO-outage PASS (a real PASS verdict IS shown, refunded because AMI couldn't finish the Room's own analysis). The old copy ('this Room didn't reach a verdict') contradicted the PASS case, which does show a verdict. States no cause the client can't know. Never phrased as the user's fault."
   },
   "roomResultCostNoBalance": "This Room used {cost} credits",
   "@roomResultCostNoBalance": {
