@@ -16,6 +16,7 @@ from sqlalchemy import select
 from app.db import get_session
 from app.db.models import (
     AgentActivationRow,
+    AlpacaOrderAuditRow,
     BugReportRow,
     JournalEntryRow,
     LessonProgressRow,
@@ -108,6 +109,10 @@ def _make_orphan_with_everything() -> tuple[User, User]:
             user_id=orphan.id, category="other", title="bug",
             app_version="0.1.0+27", platform="ios",
         ))
+        s.add(AlpacaOrderAuditRow(
+            user_id=orphan.id, symbol="NVDA", side="buy", qty=1,
+            destination="alpaca_paper", outcome="submitted",
+        ))
     return orphan, adopter
 
 
@@ -165,6 +170,7 @@ def test_execute_rekeys_everything_into_adopter():
     assert counts["one_on_one_messages"] == 1
     assert counts["room_runs"] == 1
     assert counts["bug_reports"] == 1
+    assert counts["alpaca_order_audit"] == 1
     assert mandate_kept == "neither"
     assert deact == 0
 
@@ -176,9 +182,43 @@ def test_execute_rekeys_everything_into_adopter():
             JournalEntryRow, SimTradeRow, SimWatchlistRow,
             LessonProgressRow, AgentActivationRow,
             OneOnOneMessageRow, RoomRunRow, BugReportRow,
+            AlpacaOrderAuditRow,
         ):
             for row in s.execute(select(model)).scalars().all():
                 assert row.user_id == adopter.id, f"{model.__tablename__} not re-keyed"
+
+
+def test_execute_rekeys_alpaca_order_audit_no_orphaned_rows():
+    """DEF430 round 2 MINOR-B. Before this fix, `alpaca_order_audit` had no
+    FK/cascade and was absent from the merge's re-key list, so an
+    anonymous user's order-audit rows survived under a user_id that no
+    longer existed once the anonymous User row was deleted here — orphaned,
+    and unreachable by a later deletion request keyed on the surviving
+    (adopter) user_id."""
+    orphan, adopter = _make_users()
+    with get_session() as s:
+        s.add(AlpacaOrderAuditRow(
+            user_id=orphan.id, symbol="NVDA", side="buy", qty=1,
+            destination="alpaca_paper", outcome="submitted",
+        ))
+        s.add(AlpacaOrderAuditRow(
+            user_id=orphan.id, symbol="MSFT", side="sell", qty=2,
+            destination="alpaca_paper", outcome="rejected_by_alpaca",
+            detail="insufficient buying power",
+        ))
+
+    counts, _, _ = MergeService().execute(
+        from_user_id=orphan.id, to_user_id=adopter.id,
+    )
+    assert counts["alpaca_order_audit"] == 2
+
+    with get_session() as s:
+        rows = s.execute(select(AlpacaOrderAuditRow)).scalars().all()
+        assert len(rows) == 2
+        for row in rows:
+            assert row.user_id == adopter.id
+        # None left under the old (now-deleted) orphan id.
+        assert not any(row.user_id == orphan.id for row in rows)
 
 
 def test_execute_writes_subscription_event():

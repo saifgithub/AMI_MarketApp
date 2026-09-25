@@ -47,6 +47,11 @@ is re-keyed.
 The orphan's audit rows (`http_audit`, `llm_audit`, `auth_challenges`)
 are intentionally left in place — they reflect what happened during the
 anon session and re-keying them would lose forensic provenance.
+`alpaca_order_audit` (DEF430 round 2 MINOR-B) is NOT one of those — it is
+the user's own record of orders they sent/cancelled, not session forensics,
+so it re-keys orphan→adopter like `journal_entries` rather than staying put;
+otherwise it survives under a user_id that no longer exists once the orphan
+User row is deleted below, unreachable by a later deletion request.
 """
 
 from __future__ import annotations
@@ -63,6 +68,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import (
     AgentActivationRow,
+    AlpacaOrderAuditRow,
     BugReportRow,
     CareerEventRow,
     DailyChallengeAttemptRow,
@@ -514,6 +520,18 @@ class MergeService:
             )
             counts["bug_reports"] = _rekey_all(
                 s, BugReportRow, from_user_id, to_user_id,
+            )
+            # DEF430 round 2 MINOR-B: alpaca_order_audit.user_id had no FK
+            # and no cascade, so an orphan's rows survived under a user_id
+            # that no longer exists after this same merge deletes the
+            # orphan User row below — permanently orphaned, unreachable by
+            # a later deletion request keyed on the surviving user_id. Not
+            # one of the audit tables the module docstring says are left in
+            # place on purpose (http_audit/llm_audit/auth_challenges — pure
+            # request/session forensics); this is the user's own record of
+            # orders they sent, so it moves with them like journal_entries.
+            counts["alpaca_order_audit"] = _rekey_all(
+                s, AlpacaOrderAuditRow, from_user_id, to_user_id,
             )
 
             # ── DEF099: billing state (was silently dropped) ─────────
