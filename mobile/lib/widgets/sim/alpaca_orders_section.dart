@@ -269,19 +269,28 @@ class _AlpacaOrderCard extends ConsumerWidget {
         content: Text(l.alpacaOrderCancelFailed(e.detail),
             style: const TextStyle(color: AmiColors.slate900)),
       ));
-    } on AlpacaOrderRejected catch (e) {
+    } on AlpacaOrderRejected catch (_) {
       // Structural refusal — the paper-host check in `cancelOrder()` fired
       // before any network call, so nothing was sent and nothing to log
       // (unlike the `AlpacaException` branch above, which reports an
       // attempt that Alpaca itself answered). This can only happen for a
-      // live-linked account; still surface it rather than let it die as an
+      // credential stored before DEF439 (the connect screen no longer lets a
+      // live link be saved) — still surface it rather than let it die as an
       // unhandled async error, which read as the Cancel button silently
       // doing nothing (CR040).
+      //
+      // CR234 round-2 MINOR-4 — this used to interpolate `e.message`, the
+      // raw developer-facing string `cancelOrder()` throws ("refusing to
+      // cancel an order against a non-paper Alpaca host: <url>"), straight
+      // into user-facing copy. Fixed copy names the actual, user-actionable
+      // fact instead.
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AmiColors.hexAmber,
-        content: Text(l.alpacaOrderCancelFailed(e.message),
+        content: Text(
+            l.alpacaOrderCancelFailed(
+                'this account is not a paper account — relink in Settings'),
             style: const TextStyle(color: AmiColors.slate900)),
       ));
     }

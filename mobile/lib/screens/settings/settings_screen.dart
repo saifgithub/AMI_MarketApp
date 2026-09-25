@@ -1699,7 +1699,21 @@ class _AlpacaSection extends ConsumerWidget {
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
           error: (_, __) => _AlpacaRow(linked: false, ref: ref),
-          data: (linked) => _AlpacaRow(linked: linked, ref: ref),
+          data: (linked) {
+            // DEF439 — `alpacaLinkedProvider` now means "linked to a
+            // confirmed PAPER account". When it is false, a credential may
+            // still be sitting on the device from before this fix — check
+            // `alpacaStoredNonPaperProvider` so that case reads as "relink",
+            // not as "you were never connected".
+            final storedNonPaper = !linked &&
+                (ref.watch(alpacaStoredNonPaperProvider).valueOrNull ??
+                    false);
+            return _AlpacaRow(
+              linked: linked,
+              storedNonPaper: storedNonPaper,
+              ref: ref,
+            );
+          },
         ),
       ],
     );
@@ -1707,9 +1721,14 @@ class _AlpacaSection extends ConsumerWidget {
 }
 
 class _AlpacaRow extends StatelessWidget {
-  const _AlpacaRow({required this.linked, required this.ref});
+  const _AlpacaRow({
+    required this.linked,
+    required this.ref,
+    this.storedNonPaper = false,
+  });
 
   final bool linked;
+  final bool storedNonPaper;
   final WidgetRef ref;
 
   @override
@@ -1721,7 +1740,9 @@ class _AlpacaRow extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: linked ? AmiColors.hexGreen : AmiColors.slate600,
+            color: linked
+                ? AmiColors.hexGreen
+                : (storedNonPaper ? AmiColors.hexAmber : AmiColors.slate600),
           ),
         ),
         const SizedBox(width: AmiSpacing.s),
@@ -1734,18 +1755,30 @@ class _AlpacaRow extends StatelessWidget {
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
               ),
               Text(
-                linked ? 'Connected' : 'Not connected',
+                // DEF439 — a stored non-paper credential gets its own line:
+                // "Not connected" alone would read as "never linked", which
+                // is false and drops the reason a relink is needed.
+                linked
+                    ? 'Connected'
+                    : (storedNonPaper
+                        ? 'AMI now links Alpaca paper accounts only — relink'
+                        : 'Not connected'),
                 style: AmiTypography.caption.copyWith(
-                  color: linked ? AmiColors.hexGreen : AmiColors.slate500,
+                  color: linked
+                      ? AmiColors.hexGreen
+                      : (storedNonPaper
+                          ? AmiColors.hexAmber
+                          : AmiColors.slate500),
                 ),
               ),
             ],
           ),
         ),
         TextButton(
-          onPressed: () => linked ? _disconnect(context) : _connect(context),
+          onPressed: () =>
+              linked ? _disconnect(context) : _connect(context, storedNonPaper),
           child: Text(
-            linked ? 'Disconnect' : 'Connect',
+            linked ? 'Disconnect' : (storedNonPaper ? 'Relink' : 'Connect'),
             style: AmiTypography.labelMono.copyWith(
               color: linked ? AmiColors.hexRed : AmiColors.hexBlue,
             ),
@@ -1755,13 +1788,21 @@ class _AlpacaRow extends StatelessWidget {
     );
   }
 
-  Future<void> _connect(BuildContext context) async {
+  Future<void> _connect(BuildContext context, bool storedNonPaper) async {
+    // DEF439 — a stale non-paper credential is cleared before the connect
+    // screen opens, the same local-wipe-first order `_disconnect` uses, so
+    // the new link cannot be read as "on top of" the old one.
+    if (storedNonPaper) {
+      await AlpacaCredentialStore.clear();
+    }
+    if (!context.mounted) return;
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => const AlpacaConnectScreen()),
     );
-    if (result == true) {
+    if (result == true || storedNonPaper) {
       ref.read(alpacaSnapshotCacheProvider).invalidate();
       ref.invalidate(alpacaLinkedProvider);
+      ref.invalidate(alpacaStoredNonPaperProvider);
       ref.invalidate(alpacaPortfolioProvider);
       ref.invalidate(alpacaPositionsProvider);
     }
@@ -1781,6 +1822,7 @@ class _AlpacaRow extends StatelessWidget {
     } catch (_) {}
     ref.read(alpacaSnapshotCacheProvider).invalidate();
     ref.invalidate(alpacaLinkedProvider);
+    ref.invalidate(alpacaStoredNonPaperProvider);
     ref.invalidate(alpacaPortfolioProvider);
     ref.invalidate(alpacaPositionsProvider);
   }

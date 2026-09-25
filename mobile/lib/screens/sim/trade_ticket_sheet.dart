@@ -44,6 +44,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// `_TradeTicketSheetState.build`).
 enum TradeDestination { amiSim, alpacaPaper, both }
 
+/// DEF439 — the [AlpacaException.detail] `_fetchAlpacaSnapshot` throws when
+/// the linked credential is not a confirmed paper account, distinct from an
+/// ordinary "couldn't read the account" fetch failure so the two call sites
+/// can give the user a specific message instead of the generic one (DEF430
+/// round-1 MINOR-1's misleading refusal).
+const String _nonPaperAccountDetail =
+    'refusing to read a non-paper Alpaca account for preview';
+
 /// CR227 — one destination's outcome, shown independently in the result
 /// surfacing so "Both" can report a leg that filled next to one that didn't.
 class _DestinationOutcome {
@@ -753,9 +761,23 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final client = ref.read(alpacaClientProvider);
     // DEF430 — never fetch (let alone send) a live account's summary. See
     // this method's docstring.
+    //
+    // DEF439 — as of the connect-screen fix, this branch should be
+    // structurally unreachable via the UI: the destination picker itself
+    // (`alpacaLinkedProvider`, `trade_ticket_sheet.dart`'s own `build`) only
+    // renders ALPACA PAPER/BOTH when the linked credential is already
+    // confirmed paper, and no non-paper credential can be linked in the
+    // first place. Kept as a re-check anyway — same "never trust a label,
+    // check the endpoint" posture `submitOrder`/`cancelOrder` apply, in case
+    // a pre-fix stored credential is still present and this method runs
+    // before the caller re-reads link state. `_nonPaperAccountDetail` marks
+    // the throw distinctly from an ordinary fetch failure so the two call
+    // sites can give a specific message instead of the generic
+    // "couldn't read your account" (DEF430 round-1 MINOR-1 — that generic
+    // message on THIS branch used to read as "Alpaca is unreachable" when
+    // the account was in fact readable and simply refused).
     if (!await client.isLinkedToPaperAccount()) {
-      throw const AlpacaException(
-          null, 'refusing to read a non-paper Alpaca account for preview');
+      throw const AlpacaException(null, _nonPaperAccountDetail);
     }
     final results =
         await Future.wait([client.account(), client.positions()]);
@@ -787,14 +809,21 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final AlpacaSnapshot snapshot;
     try {
       snapshot = await _fetchAlpacaSnapshot();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _destinationOutcomes = const [
+      // DEF439 / DEF430 round-1 MINOR-1 — a non-paper (live) linked account
+      // gets its own message: the account WAS readable, AMI simply refuses
+      // to read it. The generic "couldn't read" copy used to cover this case
+      // too, which told a live-account user their account was unreachable
+      // when it was in fact just refused.
+      setState(() => _destinationOutcomes = [
             _DestinationOutcome(
               label: kAlpacaPaperLabel,
               ok: false,
-              message: "Couldn't read your Alpaca paper account — "
-                  'order not sent.',
+              message: e is AlpacaException && e.detail == _nonPaperAccountDetail
+                  ? 'AMI links Alpaca paper accounts only — order not sent.'
+                  : "Couldn't read your Alpaca paper account — "
+                      'order not sent.',
             ),
           ]);
       return;
@@ -984,11 +1013,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final AlpacaSnapshot snapshot;
     try {
       snapshot = await _fetchAlpacaSnapshot();
-    } catch (_) {
-      return const _DestinationOutcome(
+    } catch (e) {
+      // DEF439 / DEF430 round-1 MINOR-1 — see `_submitAlpacaOnly`'s matching
+      // branch for why the non-paper case gets its own message.
+      return _DestinationOutcome(
         label: kAlpacaPaperLabel,
         ok: false,
-        message: "Couldn't read your Alpaca paper account — order not sent.",
+        message: e is AlpacaException && e.detail == _nonPaperAccountDetail
+            ? 'AMI links Alpaca paper accounts only — order not sent.'
+            : "Couldn't read your Alpaca paper account — order not sent.",
       );
     }
     final preview = await ref.read(simNotifierProvider.notifier).preview(

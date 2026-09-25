@@ -5,9 +5,26 @@
 /// Keystore; they are never sent to the AMI backend, which no longer has
 /// anywhere to put them. Only the resulting positions are ever uploaded.
 ///
+/// **DEF439 (Saiful, 2026-09-25: "add key validation. Check out alpaca key
+/// format") — only a paper account can ever be linked.** Alpaca's own
+/// convention names paper key IDs "PK..." and live key IDs "AK..." but does
+/// not document that convention, so an unrecognised prefix is never refused
+/// on that basis alone. The real, structural boundary is the endpoint: a
+/// paper key pair gets a 401 from the live endpoint and vice versa. So this
+/// screen (a) only accepts a paper-shaped host in the endpoint field, (b)
+/// refuses a key ID that is recognisably live ("AK...") before any network
+/// call, and (c) verifies whatever is left against the paper endpoint before
+/// storing it. Net effect: no live account can be linked at all, which makes
+/// every "live account rendered as paper" / "live account offered as a trade
+/// destination" symptom unreachable by construction rather than patched at
+/// each display site.
+///
 /// Two modes:
-///   1. API Key — paste key ID + secret, and (CR224) the API endpoint Alpaca
-///      assigned the account, since it is not the same host for everyone.
+///   1. API Key — paste key ID + secret, and (CR224) the API endpoint. CR224
+///      added the endpoint field because Alpaca does not resolve every PAPER
+///      account to the same host (region/account-prefixed variants exist) —
+///      it was never meant as a way to point at a live host, and DEF439
+///      closes that gap by validating the field itself.
 ///      Validated against `GET /v2/account` before being stored, so a bad
 ///      pair — or a wrong endpoint — fails here rather than silently at the
 ///      next Room convene.
@@ -15,7 +32,13 @@
 ///      define and Alpaca app approval, so it stays greyed-out. Alpaca's token
 ///      endpoint requires client_secret and documents no PKCE, so that one
 ///      exchange cannot run on-device; the backend performs it and hands the
-///      token straight back without storing it.
+///      token straight back without storing it. DEF439: Alpaca's
+///      `/oauth/authorize` documents no `env=paper` selector — which account
+///      the token resolves to is decided by whichever Alpaca account the user
+///      was logged into in the browser, not by anything in the authorize
+///      request — so the token itself is verified against the paper host
+///      (`AlpacaClient.validateOAuthToken`) before it is stored, the OAuth
+///      counterpart of (c) above.
 ///
 /// Returns `true` to the caller if linking succeeded, `false` otherwise.
 library;
@@ -247,13 +270,31 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
     super.dispose();
   }
 
+  /// DEF439 — a key ID that is recognisably a LIVE key. Alpaca's own
+  /// convention (undocumented, so never a hard refusal on its own for an
+  /// UNRECOGNISED prefix — see the file docstring) names live key IDs
+  /// "AK...". Checked case-insensitively and against the trimmed value —
+  /// this runs before any network call, so a live key never even reaches
+  /// Alpaca.
+  static bool _isLiveKeyId(String keyId) =>
+      keyId.toUpperCase().startsWith('AK');
+
   Future<void> _connect() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final keyId = _keyCtrl.text.trim();
+    // DEF439 — refused before any state change or network call: this is not
+    // a "could not verify" failure, it is a recognisable live key.
+    if (_isLiveKeyId(keyId)) {
+      setState(() => _error =
+          "That's a live-account key. AMI links Alpaca paper accounts "
+          'only — create a key in Alpaca\'s Paper Trading dashboard (paper '
+          'keys start with PK).');
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
     });
-    final keyId = _keyCtrl.text.trim();
     final secret = _secretCtrl.text.trim();
     // Trim a trailing slash — the client joins this with paths that already
     // start with '/', and a stray slash here would double up silently.
@@ -278,9 +319,14 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
       if (!mounted) return;
       setState(() {
         _loading = false;
+        // DEF439 — a 401 here may mean the key is a live pair that slipped
+        // past the AK-prefix check (an unrecognised-prefix live key, or
+        // Alpaca changing its convention) as much as it may mean a typo, so
+        // the copy names both rather than only suggesting "check your key".
         _error = e.isAuthFailure
-            ? 'Alpaca rejected that key — check the ID and secret, and that '
-                'they are Paper Trading keys.'
+            ? 'Alpaca rejected that key — check the ID and secret, that '
+                "they are Paper Trading keys, and that this isn't a live-"
+                'account key.'
             : 'Could not reach Alpaca. Check your connection and try again.';
       });
     } catch (_) {
@@ -366,13 +412,24 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
                 final trimmed = v?.trim() ?? '';
                 if (trimmed.isEmpty) return 'Required';
                 if (!trimmed.startsWith('https://')) return 'Must start with https://';
+                // DEF439 — the CR224 field exists for a paper-account host
+                // variant, never for a live host. Reuses `isAlpacaPaperHost`
+                // (the same predicate `submitOrder`/`cancelOrder` re-check)
+                // rather than a second copy of the pattern.
+                if (!isAlpacaPaperHost(trimmed)) {
+                  return 'Must be an Alpaca paper-trading host '
+                      '(paper-api.alpaca.markets, or a region/account '
+                      'variant with "paper" in it)';
+                }
                 return null;
               },
             ),
             const SizedBox(height: AmiSpacing.xs),
             const Text(
-              'Only change this if Alpaca gave your account a different paper '
-              'trading endpoint than the default.',
+              'Only change this if Alpaca gave your paper account a '
+              'different paper trading endpoint than the default. AMI links '
+              'Alpaca paper accounts only — this cannot be a live-account '
+              'endpoint.',
               style: TextStyle(color: AmiColors.slate500, fontSize: 11, height: 1.4),
             ),
             const SizedBox(height: AmiSpacing.xl),
@@ -547,6 +604,14 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
       // credential is persisted here, on the device, like the API key pair.
       final api = ref.read(apiClientProvider);
       final tokens = await api.alpacaExchangeOAuthCode(code);
+      // DEF439 — Alpaca's authorize request carries no paper/live selector
+      // (see the file docstring), so the token itself is the only thing that
+      // can be checked: verify it against the paper host BEFORE storing,
+      // the OAuth counterpart of the API-key tab's `validate()` call. A live
+      // token is rejected here with a 401, same as a live key pair would be.
+      await ref
+          .read(alpacaClientProvider)
+          .validateOAuthToken(tokens.accessToken);
       await AlpacaCredentialStore.save(
         tokens.accessToken,
         tokens.refreshToken,
@@ -556,6 +621,19 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
       unawaited(_reportLinked(ref));
       if (!mounted) return;
       Navigator.of(context).pop(true);
+    } on AlpacaException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _linking = false;
+        // DEF439 — name the live-account case specifically: OAuth gives the
+        // user no way to tell which Alpaca account they authorized with
+        // before the fact, so a 401 here is the first and only signal.
+        _error = e.isAuthFailure
+            ? "That Alpaca account isn't a paper account. AMI links Alpaca "
+                'paper accounts only — sign in with your Paper Trading '
+                'account and try again.'
+            : 'Link failed — try again';
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {

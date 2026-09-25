@@ -404,6 +404,16 @@ void main() {
       expect(find.textContaining("Couldn't cancel"), findsOneWidget,
           reason: 'a structural refusal must surface a clear message, not '
               'fail silently');
+      // CR234 round-2 MINOR-4 (DEF439 closes the reachability, but the copy
+      // itself is fixed regardless as a backstop): this used to interpolate
+      // `AlpacaOrderRejected.message` directly — the raw developer string
+      // `cancelOrder()` throws ("refusing to cancel an order against a
+      // non-paper Alpaca host: <url>") — straight into user-facing copy.
+      expect(find.textContaining('non-paper Alpaca host'), findsNothing,
+          reason: 'the raw developer-facing exception string must never '
+              'reach the snackbar verbatim');
+      expect(find.textContaining('not a paper account'), findsOneWidget,
+          reason: 'user-actionable copy in its place');
       // Nothing was sent to Alpaca, so nothing to audit-log.
       expect(api.calls, isEmpty);
     });
