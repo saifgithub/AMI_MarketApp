@@ -179,3 +179,149 @@ row-level-security layer keyed on a variable the application has never set. That
 thing a fresh Beta database would meet.
 
 VERDICT: AWAITING_FIXES (round 1)
+
+## Round 2 — auditor u66
+
+U68 is decommissioned; u66 takes the lane from round 2. **SHA audited:** `3197b9bf` (main HEAD),
+detached worktree `ami_wt/RETRO-MIGRATIONS-u66`, verified clean after probes and removed. Mac only:
+no Postgres, no melehost. Every line below says whether I ran it or read it. Nothing here was run
+against a real database. The Postgres evidence is U68's round 1 plus the DEF416/DEF417/DEF425
+lanes' own throwaway-Postgres runs, and I cite those as theirs.
+
+### The rescope: honest in substance, and it holds on the three probes
+
+1. **Can anything build a database from the chain before CR126?** No.
+   - `deploy-beta.yml` is `workflow_dispatch`-only, needs GCP vars that do not exist yet, and runs
+     no migration.
+   - `tests.yml` has no Postgres service.
+   - `grep` for `alembic … upgrade` / `command.upgrade` finds only `Dockerfile` comments,
+     `session.py` (the check), `postflight.py` (the Alpha promotion), two guard tests,
+     `alembic/env.py`, and one old audit probe.
+   - The only Postgres service in any compose file is Alpha's.
+   - A fresh Postgres booted by the app goes through `init_schema`'s `create_all` + stamp
+     (`app/db/session.py:240,251`), not the chain. That is DEF421's own subject, not a way around it.
+2. **Does anything on Alpha depend on the RLS or on `app.user_id`?** No.
+   `grep -rn 'app\.user_id\|use_user' backend/app backend/scripts scripts` returns 0 lines. U68
+   measured Alpha at 0 RLS-enabled tables and 0 policies.
+3. **Is DEF421 accurate and open?** It exists (`docs/defect/_registry/DEF421.row.md`, `b0045b13`)
+   with status `open`, marked as a Beta blocker. It names the forced RLS, the missing
+   `use_user`, the NOSUPERUSER 0-rows / INSERT-refused demonstration, and the drift inventory. It
+   does **not** carry all of round 1. See MAJOR-1.
+
+Round 1's backfill finding stands, and I re-measured it across the whole chain.
+`grep -E 'UPDATE|INSERT INTO|DELETE FROM'` over `alembic/versions/`, then reading each hit, finds
+four `upgrade()` bodies that write rows:
+
+- `8c5b1a70f4d2`: dedupe `DELETE`.
+- `b4c5d6e70018`: two `UPDATE bug_reports`.
+- `d5f2a3b00009`: `INSERT … ON CONFLICT DO NOTHING`.
+- `a309a000001c`: round 1's in-window one.
+
+The other hits are docstrings. The first three predate the 08-13 window. One note on
+`b4c5d6e70018`: its second `UPDATE` stamps `acknowledged_at = NOW()` with no `IS NULL` guard, so a
+manual re-run would overwrite it. Alembic never re-runs a revision, and the migration is outside
+the window, so this is an observation, not a finding.
+
+### The chain at `3197b9bf`: strong
+
+Run bare in the worktree:
+
+```
+alembic heads                        def425a0interrupt1 (head)
+ScriptDirectory walk                 76 revisions, heads ['def425a0interrupt1'], bases ['e355c2468b2a']
+pytest test_def278_… test_def337_… test_def406_… -q        14 passed   EXIT=0
+  + test_def215_schema_ownership.py                        20 passed   EXIT=0
+```
+
+Four revisions landed after round 1's `34941fa1`. I read all four and produced Postgres
+`--sql` offline for each. Offline mode is meaningful only per range: the full base→head offline
+run already dies at a pre-existing inspector-based repair (`NoInspectionAvailable`), which is not
+new.
+
+| revision | what it does | reversible | backfill / rows | covered on real Postgres by |
+|---|---|---|---|---|
+| `def416a0oidc0uq` | 3 partial unique indexes on `users` | `drop_index` ×3 | reads only: refuses and lists ids if duplicates exist, never deletes or merges | DEF416 r1 (COMPLETE): refused on a planted duplicate, then upgrade and downgrade both `EXIT=0` |
+| `def417a0b0c0d1` | 2 JSONB columns `DEFAULT '{}'` | `DROP COLUMN` ×2 | implicit fill: existing rows read `'{}'`. One-shot DDL, correct per docstring | DEF417 lane round-trip |
+| `m111a0def416x417` | merge, `pass`/`pass` | yes | none | DEF416 r1 (walks m111 → both parents → cr230) |
+| `def425a0interrupt1` | nullable `room_runs.interrupted_at` | `DROP COLUMN` (offline SQL, run) | none. NULL is the stated correct value for old rows | DEF425 r2 (throwaway Postgres migrated to it) |
+
+`def416a0oidc0uq` cannot run in offline `--sql` mode (`bind.execute(...)` returns `None` →
+`AttributeError`, run). No path uses offline mode, and the chain was already offline-incompatible,
+so this is not a finding.
+
+### MAJOR-1 — DEF421 does not carry all of round 1, so part of the rescope is a silent drop
+
+The round-2 claim rests on "MAJOR-1 … is DEF421; MINOR-1 travels with DEF421". Checked against
+`DEF421.row.md:1`:
+
+- **Round 1 fix step 2 is missing.** Step 2 said a fresh Postgres must be built by migrations
+  only. The row describes Alpha as built by `create_all()`, but its "decide:" list has only two
+  items: RLS, and reconciling Alpha's drift. It never names the mechanism,
+  `_init_schema_locked`'s `create_all` + `stamp head` on any fresh non-SQLite DB
+  (`app/db/session.py:240,251`). That mechanism is what made round 1's scenario depend on start
+  order. If CR126 implements `app.user_id` and a Supabase DB is first booted by the app, the RLS
+  migration is stamped as run and never executes, and the security control is silently absent
+  again. Reconciling the drift without closing that path only resets the divergence.
+- **Round 1 fix step 3 is missing.** Step 3 was the guard: diff Alpha's schema against a
+  chain-built throwaway at promotion. House rule: an entry without an enforcing check is not done.
+- **MINOR-1 is carried nowhere.** The row does not mention it, and the lane file's
+  "no backfills in this window" sentence still stands uncorrected. MINOR-1 has nothing to do with
+  RLS, so "travels with DEF421" leaves it without a home.
+
+This is MAJOR on the protocol's doubt rule. The fix is small and needs no code, but the
+rescope is legitimate only if the tracked item holds the whole finding, and today it holds part
+of it. **Fix:**
+
+1. Amend `DEF421.row.md` so its "decide:" list also has (a) "fresh Postgres builds by
+   migrations only: `init_schema` runs `alembic upgrade head` or refuses to boot, instead of
+   `create_all` + stamp" and (b) "guard: diff the chain-built schema against the live schema at
+   promotion".
+2. Regenerate `def_list.md`.
+3. Add one correcting line to this lane file naming `a309a000001c` as the in-window backfill (and
+   U68's soundness finding on it).
+
+Then this lane can close.
+
+### MINOR-1 — the round-2 inventory is wrong, and at this SHA the head is not on Alpha
+
+"The one migration added since your round, `m111a0def416x417`": in fact three revisions were new
+against `34941fa1` when the claim was written at `380e825d`: `def416a0oidc0uq`, `def417a0b0c0d1`
+and `m111`. At the audited SHA there are four. `def425a0interrupt1` (`9160660f`, 08:48, an hour
+after the submission) is the head, and it is in no `alpha-*` tag. I listed each tag's
+`backend/alembic/versions/`: `alpha-2026-09-25-4` (`685dbdd0`) has 75 files and no `def425`.
+So "Alpha at head" is false at `3197b9bf`, and the next promotion will apply `def425a0interrupt1`.
+In substance this is sound: all four revisions are additive and reversible, and each was
+exercised on Postgres by its own lane (table above). The record needs correcting. **Fix:** name
+all four revisions in the lane file, and state that Alpha sits at `m111a0def416x417`, one behind
+head, until the next promotion. I cannot re-query Alpha from the Mac. The `m111` reading is from
+DEF416 r1 at `alpha-2026-09-25-4`.
+
+### MINOR-2 — a new chain vs `create_all` divergence, filed after DEF421
+
+`def417a0b0c0d1:42,48` gives `market_caps` / `avg_volumes` a server default `'{}'`. The model
+(`app/db/models.py:1422-1423`) has only Python `default=dict`, with no `server_default`. Alpha got
+these columns through the chain, so it has the default. A DB born through `init_schema` would not.
+This is the same class as DEF421's 13 server defaults, but in the opposite direction, and it
+landed after DEF421 was filed. **Fix:** add it to DEF421's reconciliation inventory, or add
+`server_default` to the model. MINOR: the app always writes the value, and no DB is built that
+way before CR126.
+
+### Suite
+
+Full suites were already run at `3197b9bf` and not re-run here: backend `7022 passed, 9 skipped`,
+`FULL_EXIT=0`. Targeted guards, run bare in the worktree: 14 passed (DEF278/DEF337/DEF406, the
+same three files and count as round 1) and 20 passed with DEF215 added, both `EXIT=0`.
+
+FOREIGN: not run. No `foreign/RETRO-MIGRATIONS.r2` branch exists. This is not a clean bill.
+
+### Verdict
+
+The chain is in good shape. It has one head across 76 revisions. The four revisions since round 1
+are additive, reversible and each tested on Postgres. The four row-writing migrations in the
+repo's history are correct and effectively one-shot. Narrowing the lane to the Alpha chain is the
+right call: nothing builds a DB from the chain before CR126, and nothing on Alpha touches RLS.
+What is not yet true is the premise the narrowing rests on, that DEF421 carries the fresh-DB
+finding. It carries the RLS half. It drops the dual-build mechanism, the guard and MINOR-1. That
+is one registry-row edit and one correcting line away from closing.
+
+VERDICT: AWAITING_FIXES (round 2)
