@@ -25,7 +25,7 @@ from __future__ import annotations
 import base64
 import contextlib
 import json
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
@@ -242,3 +242,145 @@ def test_hms_unionid_unique_index_rejects_duplicate():
     with pytest.raises(SAIntegrityError):
         with get_session() as s:
             s.add(User(id=uuid4(), hms_unionid=uid_val))
+
+
+# ── Post-COMPLETE minor fix (auditor U68 MINOR-1) ───────────────────────────
+#
+# Round 1's race tests above pass `user_id=uuid4()` — an id with NO existing
+# row — which drives `sign_in_with_apple`/`sign_in_with_google` down the
+# FRESH-INSERT branch (`row is None`, "row = User(...)"). The auditor traced
+# the REAL `/v1/auth/apple` and `/v1/auth/google` routes and found they never
+# reach that branch: `get_current_user` always resolves a LIVE row for the
+# Bearer-authenticated caller, so `user_id` here is always the caller's own
+# pre-claim anonymous row, found at the `if row is None and user_id is not
+# None: row = ...` lookup, and control falls to the `else: _attach_*_sub(row)`
+# UPDATE branch — which had NO begin_nested()/IntegrityError guard at all.
+# Two devices signing in with the same Apple/Google `sub` for the first time,
+# milliseconds apart, both start from their OWN anon row and both attempt the
+# UPDATE; the loser's hits `uq_users_apple_id`/`uq_users_google_id` and (pre-
+# fix) surfaced as an unhandled HTTP 500 (`api/auth.py` maps only
+# `ValueError`). These two tests drive the REAL route (TestClient, through
+# `get_current_user`, both callers holding their OWN pre-existing anonymous
+# row) with the same deterministic blinded-pre-check technique as round 1,
+# so they exercise the branch the real route actually takes.
+
+
+def _client_with_fake_verifiers(*, apple=None, google=None):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.auth import router as auth_router
+    from app.services.auth_service import AuthService, get_auth_service
+
+    app = FastAPI()
+    app.include_router(auth_router)
+    service = AuthService(apple_verifier=apple, google_verifier=google)
+    app.dependency_overrides[get_auth_service] = lambda: service
+    return TestClient(app)
+
+
+def _anon_user_and_token() -> tuple[UUID, str]:
+    auth = AuthService()
+    u, t, _ = auth.ensure_anonymous(device_user_id=None)
+    return u.id, t
+
+
+def test_apple_sign_in_attach_race_on_the_real_route_signs_loser_into_winner():
+    """The route path DEF416 round 1 did not reach: caller A holds its own
+    pre-existing anon row and POSTs `/v1/auth/apple` with a `sub` a
+    concurrent winner has already claimed. Pre-fix: HTTP 500
+    (`IntegrityError` on the UPDATE, unmapped). Post-fix: 200, signed into
+    the winner's account, exactly one row for the `sub`."""
+    sub = "apple-sub-attach-race-1"
+    loser_uid, loser_token = _anon_user_and_token()
+
+    winner_uid = uuid4()
+    with get_session() as s:  # the winner, committed before we run
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        s.add(User(
+            id=winner_uid, apple_id=sub, email="attach-race@example.com",
+            is_anonymous=False, claimed_at=now, trial_started_at=now,
+            trial_expires_at=now + timedelta(days=7),
+        ))
+
+    client = _client_with_fake_verifiers(apple=_FakeVerifier())
+
+    real_get_session = auth_mod.get_session
+
+    @contextlib.contextmanager
+    def _blinded_session():
+        with real_get_session() as s:
+            yield _BlindSelectOnce(s)
+
+    orig = auth_mod.get_session
+    auth_mod.get_session = _blinded_session
+    try:
+        r = client.post(
+            "/v1/auth/apple",
+            json={"identity_token": _apple_jwt(sub)},
+            headers={"Authorization": f"Bearer {loser_token}"},
+        )
+    finally:
+        auth_mod.get_session = orig
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert UUID(body["user"]["id"]) == winner_uid, (
+        "the loser must sign into the winner's account, not 500"
+    )
+
+    rows = _users_with(apple_id=sub)
+    assert len(rows) == 1, f"expected exactly one row for apple_id={sub!r}, got {len(rows)}"
+    assert rows[0].id == winner_uid
+    # The loser's pre-claim anon row must not itself still carry the sub —
+    # it was never persisted (the UPDATE that would have set it raised).
+    assert loser_uid != winner_uid
+
+
+def test_google_sign_in_attach_race_on_the_real_route_signs_loser_into_winner():
+    """Mirrors the Apple case above for `/v1/auth/google` and
+    `uq_users_google_id`."""
+    sub = "google-sub-attach-race-1"
+    loser_uid, loser_token = _anon_user_and_token()
+
+    winner_uid = uuid4()
+    with get_session() as s:  # the winner, committed before we run
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        s.add(User(
+            id=winner_uid, google_id=sub, email="attach-race2@example.com",
+            is_anonymous=False, claimed_at=now, trial_started_at=now,
+            trial_expires_at=now + timedelta(days=7),
+        ))
+
+    client = _client_with_fake_verifiers(google=_FakeVerifier())
+
+    real_get_session = auth_mod.get_session
+
+    @contextlib.contextmanager
+    def _blinded_session():
+        with real_get_session() as s:
+            yield _BlindSelectOnce(s)
+
+    orig = auth_mod.get_session
+    auth_mod.get_session = _blinded_session
+    try:
+        r = client.post(
+            "/v1/auth/google",
+            json={"identity_token": _google_jwt(sub)},
+            headers={"Authorization": f"Bearer {loser_token}"},
+        )
+    finally:
+        auth_mod.get_session = orig
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert UUID(body["user"]["id"]) == winner_uid, (
+        "the loser must sign into the winner's account, not 500"
+    )
+
+    rows = _users_with(google_id=sub)
+    assert len(rows) == 1, f"expected exactly one row for google_id={sub!r}, got {len(rows)}"
+    assert rows[0].id == winner_uid
+    assert loser_uid != winner_uid
