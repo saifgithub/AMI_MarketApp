@@ -533,4 +533,107 @@ void main() {
       expect(windowWidthClassOf(1024), AmiWindowWidthClass.expanded);
     });
   });
+
+  group('DEF420 MINOR-1 — nextUsCloseEstimate is DST-correct', () {
+    // 2026 US DST transitions (verified against the "second Sunday of March
+    // / first Sunday of November, 2:00am local" rule the fix implements):
+    //   DST starts 2026-03-08 07:00 UTC (2:00am EST -> 3:00am EDT)
+    //   DST ends   2026-11-01 06:00 UTC (2:00am EDT -> 1:00am EST)
+    // The old fixed-20:30-UTC estimate was wrong by 30 minutes on BOTH sides
+    // of every transition and, worse, could count down to an already-passed
+    // close depending on which side of the true boundary "now" landed.
+
+    test('deep winter (EST, UTC-5) — close resolves to 21:00 UTC', () {
+      // Tuesday 2026-01-06, well clear of both transitions.
+      final now = DateTime.utc(2026, 1, 6, 14, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 1, 6, 21, 0));
+    });
+
+    test('deep summer (EDT, UTC-4) — close resolves to 20:00 UTC', () {
+      // Wednesday 2026-07-15, well clear of both transitions.
+      final now = DateTime.utc(2026, 7, 15, 14, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 7, 15, 20, 0));
+    });
+
+    test('the day before spring-forward is still EST (21:00 UTC close)', () {
+      // Saturday 2026-03-07 — a weekend, so the estimate must also roll to
+      // Monday 2026-03-09, which is AFTER the spring-forward transition and
+      // therefore an EDT (20:00 UTC) close.
+      final now = DateTime.utc(2026, 3, 7, 10, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close!.weekday, DateTime.monday);
+      expect(close, DateTime.utc(2026, 3, 9, 20, 0));
+    });
+
+    test('the day of spring-forward (Sunday) rolls to Monday, already EDT',
+        () {
+      final now = DateTime.utc(2026, 3, 8, 10, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 3, 9, 20, 0));
+    });
+
+    test('the first weekday close after spring-forward is 20:00 UTC (EDT)',
+        () {
+      // Monday 2026-03-09, morning — the transition (Sun 07:00 UTC) is
+      // already behind us, so today's own close must be EDT.
+      final now = DateTime.utc(2026, 3, 9, 12, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 3, 9, 20, 0));
+    });
+
+    test('the last weekday close before fall-back is still 20:00 UTC (EDT)',
+        () {
+      // Friday 2026-10-30 — before the Nov 1 transition, still EDT.
+      final now = DateTime.utc(2026, 10, 30, 12, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 10, 30, 20, 0));
+    });
+
+    test('fall-back Sunday rolls to Monday, already EST (21:00 UTC)', () {
+      final now = DateTime.utc(2026, 11, 1, 10, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 11, 2, 21, 0));
+    });
+
+    test('the first weekday close after fall-back is 21:00 UTC (EST)', () {
+      // Monday 2026-11-02, morning — the transition (Sun 06:00 UTC) is
+      // already behind us, so today's own close must be EST.
+      final now = DateTime.utc(2026, 11, 2, 12, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 11, 2, 21, 0));
+    });
+
+    test('a plain weekend (no DST transition involved) still rolls to Monday',
+        () {
+      // Saturday 2026-07-18 -> Monday 2026-07-20, both EDT.
+      final now = DateTime.utc(2026, 7, 18, 10, 0);
+      final close = nextUsCloseEstimate(now);
+      expect(close, DateTime.utc(2026, 7, 20, 20, 0));
+    });
+
+    test('Friday evening after close rolls straight to Monday, not Saturday',
+        () {
+      // Friday 2026-07-17 21:30 UTC is after that day's 20:00 UTC EDT close.
+      final now = DateTime.utc(2026, 7, 17, 21, 30);
+      final close = nextUsCloseEstimate(now);
+      expect(close!.weekday, DateTime.monday);
+      expect(close, DateTime.utc(2026, 7, 20, 20, 0));
+    });
+
+    test('a second year (2027) resolves the correct transition dates too',
+        () {
+      // 2027: 2nd Sunday of March = 2027-03-14; 1st Sunday of Nov = 2027-11-07.
+      final beforeSpringForward = nextUsCloseEstimate(
+        DateTime.utc(2027, 3, 12, 12, 0), // Friday, still EST
+      );
+      expect(beforeSpringForward, DateTime.utc(2027, 3, 12, 21, 0));
+
+      final afterSpringForward = nextUsCloseEstimate(
+        DateTime.utc(2027, 3, 15, 12, 0), // Monday, already EDT
+      );
+      expect(afterSpringForward, DateTime.utc(2027, 3, 15, 20, 0));
+    });
+  });
 }

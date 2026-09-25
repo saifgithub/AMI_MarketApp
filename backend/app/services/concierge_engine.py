@@ -109,6 +109,14 @@ def q6_text(risk_score: int) -> str:
 Q6_CHIPS = ["10%", "20%", "30%", "40%", "50%", "No cap"]
 
 
+def _q6_clarify_text() -> str:
+    return (
+        "I didn't catch a number there — what percentage loss could you stomach "
+        "before it costs you sleep? Give me a number like \"20%\", or pick a chip, "
+        "or say \"no cap\" if there isn't one."
+    )
+
+
 # CR114: this used to ask only what you'd NEVER invest in, while five of its
 # seven chips were inclusions ("Halal only", "ESG-leaning") or strategy and
 # liquidity limits. Read literally, picking "Halal only" answered "I'd never
@@ -181,7 +189,30 @@ def process_answer(
     step: ConversationStep,
     answer: str,
 ) -> tuple[ConversationStep, Message, dict[str, Any] | None]:
-    """Apply the answer to the session, return (next_step, next_message, readback_or_none)."""
+    """Apply the answer to the session, return (next_step, next_message, readback_or_none).
+
+    DEF428: Q6 ("largest temporary loss you could stomach") is the one free-text
+    numeric question in the interview, and `_parse_drawdown_pct` used to fall
+    back to a bare 30 for anything it couldn't read — "5%", "45%", "83", or
+    garbage all silently became a 30% drawdown mandate with nothing disclosed
+    to the user. There is no other unparseable-answer precedent in this state
+    machine to follow (every other `_classify_*` has a "safe default" and
+    always advances), so this is the first re-ask: on an unparseable Q6 answer,
+    `current_step` does NOT advance — `session.answers["max_drawdown_pct"]` is
+    left untouched and the Concierge re-asks Q6 with a clarifying prefix
+    instead of moving to Q7. A parseable answer (an explicit 1-100 percentage,
+    with or without "%"/"percent", or "no cap") behaves exactly as before.
+    """
+
+    if step == ConversationStep.Q6_MAX_DRAWDOWN and _parse_drawdown_pct(answer.strip().lower()) is None:
+        session.updated_at = now_utc()
+        message = Message(
+            author=Author.CONCIERGE,
+            content=_q6_clarify_text(),
+            step=ConversationStep.Q6_MAX_DRAWDOWN,
+            chips=Q6_CHIPS,
+        )
+        return ConversationStep.Q6_MAX_DRAWDOWN, message, None
 
     # Record the user's answer in session.answers
     _record_answer(session, step, answer)
@@ -371,21 +402,31 @@ def _classify_concentration(text: str) -> int:
     return 3
 
 
-def _parse_drawdown_pct(text: str) -> int:
-    t = text.lower()
-    if "no cap" in t or "no limit" in t or "100" in t:
+def _parse_drawdown_pct(text: str) -> float | None:
+    """Q6 free-text -> a 1-100 drawdown percentage, or None if unparseable.
+
+    DEF428: this used to substring-match the six chip values only and default
+    to 30 for anything else — "5%", "45%", "83", and plain garbage all became
+    an undisclosed 30% mandate. It now reads ANY explicit number the user
+    typed (with or without "%"/"percent", decimals allowed) in the 1-100
+    range, so a free-text answer is honoured exactly rather than snapped to
+    the nearest chip. Returns None (caller re-asks) rather than guessing when
+    no such number is present — a fabricated mandate value is worse than
+    asking again.
+    """
+    t = text.lower().strip()
+    if "no cap" in t or "no limit" in t or "uncapped" in t:
         return 100
-    if "50" in t:
-        return 50
-    if "40" in t:
-        return 40
-    if "30" in t:
-        return 30
-    if "20" in t:
-        return 20
-    if "10" in t:
-        return 10
-    return 30
+
+    import re
+
+    m = re.search(r"(-?\d+(?:\.\d+)?)\s*(?:%|percent)?", t)
+    if not m:
+        return None
+    pct = float(m.group(1))
+    if pct <= 0 or pct > 100:
+        return None
+    return int(pct) if pct == int(pct) else round(pct, 1)
 
 
 def _parse_constraints(text: str) -> dict[str, Any]:
