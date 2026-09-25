@@ -49,7 +49,8 @@ new socket" mandate doesn't ask for.
 from __future__ import annotations
 
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutureTimeoutError
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as _FutureTimeoutError
 from threading import RLock
 
 from app.core.logging import logger
@@ -68,6 +69,7 @@ _ON_DEMAND_CACHE_TTL_S = 24 * 60 * 60.0
 # (`market_data.py:523`) — the nearest sibling of "one blocking read, short
 # budget, degrade on miss."
 _ON_DEMAND_TIMEOUT_S = 4.0
+
 
 class _LookupFailed:
     """Sentinel distinguishing "the fetch itself errored or timed out" from
@@ -223,8 +225,13 @@ def resolve_liquidity_with_lookup(universe, ticker: str, *, price: float | None 
     unchanged): the on-demand path is about tickers the snapshot never
     covers, not about a broken snapshot.
     """
-    from app.schemas.liquidity import ON_DEMAND_SOURCE, LiquidityStatus, LiquidityVerdict
-    from app.schemas.liquidity import ILLIQUID_AVG_DOLLAR_VOLUME_USD, MICROCAP_FLOOR_USD_M
+    from app.schemas.liquidity import (
+        ILLIQUID_AVG_DOLLAR_VOLUME_USD,
+        MICROCAP_FLOOR_USD_M,
+        ON_DEMAND_SOURCE,
+        LiquidityStatus,
+        LiquidityVerdict,
+    )
 
     resolve = getattr(universe, "resolve_liquidity", None)
     if not callable(resolve):

@@ -704,9 +704,10 @@ def test_sim_engine_fill_resting_order_wiring_fails_red_if_the_check_is_removed(
     call (replacing it with `None`, simulating the argument being lost), the
     fill must go from REJECTED to ACCEPTED — proving this test would actually
     go red under that regression, not just under a contrived direct call."""
-    import app.services.sim_engine as _se
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    import app.services.sim_engine as _se
 
     real_check = _se.check_mandate_compliance
 
