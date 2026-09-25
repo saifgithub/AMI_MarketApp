@@ -43,10 +43,14 @@ DEF269 — a game run must never read as this user's own practice behaviour):
     so a lookback of 5 trading days is 5 PRICE ROWS back, not 5 calendar
     days back.
   * **Disposition ratio (PGR/PLR, Odean 1998)** — proportion of gains
-    realised vs proportion of losses realised. Odean's own definition:
-    PGR = realised gains / (realised gains + paper gains), and likewise for
-    losses, summed over every SALE in the window and every position that was
-    open (elsewhere in the account) at the moment of that sale.
+    realised vs proportion of losses realised. Odean's own definition is a
+    COUNT proportion, not a dollar-weighted one: PGR = number of realised
+    gains / (number of realised gains + number of paper gains), and likewise
+    for losses by count, tallied over every SALE in the window and every
+    position that was open (elsewhere in the account) at the moment of that
+    sale. `_NEW_BASELINES["odean_1998_disposition"]` below is the paper's own
+    Table I count-based figure — a dollar-weighted ratio would not be
+    comparable to it.
 
     **The standard closed-lot approximation, stated because the CR asked for
     it to be:** a full Odean replication marks every open lot to market on
@@ -515,12 +519,12 @@ def _disposition_ratio(trades: list[_Trade]) -> dict:
                     paper_losses_count += 1
 
     pgr = (
-        realised_gains / (realised_gains + paper_gains)
-        if (realised_gains + paper_gains) > 0 else None
+        realised_gains_count / (realised_gains_count + paper_gains_count)
+        if (realised_gains_count + paper_gains_count) > 0 else None
     )
     plr = (
-        realised_losses / (realised_losses + paper_losses)
-        if (realised_losses + paper_losses) > 0 else None
+        realised_losses_count / (realised_losses_count + paper_losses_count)
+        if (realised_losses_count + paper_losses_count) > 0 else None
     )
     return {
         "pgr": round(pgr, 4) if pgr is not None else None,
