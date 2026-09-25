@@ -49,7 +49,10 @@ from app.api.dependencies import (
 )
 from app.schemas import Mandate
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service
-from app.services.concierge_engine import session_to_mandate_dict
+from app.services.concierge_engine import (
+    MissingMandateAnswerError,
+    session_to_mandate_dict,
+)
 from app.services.mandate_store import get_mandate_store
 from app.services.merge_service import MergeError, MergeService, get_merge_service
 from app.services.rate_limit import (
@@ -78,7 +81,23 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
     now hydrates the real mandate from the completed session's answers. Skips
     if a mandate row already exists for this user — never clobber a mandate
     that may have been edited since claim (e.g. a re-auth replaying the same
-    onboarding_session_id)."""
+    onboarding_session_id).
+
+    DEF428 round 2, MAJOR-1: this used to stamp `claimed_user_id` and save the
+    session BEFORE building/validating the mandate. When
+    `Mandate.model_validate` then raised (an off-grid `max_drawdown_pct` like
+    45 against the old `Literal[10, 20, 30, 50, 100]`), the exception
+    propagated out of a 200-turned-500 response, but the session was already
+    marked claimed — a retried claim hit the idempotency check above and
+    returned early without ever trying to persist the mandate again. The
+    user was left permanently on `get_or_default()`'s silent 30% with no
+    mandate row and no further attempt possible. The schema widening in this
+    same round (`max_drawdown_pct: int, ge=1, le=100`) removes the
+    ValidationError this specific input triggered, but the ordering is fixed
+    here too as defense in depth: hydrate and persist the mandate FIRST, mark
+    the session claimed only once that has succeeded (or was correctly
+    skipped). A failure now leaves the session unclaimed, so a retry tries
+    the hydration again instead of silently no-op'ing forever."""
     if session_id is None:
         return
     store = get_session_store()
@@ -87,12 +106,28 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
         return
     if session.claimed_user_id == user_id:
         return
-    session.claimed_user_id = user_id
-    await store.save(session)
 
     if session.completed and get_mandate_store().get(user_id) is None:
         mandate_dict = session_to_mandate_dict(session, user_id=user_id)
         get_mandate_store().upsert(user_id, Mandate.model_validate(mandate_dict))
+
+    session.claimed_user_id = user_id
+    await store.save(session)
+
+
+async def _bind_onboarding_session_or_409(session_id: UUID | None, user_id: UUID) -> None:
+    """Thin wrapper around `_bind_onboarding_session` shared by all three claim
+    routes (magic-link, Apple, Google): DEF428 round 2 — a completed session
+    that somehow reached claim with no `max_drawdown_pct` answer recorded
+    raises `MissingMandateAnswerError` rather than silently defaulting one
+    in. The user account itself is already created by this point, so that
+    is surfaced as a 409 on the claim response, not a bare 500 — the caller
+    is told the mandate wasn't persisted rather than seeing an opaque
+    failure with no explanation."""
+    try:
+        await _bind_onboarding_session(session_id, user_id)
+    except MissingMandateAnswerError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -199,7 +234,7 @@ async def magic_link_verify(
             "invalid or expired code",
         )
     user, token, adopted_from = result
-    await _bind_onboarding_session(req.onboarding_session_id, user.id)
+    await _bind_onboarding_session_or_409(req.onboarding_session_id, user.id)
     return AuthVerifyResponse(
         user=user, token=token, claimed=True,
         adopted_from_user_id=adopted_from,
@@ -233,7 +268,7 @@ async def sign_in_with_apple(
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
-    await _bind_onboarding_session(req.onboarding_session_id, user.id)
+    await _bind_onboarding_session_or_409(req.onboarding_session_id, user.id)
     return AuthVerifyResponse(
         user=user, token=token, claimed=True,
         adopted_from_user_id=adopted_from,
@@ -260,7 +295,7 @@ async def sign_in_with_google(
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
-    await _bind_onboarding_session(req.onboarding_session_id, user.id)
+    await _bind_onboarding_session_or_409(req.onboarding_session_id, user.id)
     return AuthVerifyResponse(
         user=user, token=token, claimed=True,
         adopted_from_user_id=adopted_from,

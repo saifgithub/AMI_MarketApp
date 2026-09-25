@@ -124,6 +124,34 @@ def test_authenticated_restart_replaces_existing_mandate(client: TestClient) -> 
     assert replaced.version == original_version + 1
 
 
+def test_authenticated_restart_persists_offgrid_typed_drawdown_percentage(
+    client: TestClient,
+) -> None:
+    """DEF428 round 2 — U66 round-1 MAJOR-1: the restart-confirm path calls
+    the same unguarded `Mandate.model_validate(session_to_mandate_dict(...))`
+    as claim. An off-grid Q6 answer (45%) used to raise `ValidationError`
+    against the old `Literal[10, 20, 30, 50, 100]`; the schema widening must
+    make this path succeed and persist 45 verbatim."""
+    user_id, token = _new_user()
+    get_mandate_store().upsert(user_id, get_mandate_store().get_or_default(user_id))
+
+    session = _completed_session(
+        answers={**_completed_session().answers, "max_drawdown_pct": 45}
+    )
+    asyncio.run(get_session_store().create(session))
+
+    resp = client.post(
+        "/v1/onboarding/readback/confirm",
+        json={"session_id": str(session.id), "confirm": "confirm", "restart": True},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    replaced = get_mandate_store().get(user_id)
+    assert replaced is not None
+    assert replaced.max_drawdown_pct == 45
+
+
 def test_reauth_replaying_session_id_still_does_not_overwrite_edited_mandate(
     client: TestClient,
 ) -> None:

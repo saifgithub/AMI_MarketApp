@@ -2,9 +2,11 @@
 
 `MandateStore.patch()` used to merge `updates` via `current.model_copy(update=updates)`,
 which Pydantic v2 explicitly does not validate — an out-of-range `max_drawdown_pct`
-(declared `Literal[10, 20, 30, 50, 100]`) or `risk_score` (declared 1-5) would persist
-silently and then feed the safety floor's deterministic compliance math uncorrupted-looking
-but wrong. This must now raise instead of persisting.
+(declared `int, ge=1, le=100` — DEF428 round 2 widened this from the old
+`Literal[10, 20, 30, 50, 100]`, which is why 999 rather than a merely off-grid
+number like 45 is this file's out-of-range probe) or `risk_score` (declared 1-5)
+would persist silently and then feed the safety floor's deterministic compliance
+math uncorrupted-looking but wrong. This must now raise instead of persisting.
 """
 
 from __future__ import annotations

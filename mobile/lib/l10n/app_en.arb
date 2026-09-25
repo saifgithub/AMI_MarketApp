@@ -1808,6 +1808,15 @@
   "@settingsMaxDrawdownExplain": {
     "description": "CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
   },
+  "settingsMaxDrawdownCustom": "Custom ({value}%)",
+  "@settingsMaxDrawdownCustom": {
+    "description": "DEF428 round 2. `max_drawdown_pct` widened from a fixed 5-value menu to any whole 1-100. Extra chip shown, selected, whenever the mandate's stored value isn't one of the five preset chips (e.g. typed '45%' at onboarding Q6) — so an off-grid value is labelled and visibly selected rather than silently unmatched by every fixed chip. {value} is the exact stored integer, never rounded or snapped. retranslate:[ar,ms]",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSectionRiskLimits": "RISK LIMITS",
   "@settingsSectionRiskLimits": {
     "description": "CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]"

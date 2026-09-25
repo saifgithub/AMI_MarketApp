@@ -172,6 +172,56 @@ def test_claim_falls_back_to_default_when_session_incomplete(
     assert mandate["compliance"]["halal"] is False
 
 
+def test_claim_persists_offgrid_typed_drawdown_percentage(client: TestClient) -> None:
+    """DEF428 round 2 — U66 round-1 MAJOR-1: a session whose Q6 answer was an
+    off-grid typed percentage (45%, not one of the five chips) used to raise
+    `ValidationError` inside `Mandate.model_validate` at claim time (the old
+    `Literal[10, 20, 30, 50, 100]`), which `_bind_onboarding_session` reached
+    AFTER already marking the session claimed — so the user was left
+    permanently on the silent 30% default with no further claim attempt
+    possible. This is the exact scenario U66 drove for real. The claim must
+    now succeed and the mandate must carry 45 verbatim."""
+    user_id, token = _new_user()
+    session = _completed_session(
+        answers={**_completed_session().answers, "max_drawdown_pct": 45}
+    )
+    asyncio.run(get_session_store().create(session))
+
+    claimed_token = _claim_with_session(
+        client, token, session.id, "def428-r2-a@example.com"
+    )
+
+    r = client.get(
+        f"/v1/mandate/{user_id}",
+        headers={"Authorization": f"Bearer {claimed_token}"},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["max_drawdown_pct"] == 45
+
+
+def test_claim_persists_the_40_percent_chip_value(client: TestClient) -> None:
+    """Audit round 1 'Recorded, not scored': the Q6 "40%" chip was never
+    actually persistable pre-fix (the Literal had no 40) despite a dedicated
+    test asserting it parsed and advanced. The chip must now survive claim
+    exactly like any other DEF428-fixed off-grid value."""
+    user_id, token = _new_user()
+    session = _completed_session(
+        answers={**_completed_session().answers, "max_drawdown_pct": 40}
+    )
+    asyncio.run(get_session_store().create(session))
+
+    claimed_token = _claim_with_session(
+        client, token, session.id, "def428-r2-b@example.com"
+    )
+
+    r = client.get(
+        f"/v1/mandate/{user_id}",
+        headers={"Authorization": f"Bearer {claimed_token}"},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["max_drawdown_pct"] == 40
+
+
 def test_claim_does_not_clobber_an_existing_mandate(client: TestClient) -> None:
     """If a mandate row already exists for the claimed user_id (edge case —
     re-claim, or a mandate created some other way before claim completes),

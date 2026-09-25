@@ -223,9 +223,10 @@ def test_resolved_open_risk_tracks_the_users_own_drawdown(client: TestClient):
     would freeze exactly the per-user half of the derivation."""
     user_id, headers = _new_user()
     before = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
-    # 10 rather than an arithmetic half: `max_drawdown_pct` is a
-    # Literal[10, 20, 30, 50, 100], so anything off the menu 422s and the
-    # test would silently measure an unchanged mandate.
+    # 10 is just a value clearly different from the default — DEF428 round 2
+    # widened `max_drawdown_pct` from `Literal[10, 20, 30, 50, 100]` to
+    # `int, ge=1, le=100`, so an off-grid value would work here too now, but
+    # picking a round chip number keeps this test's intent obvious.
     r = client.patch(
         f"/v1/mandate/{user_id}", json={"max_drawdown_pct": 10}, headers=headers,
     )

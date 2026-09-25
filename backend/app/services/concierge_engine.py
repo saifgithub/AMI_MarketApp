@@ -402,8 +402,8 @@ def _classify_concentration(text: str) -> int:
     return 3
 
 
-def _parse_drawdown_pct(text: str) -> float | None:
-    """Q6 free-text -> a 1-100 drawdown percentage, or None if unparseable.
+def _parse_drawdown_pct(text: str) -> int | None:
+    """Q6 free-text -> a 1-100 whole-percent drawdown, or None if unparseable.
 
     DEF428: this used to substring-match the six chip values only and default
     to 30 for anything else — "5%", "45%", "83", and plain garbage all became
@@ -413,6 +413,14 @@ def _parse_drawdown_pct(text: str) -> float | None:
     the nearest chip. Returns None (caller re-asks) rather than guessing when
     no such number is present — a fabricated mandate value is worse than
     asking again.
+
+    Round 2: `Mandate.max_drawdown_pct` is now `int` (round 1 shipped this
+    returning a `float` against a `Literal[10, 20, 30, 50, 100]` schema field
+    that a decimal like 12.5 could never actually satisfy — see U66 round-1
+    MAJOR-1). A fractional answer ("12.5%") rounds DOWN to the whole percent
+    via `int()` truncation (valid here because `pct` is always positive) —
+    the stricter cap, since a drawdown ceiling should never round in the
+    user's favour.
     """
     t = text.lower().strip()
     if "no cap" in t or "no limit" in t or "uncapped" in t:
@@ -438,7 +446,7 @@ def _parse_drawdown_pct(text: str) -> float | None:
     pct = float(m.group(1))
     if pct <= 0 or pct > 100:
         return None
-    return int(pct) if pct == int(pct) else round(pct, 1)
+    return int(pct)
 
 
 def _parse_constraints(text: str) -> dict[str, Any]:
@@ -514,6 +522,29 @@ def _parse_constraints(text: str) -> dict[str, Any]:
 # both mapped to 50%; widened to {10: 1, 20: 2, 30: 3, 40: 4, 50: 5} per Saiful
 # 2026-09-24 ruling: "4→40%, 5→50%".
 _DRAWDOWN_PCT_TO_TIER: dict[int, int] = {10: 1, 20: 2, 30: 3, 40: 4, 50: 5, 100: 5}
+
+
+def _drawdown_tier(dd: int) -> int:
+    """Nudge tier (1-5) for an arbitrary 1-100 `max_drawdown_pct`.
+
+    DEF428 round 2: since round 1, a typed off-grid value (5, 45, 12.5→12) is
+    honoured exactly rather than snapped to a chip before it ever reaches
+    here, so this can no longer just be a dict lookup with a fixed neutral
+    fallback (`.get(dd, 3)`) — that treated every non-chip value as tier-3
+    regardless of whether the user typed 11% or 99%. Instead: the tier of the
+    nearest chip value AT OR BELOW `dd`, i.e. the more conservative
+    neighbour — an off-grid answer nudges the score as if the user had
+    picked the closest chip they didn't overshoot, rather than either
+    interpolating (invents precision nobody asked for) or going neutral
+    (throws away a real, if imprecise, signal). Below the lowest chip (< 10)
+    still floors to tier 1, the most conservative tier there is.
+    """
+    if dd in _DRAWDOWN_PCT_TO_TIER:
+        return _DRAWDOWN_PCT_TO_TIER[dd]
+    at_or_below = [k for k in _DRAWDOWN_PCT_TO_TIER if k <= dd]
+    if not at_or_below:
+        return _DRAWDOWN_PCT_TO_TIER[min(_DRAWDOWN_PCT_TO_TIER)]
+    return _DRAWDOWN_PCT_TO_TIER[max(at_or_below)]
 # `Horizon.SHORT` implies active/short-term trading (Q1's "learn to trade" path
 # maps here too) — more risk tolerance is needed to accept the swings that
 # horizon trades through, not less. `VERY_LONG` similarly has more room to
@@ -566,7 +597,7 @@ def _derive_risk_score(session: OnboardingSession) -> int:
 
     nudges: list[float] = []
     if (dd := session.answers.get("max_drawdown_pct")) is not None:
-        nudges.append(_DRAWDOWN_PCT_TO_TIER.get(dd, 3) - 3)
+        nudges.append(_drawdown_tier(dd) - 3)
     if (h := session.answers.get("horizon")) is not None:
         nudges.append(_HORIZON_TIER.get(h, 3) - 3)
     if (g := session.answers.get("primary_goal")) is not None:
@@ -601,14 +632,37 @@ def _derive_risk_score(session: OnboardingSession) -> int:
 # ──────────────────────────────────────────────────────────────────────────
 
 
+class MissingMandateAnswerError(ValueError):
+    """DEF428 round 2, MINOR-1: raised instead of fabricating a mandate field
+    that the interview never actually collected an answer for.
+
+    `_build_readback_summary` is reached from `process_answer` (only when
+    `next_step == READBACK`, i.e. Q7 was just answered) and from
+    `session_to_mandate_dict` (claim/restart, only for a `session.completed`
+    session). Both preconditions mean `max_drawdown_pct` is normally present
+    by the time this runs — reaching here without it means something upstream
+    let the state machine be skipped (the `submit_answer` step-mismatch guard
+    in `api/onboarding.py` is what closes that off for the HTTP path). Failing
+    loudly here is the backstop: a `.get(..., 30)` default at this point would
+    silently manufacture a real mandate value nobody typed, indistinguishable
+    from a user who deliberately chose 30% — exactly the DEF428 defect class.
+    """
+
+
 def _build_readback_summary(session: OnboardingSession) -> dict[str, Any]:
     risk_score = _derive_risk_score(session)
+    if "max_drawdown_pct" not in session.answers:
+        raise MissingMandateAnswerError(
+            "session reached readback/claim with no max_drawdown_pct answer recorded "
+            f"(session_id={session.id}, current_step={session.current_step}) — "
+            "refusing to fabricate a default drawdown limit"
+        )
     return {
         "primary_goal": session.answers.get("primary_goal", PrimaryGoal.EXPLORING.value),
         "horizon": session.answers.get("horizon", Horizon.LONG.value),
         "path": session.answers.get("path", Path.LONG_HORIZON.value),
         "risk_score": risk_score,
-        "max_drawdown_pct": session.answers.get("max_drawdown_pct", 30),
+        "max_drawdown_pct": session.answers["max_drawdown_pct"],
         # CR220: resolve the PARTIAL dict `_parse_constraints` returns through
         # the schema, so both consumers of this summary — the readback text the
         # user confirms, and the mandate built at claim — see the same fully

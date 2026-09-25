@@ -2879,6 +2879,7 @@
         "settingsLearningQuick": "9215a4bb5aaa",
         "settingsLearningStory": "618cdecc82c0",
         "settingsLearningVisual": "ba3033214fe4",
+        "settingsMaxDrawdownCustom": "df61aec899a2",
         "settingsMinDteExplain": "d8d048b00110",
         "settingsMinDteLabel": "7bdac8d0d9dd",
         "settingsOptionNotionalCapExplain": "05cc1dbafa2c",
@@ -3248,5 +3249,6 @@
     "alpacaOrderCancelFailed": "Couldn't cancel that order — {detail}",
     "portfolioTabCountLoading": "Still loading Alpaca's count for this tab",
     "portfolioTabCountError": "Couldn't load Alpaca's count for this tab",
-    "tradeTicketAlpacaGtdBecomesGtc": "Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it."
+    "tradeTicketAlpacaGtdBecomesGtc": "Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it.",
+    "settingsMaxDrawdownCustom": "Custom ({value}%)"
 }
