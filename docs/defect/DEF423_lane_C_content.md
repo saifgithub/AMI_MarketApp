@@ -148,7 +148,8 @@ content/glossary/terms.en.json` against this commit's parent.
   Noted but **not fixed**: those quiz items render raw snake_case ids as
   user-facing answer text, which is a pre-existing display bug independent of
   PM/CIO naming — out of DEF423's scope, flagged here only so it isn't
-  mistaken for something this sweep should have caught.
+  mistaken for something this sweep should have caught. **Fixed under DEF429
+  (2026-09-25)** — see `docs/defect/_registry/DEF429.row.md`.
 - **`content/_authoring/**`** — translation manifests and sweep logs
   (`cr060_*`, `cr172_*`, `cr223_*`, etc.) are tooling metadata, not rendered
   content; inspected, none render to users, left untouched per the task
