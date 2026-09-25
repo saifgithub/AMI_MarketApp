@@ -269,6 +269,21 @@ class _AlpacaOrderCard extends ConsumerWidget {
         content: Text(l.alpacaOrderCancelFailed(e.detail),
             style: const TextStyle(color: AmiColors.slate900)),
       ));
+    } on AlpacaOrderRejected catch (e) {
+      // Structural refusal — the paper-host check in `cancelOrder()` fired
+      // before any network call, so nothing was sent and nothing to log
+      // (unlike the `AlpacaException` branch above, which reports an
+      // attempt that Alpaca itself answered). This can only happen for a
+      // live-linked account; still surface it rather than let it die as an
+      // unhandled async error, which read as the Cancel button silently
+      // doing nothing (CR040).
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AmiColors.hexAmber,
+        content: Text(l.alpacaOrderCancelFailed(e.message),
+            style: const TextStyle(color: AmiColors.slate900)),
+      ));
     }
   }
 
