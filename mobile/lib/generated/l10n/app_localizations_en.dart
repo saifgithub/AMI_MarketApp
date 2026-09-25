@@ -52,13 +52,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get watchlistEmpty =>
-      'Add tickers you want to watch. Tap a row for quick actions: Ask the Market Analyst, Convene the Room, or open a trade.';
+      'Add tickers you want to watch. Tap a row for quick actions: Ask the Technical Strategist, Convene the Room, or open a trade.';
 
   @override
   String get watchlistOpenTradeTicket => 'OPEN TRADE TICKET';
 
   @override
-  String get watchlistAskMarketAnalyst => 'ASK THE MARKET ANALYST';
+  String get watchlistAskMarketAnalyst => 'ASK THE TECHNICAL STRATEGIST';
 
   @override
   String get watchlistConveneRoom => 'CONVENE THE ROOM';
@@ -175,7 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get insightsVerdictTitle => 'WHAT YOUR PM DECIDED';
+  String get insightsVerdictTitle => 'WHAT YOUR CIO DECIDED';
 
   @override
   String get insightsVerdictApprove => 'approved';
@@ -194,7 +194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get insightsVerdictNoVerdictNote =>
-      'NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.';
+      'NO VERDICT is not a rejection. The CIO declined to rule because the run had no market read — your idea was never judged.';
 
   @override
   String insightsVerdictUnrecorded(int count) {
@@ -356,7 +356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get portfolioStartSimTradingBody =>
-      'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'s safety floor runs on every submit.';
+      'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your CIO\'s safety floor runs on every submit.';
 
   @override
   String get portfolioNewTrade => 'NEW TRADE';
@@ -1463,7 +1463,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String lessonPlayBreachDrawdownCeiling(int cap, int depth, int over) {
-    return 'Your mandate halts new entries at $cap% down. This hole is $depth% — the PM stopped you $over points ago.';
+    return 'Your mandate halts new entries at $cap% down. This hole is $depth% — the CIO stopped you $over points ago.';
   }
 
   @override
@@ -1536,7 +1536,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMaxDrawdownExplain =>
-      'Your PM refuses trades that would push the portfolio past this.';
+      'Your CIO refuses trades that would push the portfolio past this.';
 
   @override
   String get settingsSectionRiskLimits => 'RISK LIMITS';
@@ -2225,7 +2225,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomTradeTicketCaption =>
-      'Submits with the verdict\'s size / stop / target. PM safety floor reruns.';
+      'Submits with the verdict\'s size / stop / target. CIO safety floor reruns.';
 
   @override
   String get roomWinzipTitle => 'Your Room is warming up';
@@ -2433,7 +2433,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tradeTicketFooterNote =>
-      'PM safety floor runs on submit — compliance flags + drawdown + single-name cap.';
+      'CIO safety floor runs on submit — compliance flags + drawdown + single-name cap.';
 
   @override
   String get tradeTicketSideBuy => 'BUY';
@@ -2845,7 +2845,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourYou3Body =>
-      'How your trades ended, what your PM decided, how your mandate has moved. Your own record, not a score.';
+      'How your trades ended, what your CIO decided, how your mandate has moved. Your own record, not a score.';
 
   @override
   String get tourCompletionYou =>
@@ -3037,7 +3037,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSCRIPT';
 
   @override
-  String get roomPmCardHeading => 'PORTFOLIO MANAGER';
+  String get roomPmCardHeading => 'CHIEF INVESTMENT OFFICER';
 
   @override
   String get roomHeroApprove => 'THE ROOM APPROVED';
@@ -3081,7 +3081,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomOverrideHeading =>
-      'MANDATE OVERRIDE — YOUR RULES CHANGED THE PM\'S CALL';
+      'MANDATE OVERRIDE — YOUR RULES CHANGED THE CIO\'S CALL';
 
   @override
   String roomCombVoices(int count) {
@@ -3117,7 +3117,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String roomRibbonDerived(String levels) {
-    return '$levels SET BY AMI, NOT THE PM';
+    return '$levels SET BY AMI, NOT THE CIO';
   }
 
   @override
@@ -3924,7 +3924,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomStageRiskReview => 'RISK REVIEW';
 
   @override
-  String get roomStagePmVerdict => 'PM VERDICT';
+  String get roomStagePmVerdict => 'CIO VERDICT';
 
   @override
   String get roomStageAnalystDeskSubtitle =>
@@ -3936,7 +3936,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomStageRiskReviewSubtitle =>
-      'The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.';
+      'The Execution Desk drafts a ticket. Risk Officers — Aggressive, Conservative and Balanced — stress it from both sides.';
 
   @override
   String get roomStagePmVerdictSubtitle =>
@@ -4073,7 +4073,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomConsensusNoCall =>
-      'The PM made no call, so there is nothing to dissent from.';
+      'The CIO made no call, so there is nothing to dissent from.';
 
   @override
   String get floorReactionPrompt => 'HOW DOES THE FLOOR FEEL?';

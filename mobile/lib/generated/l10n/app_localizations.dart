@@ -184,10 +184,10 @@ abstract class AppLocalizations {
   /// **'ADD'**
   String get watchlistAdd;
 
-  /// No description provided for @watchlistEmpty.
+  /// CR160 DEF423 — 'Technical Strategist' replaces the retired 'Market Analyst' agent label. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Add tickers you want to watch. Tap a row for quick actions: Ask the Market Analyst, Convene the Room, or open a trade.'**
+  /// **'Add tickers you want to watch. Tap a row for quick actions: Ask the Technical Strategist, Convene the Room, or open a trade.'**
   String get watchlistEmpty;
 
   /// No description provided for @watchlistOpenTradeTicket.
@@ -196,10 +196,10 @@ abstract class AppLocalizations {
   /// **'OPEN TRADE TICKET'**
   String get watchlistOpenTradeTicket;
 
-  /// No description provided for @watchlistAskMarketAnalyst.
+  /// CR160 DEF423 — 'Technical Strategist' replaces the retired 'Market Analyst' agent label. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'ASK THE MARKET ANALYST'**
+  /// **'ASK THE TECHNICAL STRATEGIST'**
   String get watchlistAskMarketAnalyst;
 
   /// No description provided for @watchlistConveneRoom.
@@ -388,10 +388,10 @@ abstract class AppLocalizations {
   /// **'{count} closed {count, plural, =1{trade} other{trades}} could not be classified and are not in the bars above.'**
   String insightsTradesUnclassified(int count);
 
-  /// CR178 — card 2. retranslate:[ar,ms]
+  /// CR178 — card 2. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'WHAT YOUR PM DECIDED'**
+  /// **'WHAT YOUR CIO DECIDED'**
   String get insightsVerdictTitle;
 
   /// CR178 — PM verdict APPROVE. retranslate:[ar,ms]
@@ -424,10 +424,10 @@ abstract class AppLocalizations {
   /// **'no verdict'**
   String get insightsVerdictNoVerdict;
 
-  /// CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. retranslate:[ar,ms]
+  /// CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.'**
+  /// **'NO VERDICT is not a rejection. The CIO declined to rule because the run had no market read — your idea was never judged.'**
   String get insightsVerdictNoVerdictNote;
 
   /// CR178 — Room runs whose payload.verdict is null (failed or cancelled). Excluded from the mix, never counted as PASS, and surfaced so the totals reconcile. retranslate:[ar,ms]
@@ -652,10 +652,10 @@ abstract class AppLocalizations {
   /// **'Start sim trading'**
   String get portfolioStartSimTrading;
 
-  /// No description provided for @portfolioStartSimTradingBody.
+  /// CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'s safety floor runs on every submit.'**
+  /// **'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your CIO\'s safety floor runs on every submit.'**
   String get portfolioStartSimTradingBody;
 
   /// No description provided for @portfolioNewTrade.
@@ -2524,10 +2524,10 @@ abstract class AppLocalizations {
   /// **'{count} names at 1% each is {real} of real open risk — past the {limit} open-risk limit on your own mandate.'**
   String lessonPlayBreachOpenRisk(int count, String real, String limit);
 
-  /// CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points.
+  /// CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Your mandate halts new entries at {cap}% down. This hole is {depth}% — the PM stopped you {over} points ago.'**
+  /// **'Your mandate halts new entries at {cap}% down. This hole is {depth}% — the CIO stopped you {over} points ago.'**
   String lessonPlayBreachDrawdownCeiling(int cap, int depth, int over);
 
   /// No description provided for @settingsHeading.
@@ -2650,10 +2650,10 @@ abstract class AppLocalizations {
   /// **'Max drawdown'**
   String get settingsMaxDrawdown;
 
-  /// No description provided for @settingsMaxDrawdownExplain.
+  /// CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Your PM refuses trades that would push the portfolio past this.'**
+  /// **'Your CIO refuses trades that would push the portfolio past this.'**
   String get settingsMaxDrawdownExplain;
 
   /// CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]
@@ -3762,10 +3762,10 @@ abstract class AppLocalizations {
   /// **'OPEN TRADE TICKET'**
   String get roomOpenTradeTicket;
 
-  /// No description provided for @roomTradeTicketCaption.
+  /// CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Submits with the verdict\'s size / stop / target. PM safety floor reruns.'**
+  /// **'Submits with the verdict\'s size / stop / target. CIO safety floor reruns.'**
   String get roomTradeTicketCaption;
 
   /// No description provided for @roomWinzipTitle.
@@ -4104,10 +4104,10 @@ abstract class AppLocalizations {
   /// **'SUBMIT TRADE'**
   String get tradeTicketSubmit;
 
-  /// No description provided for @tradeTicketFooterNote.
+  /// CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'PM safety floor runs on submit — compliance flags + drawdown + single-name cap.'**
+  /// **'CIO safety floor runs on submit — compliance flags + drawdown + single-name cap.'**
   String get tradeTicketFooterNote;
 
   /// No description provided for @tradeTicketSideBuy.
@@ -4780,10 +4780,10 @@ abstract class AppLocalizations {
   /// **'WHAT YOUR DECISIONS LOOK LIKE'**
   String get tourYou3Title;
 
-  /// CR180 — YOU tour step 3. Names three of the five cards concretely; 'not a score' because the app deliberately has no streaks or badges (CR109 Amendment A). retranslate:[ar,ms]
+  /// CR180 — YOU tour step 3. Names three of the five cards concretely; 'not a score' because the app deliberately has no streaks or badges (CR109 Amendment A). CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'How your trades ended, what your PM decided, how your mandate has moved. Your own record, not a score.'**
+  /// **'How your trades ended, what your CIO decided, how your mandate has moved. Your own record, not a score.'**
   String get tourYou3Body;
 
   /// CR180 — snackbar after the YOU tour, matching the other four sections' completion lines. retranslate:[ar,ms]
@@ -5122,10 +5122,10 @@ abstract class AppLocalizations {
   /// **'TRANSCRIPT'**
   String get roomViewModeTranscript;
 
-  /// CR127 — card header over the PM's reasoning, the last card on the Verdict Board (after the eleven-voice comb). Names whose words those are: the reason prose is the Portfolio Manager's own, and before this it carried no attribution at all. Giving the PM a titled card of its own is what makes the old 'THE PM DECIDES — THIS IS NOT A VOTE' caption redundant. Mono uppercase, PM family purple. Hidden when there is no reason text to head.
+  /// CR127 — card header over the CIO's reasoning, the last card on the Verdict Board (after the eleven-voice comb). Names whose words those are: the reason prose is the Chief Investment Officer's own, and before this it carried no attribution at all. Giving the CIO a titled card of its own is what makes the old 'THE PM DECIDES — THIS IS NOT A VOTE' caption redundant. Mono uppercase, PM family purple (color token name unchanged — CLAUDE.md: internal identifiers stay). Hidden when there is no reason text to head. CR160 DEF423: value renamed Portfolio Manager → Chief Investment Officer. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'PORTFOLIO MANAGER'**
+  /// **'CHIEF INVESTMENT OFFICER'**
   String get roomPmCardHeading;
 
   /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
@@ -5200,10 +5200,10 @@ abstract class AppLocalizations {
   /// **'CONVENE AGAIN'**
   String get roomHeroConveneAgain;
 
-  /// Mandatory line between hero and comb whenever the safety floor overrode the PM. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS.
+  /// Mandatory line between hero and comb whenever the safety floor overrode the CIO. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'MANDATE OVERRIDE — YOUR RULES CHANGED THE PM\'S CALL'**
+  /// **'MANDATE OVERRIDE — YOUR RULES CHANGED THE CIO\'S CALL'**
   String get roomOverrideHeading;
 
   /// Comb heading. Always 11 — the Portfolio Manager is excluded because its decision is the hero tile, not one vote among twelve.
@@ -5260,10 +5260,10 @@ abstract class AppLocalizations {
   /// **'RISK → REWARD'**
   String get roomRibbonHeading;
 
-  /// Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'.
+  /// Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'{levels} SET BY AMI, NOT THE PM'**
+  /// **'{levels} SET BY AMI, NOT THE CIO'**
   String roomRibbonDerived(String levels);
 
   /// Caption over the plain price list on an older entry, where we cannot say which prices the PM chose — so no bar is drawn.
@@ -6472,10 +6472,10 @@ abstract class AppLocalizations {
   /// **'RISK REVIEW'**
   String get roomStageRiskReview;
 
-  /// CR173 slice 1. Stage 4 of 4: the Portfolio Manager's single call. 'PM' is the Portfolio Manager abbreviation used across the app. Mono uppercase. NEW key. retranslate:[ar,ms]
+  /// CR173 slice 1. Stage 4 of 4: the Chief Investment Officer's single call. 'CIO' is the Chief Investment Officer abbreviation used across the app (CR160 DEF423 — replaces the retired 'PM'/'Portfolio Manager' label). Mono uppercase. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'PM VERDICT'**
+  /// **'CIO VERDICT'**
   String get roomStagePmVerdict;
 
   /// CR173 slice 1. One-line description of the ANALYST DESK stage, shown on the row before that desk has started. Sentence case. NEW key. retranslate:[ar,ms]
@@ -6490,10 +6490,10 @@ abstract class AppLocalizations {
   /// **'Bull and Bear argue it out. The Research Manager adjudicates.'**
   String get roomStageResearchDebateSubtitle;
 
-  /// CR173 slice 1. One-line description of the RISK REVIEW stage. Trader, Aggressive Debator, Conservative Debator and Neutral Debator are agent names. A 'ticket' is a proposed trade order. Sentence case. NEW key. retranslate:[ar,ms]
+  /// CR173 slice 1. One-line description of the RISK REVIEW stage. Execution Desk and Risk Officer — Aggressive/Conservative/Balanced are agent names (CR160 DEF423 — replaces the retired Trader/Aggressive/Conservative/Neutral Debator labels). A 'ticket' is a proposed trade order. Sentence case. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.'**
+  /// **'The Execution Desk drafts a ticket. Risk Officers — Aggressive, Conservative and Balanced — stress it from both sides.'**
   String get roomStageRiskReviewSubtitle;
 
   /// CR173 slice 1. One-line description of the PM VERDICT stage. 'Mandate' is the user's standing instruction to the firm, a term used throughout the app. Sentence case. NEW key. retranslate:[ar,ms]
@@ -6688,10 +6688,10 @@ abstract class AppLocalizations {
   /// **'All {count} who stated a view agreed with the call.'**
   String roomConsensusUnanimous(int count);
 
-  /// CR173. Shown when the verdict was NO_VERDICT (the PM professionally refused to price a trade) or an action this build does not recognise. Neither is a position, so no analyst can be said to disagree with it. NEW key. retranslate:[ar,ms]
+  /// CR173. Shown when the verdict was NO_VERDICT (the CIO professionally refused to price a trade) or an action this build does not recognise. Neither is a position, so no analyst can be said to disagree with it. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'The PM made no call, so there is nothing to dissent from.'**
+  /// **'The CIO made no call, so there is nothing to dissent from.'**
   String get roomConsensusNoCall;
 
   /// CR173 §5.12. Heading on a one-time card asking the user's reaction to the Floor. Deliberately does NOT say 'the new Floor' — a user who installed today never saw the old one. Mono uppercase. NEW key. retranslate:[ar,ms]
