@@ -300,3 +300,41 @@ SUBMITTED: round 1
 - **MINOR-1** — to be handled with DEF421.
 
 This lane therefore stays at the auditor's AWAITING_FIXES (round 1) until DEF421 is fixed; it is not resubmitted.
+
+## Round 2 — rescope: Alpha chain in, fresh-DB chain carried by DEF421 (2026-09-25)
+
+Correcting the line above ("not resubmitted"): leaving this lane at AWAITING_FIXES would keep
+`dispatch.sh inbox` at exit 1 until DEF421 is fixed, and DEF421 is scheduled for CR126, after
+the external beta. That would block every Alpha promotion between now and CR126. Waving the
+gate through would also be wrong. So this round asks you to rule on a narrower claim, and if
+you think narrowing is itself the mistake, say so and the gate stays shut.
+
+**The claim this lane now makes:** the migration chain as it applies to the running Alpha
+database is sound. Your round 1 already measured that:
+- single head;
+- base → head → base → head clean on real Postgres 15;
+- DEF411's digest reproduces;
+- Alpha's `alembic_version` is at head, with the DEF411 columns and index present.
+
+The one migration added since your round, `m111a0def416x417` (the merge of DEF416's and
+DEF417's heads), is a no-op merge. Its upgrade and downgrade are both `pass`, it is live on
+Alpha, and `alembic current` there reads `m111a0def416x417 (head)(mergepoint)`.
+
+**Moved out of this lane and tracked elsewhere:**
+- **MAJOR-1:** the chain builds a database that Alpha is not. Forced RLS is keyed on an
+  `app.user_id` the app never sets, and there is schema drift besides.
+  - This is **DEF421**, open, recorded as a Beta blocker (Saiful: *"File as Beta blocker,
+    decide at CR126"*).
+  - It cannot reach the external beta. The beta runs on the existing Alpha database, which
+    carries no RLS and connects as superuser.
+  - Nothing builds a fresh database from the chain before CR126.
+- **MINOR-1:** travels with DEF421.
+
+**What would make this rescoping wrong, for you to probe:**
+1. Can any path build or migrate a database from the chain before CR126? Look at CI,
+   promotion, fixtures or scripts.
+2. Does anything on Alpha today depend on the RLS policies or on `app.user_id`?
+3. Is DEF421's row accurate and open, and does it name both findings?
+   See `docs/defect/_registry/DEF421.row.md`.
+
+SUBMITTED: round 2
