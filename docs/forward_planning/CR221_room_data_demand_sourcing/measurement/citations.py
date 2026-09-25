@@ -68,6 +68,21 @@ SHIPPED = {
     # 2026-04-10: the names and the item code are the filing's, the $B blind
     # spot does not apply to prose.
     "I1": ("exec", [r"Epley", r"Bonfield", r"Item 5\.02", r"8-K filed 2026-04-10", r"0001104659-26-042062"]),
+    # Round 5 (2026-09-25): the history and capret arms had no citation row, so
+    # rounds 2 and slot 5 were never scored on this endpoint. Markers are the
+    # figures `_format_profile` renders on the round-5 CAT pickle (built
+    # 2026-09-25). Several are short percentages that an agent can write for
+    # an unrelated reason, which is why the `off` column below exists.
+    "C2": ("history", [r"7,453", r"8,820", r"9,793", r"5,167", r"7,808", r"4,286", r"3,215",
+                       r"3,092", r"2,599", r"3,298", r"7\.8\s?B", r"4-year average"]),
+    "C5": ("history", [r"FCF conversion", r"8[24]% of net income",
+                       r"conversion[^.\n]{0,30}\b(84|82|95|77)%"]),
+    "B2": ("history", [r"41\.7%", r"55\.4%", r"53\.0%", r"42\.3%", r"47\.6%", r"median ROE",
+                       r"ROE history", r"return on equity history"]),
+    "C8": ("capret", [r"8\.0% CAGR", r"\$1\.51", r"\$1\.41", r"\$5\.84", r"raised in 4",
+                      r"dividend growth"]),
+    "C7": ("capret", [r"664\.64", r"\$664", r"10,869,082", r"7,224", r"buyback average price",
+                      r"implied (average )?(buyback|repurchase) price"]),
 }
 
 # DEF400 is not a new line — it MOVES one — so it is counted both ways.
@@ -133,7 +148,15 @@ def main() -> int:
     print("=" * 92)
     print(f"CITATION — {args.ticker}, {len(loaded)} convenes")
     print("=" * 92)
-    print(f"{'item':5s} {'arm':8s} {'cited/turns':>12s} {'cited/askers':>13s}  askers")
+    # The `off` columns count the SAME markers in the control arm. Round 5 added
+    # them because the production sheet now carries the filed FCF ($8,994M,
+    # 112%) in every arm (DEF400 on by default since 2026-09-17), so C3's own
+    # figure is no longer unique to the bridge line, and C5/C8's markers include
+    # phrases an agent can write unprompted. A citation the control arm also
+    # produces is the sheet, or the model, not the new line.
+    off_turns = [t for (m, label), rows in loaded.items() if label == "off" for t in rows]
+    print(f"{'item':5s} {'arm':8s} {'cited/turns':>12s} {'cited/askers':>13s} "
+          f"{'off cited':>10s} {'off/askers':>11s}  askers")
     print("-" * 92)
     for item_id, (arm, patterns) in SHIPPED.items():
         turns = [t for (m, label), rows in loaded.items() if label == arm for t in rows]
@@ -143,8 +166,11 @@ def main() -> int:
         cited = _cited(turns, patterns)
         askers = asked_by.get(item_id, set())
         overlap = cited & askers
+        off_cited = _cited(off_turns, patterns) if off_turns else set()
         print(f"{item_id:5s} {arm:8s} {len(cited):>6d}/{agents:<5d} "
-              f"{len(overlap):>6d}/{len(askers):<6d}  "
+              f"{len(overlap):>6d}/{len(askers):<6d} "
+              f"{len(off_cited):>6d}/{len(off_turns):<3d} "
+              f"{len(off_cited & askers):>6d}/{len(askers):<4d}  "
               f"{','.join(sorted(a[:12] for a in askers)) or '-'}")
 
     print("\n" + "-" * 92)
