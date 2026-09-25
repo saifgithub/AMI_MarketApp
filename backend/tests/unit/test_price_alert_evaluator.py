@@ -46,6 +46,20 @@ class _BoomLLMGateway:
         yield  # pragma: no cover — unreachable, makes this an async generator
 
 
+class _InBandSentinelLLMGateway:
+    """DEF424 post-COMPLETE — a provider that is reachable but REFUSES
+    (HTTP 503 etc.) never raises: it sets `meta["stream_error"]` and yields
+    its own `[AMI error: HTTP … from the upstream provider (…). Check
+    backend logs.]` sentinel as an ordinary chunk, same shape
+    `OpenAICompatibleProvider.stream_chat` uses for a real non-200 response.
+    """
+
+    async def stream_chat(self, *, meta=None, **kwargs):
+        if meta is not None:
+            meta["stream_error"] = "HTTP 503: upstream unavailable"
+        yield "\n\n[AMI error: HTTP 503 from the upstream provider (vllm). Check backend logs.]"
+
+
 def _alert_row(alert_id):
     with get_session() as s:
         return s.get(PriceAlertRow, alert_id)
@@ -145,6 +159,27 @@ async def test_commentary_generation_failure_falls_back_to_template(monkeypatch,
         threshold_type="stop", threshold_price=150.0, trade_ref=None,
     )
     text = await pae.generate_alert_commentary(alert, 140.0, base_mandate)
+    assert "AAPL" in text
+    assert "150.0" in text or "150" in text
+
+
+async def test_commentary_in_band_sentinel_falls_back_to_template(monkeypatch, base_mandate):
+    """DEF424 post-COMPLETE — a raised exception already falls back to the
+    template (test above). The in-band `stream_error` sentinel never
+    raises, so before this fix `text = "".join(chunks).strip()` picked up
+    the raw `[AMI error: HTTP 503 … (vllm). Check backend logs.]` text
+    (non-empty, so it won the `text or fallback` check) and it would have
+    gone out as the push notification body — provider name, HTTP status,
+    operator instruction, on the user's phone."""
+    monkeypatch.setattr(pae, "get_llm_gateway", lambda: _InBandSentinelLLMGateway())
+    alert = pae._AlertSnapshot(
+        id=uuid4(), user_id=uuid4(), ticker="AAPL",
+        threshold_type="stop", threshold_price=150.0, trade_ref=None,
+    )
+    text = await pae.generate_alert_commentary(alert, 140.0, base_mandate)
+    assert "AMI error" not in text
+    assert "vllm" not in text.lower()
+    assert "backend logs" not in text.lower()
     assert "AAPL" in text
     assert "150.0" in text or "150" in text
 

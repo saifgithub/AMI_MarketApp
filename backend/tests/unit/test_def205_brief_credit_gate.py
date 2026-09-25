@@ -230,10 +230,20 @@ def test_an_http_error_sentinel_reply_is_refunded_not_billed(monkeypatch):
     """The auditor's exact probe (round 1 run report): a non-200 transport
     reply never raises, so BEFORE round 2's fix the route's only "did this
     fail" signal was absent and the turn was billed for an error message
-    rendered as the answer."""
+    rendered as the answer.
+
+    DEF424 post-COMPLETE MINOR-1 (round-1 audit): round 2 only fixed the
+    BILLING half — the raw `[AMI error: HTTP 503 …]` sentinel text itself
+    (provider name, HTTP status, "Check backend logs") still reached the
+    user verbatim. `BriefEngine.stream_chat` now detects the `stream_error`
+    key going from unset to set on this exact chunk and swaps it for
+    `canned_agent_fallback(agent_id)` — this session is `agent_id=concierge`
+    (see `_open` above), so the branded copy is `MockProvider._CANNED
+    ["concierge"]`. The refund assertion below is unchanged from round 2."""
     from app.api.brief import router as brief_router
     from app.services.brief_engine import get_brief_engine
     from app.core import config as config_mod
+    from app.services.llm_gateway import MockProvider
 
     monkeypatch.setattr(config_mod.settings, "brief_credit_cost", 3)
 
@@ -249,7 +259,12 @@ def test_an_http_error_sentinel_reply_is_refunded_not_billed(monkeypatch):
 
     r = _send(client, headers, session_id)
     assert r.status_code == 200
-    assert "AMI error" in r.text
+    assert "AMI error" not in r.text
+    lower = r.text.lower()
+    assert "vllm" not in lower
+    assert "503" not in r.text
+    assert "backend logs" not in lower
+    assert MockProvider._CANNED["concierge"][:40] in r.text.replace("\\n", "\n")
     assert balance_for(user_id)[0] == before, (
         "an HTTP-error-sentinel reply must be refunded, not billed as a "
         "successful turn"
