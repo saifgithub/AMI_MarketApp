@@ -70,10 +70,11 @@ RETIRED_LABELS = (
     "News Analyst",
 )
 
-# Bare "PM" as the retired Portfolio Manager abbreviation. Excludes a
+# Bare "PM" as the retired Portfolio Manager abbreviation, possessive
+# included ("PM's", "PM’s": the form the residue actually took). Excludes a
 # time-of-day ("4 PM ET"), the Philip Morris ticker "(PM)", and anything
 # already caught by the label scan above.
-_BARE_PM = re.compile(r"(?<![A-Za-z])PM(?![A-Za-z'])")
+_BARE_PM = re.compile(r"(?<![A-Za-z])PM(?![A-Za-z])")
 _PM_TIME_CONTEXT = re.compile(r"\b\d{1,2}\s*PM\b", re.IGNORECASE)
 _PM_TICKER_CONTEXT = re.compile(r"\(PM\)")
 
@@ -327,6 +328,20 @@ def test_backend_ast_scan_finds_the_known_positive():
         assert hits, "scanner failed to find the known-positive 'Trader' role text"
     finally:
         tmp_path.unlink(missing_ok=True)
+
+    # DEF423 round 2 MAJOR-1: both of that round's own "PM's" fixes could be
+    # reverted with the guard green, because the lookahead excluded "'".
+    for possessive in ("PM's", "PM\u2019s"):
+        sample = f'NOTE = "You can shape the {possessive} own view."\n'
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+            f.write(sample)
+            tmp_path = Path(f.name)
+        try:
+            assert _scan_backend_file(tmp_path), (
+                f"scanner failed to find the possessive {possessive!r}"
+            )
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
