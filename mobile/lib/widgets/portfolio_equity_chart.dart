@@ -169,6 +169,17 @@ class _EquityCurveCardState extends State<_EquityCurveCard> {
           // group to its own line instead of overflowing — the same
           // overflow-safe pattern `_ClosedTradeSummary` already uses below
           // in this file for its own row of stat labels.
+          //
+          // DEF422 sweep (§9 acceptance 7b's own 320/375/430dp × 1.0/1.3x
+          // matrix, extended past this docstring's original 390dp/1.0–1.15
+          // measurement) found the INNER "WINDOW RETURN +x.xx%" `Row` still
+          // overflows on its own at 320dp/1.3x — Wrap only ever protected the
+          // OUTER heading-vs-return split, not this pair's own two children.
+          // `mainAxisSize: MainAxisSize.min` gives this Row no bound to
+          // shrink against; `Flexible`+ellipsis on the label (the run itself
+          // is short and bidi-isolated, so it is never the one that needs to
+          // give) closes the gap the same way every other stat pair in this
+          // file already guards itself.
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: AmiSpacing.s,
@@ -183,9 +194,13 @@ class _EquityCurveCardState extends State<_EquityCurveCard> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      l.portfolioEquityCurveWindowReturn,
-                      style: AmiTypography.caption.copyWith(fontSize: 10),
+                    Flexible(
+                      child: Text(
+                        l.portfolioEquityCurveWindowReturn,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmiTypography.caption.copyWith(fontSize: 10),
+                      ),
                     ),
                     const SizedBox(width: 4),
                     Text(

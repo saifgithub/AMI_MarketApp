@@ -2772,6 +2772,8 @@
         "portfolioStatLost": "9d50beb43fde",
         "portfolioStatNet": "e2ffa4f10657",
         "portfolioStatWon": "d7317ba22147",
+        "portfolioTabCountError": "abfe655e0905",
+        "portfolioTabCountLoading": "55d566eef16b",
         "portfolioTabHistory": "23e04084df12",
         "portfolioTabOrders": "d0d6efb188ea",
         "portfolioTabPositions": "172b3c923f6f",
@@ -3258,5 +3260,7 @@
     "alpacaOrderKeep": "KEEP ORDER",
     "alpacaOrderCancelConfirm": "CANCEL ORDER",
     "alpacaOrderCancelled": "Alpaca order cancelled.",
-    "alpacaOrderCancelFailed": "Couldn't cancel that order — {detail}"
+    "alpacaOrderCancelFailed": "Couldn't cancel that order — {detail}",
+    "portfolioTabCountLoading": "Still loading Alpaca's count for this tab",
+    "portfolioTabCountError": "Couldn't load Alpaca's count for this tab"
 }

@@ -11,9 +11,14 @@
 /// 390×844 test surface matching the CR's own prototype measurements.
 library;
 
+import 'dart:async';
+
+import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -118,6 +123,87 @@ WatchlistEntry _watchlistEntry(int i) => WatchlistEntry(
       price: 120.5 + i,
       dayChangePct: i.isEven ? 1.2 : -0.8,
     );
+
+/// DEF422 fixtures — a small, easy-to-count AMI state (1 holding, 1 resting
+/// order, 1 closed trade) so a combined tab count is arithmetic a reader can
+/// check by eye (AMI 1 + Alpaca N), rather than re-deriving it from the
+/// heavy profile's own larger numbers.
+///
+/// The Orders tab's AMI count is `restingOrderCount(state)` —
+/// `state.restingOrders.where((o) => o.isLive).length` — NOT
+/// `SimPortfolio.restingOrderCount` (a separate field the value card's own
+/// COMMITTED/AVAILABLE line reads). Both must be set, or the two disagree.
+SimState _lightSimState() => SimState(
+      portfolio: SimPortfolio(
+        userId: 'u1',
+        portfolioId: 'p1',
+        startingCapital: 100000,
+        currentCash: 90000,
+        holdings: [_holding(1)],
+        totalValue: 100550,
+        drawdownPct: 0,
+        priceSource: 'yahoo',
+        restingOrderCount: 1,
+      ),
+      trades: [_closedTrade(1, closedAt: DateTime.now())],
+      restingOrders: const [
+        SimRestingOrder(
+          id: 'r1',
+          ticker: 'H001',
+          side: 'sell',
+          quantity: 5,
+          orderType: SimOrderType.limit,
+          state: RestingOrderState.working,
+          tif: SimOrderTif.gtd30,
+          limitPrice: 60,
+        ),
+      ],
+    );
+
+AlpacaPosition _alpacaPosition(String symbol) => AlpacaPosition(
+      symbol: symbol,
+      qty: 10,
+      marketValue: 1700,
+      unrealizedPl: 12.5,
+      avgEntryPrice: 168.75,
+    );
+
+AlpacaOrder _alpacaOpenOrder(String symbol) => AlpacaOrder(
+      id: 'alp-open-$symbol',
+      symbol: symbol,
+      side: 'buy',
+      qty: 10,
+      status: 'accepted',
+      limitPrice: 1700,
+      timeInForce: 'gtc',
+      submittedAt: DateTime.now(),
+    );
+
+AlpacaOrder _alpacaClosedOrder(String symbol) => AlpacaOrder(
+      id: 'alp-closed-$symbol',
+      symbol: symbol,
+      side: 'sell',
+      qty: 5,
+      status: 'filled',
+      filledAvgPrice: 210,
+      filledQty: 5,
+      submittedAt: DateTime.now(),
+    );
+
+/// A `Completer`-backed override — lets a test hold a provider in `loading`
+/// state indefinitely (never completing the future during the test), which
+/// `overrideWith((ref) async => value)` cannot do since that future resolves
+/// on the very next microtask.
+Override _pendingOverride<T>(
+  AutoDisposeFutureProvider<T> provider, {
+  required T fallback,
+}) {
+  final completer = Completer<T>();
+  addTearDown(() {
+    if (!completer.isCompleted) completer.complete(fallback);
+  });
+  return provider.overrideWith((ref) => completer.future);
+}
 
 /// The CR's own "heavy" profile (§1.1): 40 watch, 12 held, 5 open + 195
 /// closed. Closed trades spread newest-first across ~72 days so the span
@@ -589,5 +675,334 @@ void main() {
       expect(find.text('WON'), findsWidgets);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('DEF422 — tab counts combine AMI + Alpaca when linked', () {
+    // Saiful, TestFlight +111: "The 'order' header was showing '0' orders.
+    // But I still have one order open in alpaca." Each of these pumps a
+    // linked account with one item of the relevant kind and checks the tab
+    // bar prints AMI-count + Alpaca-count, not the AMI count alone.
+
+    Future<void> pumpLinked(
+      WidgetTester tester, {
+      List<Override> extraOverrides = const [],
+    }) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            simNotifierProvider
+                .overrideWith((ref) => _FixedSimNotifier(ref, _lightSimState())),
+            watchlistNotifierProvider.overrideWith(
+                (ref) => _FixedWatchlistNotifier(ref, const WatchlistState())),
+            journalNotifierProvider.overrideWith(
+                (ref) => _FixedJournalNotifier(ref, const JournalState())),
+            portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
+            sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
+                  allocation: {},
+                  totalValue: 0,
+                  compliance: SectorCompliance(
+                    maxSector: 0, maxAllowed: 0.4, compliant: true,
+                  ),
+                )),
+            portfolioHistoryProvider
+                .overrideWith((ref) async => _equityHistoryFixture()),
+            alpacaLinkedProvider.overrideWith((ref) async => true),
+            // Defaults every test overrides at least one of below; keeps
+            // the three Alpaca providers from throwing "no override" when a
+            // test only cares about one of them.
+            alpacaPortfolioProvider.overrideWith((ref) async => const AlpacaPortfolio(
+                  cash: 5000, portfolioValue: 5000, equity: 5000, buyingPower: 5000,
+                )),
+            alpacaPositionsProvider.overrideWith((ref) async => const []),
+            alpacaOpenOrdersProvider.overrideWith((ref) async => const []),
+            alpacaClosedOrdersProvider.overrideWith((ref) async => const []),
+            ...extraOverrides,
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PortfolioScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('POSITIONS combines AMI holdings + Alpaca positions',
+        (tester) async {
+      await pumpLinked(tester, extraOverrides: [
+        alpacaPositionsProvider
+            .overrideWith((ref) async => [_alpacaPosition('ASML')]),
+      ]);
+      // AMI: 1 holding. Alpaca: 1 position. Combined: 2.
+      expect(find.textContaining('POSITIONS 2'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('ORDERS combines AMI resting orders + Alpaca open orders — '
+        'the DEF422 report itself', (tester) async {
+      await pumpLinked(tester, extraOverrides: [
+        alpacaOpenOrdersProvider
+            .overrideWith((ref) async => [_alpacaOpenOrder('ASML')]),
+      ]);
+      // AMI: 1 resting order (via SimPortfolio.restingOrderCount). Alpaca: 1
+      // open order. Combined: 2 — never the reported "0" while Alpaca in
+      // fact holds one open order.
+      expect(find.textContaining('ORDERS 2'), findsOneWidget);
+      expect(find.textContaining('ORDERS 0'), findsNothing);
+      expect(find.textContaining('ORDERS 1'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'HISTORY combines AMI transactions + Alpaca closed orders, matching '
+        'what AlpacaHistorySection renders', (tester) async {
+      await pumpLinked(tester, extraOverrides: [
+        alpacaClosedOrdersProvider
+            .overrideWith((ref) async => [_alpacaClosedOrder('ASML')]),
+      ]);
+      // AMI: 1 closed trade. Alpaca: 1 closed order. Combined: 2.
+      expect(find.textContaining('HISTORY 2'), findsOneWidget);
+      // The same Alpaca order is rendered in the History tab body via
+      // AlpacaHistorySection — proves the badge and the list agree.
+      await tester.tap(find.textContaining('HISTORY 2'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('SELL 5 ASML'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('DEF422 — unlinked account stays AMI-only (no regression)', () {
+    testWidgets('no Alpaca account linked shows AMI counts with no marker',
+        (tester) async {
+      await _pump(tester, sim: _lightSimState(), watchlist: const WatchlistState());
+      expect(find.textContaining('POSITIONS 1'), findsOneWidget);
+      expect(find.textContaining('ORDERS 1'), findsOneWidget);
+      expect(find.textContaining('HISTORY 1'), findsOneWidget);
+      expect(
+          find.byWidgetPredicate(
+              (w) => w.runtimeType.toString() == '_TabCountMarkerIcon'),
+          findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('DEF422 — honest intermediate states, never a silently-final number', () {
+    Future<void> pumpLoading(
+      WidgetTester tester, {
+      bool holdPositions = false,
+      bool holdOpenOrders = false,
+      bool holdClosedOrders = false,
+    }) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            simNotifierProvider
+                .overrideWith((ref) => _FixedSimNotifier(ref, _lightSimState())),
+            watchlistNotifierProvider.overrideWith(
+                (ref) => _FixedWatchlistNotifier(ref, const WatchlistState())),
+            journalNotifierProvider.overrideWith(
+                (ref) => _FixedJournalNotifier(ref, const JournalState())),
+            portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
+            sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
+                  allocation: {},
+                  totalValue: 0,
+                  compliance: SectorCompliance(
+                    maxSector: 0, maxAllowed: 0.4, compliant: true,
+                  ),
+                )),
+            portfolioHistoryProvider
+                .overrideWith((ref) async => _equityHistoryFixture()),
+            alpacaLinkedProvider.overrideWith((ref) async => true),
+            alpacaPortfolioProvider.overrideWith((ref) async => const AlpacaPortfolio(
+                  cash: 5000, portfolioValue: 5000, equity: 5000, buyingPower: 5000,
+                )),
+            if (holdPositions)
+              _pendingOverride(alpacaPositionsProvider, fallback: const <AlpacaPosition>[])
+            else
+              alpacaPositionsProvider.overrideWith((ref) async => const []),
+            if (holdOpenOrders)
+              _pendingOverride(alpacaOpenOrdersProvider, fallback: const <AlpacaOrder>[])
+            else
+              alpacaOpenOrdersProvider.overrideWith((ref) async => const []),
+            if (holdClosedOrders)
+              _pendingOverride(alpacaClosedOrdersProvider, fallback: const <AlpacaOrder>[])
+            else
+              alpacaClosedOrdersProvider.overrideWith((ref) async => const []),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PortfolioScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets(
+        'ORDERS while Alpaca open-orders is still loading shows the AMI '
+        'count plus a spinner, never a combined-looking number',
+        (tester) async {
+      await pumpLoading(tester, holdOpenOrders: true);
+      // AMI count alone (1), NOT a combined number — Alpaca hasn't reported
+      // in yet, so there is nothing honest to combine with.
+      expect(find.textContaining('ORDERS 1'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'POSITIONS while Alpaca positions is still loading shows the AMI '
+        'count plus a spinner', (tester) async {
+      await pumpLoading(tester, holdPositions: true);
+      expect(find.textContaining('POSITIONS 1'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'HISTORY while Alpaca closed-orders is still loading shows the AMI '
+        'count plus a spinner', (tester) async {
+      await pumpLoading(tester, holdClosedOrders: true);
+      expect(find.textContaining('HISTORY 1'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'ORDERS when Alpaca open-orders fails shows the AMI count plus a '
+        'warning marker, never a silently-undercounted final number',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            simNotifierProvider
+                .overrideWith((ref) => _FixedSimNotifier(ref, _lightSimState())),
+            watchlistNotifierProvider.overrideWith(
+                (ref) => _FixedWatchlistNotifier(ref, const WatchlistState())),
+            journalNotifierProvider.overrideWith(
+                (ref) => _FixedJournalNotifier(ref, const JournalState())),
+            portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
+            sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
+                  allocation: {},
+                  totalValue: 0,
+                  compliance: SectorCompliance(
+                    maxSector: 0, maxAllowed: 0.4, compliant: true,
+                  ),
+                )),
+            portfolioHistoryProvider
+                .overrideWith((ref) async => _equityHistoryFixture()),
+            alpacaLinkedProvider.overrideWith((ref) async => true),
+            alpacaPortfolioProvider.overrideWith((ref) async => const AlpacaPortfolio(
+                  cash: 5000, portfolioValue: 5000, equity: 5000, buyingPower: 5000,
+                )),
+            alpacaPositionsProvider.overrideWith((ref) async => const []),
+            alpacaOpenOrdersProvider
+                .overrideWith((ref) async => throw Exception('network down')),
+            alpacaClosedOrdersProvider.overrideWith((ref) async => const []),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PortfolioScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      // AMI count alone (1) — a failed Alpaca fetch must not silently drop
+      // its contribution from a number that then looks final and correct.
+      expect(find.textContaining('ORDERS 1'), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('DEF422 — tab bar has no overflow at combined counts', () {
+    for (final entry in {
+      '320x844 @1.0x': (const Size(320, 844), 1.0),
+      '320x844 @1.3x': (const Size(320, 844), 1.3),
+      '375x844 @1.0x': (const Size(375, 844), 1.0),
+      '375x844 @1.3x': (const Size(375, 844), 1.3),
+      '430x932 @1.0x': (const Size(430, 932), 1.0),
+      '430x932 @1.3x': (const Size(430, 932), 1.3),
+    }.entries) {
+      testWidgets('no overflow at ${entry.key} with combined 3-digit counts',
+          (tester) async {
+        final (size, scale) = entry.value;
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              simNotifierProvider
+                  .overrideWith((ref) => _FixedSimNotifier(ref, _heavySimState())),
+              watchlistNotifierProvider.overrideWith(
+                  (ref) => _FixedWatchlistNotifier(ref, _heavyWatchlistState())),
+              journalNotifierProvider.overrideWith(
+                  (ref) => _FixedJournalNotifier(ref, const JournalState())),
+              sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
+                    allocation: {},
+                    totalValue: 0,
+                    compliance: SectorCompliance(
+                      maxSector: 0, maxAllowed: 0.4, compliant: true,
+                    ),
+                  )),
+              portfolioHistoryProvider
+                  .overrideWith((ref) async => _equityHistoryFixture()),
+              alpacaLinkedProvider.overrideWith((ref) async => true),
+              alpacaPortfolioProvider.overrideWith((ref) async => const AlpacaPortfolio(
+                    cash: 5000, portfolioValue: 5000, equity: 5000, buyingPower: 5000,
+                  )),
+              // Worst case for label width: a large 3-digit Alpaca count on
+              // every tab, pushing every combined number into 3 digits too.
+              alpacaPositionsProvider.overrideWith(
+                  (ref) async => List.generate(120, (i) => _alpacaPosition('P$i'))),
+              alpacaOpenOrdersProvider.overrideWith(
+                  (ref) async => List.generate(120, (i) => _alpacaOpenOrder('P$i'))),
+              alpacaClosedOrdersProvider.overrideWith(
+                  (ref) async => List.generate(120, (i) => _alpacaClosedOrder('P$i'))),
+            ],
+            child: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: MaterialApp(
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: const PortfolioScreen(),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+        // Checked on the Positions landing tab as pumped (no tab switch):
+        // this sweep also caught a second, pre-existing overflow in
+        // `PortfolioEquityChart`'s "WINDOW RETURN" row at this exact
+        // 320dp/1.3x combination — unmeasured before this DEF (that file's
+        // own comment only ever covered 1.0-1.15 scale at 390dp) and in a
+        // file DEF422 does not otherwise touch. Fixed alongside this DEF
+        // (small, same `Flexible`+ellipsis pattern already used elsewhere
+        // in that file) since leaving a known overflow live on the tab this
+        // bar sits above would make this very test dishonest.
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.textContaining('ORDERS'));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

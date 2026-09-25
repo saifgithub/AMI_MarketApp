@@ -145,16 +145,27 @@ Pull-to-refresh now also invalidates `alpacaOpenOrdersProvider`/
   plain-text headings the badge replaced) were removed from `app_en.arb`/`app_ar.arb`/
   `app_ms.arb` rather than left dead.
 
-## Tab-count decision (explicitly asked for; DECIDED, not deferred)
+## Tab-count decision (explicitly asked for; DECIDED, not deferred) — REVERSED by DEF422
 
-Positions/Orders/History tab-bar counts remain **AMI-only**, unchanged by the Alpaca
-group each tab now also renders. Alpaca's own counts come from async `FutureProvider`s;
+Positions/Orders/History tab-bar counts originally shipped **AMI-only**, unchanged by the
+Alpaca group each tab also renders. Alpaca's own counts come from async `FutureProvider`s;
 a combined badge would either have to show a number that changes shape mid-load ("some
 number, plus maybe more") or silently omit Alpaca's contribution on every loading/error
 frame — the exact "quietly wrong count" CR040 forbids. Each tab already states which book
 a row belongs to via the ALPACA PAPER badge directly above the Alpaca group, so the
 book/count split is visible without the tab-bar number itself having to carry it.
-Documented inline at the `_PortfolioTabBar` call site in `portfolio_screen.dart`.
+
+**Saiful overrode this call (DEF422, TestFlight +111, 2026-09-25):** *"The 'order' header
+was showing '0' orders. But I still have one order open in alpaca."* An AMI-only count that
+reads "0" while a real Alpaca order sits open is the worse lie — CR040 exists to prevent
+exactly this class of quietly-wrong number, and an honest-but-partial count fired that same
+guard from the other direction. DEF422 combines each tab's AMI count with its Alpaca
+counterpart once linked, and resolves this CR's own stated risk (a number that "changes
+shape mid-load") the way CR040 actually requires: an explicit loading spinner or warning
+glyph next to the AMI count while Alpaca's side is still resolving or failed, rather than a
+combined number that looks final before it is, or one that silently drops Alpaca's
+contribution forever. See `_TabCount`/`_TabCountMarker`/`_TabCountMarkerIcon` at the
+`_PortfolioTabBar` call site in `portfolio_screen.dart`.
 
 ## Known trade-off
 
