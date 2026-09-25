@@ -84,6 +84,7 @@ from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
+from app.services.liquidity_lookup import prewarm_on_demand_liquidity  # DEF417 round 2
 from app.services.sector_allocation import allocate_by_sector, default_sector_map  # CR026
 from app.services.news_context import (
     LiveDataState,
@@ -5347,6 +5348,22 @@ class RoomRunner:
         classification = (
             classification_universe or await default_classification_universe_async()
         )
+        # DEF417 round 2 — pre-warm the on-demand liquidity cache for THIS
+        # ticker, off the event loop via asyncio.to_thread, BEFORE the sync
+        # compliance call. `check_mandate_compliance` (`_assemble_verdict`,
+        # the scripted path) and `enforce_safety_floor` (the live-PM path)
+        # both run directly on this Task's event loop — never inside
+        # `asyncio.to_thread` the way every SimEngine call site is — so a
+        # cache-miss inside their own `resolve_liquidity_with_lookup` call
+        # would block every concurrent Room stream on this loop for up to
+        # `_ON_DEMAND_TIMEOUT_S`. Warming here, at the SAME async boundary
+        # `default_classification_universe_async()` already uses one line up,
+        # means that sync call is a guaranteed cache hit (real answer or a
+        # cached LOOKUP_FAILED) by the time either path reaches it. Gated on
+        # `liquid_only` so a mandate that doesn't use the flag never pays for
+        # a fetch nothing will read.
+        if mandate.compliance.liquid_only:
+            await prewarm_on_demand_liquidity(ticker)
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 

@@ -259,3 +259,137 @@ Asked by the Architect after the builder flagged three judgment calls; all three
 1. **Scope** — *"Enforce for all where ON."* `liquid_only` defaults ON on nearly every mandate; the floor enforces it wherever it is ON. Microcap buys are refused with a clear mandate reason; the user can switch the constraint off in their mandate.
 2. **Classification outage** — *"Allow + disclose."* When the daily classification snapshot is stale or unavailable, `liquid_only` does not block; the verdict discloses that liquidity was not checked. (Deliberate divergence from the fossil/sin/ESG flags, which block on UNAVAILABLE but default OFF.)
 3. **Volume floor** — *"$1M/day."* `ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000` confirmed.
+
+## Round 2 (2026-09-25, AT:R85) — auditor U68's MAJOR-1/MAJOR-2/MINOR-1
+
+Audit lane `orchestration/audit/cr/DEF417.auditor.md` round 1 found the mechanism
+sound but incomplete on the goal it was built for:
+
+- **MAJOR-1.** `resolve_liquidity` only ever measured the ~503-name daily
+  classification snapshot (the S&P parent constituents). Measured live:
+  12,743 of 13,246 tradable symbols (96%) sit outside that set and resolved
+  UNKNOWN=permitted unconditionally — a real, active microcap the auditor
+  probed live (GNS, NYSE American) passed `liquid_only` with `advisories=[]`.
+  The filter could not refuse any ticker a user could actually type.
+- **MAJOR-2.** The UNKNOWN verdict never reached `advisories` (only
+  UNAVAILABLE did), and `mobile/lib` had zero references to `liquidity` — the
+  permitted-with-disclosure case was never actually disclosed anywhere a user
+  could see it.
+- **MINOR-1.** Two of the five claimed call-site wiring tests didn't reach the
+  call site they named: `room_runner.py`'s live-PM `enforce_safety_floor` call
+  and `SimEngine.fill_resting_order` both had no test that would fail if
+  `classification_universe=` were dropped there.
+
+**Saiful's new ruling (2026-09-25): "Look it up on demand."** When a
+`liquid_only` mandate BUYs a ticker outside the snapshot, fetch market cap +
+average volume from the SAME source the snapshot uses (`yf.Ticker(t).info`),
+cache it 24h, and enforce the SAME two floors against the fetched figures.
+Only when the lookup itself fails or times out does "allow + disclose" apply
+— and that disclosure must actually reach the user via the same
+`advisories` channel DEF061's UNAVAILABLE verdict already uses.
+
+### Design — `app/services/liquidity_lookup.py` (new module)
+
+- **Fetch:** reuses the exact `yf.Ticker(t).info` shape
+  `classification_universe.py::_yf_info` already uses (same dot→hyphen
+  class-share normalisation), reading `marketCap`/`averageVolume` — the SAME
+  two fields the snapshot pass reads, no new provider. Isolated in
+  `_fetch_liquidity_info_uncached`, which RAISES on a provider error rather
+  than swallowing it, so the caller can tell "the fetch failed" apart from
+  "the fetch succeeded and returned nothing."
+- **Cache:** an in-process `dict[ticker] -> (result, expires_at)` + `RLock`,
+  TTL 24h (Saiful's ruling, verbatim) — the SAME shape
+  `fundamentals.py::_statements_cache` and `market_data.py::CachingProvider`
+  already use. Not Redis: no application code opens a Redis connection
+  anywhere in this codebase today (`readiness.py`'s probe is read-only), so a
+  Redis-backed cache for one ticker-info lookup would be new infra nothing
+  else in the app relies on. A `_LookupFailed` sentinel is cached distinctly
+  from a real (possibly empty) result, so a failed/timed-out lookup doesn't
+  masquerade as "yfinance answered and had nothing" or vice versa.
+- **Timeout:** `_ON_DEMAND_TIMEOUT_S = 4.0`, matching `YahooQuoteProvider`'s
+  own httpx client timeout (`market_data.py`) — the nearest sibling of "one
+  blocking read, short budget, degrade on miss." Bounded via a dedicated
+  `concurrent.futures.ThreadPoolExecutor(max_workers=1)` per miss (not the
+  caller's own thread), so a hung fetch cannot pin the calling thread past the
+  timeout — it cannot kill the underlying OS thread outright (the same
+  orphaned-thread reality this codebase already accepts for
+  `asyncio.wait_for` around `asyncio.to_thread` elsewhere, e.g.
+  `room_runner.py`'s LLM stream timeouts), but it bounds one throwaway thread
+  per miss rather than the shared pool.
+- **New status:** `LiquidityStatus.LOOKUP_FAILED`, distinct from
+  `UNAVAILABLE` (whole snapshot stale/absent) — the snapshot is healthy here;
+  only this one ticker's on-demand read failed. `is_disclosed_pause` now
+  covers both. Message: *"AMI tried to look up {ticker}'s market cap and
+  trading volume on demand ... and couldn't get an answer in time."*
+
+### Event-loop safety — the asymmetry that shaped the wiring
+
+`check_mandate_compliance`/`enforce_safety_floor` are plain sync functions.
+Three call sites (`SimEngine.submit`/`.preview`/`.fill_resting_order`) are
+ALWAYS reached via `asyncio.to_thread` from their API route or the
+resting-order sweep tick — a blocking on-demand fetch there is safe, so
+`resolve_liquidity_with_lookup` (sync) calls it directly. TWO call sites
+(`room_runner.py`'s live-PM `enforce_safety_floor` and its scripted
+`_assemble_verdict`, both inside `RoomRunner.run()`, an `asyncio.Task` that
+runs directly on the event loop, never `to_thread`-wrapped) would block every
+concurrent Room stream on a cache miss. Fix: `prewarm_on_demand_liquidity(
+ticker)` — async, awaited at the SAME point `run()` already resolves
+`classification_universe` via `default_classification_universe_async()` —
+populates the cache off the loop via `asyncio.to_thread` BEFORE either sync
+compliance call runs, so by the time either reaches
+`resolve_liquidity_with_lookup`, it is a guaranteed cache hit (real answer or
+a cached `LOOKUP_FAILED`). Gated on `mandate.compliance.liquid_only` so a
+mandate not using the flag never pays for an unread fetch.
+
+`price_alert_evaluator.py`'s `_alert_mandate_check` (also on-loop) needed no
+change: it always frames the check as a SELL (ticker-eligibility reuse), and
+`liquid_only`'s branch is buy-only-gated, so it never fires there.
+
+### MAJOR-2 fix — the disclosure channel, unchanged
+
+`LiquidityVerdict.is_disclosed_pause` (now covering `LOOKUP_FAILED` too)
+already routes to `ComplianceResult.advisories` in `safety_floor.py` — the
+SAME channel the trade ticket already renders generically
+(`trade_ticket_sheet.dart`'s `_pendingAdvisories`, a plain `list[String]`
+rendered as-is, not per-type). **No mobile change was needed**: advisories are
+server-generated English strings, not localized ARB keys, so the existing
+render path picks up the new `LOOKUP_FAILED` message automatically. Verified:
+zero `mobile/lib` files touched in this round.
+
+### MINOR-1 fix — real end-to-end wiring tests, mutation-verified
+
+Two new tests drive the FULL path rather than calling `enforce_safety_floor`/
+`check_mandate_compliance` directly:
+
+- `test_room_runner_live_pm_end_to_end_refuses_an_on_demand_microcap` —
+  drives `RoomRunner.run()` (real live-PM path, a liberal-APPROVE fake
+  gateway) end-to-end for a ticker outside the snapshot, on-demand fetcher
+  answering a real sub-$500M reading. Mutation-verified: temporarily replacing
+  `classification_universe=ctx.classification_universe` with `None` at
+  `room_runner.py`'s live-PM call site (~line 5939) turned the REJECT into an
+  APPROVE, confirming the test actually exercises that call site.
+- `test_sim_engine_fill_resting_order_rejects_a_microcap_at_fill_time` —
+  drives `SimEngine.fill_resting_order` directly. Mutation-verified: replacing
+  `classification_universe=(classification_universe or
+  default_classification_universe())` with `classification_universe=None` at
+  `sim_engine.py`'s fill-time call site (~line 1982) turned the refusal into
+  an accepted fill.
+
+Both mutations were applied to the real source, run, confirmed red, then
+reverted — not simulated via a monkeypatched wrapper alone (each site also has
+a companion monkeypatch-based test for a faster/isolated regression signal,
+but the mutation evidence above is against the actual call site).
+
+### Round 2 tests
+
+`backend/tests/unit/test_def417_liquid_only_enforcement.py` grew from 25 to
+38 tests. New coverage: on-demand PERMITTED/EXCLUDED/UNKNOWN/LOOKUP_FAILED
+(including a timeout case), cache-hit-avoids-second-fetch (including a
+mixed-case ticker), the on-demand failure disclosure reaching
+`ComplianceResult.advisories`, and the two mutation-verified end-to-end wiring
+tests above. Also re-ran green: `test_safety_floor.py`, `test_sim_engine.py`,
+`test_room_runner.py`, `test_def061_compliance_enforcement.py`,
+`test_config_compose_parity.py`, `test_def419_per_account_mandate_check.py`,
+`test_def200_ratchet.py`.
+
+No mobile changes — see MAJOR-2 fix above.
