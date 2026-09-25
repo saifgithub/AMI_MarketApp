@@ -334,6 +334,26 @@ class MockProvider(LLMProvider):
             await asyncio.sleep(random.uniform(0.005, 0.020))
 
 
+def canned_agent_fallback(agent_id: "AgentId | str") -> str:
+    """The branded "AMI is offline" copy for one agent — DEF424.
+
+    Same text `MockProvider` streams when no real provider is configured at
+    all, reused here for the DIFFERENT case of a real provider that is
+    configured but unreachable mid-call (a raised transport exception or an
+    in-band `stream_error`). Keyed directly by `agent_id` rather than
+    sniffing the system prompt (`MockProvider`'s own approach) — every
+    caller of this function already knows exactly which agent it is, so a
+    direct dict lookup can't mis-route the way a substring sniff could.
+
+    An agent absent from `MockProvider._CANNED` (news_analyst,
+    social_media_analyst, research_manager, the three risk debators) falls
+    back to `MockProvider._DEFAULT` — still branded AMI copy, never a raw
+    transport string.
+    """
+    key = agent_id.value if isinstance(agent_id, AgentId) else str(agent_id)
+    return MockProvider._CANNED.get(key, MockProvider._DEFAULT)
+
+
 # ── Anthropic provider ───────────────────────────────────────────────────
 #
 # CR141 usage capture: Anthropic splits token counts across TWO SSE frames —

@@ -50,7 +50,7 @@ from app.services.news_context import build_news_context_block
 from app.services.sharia_universe import default_halal_universe_async
 from app.services.social_context import build_social_context_block
 from app.services.technicals import build_technicals_context_block
-from app.services.llm_gateway import ChatMessage, LLMGateway
+from app.services.llm_gateway import ChatMessage, LLMGateway, canned_agent_fallback
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 
@@ -236,18 +236,40 @@ class AgentRunner:
             ]
             messages.append(ChatMessage(role="user", content=user_message))
             agent_id_str = str(agent_id.value if hasattr(agent_id, "value") else agent_id)
-            async for chunk in self._llm.stream_chat(
-                system_prompt=system_prompt,
-                messages=messages,
-                model_tier=tier,
-                locale=mandate.locale,
-                audit_user_id=session.user_id,
-                audit_agent_id=agent_id_str,
-                audit_flow="one_on_one",
-                meta=meta,
-            ):
-                buf.append(chunk)
-                yield chunk
+            # DEF424 — a raw transport exception (e.g. httpx.ConnectError,
+            # `LLMGateway.stream_chat` re-raises with no runtime fallback)
+            # used to propagate straight out of this generator to
+            # `one_on_one.py`'s `except Exception as e: yield sse_text("error",
+            # str(e)[:300])` — the httpx exception's own text, verbatim, on
+            # the wire. `_stream_concierge` (below) already catches this
+            # shape for the Concierge; every OTHER agent had no equivalent
+            # catch. Mirrors that handler: log, mark `meta["stream_error"]`
+            # (the same key `one_on_one.py` already reads to decide whether
+            # to refund — RETRO-SECURITY MAJOR-2's contract, untouched here),
+            # and yield branded AMI fallback copy instead of the exception.
+            try:
+                async for chunk in self._llm.stream_chat(
+                    system_prompt=system_prompt,
+                    messages=messages,
+                    model_tier=tier,
+                    locale=mandate.locale,
+                    audit_user_id=session.user_id,
+                    audit_agent_id=agent_id_str,
+                    audit_flow="one_on_one",
+                    meta=meta,
+                ):
+                    buf.append(chunk)
+                    yield chunk
+            except Exception as exc:  # pragma: no cover — defensive, mirrors _stream_concierge
+                logger.warn(
+                    "one_on_one_llm_failed", agent_id=agent_id_str, error=str(exc)[:200],
+                )
+                if meta is not None:
+                    meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]
+                if not buf:
+                    fallback = canned_agent_fallback(agent_id)
+                    buf.append(fallback)
+                    yield fallback
 
         if session.user_id is not None and buf:
             record_one_on_one_message(

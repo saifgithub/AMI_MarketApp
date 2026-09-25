@@ -4443,6 +4443,15 @@ class RoomRunner:
         # Late-bound so tests can pass a fake gateway via constructor.
         # In production, get_room_runner() wires get_llm_gateway() once.
         self._llm: LLMGateway | None = llm
+        # DEF425 — set by `mark_shutting_down()` from `main.py`'s lifespan
+        # SHUTDOWN phase, before that phase cancels its own tracked tasks
+        # (which triggers asyncio's own cascade of cancellation into every
+        # other still-running task, `run()`'s background `_pump` included).
+        # `run()`'s `except (asyncio.CancelledError, GeneratorExit)` reads
+        # this flag to tell "the server is going down" apart from a genuine
+        # per-run cancellation — see that handler's own docstring for why
+        # the two used to be conflated.
+        self._shutting_down: bool = False
         # Per-run event queues: keyed by run_id, alive while _pump() runs.
         # SSE consumers read from these; background tasks write to them.
         self._active_queues: dict[UUID, asyncio.Queue[RoomEvent | None]] = {}
@@ -4457,6 +4466,19 @@ class RoomRunner:
         # respawn so __init__ doesn't need a live event loop.
         self._pending_retry: list[_PendingRetry] = []
         self._sweep_stuck_runs()
+
+    def mark_shutting_down(self) -> None:
+        """DEF425 — flip the flag `run()`'s cancellation handler reads.
+
+        Called from `main.py`'s lifespan SHUTDOWN phase, BEFORE that phase
+        cancels its own tracked tasks. asyncio's own teardown cascades that
+        cancellation into every other still-running task — `run()`'s
+        detached `_pump` background task included — so by the time `run()`
+        observes `CancelledError`/`GeneratorExit`, this flag is already set
+        and the handler can tell a server shutdown apart from anything
+        else that might reach that except clause.
+        """
+        self._shutting_down = True
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
         with get_session() as s:
@@ -4491,7 +4513,12 @@ class RoomRunner:
           * retry_count >= MAX_AUTO_RETRIES: a run that has already died
             once on retry is likely a real bug, not a transient restart.
             Mark failed so the client surfaces it and the user can
-            manually resubmit (or report).
+            manually resubmit (or report). DEF425: this is one of the two
+            safety nets a stuck row must reach (retry, or fail WITH a
+            refund) — refunded below, off this method's own DB session (same
+            "commit the row, refund after" shape `_respawn_run_from_row`'s
+            abandoned-snapshot branch already uses), never left uncredited
+            the way `run()`'s old unconditional-CANCELLED path left it.
 
         Pure DB work — no event loop needed, runs from __init__. The
         respawn happens later in resume_pending_retries() from the
@@ -4500,6 +4527,7 @@ class RoomRunner:
         cutoff = datetime.now(timezone.utc) - timedelta(
             minutes=settings.room_dedup_running_minutes
         )
+        to_refund: list[tuple[UUID, UUID, int]] = []  # (run_id, user_id, credit_cost)
         try:
             now = datetime.now(timezone.utc)
             with get_session() as s:
@@ -4530,6 +4558,8 @@ class RoomRunner:
                             f"abandoned: auto-retried {row.retry_count} time(s), gave up"
                         )
                         failed += 1
+                        if row.credit_cost:
+                            to_refund.append((row.id, row.user_id, row.credit_cost))
                 if rows:
                     logger.info(
                         "room_startup_sweep",
@@ -4538,6 +4568,18 @@ class RoomRunner:
                     )
         except Exception as exc:
             logger.warning("room_startup_sweep_failed", error=str(exc)[:200])
+            return
+
+        for run_id, user_id, credit_cost in to_refund:
+            try:
+                refund(user_id, credit_cost, reason=f"room_abandoned_no_retry:{run_id}")
+            except Exception as exc:
+                logger.error(
+                    "room_startup_sweep_refund_failed",
+                    run_id=str(run_id),
+                    credits=credit_cost,
+                    error=str(exc)[:200],
+                )
 
     async def resume_pending_retries(self) -> None:
         """Spawn background tasks for runs claimed by _sweep_stuck_runs.
@@ -6110,14 +6152,55 @@ class RoomRunner:
                 action=str(run.verdict.action if run.verdict else "n/a"),
             )
         except (asyncio.CancelledError, GeneratorExit):
-            # Client disconnect: the SSE consumer's `async for ev in run_iter`
-            # tears the iterator down via aclose(), sending GeneratorExit here.
-            # The previous code let it propagate uncaught — the generator died
-            # before reaching the bottom-of-function `_persist_run`, leaving
-            # the DB row at status=running with an empty transcript. The
-            # detached drain task in room.py would then finalise a journal
-            # entry from that stale snapshot. Catch here, persist whatever
-            # transcript was collected, then re-raise.
+            # DEF425 — this branch used to treat EVERY cancellation as a
+            # client disconnect (the comment's own claim), and marked the row
+            # CANCELLED with no refund on that assumption. That assumption is
+            # false for this call path: `run()` is driven by `start_run`'s
+            # detached `_pump()` background task, and `start_run`'s own
+            # docstring is explicit that "a client disconnect does not
+            # cancel the run" — nothing in this codebase calls `.cancel()`
+            # on that task. The ONE real source of `CancelledError`/
+            # `GeneratorExit` reaching here is the server itself shutting
+            # down (`docker restart`, a redeploy) and asyncio cancelling
+            # every outstanding task on the way out — confirmed live,
+            # DEF425's own drill: a mid-run `docker restart ami_api_alpha`
+            # charged the full Room price, left `verdict=null`, and never
+            # refunded, because this branch persisted CANCELLED (a terminal
+            # state) before `_sweep_stuck_runs` ever got a chance to claim
+            # the row on the next boot.
+            #
+            # `mark_shutting_down()` is set by `main.py`'s lifespan SHUTDOWN
+            # phase before it cancels its own tracked tasks — which is what
+            # cascades into this one. So: shutdown-triggered cancellation
+            # leaves the row at RUNNING (touching nothing — no status flip,
+            # no error_message, no finished_at) so `_sweep_stuck_runs` finds
+            # it next boot exactly the way its own docstring already
+            # promises ("a run left in status=running means the server was
+            # restarted... while the run was in progress") and either
+            # respawns it with the user's real snapshot
+            # (RETRO-PM-FLOOR round 2) or fails it WITH a refund
+            # (`_respawn_run_from_row`'s abandoned-snapshot branch, and
+            # `_sweep_stuck_runs`'s own retry-exhausted branch — see the
+            # TODO below, filed as its own gap, not silently fixed here).
+            #
+            # Any OTHER source of cancellation (there is none today, but the
+            # `except` clause has to mean something if one is ever added)
+            # keeps today's semantics: CANCELLED, no refund, "client
+            # disconnected mid-run" — the label this comment used to apply
+            # unconditionally.
+            if self._shutting_down:
+                logger.info(
+                    "room_cancelled_shutdown",
+                    run_id=str(run_id),
+                    ticker=ticker,
+                    agents_completed=len(run.transcript),
+                    detail=(
+                        "server shutdown mid-run — row left RUNNING for "
+                        "_sweep_stuck_runs to claim on next boot; NOT marked "
+                        "CANCELLED, NOT refunded here"
+                    ),
+                )
+                raise
             run.status = RoomStatus.CANCELLED
             run.error_message = "client disconnected mid-run"
             run.finished_at = datetime.now(timezone.utc)

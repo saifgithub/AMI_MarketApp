@@ -50,7 +50,12 @@ from app.schemas.mandate import (
 )
 from app.schemas.one_on_one import ChatMsg
 from app.services.agent_prompts import load_base_prompt
-from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier
+from app.services.llm_gateway import (
+    ChatMessage,
+    LLMGateway,
+    ModelTier,
+    canned_agent_fallback,
+)
 from app.services.llm_json import extract_json_object
 from app.services.overlay_store import OverlayStore, get_overlay_store
 from app.services.entitlements import effective_plan_for_user
@@ -265,18 +270,40 @@ class BriefEngine:
             ChatMessage(role=h.role, content=h.content) for h in history
         ]
         messages.append(ChatMessage(role="user", content=user_message))
+        agent_id_str = agent_id.value if hasattr(agent_id, "value") else str(agent_id)
 
-        async for chunk in self._llm.stream_chat(
-            system_prompt=system_prompt,
-            messages=messages,
-            model_tier=tier,
-            locale=mandate.locale,
-            audit_user_id=session.user_id,
-            audit_agent_id=agent_id.value if hasattr(agent_id, "value") else str(agent_id),
-            audit_flow="coach_chat",
-            meta=meta,
-        ):
-            yield chunk
+        # DEF424 — a raw transport exception (httpx.ConnectError and
+        # friends; `LLMGateway.stream_chat` re-raises, there is no runtime
+        # fallback) used to propagate straight out of this generator to
+        # `brief.py`'s `except Exception as e: yield sse_text("error",
+        # str(e)[:300])` — the exception's own text, verbatim, on the wire.
+        # `agent_runner._stream_concierge` already catches this shape for
+        # the Concierge 1-on-1 path; Brief had no equivalent. Same
+        # treatment: log, set `meta["stream_error"]` (the key `brief.py`
+        # already reads to decide whether to refund — untouched here) and
+        # yield branded AMI fallback copy instead of the exception.
+        buf: list[str] = []
+        try:
+            async for chunk in self._llm.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,
+                locale=mandate.locale,
+                audit_user_id=session.user_id,
+                audit_agent_id=agent_id_str,
+                audit_flow="coach_chat",
+                meta=meta,
+            ):
+                buf.append(chunk)
+                yield chunk
+        except Exception as exc:  # pragma: no cover — defensive, mirrors _stream_concierge
+            logger.warn(
+                "brief_llm_failed", agent_id=agent_id_str, error=str(exc)[:200],
+            )
+            if meta is not None:
+                meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]
+            if not buf:
+                yield canned_agent_fallback(agent_id)
 
     # ── propose: turn conversation into structured proposal ────────────
 
