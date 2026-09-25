@@ -31,6 +31,7 @@ from helpers.gestures import screen_scale
 from helpers.onboarding import ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
 from helpers.shell import recover_to_shell, shell_is_up
+from helpers.system_alerts import dismiss_system_alert_if_present
 from tools import harness_manifest
 
 
@@ -131,6 +132,11 @@ def driver(device_profile):
     # precondition true rather than just assumed. Cheap no-op once onboarding
     # has completed once, thanks to noReset=True.
     _require_unlocked(drv)
+    # DEF426 — clear a native alert before the onboarding walk even starts.
+    # noReset=True persists app state across the whole run, so a permission
+    # decision (or prompt) from an earlier module's session can still be
+    # sitting on screen when this module's driver attaches.
+    dismiss_system_alert_if_present(drv)
     ensure_onboarded(drv)
     yield drv
     drv.quit()
@@ -194,6 +200,17 @@ def _shell_precondition(request):
         return
 
     drv = request.getfixturevalue("driver")
+
+    # DEF426 — a native permission dialog (e.g. iOS's "Turn on notifications?")
+    # sits above the Flutter semantics tree entirely, so no locator below this
+    # point can see it, let alone dismiss it. Clear it here, before the
+    # shell-up check, so a covered-but-healthy app doesn't misreport as
+    # "previous test left something open" and doesn't cascade into every test
+    # in this module the way E5-U1 did. No-op on Android and when nothing is
+    # up (see helpers/system_alerts.py).
+    if dismiss_system_alert_if_present(drv):
+        print(f"    [alert] {request.node.name} — dismissed a native system alert")
+
     floor_label = LOCALES["en"].tab_labels["Floor"]
     if not shell_is_up(drv, floor_label):
         print(

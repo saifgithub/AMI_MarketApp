@@ -99,11 +99,24 @@ _SHELL_BUDGET_S = 30.0
 # existed on the backend. All three rendered locales are listed because the
 # label is what the walk sees, and matching is against `.upper()` — Arabic has
 # no case, so its entry is verbatim.
+#
+# TURN ON (DEF426, E5-U1) is `pushSoftAskAccept` — the in-app Flutter soft-ask
+# dialog `push_notification_listener.dart` shows before ever calling
+# `service.requestPermission()`. That dialog IS inside the semantics tree
+# (it's a Flutter `AlertDialog`, unlike what it triggers), so the walk's
+# exploratory tapper could and did reach it: tapping "Turn on" fires the real
+# native OS permission prompt, which is NOT in the semantics tree, covers the
+# Floor screen, and times out every locator after it for the rest of the
+# module. Refusing it here means the walk always falls through to "Not now"
+# instead (an ordinary, non-expensive control, so nothing extra is needed to
+# make the walk still progress past this turn). See helpers/system_alerts.py
+# for the backstop that handles the dialog if it appears anyway.
 _NEVER_TAP = (
     "CONVENE",
     "RESTART ONBOARDING",
     "إعادة تشغيل الجولة التعريفية",
     "MULAKAN SEMULA ORIENTASI",
+    "TURN ON",
 )
 
 
