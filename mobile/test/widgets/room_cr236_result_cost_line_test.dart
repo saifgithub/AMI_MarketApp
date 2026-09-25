@@ -1,10 +1,12 @@
 /// CR236 — the settled Room states what the run cost: "This Room used 8
-/// credits · 55 left", or "Not charged — the desks were unreachable" when
-/// CR039/DEF425/DEF432 refunded a FAILED run.
+/// credits · 55 left", or "Not charged — this Room didn't reach a verdict"
+/// when CR039/DEF425/DEF432 refunded it.
 ///
 /// Harness mirrors room_no_verdict_test.dart — the real `RoomScreen` with
-/// `RoomNotifier` fixed to a chosen `RoomState`, plus `MandateNotifier` fixed
-/// for the "balance after" half of the line.
+/// `RoomNotifier` fixed to a chosen `RoomState`. The balance half comes from
+/// `RoomState.balanceAfter` (set after the post-run refresh), and the
+/// `MandateNotifier` is fixed to a STALE balance to prove the line never
+/// reads the mandate cached before the Room.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -95,12 +97,14 @@ void main() {
           verdict: _approveVerdict(),
           creditCost: 8,
           refunded: false,
+          balanceAfter: 55,
         ),
-        mandate: _mandate(creditBalance: 55),
+        mandate: _mandate(creditBalance: 63),
       );
 
       final l = _l(t);
       expect(find.text(l.roomResultCost('8', '55')), findsOneWidget);
+      expect(find.textContaining('63'), findsNothing);
       expect(find.text(l.roomResultRefunded), findsNothing);
     });
 
@@ -145,8 +149,9 @@ void main() {
       expect(find.textContaining('This Room used'), findsNothing);
     });
 
-    testWidgets('shows "—" for the left-over balance if the mandate has not refreshed',
-        (t) async {
+    testWidgets(
+        'omits the balance until the post-run refresh lands — never the '
+        'pre-Room balance', (t) async {
       await _pump(
         t,
         roomState: RoomState(
@@ -158,11 +163,12 @@ void main() {
           creditCost: 8,
           refunded: false,
         ),
-        mandate: null,
+        mandate: _mandate(creditBalance: 63),
       );
 
       final l = _l(t);
-      expect(find.text(l.roomResultCost('8', '—')), findsOneWidget);
+      expect(find.text(l.roomResultCostNoBalance('8')), findsOneWidget);
+      expect(find.textContaining('left'), findsNothing);
     });
   });
 }

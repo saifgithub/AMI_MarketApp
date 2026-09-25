@@ -3659,7 +3659,7 @@ abstract class AppLocalizations {
   /// CR236 — appended to the compact credits line on the Convene sheet when balance < cost, said plainly rather than silently. The actual refusal still happens server-side (402); this is a heads-up, not the wall itself.
   ///
   /// In en, this message translates to:
-  /// **'Not enough — the Room refuses at convene'**
+  /// **'not enough to convene'**
   String get creditsLineInsufficient;
 
   /// CR236/DEF437 — shown in place of the credits line while the mandate has not loaded yet, or when the balance came back unknown. Never a guessed number.
@@ -3680,11 +3680,17 @@ abstract class AppLocalizations {
   /// **'This Room used {cost} credits · {left} left'**
   String roomResultCost(String cost, String left);
 
-  /// CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425/DEF432). Never phrased as the user's fault.
+  /// CR236 — shown instead of roomResultCost when the done event's refunded flag is true (a FAILED run refunded per CR039/DEF425, or an outage NO_VERDICT per DEF432). States no cause the client can't know. Never phrased as the user's fault.
   ///
   /// In en, this message translates to:
-  /// **'Not charged — the desks were unreachable'**
+  /// **'Not charged — this Room didn\'t reach a verdict'**
   String get roomResultRefunded;
+
+  /// CR236 — roomResultCost without the balance clause, shown until the post-Room balance refresh succeeds (never the balance cached before the run). {cost} is the run's credit_cost as a plain integer string.
+  ///
+  /// In en, this message translates to:
+  /// **'This Room used {cost} credits'**
+  String roomResultCostNoBalance(String cost);
 
   /// CR236 — Settings → Profile → Credits row value, once the reset date is known. {balance} and {date} are both pre-formatted strings from the caller (date is a localized short date, e.g. '1 Oct').
   ///

@@ -215,21 +215,9 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                         ),
                     ],
                     // CR236 — what this run cost, once it's actually finished.
-                    // Shared by both the board and the transcript surface
-                    // above (whichever `showBoard` picked) rather than
-                    // duplicated into each, so there is one place this line
-                    // can render. Gated on `creditCost != null` (not just
-                    // `done`) so a `done` event that carried no cost — an
-                    // older backend, mainly, but also every existing test
-                    // fixture that constructs `RoomState(done: true)` without
-                    // it — renders nothing and never mounts the mandate
-                    // watch below at all: `_RoomResultCostRow` reads
-                    // `mandateNotifierProvider`, and merely creating that
-                    // provider schedules a real network refresh
-                    // (`MandateNotifier`'s `Future.microtask(n.refresh)`) —
-                    // exactly the pending-Dio-timer regression this gate
-                    // exists to avoid in every settled-Room test that has no
-                    // reason to know about mandates at all.
+                    // One line for both settled surfaces (board and
+                    // transcript). Gated on `creditCost` so a `done` without
+                    // it (an older backend) renders nothing.
                     if (state.done && state.creditCost != null) ...[
                       const SizedBox(height: AmiSpacing.s),
                       _RoomResultCostRow(state: state),
@@ -266,23 +254,19 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
   }
 }
 
-/// CR236 — "This Room used 8 credits · 55 left" (or the refunded variant),
-/// shared by both settled surfaces (`showBoard`'s RoomBoard and the
-/// transcript view) so the fact renders once regardless of which the user
-/// has open. `state.creditCost` is null until `done` carries it — an older
-/// backend, or a row read that raced away server-side — and the underlying
-/// [RoomResultCostLine] renders nothing at all in that case (never a guess).
-class _RoomResultCostRow extends ConsumerWidget {
+/// CR236 — "This Room used 8 credits · 55 left" (or the refunded variant).
+/// The balance is `state.balanceAfter`, set only once the post-`done` mandate
+/// refresh succeeds — never the balance cached before the Room.
+class _RoomResultCostRow extends StatelessWidget {
   const _RoomResultCostRow({required this.state});
   final RoomState state;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final balanceAfter = ref.watch(mandateNotifierProvider).mandate?.creditBalance;
+  Widget build(BuildContext context) {
     return RoomResultCostLine(
       cost: state.creditCost,
       refunded: state.refunded,
-      balanceAfter: balanceAfter,
+      balanceAfter: state.balanceAfter,
     );
   }
 }

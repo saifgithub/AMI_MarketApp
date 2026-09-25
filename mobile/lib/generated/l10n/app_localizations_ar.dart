@@ -2175,8 +2175,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get creditsLineInsufficient =>
-      'Not enough — the Room refuses at convene';
+  String get creditsLineInsufficient => 'not enough to convene';
 
   @override
   String get creditsLineUnknown => 'Checking your credits…';
@@ -2192,7 +2191,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get roomResultRefunded => 'Not charged — the desks were unreachable';
+  String get roomResultRefunded =>
+      'Not charged — this Room didn\'t reach a verdict';
+
+  @override
+  String roomResultCostNoBalance(String cost) {
+    return 'This Room used $cost credits';
+  }
 
   @override
   String settingsProfileCreditsWithReset(String balance, String date) {

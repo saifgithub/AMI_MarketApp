@@ -105,6 +105,7 @@ class RoomState {
     this.agentStances = const {},
     this.creditCost,
     this.refunded = false,
+    this.balanceAfter,
   });
 
   final String? phase;
@@ -156,6 +157,11 @@ class RoomState {
   /// own.
   final bool refunded;
 
+  /// CR236 — the credit balance read back AFTER this run's post-`done`
+  /// mandate refresh. Null until that refresh succeeds, so the result line
+  /// never shows the balance cached before the Room ("used 8 · 63 left").
+  final int? balanceAfter;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -176,6 +182,7 @@ class RoomState {
     Map<String, AgentStance>? agentStances,
     int? creditCost,
     bool? refunded,
+    int? balanceAfter,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -195,6 +202,7 @@ class RoomState {
       agentStances: agentStances ?? this.agentStances,
       creditCost: creditCost ?? this.creditCost,
       refunded: refunded ?? this.refunded,
+      balanceAfter: balanceAfter ?? this.balanceAfter,
     );
   }
 }
@@ -357,6 +365,11 @@ class RoomNotifier extends StateNotifier<RoomState> {
             await _ref.read(journalNotifierProvider.notifier).refresh();
             await _ref.read(lessonsNotifierProvider.notifier).refresh();
             await _ref.read(mandateNotifierProvider.notifier).refresh();
+            if (!mounted) break;
+            final m = _ref.read(mandateNotifierProvider);
+            if (m.error == null && m.mandate?.creditBalance != null) {
+              state = state.copyWith(balanceAfter: m.mandate!.creditBalance);
+            }
             break;
           case 'error':
             state = state.copyWith(

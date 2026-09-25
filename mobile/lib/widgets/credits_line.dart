@@ -99,10 +99,11 @@ class OneOnOneCreditsLine extends StatelessWidget {
   }
 }
 
-/// The post-Room quiet line: "This Room used 8 credits · 55 left", or the
-/// refunded variant when the run failed and CR039/DEF425/DEF432 gave the
-/// charge back. Renders nothing when [cost] is null (a backend predating
-/// CR236, or the done event's row read raced away) — silence, not a guess.
+/// The post-Room quiet line: "This Room used 8 credits · 55 left" ("This
+/// Room used 8 credits" until the refreshed balance arrives), or the refunded
+/// variant when CR039/DEF425/DEF432 gave the charge back. Renders nothing
+/// when [cost] is null (a backend predating CR236, or the done event's row
+/// read raced away) — silence, not a guess.
 class RoomResultCostLine extends StatelessWidget {
   const RoomResultCostLine({
     super.key,
@@ -123,7 +124,9 @@ class RoomResultCostLine extends StatelessWidget {
     final left = balanceAfter;
     final text = refunded
         ? l.roomResultRefunded
-        : l.roomResultCost(c.toString(), left == null ? '—' : left.toString());
+        : left == null
+            ? l.roomResultCostNoBalance(c.toString())
+            : l.roomResultCost(c.toString(), left.toString());
     return Text(
       text,
       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
