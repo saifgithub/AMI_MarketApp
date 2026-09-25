@@ -138,6 +138,7 @@ class AgentRunner:
                 user_id=session.user_id,
                 history=history,
                 user_message=user_message,
+                meta=meta,
             ):
                 buf.append(chunk)
                 yield chunk
@@ -264,6 +265,7 @@ class AgentRunner:
         user_id: UUID | None,
         history: list[ChatMsg],
         user_message: str,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         # BL11 (AT:R33): effective_plan downgrades expired trials. Falls
         # back to mandate.plan for pre-claim anon users (no user row yet).
@@ -308,11 +310,22 @@ class AgentRunner:
                 audit_user_id=user_id,
                 audit_agent_id="concierge",
                 audit_flow="concierge_floor",
+                meta=meta,
             ):
                 buf.append(chunk)
                 yield chunk
         except Exception as exc:  # pragma: no cover — defensive
+            # RETRO-SECURITY MAJOR-2 (round 3): a provider outage (e.g.
+            # ConnectError) here used to be swallowed silently — the caller
+            # got a scripted reply and no signal it was a fallback, so
+            # one_on_one.py's `stream_meta.get("stream_error")` refund check
+            # never fired and the turn was billed. Same `stream_error` key
+            # the gateway itself sets for an in-band HTTP error (round 2's
+            # fix, threaded through `meta=` above); this is the transport
+            # half of the same contract.
             logger.warn("concierge_llm_failed", error=str(exc)[:200])
+            if meta is not None:
+                meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]
             if not buf:
                 yield concierge_scripted_reply(
                     user_message=user_message,

@@ -187,6 +187,69 @@ def test_lock_user_row_itself_uses_with_for_update() -> None:
         "as a literal keyword — found none in the executable body (docstring "
         "prose does not count)"
     )
+    populate_existing_calls = [
+        c for c in calls
+        if any(
+            kw.arg == "populate_existing"
+            and isinstance(kw.value, ast.Constant)
+            and kw.value.value is True
+            for kw in c.keywords
+        )
+    ]
+    assert populate_existing_calls, (
+        "_lock_user_row's session.get(...) call must ALSO pass "
+        "populate_existing=True as a literal keyword (RETRO-SECURITY MAJOR-1, "
+        "round 3). Without it, SQLAlchemy 2.0's Session.get(with_for_update=True) "
+        "takes the row lock but returns the identity-map object with its "
+        "PRE-lock attributes — the caller re-reads a stale credit_balance right "
+        "after 'locking' it. Measured on real Postgres by the round-2 auditor: "
+        "pack_vs_spend landed on 15 instead of 14, admin_vs_spend on 6 instead "
+        "of 5 — the lock was taken and then ignored."
+    )
+
+
+def test_lock_user_row_re_reads_the_balance_after_a_concurrent_write() -> None:
+    """Round 3 sqlite-runnable regression for MAJOR-1's re-read half.
+
+    SQLite ignores FOR UPDATE, but `populate_existing` is a SQLAlchemy ORM
+    identity-map behaviour, not a database lock — it is fully exercisable on
+    SQLite. This proves the actual bug the auditor measured on Postgres: with
+    `user` already loaded in `s`'s identity map (exactly `add_credit_pack`'s
+    and `adjust_credits`'s shape — load, then `_lock_user_row`), a second
+    session commits a change to the same row, and `_lock_user_row`'s return
+    value must see the NEW balance, not the one `user` was loaded with.
+
+    Without `populate_existing=True`, `session.get(...)` returns the same
+    Python object already in the identity map untouched — the mutation from
+    the second session is invisible until something else expires/refreshes
+    it, which is exactly how a concurrent spend's write got erased.
+    """
+    from app.db import get_session
+    from app.db.models import User
+    from app.services.auth_service import AuthService
+    from app.services.credit_service import _lock_user_row
+
+    user, _token, _ = AuthService().ensure_anonymous(device_user_id=None)
+
+    with get_session() as s1:
+        loaded = s1.get(User, user.id)
+        assert loaded is not None
+        starting_balance = loaded.credit_balance
+
+        # A concurrent writer (a spend, in the real race) commits a change
+        # to the same row via its OWN session while s1 still holds `loaded`
+        # in its identity map with the old balance.
+        with get_session() as s2:
+            other = s2.get(User, user.id)
+            assert other is not None
+            other.credit_balance = starting_balance - 1
+
+        relocked = _lock_user_row(s1, loaded)
+        assert relocked.credit_balance == starting_balance - 1, (
+            "_lock_user_row must re-read the row's current balance after "
+            "taking the lock — it returned the pre-lock value, reproducing "
+            "the round-2 MAJOR-1 gap (populate_existing missing)"
+        )
 
 
 def test_known_writer_inventory_is_exact() -> None:

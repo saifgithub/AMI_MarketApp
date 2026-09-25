@@ -201,7 +201,9 @@ def _lock_user_row(session, user: User) -> User:
     Returns the (same, now-locked) `User` so callers can reassign in place:
     `user = _lock_user_row(s, user)`.
     """
-    locked = session.get(User, user.id, with_for_update=True)
+    locked = session.get(
+        User, user.id, with_for_update=True, populate_existing=True
+    )
     if locked is None:
         raise LookupError(f"user {user.id} not found")
     return locked

@@ -313,3 +313,155 @@ def test_negative_price_fails_boot_loudly():
 
     with pytest.raises(ValidationError):
         Settings(one_on_one_credit_cost=-1, _env_file=None)
+
+
+# ── RETRO-SECURITY MAJOR-2 (round 3) — the Concierge 1-on-1, real gateway ───
+#
+# Round 2's `test_an_http_error_sentinel_reply_is_refunded_not_billed` above
+# monkeypatches the whole `stream_one_on_one_message` method — exactly what
+# the round-2 auditor flagged: it never exercises `_stream_concierge`'s own
+# `self._llm.stream_chat` call, so it could not have caught that `meta` never
+# reached that call, or that the ConnectError branch swallowed the failure
+# with no signal at all. These drive the REAL `LLMGateway` + a REAL
+# `OpenAICompatibleProvider` (as `VLLMProvider`, the live-preference
+# provider), with only the HTTP transport faked via `httpx.MockTransport` —
+# the auditor's own probe shape, reproduced through the route.
+
+@pytest.fixture
+def _real_vllm_gateway(monkeypatch):
+    """Register a real VLLMProvider so `_active_provider_name()` picks
+    "vllm" (the live preference, `vllm > anthropic > mock`), then hand back
+    a function that swaps its transport for an `httpx.MockTransport` driven
+    by the given handler — the provider object, request building, SSE
+    parsing and `meta["stream_error"]` writes are all the real code."""
+    import httpx as _httpx
+
+    from app.core import config as config_mod
+    from app.services import llm_gateway as gw_mod
+
+    monkeypatch.setattr(config_mod.settings, "vllm_base_url", "http://fake-vllm:8000")
+    monkeypatch.setattr(config_mod.settings, "vllm_model", "test-model")
+    monkeypatch.setattr(config_mod.settings, "vllm_api_key", "")
+
+    gateway = gw_mod.LLMGateway()
+    assert "vllm" in gateway._providers
+    assert gateway._active_provider_name() == "vllm"
+
+    def _wire(handler):
+        provider = gateway._providers["vllm"]
+        provider._client = _httpx.AsyncClient(
+            base_url="http://fake-vllm:8000",
+            transport=_httpx.MockTransport(handler),
+        )
+        return gateway
+
+    monkeypatch.setattr(gw_mod, "_gateway", None)
+    monkeypatch.setattr(gw_mod, "get_llm_gateway", lambda: gateway)
+
+    from app.services import agent_runner as agent_runner_mod
+    monkeypatch.setattr(agent_runner_mod, "_runner", None)
+    monkeypatch.setattr(
+        agent_runner_mod, "get_agent_runner",
+        lambda: agent_runner_mod.AgentRunner(gateway),
+    )
+
+    return _wire
+
+
+def _http_503_handler(request):
+    import httpx as _httpx
+    return _httpx.Response(503, text="upstream unavailable")
+
+
+def _connect_error_handler(request):
+    import httpx as _httpx
+    raise _httpx.ConnectError("connection refused", request=request)
+
+
+def test_concierge_real_provider_http_503_is_refunded_not_billed(
+    client, monkeypatch, _real_vllm_gateway
+):
+    """Auditor round-2 probe: `PROBE 1on1 agent=concierge http503 charged=1`.
+    The gateway's own `stream_chat` writes `meta["stream_error"]` on a
+    non-200 reply (`llm_gateway.py`'s `OpenAICompatibleProvider.stream_chat`)
+    — round 3's fix threads that same `meta` into `_stream_concierge`, which
+    round 2 never did."""
+    from app.core import config as config_mod
+    monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
+
+    _real_vllm_gateway(_http_503_handler)
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open_session(client, headers, agent_id="concierge")
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200, r.text
+    assert "AMI error" in r.text
+    assert balance_for(user_id)[0] == before, (
+        "Concierge must not bill for an HTTP-error-sentinel reply"
+    )
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 1
+
+
+def test_concierge_real_provider_connect_error_is_refunded_not_billed(
+    client, monkeypatch, _real_vllm_gateway
+):
+    """Auditor round-2 probe: `PROBE 1on1 agent=concierge connect_error
+    charged=1  tail: a scripted Concierge reply`. Before round 3,
+    `_stream_concierge`'s `except Exception` swallowed the transport error
+    and yielded a scripted fallback with no `stream_error` signal at all —
+    so the caller billed a real turn for a fallback the user never chose."""
+    from app.core import config as config_mod
+    monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
+
+    _real_vllm_gateway(_connect_error_handler)
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open_session(client, headers, agent_id="concierge")
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200, r.text
+    assert balance_for(user_id)[0] == before, (
+        "Concierge must not bill for a provider outage answered by the "
+        "scripted fallback reply"
+    )
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 1
+
+
+def test_concierge_real_provider_success_still_bills_normally(
+    client, monkeypatch, _real_vllm_gateway
+):
+    """Control: threading `meta` through must not turn a real, successful
+    Concierge reply into a false refund."""
+    from app.core import config as config_mod
+    monkeypatch.setattr(config_mod.settings, "one_on_one_credit_cost", 3)
+
+    def _ok_handler(request):
+        import httpx as _httpx
+        body = (
+            b'data: {"choices":[{"delta":{"content":"hello"}}]}\n\n'
+            b'data: [DONE]\n\n'
+        )
+        return _httpx.Response(
+            200, content=body,
+            headers={"content-type": "text/event-stream"},
+        )
+
+    _real_vllm_gateway(_ok_handler)
+
+    user_id, headers = _new_user()
+    before = balance_for(user_id)[0]
+    session_id = _open_session(client, headers, agent_id="concierge")
+
+    r = _send(client, headers, session_id)
+    assert r.status_code == 200, r.text
+    assert balance_for(user_id)[0] == before - 3
+    kinds = [e.event_type for e in _ledger(user_id)]
+    assert kinds.count("credits_spent") == 1
+    assert kinds.count("credits_refunded") == 0

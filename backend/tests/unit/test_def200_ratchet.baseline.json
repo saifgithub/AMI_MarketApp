@@ -6,7 +6,6 @@
     "auth.py::_bind_onboarding_session",
     "auth.py::magic_link_verify",
     "backtest_admin.py::start_backtest_room_run",
-    "brief.py::brief_message",
     "brief.py::brief_propose",
     "feedback.py::submit_bug_report",
     "mandate.py::audit_holdings",

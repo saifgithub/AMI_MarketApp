@@ -19,6 +19,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 from app.schemas import (
     AgentId,
@@ -137,7 +138,19 @@ async def brief_message(
     # wedges the cap this user shares with 1-on-1 (DEF201's exact shape).
     cost = brief_cost()
     try:
-        spend(current_user.id, cost, reason=f"brief:{req.session_id}")
+        # RETRO-SECURITY MAJOR-3 (round 3, extended): `spend()` is the same
+        # sync-session/row-lock/ledger-insert shape as `refund()` below, and
+        # was already running directly on this handler's event loop before
+        # this round touched the file. Fixing only `refund()` would have
+        # left this call exploiting the census's per-function (not
+        # per-callsite) `run_in_threadpool` check — the whole handler reads
+        # as "mitigated" the moment ANY call inside it (including the one in
+        # the nested `event_stream` closure) is threadpooled, silently
+        # masking this one. Wrapped for the same reason as `refund()`, not
+        # because the guard demanded it.
+        await run_in_threadpool(
+            spend, current_user.id, cost, reason=f"brief:{req.session_id}",
+        )
     except InsufficientCredits as e:
         agent_stream_concurrency_limit.release(concurrency_key)
         raise HTTPException(
@@ -194,9 +207,26 @@ async def brief_message(
             # user-visible wrong on a money path even at price 0 (the ledger
             # row persists regardless of price). Best-effort — a refund
             # failure must not mask the original stream outcome.
+            #
+            # RETRO-SECURITY MAJOR-3 (round 3): `refund()` opens a sync
+            # session and runs `SELECT ... FOR UPDATE` + an `UPDATE` + a
+            # ledger insert — real blocking DB I/O. Calling it directly here
+            # blocks the single uvicorn worker's event loop for every other
+            # request and every other open SSE stream (the DEF200/CR123
+            # class), and with RETRO-SECURITY's own row lock it can now also
+            # wait on any other holder of this user's row lock (e.g. a Room
+            # run spending from the threadpool) — worst exactly when the
+            # provider is failing and many streams hit this branch at once.
+            # `run_in_threadpool` moves it off the loop, same idiom as
+            # auth.py's DEF183 fix.
             if failed and cost > 0:
                 try:
-                    refund(current_user.id, cost, reason=f"brief_failed:{req.session_id}")
+                    await run_in_threadpool(
+                        refund,
+                        current_user.id,
+                        cost,
+                        reason=f"brief_failed:{req.session_id}",
+                    )
                 except Exception:  # pragma: no cover
                     pass
             yield sse_json("done", json.dumps({"chars": total}))
