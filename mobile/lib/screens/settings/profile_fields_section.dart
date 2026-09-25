@@ -99,12 +99,21 @@ class MandateChoiceRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(label, style: AmiTypography.body),
-            const Spacer(),
+            // DEF435 — same overflow class as `_RiskSlider`/`_DrawdownPicker`
+            // (settings_screen.dart), which this row generalises: `Spacer()`
+            // only redistributes LEFTOVER space, it does not shrink either
+            // `Text` sibling, so the longest labels ("Learning style") could
+            // outgrow the Row at a 1.3x text scale. `Expanded` + ellipsis
+            // lets the label give way instead.
+            Expanded(
+              child: Text(label,
+                  style: AmiTypography.body, overflow: TextOverflow.ellipsis),
+            ),
             Flexible(
               child: Text(
                 labelFor(options, value),
                 textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
               ),
             ),
