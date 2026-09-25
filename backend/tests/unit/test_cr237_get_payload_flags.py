@@ -81,3 +81,41 @@ def test_get_reports_refunded_true_for_a_failed_run(app, client):
     body = _get(client, app, token, _FakeRunner(run), run.id)
 
     assert body["refunded"] is True
+
+
+class _ListRunner(_FakeRunner):
+    def __init__(self, runs) -> None:
+        super().__init__(runs[0])
+        self._runs = runs
+
+    def list_runs_for_user(self, user_id, limit: int = 50):
+        return list(self._runs)
+
+
+def test_list_reports_refunded_per_run(app, client):
+    """CR237 round 3 (auditor U66 MINOR-3) — the list route sets `refunded`
+    through the same predicate as the single-run GET; removing that line
+    survived every round-2 test."""
+    user_id, token = _new_user()
+    outage = Verdict(
+        action=VerdictAction.NO_VERDICT,
+        reason=f"{PM_ROOM_INCOMPLETE_REASON} This Room wasn't charged.",
+        overridden_from_llm=True,
+    )
+    runs = [
+        _owned(_make_run(credit_cost=8, status=RoomStatus.COMPLETED,
+                         verdict=outage, refund_recorded=True), user_id),
+        _owned(_make_run(credit_cost=8, status=RoomStatus.COMPLETED,
+                         verdict=Verdict(action=VerdictAction.APPROVE, reason="ok")), user_id),
+        _owned(_make_run(credit_cost=8, status=RoomStatus.FAILED), user_id),
+    ]
+    app.dependency_overrides[get_room_runner] = lambda: _ListRunner(runs)
+    try:
+        r = client.get(
+            f"/v1/room/user/{user_id}", headers={"Authorization": f"Bearer {token}"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert r.status_code == 200, r.text
+    assert [row["refunded"] for row in r.json()] == [True, False, True]

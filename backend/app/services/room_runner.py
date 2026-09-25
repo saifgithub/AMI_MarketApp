@@ -33,6 +33,7 @@ Spec: docs/initial_specs/02_agents/convene_the_room.md
 from __future__ import annotations
 
 import asyncio
+import json
 import random
 import re
 import zlib
@@ -81,6 +82,7 @@ from app.services import (
 )
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
+from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
@@ -4345,10 +4347,15 @@ def _build_cio_context_snapshot(
 ) -> dict[str, Any]:
     """CR237 — everything `retry_cio_step` needs that only the ORIGINAL run's
     desk phases produced. Written once, only on a CIO-outage PASS (see the
-    call site in `run()`). JSON-safe: every value is a plain str/float/int/
-    list or the `profile` dict itself (already JSON-safe — it round-trips
-    through `RoomRun.verdict.sheet_state`'s `dict(profile["field_state"])`
-    copy elsewhere in this file).
+    call site in `run()`).
+
+    CR237 round 3 (auditor U66 MAJOR-B) — `profile` is NOT JSON-native: it
+    carries `LiveHeadline` NamedTuples (`news_headlines`) and frozen
+    dataclasses (`dividend_growth`, `buyback_price`). It is stored through
+    `encode_profile`, which tags those so `_rebuild_ctx_from_snapshot` gets
+    the same types back. Raises (`TypeError`/`ValueError`) when any value
+    has no exact JSON form, including a non-finite trader level; the caller
+    then stores no snapshot and the run is simply not offered a retry.
     """
     snapshot: dict[str, Any] = {
         field_name: getattr(ctx, field_name)
@@ -4357,7 +4364,8 @@ def _build_cio_context_snapshot(
     snapshot["ticker"] = ctx.ticker
     snapshot["withheld"] = [a.value for a in ctx.withheld]
     snapshot["scripted_turns"] = [a.value for a in ctx.scripted_turns]
-    snapshot["profile"] = profile
+    snapshot["profile"] = encode_profile(profile)
+    json.dumps(snapshot, allow_nan=False)
     return snapshot
 
 
@@ -4410,7 +4418,7 @@ def _rebuild_ctx_from_snapshot(
         risk_trade_open_timestamps=risk_trade_open_timestamps,
         risk_existing_open_risk_pct=risk_existing_open_risk_pct,
         withheld=tuple(AgentId(v) for v in snapshot["withheld"]),
-        profile=snapshot["profile"],
+        profile=decode_profile(snapshot["profile"]),
     )
     for field_name in _CIO_SNAPSHOT_SCALAR_FIELDS:
         setattr(ctx, field_name, snapshot[field_name])
@@ -6740,33 +6748,69 @@ class RoomRunner:
                     # docstring). Set only on a SUCCESSFUL refund, matching
                     # the log line right below.
                     run.refund_recorded = True
-                    # DEF432 MINOR-1 — the "wasn't charged" sentence is
-                    # appended to the verdict's OWN reason only NOW, after
-                    # `refund()` has actually returned, never at verdict-
-                    # construction time. `run.verdict.reason` at this point
-                    # is exactly what `_run_cio_step` built — the outage
-                    # sentinel prose with no charge claim attached.
-                    run.verdict = run.verdict.model_copy(update={
-                        "reason": f"{run.verdict.reason} {_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}",
-                    })
-                    # CR237 — snapshot the pre-CIO desk-phase context ONLY on
-                    # the DEF059 outage PASS (`is_llm_outage_verdict`), the
-                    # one case "Ask the CIO again" can retry. The R51 partial-
-                    # outage NO_VERDICT is also refunded here but is NOT
-                    # retryable (too few live desks to re-argue from — the
-                    # user's only offer there is reconvene), so it gets no
-                    # snapshot, same as every other refunded shape.
-                    if is_llm_outage_verdict(_outage_verdict_dict):
-                        run.cio_context_snapshot = _build_cio_context_snapshot(
-                            ctx, profile,
-                        )
-                    _persist_run(run)
                     logger.info(
                         "room_outage_refunded",
                         run_id=str(run_id),
                         ticker=ticker,
                         credits=run.credit_cost,
                     )
+                    # CR237 round 3 (auditor U66 MAJOR-A) — the refund has
+                    # already happened, so nothing below may raise into the
+                    # outer `except Exception`: that handler marks the run
+                    # FAILED and replaces the user's verdict with an error
+                    # (and, before its own `refund_recorded` guard, refunded
+                    # a second time — measured: spent 8, refunded 16).
+                    try:
+                        # DEF432 MINOR-1 — the "wasn't charged" sentence is
+                        # appended to the verdict's OWN reason only NOW, after
+                        # `refund()` has actually returned, never at verdict-
+                        # construction time. `run.verdict.reason` at this
+                        # point is exactly what `_run_cio_step` built — the
+                        # outage sentinel prose with no charge claim attached.
+                        run.verdict = run.verdict.model_copy(update={
+                            "reason": f"{run.verdict.reason} {_ROOM_OUTAGE_NOT_CHARGED_SUFFIX}",
+                        })
+                        # CR237 — snapshot the pre-CIO desk-phase context ONLY
+                        # on the DEF059 outage PASS (`is_llm_outage_verdict`),
+                        # the one case "Ask the CIO again" can retry. The R51
+                        # partial-outage NO_VERDICT is also refunded here but
+                        # is NOT retryable (too few live desks to re-argue
+                        # from — the user's only offer there is reconvene), so
+                        # it gets no snapshot, same as every other refunded
+                        # shape. A snapshot that cannot be encoded is logged
+                        # and left out: the refund must still be recorded.
+                        if is_llm_outage_verdict(_outage_verdict_dict):
+                            try:
+                                run.cio_context_snapshot = _build_cio_context_snapshot(
+                                    ctx, profile,
+                                )
+                            except Exception:
+                                logger.exception(
+                                    "room_cio_snapshot_unencodable",
+                                    run_id=str(run_id),
+                                    detail="no 'Ask the CIO again' offer for this run",
+                                )
+                        # One re-attempt: a transient DB error here would
+                        # leave the row reading "not refunded" while the
+                        # ledger says it was.
+                        try:
+                            _persist_run(run)
+                        except Exception:
+                            logger.exception(
+                                "room_outage_refund_persist_retry", run_id=str(run_id),
+                            )
+                            _persist_run(run)
+                    except Exception:
+                        logger.exception(
+                            "room_outage_refund_bookkeeping_failed",
+                            run_id=str(run_id),
+                            credits=run.credit_cost,
+                            detail=(
+                                "credits WERE refunded (ledger row written); the "
+                                "run row may still read refund_recorded=False — "
+                                "reconcile against subscription_events"
+                            ),
+                        )
             # CR237 round 2 — the outage-shaped verdict's ONE `verdict` event
             # (CR219 R51: a Room emits exactly one), held back by
             # `_run_cio_step` so it streams only now, after the refund
@@ -6920,23 +6964,38 @@ class RoomRunner:
             # give the credits back — otherwise a bad deploy silently eats a
             # Floor Pass user's entire monthly allowance in one tap. Refund is
             # best-effort: a failure here must not mask the original error.
-            try:
-                refund(user_id, run.credit_cost, reason=f"room_failed:{run_id}")
-            except Exception as refund_exc:
+            #
+            # CR237 round 3 (auditor U66 MAJOR-A) — never a second refund. An
+            # exception raised after the DEF432 outage refund succeeded lands
+            # here too, and refunding `credit_cost` again minted a Room's worth
+            # of credits. Keyed on the ground-truth flag, so it holds for any
+            # line added to the try above later.
+            if run.refund_recorded:
                 logger.error(
-                    "room_refund_failed",
+                    "room_failed_after_refund",
                     run_id=str(run_id),
                     credits=run.credit_cost,
-                    error=str(refund_exc)[:200],
+                    detail="already refunded once; CR039 refund skipped",
                 )
             else:
-                # CR237 — same persisted marker as the DEF432 outage refund
-                # above, for the same reason: a failed run is not retryable
-                # today, but the flag should reflect ground truth uniformly
-                # rather than relying solely on `status == "failed"` staying
-                # true forever (it already does, this is belt-and-braces).
-                run.refund_recorded = True
-                _persist_run(run)
+                try:
+                    refund(user_id, run.credit_cost, reason=f"room_failed:{run_id}")
+                except Exception as refund_exc:
+                    logger.error(
+                        "room_refund_failed",
+                        run_id=str(run_id),
+                        credits=run.credit_cost,
+                        error=str(refund_exc)[:200],
+                    )
+                else:
+                    # CR237 — same persisted marker as the DEF432 outage
+                    # refund above, for the same reason: a failed run is not
+                    # retryable today, but the flag should reflect ground
+                    # truth uniformly rather than relying solely on
+                    # `status == "failed"` staying true forever (it already
+                    # does, this is belt-and-braces).
+                    run.refund_recorded = True
+                    _persist_run(run)
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
 
@@ -6978,6 +7037,17 @@ class RoomRunner:
         VERDICT phase (`phase`, `agent_token`, `agent_done`, `verdict`) plus
         a synthetic terminal event distinguishing "replaced with a real
         verdict" from "still down" — see the route for how these become SSE.
+
+        CR237 round 3 (auditor U66 MINOR-1) — unlike `run()`, this runs
+        inside the SSE response, not a detached pump, so a client disconnect
+        stops it at the next yield. That is safe because of the ORDER: the
+        `verdict` event is the verdict already persisted (and, on success,
+        already banked and journalled), streamed only after that. A drop
+        before it leaves the row exactly as it was (still the outage PASS,
+        still retryable, no credits moved; only the CIO call is wasted). A
+        drop at or after it changes nothing the client has not been shown.
+        The still-down branch streams the ORIGINAL verdict it restores, so
+        the card and the row agree (MINOR-2).
         """
         if run_id in self._retrying_runs:
             yield RoomEvent(
@@ -7125,6 +7195,11 @@ class RoomRunner:
                 char_delay_max=_CHAR_DELAY_MAX,
                 agent_timeout_s=_AGENT_LLM_TIMEOUT_S,
             ):
+                # CR237 round 3 (auditor U66 MINOR-1/MINOR-2) — the step's own
+                # verdict event is held. The retry streams the verdict it
+                # PERSISTED, and only after persisting it (see the docstring).
+                if ev.kind == "verdict":
+                    continue
                 yield ev
 
             still_down = is_llm_outage_verdict(
@@ -7146,6 +7221,8 @@ class RoomRunner:
                 # the same age window.
                 _persist_run(run)
                 logger.info("room_cio_retry_still_down", run_id=str(run_id))
+                if run.verdict is not None:
+                    yield RoomEvent(kind="verdict", run_id=run_id, verdict=run.verdict)
                 yield RoomEvent(
                     kind="error", run_id=run_id,
                     text=(
@@ -7223,6 +7300,7 @@ class RoomRunner:
                     "room_cio_retry_journal_failed",
                     run_id=str(run_id), error=str(exc)[:200],
                 )
+            yield RoomEvent(kind="verdict", run_id=run_id, verdict=run.verdict)
         finally:
             self._retrying_runs.discard(run_id)
 

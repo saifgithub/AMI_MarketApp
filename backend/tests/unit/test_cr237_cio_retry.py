@@ -660,12 +660,10 @@ def test_retry_still_down_keeps_outage_pass_no_journal_change_told_plainly():
 
     assert len(errors) == 1
     assert "unreachable" in errors[0].text.lower()
-    # `_run_cio_step` (shared with `run()`) always yields its own assembled
-    # verdict at the end of the CIO's turn, BEFORE `retry_cio_step`'s
-    # still-down check runs — so a still-down retry emits exactly ONE
-    # verdict event (the outage-shaped one, unchanged from the original run)
-    # plus the error event above; it does NOT emit a second verdict or
-    # silently drop the event entirely.
+    # A still-down retry emits exactly ONE verdict event plus the error event
+    # above. Since round 3 (U66 MINOR-2) that event is the ORIGINAL outage
+    # verdict the row keeps, not the fresh one `_run_cio_step` assembled
+    # (which lacked "wasn't charged" and the R60 stamps).
     assert len(verdicts) == 1
     assert is_llm_outage_verdict(verdicts[0].verdict.model_dump())
 
@@ -1289,3 +1287,381 @@ def test_minor1_retry_refuses_without_a_live_provider(monkeypatch):
     assert after.cio_context_snapshot is not None, "still retryable later"
     assert _row(run_id).verdict == row_before
     assert balance_for(user_id)[0] == before
+
+
+# ── round 3 — auditor U66 findings ───────────────────────────────────────────
+
+
+def _ledger_moves(user_id) -> tuple[list[str], list[str]]:
+    """(spent notes, refunded notes) from `subscription_events` — the ledger
+    the auditor measured, not the balance column alone."""
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import SubscriptionEventRow
+
+    with get_session() as s:
+        rows = list(s.execute(
+            select(SubscriptionEventRow)
+            .where(SubscriptionEventRow.user_id == user_id)
+            .order_by(SubscriptionEventRow.created_at)
+        ).scalars())
+    spent = [r.note for r in rows if r.event_type == "credits_spent"]
+    refunded = [r.note for r in rows if r.event_type == "credits_refunded"]
+    return spent, refunded
+
+
+def _run_events(runner: RoomRunner, run_id, user_id, mandate, **kw):
+    async def go():
+        return [ev async for ev in runner.run(
+            run_id=run_id, user_id=user_id, ticker=TICKER, mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0, credit_cost=CREDIT_COST, **kw,
+        )]
+    return asyncio.run(go())
+
+
+def _charged_outage_setup():
+    user_id = _billed_user()
+    before = balance_for(user_id)[0]
+    spend(user_id, CREDIT_COST, reason="room:AAPL:test-charge")
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    return user_id, before, mandate
+
+
+def _assert_one_spend_one_refund(user_id, before):
+    spent, refunded = _ledger_moves(user_id)
+    assert len(spent) == 1, spent
+    assert len(refunded) == 1, f"refunded more than once: {refunded}"
+    assert refunded[0].startswith("room_outage_no_verdict:")
+    assert balance_for(user_id)[0] == before, "ledger does not net to zero"
+
+
+def _persist_failing_after_refund(monkeypatch, times: int) -> dict:
+    """P5b: `_persist_run` raises for the first `times` calls made once the
+    outage refund has been recorded (a DB drop right after `refund()`)."""
+    real_persist = room_runner_mod._persist_run
+    state = {"left": times, "raised": 0}
+
+    def _flaky(run):
+        if run.refund_recorded and state["left"] > 0:
+            state["left"] -= 1
+            state["raised"] += 1
+            raise RuntimeError("db connection dropped")
+        return real_persist(run)
+
+    monkeypatch.setattr(room_runner_mod, "_persist_run", _flaky)
+    return state
+
+
+def test_major_a_a_db_drop_after_the_outage_refund_refunds_once_and_delivers_the_verdict(
+    monkeypatch,
+):
+    """MAJOR-A, P5b shape. Measured before the fix: spent 8, refunded 16,
+    status failed, the verdict event never sent."""
+    user_id, before, mandate = _charged_outage_setup()
+    state = _persist_failing_after_refund(monkeypatch, times=1)
+    runner, run_id = RoomRunner(llm=_CioDownGateway()), uuid4()  # type: ignore[arg-type]
+
+    events = _run_events(runner, run_id, user_id, mandate)
+
+    assert state["raised"] == 1, "guard: the injected fault fired"
+    _assert_one_spend_one_refund(user_id, before)
+    verdicts = [ev for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1
+    assert "wasn't charged" in verdicts[0].verdict.reason
+    assert [ev for ev in events if ev.kind == "error"] == []
+    row = _row(run_id)
+    assert row.status == "completed"
+    assert row.refund_recorded is True, "the re-attempt recorded the refund"
+    run = runner.get_run(run_id)
+    assert run_was_refunded(run) is True
+    assert cio_retry_eligible(
+        run, requesting_user_id=user_id, current_mandate_version=mandate.version,
+    )
+
+
+def test_major_a_a_persistent_db_fault_after_the_refund_still_delivers_the_verdict(
+    monkeypatch,
+):
+    """Both the write and its re-attempt fail. The refund stands (once), the
+    user still gets the verdict, nothing reaches the CR039 failure path."""
+    user_id, before, mandate = _charged_outage_setup()
+    state = _persist_failing_after_refund(monkeypatch, times=2)
+    runner, run_id = RoomRunner(llm=_CioDownGateway()), uuid4()  # type: ignore[arg-type]
+
+    events = _run_events(runner, run_id, user_id, mandate)
+
+    assert state["raised"] == 2
+    _assert_one_spend_one_refund(user_id, before)
+    verdicts = [ev for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1
+    assert "wasn't charged" in verdicts[0].verdict.reason
+    assert [ev for ev in events if ev.kind == "error"] == []
+    assert _row(run_id).status == "completed"
+
+
+def test_major_a_a_snapshot_that_cannot_be_built_costs_the_retry_not_a_second_refund(
+    monkeypatch,
+):
+    """MAJOR-A, P5 shape: `_build_cio_context_snapshot` raises after the
+    refund. The refund is still recorded; the run is simply not retryable."""
+    user_id, before, mandate = _charged_outage_setup()
+
+    def _boom(ctx, profile):
+        raise TypeError("Object of type X is not JSON serializable")
+
+    monkeypatch.setattr(room_runner_mod, "_build_cio_context_snapshot", _boom)
+    runner, run_id = RoomRunner(llm=_CioDownGateway()), uuid4()  # type: ignore[arg-type]
+
+    events = _run_events(runner, run_id, user_id, mandate)
+
+    _assert_one_spend_one_refund(user_id, before)
+    verdicts = [ev for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1 and "wasn't charged" in verdicts[0].verdict.reason
+    assert [ev for ev in events if ev.kind == "error"] == []
+    run = runner.get_run(run_id)
+    assert run.status == RoomStatus.COMPLETED
+    assert run.refund_recorded is True
+    assert run.cio_context_snapshot is None
+    assert not cio_retry_eligible(
+        run, requesting_user_id=user_id, current_mandate_version=mandate.version,
+    )
+
+
+def test_major_a_an_exception_after_the_refund_bookkeeping_never_refunds_again(
+    monkeypatch,
+):
+    """The structural guard: ANY exception after a successful outage refund
+    (here the calibration-ledger bank call, a line outside the bookkeeping
+    try) reaches CR039's `except Exception`, which must not refund again."""
+    user_id, before, mandate = _charged_outage_setup()
+
+    def _bank_raises(**_kw):
+        raise RuntimeError("verdict_outcomes unavailable")
+
+    monkeypatch.setattr(room_runner_mod, "bank_verdict_outcome", _bank_raises)
+    runner, run_id = RoomRunner(llm=_CioDownGateway()), uuid4()  # type: ignore[arg-type]
+
+    events = _run_events(runner, run_id, user_id, mandate)
+
+    _assert_one_spend_one_refund(user_id, before)
+    assert len([ev for ev in events if ev.kind == "verdict"]) == 1
+    assert len([ev for ev in events if ev.kind == "error"]) == 1
+    run = runner.get_run(run_id)
+    assert run.status == RoomStatus.FAILED
+    assert run_was_refunded(run) is True
+
+
+def _dividend_growth():
+    from datetime import date
+
+    from app.services.dividend_growth import DividendGrowth
+
+    return DividendGrowth(
+        first_year=2020, last_year=2024,
+        rate_by_year=((2020, 0.82), (2024, 1.0)),
+        total_by_year=((2020, 3.28), (2024, 4.0)),
+        cagr_pct=5.1, raised_years=4, comparisons=4,
+        payments_per_year=((2020, 4), (2024, 4)),
+        specials=((date(2023, 5, 12), 0.5),),
+        partial_year=None, truncated_by_gap=False,
+    )
+
+
+def _buyback_price():
+    from datetime import date
+
+    from app.services.buyback_price import BuybackPrice
+
+    return BuybackPrice(
+        avg_price=187.4, dollars=9.1e10, shares=4.86e8,
+        period_start=date(2024, 10, 1), period_end=date(2025, 9, 30), quarters=4,
+    )
+
+
+class _RecordingCioGateway(_CioDownThenApproveGateway):
+    """Records the CIO's messages on every call, so the original outage run's
+    prompt can be compared with the retry's."""
+
+    def __init__(self, pm_json: str):
+        super().__init__(pm_json)
+        self.cio_messages: list = []
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        if "speak as the chief investment officer" in system_prompt.lower():
+            self.cio_messages.append(system_prompt + repr(messages))
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages,
+            model_tier=model_tier, locale=locale, max_tokens=max_tokens,
+        ):
+            yield chunk
+
+
+def test_major_b_retry_after_a_live_feed_of_several_headlines_and_capital_returns(
+    monkeypatch,
+):
+    """MAJOR-B, P6 shape. A LIVE news feed puts `LiveHeadline` NamedTuples in
+    the profile; a dividend payer adds the `DividendGrowth`/`BuybackPrice`
+    dataclasses. Before the fix the headlines came back from the JSON column
+    as lists (retry: `AttributeError: 'list' object has no attribute
+    'title'`) and the dataclasses could not be written at all (the snapshot
+    write raised straight into MAJOR-A). The snapshot here goes through the
+    real JSON column; the retry's CIO must see the same prompt the original
+    CIO was given."""
+    from app.services.news_context import LiveDataState, LiveHeadline, NewsFeed
+
+    monkeypatch.setattr(room_runner_mod.settings, "room_dividend_growth_enabled", True)
+    monkeypatch.setattr(room_runner_mod.settings, "room_buyback_price_enabled", True)
+    real_profile = room_runner_mod._profile_for_ticker
+
+    def _dividend_payer(*a, **kw):
+        profile = real_profile(*a, **kw)
+        profile["dividend_growth"] = _dividend_growth()
+        profile["buyback_price"] = _buyback_price()
+        profile["field_state"]["dividend_growth"] = LiveDataState.LIVE.value
+        profile["field_state"]["buyback_price"] = LiveDataState.LIVE.value
+        return profile
+
+    monkeypatch.setattr(room_runner_mod, "_profile_for_ticker", _dividend_payer)
+    headlines = tuple(
+        LiveHeadline(
+            title=f"Apple headline {i}", link=f"https://example.com/{i}",
+            publisher="Reuters", published_at=1_758_000_000 + i,
+            sentiment=None, source="yfinance", summary=f"What happened, part {i}.",
+        )
+        for i in range(3)
+    )
+    user_id, before, mandate = _charged_outage_setup()
+    gateway = _RecordingCioGateway(_pm_json(action="APPROVE"))
+    runner, run_id = RoomRunner(llm=gateway), uuid4()  # type: ignore[arg-type]
+
+    _run_events(
+        runner, run_id, user_id, mandate,
+        news_feed=NewsFeed(LiveDataState.LIVE, headlines),
+    )
+
+    _assert_one_spend_one_refund(user_id, before)
+    stored = _row(run_id).cio_context_snapshot
+    assert stored is not None, "the snapshot was written"
+    import json as _json
+    _json.dumps(stored, allow_nan=False)
+    original_prompt = gateway.cio_messages[0]
+    assert "Apple headline 2" in original_prompt, "guard: headlines reach the CIO"
+    assert "special dividend excluded" in original_prompt, "guard: dividend line"
+    assert "$187.24 per share" in original_prompt, "guard: buyback line"
+
+    gateway.down = False
+    gateway.cio_messages.clear()
+    events = _retry(runner, run_id, user_id)
+
+    assert [ev for ev in events if ev.kind == "error"] == []
+    run = runner.get_run(run_id)
+    assert run.verdict.action == VerdictAction.APPROVE
+    assert run.cio_retried is True
+    assert gateway.cio_messages[0] == original_prompt
+    _assert_one_spend_one_refund(user_id, before)
+
+
+def test_major_b_retry_route_ends_in_error_and_done_when_the_retry_raises(
+    monkeypatch,
+):
+    """MAJOR-B, second half: the route used to have no handler, so an
+    exception aborted the SSE body with no `error` and no `done`."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.room import CIO_RETRY_CRASHED_MESSAGE, get_room_runner
+    from app.api.room import router as room_router
+    from app.services.room_runner import RoomEvent
+    from tests.unit.test_cr236_room_done_credit_cost import _new_user
+
+    user_id, token = _new_user()
+    run = _bare_run(user_id=user_id, verdict=_outage_verdict(),
+                    cio_context_snapshot={"ticker": TICKER})
+
+    class _CrashingRunner:
+        def get_run(self, run_id):
+            return run
+
+        async def retry_cio_step(self, run_id, *, user_id):
+            yield RoomEvent(kind="phase", phase="VERDICT", run_id=run_id)
+            raise AttributeError("'list' object has no attribute 'title'")
+
+    app = FastAPI()
+    app.include_router(room_router)
+    app.dependency_overrides[get_room_runner] = lambda: _CrashingRunner()
+    r = TestClient(app).post(
+        f"/v1/room/runs/{run.id}/cio-retry",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert r.status_code == 200
+    lines = r.text.splitlines()
+    assert "event: phase" in lines
+    error_at = lines.index("event: error")
+    assert lines[error_at + 1] == f"data: {CIO_RETRY_CRASHED_MESSAGE}"
+    done_at = lines.index("event: done")
+    assert done_at > error_at
+    assert '"run_id"' in lines[done_at + 1]
+
+
+def test_minor1_a_drop_at_the_retry_verdict_leaves_the_row_already_holding_it():
+    """MINOR-1, P7 shape: the client closes the stream at the retry's
+    `verdict` event. The verdict it saw must already be the persisted one;
+    before the fix the row was still the outage PASS and still eligible."""
+    user_id, before, mandate = _charged_outage_setup()
+    gateway = _CioDownThenApproveGateway(_pm_json(action="APPROVE"))
+    runner, run_id = _run_outage_room(user_id, mandate, gateway)
+    gateway.down = False
+
+    async def drop_at_verdict():
+        gen = runner.retry_cio_step(run_id, user_id=user_id)
+        async for ev in gen:
+            if ev.kind == "verdict":
+                await gen.aclose()
+                return ev.verdict
+        return None
+
+    seen = asyncio.run(drop_at_verdict())
+
+    assert seen is not None and seen.action == VerdictAction.APPROVE
+    run = runner.get_run(run_id)
+    assert run.verdict == seen
+    assert run.cio_retried is True
+    assert not cio_retry_eligible(
+        run, requesting_user_id=user_id, current_mandate_version=mandate.version,
+    )
+    entry = get_journal_store().first_for_reference(user_id, EntryType.ROOM_RUN, run_id)
+    assert entry is not None and "APPROVE" in entry.summary.upper()
+    assert balance_for(user_id)[0] == before
+
+
+def test_minor2_a_still_down_retry_streams_exactly_the_verdict_it_keeps():
+    """MINOR-2: the streamed verdict used to be the fresh outage PASS (no
+    "wasn't charged", no R60 stamps) while the row kept the original."""
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    runner, run_id = _run_outage_room(user_id, mandate, _AlwaysDownGateway())
+
+    events = _retry(runner, run_id, user_id)
+
+    verdicts = [ev.verdict for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1
+    assert verdicts[0] == runner.get_run(run_id).verdict
+    assert "wasn't charged" in verdicts[0].reason
+
+
+def test_minor2_a_successful_retry_streams_exactly_the_verdict_it_persisted():
+    user_id = _billed_user()
+    mandate = _seed_stored_mandate(user_id, blocklist=None)
+    gateway = _CioDownThenApproveGateway(_pm_json(action="APPROVE"))
+    runner, run_id = _run_outage_room(user_id, mandate, gateway)
+    gateway.down = False
+
+    events = _retry(runner, run_id, user_id)
+
+    verdicts = [ev.verdict for ev in events if ev.kind == "verdict"]
+    assert len(verdicts) == 1
+    assert verdicts[0] == runner.get_run(run_id).verdict
+    assert verdicts[0].sheet_state, "the streamed verdict carries the R60 stamps"
