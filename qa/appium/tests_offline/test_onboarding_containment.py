@@ -38,7 +38,11 @@ from helpers import onboarding, shell
 
 class FakeDriver:
     def __init__(self, *, state=onboarding._FOREGROUND, caps=None, package="com.x"):
-        self.capabilities = caps if caps is not None else {"appPackage": "ai.agenticmarketintel.ami_trade"}
+        self.capabilities = (
+            caps
+            if caps is not None
+            else {"platformName": "Android", "appPackage": "ai.agenticmarketintel.ami_trade"}
+        )
         self._state = state
         self.current_package = package
 
@@ -75,21 +79,45 @@ def test_the_app_under_test_is_read_from_the_live_session():
 def test_only_foreground_counts_as_still_in_the_app(state, foreground):
     """Background is exactly the state the dialer incident produced — the app
     was alive the whole time (`pidof` returned a pid), just not in front. An
-    is-it-running check would have called that healthy."""
+    is-it-running check would have called that healthy.
+
+    DEF366 (AT:R74, cd597afb) replaced the old bool-returning
+    `_is_app_foreground` with `app_foreground_state`, which answers one of
+    three strings (FOREGROUND / NOT_FOREGROUND / UNKNOWN) rather than True/
+    False — see `test_an_unanswerable_state_query_...` below for why the
+    third state exists. The guarantee this test pins is unchanged: of the
+    five real Appium app-state values, only RUNNING_IN_FOREGROUND (4) counts
+    as "still in the app"."""
     driver = FakeDriver(state=state)
-    assert onboarding._is_app_foreground(driver, "ai.agenticmarketintel.ami_trade") is foreground
+    result = onboarding.app_foreground_state(driver, "ai.agenticmarketintel.ami_trade")
+    assert (result == onboarding.FOREGROUND) is foreground
 
 
-def test_an_unanswerable_state_query_assumes_we_are_home():
-    """The one place this must NOT degrade loudly.
+def test_an_unanswerable_state_query_is_its_own_state_not_a_silent_home():
+    """DEF366 (AT:R74, cd597afb) deliberately reversed the policy this test
+    used to pin.
 
-    A false escape relaunches the app mid-interview and throws away every
-    answer already given, turning a working run into a failing one. The cost is
-    asymmetric: a missed escape wastes the budget of a run that was going to
-    fail anyway, a false escape breaks a run that was going to pass. So an
-    unknown answer means carry on."""
+    The old code was `try: return query() == 4; except: return True` — an
+    unanswerable query and a genuinely-foregrounded app produced the same
+    `True`. That collapse is what burned two rounds of diagnosis on DEF362:
+    a simulator sat at the iOS home screen for its full 480s budget, the
+    detector could not observe it, reported fine, and the walk blamed the
+    app instead of the harness that had gone blind.
+
+    The fix (`helpers/foreground.py::resolve`) is a three-state function:
+    an unanswerable query resolves to `UNKNOWN`, which is neither
+    `FOREGROUND` (the old silent-home behaviour) nor `NOT_FOREGROUND` (would
+    manufacture a false escape from a measurement that never happened — the
+    DEF059 shape pointing the other way). `ensure_onboarded` counts UNKNOWN
+    separately (`blind`, not `escapes`) and eventually raises its own
+    diagnostic rather than ever reporting on onboarding it could not see.
+    See backend/tests/unit/test_def366_foreground_detector.py for the
+    resolver-level guard this mirrors at the onboarding-helper boundary."""
     driver = FakeDriver(state=RuntimeError("driver does not implement this"))
-    assert onboarding._is_app_foreground(driver, "whatever") is True
+    result = onboarding.app_foreground_state(driver, "whatever")
+    assert result == onboarding.UNKNOWN
+    assert result != onboarding.FOREGROUND
+    assert result != onboarding.NOT_FOREGROUND
 
 
 class ShellDriver:
@@ -347,7 +375,16 @@ def test_an_empty_candidate_list_still_raises():
 
 class WalkChip:
     """A tappable iOS element as the walk sees one: string via `label`,
-    geometry via rect, WDA's 500 on anything else."""
+    geometry via rect, a real `type` (DEF374's `_selectable` reads it), WDA's
+    500 on anything else.
+
+    `type` answering `"XCUIElementTypeButton"` — rather than `None` — is
+    load-bearing since DEF374 (7636e7f6): `_selectable` reads
+    `element.get_attribute("type") or element.get_attribute("class") or ""`,
+    and `"class"` is not in WDA's answerable set, so a fake that left `type`
+    unmodelled turned every candidate's attribute read into an unhandled
+    HTTP-500 that `_selectable`'s `except Exception: continue` swallowed —
+    silently emptying the pool it was supposed to filter, not exercising it."""
 
     def __init__(self, label, y, on_click=None):
         self._label, self._y, self._on_click = label, y, on_click
@@ -361,7 +398,11 @@ class WalkChip:
     def get_attribute(self, name):
         if name not in _WDA_ATTRIBUTES:
             raise WebDriverException(f"HTTP 500: WDA has no attribute {name!r}")
-        return self._label if name == "label" else None
+        if name == "label":
+            return self._label
+        if name == "type":
+            return "XCUIElementTypeButton"
+        return None
 
     def click(self):
         self.taps += 1
@@ -374,7 +415,25 @@ class KeyboardedInterviewDriver:
 
     The keyboard's Dictate key is the bottom-most labelled control, the live
     chip sits above it, and the shell appears only once the CHIP is tapped. A
-    walk that does not dismiss the keyboard taps Dictate until its budget dies."""
+    walk that does not dismiss the keyboard taps Dictate until its budget dies.
+
+    DEF374 (AT:R74, 7636e7f6) added a second, distinct query this fake must
+    also answer: `helpers.onboarding._keyboard_frame` looks up
+    `type == "XCUIElementTypeKeyboard"` specifically, separately from the
+    interactive-elements predicate (which OR-lists Button/Link/TextField/
+    Switch — see `locators._IOS_INTERACTIVE_TYPES` — and never mentions
+    "Keyboard"). The two queries share the substring "XCUIElementType", so a
+    fake that branches on that substring alone answers both with the same
+    [chip, dictate] list — including when asked for the keyboard's own frame,
+    which then makes the chip (at y=500) register as sitting AT OR BELOW its
+    own rect's top edge and `_selectable` excludes it as "occluded by the
+    keyboard". That was a fixture gap, not a real regression: it went
+    unnoticed because DEF374 never touched this test file when it added
+    `_keyboard_frame`. Modelling a real keyboard rect separately is what lets
+    `_selectable` do its real job — keep the chip (above the keyboard),
+    drop Dictate (inside/below it) — instead of failing shut."""
+
+    _KEYBOARD_RECT = {"x": 0, "y": 700, "width": 320, "height": 300}
 
     def __init__(self):
         self.capabilities = {"platformName": "iOS", "bundleId": "ai.agenticmarketintel.amiTrade"}
@@ -403,9 +462,16 @@ class KeyboardedInterviewDriver:
     def find_elements(self, by, value):
         if by == AppiumBy.ACCESSIBILITY_ID:
             return [object()] if (self.shell_up and value == NAV_IDS["Floor"]) else []
+        if "XCUIElementTypeKeyboard" in value:  # helpers.onboarding._keyboard_frame
+            return [_FakeKeyboard(self._KEYBOARD_RECT)] if self.keyboard_shown else []
         if "XCUIElementType" in value:  # the interactive-elements predicate
             return [self.chip, self.dictate] if self.keyboard_shown else [self.chip]
         return []  # text probes: no SKIP FOR NOW / READBACK / error banner on this turn
+
+
+class _FakeKeyboard:
+    def __init__(self, rect):
+        self.rect = rect
 
 
 def test_the_walk_dismisses_the_keyboard_instead_of_typing_on_it(monkeypatch):
@@ -434,10 +500,20 @@ def test_waiting_for_the_shell_gives_up_rather_than_hanging():
 def test_the_diagnostic_names_the_intruder_and_survives_not_knowing_it():
     """`current_package` is Android-only. It is worth reporting where it works
     — "the dialer" is a diagnosis, "not our app" is a puzzle — and must not
-    break the escape path where it does not."""
+    break the escape path where it does not.
+
+    DEF366 (AT:R74, cd597afb) made `_foreground_package` platform-dispatched
+    (`is_ios(driver)` first, since iOS has no `current_package` equivalent at
+    all — see `test_the_ios_escape_diagnostic_names_something` in the backend
+    suite). `NoPackage` below has to declare Android capabilities so the
+    dispatch actually reaches `current_package` and exercises the case this
+    test is about; without it, `is_ios()`'s own `driver.capabilities` lookup
+    would raise first and the assertion would pass for the wrong reason."""
     assert onboarding._foreground_package(FakeDriver(package="com.android.dialer")) == "com.android.dialer"
 
     class NoPackage:
+        capabilities = {"platformName": "Android", "appPackage": "x"}
+
         @property
         def current_package(self):
             raise RuntimeError("unsupported on this platform")
