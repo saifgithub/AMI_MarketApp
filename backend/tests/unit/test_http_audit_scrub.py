@@ -245,3 +245,219 @@ def test_an_unrelated_routes_account_key_is_not_swept() -> None:
     body = recorded[0]["request_body"]
     assert b"[REDACTED]" not in body
     assert b"checking-1234" in body
+
+
+# ── DEF430 round 2 MAJOR-A ───────────────────────────────────────────────
+#
+# The request-side fix above only redacts the `account` KEY on the request.
+# `preview_trade`'s RESPONSE also echoes part of the same Alpaca paper
+# snapshot: `cash_available` (the account's own cash) and `held_quantity`
+# (a held position's own size), and the same numbers again inside free-text
+# `violations` strings (e.g. "insufficient cash: need $X, have $50000.00";
+# a concentration % next to the notional). Per-key redaction can't reach
+# text embedded in a string value, so the fix goes dark on the WHOLE
+# response body instead — same mechanism `SCRUB_PATHS` already uses for
+# auth routes — but only when the matching REQUEST actually carried
+# `account` (a preview with no `account` is AMI's own sim and must keep
+# its normal, unredacted response).
+
+
+def test_sim_preview_snapshot_response_is_fully_redacted_buy() -> None:
+    """A snapshot-path buy preview: the stored RESPONSE body must contain
+    no `50000` (the account's cash), no `cash_available`, and no
+    `held_quantity` key."""
+    client = TestClient(_sim_preview_app(), raise_server_exceptions=False)
+    user_id, token = _new_user_and_token()
+
+    r = client.post(
+        "/v1/sim/preview",
+        json={
+            "user_id": str(user_id),
+            "ticker": "NVDA",
+            "side": "buy",
+            "quantity": 1,
+            "order_type": "market",
+            "mandate_override": _permissive_mandate(),
+            "account": _REAL_MANDATE_SNAPSHOT,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+    # The real, unredacted response DOES carry the account's cash — proves
+    # the test would fail without the fix (not a false negative).
+    assert "cash_available" in r.text
+
+    with get_session() as s:
+        row = s.execute(
+            select(HTTPAuditRow)
+            .where(HTTPAuditRow.path == "/v1/sim/preview")
+            .order_by(HTTPAuditRow.id.desc())
+        ).scalars().first()
+
+    assert row.response_body == "[REDACTED]"
+    assert "50000" not in row.response_body
+    assert "cash_available" not in row.response_body
+    assert "held_quantity" not in row.response_body
+
+
+def test_sim_preview_snapshot_response_is_fully_redacted_sell_of_held_position() -> None:
+    """A snapshot-path sell of an already-held ticker: the response echoes
+    `held_quantity` for that position — must not survive in the stored row."""
+    client = TestClient(_sim_preview_app(), raise_server_exceptions=False)
+    user_id, token = _new_user_and_token()
+
+    held_snapshot = {
+        "kind": "alpaca_paper",
+        "equity": 104321.5,
+        "cash": 50000.0,
+        "positions": [
+            {"ticker": "NVDA", "qty": 12, "market_value": 2100.0},
+        ],
+    }
+
+    r = client.post(
+        "/v1/sim/preview",
+        json={
+            "user_id": str(user_id),
+            "ticker": "NVDA",
+            "side": "sell",
+            "quantity": 5,
+            "order_type": "market",
+            "mandate_override": _permissive_mandate(),
+            "account": held_snapshot,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+    assert "held_quantity" in r.text
+
+    with get_session() as s:
+        row = s.execute(
+            select(HTTPAuditRow)
+            .where(HTTPAuditRow.path == "/v1/sim/preview")
+            .order_by(HTTPAuditRow.id.desc())
+        ).scalars().first()
+
+    assert row.response_body == "[REDACTED]"
+    assert "held_quantity" not in row.response_body
+    assert "12" not in row.response_body or "[REDACTED]" == row.response_body
+
+
+def test_sim_preview_snapshot_response_is_fully_redacted_insufficient_cash() -> None:
+    """A snapshot-path buy sized past the account's cash: the refusal
+    violation TEXT carries `have $50000.00` — a per-key redaction can't
+    reach that, so the whole response must go dark."""
+    client = TestClient(_sim_preview_app(), raise_server_exceptions=False)
+    user_id, token = _new_user_and_token()
+
+    r = client.post(
+        "/v1/sim/preview",
+        json={
+            "user_id": str(user_id),
+            "ticker": "NVDA",
+            "side": "buy",
+            # Sized to blow well past $50000.0 cash at any plausible mark.
+            "quantity": 500000,
+            "order_type": "market",
+            "mandate_override": _permissive_mandate(),
+            "account": _REAL_MANDATE_SNAPSHOT,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+    assert "50000" in r.text  # unredacted response really does leak it
+
+    with get_session() as s:
+        row = s.execute(
+            select(HTTPAuditRow)
+            .where(HTTPAuditRow.path == "/v1/sim/preview")
+            .order_by(HTTPAuditRow.id.desc())
+        ).scalars().first()
+
+    assert row.response_body == "[REDACTED]"
+    assert "50000" not in row.response_body
+
+
+def test_sim_preview_without_account_keeps_normal_response() -> None:
+    """A preview with NO `account` key (AMI's own sim portfolio, not a
+    linked Alpaca account) must keep its response body exactly as before —
+    this fix must not blank every preview response, only the snapshot
+    path's."""
+    client = TestClient(_sim_preview_app(), raise_server_exceptions=False)
+    user_id, token = _new_user_and_token()
+
+    r = client.post(
+        "/v1/sim/preview",
+        json={
+            "user_id": str(user_id),
+            "ticker": "NVDA",
+            "side": "buy",
+            "quantity": 1,
+            "order_type": "market",
+            "mandate_override": _permissive_mandate(),
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+
+    with get_session() as s:
+        row = s.execute(
+            select(HTTPAuditRow)
+            .where(HTTPAuditRow.path == "/v1/sim/preview")
+            .order_by(HTTPAuditRow.id.desc())
+        ).scalars().first()
+
+    assert row.response_body != "[REDACTED]"
+    assert "cash_available" in row.response_body
+
+
+# ── DEF430 round 2 MINOR-A ────────────────────────────────────────────────
+#
+# `_PATH_SCOPED_PRIVATE_FIELDS.get(path)` / the new response-scrub table
+# above are exact dict lookups. A POST to `/v1/sim/preview/` (trailing
+# slash) 307-redirects at the route layer, but THIS middleware sees the
+# pre-redirect path, so without normalization the exact-match lookup misses
+# and stores the full snapshot on both the request and the response.
+
+
+def test_sim_preview_trailing_slash_request_is_still_redacted() -> None:
+    client = TestClient(_sim_preview_app(), raise_server_exceptions=False)
+    user_id, token = _new_user_and_token()
+
+    r = client.post(
+        "/v1/sim/preview/",
+        json={
+            "user_id": str(user_id),
+            "ticker": "NVDA",
+            "side": "buy",
+            "quantity": 1,
+            "order_type": "market",
+            "mandate_override": _permissive_mandate(),
+            "account": _REAL_MANDATE_SNAPSHOT,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+        follow_redirects=True,
+    )
+    assert r.status_code == 200, r.text
+
+    with get_session() as s:
+        rows = s.execute(
+            select(HTTPAuditRow)
+            .where(HTTPAuditRow.path.in_(["/v1/sim/preview", "/v1/sim/preview/"]))
+            .order_by(HTTPAuditRow.id.asc())
+        ).scalars().all()
+
+    # The 307 redirect itself is recorded too (no body); find the row that
+    # actually carried the POST body — the trailing-slash entry.
+    slash_rows = [row for row in rows if row.path == "/v1/sim/preview/"]
+    assert slash_rows, "expected the pre-redirect POST to be recorded under the trailing-slash path"
+    row = slash_rows[0]
+
+    assert row.request_body is not None
+    for leaked in ("104321.5", "50000.0", "MSFT", "2100.0"):
+        assert leaked not in row.request_body
+    assert '"equity"' not in row.request_body
+    assert '"cash"' not in row.request_body
+
+    if row.response_body is not None:
+        assert row.response_body == "[REDACTED]"
