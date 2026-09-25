@@ -11,6 +11,10 @@ closed), and slot 5 (C8 + C7) — §5 "Build status". That is **13 of the 49 ite
 merged behind flags that default False, so no user has seen any of them. Two flags are live on
 Alpha since 2026-09-10; the other eleven are OFF.
 
+**Round 5 (2026-09-25, §7.14):** every arm re-run on the current serve
+(`/models/qwen38-flash-next-abliterated-nvfp4`), with a flip list for Saiful: 7 FLIP (2 weak),
+4 KEEP OFF, 1 NEEDS DATA. Slots 6–9 moved to CR238 (proposed).
+
 **Measured:** §7 rounds 1–4 (round 3 = the slot-4 `dims` arm, §7.10: A2 answered, D2 unread;
 round 4 retired the demand-extinction endpoint, §7.9). **Slot 4's dimensional ingest DID run
 inside `ami_api_alpha`** — 146 of 150 filings, 2,736 `ami:` rows, resolved to the dollar against
@@ -1537,3 +1541,132 @@ move. The rank-limited "five things I lacked" ask is not a demand *measure*; it 
 item's satisfaction. §7.2's primary endpoint should be retired in favour of §7.3's citation rate
 for any future slot, and the register's per-item line counts should be read as *what the Room
 asked once*, never as *what the Room needs*.
+
+
+### 7.14 ROUND 5 — the current model, and the flip list
+
+**Why a fifth round.** Rounds 1–4 ran on `/models/qwen38-flash-next-nvfp4`. Alpha has served
+`/models/qwen38-flash-next-abliterated-nvfp4` since 2026-09-17 (`/v1/models` `root`, read at
+run start 2026-09-25 13:35Z, `:8000`). A round on another model is not evidence about this
+one, so every arm was re-run on today's serve.
+
+**Run.** CAT × {short, medium, long} × {`off`, `debt`, `cash`, `history`, `dims`, `exec`,
+`capret`}: 21 convenes, 36 turns per arm, `thinking=False`, `pm_samples=5`. Two stamps:
+
+- `20260925T133521Z` (batch A: off/dims/exec/debt), 13:35–15:06Z;
+- `20260925T150609Z` (batch B: cash/history/capret), 15:06–16:12Z.
+
+That is **157 minutes of vLLM time**, run sequentially because the serve also carries live
+Alpha. All 21 convenes are complete: `replay.py --score-only` reports no dead turns.
+
+**The profile.** One CAT profile was rebuilt 2026-09-25 with current `main` code: 112 LIVE
+fields, price $812.47. It uses the rig's store `measurement/edgar.db`, which holds CAT's
+maturity, interest, share-repurchase, dimensional and 8-K rows. DEF400 is on at build, as in
+production since 2026-09-17, so **every arm, `off` included, carries the filed FCF $8,994M and
+112%**. Rounds 1–4 had the vendor $5,049M / 200% in `off`.
+
+**Scorer changes, both committed with the data** (`65760a82`):
+
+- `citations.py` gained rows for C2/C5/B2/C8/C7. They had none, so the history arm (round 2)
+  and slot 5 were never scored on this endpoint.
+- It also gained an **`off` column** that counts the same markers in the control arm. Without
+  it, C3 would score the base sheet's own $8,994M as a bridge citation.
+- `outcomes.py` gained `capret`.
+
+Reproduce with:
+
+```
+replay.py    --score-only 20260925T133521Z 20260925T150609Z --mandates short medium long
+citations.py --stamp      20260925T133521Z 20260925T150609Z
+outcomes.py  --stamp      20260925T133521Z 20260925T150609Z
+```
+
+#### The table — every CR221 flag, round 5 on the current serve
+
+cited/askers = distinct agents who cited the line's own figures in their turn body, over the
+agents who asked for the item in the 127-line corpus. The `off` columns are the same markers
+in the control arm. Cost = mean prompt tokens per convene vs `off` (151,033); the cost is per
+arm, so flags that share an arm share its cost.
+
+| Flag | Item | Earlier round (old serve) | R5 cited/turns | R5 cited/askers | `off` cited · askers | R5 arm cost | Prerequisite on Alpha | Audit |
+|---|---|---|---|---|---|---|---|---|
+| `room_debt_maturity_enabled` | A1 | R1 `20260903T123617Z`+`…175205Z`+`…180639Z`: 1/6 | 3/36 | **2/6** | 0 · 0 | +6.0% (debt: A1+A3) | `ingest_edgar_facts.py --force` in the container (§7.6c), then enable; not recorded as run | RETRO-CR221-S13 COMPLETE r1, nothing open |
+| `room_cost_of_debt_enabled` | A3 | R1: 0/4 | 6/36 | **3/4** | 0 · 0 | shared | same `--force` ingest | RETRO-CR221-S13 COMPLETE |
+| `room_cashflow_bridge_enabled` | C3, C4 | R1: C3 5/6, C4 0/2 | C3 5/36 · C4 0/36 | C3 **2/6** · C4 0/2 | C3 4/36 · 2/6 | +1.0% | none | RETRO-CR221-S13 COMPLETE |
+| `room_fcf_history_enabled` | C2 | R2 `20260903T191926Z`: demand only, never citation-scored | 0/36 | **0/3** | 0 · 0 | +4.7% (history: C2+C5+B2) | none | RETRO-CR221-S13 COMPLETE |
+| `room_fcf_conversion_enabled` | C5 | R2: as C2 | 0/36 | **0/2** | 2/36 · 0 (marker noise) | shared | none | RETRO-CR221-S13 COMPLETE |
+| `room_roe_history_enabled` | B2 | R2: as C2; basis defect fixed `9da0be32` | 5/36 | **0/1** | 0 · 0 | shared | none | RETRO-CR221-S13 COMPLETE |
+| `room_debt_split_enabled` | A2 | R3 `20260910T164026Z`: 8/9 | 8/36 | **8/9** | 0 · 0 | +2.7% (dims: A2+D1+D2) | dimensional ingest **ran** in `ami_api_alpha` 2026-09-11 (146/150) | CR221-SLOT4 COMPLETE r3, nothing open |
+| `room_segment_revenue_enabled` | D1 | R3: 1/4 | 3/36 | **1/4** | 0 · 0 | shared | same ingest, ran | CR221-SLOT4 COMPLETE |
+| `room_geographic_revenue_enabled` | D2 | R3: 0/1 | 0/36 | **0/1** | 0 · 0 | shared | same ingest, ran | CR221-SLOT4 COMPLETE |
+| `room_executive_change_enabled` | I1 | R4 `20260910T191437Z`: 1/1, +7.9% | 1/36 | **1/1** | 0 · 0 | **+11.2%** | `ingest_edgar_8k.py` in the container, plus a re-scan cron (unavailable at 180 days); not recorded as run | CR221-SLOT2 COMPLETE r2, MINOR closed |
+| `room_dividend_growth_enabled` | C8 | never measured | 1/36 | **1/2** | 0 · 0 | +0.9% (capret: C8+C7) | none | CR221-SLOT5 COMPLETE r2, MINOR closed |
+| `room_buyback_price_enabled` | C7 | never measured | 2/36 | **1/1** | 0 · 0 | shared | `ingest_edgar_facts.py --force` (the new `TreasuryStockSharesAcquired` tag); not recorded as run | CR221-SLOT5 COMPLETE |
+
+Every earlier round ran on `/models/qwen38-flash-next-nvfp4` (the `model.root` in each banked
+JSON). `fundamentals_fcf_from_statements_enabled` (DEF400) is not in the table: it has been on
+by default since 2026-09-17. `room_risk_officer_enabled`, `room_json_constraints_enabled` and
+`room_trader_regex_enabled` are not CR221's. The header's "two flags live on Alpha since
+2026-09-10" are the last two of these, not CR221 flags.
+
+**What the citations were.** Per-hit sentences were read to confirm the markers matched real
+use, not to re-score.
+
+- **A2 held exactly** on the new serve (8/9, as in round 3). It is used both ways: the CIO
+  wrote *"the $39.2B net debt figure conflates $10.7B industrial debt with $32.6B captive
+  finance leverage"*.
+- **A3 rose** from 0/4 to 3/4. Agents argue from *"5.1% implied cost of debt on $7.1bn of
+  near-term maturities"*.
+- **I1** is cited in all three mandates by the News Analyst, with names and dates.
+- **C7** is argued from by its asker, the Bull: *"an implied average price of $664.64 … the
+  current price $812.47 is ~22% above their average repurchase cost"*.
+- **B2**'s five citations quote the 41.7% FY25 ROE and the 47.6% four-year median. None comes
+  from its one asker.
+- **C3 shows no lift.** Four of the cash arm's five hits are the $8,994M FCF that every arm now
+  carries. Only one quotes the bridge's own $13,569M operating cash flow. `off` reaches the
+  same 2/6 askers.
+
+**Recorded, not attributed.**
+
+- **Demand** (`replay.py`): totals are off 33 · debt 40 · cash 53 · history 50 · dims 44 ·
+  exec 48 · capret 43. This is the rank-limited refill of §7.9 a fifth time.
+- **Verdicts** (APPROVE/PASS): off 2/1 · debt 3/0 · cash 2/1 · history 3/0 · dims 1/2 ·
+  exec 1/2 · capret 3/0. Not attributable (§7.1).
+- **PM parse loss**: 92 of 105 draws parsed. Six of the 13 failures are in `exec` (medium 1/5,
+  long 3/5). The failed draws show format drift under the addendum (non-JSON final sections),
+  the harness's known addendum/JSON-contract collision. They are not attributed to the
+  exec line.
+- **H2** (control) was asked 0/0/1/1/0/0/0 times across the arms. It remains uninformative
+  (§7.6d).
+
+**Not measured, and why.**
+
+- **D2 on a geographically exposed filer.** The rig store holds CAT, MSFT (US/non-US only)
+  and XOM (39 facts). No China-exposed name is ingested. It needs `ingest_edgar_facts.py` and
+  `ingest_edgar_dimensional.py` for such a filer (NVDA, say) into `measurement/edgar.db`, then
+  a profile and a `dims` round. No new data path was improvised.
+- **I1 on a second filer.** Only CAT and F carry 8-K rows, and F has no facts. CAT's 5.02 is
+  a real event.
+
+#### The flip list
+
+**Ordered by evidence. Saiful flips; this lane flipped nothing.** A flag flipped before its
+ingest renders the loud-unavailable state, not a number.
+
+| # | Flag | Call | Why (round 5, current serve) | Prerequisite, in order |
+|---|---|---|---|---|
+| 1 | `room_debt_split_enabled` | **FLIP** | 8/9 askers, 0 in `off`, dims arm +2.7%; the same result on both serves | none left (ingest ran 2026-09-11), so set `ROOM_DEBT_SPLIT_ENABLED=true` |
+| 2 | `room_cost_of_debt_enabled` | **FLIP** | 3/4 askers (was 0/4), 0 in `off` | `ingest_edgar_facts.py --force` in `ami_api_alpha`; confirm `edgar_debt_structure_tags_not_ingested` is quiet; then set the flag |
+| 3 | `room_executive_change_enabled` | **FLIP** | 1/1 asker in every mandate on both serves; costliest at +11.2%, paid for one filing | `ingest_edgar_8k.py --user-agent "…"` in the container, then read its `[fetch_failed]`/`[unextracted]`/`[index_unreadable]` lines, then set the flag, then add the re-scan cron |
+| 4 | `room_buyback_price_enabled` | **FLIP** | 1/1 asker, argued from, 0 in `off`; capret arm +0.9% | the same `--force` ingest as #2, then set the flag |
+| 5 | `room_debt_maturity_enabled` | **FLIP** | 2/6 askers (was 1/6), 0 in `off`; carries its own reconciliation to gross debt | the same `--force` ingest as #2, then set the flag |
+| 6 | `room_dividend_growth_enabled` | **FLIP (weak)** | 1/2 askers, 0 in `off`, one citation in 36 turns; capret arm +0.9% | none |
+| 7 | `room_segment_revenue_enabled` | **FLIP (weak)** | 1/4 askers on both serves, 0 in `off` | none left (ingest ran) |
+| 8 | `room_roe_history_enabled` | **KEEP OFF** | 0/1 askers; read only by non-askers; shares the +4.7% arm with two unread lines | none |
+| 9 | `room_cashflow_bridge_enabled` | **KEEP OFF** | no lift, 2/6 in both arm and `off`. Round 1's 5/6 was DEF400's figure, which now ships unflagged | none |
+| 10 | `room_fcf_history_enabled` | **KEEP OFF** | 0/3 askers, 0 citations | none |
+| 11 | `room_fcf_conversion_enabled` | **KEEP OFF** | 0/2 askers, 0 citations | none |
+| 12 | `room_geographic_revenue_enabled` | **NEEDS DATA** | 0/1 on CAT on both serves; §7.10 asked for a geographically exposed name, and none is in the rig store | ingest a China-exposed filer into `measurement/edgar.db` and measure (on Alpha the ingest already ran) |
+
+The unbuilt batches (slots 6–9) moved to
+[CR238](../CR238_cr221_unbuilt_data_batches/CR238.md), proposed and not built during the freeze.
