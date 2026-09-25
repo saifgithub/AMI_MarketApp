@@ -532,6 +532,21 @@ async def lifespan(app: FastAPI):
             get_room_runner().mark_shutting_down()
         except Exception:
             logger.exception("room_mark_shutting_down_failed")
+        # DEF425 round 4 (auditor u66, round-3 MINOR-1) — cancel the Room's
+        # own tracked `_pump` tasks directly, rather than relying on
+        # asyncio's teardown cascade (below) to reach them before uvicorn
+        # re-raises the captured SIGTERM inside the event loop. That
+        # re-raise (uvicorn 0.47's `capture_signals`) kills a normal process
+        # on the spot — the cascade only reaches these tasks today because
+        # the exec-form Dockerfile CMD happens to make uvicorn PID 1. Bounded
+        # well inside the remaining grace: uvicorn runs with
+        # `--timeout-graceful-shutdown 5` and Docker's `stop_grace_period` is
+        # 15s, so this is called after that 5s wait already elapsed — 3s
+        # keeps a slow pump from eating meaningfully into what is left.
+        try:
+            await get_room_runner().cancel_pumps_for_shutdown(timeout=3.0)
+        except Exception:
+            logger.exception("room_cancel_pumps_failed")
         for task in tasks:
             task.cancel()
         for task in tasks:

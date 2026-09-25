@@ -4256,12 +4256,24 @@ PLAN_TO_TIER: dict[Plan, str] = {
 
 @dataclass(frozen=True)
 class _PendingRetry:
-    """Stuck-run row claimed by _sweep_stuck_runs for async respawn (eeeb866f)."""
+    """Stuck-run row claimed by _sweep_stuck_runs for async respawn (eeeb866f).
+
+    DEF425/DEF432 round 4 — `credit_cost` carries the REAL amount `row.credit_cost`
+    held at claim time (base + any CR090 live-data surcharge already charged by the
+    original `start_run()`). Without it, the respawn's `self.run(...)` call had no
+    `credit_cost` to pass, so `run()` fell back to `room_cost_for_plan(plan)` (base
+    price only) and `_persist_run` overwrote the row's real charge with that lower
+    figure — every refund that later reads `row.credit_cost` (this sweep's own
+    retry-exhausted refund, CR039's failed-run refund, DEF432's outage refund) then
+    gave back less than the user was actually charged. Measured: a Trader user
+    charged base 8 + surcharge 4 = 12 got back only 8 on a respawned outage.
+    """
 
     run_id: UUID
     user_id: UUID
     ticker: str
     mandate_version: int
+    credit_cost: int
 
 
 def _row_to_room_run(row: RoomRunRow) -> RoomRun:
@@ -4514,6 +4526,18 @@ class RoomRunner:
         # per-run cancellation — see that handler's own docstring for why
         # the two used to be conflated.
         self._shutting_down: bool = False
+        # DEF425 round 4 (auditor u66, round-3 MINOR-1) — every `_pump`
+        # background task (both start_run's and the respawn's), so
+        # `main.py`'s lifespan can cancel-and-await them directly instead of
+        # relying on `mark_shutting_down()` + asyncio's own teardown cascade
+        # reaching them before uvicorn re-raises the captured SIGTERM inside
+        # the event loop (uvicorn 0.47 `capture_signals`, `server.py:338-339`)
+        # — which only happens to work today because the exec-form Dockerfile
+        # `CMD` makes uvicorn PID 1. Cancelling these tasks structurally,
+        # from the lifespan itself, makes the interrupted-at mark land
+        # whatever the process's PID. Each task removes itself on completion
+        # via a done-callback — see _track_pump().
+        self._pump_tasks: set[asyncio.Task] = set()
         # Per-run event queues: keyed by run_id, alive while _pump() runs.
         # SSE consumers read from these; background tasks write to them.
         self._active_queues: dict[UUID, asyncio.Queue[RoomEvent | None]] = {}
@@ -4541,6 +4565,51 @@ class RoomRunner:
         else that might reach that except clause.
         """
         self._shutting_down = True
+
+    def _track_pump(self, task: asyncio.Task) -> None:
+        """DEF425 round 4 — register a `_pump` background task (start_run's
+        or the respawn's) so the lifespan can cancel-and-await it directly.
+        Removes itself on completion via a done-callback, so this set only
+        ever holds tasks that are still genuinely in flight.
+        """
+        self._pump_tasks.add(task)
+        task.add_done_callback(self._pump_tasks.discard)
+
+    async def cancel_pumps_for_shutdown(self, timeout: float) -> None:
+        """DEF425 round 4 (auditor u66, round-3 MINOR-1) — cancel every
+        tracked `_pump` task directly from the lifespan, instead of relying
+        on `mark_shutting_down()` + asyncio's own teardown cascade to reach
+        them before uvicorn re-raises the captured SIGTERM inside the event
+        loop.
+
+        That re-raise (uvicorn 0.47's `capture_signals`, `server.py:338-339`)
+        kills a normal process on the spot, before any teardown — the
+        cascade only reaches these tasks today because the exec-form
+        Dockerfile `CMD` happens to make uvicorn PID 1, so the kernel drops
+        the signal for want of a handler and lets teardown run. Cancelling
+        here makes the interrupted-at mark land whatever the PID is, or
+        however the process is launched.
+
+        Called AFTER `mark_shutting_down()` so `run()`'s cancellation
+        handler already sees `self._shutting_down is True` when the
+        cancellation it raises here reaches that handler. Bounded well
+        inside the remaining shutdown grace — a slow pump is abandoned
+        (left `running`, unmarked) rather than let it block the rest of
+        shutdown; `_sweep_stuck_runs`'s age-based cutoff still claims it
+        on a later boot.
+        """
+        tasks = [t for t in self._pump_tasks if not t.done()]
+        if not tasks:
+            return
+        for task in tasks:
+            task.cancel()
+        _done, pending = await asyncio.wait(tasks, timeout=timeout)
+        if pending:
+            logger.warning(
+                "room_pump_cancel_timeout",
+                pending=len(pending),
+                timeout=timeout,
+            )
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
         with get_session() as s:
@@ -4633,6 +4702,12 @@ class RoomRunner:
                             user_id=row.user_id,
                             ticker=row.ticker,
                             mandate_version=row.mandate_version,
+                            # DEF425/DEF432 round 4 — carry the row's REAL
+                            # charge (base + any CR090 surcharge) into the
+                            # respawn, so `run()` never falls back to base
+                            # pricing and overwrites it. See _PendingRetry's
+                            # own docstring.
+                            credit_cost=row.credit_cost,
                         ))
                         retried += 1
                     else:
@@ -4800,6 +4875,13 @@ class RoomRunner:
                     mandate=mandate,
                     portfolio_value=portfolio_value,
                     current_drawdown_pct=current_drawdown_pct,
+                    # DEF425/DEF432 round 4 — without this, `run()` falls
+                    # back to `room_cost_for_plan(plan)` (base price only)
+                    # and `_persist_run` overwrites the row's real charge
+                    # (base + CR090 surcharge) with that lower figure, so
+                    # every refund reading `row.credit_cost` afterwards
+                    # gives back less than was actually taken.
+                    credit_cost=p.credit_cost,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -4822,10 +4904,14 @@ class RoomRunner:
                 # "running" line as the ONLY record if retries are then
                 # exhausted (round 2's drill C). Same guard
                 # `start_run()`'s own `_pump` already applies to `on_complete`
-                # — skip the write entirely on the shutdown path; the next
-                # retry (this same replay, next boot) or the sweep's
-                # retry-exhausted `failed` branch writes the real, terminal
-                # entry once the run actually finishes.
+                # — skip the write entirely on the shutdown path. The next
+                # retry (this same replay, next boot) writes the real entry
+                # once IT finishes; if retries are then exhausted, the sweep's
+                # retry-exhausted `failed` branch writes NO journal entry at
+                # all (confirmed by reading it — it only flips status/
+                # error_message and refunds), leaving this run with no
+                # journal record at all rather than a false one (round 3,
+                # auditor u66, "Recorded, not scored").
                 if self._shutting_down:
                     return
                 # Re-fire the journal write the original request's
@@ -4855,7 +4941,7 @@ class RoomRunner:
                         else:
                             await asyncio.sleep(2 ** attempt)
 
-        asyncio.create_task(_pump())
+        self._track_pump(asyncio.create_task(_pump()))
         logger.info(
             "room_startup_retry_respawned",
             run_id=str(p.run_id),
@@ -5292,10 +5378,13 @@ class RoomRunner:
                 # ALONGSIDE this false one, or — if retries were exhausted —
                 # this false "running" entry was left as the sole record of a
                 # run that is actually failed and refunded. Skip on_complete
-                # entirely on the shutdown path: the retry (respawn's own
-                # journal replay) or the sweep's failed-branch is what writes
-                # the real entry once the run actually reaches a terminal
-                # state.
+                # entirely on the shutdown path: the next retry (the respawn's
+                # own journal replay) writes the real entry once IT finishes;
+                # if retries are then exhausted, the sweep's retry-exhausted
+                # `failed` branch writes NO journal entry at all (confirmed by
+                # reading it — it only flips status/error_message and
+                # refunds), leaving no record rather than a false one (round 3,
+                # auditor u66, "Recorded, not scored").
                 if on_complete is not None and not self._shutting_down:
                     try:
                         await on_complete(run_id)
@@ -5306,7 +5395,7 @@ class RoomRunner:
                             error=str(exc)[:200],
                         )
 
-        asyncio.create_task(_pump())
+        self._track_pump(asyncio.create_task(_pump()))
         return run_id
 
     def is_active(self, run_id: UUID) -> bool:
