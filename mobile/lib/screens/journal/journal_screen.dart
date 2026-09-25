@@ -398,33 +398,69 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(AmiSpacing.xl),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSearching ? Icons.search_off : Icons.menu_book_outlined,
-              color: AmiColors.textLow,
-              size: 48,
-            ),
-            const SizedBox(height: AmiSpacing.m),
-            Text(
-              isSearching ? l.journalSearchEmpty : l.journalEmptyTitle,
-              style: AmiTypography.h4,
-            ),
-            if (!isSearching) ...[
-              const SizedBox(height: AmiSpacing.xs),
-              Text(
-                l.journalEmptyBody,
-                textAlign: TextAlign.center,
-                style: AmiTypography.body.copyWith(color: AmiColors.textLow),
-              ),
-            ],
-          ],
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          isSearching ? Icons.search_off : Icons.menu_book_outlined,
+          color: AmiColors.textLow,
+          size: 48,
         ),
-      ),
+        const SizedBox(height: AmiSpacing.m),
+        Text(
+          isSearching ? l.journalSearchEmpty : l.journalEmptyTitle,
+          textAlign: TextAlign.center,
+          style: AmiTypography.h4,
+        ),
+        if (!isSearching) ...[
+          const SizedBox(height: AmiSpacing.xs),
+          Text(
+            l.journalEmptyBody,
+            textAlign: TextAlign.center,
+            style: AmiTypography.body.copyWith(color: AmiColors.textLow),
+          ),
+        ],
+      ],
+    );
+
+    // DEF427 (E5-U2) — this sat in a fixed `Center`, which does not protect
+    // its child from being taller than the space `Expanded` actually left it
+    // (this pane shares its parent Column with the AdSlot sibling below it,
+    // and both compete for one Expanded region). At a short viewport height
+    // and/or a large text scale (the body copy alone can wrap to 3+ lines),
+    // the Column's intrinsic height exceeded that, and `Center` overflowed
+    // by 29px on an iPhone 17 Simulator rather than clip or shrink.
+    //
+    // `LayoutBuilder` + `SingleChildScrollView` + a `ConstrainedBox` with
+    // `minHeight: constraints.maxHeight` reproduces the old "visually
+    // centred with room to spare" look on every viewport that actually HAS
+    // room to spare (the common case — the min-height constraint alone
+    // centres the content, same as before), and becomes a real, reachable
+    // scroll instead of an overflow on the viewports that don't. This is the
+    // same fix shape CLAUDE.md itself names for this harness's whole
+    // purpose: screens that do not scroll when they need to.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // `constraints.maxHeight` can be tighter than the padding this pane
+        // used to reserve unconditionally (a very short viewport, or an
+        // ancestor with no bounded height at all giving `double.infinity`,
+        // which subtraction would carry through as NaN/infinity into a
+        // BoxConstraints assertion). Clamped to 0 either way: a non-positive
+        // minHeight is simply "no extra height demanded", which is exactly
+        // what a screen too short to centre into should do — scroll,
+        // starting from the top, rather than throw.
+        final available = constraints.maxHeight - (AmiSpacing.xl * 2);
+        final minHeight = available.isFinite && available > 0 ? available : 0.0;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AmiSpacing.xl),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Center(child: content),
+          ),
+        );
+      },
     );
   }
 }

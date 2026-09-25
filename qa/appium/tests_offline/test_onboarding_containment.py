@@ -271,6 +271,27 @@ def test_the_walk_refuses_the_settings_row_that_resets_a_real_account(label):
     assert onboarding._is_expensive(_ios_driver(), WdaElement(label)) is True
 
 
+@pytest.mark.parametrize("label", ["Turn on", "TURN ON", "turn on"])
+def test_the_walk_refuses_the_push_soft_ask_accept_button(label):
+    """DEF426 (E5-U1) — `pushSoftAskAccept` is a Flutter `AlertDialog` button,
+    so unlike the native OS prompt it triggers, it IS inside the semantics
+    tree and IS something the exploratory walk could reach. Tapping it calls
+    `service.requestPermission()`, which raises the real native
+    `UIAlertController` — outside the semantics tree, covering the Floor
+    screen, and unrecoverable by any locator this harness has. Refusing this
+    button keeps the walk on `pushSoftAskDecline` ("Not now") instead, so the
+    native dialog should never be triggered by onboarding in the first place."""
+    assert onboarding._is_expensive(_android_driver(), LabelledElement(label)) is True
+    assert onboarding._is_expensive(_ios_driver(), WdaElement(label)) is True
+
+
+def test_the_push_soft_ask_decline_button_is_still_tappable():
+    """The opposite half of DEF426 — "Not now" must stay ordinary, or the walk
+    has nothing left to tap on that turn and wedges instead of progressing."""
+    assert onboarding._is_expensive(_android_driver(), LabelledElement("Not now")) is False
+    assert onboarding._is_expensive(_ios_driver(), WdaElement("Not now")) is False
+
+
 def test_a_benign_settings_row_is_still_tappable():
     """The deny-list must stay about spending and destruction — a filter broad
     enough to swallow ordinary rows would make the walk pass by hiding what it
