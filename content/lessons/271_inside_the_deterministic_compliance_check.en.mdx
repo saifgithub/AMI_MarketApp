@@ -44,20 +44,20 @@ compliance:
   ticker_allowlist: null
 ```
 
-The check runs every rule, in order, deterministically — and it does not stop at the first failure. It runs all of them and collects every violation, recording the first one hit as `blocked_by`. *Is `XOM` in `ticker_blocklist`?* Yes → violation, `blocked_by = "blocklist"`. *Is `proposed_size_pct` above the absolute single-name cap?* AMI enforces a fixed 50% ceiling on any one position regardless of risk tier — 60.0 > 50 → a second violation is appended. *Does `halal` apply?* No, skipped. *Is `long_only` violated?* No — this is a buy. Both violations are returned together in the result; the PM persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same two violations. Remove XOM from `ticker_blocklist` and cut the proposed size to 40% and run again — you get PASS. The model has not been re-prompted; the function read different data.
+The check runs every rule, in order, deterministically — and it does not stop at the first failure. It runs all of them and collects every violation, recording the first one hit as `blocked_by`. *Is `XOM` in `ticker_blocklist`?* Yes → violation, `blocked_by = "blocklist"`. *Is `proposed_size_pct` above the absolute single-name cap?* AMI enforces a fixed 50% ceiling on any one position regardless of risk tier — 60.0 > 50 → a second violation is appended. *Does `halal` apply?* No, skipped. *Is `long_only` violated?* No — this is a buy. Both violations are returned together in the result; the CIO persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same two violations. Remove XOM from `ticker_blocklist` and cut the proposed size to 40% and run again — you get PASS. The model has not been re-prompted; the function read different data.
 
-Now contrast: if the check were "ask the PM agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A briefing note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see briefing. It sees two structured objects and a list of rules.
+Now contrast: if the check were "ask the CIO agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A briefing note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see briefing. It sees two structured objects and a list of rules.
 
 ## The trap
 
-The trap is thinking the compliance check is sophisticated AI judgment. It is not. It is deliberately *unsophisticated* — basic comparisons, exclusion flags, lookups — because sophistication is exactly what you do not want at the <Term id="ami_pm_safety_floor" />. You want a check that cannot be argued with, cannot be charmed, and cannot drift. The trade-off is real: a deterministic check cannot catch every edge case a smart human reviewer would. It will pass a 5% position in a stock with deteriorating fundamentals because the size is within mandate. That is not a bug; it is the contract. The trading team's debate is where nuance happens. The PM check is where bright lines hold.
+The trap is thinking the compliance check is sophisticated AI judgment. It is not. It is deliberately *unsophisticated* — basic comparisons, exclusion flags, lookups — because sophistication is exactly what you do not want at the <Term id="ami_pm_safety_floor" />. You want a check that cannot be argued with, cannot be charmed, and cannot drift. The trade-off is real: a deterministic check cannot catch every edge case a smart human reviewer would. It will pass a 5% position in a stock with deteriorating fundamentals because the size is within mandate. That is not a bug; it is the contract. The trading team's debate is where nuance happens. The CIO check is where bright lines hold.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="Your Mandate has NVDA on `ticker_blocklist`. Eleven agents argue for a position on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the PM compliance check on each run?"
+  question="Your Mandate has NVDA on `ticker_blocklist`. Eleven agents argue for a position on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the CIO compliance check on each run?"
   options={[
     "It passes once the trading team's confidence is high enough",
     "It might pass on the second run because the model's mood varies",
@@ -82,7 +82,7 @@ The trap is thinking the compliance check is sophisticated AI judgment. It is no
 
 ## Try it
 
-Open **Settings → Mandate**. Add a US ticker you're likely to convene on to your `ticker_blocklist`. <Term id="ami_convene_the_room" /> on that ticker until you see the PM block on the blocklist hit. Now remove the ticker from `ticker_blocklist` and re-run the *exact same Verdict*. The block disappears even though the trading team's debate is identical. You just watched the deterministic function read different data.
+Open **Settings → Mandate**. Add a US ticker you're likely to convene on to your `ticker_blocklist`. <Term id="ami_convene_the_room" /> on that ticker until you see the CIO block on the blocklist hit. Now remove the ticker from `ticker_blocklist` and re-run the *exact same Verdict*. The block disappears even though the trading team's debate is identical. You just watched the deterministic function read different data.
 
 ## Takeaway
 

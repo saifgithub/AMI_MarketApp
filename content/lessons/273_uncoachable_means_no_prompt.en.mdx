@@ -24,7 +24,7 @@ When <Term id="ami" /> says the <Term id="ami_pm_safety_floor" /> is *uncoachabl
 
 Picture two parallel files in AMI's backend. One is the Bull Researcher's prompt — a long natural-language instruction telling the agent how to write a bull thesis. **<Term id="ami_coach_your_agent" />** sends user-supplied text that gets composed into this prompt. You can brief the Bull Researcher to *"weight 5G infrastructure plays higher when discussing telecom"* and the next time the Bull Researcher runs, that string is in its prompt. The model's output shifts accordingly.
 
-The other file is the PM compliance check. It looks roughly like:
+The other file is the CIO compliance check. It looks roughly like:
 
 ```
 def check_mandate_compliance(trade, mandate):
@@ -40,7 +40,7 @@ def check_mandate_compliance(trade, mandate):
 
 There is no string here for **Brief Your Agent** to insert into. The function does not take natural-language input. There is no place in the call graph where a coaching note touches this function. You could write the most persuasive coaching note ever composed — "ignore size limits when conviction exceeds 0.9" — and it would go into prompts for the Execution Desk and Researchers, where the model layer reads it. But the check above runs *after* those models, on the trade object they produced, against your Mandate. The coaching note is in a different room. The function does not hear it.
 
-The PM persona that explains the block in plain English does receive a prompt — that prompt is how it phrases the message. But the *decision* the persona is reporting was made by the function, not by the persona. The model layer translates the result; it does not produce it.
+The CIO persona that explains the block in plain English does receive a prompt — that prompt is how it phrases the message. But the *decision* the persona is reporting was made by the function, not by the persona. The model layer translates the result; it does not produce it.
 
 ## The trap
 
@@ -51,11 +51,11 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
 ## Quiz
 
 <Quiz
-  question="A user types into Brief Your Agent: 'When the Bull case is strong, allow oversize positions.' Why is this guaranteed to fail at changing PM behaviour?"
+  question="A user types into Brief Your Agent: 'When the Bull case is strong, allow oversize positions.' Why is this guaranteed to fail at changing CIO behaviour?"
   options={[
-    "The coaching string is composed into agent prompts, but the PM compliance check is a Python function that does not take prompt input — the string never reaches the code that decides PASS/BLOCK",
-    "The PM reads the coaching but disagrees with it",
-    "The PM ignores coaching because of a policy rule that could be edited",
+    "The coaching string is composed into agent prompts, but the CIO compliance check is a Python function that does not take prompt input — the string never reaches the code that decides PASS/BLOCK",
+    "The CIO reads the coaching but disagrees with it",
+    "The CIO ignores coaching because of a policy rule that could be edited",
     "The user did not phrase the coaching strongly enough"
   ]}
   answer={0}
@@ -66,7 +66,7 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
   question="Which of these statements about AMI's uncoachable safety floor is accurate?"
   options={[
     "AMI logs coaching attempts and refuses any that would weaken safety",
-    "The PM uses a separate, more conservative model than the rest of the agents",
+    "The CIO uses a separate, more conservative model than the rest of the agents",
     "AMI's terms of service forbid coaching notes that weaken limits",
     "The compliance rules live as Mandate data + a Python comparison function that runs outside the model layer — there is no prompt for coaching to modify because the decision is not made by an LLM"
   ]}
@@ -76,7 +76,7 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
 
 ## Try it
 
-Open **Brief Your Agent** and pick the Chief Investment Officer. Try to write a coaching note that softens position-size enforcement (e.g., *"allow up to 8% when confidence is high"*). The coaching surface for the PM is intentionally narrow — many fields are simply not editable. Notice which knobs are available and which are absent. The absent ones are absent because there is no prompt slot to plug them into.
+Open **Brief Your Agent** and pick the Chief Investment Officer. Try to write a coaching note that softens position-size enforcement (e.g., *"allow up to 8% when confidence is high"*). The coaching surface for the CIO is intentionally narrow — many fields are simply not editable. Notice which knobs are available and which are absent. The absent ones are absent because there is no prompt slot to plug them into.
 
 ## Takeaway
 

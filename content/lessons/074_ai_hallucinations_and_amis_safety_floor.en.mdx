@@ -26,50 +26,50 @@ Suppose you convene the Room on TENAGA (Bursa Malaysia). The Bull Researcher get
 
 > *Bull Researcher:* TENAGA's dividend yield is 8.5%, payout ratio 60%, and the chart shows a clean breakout above RM14.20 — strong BUY at 8% size.
 
-Two things are potentially hallucinated: the yield number, and the breakout claim. The Research Manager flags the yield against the Fundamentals Analyst's pulled data (actual: ~3.9%) and rebases the case. The Execution Desk proposes 6% size anyway. The Verdict reaches the PM.
+Two things are potentially hallucinated: the yield number, and the breakout claim. The Research Manager flags the yield against the Fundamentals Analyst's pulled data (actual: ~3.9%) and rebases the case. The Execution Desk proposes 6% size anyway. The Verdict reaches the CIO.
 
-Your Mandate says `risk_score: 3 (per-name cap 3%), max_drawdown_pct: 20, region: bursa_malaysia`. The PM's safety-floor message comes back as plain text in the Verdict footer:
+Your Mandate says `risk_score: 3 (per-name cap 3%), max_drawdown_pct: 20, region: bursa_malaysia`. The CIO's safety-floor message comes back as plain text in the Verdict footer:
 
 > *Chief Investment Officer (compliance check):* Proposed size 6% > risk-tier cap 3% (risk_score 3). Trade blocked. Adjusted recommendation: size 3% or reject. Compliance: PASS only if size ≤ 3%.
 
-The block is not a prompt nudging the Execution Desk to be careful. It's a deterministic function: `if proposed_size_pct > risk_tier_cap(mandate.risk_score): block`. Even if every agent insisted at 6%, the function would still block. The mandate clauses themselves — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only` — are stored as your data, not the model's parameters, and the compliance function reads that data directly. You can verify this by editing your Mandate to `risk_score: 2` (cap 1.5%) and re-running the Verdict: the PM will block anything > 1.5%, every time.
+The block is not a prompt nudging the Execution Desk to be careful. It's a deterministic function: `if proposed_size_pct > risk_tier_cap(mandate.risk_score): block`. Even if every agent insisted at 6%, the function would still block. The mandate clauses themselves — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only` — are stored as your data, not the model's parameters, and the compliance function reads that data directly. You can verify this by editing your Mandate to `risk_score: 2` (cap 1.5%) and re-running the Verdict: the CIO will block anything > 1.5%, every time.
 
 ## The trap
 
-The trap is believing hallucinations can be fixed by "better prompts" or "a smarter model". They can be reduced that way, never eliminated. The structural answer is to assume some agent output will be wrong some of the time, and put deterministic guards on the parts that matter most — position size, drawdown, exclusions. AMI's safety floor is that guard. **<Term id="ami_coach_your_agent" />** can change the Bull Researcher's tone, weighting of catalysts, or skepticism level — it cannot change the PM's compliance check, because the check isn't a prompt. The PM's mandate enforcement is uncoachable by design. Read that twice.
+The trap is believing hallucinations can be fixed by "better prompts" or "a smarter model". They can be reduced that way, never eliminated. The structural answer is to assume some agent output will be wrong some of the time, and put deterministic guards on the parts that matter most — position size, drawdown, exclusions. AMI's safety floor is that guard. **<Term id="ami_coach_your_agent" />** can change the Bull Researcher's tone, weighting of catalysts, or skepticism level — it cannot change the CIO's compliance check, because the check isn't a prompt. The CIO's mandate enforcement is uncoachable by design. Read that twice.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="A user briefs the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when your risk-tier cap is 3% (risk_score 3)?"
+  question="A user briefs the CIO: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when your risk-tier cap is 3% (risk_score 3)?"
   options={[
-    "PM asks the user to confirm the override",
-    "PM compromises and allows 6%",
-    "PM allows the 7% trade because confidence is high",
-    "PM still blocks the trade — mandate enforcement is a deterministic function outside the briefable surface, regardless of any agent's confidence"
+    "CIO asks the user to confirm the override",
+    "CIO compromises and allows 6%",
+    "CIO allows the 7% trade because confidence is high",
+    "CIO still blocks the trade — mandate enforcement is a deterministic function outside the briefable surface, regardless of any agent's confidence"
   ]}
   answer={3}
-  explanation="The PM's compliance check is not a prompt that can be softened by briefing. It's a deterministic function reading your Mandate fields directly. 'Be more flexible' looks like it should work because the rest of the agent layer is briefable — but the safety floor is the part that isn't. The tempting wrong answer is 'PM asks to confirm' — there is no confirm-override path."
+  explanation="The CIO's compliance check is not a prompt that can be softened by briefing. It's a deterministic function reading your Mandate fields directly. 'Be more flexible' looks like it should work because the rest of the agent layer is briefable — but the safety floor is the part that isn't. The tempting wrong answer is 'CIO asks to confirm' — there is no confirm-override path."
 />
 
 <Quiz
-  question="The Fundamentals Analyst hallucinates that XOM has a P/E of 4.2 (actual ~14). The Bull Researcher writes a BUY case citing the wrong number. The Execution Desk proposes 4% size, which is within your mandate. What happens at the PM step?"
+  question="The Fundamentals Analyst hallucinates that XOM has a P/E of 4.2 (actual ~14). The Bull Researcher writes a BUY case citing the wrong number. The Execution Desk proposes 4% size, which is within your mandate. What happens at the CIO step?"
   options={[
-    "PM verifies every number cited by every agent against ground truth",
-    "PM auto-corrects the P/E and re-runs the debate",
-    "PM does not re-verify the analyst's fundamentals — its job is mandate compliance, not fact-checking. The trade passes if size and exclusions are within your Mandate",
-    "PM rejects the trade because the P/E is wrong"
+    "CIO verifies every number cited by every agent against ground truth",
+    "CIO auto-corrects the P/E and re-runs the debate",
+    "CIO does not re-verify the analyst's fundamentals — its job is mandate compliance, not fact-checking. The trade passes if size and exclusions are within your Mandate",
+    "CIO rejects the trade because the P/E is wrong"
   ]}
   answer={2}
-  explanation="The safety floor protects against mandate violations (size, drawdown, exclusions) — not against every possible hallucinated fact. Reading the Verdict transcript and cross-checking key numbers is part of your CEO job. The most tempting wrong answer is 'PM verifies everything' — it doesn't, and pretending it does is how you'd end up overtrusting."
+  explanation="The safety floor protects against mandate violations (size, drawdown, exclusions) — not against every possible hallucinated fact. Reading the Verdict transcript and cross-checking key numbers is part of your CEO job. The most tempting wrong answer is 'CIO verifies everything' — it doesn't, and pretending it does is how you'd end up overtrusting."
 />
 
 ## Try it
 
-Open **Settings → Mandate**, set `risk_score` to 2 (cap 1.5%). Convene the Room on any liquid US ticker. When the Verdict comes back, look for the PM's compliance-check line in the footer. Then change `risk_score` to 5 (cap 4.5%) and re-convene. The PM's allowed-size ceiling moves with your mandate — proof that the check reads your data, not the model's mood.
+Open **Settings → Mandate**, set `risk_score` to 2 (cap 1.5%). Convene the Room on any liquid US ticker. When the Verdict comes back, look for the CIO's compliance-check line in the footer. Then change `risk_score` to 5 (cap 4.5%) and re-convene. The CIO's allowed-size ceiling moves with your mandate — proof that the check reads your data, not the model's mood.
 
 ## Takeaway
 
-Hallucinations are an LLM-layer reality; AMI's answer is a deterministic mandate check at the PM that cannot be coached, prompted, or charmed around. AMI is teaching you to evaluate analyst output under realistic failure modes — not handing you advice to follow.
+Hallucinations are an LLM-layer reality; AMI's answer is a deterministic mandate check at the CIO that cannot be coached, prompted, or charmed around. AMI is teaching you to evaluate analyst output under realistic failure modes — not handing you advice to follow.

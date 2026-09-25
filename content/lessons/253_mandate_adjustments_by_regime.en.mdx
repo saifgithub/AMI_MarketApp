@@ -57,7 +57,7 @@ High-volatility regime (e.g., October 2022, VIX > 25 sustained):
 Backwardation regime (per <Lesson id="248_vix_term_structure"/>, VIX1M/VIX3M > 1.0 for 3+ sessions):
 - All long positions compressed by ~25% until backwardation reverts.
 
-The Chief Investment Officer's safety floor is uncoachable. Regardless of regime preset, the PM will enforce: compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if set), hard maximum on single-position size, hard floor on stop-loss requirement. The PM will block a trade that violates these even if you <Term id="ami_coach_your_agent" /> to ignore the regime. This is by design — the regime adjustments are dials within bounds, not overrides of the bounds.
+The Chief Investment Officer's safety floor is uncoachable. Regardless of regime preset, the CIO will enforce: compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if set), hard maximum on single-position size, hard floor on stop-loss requirement. The CIO will block a trade that violates these even if you <Term id="ami_coach_your_agent" /> to ignore the regime. This is by design — the regime adjustments are dials within bounds, not overrides of the bounds.
 
 ## The trap
 
@@ -72,13 +72,13 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
 <Quiz
   question="You detected the bear-regime cluster firing fully on a stock-market index 4 weeks ago, and the regime has survived without invalidation. Your current mandate is set to the bull preset (max_position 10%, max_drawdown 25%, stop 8%, gross 100%). What is the regime-correct mandate update?"
   options={[
-    "Update to the confirmed-bear preset incrementally: max_single_position_pct down toward 3–5%, max_drawdown_pct down toward 12–15%, stop_loss_pct down toward 4–5%, gross_exposure_pct down toward 30–50%. The PM safety floor (compliance flags, hard caps) does not change — those are uncoachable. If the regime reverses (200-day SMA reclaimed weekly), reverse the mandate adjustment back toward bull preset; don't flip all at once.",
+    "Update to the confirmed-bear preset incrementally: max_single_position_pct down toward 3–5%, max_drawdown_pct down toward 12–15%, stop_loss_pct down toward 4–5%, gross_exposure_pct down toward 30–50%. The CIO safety floor (compliance flags, hard caps) does not change — those are uncoachable. If the regime reverses (200-day SMA reclaimed weekly), reverse the mandate adjustment back toward bull preset; don't flip all at once.",
     "Switch the mandate to 200% short with maximum leverage.",
     "Zero out all exposure overnight.",
     "Leave it alone — the bull preset is conservative enough."
   ]}
   answer={0}
-  explanation="The tempting wrong answer is zeroing out all exposure overnight — 'just go to cash' feels safe but ignores the synthesis from <Lesson id="252_regime_change_realtime_vs_hindsight"/> about head fakes. Leaving the bull preset alone ignores the regime entirely. Flipping to 200% short inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
+  explanation="The tempting wrong answer is zeroing out all exposure overnight — 'just go to cash' feels safe but ignores the synthesis from <Lesson id="252_regime_change_realtime_vs_hindsight"/> about head fakes. Leaving the bull preset alone ignores the regime entirely. Flipping to 200% short inverts safety into recklessness. The synthesis is graduated mandate adjustment within the CIO safety floor, mirrored on the way back out."
 />
 
 <Quiz
@@ -90,7 +90,7 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
     "max_drawdown_pct (changes by regime)."
   ]}
   answer={0}
-  explanation="The tempting wrong answer is max_single_position_pct — it sounds like a hard rule but is in fact a tunable mandate parameter. The uncoachable floor is the compliance layer plus the deterministic hard caps the PM enforces regardless of any coaching. This is the synthesis of the entire safety design from the AMI Trade architecture: regime adjustments are dials, the safety floor is bedrock."
+  explanation="The tempting wrong answer is max_single_position_pct — it sounds like a hard rule but is in fact a tunable mandate parameter. The uncoachable floor is the compliance layer plus the deterministic hard caps the CIO enforces regardless of any coaching. This is the synthesis of the entire safety design from the AMI Trade architecture: regime adjustments are dials, the safety floor is bedrock."
 />
 
 <Quiz
@@ -98,7 +98,7 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
   options={[
     "Cash 100% — too many warnings.",
     "Switch to bear preset preemptively.",
-    "Bull preset compressed roughly to the mid-point between full-bull and late-bull: max_single_position around 6–7%, max_drawdown around 20%, stop_loss around 6%, gross exposure around 85%, concentration cap of 25% on top 3 names. The PM safety floor is untouched. Re-evaluate as more warning signs fire (which moves toward late-bull preset) or as VVIX percentile falls back (which moves toward full-bull preset).",
+    "Bull preset compressed roughly to the mid-point between full-bull and late-bull: max_single_position around 6–7%, max_drawdown around 20%, stop_loss around 6%, gross exposure around 85%, concentration cap of 25% on top 3 names. The CIO safety floor is untouched. Re-evaluate as more warning signs fire (which moves toward late-bull preset) or as VVIX percentile falls back (which moves toward full-bull preset).",
     "Full bull preset — the regime is confirmed bull."
   ]}
   answer={2}
@@ -107,8 +107,8 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
 
 ## Try it
 
-Open the Mandate editor in the app. Build three named presets in your journal: "Bull-broad", "Bull-narrow / late-bull", and "Bear-confirmed". Write the four numbers for each (max_position, max_drawdown, stop_loss, gross_exposure). Then run a quick simulation: drop risk_score to 1 (a 1.5% per-name cap) and try submitting a 4% position — watch the PM safety-floor message reject it. Raise risk_score to 5 (a 4.5% per-name cap) and submit the same 4% position — watch it pass. You're feeling the dial in action. Finally, <Term id="ami_convene_the_room" /> on any ticker and ask the Chief Investment Officer: "Given the current regime and my mandate, which dial would you adjust first?"
+Open the Mandate editor in the app. Build three named presets in your journal: "Bull-broad", "Bull-narrow / late-bull", and "Bear-confirmed". Write the four numbers for each (max_position, max_drawdown, stop_loss, gross_exposure). Then run a quick simulation: drop risk_score to 1 (a 1.5% per-name cap) and try submitting a 4% position — watch the CIO safety-floor message reject it. Raise risk_score to 5 (a 4.5% per-name cap) and submit the same 4% position — watch it pass. You're feeling the dial in action. Finally, <Term id="ami_convene_the_room" /> on any ticker and ask the Chief Investment Officer: "Given the current regime and my mandate, which dial would you adjust first?"
 
 ## Takeaway
 
-The mandate is the layer that turns regime calls into enforceable risk control. Adjust the dials with the regime cluster; the PM safety floor (compliance, hard caps, stop-loss floor) is bedrock and does not move.
+The mandate is the layer that turns regime calls into enforceable risk control. Adjust the dials with the regime cluster; the CIO safety floor (compliance, hard caps, stop-loss floor) is bedrock and does not move.

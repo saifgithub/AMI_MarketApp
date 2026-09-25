@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # The Mandate is your contract with AMI
 
-The <Term id="ami_mandate" /> is not a settings screen. Inside the <Term id="ami" /> <Term id="training_simulator" />, it is the contract you write with your own simulated analyst team — the constraints the PM will enforce against every <Term id="ami_verdict" /> the Room produces. The fields — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only`, `ticker_blocklist` — are the limits *you* set. AMI does not negotiate the Mandate. AMI does not suggest "you should lower this to 3%" — that would be advice, and AMI is not a licensed advisor. You set it; the simulator lives inside it; you practise judging analyst output under your own stated rules. By the end of this lesson you will understand why authoring the Mandate is the single most consequential act in the app.
+The <Term id="ami_mandate" /> is not a settings screen. Inside the <Term id="ami" /> <Term id="training_simulator" />, it is the contract you write with your own simulated analyst team — the constraints the CIO will enforce against every <Term id="ami_verdict" /> the Room produces. The fields — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only`, `ticker_blocklist` — are the limits *you* set. AMI does not negotiate the Mandate. AMI does not suggest "you should lower this to 3%" — that would be advice, and AMI is not a licensed advisor. You set it; the simulator lives inside it; you practise judging analyst output under your own stated rules. By the end of this lesson you will understand why authoring the Mandate is the single most consequential act in the app.
 
 ## How this plays out in real markets
 
@@ -32,48 +32,48 @@ no_fossil_fuels: false
 long_only: true
 ```
 
-Every Verdict for the next year is checked against those fields. <Term id="ami_convene_the_room" /> on PCHEM (5183) on Bursa: the Execution Desk proposes 2%. PM compliance check — `halal: true` requires the screen, PCHEM passes the screen, size within limit, region allowed. PASS. Now convene on TOPGLOV: trader proposes a short. `long_only: true` triggers BLOCK before size is even checked.
+Every Verdict for the next year is checked against those fields. <Term id="ami_convene_the_room" /> on PCHEM (5183) on Bursa: the Execution Desk proposes 2%. CIO compliance check — `halal: true` requires the screen, PCHEM passes the screen, size within limit, region allowed. PASS. Now convene on TOPGLOV: trader proposes a short. `long_only: true` triggers BLOCK before size is even checked.
 
-The Mandate is also auditable. Every block the PM issues references the specific clause: *"Trade blocked — mandate field `long_only` does not permit short proposals."* You can scroll back through your decision history and see which clauses fired most often — that tells you whether your Mandate is shaping decisions the way you intended, or whether you wrote something on day one that no longer fits.
+The Mandate is also auditable. Every block the CIO issues references the specific clause: *"Trade blocked — mandate field `long_only` does not permit short proposals."* You can scroll back through your decision history and see which clauses fired most often — that tells you whether your Mandate is shaping decisions the way you intended, or whether you wrote something on day one that no longer fits.
 
-The contract direction matters. You write the Mandate; the PM enforces it. The trading team works *inside* it — the Execution Desk's proposals already try to stay within the bounds, which is why the PM block is less common than you might expect. But when the trading team's enthusiasm overshoots, the PM is the line that doesn't move. Even **<Term id="ami_coach_your_agent" />** changes do not edit the Mandate. The Mandate is a data object you control directly in Settings; it is not in any prompt.
+The contract direction matters. You write the Mandate; the CIO enforces it. The trading team works *inside* it — the Execution Desk's proposals already try to stay within the bounds, which is why the CIO block is less common than you might expect. But when the trading team's enthusiasm overshoots, the CIO is the line that doesn't move. Even **<Term id="ami_coach_your_agent" />** changes do not edit the Mandate. The Mandate is a data object you control directly in Settings; it is not in any prompt.
 
 ## The trap
 
-The trap is treating the Mandate as a fire-and-forget setting from onboarding. Your life changes — income, obligations, time horizon, risk appetite — and the Mandate should change with it. Users who never re-open the editor find themselves either (a) constantly fighting the PM because their Mandate is tighter than how they actually want to trade now, or (b) drifting into trades the Mandate would have blocked if they had updated it after their last drawdown. The contract is between *you-now* and *AMI*. *You-six-months-ago* may have written something *you-now* would not. Editing the Mandate is not breaking the rules; it is renewing the contract.
+The trap is treating the Mandate as a fire-and-forget setting from onboarding. Your life changes — income, obligations, time horizon, risk appetite — and the Mandate should change with it. Users who never re-open the editor find themselves either (a) constantly fighting the CIO because their Mandate is tighter than how they actually want to trade now, or (b) drifting into trades the Mandate would have blocked if they had updated it after their last drawdown. The contract is between *you-now* and *AMI*. *You-six-months-ago* may have written something *you-now* would not. Editing the Mandate is not breaking the rules; it is renewing the contract.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="The PM blocks a trade citing `risk_score: 3`. You disagree — you want this 4% position. What's the right way to handle this?"
+  question="The CIO blocks a trade citing `risk_score: 3`. You disagree — you want this 4% position. What's the right way to handle this?"
   options={[
     "Open the Mandate editor and either accept the block, take the trade at 3%, or change `risk_score` after thinking about whether the new limit fits your actual life",
-    "Coach the PM to be more flexible on confident trades",
+    "Coach the CIO to be more flexible on confident trades",
     "Re-run the Verdict until you get a different answer",
     "Ask the Bull Researcher to argue more strongly"
   ]}
   answer={0}
-  explanation="The Mandate is yours to edit. The PM enforces what you wrote. If your Mandate no longer fits your life, change it deliberately — but change it in the editor, not through persuasion. The most tempting wrong answer is 'brief the PM' — briefing cannot edit the Mandate; that is by design."
+  explanation="The Mandate is yours to edit. The CIO enforces what you wrote. If your Mandate no longer fits your life, change it deliberately — but change it in the editor, not through persuasion. The most tempting wrong answer is 'brief the CIO' — briefing cannot edit the Mandate; that is by design."
 />
 
 <Quiz
   question="Who writes the Mandate, and who enforces it?"
   options={[
     "It's a shared document that both AMI and the user can edit",
-    "The user writes it (with Concierge guidance) and the PM enforces it deterministically against every Verdict",
+    "The user writes it (with Concierge guidance) and the CIO enforces it deterministically against every Verdict",
     "AMI writes it during onboarding and AMI enforces it",
-    "The PM writes it and the user enforces it manually"
+    "The CIO writes it and the user enforces it manually"
   ]}
   answer={1}
-  explanation="The Mandate is yours. The Concierge helps you author it during onboarding, but the values are yours and you can edit them anytime in Settings. The PM's only job is to enforce what you wrote. The tempting wrong answer is the 'shared document' one — AMI cannot edit your Mandate, ever; that asymmetry is what makes the contract meaningful."
+  explanation="The Mandate is yours. The Concierge helps you author it during onboarding, but the values are yours and you can edit them anytime in Settings. The CIO's only job is to enforce what you wrote. The tempting wrong answer is the 'shared document' one — AMI cannot edit your Mandate, ever; that asymmetry is what makes the contract meaningful."
 />
 
 ## Try it
 
-Open **Settings → Mandate**. Look at the values currently set. Ask yourself: *did I write these or did I accept the onboarding defaults six weeks ago?* Change one field that no longer fits — even by one number — and save. You just exercised the only authority the PM cannot override: your own.
+Open **Settings → Mandate**. Look at the values currently set. Ask yourself: *did I write these or did I accept the onboarding defaults six weeks ago?* Change one field that no longer fits — even by one number — and save. You just exercised the only authority the CIO cannot override: your own.
 
 ## Takeaway
 
-You write the Mandate; the PM enforces the Mandate inside the simulator. Renew the contract when your life changes — it is the only document in the app AMI cannot edit. AMI is teaching you to evaluate analyst output under your own rules, not handing you advice to follow.
+You write the Mandate; the CIO enforces the Mandate inside the simulator. Renew the contract when your life changes — it is the only document in the app AMI cannot edit. AMI is teaching you to evaluate analyst output under your own rules, not handing you advice to follow.

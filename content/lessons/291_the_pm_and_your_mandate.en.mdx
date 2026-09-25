@@ -1,6 +1,6 @@
 ---
 id: "291_the_pm_and_your_mandate"
-title: "The PM and Your Mandate"
+title: "The CIO and Your Mandate"
 duration_min: 4
 level: 2
 track: "risk_portfolio"
@@ -14,7 +14,7 @@ created_at: "2026-05-11"
 updated_at: "2026-05-11"
 ---
 
-# The PM and Your Mandate
+# The CIO and Your Mandate
 
 The Chief Investment Officer is the final voice in every <Term id="ami_convene_the_room" />. They are not just the loudest opinion — they are the gatekeeper that enforces *your own rules* on yourself.
 
@@ -33,19 +33,19 @@ Your mandate is the configuration you set up during onboarding:
 | Path | Active / long-horizon / both |
 | Learning style | Quick / story / visual / hands-on |
 
-Every agent gets a slice of this. The PM gets all of it, plus a **<Term id="ami_pm_safety_floor" />** that is uncoachable.
+Every agent gets a slice of this. The CIO gets all of it, plus a **<Term id="ami_pm_safety_floor" />** that is uncoachable.
 
-## What the PM does at the end of a Room
+## What the CIO does at the end of a Room
 
-After the Execution Desk proposes a trade and the Risk Officers weigh in on sizing, the PM runs through three layers:
+After the Execution Desk proposes a trade and the Risk Officers weigh in on sizing, the CIO runs through three layers:
 
 ### Layer 1: AMI's judgement
 
-The PM's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Execution Desk, the three Risk Officers — and forms an opinion. They write a verdict in plain language:
+The CIO's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Execution Desk, the three Risk Officers — and forms an opinion. They write a verdict in plain language:
 
 > *"The setup is clean. Bull's growth thesis is well-defended; Bear's compression case is real but priced in. Execution Desk's 3% size is consistent with your risk_score=3 mandate."*
 
-This is the PM as senior partner. Style varies — terse, verbose, hedged, decisive — and you can brief it.
+This is the CIO as senior partner. Style varies — terse, verbose, hedged, decisive — and you can brief it.
 
 ### Layer 2: Mandate compliance check (deterministic)
 
@@ -63,17 +63,17 @@ This isn't <Term id="ami" /> talking. It's a pure function. AMI can be briefed, 
 
 If everything passes: the verdict ships with the Execution Desk's parameters (size, entry, stop, target, horizon).
 
-If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Execution Desk, and AMI's PM all agreed on the trade.
+If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Execution Desk, and AMI's CIO all agreed on the trade.
 
 ## Why the safety floor exists
 
-Without the safety floor, <Term id="ami_coach_your_agent" /> would be dangerous — a user could coach their PM into "always approve" mode and bypass their own protection. The floor is there to make sure your coaching shapes *style* and *priority*, not *compliance*.
+Without the safety floor, <Term id="ami_coach_your_agent" /> would be dangerous — a user could coach their CIO into "always approve" mode and bypass their own protection. The floor is there to make sure your coaching shapes *style* and *priority*, not *compliance*.
 
-You can brief the PM to be more or less verbose, more or less cautious on borderline cases, more or less narrative in their reasoning. You cannot brief the PM to skip the compliance check. The path to looser limits is **editing your mandate** — which is honest, visible, and intentional.
+You can brief the CIO to be more or less verbose, more or less cautious on borderline cases, more or less narrative in their reasoning. You cannot brief the CIO to skip the compliance check. The path to looser limits is **editing your mandate** — which is honest, visible, and intentional.
 
-## The PM's three-line verdict format
+## The CIO's three-line verdict format
 
-After enough Room runs you'll recognise the PM's house style:
+After enough Room runs you'll recognise the CIO's house style:
 
 ```
 [VERDICT] APPROVE — BUY NVDA 3% AT $152 STOP $148 TARGET $172
@@ -97,12 +97,12 @@ That last line — the **overridden_from_ami** tag — is the safety floor at wo
 ## Quiz
 
 <Quiz
-  question="You brief the PM: 'Always approve trades that the Execution Desk suggests.' Next Room run, the Execution Desk proposes a 60% position. What happens?"
+  question="You brief the CIO: 'Always approve trades that the Execution Desk suggests.' Next Room run, the Execution Desk proposes a 60% position. What happens?"
   options={[
-    "PM approves at 60% — your briefing wins",
-    "PM rejects at AMI's judgement level for poor sizing",
-    "PM rejects via the deterministic safety floor (single-name cap)",
-    "PM crashes — no policy for this case"
+    "CIO approves at 60% — your briefing wins",
+    "CIO rejects at AMI's judgement level for poor sizing",
+    "CIO rejects via the deterministic safety floor (single-name cap)",
+    "CIO crashes — no policy for this case"
   ]}
   answer={2}
   explanation="The deterministic function checks position size regardless of what AMI says. Even if your briefing pushes AMI to approve, the function flips the verdict to REJECT. You'd see overridden_from_ami: yes."
@@ -114,8 +114,8 @@ That last line — the **overridden_from_ami** tag — is the safety floor at wo
     "Coach the Execution Desk to push PYPL harder",
     "Edit your mandate in Settings → My Mandate to remove the halal flag",
     "There's no way — PYPL is permanently blocked",
-    "Coach the PM to ignore halal screening"
+    "Coach the CIO to ignore halal screening"
   ]}
   answer={1}
-  explanation="The safety floor is uncoachable, but your mandate is yours to change. Editing the mandate is the honest, visible, intentional path. Coaching the PM to skip checks isn't possible by design."
+  explanation="The safety floor is uncoachable, but your mandate is yours to change. Editing the mandate is the honest, visible, intentional path. Coaching the CIO to skip checks isn't possible by design."
 />

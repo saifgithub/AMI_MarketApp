@@ -18,11 +18,11 @@ updated_at: "2026-05-12"
 
 # The safety floor's audit trail
 
-A check that runs but does not record itself is a check you cannot trust. Every PM compliance result in <Term id="ami" /> — PASS or BLOCK, with the specific clause that fired — gets written to the <Term id="ami_decision_journal" /> alongside the <Term id="ami_verdict" />. That trail is yours to inspect. You can see which <Term id="ami_mandate" /> clauses bound most often, which trades the PM blocked, what your Mandate values were at the time of each decision, and whether your subsequent edits to the Mandate correlated with different PM behaviour. By the end of this lesson you will know how to read the audit trail and what it can tell you that no single Verdict can.
+A check that runs but does not record itself is a check you cannot trust. Every CIO compliance result in <Term id="ami" /> — PASS or BLOCK, with the specific clause that fired — gets written to the <Term id="ami_decision_journal" /> alongside the <Term id="ami_verdict" />. That trail is yours to inspect. You can see which <Term id="ami_mandate" /> clauses bound most often, which trades the CIO blocked, what your Mandate values were at the time of each decision, and whether your subsequent edits to the Mandate correlated with different CIO behaviour. By the end of this lesson you will know how to read the audit trail and what it can tell you that no single Verdict can.
 
 ## How this plays out in real markets
 
-Suppose over six weeks you convene the Room 24 times across AAPL, NVDA, MSFT, AMZN, and JPM. Open the Decision Journal and filter by *PM result*. You see:
+Suppose over six weeks you convene the Room 24 times across AAPL, NVDA, MSFT, AMZN, and JPM. Open the Decision Journal and filter by *CIO result*. You see:
 
 - 18 PASS — proposed sizes 2–4%, well inside the 4.5% cap your `risk_score: 4` sets.
 - 4 BLOCK on the risk-tier size cap — the Execution Desk proposed 6–7% three times on NVDA and once on TSLA. Each block recorded with timestamp, the Mandate value that was active (`risk_score: 4`, a 4.5% cap), and the proposed size.
@@ -35,26 +35,26 @@ Critically, the trail records the Mandate values *at the time of the decision*, 
 
 ## The trap
 
-The trap is using the audit trail to argue with the PM after the fact. *"It blocked me on XOM but XOM ran 40% — the PM cost me money."* The audit trail is not evidence the PM was wrong. The PM was enforcing your Mandate. If the Mandate's `no_fossil` flag was active and you are now regretting it, the trail tells you that *you* chose that exclusion, and the system honoured it. The right reading: the audit trail is for *you* to inspect your own past judgment, not for litigating the PM's behaviour. The PM did not pick the rules — you did. The trail proves the rules were applied consistently, which is the only thing it can prove.
+The trap is using the audit trail to argue with the CIO after the fact. *"It blocked me on XOM but XOM ran 40% — the CIO cost me money."* The audit trail is not evidence the CIO was wrong. The CIO was enforcing your Mandate. If the Mandate's `no_fossil` flag was active and you are now regretting it, the trail tells you that *you* chose that exclusion, and the system honoured it. The right reading: the audit trail is for *you* to inspect your own past judgment, not for litigating the CIO's behaviour. The CIO did not pick the rules — you did. The trail proves the rules were applied consistently, which is the only thing it can prove.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="You scroll your Decision Journal and find five PM blocks on the risk-tier size cap over the last month, all on NVDA. What's the most useful inference?"
+  question="You scroll your Decision Journal and find five CIO blocks on the risk-tier size cap over the last month, all on NVDA. What's the most useful inference?"
   options={[
     "The Execution Desk keeps proposing oversize positions on NVDA — either NVDA's setups genuinely warrant more size (and you should consider whether your `risk_score` matches your risk appetite) or the Execution Desk is over-enthusiastic; either way the audit trail surfaced a pattern worth thinking about",
-    "The PM is being too strict on NVDA specifically",
+    "The CIO is being too strict on NVDA specifically",
     "The blocks should be ignored because NVDA ran higher anyway",
     "AMI dislikes NVDA"
   ]}
   answer={0}
-  explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Execution Desk's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the 'ignore the blocks because NVDA ran higher anyway' one — outcome bias retconning the PM as wrong; the PM enforced your stated rules, and outcome on one trade does not validate ignoring them."
+  explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Execution Desk's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the 'ignore the blocks because NVDA ran higher anyway' one — outcome bias retconning the CIO as wrong; the CIO enforced your stated rules, and outcome on one trade does not validate ignoring them."
 />
 
 <Quiz
-  question="You changed `risk_score` from 3 to 4 two weeks ago. You audit a PM block from a month ago that fired on a 4% proposal. What does the audit trail show?"
+  question="You changed `risk_score` from 3 to 4 two weeks ago. You audit a CIO block from a month ago that fired on a 4% proposal. What does the audit trail show?"
   options={[
     "The block has been deleted because the rule changed",
     "The audit trail shows whichever Mandate value the user picks",
@@ -67,8 +67,8 @@ The trap is using the audit trail to argue with the PM after the fact. *"It bloc
 
 ## Try it
 
-Open the **Decision Journal**, filter by *PM result: BLOCK*, and read three. For each, note the clause that fired (size, drawdown, exclusion) and the Mandate value active at the time. Ask yourself whether the same trade today, under your current Mandate, would still block. If three out of three would now pass, your Mandate moved — and the trail just told you so.
+Open the **Decision Journal**, filter by *CIO result: BLOCK*, and read three. For each, note the clause that fired (size, drawdown, exclusion) and the Mandate value active at the time. Ask yourself whether the same trade today, under your current Mandate, would still block. If three out of three would now pass, your Mandate moved — and the trail just told you so.
 
 ## Takeaway
 
-The PM logs every block with the clause and the Mandate value of the moment. Read your trail periodically; it is the only honest record of what rules you were actually training under. AMI is a <Term id="training_simulator" /> — the trail is for evaluating your own past judgment, not litigating advice you were never given.
+The CIO logs every block with the clause and the Mandate value of the moment. Read your trail periodically; it is the only honest record of what rules you were actually training under. AMI is a <Term id="training_simulator" /> — the trail is for evaluating your own past judgment, not litigating advice you were never given.
