@@ -57,6 +57,27 @@ def test_scrub_paths_redact_bodies(scrub_path: str) -> None:
     assert recorded[0]["response_body"] == b"[REDACTED]"
 
 
+@pytest.mark.parametrize("scrub_path", sorted(SCRUB_PATHS))
+def test_scrub_paths_redact_bodies_with_a_trailing_slash(scrub_path: str) -> None:
+    """DEF430 r3 MINOR-1 (u66): the trailing-slash normalisation also covers
+    SCRUB_PATHS, but nothing pinned it. A POST to `<auth route>/` is recorded
+    under the slash path, which is not literally in SCRUB_PATHS."""
+    slash_path = scrub_path + "/"
+    app = _make_app(slash_path)
+    recorded: list[dict] = []
+
+    def _capture(**kwargs: object) -> None:
+        recorded.append(dict(kwargs))
+
+    with patch("app.middleware.http_audit.record_http", side_effect=_capture):
+        client = TestClient(app, raise_server_exceptions=False)
+        client.post(slash_path, json={"identity_token": "secret-jwt", "password": "hunter2"})
+
+    assert len(recorded) == 1
+    assert recorded[0]["request_body"] == b"[REDACTED]"
+    assert recorded[0]["response_body"] == b"[REDACTED]"
+
+
 def test_non_scrub_path_records_body() -> None:
     app = _make_app("/v1/some/other/route")
     recorded: list[dict] = []
