@@ -221,7 +221,7 @@ void main() {
       // (172 - 150) / (150 - 141) = 2.4
       expect(find.text('2.4 : 1'), findsOneWidget);
       // The minted stop is named, and named as AMI's — not the PM's.
-      expect(find.textContaining('SET BY AMI, NOT THE PM'), findsOneWidget);
+      expect(find.textContaining('SET BY AMI, NOT THE CIO'), findsOneWidget);
       expect(find.textContaining('STOP'), findsWidgets);
     });
 
@@ -276,18 +276,18 @@ void main() {
   });
 
   group('CR127 — the PM gets a card of its own, after the eleven', () {
-    testWidgets('the reasoning card is titled PORTFOLIO MANAGER', (t) async {
+    testWidgets('the reasoning card is titled CHIEF INVESTMENT OFFICER', (t) async {
       // The prose is the PM's, and it used to arrive unattributed — plain
       // body text after eleven labelled analyst hexes, reading as the
       // board's narration rather than as the twelfth agent's.
       await _pump(t, _board());
-      expect(find.text('PORTFOLIO MANAGER'), findsOneWidget);
+      expect(find.text('CHIEF INVESTMENT OFFICER'), findsOneWidget);
     });
 
     testWidgets('titled on every outcome that produced reasoning', (t) async {
       for (final o in VerdictOutcome.values) {
         await _pump(t, _board(outcome: o, actionToken: 'SOMETHING'));
-        expect(find.text('PORTFOLIO MANAGER'), findsOneWidget, reason: '$o');
+        expect(find.text('CHIEF INVESTMENT OFFICER'), findsOneWidget, reason: '$o');
       }
     });
 
@@ -295,10 +295,10 @@ void main() {
       // A titled but empty PM card asserts the PM said something on a run
       // where it said nothing. Absent is never inferred.
       await _pump(t, _board(reason: ''));
-      expect(find.text('PORTFOLIO MANAGER'), findsNothing);
+      expect(find.text('CHIEF INVESTMENT OFFICER'), findsNothing);
 
       await _pump(t, _board(reason: '   '));
-      expect(find.text('PORTFOLIO MANAGER'), findsNothing,
+      expect(find.text('CHIEF INVESTMENT OFFICER'), findsNothing,
           reason: 'whitespace is not reasoning');
     });
 

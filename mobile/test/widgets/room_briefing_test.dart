@@ -88,7 +88,7 @@ void main() {
     expect(find.textContaining('ANALYST DESK'), findsOneWidget);
     expect(find.text('RESEARCH DEBATE'), findsOneWidget);
     expect(find.text('RISK REVIEW'), findsOneWidget);
-    expect(find.text('PM VERDICT'), findsOneWidget);
+    expect(find.text('CIO VERDICT'), findsOneWidget);
   });
 
   testWidgets('the desk count says how many of the desk have reported',

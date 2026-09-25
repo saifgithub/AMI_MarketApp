@@ -143,9 +143,13 @@ class _SheetAction extends StatelessWidget {
           children: [
             Icon(icon, color: color),
             const SizedBox(width: AmiSpacing.s),
-            Text(
-              label,
-              style: AmiTypography.labelMono.copyWith(color: color),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AmiTypography.labelMono.copyWith(color: color),
+              ),
             ),
           ],
         ),
