@@ -2257,3 +2257,22 @@ echo back — and confirm the guard's file-glob actually reaches each one. A gua
 scoped to "the corpus I was already editing" is not wrong, it is just answering a
 narrower question than "is the rename done," and the two get conflated exactly
 when the narrower one is green.
+
+**Third instance (DEF429, 2026-09-25).** DEF423's own lane-C writeup flagged,
+but explicitly left unfixed as out of scope, that `content/daily_challenges/
+2026_07.json` rendered raw snake_case `agent_id`s (`market_analyst`,
+`conservative_debator`, literal `["portfolio_manager", "trader",
+"bear_researcher", "conservative_debator"]` quiz options) as user-facing quiz
+text — a label class neither `test_cr160_agent_rename.py` (checks retired
+English labels) nor `test_def423_agent_rename_residue.py` (checks the same
+retired-label class in `mobile/lib`/`agent.dart`/`content/agents/*.md`) could
+ever have caught, because a wire id was never one of the retired labels to
+begin with. New guard: `test_def429_no_raw_agent_ids_in_content.py`, importing
+`TWELVE_AGENT_IDS` from `app.schemas.agents` (never hard-coded) and walking
+every EN string in `content/daily_challenges/*.json`, `content/ai_coach/*.json`,
+and `content/glossary/terms.en.json` outside known code-key fields, plus a
+sibling check on `content/lessons/*.en.mdx` prose outside frontmatter/`agent="..."`
+props/fenced code. `trader` is excluded from the scan (ordinary English
+vocabulary throughout this corpus, same ambiguity CR160's own guard already
+documents for the label "Trader"); `concierge` is excluded because it is
+simultaneously the id and the correct display name.
