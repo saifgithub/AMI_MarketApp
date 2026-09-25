@@ -82,33 +82,92 @@ def _close_truncated_object(candidate: str) -> str | None:
     return repaired
 
 
+class ConflictingDecision:
+    """RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — a sentinel distinct
+    from `None`, returned by `extract_json_object` when it found a real,
+    parseable decision AND a second, conflicting one after it.
+
+    Round 2's fix returned bare `None` for this case, indistinguishable from
+    "genuinely unparseable" — and `room_runner.py`'s caller treats a `None`
+    verdict as DEF058's cue to run ONE reformat retry, which DEF067 lets
+    upgrade to APPROVE (never downgrade). So a reply carrying a retracted
+    draft APPROVE and a final PASS could still end up re-asked, and the
+    model's second read — not the room's floor — decided the conflict, in
+    the APPROVE direction only. The auditor's own fix: "on a detected
+    conflict, return PASS directly — never re-ask." That decision belongs to
+    the PM-verdict caller (only room_runner.py's `_parse_pm_verdict` has a
+    concept of PASS/APPROVE — `brief_engine.py`'s and the Risk Officer's own
+    `extract_json_object` calls parse shapes with no `action` key, so this
+    sentinel can never reach them; see `_extract_second_decision`'s
+    `"action" in decoded` scoping below), so this class only marks the fact
+    for the caller to act on — it carries no behaviour itself.
+    """
+
+    __slots__ = ("first", "second")
+
+    def __init__(self, first: dict, second: dict) -> None:
+        self.first = first
+        self.second = second
+
+
 def _extract_second_decision(tail: str) -> dict | None:
     """MINOR-2 helper — is there ANOTHER complete `{"action": …}`-shaped
-    object anywhere in `tail`? Deliberately simple (a plain brace-scan +
-    `raw_decode`, not the DEF352/DEF398 recovery machinery above): this only
-    ever answers "is a second decision sitting in the part we didn't use",
-    never "recover a verdict from that second object" — a genuinely malformed
-    tail correctly returns None here, which is `extract_json_object`'s cue to
-    keep the FIRST decision (no ambiguity found), not to manufacture one from
-    a scrap.
+    object anywhere in `tail`?
+
+    RETRO-PM-FLOOR round 3 (MINOR-2 residual 2): scans EVERY top-level object
+    in `tail`, not just the first `{`. The auditor's measured gap was DEF398's
+    own shape — the PM quoting its own "begin with '{' and end with '}'"
+    contract back at us inside the trailing prose puts a stray, non-decision
+    brace before the real second decision, so a scan that stopped at the
+    first `{` (round 2's version) walked into the quoted brace, failed to
+    decode a dict with `action`, and returned `None` — hiding a real
+    conflicting decision sitting right after it.
+
+    Deliberately simple (repeated brace-scan + `raw_decode`, not the
+    DEF352/DEF398 recovery machinery above): this only ever answers "is a
+    second decision sitting in the part we didn't use", never "recover a
+    verdict from that second object" — a tail with no decision-shaped object
+    anywhere correctly returns None here, which is `extract_json_object`'s
+    cue to keep the FIRST decision (no ambiguity found), not to manufacture
+    one from a scrap.
     """
-    first = tail.find("{")
-    if first == -1:
-        return None
-    try:
-        decoded, _end = json.JSONDecoder(strict=False).raw_decode(tail[first:])
-    except json.JSONDecodeError:
-        return None
-    return decoded if isinstance(decoded, dict) and "action" in decoded else None
+    pos = 0
+    while True:
+        first = tail.find("{", pos)
+        if first == -1:
+            return None
+        try:
+            decoded, end = json.JSONDecoder(strict=False).raw_decode(tail[first:])
+        except json.JSONDecodeError:
+            # Not a complete object starting here (e.g. a stray/quoted brace
+            # in prose) — keep scanning from the next character, not the
+            # next `{`, so a decode failure can't skip past a real object
+            # that starts one character later.
+            pos = first + 1
+            continue
+        if isinstance(decoded, dict) and "action" in decoded:
+            return decoded
+        pos = first + end
 
 
-def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | None:
+def extract_json_object(
+    text: str, *, repair_truncated: bool = False
+) -> dict | ConflictingDecision | None:
     """Extract the first JSON object found in `text`, tolerating ```json
     fences and surrounding prose. Returns None if nothing parses.
 
     `repair_truncated` is opt-in (DEF258): only the PM verdict path asks for it,
     and only after a strict read has already failed, because a repaired object
     is a partial read and the caller must disclose it as one.
+
+    RETRO-PM-FLOOR round 3 (MINOR-2 residual 1): can also return a
+    `ConflictingDecision` instead of `None` — see that class's docstring.
+    Only ever happens for text containing an `action` key (the PM/CIO
+    verdict shape), so `brief_engine.py`'s and the Risk Officer's own calls
+    (neither shape carries `action`) can never receive one; callers that
+    only ever expect `dict | None` and treat a truthy non-None specially
+    would need updating, but none currently do — `_extract_second_decision`'s
+    `"action" in decoded` scoping is what keeps this safe today.
     """
     if not text:
         return None
@@ -191,7 +250,13 @@ def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | 
                 _tail = candidate[_end:]
                 _second = _extract_second_decision(_tail)
                 if _second is not None and _second.get("action") != decoded.get("action"):
-                    return None
+                    # RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — round 2
+                    # returned bare `None` here, indistinguishable from
+                    # "genuinely unparseable" to the caller, which let
+                    # DEF058's reformat retry re-ask the model and DEF067
+                    # upgrade the reply to APPROVE. A sentinel lets
+                    # `room_runner.py` fail straight to PASS instead.
+                    return ConflictingDecision(decoded, _second)
             return decoded
         last = candidate.rfind("}")
         if last > 0 and last + 1 < len(candidate):

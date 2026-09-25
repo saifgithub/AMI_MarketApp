@@ -21,7 +21,7 @@ while violating it. The parser is the control. The structural control is CR210's
 import json
 from pathlib import Path
 
-from app.services.llm_json import extract_json_object
+from app.services.llm_json import ConflictingDecision, extract_json_object
 
 # The tail measured on arms h_short / g_learning, reduced to its defeating
 # feature: the model quoting the JSON-only rule back at us.
@@ -68,9 +68,23 @@ def test_two_conflicting_decisions_fail_safe_not_first_wins():
     `{"action":"APPROVE"}` followed by a different final `{"action":"REJECT"}`
     read as APPROVE. Two conflicting decisions in one reply is an uncertain
     decision, and DEF059's direction for those is to fail safe (unparseable),
-    never to silently pick the first."""
+    never to silently pick the first.
+
+    RETRO-PM-FLOOR round 3 (MINOR-2 residual 1): round 2 returned bare
+    `None` here, indistinguishable to the caller from "genuinely
+    unparseable" — which let `room_runner.py`'s DEF058 reformat retry
+    re-ask the model, and DEF067 lets that retry recover an APPROVE but
+    never downgrade one, so the conflict could still resolve to APPROVE.
+    Round 3 returns a distinguishable `ConflictingDecision` sentinel so the
+    caller can fail straight to PASS instead of re-asking — this test pins
+    only that it is NOT a real parsed dict (still "not the decision"); the
+    caller-side PASS-without-reformat behaviour is pinned in
+    room_runner.py's own test."""
     raw = '{"action": "APPROVE"}\n\nFor contrast: {"action": "REJECT"}'
-    assert extract_json_object(raw) is None
+    result = extract_json_object(raw)
+    assert isinstance(result, ConflictingDecision)
+    assert result.first == {"action": "APPROVE"}
+    assert result.second == {"action": "REJECT"}
 
 
 def test_two_objects_with_the_SAME_action_are_not_a_conflict():

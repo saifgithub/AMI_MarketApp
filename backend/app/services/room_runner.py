@@ -115,7 +115,7 @@ from app.services.llm_gateway import (
     OutputConstraint,
     get_llm_gateway,
 )
-from app.services.llm_json import extract_json_object
+from app.services.llm_json import ConflictingDecision, extract_json_object
 # CR219 R59-F1/F3/F6 (lane B1) — the sheet-figure checker for prose: a
 # labelled numeral in analyst prose, a stance-envelope HEADLINE, or a PM
 # kill_criterion that disagrees with the fact sheet's own value for that
@@ -2137,6 +2137,21 @@ _PM_TRUNCATED_NO_NARRATION = (
     "this as an explanation we lost, not one the PM declined to give.]"
 )
 
+# RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — the reply carried a real,
+# parseable decision AND a second, conflicting one after it (e.g. a draft
+# APPROVE the PM then retracted to a final PASS). DEF067's reformat retry
+# only ever RECOVERS an APPROVE and never downgrades, so re-asking the model
+# here would let its second read settle the conflict in the APPROVE
+# direction only — the opposite of what the retraction said. Fail straight
+# to PASS instead, same `[AMI …]` disclosure voice as the other PM-parse
+# fallbacks (CR106 §3.3).
+_PM_CONFLICTING_DECISION = (
+    "[AMI: the Chief Investment Officer's reply contained two different "
+    "decisions — one appears to have been retracted or corrected mid-reply. "
+    "Rather than guess which one it meant, this is treated as no decision at "
+    "all.]"
+)
+
 
 # DEF239 (≡ CR156 A2) — the PM writes its rationale under a key that is not
 # always `narration`, and reading one key alone published "it wrote no rationale"
@@ -2448,6 +2463,27 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     caller fails safe to PASS in that case rather than fabricating APPROVE.
     """
     parsed = extract_json_object(text)
+    if isinstance(parsed, ConflictingDecision):
+        # RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — a real DECISION was
+        # returned here, not "unparseable"; DEF058's reformat retry exists
+        # only for the latter. Returning a real Verdict directly (rather
+        # than None) is what stops the caller from re-asking the model at
+        # all — `if parsed is None:` at the call site is what triggers
+        # `_reformat_pm_response`, and DEF067 lets that retry recover an
+        # APPROVE but never downgrade one, so re-asking here would let the
+        # conflict resolve itself in the one direction the retraction
+        # argued against.
+        logger.warning(
+            "room_pm_conflicting_decision",
+            ticker=ctx.ticker,
+            first_action=parsed.first.get("action"),
+            second_action=parsed.second.get("action"),
+        )
+        return _PM_CONFLICTING_DECISION, Verdict(
+            action=VerdictAction.PASS,
+            reason=_PM_CONFLICTING_DECISION,
+            overridden_from_llm=True,
+        )
     truncated = False
     if parsed is None:
         # DEF258 — the decode budget is a ceiling, and the PM reaches it: 2 of
@@ -4587,6 +4623,7 @@ class RoomRunner:
                 user_id=str(p.user_id),
                 error=str(exc)[:200],
             )
+            credit_cost: int | None = None
             with get_session() as s:
                 row = s.execute(
                     select(RoomRunRow).where(RoomRunRow.id == p.run_id)
@@ -4597,6 +4634,30 @@ class RoomRunner:
                         "respawn abandoned: could not resolve the real portfolio "
                         f"snapshot ({str(exc)[:150]}) — never re-run against a "
                         "fabricated default"
+                    )
+                    credit_cost = row.credit_cost
+            # RETRO-PM-FLOOR round 2 (auditor U68, MINOR-3) — the run was
+            # billed at start_run (CR039's own rule: a failure on our side
+            # gives the credits back). This branch marked the row `failed`
+            # and returned without refunding, keeping the user's credits for
+            # a convene that never ran at all — the same gap
+            # `_sweep_stuck_runs`' retry-exhausted `failed` branch has
+            # (pre-existing, not fixed here; this branch is new in this
+            # round). Off the event loop, same as the other DB writer above,
+            # via the locked credit path (`credit_service.refund` ->
+            # `_lock_user_row`).
+            if credit_cost:
+                try:
+                    await asyncio.to_thread(
+                        refund, p.user_id, credit_cost,
+                        reason=f"room_respawn_abandoned:{p.run_id}",
+                    )
+                except Exception as refund_exc:
+                    logger.error(
+                        "room_respawn_refund_failed",
+                        run_id=str(p.run_id),
+                        credits=credit_cost,
+                        error=str(refund_exc)[:200],
                     )
             return
 

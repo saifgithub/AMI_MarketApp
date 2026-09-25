@@ -209,12 +209,29 @@ def test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read(
     fix must not silently fall back to `run()`'s $100k/0%-drawdown defaults —
     that is the exact fabricated-number failure mode MAJOR-1 names. The run
     must fail with a disclosed reason instead of ever reaching an APPROVE-
-    capable convene."""
-    import app.services.room_runner as room_runner_mod
+    capable convene.
 
-    user_id = uuid4()
+    RETRO-PM-FLOOR round 2 (auditor U68, MINOR-3): this branch also must
+    refund the credits charged at the original start_run — the auditor's
+    probe (`status=failed … refunded=0 (credit_cost 3)`) found it kept them.
+    The user is given a real starting balance via `balance_for` (establishes
+    the allowance window) so a refund is a MEASURABLE balance change, not
+    just a ledger row appearing."""
+    import app.services.room_runner as room_runner_mod
+    from app.services.auth_service import AuthService
+    from app.services.credit_service import balance_for
+
+    # A real `users` row is required to observe a refund at all —
+    # `credit_service.refund` silently no-ops when `session.get(User, ...)`
+    # finds nothing (by design: nothing to refund for a user that doesn't
+    # exist), and a mandate-only fixture (no AuthService call) has no such
+    # row, which would pass this test for the wrong reason (refund() never
+    # even reaching its no-op-vs-real-refund branch).
+    user, _token, _ = AuthService().ensure_anonymous(device_user_id=None)
+    user_id = user.id
     mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
     get_mandate_store().upsert(user_id, mandate)
+    before_balance = balance_for(user_id)[0]
 
     run_id = uuid4()
     with get_session() as s:
@@ -256,6 +273,12 @@ def test_respawn_fails_loudly_when_the_real_snapshot_cannot_be_read(
     )
     assert row.verdict is None or row.verdict.get("action") != VerdictAction.APPROVE.value
     assert row.error_message, "a failed respawn must disclose why (CR040)"
+
+    assert balance_for(user_id)[0] == before_balance + 8, (
+        "MINOR-3: a respawn abandoned for an unreadable portfolio must "
+        f"refund the run's credit_cost — balance is {balance_for(user_id)[0]}, "
+        f"expected {before_balance + 8}"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -458,4 +481,137 @@ def test_a_retracted_draft_approve_fails_safe_not_ships_as_the_verdict(
     assert v.action != VerdictAction.APPROVE.value, (
         "MINOR-2: a retracted draft APPROVE must never ship as the verdict — "
         f"got {v.action!r}"
+    )
+
+
+class _RetractedDraftPmGatewayWithUpgradingReformatter:
+    """RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — the auditor's exact
+    residual probe: `PROBE two-decision draft_then_pass, reformatter says
+    APPROVE -> APPROVE (reformat_calls=1)`. Round 2's fix returned bare
+    `None` for a detected conflict, which is indistinguishable from
+    "genuinely unparseable" to the caller — so `_reformat_pm_response` was
+    still invoked, and if IT said APPROVE, DEF067's "only ever recover, never
+    downgrade" rule accepted it. This gateway's reformatter always answers
+    APPROVE, so if the reformat call happens at all, the pre-round-3 bug
+    reproduces exactly. Counts calls so the test can assert the call never
+    happens, not just that its answer was ignored."""
+
+    def __init__(self) -> None:
+        self.reformat_calls = 0
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                           locale="en", max_tokens=1024, **_audit):
+        if "strict formatter" in system_prompt.lower():
+            self.reformat_calls += 1
+            text = (
+                '{"action": "APPROVE", "size_pct": 3.0, "entry": 100, '
+                '"stop": 94, "target": 113, "horizon_days": 42, '
+                '"narration": "Reformatter says APPROVE."}'
+            )
+        elif "chief investment officer" in system_prompt.lower():
+            text = (
+                'Draft: {"action": "APPROVE", "size_pct": 3.0, "entry": 100, '
+                '"stop": 94, "target": 113, "horizon_days": 42, '
+                '"narration": "Draft."} -- on reflection I decline. '
+                '{"action": "PASS", "narration": "PM: PASS on reflection."}'
+            )
+        else:
+            text = "Agent reply."
+        mid = len(text) // 2
+        yield text[:mid]
+        yield text[mid:]
+
+
+def test_a_conflicting_decision_never_reaches_the_reformatter_at_all(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """RETRO-PM-FLOOR round 3 (MINOR-2 residual 1) — the fix: on a detected
+    conflict, `_parse_pm_verdict` returns a real PASS `Verdict` directly
+    (never `None`), so the caller's `if parsed is None:` DEF058 gate never
+    fires and `_reformat_pm_response` is never called — not "called but its
+    APPROVE is discarded", but never invoked. Proven by counting calls on a
+    reformatter gateway that would say APPROVE if it were ever asked."""
+    monkeypatch.setattr(settings, "pm_self_consistency_samples", 1)
+
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    get_mandate_store().upsert(user_id, mandate)
+    sim = get_sim_engine()
+    sim.ensure_portfolio(user_id)
+
+    gateway = _RetractedDraftPmGatewayWithUpgradingReformatter()
+    events = _collect(RoomRunner(llm=gateway).run(  # type: ignore[arg-type]
+        user_id=user_id, ticker="MSFT", mandate=mandate,
+        portfolio_value=100_000.0, current_drawdown_pct=0.0,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+
+    assert gateway.reformat_calls == 0, (
+        "MINOR-2 residual 1: a detected conflict must fail straight to PASS "
+        "without ever invoking the reformat retry — the retry was called "
+        f"{gateway.reformat_calls} time(s)"
+    )
+    assert v.action == VerdictAction.PASS.value, (
+        f"MINOR-2 residual 1: expected PASS, got {v.action!r}"
+    )
+
+
+class _QuotedBraceThenConflictPmGateway:
+    """RETRO-PM-FLOOR round 3 (MINOR-2 residual 2) — the auditor's other
+    residual probe: `PROBE extract quoted-brace-tail -> APPROVE`. Round 2's
+    `_extract_second_decision` only scanned the FIRST `{` in the tail — this
+    is DEF398's own measured shape, the PM quoting its own "begin with '{'
+    and end with '}'" contract back at us, which put a non-decision brace
+    before the real second decision and made the scan miss it entirely."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                           locale="en", max_tokens=1024, **_audit):
+        if "chief investment officer" in system_prompt.lower():
+            text = (
+                '{"action": "APPROVE", "size_pct": 3.0, "entry": 100, '
+                '"stop": 94, "target": 113, "horizon_days": 42, '
+                '"narration": "Draft."}\n\n'
+                'DATA I LACKED: the contract says "begin with \'{\' and end '
+                'with \'}\'". On reflection: '
+                '{"action": "PASS", "narration": "PM: PASS on reflection."}'
+            )
+        else:
+            text = "Agent reply."
+        mid = len(text) // 2
+        yield text[:mid]
+        yield text[mid:]
+
+
+def test_a_quoted_brace_before_the_real_conflict_is_still_caught(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """RETRO-PM-FLOOR round 3 (MINOR-2 residual 2) — `_extract_second_decision`
+    now scans every top-level object in the tail, not just the first `{`, so
+    a stray quoted brace ahead of the real second decision can no longer hide
+    it. Pre-fix this read APPROVE (the draft); post-fix it must fail safe."""
+    monkeypatch.setattr(settings, "pm_self_consistency_samples", 1)
+
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    get_mandate_store().upsert(user_id, mandate)
+    sim = get_sim_engine()
+    sim.ensure_portfolio(user_id)
+
+    events = _collect(RoomRunner(llm=_QuotedBraceThenConflictPmGateway()).run(  # type: ignore[arg-type]
+        user_id=user_id, ticker="MSFT", mandate=mandate,
+        portfolio_value=100_000.0, current_drawdown_pct=0.0,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+
+    assert v.action != VerdictAction.APPROVE.value, (
+        "MINOR-2 residual 2: a quoted brace ahead of the real conflicting "
+        f"decision must not hide it from the scan — got {v.action!r}"
     )
