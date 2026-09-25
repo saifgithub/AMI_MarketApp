@@ -22,6 +22,7 @@ from app.schemas.classification import (
 from app.schemas.liquidity import LiquidityStatus, LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
+from app.services.liquidity_lookup import resolve_liquidity_with_lookup
 from app.services.sector_allocation import (
     sector_cap_breach as _sector_cap_breach,
 )
@@ -404,11 +405,18 @@ def check_mandate_compliance(
     #   even less reliably than a well-behaved one.
     #
     #   UNKNOWN (not EXCLUDED) is what a ticker outside the classified universe
-    #   resolves to — required precisely BECAUSE `liquid_only` is default-on: the
-    #   alternative would silently reject every name outside the ~503 S&P parent
-    #   constituents this snapshot classifies, the DEF059 inversion trap, and the
-    #   wrong direction for this flag specifically (an unmeasured name skews
-    #   smaller — but AMI did not MEASURE it, so it cannot claim the ruling).
+    #   used to resolve to unconditionally. DEF417 round 2 (Saiful, 2026-09-25:
+    #   "Look it up on demand"): 96% of tradable symbols sit outside the ~503
+    #   S&P names this snapshot classifies, so UNKNOWN=permitted meant the
+    #   filter could never refuse a real microcap. `resolve_liquidity_with_lookup`
+    #   (`app.services.liquidity_lookup`) now fetches market cap + average
+    #   volume ON DEMAND for exactly that UNKNOWN case — same source
+    #   (`yf.Ticker(t).info`), 24h-cached, off the event loop — and judges it
+    #   against the SAME two floors. Only when the on-demand read ITSELF fails
+    #   or times out does the old "permitted, no ruling" disclosure apply
+    #   (`LiquidityStatus.LOOKUP_FAILED`, the DEF059 inversion trap otherwise) —
+    #   never a silent block on a name the snapshot legitimately never measured
+    #   and the on-demand read then also could not answer for.
     #
     #   A sell is never blocked by liquid_only — like `long_only`, this
     #   constrains what enters a position, not what leaves one; forcing a user to
@@ -416,14 +424,19 @@ def check_mandate_compliance(
     #   be the sizing-cap-on-sells mistake in a new shape.
     liquidity_verdict: LiquidityVerdict | None = None
     if c.liquid_only and proposed.is_buy:
-        resolve_liquidity = getattr(classification_universe, "resolve_liquidity", None)
-        if callable(resolve_liquidity):
+        if classification_universe is not None:
             price_for_liquidity = proposed.limit_price or (quotes or {}).get(t)
-            liquidity_verdict = resolve_liquidity(t, price=price_for_liquidity)
+            liquidity_verdict = resolve_liquidity_with_lookup(
+                classification_universe, t, price=price_for_liquidity
+            )
         else:
             # None/unavailable universe → paused, same as the halal/classification
             # paused branches. A bare object with no resolver (legacy test doubles)
-            # degrades the same way rather than raising.
+            # degrades the same way rather than raising —
+            # `resolve_liquidity_with_lookup` itself returns UNAVAILABLE when
+            # `getattr(universe, "resolve_liquidity", None)` isn't callable, so a
+            # non-None-but-bare double still routes through it correctly; `None`
+            # is short-circuited here only to avoid the import/call overhead.
             liquidity_verdict = LiquidityVerdict(
                 status=LiquidityStatus.UNAVAILABLE, ticker=t,
             )

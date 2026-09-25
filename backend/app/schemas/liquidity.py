@@ -86,12 +86,26 @@ ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000
 
 _SOURCE = "AMI sector/industry classification snapshot (yfinance market cap + average volume)"
 
+# DEF417 round 2 — the on-demand lookup's own source label, distinct from the
+# snapshot's (`_SOURCE`), so a verdict's `source` field always names which read
+# actually produced it, exactly as `ClassificationVerdict` already does per kind.
+ON_DEMAND_SOURCE = "AMI on-demand liquidity lookup (yfinance, 24h cached)"
+
 
 class LiquidityStatus(str, Enum):
     PERMITTED = "permitted"
     EXCLUDED = "excluded"
     UNKNOWN = "unknown"
     UNAVAILABLE = "unavailable"
+    # DEF417 round 2 — Saiful's ruling: a ticker outside the ~503-name snapshot
+    # is looked up ON DEMAND (yfinance, cached 24h) rather than left UNKNOWN.
+    # LOOKUP_FAILED is the new, narrower failure mode this creates: the SNAPSHOT
+    # is healthy (unlike UNAVAILABLE, where the whole snapshot is stale/absent),
+    # but the specific on-demand read for THIS ticker errored or timed out.
+    # Same non-blocking treatment as UNAVAILABLE (`is_disclosed_pause`) — "AMI
+    # tried to look this name up and couldn't" must never silently become
+    # either a block (DEF059 direction) or a silent permit (CR040).
+    LOOKUP_FAILED = "lookup_failed"
 
 
 def _as_of_str(as_of: date | None) -> str:
@@ -146,10 +160,12 @@ class LiquidityVerdict(BaseModel):
 
     @property
     def is_disclosed_pause(self) -> bool:
-        """UNAVAILABLE — the screen is paused, and that must still reach the
-        user (CR040 degrade-loudly), just as an advisory rather than a block.
-        See `is_blocking`'s docstring for why this flag doesn't hard-block."""
-        return self.status is LiquidityStatus.UNAVAILABLE
+        """UNAVAILABLE (whole snapshot stale/absent) or LOOKUP_FAILED (this one
+        ticker's on-demand read errored/timed out) — either way the screen
+        didn't run for this trade, and that must still reach the user (CR040
+        degrade-loudly), as an advisory rather than a block. See `is_blocking`'s
+        docstring for why this flag doesn't hard-block on either state."""
+        return self.status in (LiquidityStatus.UNAVAILABLE, LiquidityStatus.LOOKUP_FAILED)
 
     def message(self) -> str:
         """User-facing line, AMI by name (never "the AI")."""
@@ -188,6 +204,18 @@ class LiquidityVerdict(BaseModel):
                 f"AMI hasn't measured {t}'s market cap or trading volume for the "
                 "liquidity filter — it isn't in AMI's classified universe. That's "
                 "not a ruling either way; the trade is permitted."
+            )
+        if self.status is LiquidityStatus.LOOKUP_FAILED:
+            # DEF417 round 2 — the snapshot didn't have this ticker, AMI tried an
+            # on-demand read and it errored or timed out. Named distinctly from
+            # UNAVAILABLE (below) so a user never reads "AMI couldn't refresh its
+            # classification" when the classification is fine and only this one
+            # ticker's live lookup failed.
+            return (
+                f"AMI tried to look up {t}'s market cap and trading volume "
+                "on demand (it isn't in AMI's classified universe) and couldn't "
+                "get an answer in time. That's not a ruling either way; the "
+                "trade is permitted."
             )
         # UNAVAILABLE
         return (

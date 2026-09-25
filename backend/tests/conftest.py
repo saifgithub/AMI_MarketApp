@@ -146,6 +146,14 @@ def _isolated_db(tmp_path: _Path) -> None:
     # future test has to remember, which is the only version of this that holds.
     from app.services import fundamentals as _fund
     _fund.clear_statement_cache()
+    # DEF417 round 2: the on-demand liquidity lookup's cache is keyed by
+    # TICKER and lives for 24h, same leak shape as the statements cache above —
+    # cleared here so no test's cached (or fixture-fetcher-injected) result
+    # survives into the next, and any test-installed fetcher override is
+    # always restored to the real one.
+    from app.services import liquidity_lookup as _liq
+    _liq.clear_on_demand_liquidity_cache()
+    _liq.set_on_demand_fetcher(None)
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
     _nc.set_alpha_vantage_source(None)
