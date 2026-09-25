@@ -177,6 +177,37 @@ class GamesBoardScreen extends ConsumerWidget {
   }
 }
 
+/// Is [utcInstant] within US Eastern daylight time (EDT, UTC-4)?
+///
+/// DEF420 MINOR-1: the previous estimate split the difference between EDT
+/// (UTC-4) and EST (UTC-5) at a fixed 20:30 UTC, which is off by 30 minutes
+/// every single day and, during the "wrong" half of the year, counts down to
+/// a close that already happened. `mobile/pubspec.yaml` has no `timezone`
+/// package (checked), so this implements the US DST rule directly rather
+/// than pulling in a new dependency for one calculation: DST runs from
+/// 2:00am local on the second Sunday of March to 2:00am local on the first
+/// Sunday of November (the rule in effect since 2007). The comparison is
+/// done in UTC throughout — DST start is 07:00 UTC (2am EST = UTC-5) and DST
+/// end is 06:00 UTC (2am EDT = UTC-4) — so no local-time/UTC round trip is
+/// needed for the boundary itself.
+bool _isUsEasternDaylightTime(DateTime utcInstant) {
+  final year = utcInstant.year;
+
+  DateTime nthSundayOfMonthUtc(int month, int n, int hourUtc) {
+    var d = DateTime.utc(year, month, 1);
+    final firstSundayDay = 1 + ((7 - d.weekday) % 7);
+    final day = firstSundayDay + (n - 1) * 7;
+    return DateTime.utc(year, month, day, hourUtc);
+  }
+
+  // Second Sunday of March, 2:00am EST (UTC-5) = 07:00 UTC.
+  final dstStart = nthSundayOfMonthUtc(3, 2, 7);
+  // First Sunday of November, 2:00am EDT (UTC-4) = 06:00 UTC.
+  final dstEnd = nthSundayOfMonthUtc(11, 1, 6);
+
+  return !utcInstant.isBefore(dstStart) && utcInstant.isBefore(dstEnd);
+}
+
 /// A rough, client-only estimate of the next US equity close (4pm ET,
 /// Mon–Fri), used ONLY to soften the "not ranked yet" wait with a sense of
 /// scale — never as a scored fact. Deliberately ignores market holidays: the
@@ -184,19 +215,34 @@ class GamesBoardScreen extends ConsumerWidget {
 /// US close," so a holiday just means this estimate undershoots by a day,
 /// never that it asserts a close happened when it didn't. No backend call —
 /// per DEF420's brief, this is arithmetic on the device clock only.
+///
+/// DEF420 MINOR-1: previously pinned "4pm ET" to a fixed 20:30 UTC
+/// year-round (splitting the difference between EDT and EST), which was off
+/// by 30 minutes every day and, under the "wrong" side of the DST rule,
+/// could count down to a close that had already happened. This now resolves
+/// 4pm ET to the correct UTC hour — 20:00 UTC during EDT, 21:00 UTC during
+/// EST — via [_isUsEasternDaylightTime], checked against the CANDIDATE close
+/// instant (not just "now"), since DST can change between "now" and the
+/// close being computed on the two transition days.
 DateTime? nextUsCloseEstimate([DateTime? from]) {
-  // 4pm ET ≈ 21:00 UTC (EDT) or 20:00 UTC (EST). Splitting the difference at
-  // 20:30 UTC keeps the estimate within ~30 minutes either side of the real
-  // close year-round without a timezone database dependency — adequate for
-  // "about N hours," not for a scored deadline.
   final now = (from ?? DateTime.now()).toUtc();
-  var close = DateTime.utc(now.year, now.month, now.day, 20, 30);
+
+  DateTime closeOn(DateTime utcDay) {
+    final hourUtc = _isUsEasternDaylightTime(
+      DateTime.utc(utcDay.year, utcDay.month, utcDay.day, 20),
+    )
+        ? 20
+        : 21;
+    return DateTime.utc(utcDay.year, utcDay.month, utcDay.day, hourUtc);
+  }
+
+  var close = closeOn(now);
   if (!close.isAfter(now)) {
-    close = close.add(const Duration(days: 1));
+    close = closeOn(now.add(const Duration(days: 1)));
   }
   // Skip to Monday's close if we've landed on a weekend.
   while (close.weekday == DateTime.saturday || close.weekday == DateTime.sunday) {
-    close = close.add(const Duration(days: 1));
+    close = closeOn(close.add(const Duration(days: 1)));
   }
   return close;
 }
