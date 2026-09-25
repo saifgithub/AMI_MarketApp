@@ -59,6 +59,7 @@ from app.core.logging import logger
 # own cadence, so an on-demand read is never staler than the thing it stands in
 # for between refreshes.
 _ON_DEMAND_CACHE_TTL_S = 24 * 60 * 60.0
+_FAILED_LOOKUP_TTL_S = 5 * 60.0
 
 # Short — this fires on the hot path (a BUY preview/submit, or a live Room
 # convene), for a ticker the daily snapshot never saw. `fetch_live_fundamentals`
@@ -187,24 +188,29 @@ def _cached_lookup_sync(ticker: str) -> dict[str, float] | None | _LookupFailed:
         if hit is not None and hit[1] > now:
             return hit[0]
     fetch = _fetcher_override or _fetch_liquidity_info_uncached
+    # Not a `with` block: its exit calls shutdown(wait=True), which joins the
+    # worker — a hung fetch would then hold the caller for as long as Yahoo
+    # hangs and the timeout below would bound nothing.
+    pool = ThreadPoolExecutor(max_workers=1)
     try:
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            fut = pool.submit(fetch, t)
-            result: dict[str, float] | None | _LookupFailed = fut.result(
-                timeout=_ON_DEMAND_TIMEOUT_S
-            )
+        fut = pool.submit(fetch, t)
+        result: dict[str, float] | None | _LookupFailed = fut.result(
+            timeout=_ON_DEMAND_TIMEOUT_S
+        )
     except _FutureTimeoutError:
         logger.warn("liquidity_on_demand_timeout", ticker=t, timeout_s=_ON_DEMAND_TIMEOUT_S)
         result = _LOOKUP_FAILED
     except Exception as exc:  # noqa: BLE001 — degrade, never raise, into the caller's floor
         logger.warn("liquidity_on_demand_lookup_error", ticker=t, error=str(exc)[:200])
         result = _LOOKUP_FAILED
+    finally:
+        pool.shutdown(wait=False)
+    # A failure is cached briefly so a burst of retries doesn't each re-pay the
+    # timeout — but only briefly: a failure means "allowed with a disclosure",
+    # and one Yahoo blip must not open a microcap to liquid_only buys all day.
+    ttl = _FAILED_LOOKUP_TTL_S if isinstance(result, _LookupFailed) else _ON_DEMAND_CACHE_TTL_S
     with _lock:
-        # A failed/timed-out result is cached too, same reasoning as
-        # `fundamentals.fetch_statement_facts`: without this, a ticker
-        # yfinance can't answer for becomes the EXPENSIVE case, and every
-        # retry inside the TTL window re-pays the same timeout.
-        _cache[t] = (result, now + _ON_DEMAND_CACHE_TTL_S)
+        _cache[t] = (result, now + ttl)
     return result
 
 

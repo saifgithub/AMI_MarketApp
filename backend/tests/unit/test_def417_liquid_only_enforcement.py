@@ -528,22 +528,54 @@ def test_on_demand_lookup_failure_is_permitted_and_disclosed():
     assert "couldn't get an answer" in v.message().lower()
 
 
-def test_on_demand_lookup_timeout_is_permitted_and_disclosed():
+def test_on_demand_lookup_timeout_is_permitted_and_disclosed(monkeypatch):
     """The other half of Saiful's ruling — a fetch that never returns within
     the bounded timeout must degrade exactly like an outright error, never
-    hang the caller."""
+    hang the caller. Timed, not just status-checked: a status-only version of
+    this test passed while the caller silently waited out the whole hang."""
     import time as _time
 
     from app.services import liquidity_lookup as _liq_mod
 
+    monkeypatch.setattr(_liq_mod, "_ON_DEMAND_TIMEOUT_S", 0.2)
+
     def _hangs(t: str):
-        _time.sleep(_liq_mod._ON_DEMAND_TIMEOUT_S + 1.0)
+        _time.sleep(3.0)
         return {"market_cap_usd_m": 1.0}
 
     set_on_demand_fetcher(_hangs)
+    started = _time.monotonic()
     v = resolve_liquidity_with_lookup(_universe(), "SLOWTICK", price=10.0)
+    elapsed = _time.monotonic() - started
     assert v.status is LiquidityStatus.LOOKUP_FAILED
     assert v.is_disclosed_pause
+    assert elapsed < 1.0, f"caller held {elapsed:.2f}s by a 0.2s-bounded lookup"
+
+
+def test_a_failed_lookup_is_retried_after_minutes_not_a_day(monkeypatch):
+    """A failure means allowed-with-a-disclosure. Cached for 24h, one Yahoo blip
+    would open a microcap to liquid_only buys all day; it must be re-asked once
+    the short failure window passes, and the real answer then refuses it."""
+    from app.services import liquidity_lookup as _liq_mod
+
+    clock = [1_000_000.0]
+    monkeypatch.setattr(_liq_mod.time, "time", lambda: clock[0])
+    answers = [RuntimeError("yahoo blip"), {"market_cap_usd_m": 85.0, "avg_volume": 250_000.0}]
+
+    def _fetcher(t: str):
+        a = answers.pop(0)
+        if isinstance(a, Exception):
+            raise a
+        return a
+
+    set_on_demand_fetcher(_fetcher)
+    first = resolve_liquidity_with_lookup(_universe(), "GNS", price=3.0)
+    assert first.status is LiquidityStatus.LOOKUP_FAILED
+    clock[0] += 60
+    assert resolve_liquidity_with_lookup(_universe(), "GNS", price=3.0).status is LiquidityStatus.LOOKUP_FAILED
+    clock[0] += 10 * 60
+    assert resolve_liquidity_with_lookup(_universe(), "GNS", price=3.0).status is LiquidityStatus.EXCLUDED
+    assert answers == []
 
 
 def test_on_demand_lookup_end_to_end_reaches_advisories(base_mandate: Mandate):

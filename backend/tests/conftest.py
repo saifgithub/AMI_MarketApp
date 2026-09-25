@@ -153,7 +153,11 @@ def _isolated_db(tmp_path: _Path) -> None:
     # always restored to the real one.
     from app.services import liquidity_lookup as _liq
     _liq.clear_on_demand_liquidity_cache()
-    _liq.set_on_demand_fetcher(None)
+    # No test reaches Yahoo by default: `liquid_only` defaults True (CR220), so
+    # every BUY of a name outside the snapshot would otherwise open a socket.
+    # An empty answer resolves UNKNOWN, round 1's behaviour; tests that exercise
+    # the lookup install their own fetcher.
+    _liq.set_on_demand_fetcher(lambda _ticker: None)
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
     _nc.set_alpha_vantage_source(None)
