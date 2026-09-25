@@ -351,6 +351,37 @@ class AlpacaClient {
     }
   }
 
+  /// DEF439 — validate an OAuth bearer token against Alpaca's **paper** host
+  /// BEFORE storing it, the OAuth-mode counterpart to [validate].
+  ///
+  /// Alpaca's `/oauth/authorize` documents no `env=paper` selector — which
+  /// Alpaca account (paper or live) the token resolves to is decided by
+  /// whichever account the user was logged into in the browser when they
+  /// approved the app, not by anything AMI's authorize-request URL can pass.
+  /// So the only structural way to keep a live-account token from ever being
+  /// linked is to test the token itself: hit the paper host's `GET
+  /// /v2/account` with it and require success. A token minted against a live
+  /// account is rejected by the paper host with a 401, the same signal
+  /// [AlpacaException.isAuthFailure] already carries for the API-key path —
+  /// this method never inspects the token's contents (it is opaque), only
+  /// what Alpaca's paper endpoint does with it.
+  Future<void> validateOAuthToken(
+    String accessToken, {
+    String baseUrl = kDefaultAlpacaBaseUrl,
+  }) async {
+    try {
+      await _dio.get<dynamic>(
+        '$baseUrl/v2/account',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+    } on DioException catch (e) {
+      throw AlpacaException(
+        e.response?.statusCode,
+        e.response?.data?.toString() ?? e.message ?? 'network error',
+      );
+    }
+  }
+
   /// DEF430 (Saiful, 2026-09-25: "paper only") — true only when the device
   /// holds a credential AND it resolves to a confirmed paper host. Every
   /// caller that uploads an account snapshot to AMI (Room convene, 1-on-1,

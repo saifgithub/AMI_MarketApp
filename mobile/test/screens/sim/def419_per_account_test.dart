@@ -659,11 +659,18 @@ void main() {
           reason: 'no preview may run against a live account\'s data');
       expect(alpaca.orderCalls, isEmpty);
       expect(sim.submitCalls, 0);
+      // DEF439 round 1 MINOR-1 (carried from DEF430): this used to be the
+      // same generic "Couldn't read your Alpaca paper account" text as an
+      // offline/unlinked failure, which told a live-account user their
+      // account was unreachable when it was in fact readable and simply
+      // refused. The structural backstop this test drives directly (real UI
+      // can no longer reach this state at all post-DEF439 — see
+      // `alpacaLinkedProvider`) now says so specifically.
       expect(
-        find.textContaining("Couldn't read your Alpaca paper account"),
+        find.textContaining('AMI links Alpaca paper accounts only'),
         findsOneWidget,
-        reason: 'same loud, specific failure as the offline/unlinked case — '
-            'a live account must not look "successfully skipped"',
+        reason: 'a live account must say why it was refused, not look like '
+            'an unreadable/offline account',
       );
     });
 

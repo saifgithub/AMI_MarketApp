@@ -685,3 +685,47 @@ Keep this log honest. The "why" matters more than the "what."
   decision widens; the table row is left as-is since it does not enumerate order
   types. Filed as
   [CR233](../../forward_planning/CR233_alpaca_order_types/CR233_alpaca_order_types.md).
+
+### D-075 — Only Alpaca paper accounts can be linked: narrow amendment of D-071
+
+- **Decided** (2026-09-25, DEF439): a live/production Alpaca account can no longer be
+  **linked** at all, not merely refused a write. The connect screen refuses a
+  recognisably-live key ID ("AK...") before any network call, restricts the
+  [CR224](../../forward_planning/CR224_alpaca_endpoint_override/) endpoint field to a
+  confirmed paper host (`isAlpacaPaperHost`), and verifies an OAuth token against the
+  paper host before ever storing it — Alpaca's `/oauth/authorize` documents no
+  `env=paper` selector, so the token itself is the only thing that can be checked.
+  `alpacaLinkedProvider` now means "linked to a confirmed paper account"; a credential
+  stored before this fix that resolves to a non-paper host reads as **not linked**, with
+  a "relink" prompt in Settings and on the Portfolio screen, rather than silently
+  rendering as an ordinary paper link.
+- **Source**: Saiful — *"DEF439 - add key validation. Check out alpaca key format."*
+  Prompted by [DEF439](../../defect/_registry/DEF439.row.md) (auditor u66, CR234 round 2):
+  a live Alpaca account was labelled "ALPACA PAPER" on the Portfolio screen, because
+  nothing before that point stopped a live account from being linked in the first place —
+  D-071/D-074's read-only-for-live, paper-only-for-writes posture was enforced at the
+  order/cancel boundary, not at the link boundary.
+- **What did NOT change.** D-071's core boundary — AMI never routes an order to a live
+  execution venue — is untouched; `submitOrder`/`cancelOrder`'s own paper-host re-check
+  stays as a structural backstop even though a live link should now be unreachable.
+  Device-local credential custody ([CR202](../../forward_planning/CR202_alpaca_credentials_on_device/))
+  is unchanged. The CR224 endpoint override still exists for a paper account Alpaca
+  resolves to a different host — it is restricted to paper hosts, not removed.
+- **Rationale**: D-071 narrowed "no brokerage integration" to "no *live* order routing,"
+  on the premise that a live account could still usefully be linked read-only. In
+  practice that read-only display was the entire attack surface DEF439 found: a
+  live account rendered exactly like a paper one, with no distinguishing signal a user
+  could act on before trusting the "ALPACA PAPER" label with real money. Removing the
+  live-link path entirely is simpler and safer than auditing every future display site
+  for the same mislabel, and Saiful confirmed no user currently has a live account linked
+  (2026-09-25: *"I don't think we have any users with real money and alpaca at the
+  moment"*), so nothing is broken by the tightening.
+- **Supersedes (partial)**: [D-071](#d-071--paper-only-brokerage-order-routing-is-permitted-narrow-partial-amendment-of-d-004d-069)'s
+  framing of a live account as "strictly read-only/unsupported for order placement" —
+  that account is no longer *linkable* at all, which is stricter than read-only-but-
+  linked. Every other part of D-071 (paper-only order routing, identical mandate floor,
+  device-local credentials) is unchanged and not superseded.
+- **Affects**: [`CLAUDE.md`](../../../CLAUDE.md)'s "Endpoint of the journey" decision-pointer
+  row is updated: "a live/production account stays strictly read-only" is narrowed to "a
+  live/production account can no longer be linked at all." Filed as DEF439 (no CR — a
+  Defect fix under the existing CR227/CR233/CR234 Alpaca-paper feature line).

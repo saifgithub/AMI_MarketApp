@@ -2015,6 +2015,14 @@ class _JournalPointer extends ConsumerWidget {
 /// CR234 — the Alpaca group inside the Positions tab, now built on the same
 /// shared components (`ValueCard`, `PositionCard`, `AlpacaBadge`) AMI's own
 /// account/positions use, in place of the pre-CR234 bespoke text rows.
+///
+/// DEF439 — `alpacaLinkedProvider` now means "linked to a confirmed PAPER
+/// account", so a stored non-paper credential (only possible from before this
+/// fix — the connect screen no longer lets one be saved) makes this section
+/// render nothing, exactly like the unlinked state, UNLESS
+/// [alpacaStoredNonPaperProvider] says a credential IS present: then it shows
+/// a relink prompt instead of silently rendering nothing, which would read as
+/// "you were never linked" to someone who very much was.
 class _AlpacaPortfolioSection extends ConsumerWidget {
   const _AlpacaPortfolioSection();
 
@@ -2025,7 +2033,12 @@ class _AlpacaPortfolioSection extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (linked) {
-        if (!linked) return const SizedBox.shrink();
+        if (!linked) {
+          final storedNonPaper =
+              ref.watch(alpacaStoredNonPaperProvider).valueOrNull ?? false;
+          if (storedNonPaper) return const _AlpacaRelinkPrompt();
+          return const SizedBox.shrink();
+        }
         return Padding(
           padding: const EdgeInsets.only(top: AmiSpacing.l),
           child: Column(
@@ -2038,6 +2051,45 @@ class _AlpacaPortfolioSection extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// DEF439 — shown in place of the Alpaca account card when a credential is
+/// stored but does not resolve to a paper host. Points at Settings, where the
+/// existing Connect/Disconnect flow lives — this widget does not itself
+/// attempt to unlink or relink, keeping exactly one place credentials are
+/// mutated from.
+class _AlpacaRelinkPrompt extends StatelessWidget {
+  const _AlpacaRelinkPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AmiSpacing.l),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AmiSpacing.m),
+        decoration: BoxDecoration(
+          color: AmiColors.slate800,
+          borderRadius: BorderRadius.circular(AmiRadii.card),
+          border: Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline, size: 18, color: AmiColors.hexAmber),
+            const SizedBox(width: AmiSpacing.s),
+            Expanded(
+              child: Text(
+                'AMI now links Alpaca paper accounts only. Relink your '
+                'account from Settings → Connected Accounts.',
+                style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

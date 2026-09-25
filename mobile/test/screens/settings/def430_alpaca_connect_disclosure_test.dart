@@ -58,11 +58,16 @@ void main() {
         find.textContaining('Your Alpaca keys stay on this phone'),
         findsOneWidget,
       );
-      expect(find.textContaining('AMI sends your account summary'),
+      expect(find.textContaining('AMI sends your paper account summary'),
           findsOneWidget);
       expect(
-        find.textContaining('A live account is shown on this phone only'),
+        find.textContaining(
+            'AMI links Alpaca paper accounts only — a live account cannot '
+            'be linked'),
         findsOneWidget,
+        reason: 'DEF439: a live account can no longer be linked at all, so '
+            'the disclosure must say so rather than describe a live-account '
+            'on-device-only path that no longer exists',
       );
       expect(tester.takeException(), isNull);
     });

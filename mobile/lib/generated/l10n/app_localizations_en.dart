@@ -4954,5 +4954,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alpacaConnectDisclosure =>
-      'Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record. A live account is shown on this phone only and never receives orders.';
+      'Your Alpaca keys stay on this phone. AMI links Alpaca paper accounts only — a live account cannot be linked. AMI sends your paper account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record.';
 }
