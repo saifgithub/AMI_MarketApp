@@ -14,7 +14,19 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-*(none)*
+### CR228-PILOT — a 5-arm risk-dial pilot is running inside `ami_api_alpha`
+
+**Raised:** 2026-09-25 20:25Z (AT:R85 CR228) · **Blocked:** any Alpha promotion, and any `docker compose up -d` / restart of `api-alpha`
+
+**Why.** The CR228 pilot (`run_pilot.sh`, `ARMS='1 2 3 4 5'`, 30 tickers per arm, one convene in
+flight) runs as a process INSIDE the container, launched 20:23:53Z on `alpha-2026-09-26-1`. A
+promotion recreates the container and kills it mid-arm; ~13h of sequential convenes are lost and the
+dial comparison is confounded if arms run on different code. Output:
+`/backtest_results/cr228_20260926/` (`pilot.log`, `runs_cr228-r{1..5}-20260926.jsonl`).
+
+**To clear:** `pilot.log` shows arm 5 finished (or the pilot was deliberately abandoned), checked by
+`ssh melehost "docker exec ami_api_alpha tail -3 /backtest_results/cr228_20260926/pilot.log"` — not
+by elapsed time.
 
 ## CLEARED HOLDS
 
