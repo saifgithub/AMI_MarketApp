@@ -17,6 +17,7 @@ flag off; and `day_trader_outcomes.py`'s own test file passing unchanged
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
@@ -29,10 +30,12 @@ from app.services.behaviour_diagnostics import (
     MIN_TRADES_FOR_DIAGNOSTICS,
     STATUS_READY,
     STATUS_TOO_EARLY,
+    _NEW_BASELINES,
     build_behaviour_block,
     compute_behaviour_diagnostics,
     turnover,
 )
+from app.services.portfolio_health_constants import VALIDATOR_FIXED_PCT, VALIDATOR_FIXED_RAW
 from app.services.portfolio_finding import (
     build_allowlist,
     build_stripped_context,
@@ -386,46 +389,59 @@ def test_buy_within_five_trading_days_of_a_ten_percent_move_is_triggered():
     assert result["attention_trade_share_pct"] == pytest.approx(10.0, abs=0.01)
 
 
-# ── (c) PGR/PLR — hand-built lot fixture, Odean's definition by hand ─────
+# ── (c) PGR/PLR — hand-built fixtures, Odean's tally computed by hand ────
+#
+# Odean 1998 p.1781, the rule every docstring below applies by hand: on each
+# day a sale takes place in a portfolio holding two or more stocks at the
+# start of that day, each stock sold is ONE realised gain/loss (selling price
+# vs its average purchase price) and each stock held at the start of the day
+# and not sold that day is ONE paper gain/loss (that day's price vs its
+# average purchase price). Nothing else is counted.
+
+
+def _pad_unmeasured_closed_lots(
+    user_id: UUID, portfolio_id: UUID, *, n: int, before: datetime,
+) -> None:
+    """`n` back-to-back closed losing round trips on one unpriced ticker, all
+    over well before `before`. Each closes on a day when only that one stock
+    was held, so Odean's two-stock rule counts none of them — they exist only
+    to lift `closed_lot_count` to the honesty floor without touching PGR/PLR."""
+    for i in range(n):
+        opened = before - timedelta(days=40) + timedelta(days=2 * i)
+        _insert_trade(
+            user_id, portfolio_id, ticker="PAD", side="buy",
+            quantity=1.0, entry_price=50.0, opened_at=opened,
+            status="lost", closed_at=opened + timedelta(days=1),
+            closed_price=49.0, realised_pnl=-1.0,
+        )
+
+
+def _flat_prices(ticker: str, start: date, days: int, overrides: dict[date, float]) -> None:
+    prices = {start + timedelta(days=i): 100.0 for i in range(days)}
+    prices.update(overrides)
+    _seed_prices(ticker, prices)
 
 
 def test_disposition_ratio_hand_built_fixture_matches_odean_by_hand():
-    """Two tickers, AAA and BBB, each bought once at $100/share, 10 shares.
+    """Odean's tally, by hand, sale day by sale day.
 
-    Day 0: buy 10 AAA @ $100, buy 10 BBB @ $100.
-    Day 10: AAA closes (self-close, won) at $120 -> realised gain, one event.
-            At this instant BBB is still open, entered at $100. BBB's price
-            on day 10 is $90 (seeded) -> paper LOSS event (90 < 100), NOT a
-            paper gain.
-    Day 20: BBB closes (self-close, lost) at $80 -> realised loss, one event.
-            At this instant AAA is already closed (no longer open), so it
-            contributes nothing to this sale's paper terms.
+    Day 0: buy 10 AAA @ $100, buy 10 BBB @ $100 (both at 00:00 UTC).
+    Day 10: AAA self-closes (won) at $120.
+      Held at the start of day 10: {AAA, BBB} — 2 stocks, so the day counts.
+      AAA sold: $120 vs average purchase price $100 -> 1 realised GAIN.
+      BBB held, not sold: day-10 close $90 vs $100 -> 1 paper LOSS.
+    Day 20: BBB self-closes (lost) at $80.
+      Held at the start of day 20: {BBB} — 1 stock. Odean counts NOTHING.
+    Days 101..108: eight CCC round trips, one at a time.
+      Held at the start of each: {CCC} — 1 stock. Nothing counted.
 
-    Odean (1998) defines PGR/PLR as COUNT proportions — number of realised
-    gain/loss EVENTS over number of (realised + paper) gain/loss EVENTS of
-    the same sign, not a dollar-weighted average. By hand, counting events
-    from AAA/BBB alone:
-      AAA/BBB realised_gains_count = 1 (AAA's close)
-      AAA/BBB realised_losses_count = 1 (BBB's close)
-      paper_gains_count = 0 (BBB's day-10 mark was a paper LOSS event, not a
-          paper gain event)
-      paper_losses_count = 1 (BBB's day-10 mark, at AAA's sale instant)
+      realised_gains_count  = 1   paper_gains_count  = 0
+      realised_losses_count = 0   paper_losses_count = 1
+      PGR = 1 / (1 + 0) = 1.0
+      PLR = 0 / (0 + 1) = 0.0
 
-    The padding block below (8 independent CCC round trips, each a small
-    realised WIN, on a ticker with no price history) adds 8 more realised
-    gain events and 8 `priced_lots_excluded` (CCC itself has no price row,
-    and AAA/BBB are both closed or not-yet-open at each CCC sale instant, so
-    they contribute no paper terms there) — it does not touch
-    realised_losses_count, paper_gains_count or paper_losses_count. So,
-    counting the whole fixture:
-      realised_gains_count = 1 (AAA) + 8 (CCC) = 9
-      realised_losses_count = 1 (BBB)
-      paper_gains_count = 0
-      paper_losses_count = 1
-      pgr = realised_gains_count / (realised_gains_count + paper_gains_count)
-          = 9 / (9 + 0) = 1.0
-      plr = realised_losses_count / (realised_losses_count + paper_losses_count)
-          = 1 / (1 + 1) = 0.5
+    (Round 2's lot-per-event tally read 9 realised gains and PLR 0.5 here:
+    it counted day 20's lone BBB sale and every CCC close.)
     """
     user_id = uuid4()
     portfolio_id = _make_portfolio(user_id)
@@ -434,15 +450,8 @@ def test_disposition_ratio_hand_built_fixture_matches_odean_by_hand():
     day10 = day0 + timedelta(days=10)
     day20 = day0 + timedelta(days=20)
 
-    days = [day0.date() + timedelta(days=i) for i in range(25)]
-    aaa_prices = {d: 100.0 for d in days}
-    aaa_prices[day10.date()] = 120.0
-    _seed_prices("AAA", aaa_prices)
-
-    bbb_prices = {d: 100.0 for d in days}
-    bbb_prices[day10.date()] = 90.0
-    bbb_prices[day20.date()] = 80.0
-    _seed_prices("BBB", bbb_prices)
+    _flat_prices("AAA", day0.date(), 25, {day10.date(): 120.0})
+    _flat_prices("BBB", day0.date(), 25, {day10.date(): 90.0, day20.date(): 80.0})
 
     _insert_trade(
         user_id, portfolio_id, ticker="AAA", side="buy",
@@ -454,59 +463,50 @@ def test_disposition_ratio_hand_built_fixture_matches_odean_by_hand():
         quantity=10.0, entry_price=100.0, opened_at=day0,
         status="lost", closed_at=day20, closed_price=80.0, realised_pnl=-200.0,
     )
-    # Padding to clear the trade-count floor, on a THIRD ticker with no price
-    # history at all — proves an unpriced padding position is excluded
-    # (`priced_lots_excluded`), never silently folded in as a zero.
     for i in range(8):
         opened = day0 + timedelta(days=100 + i)
-        closed = opened + timedelta(days=1)
         _insert_trade(
             user_id, portfolio_id, ticker="CCC", side="buy",
             quantity=1.0, entry_price=50.0, opened_at=opened,
-            status="won", closed_at=closed, closed_price=51.0, realised_pnl=1.0,
+            status="won", closed_at=opened + timedelta(days=1),
+            closed_price=51.0, realised_pnl=1.0,
         )
 
     result = compute_behaviour_diagnostics(user_id, now=now)
     assert result["status"] == STATUS_READY
     disposition = result["disposition"]
-    assert disposition["realised_gains_count"] == 9
+    assert disposition["realised_gains_count"] == 1
     assert disposition["paper_gains_count"] == 0
-    assert disposition["realised_losses_count"] == 1
+    assert disposition["realised_losses_count"] == 0
     assert disposition["paper_losses_count"] == 1
+    assert disposition["unpriced_positions_excluded"] == 0
     assert disposition["pgr"] == pytest.approx(1.0, abs=1e-4)
-    assert disposition["plr"] == pytest.approx(0.5, abs=1e-4)
+    assert disposition["plr"] == pytest.approx(0.0, abs=1e-4)
 
 
 def test_disposition_ratio_uses_count_basis_not_dollar_basis():
-    """One $900 realised gain plus nine $100 paper gains: dollar-weighted PGR
-    would read 900 / (900 + 900) = 0.50; Odean's own count-weighted PGR reads
-    1 / (1 + 9) = 0.10. This pins the count basis directly against a fixture
-    engineered so the two bases diverge sharply — a regression to the dollar
-    basis would fail this test even if every other PGR/PLR assertion in this
-    file happened not to notice (most use unit qty/price so the two bases
-    coincide by construction). Padding trades are closed LOSSES on a
-    no-price-history ticker so they clear the trade-count floor without
-    perturbing realised_gains_count or paper_gains_count."""
+    """One $900 realised gain beside nine $10 paper gains.
+
+    Day 10: BIG (10 sh @ $100) self-closes at $190 -> $900 realised gain.
+    SM0..SM8 (1 sh @ $100 each) are held, not sold, day-10 close $110 each
+    -> nine paper gains of $10 = $90 in total.
+      Held at the start of day 10: BIG + 9 SM = 10 stocks, so the day counts.
+      Count basis (Odean): PGR = 1 / (1 + 9) = 0.10
+      Dollar basis (wrong): 900 / (900 + 90) = 0.909
+    PAD's losing closes land on days when only PAD was held (1 stock), so
+    Odean counts none of them: no loss is measured and PLR is None — not
+    the 1.0 a per-close tally would print.
+    """
     user_id = uuid4()
     portfolio_id = _make_portfolio(user_id)
     now = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day0 = now - timedelta(days=200)
     day10 = day0 + timedelta(days=10)
 
-    days = [day0.date() + timedelta(days=i) for i in range(15)]
-
-    # BIG: bought at $100, 10 shares -> $900 realised gain on close at $190.
-    big_prices = {d: 100.0 for d in days}
-    big_prices[day10.date()] = 190.0
-    _seed_prices("BIG", big_prices)
-
-    # Nine SMALL tickers, each bought at $100/1 share, each up $10/share
-    # (a $100 paper gain each) and still open at BIG's sale instant.
+    _flat_prices("BIG", day0.date(), 15, {day10.date(): 190.0})
     small_tickers = [f"SM{i}" for i in range(9)]
     for tk in small_tickers:
-        prices = {d: 100.0 for d in days}
-        prices[day10.date()] = 110.0
-        _seed_prices(tk, prices)
+        _flat_prices(tk, day0.date(), 15, {day10.date(): 110.0})
 
     _insert_trade(
         user_id, portfolio_id, ticker="BIG", side="buy",
@@ -516,25 +516,9 @@ def test_disposition_ratio_uses_count_basis_not_dollar_basis():
     for tk in small_tickers:
         _insert_trade(
             user_id, portfolio_id, ticker=tk, side="buy",
-            quantity=1.0, entry_price=100.0, opened_at=day0,
-            status="open",
+            quantity=1.0, entry_price=100.0, opened_at=day0, status="open",
         )
-    # Padding to clear the trade-count floor (need closed_lot_count >= 10;
-    # BIG contributes 1, so 9 more here). Losses on a no-price-history
-    # ticker, opened+closed entirely BEFORE day0 (BIG/SM's own open date),
-    # so at their own sale instants BIG and every SM ticker are not yet
-    # opened (`_open_lots_as_of` filters on `opened_at <= as_of`) and cannot
-    # be counted as an "other open lot" — and at BIG's/SM's later sale
-    # instants PAD is already fully closed, so it contributes nothing back
-    # either way.
-    for i in range(9):
-        opened = day0 - timedelta(days=20 + i)
-        closed = opened + timedelta(days=1)
-        _insert_trade(
-            user_id, portfolio_id, ticker="PAD", side="buy",
-            quantity=1.0, entry_price=50.0, opened_at=opened,
-            status="lost", closed_at=closed, closed_price=49.0, realised_pnl=-1.0,
-        )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
 
     result = compute_behaviour_diagnostics(user_id, now=now)
     assert result["status"] == STATUS_READY
@@ -542,13 +526,315 @@ def test_disposition_ratio_uses_count_basis_not_dollar_basis():
     assert disposition["realised_gains_count"] == 1
     assert disposition["paper_gains_count"] == 9
     assert disposition["pgr"] == pytest.approx(0.10, abs=1e-4)
+    assert disposition["realised_losses_count"] == 0
+    assert disposition["paper_losses_count"] == 0
+    assert disposition["plr"] is None
 
 
-def test_disposition_ratio_is_none_when_no_closed_lot_has_a_priced_paper_leg():
-    """A single-position account (no OTHER open lot at any sale instant) has
-    no paper terms at all — pgr/plr are still computable from realised-only
-    denominators here (paper=0 is a valid, measured zero, not an absence),
-    so this pins the shape rather than a None."""
+def test_disposition_p1_dca_built_holding_is_one_paper_gain_not_four():
+    """Audit probe P1. AAA (1 buy) is sold at a gain; BBB was built in four
+    buys (DCA) and is held at a gain.
+
+    Day 20: AAA self-closes at $120 vs average $100 -> 1 realised gain.
+    BBB lots @ $100/$102/$104/$106, average $103; day-20 close $115 -> ONE
+    paper gain (one stock, however many lots).
+      Held at the start of day 20: {AAA, BBB} — 2 stocks.
+      PGR = 1 / (1 + 1) = 0.5   (per-lot tally: 1 / (1 + 4) = 0.2)
+      PLR: no loss anywhere measured -> None.
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20)
+    _flat_prices("AAA", day0.date(), 25, {})
+    _flat_prices("BBB", day0.date(), 25, {sale.date(): 115.0})
+
+    _insert_trade(
+        user_id, portfolio_id, ticker="AAA", side="buy",
+        quantity=1.0, entry_price=100.0, opened_at=day0,
+        status="won", closed_at=sale, closed_price=120.0, realised_pnl=20.0,
+    )
+    for i, px in enumerate([100.0, 102.0, 104.0, 106.0]):
+        _insert_trade(
+            user_id, portfolio_id, ticker="BBB", side="buy",
+            quantity=1.0, entry_price=px, opened_at=day0 + timedelta(days=3 * i),
+            status="open",
+        )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_gains_count"] == 1
+    assert disposition["paper_gains_count"] == 1
+    assert disposition["pgr"] == pytest.approx(0.5, abs=1e-4)
+    assert disposition["plr"] is None
+
+
+def test_disposition_p2_two_winners_closed_the_same_day_are_not_each_others_paper():
+    """Audit probe P2. AAA, BBB, CCC each 1 sh @ $100, held since day 0.
+
+    Sale day: AAA closes at $110 (10:00), BBB at $115 (15:00). CCC is held,
+    not sold, close $108.
+      Held at the start of the sale day: {AAA, BBB, CCC} — 3 stocks.
+      Realised gains: AAA, BBB = 2. Paper gains: CCC = 1 (BBB was sold that
+      day, so it is never AAA's paper gain).
+      PGR = 2 / (2 + 1) = 0.667   (per-event tally: 2 / (2 + 3) = 0.4)
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20)
+    # AAA/BBB closes on the sale day sit above cost too, so a tally that
+    # also counted a sold stock as paper would read 2 / (2 + 3) = 0.4.
+    _flat_prices("AAA", day0.date(), 25, {sale.date(): 110.0})
+    _flat_prices("BBB", day0.date(), 25, {sale.date(): 115.0})
+    _flat_prices("CCC", day0.date(), 25, {sale.date(): 108.0})
+
+    for tk, hour, px in (("AAA", 10, 110.0), ("BBB", 15, 115.0)):
+        _insert_trade(
+            user_id, portfolio_id, ticker=tk, side="buy",
+            quantity=1.0, entry_price=100.0, opened_at=day0,
+            status="won", closed_at=sale + timedelta(hours=hour),
+            closed_price=px, realised_pnl=px - 100.0,
+        )
+    _insert_trade(
+        user_id, portfolio_id, ticker="CCC", side="buy",
+        quantity=1.0, entry_price=100.0, opened_at=day0, status="open",
+    )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_gains_count"] == 2
+    assert disposition["paper_gains_count"] == 1
+    assert disposition["pgr"] == pytest.approx(0.6667, abs=1e-4)
+
+
+def test_disposition_p3_partial_sell_leaves_no_paper_remainder():
+    """Audit probe P3. AAA 10 sh @ $100 and BBB 1 sh @ $100, held since day 0.
+
+    Sale day: an explicit sell of 5 AAA @ $120. BBB held, not sold, close $110.
+      Held at the start of the sale day: {AAA, BBB} — 2 stocks.
+      Realised gains: AAA = 1. Paper gains: BBB = 1. AAA's unsold 5 shares
+      are NOT a paper gain — AAA was sold that day.
+      PGR = 1 / (1 + 1) = 0.5   (remainder-as-paper tally: 1 / (1 + 2) = 0.333)
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20, hours=14)
+    _flat_prices("AAA", day0.date(), 25, {sale.date(): 120.0})
+    _flat_prices("BBB", day0.date(), 25, {sale.date(): 110.0})
+
+    _insert_trade(
+        user_id, portfolio_id, ticker="AAA", side="buy",
+        quantity=10.0, entry_price=100.0, opened_at=day0, status="open",
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="BBB", side="buy",
+        quantity=1.0, entry_price=100.0, opened_at=day0, status="open",
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="AAA", side="sell",
+        quantity=5.0, entry_price=120.0, opened_at=sale, status="closed",
+    )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_gains_count"] == 1
+    assert disposition["paper_gains_count"] == 1
+    assert disposition["pgr"] == pytest.approx(0.5, abs=1e-4)
+
+
+def _one_position_at_a_time(user_id: UUID, portfolio_id: UUID, day0: datetime) -> None:
+    """Ten priced tickers held strictly one at a time, 6 wins then 4 losses.
+    T_i closes at 15:00 on the same day T_(i+1) opens at 16:00, so at the
+    START of every sale day exactly one stock is held."""
+    for i in range(10):
+        tk = f"T{i}"
+        _flat_prices(tk, day0.date(), 120, {})
+        opened = day0 + timedelta(days=10 * i, hours=16)
+        closed = day0 + timedelta(days=10 * (i + 1), hours=15)
+        win = i < 6
+        fill = 110.0 if win else 90.0
+        _insert_trade(
+            user_id, portfolio_id, ticker=tk, side="buy",
+            quantity=1.0, entry_price=100.0, opened_at=opened,
+            status="won" if win else "lost", closed_at=closed,
+            closed_price=fill, realised_pnl=fill - 100.0,
+        )
+
+
+def test_disposition_p4_one_position_at_a_time_is_not_measured():
+    """Audit probe P4. No sale day ever starts with two or more stocks held,
+    so Odean counts nothing: every count 0, PGR and PLR None. Not the
+    algebraically forced 100% / 100% a per-close tally prints."""
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    _one_position_at_a_time(user_id, portfolio_id, now - timedelta(days=200))
+
+    result = compute_behaviour_diagnostics(user_id, now=now)
+    assert result["status"] == STATUS_READY
+    disposition = result["disposition"]
+    assert disposition == {
+        "pgr": None, "plr": None,
+        "realised_gains_count": 0, "paper_gains_count": 0,
+        "realised_losses_count": 0, "paper_losses_count": 0,
+        "unpriced_positions_excluded": 0,
+    }
+
+
+def test_disposition_p4_renders_not_measured_never_one_hundred_percent():
+    """Audit probe P5: P4 through the real renderer and validator."""
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    _one_position_at_a_time(user_id, portfolio_id, now - timedelta(days=200))
+
+    context = _metric_context()
+    context["behaviour"] = compute_behaviour_diagnostics(user_id, now=now)
+    rules = _rules_empty()
+    sections = render_deterministic_sections(context, rules)
+    assert "Disposition ratio: not measured this run" in sections["f3"]
+    assert "100.0%" not in sections["f3"]
+    assert "of their available gains" not in sections["f3"]
+    assert validate_sections(sections, build_allowlist(context, rules)) is None
+
+
+def test_disposition_classifies_against_average_purchase_price_not_the_lot():
+    """Odean scores a stock against its AVERAGE purchase price.
+
+    XXX: lot 1 @ $90 (held), lot 2 @ $130 self-closes at $120 on the sale day.
+      Lot 2's own P&L is -$10 (a per-lot LOSS); the position's average
+      purchase price just before the sale is (90 + 130) / 2 = $110, and
+      $120 > $110 -> 1 realised GAIN.
+    YYY: lot 1 @ $130, lot 2 @ $90, both held; sale-day close $115.
+      Average $110, $115 > $110 -> 1 paper GAIN (first-lot basis $130 would
+      call it a loss).
+      Held at the start of the sale day: {XXX, YYY} — 2 stocks.
+      PGR = 1 / (1 + 1) = 0.5, PLR None.
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20, hours=14)
+    _flat_prices("XXX", day0.date(), 25, {})
+    _flat_prices("YYY", day0.date(), 25, {sale.date(): 115.0})
+
+    _insert_trade(
+        user_id, portfolio_id, ticker="XXX", side="buy",
+        quantity=1.0, entry_price=90.0, opened_at=day0, status="open",
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="XXX", side="buy",
+        quantity=1.0, entry_price=130.0, opened_at=day0 + timedelta(hours=1),
+        status="lost", closed_at=sale, closed_price=120.0, realised_pnl=-10.0,
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="YYY", side="buy",
+        quantity=1.0, entry_price=130.0, opened_at=day0, status="open",
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="YYY", side="buy",
+        quantity=1.0, entry_price=90.0, opened_at=day0 + timedelta(hours=1),
+        status="open",
+    )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_gains_count"] == 1
+    assert disposition["realised_losses_count"] == 0
+    assert disposition["paper_gains_count"] == 1
+    assert disposition["paper_losses_count"] == 0
+    assert disposition["pgr"] == pytest.approx(0.5, abs=1e-4)
+    assert disposition["plr"] is None
+
+
+def test_disposition_one_stock_sold_across_several_lots_is_one_realised_event():
+    """AAA bought in three 10-share lots @ $100, then ONE sell of all 30
+    shares @ $110 on the sale day (three FIFO lot closes). BBB 1 sh @ $100,
+    held, sale-day close $95.
+      Held at the start of the sale day: {AAA, BBB} — 2 stocks.
+      Realised gains: AAA = 1 (one stock, not three lots).
+      Paper losses: BBB = 1.
+      PGR = 1 / (1 + 0) = 1.0, PLR = 0 / (0 + 1) = 0.0
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20, hours=14)
+    _flat_prices("AAA", day0.date(), 25, {})
+    _flat_prices("BBB", day0.date(), 25, {sale.date(): 95.0})
+
+    for i in range(3):
+        _insert_trade(
+            user_id, portfolio_id, ticker="AAA", side="buy",
+            quantity=10.0, entry_price=100.0, opened_at=day0 + timedelta(days=i),
+            status="open",
+        )
+    _insert_trade(
+        user_id, portfolio_id, ticker="BBB", side="buy",
+        quantity=1.0, entry_price=100.0, opened_at=day0, status="open",
+    )
+    _insert_trade(
+        user_id, portfolio_id, ticker="AAA", side="sell",
+        quantity=30.0, entry_price=110.0, opened_at=sale, status="closed",
+    )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_gains_count"] == 1
+    assert disposition["paper_losses_count"] == 1
+    assert disposition["pgr"] == pytest.approx(1.0, abs=1e-4)
+    assert disposition["plr"] == pytest.approx(0.0, abs=1e-4)
+
+
+def test_disposition_pgr_is_none_with_no_gain_and_an_unpriced_holding_is_named():
+    """No gain anywhere: PGR's denominator is empty, so PGR is None — never
+    a silent 0.0 (CR040). A held stock with no stored price is a NAMED
+    exclusion, not a zero.
+
+    LLL 1 sh @ $100 self-closes at $90 on the sale day -> 1 realised loss.
+    MMM 1 sh @ $100 held, sale-day close $80 -> 1 paper loss.
+    UNP 1 sh @ $100 held, no price on record -> excluded, counted once.
+      Held at the start of the sale day: {LLL, MMM, UNP} — 3 stocks.
+      PGR = None (0 + 0), PLR = 1 / (1 + 1) = 0.5
+    """
+    user_id = uuid4()
+    portfolio_id = _make_portfolio(user_id)
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day0 = now - timedelta(days=200)
+    sale = day0 + timedelta(days=20, hours=14)
+    _flat_prices("LLL", day0.date(), 25, {})
+    _flat_prices("MMM", day0.date(), 25, {sale.date(): 80.0})
+
+    _insert_trade(
+        user_id, portfolio_id, ticker="LLL", side="buy",
+        quantity=1.0, entry_price=100.0, opened_at=day0,
+        status="lost", closed_at=sale, closed_price=90.0, realised_pnl=-10.0,
+    )
+    for tk in ("MMM", "UNP"):
+        _insert_trade(
+            user_id, portfolio_id, ticker=tk, side="buy",
+            quantity=1.0, entry_price=100.0, opened_at=day0, status="open",
+        )
+    _pad_unmeasured_closed_lots(user_id, portfolio_id, n=9, before=day0)
+
+    disposition = compute_behaviour_diagnostics(user_id, now=now)["disposition"]
+    assert disposition["realised_losses_count"] == 1
+    assert disposition["paper_losses_count"] == 1
+    assert disposition["unpriced_positions_excluded"] == 1
+    assert disposition["pgr"] is None
+    assert disposition["plr"] == pytest.approx(0.5, abs=1e-4)
+
+
+def test_disposition_ratio_is_not_measured_on_a_single_ticker_book():
+    """Ten back-to-back AAPL round trips: every sale day starts with at most
+    one stock held, so Odean counts nothing and both ratios are None."""
     user_id = uuid4()
     portfolio_id = _make_portfolio(user_id)
     now = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -558,8 +844,7 @@ def test_disposition_ratio_is_none_when_no_closed_lot_has_a_priced_paper_leg():
     result = compute_behaviour_diagnostics(user_id, now=now)
     assert result["status"] == STATUS_READY
     disposition = result["disposition"]
-    # All wins, no losses at all -> plr has zero denominator -> None.
-    assert disposition["pgr"] == pytest.approx(1.0, abs=1e-4)
+    assert disposition["pgr"] is None
     assert disposition["plr"] is None
 
 
@@ -585,13 +870,14 @@ def _rules_empty():
 
 
 def _ready_behaviour_block_no_fixed_literals() -> dict:
-    """A `ready`-shape behaviour block where NO numeric field equals 1, 5, or
-    10 (or any other token in `VALIDATOR_FIXED_RAW`/`VALIDATOR_FIXED_PCT`) —
-    unlike the old fixture, whose `realised_gains_count = 5` only passed
-    because "5" happens to be independently registered for the CR222 §4
-    attention-trade sentence's fixed prose (`ATTENTION_MOVE_LOOKBACK_
-    TRADING_DAYS`). A fixture built this way would have caught THAT
-    coincidence, and is designed to catch the next one."""
+    """A `ready`-shape behaviour block where no numeric field, raw or ×100,
+    equals a token in `VALIDATOR_FIXED_RAW`/`VALIDATOR_FIXED_PCT` or another
+    field's rendered value (pinned by
+    `test_ready_fixture_numbers_collide_with_no_fixed_literal`). The old
+    fixture's `realised_gains_count = 5` passed only because "5" is
+    registered for the attention sentence's fixed prose; a coincidence like
+    that hides an unregistered field. The baselines are the shipped
+    `_NEW_BASELINES` values, so the test tracks what users actually read."""
     return {
         "status": STATUS_READY,
         "first_trade_at": "2026-01-01T00:00:00+00:00",
@@ -602,22 +888,59 @@ def _ready_behaviour_block_no_fixed_literals() -> dict:
         "median_holding_period_days": 7.8,
         "attention_trade_share_pct": 24.6,
         "disposition": {
-            "pgr": 0.57, "plr": 0.34,
-            "realised_gains_count": 17, "paper_gains_count": 13,
-            "realised_losses_count": 9, "paper_losses_count": 17,
-            "priced_lots_excluded": 0,
+            "pgr": 0.63, "plr": 0.34,
+            "realised_gains_count": 17, "paper_gains_count": 14,
+            "realised_losses_count": 9, "paper_losses_count": 19,
+            "unpriced_positions_excluded": 7,
         },
         "baselines": {
-            "barber_odean_2000_turnover": {
-                "average_household_annual_turnover_pct": 75.0,
-                "most_active_quintile_annual_turnover_pct": 250.0,
-            },
-            "odean_1998_disposition": {
-                "proportion_gains_realised": 0.148,
-                "proportion_losses_realised": 0.098,
-            },
+            key: dict(_NEW_BASELINES[key])
+            for key in ("barber_odean_2000_turnover", "odean_1998_disposition")
         },
     }
+
+
+def _numeric_leaves_of(node):
+    if isinstance(node, bool):
+        return
+    if isinstance(node, (int, float)):
+        yield node
+    elif isinstance(node, dict):
+        for value in node.values():
+            yield from _numeric_leaves_of(value)
+
+
+def test_ready_fixture_numbers_collide_with_no_fixed_literal():
+    fixed = {Decimal(t).normalize() for t in VALIDATOR_FIXED_RAW | VALIDATOR_FIXED_PCT}
+    seen: set[Decimal] = set()
+    for value in _numeric_leaves_of(_ready_behaviour_block_no_fixed_literals()):
+        forms = {Decimal(str(value)).normalize(), (Decimal(str(value)) * 100).normalize()}
+        assert not forms & fixed, value
+        assert not forms & seen, value
+        seen |= forms
+
+
+def test_disposition_baseline_is_odeans_per_account_average_not_the_pooled_figure():
+    """Odean 1998 p.1784: average account PGR 0.57, PLR 0.36 — the average
+    of the same per-account ratio this block computes for one user. The
+    pooled Table I figures (0.148 / 0.098) are not comparable beside one
+    account's ratio and must not be the rendered comparison."""
+    assert _NEW_BASELINES["odean_1998_disposition"]["average_account_pgr"] == 0.57
+    assert _NEW_BASELINES["odean_1998_disposition"]["average_account_plr"] == 0.36
+
+    context = _metric_context()
+    context["behaviour"] = _ready_behaviour_block_no_fixed_literals()
+    rules = _rules_empty()
+    sections = render_deterministic_sections(context, rules)
+    f3 = sections["f3"]
+    assert (
+        "Published baseline (Odean 1998, average of per-account ratios): the "
+        "average measured account realised 57.0% of its available gains and "
+        "36.0% of its available losses."
+    ) in f3
+    assert "14.8" not in f3
+    assert "9.8%" not in f3
+    assert validate_sections(sections, build_allowlist(context, rules)) is None
 
 
 def test_behaviour_block_passes_validator_ready_shape():

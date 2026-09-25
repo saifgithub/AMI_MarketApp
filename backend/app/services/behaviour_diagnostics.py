@@ -42,32 +42,50 @@ DEF269 — a game run must never read as this user's own practice behaviour):
     imports no trading calendar anywhere (see that table's own docstring),
     so a lookback of 5 trading days is 5 PRICE ROWS back, not 5 calendar
     days back.
-  * **Disposition ratio (PGR/PLR, Odean 1998)** — proportion of gains
-    realised vs proportion of losses realised. Odean's own definition is a
-    COUNT proportion, not a dollar-weighted one: PGR = number of realised
-    gains / (number of realised gains + number of paper gains), and likewise
-    for losses by count, tallied over every SALE in the window and every
-    position that was open (elsewhere in the account) at the moment of that
-    sale. `_NEW_BASELINES["odean_1998_disposition"]` below is the paper's own
-    Table I count-based figure — a dollar-weighted ratio would not be
-    comparable to it.
+  * **Disposition ratio (PGR/PLR, Odean 1998)** — Odean's own tally
+    (p.1781), by COUNT: on each day a sale takes place in a portfolio that
+    held two or more stocks at the start of that day, each stock sold that
+    day is ONE realised gain or loss (its selling price against its average
+    purchase price), and each stock held at the start of that day and NOT
+    sold that day is ONE paper gain or loss (its price that day against its
+    average purchase price). A stock sold that day, fully or partly, is
+    never also a paper event. Days with no sale, and sale days on which
+    fewer than two stocks were held at the start of the day, count nothing.
+    PGR = realised gains / (realised gains + paper gains); PLR likewise for
+    losses. The counts are pooled over this user's own measured sale days,
+    so the result is ONE account's ratio: the quantity Odean's per-account
+    averages (p.1784, 0.57 / 0.36) average over, which is why those, and not
+    the pooled all-account Table I figures, are the published baseline. A
+    user with no qualifying sale day (one position at a time, say) gets
+    `pgr`/`plr` = None — not measured, never a forced 100%.
 
-    **The standard closed-lot approximation, stated because the CR asked for
-    it to be:** a full Odean replication marks every open lot to market on
-    every trading day and classifies the paper gain/loss it carries that day.
-    This module does not carry a daily portfolio revaluation loop — nothing
-    in Portfolio Health does either (CR222 Corrections §6, no bootstrap) — so
-    it approximates at SALE-EVENT resolution instead: for each closing event
-    (an explicit sell, or a buy that self-closed via stop/target/manual), the
-    realised leg is classified at its own realised_pnl sign, and every OTHER
-    lot open across every ticker AT THAT INSTANT is priced at the closing
-    event's own ticker's price on record nearest that date where the other
-    lot's own ticker has one (`price_history_daily`, nearest close on or
-    before the sale date), classified paper-gain or paper-loss against that
-    lot's entry price, and folded into the same day's denominator. A lot
-    whose ticker has no price on record for that window is a NAMED absence
-    (excluded from that sale's paper terms, not priced at zero or at the
-    entry price) — degrade loudly (CR040), never a silent zero gain.
+    **Where this still differs from the paper, stated because the CR asked
+    for it to be:**
+      - Paper side: Odean scores a held stock a paper gain only if the day's
+        high AND low are both above its average purchase price (a paper loss
+        if both are below, neither if the average lies between them).
+        `price_history_daily` stores one close a day, so this scores the
+        close on or before the sale day against the average purchase price;
+        a stock Odean would score "neither" is scored here by the close's
+        side.
+      - Prices are `adj_close` (split- and dividend-adjusted, see
+        `PriceHistoryDailyRow`); average purchase price is the nominal fill
+        price. A split after a fill, or a dividend after the sale day, can
+        move the stored close relative to the fill without the position's
+        value moving.
+      - "Day" is the UTC calendar date of the sale's timestamp. "Held at the
+        start of the day" means opened before 00:00 UTC of that date and not
+        fully closed before it.
+      - A stock bought and sold within the same day is a realised event (it
+        was sold that day) but does not count toward the two-stock threshold
+        (it was not held at the start of the day).
+      - Several sales of one stock on one day are one realised event, scored
+        by their quantity-weighted average selling price against the average
+        purchase price just before that day's first sale of it.
+    A held stock with no stored close on or before the sale day, or a sale
+    with no recorded selling price, is a NAMED absence
+    (`unpriced_positions_excluded`), never priced at zero or at its own
+    purchase price — degrade loudly (CR040).
 
 **Honesty rules are CR131's, unchanged, restated here because this module is
 the second place they apply.** Below `MIN_TRADES_FOR_DIAGNOSTICS` closed lots
@@ -84,7 +102,7 @@ from __future__ import annotations
 
 from bisect import bisect_right
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from statistics import median
 from uuid import UUID
 
@@ -148,14 +166,26 @@ _NEW_BASELINES = {
         "average_household_annual_turnover_pct": 75.0,
         "most_active_quintile_annual_turnover_pct": 250.0,
     },
+    # Odean 1998 p.1784: "PGR and PLR are then estimated for each account …
+    # The average account PGR is 0.57, the average account PLR is 0.36."
+    # Per-account, because `_disposition_ratio` computes ONE account's ratio
+    # and this is the average of that same quantity across his accounts.
+    # That test also drops any sale (or paper event) of a stock within a week
+    # of a counted one of the same stock in ANY account, a cross-account
+    # control one account has no counterpart for. The pooled Table I figures
+    # (PGR 0.148 / PLR 0.098, p.1783) are deliberately NOT carried: they pool
+    # counts across all accounts, so accounts with many holdings dominate,
+    # and set beside one account's ratio they read as a ~4x gap that is not
+    # there (CR222-D audit round 2, MAJOR-2).
     "odean_1998_disposition": {
         "provenance": (
             "Odean, \"Are Investors Reluctant to Realize Their Losses?\", "
             "Journal of Finance 1998. 10,000 US retail brokerage accounts, "
-            "1987-1993."
+            "1987-1993. PGR and PLR estimated for each account separately, "
+            "then averaged across accounts."
         ),
-        "proportion_gains_realised": 0.148,
-        "proportion_losses_realised": 0.098,
+        "average_account_pgr": 0.57,
+        "average_account_plr": 0.36,
     },
 }
 
@@ -200,6 +230,7 @@ class _Trade:
     closed_at: datetime | None
     status: str
     realised_pnl: float
+    closed_price: float | None = None
 
 
 def _load_all_trades(user_id: UUID) -> list[_Trade]:
@@ -224,6 +255,7 @@ def _load_all_trades(user_id: UUID) -> list[_Trade]:
                 closed_at=_as_utc(r.closed_at) if r.closed_at is not None else None,
                 status=str(r.status),
                 realised_pnl=float(r.realised_pnl or 0),
+                closed_price=float(r.closed_price) if r.closed_price is not None else None,
             )
             for r in rows
         ]
@@ -291,9 +323,10 @@ def _median_holding_period_days(trades: list[_Trade]) -> float | None:
     """Calendar days between a closed lot's entry and its close, pooled
     across every ticker, median rather than mean (see module docstring).
 
-    Built from `_closing_events_by_ticker`, which both this and
-    `_disposition_ratio` share for event-level (not merely per-lot
-    aggregate) dates — see that function's own docstring for why it walks
+    Built from `_closing_events_by_ticker`, whose per-ticker walk
+    (`_closing_events_one_ticker`) `_disposition_ratio` shares for
+    event-level (not merely per-lot aggregate) dates — see that function's
+    own docstring for why it walks
     `fifo_sell` directly rather than going through
     `cost_basis_lots.compute_lots_fifo`.
     """
@@ -317,6 +350,10 @@ class _ClosingEvent:
     opened and this slice closed, for calendar-day holding-period arithmetic.
     `close_at` keeps the full timestamp for chronological ordering against
     other tickers' events when building the disposition ratio.
+    `sell_price` is the price the shares left at (None when the row carries
+    none); `avg_cost_before` is the quantity-weighted average purchase price
+    of the ticker's whole open position immediately before this sale, which
+    is what Odean classifies a sale against — not this one lot's entry.
     """
 
     ticker: str
@@ -325,6 +362,8 @@ class _ClosingEvent:
     close_at: datetime
     quantity_closed: float
     realised_pnl: float
+    sell_price: float | None
+    avg_cost_before: float
 
 
 def _closing_events_by_ticker(trades: list[_Trade]) -> dict[str, list[_ClosingEvent]]:
@@ -388,6 +427,9 @@ def _closing_events_one_ticker(ticker: str, trades: list[_Trade]) -> list[_Closi
                     ticker=ticker, trade_id=t.id,
                 )
                 continue
+            if not result.closes:
+                continue
+            avg_cost = _average_cost(open_refs)
             for i, close in enumerate(result.closes):
                 lot = open_refs[i]
                 lot["quantity_open"] = round(lot["quantity_open"] - close.quantity_closed, 6)
@@ -398,11 +440,14 @@ def _closing_events_one_ticker(ticker: str, trades: list[_Trade]) -> list[_Closi
                     close_at=ts,
                     quantity_closed=close.quantity_closed,
                     realised_pnl=round(close.realised_pnl, 2),
+                    sell_price=t.entry_price,
+                    avg_cost_before=avg_cost,
                 ))
         elif kind == 2:
             lot = by_id.get(t.id)
             if lot is None or lot["quantity_open"] <= 1e-9:
                 continue
+            avg_cost = _average_cost([lot for lot in lots if lot["quantity_open"] > 1e-9])
             events.append(_ClosingEvent(
                 ticker=ticker,
                 entry_date=lot["entry_date"],
@@ -410,12 +455,21 @@ def _closing_events_one_ticker(ticker: str, trades: list[_Trade]) -> list[_Closi
                 close_at=ts,
                 quantity_closed=lot["quantity_open"],
                 realised_pnl=round(t.realised_pnl, 2),
+                sell_price=t.closed_price,
+                avg_cost_before=avg_cost,
             ))
             lot["quantity_open"] = 0.0
     return events
 
 
-# ── Disposition ratio (Odean 1998, closed-lot approximation) ───────────────
+def _average_cost(open_lots: list[dict]) -> float:
+    """Quantity-weighted average purchase price over open lots (Odean's
+    reference point). Callers pass only lots with quantity_open > 0."""
+    qty = sum(lot["quantity_open"] for lot in open_lots)
+    return sum(lot["entry_price"] * lot["quantity_open"] for lot in open_lots) / qty
+
+
+# ── Disposition ratio (Odean 1998, per stock per sale day) ─────────────────
 
 
 def _price_rows(ticker: str) -> list[tuple[date, float]]:
@@ -438,40 +492,28 @@ def _price_on_or_before(dates: list[date], closes: list[float], as_of: date) -> 
 
 
 def _disposition_ratio(trades: list[_Trade]) -> dict:
-    """Odean 1998's PGR/PLR, at sale-event resolution (see module docstring
-    for the closed-lot approximation this implements and why).
+    """Odean 1998's PGR/PLR, tallied his way: per stock per sale day, only on
+    sale days when two or more stocks were held at the start of the day, each
+    stock against its average purchase price (see the module docstring for
+    the method and the deviations that remain).
 
     Returns `{pgr, plr, realised_gains_count, paper_gains_count,
-    realised_losses_count, paper_losses_count, priced_lots_excluded}` — the
-    last a NAMED count of open lots (elsewhere in the account, at a sale's
-    own instant) that were excluded from that sale's paper terms because
-    their own ticker had no stored price on or before the sale date. It is
-    not folded into either denominator silently.
+    realised_losses_count, paper_losses_count, unpriced_positions_excluded}`.
+    The last is a NAMED count of (sale day, stock) pairs on a measured sale
+    day that could not be classified for want of a price: a held stock with
+    no stored close on or before that day, or a sold stock whose sale carries
+    no selling price. It is not folded into either denominator silently.
+    `pgr`/`plr` are None when their denominator is empty — including every
+    account that never had a qualifying sale day.
     """
-    events_by_ticker = _closing_events_by_ticker(trades)
-    all_events = sorted(
-        (ev for events in events_by_ticker.values() for ev in events),
-        key=lambda e: e.close_at,
-    )
-    if not all_events:
-        return {
-            "pgr": None, "plr": None,
-            "realised_gains_count": 0, "paper_gains_count": 0,
-            "realised_losses_count": 0, "paper_losses_count": 0,
-            "priced_lots_excluded": 0,
-        }
-
-    # Every OTHER open lot, across every ticker, as of each sale's own
-    # instant — reconstructed once per ticker via _closing_events (which
-    # already carries entry_date and quantity_closed per event, so the
-    # REMAINING open quantity at time T is the lot's own buy minus every
-    # close of it that happened at or before T). Built lazily from the raw
-    # trades rather than from `_closing_events_by_ticker`'s output, because
-    # an OPEN remainder (never closed) never appears as a `_ClosingEvent` at
-    # all.
     by_ticker_trades: dict[str, list[_Trade]] = {}
     for t in trades:
         by_ticker_trades.setdefault(t.ticker, []).append(t)
+
+    sales_by_day: dict[date, dict[str, list[_ClosingEvent]]] = {}
+    for ticker, ticker_trades in by_ticker_trades.items():
+        for ev in _closing_events_one_ticker(ticker, ticker_trades):
+            sales_by_day.setdefault(ev.close_date, {}).setdefault(ticker, []).append(ev)
 
     price_cache: dict[str, tuple[list[date], list[float]]] = {}
 
@@ -481,43 +523,51 @@ def _disposition_ratio(trades: list[_Trade]) -> dict:
             price_cache[ticker] = ([d for d, _ in rows], [c for _, c in rows])
         return price_cache[ticker]
 
-    realised_gains = 0.0
-    realised_losses = 0.0
-    paper_gains = 0.0
-    paper_losses = 0.0
-    realised_gains_count = 0
-    realised_losses_count = 0
-    paper_gains_count = 0
-    paper_losses_count = 0
-    priced_lots_excluded = 0
+    counts = {"realised_gain": 0, "realised_loss": 0, "paper_gain": 0, "paper_loss": 0}
+    unpriced_positions_excluded = 0
 
-    for ev in all_events:
-        if ev.realised_pnl > 0:
-            realised_gains += ev.realised_pnl
-            realised_gains_count += 1
-        elif ev.realised_pnl < 0:
-            realised_losses += abs(ev.realised_pnl)
-            realised_losses_count += 1
-        # A breakeven close (realised_pnl == 0) contributes to neither side —
-        # Odean's own definition classifies gains and losses, not flat exits.
+    def _tally(kind: str, price: float, avg_cost: float) -> None:
+        # A price equal to the average purchase price is neither a gain nor a
+        # loss — Odean classifies gains and losses, not flat positions.
+        if price - avg_cost > 1e-9:
+            counts[f"{kind}_gain"] += 1
+        elif price - avg_cost < -1e-9:
+            counts[f"{kind}_loss"] += 1
 
-        as_of = ev.close_date
+    for day in sorted(sales_by_day):
+        start_of_day = datetime.combine(day, time.min, tzinfo=timezone.utc)
+        held_at_start: dict[str, float] = {}
         for ticker, ticker_trades in by_ticker_trades.items():
-            open_lots = _open_lots_as_of(ticker_trades, as_of=ev.close_at)
-            dates, closes = _prices_for(ticker)
-            for lot_entry_price, lot_qty_open in open_lots:
-                price = _price_on_or_before(dates, closes, as_of)
-                if price is None:
-                    priced_lots_excluded += 1
-                    continue
-                paper_pnl = (price - lot_entry_price) * lot_qty_open
-                if paper_pnl > 0:
-                    paper_gains += paper_pnl
-                    paper_gains_count += 1
-                elif paper_pnl < 0:
-                    paper_losses += abs(paper_pnl)
-                    paper_losses_count += 1
+            avg_cost = _average_cost_held_before(ticker_trades, cutoff=start_of_day)
+            if avg_cost is not None:
+                held_at_start[ticker] = avg_cost
+        if len(held_at_start) < 2:
+            continue
 
+        sold_today = sales_by_day[day]
+        for ticker, events in sold_today.items():
+            events = sorted(events, key=lambda e: e.close_at)
+            if any(ev.sell_price is None for ev in events):
+                unpriced_positions_excluded += 1
+                continue
+            qty = sum(ev.quantity_closed for ev in events)
+            sell_price = sum(ev.sell_price * ev.quantity_closed for ev in events) / qty
+            _tally("realised", sell_price, events[0].avg_cost_before)
+
+        for ticker, avg_cost in held_at_start.items():
+            if ticker in sold_today:
+                continue
+            dates, closes = _prices_for(ticker)
+            price = _price_on_or_before(dates, closes, day)
+            if price is None:
+                unpriced_positions_excluded += 1
+                continue
+            _tally("paper", price, avg_cost)
+
+    realised_gains_count = counts["realised_gain"]
+    realised_losses_count = counts["realised_loss"]
+    paper_gains_count = counts["paper_gain"]
+    paper_losses_count = counts["paper_loss"]
     pgr = (
         realised_gains_count / (realised_gains_count + paper_gains_count)
         if (realised_gains_count + paper_gains_count) > 0 else None
@@ -533,31 +583,30 @@ def _disposition_ratio(trades: list[_Trade]) -> dict:
         "paper_gains_count": paper_gains_count,
         "realised_losses_count": realised_losses_count,
         "paper_losses_count": paper_losses_count,
-        "priced_lots_excluded": priced_lots_excluded,
+        "unpriced_positions_excluded": unpriced_positions_excluded,
     }
 
 
-def _open_lots_as_of(trades: list[_Trade], *, as_of: datetime) -> list[tuple[float, float]]:
-    """`(entry_price, quantity_open)` for every lot of ONE ticker still open
-    at instant `as_of` — i.e. replay every event up to and including `as_of`
-    and report what is left. Used only inside `_disposition_ratio`, where it
-    is called once per (sale event, other ticker) pair; the trade lists here
-    are one user's full history, never large enough for the O(events^2) cost
-    to matter (the same asymptotic shape `_window_summary` already accepts)."""
-    relevant = [t for t in trades if t.opened_at <= as_of]
-    return _open_lots_after_replay(relevant, as_of=as_of)
+def _average_cost_held_before(trades: list[_Trade], *, cutoff: datetime) -> float | None:
+    """Average purchase price of ONE ticker's position as it stood just
+    before `cutoff` (every event strictly earlier than it replayed), or None
+    when nothing was held. Strictly earlier, so a lot opened or closed at
+    exactly 00:00 of a sale day belongs to that day, not to its start.
 
-
-def _open_lots_after_replay(trades: list[_Trade], *, as_of: datetime) -> list[tuple[float, float]]:
+    Same event-stream construction as `_closing_events_one_ticker`. Called
+    once per (sale day, ticker); one user's trade list is never large enough
+    for the repeated replay to matter."""
     lots: list[dict] = []
     by_id: dict[str, dict] = {}
     stream: list[tuple[int, datetime, str, _Trade]] = []
     for t in trades:
-        if t.side == "buy":
+        if t.side == "buy" and t.opened_at < cutoff:
             stream.append((0, t.opened_at, t.id, t))
-            if t.status.lower() in {"won", "lost", "closed"} and t.closed_at is not None and t.closed_at <= as_of:
-                stream.append((2, t.closed_at, t.id, t))
-        elif t.side == "sell" and t.opened_at <= as_of:
+            if t.status.lower() in {"won", "lost", "closed"}:
+                closed_at = t.closed_at or t.opened_at
+                if closed_at < cutoff:
+                    stream.append((2, closed_at, t.id, t))
+        elif t.side == "sell" and t.opened_at < cutoff:
             stream.append((1, t.opened_at, t.id, t))
     stream.sort(key=lambda e: (e[1], e[0], e[2]))
 
@@ -580,10 +629,8 @@ def _open_lots_after_replay(trades: list[_Trade], *, as_of: datetime) -> list[tu
             lot = by_id.get(t.id)
             if lot is not None:
                 lot["quantity_open"] = 0.0
-    return [
-        (lot["entry_price"], lot["quantity_open"])
-        for lot in lots if lot["quantity_open"] > 1e-9
-    ]
+    open_lots = [lot for lot in lots if lot["quantity_open"] > 1e-9]
+    return _average_cost(open_lots) if open_lots else None
 
 
 # ── Attention-trade share ───────────────────────────────────────────────────
