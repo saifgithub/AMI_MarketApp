@@ -148,6 +148,87 @@ def fill_price_for(*, side: Side | str, named: float, mark: float) -> float:
     return min(named, mark)
 
 
+def committed_price_for(
+    *,
+    side: Side | str,
+    order_type: OrderType | str,
+    mark: float,
+    trigger_price: float | None = None,
+    limit_price: float | None = None,
+) -> float:
+    """CR233-BE round 2 — the ONE price `preview()` and `submit()` size a
+    non-market order's cash-sufficiency/concentration checks against, so the
+    two can never diverge (MAJOR-1, auditor U68).
+
+    `preview()` used to size a STOP/STOP_LIMIT at its named price
+    unconditionally — `named_price_for(...) or mark` — which is right for a
+    resting order but wrong the moment the order is already marketable: a BUY
+    STOP with a trigger below the mark fills AT ONCE, at `mark`
+    (`submit()`'s own branch — `is_triggered(...)` is false only when the
+    order truly rests), not at its 1%-of-mark trigger. Previewing at the
+    trigger there understated a $30,000 order as $300, passing a cap
+    `/submit` immediately refused. On the Alpaca-snapshot path `preview()` is
+    the ONLY floor an order like that ever meets.
+
+    This mirrors the exact branch `submit()` takes (`sim_engine.py`'s
+    `can_rest(...) and named is not None and not is_triggered(...)`):
+
+    - **MARKET** — `named` is always `None`, so this always returns `mark`.
+      Byte-identical to before.
+    - **LIMIT** — `named` is `limit_price`. A marketable limit fills at the
+      (better, capped) mark exactly like a market order (CR170 §3
+      acceptance 1) — sizing at `mark` there is *more* permissive than the
+      pre-fix `named`-always basis, matching what `/submit` would actually
+      book. A resting limit sizes at its own `limit_price`, unchanged.
+    - **STOP** — triggered now -> `mark` (it fills like a market order the
+      instant it is entered, CR170 §3). Resting -> `trigger_price`, the
+      existing conservative anchor `commitment_for()` already uses for a
+      resting stop's committed cash (a floor, not an exact figure — Rule 2
+      can still fill worse on an eventual gap).
+    - **STOP_LIMIT** — triggered now -> `mark`, exactly like STOP and LIMIT:
+      `submit()` sets `fill_price = mark` UNCONDITIONALLY before deciding
+      rest-vs-fill, and a marketable order (any type) falls through to
+      `_execute_fill` at that same `mark` with no further price logic —
+      there is no separate "does it also clear its own limit" step at
+      submit time (CR170 §3 acceptance 1 makes no order-type exception).
+      Resting -> `limit_price`, never the trigger alone: once resting, a
+      stop-limit can fill anywhere up to its limit (Alpaca, and this sim's
+      own `stop_limit_becomes_limit`/Rule 2 once it converts), so the limit
+      is the worst case it can ever commit at (auditor's P3 — a stop-limit
+      sized at its trigger alone understated a 17.8%-of-equity commitment
+      as 9.0%).
+
+    Pure — no DB, no network, no clock, matching this module's other rules.
+    """
+    ot = _as_order_type(order_type)
+    if ot == OrderType.MARKET:
+        return mark
+
+    named = named_price_for(ot, trigger_price=trigger_price, limit_price=limit_price)
+    if named is None:
+        # Defensive only — `SubmitTradeRequest`'s validator 422s a
+        # LIMIT/STOP/STOP_LIMIT with no named price before either caller
+        # ever reaches this. Falls back to the mark, matching `preview()`'s
+        # own pre-existing defensive fallback.
+        return mark
+
+    triggered = is_triggered(side=side, order_type=ot, named=named, mark=mark)
+
+    if triggered:
+        # Marketable now: `submit()` books this at `mark`, no matter the
+        # order type (CR170 §3 acceptance 1) — see docstring.
+        return mark
+
+    if ot == OrderType.STOP_LIMIT:
+        # Resting: the worst case is the order's own limit, not the
+        # trigger it has not reached yet.
+        return limit_price if limit_price is not None else named
+
+    # LIMIT / STOP, resting: size at the order's own named price, the same
+    # conservative anchor `commitment_for()` already uses.
+    return named
+
+
 def stop_limit_becomes_limit(order_type: OrderType | str) -> bool:
     """A stop-limit is two-phase: the trigger converts it into a resting limit,
     and Rule 1 then re-applies against `limit_price`.

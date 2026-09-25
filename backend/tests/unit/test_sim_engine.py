@@ -419,15 +419,26 @@ def test_preview_stop_buy_sizes_cash_at_trigger_not_mark():
 
 def test_preview_stop_buy_passes_at_trigger_even_though_mark_would_breach():
     """The inverse of the above — proves the trigger price is genuinely
-    READ, not just no-longer-mark: a mark that alone would breach cash must
-    NOT block a stop order whose named trigger is affordable."""
-    sim = SimEngine(provider=_ConstProvider(150.0))
+    READ for a STOP that still RESTS, not just no-longer-mark: a mark that
+    alone would breach cash must not block a stop order whose named
+    trigger is affordable, PROVIDED the order has not already triggered.
+
+    A BUY STOP rests ABOVE the mark (breakout entry) — `rests_below` is
+    `False` for a BUY STOP, so `is_triggered` fires the moment `mark >=
+    trigger`. To keep this order genuinely resting, the trigger here is
+    ABOVE the mark (unlike round 1's version of this test, which put the
+    trigger at $80 under an $150 mark — that is an ALREADY-TRIGGERED buy
+    stop, CR233-BE round 2 MAJOR-1's exact finding, and correctly now
+    sizes at the mark, not the trigger; see the marketable-stop test
+    below)."""
+    sim = SimEngine(provider=_ConstProvider(60.0))
     user_id = uuid4()
     mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
 
-    # $10k cash. 100 shares @ $150 mark = $15,000 (would breach). 100 shares
-    # @ $80 trigger = $8,000 (affordable) — a sell-stop-style breakdown entry
-    # priced well under the current mark.
+    # $10k cash. 100 shares @ $60 mark = $6,000 (would pass at mark too, but
+    # that is not what is being proven here). 100 shares @ $80 trigger =
+    # $8,000 (affordable) — a breakout entry priced above the current mark,
+    # genuinely resting (mark $60 < trigger $80).
     pv = sim.preview(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
         mandate=mandate, order_type=OrderType.STOP, trigger_price=80.0,
@@ -437,11 +448,43 @@ def test_preview_stop_buy_passes_at_trigger_even_though_mark_would_breach():
     assert pv.notional == 80.0 * 100
 
 
-def test_preview_stop_limit_sizes_at_trigger_price():
-    """A STOP_LIMIT previewed the same way — `named_price_for` reads
-    `trigger_price` for STOP_LIMIT too (the limit only takes over once
-    triggered), so `preview()` must size against the trigger, matching
-    `commitment_for()`'s read-time reservation for a resting STOP_LIMIT."""
+def test_preview_stop_buy_marketable_sizes_at_mark_not_trigger():
+    """CR233-BE round 2 (MAJOR-1 fix) — a BUY STOP whose trigger the mark
+    has ALREADY crossed is marketable now: `submit()` books it at `mark`
+    unconditionally (CR170 §3 acceptance 1, no order-type exception), so
+    `preview()` must size cash-sufficiency there too, not at the trigger.
+    Before this fix, this exact shape (trigger $80, well below a $150 mark)
+    passed preview sized at $8,000, then would have been refused by
+    `/submit`'s real $15,000 mark-priced fill — the auditor's measured P1
+    (300% of cap passing preview, refused at submit)."""
+    sim = SimEngine(provider=_ConstProvider(150.0))
+    user_id = uuid4()
+    # single_name_cap_pct raised well past 150% so the concentration cap
+    # doesn't fire first and mask the cash-sufficiency check this test is
+    # actually about.
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 500.0})
+
+    # $10k cash. 100 shares @ $150 mark = $15,000 (breaches). Trigger $80 is
+    # BELOW the $150 mark, so this BUY STOP has already triggered.
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
+        mandate=mandate, order_type=OrderType.STOP, trigger_price=80.0,
+    )
+    assert not pv.accepted
+    assert any("insufficient cash" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
+    assert pv.fill_price == 150.0
+    assert pv.notional == 150.0 * 100
+
+
+def test_preview_stop_limit_resting_sizes_at_limit_not_trigger():
+    """CR233-BE round 2 (MAJOR-1 fix) — a STOP_LIMIT that still RESTS must
+    size at its own LIMIT, the worst price it can ever commit at once
+    resting, never the trigger alone (the auditor's P3: a stop-limit sized
+    at its trigger understated a 17.8%-of-equity commitment as 9.0%).
+    Trigger $120 is above the $50 mark, so this BUY STOP_LIMIT still
+    rests."""
     sim = SimEngine(provider=_ConstProvider(50.0))
     user_id = uuid4()
     mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 150.0})
@@ -455,7 +498,31 @@ def test_preview_stop_limit_sizes_at_trigger_price():
     assert any("insufficient cash" in v for v in pv.compliance.violations), (
         pv.compliance.violations
     )
-    assert pv.fill_price == 120.0
+    assert pv.fill_price == 121.0
+
+
+def test_preview_stop_limit_marketable_sizes_at_mark_not_trigger_or_limit():
+    """CR233-BE round 2 (MAJOR-1 fix) — a STOP_LIMIT whose trigger the mark
+    has already crossed is marketable now, exactly like a plain STOP or
+    LIMIT: `submit()` books it at `mark`, no matter the order type
+    (CR170 §3 acceptance 1). Trigger $80 is below the $150 mark, so this
+    BUY STOP_LIMIT has already triggered."""
+    sim = SimEngine(provider=_ConstProvider(150.0))
+    user_id = uuid4()
+    # single_name_cap_pct raised well past 150% — see the STOP twin above.
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 500.0})
+
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=100,
+        mandate=mandate, order_type=OrderType.STOP_LIMIT,
+        trigger_price=80.0, limit_price=200.0,
+    )
+    assert not pv.accepted
+    assert any("insufficient cash" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
+    assert pv.fill_price == 150.0
+    assert pv.notional == 150.0 * 100
 
 
 def test_preview_market_order_still_sizes_at_mark_unchanged():
