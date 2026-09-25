@@ -257,6 +257,11 @@ def test_http_503_sentinel_yields_branded_scripted_reply_no_leak(
     assert "backend logs" not in lower
     assert "AMI error" not in r.text
     assert "AMI" in r.text, "the Concierge's own scripted reply is branded AMI copy"
+    # DEF433 r1 MINOR-1 (u66): with no text yet, the reply must be the
+    # Concierge's scripted answer, not the bare mid-reply cut-off line; the
+    # checks above pass for either.
+    assert "fallback mode" in lower, "an empty-buffer outage gets the scripted reply"
+    assert "lost the connection" not in lower
 
     assert balance_for(user_id)[0] == before, (
         "an HTTP-503 Concierge turn must net to zero credits (spent then refunded)"
