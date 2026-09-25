@@ -1678,3 +1678,19 @@ Order at promotion:
 2. Set the five `ROOM_*_ENABLED=true` in `infra/alpha.env` (already forwarded in `docker-compose.yml`), re-ship the env, `up -d` again, then check each flag in the container env.
 
 Follow-up, not built: no scheduled 8-K re-scan exists. #3's line marks itself unavailable when the scan is 180 days old, so it goes dark in the open rather than stale in silence. Needs a daily re-scan (a melehost cron, which needs its own go, or an in-app tick) before about 2027-03-24.
+
+### Flipped 2026-09-25 ~20:22Z on `alpha-2026-09-26-1` (54a38496) (AT:R85)
+
+Ingests ran in `ami_api_alpha` before the flags went live (tickers: CR035's `tickers_150.txt`,
+`docker cp`'d to `/tmp` — the default path resolves outside the container's `/app`):
+
+- `ingest_edgar_facts.py --force`: ingested=150, failed=0, no_cik=0, no_facts=0 · facts_inserted=3168.
+- `ingest_edgar_8k.py`: 150 tickers, submissions_failed=0, index_unreadable=0 · filings new=444,
+  text extracted=443. Named gaps: `fetch_failed` TDOC 0001477449-26-000002 (the filing row stands, so
+  the line still reads "filed", excerpt missing); `recent_block_short` XOM (index reaches 2026-07-01,
+  so earlier windows read unavailable, never "none filed"). Neither blocks the flip.
+
+`ROOM_DEBT_SPLIT_ENABLED`, `ROOM_COST_OF_DEBT_ENABLED`, `ROOM_EXECUTIVE_CHANGE_ENABLED`,
+`ROOM_BUYBACK_PRICE_ENABLED`, `ROOM_DEBT_MATURITY_ENABLED` = true in `infra/alpha.env`; verified
+`true` in the container env; postflight `config` ok. The 8-K re-scan cron remains a follow-up (due
+before ~2027-03-24; needs Saiful's go for a melehost cron).
