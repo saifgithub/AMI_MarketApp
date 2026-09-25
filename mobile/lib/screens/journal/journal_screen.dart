@@ -167,21 +167,18 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
       // CR122 — Decision Journal empty state is one of the six approved ad
       // placements (ads.md:41). The slot self-gates (plan, caps) and
       // collapses to nothing for paying plans.
-      return Column(
-        children: [
-          Expanded(
-            child: _EmptyState(isSearching: state.searchQuery.isNotEmpty),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
-                AmiSpacing.m, 0, AmiSpacing.m, AmiSpacing.m),
-            child: AdSlot(
-              placement: AdPlacement.journalEmptyState,
-              topSpacing: false,
-            ),
-          ),
-        ],
-      );
+      //
+      // DEF427 round 2 (U66 MAJOR-1) — round 1 scrolled `_EmptyState`'s own
+      // content but left `AdSlot` as a fixed-height sibling OUTSIDE that
+      // scroll view, both still sharing this one `Expanded` region. With the
+      // ad actually rendered (a `HouseAdCard` is 235-317pt tall) that still
+      // overflows once the region drops to ~360-440pt — exactly the
+      // landscape-phone and small-portrait cases the round-1 tests never
+      // exercised because their harness never let the ad render. Fix: the
+      // scroll/min-height machinery moves up to wrap `_EmptyState` AND
+      // `AdSlot` together, so the ad is now part of the same scrollable
+      // content instead of a sibling the scroll can't absorb.
+      return _EmptyStateWithAd(isSearching: state.searchQuery.isNotEmpty);
     }
     return RefreshIndicator(
       onRefresh: () => ref
@@ -391,6 +388,10 @@ class _DeleteBackground extends StatelessWidget {
 }
 
 
+/// The illustration/title/body content alone — no scroll or sizing logic of
+/// its own. [_EmptyStateWithAd] owns the layout that makes this (and the ad
+/// slot beside it) fit a short viewport; keeping this widget dumb means the
+/// searching-vs-not copy stays the only thing it's responsible for.
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.isSearching});
   final bool isSearching;
@@ -398,7 +399,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final content = Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -423,33 +424,56 @@ class _EmptyState extends StatelessWidget {
         ],
       ],
     );
+  }
+}
 
-    // DEF427 (E5-U2) — this sat in a fixed `Center`, which does not protect
-    // its child from being taller than the space `Expanded` actually left it
-    // (this pane shares its parent Column with the AdSlot sibling below it,
-    // and both compete for one Expanded region). At a short viewport height
-    // and/or a large text scale (the body copy alone can wrap to 3+ lines),
-    // the Column's intrinsic height exceeded that, and `Center` overflowed
-    // by 29px on an iPhone 17 Simulator rather than clip or shrink.
-    //
-    // `LayoutBuilder` + `SingleChildScrollView` + a `ConstrainedBox` with
-    // `minHeight: constraints.maxHeight` reproduces the old "visually
-    // centred with room to spare" look on every viewport that actually HAS
-    // room to spare (the common case — the min-height constraint alone
-    // centres the content, same as before), and becomes a real, reachable
-    // scroll instead of an overflow on the viewports that don't. This is the
-    // same fix shape CLAUDE.md itself names for this harness's whole
-    // purpose: screens that do not scroll when they need to.
+/// [_EmptyState] plus its CR122 ad slot, laid out so BOTH fit a short
+/// viewport (DEF427).
+///
+/// Round 1 gave `_EmptyState` its own `SingleChildScrollView` but left
+/// `AdSlot` as a fixed-height sibling outside it, still sharing the same
+/// `Expanded` region — a `HouseAdCard` is 235-317pt tall, so once that
+/// region dropped to roughly 360-440pt (a landscape phone, or a short
+/// portrait phone at a large text scale) the pair overflowed again, just
+/// like the original defect. Root cause both times: `Center`/`Column`
+/// don't protect a child from being taller than the space an `Expanded`
+/// ancestor actually left it.
+///
+/// Fix: one `LayoutBuilder` + `SingleChildScrollView` + `ConstrainedBox`
+/// wraps `_EmptyState`'s content AND the ad together. On every viewport with
+/// room to spare — the common case — the min-height constraint alone
+/// reproduces the old "centred with slack" look for both (a no-op scroll
+/// physically), and on a viewport that does not have room, the pane scrolls
+/// to reach whichever of the two doesn't fit, ad included, instead of
+/// overflowing.
+class _EmptyStateWithAd extends StatelessWidget {
+  const _EmptyStateWithAd({required this.isSearching});
+  final bool isSearching;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _EmptyState(isSearching: isSearching),
+        const SizedBox(height: AmiSpacing.m),
+        const AdSlot(
+          placement: AdPlacement.journalEmptyState,
+          topSpacing: false,
+        ),
+      ],
+    );
+
+    // See _EmptyState's former doc (now here): `constraints.maxHeight` can
+    // be tighter than the padding this pane used to reserve unconditionally
+    // (a very short viewport, or an ancestor with no bounded height at all
+    // giving `double.infinity`, which subtraction would carry through as
+    // NaN/infinity into a BoxConstraints assertion). Clamped to 0 either
+    // way: a non-positive minHeight is simply "no extra height demanded" —
+    // exactly what a screen too short to centre into should do: scroll,
+    // starting from the top, rather than throw.
     return LayoutBuilder(
       builder: (context, constraints) {
-        // `constraints.maxHeight` can be tighter than the padding this pane
-        // used to reserve unconditionally (a very short viewport, or an
-        // ancestor with no bounded height at all giving `double.infinity`,
-        // which subtraction would carry through as NaN/infinity into a
-        // BoxConstraints assertion). Clamped to 0 either way: a non-positive
-        // minHeight is simply "no extra height demanded", which is exactly
-        // what a screen too short to centre into should do — scroll,
-        // starting from the top, rather than throw.
         final available = constraints.maxHeight - (AmiSpacing.xl * 2);
         final minHeight = available.isFinite && available > 0 ? available : 0.0;
         return SingleChildScrollView(
