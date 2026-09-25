@@ -93,22 +93,50 @@ _SECRET_FIELD_RE = re.compile(
 # one says "this would be a credential leak", this says "we do not need this".
 _PRIVATE_FIELD_RE = re.compile(r"^alpaca$", re.IGNORECASE)
 
+# DEF430 MAJOR-1: the DEF419 mandate-preview snapshot
+# (`toMandateSnapshotJson()` — `{kind, equity, cash, positions}`) rides
+# `/v1/sim/preview` under the key `account`, not `alpaca`, so `_PRIVATE_FIELD_RE`
+# above never touches it — it was persisted to http_audit.request_body verbatim
+# for 90 days, which is exactly the outcome CR202's comment above says this
+# module exists to prevent, and makes Privacy v2.1's "we do not store the
+# summary as its own record" false for this one path. `account` is NOT added to
+# `_PRIVATE_FIELD_RE` globally: that key name is generic (e.g. billing/auth
+# payloads use it for unrelated things) and a blanket match would redact fields
+# on routes that have nothing to do with Alpaca. Scoped by path instead — one
+# entry per route whose body carries the Alpaca snapshot under a different key
+# than `alpaca`. `/v1/sim/preview` is the only such route today (grepped
+# `mobile/lib/services/api/api_client.dart` for every `toMandateSnapshotJson`/
+# `toWireJson` call site: Room convene and 1-on-1 both use the `alpaca` key,
+# already covered; order submit/cancel never send the snapshot at all).
+_PATH_SCOPED_PRIVATE_FIELDS: dict[str, re.Pattern[str]] = {
+    "/v1/sim/preview": re.compile(r"^account$", re.IGNORECASE),
+}
 
-def _scrub_secret_fields(body: bytes) -> bytes:
+
+def _scrub_secret_fields(body: bytes, path: str | None = None) -> bytes:
     """Redact values of secret-shaped and privacy-sensitive JSON keys,
     recursively. Returns the input unchanged if it isn't parseable JSON (e.g.
-    already scrubbed, binary, or malformed) — never raises."""
+    already scrubbed, binary, or malformed) — never raises.
+
+    `path` additionally applies `_PATH_SCOPED_PRIVATE_FIELDS`, so a key name
+    that only carries Alpaca data on ONE route (e.g. `account` on the DEF419
+    preview) doesn't get swept on every other route that happens to use the
+    same generic key name for something unrelated."""
     try:
         parsed = json.loads(body)
     except Exception:
         return body
+
+    scoped_re = _PATH_SCOPED_PRIVATE_FIELDS.get(path) if path else None
 
     def _walk(node):
         if isinstance(node, dict):
             out = {}
             for k, v in node.items():
                 if isinstance(k, str) and (
-                    _SECRET_FIELD_RE.search(k) or _PRIVATE_FIELD_RE.search(k)
+                    _SECRET_FIELD_RE.search(k)
+                    or _PRIVATE_FIELD_RE.search(k)
+                    or (scoped_re is not None and scoped_re.search(k))
                 ):
                     out[k] = "[REDACTED]"
                 else:
@@ -167,7 +195,7 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
                 body_bytes = await request.body()
             except Exception:
                 body_bytes = b""
-            body_bytes = _scrub_secret_fields(body_bytes)
+            body_bytes = _scrub_secret_fields(body_bytes, path)
             if len(body_bytes) > MAX_BODY_BYTES:
                 captured_request = body_bytes[:MAX_BODY_BYTES]
             else:
@@ -225,7 +253,7 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
             async for chunk in response.body_iterator:  # type: ignore[attr-defined]
                 body_chunks.append(chunk)
             full = b"".join(body_chunks)
-            scrubbed = _scrub_secret_fields(full)
+            scrubbed = _scrub_secret_fields(full, path)
             if len(scrubbed) > MAX_BODY_BYTES:
                 captured_response = scrubbed[:MAX_BODY_BYTES]
                 response_truncated = True

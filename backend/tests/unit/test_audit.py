@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.db.models import (
     HTTPAuditRow,
@@ -387,3 +387,86 @@ def test_trim_audit_tables_ages_out_old_notifications():
     with get_session() as s:
         assert s.get(NotificationRow, old_id) is None
         assert s.get(NotificationRow, new_id) is not None
+
+
+def test_trim_audit_tables_exempts_policy_update_but_not_other_types():
+    """DEF430 MAJOR-2: `policy_notice.notify_policy_update_v2_1()`'s "exactly
+    once, ever" claim depends on `uq_notifications_dedupe` — which only blocks
+    a re-send while the earlier `policy_update` row still exists. Before this
+    fix, the row aged out at 90 days like any other notification, and the next
+    boot's sweep told every linked user again. A `price_alert` row of the same
+    age must still trim — this is a `type`-scoped exemption, not "notifications
+    stopped trimming".
+    """
+    old_ts = datetime.now(timezone.utc) - timedelta(days=91)
+    policy_id, alert_id = uuid4(), uuid4()
+
+    with get_session() as s:
+        s.add(NotificationRow(
+            id=policy_id, user_id=uuid4(), type="policy_update",
+            title="Privacy Policy updated (v2.1)", body="...",
+            deep_link={}, created_at=old_ts,
+        ))
+        s.add(NotificationRow(
+            id=alert_id, user_id=uuid4(), type="price_alert", title="old",
+            body="old", deep_link={}, created_at=old_ts,
+        ))
+        s.commit()
+
+    counts = trim_audit_tables(days=90)
+    assert counts["notifications"] >= 1  # the price_alert row, not the policy one
+
+    with get_session() as s:
+        assert s.get(NotificationRow, policy_id) is not None, (
+            "a policy_update row must survive the 90-day trim — otherwise "
+            "notify_policy_update_v2_1()'s dedupe constraint loses its only "
+            "signal that this user was already notified, and the next boot "
+            "notifies them again"
+        )
+        assert s.get(NotificationRow, alert_id) is None
+
+
+def test_policy_update_notice_survives_trim_and_re_sweep_stays_a_no_op():
+    """DEF430 MAJOR-2, end to end: notify -> age the row past 90 days ->
+    trim -> re-sweep. Must still be exactly one row and the re-sweep must
+    report the user as already notified, not send a second notice."""
+    from app.db.models import User
+    from app.services import policy_notice
+
+    user_id = uuid4()
+    with get_session() as s:
+        s.add(User(
+            id=user_id, plan="floor_pass", is_anonymous=True,
+            alpaca_linked_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        ))
+        s.commit()
+
+    first = policy_notice.notify_policy_update_v2_1()
+    assert first["notified"] == 1
+
+    old_ts = datetime.now(timezone.utc) - timedelta(days=91)
+    with get_session() as s:
+        s.execute(
+            update(NotificationRow)
+            .where(NotificationRow.user_id == user_id)
+            .values(created_at=old_ts)
+        )
+        s.commit()
+
+    trim_audit_tables(days=90)
+
+    second = policy_notice.notify_policy_update_v2_1()
+
+    with get_session() as s:
+        rows = s.execute(
+            select(NotificationRow).where(
+                NotificationRow.user_id == user_id,
+                NotificationRow.type == "policy_update",
+            )
+        ).scalars().all()
+    assert len(rows) == 1, (
+        "the notice must not repeat after the 90-day notifications trim runs "
+        "and the sweep fires again on a later boot"
+    )
+    assert second["notified"] == 0
+    assert second["already_notified"] == 1
