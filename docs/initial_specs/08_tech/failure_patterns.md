@@ -2206,3 +2206,54 @@ auditor's second demonstrated evasion. A third test pins the
 allowlist-can-only-shrink property directly, so growing the allowlist to
 unblock an unrelated change (rather than fixing the actual exit) fails on its
 own rather than silently widening the hole.
+
+---
+
+## P37 — a rename's own guard scans one corpus; a structurally identical sibling corpus has none
+
+**Symptom.** A rename ships with a test that asserts the retired label is
+gone — and the test is real, passes, and checks a real corpus. It just
+doesn't check *every* corpus the label could still live in, because nobody
+enumerated "every surface a user reads this app's copy from" before writing
+the walk. The gap is invisible precisely because the shipped guard is green:
+there is a passing test, so the rename *reads* as verified.
+
+**Instances (two).**
+
+| | The guard that shipped | What it walked | What it never touched |
+|---|---|---|---|
+| **CR160** (agent rename, AT:R73) | `test_cr160_agent_rename.py::test_retired_labels_absent_from_en_content_corpus` | `content/` (lessons, daily challenges, glossary, ai_coach, `content/agents/*.md`) | `mobile/lib` entirely — no ARB file, no Dart string, was ever in this test's walk |
+| **DEF423** (2026-09-25) | found the above gap by hand-grepping `mobile/lib/l10n/app_en.arb`, `agent.dart`, `backend/app/services/room_prompts.py`, `website_api/` | — | 16 EN ARB values still said "PM"/"Portfolio Manager"/"Market Analyst"/"Trader" as agent labels months after CR160 shipped; one backend LLM-prompt string was internally inconsistent within its own paragraph (said "Execution Desk" twice, then "the Trader" twice, two sentences later) |
+
+**Why the previous guard failed.** `content/` and `mobile/lib` are *the same kind of
+thing* — both are corpora of user-facing strings a rename must clear — but they are
+different directories, own by different teams' conventions (content is
+Markdown/JSON with an i18n pipeline; `mobile/lib` is Dart + ARB with a different
+i18n pipeline), and nothing forced the person writing the CR160 guard to ask "what
+else looks like `content/` from the user's side." A rename's acceptance criterion
+("zero occurrences of the old label") is a property of *the whole app*, but the
+guard that proves it is scoped to whichever corpus was open in the editor when the
+guard was written. Passing that guard produces exactly the false confidence P19
+describes for a different reason: the test is not wrong, its **domain** is
+incomplete, and a green run reads as "the rename holds" rather than "the rename
+holds in the one place I checked."
+
+**The check.** `backend/tests/unit/test_def423_agent_rename_residue.py` — five
+tests scanning EN ARB values (`mobile/lib/l10n/app_en.arb`), the Flutter agent
+registry's `displayName` values (`agent.dart`), and `content/agents/*.md` prompt
+text for the CR160 retired labels, including a case-insensitive pass (ALL-CAPS UI
+strings like `"ASK THE MARKET ANALYST"` don't match a case-sensitive `"Market
+Analyst"` literal) and a bare-`"PM"`-abbreviation check with a documented `4 PM
+ET`-style time exclusion. A small, reasoned allowlist covers "Trader" as the
+pricing-tier name, the Day Trader preset, and a competition-ladder rank — real
+exceptions, not a growing escape hatch (see `docs/defect/DEF423_cr160_rename_residue.md`
+for the exact list and reasoning).
+
+**What generalises.** Before treating any corpus-wide rename/redaction/i18n guard
+as proof the change holds everywhere, enumerate every surface a user actually reads
+copy from — app strings, backend-generated user-facing text (verdict reasons,
+notifications, error messages), marketing/website copy, prompt text an LLM can
+echo back — and confirm the guard's file-glob actually reaches each one. A guard
+scoped to "the corpus I was already editing" is not wrong, it is just answering a
+narrower question than "is the rename done," and the two get conflated exactly
+when the narrower one is green.

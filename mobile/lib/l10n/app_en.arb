@@ -48,9 +48,15 @@
   },
   "watchlistHeading": "WATCHLIST",
   "watchlistAdd": "ADD",
-  "watchlistEmpty": "Add tickers you want to watch. Tap a row for quick actions: Ask the Market Analyst, Convene the Room, or open a trade.",
+  "watchlistEmpty": "Add tickers you want to watch. Tap a row for quick actions: Ask the Technical Strategist, Convene the Room, or open a trade.",
+  "@watchlistEmpty": {
+    "description": "CR160 DEF423 — 'Technical Strategist' replaces the retired 'Market Analyst' agent label. retranslate:[ar,ms]"
+  },
   "watchlistOpenTradeTicket": "OPEN TRADE TICKET",
-  "watchlistAskMarketAnalyst": "ASK THE MARKET ANALYST",
+  "watchlistAskMarketAnalyst": "ASK THE TECHNICAL STRATEGIST",
+  "@watchlistAskMarketAnalyst": {
+    "description": "CR160 DEF423 — 'Technical Strategist' replaces the retired 'Market Analyst' agent label. retranslate:[ar,ms]"
+  },
   "watchlistConveneRoom": "CONVENE THE ROOM",
   "watchlistRemove": "REMOVE FROM WATCHLIST",
   "watchlistRemoved": "Removed from watchlist",
@@ -187,9 +193,9 @@
       }
     }
   },
-  "insightsVerdictTitle": "WHAT YOUR PM DECIDED",
+  "insightsVerdictTitle": "WHAT YOUR CIO DECIDED",
   "@insightsVerdictTitle": {
-    "description": "CR178 — card 2. retranslate:[ar,ms]"
+    "description": "CR178 — card 2. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]"
   },
   "insightsVerdictApprove": "approved",
   "@insightsVerdictApprove": {
@@ -211,9 +217,9 @@
   "@insightsVerdictNoVerdict": {
     "description": "CR178 — PM verdict NO_VERDICT (CR098). Its own outcome, never folded into REJECT. retranslate:[ar,ms]"
   },
-  "insightsVerdictNoVerdictNote": "NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.",
+  "insightsVerdictNoVerdictNote": "NO VERDICT is not a rejection. The CIO declined to rule because the run had no market read — your idea was never judged.",
   "@insightsVerdictNoVerdictNote": {
-    "description": "CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. retranslate:[ar,ms]"
+    "description": "CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]"
   },
   "insightsVerdictUnrecorded": "{count} {count, plural, =1{run} other{runs}} ended before a verdict was recorded and are not counted.",
   "@insightsVerdictUnrecorded": {
@@ -355,7 +361,10 @@
   "portfolioLive": "LIVE",
   "portfolioMock": "MOCK",
   "portfolioStartSimTrading": "Start sim trading",
-  "portfolioStartSimTradingBody": "Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM's safety floor runs on every submit.",
+  "portfolioStartSimTradingBody": "Convene the Room to get a verdict, then open a trade — or place one directly from here. Your CIO's safety floor runs on every submit.",
+  "@portfolioStartSimTradingBody": {
+    "description": "CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
+  },
   "portfolioNewTrade": "NEW TRADE",
   "portfolioHoldings": "HOLDINGS",
   "portfolioTrades": "TRADES",
@@ -1741,9 +1750,9 @@
       }
     }
   },
-  "lessonPlayBreachDrawdownCeiling": "Your mandate halts new entries at {cap}% down. This hole is {depth}% — the PM stopped you {over} points ago.",
+  "lessonPlayBreachDrawdownCeiling": "Your mandate halts new entries at {cap}% down. This hole is {depth}% — the CIO stopped you {over} points ago.",
   "@lessonPlayBreachDrawdownCeiling": {
-    "description": "CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points.",
+    "description": "CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation. retranslate:[ar,ms]",
     "placeholders": {
       "cap": {
         "type": "int"
@@ -1795,7 +1804,10 @@
   "settingsRiskLabel4": "Aggressive. Larger sizes on high-conviction setups.",
   "settingsRiskLabel5": "Highest risk tolerance. Concentrated bets allowed.",
   "settingsMaxDrawdown": "Max drawdown",
-  "settingsMaxDrawdownExplain": "Your PM refuses trades that would push the portfolio past this.",
+  "settingsMaxDrawdownExplain": "Your CIO refuses trades that would push the portfolio past this.",
+  "@settingsMaxDrawdownExplain": {
+    "description": "CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
+  },
   "settingsSectionRiskLimits": "RISK LIMITS",
   "@settingsSectionRiskLimits": {
     "description": "CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]"
@@ -2400,7 +2412,10 @@
   },
   "roomViolations": "VIOLATIONS",
   "roomOpenTradeTicket": "OPEN TRADE TICKET",
-  "roomTradeTicketCaption": "Submits with the verdict's size / stop / target. PM safety floor reruns.",
+  "roomTradeTicketCaption": "Submits with the verdict's size / stop / target. CIO safety floor reruns.",
+  "@roomTradeTicketCaption": {
+    "description": "CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
+  },
   "roomWinzipTitle": "Your Room is warming up",
   "roomWinzipBody": "You've used this Room — AMI's already topping you up. Your next Room unlocks in {countdown}.",
   "@roomWinzipBody": {
@@ -2631,7 +2646,10 @@
   "tradeTicketHintOptional": "optional",
   "tradeTicketSubmitting": "SUBMITTING…",
   "tradeTicketSubmit": "SUBMIT TRADE",
-  "tradeTicketFooterNote": "PM safety floor runs on submit — compliance flags + drawdown + single-name cap.",
+  "tradeTicketFooterNote": "CIO safety floor runs on submit — compliance flags + drawdown + single-name cap.",
+  "@tradeTicketFooterNote": {
+    "description": "CR160 DEF423 — 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
+  },
   "tradeTicketSideBuy": "BUY",
   "tradeTicketSideSell": "SELL",
   "tradeTicketFilled": "Filled: {side} {qty} {ticker} @ \\${price}",
@@ -3239,9 +3257,9 @@
   "@tourYou3Title": {
     "description": "CR180 — YOU tour step 3: INSIGHTS (CR178), the only new surface. retranslate:[ar,ms]"
   },
-  "tourYou3Body": "How your trades ended, what your PM decided, how your mandate has moved. Your own record, not a score.",
+  "tourYou3Body": "How your trades ended, what your CIO decided, how your mandate has moved. Your own record, not a score.",
   "@tourYou3Body": {
-    "description": "CR180 — YOU tour step 3. Names three of the five cards concretely; 'not a score' because the app deliberately has no streaks or badges (CR109 Amendment A). retranslate:[ar,ms]"
+    "description": "CR180 — YOU tour step 3. Names three of the five cards concretely; 'not a score' because the app deliberately has no streaks or badges (CR109 Amendment A). CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]"
   },
   "tourCompletionYou": "Your mandate is the one thing worth revisiting.",
   "@tourCompletionYou": {
@@ -3501,9 +3519,9 @@
   "@roomViewModeTranscript": {
     "description": "Segmented-control label for the collapsed per-agent transcript view. Mono uppercase; keep as short as the language allows."
   },
-  "roomPmCardHeading": "PORTFOLIO MANAGER",
+  "roomPmCardHeading": "CHIEF INVESTMENT OFFICER",
   "@roomPmCardHeading": {
-    "description": "CR127 — card header over the PM's reasoning, the last card on the Verdict Board (after the eleven-voice comb). Names whose words those are: the reason prose is the Portfolio Manager's own, and before this it carried no attribution at all. Giving the PM a titled card of its own is what makes the old 'THE PM DECIDES — THIS IS NOT A VOTE' caption redundant. Mono uppercase, PM family purple. Hidden when there is no reason text to head."
+    "description": "CR127 — card header over the CIO's reasoning, the last card on the Verdict Board (after the eleven-voice comb). Names whose words those are: the reason prose is the Chief Investment Officer's own, and before this it carried no attribution at all. Giving the CIO a titled card of its own is what makes the old 'THE PM DECIDES — THIS IS NOT A VOTE' caption redundant. Mono uppercase, PM family purple (color token name unchanged — CLAUDE.md: internal identifiers stay). Hidden when there is no reason text to head. CR160 DEF423: value renamed Portfolio Manager → Chief Investment Officer. retranslate:[ar,ms]"
   },
   "roomHeroApprove": "THE ROOM APPROVED",
   "@roomHeroApprove": {
@@ -3565,9 +3583,9 @@
   "@roomHeroConveneAgain": {
     "description": "Button under the NO RESULT hero — the run failed, so the honest action is to retry it."
   },
-  "roomOverrideHeading": "MANDATE OVERRIDE — YOUR RULES CHANGED THE PM'S CALL",
+  "roomOverrideHeading": "MANDATE OVERRIDE — YOUR RULES CHANGED THE CIO'S CALL",
   "@roomOverrideHeading": {
-    "description": "Mandatory line between hero and comb whenever the safety floor overrode the PM. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS."
+    "description": "Mandatory line between hero and comb whenever the safety floor overrode the CIO. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]"
   },
   "roomCombVoices": "{count} VOICES",
   "@roomCombVoices": {
@@ -3617,9 +3635,9 @@
   "@roomRibbonHeading": {
     "description": "Heading over the to-scale stop/entry/target bar."
   },
-  "roomRibbonDerived": "{levels} SET BY AMI, NOT THE PM",
+  "roomRibbonDerived": "{levels} SET BY AMI, NOT THE CIO",
   "@roomRibbonDerived": {
-    "description": "Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'.",
+    "description": "Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'. CR160 DEF423: 'CIO' replaces the retired 'PM' abbreviation (Portfolio Manager → Chief Investment Officer). retranslate:[ar,ms]",
     "placeholders": {
       "levels": {
         "type": "String",
@@ -4901,9 +4919,9 @@
   "@roomStageRiskReview": {
     "description": "CR173 slice 1. Stage 3 of 4: the Trader plus the three risk debators. Mono uppercase. NEW key. retranslate:[ar,ms]"
   },
-  "roomStagePmVerdict": "PM VERDICT",
+  "roomStagePmVerdict": "CIO VERDICT",
   "@roomStagePmVerdict": {
-    "description": "CR173 slice 1. Stage 4 of 4: the Portfolio Manager's single call. 'PM' is the Portfolio Manager abbreviation used across the app. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    "description": "CR173 slice 1. Stage 4 of 4: the Chief Investment Officer's single call. 'CIO' is the Chief Investment Officer abbreviation used across the app (CR160 DEF423 — replaces the retired 'PM'/'Portfolio Manager' label). Mono uppercase. retranslate:[ar,ms]"
   },
   "roomStageAnalystDeskSubtitle": "Four independent reads on the same company — fundamentals, the chart, the news, the crowd.",
   "@roomStageAnalystDeskSubtitle": {
@@ -4913,9 +4931,9 @@
   "@roomStageResearchDebateSubtitle": {
     "description": "CR173 slice 1. One-line description of the RESEARCH DEBATE stage. 'Bull' and 'Bear' are the agent names (Bull Researcher / Bear Researcher). Sentence case. NEW key. retranslate:[ar,ms]"
   },
-  "roomStageRiskReviewSubtitle": "The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.",
+  "roomStageRiskReviewSubtitle": "The Execution Desk drafts a ticket. Risk Officers — Aggressive, Conservative and Balanced — stress it from both sides.",
   "@roomStageRiskReviewSubtitle": {
-    "description": "CR173 slice 1. One-line description of the RISK REVIEW stage. Trader, Aggressive Debator, Conservative Debator and Neutral Debator are agent names. A 'ticket' is a proposed trade order. Sentence case. NEW key. retranslate:[ar,ms]"
+    "description": "CR173 slice 1. One-line description of the RISK REVIEW stage. Execution Desk and Risk Officer — Aggressive/Conservative/Balanced are agent names (CR160 DEF423 — replaces the retired Trader/Aggressive/Conservative/Neutral Debator labels). A 'ticket' is a proposed trade order. Sentence case. retranslate:[ar,ms]"
   },
   "roomStagePmVerdictSubtitle": "One call, checked against your mandate.",
   "@roomStagePmVerdictSubtitle": {
@@ -5139,9 +5157,9 @@
       }
     }
   },
-  "roomConsensusNoCall": "The PM made no call, so there is nothing to dissent from.",
+  "roomConsensusNoCall": "The CIO made no call, so there is nothing to dissent from.",
   "@roomConsensusNoCall": {
-    "description": "CR173. Shown when the verdict was NO_VERDICT (the PM professionally refused to price a trade) or an action this build does not recognise. Neither is a position, so no analyst can be said to disagree with it. NEW key. retranslate:[ar,ms]"
+    "description": "CR173. Shown when the verdict was NO_VERDICT (the CIO professionally refused to price a trade) or an action this build does not recognise. Neither is a position, so no analyst can be said to disagree with it. CR160 DEF423: value renamed PM → CIO. retranslate:[ar,ms]"
   },
   "floorReactionPrompt": "HOW DOES THE FLOOR FEEL?",
   "@floorReactionPrompt": {

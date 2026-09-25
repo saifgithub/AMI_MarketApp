@@ -179,7 +179,7 @@ _SCRIPTED = [
     (re.compile(r"\b(how (does|do) (it|ami|this) work|what (is|does)|agents?|analyst)\b", re.I),
      "AMI Trade puts a team of AI analyst agents in your pocket — they research and "
      "debate a stock (fundamentals, technicals, news, sentiment, a Bull and Bear, risk, "
-     "and a Portfolio Manager), then you make the final call. It's simulation-only."),
+     "and a Chief Investment Officer), then you make the final call. It's simulation-only."),
     (re.compile(r"\b(start|sign ?up|get started|download|available|launch|waitlist)\b", re.I),
      "AMI Trade is preparing for launch — you can join the early-access waitlist right "
      "here on the site. Onboarding is anonymous-first; you set your goals up front."),
