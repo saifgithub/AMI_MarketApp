@@ -47,6 +47,8 @@ String notificationTypeLabel(AppLocalizations l, String wireType) {
       return l.notifTypeRestingOrderTriggered;
     case NotificationType.restingOrderRejected:
       return l.notifTypeRestingOrderRejected;
+    case NotificationType.policyUpdate:
+      return l.notifTypePolicyUpdate;
     case null:
       return wireType;
   }

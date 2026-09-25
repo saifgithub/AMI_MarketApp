@@ -7369,6 +7369,12 @@ abstract class AppLocalizations {
   /// **'Order rejected'**
   String get notifTypeRestingOrderRejected;
 
+  /// DEF430 — toggle label for the 'policy_update' notification type on the push-preferences screen (a one-time notice that Privacy Policy v2.1 was published, sent to users who had already linked an Alpaca account). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Policy updates'**
+  String get notifTypePolicyUpdate;
+
   /// CR122 — the mandatory ad label on every ad surface (ads.md UX rules), rendered in mono uppercase. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
@@ -8094,6 +8100,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alpaca has no 30/90-day expiry — this order stays open at Alpaca until filled or you cancel it.'**
   String get tradeTicketAlpacaGtdBecomesGtc;
+
+  /// DEF430 (Saiful, 2026-09-25 ruling: 'publish + link-screen notice') — plain-language disclosure shown on the Alpaca connect screen (both the API Key and OAuth tabs) BEFORE the user links an account, so consent happens at the point of collection. Must name AMI by name (never 'the AI') per the house style rule. States what is true after the DEF430 mobile fix: only a PAPER account's summary is uploaded with a Room convene or 1-on-1 message (not stored as its own record — mirrors Privacy Policy v2.1 clause 3); a LIVE account stays fully on-device and this build's AlpacaClient refuses to route any order to it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record. A live account is shown on this phone only and never receives orders.'**
+  String get alpacaConnectDisclosure;
 }
 
 class _AppLocalizationsDelegate

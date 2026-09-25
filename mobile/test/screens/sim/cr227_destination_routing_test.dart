@@ -32,6 +32,15 @@ class _RecordingAlpacaClient extends AlpacaClient {
   // previews, so this fixture needs `account()`/`positions()` to resolve
   // rather than hit the real (unlinked, under
   // `SharedPreferences.setMockInitialValues`) credential store and throw.
+  //
+  // DEF430 — same reasoning applies to the paper/live host gate itself: no
+  // secure-storage mock is registered here, so the real
+  // `isLinkedToPaperAccount()` would throw. This file is about destination
+  // routing, not the host gate (covered by
+  // `test/state/def430_alpaca_snapshot_paper_only_test.dart`).
+  @override
+  Future<bool> isLinkedToPaperAccount() async => true;
+
   @override
   Future<AlpacaPortfolio> account() async => const AlpacaPortfolio(
         cash: 5000,

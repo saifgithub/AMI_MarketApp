@@ -139,6 +139,14 @@ class _SlowApiClient extends ApiClient {
 /// outcome, so the account fetch is fixed at one plausible value common to
 /// all of them.
 class _FakeAccountAlpacaClient extends AlpacaClient {
+  // DEF430 — same reasoning as the account()/positions() fixture above: no
+  // secure-storage mock is registered here, so the real
+  // `isLinkedToPaperAccount()` would throw. This file is about
+  // `submitOrder`'s outcome, not the paper/live host gate itself (covered by
+  // `test/state/def430_alpaca_snapshot_paper_only_test.dart`).
+  @override
+  Future<bool> isLinkedToPaperAccount() async => true;
+
   @override
   Future<AlpacaPortfolio> account() async => const AlpacaPortfolio(
         cash: 5000,

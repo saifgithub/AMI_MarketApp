@@ -351,6 +351,21 @@ class AlpacaClient {
     }
   }
 
+  /// DEF430 (Saiful, 2026-09-25: "paper only") — true only when the device
+  /// holds a credential AND it resolves to a confirmed paper host. Every
+  /// caller that uploads an account snapshot to AMI (Room convene, 1-on-1,
+  /// the DEF419 per-account preview) checks this FIRST and sends nothing at
+  /// all when it is false — a live account's cash/positions must never reach
+  /// AMI's server, full stop. A virtual method (not a free function reading
+  /// `AlpacaCredentialStore` directly) so every call site already reaches
+  /// this through the mockable `alpacaClientProvider`, the same as
+  /// `account()`/`positions()`, rather than adding a second, ungated read
+  /// path into secure storage.
+  Future<bool> isLinkedToPaperAccount() async {
+    final creds = await AlpacaCredentialStore.read();
+    return creds != null && isAlpacaPaperHost(creds.baseUrl);
+  }
+
   Future<AlpacaPortfolio> account() =>
       _get('/v2/account', (d) => AlpacaPortfolio.fromJson(d as Map<String, dynamic>));
 

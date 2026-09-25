@@ -22,6 +22,7 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
@@ -146,11 +147,74 @@ class _AlpacaConnectScreenState extends ConsumerState<AlpacaConnectScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _ApiKeyTab(),
-          _OAuthTab(),
+      body: Column(
+        children: [
+          const _AlpacaDisclosureBanner(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                _ApiKeyTab(),
+                _OAuthTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// DEF430 (Saiful, 2026-09-25: "publish + link-screen notice") — shown above
+/// BOTH tabs, before the user links anything, so consent happens at the
+/// point of collection rather than only in the Privacy Policy. Text mirrors
+/// Privacy Policy v2.1 clause 3 and must stay true to what the DEF430 mobile
+/// fix actually does: only a PAPER account's summary ever leaves the device
+/// (`AlpacaSnapshotCache`/`AlpacaClient.isLinkedToPaperAccount`); a LIVE
+/// account is never uploaded and never receives an order.
+///
+/// Capped at [_maxHeight] with its own internal scroll: this sits above the
+/// `TabBarView` in a plain (non-scrolling) `Column`, and the full disclosure
+/// text — at a small phone width and a large text scale — wraps to more
+/// lines than an uncapped banner would leave room for beside the tab
+/// content, overflowing the page. Scrolling inside the banner itself, rather
+/// than shrinking the text or truncating it, keeps every word readable
+/// without stealing the tab content's own space.
+class _AlpacaDisclosureBanner extends StatelessWidget {
+  const _AlpacaDisclosureBanner();
+
+  static const double _maxHeight = 96;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(
+          AmiSpacing.l, AmiSpacing.m, AmiSpacing.l, 0),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      constraints: const BoxConstraints(maxHeight: _maxHeight),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, size: 16, color: AmiColors.hexCyan),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                child: Text(
+                  l.alpacaConnectDisclosure,
+                  style: const TextStyle(
+                      color: AmiColors.slate500, fontSize: 12, height: 1.5),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

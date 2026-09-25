@@ -34,6 +34,7 @@ library;
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/nav/home_shell_navigation.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/screens/settings/legal_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/services/notifications/notification_models.dart';
 import 'package:flutter/foundation.dart';
@@ -85,6 +86,11 @@ abstract final class DeepLinkDispatcher {
     'open_room_verdict': DeepLinkRoute(AmiTab.floor, _stub),
     'open_lesson': DeepLinkRoute(AmiTab.lessons, _stub),
     'open_game_close': DeepLinkRoute(AmiTab.game, _stub),
+    // DEF430 — the one-time Privacy Policy v2.1 notice's own deep link.
+    // Pushes the same in-app `LegalScreen` WebView Settings → Help already
+    // uses for the Privacy Policy row, so a tap opens the real published
+    // page rather than a second, in-app copy of the text.
+    'open_privacy_policy': DeepLinkRoute(AmiTab.you, _openPrivacyPolicy),
   };
 
   static DeepLinkDispatchResult dispatch(WidgetRef ref, DeepLink link) {
@@ -151,4 +157,34 @@ abstract final class DeepLinkDispatcher {
   }
 
   static void _stub(NavigatorState navigator, Map<String, dynamic> params) {}
+
+  static void _openPrivacyPolicy(
+    NavigatorState navigator,
+    Map<String, dynamic> params,
+  ) {
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => LegalScreen(
+          title: 'Privacy Policy',
+          url: privacyPolicyUrlFromParams(params),
+        ),
+      ),
+    );
+  }
+}
+
+/// DEF430 — the pure half of [DeepLinkDispatcher]'s `open_privacy_policy`
+/// route, split out so it is testable without pushing (and thereby
+/// constructing) the real `LegalScreen`/`WebViewController`.
+///
+/// The URL rides the notification's own `deep_link.params.url`
+/// (server-supplied) rather than a hardcoded constant, so a future policy
+/// URL change is a server-side edit, not a client release. Falls back to the
+/// public Privacy Policy url if the param is somehow missing, so a
+/// malformed link still opens something rather than doing nothing.
+String privacyPolicyUrlFromParams(Map<String, dynamic> params) {
+  final url = params['url'];
+  return url is String && url.isNotEmpty
+      ? url
+      : 'https://www.agenticmarketintel.ai/privacy/';
 }

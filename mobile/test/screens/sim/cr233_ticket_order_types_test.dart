@@ -36,6 +36,14 @@ class _RecordingAlpacaClient extends AlpacaClient {
         AlpacaBracket? bracket,
       })> calls = [];
 
+  // DEF430 — no secure-storage mock is registered in this file; fixed `true`
+  // so `_fetchAlpacaSnapshot`'s paper-host gate does not throw here. This
+  // suite is about the order-type wire shape, not the paper/live host gate
+  // itself (covered by
+  // `test/state/def430_alpaca_snapshot_paper_only_test.dart`).
+  @override
+  Future<bool> isLinkedToPaperAccount() async => true;
+
   @override
   Future<AlpacaPortfolio> account() async => const AlpacaPortfolio(
         cash: 100000,

@@ -718,6 +718,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// Throws on failure — callers decide what "couldn't read the account"
   /// means for their leg; this method never guesses.
   ///
+  /// DEF430 (Saiful, 2026-09-25: "paper only") — refuses (throws) against a
+  /// live/production host rather than fetching and sending it. This closes
+  /// a real gap: `submitOrder`/`cancelOrder` already refuse to WRITE to a
+  /// live host, but the snapshot fetch used to run before that check ever
+  /// applied, so a live account's cash/positions still reached
+  /// `/v1/sim/preview` even though the order itself would then be refused.
+  /// Checked via [AlpacaClient.isLinkedToPaperAccount] — the client already
+  /// reached through `alpacaClientProvider` below, not a second read of
+  /// `AlpacaCredentialStore` — so this stays mockable the same way
+  /// `account()`/`positions()` already are for this file's own tests.
+  ///
   /// DEF419-MOBILE round 2 (MINOR-1, auditor u66) — round 1 fanned every
   /// caller through its own `Completer`, described as guarding "concurrent
   /// callers (the BOTH path fires the AMI and Alpaca legs at once)". The
@@ -740,6 +751,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       return cached;
     }
     final client = ref.read(alpacaClientProvider);
+    // DEF430 — never fetch (let alone send) a live account's summary. See
+    // this method's docstring.
+    if (!await client.isLinkedToPaperAccount()) {
+      throw const AlpacaException(
+          null, 'refusing to read a non-paper Alpaca account for preview');
+    }
     final results =
         await Future.wait([client.account(), client.positions()]);
     final snapshot = AlpacaSnapshot(
