@@ -798,6 +798,89 @@ expected value (14 and 5) instead of the pre-fix 15/6 — this submission's own
 evidence is the sqlite regression above plus the AST guard; it does not
 itself re-drive the two named Postgres races.
 
+**Second bug, self-caught by the full mandated test list, not by the auditor's
+own probes — `populate_existing=True` alone regressed the full backend
+suite.** Running the mandated test list after the `populate_existing` fix
+above (before adding anything further) turned `test_cr084_revenuecat_webhook.py`
+red — 9 of its 39 tests, all on the SAME mechanism:
+
+```
+test_credit_pack_adds_credits_no_plan_change[credits_starter-60]   60 == (13 + 60)     — the monthly allowance vanished
+test_replayed_credit_pack_adds_credits_once                       300 == 313           — same, plus a replay double-count
+test_revoke_drops_effective_plan_to_floor_pass[CANCELLATION]       plan stayed 'trader' — the revoke never stuck
+test_revoke_falls_back_to_trial_when_trial_active                  plan stayed 'trader' — same
+test_test_store_expiration_revokes_to_floor_pass                   plan stayed 'trader' — same
+(4 more parametrizations of the same two assertions)
+```
+
+**Root cause.** `db/session.py` sets `autoflush=False` on every session,
+deliberately. Two call chains mutate `user` and THEN call `_lock_user_row` a
+SECOND time on the same still-open transaction:
+
+- `add_credit_pack`: `_ensure_period(session, user)` sets
+  `user.credit_balance = ALLOWANCE[eff]` (the monthly re-grant) — unflushed —
+  then `add_credit_pack` itself calls `_lock_user_row(session, user)` again
+  before adding the pack amount.
+- `revoke_to_base`: sets `user.plan = Plan.FLOOR_PASS.value` — unflushed —
+  then calls `_ensure_period(session, user)`, which calls `_lock_user_row`.
+
+With `populate_existing=True` and no flush in between, the second
+`_lock_user_row` call's fresh `SELECT` reads the row as it stood BEFORE the
+first function's own pending change — and `populate_existing` then
+overwrites that pending change with the stale pre-write snapshot. The
+monthly allowance grant and the plan-drop both silently evaporated, one
+call chain later, in a way that has NOTHING to do with a second session or a
+real concurrent writer — this is the same transaction erasing its OWN
+just-made, not-yet-flushed edit.
+
+**Fix.** `_lock_user_row` calls `session.flush()` before the `populate_existing`
+re-select — this pushes any pending change to the DB (still inside the same
+open transaction; nothing is committed and no OTHER transaction can see it
+yet), so the subsequent `SELECT … FOR UPDATE` reads this transaction's own
+latest state, and `populate_existing` refreshes from THAT snapshot rather
+than a pre-flush stale one. A narrower fix (e.g. skip the re-select when
+`user` is already the locked object) was considered and rejected: the merge
+path's `carry_billing_on_merge` locks two DISTINCT `User` objects for two
+different accounts, and that path genuinely needs the real cross-session
+re-read regardless of what either object has pending — a flush-first
+approach handles both shapes with one line, a same-object-skip would not
+have covered the merge path's real cross-account race.
+
+**Tests + output**
+(`backend/.venv/bin/python -m pytest tests/unit/test_cr084_revenuecat_webhook.py tests/unit/test_retro_security_credit_balance_lock_guard.py -q -p no:cacheprovider`):
+
+```
+42 passed in 5.37s     EXIT=0
+```
+
+**Mutation evidence (reverted immediately after, restored and re-verified
+green):** removed only the `session.flush()` line, `populate_existing=True`
+left in place — the exact same 9 `test_cr084_revenuecat_webhook.py` failures
+reproduced verbatim (same numbers: `60 == 13 + 60`, plan stuck at `'trader'`
+after a revoke). Restored, re-ran: `42 passed in 5.37s, EXIT=0`.
+
+Re-ran the full mandated test list plus the credit-adjacent suite after
+adding the flush (`test_def099_merge_billing.py`, `test_merge_service.py`,
+`test_reputation_service.py`, `test_sim_reputation.py`, `test_admin.py`,
+`test_cr200_admin_audit.py` in addition to the mandated list, since the merge
+and admin paths are the other two callers of `_lock_user_row` a second flush
+could in principle disturb):
+
+```
+390 passed, 1 skipped, EXIT=0
+```
+
+**What the auditor should re-measure on real Postgres, in addition to the
+pack_vs_spend/admin_vs_spend probes above:** the SAME probes should also be
+re-run in a shape that exercises `_ensure_period` immediately before
+`add_credit_pack`/`revoke_to_base` within one request (the live webhook
+shape, not a bare unit fixture) — this submission's own regression was only
+caught because the mandated test list happened to include
+`test_cr084_revenuecat_webhook.py`; a narrower targeted run limited to the
+auditor's own named files would have missed it entirely, which is itself
+worth noting for how future rounds scope "targeted" runs on a fix to a
+shared low-level helper like `_lock_user_row`.
+
 ### MAJOR-2 — the Concierge 1-on-1 still charged for an error sentinel and for an outage (fixed)
 
 **The claim, in two parts.** (1) `AgentRunner.stream_one_on_one_message`

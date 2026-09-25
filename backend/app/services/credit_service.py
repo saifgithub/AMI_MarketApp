@@ -200,7 +200,36 @@ def _lock_user_row(session, user: User) -> User:
 
     Returns the (same, now-locked) `User` so callers can reassign in place:
     `user = _lock_user_row(s, user)`.
+
+    RETRO-SECURITY MAJOR-1 (round 3) — `populate_existing=True` (below) fixes
+    a CROSS-session staleness (round 2's own gap: the lock was taken but the
+    balance read afterward was the pre-lock one). It has a second edge the
+    round-3 auditor's own probes caught: `session.autoflush=False` (this
+    codebase's session config, deliberately — see `db/session.py`) means a
+    caller that already mutated `user` earlier in the SAME still-open
+    transaction (e.g. `_ensure_period` sets `user.credit_balance =
+    ALLOWANCE[eff]`, unflushed, then `add_credit_pack` calls this helper a
+    SECOND time on the same `user`; `revoke_to_base` sets `user.plan =
+    FLOOR_PASS.value`, unflushed, then calls `_ensure_period` which calls
+    this helper) has that pending, uncommitted write silently OVERWRITTEN
+    by `populate_existing`'s fresh `SELECT` — which, without an explicit
+    flush first, reads the row as it stood BEFORE the pending change, not
+    after. Reproduced live: `add_credit_pack`'s allowance re-grant vanished
+    (`balance == 60` instead of `13 + 60`), and `revoke_to_base`'s plan drop
+    never stuck (`effective_plan_for_user` still read `trader` after a
+    revoke event). `session.flush()` first pushes any pending change to the
+    DB (still inside the same open transaction — nothing is committed, and
+    any OTHER transaction still sees nothing until commit), so the
+    subsequent `SELECT ... FOR UPDATE` reads this transaction's own latest
+    state, and `populate_existing` then refreshes from THAT snapshot rather
+    than a stale pre-flush one. This is the correct fix, not a narrower one
+    (e.g. skipping the re-select when `user` is already locked) because a
+    genuinely different `User` ROW object for the same id — the merge path's
+    `carry_billing_on_merge`, which locks two distinct users — needs the
+    real cross-session re-read regardless of what this transaction itself
+    has pending on either object.
     """
+    session.flush()
     locked = session.get(
         User, user.id, with_for_update=True, populate_existing=True
     )
