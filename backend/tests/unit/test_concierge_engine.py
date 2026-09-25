@@ -617,3 +617,129 @@ def test_def418_all_five_risk_tiers_have_distinct_suggestions_in_q6_chips():
     assert _parse_drawdown_pct("40") == 40
     # Verify 40% maps to tier 4 in the nudge table
     assert _DRAWDOWN_PCT_TO_TIER[40] == 4
+
+
+def test_def428_parse_drawdown_pct_reads_any_explicit_percentage():
+    """DEF428: `_parse_drawdown_pct` used to substring-match only the six chip
+    values and silently default to 30 for anything else — a typed "5%" or
+    "45%" became an undisclosed 30% mandate. It must now parse ANY explicit
+    1-100 percentage the user types, with or without "%"/"percent", decimals
+    included."""
+    from app.services.concierge_engine import _parse_drawdown_pct
+
+    assert _parse_drawdown_pct("5%") == 5
+    assert _parse_drawdown_pct("45%") == 45
+    assert _parse_drawdown_pct("45") == 45
+    assert _parse_drawdown_pct("12.5%") == 12.5
+    assert _parse_drawdown_pct("12.5 percent") == 12.5
+    assert _parse_drawdown_pct("83 percent") == 83
+    assert _parse_drawdown_pct("no cap") == 100
+    assert _parse_drawdown_pct("No Cap") == 100
+    assert _parse_drawdown_pct("no limit") == 100
+
+
+def test_def428_parse_drawdown_pct_rejects_garbage_and_out_of_range():
+    """Unparseable or out-of-range text must return None, never a fabricated
+    value — the caller re-asks rather than storing a mandate the user never
+    gave."""
+    from app.services.concierge_engine import _parse_drawdown_pct
+
+    assert _parse_drawdown_pct("not sure") is None
+    assert _parse_drawdown_pct("whatever you think") is None
+    assert _parse_drawdown_pct("") is None
+    assert _parse_drawdown_pct("banana") is None
+    assert _parse_drawdown_pct("150%") is None
+    assert _parse_drawdown_pct("0%") is None
+    assert _parse_drawdown_pct("-10%") is None
+
+
+def test_def428_unparseable_q6_answer_re_asks_instead_of_defaulting_to_30():
+    """The end-to-end fix: an unparseable Q6 answer must NOT silently become
+    a 30% mandate. `process_answer` must keep the user on Q6 (current_step
+    does not advance to Q7) and must NOT write `max_drawdown_pct` into
+    `session.answers`."""
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    next_step, message, readback = process_answer(
+        session, ConversationStep.Q6_MAX_DRAWDOWN, "I dunno, whatever's fine"
+    )
+
+    assert next_step == ConversationStep.Q6_MAX_DRAWDOWN, (
+        "unparseable Q6 answer must re-ask Q6, not silently advance to Q7"
+    )
+    assert readback is None
+    assert "max_drawdown_pct" not in session.answers, (
+        "an unparseable answer must never be stored as a mandate value"
+    )
+    assert message.step == ConversationStep.Q6_MAX_DRAWDOWN
+    assert message.chips == Q6_CHIPS
+
+
+def test_def428_explicit_percentage_typed_freeform_is_honoured_exactly():
+    """A typed "5%" must become max_drawdown_pct=5, not the nearest chip (10%)
+    and not the old silent default of 30."""
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    next_step, message, readback = process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "5%")
+
+    assert next_step == ConversationStep.Q7_CONSTRAINTS
+    assert session.answers["max_drawdown_pct"] == 5
+
+
+def test_def428_explicit_percentage_45_is_honoured_not_snapped_to_40_or_50():
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "45%")
+
+    assert session.answers["max_drawdown_pct"] == 45
+
+
+def test_def428_decimal_percentage_12_5_rounds_as_documented():
+    """12.5% is accepted and preserved at one decimal place — this test pins
+    that documented rounding behaviour."""
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "12.5%")
+
+    assert session.answers["max_drawdown_pct"] == 12.5
+
+
+def test_def428_no_cap_still_gives_100_after_the_fix():
+    """DEF418/DEF428 regression guard: 'No cap' must keep mapping to 100."""
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    next_step, _message, _readback = process_answer(
+        session, ConversationStep.Q6_MAX_DRAWDOWN, "No cap"
+    )
+
+    assert next_step == ConversationStep.Q7_CONSTRAINTS
+    assert session.answers["max_drawdown_pct"] == 100
+
+
+def test_def428_chip_values_still_all_parse_and_advance():
+    """Regression guard: every Q6 chip must still parse and advance the
+    conversation exactly as before this fix."""
+    expected = {"10%": 10, "20%": 20, "30%": 30, "40%": 40, "50%": 50, "No cap": 100}
+    for chip, expected_pct in expected.items():
+        session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+        next_step, _message, _readback = process_answer(
+            session, ConversationStep.Q6_MAX_DRAWDOWN, chip
+        )
+        assert next_step == ConversationStep.Q7_CONSTRAINTS, f"chip {chip!r} must advance"
+        assert session.answers["max_drawdown_pct"] == expected_pct
+
+
+def test_def428_re_ask_then_valid_answer_completes_the_interview():
+    """A garbage answer followed by a valid one must let the user proceed —
+    the re-ask is not a dead end."""
+    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+
+    next_step, _message, _readback = process_answer(
+        session, ConversationStep.Q6_MAX_DRAWDOWN, "garbage answer"
+    )
+    assert next_step == ConversationStep.Q6_MAX_DRAWDOWN
+    assert "max_drawdown_pct" not in session.answers
+
+    next_step, _message, _readback = process_answer(session, ConversationStep.Q6_MAX_DRAWDOWN, "25%")
+    assert next_step == ConversationStep.Q7_CONSTRAINTS
+    assert session.answers["max_drawdown_pct"] == 25
