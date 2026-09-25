@@ -420,3 +420,153 @@ Counts, round 2: 0 BLOCKER, 3 MAJOR (MAJOR-1 and MAJOR-2 partly fixed, MAJOR-3 n
 open (MINOR-1, 2 and 3 closed).
 
 VERDICT: AWAITING_FIXES (round 2)
+
+---
+
+## Round 3 — auditor U68
+
+**SHA audited:** `685dbdd0` (round-3 fixes `aa17a2d1` + `685dbdd0`). Detached scratch worktree
+`audit-U68-R3` per DEF159, clean after every mutation. Postgres runs: new throwaway
+`postgres:15-alpine` (`audit_u68_r3_pg`, isolated network, `alembic upgrade head` ->
+`m111a0def416x417`), removed after. **Not live:** Alpha runs `alpha-2026-09-25-3` (`0accfeed`).
+
+### MAJOR-1 — fixed for the six named writers; still open inside `_ensure_period` (the re-grant decision is made before the lock)
+
+`_lock_user_row` now does `session.flush()` then
+`session.get(User, user.id, with_for_update=True, populate_existing=True)`
+(`credit_service.py:232-235`). My round-2 probes, unchanged, plus the three writers I did not
+drive in round 2, all through the real functions on real Postgres, a concurrent `spend(1)`
+committing between the caller's own load and its first lock:
+
+```
+PROBE refund_vs_spend        start=5 +1 refund -1 spend      expected=5   final=5
+PROBE pack_vs_spend          start=5 +10 pack  -1 spend      expected=14  final=14  (round 2: 15)
+PROBE admin_vs_spend         start=5 +1 admin  -1 spend      expected=5   final=5   (round 2: 6)
+PROBE streak_vs_spend        start=5 +5 streak_7 -1 spend    expected=9   final=9
+PROBE plan_renew_vs_spend    same period, no re-grant        expected=4   final=4   grant.old_balance=4
+PROBE merge_vs_spend         real MergeService.execute       expected=11  final=11  (src 7 + tgt 5 - 1; orphan row gone)
+```
+
+The builder's self-found flush bug, sequential, on Postgres:
+`rollover_pack_sequential` 160 = 150 + 10 ✓, `revoke_sequential` plan trader -> floor_pass,
+balance 13 ✓. The flush also runs partway through `MergeService.execute` on Postgres, and the merge
+completes (the probe above).
+
+**Still open — `_ensure_period` decides on the pre-lock snapshot.** It computes `eff`,
+`window_rolled` and `plan_drifted` from the caller's unlocked `user`, *then* calls
+`_lock_user_row`, then writes `ALLOWANCE[eff]` unconditionally (`credit_service.py:261-285`, lock at `:277`, write at `:279`).
+The lock refreshes the balance, but not the decision. When another writer rolls the window
+in that gap, the re-grant runs a second time over it:
+
+```
+PROBE rollover_balance_for_vs_spend  concurrent spend rolls (->150) then -1   expected=149  final=150
+PROBE rollover_pack_vs_spend         webhook _ensure_period+pack vs spend      expected=159  final=160
+PROBE rollover_balance_for_vs_pack   concurrent PACK webhook rolls then +10    expected=160  final=150
+PROBE rollover control, sequential                                             expected=149  final=149
+```
+
+The third line is the one that matters: a `GET /mandate` balance read (`balance_for`,
+`api/mandate.py:216`) racing the RevenueCat pack webhook **erases the paid pack** — 10 credits
+bought, 0 delivered, no error anywhere. The two calls are concurrent by design: the app re-reads
+`GET /v1/mandate` straight after a purchase (`mobile/lib/state/purchase_providers.dart:79,96-100`)
+while RevenueCat delivers the webhook. The reach is narrow: the pair must be the first credit touch
+after a month rollover (for example, a purchase made just after midnight on the 1st while the app
+was already open) or after a plan drift. I measured the rollover. Plan drift, such as a trial
+expiring, goes through the same branch, but I did not drive it.
+Control, `_ensure_period` re-evaluating `eff`/window/drift on the locked row and returning if no
+longer due (nothing else changed):
+
+```
+PROBE rollover_balance_for_vs_spend_recheck_control   expected=149  final=149
+PROBE rollover_pack_vs_spend_recheck_control          expected=159  final=159
+```
+
+This check-then-lock shape predates round 2; round 2 put the lock after the decision and I did
+not catch it then — my miss, recorded. It is the same property MAJOR-1 is about (a credit writer
+must never erase a concurrent write), on `_ensure_period`, one of the six writers round 1 named,
+and it can take money from the user. Doubt resolves toward MAJOR. The AST guard cannot see it:
+the lock is present, the order is wrong.
+**Fix:** in `_ensure_period`, after `user = _lock_user_row(session, user)`, recompute `eff`,
+`period`, `window_rolled`, `plan_drifted` from the locked row and `return eff` if no longer due.
+Regression, sqlite-runnable the same way as the builder's re-read test: load in `s1` with a
+last-month period, roll + spend in `s2` and commit, then `_ensure_period(s1, user)` -> assert
+`allowance - 1`.
+
+**Mutations, mine** (each reverted, tree re-checked clean): dropped `populate_existing=True` ->
+`2 failed, 10 passed` (guard file); dropped `session.flush()` -> `9 failed, 33 passed`
+(`test_cr084_revenuecat_webhook.py`, the builder's exact 9).
+
+### MAJOR-2 — fixed
+
+`meta` now reaches `_stream_concierge`'s own `stream_chat` (`agent_runner.py:141,268,313`), and its
+outage branch writes `meta["stream_error"]` behind an `if meta is not None` guard
+(`agent_runner.py:327-328`), so other callers of `_stream_concierge` are unaffected. My round-2
+probe, unchanged (real `LLMGateway`, real `OpenAICompatibleProvider`, `httpx.MockTransport`,
+real routes):
+
+```
+PROBE 1on1 agent=concierge            http503        charged=0   (round 2: 1)
+PROBE 1on1 agent=concierge            connect_error  charged=0   (round 2: 1; user still gets the scripted reply)
+PROBE 1on1 agent=fundamentals_analyst http503 / connect_error   charged=0 / 0
+PROBE brief                           503 / 429 / ConnectError  charged=0 / 0 / 0
+9 passed
+```
+
+**Mutation, mine:** removed the outage-branch `meta["stream_error"]` write only ->
+`FAILED test_concierge_real_provider_connect_error_is_refunded_not_billed`, `1 failed, 13 passed`.
+
+### MAJOR-3 — fixed
+
+`refund` and `spend` in `brief.py` both go through `run_in_threadpool` (`brief.py:151-153,224-229`).
+`test_def200_ratchet.py` -> `4 passed`. `brief.py::brief_message` left the frozen baseline
+honestly: its only other call before the stream, `engine.get_session`, is an in-memory dict
+lookup (`brief_engine.py:207-208`), so the census's whole-handler `run_in_threadpool` shortcut
+is not hiding sync I/O here. The builder named that blind spot itself rather than ride it.
+**Mutation, mine:** refund back to a bare sync call -> ratchet `FAILED`, `brief.py::event_stream`
+newly flagged.
+
+### OUT-OF-SCOPE (recorded, not scored)
+
+- `one_on_one.py:278`'s refund (and its spend) are the same sync-in-`async def` shape, still on the
+  ratchet's frozen debt baseline. The builder checked and disclosed it.
+
+### Evidence, run bare in the pinned worktree
+
+```
+pytest test_u68r3_probe_refund.py (scratch) -q -p no:cacheprovider -s          9 passed      EXIT=0
+pytest test_def200_ratchet.py -q -p no:cacheprovider                           4 passed      EXIT=0
+```
+
+Full unit suite at `685dbdd0`. The melehost part ran in a throwaway container from the Alpha
+image, 3 shards on tmpfs. The 5 git-dependent files ran on the Mac. All runs were bare, and I
+read the exit codes directly:
+
+```
+melehost s0   2128 passed, 2 skipped              EXIT=0   (test_def200_ratchet green; red at ae468eff)
+melehost s1   2672 passed, 3 skipped              EXIT=0
+melehost s2   1 failed, 2015 passed, 4 skipped    EXIT=1   test_def247_displaced_stance_envelope.py::test_a_displaced_envelope_is_still_reported
+Mac (5 git-dependent files)  34 passed            EXIT=0
+total         6849 passed, 1 failed, 9 skipped
+```
+
+The one failure is the order-dependent `test_def247` failure diagnosed in round 2. It is
+pre-existing: it fails the same way in shard order at `0accfeed`, passes alone, and passes in
+the default order. It was recorded out of scope there and is not caused by this round. Nothing
+in the suite fails because of round 3.
+
+FOREIGN: not run — no `foreign/RETRO-SECURITY.r3` branch exists. Not a clean bill.
+
+### Verdict
+
+Round 3 fixes what round 2 asked for, and I re-drove every one on real Postgres and the real
+provider: all six credit writers now serialise against a concurrent spend (14, 5, 9, 4, 11, and
+refund 5), the Concierge no longer bills an error or an outage, and the event loop is clear.
+The builder also caught and fixed a data-loss bug its own first fix introduced. One path is still
+open: `_ensure_period` decides whether to re-grant before it takes the lock, so when a balance
+read and a pack purchase are the first credit touch after a month rollover, the purchase is
+erased. The reach is narrow, but the user loses money they paid. The fix is a re-check after the lock, and my control proves it.
+
+Counts, round 3: 0 BLOCKER, 1 MAJOR open (MAJOR-1, on `_ensure_period` only), 0 MINOR. MAJOR-2 and
+MAJOR-3 are fixed.
+
+VERDICT: AWAITING_FIXES (round 3)
