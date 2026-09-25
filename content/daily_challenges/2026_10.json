@@ -32,7 +32,7 @@
       "Sector concentration rule — TSLA is over-weighted in autos"
     ],
     "answer": 0,
-    "explanation": "The mandate explicitly requires a 60-minute pause after any loss greater than 1% of NAV. The user took a 1.4% loss and re-entered the same ticker in 9 minutes — 51 minutes inside the cooling-off window. The notes field ('gonna get it back') is textbook revenge framing. The tempting wrong answer 'day-trade count' fails because we don't have the week's count in the scenario; the cooling-off violation is unambiguous and trips first. The PM blocks the ticket; the right move is to log the loss in the journal and walk away from the screen.",
+    "explanation": "The mandate explicitly requires a 60-minute pause after any loss greater than 1% of NAV. The user took a 1.4% loss and re-entered the same ticker in 9 minutes — 51 minutes inside the cooling-off window. The notes field ('gonna get it back') is textbook revenge framing. The tempting wrong answer 'day-trade count' fails because we don't have the week's count in the scenario; the cooling-off violation is unambiguous and trips first. The CIO blocks the ticket; the right move is to log the loss in the journal and walk away from the screen.",
     "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": ["revenge_trading", "cooling_off", "mandate", "module_8"]
@@ -89,7 +89,7 @@
       "Cooling-off rule — winning streaks require a 24-hour pause"
     ],
     "answer": 0,
-    "explanation": "The cap is 5% of NAV ($2,560 on a $51,200 account). The ticket is $26,640 — 10.4x over the cap. The note ('in the zone, doubling up') is the overconfidence tell: the mandate explicitly says sizing must not change after wins because the streak does not increase the user's edge, only the user's confidence. The tempting wrong answer 'cooling-off after wins' fails because the mandate as written doesn't require it — the size cap is what is breached, and that is the floor the PM enforces.",
+    "explanation": "The cap is 5% of NAV ($2,560 on a $51,200 account). The ticket is $26,640 — 10.4x over the cap. The note ('in the zone, doubling up') is the overconfidence tell: the mandate explicitly says sizing must not change after wins because the streak does not increase the user's edge, only the user's confidence. The tempting wrong answer 'cooling-off after wins' fails because the mandate as written doesn't require it — the size cap is what is breached, and that is the floor the CIO enforces.",
     "related_lesson": "049_overconfidence",
     "related_agent": "portfolio_manager",
     "tags": ["overconfidence", "winning_streak", "sizing", "module_8"]
@@ -165,7 +165,7 @@
       "Blocked — but only because TENAGA is not a US ticker"
     ],
     "answer": 1,
-    "explanation": "Two breaches at once: the cooling-off window from the MAYBANK loss does not clear until 10:48 (the ticket is at 10:09), and the CIMB trade has no journal entry as required by the mandate for off-watchlist names. The PM's job is to enforce the floor — both rules trip, both must be cleared before the next ticket. The tempting wrong answer 'approved — under the trade cap' fails because the trade-count rule is satisfied but it is not the only rule; cooling-off and journal-entry are independent floors.",
+    "explanation": "Two breaches at once: the cooling-off window from the MAYBANK loss does not clear until 10:48 (the ticket is at 10:09), and the CIMB trade has no journal entry as required by the mandate for off-watchlist names. The CIO's job is to enforce the floor — both rules trip, both must be cleared before the next ticket. The tempting wrong answer 'approved — under the trade cap' fails because the trade-count rule is satisfied but it is not the only rule; cooling-off and journal-entry are independent floors.",
     "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": ["discipline", "mandate", "cooling_off", "module_8"]
@@ -260,7 +260,7 @@
       "The Macro & Events desk — already covered"
     ],
     "answer": 1,
-    "explanation": "The PM is the safety-floor gate — every verdict ships through them. 9% of NAV is well above a typical 5% single-position cap; the verdict cites no check. The tempting wrong answer 'Macro & Events already covered' is a misread: news is represented; what is structurally missing is the rules-check, and that is always the PM. Without that gate, a momentum chase becomes a mandate breach.",
+    "explanation": "The CIO is the safety-floor gate — every verdict ships through them. 9% of NAV is well above a typical 5% single-position cap; the verdict cites no check. The tempting wrong answer 'Macro & Events already covered' is a misread: news is represented; what is structurally missing is the rules-check, and that is always the CIO. Without that gate, a momentum chase becomes a mandate breach.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "safety_floor", "module_3"]
@@ -279,7 +279,7 @@
       "Entry-discipline rule — the ticket is 8% above the breakout level and 14% above the pullback low, far outside the 3% tolerance, driven by FOMO ('don't want to miss it')"
     ],
     "answer": 3,
-    "explanation": "The mandate caps entries at 3% from a defined level. The closest level is the $158.50 breakout, and $171.10 is 7.96% above it — more than 2.5x the tolerance. The notes ('don't want to miss it') name the emotion: FOMO. The PM blocks; the right move is to set an alert at the next pullback level (e.g., $158–$162) and wait. The tempting wrong answer 'stop-loss rule' is plausible but the entry-discipline rule trips first and is the primary breach.",
+    "explanation": "The mandate caps entries at 3% from a defined level. The closest level is the $158.50 breakout, and $171.10 is 7.96% above it — more than 2.5x the tolerance. The notes ('don't want to miss it') name the emotion: FOMO. The CIO blocks; the right move is to set an alert at the next pullback level (e.g., $158–$162) and wait. The tempting wrong answer 'stop-loss rule' is plausible but the entry-discipline rule trips first and is the primary breach.",
     "related_lesson": "048_fomo",
     "related_agent": "portfolio_manager",
     "tags": ["fomo", "chasing", "entry_discipline", "module_8"]
@@ -393,7 +393,7 @@
       "No violation — pyramiding into a winner is fine"
     ],
     "answer": 0,
-    "explanation": "Three independent rules trip at once: the new size 6.5% exceeds the 6% cap; pyramiding requires a level break with volume which has not occurred; and the no-add-above-RSI-75 rule is breached at RSI 81. The notes ('can't let it run without me') name the driver — greed/FOMO on an existing winner. The PM blocks the add. The tempting wrong answer 'no violation — pyramiding into a winner is fine' is the rationalisation: pyramiding without conditions is just sizing up on emotion.",
+    "explanation": "Three independent rules trip at once: the new size 6.5% exceeds the 6% cap; pyramiding requires a level break with volume which has not occurred; and the no-add-above-RSI-75 rule is breached at RSI 81. The notes ('can't let it run without me') name the driver — greed/FOMO on an existing winner. The CIO blocks the add. The tempting wrong answer 'no violation — pyramiding into a winner is fine' is the rationalisation: pyramiding without conditions is just sizing up on emotion.",
     "related_lesson": "045_greed",
     "related_agent": "portfolio_manager",
     "tags": ["greed", "pyramiding", "mandate", "module_8"]
@@ -507,7 +507,7 @@
       "Sector concentration on banks"
     ],
     "answer": 2,
-    "explanation": "Three breaches stack: (1) the user already exceeded the 2.5% daily-loss cap at 2.7%, which mandates trading halted — trade 4 should not even reach the queue; (2) trade 2's PUBLIC re-entry at 10:21 was 7 minutes after a 1.3% loss, breaching the 60-min cooling-off; (3) trade 4's 2x sizing combined with the 'claw it back' note is the revenge tell. The PM hard-halts. The tempting wrong answer 'still under the cap' fails because 2.7% > 2.5% — and the cap is a hard floor, not a soft target.",
+    "explanation": "Three breaches stack: (1) the user already exceeded the 2.5% daily-loss cap at 2.7%, which mandates trading halted — trade 4 should not even reach the queue; (2) trade 2's PUBLIC re-entry at 10:21 was 7 minutes after a 1.3% loss, breaching the 60-min cooling-off; (3) trade 4's 2x sizing combined with the 'claw it back' note is the revenge tell. The CIO hard-halts. The tempting wrong answer 'still under the cap' fails because 2.7% > 2.5% — and the cap is a hard floor, not a soft target.",
     "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": ["revenge_trading", "daily_loss_cap", "module_8"]
@@ -545,7 +545,7 @@
       "The Execution Desk — already represented"
     ],
     "answer": 1,
-    "explanation": "The Conservative Risk Officer raised the size concern, but the Chief Investment Officer is the structural gate that validates against the actual mandate — and that check is missing. 9% of NAV against a typical 5–6% cap should not ship without an explicit PM sign-off. The tempting wrong answer 'Flow & Positioning already covered' fails because that input is present; what is missing is the rules-check, which is always PM-owned.",
+    "explanation": "The Conservative Risk Officer raised the size concern, but the Chief Investment Officer is the structural gate that validates against the actual mandate — and that check is missing. 9% of NAV against a typical 5–6% cap should not ship without an explicit CIO sign-off. The tempting wrong answer 'Flow & Positioning already covered' fails because that input is present; what is missing is the rules-check, which is always CIO-owned.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "safety_floor", "module_3"]
@@ -564,7 +564,7 @@
       "Off-watchlist journal rule — the trade is off-watchlist and the notes ('felt like it') do not satisfy the required thesis + level entry; this is the boredom-trade signature the mandate is designed to catch"
     ],
     "answer": 3,
-    "explanation": "The mandate explicitly requires off-watchlist trades to carry a one-sentence thesis and a defined level. 'Felt like it' is the textbook boredom-trade tell — the rule exists precisely to force the user to confront the absence of a reason before executing. The PM blocks; the right path is to journal honestly ('I was bored and this was screen-time'), then either define a real setup or close the platform. The tempting wrong answer 'position-size 3% too large' fails because 3% is within a typical 5–6% cap.",
+    "explanation": "The mandate explicitly requires off-watchlist trades to carry a one-sentence thesis and a defined level. 'Felt like it' is the textbook boredom-trade tell — the rule exists precisely to force the user to confront the absence of a reason before executing. The CIO blocks; the right path is to journal honestly ('I was bored and this was screen-time'), then either define a real setup or close the platform. The tempting wrong answer 'position-size 3% too large' fails because 3% is within a typical 5–6% cap.",
     "related_lesson": "050_boredom_trading",
     "related_agent": "portfolio_manager",
     "tags": ["boredom", "watchlist", "journal", "module_8"]
@@ -583,7 +583,7 @@
       "Strategy was wrong — switch approach for November"
     ],
     "answer": 1,
-    "explanation": "The numbers tell a discipline story, not a strategy story: trade count up 58%, average loser nearly doubled, and five mandate breaches across cooling-off and journal rules. The user's edge probably did not vanish — the user stopped following the rules that contained variance. The PM's prescription is to fix the process (lower frequency, tighter mandate enforcement) before touching the strategy. The tempting wrong answer 'strategy was wrong — switch approach' is the panic move that compounds the damage: changing strategies on a discipline-driven losing month locks in the wrong lesson.",
+    "explanation": "The numbers tell a discipline story, not a strategy story: trade count up 58%, average loser nearly doubled, and five mandate breaches across cooling-off and journal rules. The user's edge probably did not vanish — the user stopped following the rules that contained variance. The CIO's prescription is to fix the process (lower frequency, tighter mandate enforcement) before touching the strategy. The tempting wrong answer 'strategy was wrong — switch approach' is the panic move that compounds the damage: changing strategies on a discipline-driven losing month locks in the wrong lesson.",
     "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": ["discipline", "process_review", "module_8"]

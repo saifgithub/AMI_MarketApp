@@ -545,7 +545,7 @@
       "Stop-attachment rule — every entry must have a stop attached at submission, 'will set after open' violates the rule"
     ],
     "answer": 3,
-    "explanation": "The mandate is explicit: stop attached at submission, no exceptions. 'Will set after the open' is a stop-not-attached condition that violates the rule by definition. The intention is irrelevant — the mandate enforces structure, not promises. The 'no violation, user has a plan' answer is the friendly-sounding trap; mandates exist precisely because plans formed at the open under live P&L pressure are the ones that get broken. The PM blocks at submission.",
+    "explanation": "The mandate is explicit: stop attached at submission, no exceptions. 'Will set after the open' is a stop-not-attached condition that violates the rule by definition. The intention is irrelevant — the mandate enforces structure, not promises. The 'no violation, user has a plan' answer is the friendly-sounding trap; mandates exist precisely because plans formed at the open under live P&L pressure are the ones that get broken. The CIO blocks at submission.",
     "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stops", "safety_floor", "module_3"]
@@ -583,7 +583,7 @@
       "The Chief Investment Officer — no mandate-compliance check is named; a 9% NAV size needs explicit sizing/stop validation"
     ],
     "answer": 3,
-    "explanation": "The Chief Investment Officer is the safety-floor gate. Every Room verdict must surface an explicit compliance check before it ships. The proposed BUY at 9% of NAV is large enough that the typical mandate would either cap it (if the user's single-position max is 5-8%) or pass it after explicit validation — but the verdict shows neither. The Aggressive/Balanced Risk Officers and Flow & Positioning can be silent without breaking a verdict; the PM cannot. That's a structural absence, not a stylistic one.",
+    "explanation": "The Chief Investment Officer is the safety-floor gate. Every Room verdict must surface an explicit compliance check before it ships. The proposed BUY at 9% of NAV is large enough that the typical mandate would either cap it (if the user's single-position max is 5-8%) or pass it after explicit validation — but the verdict shows neither. The Aggressive/Balanced Risk Officers and Flow & Positioning can be silent without breaking a verdict; the CIO cannot. That's a structural absence, not a stylistic one.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "safety_floor", "completeness", "module_3"]
