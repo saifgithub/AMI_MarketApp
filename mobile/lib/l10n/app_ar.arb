@@ -2844,7 +2844,7 @@
         "roomMetricTicker": "277e62199cff",
         "roomResultCost": "340ae1ea1fea",
         "roomResultCostNoBalance": "305d4ac31dc7",
-        "roomResultRefunded": "3f567daca027",
+        "roomResultRefunded": "fa6aad2a42d9",
         "roomSafetyFloorPill": "d82ebd78c3df",
         "roomStageAnalystDesk": "37e3c5b3f44b",
         "roomStageAnalystDeskSubtitle": "bd967ba8f69d",
@@ -3271,8 +3271,8 @@
     "settingsProfileCreditsWithReset": "{balance} · resets {date}",
     "settingsProfileCreditsUnknown": "—",
     "creditsLineInsufficient": "not enough to convene",
-    "roomResultRefunded": "Not charged — this Room didn't reach a verdict",
     "roomResultCostNoBalance": "This Room used {cost} credits",
     "alpacaConnectDisclosure": "Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn't stored as its own record. A live account is shown on this phone only and never receives orders.",
-    "notifTypePolicyUpdate": "Policy updates"
+    "notifTypePolicyUpdate": "Policy updates",
+    "roomResultRefunded": "Not charged — AMI couldn't finish this Room"
 }

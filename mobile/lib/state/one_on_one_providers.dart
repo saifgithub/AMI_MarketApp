@@ -3,6 +3,7 @@ library;
 
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -108,6 +109,12 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
         isStreaming: false,
       );
       state = state.copyWith(messages: finalised, streaming: false);
+      // CR236 round 2 — a 1-on-1 turn is billed (`one_on_one_credit_cost`)
+      // the same ledger the Room's `done` refresh keeps current; without
+      // this, the composer's "You have N credits" line goes stale after
+      // the very first paid turn.
+      if (!mounted) return;
+      await _ref.read(mandateNotifierProvider.notifier).refresh();
     } catch (e) {
       // Replace placeholder with an error bubble
       final updated = List<ChatMessage>.from(state.messages);
@@ -120,6 +127,13 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
           messages: updated,
           streaming: false,
           error: friendlyError(e, action: 'reach your analyst'));
+      // CR236 round 2 — the backend charges before it streams a byte
+      // (`one_on_one.py`), so a failure the client sees mid-stream may
+      // still be a real charge with a server-side refund already landed
+      // (`one_on_one_failed:` reason) — either way the balance moved and
+      // the cached mandate is stale.
+      if (!mounted) return;
+      await _ref.read(mandateNotifierProvider.notifier).refresh();
     }
   }
 

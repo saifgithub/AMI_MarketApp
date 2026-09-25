@@ -17,6 +17,7 @@ import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -157,6 +158,12 @@ class BriefNotifier extends StateNotifier<BriefState> {
         isStreaming: false,
       );
       state = state.copyWith(messages: finalised, streaming: false);
+      // CR236 round 2 — a Brief turn is billed (`brief_credit_cost`) the
+      // same ledger the Room's `done` refresh keeps current; without this,
+      // any surface showing the balance goes stale after the first paid
+      // Brief turn.
+      if (!mounted) return;
+      await _ref.read(mandateNotifierProvider.notifier).refresh();
     } catch (e) {
       final updated = List<ChatMessage>.from(state.messages);
       updated[assistantIdx] = ChatMessage(
@@ -168,6 +175,12 @@ class BriefNotifier extends StateNotifier<BriefState> {
           messages: updated,
           streaming: false,
           error: friendlyError(e, action: 'reach your analyst'));
+      // CR236 round 2 — `brief.py` charges before it streams a byte, so a
+      // failure the client sees mid-stream may still be a real charge with
+      // a server-side refund already landed (`brief_failed:` reason) —
+      // either way the balance moved and the cached mandate is stale.
+      if (!mounted) return;
+      await _ref.read(mandateNotifierProvider.notifier).refresh();
     }
   }
 
