@@ -504,6 +504,19 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        # DEF425 — set BEFORE cancelling anything below. `room_runner.py`'s
+        # `run()` reads this flag from its own `except (asyncio.
+        # CancelledError, GeneratorExit)` handler to tell a server shutdown
+        # apart from (today, nonexistent) other sources of cancellation —
+        # cancelling `tasks` here, and the loop teardown that follows this
+        # `finally` block on process exit, are exactly what cascades
+        # `CancelledError` into the Room's detached `_pump` background
+        # tasks. Best-effort: `get_room_runner()` must not raise here and
+        # block the rest of shutdown from running.
+        try:
+            get_room_runner().mark_shutting_down()
+        except Exception:
+            logger.exception("room_mark_shutting_down_failed")
         for task in tasks:
             task.cancel()
         for task in tasks:
