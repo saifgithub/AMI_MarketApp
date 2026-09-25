@@ -136,8 +136,24 @@ suite cannot.
    returns exit 0. (The pre-existing `assets/icons/ does not exist`
    warning is acceptable until that gets fixed; the script
    tolerates it explicitly.)
-7. **Manual smoke confirmation.** `n` aborts. This is the only manual gate —
-   it keeps the operator honest without forcing CI we don't need yet.
+7. **Local release gate green (CR235).** `scripts/promotion/preflight_local_gate.sh`
+   returns exit 0 — `flutter test` (the Flutter suite) and `qa/appium`'s offline
+   self-tests (locator dispatch, locale-vs-ARB, crawler logic; no device needed).
+   These used to run only in GitHub Actions, which was red or flapping for 46 days
+   with nothing in this protocol ever reading the result (measured 2026-09-25:
+   last green 2026-08-10). They gate here now, on the same DEF405 discipline as
+   the backend suite gate — run bare, read the `VERDICT:` line, never through a
+   pipe or a background task. A missing `qa/appium/.venv` fails loudly with the
+   exact bootstrap command, never silently skips (CR040).
+8. **CI status printed, never blocking (CR235).** `scripts/promotion/ci_status.py`
+   looks up GitHub Actions' `tests.yml` result for the exact commit being
+   promoted and prints one line — GREEN / RED (naming the failing jobs) / PENDING
+   / CANCELLED / NOT RUN / UNAVAILABLE. **This is a warning, by Saiful's explicit
+   choice** — the tests that must gate already ran locally in step 7, so CI's own
+   result (now a clean-checkout check in minutes) is informational. Its exit code
+   never aborts the promotion.
+9. **Manual smoke confirmation.** `n` aborts. This is the only manual gate —
+   it keeps the operator honest without forcing more CI than we need.
 
    **The question itself is NOT restated here.** `/promote-to-alpha` step 1
    holds the wording, and this file points at it deliberately: the two copies

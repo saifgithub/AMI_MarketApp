@@ -1,9 +1,24 @@
-# CR162 — run the tests that already exist.
+# CR162 — run the tests that already exist. CR235 — trimmed to a clean-checkout check.
 #
-# Before this, `mobile/test/` held ~70 files and ~620 cases that ran only when
+# Before CR162, `mobile/test/` held ~70 files and ~620 cases that ran only when
 # a human remembered to run them: deploy-beta.yml is `workflow_dispatch`-only
 # and runs backend pytest alone, so nothing on any push executed a single
-# Flutter test. This closes that.
+# Flutter test. CR162 closed that.
+#
+# CR235 (2026-09-25) removed the backend unit-test job. Measured that day: this
+# workflow last went green 2026-08-10; the harness job was red every run since
+# 08-11 (stale MANIFEST.sha256, then 8 stale containment tests); the backend job
+# flapped 08-14->08-25 and then took 5h13m on a single 09-17 run; every push
+# cancels the previous run (11 consecutive cancels the day this was measured);
+# and nothing in `/promote-to-alpha` ever read the result — 46 days of red sat
+# unseen. Saiful's ruling: move the tests that must GATE (Flutter, harness
+# offline self-tests) into the local release gate (`scripts/promotion/
+# preflight_local_gate.sh`), where a human actually reads the exit code every
+# promotion, and cut CI down to a clean-checkout check in minutes. The backend
+# suite still runs — at promotion time, via `scripts/promotion/
+# preflight_suite.sh` (unchanged) — just not here. `/promote-to-alpha` now
+# prints this workflow's result for the exact commit being promoted
+# (`scripts/promotion/ci_status.py`) as a WARNING line, never a blocker.
 #
 # Deliberately `ubuntu-latest`, NOT macOS. GitHub bills macOS runners at
 # $0.062/min against a 10x minute multiplier versus $0.006/min on Linux, and
@@ -105,20 +120,3 @@ jobs:
         run: |
           python scripts/registers/gen_registers.py verify def
           python scripts/registers/gen_registers.py verify cr
-
-  backend:
-    name: Backend unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install backend deps
-        working-directory: backend
-        run: |
-          pip install --no-cache-dir uv
-          uv pip install --system -e ".[dev]"
-      - name: Run backend unit tests
-        working-directory: backend
-        run: pytest tests/unit/ -q
