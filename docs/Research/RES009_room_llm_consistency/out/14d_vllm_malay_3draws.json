@@ -1,0 +1,41 @@
+{
+  "label": "SO research_manager (Malay instruction, vLLM ami-llm)",
+  "provider": "vllm",
+  "draws": [
+    {
+      "draw": 1,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: FCF Negatif $3,269M]\n\nPerbezaan teras terletak pada keupayaan neraka kewangan menampung dividen dan pembesaran modal dalam persekitaran kadar faedah semasa.\n- Asimetri **+19.7%** ke sasaran konsensus **$99.24** menarik, namun **FCF -$3,269M** dan liputan faedah **2.2x** mengehadkan margin keselamatan jangka panjang.\n- Momentum pendapatan (**3 beat dalam 4 suku**) dan kontrak nuklear Google menyokong tesis pertumbuhan, tetapi penilaian **P/E 20.0x** tidak menawarkan diskaun yang cukup untuk menyerap risiko pengoperasan.\n- Kecondongan: **TUNGGU (WAIT)**. Jangan beli di tahap **$82.88** yang hanya **+1.0%** di atas paras rendah 52-minggu tanpa bukti aliran tunai bebas kembali positif.\n- Implikasi saiz: Had maksimum **3.0%** ($3,000) dibenarkan, tetapi dengan **drawdown portfolio 0 pt** digunakan, simpan kapasiti risiko ini untuk nama dengan penjanaan tunai yang lebih terbukti.",
+      "usage": {
+        "prompt_tokens": 6536,
+        "completion_tokens": 270,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 2,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: low | HEADLINE: FCF negatif, coverage rapuh]\n\nThesis: Kontrak Google menawarkan jalur pertumbuhan jangka panjang, tetapi tekanan liabiliti semasa menjadikan risiko melebihi potensi keuntungan pada harga semasa.\n\n*   **FCF** ialah **-$3,269M** (TTM) manakala **coverage bunga** hanya **2.2x**; kedua-dua angka ini menjejaskan keyakinan terhadap kelestarian dividen tanpa pembiayaan hutang tambahan.\n*   **Asimetri** menunjukkan kenaikan **19.7%** ke sasaran konsensus, tetapi harga **$82.88** masih **10.1%** di bawah purata 200 hari dengan RS negatif **28.3pp**, menandakan momentum lemah.\n*   **PEG** pada **1.97** dan **EV/EBITDA** **12.1x** (melebihi median sejarah **13.6x** menurut perbandingan sejarahan sendiri dalam data) tidak menawarkan margin keselamatan yang mencukupi untuk menampung risiko pelaksanaan.\n*   Tunggu sehingga **FCF** pulih atau **coverage** meningkat sebelum membuka posisi; jika dipaksa, hadkan saiz kepada **3.0%** dari portfolio untuk mengawal risiko liabiliti.",
+      "usage": {
+        "prompt_tokens": 6536,
+        "completion_tokens": 281,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 3,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: low | HEADLINE: FCF negatif $-3,269M]\n\nBenteng antara aliran tunai bebas negatif dan momentum pendapatan mengimbang risiko kadar faedah.\n\n*   **FCF TTM -$3,269M** dan **liputan faedah 2.2x** mengehadkan kapasiti serapan kejutan; dividen kini dibiayai hutang, bukan tunai.\n*   Naik **19.7%** ke sasaran konsensus **$99.24** berbanding risiko ke paras rendah **$82.09**; tidak ada kelebihan harga yang ketara untuk memaksa tindakan.\n*   **Beta 0.32** sesuai dengan kepekaan risiko **3/5**, tetapi **P/E 20.0x** (trailing) melebihi median sejarah **22.0x** apabila dinilai terhadap EPS masa lalu, menandakan tiada \"diskaun\" mudah.\n*   **Saiz 3.0%** ($3,000) adalah had maksima;\u9274\u4e8e **FCF negatif**, penantian sehingga pengesahan **FCF positif** atau **earnings 2026-11-05** lebih selari dengan matlamat kekayaan jangka panjang berbanding masuk sekarang.",
+      "usage": {
+        "prompt_tokens": 6536,
+        "completion_tokens": 284,
+        "reasoning_tokens": 0
+      }
+    }
+  ],
+  "total_tokens": {
+    "input": 19608,
+    "output": 835
+  },
+  "cost_estimate_usd": null
+}

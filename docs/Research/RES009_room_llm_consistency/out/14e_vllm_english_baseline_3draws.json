@@ -1,0 +1,41 @@
+{
+  "label": "SO research_manager (English, no language instruction, vLLM ami-llm)",
+  "provider": "vllm",
+  "draws": [
+    {
+      "draw": 1,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: FCF -$3.3B vs 72% payout]\n\nContracted revenue visibility from the Google deal is real, but negative free cash flow makes the dividend's sustainability the primary variable for this long-term mandate, not the near-term price dip.\n\n*   The Bull's upside case rests on the Street's **+19.7%** implied move to **$99.24**; the Bear's risk case highlights **FCF of -$3,269M** and **2.2x interest coverage**, where a rate shock or execution delay hits the equity faster than the PPA revenue flows.\n*   With **30.0 pt** of drawdown headroom and no open positions, a **3.0%** cap (**$3,000** / ~36 shares) is affordable, but the lack of cash-flow coverage means we are buying a credit story as an equity, not a pure yield play.\n*   LEAN: Wait for the **2026-11-05** earnings print. If the next quarter confirms FCF stabilization toward positive territory, the balance-sheet strain thesis loses force and the contracted growth story justifies a BUY at the current price.",
+      "usage": {
+        "prompt_tokens": 6485,
+        "completion_tokens": 268,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 2,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: low | HEADLINE: FCF -$3,269M caps upside]\n\nContracted AI revenue is real but does not outweigh the balance-sheet strain for a long-term hold.\n\n- **Dispute focus:** Bull cites the Google PPA as a structural moat; Bear argues **net debt of $74,103M** and **interest coverage of 2.2x** make the **3.67%** yield fragile until **FCF of -$3,269M** turns positive.\n- **Agreement:** Both sides see price near the 52-week low (**$82.09**) as the key technical pivot; the Bear notes **19.7%** upside to consensus target is offset by weak **PEG of 1.97**.\n- **Mandate fit:** **Long-term wealth** seeks FCF consistency, not just contracted revenue. With **capex $13,920M** consuming cash, the **72% payout** is accounting-covered but cash-starved.\n- **Lean:** **Wait**. Avoid buying until the Nov 5 earnings show signs of FCF stabilization. If forced to act, size at the **3.0%** cap ($3,000), acknowledging high balance-sheet risk.",
+      "usage": {
+        "prompt_tokens": 6485,
+        "completion_tokens": 280,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 3,
+      "extracted": "neutral",
+      "full_text": "[STANCE: neutral | CONVICTION: medium | HEADLINE: Negative FCF vs contracted growth]\n\nThesis: The contracted Google nuclear deal provides the durable moat the mandate seeks, but the cash flow reality of negative FCF and low interest coverage demands patience until the balance sheet proves it can fund the build-out without distress.\n\n- **Asymmetry:** The derived upside to the Street's mean target of **$99.24** is **+19.7%**, but this assumes the market ignores the structural strain of **-$3,269M TTM free cash flow** and **2.2x interest coverage**. The Bear's point about **13.6x** median EV/EBITDA history versus today's **12.1x** is misread by the Bull; today's multiple is actually *below* that historical median, not above, suggesting the market is already pricing some risk, not rewarding it.\n- **Lean:** Wait for Q4 earnings on **2026-11-05** (40 days). The **$1.64969** consensus EPS must validate that the Google contract is translating into margin resilience, not just debt-funded capex. The **72% payout ratio** is covered by earnings but not cash; we need to see if FCF turns positive before sizing.\n- **Size implication:** At a **3.0%** single-name cap (**$3,000** or ~36 shares), the position is small enough to be a candidate, but the **28.3pp** underperformance vs S&P 500 and proximity to the **$82.09** 52-week low suggest no urgency. A break below **$82.09** invalidates the technical floor; acceptance below **$79.00** (the Street's low target) signals structural distress.\n- **Mandate fit:** The long-term wealth goal favors the **Google contract**'s multi-decade revenue visibility, but the **risk score 3/5** and **30%** portfolio drawdown cap make adding a name with **1.82x debt/equity** and **0.79 current ratio** before earnings proof a suboptimal use of current headroom.",
+      "usage": {
+        "prompt_tokens": 6485,
+        "completion_tokens": 488,
+        "reasoning_tokens": 0
+      }
+    }
+  ],
+  "total_tokens": {
+    "input": 19455,
+    "output": 1036
+  },
+  "cost_estimate_usd": null
+}
