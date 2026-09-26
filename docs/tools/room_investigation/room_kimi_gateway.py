@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Shared core for running the Room (RoomRunner) against Kimi OR vLLM,
-in-process, on the Mac — extracted from CR228/RES009's `run_local_kimi*.py`
-family (2026-09, CR228 risk-appetite benchmark cross-check). Every other
-script in this directory imports from here rather than re-copying this
-logic. Despite the filename (kept for git-history continuity — this module
-started Kimi-only), `force_vllm_gateway()` is the vLLM counterpart to
-`force_kimi_gateway()` and both scripts in this toolkit take `--provider`.
+"""Shared core for running the Room (RoomRunner) against Kimi, vLLM, OR
+DeepInfra, in-process, on the Mac — extracted from CR228/RES009's
+`run_local_kimi*.py` family (2026-09, CR228 risk-appetite benchmark
+cross-check). Every other script in this directory imports from here rather
+than re-copying this logic. Despite the filename (kept for git-history
+continuity — this module started Kimi-only), `force_vllm_gateway()` and
+`force_deepinfra_gateway()` are the vLLM/DeepInfra counterparts to
+`force_kimi_gateway()`, and every CLI script in this toolkit takes
+`--provider {kimi,vllm,deepinfra}` via the shared `force_gateway()` dispatch.
 
 ## Why this exists
 
@@ -79,6 +81,19 @@ if str(BACKEND_DIR) not in sys.path:
 KIMI_OPEN_PLATFORM_BASE_URL = "https://api.moonshot.ai"
 KIMI_OPEN_PLATFORM_MODEL = "kimi-k3"
 KIMI_EXTRA_BODY = {"thinking": {"type": "disabled"}}
+
+# CR240 — DeepInfra's OpenAI-compatible endpoint. `OpenAICompatibleProvider`
+# (llm_gateway.py) always POSTs to "{base_url}/v1/chat/completions", so this
+# must be the bare host — NOT "https://api.deepinfra.com/v1/openai" (that
+# shape is what room_agent_replay.py's standalone `_call_deepinfra` uses,
+# which builds its own "{base}/chat/completions" path instead; the two
+# tools' base URLs are deliberately NOT the same string, since they append
+# different suffixes — confirmed live: DeepInfra 404'd every Room agent call
+# under the OpenAICompatibleProvider path when this constant carried the
+# "/v1/openai" suffix, since the request landed on
+# ".../v1/openai/v1/chat/completions", a route that doesn't exist).
+DEEPINFRA_BASE_URL = "https://api.deepinfra.com"
+DEEPINFRA_DEFAULT_MODEL = "zai-org/GLM-5.3-Flash"
 
 # vLLM's tuned default (room_agent_timeout_s config default, 180s) starves
 # Kimi even with thinking disabled some of the time — this internet-path,
@@ -252,12 +267,59 @@ def force_vllm_gateway(*, temperature: float | None = None):
     return gateway
 
 
+def force_deepinfra_gateway(*, model: str = DEEPINFRA_DEFAULT_MODEL):
+    """Build an LLMGateway resolving to DeepInfra for every call, in THIS
+    PROCESS ONLY. CR240 (hosted-provider evaluation for production) — this
+    is the full-Room counterpart to `room_agent_replay.py --provider
+    deepinfra`'s single-agent replay; same endpoint/model, but driven
+    through RoomRunner so every one of the 12 agents in a convene actually
+    calls DeepInfra, not just one captured prompt replayed in isolation.
+
+    Not registered in LLMGateway.__init__ at all (unlike vLLM/Kimi, which
+    have dedicated branches there) — DeepInfra is injected the same way
+    Kimi's extra_body override is: build the gateway normally, then add a
+    manually-constructed OpenAICompatibleProvider entry and force selection
+    onto it via `settings.llm_force_provider`.
+    """
+    import os
+
+    from app.core.config import settings
+    from app.services.llm_gateway import LLMGateway, OpenAICompatibleProvider
+
+    api_key = os.environ.get("DEEPINFR_API_KEY")  # codebase's own spelling, see .env — no trailing A
+    if not api_key:
+        raise SystemExit(
+            "DEEPINFR_API_KEY not set — refusing to run with DeepInfra "
+            "unregistered, which would silently fall through to vLLM"
+        )
+    settings.llm_force_provider = "deepinfra"
+    gateway = LLMGateway()
+    gateway._providers["deepinfra"] = OpenAICompatibleProvider(  # noqa: SLF001 — see docstring
+        name="deepinfra",
+        base_url=DEEPINFRA_BASE_URL,
+        model_name=model,
+        api_key=api_key,
+    )
+    active = gateway._active_provider_name()  # noqa: SLF001 — verifying the force actually took
+    if active != "deepinfra":
+        raise SystemExit(
+            f"LLM_FORCE_PROVIDER=deepinfra did not take effect — active "
+            f"provider resolved to {active!r} instead. Refusing to run: this "
+            f"would silently score vLLM against itself under a DeepInfra label."
+        )
+    print(f"LLM gateway forced to: {active} ({DEEPINFRA_BASE_URL}, {model})")
+    return gateway
+
+
 def force_gateway(provider: str, **kwargs):
-    """Dispatch to force_kimi_gateway() or force_vllm_gateway() by name —
-    the single entry point every CLI script in this toolkit should call.
+    """Dispatch to force_kimi_gateway() / force_vllm_gateway() /
+    force_deepinfra_gateway() by name — the single entry point every CLI
+    script in this toolkit should call.
     """
     if provider == "kimi":
         return force_kimi_gateway()
     if provider == "vllm":
         return force_vllm_gateway(**kwargs)
-    raise SystemExit(f"unknown provider {provider!r} — expected 'kimi' or 'vllm'")
+    if provider == "deepinfra":
+        return force_deepinfra_gateway(**kwargs)
+    raise SystemExit(f"unknown provider {provider!r} — expected 'kimi', 'vllm', or 'deepinfra'")

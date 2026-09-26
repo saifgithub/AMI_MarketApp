@@ -91,7 +91,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sweep one ticker across risk_score values against Kimi.")
     parser.add_argument("--ticker", required=True, help="e.g. AAPL")
     parser.add_argument("--risk-scores", default="1,2,3,4,5", help="comma-separated, e.g. 1,2,4,5")
-    parser.add_argument("--provider", choices=["kimi", "vllm"], default="kimi")
+    parser.add_argument("--provider", choices=["kimi", "vllm", "deepinfra"], default="kimi")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--tag", default=None, help="filename tag, e.g. a date stamp (defaults to the provider name)")
     parser.add_argument("--post-spacing", type=float, default=5.0)

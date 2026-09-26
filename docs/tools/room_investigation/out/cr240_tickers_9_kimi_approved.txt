@@ -1,0 +1,17 @@
+# CR240 DeepInfra/GLM-5.3-Flash full-Room comparison, 2026-09-26.
+# The 9 tickers that scored action=APPROVE, approve_votes=5/5 in
+# docs/forward_planning/CR228_risk_appetite_differentiation/results/
+# runs_cr228-r3-kimi-nothink-20260926.jsonl (risk_score=3, Kimi, thinking
+# disabled). Saiful asked for these 9 + AAPL, but AAPL was already run once
+# as the smoke test for room_ticker_batch.py (see RES009 10a) — running it
+# again wouldn't be a clean incremental data point on the same footing as
+# the other 9, so per Saiful's own call: these 9 first, AAPL last/separate.
+BAC
+JPM
+MA
+MO
+SLB
+SO
+T
+V
+WFC
