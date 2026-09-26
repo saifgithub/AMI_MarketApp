@@ -85,9 +85,23 @@ third provider.
   (there, same-day batches had identical spot prices). Worth checking
   before treating 100% of the flip as sampling noise.
 
-## Cost
+## Cost — measured directly from the DeepInfra dashboard
 
-See [`out/12_cost_tracking_9ticker_5x_consistency.json`](out/12_cost_tracking_9ticker_5x_consistency.json)
-for the before/after dashboard figures. `before_4x_run` is recorded
-(identical to doc 11's post-10-room-batch figure); `after_4x_run` is
-pending Saiful's next dashboard pull.
+Full before/after figures in
+[`out/12_cost_tracking_9ticker_5x_consistency.json`](out/12_cost_tracking_9ticker_5x_consistency.json).
+
+| | in tokens | out tokens | cached-in tokens |
+|---|---|---|---|
+| Before (= doc 11's after-figure) | 1,066,156 | 82,804 | 201,856 |
+| After (draws 2-5 complete) | 4,652,286 | 346,661 | 722,304 |
+| **Delta (36 room convenes)** | **3,586,130** | **263,857** | **520,448** |
+
+**Total cost, 4 draws (36 room convenes): $0.34273** — $0.26896 (in) +
+$0.06596 (out) + $0.00781 (cached-in). **$0.00952/room**, closely matching
+doc 11's independently-measured $0.00929/room from the original 10-room
+batch — a convergent per-room cost estimate across 46 total convenes now.
+
+**Running total for the whole GLM-5.3-Flash CR240 investigation:**
+doc 11's $0.0929 (10 rooms) + this doc's $0.34273 (36 rooms) = **$0.43563
+for 46 full Room convenes, averaging $0.00947/room** — under 2% of the $25
+DeepInfra balance.

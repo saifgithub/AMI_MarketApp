@@ -8,11 +8,29 @@
     "cached_in_tokens": 201856
   },
   "after_4x_run": {
-    "captured_at": null,
-    "note": "TO BE FILLED once Saiful pulls the dashboard after draws 2-5 (4 more full 9-ticker batches) complete",
-    "in_tokens": null,
-    "out_tokens": null,
-    "cached_in_tokens": null
+    "captured_at": "2026-09-26, after draws 2-5 (4 more full 9-ticker batches, 36 room convenes) completed",
+    "in_tokens": 4652286,
+    "out_tokens": 346661,
+    "cached_in_tokens": 722304
+  },
+  "computed": {
+    "delta_in_tokens": 3586130,
+    "delta_out_tokens": 263857,
+    "delta_cached_in_tokens": 520448,
+    "cost_in_usd": 0.26896,
+    "cost_out_usd": 0.06596,
+    "cost_cached_usd": 0.00781,
+    "total_cost_usd": 0.34273,
+    "room_convenes": 36,
+    "cost_per_room_usd": 0.00952,
+    "note": "4 draws x 9 tickers = 36 room convenes. Cost per room (~$0.0095) matches doc 11's 10-room-batch figure (~$0.00929/room) closely -- convergent measurement across 46 total room convenes now."
+  },
+  "grand_total_across_this_investigation": {
+    "doc11_10room_batch_usd": 0.0929,
+    "doc13_4draws_36room_usd": 0.34273,
+    "total_usd": 0.43563,
+    "total_room_convenes": 46,
+    "average_cost_per_room_usd": 0.00947
   },
   "rate_card_per_1M": {
     "input": 0.075,
