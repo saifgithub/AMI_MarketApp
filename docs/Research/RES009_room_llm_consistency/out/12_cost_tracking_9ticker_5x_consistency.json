@@ -1,0 +1,22 @@
+{
+  "_comment": "DeepInfra dashboard stats (zai-org/GLM-5.3-Flash, 2026-09-01 to 2026-10-01 window), tracked across the 9-ticker x5-draw internal-consistency run. 'before_4x_run' is the SAME figure as doc 11's 'after' stat for the original 10-room batch (9 tickers + AAPL) -- carried forward as the starting point for this new run, not re-measured, since no DeepInfra calls happened between doc 11's batch finishing and this 4x run starting.",
+  "before_4x_run": {
+    "captured_at": "2026-09-26, immediately before launching draws 2-5 of the 9-ticker batch (draw 1 was the original 9-ticker batch from doc 11)",
+    "note": "identical to doc 11's after-10-room-batch figure -- this run's baseline",
+    "in_tokens": 1066156,
+    "out_tokens": 82804,
+    "cached_in_tokens": 201856
+  },
+  "after_4x_run": {
+    "captured_at": null,
+    "note": "TO BE FILLED once Saiful pulls the dashboard after draws 2-5 (4 more full 9-ticker batches) complete",
+    "in_tokens": null,
+    "out_tokens": null,
+    "cached_in_tokens": null
+  },
+  "rate_card_per_1M": {
+    "input": 0.075,
+    "output": 0.25,
+    "cached_input": 0.015
+  }
+}
