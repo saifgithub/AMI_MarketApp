@@ -76,7 +76,8 @@ gap is stated, not filled in from memory.
 | [05 — Kimi cross-check](05_kimi_cross_check.md) | The same tests against a second, independent model/provider — **includes exactly how Kimi was reached: which key, which endpoint, which model, how thinking was disabled** |
 | [06 — Ask the model, then test the answer](06_pivot_and_growth_threshold_test.md) | The model's own stated decision threshold, then a direct test of that threshold across both providers |
 | [07 — CR228 BAC risk_score sweep instability](07_cr228_bac_risk_score_instability.md) | risk_score=2 is a genuine ~2-in-3 coin flip on BAC; risk_score=3 is stable — instability compounds through the pipeline, not one fork point |
-| [10 — CR240 DeepInfra/GLM-5.3-Flash cross-provider setup (in progress)](10_cr240_deepinfra_cross_provider_setup.md) | New toolkit (`room_ticker_batch.py`, DeepInfra support in `room_kimi_gateway.py`), two real defects caught by the AAPL smoke test (DeepInfra URL double-prefix; `backend/.env` not existing silently degrading DB/market-data settings), measured per-convene cost from the DeepInfra dashboard. The real 9-ticker batch is staged, not yet run. |
+| [10 — CR240 DeepInfra/GLM-5.3-Flash cross-provider setup](10_cr240_deepinfra_cross_provider_setup.md) | New toolkit (`room_ticker_batch.py`, DeepInfra support in `room_kimi_gateway.py`), two real defects caught by the AAPL smoke test (DeepInfra URL double-prefix; `backend/.env` not existing silently degrading DB/market-data settings), measured per-convene cost from the DeepInfra dashboard |
+| [11 — CR240 10-ticker DeepInfra vs. Kimi comparison](11_cr240_9ticker_plus_aapl_deepinfra_vs_kimi.md) | The real batch: 9 Kimi-approved tickers + AAPL, full Room convenes, real market data. **6/10 match** — all 4 disagreements are the same direction (Kimi APPROVE → GLM-5.3-Flash PASS, never the reverse); 2 of the 4 (SO, T) already known cross-provider-unstable from this session's earlier CR228 work |
 
 ## Raw data
 
