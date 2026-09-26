@@ -40,6 +40,32 @@ Pull one agent's full response_text for a user_id:
 Diff two user_ids' output for the same agent (e.g. compare a PASS run vs an
 APPROVE run's `trader` call):
     python3 room_llm_audit_trace.py diff --user-id-a <uuid1> --user-id-b <uuid2> --agent-id trader --field system_prompt
+
+## A shared/reused user_id holds MULTIPLE convenes — bound the window
+
+Not every user_id is one-convene-only. `room_repeat_consistency.py` and
+`room_risk_score_sweep.py` mint a fresh user_id per draw, so for THEIR output
+a bare `get`/`diff` is safe. But a 30-ticker batch driver script (e.g. this
+investigation's `run_local_kimi.py`/`run_pilot.sh`-style sweeps) can reuse ONE
+user_id across the whole batch, back-to-back, with no gap between one
+ticker's PM votes ending and the next ticker's analysts starting. `get`/`diff`
+default to `ORDER BY created_at LIMIT 1` — against a shared user_id that
+silently returns the WRONG ticker's call with no error (this happened live,
+2026-09-26: a bare `get --agent-id trader` on a batch user_id returned an
+earlier ticker's trader call, not the intended one).
+
+If `list --user-id <uuid>` shows more than ~17 rows (one convene is ~17: 4
+analysts + bull/bear + research_manager + trader + 3 debators + up to 5 PM
+votes, occasionally +1 PM reformat), the user_id is shared. Narrow `get`/
+`diff` to the right convene with `--after`/`--before` (from the batch
+driver's own JSONL `triggered_at`, or read off the `list` output directly —
+find the PM-votes block that ends right before your ticker's analysts start,
+that gap is the convene boundary) or `--nth` (0-indexed, Nth occurrence of
+`--agent-id` in the whole user_id's history, in `created_at` order — simpler
+when you just know "the 6th ticker in this batch", no timestamps needed).
+`get`/`diff` print a loud warning to stderr whenever the (optionally
+windowed) query still matches more than one row, specifically so this class
+of silent-wrong-answer can't repeat.
 """
 from __future__ import annotations
 
@@ -78,13 +104,60 @@ def cmd_list(args: argparse.Namespace) -> int:
         f"FROM llm_audit WHERE user_id='{args.user_id}' ORDER BY created_at) t;"
     )
     out = _run_psql(sql)
+    n = 0
     for line in out.splitlines():
         line = line.strip()
         if not line:
             continue
         row = json.loads(line)
+        n += 1
         print(f"{row['created_at']:30s} {row['agent_id']:22s} {row['provider']:8s} {row['flow']}")
+    if n > 20:
+        print(
+            f"\nNOTE: {n} rows for this user_id — one convene is ~17 "
+            f"(4 analysts + bull/bear + research_manager + trader + 3 debators "
+            f"+ up to 5 PM votes, occasionally +1 reformat). This user_id likely "
+            f"spans MULTIPLE convenes (a batch run reusing one user_id). Use "
+            f"get/diff's --after/--before or --nth to target the right one — a "
+            f"bare get/diff will otherwise silently return the wrong ticker's call.",
+            file=sys.stderr,
+        )
     return 0
+
+
+def _window_clause(after: str | None, before: str | None) -> str:
+    parts = []
+    if after:
+        parts.append(f"created_at >= '{after}'")
+    if before:
+        parts.append(f"created_at <= '{before}'")
+    return (" AND " + " AND ".join(parts)) if parts else ""
+
+
+def _count_matches(user_id: str, agent_id: str, after: str | None, before: str | None) -> int:
+    sql = (
+        f"SELECT count(*) FROM llm_audit WHERE user_id='{user_id}' "
+        f"AND agent_id='{agent_id}'{_window_clause(after, before)};"
+    )
+    out = _run_psql(sql).strip()
+    return int(out) if out else 0
+
+
+def _fetch_field(
+    user_id: str, agent_id: str, field: str, *,
+    after: str | None, before: str | None, nth: int | None,
+) -> tuple[str, int]:
+    """Returns (value, total_matches_in_window) so callers can warn on ambiguity."""
+    cast = "::text" if field == "messages" else ""
+    window = _window_clause(after, before)
+    total = _count_matches(user_id, agent_id, after, before)
+    offset = f"OFFSET {nth}" if nth else ""
+    sql = (
+        f"SELECT {field}{cast} FROM llm_audit "
+        f"WHERE user_id='{user_id}' AND agent_id='{agent_id}'{window} "
+        f"ORDER BY created_at LIMIT 1 {offset};"
+    )
+    return _run_psql(sql), total
 
 
 def cmd_get(args: argparse.Namespace) -> int:
@@ -92,13 +165,20 @@ def cmd_get(args: argparse.Namespace) -> int:
     if field not in VALID_FIELDS:
         print(f"unknown field {field!r}; valid: {sorted(VALID_FIELDS)}", file=sys.stderr)
         return 1
-    cast = "::text" if field == "messages" else ""
-    sql = (
-        f"SELECT {field}{cast} FROM llm_audit "
-        f"WHERE user_id='{args.user_id}' AND agent_id='{args.agent_id}' "
-        f"ORDER BY created_at LIMIT 1;"
+    out, total = _fetch_field(
+        args.user_id, args.agent_id, field,
+        after=args.after, before=args.before, nth=args.nth,
     )
-    out = _run_psql(sql)
+    if total > 1 and args.nth is None:
+        print(
+            f"WARNING: {total} '{args.agent_id}' rows match this user_id"
+            f"{' in the given window' if (args.after or args.before) else ''} "
+            f"— this user_id likely spans multiple convenes (a batch run). "
+            f"Returning the earliest by created_at, which may be the WRONG "
+            f"ticker/draw. Narrow with --after/--before or --nth. "
+            f"Run `list --user-id {args.user_id}` to see convene boundaries.",
+            file=sys.stderr,
+        )
     print(out)
     return 0
 
@@ -108,19 +188,27 @@ def cmd_diff(args: argparse.Namespace) -> int:
     if field not in VALID_FIELDS:
         print(f"unknown field {field!r}; valid: {sorted(VALID_FIELDS)}", file=sys.stderr)
         return 1
-    cast = "::text" if field == "messages" else ""
-    sql_a = (
-        f"SELECT {field}{cast} FROM llm_audit "
-        f"WHERE user_id='{args.user_id_a}' AND agent_id='{args.agent_id}' "
-        f"ORDER BY created_at LIMIT 1;"
+    text_a, total_a = _fetch_field(
+        args.user_id_a, args.agent_id, field,
+        after=args.after_a, before=args.before_a, nth=args.nth_a,
     )
-    sql_b = (
-        f"SELECT {field}{cast} FROM llm_audit "
-        f"WHERE user_id='{args.user_id_b}' AND agent_id='{args.agent_id}' "
-        f"ORDER BY created_at LIMIT 1;"
+    text_b, total_b = _fetch_field(
+        args.user_id_b, args.agent_id, field,
+        after=args.after_b, before=args.before_b, nth=args.nth_b,
     )
-    text_a = _run_psql(sql_a)
-    text_b = _run_psql(sql_b)
+    for label, uid, total, nth in (
+        ("A", args.user_id_a, total_a, args.nth_a),
+        ("B", args.user_id_b, total_b, args.nth_b),
+    ):
+        if total > 1 and nth is None:
+            print(
+                f"WARNING: side {label} ({uid}) has {total} '{args.agent_id}' rows "
+                f"matching — this user_id likely spans multiple convenes. Returning "
+                f"the earliest by created_at, which may be the WRONG ticker/draw. "
+                f"Narrow with --after-{label.lower()}/--before-{label.lower()} or "
+                f"--nth-{label.lower()}.",
+                file=sys.stderr,
+            )
     diff = difflib.unified_diff(
         text_a.splitlines(keepends=True), text_b.splitlines(keepends=True),
         fromfile=f"{args.user_id_a} ({args.agent_id})",
@@ -142,6 +230,9 @@ def main() -> int:
     p_get.add_argument("--user-id", required=True)
     p_get.add_argument("--agent-id", required=True)
     p_get.add_argument("--field", default="response_text")
+    p_get.add_argument("--after", default=None, help="only rows with created_at >= this (ISO timestamp) — use when --user-id spans multiple convenes")
+    p_get.add_argument("--before", default=None, help="only rows with created_at <= this (ISO timestamp)")
+    p_get.add_argument("--nth", type=int, default=None, help="0-indexed: the Nth occurrence of --agent-id for this user_id, in created_at order (alternative to --after/--before)")
     p_get.set_defaults(func=cmd_get)
 
     p_diff = sub.add_parser("diff", help="diff one agent's field between two user_ids")
@@ -149,6 +240,12 @@ def main() -> int:
     p_diff.add_argument("--user-id-b", required=True)
     p_diff.add_argument("--agent-id", required=True)
     p_diff.add_argument("--field", default="system_prompt")
+    p_diff.add_argument("--after-a", default=None, help="window bound for side A — use when --user-id-a spans multiple convenes")
+    p_diff.add_argument("--before-a", default=None)
+    p_diff.add_argument("--nth-a", type=int, default=None, help="0-indexed occurrence of --agent-id for side A (alternative to --after-a/--before-a)")
+    p_diff.add_argument("--after-b", default=None, help="window bound for side B")
+    p_diff.add_argument("--before-b", default=None)
+    p_diff.add_argument("--nth-b", type=int, default=None, help="0-indexed occurrence of --agent-id for side B")
     p_diff.set_defaults(func=cmd_diff)
 
     args = parser.parse_args()

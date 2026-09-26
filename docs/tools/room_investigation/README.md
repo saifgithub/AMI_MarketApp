@@ -113,6 +113,18 @@ python3 ../docs/tools/room_investigation/room_llm_audit_trace.py diff \
     --user-id-a <uuid-pass-run> --user-id-b <uuid-approve-run> \
     --agent-id trader --field system_prompt
 
+# If --user-id belongs to a batch driver (one user_id reused across a whole
+# 30-ticker sweep, not one-per-draw) — `list` prints a NOTE when it detects
+# this (>20 rows). Narrow get/diff to the right convene with --after/--before
+# (from the batch's own JSONL triggered_at) or --nth (0-indexed occurrence,
+# simpler when you just know "the Nth ticker in this batch"):
+python3 ../docs/tools/room_investigation/room_llm_audit_trace.py get \
+    --user-id <batch-uuid> --agent-id trader --field response_text \
+    --after "2026-09-26T01:22:51+00" --before "2026-09-26T01:28:00+00"
+# — or —
+python3 ../docs/tools/room_investigation/room_llm_audit_trace.py get \
+    --user-id <batch-uuid> --agent-id trader --field response_text --nth 21
+
 # Replay one agent's exact captured prompt, isolate whether IT is unstable
 python3 ../docs/tools/room_investigation/room_llm_audit_trace.py get \
     --user-id <uuid> --agent-id trader --field system_prompt > /tmp/sp.txt
@@ -129,6 +141,15 @@ python3 ../docs/tools/room_investigation/room_agent_replay.py \
   mints a fresh synthetic `user_id` per draw specifically so
   `room_llm_audit_trace.py` can correlate unambiguously — always capture the
   `user_id` a sweep/repeat script prints, you'll need it to trace that draw.
+- **Not every user_id is one-convene-only** — a batch driver (a 30-ticker
+  sweep run outside this toolkit, e.g. the CR228 r3 Kimi batch) can reuse ONE
+  user_id for the whole batch, back-to-back with no gap. Hit this live
+  2026-09-26: a bare `get --agent-id trader` against such a user_id silently
+  returned an earlier ticker's trader call (AAPL instead of the intended SO),
+  no error. `list` now warns when a user_id has >20 rows (one convene is
+  ~17); `get`/`diff` now take `--after`/`--before` (timestamp window) or
+  `--nth` (0-indexed occurrence) to target the right convene, and warn loudly
+  on stderr if the query still matches more than one row.
 - **Temperature/seed are unset everywhere else in this codebase** — an RES009
   finding, not an oversight. `room_agent_replay.py --provider vllm
   --temperature X` is the one place in this toolkit that pins it, for a
