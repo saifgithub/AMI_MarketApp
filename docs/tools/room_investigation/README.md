@@ -150,6 +150,18 @@ python3 ../docs/tools/room_investigation/room_agent_replay.py \
   ~17); `get`/`diff` now take `--after`/`--before` (timestamp window) or
   `--nth` (0-indexed occurrence) to target the right convene, and warn loudly
   on stderr if the query still matches more than one row.
+- **`messages` is a trivial placeholder for every Room agent — `system_prompt`
+  carries the actual content.** Every agent's captured `llm_audit.messages`
+  is just `[{"role": "user", "content": "Convene on <TICKER>."}]`; the real
+  role/task text, the live fact sheet, AND the full upstream transcript (every
+  earlier agent's output the current agent can see — e.g. `research_manager`'s
+  `system_prompt` inlines the Bull's and Bear's full arguments verbatim) are
+  all in `system_prompt`. Diffing `--field messages` between two runs will
+  always come back empty/trivial and prove nothing — this produced a wrong
+  "prompts are byte-identical" conclusion live 2026-09-26 (caught by a user
+  question, not by the tooling) before the same comparison was redone on
+  `--field system_prompt` and found genuinely different. **Diff/replay
+  `system_prompt`, not `messages`, for anything upstream-of-this-agent.**
 - **Temperature/seed are unset everywhere else in this codebase** — an RES009
   finding, not an oversight. `room_agent_replay.py --provider vllm
   --temperature X` is the one place in this toolkit that pins it, for a
@@ -168,3 +180,16 @@ python3 ../docs/tools/room_investigation/room_agent_replay.py \
   at the full 12-agent pipeline with Kimi thinking disabled (vLLM is
   typically faster, LAN-direct). 5 repeats is ~25-30 min; budget accordingly
   before launching a large sweep × repeat matrix.
+- **A backgrounded launch's "completed" notification is NOT the run
+  finishing** — if a script is started as `cmd ... &` inside a bash call that
+  itself runs in the background (`run_in_background: true`), the harness's
+  "completed" notification fires when that OUTER bash call returns (i.e. the
+  moment the `&` successfully detaches the inner process), not when the
+  detached script itself finishes. Hit this live 2026-09-26, twice, on both
+  a 5-min full-Room draw and a ~20s single-agent replay: the notification
+  arrived in under a second each time, well before the room convene or
+  replay had produced any output. **Always verify against the real process**
+  (`ps -p <pid>` — capture the `&`'s `$!` at launch) or the actual output
+  file/JSONL, never the notification text alone, before reporting a result.
+  A `while ps -p <pid> >/dev/null 2>&1; do sleep 5; done` loop before reading
+  results is the reliable pattern.
