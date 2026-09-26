@@ -45,6 +45,18 @@ start at 1.0, step down only if draws don't already agree):
     python3 room_agent_replay.py --provider vllm --temperature 0.6 \\
         --system-prompt-file ... --messages-file ... --repeats 10
 
+DeepInfra (CR240 — hosted-provider evaluation for production; NOT part of the
+Room's own gateway, a standalone OpenAI-compatible endpoint reached directly,
+same shape as vLLM's call):
+    export DEEPINFR_API_KEY=...   # note the codebase's spelling, no trailing A
+    python3 room_agent_replay.py --provider deepinfra \\
+        --deepinfra-model zai-org/GLM-5.3-Flash \\
+        --system-prompt-file ... --messages-file ... --repeats 5
+    # or the flagship, for a quality-ceiling comparison on the same prompt:
+    python3 room_agent_replay.py --provider deepinfra \\
+        --deepinfra-model zai-org/GLM-5.3 \\
+        --system-prompt-file ... --messages-file ... --repeats 5
+
 Pull the prompt files first with room_llm_audit_trace.py:
     python3 room_llm_audit_trace.py get --user-id <uuid> --agent-id trader --field system_prompt > sysprompt.txt
     python3 room_llm_audit_trace.py get --user-id <uuid> --agent-id trader --field messages > messages.txt
@@ -64,6 +76,9 @@ import httpx
 KIMI_BASE_URL = "https://api.moonshot.ai"
 KIMI_MODEL = "kimi-k3"
 _REASONING_TOKEN_TOLERANCE = 2  # RES009: kimi-k2.6 leaves ~1 residual even with thinking disabled
+
+DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
+DEEPINFRA_DEFAULT_MODEL = "zai-org/GLM-5.3-Flash"  # CR240's leading cost/quality candidate
 
 _SIDE_PATTERN = re.compile(r"Side:\s*([A-Z]+)")
 _STANCE_PATTERN = re.compile(r"\[STANCE:\s*([^\|]+?)\s*\|", re.IGNORECASE)
@@ -110,6 +125,34 @@ def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dic
     return {"content": msg.get("content", ""), "reasoning_content": None}
 
 
+def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None) -> dict:
+    """CR240 — hosted-provider evaluation. DeepInfra's endpoint is OpenAI-
+    compatible, same request shape as vLLM's, plus an API key. Not routed
+    through LLMGateway/OpenAICompatibleProvider (backend/app/services/
+    llm_gateway.py) at all — this is a standalone probe for the CR240
+    comparison, not a registered Room provider; if CR240 concludes DeepInfra
+    is the production pick, THAT integration belongs in llm_gateway.py
+    itself, mirroring VLLMProvider, not here.
+    """
+    body: dict = {
+        "model": model,
+        "messages": [{"role": "system", "content": system_prompt}, *messages],
+        "max_tokens": 2000,
+    }
+    if temperature is not None:
+        body["temperature"] = temperature
+    resp = httpx.post(
+        f"{DEEPINFRA_BASE_URL}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json=body,
+        timeout=120,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    msg = data["choices"][0]["message"]
+    return {"content": msg.get("content", ""), "reasoning_content": None}
+
+
 def _extract(text: str, pattern: re.Pattern | None) -> str | None:
     if pattern:
         m = pattern.search(text)
@@ -125,7 +168,7 @@ def _extract(text: str, pattern: re.Pattern | None) -> str | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Replay an exact captured agent prompt N times, report answer distribution.")
-    parser.add_argument("--provider", choices=["kimi", "vllm"], default="kimi")
+    parser.add_argument("--provider", choices=["kimi", "vllm", "deepinfra"], default="kimi")
     parser.add_argument("--system-prompt-file", type=Path, required=True)
     parser.add_argument("--messages-file", type=Path, required=True, help="JSON list of {role, content}")
     parser.add_argument("--repeats", type=int, default=5)
@@ -138,6 +181,8 @@ def main() -> int:
     parser.add_argument("--vllm-base-url", default=os.environ.get("VLLM_BASE_URL", ""),
                          help="e.g. http://192.168.20.74:8000 (LAN-direct from the Mac)")
     parser.add_argument("--vllm-model", default=os.environ.get("VLLM_MODEL", "ami-llm"))
+    parser.add_argument("--deepinfra-model", default=DEEPINFRA_DEFAULT_MODEL,
+                         help=f"e.g. zai-org/GLM-5.3-Flash or zai-org/GLM-5.3 (default: {DEEPINFRA_DEFAULT_MODEL})")
     args = parser.parse_args()
 
     if args.provider == "kimi":
@@ -145,23 +190,31 @@ def main() -> int:
         if not api_key:
             print("KIMI_API_KEY not set", file=sys.stderr)
             return 1
-    else:
+    elif args.provider == "vllm":
         if not args.vllm_base_url:
             print("--vllm-base-url or VLLM_BASE_URL not set", file=sys.stderr)
+            return 1
+    else:  # deepinfra
+        api_key = os.environ.get("DEEPINFR_API_KEY")  # codebase's own spelling, see .env
+        if not api_key:
+            print("DEEPINFR_API_KEY not set", file=sys.stderr)
             return 1
 
     system_prompt = args.system_prompt_file.read_text()
     messages = json.loads(args.messages_file.read_text())
     pattern = re.compile(args.extract_pattern) if args.extract_pattern else None
 
-    temp_note = f", T={args.temperature}" if args.provider == "vllm" and args.temperature is not None else ""
-    print(f"=== {args.label} [{args.provider}{temp_note}] ({len(system_prompt)} char system_prompt) ===")
+    temp_note = f", T={args.temperature}" if args.provider in ("vllm", "deepinfra") and args.temperature is not None else ""
+    model_note = f" model={args.deepinfra_model}" if args.provider == "deepinfra" else ""
+    print(f"=== {args.label} [{args.provider}{temp_note}{model_note}] ({len(system_prompt)} char system_prompt) ===")
     draws = []
     for i in range(args.repeats):
         if args.provider == "kimi":
             out = _call_kimi(api_key, system_prompt, messages)
-        else:
+        elif args.provider == "vllm":
             out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature)
+        else:
+            out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature)
         extracted = _extract(out["content"], pattern)
         print(f"  draw {i + 1}/{args.repeats}: {extracted}")
         draws.append({"draw": i + 1, "extracted": extracted, "full_text": out["content"]})
