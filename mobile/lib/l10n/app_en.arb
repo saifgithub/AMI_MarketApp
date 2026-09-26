@@ -2125,6 +2125,10 @@
   "onboardingSaveTeam": "SAVE MY TEAM",
   "onboardingSkipForNow": "SKIP FOR NOW",
   "onboardingErrorTitle": "CAN'T REACH THE BACKEND",
+  "onboardingErrorTitleRejected": "REQUEST NOT ACCEPTED",
+  "@onboardingErrorTitleRejected": {
+    "description": "DEF446. Title for the onboarding error screen when the request reached the server and was rejected (e.g. a 409/422), as opposed to a genuine connectivity failure — see onboardingErrorTitle for that case. NEW key. retranslate:[ar,ms]"
+  },
   "onboardingErrorUnknown": "Unknown error",
   "onboardingTryAgain": "TRY AGAIN",
   "signInHeading": "SIGN IN",

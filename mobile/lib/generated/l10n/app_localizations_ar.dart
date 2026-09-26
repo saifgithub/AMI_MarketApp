@@ -1848,6 +1848,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingErrorTitle => 'تعذر الاتصال بالخادم';
 
   @override
+  String get onboardingErrorTitleRejected => 'REQUEST NOT ACCEPTED';
+
+  @override
   String get onboardingErrorUnknown => 'خطأ غير معروف';
 
   @override

@@ -100,6 +100,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return _ErrorView(
         message: state.errorMessage ??
             AppLocalizations.of(context).onboardingErrorUnknown,
+        isConnectivity: state.errorIsConnectivity,
         onRetry: () => ref.read(onboardingNotifierProvider.notifier).start(
               locale: Localizations.localeOf(context).languageCode,
               timezone: DateTime.now().timeZoneName,
@@ -330,22 +331,38 @@ class _HeaderBar extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+    required this.isConnectivity,
+  });
   final String message;
   final VoidCallback onRetry;
+
+  /// DEF446 — whether [message] describes a genuine reachability failure.
+  /// `false` means the request reached the server and was rejected (e.g. a
+  /// 409 conflict), so the connectivity-flavored title and cloud-off icon
+  /// would contradict the body text underneath them.
+  final bool isConnectivity;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final title =
+        isConnectivity ? l.onboardingErrorTitle : l.onboardingErrorTitleRejected;
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.l),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.cloud_off, size: 56, color: AmiColors.hexAmber),
+          Icon(
+            isConnectivity ? Icons.cloud_off : Icons.report_gmailerrorred,
+            size: 56,
+            color: AmiColors.hexAmber,
+          ),
           const SizedBox(height: AmiSpacing.m),
-          Text(l.onboardingErrorTitle,
+          Text(title,
               style: AmiTypography.labelMono, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.s),
           Text(message, style: AmiTypography.body, textAlign: TextAlign.center),

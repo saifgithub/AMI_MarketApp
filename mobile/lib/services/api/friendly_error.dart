@@ -185,6 +185,41 @@ bool isRetryable(Object error) {
   return true;
 }
 
+/// DEF446 — whether [error] is honestly a reachability problem: the request
+/// never got an answer, for reasons on the pipe's side rather than the
+/// server's. `false` covers everything that got a response, including a
+/// rejected one (409, 422, …) and a healthy 5xx-turned-"unavailable" message —
+/// those are the server refusing or struggling, not the app failing to reach
+/// it, and a caller-side "can't reach the backend" header on top of that copy
+/// contradicts the body under it (DEF446: a live user hit exactly this on a
+/// 409 while the backend, DB and tunnel all measured healthy at the time).
+///
+/// Screens that show a dedicated connectivity title (cloud-off icon, "can't
+/// reach the backend") must gate it on this, not show it unconditionally —
+/// same reasoning DEF164 already applies to keep `_forStatus` and
+/// [isRetryable] from disagreeing about the same status code.
+bool isConnectivityFailure(Object error) {
+  if (error is DioException) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
+        return true;
+      case DioExceptionType.receiveTimeout:
+        // Only dishonest to call this a reachability problem when the
+        // request never landed; see the receiveTimeout branch of
+        // [friendlyError] for the [_waitsOnModel] carve-out.
+        return !_waitsOnModel(error);
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.badResponse:
+        return false;
+    }
+  }
+  return false;
+}
+
 /// DEF164 — the one place badResponse retryability is decided. `_forStatus`
 /// below reads this too, so the copy and the retry affordance cannot disagree
 /// about the same status code by construction.

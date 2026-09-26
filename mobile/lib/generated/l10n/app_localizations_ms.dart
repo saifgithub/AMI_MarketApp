@@ -1850,6 +1850,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get onboardingErrorTitle => 'GAGAL MENGHUBUNGI BACKEND';
 
   @override
+  String get onboardingErrorTitleRejected => 'REQUEST NOT ACCEPTED';
+
+  @override
   String get onboardingErrorUnknown => 'Ralat tidak diketahui';
 
   @override

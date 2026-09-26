@@ -58,6 +58,7 @@ class OnboardingState {
     this.lines = const [],
     this.currentStep,
     this.errorMessage,
+    this.errorIsConnectivity = false,
     this.readbackSummary,
     this.mandatePreview,
     this.submitting = false,
@@ -69,6 +70,12 @@ class OnboardingState {
   final List<ChatLine> lines;
   final String? currentStep;
   final String? errorMessage;
+
+  /// DEF446 — whether [errorMessage] describes a genuine reachability
+  /// failure (see [isConnectivityFailure]), so the error screen's title can
+  /// agree with its own body instead of always claiming "can't reach the
+  /// backend" over a rejected-but-delivered request.
+  final bool errorIsConnectivity;
   final Map<String, dynamic>? readbackSummary;
   final Map<String, dynamic>? mandatePreview;
   final bool submitting;
@@ -97,6 +104,7 @@ class OnboardingState {
     List<ChatLine>? lines,
     String? currentStep,
     String? errorMessage,
+    bool errorIsConnectivity = false,
     Map<String, dynamic>? readbackSummary,
     Map<String, dynamic>? mandatePreview,
     bool? submitting,
@@ -108,6 +116,7 @@ class OnboardingState {
       lines: lines ?? this.lines,
       currentStep: currentStep ?? this.currentStep,
       errorMessage: errorMessage,
+      errorIsConnectivity: errorMessage == null ? false : errorIsConnectivity,
       readbackSummary: readbackSummary ?? this.readbackSummary,
       mandatePreview: mandatePreview ?? this.mandatePreview,
       isRestart: isRestart ?? this.isRestart,
@@ -186,6 +195,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       state = state.copyWith(
         phase: OnboardingPhase.error,
         errorMessage: friendlyError(e, action: 'start onboarding'),
+        errorIsConnectivity: isConnectivityFailure(e),
       );
     }
   }
@@ -235,6 +245,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         submitting: false,
         phase: OnboardingPhase.error,
         errorMessage: friendlyError(e, action: 'send your answer'),
+        errorIsConnectivity: isConnectivityFailure(e),
       );
     }
   }
@@ -271,6 +282,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       state = state.copyWith(
         phase: OnboardingPhase.error,
         errorMessage: friendlyError(e, action: 'confirm your mandate'),
+        errorIsConnectivity: isConnectivityFailure(e),
       );
     }
   }

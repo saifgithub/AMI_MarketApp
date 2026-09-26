@@ -3186,6 +3186,12 @@ abstract class AppLocalizations {
   /// **'CAN\'T REACH THE BACKEND'**
   String get onboardingErrorTitle;
 
+  /// DEF446. Title for the onboarding error screen when the request reached the server and was rejected (e.g. a 409/422), as opposed to a genuine connectivity failure — see onboardingErrorTitle for that case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'REQUEST NOT ACCEPTED'**
+  String get onboardingErrorTitleRejected;
+
   /// No description provided for @onboardingErrorUnknown.
   ///
   /// In en, this message translates to:

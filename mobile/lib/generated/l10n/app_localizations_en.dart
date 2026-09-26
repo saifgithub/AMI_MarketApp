@@ -1847,6 +1847,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingErrorTitle => 'CAN\'T REACH THE BACKEND';
 
   @override
+  String get onboardingErrorTitleRejected => 'REQUEST NOT ACCEPTED';
+
+  @override
   String get onboardingErrorUnknown => 'Unknown error';
 
   @override

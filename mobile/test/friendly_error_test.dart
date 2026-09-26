@@ -144,6 +144,64 @@ void main() {
     });
   });
 
+  group('DEF446 — isConnectivityFailure agrees with what the user is told', () {
+    // The bug: a live user in Saudi got "CAN'T REACH THE BACKEND" on a
+    // 409 Conflict from /v1/onboarding/answer while the backend, DB, LLM
+    // gateway and Cloudflare tunnel all measured healthy at that moment —
+    // the request landed and was rejected, it never failed to reach anything.
+    test('a rejected-but-delivered request is never a connectivity failure',
+        () {
+      const statuses = [400, 401, 403, 404, 409, 422, 429, 500, 502, 503];
+      for (final status in statuses) {
+        final err = _dio(DioExceptionType.badResponse, status: status);
+        expect(isConnectivityFailure(err), isFalse,
+            reason: 'status $status reached the server; the title must not '
+                'claim otherwise');
+      }
+    });
+
+    test('a request that never landed is a connectivity failure', () {
+      for (final type in [
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.sendTimeout,
+        DioExceptionType.connectionError,
+        DioExceptionType.unknown,
+      ]) {
+        expect(isConnectivityFailure(_dio(type)), isTrue, reason: '$type');
+      }
+    });
+
+    test('receiveTimeout follows the same waitsOnModel split as the copy', () {
+      final unmarked = DioException(
+        requestOptions: RequestOptions(path: '/v1/onboarding/answer'),
+        type: DioExceptionType.receiveTimeout,
+      );
+      final marked = DioException(
+        requestOptions: RequestOptions(
+          path: '/v1/brief/propose',
+          extra: Map<String, dynamic>.from(kAmiWaitsOnModel),
+        ),
+        type: DioExceptionType.receiveTimeout,
+      );
+      expect(isConnectivityFailure(unmarked), isTrue,
+          reason: 'nothing marked this call as waiting on the model');
+      expect(isConnectivityFailure(marked), isFalse,
+          reason: 'the request was sent and AMI was slow — not unreachable');
+    });
+
+    test('cancel and bad certificate are not connectivity failures', () {
+      expect(isConnectivityFailure(_dio(DioExceptionType.cancel)), isFalse);
+      expect(isConnectivityFailure(_dio(DioExceptionType.badCertificate)),
+          isFalse);
+    });
+
+    test('non-Dio errors default to not-connectivity', () {
+      expect(isConnectivityFailure(Exception('boom')), isFalse);
+      expect(isConnectivityFailure(const InsufficientCreditsException(
+          balance: 0, cost: 1, plan: 'floor_pass')), isFalse);
+    });
+  });
+
   group('DEF253 — only a call that waits on AMI may blame AMI', () {
     // Saiful, on 4G, healthy backend, AMI not in the call path:
     // "Couldn't load your portfolio — AMI took too long to answer."
