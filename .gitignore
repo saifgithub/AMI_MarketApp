@@ -128,3 +128,9 @@ qa/appium/_runs/
 !docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/
 !docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/**
 _wire_capture.jsonl
+
+# RES009 — bulk llm_audit exports (full system_prompt/messages/response_text
+# dumps from melehost Postgres). Local investigation artifact, never
+# committed: raw prompts/completions at this volume don't belong in git
+# history. Curated excerpts a doc actually cites still go in RES009's out/.
+docs/Research/RES009_room_llm_consistency/out/cr228_full_audit_dump/

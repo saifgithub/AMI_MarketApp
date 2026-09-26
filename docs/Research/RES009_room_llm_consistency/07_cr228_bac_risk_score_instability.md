@@ -1,4 +1,12 @@
-# 07 — CR228 risk_score sweep, BAC: instability traced to the `trader` agent
+# 07 — CR228 risk_score sweep, BAC: instability compounds through the pipeline, not a single fork
+
+**Correction, same session:** an earlier version of this doc concluded the
+divergence traced to a single fork point at the `trader` agent, based on
+comparing 2 of the 6 draws and their `system_prompt`s. Checking all 6 draws
+and diffing `trader`'s actual input (not just its output) found that claim
+wrong — see "Result 4" below. Left the original findings in place and added
+the correction rather than rewriting history, per RES009's own "if the spec
+changes after seeing results, say so" rule.
 
 Note on numbering: this doc's `out/` data files are prefixed `08*`, not `07*` —
 [06](06_pivot_and_growth_threshold_test.md)'s own data already claimed `07a`/`07b`
@@ -114,40 +122,101 @@ both, but one run PASSed and the other APPROVEd):
 > "2.0% size with a 2.5% stop distance contributes 0.05 percentage points to
 > portfolio drawdown — negligible against the 30% cap."
 
-Both `trader` calls cite the **same numbers** — $56.70 price, $55.29 200-day,
-$68.62 Street target, 18 days to the 2026-10-14 print, both `STANCE: for`,
-both `CONVICTION: medium`. The fork is a genuine judgment call on one
-specific question: **is "2.6% above the ideal entry level, with a binary
-catalyst 18 days out" close enough to initiate a small position now, or does
-it warrant waiting for the pullback / the print to resolve first?** One
-`trader` draw says wait (`Side: WAIT`, 0% size, a *conditional* future trade);
-the other says buy now at reduced size. Neither is an error — both are
-internally coherent, cite correct figures, and reach a defensible conclusion
-from the same inputs.
+Both `trader` calls cite the **same headline numbers** — $56.70 price, $55.29
+200-day, $68.62 Street target, 18 days to the 2026-10-14 print, both
+`STANCE: for`, both `CONVICTION: medium` — which read at first as "the fork is
+at `trader`." Checking `trader`'s actual *input* (not just its output) shows
+that framing was wrong.
+
+## Result 4 (correction): the fork isn't at `trader` — every stage upstream of it already differs
+
+Extending Result 3 to all 6 draws, not the 2 spot-checked:
+
+| run | trader Side | trader Size | final action |
+|---|---|---|---|
+| APPROVE_1 | BUY | 2.0% | APPROVE |
+| APPROVE_2 | BUY | 2.0% | APPROVE |
+| APPROVE_3 | BUY | 2.0% | APPROVE |
+| APPROVE_4 | BUY | 2.0% | APPROVE |
+| PASS_1 | **WAIT** | **0.0%** | PASS |
+| PASS_2 | **WAIT** | **0.0%** | PASS |
+
+`trader`'s Side/Size is a perfect 6/6 predictor of the final action — stronger
+than Result 3's "close call" framing suggested. That raised the real
+question: **why does `trader` itself flip?** Full `trader` output for all 6
+draws, plus the `fundamentals_analyst` and `trader` system_prompt diffs cited
+below:
+[`out/08e_bac_r2_all6_trader_and_diff.json`](out/08e_bac_r2_all6_trader_and_diff.json).
+
+Diffing `trader`'s full `system_prompt` (not just its `response_text`)
+between a WAIT draw (PASS_1) and a BUY draw (APPROVE_1) — i.e., the actual
+text `trader` was given to read, built from every upstream agent's output —
+found it is **not the same prompt with a different trader judgment on top**.
+Every upstream stage already differs in substance:
+
+- **News catalysts differ**: PASS_1's prompt includes a Citigroup/Banamex IPO
+  headline that APPROVE_1's does not; headline "hours ago" timestamps differ
+  beyond what the ~4-minute gap between the two draws would explain.
+- **`fundamentals_analyst`'s own framing differs**, even though both cite
+  identical underlying numbers (13.1x trailing P/E, 17.8x own-history median,
+  PEG 0.85, $34.8B total capital return, 2.28% yield, 26% payout — see
+  [`out/08d_bac_r2_agent_trace.json`](out/08d_bac_r2_agent_trace.json)).
+  PASS_1's version leads with "PEG 0.85 signals growth at a reasonable
+  price"; APPROVE_1's omits that framing sentence entirely and leads with
+  buyback pace instead. Same facts, different emphasis, from the very first
+  LLM call in the chain.
+- **A grounding/self-correction block appears in both, flagging different
+  hallucinated figures each time** (`[AMI checked "10" against the fact
+  sheet: the sheet's own figure is 10.7, not 10...]` in one draw,
+  `[AMI checked "17" against the fact sheet: the sheet's own figure is 13.1,
+  not 17...]` in the other) — each draw's chain independently hallucinated
+  and then self-corrected a *different* number.
+- **`bear_researcher`'s actual argument is a different argument, not a
+  reworded one**: PASS_1's bear case is balance-sheet/leverage fragility
+  ("$789B gross debt... ROA of 1%... structural constraints"); APPROVE_1's
+  bear case is a "peak earnings, the multiple discount is a value trap"
+  thesis. These are two different bear theses on the same ticker, not the
+  same thesis in different words.
+- **`research_manager`'s output text differs throughout**, not only its
+  `[STANCE:]` tag (already shown in Result 3).
 
 ## Read
 
-- **The instability is not upstream-data noise, not a PM-sampling artifact, and
-  not attributable to `research_manager`'s stance alone.** It is a genuine
-  disagreement, reproduced live, at the `trader` agent — the one stage that
-  converts a qualitative "for" lean into a concrete Side/Size decision. This is
-  a *narrower and more specific* finding than "risk_score=2 is noisy": the
-  noise has a location.
-- **This is a close call, not a bug.** $56.70 vs. a $55.29 target entry (2.6%
-  away) with an earnings print 18 days out is exactly the kind of setup where
-  "wait for the better price" and "small size now, add later" are both
-  reasonable trading stances. The two `trader` draws are not contradicting
-  facts — they're weighting the same acknowledged tension differently.
-- **Practical implication for CR228**: risk_score=2 (a specific point, not the
-  full 1–5 range) may sit in a genuinely higher-variance region of Kimi's
-  behavior on setups near-but-not-at a `trader` agent's own stated ideal entry
-  zone. Whether this is Kimi-specific or would reproduce on vLLM too, and
-  whether it's particular to BAC-like near-threshold technical setups or
-  general to risk_score=2, is not established by this one ticker — it would
-  need the same trader-level trace repeated on other tickers with a similarly
-  marginal entry setup before generalizing.
+- **The instability does not have a single location — it compounds through
+  the whole sequential pipeline.** `fundamentals_analyst`, the earliest
+  narrative-generating call, already produces different emphasis on identical
+  numbers between draws. Each subsequent agent (technical strategist,
+  macro/events, bull, bear, research_manager) reads the previous agents'
+  *already-diverged* text and adds its own independent variation on top,
+  compounding by the time it reaches `trader`. `trader`'s WAIT-vs-BUY split
+  is the point where compounding upstream variance finally resolves into a
+  visible binary outcome — not the point where the disagreement originates.
+  The original "genuine judgment call at `trader`" framing (struck through
+  above) implied the two `trader` calls saw the same inputs and reasoned
+  differently from them; they did not see the same inputs.
+- **This reframes "risk_score=2 is noisy" as "risk_score=2 is where noise that
+  exists at every stage happens to land on different sides of a binary
+  decision."** risk_score=3's identically-repeated APPROVE (6/6, Result 1)
+  doesn't mean risk_score=3's upstream agent chain is more stable per se — it
+  may mean risk_score=3's setup is far enough from any agent's decision
+  boundary that the same kind of per-stage variance never changes the final
+  binary outcome. risk_score=2's BAC setup (price 2.6% above the trader's own
+  stated ideal entry, 18 days to a binary earnings catalyst) appears to sit
+  close enough to that boundary that ordinary per-call variance — the same
+  kind RES009's [01](01_divergence_sources.md) and
+  [06](06_pivot_and_growth_threshold_test.md) already documented at the
+  single-agent level — is enough to flip it.
+- **Practical implication for CR228**: this is not evidence that risk_score=2
+  specifically is broken, or that the vote-threshold mechanism is wrong. It is
+  evidence that **any** Room verdict near a genuine decision boundary — for
+  any risk_score, any ticker — inherits instability from every one of the
+  ~6-9 sequential LLM calls that precede the final vote, not just from the
+  PM's own 5-sample stage that CR197 already accounts for. Whether that
+  argues for self-consistency sampling earlier in the pipeline (not just at
+  the PM), for a different aggregation approach, or for accepting this as an
+  inherent property of a long LLM-agent chain, is a CR228/Room-architecture
+  question, not something this doc resolves.
 - Consistent with [06](06_pivot_and_growth_threshold_test.md)'s broader
   finding: confident, fluent, well-reasoned model output is not the same
-  thing as consistent model output. Both `trader` draws here would pass a
-  spot-check on their own — the disagreement only shows up by deliberately
-  running the same setup more than once.
+  thing as consistent model output — now shown to hold at every stage of a
+  12-agent pipeline, not just a single isolated call.
