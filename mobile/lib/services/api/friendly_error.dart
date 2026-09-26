@@ -75,6 +75,55 @@ bool _waitsOnModel(DioException e) =>
 const String _slowConnection =
     'the connection is too slow right now. Try again on a stronger signal.';
 
+/// CR239 Leg A — the id `HTTPAuditMiddleware` mints per request, echoed on
+/// every response (success or error) as `X-Request-Id`. Read straight off
+/// `DioException.response?.headers` rather than plumbed through an
+/// interceptor: the header is already sitting on every error by the time
+/// [friendlyError] runs, and the two existing error-annotating interceptors
+/// (`_ServerErrorInterceptor`, `_VersionGateInterceptor`) already use the
+/// `DioException.error` slot for their own payload — reusing it here would
+/// stomp whichever fired first instead of composing with it.
+///
+/// Truncated to a short, screen-legible prefix — same idea as a git/Sentry
+/// short SHA. The full UUID is what `http_audit.id` stores; a support
+/// session greps for the prefix and gets one match in practice, or falls
+/// back to the couple of surrounding minutes if not.
+String? _requestIdFrom(Object error) {
+  if (error is DioException) {
+    final id = error.response?.headers.value('x-request-id');
+    if (id != null && id.isNotEmpty) return id;
+  }
+  return null;
+}
+
+/// A short reference a user can read off-screen and a support session can
+/// grep for. Returns null when [error] carries no trace id (Leg B — see
+/// [isConnectivityFailure] — covers that case with a Sentry event id
+/// instead, surfaced by the caller, not this function).
+String? traceReference(Object error) {
+  final id = _requestIdFrom(error);
+  if (id == null) return null;
+  final short = id.length > 8 ? id.substring(0, 8) : id;
+  return 'Error ref: $short';
+}
+
+/// CR239 scope item 5 — Room already has its own trace id
+/// (`room_runs.id`, minted at convene and logged against by every
+/// `llm_call_start`/`room_completed` line for that run) and it is the more
+/// useful one to show: it spans the whole run, not one HTTP request, and a
+/// broken Room stream runs over raw `http.Client` (DEF114 D4), not Dio — so
+/// [traceReference]'s `X-Request-Id` read is almost never available for it.
+/// Room error sites append this INSTEAD of relying on [friendlyError]'s own
+/// ref, keyed on whatever run id is already in state by the time the catch
+/// runs. Returns the base message unchanged when [runId] is null — the one
+/// case genuinely worth that (the stream broke before the `started` event
+/// ever named a run), where there is nothing yet to reference.
+String withRoomRunReference(String message, String? runId) {
+  if (runId == null || runId.isEmpty) return message;
+  final short = runId.length > 8 ? runId.substring(0, 8) : runId;
+  return '$message Run ref: $short.';
+}
+
 /// Turns [error] into a sentence a user can act on.
 ///
 /// [action] names what failed as a verb phrase in the user's terms — lower
@@ -83,13 +132,24 @@ const String _slowConnection =
 ///
 /// Never interpolates [error]. If you find yourself wanting to, the thing you
 /// want is [debugPrint], which this already does.
+///
+/// CR239 Leg A: when [error] carries a backend-minted request id (any
+/// [DioException] whose response carries `X-Request-Id` — set on every
+/// response, success or error, by `HTTPAuditMiddleware`), a short trace
+/// reference is appended as its own sentence — a footnote, never the
+/// headline. DEF148's rule that the primary message is "what failed, in the
+/// user's words" is unchanged; this adds a second, optional sentence after
+/// it, not a new sentence AT its expense.
 String friendlyError(Object error, {required String action}) {
   if (kDebugMode) debugPrint('friendlyError($action): $error');
 
   final lead = "Couldn't $action";
+  final ref = traceReference(error);
+  String withRef(String message) => ref == null ? message : '$message $ref.';
 
   if (error is ServerUnavailableException) {
-    return '$lead — AMI is temporarily unavailable. Try again in a moment.';
+    return withRef(
+        '$lead — AMI is temporarily unavailable. Try again in a moment.');
   }
   // CR121 audit MAJOR. A 426 is the version gate refusing a build the server
   // has condemned, and it can arrive on ANY call — the gate's own launch and
@@ -100,7 +160,8 @@ String friendlyError(Object error, {required String action}) {
   // rejected form, telling the user to re-check details that were never the
   // problem, about a request that can never succeed on this build.
   if (asUpgradeRequired(error) != null) {
-    return '$lead — this version of AMI is out of date. Update to continue.';
+    return withRef(
+        '$lead — this version of AMI is out of date. Update to continue.');
   }
   if (error is InsufficientCreditsException) {
     // Has its own surface (the credit wall). Reaching here means a caller let
@@ -123,7 +184,7 @@ String friendlyError(Object error, {required String action}) {
       // the model — see [kAmiWaitsOnModelKey].
       case DioExceptionType.receiveTimeout:
         return _waitsOnModel(error)
-            ? '$lead — AMI took too long to answer. Try again.'
+            ? withRef('$lead — AMI took too long to answer. Try again.')
             : '$lead — $_slowConnection';
       // DEF253's sibling branch, moved for the same reason. "Unreachable" is
       // about reachability, which is true of both a dead network and an
@@ -139,7 +200,7 @@ String friendlyError(Object error, {required String action}) {
       case DioExceptionType.badCertificate:
         return '$lead — the secure connection to AMI could not be verified.';
       case DioExceptionType.badResponse:
-        return _forStatus(error.response?.statusCode, lead);
+        return withRef(_forStatus(error.response?.statusCode, lead));
     }
   }
 

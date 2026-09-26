@@ -455,6 +455,8 @@ class RoomNotifier extends StateNotifier<RoomState> {
       if (state.runId != null) {
         await _recoverViaPolling(state.runId!);
       } else {
+        // CR239: no run_id to reference here — this branch is reached only
+        // when the stream broke before the `started` event ever named one.
         state = state.copyWith(
             streaming: false,
             error: friendlyError(e, action: 'run the Room'));
@@ -571,9 +573,13 @@ class RoomNotifier extends StateNotifier<RoomState> {
       }
     } catch (e) {
       if (!mounted) return;
+      // CR239 scope item 5 — Room shows ITS OWN run id here, not a second
+      // number: this call's own run_id is already known and outlives the
+      // request that failed, so it is the more useful reference.
       state = state.copyWith(
         retryingCio: false,
-        error: friendlyError(e, action: 'ask the CIO again'),
+        error: withRoomRunReference(
+            friendlyError(e, action: 'ask the CIO again'), runId),
       );
     }
   }

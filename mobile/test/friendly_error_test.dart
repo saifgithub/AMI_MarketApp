@@ -202,6 +202,70 @@ void main() {
     });
   });
 
+  group('CR239 Leg A — the trace reference `friendlyError` appends', () {
+    DioException dioWithRequestId(
+      int status, {
+      String? requestId = 'a1b2c3d4-0000-0000-0000-000000000000',
+    }) {
+      final headers = Headers();
+      if (requestId != null) {
+        headers.set('x-request-id', requestId);
+      }
+      return DioException(
+        requestOptions: RequestOptions(path: '/v1/onboarding/answer'),
+        type: DioExceptionType.badResponse,
+        response: Response<void>(
+          requestOptions: RequestOptions(path: '/v1/onboarding/answer'),
+          statusCode: status,
+          headers: headers,
+        ),
+      );
+    }
+
+    test('traceReference reads X-Request-Id off the response and shortens it',
+        () {
+      final err = dioWithRequestId(409);
+      expect(traceReference(err), 'Error ref: a1b2c3d4');
+    });
+
+    test('traceReference is null when the response carries no header', () {
+      final err = dioWithRequestId(409, requestId: null);
+      expect(traceReference(err), isNull);
+    });
+
+    test('traceReference is null for a non-Dio error', () {
+      expect(traceReference(Exception('boom')), isNull);
+    });
+
+    test('friendlyError appends the ref as a footnote, after the real message',
+        () {
+      final message =
+          friendlyError(dioWithRequestId(409), action: 'send your answer');
+      expect(message,
+          "Couldn't send your answer — that request wasn't accepted. Check "
+          'the details before trying again. Error ref: a1b2c3d4.');
+    });
+
+    test('friendlyError omits the footnote entirely when there is no ref', () {
+      final message = friendlyError(dioWithRequestId(409, requestId: null),
+          action: 'send your answer');
+      expect(message, isNot(contains('Error ref')));
+    });
+
+    test('a genuine connectivity failure (no response at all) has no ref', () {
+      // Leg A's ref only ever exists once a response came back; a request
+      // that never reached the server has nothing to read a header off of —
+      // that class is Leg B's (Sentry event id), not this one's.
+      final err = DioException(
+        requestOptions: RequestOptions(path: '/v1/onboarding/answer'),
+        type: DioExceptionType.connectionError,
+      );
+      expect(traceReference(err), isNull);
+      expect(friendlyError(err, action: 'send your answer'),
+          isNot(contains('Error ref')));
+    });
+  });
+
   group('DEF253 — only a call that waits on AMI may blame AMI', () {
     // Saiful, on 4G, healthy backend, AMI not in the call path:
     // "Couldn't load your portfolio — AMI took too long to answer."

@@ -13,6 +13,15 @@ AT:R16. Records to the `http_audit` table:
 Authorization / Cookie headers are never persisted.
 Endpoints that are pure noise (`/v1/health` from the cloudflared healthcheck)
 are skipped to avoid burying real activity.
+
+CR239 Leg A: this is also where the per-request trace id is minted. It is
+the SAME value as `http_audit.id` (not a second number) — generated here,
+before `call_next`, so it is available to bind onto every structlog line
+for this request (including agent `llm_call_start`/error lines during a
+Room) and to echo on the response even when the handler raises. Every
+response, success or error, carries it as `X-Request-Id`;
+`app.main`'s exception handlers put the same value in the JSON body under
+`request_id` so a client that only inspects the parsed body still gets it.
 """
 
 from __future__ import annotations
@@ -21,8 +30,9 @@ import json
 import re
 import time
 from typing import Awaitable, Callable, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
@@ -205,6 +215,14 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
 
         started = time.perf_counter()
 
+        # CR239 Leg A: mint once, bind for every log line this request emits,
+        # and stash on request.state so a route handler that wants to embed
+        # it explicitly (e.g. Room's own error payload) doesn't have to
+        # re-derive it from the response header it hasn't seen yet.
+        request_id = uuid4()
+        request.state.request_id = request_id
+        structlog.contextvars.bind_contextvars(request_id=str(request_id))
+
         # DEF184: reject an oversized declared body BEFORE any buffering.
         content_length = request.headers.get("content-length")
         if content_length is not None:
@@ -274,23 +292,27 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
         # an empty response.
 
         try:
-            response = await call_next(request)
-        except Exception:
-            latency_ms = int((time.perf_counter() - started) * 1000)
-            record_http(
-                method=request.method,
-                path=path,
-                query=request.url.query or None,
-                user_id=_user_id_from_request(request),
-                client_ip=_client_ip(request),
-                status_code=500,
-                request_body=captured_request,
-                response_body=None,
-                response_truncated=False,
-                is_streaming=False,
-                latency_ms=latency_ms,
-            )
-            raise
+            try:
+                response = await call_next(request)
+            except Exception:
+                latency_ms = int((time.perf_counter() - started) * 1000)
+                record_http(
+                    method=request.method,
+                    path=path,
+                    query=request.url.query or None,
+                    user_id=_user_id_from_request(request),
+                    client_ip=_client_ip(request),
+                    status_code=500,
+                    request_body=captured_request,
+                    response_body=None,
+                    response_truncated=False,
+                    is_streaming=False,
+                    latency_ms=latency_ms,
+                    request_id=request_id,
+                )
+                raise
+        finally:
+            structlog.contextvars.unbind_contextvars("request_id")
 
         is_streaming = isinstance(response, StreamingResponse) or response.headers.get(
             "content-type", ""
@@ -335,7 +357,15 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
             response_truncated=response_truncated,
             is_streaming=is_streaming,
             latency_ms=latency_ms,
+            request_id=request_id,
         )
+        # CR239 Leg A: echoed on EVERY response, not just errors — a report of
+        # "it was slow" or "it looked wrong" needs a trace id just as much as
+        # a report of "it broke". `app.main`'s exception handlers add the same
+        # value to the JSON body for the error case; success bodies are each
+        # route's own shape, so the header is the one place a healthy 200 is
+        # guaranteed to carry it.
+        response.headers["X-Request-Id"] = str(request_id)
         return response
 
 

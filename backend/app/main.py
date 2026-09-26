@@ -5,9 +5,10 @@ import hmac
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Header, Query, Response
+from fastapi import FastAPI, Header, Query, Request, Response
+from fastapi.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.admin import router as admin_router
@@ -581,6 +582,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# CR239 Leg A: every error body carries the same request id `HTTPAuditMiddleware`
+# already minted and put in the `X-Request-Id` response header — a client that
+# only inspects the parsed JSON body (not headers) still gets it. Two handlers
+# because FastAPI dispatches `HTTPException` (the vast majority of this app's
+# error responses — 31 route files raise it directly) and any other uncaught
+# exception through separate hooks; both paths get `request.state.request_id`
+# from `HTTPAuditMiddleware`, which always runs first (registered first, so it
+# is outermost — Starlette middleware wraps in registration order).
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception_with_request_id(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", None)
+    body: dict = {"detail": exc.detail}
+    if request_id is not None:
+        body["request_id"] = str(request_id)
+    response = JSONResponse(status_code=exc.status_code, content=body, headers=exc.headers)
+    if request_id is not None:
+        response.headers["X-Request-Id"] = str(request_id)
+    return response
+
+
+@app.exception_handler(Exception)
+async def _unhandled_exception_with_request_id(request: Request, exc: Exception) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", None)
+    logger.exception("unhandled_exception", path=request.url.path)
+    body: dict = {"detail": "internal server error"}
+    if request_id is not None:
+        body["request_id"] = str(request_id)
+    response = JSONResponse(status_code=500, content=body)
+    if request_id is not None:
+        response.headers["X-Request-Id"] = str(request_id)
+    return response
 
 
 # Routers

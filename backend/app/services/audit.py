@@ -179,8 +179,18 @@ def record_http(
     response_truncated: bool,
     is_streaming: bool,
     latency_ms: int,
+    request_id: Optional[UUID] = None,
 ) -> None:
-    """Persist one HTTP request. Safe to call from any code path."""
+    """Persist one HTTP request. Safe to call from any code path.
+
+    CR239 Leg A: `request_id` is minted by `HTTPAuditMiddleware` *before*
+    `call_next` (so it can be echoed on the response even if the handler
+    raises) and passed in here rather than left to `HTTPAuditRow.id`'s own
+    default — the row's primary key IS the trace id a support session greps
+    for, so the middleware needs the value up front, not whatever the ORM
+    assigns on flush. Optional only so this function still works untouched
+    from the one existing test call site that predates CR239.
+    """
     try:
         with get_session() as session:
             row = HTTPAuditRow(
@@ -196,6 +206,8 @@ def record_http(
                 is_streaming=is_streaming,
                 latency_ms=latency_ms,
             )
+            if request_id is not None:
+                row.id = request_id
             session.add(row)
             session.commit()
     except Exception:
