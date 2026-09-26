@@ -25,6 +25,30 @@ Usage (from backend/, with the venv that already has app deps installed):
     .venv/bin/python3 ../docs/tools/room_investigation/room_repeat_consistency.py \\
         --ticker BAC --risk-score 3 --repeats 5 --provider kimi \\
         --out-dir ../docs/tools/room_investigation/out
+
+## Reproducing a REAL user's exact mandate, not the synthetic default
+
+`base_mandate()` (risk_score-only, everything else default — single_name_cap
+resolves from risk_score, max_drawdown_pct pinned at 30) is NOT the same
+compliance envelope as any real account's stored mandate. Hit this live
+2026-09-26: a real user's V room (mandate_version=5, risk_score=3) landed
+PASS, but their mandate had single_name_cap_pct=100.0 and sector_cap_pct=100.0
+(effectively uncapped) and max_drawdown_pct=50 — materially looser than this
+tool's synthetic risk_score=3 default — so it wasn't a clean comparison to
+this toolkit's other risk_score=3 runs. Pull the exact `mandates.snapshot`
+JSON for their user_id (see `room_llm_audit_trace.py`'s docstring for the
+psql/ssh pattern) to a file, then pass `--mandate-file` to reproduce it
+verbatim instead of `--risk-score`'s synthetic mandate:
+    ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -t -A \\
+        -c \\"SELECT snapshot FROM mandates WHERE user_id='<uuid>' AND version=<n>;\\"" \\
+        > /tmp/their_mandate.json
+    .venv/bin/python3 ../docs/tools/room_investigation/room_repeat_consistency.py \\
+        --ticker V --mandate-file /tmp/their_mandate.json --repeats 5 \\
+        --provider kimi --out-dir ../docs/tools/room_investigation/out
+`--risk-score` is still required for the output filename/labeling even when
+`--mandate-file` is given — pass the mandate's own `risk_score` field so the
+filename/log line stays accurate; the mandate CONTENT sent to the Room comes
+entirely from the file, --risk-score does not additionally override it.
 """
 from __future__ import annotations
 
@@ -55,10 +79,19 @@ async def main_async(args: argparse.Namespace) -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.out_dir / f"{args.ticker.lower()}_repeat_r{args.risk_score}_{args.tag}.jsonl"
 
+    if args.mandate_file:
+        mandate_override = json.loads(args.mandate_file.read_text())
+        print(f"Using mandate snapshot from {args.mandate_file} (risk_score={mandate_override.get('risk_score')}, "
+              f"single_name_cap_pct={mandate_override.get('single_name_cap_pct')}, "
+              f"sector_cap_pct={mandate_override.get('sector_cap_pct')}, "
+              f"max_drawdown_pct={mandate_override.get('max_drawdown_pct')})")
+    else:
+        mandate_override = None
+
     results = []
     for i in range(args.repeats):
         user_id = uuid4()
-        mandate = resolve_mandate(user_id, base_mandate(
+        mandate = resolve_mandate(user_id, mandate_override if mandate_override is not None else base_mandate(
             risk_score=args.risk_score,
             display_name=f"{args.tag} R{args.risk_score} repeat ({args.ticker})",
         ))
@@ -91,12 +124,13 @@ async def main_async(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Repeat one ticker+risk_score N times against Kimi, report distribution.")
     parser.add_argument("--ticker", required=True)
-    parser.add_argument("--risk-score", type=int, required=True)
+    parser.add_argument("--risk-score", type=int, required=True, help="used for the output filename/log line; the actual mandate content sent to the Room is --mandate-file's, when given, not re-derived from this")
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--provider", choices=["kimi", "vllm"], default="kimi")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--tag", default=None, help="filename tag (defaults to the provider name)")
     parser.add_argument("--post-spacing", type=float, default=5.0)
+    parser.add_argument("--mandate-file", type=Path, default=None, help="JSON mandate snapshot (e.g. a real user's mandates.snapshot column) to use verbatim instead of the synthetic base_mandate()")
     args = parser.parse_args()
     if args.tag is None:
         args.tag = args.provider
