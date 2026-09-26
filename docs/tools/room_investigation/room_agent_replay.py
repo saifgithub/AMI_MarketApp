@@ -79,6 +79,15 @@ _REASONING_TOKEN_TOLERANCE = 2  # RES009: kimi-k2.6 leaves ~1 residual even with
 
 DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
 DEEPINFRA_DEFAULT_MODEL = "zai-org/GLM-5.3-Flash"  # CR240's leading cost/quality candidate
+# $/1M tokens, fetched directly from deepinfra.com model pages (CR240 §3) — for a
+# printed cost estimate only, not billing-grade; DeepInfra's own dashboard is the
+# source of truth (CR240 found this tool's char-count-based guess off by >20x on
+# output tokens, since GLM-5.3-Flash's structured-output token density isn't ~4
+# chars/token — hence capturing real `usage` instead of estimating at all).
+DEEPINFRA_PRICING_PER_1M = {
+    "zai-org/GLM-5.3-Flash": {"input": 0.075, "output": 0.25},
+    "zai-org/GLM-5.3": {"input": 0.563, "output": 2.50},
+}
 
 _SIDE_PATTERN = re.compile(r"Side:\s*([A-Z]+)")
 _STANCE_PATTERN = re.compile(r"\[STANCE:\s*([^\|]+?)\s*\|", re.IGNORECASE)
@@ -103,7 +112,15 @@ def _call_kimi(api_key: str, system_prompt: str, messages: list[dict]) -> dict:
     msg = data["choices"][0]["message"]
     if reasoning_tokens and reasoning_tokens > _REASONING_TOKEN_TOLERANCE:
         raise RuntimeError(f"thinking not disabled: reasoning_tokens={reasoning_tokens}")
-    return {"content": msg.get("content", ""), "reasoning_content": msg.get("reasoning_content")}
+    return {
+        "content": msg.get("content", ""),
+        "reasoning_content": msg.get("reasoning_content"),
+        "usage": {
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "reasoning_tokens": reasoning_tokens,
+        },
+    }
 
 
 def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None) -> dict:
@@ -122,7 +139,16 @@ def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dic
     resp.raise_for_status()
     data = resp.json()
     msg = data["choices"][0]["message"]
-    return {"content": msg.get("content", ""), "reasoning_content": None}
+    usage = data.get("usage", {})
+    return {
+        "content": msg.get("content", ""),
+        "reasoning_content": None,
+        "usage": {
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "reasoning_tokens": usage.get("completion_tokens_details", {}).get("reasoning_tokens"),
+        },
+    }
 
 
 def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None) -> dict:
@@ -150,7 +176,16 @@ def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list
     resp.raise_for_status()
     data = resp.json()
     msg = data["choices"][0]["message"]
-    return {"content": msg.get("content", ""), "reasoning_content": None}
+    usage = data.get("usage", {})
+    return {
+        "content": msg.get("content", ""),
+        "reasoning_content": msg.get("reasoning_content"),
+        "usage": {
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "reasoning_tokens": usage.get("completion_tokens_details", {}).get("reasoning_tokens"),
+        },
+    }
 
 
 def _extract(text: str, pattern: re.Pattern | None) -> str | None:
@@ -216,15 +251,36 @@ def main() -> int:
         else:
             out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature)
         extracted = _extract(out["content"], pattern)
-        print(f"  draw {i + 1}/{args.repeats}: {extracted}")
-        draws.append({"draw": i + 1, "extracted": extracted, "full_text": out["content"]})
+        usage = out.get("usage") or {}
+        usage_note = ""
+        if usage.get("prompt_tokens") is not None:
+            usage_note = f"  [in={usage['prompt_tokens']} out={usage.get('completion_tokens')}]"
+        print(f"  draw {i + 1}/{args.repeats}: {extracted}{usage_note}")
+        draws.append({"draw": i + 1, "extracted": extracted, "full_text": out["content"], "usage": usage})
 
     dist = Counter(d["extracted"] for d in draws)
     print(f"  distribution: {dict(dist)}")
 
+    total_in = sum(d["usage"].get("prompt_tokens") or 0 for d in draws)
+    total_out = sum(d["usage"].get("completion_tokens") or 0 for d in draws)
+    cost_estimate = None
+    if args.provider == "deepinfra" and total_in and args.deepinfra_model in DEEPINFRA_PRICING_PER_1M:
+        rates = DEEPINFRA_PRICING_PER_1M[args.deepinfra_model]
+        cost_estimate = (total_in / 1_000_000) * rates["input"] + (total_out / 1_000_000) * rates["output"]
+        print(f"  tokens: in={total_in} out={total_out}  est. cost=${cost_estimate:.5f} "
+              f"(from real usage + fetched rate card — verify against the DeepInfra dashboard)")
+    elif total_in:
+        print(f"  tokens: in={total_in} out={total_out}")
+
     if args.out_file:
         args.out_file.parent.mkdir(parents=True, exist_ok=True)
-        args.out_file.write_text(json.dumps({"label": args.label, "provider": args.provider, "draws": draws}, indent=2))
+        args.out_file.write_text(json.dumps({
+            "label": args.label,
+            "provider": args.provider,
+            "draws": draws,
+            "total_tokens": {"input": total_in, "output": total_out},
+            "cost_estimate_usd": cost_estimate,
+        }, indent=2))
         print(f"  wrote {args.out_file}")
     return 0
 
