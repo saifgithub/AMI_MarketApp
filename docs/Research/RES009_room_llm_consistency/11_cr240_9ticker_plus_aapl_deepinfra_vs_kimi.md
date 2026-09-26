@@ -77,15 +77,27 @@ establish whether Kimi's own APPROVE 5/5 on those two is a settled result or
 one draw of an unstable distribution — before concluding GLM-5.3-Flash
 "got it wrong."
 
-## Cost
+## Cost — measured directly from the DeepInfra dashboard
 
-Saiful's dashboard stats immediately before this batch (`zai-org/GLM-5.3-Flash`,
-2026-09-01→2026-10-01 window): 109,485 in / 9,440 out / 14,592 cached-in
-tokens (this already includes the earlier AAPL smoke-test's cost from doc
-10 — cost isolation for THIS 10-room batch needs an after-batch dashboard
-pull, not yet taken as of this doc). Once that after-figure is in, the
-delta gives the real cost of 10 full Room convenes on GLM-5.3-Flash,
-directly comparable to doc 10's single-convene figure ($0.00678).
+Saiful pulled the dashboard immediately before and after this batch
+(`zai-org/GLM-5.3-Flash`, 2026-09-01→2026-10-01 window):
+
+| | in tokens | out tokens | cached-in tokens |
+|---|---|---|---|
+| Before | 109,485 | 9,440 | 14,592 |
+| After | 1,066,156 | 82,804 | 201,856 |
+| **Delta (10 rooms)** | **956,671** | **73,364** | **187,264** |
+
+At GLM-5.3-Flash's fetched rate card ($0.075/$0.25/$0.015 per 1M for
+in/out/cached-in): **$0.07175 + $0.01834 + $0.00281 = $0.09290 total for 10
+full Room convenes — ~$0.00929/room average.** This is ~37% higher than doc
+10's single-convene smoke-test figure ($0.00678) — expected, not a
+discrepancy: that smoke test's first attempt ran on mock-walk data (thinner
+fact sheets, likely shorter agent output) before defect #2 was caught,
+while this batch ran on real market data throughout, and per-ticker cost
+naturally varies with how much each agent has to reason about. Trivial
+either way: this 10-room batch used under 0.4% of the $25 DeepInfra
+balance.
 
 ## What this is not
 
