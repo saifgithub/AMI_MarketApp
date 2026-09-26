@@ -44,6 +44,25 @@ concealed. Where a run's raw output could not be preserved (one temperature casc
 lost to a container restart — see [04](04_vllm_run_a_temperature_cascade.md)), that
 gap is stated, not filled in from memory.
 
+**Related, and kept in sync with this doc:**
+
+- [`docs/tools/room_investigation/`](../../tools/room_investigation/) — the reusable
+  toolkit this investigation is built on (`room_kimi_gateway.py`'s shared
+  force-a-provider-and-run-a-Room core, `room_agent_replay.py` for single-agent
+  replay, `room_repeat_consistency.py`/`room_risk_score_sweep.py`/
+  `room_ticker_batch.py` for repeat/sweep/batch drivers, `room_llm_audit_trace.py`
+  for pulling captured prompts). Every script here that ran against a real
+  provider used one of these tools; new findings from using the toolkit
+  (gotchas, defects caught) get written back into its own README, not just here.
+- [`docs/forward_planning/CR240_llm_provider_evaluation/`](../../forward_planning/CR240_llm_provider_evaluation/CR240.md) —
+  the CR this investigation's cross-provider work feeds into: evaluating hosted
+  LLM providers (DeepInfra/GLM-5.3-Flash, etc.) as a production replacement for
+  the self-hosted vLLM model, sized against real Room data rather than price
+  tables alone. [Doc 10](10_cr240_deepinfra_cross_provider_setup.md) in this
+  series is CR240's own measurement work, run and logged here because it's the
+  same kind of same-ticker/cross-provider comparison every other doc in this
+  series already does.
+
 ---
 
 ## How to read this

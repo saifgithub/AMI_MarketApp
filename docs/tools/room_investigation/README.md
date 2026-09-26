@@ -8,6 +8,21 @@ consistency research (2026-09); generalized here from that investigation's
 one-off, hardcoded scripts so the same capabilities are one command away next
 time, not a re-write.
 
+**Related, kept in sync with this doc:**
+
+- [`docs/Research/RES009_room_llm_consistency/`](../../Research/RES009_room_llm_consistency/README.md) —
+  the research this toolkit was built to support; every numbered doc in that
+  series either used these scripts directly or documents a finding that led
+  to one being written. New findings from using this toolkit (gotchas,
+  defects caught while running it) get written back into RES009's own docs,
+  not just here.
+- [`docs/forward_planning/CR240_llm_provider_evaluation/CR240.md`](../../forward_planning/CR240_llm_provider_evaluation/CR240.md) —
+  the CR evaluating hosted LLM providers (DeepInfra/GLM-5.3-Flash, etc.) as a
+  production replacement for the self-hosted vLLM model; this toolkit's
+  `--provider deepinfra` support (both `room_agent_replay.py`'s single-agent
+  replay and `room_ticker_batch.py`'s full-Room batch) was built specifically
+  for CR240's §5 measurement plan.
+
 **Nothing here touches production code or ships a behavior change.** Same
 rule as `docs/Research/` — these scripts run `RoomRunner.run()` directly, in
 a throwaway process on the Mac, never through melehost's shared
@@ -19,10 +34,11 @@ would redirect ALL live users' traffic, not just a benchmark's calls).
 
 | Script | Question it answers |
 |---|---|
-| `room_kimi_gateway.py` | (shared core, not run directly) — forces a `RoomRunner`'s `LLMGateway` to Kimi or vLLM, in-process only |
-| `room_risk_score_sweep.py` | "Does risk_score actually change this Room's verdict for this ticker, right now?" — one ticker, N risk_score values, either provider |
-| `room_repeat_consistency.py` | "Is this ticker/risk_score/provider's verdict stable, or did I see one draw of an unstable distribution?" — full Room, N repeats |
-| `room_agent_replay.py` | "Is THIS agent itself unstable on a fixed input, or did it just receive different upstream input?" — one agent, exact captured prompt, N repeats, either provider, optional pinned temperature (vLLM only) |
+| `room_kimi_gateway.py` | (shared core, not run directly) — forces a `RoomRunner`'s `LLMGateway` to Kimi, vLLM, or DeepInfra, in-process only |
+| `room_risk_score_sweep.py` | "Does risk_score actually change this Room's verdict for this ticker, right now?" — one ticker, N risk_score values, any provider |
+| `room_repeat_consistency.py` | "Is this ticker/risk_score/provider's verdict stable, or did I see one draw of an unstable distribution?" — full Room, N repeats, `--mandate-file` to reproduce a real user's exact mandate |
+| `room_ticker_batch.py` | "Do these N tickers reach the same verdict on provider X as they did on provider Y?" — a list of tickers, one fixed mandate, one full Room convene each, any provider, resumable (CR240) |
+| `room_agent_replay.py` | "Is THIS agent itself unstable on a fixed input, or did it just receive different upstream input?" — one agent, exact captured prompt, N repeats, any provider, optional pinned temperature (vLLM only), real per-call token usage + cost logged for DeepInfra |
 | `room_llm_audit_trace.py` | "What did agent X actually see/say in run Y?" — pull or diff captured `system_prompt`/`messages`/`response_text` from melehost's `llm_audit` table by `user_id` |
 
 ## The investigation pattern these support
@@ -83,7 +99,23 @@ ssh -f -N -L 5434:127.0.0.1:5434 melehost
 export DB_PASSWORD=$(ssh melehost "docker exec ami_postgres printenv POSTGRES_PASSWORD")
 export DATABASE_URL="postgresql+psycopg2://postgres:${DB_PASSWORD}@127.0.0.1:5434/ami_trade"
 export USE_REAL_MARKET_DATA=true
+
+# DeepInfra (CR240 — hosted-provider evaluation): codebase's own spelling,
+# no trailing A, see .env.
+export DEEPINFR_API_KEY=$(python3 -c "import re; print(re.search(r'^DEEPINFR_API_KEY=(.+)\$', open('../.env').read(), re.M).group(1))")
 ```
+
+**Every one of the exports above must be literal shell exports, not left to
+`.env`.** `backend/.env` does not exist — the repo's real `.env` is at the
+repo root, one level up, and `Settings.model_config`'s `env_file=".env"` is
+resolved relative to CWD (`backend/`), so it silently loads nothing and
+falls back to class defaults with **no error**. This bit `room_ticker_batch.py`
+live 2026-09-26: `DATABASE_URL` fell back far enough to trip `db/session.py`'s
+solo-dev sqlite fallback, and `USE_REAL_MARKET_DATA` fell back to `False`
+(silent mock-walk data) — see
+[RES009 doc 10](../../Research/RES009_room_llm_consistency/10_cr240_deepinfra_cross_provider_setup.md#2-backendenv-does-not-exist--settings-silently-missed-the-real-one)
+for the full story. `room_ticker_batch.py` now refuses to run on mock market
+data unless `--allow-mock-market-data` is passed explicitly.
 
 `room_llm_audit_trace.py` doesn't need `DATABASE_URL` — it shells out to
 `ssh melehost docker exec ami_postgres psql` directly, matching how this
@@ -175,7 +207,19 @@ python3 ../docs/tools/room_investigation/room_agent_replay.py \
   deliberately for single-call, non-Room probes).
 - **vLLM only reaches from the office LAN** (`192.168.20.74:8000`) — these
   scripts will not work from a remote worktree/cloud sandbox for the vLLM
-  provider; Kimi works from anywhere with the Open Platform key.
+  provider; Kimi and DeepInfra work from anywhere with the right key.
+- **DeepInfra's base URL is NOT the same string in the two DeepInfra call
+  paths in this toolkit** — `room_kimi_gateway.py`'s `force_deepinfra_gateway()`
+  (used by `room_ticker_batch.py`/`room_risk_score_sweep.py`, which go
+  through `OpenAICompatibleProvider`, always POSTing to
+  `"{base_url}/v1/chat/completions"`) needs the **bare host**
+  (`https://api.deepinfra.com`); `room_agent_replay.py`'s standalone
+  `_call_deepinfra` builds its own path and needs
+  `https://api.deepinfra.com/v1/openai` instead. Mixing these up 404s every
+  call — and the Room's scripted-fallback path silently absorbed that 404
+  rather than crashing, live 2026-09-26 (see RES009 doc 10) — always check
+  the log for real `provider=deepinfra` completions, not just "the script
+  didn't crash," when verifying a DeepInfra run actually worked.
 - **A full-Room repeat costs real wall-clock time** — roughly 5-6 min/draw
   at the full 12-agent pipeline with Kimi thinking disabled (vLLM is
   typically faster, LAN-direct). 5 repeats is ~25-30 min; budget accordingly
