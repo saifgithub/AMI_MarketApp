@@ -188,14 +188,22 @@ def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list
     }
 
 
-def _extract(text: str, pattern: re.Pattern | None, json_key: str | None = None) -> str | None:
+def _extract(text: str | None, pattern: re.Pattern | None, json_key: str | None = None) -> str | None:
     """`portfolio_manager` (CR240 PM-vote replay, 2026-09-27) answers in JSON
     (`{"action": "APPROVE", ...}`), not the `Side:`/`[STANCE: ...]` tag shape
     every other agent uses — pass --extract-json-key action for it. A
     trailing disclaimer line ("Worked example — classroom simulation...")
     sometimes follows the JSON block, so this parses only the first
     balanced-looking `{...}` span, not the whole string.
+
+    `text` can genuinely be `None` — hit live in a CR240 hybrid-CoT test
+    (2026-09-27): one vLLM draw returned `message.content: null` with only
+    ~10 completion tokens, no error status, aborting the whole batch on an
+    unguarded `.find()`. Treat it the same as "couldn't extract" rather than
+    crashing — a single bad draw must not lose the other N-1.
     """
+    if text is None:
+        return None
     if json_key:
         start = text.find("{")
         if start == -1:
@@ -275,12 +283,19 @@ def main() -> int:
     print(f"=== {args.label} [{args.provider}{temp_note}{model_note}] ({len(system_prompt)} char system_prompt) ===")
     draws = []
     for i in range(args.repeats):
-        if args.provider == "kimi":
-            out = _call_kimi(api_key, system_prompt, messages, args.max_tokens)
-        elif args.provider == "vllm":
-            out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature, args.max_tokens)
-        else:
-            out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature, args.max_tokens)
+        try:
+            if args.provider == "kimi":
+                out = _call_kimi(api_key, system_prompt, messages, args.max_tokens)
+            elif args.provider == "vllm":
+                out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature, args.max_tokens)
+            else:
+                out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature, args.max_tokens)
+        except Exception as exc:  # noqa: BLE001 — one bad draw (transport error, null content, malformed
+            # response) must not lose the other N-1; record and continue, matching
+            # room_kimi_gateway.py's run_one_ticker's own "record and continue" pattern.
+            print(f"  draw {i + 1}/{args.repeats}: ERROR — {exc!r}")
+            draws.append({"draw": i + 1, "extracted": None, "full_text": None, "usage": {}, "error": repr(exc)})
+            continue
         extracted = _extract(out["content"], pattern, json_key=args.extract_json_key)
         usage = out.get("usage") or {}
         usage_note = ""
