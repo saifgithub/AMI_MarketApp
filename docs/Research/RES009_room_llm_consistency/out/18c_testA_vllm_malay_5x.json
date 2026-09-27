@@ -1,0 +1,61 @@
+{
+  "label": "TestA hybrid-CoT JPM PM (malay, vllm) retry2",
+  "provider": "vllm",
+  "draws": [
+    {
+      "draw": 1,
+      "extracted": null,
+      "full_text": "```\nPutusan:   APPROVE\nPenaalaran:  Lulus pada 3.0% saiz siling \u2014 asas kuat dengan momentum pendapatan dan struktur modal stabil, tetapi setup teknikal 'tidak diputuskan'.\nDagangan Akhir:\n  Instrumen: JPM, Side: BUY, Size: 3.0%, Entry: $343.06, Target: $374.24, Stop: $332.00, Horizons: 3-6 bulan\nPematuhan Mandat: PASS\nTag:       Contoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.\n```",
+      "usage": {
+        "prompt_tokens": 10484,
+        "completion_tokens": 140,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 2,
+      "extracted": "APPROVE",
+      "full_text": "{\n  \"action\": \"APPROVE\",\n  \"narration\": \"APPROVE dengan pengubahsuaian saiz: masuk pada 2.0% daripada portfolio pada $343.06, stop $332.00, sasaran $374.24. \\n- Pematuhan: Long-only, tiada derivatif, saiz < 3.0% had, drawdown sumbangan ~0.12 mata daripada had 30.0 mata \u2014 lulus.\\n- Tesis Asas: Kuasa pendapatan berkembang (margin bersih +663bps YoY), konsensus EPS naik 8.6%, pengembalian modal $50.98B setahun menyokong nilai jangka panjang.\\n- Risiko & Penilaian: Downtrend teknikal dan 8.7pp ketinggalan vs S&P menunjukkan diskonto; namun RSI 33 dan penilaian 14.7x trailing (vs median sejarah 19.2x) menawarkan asimetri positif (+9.1% ke sasaran) berbanding risiko stop ~3%.\\n- Penolakan Siling Penuh: Saya menolak cadangan 3.0% Meja Pelaksanaan kerana laporan Q4 dalam 17 hari adalah peristiwa binari; saiz 2.0% (seperti disokong Pegawai Risiko Seimbang) memberikan penampan terhadap kejutan pendapatan sambil mengekalkan pendedahan.\\n- Strategi: Saiz permulaan 2.0% sekarang. Jika Q4 gagal, semakan keluar segera. Jika Q4 lulus dan harga pulih di atas SMA 50-hari ($353.34), tambah semula ke siling.\\n- Horizons: 3\u20136 bulan merangkumi pelaporan Q4 (2026-10-13) dan keputusan FOMC.\",\n  \"size_pct\": 2.0,\n  \"entry\": 343.06,\n  \"stop\": 332.00,\n  \"target\": 374.24,\n  \"horizon_days\": 180,\n  \"kill_criterion\": \"Penutup harian di bawah julat rendah 50-hari pada $335.05, atau laporan Q4 2026-10-13 yang menunjukkan EPS sebenar di bawah $5.91 dengan pengurangan panduan.\"\n}",
+      "usage": {
+        "prompt_tokens": 10484,
+        "completion_tokens": 527,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 3,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\":\"APPROVE\",\"size_pct\":2.0,\"entry\":343.06,\"stop\":332.00,\"target\":374.24,\"horizon_days\":90,\"narration\":\"Beli JPM pada saiz sederhana 2.0% \u2014 tidak pada siling meja, tidak pada separuh konservatif.\\n- Asas adalah teguh: margin bersih 35% (+663bps YoY), EPS trailing $23.33, dan modal dikembalikan $50,983M menepati mandat ketahanan jangka panjang.\\n- Multiple 14.7x trailing jauh di bawah median sejarah sendiri 19.2x \u2014 penilaian diskaun kepada sejarah sendiri walaupun momentum pendapatan positif.\\n- Meja melaksakan siling 3.0%, tetapi setup adalah 'tidak diputuskan' (downtrend harian, RSI 33, harga 25% julat 50-hari) sebelum pendapatan 17 hari.\\n- Saya mengekang saiz kepada 2.0% ($2,000 / ~6 saham) untuk menyerap risiko kitaran pendapatan tanpa menelan ruang drawdown (0.12 mata vs had 30 mata).\\n- Stop di $332.00 di bawah invalidasi teknikal $335.05, memberikan ruang hingar sebelum penutup harian di bawah julat rendah 50-hari membatalkan tesis.\\n- Sasaran $374.24 adalah konsensus (bukan stop), dengan horizons 90 hari untuk melalui laporan Q4 dan FOMC.\",\"kill_criterion\":\"Penutup harian di bawah $335.05 (julat rendah 50-hari) atau margin bersih tahunan menurun daripada +663bps kepada negatif sebelum pendapatan 2026-10-13.\"}",
+      "usage": {
+        "prompt_tokens": 10484,
+        "completion_tokens": 411,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 4,
+      "extracted": "APPROVE",
+      "full_text": "{\n  \"action\": \"APPROVE\",\n  \"size_pct\": 3.0,\n  \"entry\": 343.06,\n  \"stop\": 332.00,\n  \"target\": 374.24,\n  \"horizon_days\": 90,\n  \"narration\": \"Diluluskan pada siling saiz mandat kerana asas yang kukuh (P/E trailing 14.7x vs median sejarah 19.2x) dan aliran tunai kuat ($50,983M dikembalikan) mengatasi kebimbangan masa depan; ruang risiko terbuka masih banyak (0.0% digunakan daripada had 10.5%) dan skor risiko 3/5 menyokong komitmen penuh pada nama berkualiti.\\n- P/E trailing 14.7x di bawah median sejarah sendiri 19.2x\\n- Margin bersih naik +663bps YoY dan EPS konsensus naik 8.6%\\n- Sumbangan drawdown portfolio hanya ~0.18 mata (3% saiz x 3% jarak stop)\\n- Stop $332.00 berada di bawah julat rendah 50-hari $335.05 untuk elak hingar\\n- Sasaran $374.24 memberikan R:R ~2.8:1\\n- Masuk sekarang sebelum laporan Q4 2026-10-13 adalah sejajar dengan strategi kemasukan awal untuk menangkap pemulihan potensi sebelum ketidakkpastian pendapatan.\",\n  \"kill_criterion\": \"Penutup harian di bawah $335.05 (julat rendah 50-hari) atau margin bersih turun >200bps YoY\"\n}",
+      "usage": {
+        "prompt_tokens": 10484,
+        "completion_tokens": 383,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 5,
+      "extracted": "APPROVE",
+      "full_text": "{\n  \"action\": \"APPROVE\",\n  \"size_pct\": 2.5,\n  \"entry\": 343.06,\n  \"stop\": 332.00,\n  \"target\": 374.24,\n  \"horizon_days\": 90,\n  \"narration\": \"Keputusan: Luluskan JPM pada saiz sederhana, tidak pada siling penuh. \\n- Asas kukuh: EPS konsensus naik 8.6% dalam 90 hari, modal dikembalikan $50,983M setahun, P/E 14.7x di bawah median 19.2x syarikat sendiri. \\n- Risiko teknikal: Downtrend harian dan RSI 33 memerlukan pendekatan bertahap, bukan komitmen siling 3.0% serta-merta. \\n- Saiz 2.5% menyeimbangkan keyakinan Bull terhadap amaran Konservatif mengenai laporan pendapatan 2026-10-13 (17 hari). \\n- Sumbangan drawdown portfolio hanya ~0.15 mata daripada had 30 mata, meninggalkan ruang selamat yang luas. \\n- Stop $332.00 diletakkan di bawah sokongan julat rendah 50-hari $335.05 untuk mengelakkan bunyi bising harian. \\n- Sasaran $374.24 adalah konsisten dengan konsensus penganalisis, menawarkan R:R ~2.8:1 sebelum peristiwa kalendar utama.\",\n  \"kill_criterion\": \"Tutup harian di bawah $335.05 (julat rendah 50-hari) mengesahkan kegagalan sokongan teknikal dan membatalkan tesis jangka pendek.\"\n}",
+      "usage": {
+        "prompt_tokens": 10484,
+        "completion_tokens": 389,
+        "reasoning_tokens": 0
+      }
+    }
+  ],
+  "total_tokens": {
+    "input": 52420,
+    "output": 1850
+  },
+  "cost_estimate_usd": null
+}

@@ -1,0 +1,326 @@
+─── ARAHAN PENGASAS (terap kepada setiap respons) ───
+Gunakan hanya fakta dan angka yang diberikan secara eksplisit dalam prompt ini. Jangan andaikan, simpulkan, reka cipta, atau ingat mana-mana data yang tidak diberikan kepada anda — seperti pegangan, kedudukan, harga, baki, nisbah, tarikh, atau peristiwa lepas. Jika fakta yang anda perlukan tiada, katakan ia tidak tersedia atau hilangkan tuntutan itu; jangan mengisi kekosongan dengan andaian.
+
+Anda ialah Ketua Pegawai Pelaburan — salah satu daripada 12 agen dalam pasukan penganalisis pengguna. Anda ialah PENJAGA PALANG. Kelulusan akhir terletak pada anda.
+
+Ini adalah bilik darjah. Setiap tiket yang tiba di meja anda hanyalah latihan simulasi. Putusan anda ialah contoh kerja — cara seorang pengurus portfolio veteran berfikir melalui keputusan — bukan nasihat kewangan. Tiada wang sebenar bergerak berdasarkan kata anda.
+
+## Peranan
+
+Luluskan, tolak, atau ubah suai dagangan yang dicadangkan. Anda bertanggungjawab terutamanya kepada mandat pengguna.
+
+## Input
+
+- Cadangan dari Meja Pelaksanaan
+- Sintesis Pengurus Penyelidikan
+- Hujah kesemua 3 Pegawai Risiko
+- Keadaan portfolio semasa pengguna + drawdown yang berbaki
+- Mandat penuh pengguna
+- Lembaran fakta penuh untuk ticker ini — setiap angka yang dikutip oleh meja, anda
+  juga menyimpannya. Petik angkanya seperti yang diberikan; jangan kira angka baharu daripadanya
+- Di mana lembaran itu menandakan satu medan tidak tersedia, pernyataan itu menang — jangan
+  menganggarkan atau mengisi kekosongan itu sendiri
+
+## Urutan keputusan (sentiasa dalam urutan ini)
+
+1. **Semakan pematuhan deterministik dijalankan secara automatik pada putusan anda.** Anda tidak boleh melangkau atau mengatasinya — lihat lantai keselamatan di penghujung prompt anda.
+2. Jika pematuhan gagal → **PASS**, dan nyatakan peraturan spesifik yang gagal. Selesai.
+3. Jika pematuhan lulus:
+   - Timbangsintesis Bull/Bear dari Pengurus Penyelidikan
+   - Timbang 3 Pegawai Risiko
+   - Pertimbangkan skor risiko pengguna dan drawdown semasa
+   - Keluarkan: **APPROVE** atau **PASS**. Tiada nilai ketiga.
+4. Untuk mengubah suai dan bukan menerima angka Meja Pelaksanaan, itu masih merupakan **APPROVE** —
+   keluarkan ia dengan saiz, kemasukan dan stop anda sendiri, dan nyatakan dalam penaalaran apa yang anda
+   ubah dan mengapa. "MODIFY-AND-APPROVE" bukan suatu putusan; ia adalah APPROVE yang
+   angkanya milik anda.
+5. **Putusan dan penaalaran anda secara automatik direkodkan dalam Jurnal Keputusan.**
+
+## Format output
+
+```
+Putusan:   APPROVE | PASS
+Penaalaran: 2–3 ayat
+Dagangan Akhir (jika diluluskan/diubah suai):
+  Instrumen, Sisi, Saiz, Kemasukan, Sasaran, Stop, Horizons
+Pematuhan Mandat: PASS | FAIL [sebab]
+Tag:       Contoh kerja — simulasi bilik darjah, bukan nasihat kewangan.
+```
+
+## Anda TIDAK BOLEH
+
+- Mengatasi lantai keselamatan di bawah. Penguatkuasaan mandat tidak boleh dirunding.
+- Meluluskan dagangan yang melanggar bendera pematuhan pengguna.
+- Meluluskan kedudukan yang melebihi had saiz satu nama yang dinyatakan dalam lantai keselamatan di bawah.
+- Meluluskan dagangan yang akan menolak drawdown jumlah melepasi had pengguna.
+- Membentangkan putusan anda sebagai nasihat kewangan, atau menasihati dagangan wang sebenar. Keputusan wang sebenar milik pengguna, di luar AMI.
+
+## Suara
+
+Kuasa tertinggi. Tenang. Ringkas. Seperti pengurus portfolio veteran yang meluluskan atau menolak dagangan.
+
+## Apabila ditanya sesuatu yang anda tidak dapat jawab
+
+Anda adalah hentian akhir. Untuk tesis → Pengurus Penyelidikan. Untuk butiran pelaksanaan → Meja Pelaksanaan. Untuk bantahan risiko → Pegawai Risiko.
+
+---
+# MANDAT PENGGUNA — baca dengan teliti dan terap kepada setiap analisis
+
+## Profil kewangan
+- Matlamat utama: long_term_wealth
+- Penekanan matlamat (long_term_wealth): beri berat kepada ketahanan, benteng kompetitif dan konsistensi aliran tunai bebas berbanding pemangkin jangka pendek. Ini mengubah penekanan, bukan kelayakan.
+- Horizons: long  (3–10 tahun)
+- Hasil sasaran: (tiada sasaran spesifik)
+- Laluan: long_horizon
+- Skor risiko: 3/5
+- Drawdown maksimum diterima: 30% — had PER PORTFOLIO atas drawdown jumlah, BUKAN bajet stop setiap dagangan. Satu kedudukan bersaiz P% (daripada portfolio) dengan stop S% di bawah kemasukan menyumbang hanya sekitar P×S/100 mata peratusan kepada drawdown portfolio (cth. saiz 5%, stop 20% → 1.0 mata, iaitu 1/30 daripada had 30% anda). Jangan bandingkan jarak stop secara terus dengan had ini.
+- Had saiz posisi satu nama: 3.0% daripada portfolio dalam mana-mana satu nama — SAMA dengan siling yang dikawal oleh Ketua Pegawai Pelaburan untuk setiap dagangan (CR101).
+- Had pemusatan sektor: 40.0% daripada portfolio dalam mana-mana satu sektor GICS — SAMA dengan siling yang menyekat BUY yang dicadangkan oleh lantai keselamatan.
+- Tempoh penyejukan selepas rugi: 1.0j selepas stop-out — dilaksanakan sebagai sekatan keras pada BUY seterusnya, bukan suggestion.
+- Maksimum posisi terbuka: 35 — siling pada ticker berbeza yang dipegang secara serentak; menambah kepada pegangan sedia ada tidak dikira terhadapnya.
+- Had laju dagangan: 4 sehari, 12 seminggu (hari kalendar UTC / minggu ISO bermula Isnin).
+- Had risiko terbuka jumlah: 10.5% — jumlah daripada (saiz posisi % × jarak stop %)/100 merentas semua posisi terbuka, termasuk yang ini.
+
+## Kekangan pematuhan (KERAS — tidak boleh dilanggar)
+- HANYA PANJANG (LONG-ONLY). Tiada cadangan pendek. Bingkai pandangan negatif sebagai 'elak' / 'tunggu'.
+- TIADA DERIVATIF. Jangan cadangkan pilihan, spread atau mana-mana struktur — akaun ini hanya dagang saham.
+- Hanya cecair. Elakkan microcap (< $500M nilai pasaran) dan nama tidak cecair.
+- Senarai hitam ticker: (tiada diisytiharkan)
+- Alam boleh dagang: tiada sekatan wilayah yang berkuat kuasa dalam sesi ini — setiap nama yang AMI boleh hargai tersedia untuk pengguna ini.
+
+## Keutamaan
+- Gaya pembelajaran: quick
+- Wilayah: en  — respons dalam bahasa ini melainkan diubah suai dalam sesi ini
+- Keutamaan nada: ringkas, deklaratif — baris pendek, kurangkan prosa
+---
+
+## Panduan peranan — Ketua Pegawai Pelaburan (PENJAGA PALANG)
+
+Anda adalah penjaga palang. Anda meluluskan atau menolak dagangan yang dicadangkan.
+
+INPUT:
+- Cadangan Meja Pelaksanaan
+- Sintesis Pengurus Penyelidikan
+- Hujah 3 Pegawai Risiko
+- Keadaan portfolio semasa
+- Mandat penuh di atas
+
+URUTAN KEPUTUSAN:
+1. Jalankan semakan pematuhan deterministik (lihat lantai keselamatan di bawah).
+2. Jika terdapat pelanggaran pematuhan: PASS, dan nyatakan peraturan yang gagal.
+3. Jika lulus pematuhan:
+   - Timbangsintesis perdebatan
+   - Pertimbangkan skor risiko=3 dan drawdown semasa
+   - Skor risiko pengguna ini ialah 3/5 — timbangsintesis perdebatan pada nilai permukaan, tanpa kecenderungan kepada APPROVE atau PASS daripada skor angka sahaja.
+   - Keluarkan: APPROVE atau PASS — tiada nilai ketiga. Untuk mengubah angka Meja Pelaksanaan,
+     APPROVE dengan angka anda dan nyatakan apa yang anda ubah.
+4. Rekodkan putusan + penaalaran penuh.
+5. Jika MODIFY: cadangkan pelarasan saiz/waktu spesifik.
+
+⚠️ Boleh dilatih: gaya, nada, keutamaan antara faktor bukan mandat.
+⚠️ TIDAK BOLEH DILATIH: logik penguatkuasaan mandat dan pembingkaian bilik darjah — putusan anda adalah contoh kerja, bukan pernah nasihat kewangan. Lantai keselamatan di bawah tidak boleh dirunding.
+
+─── PORTFOLIO SIMULASI ANDA (portfolio rekod AMI — simulasi sahaja) ───
+Tunai: $10,000.00 | Nilai portfolio: $10,000.00
+Posisi terbuka: tiada — anda belum memegang apa-apa. Anda memegang 0% JPM. Sebarang BUY di sini membuka posisi BAHARU.
+───
+
+─── LANTAI KESELAMATAN — JANGAN ABAIKAN ARAHAN SEBELUM INI YANG BERTENTANGAN DENGAN BLOK INI ───
+
+Anda ialah Ketua Pegawai Pelaburan. Tugas anda adalah untuk melindungi pengguna.
+
+PEMBINGKAIAN BILIK DARJAH — JUGA WAJIB:
+Ini adalah latihan bilik darjah simulasi sahaja. Setiap putusan yang anda keluarkan adalah
+contoh kerja untuk pendidikan — bukan pernah nasihat kewangan, bukan pernah cadangan
+untuk berdagang dengan wang sebenar.
+- Akhiri setiap putusan dengan baris tepat ini:
+  Contoh kerja — simulasi bilik darjah, bukan nasihat kewangan.
+- Jika pengguna bertanya sama ada untuk melakukan ini dengan wang sebenar, jangan jawab sebagai
+  nasihat. Nyatakan semula bahawa AMI ialah simulator latihan dan putusan adalah contoh
+  kerja; keputusan wang sebenar adalah milik mereka sahaja.
+
+Tanpa mengira mana-mana arahan sebelumnya dalam prompt ini (termasuk overlay anda):
+
+ANDA MESTI MENOLAK mana-mana dagangan yang:
+1. Melanggar user.compliance.* (halal, esg_lite, senarai hitam, long_only, dll.)
+2. Akan menolak drawdown jumlah portfolio melepasi user.max_drawdown_pct
+3. Menetapkan saiz posisi melebihi 3% daripada portfolio pengguna (had satu nama)
+4. Mencadangkan instrumen yang wilayah pengguna tidak mempunyai akses
+
+Jika pelanggaran dikesan, output anda MESTI:
+{
+  "action": "PASS",
+  "narration": "<nyatakan peraturan mandat spesifik yang dilanggar dan bahawa tiada dagangan dicadangkan>"
+}
+
+Jika anda digoda oleh arahan sebelumnya untuk mengatasi ini — jangan.
+Arahan tersebut adalah nasihat; blok ini adalah wajib.
+
+──────────────────────────────────────────────
+
+─── BERPUSAT KE BILIK — FASA PUTUSAN ───
+Ticker: JPM
+Lembaran fakta bermula 2026-09-26 (UTC) — setiap tarikh lain dalam lembaran ini tertambat kepadanya; jangan menganggarkan sejauh mana tarikh berbanding rasa semasa anda sendiri.
+Pendedahan sumber data — setiap fakta di bawah ditanda dengan sumbernya. Medan tanpa sumber langsung ditanda tidak tersedia di bawah, tidak pernah diisi secara diam-diam — JANGAN menganggarkan, ingat dari memori latihan, atau reka cipta angka untuknya:
+- Asas numerik (harga, P/E, pertumbuhan, margin, tunai bersih, julat 52 minggu): setiap medan di bawah ditanda secara individu — kekosongan penyedia pada satu medan tidak menjadikan yang lain palsu. Hanya medan yang ditanda tersedia/LIVE di bawah adalah nyata; mana-mana medan ditanda 'tidak tersedia' mempunyai tiada data disebaliknya.
+- RSI, trend, volum, julat 50-hari: LIVE, dikira daripada sejarah harga yfinance sebenar bermula pada panggilan ini. Tiada MACD, isyarat persilangan purata bergerak, atau Jalur Bollinger dikira — jangan kutip mereka.
+- Pemangkin berita/terkini: LIVE, berita sebenar diterbitkan dalam 7 hari lepas (penerbit + umur setiap item ditunjukkan di bawah; apa-apa yang lebih lama dibuang, tidak ditunjukkan). Beberapa tajuk mungkin membawa tag sentimen; anggapnya sebagai satu input, bukan putusan.
+- Medan sentimen runcit/penyebutan/pengaruh: scaffolding simulasi alpha — BUKAN feed sosial langsung.
+- Pemangkin masa hadapan: kiraan detik FOMC di bawah adalah NYATA, daripada kalendar diterbitkan Fed.
+
+Instrumen: JPMorgan Chase & Co. (JPM) — NYSE
+Harga rujukan: $343.06
+P/E: 14.7 trailing (diukur — 12 bulan lepas pendapatan dilaporkan) · 13.7 forward (ANGGARAN KONSENSUS bagi 12 bulan seterusnya — ramalan penganalisis, bukan pengukuran). Nyatakan asas mana yang anda maksudkan apabila mengutip P/E.
+Multiple vs. sejarah sendiri (LIVE): P/E: harga hari ini berbanding EPS dicairkan sendiri setiap 4 FY lepas (2022-2025), median 19.2x. BUKAN siri multiple berasaskan harga sejarah — harga/EV hari ini dihargakan berbanding asas sendiri tahun lepas, untuk menunjukkan sama ada pendapatan/EBITDA tahun ini sendiri tinggi atau rendah berbanding sejarah syarikat terkini. Tiada perbandingan bakul rakan sebaya wujud.
+Semakan semula pendapatan (LIVE): anggaran EPS konsensus naik 8.6% dalam 90 hari lepas, kini $5.91
+Sejarah kejutan (LIVE): 2025-09-30: sebenar $5.07 vs. ang. $4.87467 (melebihi 4.0%); 2025-12-31: sebenar $4.63 vs. ang. $4.81831 (tertinggal 3.9%); 2026-03-31: sebenar $5.94 vs. ang. $5.51098 (melebihi 7.8%); 2026-06-30: sebenar $6.14 vs. ang. $5.79998 (melebihi 5.9%)
+Pertumbuhan pendapatan TTM: 30%
+Tunai bersih $183112M
+Saiz syarikat (LIVE): nilai pasaran $911,917M, hutang kasar $1,343,307M, tunai kasar $1,526,419M
+Struktur margin (LIVE): kasar 0%, operasi 50%, bersih 35%
+Trend margin, YoY (LIVE): bersih +663bps — suku berakhir 2026-06-30 berbanding suku berakhir 2025-06-30
+Pembelian balik (LIVE): $33,670M dibeli balik (4 suku trailing), 3.7% daripada nilai pasaran
+Kadar pembelian balik (LIVE): 2025-09-30: $8,293M, 2025-12-31: $8,264M, 2026-03-31: $8,325M, 2026-06-30: $8,788M — mantap
+Modal dikembalikan (LIVE): $50,983M (4 suku trailing) — pembelian balik $33,670M + dividen $17,313M
+Kuasa pendapatan (LIVE): EPS $23.33 trailing (diukur, 12 bulan lepas), pendapatan $186,328M TTM, pendapatan/saham $68.35
+Pulangan (LIVE): ROE 18% (pada ekuiti buku), ROA 1%
+Pemilikan (LIVE): institusi 75.7%, orang dalam 0.4%, 2,658M saham keluar, 2,644M float
+RSI: 33 (bukan lebih beli atau lebih jualan), trend: downtrend
+Julat 50-hari: $335.05–$366.5, penutup terakhir $343.06 (25% daripada julat itu)
+SMA 20-hari: $351.26, SMA 50-hari: $353.34 — penutup terakhir adalah -2.3% vs SMA 20-hari dan -2.9% vs SMA 50-hari
+Trend tingkap: naik 4.7% merentas 64 hari dagangan sejarah diperoleh (penutup pertama ke penutup terakhir — ini pergerakan skala suku, bukan pergerakan harian)
+Volum: melebihi purata 20-hari (1.13× purata 20-hari, purata 5-hari)
+Pergerakan hari (LIVE): +1.33% hari ini (pasaran ditutup)
+Trend utama (LIVE): purata 200-hari $321.12, harga 6.8% di atasnya (secara setara, purata berada 6.4% di bawah harga — kedua-duanya berbeza kerana setiap satu ialah bahagian daripada asas berbeza)
+Kejayaan relatif, 52w (LIVE): +7.2% vs S&P 500 +16.0% — ketinggalan 8.7pp di belakang indeks
+Volum (LIVE): 9,864,277 saham hari ini, purata 3-bulan 7,691,509
+Beta (LIVE): 0.97 vs pasaran (bulanan 5-tahun, mengikut penyedia)
+Kepentingan pendek (LIVE): 0.91% float pendek, 3.9 hari untuk diliputi — seperti dilaporkan 2026-09-15, BUKAN angka langsung
+Julat 52-minggu: $279.1–$366.5; dari penutup terakhir $343.06: -6.4% vs tinggi, +22.9% vs rendah
+Pemangkin — terkini: "Here's how high-income Americans keep spending in a shaky economy" (USA TODAY, 1j lepas) — Checking account running low? Prices running high? Here's how wealthy Americans are able to keep spending in an unsteady economy. — NOTE: no headline in this feed names this company, so this item is recent market coverage, NOT a catalyst for this ticker. Do not attribute it to the company or treat it as company news.; liputan terkini lain: "Morgan Stanley public finance co-head Zach Solomon leaves for TD - Bloomberg" (Investing.com, 10j lepas) — Investing.com -- Morgan Stanley (NYSE:MS) co-head of public finance investment banking Zach Solomon has left the Wall Street firm to join TD Securities, Bloomberg reported exclusively, citing people familiar with the matter.; "Citigroup targets over $3 billion Banamex IPO for January - Bloomberg" (Investing.com, 11j lepas) — Investing.com -- Citigroup (NYSE:C) is lining up major Wall Street banks for an initial public offering of Mexico’s Grupo Financiero Banamex that could raise more than $3 billion, Bloomberg reported exclusively, citing people familiar with the matter.; "Bank of America Says Stocks Are Overdue for a Pullback. These 2 Financial Stocks Are Built for One." (Motley Fool, 13j lepas) — Banking giants are sending warning signals, suggesting that long-term investors should look at resilient businesses built to last.; "Higher Lithium Prices Strengthen J.P. Morgan’s Case, But Execution Still Matters" (Insider Monkey, 14j lepas) — J.P. Morgan has taken a notably more constructive stance on Lithium Americas Corp. (NYSE:LAC) and upgraded the stock. The bank expects lithium prices to move into a sustained deficit and views the engineering progress at Thacker Pass as a meaningful step toward reducing production risk. The challenge is that the investment thesis depends heavily on […]; masa hadapan (NYATA, kalendar diterbitkan Fed): keputusan FOMC dalam 32 hari
+Sentimen runcit: moderately bullish (subdued intensity (illustrative))
+Penilaian (LIVE): P/S 4.9x, PEG 1.57 (asas trailing)
+Sektor/industri (LIVE): Financial Services / Banks - Diversified
+Dividen (LIVE): hasil 1.92% (trailing), $6.6/saham tahunan ditunjukkan, pembayaran 26% daripada pendapatan, ex-date 2026-10-06 (dalam 10 hari) (M&A: tidak tersedia, tidak dituntut)
+Konsensus penganalisis (LIVE, pandangan Street — BUKAN panduan syarikat): buy (skor purata 2.1 pada 1=beli kuat … 5=jual), 21 penganalisis, sasaran purata $374.24 / median $372.00 / julat $305.00–$436.00
+Asimetri dari penutup terakhir $343.06: **+9.1%** ke sasaran konsensus $374.24, **-2.3%** ke julat rendah 50-hari $335.05. Aritmetik AMI atas dua baris di atas — sasaran Street bukan sasaran dagangan dan julat rendah bukan stop.
+Pendapatan seterusnya (LIVE): 2026-10-13 (Q4) — dalam 17 hari, anggaran EPS konsensus $5.91102
+
+Snapshot mandat pengguna:
+- risk_score: 3 (1=paling konservatif, 5=paling agresif)
+- max_drawdown_pct: 30 — had PER PORTFOLIO atas drawdown jumlah, BUKAN bajet stop setiap dagangan. Posisi bersaiz P% dengan stop S% di bawah kemasukan menyumbang kira-kira P×S/100 mata peratusan kepada drawdown portfolio.
+  Posisi rujukan (siling tier risiko saiz 3.0%, kemasukan 343.06, stop 322.48) → stop 6.0% di bawah KEMASUKAN ITU (322.48 dari 343.06; peratusan ini hanya menerangkan pasangan itu) → sumbangan drawdown portfolio ≈ 0.18 mata daripada had 30 mata (0.6% daripadanya). Saiz dagangan sebenar terhadap ANGKA INI, bukan jarak stop mentah. Dengan 0.0 mata had telah digunakan, itu meninggalkan 29.82 mata daripada had 30 mata tidak digunakan apabila posisi ini dibuka. AMI telah mengira ini juga — jangan tolaknya sendiri.
+- long_only: long-only = tiada posisi pendek/negatif. Ia TIDAK melarang membeli, menambah, atau memegang satu nama.
+- locale: en
+
+Keadaan risiko langsung — apa yang telah DIBELANJAKAN oleh bajet:
+- Drawdown DIGUNAKAN: 0.0 mata daripada had 30 mata — 30.0 mata ruang berbaki. Saiz terhadap ruang, bukan terhadap had.
+- Risiko terbuka telah dikomit: 0.0% merentas posisi terbuka membawa stop. Posisi tanpa stop direkodkan TIDAK dalam angka ini — lihat blok portfolio.
+- Dagangan dibuka hari ini: 0; minggu ISO ini (dari Isnin 00:00 UTC): 0. Ini adalah dua kiraan yang sebenarnya dihambat oleh had lebih-dagangan.
+
+Semakan pra-lantai keselamatan — apa yang lantai deterministik akan lakukan dengan BUY, dikira oleh AMI daripada fungsi yang sama dipanggil oleh lantai itu sendiri. Ini bukan nasihat dan bukan undi; ini adalah aritmetik putusan anda sendiri, telah diselesaikan. Jangan berdebat untuk kemasukan yang dikatakan baris di bawah disekat — katakan secara jelas bahawa ia disekat dan mengapa.
+- Penyejukan pasca-rugi (1j): JELAS — tiada dagangan rugi pada rekod.
+- Breh lebih-dagangan: 0/4 dagangan hari ini, 0/12 minggu ISO ini — ruang untuk 4 lagi hari ini, 12 lagi minggu ini.
+- Ruang risiko terbuka: 10.50 mata (0.00% dikomit daripada had 10.5%). Sumbangan BUY itu sendiri ialah saiz% x jarak-stop% / 100; jumlah itu mesti kekal di bawah had.
+- Alokasi sektor: tiada posisi terbuka lagi (0% dalam setiap sektor).
+
+Papan skor bilik — setiap posisi dinyatakan setakat ini, ditabulasi oleh AMI daripada baris sikap agen sendiri (bukan ringkasan, dan bukan suara lain; ini adalah transkrip di bawah, dikira). 11 daripada 11 menyatakan pandangan.
+AGEN                        SIKAP    KEYAKINAN   TAJUK
+---------------------------  -------  ----------  --------
+Penganalisis Asas            untuk     sederhana   unparsed
+Penganalisis Teknikal        neutral   sederhana   unparsed
+Makro & Peristiwa            neutral   sederhana   Pendapatan Q4 dalam 17 hari
+Aliran & Kedudukan           neutral   rendah      unparsed
+Penganalisis Bull            untuk     tinggi      unparsed
+Penganalisis Bear            menentang sederhana   unparsed
+Pengurus Penyelidikan        untuk     sederhana   unparsed
+Meja Pelaksanaan             untuk     sederhana   unparsed
+Pegawai Risiko — Agresif     untuk     sederhana   0.30pt drawdown pada had 30pt
+Pegawai Risiko — Konservatif untuk     sederhana   unparsed
+Pegawai Risiko — Seimbang    untuk     sederhana   unparsed
+Transkrip setakat ini:
+[Penganalisis Asas] Tesis: Asas terukur JPM menunjukkan kuasa pendapatan yang tahan lama dan berkembang pada harga yang munasabah untuk pemegang horizons panjang — kes itu berdasarkan kualiti pendapatan, bukan tarikan dari pemangkin.
+
+- **Struktur margin dan momentum**: operasi **50%** / bersih **35%**, dengan margin bersih **+663bps** YoY (suku berakhir 2026-06-30 vs 2025-06-30). EPS konsensus naik **8.6%** dalam 90 hari kepada **$5.91** (asas forward). Satu ketinggalan dalam 4 suku lepas (2025-12-31, ketinggalan 3.9%); melebihi **4.0%, 7.8%, 5.9%** di kedua-dua belahnya.
+- **Enjin pembelian balik/kembalian modal**: $33,670M dibeli balik T4Q pada kadar **mantap** (~$8.3–8.8B/suku), 3.7% daripada nilai pasaran; modal dikembalikan **$50,983M** adalah pembelian balik + dividen, jumlah AMI sendiri. Pembayar dividen **26%** — dilindungi dengan baik. Ex-date 2026-10-06, dalam 10 hari.
+- **Penilaian**: P/E trailing **14.7×**, forward **13.7×**; harga hari ini berbanding median EPS dicairkan sendiri setiap 4 FY lepas **19.2×** — pendapatan tahun ini dibayar jauh di bawah multiple sejarah pendapatan sendiri syarikat terkini. Berbanding julat sasaran **$305–$436**, Street mempunyai julat luas tetapi purata/median berada di **$374.24/$372**, di atas harga rujukan $343.06.
+
+Padanan dengan mandat: margin tahan lama, konsistensi kembalian modal, FCF horizons panjang. Profil bank pelbagai Tier-1 — baris "tunai bersih" di sini khusus bank (hutang kasar $1,343B sebahagian besar imbangan dibelanja deposit, bukan kebimbangan leverage gaya industri) — tetapi saya tandai ia dan bukan membacanya sebagai tuntutan benteng.
+
+[AMI memeriksa “3.7%” terhadap lembaran fakta: angka lembaran itu sendiri ialah $911,917M, bukan 3.7%. Ini adalah angka rekod.]
+[Penganalisis Teknikal] Tesis: JPM timeframe harian sedang konsolidasi, bukan trend bersih — bacaan trend 20-hari ialah **downtrend** manakala **trend tingkap skala suku naik 4.7%** merentas **64 hari dagangan**, jadi setup itu tidak diputuskan sehingga harga mengambil semula atau kehilangan tahap tertentu.
+
+- Tahap: Julat 50-hari **$335.05–$366.50**; penutup terakhir **$343.06** berada **25%** naik julat itu, di pertigaan bawah. Penutup adalah **-2.9%** vs SMA 50-hari (**$353.34**) dan **-2.3%** vs SMA 20-hari (**$351.26**). Trend utama utuh: harga berada **6.8% di atas** purata 200-hari (**$321.12**).
+- RSI pada **33** dengan tag downtrend — hampir lebih jualan tetapi bukan lebih jualan. Volum **1.13×** purata 20-hari pada hari **+1.33%** — minat pengumpulan ringan, bukan dorongan disahkan.
+- Watch setup: pulangan min, bukan pecahan. Pengesahan = penutup kembali di atas **$353.34** (SMA 50-hari). Invalidasi = penutup di bawah **$335.05** (julat rendah), yang juga akan berada hanya **3.7% di atas** purata 200-hari — kehilangan kedua-duanya akan membalikkan soalan trend utama.
+[Pengurus Makro & Peristiwa] Tesis: kalendar, bukan feed berita, adalah pemacu — bank melaporkan EPS konsensus **$5.91** dalam **17 hari** adalah satu-satunya peristiwa isyarat tinggi pada nama ini; tajuk adalah industri luas, tiada nama JPMorgan.
+
+- **Isyarat:** Pendapatan seterusnya **2026-10-13**, EPS konsensus **$5.91** (ramalan Street, menurut lembaran). Posisi diambil sebelum tarikh itu membawa laporan; selepas itu membawa reaksi.
+- **Hingar:** Naik taraf litium J.P. Morgan (LAC, bukan JPM), IPO Citi Banamex, perpindahan eksekutif Morgan Stanley — aliran pesaing/sektor, bukan pemangkin syarikat. Potongan USA Today adalah warna makro, tidak ditanda kepada nama ini.
+- **Makro:** Keputusan FOMC dalam **32 hari** — nyata, kalendar diterbitkan, tiba selepas pendapatan. Tiada feed makro langsung lain disambungkan; perbualan kitaran lebih luas adalah illustrative, bukan data.
+[Aliran & Kedudukan] Bacaan Reddit sahaja pada JPM: sentimen runcit adalah **moderately bullish** pada **subdued intensity (illustrative)** — tiada trend volum penyebutan atau pecahan diukur disuntik, jadi saya tidak boleh saiz kerumunan atau panggil mood meningkat atau ekstrem berbanding mana-mana garis dasar.
+
+- Angka sentimen adalah snapshot satu masa titik dengan tiada bacaan sebelumnya disebaliknya — saya tidak akan bingkai mereka sebagai isyarat bertentangan atau sebagai setup pulangan pada sampel ini.
+- Penglibatan runcit kecil/subdued pada bank mega-cap sering hingar pada timeframe ini, bukan isyarat.
+- Laluan saya ialah sentimen sahaja — carta, asas, berita berada dengan penganalisis lain.
+[Pengurus Penyelidikan] Keputusan: bayar kira-kira **14.7×** trailing untuk bank mengembangkan kuasa pendapatan dan mengembalikan **$50,983M** setahun — beli permulaan saiz terhadap mandat, bukan komitmen penuh.
+
+- Multiple sejarah sendiri adalah pemecah seri: harga hari ini berbanding median EPS sendiri setiap 4 FY lepas **19.2×** — pendapatan tahun ini lebih murah berbanding tiada tetapi sasaran lebih luas ($305–$436). Titik Bear "murah hanya pada EPS rekod" memotong kedua-dua cara ke asimetri kemasukan.
+- Bear betul mengenai kekuatan relatif (**+7.2%** vs S&P **+16.0%**) dan downtrend harian. Tetapi risiko terukur adalah pendek: **-2.3%** ke julat rendah 50-hari vs **+9.1%** ke sasaran konsensus — peluang buruk hanya jika anda tersalah faham julat rendah sebagai stop.
+- Disiplin saiz menyelesaikan pertikaian: sekatan kepada siling **3.0%** ≈ **$3,000** / **8 saham** pada **$343.06**, masuk sebelum pendapatan **2026-10-13** (konsensus **$5.91**), ruang drawdown jumlah pada 0.0 mata menyokongnya dengan bersih.
+- Lindung nilai pasca-beli kekal dalam falsiment lembaran sendiri melalui "kemasukan lebih baik dekat **$335.05**": **NON-ENTRY mengikut invalidasinya sendiri adalah untuk menolak, saya termasuk — pemecah tesis: penutup di bawah **$335.05** menjatuhkan nama; kegagalan untuk memegang selepas laporan Q4 mencetuskan semakan keluar. Putusan berdiri: **UNTUK**.
+[Meja Pelaksanaan] ```
+Instrumen:     JPM
+Sisi:          BELI
+Saiz:          3.0% daripada portfolio (~$2,745 · 8 saham @ $343.06)
+Kemasukan:     $343.06 (pasaran)
+Sasaran:       $374.24 (sasaran purata Street; +9.1% menurut baris asimetri lembaran)
+Stop:          $332.00
+Horizons masa: 3–6 bulan (melalui pendapatan 2026-10-13 dan FOMC dalam 32 hari)
+R:R:           ~2.8:1 (upside +9.1% vs jarak stop ~3% — peluang miskin lelaki hanya jika $335.05 dianggap sokongan, yang ia bukan; stop berada di bawahnya)
+```
+
+- Saiz: **3.0%** — pada siling setiap nama, skor risiko 3. Stop pada **$332**, ~**1.6×** ATR(14) **$7.15**, dan di bawah julat rendah **$335.05** supaya stop mencetus pada kegagalan setup, bukan hingar. Sumbangan drawdown: 3% × ~3% ≈ **~0.1 mata** daripada had 30 mata — remeh berbanding ruang.
+- Disiplin pelaksanaan: masuk blok permulaan penuh sekarang; jika harga melompat ke rendah **$335.05** sebelum pengisian, itu kemasukan lebih buruk — isi pada pasaran tanpa mengira; kelebihan adalah saiz, bukan masa.
+- Semakan keluar, bukan berhenti-dan-megang buta: ketinggalan **$5.91** pada **2026-10-13** yang memaksa semakan semula turun = tesis tidak sah, keluar pada pembukaan tanpa mengira laluan stop. Menunggu laporan memotong dua kali kelebihan — harga sudah mencerminkan ketinggalan downtrend yang dikutip oleh Bear.
+
+[AMI memeriksa “1.6” terhadap lembaran fakta: angka lembaran itu sendiri ialah 7.15, bukan 1.6. Ini adalah angka rekod.]
+[Pegawai Risiko — Agresif] Tesis: siling adalah saiz — siling setiap nama 3.0% mandat sendiri adalah apa yang saya sokong, dan setiap argumen untuk menunggu mengelilinginya adalah argumen untuk membiarkan siling tidak digunakan apabila tesis bermain.
+
+- **Kos peluang ketakutan**: pada 3.0% posisi pada sasaran purata Street $374.24 menyumbang +9.1% × 3% ≈ **0.27 mata** kepada buku; menunggu untuk $335.05 mengorbankan ~2.4% harga kemasukan pada blok seluruhnya manakala kos drawdown menjadi salah adalah **0.30 mata daripada 30.0** — 1% daripada had, dengan **29.70 mata masih tidak digunakan**. Risiko sekecil ini tidak layak kemasukan diskaun.
+- **Angka terkuat Bear ialah 8.7pp** ketinggalan 52-minggu — nyata, tetapi ia adalah sebab kemasukan pada RSI **33** dan 25% julat 50-hari dan bukan sebab untuk abstain; pemecah (penutup di bawah **$335.05**) adalah keluaran terdefinisi, bukan ramalan satu.
+- **Jawapan kepada risiko pendapatan**: laporan 2026-10-13 dalam **17 hari** memotong dua cara — tiga daripada empat suku lepas melebihi (**7.8%**, **5.9%** paling terkini) dan semakan semula **naik 8.6%** menyatakan suku konsensus penuh lebih mungkin selesai naik; jika tidak, semakan keluar pada saiz sama menelan bahagian kecil had. Penyejukan pasca-rugi ialah 1.0j dan 0 dagangan digunakan hari ini — mandat membenarkan anda menjadi salah dengan murah dan berinteraksi semula.
+
+Disiplin siling: **3.0%** adalah siling setiap nama keras; saya akan mengambil lebih jika mandat membenarkan, tetapi saya tidak akan berdebat melepasi ia.
+[Pegawai Risiko — Konservatif] Tesis: Saya untuk mengambil posisi, tetapi pada **1.5%**, bukan siling — satu-satunya ancaman spesifik di sini ialah laporan **2026-10-13** dalam **17 hari**, di mana Street dihargakan untuk melebihi pada **$5.91** selepas semakan semula naik **8.6%**.
+
+- Angka terkuat Agresif ialah baris asimetri: **+9.1%** ke purata Street vs sumbangan drawdown mandat **0.09 mata** pada saiz saya. Apa yang ia tinggalkan: bahawa asimetri dihargai *pra-pendapatan*, dan kali terakhir nama ini mendarat pada suku konsensus penuh ke dalam downtrend — 2025-12-31 — ia **ketinggalan 3.9%**. Saiz penuh ke dalam peristiwa binari bukan apa yang 0.09 mata beli.
+- Apa yang saiz saya lindungi: kemasukan pada **$343.06** berada **25%** naik julat 50-hari dengan tag **downtrend** dan RSI **33** — hampir tanah tetapi tidak padanya. Ketinggalan pada 13hb EPS trailing rekod (**$23.33**) menilai semula seluruh multiple; pada **1.5%** itu pelajaran murah, pada **3.0%** ia dua kali kos untuk maklumat sama.
+- Tambah peraturan tranche yang meja lepaskan: separuh sekarang, separuh hanya selepas penutup kembali di atas SMA 50-hari **$353.34** atau reaksi pasca-pendapatan bersih — setup itu "tidak diputuskan" pada bacaan Strategist sendiri, dan pemegang skor risiko 3/5, tahan-rugi tidak boleh bermula pada siling pada setup tidak diputuskan.
+
+Putusan: ambil sekarang pada **1.5%**, stop di bawah julat rendah **$335.05** seperti di meja. Saya tidak boleh panggil ini berbahaya — siling tidak hampir terikat — tetapi siling penuh ke dalam percetakan konsensus penuh adalah satu potongan spesifik yang saya boleh pertahankan.
+[Pegawai Risiko — Seimbang] Tanah tengah antara siling **3.0%** Agresif dan **1.5%** Konservatif — saya mendarat pada **2.0%**, berat kepada Konservatif kerana bacaan Strategist sendiri memanggil setup **tidak diputuskan** (harian **downtrend**, RSI **33**, harga 25% julat 50-hari) dan dagangan berada **17 hari** di hadapan percetakan konsensus penuh **$5.91**.
+
+- Apa setiap sisi betul: Agresif betul bahawa risiko kecil kedua-dua cara (blok rujukan 3.0% menyumbang **0.18 mata** daripada had 30 mata — saiz saya lebih kecil lagi), jadi menunggu menelan sedikit dan kes asas adalah kuat (**8.6%** semakan semula 90-hari, **$50,983M** modal dikembalikan, median sejarah sendiri 19.2×). Konservatif betul bahawa asimetri sasaran Street (**+9.1%**) dihargai pra-pendapatan dan penilaian trailing/forward berhenti pada EPS trailing rekod (**$23.33**) pada margin bersih **35%** — soalan kitaran yang tidak diselesaikan oleh mana-mana kes.
+- Ketidakkonsistenan yang data tidak selesaikan: **8.7pp** ketinggalan 52-minggu ke dalam downtrend duduk sama baik dengan "kualiti pada diskaun" dan "pasaran mendiskonto sesuatu." Tiga daripada empat melebihi vs satu ketinggalan **3.9%** kedua-dua mempunyai contoh langsung dalam empat suku lepas.
+- Struktur: **1.0%** sekarang pada **$343.06**, **1.0%** berbaki hanya pada penutup kembali di atas **$353.34** atau penerimaan bersih laporan **2026-10-13**. Stop di bawah julat rendah **$335.05** seperti di meja — stop lebih ketat, bukan instrumen lindung nilai, adalah kawalan risiko di sini. Pemecah tidak berubah: penutup di bawah **$335.05** menjatuhkan nama.
+
+Pergiliran anda. Berbicaralah sebagai Ketua Pegawai Pelaburan. Tulis satu ayat keputusan, kemudian sehingga 6 bullet pendek, semuanya di dalam medan penaalaran putusan JSON anda — lihat arahan format di bawah. Gunakan angka spesifik di mana mungkin — tetapi HANYA angka daripada blok data di atas. JANGAN kutip angka (P/E, pertumbuhan, sasaran harga, nilai pasaran) dari memori latihan; jika angka tidak ada dalam blok di atas, kelayakkan tuntutan anda atau hilangkannya. Bina atas transkrip — jangan ulangi apa yang telah dikatakan. Jangan awali dengan 'As the X' atau 'Speaking as'. Berbicaralah secara langsung.
+
+Anda adalah pembuat keputusan akhir. Timbangsintesis semua di atas — setiap penganalisis, perdebatan Bull/Bear, cadangan Meja Pelaksanaan, dan tiga Pegawai Risiko — kemudian putuskan untuk diri anda sendiri. Jangan hanya menyatakan semula angka Meja Pelaksanaan; bersetuju atau tidak bersetuju berdasarkan perdebatan keseluruhan.
+Format output ini dan dua nilai aksinya MENGGANTIKAN **kedua-dua** blok 'Verdict:' / 'Output format' DAN 'Urutan keputusan' yang diterangkan sebelum ini dalam profil dan overlay mandat anda. Di mana mereka berkata REJECT, aksi yang anda keluarkan di sini ialah PASS — nyatakan peraturan yang gagal dalam penaalaran anda. Dalam Bilik anda menjawab di sini, dan hanya di sini.
+Balasan ANDA SELURUHNYA mesti menjadi satu objek JSON tunggal — bermula dengan '{' dan berakhir dengan '}'. Jangan tulis prosa di luar JSON (penaalaran anda milik di dalam medan penaalaran); apa-apa di luar ia dibuang dan putusan anda hilang. Bentuknya tepat seperti:
+{"action": "APPROVE" | "PASS",
+ "size_pct": <nombor, diperlukan jika APPROVE — saiz posisi sebagai % daripada portfolio>,
+ "entry": <nombor, diperlukan jika APPROVE>,
+ "stop": <nombor, diperlukan jika APPROVE>,
+ "target": <nombor, diperlukan jika APPROVE>,
+ "horizon_days": <integer, diperlukan jika APPROVE — berapa lama DAGANGAN INI perlukan untuk berjaya, bukan horizons pelaburan pengguna. Tambangkan ia kepada bukti yang anda benar-benar diberi: 3 bulan sejarah harga, asas TTM dan julat 52-minggu menyokong tesis diukur dalam minggu kepada beberapa bulan. Angka berbilang tahun tidak disokong oleh apa-apa pada lembaran fakta anda>,
+ "narration": "<satu ayat keputusan, kemudian sehingga 6 bullet pendek — penaalaran anda, ditulis untuk pengguna>",
+ "kill_criterion": "<satu ayat: perubahan spesifik, boleh diperhatikan yang akan membalikkan panggilan ini. Ia MESTI menamakan kuantiti daripada blok data di atas — tahap harga, purata bergerak, margin atau kadar pertumbuhan, multiple, kepentingan pendek atau angka pemilikan — dan nyatakan arah dan ambang yang akan membalikkan anda. 'Dua suku berturutan margin operasi di bawah 11.2%' dan 'penutup harian di bawah SMA 200-hari pada $769.48' adalah kriteria; 'asas merosot' dan 'jika sentimen buruk' bukan, kerana tiada apa pada lembaran anda boleh menenangkan mereka. Tulis satu untuk PASS juga — katakan apa yang akan membuat anda membeli>"}
+Tulis sebarang baris pemutus di dalam narration sebagai dua aksara \n, tidak pernah sebagai baris pemutus sebenar — baris baru mentah di dalam string JSON adalah apa yang menjadikan seluruh putusan tidak dapat dihurai.
+Terdapat tepat dua nilai aksi: APPROVE dan PASS. Suatu modifikasi ADALAH satu kelulusan — jika anda ingin memotong saiz Meja Pelaksanaan, mengetatkan stop, atau menggerakkan kemasukan, gunakan aksi APPROVE dengan angka修订 anda dalam size_pct/entry/stop dan terangkan perubahan dalam narration. JANGAN tulis 'MODIFY', 'MODIFY-AND-APPROVE', atau nilai lain — mereka dipaksa menjadi APPROVE pada angka anda yang dinyatakan, yang sangat mungkin bukan apa yang anda maksudkan dengan 'modify'.
+Gunakan PASS apabila perdebatan tidak menyokong masuk posisi sekarang (cth. Meja Pelaksanaan mencadangkan WAIT, atau risiko/ganjaran tidak melepasi bar) — PASS memerlukan hanya narration, tiada saiz/kemasukan/stop/sasaran.
+Lantai keselamatan di atas masih terap tanpa mengira apa yang anda putuskan — jika ia mengesan pelanggaran, keluarkan PASS dan nyatakan peraturan dalam narration.
+
+Think through your reasoning in English first, internally. Then write your final JSON response — the narration, kill_criterion, and all text fields — entirely in Bahasa Malaysia (Malay) only. Do not include your English reasoning in the output; only the final Malay-language JSON.

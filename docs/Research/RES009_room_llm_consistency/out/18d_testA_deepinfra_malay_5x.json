@@ -1,0 +1,61 @@
+{
+  "label": "TestA hybrid-CoT JPM PM (malay, deepinfra)",
+  "provider": "deepinfra",
+  "draws": [
+    {
+      "draw": 1,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 335.05,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Putusan: lulus BUY JPM pada saiz 2.0%, bukan siling 3.0% penuh Meja Pelaksanaan.\\n- Pematuhan lulus bersih: long-only, cecair mega-cap (nilai pasaran $911,917M), 0 dagangan hari ini, 0.0 mata drawdown digunakan, sektor 0% \u2014 tiada peraturan mandat terganggu.\\n- Setup tidak diputuskan pada bacaan Teknikal sendiri (downtrend harian, RSI 33, harga 25% julat 50-hari), jadi siling penuh 3.0% ke dalam laporan 2026-10-17 hari bersaiz penuh tidak dibenarkan; 2.0% ialah tanah tengah berstruktur 1.0% + 1.0%, dan risiko tetap kecil \u2014 sumbangan drawdown 2.0% \u00d7 ~2.4% \u2248 0.05 mata daripada 30.\\n- Kes asas kukuh dan berat mandat: margin bersih 35% (+663bps YoY), semakan semula EPS naik 8.6% dalam 90 hari, $50,983M modal dikembalikan T4Q, dan harga hari ini pada 19.2\u00d7 EPS sejarah sendiri berbanding 14.7\u00d7 trailing hari ini \u2014 asas, bukan pemangkin.\\n- Asimetri penuh: +9.1% ke sasaran konsensus $374.24 vs -2.3% ke julat rendah 50-hari $335.05; stop saya diletak tepat pada tahap invalidasi TechAnalyst itu sendiri, bukan $332 sembarangan.\\n- Bahagian kedua 1.0% hanya ditambah pada penutup kembali di atas SMA 50-hari $353.34 atau reaksi pasca-pendapatan bersih \u2014 jangan purata turun di bawah itu.\\n- Ketinggalan +7.2% vs +16.0% (52 minggu) ialah sebab untuk disiplin saiz, bukan untuk tidak hadir namanya.\",\n \"kill_criterion\": \"Penutup harian di bawah $335.05 (julat rendah 50-hari) \u2014 atau ketinggalan konsensus $5.91 pada pendapatan 2026-10-13 \u2014 membalikkan panggilan ini dan memaksa keluar/semakan segera.\"}\n\nContoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.",
+      "usage": {
+        "prompt_tokens": 12066,
+        "completion_tokens": 708,
+        "reasoning_tokens": 50
+      }
+    },
+    {
+      "draw": 2,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\", \"size_pct\": 2.0, \"entry\": 343.06, \"stop\": 335.05, \"target\": 374.24, \"horizon_days\": 90, \"narration\": \"Putusan: APPROVE pada 2.0% \u2014 bukan siling 3.0% Meja Pelaksanaan.\\n- Setup tidak diputuskan (downtrend harian, RSI 33, harga di 25% julat 50-hari) dan laporan Q4 2026-10-13 dengan anggaran $5.91 hanya 17 hari lagi \u2014 saiz penuh ke dalam konsensus yang naik 8.6% sebelum ketahui hasilnya bukan disiplin.\\n- Sumbangan drawdown pada 2.0% dengan stop $335.05 (\u22482.3% jarak) ialah ~0.05 mata daripada had 30 mata \u2014 risiko jelas rendah;\\n- Asas kelulusan: P/E trailing 14.7x vs median 19.2x sejarah sendiri, $50,983M kembalian modal, 3 daripada 4 suku terakhir melebihi, semakan semula EPS +8.6%.\\n- Menetapkan stop di bawah julat rendah 50-hari $335.05 supaya keluar mencetus pada kegagalan setup, bukan hingar \u2014 berbeza daripada $332 Meja yang kurang mengecil.\\n- Baki tranche hanya selepas penutup di atas SMA 50-hari $353.34 atau reaksi pasca-pendapatan yang bersih \u2014 angka final ialah tranche pertama sahaja; logik ini bukan bermakna MODIFY.\\n- Bulis asimetri juga datang: +9.1% ke sasaran konsensus vs -2.3% ke julat rendah yang saya jadikan stop.\", \"kill_criterion\": \"Penutup harian JPM di bawah $335.05 (rendah 50-hari) \u2014 atau ketinggalan konsensus $5.91 pada 2026-10-13 \u2014 melahkan jual keluar posisi; jika setup lemah ini betul-betul rev (RSI bawah 30 dengan harga di bawah purata 200-hari $321.12), saya akan PASS penuh kecuali asas pegerakan margin bersih bertambah balik.\"}",
+      "usage": {
+        "prompt_tokens": 12066,
+        "completion_tokens": 701,
+        "reasoning_tokens": 130
+      }
+    },
+    {
+      "draw": 3,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 330.00,\n \"target\": 374.24,\n \"horizon_days\": 60,\n \"narration\": \"Keputusan: lulus masuk, tetapi bukan pada saiz Meja \u2014 perbahasan bilik telah menyaring saiz, bukan tesis, dan kedudukan tengah 2.0% memenangi majoriti.\\n\u2022 Pematuhan mandatri bersih: sah panjang sahaja, cecair ($912B nilai pasaran), 0/4 dagangan hari, 0.0 mata drawdown terpakai daripada 30, ruparaya terbuka 0.0% daripada 10.5 \u2014 semua lantai dilalui.\\n\u2022 Asas menyokong kemasinan: semakan naik 8.6% dalam 90 hari, tiga daripada empat kejutan melebihi (7.8%, 5.9% terkini), 14.7\u00d7 trailing vs median EPS sendiri 19.2\u00d7, kembalian $50,983M \u2014 kualiti kredit.panjang.\\n\u2022 Tetapi Technician sendiri menandakan setup 'tidak diputuskan' (downtrend 20-hari, RSI 33, harga 25% julat 50-hari) dan peristiwa binari 2026-10-13 ada 17 hari lagi \u2014 saiz penuh 3.0% ke dalam percetakan konsensus penuh $5.91 adalah satu potongan yang saya tidak pertahankan.\\n\u2022 Struktur tranche Seimbang diambil: blok pertama 2.0% sekarang; baki tambahan hanya selepas penutup di atas SMA 50-hari $353.34 atau laporan Q4 dilalui bersih.\\n\u2022 Stop $330.00 dicatat di bawah julat rendah $335.05 namun lebih ketat daripada $322.48 rujukan tier \u2014 sumbangan drawdown kira-kira 2.0% \u00d7 3.8% \u2248 0.08 mata, jauh di bawah had.\\n\u2022 Waktu: masuk pada $343.06 tidak memburukkan jika kemasukan Terbaik (dekat $335.05) menolak etos saiz-disiplin; kelebihan saiz, bukan masa.\",\n \"kill_criterion\": \"Penutup harian di bawah julat rendah 50-hari $335.05 (atau, selepas 2026-10-13, EPS sebenar di bawah anggaran $5.91 dengan semakan semula turun) membalikkan panggilan ini dan mencetuskan semakan keluar.\"}\n\nContoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.",
+      "usage": {
+        "prompt_tokens": 12066,
+        "completion_tokens": 1361,
+        "reasoning_tokens": 698
+      }
+    },
+    {
+      "draw": 4,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 332.00,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Lulusan dengan saiz diubah kepada 2.0%, bukan siling 3.0% Meja Pelaksanaan \u2014 dagangan ini dibuka 17 hari sebelum laporan Q4 2026-10-13 di mana konsensus $5.91 telah dihargai selepas semakan semula +8.6%, dan bacaan teknik sendiri menyatakan setup belum diputuskan (downtrend harian, RSI 33, harga pada 25% julat 50-hari).\\n- Pematuhan lulus: long-only saham, cecair mega-cap ($911,917M), tiada bendera; sumbangan drawdown \u2248 3% \u00d7 3% \u2248 0.06\u20130.09 mata daripada had 30 mata \u2014 remeh.\\n- Sisi positif bersetuju: tiga melebihi daripada empat suku, modal dikembalikan $50,983M, P/E trailing 14.7\u00d7 vs median sejarah sendiri 19.2\u00d7, harga +9.1% asimetri ke sasaran konsensus $374.24.\\n- Sisi berhati-hati menang tentang saiz: ketinggalan 52-minggu 8.7pp dan ketinggalan 3.9% pada 2025-12-31 menunjukkan konsensus penuh boleh gagal; siling penuh ke dalam peristiwa binari tidak perlu.\\n- Struktur: 1.0% sekarang, baki 1.0% hanya selepas penutup di atas SMA 50-hari $353.34 atau keputusan pendapatan yang bersih \u2014 jangan tambah ke bawah tanpa pengesahan.\\n- Stop $332.00 dikekalkan, di bawah julat rendah $335.05 supaya ia mencetus pada kegagalan setup, bukan hingar.\",\n \"kill_criterion\": \"Penutup harian di bawah julat rendah 50-hari $335.05 (dan masih lebih teruk, dekat purata 200-hari $321.12) membalikkan panggilan ini \u2014 keluar/semak semula; juga, ketinggalan konsensus $5.91 pada 2026-10-13 membatalkan tesis.\"}",
+      "usage": {
+        "prompt_tokens": 12066,
+        "completion_tokens": 665,
+        "reasoning_tokens": 70
+      }
+    },
+    {
+      "draw": 5,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 332.00,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Kelulusan pada saiz dikurangkan \u2014 setup yang boleh dipertahankan tetapi belum diputuskan, dengan percetakan konsensus penuh 17 hari lagi.\\n- Pematuhan lulus: long-only, tiada derivatif, nilai pasaran $911,917M jauh daripada microcap, tiada penyejukan atau had laju diutilisasi (0/4, 0/12).\\n- Kes asas kukuh: semakan semula EPS naik 8.6% dalam 90 hari, tiga daripada empat suku melebihi, margin bersih +663bps YoY, modal dikembalikan $50,983M T4Q, P/E trailing 14.7x jauh di bawah median sejarah sendiri 19.2x.\\n- Risiko spesifik: laporan 2026-10-13 pada konsensus $5.91 dihargakan untuk melebihi \u2014 kali terakhir suku konsensus penuh bad dalam downtrend (2025-12-31) ketinggalan 3.9%; bacaan teknikal pun memanggil setup tidak diputuskan (downtrend harian, RSI 33, 25% julat 50-hari).\\n- Saya menerima papan tengah tiga Pegawai Risiko: 2.0% bukan 3.0% \u2014 siling CR101 kekal dipatuhi, separuh baki hanya selepas penutup di atas SMA 50-hari $353.34 atau reaksi pendapatan bersih.\\n- Stop $332.00 di bawah julat rendah $335.05 dikekalkan \u2014 sumbangan drawdown \u2248 0.22 mata daripada had 30 mata, remeh.\\n- Sasaran $374.24 (purata konsensus, +9.1%) memberi R:R kukuh terhadap jarak stop ~3.2%.\",\n \"kill_criterion\": \"Penutup harian di bawah $335.05 (julat rendah 50-hari) \u2014 atau EPS Q4 2026-10-13 di bawah konsensus $5.91 \u2014 membatalkan tesis dan menggerakkan keluar/semakan penuh.\"}\n\nContoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.",
+      "usage": {
+        "prompt_tokens": 12066,
+        "completion_tokens": 690,
+        "reasoning_tokens": 92
+      }
+    }
+  ],
+  "total_tokens": {
+    "input": 60330,
+    "output": 4125
+  },
+  "cost_estimate_usd": 0.005556
+}
