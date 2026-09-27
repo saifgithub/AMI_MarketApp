@@ -285,13 +285,46 @@ def _filings_index(
     rows = _rows_from_recent(recent)
     if rows is None:
         return None
+    return _window_items(rows, since=since, as_of=as_of)
+
+
+# A bank's shelf issues dozens of 424B2 note supplements a day (JPM, live
+# 2026-09-27: all ten slots were 424B2 on one date), which pushed every 8-K and
+# 10-Q off the list. They are counted in one trailing entry instead — an
+# offering still registers, it just can't crowd out the issuer's own reports.
+def _is_offering_document(form: str) -> bool:
+    base = form.removesuffix("/A")
+    return base.startswith("424") or base == "FWP"
+
+
+def _offerings_summary(rows: list[tuple[date, str, str | None, str]]) -> dict[str, Any]:
+    latest = max(r[0] for r in rows)
+    n = len(rows)
+    return {
+        "form": "424B*/FWP",
+        "label": (
+            f"{n} offering document{'s' if n != 1 else ''} (prospectus supplements "
+            "/ free writing prospectuses) in the window, not listed one by one; latest"
+        ),
+        "filed_date": latest.isoformat(),
+    }
+
+
+def _window_items(
+    rows: list[tuple[date, str, str | None, str]], *, since: date, as_of: date,
+) -> list[dict[str, Any]]:
+    in_window = [r for r in rows if since <= r[0] <= as_of]
+    offerings = [r for r in in_window if _is_offering_document(r[1])]
     items = [
         (filed, {"form": form, "label": label, "filed_date": filed.isoformat()})
-        for filed, form, _fn, label in rows
-        if since <= filed <= as_of
+        for filed, form, _fn, label in in_window
+        if not _is_offering_document(form)
     ]
     items.sort(key=lambda t: t[0], reverse=True)
-    return [item for _, item in items[:MAX_FILINGS]]
+    out = [item for _, item in items[:MAX_FILINGS]]
+    if offerings:
+        out.append(_offerings_summary(offerings))
+    return out
 
 
 def _recent_oldest_filed(recent: dict) -> date | None:
@@ -390,13 +423,7 @@ def fetch_recent_filings(ticker: str, as_of: date) -> tuple[str, list[dict[str, 
                 return "not_available", None
             rows.extend(page_rows)
 
-    items = [
-        (filed, {"form": form, "label": label, "filed_date": filed.isoformat()})
-        for filed, form, _fn, label in rows
-        if since <= filed <= as_of
-    ]
-    items.sort(key=lambda t: t[0], reverse=True)
-    capped = [item for _, item in items[:MAX_FILINGS]]
+    capped = _window_items(rows, since=since, as_of=as_of)
     assert_dates_within(
         [date.fromisoformat(i["filed_date"]) for i in capped], as_of,
         origin="edgar_filings_feed.fetch_recent_filings",

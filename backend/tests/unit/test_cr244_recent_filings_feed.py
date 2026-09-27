@@ -90,7 +90,7 @@ def _synthetic_submissions() -> dict:
     fixture's cap-test intent (11 in-window non-excluded rows) is unchanged
     by the audit's role classification (B1)."""
     forms = [
-        "10-K", "10-Q", "8-K", "8-K", "DEF 14A", "S-1", "S-3", "424B5",
+        "10-K", "10-Q", "8-K", "8-K", "DEF 14A", "S-1", "S-3", "S-8",
         "SC 13D", "8-K/A",
         "3", "4/A", "144",
         "10-Q",  # the 11th in-window non-insider row — proves the cap
@@ -561,3 +561,39 @@ def test_fetch_recent_filings_calls_assert_dates_within(monkeypatch):
     assert captured["as_of"] == _AS_OF
     assert captured["origin"] == "edgar_filings_feed.fetch_recent_filings"
     assert captured["dates"] == [date.fromisoformat(i["filed_date"]) for i in items]
+
+
+# ── Offering documents are counted, not listed (JPM live 2026-09-27) ────────
+
+
+def _subs(forms, dates):
+    n = len(forms)
+    return {"filings": {"recent": {
+        "form": forms, "filingDate": dates, "fileNumber": [""] * n,
+        "primaryDocDescription": [None] * n,
+    }, "files": []}}
+
+
+def test_a_flood_of_424b2_cannot_crowd_out_the_issuers_own_reports():
+    """JPM's live line was ten 424B2 supplements on one date — every 8-K and
+    10-Q gone. Offering documents now collapse into one trailing count."""
+    forms = ["424B2"] * 40 + ["FWP"] * 5 + ["8-K", "10-Q"]
+    dates = ["2026-09-25"] * 40 + ["2026-09-24"] * 5 + ["2026-09-10", "2026-08-01"]
+    items = _filings_index(_subs(forms, dates), since=date(2026, 4, 1), as_of=_AS_OF)
+    assert [i["form"] for i in items] == ["8-K", "10-Q", "424B*/FWP"]
+    summary = items[-1]
+    assert summary["label"].startswith("45 offering documents")
+    assert summary["filed_date"] == "2026-09-25"
+
+
+def test_offering_summary_respects_the_as_of_window():
+    forms = ["424B2", "424B2", "8-K"]
+    dates = ["2026-10-01", "2026-09-01", "2026-08-01"]
+    items = _filings_index(_subs(forms, dates), since=date(2026, 4, 1), as_of=_AS_OF)
+    assert items[-1]["label"].startswith("1 offering document ")
+    assert items[-1]["filed_date"] == "2026-09-01"
+
+
+def test_no_offerings_means_no_summary_entry():
+    items = _filings_index(_subs(["8-K"], ["2026-09-01"]), since=date(2026, 4, 1), as_of=_AS_OF)
+    assert [i["form"] for i in items] == ["8-K"]

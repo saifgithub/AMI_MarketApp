@@ -81,6 +81,7 @@ FORM_LABELS: dict[str, str] = {
     "8-K/A": "Current report (amended)",
     "DEF 14A": "Proxy statement",
     "DEFA14A": "Proxy statement (additional material)",
+    "PX14A6G": "Exempt solicitation filed by a shareholder group",
     "S-1": "Registration statement",
     "S-1/A": "Registration statement (amended)",
     "S-3": "Registration statement (shelf)",
