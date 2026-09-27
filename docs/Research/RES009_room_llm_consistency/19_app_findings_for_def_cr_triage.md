@@ -8,6 +8,17 @@ doc separates what's genuinely a production gap from what turned out to
 already be handled, so a future minting pass isn't re-discovering things
 the codebase already defends against.
 
+**Update, same day:**
+[CR242](../../forward_planning/CR242_room_arabic_prompt_language_reliability/CR242.md)
+(Arabic) and
+[CR243](../../forward_planning/CR243_room_malay_prompt_language_reliability/CR243.md)
+(Malay) were minted from this investigation's docs 14–20 (the
+translate + instruction-last recipe). Finding 1 below (the context-blind
+scripted fallback) is explicitly OUT of both CRs' scope — it's a
+language-independent defect (it fires on any live-call failure, in any
+language) — but both CRs cross-reference it since the one incident that
+surfaced it happened on a Malay draw (doc 15).
+
 ## Method
 
 Every anomaly hit across docs 15/16/18 (scripted-fallback rate, JSON
