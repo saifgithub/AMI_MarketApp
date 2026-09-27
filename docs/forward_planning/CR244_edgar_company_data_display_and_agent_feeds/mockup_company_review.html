@@ -1,0 +1,604 @@
+<title>EDGAR Review Screen</title>
+<style>
+:root{
+  --slate900:#0F172A; --slate800:#111827; --slate700:#374151; --slate600:#475569; --slate500:#64748B;
+  --cardBg:#152845;
+  --hexBlue:#3B82F6; --hexCyan:#06B6D4; --hexAmber:#F59E0B; --hexGreen:#10B981; --hexRed:#EF4444; --hexPurple:#8B5CF6;
+  --textHigh:#F3F4F6; --textMed:#94A3B8; --textLow:#64748B;
+  --glassChrome:rgba(15,23,42,0.85);
+  --bg:#e7ebf1;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--textHigh);
+  font-family:"IBM Plex Sans",-apple-system,sans-serif;
+  padding:0 16px; padding-block:32px;
+  display:flex; justify-content:center;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+.stage{width:100%; max-width:1180px;}
+.intro{max-width:640px; margin:0 auto 28px; text-align:center;}
+.eyebrow{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#7C3AED; font-weight:700; margin-bottom:8px;}
+.intro h1{font-size:24px; margin:0 0 8px; color:#0F172A; letter-spacing:-0.01em;}
+.intro p{color:#475569; font-size:13.5px; line-height:1.55; margin:0;}
+
+.frames{
+  display:flex; gap:36px; justify-content:center; align-items:flex-start; flex-wrap:wrap;
+}
+.frame-col{display:flex; flex-direction:column; align-items:center; gap:12px;}
+.frame-caption{font-size:12px; color:#475569; font-weight:600; text-align:center; max-width:300px;}
+.frame-caption b{color:#0F172A;}
+
+/* ---- iPhone 17 Pro frame: 6.3in, ~402x874 logical pt @ ~3x ---- */
+.iphone{
+  width:340px; height:736px; border-radius:62px; background:#1c1c1e;
+  padding:12px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.4), inset 0 0 0 2px #3a3a3c;
+  position:relative; flex:none;
+}
+.iphone .screen{
+  width:100%; height:100%; border-radius:50px; overflow:hidden; position:relative;
+  background:var(--slate900);
+}
+.dynamic-island{
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:100px; height:28px; background:#000; border-radius:16px; z-index:50;
+}
+.statusbar{
+  height:52px; display:flex; align-items:flex-end; justify-content:space-between;
+  padding:0 26px 6px; font-size:14px; font-weight:600; color:var(--textHigh);
+  position:relative; z-index:20;
+}
+.statusbar .icons{display:flex; gap:5px; align-items:center;}
+.home-indicator{
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+  width:120px; height:4px; border-radius:3px; background:rgba(255,255,255,0.55); z-index:50;
+}
+
+.screen-inner{height:100%; display:flex; flex-direction:column;}
+.appbar{
+  height:56px; background:var(--glassChrome); backdrop-filter:blur(10px);
+  display:flex; align-items:center; padding:0 16px; gap:12px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  flex:none;
+}
+.appbar .back-ic{color:var(--hexCyan); font-size:20px; line-height:1;}
+.appbar .title{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:700;
+  letter-spacing:0.15em; color:var(--hexCyan); text-transform:uppercase;
+}
+.appbar .spacer{flex:1;}
+
+.scroll{flex:1; overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* status card */
+.status-card{
+  padding:16px; background:var(--slate800); border-radius:12px;
+  border:1px solid var(--slate700); margin-bottom:16px;
+}
+.status-card .lbl{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:700;
+  letter-spacing:0.15em; text-transform:uppercase; color:var(--hexAmber); margin-bottom:6px;
+}
+.status-card .big{font-family:"IBM Plex Mono",monospace; font-size:34px; font-weight:700; line-height:1;}
+.status-card .sub{font-size:12px; color:var(--textMed); margin-top:6px;}
+
+/* chart placeholder */
+.chart-ph{
+  height:150px; border-radius:12px; margin-bottom:16px;
+  background:linear-gradient(180deg, rgba(16,185,129,0.14), rgba(16,185,129,0.02));
+  border:1px solid var(--slate700);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--slate500); font-size:11px;
+}
+
+/* chip row (real _Chip spec) */
+.chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;}
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 16px; border-radius:8px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:700;
+  border:1px solid;
+}
+.chip .ic{font-size:14px; line-height:1;}
+.chip-ask{color:var(--hexCyan); border-color:rgba(6,182,212,0.5); background:rgba(6,182,212,0.12);}
+.chip-convene{color:var(--hexPurple); border-color:rgba(139,92,246,0.5); background:rgba(139,92,246,0.12);}
+.chip-review{color:var(--hexBlue); border-color:rgba(59,130,246,0.5); background:rgba(59,130,246,0.12); position:relative;}
+.chip-watch{color:var(--hexAmber); border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.12);}
+.new-dot{
+  position:absolute; top:-5px; right:-5px; width:9px; height:9px; border-radius:50%;
+  background:var(--hexBlue); box-shadow:0 0 0 2px var(--slate900);
+}
+
+.section-head{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--textHigh); margin-bottom:8px;
+}
+
+/* floor omnibox variant */
+.omnibox-field{
+  min-height:56px; padding:4px 8px; border-radius:8px;
+  background:var(--slate800); border:1px solid var(--slate700);
+  display:flex; align-items:center; gap:10px; margin-bottom:12px;
+}
+.avatar-pink{
+  width:32px; height:32px; border-radius:50%; flex:none;
+  background:radial-gradient(circle at 35% 30%, #f472b6, #ec4899 70%);
+}
+.omnibox-field .hint{color:var(--textLow); font-size:14px;}
+.hexbtn{
+  border-radius:8px; padding:16px 24px; text-align:center;
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:700; letter-spacing:0.15em;
+  color:#fff; min-height:44px; display:flex; align-items:center; justify-content:center;
+  margin-bottom:6px;
+}
+.hexbtn-green{background:var(--hexGreen); color:var(--slate900);}
+.hexbtn-caption{font-size:11px; color:var(--textLow); text-align:center;}
+.cta-row{display:flex; gap:8px; margin-bottom:6px;}
+.cta-row .hexbtn{flex:3; margin-bottom:0;}
+.review-split-btn{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:4px;
+  border-radius:8px; padding:16px 8px; min-height:44px;
+  background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.5);
+  color:var(--hexBlue); font-size:16px; font-weight:700; position:relative;
+}
+
+/* ==== EDGAR review screen internals ==== */
+.asof-row{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.ticker-id .sym{font-family:"IBM Plex Mono",monospace; font-size:18px; font-weight:700;}
+.ticker-id .name{font-size:11px; color:var(--textMed); margin-top:2px;}
+.asof-tag{
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; color:var(--textLow);
+  background:var(--slate800); border:1px solid var(--slate700); padding:3px 8px; border-radius:6px;
+}
+
+.tabbar{
+  display:flex; gap:0; overflow-x:auto; margin:0 -16px 4px; padding:0 16px;
+  border-bottom:1px solid var(--slate700); scrollbar-width:none;
+}
+.tabbar::-webkit-scrollbar{display:none;}
+.tab{
+  flex:none; padding:10px 2px; margin-right:18px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:700; letter-spacing:0.04em;
+  color:var(--textLow); border-bottom:2px solid transparent; white-space:nowrap;
+  display:flex; align-items:center; gap:5px;
+}
+.tab .n{font-size:9px; background:var(--slate800); color:var(--textLow); padding:1px 5px; border-radius:999px;}
+.tab.active{color:var(--textHigh); border-color:var(--hexBlue);}
+.tab.active .n{background:rgba(59,130,246,0.18); color:var(--hexBlue);}
+
+.card{
+  background:var(--slate800); border:1px solid var(--slate700); border-radius:8px;
+  padding:14px; margin-top:12px;
+}
+.card .head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
+.card h3{margin:0; font-size:13px; font-weight:700;}
+.src{
+  font-family:"IBM Plex Mono",monospace; font-size:8.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+  padding:2px 6px; border-radius:5px; flex:none;
+}
+.src-edgar{color:var(--hexBlue); background:rgba(59,130,246,0.16);}
+.src-yf{color:var(--hexCyan); background:rgba(6,182,212,0.16);}
+.card p{margin:0 0 10px; font-size:12px; line-height:1.55; color:var(--textMed);}
+.kv-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-bottom:8px;}
+.kv .k{font-size:9.5px; color:var(--textLow); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;}
+.kv .v{font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:700;}
+.detail-link{
+  font-size:11.5px; font-weight:700; color:var(--hexBlue); display:inline-flex; align-items:center; gap:4px;
+}
+
+.filing-row{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:9px 0; border-bottom:1px solid var(--slate700);
+}
+.filing-row:last-child{border-bottom:none;}
+.filing-left{display:flex; align-items:center; gap:8px; min-width:0;}
+.badge{
+  flex:none; font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:700;
+  padding:3px 6px; border-radius:5px;
+}
+.badge-8k{background:rgba(139,92,246,0.18); color:var(--hexPurple);}
+.badge-10k{background:rgba(16,185,129,0.18); color:var(--hexGreen);}
+.badge-10q{background:rgba(6,182,212,0.18); color:var(--hexCyan);}
+.badge-proxy{background:rgba(245,158,11,0.18); color:var(--hexAmber);}
+.badge-buy{background:rgba(16,185,129,0.18); color:var(--hexGreen);}
+.badge-sell{background:rgba(239,68,68,0.18); color:var(--hexRed);}
+.badge-f3{background:rgba(139,92,246,0.18); color:var(--hexPurple);}
+.f-meta .t{font-size:11.5px; font-weight:600; line-height:1.3;}
+.f-meta .d{font-size:10px; color:var(--textLow); margin-top:1px;}
+.f-link{font-size:10.5px; color:var(--hexBlue); font-weight:700; flex:none;}
+
+.state-line{
+  display:flex; gap:6px; font-size:10.5px; color:var(--textLow); line-height:1.5;
+  background:var(--slate800); border:1px dashed var(--slate700); border-radius:8px; padding:9px 10px; margin-top:10px;
+}
+
+/* bottom nav */
+.bottomnav{
+  height:64px; flex:none; background:var(--glassChrome); border-top:1px solid var(--slate700);
+  display:flex; align-items:center; justify-content:space-around; padding-bottom:6px;
+}
+.navitem{display:flex; flex-direction:column; align-items:center; gap:3px;}
+.navitem .ic{font-size:19px; color:var(--textLow);}
+.navitem .lbl{font-family:"IBM Plex Mono",monospace; font-size:8px; letter-spacing:0.03em; color:var(--textLow);}
+.navitem.active .ic{
+  width:34px; height:29px; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:16px;
+  clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  background:linear-gradient(135deg, rgba(139,92,246,0.85), rgba(59,130,246,0.85));
+}
+.navitem.active .lbl{color:var(--textHigh);}
+
+footer{max-width:1180px; margin:28px auto 0; text-align:center; color:#64748B; font-size:11.5px;}
+</style>
+
+<div class="stage">
+  <div class="intro">
+    <div class="eyebrow">CR &mdash; EDGAR Review · Part 1: Customer Display</div>
+    <h1>Matched to the real Floor / Ticker Detail chrome</h1>
+    <p>iPhone 17 Pro frame, AMI Hex-Reinforced Precision tokens pulled directly from <span class="mono">ami_theme.dart</span> &mdash; same AppBar height (56pt), chip spec, card radii (8px), IBM Plex Mono labels, and hex bottom nav as the shipping app.</p>
+  </div>
+
+  <div class="frames">
+
+    <!-- FRAME 1: Floor screen with new Review CTA -->
+    <div class="frame-col">
+      <div class="iphone">
+        <div class="screen">
+          <div class="dynamic-island"></div>
+          <div class="screen-inner">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#F3F4F6"/><rect x="4.5" y="1.5" width="3" height="9.5" rx="1" fill="#F3F4F6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#F3F4F6"/></svg>
+                <svg width="15" height="11" viewBox="0 0 24 17" fill="none"><path d="M12 17c-3.3 0-6.3-1.3-8.5-3.5l1.4-1.4C6.7 13.9 9.2 15 12 15s5.3-1.1 7.1-2.9l1.4 1.4C18.3 15.7 15.3 17 12 17z" fill="#F3F4F6"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#F3F4F6" opacity="0.5"/><rect x="2" y="2" width="15" height="8" rx="1.2" fill="#F3F4F6"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="#F3F4F6" opacity="0.5"/></svg>
+              </span>
+            </div>
+            <div class="scroll">
+              <div class="section-head" style="color:var(--textLow); font-weight:600; letter-spacing:0.05em; margin-bottom:10px;">GOOD MORNING</div>
+
+              <div class="omnibox-field">
+                <div class="avatar-pink"></div>
+                <div class="hint">Ask AMI, or type a ticker&hellip;</div>
+              </div>
+
+              <div class="cta-row">
+                <div class="hexbtn hexbtn-green">CONVENE THE ROOM &middot; NVDA</div>
+                <div class="review-split-btn">
+                  <span class="new-dot"></span>
+                  &#9432;
+                </div>
+              </div>
+              <div class="hexbtn-caption">12 agents &middot; ~90 sec &middot; or open Company Review first</div>
+
+              <div style="height:24px;"></div>
+              <div class="section-head" style="color:var(--textLow); font-weight:600;">TODAY'S CHALLENGE</div>
+              <div class="card" style="margin-top:8px;">
+                <p style="margin:0;">Spot the catalyst: three headlines, one moves the tape.</p>
+              </div>
+            </div>
+            <div class="bottomnav">
+              <div class="navitem active"><div class="ic">&#9635;</div><div class="lbl">FLOOR</div></div>
+              <div class="navitem"><div class="ic">&#128176;</div><div class="lbl">PORTFOLIO</div></div>
+              <div class="navitem"><div class="ic">&#127942;</div><div class="lbl">GAME</div></div>
+              <div class="navitem"><div class="ic">&#127891;</div><div class="lbl">LESSONS</div></div>
+              <div class="navitem"><div class="ic">&#128100;</div><div class="lbl">YOU</div></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="frame-caption">Entry point 1 &mdash; <b>Floor screen</b>. New "Company Review" action sits directly beside the existing Convene CTA.</div>
+    </div>
+
+    <!-- FRAME 2: Ticker detail with new Review chip -->
+    <div class="frame-col">
+      <div class="iphone">
+        <div class="screen">
+          <div class="dynamic-island"></div>
+          <div class="screen-inner">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#F3F4F6"/><rect x="4.5" y="1.5" width="3" height="9.5" rx="1" fill="#F3F4F6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#F3F4F6"/></svg>
+                <svg width="15" height="11" viewBox="0 0 24 17" fill="none"><path d="M12 17c-3.3 0-6.3-1.3-8.5-3.5l1.4-1.4C6.7 13.9 9.2 15 12 15s5.3-1.1 7.1-2.9l1.4 1.4C18.3 15.7 15.3 17 12 17z" fill="#F3F4F6"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#F3F4F6" opacity="0.5"/><rect x="2" y="2" width="15" height="8" rx="1.2" fill="#F3F4F6"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="#F3F4F6" opacity="0.5"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <span class="back-ic">&#8592;</span>
+              <span class="title">NVDA</span>
+              <span class="spacer"></span>
+            </div>
+            <div class="scroll">
+              <div class="status-card">
+                <div class="lbl">WATCHING</div>
+                <div class="big">$182.44</div>
+                <div class="sub">+2.31 (+1.28%) today</div>
+              </div>
+              <div class="chart-ph">price chart, 220pt</div>
+              <div class="hexbtn hexbtn-green">BUY NVDA</div>
+              <div style="height:8px;"></div>
+              <div class="chip-row">
+                <span class="chip chip-ask"><span class="ic">&#128172;</span>ASK</span>
+                <span class="chip chip-convene"><span class="ic">&#128101;</span>CONVENE</span>
+                <span class="chip chip-review"><span class="new-dot"></span><span class="ic">&#9432;</span>REVIEW</span>
+                <span class="chip chip-watch"><span class="ic">&#9733;</span>WATCH</span>
+              </div>
+            </div>
+            <div class="bottomnav">
+              <div class="navitem"><div class="ic">&#9635;</div><div class="lbl">FLOOR</div></div>
+              <div class="navitem"><div class="ic">&#128176;</div><div class="lbl">PORTFOLIO</div></div>
+              <div class="navitem"><div class="ic">&#127942;</div><div class="lbl">GAME</div></div>
+              <div class="navitem"><div class="ic">&#127891;</div><div class="lbl">LESSONS</div></div>
+              <div class="navitem"><div class="ic">&#128100;</div><div class="lbl">YOU</div></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="frame-caption">Entry point 2 &mdash; <b>Ticker Detail screen</b>. New "REVIEW" chip added to the existing Ask / Convene / Watch row, same _Chip spec (8px radius, mono 11px label).</div>
+    </div>
+
+    <!-- FRAME 3: Company Review screen, Overview tab -->
+    <div class="frame-col">
+      <div class="iphone">
+        <div class="screen">
+          <div class="dynamic-island"></div>
+          <div class="screen-inner">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#F3F4F6"/><rect x="4.5" y="1.5" width="3" height="9.5" rx="1" fill="#F3F4F6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#F3F4F6"/></svg>
+                <svg width="15" height="11" viewBox="0 0 24 17" fill="none"><path d="M12 17c-3.3 0-6.3-1.3-8.5-3.5l1.4-1.4C6.7 13.9 9.2 15 12 15s5.3-1.1 7.1-2.9l1.4 1.4C18.3 15.7 15.3 17 12 17z" fill="#F3F4F6"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#F3F4F6" opacity="0.5"/><rect x="2" y="2" width="15" height="8" rx="1.2" fill="#F3F4F6"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="#F3F4F6" opacity="0.5"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <span class="back-ic">&#8592;</span>
+              <span class="title">COMPANY REVIEW</span>
+              <span class="spacer"></span>
+            </div>
+            <div class="scroll">
+              <div class="asof-row">
+                <div class="ticker-id">
+                  <div class="sym">NVDA</div>
+                  <div class="name">NVIDIA Corporation &middot; Nasdaq</div>
+                </div>
+                <div class="asof-tag">AS OF 09/27</div>
+              </div>
+
+              <div class="tabbar">
+                <div class="tab active">OVERVIEW <span class="n">4</span></div>
+                <div class="tab">FINANCIALS <span class="n">6</span></div>
+                <div class="tab">FILINGS <span class="n">12</span></div>
+                <div class="tab">OWNERSHIP <span class="n">3</span></div>
+                <div class="tab">INSIDER <span class="n">7</span></div>
+                <div class="tab">EVENTS <span class="n">2</span></div>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Business description</h3><span class="src src-yf">YFINANCE</span></div>
+                <p>Designs GPUs and AI computing platforms for gaming, data centers, professional visualization, and automotive. Compute &amp; Networking now drives most revenue, led by data-center AI accelerators&hellip;</p>
+                <span class="detail-link">View full detail &#8594;</span>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Classification</h3><span class="src src-edgar">EDGAR</span></div>
+                <div class="kv-grid">
+                  <div class="kv"><div class="k">SIC code</div><div class="v">3674</div></div>
+                  <div class="kv"><div class="k">CIK</div><div class="v">0001045810</div></div>
+                  <div class="kv"><div class="k">Employees</div><div class="v">29,600</div></div>
+                  <div class="kv"><div class="k">Exchange</div><div class="v">NASDAQ</div></div>
+                </div>
+                <span class="detail-link">View address &amp; contacts &#8594;</span>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Most recent filing</h3><span class="src src-edgar">EDGAR</span></div>
+                <div class="filing-row" style="border:none; padding-top:0;">
+                  <div class="filing-left">
+                    <span class="badge badge-10q">10-Q</span>
+                    <div class="f-meta"><div class="t">Quarterly report</div><div class="d">Filed 08/27 &middot; Q2 FY27</div></div>
+                  </div>
+                  <span class="f-link">Open &#8594;</span>
+                </div>
+                <span class="detail-link" style="margin-top:6px; display:inline-flex;">See all 12 on Filings tab &#8594;</span>
+              </div>
+            </div>
+            <div class="bottomnav">
+              <div class="navitem"><div class="ic">&#9635;</div><div class="lbl">FLOOR</div></div>
+              <div class="navitem"><div class="ic">&#128176;</div><div class="lbl">PORTFOLIO</div></div>
+              <div class="navitem"><div class="ic">&#127942;</div><div class="lbl">GAME</div></div>
+              <div class="navitem"><div class="ic">&#127891;</div><div class="lbl">LESSONS</div></div>
+              <div class="navitem"><div class="ic">&#128100;</div><div class="lbl">YOU</div></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="frame-caption">Destination screen &mdash; <b>Overview tab</b>. Tabs scroll horizontally; each summary card carries a source tag (EDGAR/yfinance) and a "View full detail" link.</div>
+    </div>
+
+    <!-- FRAME 3b: Company Review screen, Ownership tab -->
+    <div class="frame-col">
+      <div class="iphone">
+        <div class="screen">
+          <div class="dynamic-island"></div>
+          <div class="screen-inner">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#F3F4F6"/><rect x="4.5" y="1.5" width="3" height="9.5" rx="1" fill="#F3F4F6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#F3F4F6"/></svg>
+                <svg width="15" height="11" viewBox="0 0 24 17" fill="none"><path d="M12 17c-3.3 0-6.3-1.3-8.5-3.5l1.4-1.4C6.7 13.9 9.2 15 12 15s5.3-1.1 7.1-2.9l1.4 1.4C18.3 15.7 15.3 17 12 17z" fill="#F3F4F6"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#F3F4F6" opacity="0.5"/><rect x="2" y="2" width="15" height="8" rx="1.2" fill="#F3F4F6"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="#F3F4F6" opacity="0.5"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <span class="back-ic">&#8592;</span>
+              <span class="title">COMPANY REVIEW</span>
+              <span class="spacer"></span>
+            </div>
+            <div class="scroll">
+              <div class="asof-row">
+                <div class="ticker-id">
+                  <div class="sym">NVDA</div>
+                  <div class="name">NVIDIA Corporation &middot; Nasdaq</div>
+                </div>
+                <div class="asof-tag">AS OF 09/27</div>
+              </div>
+
+              <div class="tabbar">
+                <div class="tab">OVERVIEW <span class="n">4</span></div>
+                <div class="tab">FINANCIALS <span class="n">6</span></div>
+                <div class="tab">FILINGS <span class="n">12</span></div>
+                <div class="tab active">OWNERSHIP <span class="n">3</span></div>
+                <div class="tab">INSIDER <span class="n">7</span></div>
+                <div class="tab">EVENTS <span class="n">2</span></div>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Ownership split</h3><span class="src src-yf">YFINANCE</span></div>
+                <div class="kv-grid">
+                  <div class="kv"><div class="k">Institutions</div><div class="v">67.4%</div></div>
+                  <div class="kv"><div class="k">Insiders</div><div class="v">4.2%</div></div>
+                  <div class="kv"><div class="k">Public float</div><div class="v">28.4%</div></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Major holders</h3><span class="src src-yf">YFINANCE</span></div>
+                <p style="margin-bottom:10px;">Top institutional and mutual-fund holders, most recent quarterly reporting date.</p>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <div class="f-meta"><div class="t">The Vanguard Group, Inc.</div><div class="d">Reported 06/30</div></div>
+                  </div>
+                  <span class="f-meta"><span class="v" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:700;">8.24%</span></span>
+                </div>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <div class="f-meta"><div class="t">BlackRock Inc.</div><div class="d">Reported 06/30</div></div>
+                  </div>
+                  <span class="f-meta"><span class="v" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:700;">7.12%</span></span>
+                </div>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <div class="f-meta"><div class="t">State Street Corp.</div><div class="d">Reported 06/30</div></div>
+                  </div>
+                  <span class="f-meta"><span class="v" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:700;">4.31%</span></span>
+                </div>
+                <span class="detail-link" style="margin-top:6px; display:inline-flex;">See all reported holders &#8594;</span>
+              </div>
+
+              <div class="state-line">
+                &#9888; This list is yfinance's institutional/mutual-fund holder summary (quarterly, name + % + shares) &mdash; not yet a parsed SEC Schedule 13D/13G (true beneficial-ownership filings) or Form 13F feed. Those EDGAR filing types aren't ingested by this app today; this tab states which source backs each figure.
+              </div>
+            </div>
+            <div class="bottomnav">
+              <div class="navitem"><div class="ic">&#9635;</div><div class="lbl">FLOOR</div></div>
+              <div class="navitem"><div class="ic">&#128176;</div><div class="lbl">PORTFOLIO</div></div>
+              <div class="navitem"><div class="ic">&#127942;</div><div class="lbl">GAME</div></div>
+              <div class="navitem"><div class="ic">&#127891;</div><div class="lbl">LESSONS</div></div>
+              <div class="navitem"><div class="ic">&#128100;</div><div class="lbl">YOU</div></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="frame-caption"><b>Ownership tab</b> &mdash; ownership split + a named major-holders list (Vanguard/BlackRock/State Street style), sourced from yfinance's institutional-holders data, honestly distinguished from unparsed EDGAR 13D/13G/13F filings.</div>
+    </div>
+
+    <!-- FRAME 4: Company Review screen, Insider tab -->
+    <div class="frame-col">
+      <div class="iphone">
+        <div class="screen">
+          <div class="dynamic-island"></div>
+          <div class="screen-inner">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#F3F4F6"/><rect x="4.5" y="1.5" width="3" height="9.5" rx="1" fill="#F3F4F6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#F3F4F6"/></svg>
+                <svg width="15" height="11" viewBox="0 0 24 17" fill="none"><path d="M12 17c-3.3 0-6.3-1.3-8.5-3.5l1.4-1.4C6.7 13.9 9.2 15 12 15s5.3-1.1 7.1-2.9l1.4 1.4C18.3 15.7 15.3 17 12 17z" fill="#F3F4F6"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#F3F4F6" opacity="0.5"/><rect x="2" y="2" width="15" height="8" rx="1.2" fill="#F3F4F6"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="#F3F4F6" opacity="0.5"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <span class="back-ic">&#8592;</span>
+              <span class="title">COMPANY REVIEW</span>
+              <span class="spacer"></span>
+            </div>
+            <div class="scroll">
+              <div class="asof-row">
+                <div class="ticker-id">
+                  <div class="sym">NVDA</div>
+                  <div class="name">NVIDIA Corporation &middot; Nasdaq</div>
+                </div>
+                <div class="asof-tag">AS OF 09/27</div>
+              </div>
+
+              <div class="tabbar">
+                <div class="tab">OVERVIEW <span class="n">4</span></div>
+                <div class="tab">FINANCIALS <span class="n">6</span></div>
+                <div class="tab">FILINGS <span class="n">12</span></div>
+                <div class="tab">OWNERSHIP <span class="n">3</span></div>
+                <div class="tab active">INSIDER <span class="n">7</span></div>
+                <div class="tab">EVENTS <span class="n">2</span></div>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Last 90 days</h3><span class="src src-edgar">FORMS 3/4/5</span></div>
+                <div class="kv-grid">
+                  <div class="kv"><div class="k">Net sentiment</div><div class="v" style="color:var(--hexRed);">SELLING</div></div>
+                  <div class="kv"><div class="k">Buys / Sells</div><div class="v">2 / 5</div></div>
+                </div>
+                <span class="detail-link">Full transaction list &#8594;</span>
+              </div>
+
+              <div class="card">
+                <div class="head"><h3>Recent Form 4s</h3><span class="src src-edgar">EDGAR</span></div>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <span class="badge badge-sell">SELL</span>
+                    <div class="f-meta"><div class="t">C. Kress &middot; EVP Field Ops</div><div class="d">09/15 &middot; 45,000 sh @ $178.32</div></div>
+                  </div>
+                </div>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <span class="badge badge-sell">SELL</span>
+                    <div class="f-meta"><div class="t">J. Huang &middot; CEO</div><div class="d">09/08 &middot; 120,000 sh @ $176.90</div></div>
+                  </div>
+                </div>
+                <div class="filing-row">
+                  <div class="filing-left">
+                    <span class="badge badge-buy">BUY</span>
+                    <div class="f-meta"><div class="t">M. Kress &middot; CFO</div><div class="d">08/30 &middot; 8,200 sh &middot; option ex.</div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="state-line">
+                &#9888; Sales under a Rule 10b5-1 plan are scheduled in advance &mdash; the filing states this, we don't infer intent beyond it.
+              </div>
+            </div>
+            <div class="bottomnav">
+              <div class="navitem"><div class="ic">&#9635;</div><div class="lbl">FLOOR</div></div>
+              <div class="navitem"><div class="ic">&#128176;</div><div class="lbl">PORTFOLIO</div></div>
+              <div class="navitem"><div class="ic">&#127942;</div><div class="lbl">GAME</div></div>
+              <div class="navitem"><div class="ic">&#127891;</div><div class="lbl">LESSONS</div></div>
+              <div class="navitem"><div class="ic">&#128100;</div><div class="lbl">YOU</div></div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="frame-caption">Same screen, <b>Insider tab</b> &mdash; Form 3/4/5 disclosures, buy/sell badges, 10b5-1 caveat carried from the news-analyst disclosure pattern.</div>
+    </div>
+
+  </div>
+</div>
+
+<footer>Mockup only &middot; tokens read from <span class="mono">mobile/lib/theme/ami_theme.dart</span> &middot; chip/card specs from <span class="mono">ticker_detail_screen.dart</span> &middot; not wired to live data</footer>
