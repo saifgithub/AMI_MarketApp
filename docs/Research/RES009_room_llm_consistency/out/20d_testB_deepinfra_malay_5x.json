@@ -1,0 +1,61 @@
+{
+  "label": "TestB instruction-last JPM PM (malay, deepinfra)",
+  "provider": "deepinfra",
+  "draws": [
+    {
+      "draw": 1,
+      "extracted": "APPROVE",
+      "full_text": "```json\n{\"action\":\"APPROVE\",\"size_pct\":2.0,\"entry\":343.06,\"stop\":335.05,\"target\":374.24,\"horizon_days\":90,\"narration\":\"Diluluskan pada 2.0% \u2014 bukan siling 3.0% Meja \u2014 kerana setup harian masih downtrend (RSI 33, harga 25% julat 50-hari) dan laporan Q4 pada 2026-10-13 adalah acara binari dalam 17 hari di mana Street dihargakan untuk melebihi pada $5.91.\\n- Asas kuat: EPS konsensus naik 8.6% dalam 90 hari, tiga daripada empat suku terakhir melebihi (7.8%, 5.9% terkini), margin bersih 35% (+663bps YoY).\\n- Penilaian menyokong: P/E trailing 14.7x berbanding median sejarah sendiri 19.2x; kembalian modal $50,983M setahun membina lantai jangka panjang.\\n- Risiko kecil: 2.0% \u00d7 jarak stop ~2.3% \u2248 0.05 mata daripada had 30 mata drawdown \u2014 murah untuk menjadi salah.\\n- Struktur tranche: 1.0% sekarang pada $343.06, baki 1.0% hanya pada penutup kembali di atas SMA 50-hari $353.34 atau reaksi pasca-pendapatan bersih.\\n- Meja mencatat '1.6\u00d7 ATR' \u2014 angka lembaran ialah ATR $7.15; kali tidak dikira dan tidak digunakan dalam putusan ini.\\n- Sasaran$374.24 ialah purata Street (+9.1%), bukan tuntutan kgiliran saya.\",\"kill_criterion\":\"Penutup harian di bawah julat rendah 50-hari $335.05 (yang juga menyentuh katan begitu jauh dengan pengesahan SMA 50-hari $353.34 \u2014 entah mana-mana satu tahap ini dilihat, kajian semula keluar digunapakai) \u2014 atau satu ketinggalan berbanding anggaran EPS konsensus $5.91 pada laporan 2026-10-13.\"}\n```\n`Contoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.`",
+      "usage": {
+        "prompt_tokens": 12030,
+        "completion_tokens": 567,
+        "reasoning_tokens": 0
+      }
+    },
+    {
+      "draw": 2,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 332.00,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Putusan: diluluskan pada saiz 2.0%, bukan siling 3.0% \u2014 setup harian masih downtrend dengan RSI 33 dan laporan pendapatan 2026-10-13 dalam 17 hari tidak lulus lagi.\\n- Asas kukuh: EPS konsensus naik 8.6% dalam 90 hari, tiga daripada empat suku lepas melebihi (tertinggal hanya 2025-12-31, -3.9%), margin bersih 35% (+663bps YoY), modal dikembalikan $50,983M T4Q.\\n- Penilaian munasabah: P/E trailing 14.7\u00d7 berbanding median EPS sendiri 19.2\u00d7, dan asimetri +9.1% ke sasaran konsensus $374.24 vs -2.3% ke julat rendah 50-hari $335.05.\\n- Konservatif betul: asimetri dihargai pra-pendapatan; saiz penuh ke dalam peristiwa binari bukan disiplin skor risiko 3/5. Saya ambil titik tengah Seimbang: 2.0% (\u224820 saham pada $343.06), sumbangan drawdown ~0.2 mata daripada had 30 mata.\\n- Entry $343.06 pada pasaran, stop $332.00 di bawah julat rendah $335.05 supaya stop mencetus pada kegagalan setup, bukan hingar; baki 1.0% hanya selepas penutup di atas SMA 50-hari $353.34 atau laporan Q4 2026-10-13 diterima.\\n- Pematuhan: long-only, tiada derivatif, saiz 2.0% <= had 3.0%, sektor 0->2.0% <= 40%, 0.0 mata drawdown digunakan, 0/4 dan 0/12 pengiraan dagangan \u2014 semua PASS.\",\n \"kill_criterion\": \"Penutupan harian di bawah $335.05 (julat rendah 50-hari, dekat SMA 200-hari $321.12) menjatuhkan nama; sinonimnya, ketinggalan EPS konsensus $5.91 pada laporan 2026-10-13 yang memaksa semakan semula turun membatalkan tesis \u2014 keluar pada pembukaan.\"}",
+      "usage": {
+        "prompt_tokens": 12030,
+        "completion_tokens": 682,
+        "reasoning_tokens": 60
+      }
+    },
+    {
+      "draw": 3,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 332.00,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Diluluskan pada saiz dikurangkan, bukan siling Meja.\\n- Pematuhan lulus: long-only, tiada derivatif, nilai pasaran $911,917M, 0 drawdown digunakan, 0 dagangan hari ini.\\n- Saya menerima hujah Konservatif dan Seimbang: setup tidak diputuskan \u2014 harian downtrend, RSI 33, harga 25% julat 50\u2212hari \u2014 dan pendapatan Q4 2026\u221210\u221213 (konsensus $5.91) berada 17 hari lagi, dengan satu ketinggalan 3.9% pada suku 2025\u221212\u221231 sebagai contoh langsung.\\n- 2.0% + stop $332 menyumbang kira\u2212kira 0.18 mata daripada had 30 mata \u2014 murah walaupun siling tidak digunakan sepenuhnya.\\n- Asas kuat: semakan semula naik 8.6%, tiga daripada empat kejutan melebihi, modal dikembalikan $50,983M, P/E trailing 14.7x vs median sejarah sendiri 19.2x.\\n- Baki 1.0% hanya selepas penutup di atas SMA 50\u2212hari $353.34 atau hasil Q4 bersih \u2014 bukan sebelum.\\n- Tag: contoh kerja simulasi bilik darjah, bukan nasihat kewangan.\",\n \"kill_criterion\": \"Penutup harian di bawah $335.05 (julat rendah 50\u2212hari) menjatuhkan nama, dan ketinggalan konsensus $5.91 pada 2026\u221210\u221213 memicu semakan keluar.\"}",
+      "usage": {
+        "prompt_tokens": 12030,
+        "completion_tokens": 495,
+        "reasoning_tokens": 35
+      }
+    },
+    {
+      "draw": 4,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\", \"size_pct\": 2.0, \"entry\": 343.06, \"stop\": 335.05, \"target\": 374.24, \"horizon_days\": 90, \"narration\": \"Kelulusan pada 2.0% \u2014 struktur Seimbang, bukan siling penuh Meja.\\n\u2022 Setup belum diputuskan (downtrend harian, RSI 33, harga 25% julat 50-hari); siling penuh 3.0% ke dalam laporan konsensus penuh $5.91 pada 2026-10-13 bukan disiplin yang saya pertahankan untuk profil risiko 3/5.\\n\u2022 Tranche 1.0% sekarang; baki 1.0% hanya pada penutup di atas SMA 50-hari $353.34 atau reaksi bersih pasca-pendapatan \u2014 saiz ialah kawalan, bukan penghentian tesis.\\n\u2022 Stop $335.05 (rendah julat 50-hari): sumbangan drawdown ~0.13 mata daripada had 30 mata \u2014 remeh, ruang masih luas.\\n\u2022 Kes asas utuh: P/E trailing 14.7\u00d7 vs median sejarah sendiri 19.2\u00d7, semakan semula naik 8.6%, modal dikembalikan $50,983M, tiga daripada empat suku melebihi.\\n\u2022 Ketinggalan 52-minggu 8.7pp vs S&P 500 diiktiraf sebagai risiko dua hala \u2014 ia sebab saiz berhati-hati, bukan sebab berdiri di luar.\\n\u2022 Tag pematuhan: long-only, tiada derivatif, saiz 2.0% < siling 3.0% satu nama, 0/4 dan 0/12 had dagangan \u2014 semua lulus.\", \"kill_criterion\": \"Penutup harian di bawah $335.05 (rendah julat 50-hari) menjatuhkan nama \u2014 dan ketinggalan konsensus $5.91 pada laporan 2026-10-13 memaksa semakan keluar penuh; sebaliknya, penutup di atas SMA 50-hari $353.34 mengaktifkan tranche kedua 1.0%.\"}",
+      "usage": {
+        "prompt_tokens": 12030,
+        "completion_tokens": 644,
+        "reasoning_tokens": 95
+      }
+    },
+    {
+      "draw": 5,
+      "extracted": "APPROVE",
+      "full_text": "{\"action\": \"APPROVE\",\n \"size_pct\": 2.0,\n \"entry\": 343.06,\n \"stop\": 332.00,\n \"target\": 374.24,\n \"horizon_days\": 90,\n \"narration\": \"Keputusan: LULUS dengan saiz dipotong \u2014 2.0%, bukan siling 3.0% Meja Pelaksanaan.\\n- Pematuhan lulus: LONG sahaja, tiada derivatif, saiz di bawah had 3.0%, tiada drawdown digunakan (0.0 daripada 30 mata), 0/4 dagangan hari ini.\\n- Kes asas kukuh: margin bersih 35% (+663bps YoY), EPS konsensus naik 8.6% dalam 90 hari, modal dikembalikan $50,983M, harga pada 19.2\u00d7 median EPS sejarah sendiri vs 14.7\u00d7 trailing kini.\\n- Saya bersetuju dengan Konservatif dan Seimbang: setup tidak diputuskan \u2014 trend harian downtrend, RSI 33, harga 25% naik julat 50-hari \u2014 dan pendapatan 2026-10-13 ($5.91) dalam 17 hari ialah peristiwa binari dengan satu ketinggalan 3.9% dalam 4 suku lepas. Siling penuh ke dalam itu tidak perlu.\\n- 2.0% pada stop $332 (~3.2% jarak) menyumbang ~0.06 mata daripada had 30 \u2014 risiko murah dengan asimetri +9.1% ke sasaran Street.\\n- Berat baki ~1.0% hanya selepas penutup kembali di atas SMA 50-hari $353.34 atau tindak balas bersih laporan Q4 \u2014 kemasukan tranche kedua adalah keputusan berasingan.\\n- Horizons 90 hari mengukur bukti yang diberi: julat 50-hari dan 52-minggu, serta pemangkin pendapatan dan FOMC (32 hari).\",\n \"kill_criterion\": \"Penutup harian di bawah $335.05 (julat rendah 50-hari) membalikkan panggilan ini dan mengaktifkan keluar; ketinggalan konsensus $5.91 pada 2026-10-13 memaksa keluar pada pembukaan tanpa menunggu stop.\"}\n\nContoh kerja \u2014 simulasi bilik darjah, bukan nasihat kewangan.",
+      "usage": {
+        "prompt_tokens": 12030,
+        "completion_tokens": 673,
+        "reasoning_tokens": 86
+      }
+    }
+  ],
+  "total_tokens": {
+    "input": 60150,
+    "output": 3061
+  },
+  "cost_estimate_usd": 0.0052765
+}
