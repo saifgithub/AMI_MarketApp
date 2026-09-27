@@ -1304,21 +1304,26 @@ def _overlay_recent_filings(
     type + filed date + plain label, no document text), one `field_state`
     key: `recent_filings`.
 
-    Live-fetched (`edgar_filings_feed.fetch_recent_filings`, itself reusing
-    `company_profile.py`'s submissions-JSON fetch/cache) rather than
-    store-backed like the 8-K precedent — there is no offline ingest for
-    this slice, so it does its own CIK resolve + submissions GET per call.
-    Populated regardless of `room_recent_filings_enabled`; the flag gates
-    the RENDER only, same convention as every other CR221/CR244 overlay, so
-    a flag flip is a render-only A/B against one cached profile.
+    Live-fetched (`edgar_filings_feed.fetch_recent_filings`, which keeps its
+    OWN per-CIK submissions cache — audit M2: an earlier revision of this
+    docstring claimed it reused `company_profile.py`'s cache, which was
+    never true; the two modules now each cache the same submissions read
+    independently, at the same 6h-live/5min-negative TTLs, rather than one
+    silently re-fetching on every call) rather than store-backed like the
+    8-K precedent — there is no offline ingest for this slice, so it does
+    its own CIK resolve + (cached) submissions GET per call. Populated
+    regardless of `room_recent_filings_enabled`; the flag gates the RENDER
+    only, same convention as every other CR221/CR244 overlay, so a flag
+    flip is a render-only A/B against one cached profile.
 
     Two states, and they must not blur (CR040): `live` (a CIK-mapped issuer
     whose filings index parsed — an empty list is a real "nothing non-
     insider in 180 days", not a gap) and `not_available` (no CIK, an EDGAR
-    outage, or an index this parser doesn't recognise). No mid-state exists
-    here because there is no scan/store to go stale — every call re-fetches
-    (through `company_profile`'s own 6h/5min cache), so "unscanned"/"stale"
-    have no analogue.
+    outage, a filings.files page needed for as-of coverage that couldn't be
+    fetched, or an index this parser doesn't recognise). No mid-state exists
+    here because there is no scan/store to go stale — every call re-checks
+    `edgar_filings_feed`'s own cache first, so "unscanned"/"stale" have no
+    analogue.
     """
     try:
         state, items = edgar_filings_feed.fetch_recent_filings(ticker, as_of)

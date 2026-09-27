@@ -36,6 +36,16 @@ quarterly filings/financials move at most a few times a year), a
 `not_available`/`partial` result only 5 minutes (M2) — a transient SEC or
 yfinance outage should not lock a symbol out of a section for 6 hours once
 the outage clears.
+
+**Slice-1 audit (B1/M3):** the submissions fetch, form→label map, and
+ownership-form set now live in `app.services.edgar_submissions` as the ONE
+shared copy `edgar_filings_feed.py` (the Room agent feed) also uses —
+`classify_filing` there is what tells a Schedule 13D/13G where the issuer is
+the SUBJECT of someone else's ownership report apart from one where the
+issuer is the FILER of its own stake in a different company; the Filings tab
+relabels `description` by that same role (`_display_description`, below)
+rather than the old generic per-form label for every 13D/13G/13F-HR/N-PX/
+CORRESP/UPLOAD row.
 """
 
 from __future__ import annotations
@@ -65,58 +75,18 @@ from app.services.edgar_cik import (
     paced_get,
     resolve_cik,
 )
+from app.services.edgar_submissions import (
+    OWNERSHIP_FORMS as _OWNERSHIP_FORMS,
+    classify_filing,
+    form_label as _form_label,
+)
 
 _FETCH_TIMEOUT_S = 15.0
 _TTL_SECONDS = 6 * 60 * 60.0
 _DEGRADED_TTL_SECONDS = 5 * 60.0  # M2
 _MAX_CACHE_ENTRIES = 512
 
-# Form 3/4/5 belong to the Insider tab (edgar_ownership.py), not the filings
-# list — excluded here regardless of amendment suffix (4/A etc.).
-_OWNERSHIP_FORMS = frozenset({"3", "3/A", "4", "4/A", "5", "5/A"})
 MAX_FILINGS = 20
-
-_FORM_LABELS: dict[str, str] = {
-    "10-K": "Annual report",
-    "10-K/A": "Annual report (amended)",
-    "10-Q": "Quarterly report",
-    "10-Q/A": "Quarterly report (amended)",
-    "8-K": "Current report",
-    "8-K/A": "Current report (amended)",
-    "DEF 14A": "Proxy statement",
-    "DEFA14A": "Proxy statement (additional material)",
-    "S-1": "Registration statement",
-    "S-1/A": "Registration statement (amended)",
-    "S-3": "Registration statement (shelf)",
-    "S-3ASR": "Registration statement (automatic shelf)",
-    "S-8": "Employee stock plan registration",
-    "S-8 POS": "Employee stock plan registration (post-effective)",
-    "424B1": "Prospectus",
-    "424B2": "Prospectus",
-    "424B3": "Prospectus",
-    "424B4": "Prospectus",
-    "424B5": "Prospectus",
-    "SC 13D": "Beneficial ownership statement",
-    "SC 13D/A": "Beneficial ownership statement (amended)",
-    "SC 13G": "Beneficial ownership statement (passive)",
-    "SC 13G/A": "Beneficial ownership statement (passive, amended)",
-    "SCHEDULE 13D": "Beneficial ownership statement",
-    "SCHEDULE 13D/A": "Beneficial ownership statement (amended)",
-    "SCHEDULE 13G": "Beneficial ownership statement (passive)",
-    "SCHEDULE 13G/A": "Beneficial ownership statement (passive, amended)",
-    "11-K": "Employee stock plan annual report",
-    "25": "Notice of delisting",
-    "6-K": "Foreign private issuer report",
-    "20-F": "Foreign private issuer annual report",
-    "144": "Notice of proposed insider sale (Form 144)",
-    "144/A": "Notice of proposed insider sale (amended)",
-    "SD": "Conflict minerals disclosure",
-    "FWP": "Free writing prospectus",
-    "13F-HR": "Institutional investment manager holdings report",
-    "N-PX": "Proxy voting record",
-    "ARS": "Annual report to shareholders",
-    "425": "Business combination communication",
-}
 
 _lock = threading.RLock()
 _cache: dict[str, tuple[CompanyProfileResponse, float]] = {}
@@ -176,6 +146,10 @@ def _yf_has_identity(info: dict | None) -> bool:
 
 
 def _fetch_company_submissions(cik: int) -> dict | None:
+    """This module's own convene-independent fetch (15s timeout, matching the
+    display screen's own read budget) — kept distinct from
+    `edgar_filings_feed`'s shorter-timeout convene-path fetch, but both route
+    through the SAME `edgar_cik.paced_get` pacing clock (B1/M3)."""
     url = SUBMISSIONS_URL.format(cik=cik)
     try:
         with httpx.Client(timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": USER_AGENT}) as client:
@@ -189,16 +163,49 @@ def _fetch_company_submissions(cik: int) -> dict | None:
         return None
 
 
-def _form_label(form: str, primary_doc_description: str | None) -> str:
-    label = _FORM_LABELS.get(form)
-    if label:
-        return label
-    if primary_doc_description:
-        return str(primary_doc_description)
-    return form
+_INVESTMENT_MANAGER_FORMS = frozenset({"13F-HR", "13F-HR/A", "13F-NT", "13F-NT/A", "N-PX", "N-PX/A"})
+_CORRESPONDENCE_FORMS = frozenset({"CORRESP", "UPLOAD"})
+_SCHEDULE_13D_FORMS = frozenset({"SC 13D", "SC 13D/A", "SCHEDULE 13D", "SCHEDULE 13D/A"})
+_SCHEDULE_13G_FORMS = frozenset({"SC 13G", "SC 13G/A", "SCHEDULE 13G", "SCHEDULE 13G/A"})
 
 
-def _filings_from_submissions(submissions: dict, cik: int) -> list[FilingItem] | None:
+def _display_description(
+    form: str, file_number: str | None, primary_doc_description: str | None, issuer_name: str,
+) -> str:
+    """B1 — the Filings tab keeps every non-3/4/5 row (it links out, so a
+    user can judge for themselves) but must not present one issuer's own
+    filing register as if every row were "by" the issuer. Relabelled by
+    ROLE (`classify_filing`), not by form code alone:
+
+      - a 13D/13G where the issuer is the FILER (its own stake in another
+        company) — say so explicitly, don't reuse the generic label.
+      - a 13D/13G where the issuer is the SUBJECT — "filed by a >=5% holder
+        OF {issuer}", never phrased as if the issuer filed it.
+      - 13F-HR/N-PX — the issuer's OWN holdings report as an investment
+        manager, about OTHER companies' shares.
+      - CORRESP/UPLOAD — SEC correspondence, not a public filing about the
+        issuer's business.
+
+    Every other form keeps `form_label`'s existing wording unchanged —
+    `description` stays a plain string (the schema's own contract), only its
+    text differs by role.
+    """
+    role = classify_filing(form, file_number)
+    if role == "correspondence":
+        return "SEC comment-letter correspondence"
+    if role == "issuer_as_investor":
+        if form in _INVESTMENT_MANAGER_FORMS:
+            return f"{issuer_name}'s own holdings report as an investment manager"
+        kind = "13G" if form in _SCHEDULE_13G_FORMS else "13D"
+        return f"{issuer_name}'s own stake in another company ({kind})"
+    if role == "about_issuer":
+        return f"Filed by a >=5% holder of {issuer_name}"
+    if form == "25-NSE":
+        return "Exchange notice of removal from listing (may concern a debt series)"
+    return _form_label(form, primary_doc_description)
+
+
+def _filings_from_submissions(submissions: dict, cik: int, issuer_name: str) -> list[FilingItem] | None:
     """Newest-first, capped at MAX_FILINGS, every form except 3/4/5. None on
     a submissions shape this parser doesn't recognise (mirrors
     `edgar_8k.IndexUnreadable`'s "don't guess" rule) rather than a partial,
@@ -228,6 +235,9 @@ def _filings_from_submissions(submissions: dict, cik: int) -> list[FilingItem] |
     primary_descs = recent.get("primaryDocDescription")
     if not isinstance(primary_descs, list) or len(primary_descs) != n:
         primary_descs = [None] * n
+    file_numbers = recent.get("fileNumber")
+    if not isinstance(file_numbers, list) or len(file_numbers) != n:
+        file_numbers = [None] * n
 
     items: list[tuple[str, FilingItem]] = []
     for i in range(n):
@@ -247,7 +257,7 @@ def _filings_from_submissions(submissions: dict, cik: int) -> list[FilingItem] |
             filed,
             FilingItem(
                 form=form,
-                description=_form_label(form, primary_descs[i]),
+                description=_display_description(form, file_numbers[i], primary_descs[i], issuer_name),
                 filed_date=filed,
                 report_date=str(report_dates[i]) if report_dates[i] else None,
                 accession_number=accession,
@@ -489,7 +499,7 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
             reason="SEC EDGAR is temporarily unavailable — try again shortly", sources=[],
         )
     else:
-        parsed = _filings_from_submissions(submissions, cik)
+        parsed = _filings_from_submissions(submissions, cik, legal_name or display_name or sym)
         if parsed is None:
             filings = FilingsSection(
                 state="not_available", reason="SEC EDGAR filings index is in an unrecognised format",

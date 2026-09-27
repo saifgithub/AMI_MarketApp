@@ -67,7 +67,7 @@ from app.services.fundamentals import (
 )
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
-from app.services.edgar_filings_feed import FEED_LABEL, recent_filings_line
+from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -2475,8 +2475,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             header_lines.append(
                 f"- {FEED_LABEL}: LIVE, read from the issuer's own SEC filings "
                 "index (form type + filed date + plain label only — no document "
-                "text); the line lists up to the newest 10 filings in the last "
-                "180 days, newest first."
+                f"text); the line lists up to the newest {MAX_FILINGS} filings by "
+                f"or about the issuer in the last {WINDOW_DAYS} days, newest first."
             )
         else:
             header_lines.append(

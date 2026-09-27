@@ -121,10 +121,13 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   estimating one
 - **Recent SEC filings** — the issuer's filings INDEX: form type, filed date and a
   plain label, up to the last 10 in the last 180 days, when the sheet tags it (LIVE).
-  This is dates and types only, never the document text — report the form and date and
-  do not infer what a filing contains, or why it was filed, from its type or timing.
-  Not the full financial statements this list already says aren't supplied; a 10-K or
-  10-Q appearing here is only a dated marker that one exists
+  This is filings BY OR ABOUT the issuer — most rows are the issuer's own filings, but
+  a Schedule 13D/13G row can instead be a beneficial-ownership threshold holder
+  reporting a stake IN the issuer; the label says which. This is dates and types only,
+  never the document text — report the form and date and do not infer what a filing
+  contains, or why it was filed, from its type or timing. Not the full financial
+  statements this list already says aren't supplied; a 10-K or 10-Q appearing here is
+  only a dated marker that one exists
 - **What is and isn't multi-period.** Six figures on the sheet span more than one
   period and may be cited as such: (1) the margin trend YoY, across its two named
   quarters; (2) TTM revenue growth, which is itself a year-over-year change;

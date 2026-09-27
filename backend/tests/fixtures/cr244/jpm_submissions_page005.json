@@ -1,0 +1,82 @@
+{
+  "accessionNumber": [
+    "0001213900-25-031184",
+    "0000019617-25-000335",
+    "0000019617-25-000334"
+  ],
+  "filingDate": [
+    "2025-04-11",
+    "2025-04-11",
+    "2025-04-11"
+  ],
+  "reportDate": [
+    "",
+    "2025-04-09",
+    "2025-04-11"
+  ],
+  "acceptanceDateTime": [
+    "2025-04-11T21:30:06.000Z",
+    "2025-04-11T20:55:53.000Z",
+    "2025-04-11T14:29:28.000Z"
+  ],
+  "act": [
+    "33",
+    "34",
+    "34"
+  ],
+  "form": [
+    "424B2",
+    "4",
+    "8-K"
+  ],
+  "fileNumber": [
+    "333-270004",
+    "001-38267",
+    "001-05805"
+  ],
+  "filmNumber": [
+    "25833738",
+    "25832833",
+    "25830391"
+  ],
+  "items": [
+    "",
+    "",
+    "7.01,9.01"
+  ],
+  "core_type": [
+    "424B2",
+    "4",
+    "XBRL"
+  ],
+  "size": [
+    54981,
+    6869,
+    2895467
+  ],
+  "isXBRL": [
+    0,
+    0,
+    1
+  ],
+  "isInlineXBRL": [
+    0,
+    0,
+    1
+  ],
+  "isXBRLNumeric": [
+    null,
+    null,
+    null
+  ],
+  "primaryDocument": [
+    "ea0238080-01_424b2.htm",
+    "xslF345X05/primary_doc.xml",
+    "jpm-20250411.htm"
+  ],
+  "primaryDocDescription": [
+    "PRELIMINARY PRICING SUPPLEMENT",
+    "PRIMARY DOCUMENT",
+    "8-K"
+  ]
+}
