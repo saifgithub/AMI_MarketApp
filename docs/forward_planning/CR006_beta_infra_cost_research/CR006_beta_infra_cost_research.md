@@ -20,10 +20,19 @@ No code changes ship under this CR.
 Full report with charts: see the artifact delivered in-session. This doc is the filed,
 version-controlled copy.
 
-## Outcome (2026-07-30, AT:Infrastructure)
+## Outcome (2026-07-30, AT:Infrastructure; consolidation note added 2026-09-27, AT:R85)
+
+**2026-09-27:** this research's cost model has been extended to a 1,000-user target and one
+real error in its own math corrected (CR006's Room-premium cost line assumed 3 debate rounds;
+`room_runner.py:6304` hardcodes `rounds=1` — the correction lowers the Floor Manager LLM-cost
+line roughly 3x and may reverse the "don't ship Sonnet 5 unconditionally" verdict below). See
+[CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md), now the
+consolidated Beta-infra/GTM tracking doc going forward. This doc's original research and
+citations are unchanged and remain the source of the underlying unit prices CR245 extends.
 
 This research's deferred decisions are now locked in `decision_log.md` and carried into
-execution under [CR126](../CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md):
+execution under [CR126](../CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md)
+(itself closed 2026-09-27 into CR245):
 
 - **Compute + DB** — [D-066](../../initial_specs/11_decisions/decision_log.md#d-066--beta-computedb-path-confirmed-gcp-cloud-run--supabase):
   Cloud Run + Supabase confirmed over Neon + Vercel.

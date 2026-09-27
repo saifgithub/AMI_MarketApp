@@ -1,6 +1,6 @@
 # CR126 — Beta infra provisioning: IaC scaffolding, cheap-end architecture, B7 deferred
 
-**Status:** in_progress · **Session:** AT:Infrastructure · **Date:** 2026-07-30
+**Status:** done · **Session:** AT:Infrastructure · **Date:** 2026-07-30 · **Closed:** 2026-09-27 (AT:R85), consolidated into [CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md)
 **Source:** Saiful — *"you are responsible for planning and managing the infrastructure for
 the project... your immediate assignment is select a good infrastructure that the application
 can use, with space to grow."* Follow-through clarified: start provisioning now rather than
@@ -62,9 +62,26 @@ Terraform changes.
 
 ## Acceptance
 
-- [ ] `infra/gcp/*.tf` present, `terraform fmt -check` and `terraform validate` clean
-- [ ] `.github/workflows/deploy-beta.yml` present, `workflow_dispatch`-only (no push trigger)
-- [ ] k6 load-test script present, not executed against Alpha
-- [ ] `decision_log.md` carries D-066/067/068; CR006 row status `done` with Outcome note
-- [ ] CR126 row filed, registers regenerated (`gen_registers.py gen cr` + `verify` clean)
-- [ ] Saiful has a concrete, short unblock list for B1 + B4
+- [x] `infra/gcp/*.tf` present, `terraform fmt -check` and `terraform validate` clean
+      (re-verified 2026-09-27: both pass on the current tree)
+- [x] `.github/workflows/deploy-beta.yml` present, `workflow_dispatch`-only (no push trigger)
+      (verified 2026-09-27: `on: workflow_dispatch:`, no `push:` trigger)
+- [x] k6 load-test script present, not executed against Alpha
+      (`backend/scripts/load_test_1on1.js`, confirmed present 2026-09-27)
+- [x] `decision_log.md` carries D-066/067/068; CR006 row status `done` with Outcome note
+- [x] CR126 row filed, registers regenerated (`gen_registers.py gen cr` + `verify` clean)
+- [ ] Saiful has a concrete, short unblock list for B1 + B4 — **carried forward to
+      [CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md)**,
+      since it's a live action item, not a closed research/scaffolding output.
+
+## Outcome (2026-09-27, AT:R85)
+
+All credential-free scaffolding this CR set out to author is verified landed and stays in
+place, untouched — `infra/gcp/*.tf`, `deploy-beta.yml`, `load_test_1on1.js`. Closing this CR
+as `done`: the scaffolding work itself is complete and re-verified; what remains (B1/B4
+external unblocks, the actual `terraform apply`/Cloud Run deploy/DNS cutover, and the B7 LLM
+provider decision) are live action items, not scaffolding-authoring work, and are now tracked
+under [CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md) —
+the consolidated GTM/Beta-infra tracking doc — alongside CR006's cost findings. This CR's
+Terraform and workflow files are not moved, deleted, or modified; CR245 references them by
+path, same as this doc did.

@@ -1,9 +1,23 @@
 # CR036 — Go-to-market plan
 
-**Status:** proposed
+**Status:** done
 **Filed:** 2026-07-16 (AT:R59)
 **Refreshed:** 2026-09-27 — re-anchored on [CR231](../CR231_stabilisation_programme/CR231_stabilisation_programme.md), which named this doc's text as stale during its 2026-09-24 sweep
+**Closed:** 2026-09-27 (AT:R85) — consolidated into [CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md), which now carries all GTM tracking (phase map, graduation checklist, messaging/offers/compliance, MVP completeness audit) alongside Beta infra sizing. This doc's content below is preserved for history; CR245 is the doc to read/update going forward.
 **Source:** Saiful — "Prepare a Go-to-market plan. What do we need to do?"
+
+---
+
+## Outcome (2026-09-27, AT:R85)
+
+Closed and consolidated into [CR245](../CR245_beta_infra_1000_user_sizing/CR245_beta_infra_1000_user_sizing.md)
+per Saiful's request to bring all GTM activity under one CR alongside the Beta infra sizing
+work. Every section below (phase map, graduation checklist, messaging/offers/compliance,
+ownership table, MVP completeness audit) was carried into CR245 §1-2, §6-8 verbatim or
+near-verbatim — nothing was dropped. [CR231](../CR231_stabilisation_programme/CR231_stabilisation_programme.md)
+was considered for the same consolidation but deliberately left separate: its audit-lane scope
+(security, DB migrations, sim engine) is broader than GTM and would have lost its own identity
+if folded in.
 
 ---
 
