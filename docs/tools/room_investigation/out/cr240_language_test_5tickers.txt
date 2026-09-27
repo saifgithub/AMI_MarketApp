@@ -1,0 +1,16 @@
+# CR240 language test — variety design (5 different tickers, 1 draw each,
+# per provider/language combo), replacing the earlier SO-x5 depth design
+# per Saiful: "i am just wondering if we might hit a wider variety of
+# responses from different ticker."
+#
+# Mix of tickers already characterized in English this session (doc 13,
+# GLM-5.3-Flash 5x consistency): JPM and MA were UNANIMOUS APPROVE across
+# all 5 English draws (stable); BAC, T, SO were UNSTABLE (flipped
+# PASS<->APPROVE at least once across 5 draws). Picked to see whether
+# non-English prompting behaves differently on already-stable vs.
+# already-unstable tickers, not just whether it's fluent.
+JPM
+MA
+BAC
+T
+SO
