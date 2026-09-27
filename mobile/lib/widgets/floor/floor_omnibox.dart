@@ -150,6 +150,22 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
     return decision.ticker;
   }
 
+  /// L audit fix (CR244) — Review used to trust the button's enabled state
+  /// alone (a snapshot of the validator's cached result at the last
+  /// keystroke), unlike CONVENE's `_go`, which re-runs `_validator.check`
+  /// synchronously in the tap handler before navigating. That gap meant a
+  /// tap landing between "text changed" and "debounced check resolved"
+  /// could open Review on a ticker never actually confirmed to exist. This
+  /// mirrors `_go`'s gate exactly: await the check, bail if it fails.
+  Future<void> _reviewTapped() async {
+    final decision = routeOmnibox(_ctrl.text);
+    if (decision.route != OmniboxRoute.convene) return;
+    if (_validator.checking) return;
+    if (!await _validator.check(decision.ticker!)) return;
+    if (!mounted) return;
+    widget.onReview?.call(decision.ticker!);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -250,7 +266,7 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
                   key: widget.reviewKey,
                   onTap: reviewTicker == null || widget.onReview == null
                       ? null
-                      : () => widget.onReview!(reviewTicker),
+                      : _reviewTapped,
                 ),
               ),
             ],
@@ -281,22 +297,30 @@ class _ReviewSplitButton extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final enabled = onTap != null;
     final color = enabled ? AmiColors.hexBlue : AmiColors.textLow;
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: l.floorReviewCta,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 44),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(AmiRadii.card),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
+    // L6 audit fix — `floorReviewCta`'s own ARB description promises this
+    // string doubles as the button's tooltip (no visible text label at this
+    // width); previously only the Semantics label carried it, so a
+    // pointer-hover user (or anyone relying on the tooltip affordance) never
+    // saw it.
+    return Tooltip(
+      message: l.floorReviewCta,
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: l.floorReviewCta,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AmiRadii.card),
+              border: Border.all(color: color.withValues(alpha: 0.5)),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.info_outline, color: color, size: 20),
           ),
-          alignment: Alignment.center,
-          child: Icon(Icons.info_outline, color: color, size: 20),
         ),
       ),
     );

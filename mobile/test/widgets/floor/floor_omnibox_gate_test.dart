@@ -39,6 +39,7 @@ Future<_Harness> _pump(WidgetTester t, {Set<String> known = const {'AAPL'}}) asy
   final fake = _FakeValidator(known: known);
   final convened = <String>[];
   final asked = <String>[];
+  final reviewed = <String>[];
   var picked = 0;
 
   await t.pumpWidget(MaterialApp(
@@ -52,6 +53,7 @@ Future<_Harness> _pump(WidgetTester t, {Set<String> known = const {'AAPL'}}) asy
             onConvene: convened.add,
             onAsk: asked.add,
             onPick: () => picked++,
+            onReview: reviewed.add,
           ),
           // Somewhere to tap that is not the field — the thing the real Floor
           // did not have, which is DEF297.
@@ -60,14 +62,15 @@ Future<_Harness> _pump(WidgetTester t, {Set<String> known = const {'AAPL'}}) asy
       ),
     ),
   ));
-  return _Harness(fake, convened, asked, () => picked);
+  return _Harness(fake, convened, asked, reviewed, () => picked);
 }
 
 class _Harness {
-  _Harness(this.fake, this.convened, this.asked, this._picked);
+  _Harness(this.fake, this.convened, this.asked, this.reviewed, this._picked);
   final _FakeValidator fake;
   final List<String> convened;
   final List<String> asked;
+  final List<String> reviewed;
   final int Function() _picked;
   int get picked => _picked();
 }
@@ -180,6 +183,49 @@ void main() {
               'does nothing on iOS/Android, so without an explicit handler the '
               'keyboard has no way down — the Floor offers nothing else to '
               'focus and the only other exit leaves the screen');
+    });
+  });
+
+  group('CR244 audit fix L1 — Review awaits the validator, same as Convene', () {
+    testWidgets('Review is disabled with no ticker in the box', (t) async {
+      await _pump(t);
+
+      // Icon exists but the Semantics node reports disabled — no live
+      // ticker is armed, so there is nothing for Review to open yet.
+      final semantics = t.widget<Semantics>(find.ancestor(
+        of: find.byIcon(Icons.info_outline),
+        matching: find.byType(Semantics),
+      ).first);
+      expect(semantics.properties.enabled, isFalse);
+    });
+
+    testWidgets(
+        'a ticker the reference table does not know never opens Review either',
+        (t) async {
+      final h = await _pump(t);
+
+      await t.enterText(find.byType(TextField), 'HI');
+      await t.pumpAndSettle();
+
+      await t.tap(find.byIcon(Icons.info_outline));
+      await t.pumpAndSettle();
+
+      expect(h.reviewed, isEmpty,
+          reason: 'Review must re-run the same existence check CONVENE runs '
+              'before navigating, not trust a stale cached validator state');
+    });
+
+    testWidgets('a real ticker opens Review after the awaited check resolves',
+        (t) async {
+      final h = await _pump(t);
+
+      await t.enterText(find.byType(TextField), 'AAPL');
+      await t.pumpAndSettle();
+
+      await t.tap(find.byIcon(Icons.info_outline));
+      await t.pumpAndSettle();
+
+      expect(h.reviewed, ['AAPL']);
     });
   });
 }

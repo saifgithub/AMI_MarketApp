@@ -4107,7 +4107,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floorOmniboxCaption =>
-      'A ticker convenes your team. Anything else, AMI answers.';
+      'A ticker convenes your team, or open Company Review first. Anything else, AMI answers.';
 
   @override
   String floorConveneOn(String ticker) {
@@ -5145,4 +5145,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companyReviewInsiderLoadFailed =>
       'Couldn\'t load insider transaction data.';
+
+  @override
+  String get companyReviewFieldWebsite => 'Website';
+
+  @override
+  String get companyReviewFieldPhone => 'Phone';
+
+  @override
+  String get companyReviewFieldAddress => 'Address';
+
+  @override
+  String companyReviewFiledOn(String date) {
+    return 'Filed $date';
+  }
+
+  @override
+  String companyReviewSharesUnit(String count) {
+    return '$count sh';
+  }
+
+  @override
+  String get companyReviewFieldEarningsDate => 'Earnings date';
+
+  @override
+  String get companyReviewFieldQuarter => 'Quarter';
+
+  @override
+  String get companyReviewFieldEpsEstimate => 'EPS estimate';
+
+  @override
+  String get companyReviewEightKFilingsHeading => '8-K filings';
+
+  @override
+  String get companyReviewSourceEdgarYfinance => 'EDGAR + YFINANCE';
+
+  @override
+  String get companyReviewEarningsLoadFailed => 'Couldn\'t load earnings data.';
+
+  @override
+  String get companyReviewFieldFloat => 'Float';
+
+  @override
+  String get companyReviewFieldSharesOutstanding => 'Shares outstanding';
+
+  @override
+  String get companyReviewFieldSector => 'Sector';
+
+  @override
+  String get companyReviewFieldIndustry => 'Industry';
+
+  @override
+  String get companyReviewFieldSicDescription => 'SIC description';
+
+  @override
+  String get companyReviewFieldHolderShares => 'Shares';
+
+  @override
+  String get companyReviewInsiderLoadingCaption =>
+      'This can take a moment — insider filings load slowly.';
+
+  @override
+  String companyReviewLastNDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Last $count days',
+      one: 'Last 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get companyReviewMissingCount => '—';
+
+  @override
+  String get companyReviewOpenLinkFailed => 'Couldn\'t open that link.';
+
+  @override
+  String get companyReviewShowLess => 'Show less';
 }

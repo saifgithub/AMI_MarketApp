@@ -6742,10 +6742,10 @@ abstract class AppLocalizations {
   /// **'Type a ticker — or ask AMI anything…'**
   String get floorOmniboxHint;
 
-  /// CR173 slice 2. Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. NEW key. retranslate:[ar,ms]
+  /// CR173 slice 2 (CR244 audit fix L6 appended 'or open Company Review first', per the approved mockup's caption). Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'A ticker convenes your team. Anything else, AMI answers.'**
+  /// **'A ticker convenes your team, or open Company Review first. Anything else, AMI answers.'**
   String get floorOmniboxCaption;
 
   /// CR173 slice 2. The primary button once the typed text is ticker-shaped, naming the ticker it will run on. Showing the ticker is a safety property, not decoration: the router matches shape, not meaning, so a user who typed a word that looks like a ticker sees the mistake before spending a credit. Mono uppercase. NEW key. retranslate:[ar,ms]
@@ -8497,6 +8497,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load insider transaction data.'**
   String get companyReviewInsiderLoadFailed;
+
+  /// CR244 audit fix B4 — Overview tab address/contacts sheet field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get companyReviewFieldWebsite;
+
+  /// CR244 audit fix B4 — Overview tab address/contacts sheet field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get companyReviewFieldPhone;
+
+  /// CR244 audit fix B4 — Overview tab address/contacts sheet field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get companyReviewFieldAddress;
+
+  /// CR244 audit fix B4 — Filings tab row sub-line naming the filed_date. {date} is already formatted by the caller. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Filed {date}'**
+  String companyReviewFiledOn(String date);
+
+  /// CR244 audit fix B4 — Insider tab transaction row's share count, already thousands-formatted by the caller. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sh'**
+  String companyReviewSharesUnit(String count);
+
+  /// CR244 audit fix B4 — Events tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings date'**
+  String get companyReviewFieldEarningsDate;
+
+  /// CR244 audit fix B4 — Events tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarter'**
+  String get companyReviewFieldQuarter;
+
+  /// CR244 audit fix B4 — Events tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'EPS estimate'**
+  String get companyReviewFieldEpsEstimate;
+
+  /// CR244 audit fix B4 — Events tab card heading for the 8-K filings list. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'8-K filings'**
+  String get companyReviewEightKFilingsHeading;
+
+  /// CR244 audit fix B4 — combined source tag shown when a section's sources list carries both edgar and yfinance. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'EDGAR + YFINANCE'**
+  String get companyReviewSourceEdgarYfinance;
+
+  /// CR244 audit fix B3 — Events tab error note shown when the earnings provider fetch fails; must never be presented as "no upcoming earnings" (that would fabricate an absence from an error). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load earnings data.'**
+  String get companyReviewEarningsLoadFailed;
+
+  /// CR244 audit fix M1 — Ownership tab field label, float_shares / shares_outstanding when both are present; replaces the prior 1 - institutions - insiders derivation. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Float'**
+  String get companyReviewFieldFloat;
+
+  /// CR244 audit fix M1 — Ownership tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares outstanding'**
+  String get companyReviewFieldSharesOutstanding;
+
+  /// CR244 audit fix L5 — Overview tab Classification field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sector'**
+  String get companyReviewFieldSector;
+
+  /// CR244 audit fix L5 — Overview tab Classification field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Industry'**
+  String get companyReviewFieldIndustry;
+
+  /// CR244 audit fix L5 — Overview tab Classification field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'SIC description'**
+  String get companyReviewFieldSicDescription;
+
+  /// CR244 audit fix L5 — Ownership tab holder row field label, shown in the full-list detail sheet. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get companyReviewFieldHolderShares;
+
+  /// CR244 audit fix L2 — short caption under the loading spinner on the Insider tab, since GET /v1/sim/insider/{ticker} is documented as the slow endpoint (up to 25 Form 4 XML fetches under SEC rate etiquette). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'This can take a moment — insider filings load slowly.'**
+  String get companyReviewInsiderLoadingCaption;
+
+  /// CR244 audit fix L3 — Insider tab summary card heading, replacing the hardcoded 'Last 90 days' with the backend's own window_days. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Last 1 day} other{Last {count} days}}'**
+  String companyReviewLastNDays(int count);
+
+  /// CR244 audit fix L3 — shown in place of a summary count (buys/sells/other) when the backend's summary object itself is absent, never a fabricated 0. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get companyReviewMissingCount;
+
+  /// CR244 audit fix L6 — snackbar shown when launchUrl fails to open a filing/Form-4/holder document link. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open that link.'**
+  String get companyReviewOpenLinkFailed;
+
+  /// CR244 audit fix M5 — collapse label on an expanded 'view full detail' section (Financials, Insider summary, Events), mirrored against companyReviewViewFullDetail. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get companyReviewShowLess;
 }
 
 class _AppLocalizationsDelegate

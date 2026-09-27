@@ -1905,7 +1905,7 @@
     "@floorOmniboxHint": {
         "description": "CR173 slice 2. Placeholder in the Floor's single input. Must convey that ONE box takes both a ticker symbol and a plain question — that duality is the whole point of the control. 'AMI' is the assistant's name, never translate it. NEW key. retranslate:[ar,ms]"
     },
-    "floorOmniboxCaption": "A ticker convenes your team. Anything else, AMI answers.",
+    "floorOmniboxCaption": "A ticker convenes your team, or open Company Review first. Anything else, AMI answers.",
     "@floorOmniboxCaption": {
         "description": "CR173 slice 2. Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. NEW key. retranslate:[ar,ms]"
     },
@@ -3350,5 +3350,27 @@
     "companyReviewNoSecRegistrant": "No SEC registrant found for this symbol.",
     "companyReviewLoadFailedTitle": "Couldn't load Company Review",
     "companyReviewRetry": "Retry",
-    "companyReviewInsiderLoadFailed": "Couldn't load insider transaction data."
+    "companyReviewInsiderLoadFailed": "Couldn't load insider transaction data.",
+    "companyReviewFieldWebsite": "Website",
+    "companyReviewFieldPhone": "Phone",
+    "companyReviewFieldAddress": "Address",
+    "companyReviewFiledOn": "Filed {date}",
+    "companyReviewSharesUnit": "{count} sh",
+    "companyReviewFieldEarningsDate": "Earnings date",
+    "companyReviewFieldQuarter": "Quarter",
+    "companyReviewFieldEpsEstimate": "EPS estimate",
+    "companyReviewEightKFilingsHeading": "8-K filings",
+    "companyReviewSourceEdgarYfinance": "EDGAR + YFINANCE",
+    "companyReviewEarningsLoadFailed": "Couldn't load earnings data.",
+    "companyReviewFieldFloat": "Float",
+    "companyReviewFieldSharesOutstanding": "Shares outstanding",
+    "companyReviewFieldSector": "Sector",
+    "companyReviewFieldIndustry": "Industry",
+    "companyReviewFieldSicDescription": "SIC description",
+    "companyReviewFieldHolderShares": "Shares",
+    "companyReviewInsiderLoadingCaption": "This can take a moment — insider filings load slowly.",
+    "companyReviewLastNDays": "{count, plural, =1{Last 1 day} other{Last {count} days}}",
+    "companyReviewMissingCount": "—",
+    "companyReviewOpenLinkFailed": "Couldn't open that link.",
+    "companyReviewShowLess": "Show less"
 }

@@ -9,6 +9,7 @@ import 'package:ami_trade/models/company_profile.dart';
 import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/services/api/api_client.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,9 +117,13 @@ Future<void> _pump(
   WidgetTester tester, {
   required _FakeApi api,
   String ticker = 'NVDA',
+  List<Override> extraOverrides = const [],
 }) async {
   await tester.pumpWidget(ProviderScope(
-    overrides: [apiClientProvider.overrideWithValue(api)],
+    overrides: [
+      apiClientProvider.overrideWithValue(api),
+      ...extraOverrides,
+    ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -223,5 +228,123 @@ void main() {
 
     expect(find.text("Couldn't load Company Review"), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets(
+      'B1 — "See all N on Filings tab" actually jumps to the Filings tab',
+      (tester) async {
+    final profile = _liveProfile();
+    (profile['filings'] as Map<String, dynamic>)['items'] = [
+      {
+        'form': '10-Q',
+        'description': 'Quarterly report',
+        'filed_date': '2026-08-27',
+        'url': 'https://www.sec.gov/x.htm',
+      },
+      {
+        'form': '8-K',
+        'description': 'Current report',
+        'filed_date': '2026-08-01',
+        'url': 'https://www.sec.gov/y.htm',
+      },
+    ];
+    final api = _FakeApi(profileJson: profile);
+    await _pump(tester, api: api);
+
+    // Sanity: starts on Overview.
+    expect(find.text('All filings'), findsNothing);
+
+    final seeAll = find.textContaining('See all');
+    await tester.ensureVisible(seeAll);
+    await tester.pumpAndSettle();
+    await tester.tap(seeAll);
+    await tester.pumpAndSettle();
+
+    // The Filings tab's own heading is now visible — the tap landed on the
+    // real TabController, not a no-op DefaultTabController lookup.
+    expect(find.text('All filings'), findsOneWidget);
+  });
+
+  testWidgets('B2 — Overview shows its reason on a partial state, even with '
+      'a live description', (tester) async {
+    final profile = _liveProfile();
+    (profile['overview'] as Map<String, dynamic>)
+      ..['state'] = 'partial'
+      ..['reason'] = 'EDGAR rate limited; description from yfinance only';
+    final api = _FakeApi(profileJson: profile);
+    await _pump(tester, api: api);
+
+    expect(
+        find.textContaining(
+            'EDGAR rate limited; description from yfinance only'),
+        findsWidgets);
+  });
+
+  testWidgets('B2 — Ownership not_available shows its reason', (tester) async {
+    final profile = _liveProfile();
+    (profile['ownership'] as Map<String, dynamic>)
+      ..['state'] = 'not_available'
+      ..['reason'] = 'yfinance holder data unavailable for this ticker'
+      ..remove('shares_outstanding')
+      ..remove('float_shares')
+      ..remove('pct_institutions')
+      ..remove('pct_insiders')
+      ..['holders'] = <Map<String, dynamic>>[];
+    final api = _FakeApi(profileJson: profile);
+    await _pump(tester, api: api);
+
+    await tester.tap(find.text('OWNERSHIP'));
+    await tester.pumpAndSettle();
+
+    expect(
+        find.textContaining('yfinance holder data unavailable for this ticker'),
+        findsOneWidget);
+  });
+
+  testWidgets('B2 — Insider not_available shows its reason', (tester) async {
+    final api = _FakeApi(
+      profileJson: _liveProfile(),
+      insiderJson: {
+        'ticker': 'NVDA',
+        'state': 'not_available',
+        'reason': 'No CIK match for this symbol',
+        'sources': <String>[],
+        'transactions': <Map<String, dynamic>>[],
+      },
+    );
+    await _pump(tester, api: api);
+
+    await tester.tap(find.text('INSIDER'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('No CIK match for this symbol'),
+        findsOneWidget);
+  });
+
+  testWidgets(
+      'B3 — an earnings-provider error renders an explicit error note, '
+      'never "no upcoming earnings"', (tester) async {
+    final profile = _liveProfile();
+    (profile['filings'] as Map<String, dynamic>)['items'] =
+        <Map<String, dynamic>>[];
+    final api = _FakeApi(profileJson: profile);
+    await _pump(
+      tester,
+      api: api,
+      extraOverrides: [
+        tickerEarningsProvider.overrideWith(
+            (ref, ticker) async => throw Exception('earnings feed down')),
+      ],
+    );
+
+    await tester.tap(find.text('EVENTS'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("Couldn't load earnings data"),
+        findsOneWidget);
+    expect(
+        find.textContaining(
+            'No upcoming earnings and no recent 8-K filings'),
+        findsNothing);
   });
 }

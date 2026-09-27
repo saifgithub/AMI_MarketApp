@@ -34,6 +34,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// CR244 audit fix L6 — opens `uri` externally, surfacing a snackbar when
+/// `launchUrl` fails (rather than the tap silently doing nothing). Shared by
+/// every filing/Form-4 row so the failure mode is the same everywhere.
+Future<void> _openLink(BuildContext context, String? url) async {
+  if (url == null) return;
+  final l = AppLocalizations.of(context);
+  final uri = Uri.tryParse(url);
+  var ok = false;
+  if (uri != null) {
+    try {
+      ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      ok = false;
+    }
+  }
+  if (!ok && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.companyReviewOpenLinkFailed)),
+    );
+  }
+}
+
 class CompanyReviewScreen extends ConsumerStatefulWidget {
   const CompanyReviewScreen({super.key, required this.ticker});
 
@@ -179,7 +201,10 @@ class _Loaded extends ConsumerWidget {
           child: TabBarView(
             controller: tabController,
             children: [
-              _OverviewTab(ticker: ticker, profile: profile),
+              _OverviewTab(
+                  ticker: ticker,
+                  profile: profile,
+                  tabController: tabController),
               _FinancialsTab(financials: profile.financials),
               _FilingsTab(filings: profile.filings),
               _OwnershipTab(ownership: profile.ownership),
@@ -285,18 +310,26 @@ class _SourceTag extends StatelessWidget {
   }
 }
 
-/// A source tag derived from a section's `sources` list. Falls back to
-/// EDGAR-styling for an unrecognised/empty list rather than guessing wrong
-/// the other way — EDGAR is this screen's more common source.
-Widget sourceTagFor(List<String> sources, {String? fallbackLabel}) {
+/// A source tag derived from a section's `sources` list.
+///
+/// M4 audit fix — `fallbackLabel` now applies ONLY when `sources` is empty.
+/// Previously it always won over a real, non-empty `sources` list, so a
+/// live EDGAR + yfinance section still showed whatever caller-supplied
+/// fallback string (label AND colour) regardless of what actually backed
+/// it. An empty list still falls back to EDGAR-styling — EDGAR is this
+/// screen's more common source — but only then.
+Widget sourceTagFor(List<String> sources,
+    {String? fallbackLabel, required AppLocalizations l}) {
+  if (sources.isEmpty) {
+    return _SourceTag(label: fallbackLabel ?? l.companyReviewSourceEdgar, isEdgar: true);
+  }
   final hasEdgar = sources.contains('edgar');
   final hasYfinance = sources.contains('yfinance');
-  final label = fallbackLabel ??
-      (hasEdgar && hasYfinance
-          ? 'EDGAR + YFINANCE'
-          : hasYfinance
-              ? 'YFINANCE'
-              : 'EDGAR');
+  final label = hasEdgar && hasYfinance
+      ? l.companyReviewSourceEdgarYfinance
+      : hasYfinance
+          ? l.companyReviewSourceYfinance
+          : l.companyReviewSourceEdgar;
   return _SourceTag(label: label, isEdgar: !hasYfinance || hasEdgar);
 }
 
@@ -443,10 +476,20 @@ class _KvGrid extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────
 
 class _OverviewTab extends StatelessWidget {
-  const _OverviewTab({required this.ticker, required this.profile});
+  const _OverviewTab({
+    required this.ticker,
+    required this.profile,
+    required this.tabController,
+  });
 
   final String ticker;
   final CompanyProfile profile;
+
+  /// B1 audit fix — `DefaultTabController.maybeOf(context)` is always null
+  /// here (this screen uses an explicit [TabController], not a
+  /// `DefaultTabController`), so "See all N on Filings tab" used to be a
+  /// dead tap. Wired to the real controller instead.
+  final TabController tabController;
 
   @override
   Widget build(BuildContext context) {
@@ -459,54 +502,72 @@ class _OverviewTab extends StatelessWidget {
       children: [
         _Card(
           title: l.companyReviewBusinessDescription,
-          sourceTag: sourceTagFor(overview.fieldState.sources, fallbackLabel: 'YFINANCE'),
+          sourceTag: sourceTagFor(overview.fieldState.sources, fallbackLabel: l.companyReviewSourceYfinance, l: l),
           onExpand: overview.description == null
               ? null
               : () => _showTextSheet(
                   context, l.companyReviewBusinessDescription, overview.description!),
           expandLabel:
               overview.description == null ? null : l.companyReviewViewFullDetail,
-          child: overview.description == null
-              ? _StateNote(reason: overview.fieldState.reason)
-              : Text(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (overview.description != null)
+                Text(
                   overview.description!,
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                   style: AmiTypography.body.copyWith(color: AmiColors.textMed),
                 ),
+              // B2 audit fix — a `partial` state must show its reason even
+              // when SOME fields (here, description) came through live.
+              if (!overview.fieldState.isLive)
+                _StateNote(reason: overview.fieldState.reason),
+            ],
+          ),
         ),
         _Card(
           title: l.companyReviewClassification,
-          sourceTag: sourceTagFor(overview.fieldState.sources, fallbackLabel: 'EDGAR'),
+          sourceTag: sourceTagFor(overview.fieldState.sources, fallbackLabel: l.companyReviewSourceEdgar, l: l),
           onExpand: () => _showAddressSheet(context, l, overview),
           expandLabel: l.companyReviewAddressContacts,
           child: overview.fieldState.isNotAvailable
               ? _StateNote(reason: overview.fieldState.reason)
-              : _KvGrid(entries: [
-                  (l.companyReviewFieldSic,
-                      overview.sic ?? overview.sicDescription ?? '—'),
-                  (l.companyReviewFieldCik, profile.cik ?? '—'),
-                  (l.companyReviewFieldEmployees,
-                      overview.employees?.toString() ?? '—'),
-                  (l.companyReviewFieldExchange, overview.exchange ?? '—'),
-                ]),
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _KvGrid(entries: [
+                      (l.companyReviewFieldSector, overview.sector ?? '—'),
+                      (l.companyReviewFieldIndustry, overview.industry ?? '—'),
+                      (l.companyReviewFieldSic, overview.sic ?? '—'),
+                      (l.companyReviewFieldSicDescription,
+                          overview.sicDescription ?? '—'),
+                      (l.companyReviewFieldCik, profile.cik ?? '—'),
+                      (l.companyReviewFieldEmployees,
+                          _fmtThousands(overview.employees)),
+                      (l.companyReviewFieldExchange, overview.exchange ?? '—'),
+                    ]),
+                    // B2 audit fix — `partial` classification (e.g. no CIK
+                    // match, EDGAR fields withheld) still needs its reason
+                    // visible alongside whatever yfinance fields did load.
+                    if (overview.fieldState.state == 'partial')
+                      _StateNote(reason: overview.fieldState.reason),
+                  ],
+                ),
         ),
         if (filings.items.isNotEmpty)
           _Card(
             title: l.companyReviewMostRecentFiling,
             sourceTag:
-                sourceTagFor(filings.fieldState.sources, fallbackLabel: 'EDGAR'),
-            onExpand: () {
-              final tabs = DefaultTabController.maybeOf(context);
-              tabs?.animateTo(2);
-            },
+                sourceTagFor(filings.fieldState.sources, fallbackLabel: l.companyReviewSourceEdgar, l: l),
+            onExpand: () => tabController.animateTo(2),
             expandLabel: l.companyReviewSeeAllFilings(filings.items.length),
             child: _FilingRow(item: filings.items.first),
           )
         else if (!filings.fieldState.isLive)
           _Card(
             title: l.companyReviewMostRecentFiling,
-            sourceTag: sourceTagFor(filings.fieldState.sources, fallbackLabel: 'EDGAR'),
+            sourceTag: sourceTagFor(filings.fieldState.sources, fallbackLabel: l.companyReviewSourceEdgar, l: l),
             child: _StateNote(reason: filings.fieldState.reason),
           ),
       ],
@@ -543,14 +604,18 @@ class _OverviewTab extends StatelessWidget {
             ? _StateNote(reason: overview.fieldState.reason)
             : _KvGrid(entries: [
                 (l.companyReviewFieldExchange, overview.exchange ?? '—'),
-                ('Website', overview.website ?? '—'),
-                ('Phone', overview.phone ?? '—'),
-                ('Address', overview.address ?? '—'),
+                (l.companyReviewFieldWebsite, overview.website ?? '—'),
+                (l.companyReviewFieldPhone, overview.phone ?? '—'),
+                (l.companyReviewFieldAddress, overview.address ?? '—'),
               ]),
       ),
     );
   }
 }
+
+/// B4 audit fix — employees formatted with a thousands separator (L5), and
+/// an honest '—' rather than a bare 'null'.toString() edge case.
+String _fmtThousands(int? v) => v == null ? '—' : NumberFormat('#,##0').format(v);
 
 class _DetailSheet extends StatelessWidget {
   const _DetailSheet({required this.title, required this.child});
@@ -582,18 +647,48 @@ class _DetailSheet extends StatelessWidget {
 // Financials tab
 // ─────────────────────────────────────────────────────────────────────────
 
-class _FinancialsTab extends StatelessWidget {
+class _FinancialsTab extends StatefulWidget {
   const _FinancialsTab({required this.financials});
 
   final CompanyFinancials financials;
 
   @override
+  State<_FinancialsTab> createState() => _FinancialsTabState();
+}
+
+class _FinancialsTabState extends State<_FinancialsTab> {
+  // M5 audit fix — "view full detail" expand revealing every financials
+  // field; only a 4-field summary shows by default.
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final financials = widget.financials;
     final l = AppLocalizations.of(context);
     final fmtCompact = NumberFormat.compact();
-    final fmtPct = NumberFormat.percentPattern();
-    String money(double? v) => v == null ? '—' : '\$${fmtCompact.format(v)}';
-    String pct(double? v) => v == null ? '—' : fmtPct.format(v);
+    // M3 audit fix — currency from financials.currency, never a hardcoded
+    // '$'. Falls back to a bare compact number (no invented currency symbol)
+    // when currency is absent, per CR040 — never fabricate a unit.
+    String money(double? v) {
+      if (v == null) return '—';
+      final currency = financials.currency;
+      if (currency == null) return fmtCompact.format(v);
+      return NumberFormat.compactSimpleCurrency(name: currency).format(v);
+    }
+
+    // M2 audit fix — up to 2 decimals so 0.042 -> "4.2%" and 0.0002 ->
+    // "0.02%", never "0%" for a genuinely nonzero value.
+    String pct(double? v) {
+      if (v == null) return '—';
+      final fmtPct = NumberFormat.decimalPercentPattern(decimalDigits: 2);
+      final formatted = fmtPct.format(v);
+      // decimalPercentPattern always pads to 2dp ("4.20%"); trim trailing
+      // zeros but keep at least one significant digit after the point when
+      // there is one, so 0.042 shows "4.2%" not "4.20%".
+      return formatted.replaceAllMapped(
+          RegExp(r'(\.\d*?)0+%$'), (m) => '${m[1]}%'.replaceAll('.%', '%'));
+    }
+
     String num_(double? v) => v == null ? '—' : v.toStringAsFixed(2);
 
     return ListView(
@@ -602,7 +697,15 @@ class _FinancialsTab extends StatelessWidget {
       children: [
         _Card(
           title: l.companyReviewFinancialsHeading,
-          sourceTag: sourceTagFor(financials.fieldState.sources, fallbackLabel: 'YFINANCE'),
+          sourceTag: sourceTagFor(financials.fieldState.sources, fallbackLabel: l.companyReviewSourceYfinance, l: l),
+          onExpand: financials.fieldState.isNotAvailable
+              ? null
+              : () => setState(() => _expanded = !_expanded),
+          expandLabel: financials.fieldState.isNotAvailable
+              ? null
+              : (_expanded
+                  ? l.companyReviewShowLess
+                  : l.companyReviewViewFullDetail),
           child: financials.fieldState.isNotAvailable
               ? _StateNote(reason: financials.fieldState.reason)
               : Column(
@@ -612,18 +715,20 @@ class _FinancialsTab extends StatelessWidget {
                       (l.companyReviewFieldMarketCap, money(financials.marketCap)),
                       (l.companyReviewFieldRevenueTtm, money(financials.revenueTtm)),
                       (l.companyReviewFieldGrossMargin, pct(financials.grossMargin)),
-                      (l.companyReviewFieldOperatingMargin,
-                          pct(financials.operatingMargin)),
-                      (l.companyReviewFieldNetMargin, pct(financials.netMargin)),
                       (l.companyReviewFieldTrailingPe, num_(financials.trailingPe)),
-                      (l.companyReviewFieldForwardPe, num_(financials.forwardPe)),
-                      (l.companyReviewFieldEpsTtm, num_(financials.epsTtm)),
-                      (l.companyReviewFieldDebtToEquity,
-                          num_(financials.debtToEquity)),
-                      (l.companyReviewFieldFreeCashFlow,
-                          money(financials.freeCashFlow)),
-                      (l.companyReviewFieldDividendYield,
-                          pct(financials.dividendYield)),
+                      if (_expanded) ...[
+                        (l.companyReviewFieldOperatingMargin,
+                            pct(financials.operatingMargin)),
+                        (l.companyReviewFieldNetMargin, pct(financials.netMargin)),
+                        (l.companyReviewFieldForwardPe, num_(financials.forwardPe)),
+                        (l.companyReviewFieldEpsTtm, num_(financials.epsTtm)),
+                        (l.companyReviewFieldDebtToEquity,
+                            num_(financials.debtToEquity)),
+                        (l.companyReviewFieldFreeCashFlow,
+                            money(financials.freeCashFlow)),
+                        (l.companyReviewFieldDividendYield,
+                            pct(financials.dividendYield)),
+                      ],
                     ]),
                     if (financials.fieldState.state == 'partial') ...[
                       const SizedBox(height: AmiSpacing.s),
@@ -655,7 +760,7 @@ class _FilingsTab extends StatelessWidget {
       children: [
         _Card(
           title: l.companyReviewFilingsHeading,
-          sourceTag: sourceTagFor(filings.fieldState.sources, fallbackLabel: 'EDGAR'),
+          sourceTag: sourceTagFor(filings.fieldState.sources, fallbackLabel: l.companyReviewSourceEdgar, l: l),
           child: filings.items.isEmpty
               ? _StateNote(reason: filings.fieldState.reason)
               : Column(
@@ -678,14 +783,7 @@ class _FilingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return InkWell(
-      onTap: item.url == null
-          ? null
-          : () {
-              final uri = Uri.tryParse(item.url!);
-              if (uri != null) {
-                launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
-            },
+      onTap: item.url == null ? null : () => _openLink(context, item.url),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -719,7 +817,7 @@ class _FilingRow extends StatelessWidget {
                   Text(
                     item.filedDate == null
                         ? '—'
-                        : 'Filed ${item.filedDate}',
+                        : l.companyReviewFiledOn(item.filedDate!),
                     style: AmiTypography.caption
                         .copyWith(color: AmiColors.textLow, fontSize: 10),
                   ),
@@ -754,9 +852,19 @@ class _OwnershipTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final fmtPct = NumberFormat.percentPattern();
+    final fmtShares = NumberFormat('#,##0');
     final inst = ownership.pctInstitutions;
     final ins = ownership.pctInsiders;
-    final float = (inst != null && ins != null) ? (1 - inst - ins) : null;
+    // M1 audit fix — float is NEVER derived as 1 - institutions - insiders
+    // (that both double-counts overlapping filers and can go negative).
+    // Shown instead as float_shares / shares_outstanding, when the backend
+    // provides both; clamped to >= 0 as defence in depth (CR040 — a
+    // computed figure must never render as a fabricated negative).
+    final sharesOut = ownership.sharesOutstanding;
+    final floatShares = ownership.floatShares;
+    final floatPct = (sharesOut != null && sharesOut > 0 && floatShares != null)
+        ? (floatShares / sharesOut).clamp(0.0, 1.0)
+        : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -764,23 +872,32 @@ class _OwnershipTab extends StatelessWidget {
       children: [
         _Card(
           title: l.companyReviewOwnershipSplit,
-          sourceTag: sourceTagFor(ownership.fieldState.sources, fallbackLabel: 'YFINANCE'),
+          sourceTag: sourceTagFor(ownership.fieldState.sources, fallbackLabel: l.companyReviewSourceYfinance, l: l),
           child: ownership.fieldState.isNotAvailable
               ? _StateNote(reason: ownership.fieldState.reason)
-              : _KvGrid(entries: [
-                  (l.companyReviewFieldInstitutions,
-                      inst == null ? '—' : fmtPct.format(inst)),
-                  (l.companyReviewFieldInsiders,
-                      ins == null ? '—' : fmtPct.format(ins)),
-                  (l.companyReviewFieldPublicFloat,
-                      float == null ? '—' : fmtPct.format(float)),
-                ]),
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _KvGrid(entries: [
+                      (l.companyReviewFieldInstitutions,
+                          inst == null ? '—' : fmtPct.format(inst)),
+                      (l.companyReviewFieldInsiders,
+                          ins == null ? '—' : fmtPct.format(ins)),
+                      (l.companyReviewFieldFloat,
+                          floatPct == null ? '—' : fmtPct.format(floatPct)),
+                      (l.companyReviewFieldSharesOutstanding,
+                          sharesOut == null ? '—' : fmtShares.format(sharesOut)),
+                    ]),
+                    if (ownership.fieldState.state == 'partial')
+                      _StateNote(reason: ownership.fieldState.reason),
+                  ],
+                ),
         ),
         if (ownership.holders.isNotEmpty)
           _Card(
             title: l.companyReviewMajorHolders,
             sourceTag:
-                sourceTagFor(ownership.fieldState.sources, fallbackLabel: 'YFINANCE'),
+                sourceTagFor(ownership.fieldState.sources, fallbackLabel: l.companyReviewSourceYfinance, l: l),
             onExpand: () => _showHoldersSheet(context, l),
             expandLabel: l.companyReviewSeeAllHolders,
             child: Column(
@@ -830,6 +947,7 @@ class _HolderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmtPct = NumberFormat.percentPattern();
+    final fmtShares = NumberFormat('#,##0');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -843,6 +961,13 @@ class _HolderRow extends StatelessWidget {
                         color: AmiColors.textHigh,
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600)),
+                // L5 audit fix — show holder shares alongside pct held.
+                if (holder.shares != null)
+                  Text(
+                      '${l.companyReviewFieldHolderShares}: '
+                      '${fmtShares.format(holder.shares)}',
+                      style: AmiTypography.caption
+                          .copyWith(color: AmiColors.textLow, fontSize: 10)),
                 if (holder.dateReported != null)
                   Text(l.companyReviewReportedOn(holder.dateReported!),
                       style: AmiTypography.caption
@@ -906,52 +1031,121 @@ class _InsiderTab extends ConsumerWidget {
     final async = ref.watch(insiderActivityProvider(ticker));
     return async.when(
       data: (activity) => _InsiderLoaded(activity: activity),
-      loading: () =>
-          const Center(child: CircularProgressIndicator(color: AmiColors.hexCyan)),
+      // L2 audit fix — a short caption under the spinner, since this is the
+      // documented slow endpoint (up to 25 Form 4 XML fetches).
+      loading: () => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: AmiColors.hexCyan),
+            const SizedBox(height: AmiSpacing.s),
+            Text(l.companyReviewInsiderLoadingCaption,
+                style: AmiTypography.caption
+                    .copyWith(color: AmiColors.textLow)),
+          ],
+        ),
+      ),
+      // L2 audit fix — add a retry, mirroring the whole-screen error state.
       error: (e, _) => Padding(
         padding: const EdgeInsets.all(AmiSpacing.m),
-        child: _StateNote(reason: l.companyReviewInsiderLoadFailed),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _StateNote(reason: l.companyReviewInsiderLoadFailed),
+            const SizedBox(height: AmiSpacing.s),
+            OutlinedButton(
+              onPressed: () => ref.invalidate(insiderActivityProvider(ticker)),
+              child: Text(l.companyReviewRetry),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _InsiderLoaded extends StatelessWidget {
+class _InsiderLoaded extends StatefulWidget {
   const _InsiderLoaded({required this.activity});
 
   final InsiderActivity activity;
 
   @override
+  State<_InsiderLoaded> createState() => _InsiderLoadedState();
+}
+
+class _InsiderLoadedState extends State<_InsiderLoaded> {
+  // M5 audit fix — "view full detail" expand on the summary card, revealing
+  // the full transaction list (companyReviewFullTransactionList).
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final activity = widget.activity;
     final summary = activity.summary;
+    // L3 audit fix — the heading uses the backend's own window_days, never a
+    // hardcoded "Last 90 days".
+    final heading = l.companyReviewLastNDays(activity.windowDays ?? 90);
+    final transactions = activity.transactions;
+    final visibleTransactions =
+        _expanded ? transactions : transactions.take(5).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.xxl),
       children: [
         if (activity.fieldState.isNotAvailable)
           _Card(
-            title: l.companyReviewInsiderLast90Days,
-            sourceTag: const _SourceTag(label: 'FORMS 3/4/5', isEdgar: true),
+            title: heading,
+            sourceTag: _SourceTag(label: l.companyReviewSourceForms345, isEdgar: true),
             child: _StateNote(reason: activity.fieldState.reason),
           )
         else if (summary != null)
           _Card(
-            title: l.companyReviewInsiderLast90Days,
-            sourceTag: const _SourceTag(label: 'FORMS 3/4/5', isEdgar: true),
+            title: heading,
+            sourceTag: _SourceTag(label: l.companyReviewSourceForms345, isEdgar: true),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _KvGrid(entries: [
+                  (l.companyReviewNetSentiment,
+                      _netDirectionLabel(l, summary.netDirection)),
+                  (l.companyReviewBuysSells,
+                      '${summary.buys} / ${summary.sells}'),
+                ]),
+                // B2 audit fix — a `partial` state must show its reason even
+                // when a summary object came through.
+                if (activity.fieldState.state == 'partial')
+                  _StateNote(reason: activity.fieldState.reason),
+              ],
+            ),
+          )
+        else
+          // L3 audit fix — a missing summary is an honest "—", never a
+          // fabricated zero-count summary.
+          _Card(
+            title: heading,
+            sourceTag: _SourceTag(label: l.companyReviewSourceForms345, isEdgar: true),
             child: _KvGrid(entries: [
-              (l.companyReviewNetSentiment, _netDirectionLabel(l, summary.netDirection)),
-              (l.companyReviewBuysSells, '${summary.buys} / ${summary.sells}'),
+              (l.companyReviewNetSentiment, l.companyReviewMissingCount),
+              (l.companyReviewBuysSells, l.companyReviewMissingCount),
             ]),
           ),
-        if (activity.transactions.isNotEmpty)
+        if (transactions.isNotEmpty)
           _Card(
             title: l.companyReviewRecentForm4s,
             sourceTag: sourceTagFor(activity.fieldState.sources,
-                fallbackLabel: 'EDGAR'),
+                fallbackLabel: l.companyReviewSourceEdgar, l: l),
+            onExpand: transactions.length <= 5
+                ? null
+                : () => setState(() => _expanded = !_expanded),
+            expandLabel: transactions.length <= 5
+                ? null
+                : (_expanded
+                    ? l.companyReviewShowLess
+                    : l.companyReviewFullTransactionList),
             child: Column(
               children: [
-                for (final t in activity.transactions)
+                for (final t in visibleTransactions)
                   _InsiderRow(t: t, l: l),
               ],
             ),
@@ -981,6 +1175,9 @@ class _InsiderLoaded extends StatelessWidget {
     );
   }
 
+  // L3 audit fix — an unknown net_direction value renders the raw string
+  // rather than being silently folded into NONE, which would fabricate an
+  // "activity" reading (none) the backend never asserted.
   String _netDirectionLabel(AppLocalizations l, String v) {
     switch (v) {
       case 'buying':
@@ -989,8 +1186,10 @@ class _InsiderLoaded extends StatelessWidget {
         return l.companyReviewNetDirectionSelling;
       case 'mixed':
         return l.companyReviewNetDirectionMixed;
-      default:
+      case 'none':
         return l.companyReviewNetDirectionNone;
+      default:
+        return v.toUpperCase();
     }
   }
 }
@@ -1005,28 +1204,33 @@ class _InsiderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,##0');
     Widget? badge;
-    // CR244 correction: ONLY direction == buy/sell ever gets a BUY/SELL
-    // badge. Everything else (M exercise, A grant, F withholding, G gift,
-    // …) shows its own code_label in a neutral badge — never as BUY.
-    if (t.isBuy) {
+    // CR244 correction, plus L4 audit fix (defence in depth): a BUY/SELL
+    // badge requires BOTH direction == buy/sell AND code in {P, S} — never
+    // direction alone. That way a server-side direction bug can't put a
+    // BUY/SELL badge on a non-P/S row; this client independently re-checks
+    // the code before ever rendering one. Everything else (M exercise, A
+    // grant, F withholding, G gift, …) shows its own code_label in a neutral
+    // badge — falling back to the raw code when code_label is null, so an
+    // unrecognised code still renders something honest, never a blank badge.
+    final isBuySellCode = t.code == 'P' || t.code == 'S';
+    if (t.isBuy && isBuySellCode) {
       badge = _Badge(
           label: l.companyReviewBadgeBuy, color: AmiColors.hexGreen);
-    } else if (t.isSell) {
+    } else if (t.isSell && isBuySellCode) {
       badge =
           _Badge(label: l.companyReviewBadgeSell, color: AmiColors.hexRed);
-    } else if (t.codeLabel != null) {
-      badge = _Badge(label: t.codeLabel!.toUpperCase(), color: AmiColors.hexPurple);
+    } else {
+      final neutralLabel = t.codeLabel ?? t.code;
+      if (neutralLabel.isNotEmpty) {
+        badge = _Badge(
+            label: neutralLabel.toUpperCase(), color: AmiColors.hexPurple);
+      }
     }
+    final showsBuySellBadge =
+        (t.isBuy || t.isSell) && isBuySellCode;
 
     return InkWell(
-      onTap: t.url == null
-          ? null
-          : () {
-              final uri = Uri.tryParse(t.url!);
-              if (uri != null) {
-                launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
-            },
+      onTap: t.url == null ? null : () => _openLink(context, t.url),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -1050,7 +1254,10 @@ class _InsiderRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (t.isScheduled10b5_1) ...[
+                      // L4 audit fix — the 10b5-1 tag is shown ONLY on P/S
+                      // rows; it is meaningless (and could read as spurious
+                      // reassurance) on an M/A/F/G/other row.
+                      if (showsBuySellBadge && t.isScheduled10b5_1) ...[
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1074,7 +1281,7 @@ class _InsiderRow extends StatelessWidget {
                     [
                       t.transactionDate,
                       if (t.shares != null)
-                        '${fmt.format(t.shares)} sh',
+                        l.companyReviewSharesUnit(fmt.format(t.shares)),
                       if (t.price != null)
                         '@ \$${t.price!.toStringAsFixed(2)}',
                     ].whereType<String>().join(' · '),
@@ -1130,29 +1337,59 @@ class _EventsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final earningsAsync = ref.watch(tickerEarningsProvider(ticker));
     final eightKs = filings.items.where((f) => f.isEightK).toList();
 
     return earningsAsync.when(
-      data: (earnings) => _EventsLoaded(earnings: earnings, eightKs: eightKs),
+      data: (earnings) =>
+          _EventsLoaded(earnings: earnings, eightKs: eightKs, filings: filings),
       loading: () =>
           const Center(child: CircularProgressIndicator(color: AmiColors.hexCyan)),
-      error: (_, __) => _EventsLoaded(earnings: null, eightKs: eightKs),
+      // B3 audit fix — a provider error is NOT "no earnings" (that would
+      // fabricate an absence the backend never asserted). Render an
+      // explicit error note instead, distinct from the empty state.
+      error: (_, __) => Padding(
+        padding: const EdgeInsets.all(AmiSpacing.m),
+        child: _StateNote(reason: l.companyReviewEarningsLoadFailed),
+      ),
     );
   }
 }
 
-class _EventsLoaded extends StatelessWidget {
-  const _EventsLoaded({required this.earnings, required this.eightKs});
+class _EventsLoaded extends StatefulWidget {
+  const _EventsLoaded(
+      {required this.earnings, required this.eightKs, required this.filings});
 
   final SimEarnings? earnings;
   final List<FilingItem> eightKs;
+  final CompanyFilings filings;
+
+  @override
+  State<_EventsLoaded> createState() => _EventsLoadedState();
+}
+
+class _EventsLoadedState extends State<_EventsLoaded> {
+  // M5 audit fix — "view full detail" expand on the 8-K list; only the 3
+  // most recent show by default.
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
+    final earnings = widget.earnings;
+    final eightKs = widget.eightKs;
+    final filings = widget.filings;
     final l = AppLocalizations.of(context);
+    // B3 audit fix — earnings loaded OK (this widget only builds on the
+    // `data` branch) but with no date is a genuine "no upcoming earnings";
+    // that combines with the filings feed to decide the empty state below.
     final hasEarnings = earnings?.hasData ?? false;
-    if (!hasEarnings && eightKs.isEmpty) {
+    final filingsLive = filings.fieldState.isLive;
+    // The all-clear empty state may ONLY fire when earnings loaded with no
+    // date AND filings is live with zero 8-Ks — never when filings is
+    // partial/not_available, which would silently claim "no recent 8-K
+    // filings" when the truth is "we don't know."
+    if (!hasEarnings && eightKs.isEmpty && filingsLive) {
       return Padding(
         padding: const EdgeInsets.all(AmiSpacing.m),
         child: Text(l.companyReviewNoEvents,
@@ -1163,24 +1400,46 @@ class _EventsLoaded extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(
           AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.xxl),
       children: [
-        if (hasEarnings)
+        if (hasEarnings && earnings != null)
           _Card(
             title: l.companyReviewEventsHeading,
-            sourceTag: const _SourceTag(label: 'YFINANCE', isEdgar: false),
+            sourceTag: _SourceTag(label: l.companyReviewSourceYfinance, isEdgar: false),
             child: _KvGrid(entries: [
-              ('Earnings date', earnings!.earningsDate ?? '—'),
-              if (earnings!.quarter != null) ('Quarter', earnings!.quarter!),
-              if (earnings!.epsEstimate != null)
-                ('EPS estimate', earnings!.epsEstimate!.toStringAsFixed(2)),
+              (l.companyReviewFieldEarningsDate, earnings.earningsDate ?? '—'),
+              if (earnings.quarter != null)
+                (l.companyReviewFieldQuarter, earnings.quarter!),
+              if (earnings.epsEstimate != null)
+                (l.companyReviewFieldEpsEstimate,
+                    earnings.epsEstimate!.toStringAsFixed(2)),
             ]),
           ),
         if (eightKs.isNotEmpty)
           _Card(
-            title: '8-K filings',
-            sourceTag: const _SourceTag(label: 'EDGAR', isEdgar: true),
+            title: l.companyReviewEightKFilingsHeading,
+            sourceTag: _SourceTag(label: l.companyReviewSourceEdgar, isEdgar: true),
+            onExpand: eightKs.length <= 3
+                ? null
+                : () => setState(() => _expanded = !_expanded),
+            expandLabel: eightKs.length <= 3
+                ? null
+                : (_expanded
+                    ? l.companyReviewShowLess
+                    : l.companyReviewViewFullDetail),
             child: Column(
-              children: [for (final f in eightKs) _FilingRow(item: f)],
+              children: [
+                for (final f in (_expanded ? eightKs : eightKs.take(3)))
+                  _FilingRow(item: f),
+              ],
             ),
+          )
+        else if (!filingsLive)
+          // B3 audit fix — filings not live must show ITS OWN reason, never
+          // the blanket "no recent 8-K filings" line (that would fabricate
+          // an absence from an unknown).
+          _Card(
+            title: l.companyReviewEightKFilingsHeading,
+            sourceTag: _SourceTag(label: l.companyReviewSourceEdgar, isEdgar: true),
+            child: _StateNote(reason: filings.fieldState.reason),
           ),
       ],
     );
