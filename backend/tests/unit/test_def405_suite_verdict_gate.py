@@ -189,7 +189,12 @@ def test_the_gate_records_a_verdict_before_every_exit() -> None:
 def test_the_gate_captures_the_commit_before_the_suite_runs() -> None:
     src = _GATE.read_text()
     sha_at = src.index('GATE_SHA="$(git')
-    run_at = src.index('"${PYTEST[@]}" "$TARGET"')
+    # DEF450: pytest now runs against PYTEST_TARGET (TARGET with its
+    # "backend/" prefix stripped, since the gate `cd`s into backend/ before
+    # invoking it — see DEF450's comment above `cd "$REPO_ROOT/backend"`).
+    # TARGET itself is unchanged: it is still what gets recorded to the
+    # verdict file, in the caller's own repo-root-relative convention.
+    run_at = src.index('"${PYTEST[@]}" "$PYTEST_TARGET"')
     assert sha_at < run_at, "HEAD can move during the run; the record must name what was tested"
     assert '"$GATE_SHA" "$1" "$TARGET"' in src
 

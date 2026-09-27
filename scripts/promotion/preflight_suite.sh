@@ -34,12 +34,32 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$REPO_ROOT" || exit 2
+
+# DEF450: this used to `cd "$REPO_ROOT"` before invoking pytest. `Settings`
+# (backend/app/core/config.py) is a pydantic-settings model with
+# `env_file=".env"` — relative to the PROCESS cwd, not to the settings module
+# — so running from repo root silently loads the real dev `.env` there
+# (DATABASE_URL pointed at a real docker-compose/melehost Postgres,
+# USE_REAL_MARKET_DATA=true), not the empty config `_resolve_url()`'s sqlite
+# fallback expects. `AMI_TEST_DATABASE_URL` (set by the autouse `_isolated_db`
+# fixture) still wins for tests that read it directly, but the two
+# `test_def324_test_db_isolation.py` tests that exercise the FALLBACK path on
+# purpose (deleting that var to assert what's left under it) got a real
+# Postgres URL instead of the sqlite default — 58 failures on 2026-09-27, all
+# traced to this. `backend/` has no `.env` of its own and is where
+# `backend/pyproject.toml`'s own `testpaths = ["tests"]` already says pytest
+# runs from — cd there instead, exactly as a developer running `cd backend &&
+# pytest` would, which is the invocation that stayed green throughout.
+cd "$REPO_ROOT/backend" || exit 2
 
 # An array, not a string: the repo lives under `/Volumes/Extreme Pro/`, and a
 # word-split string command turns that space into two arguments and exits 127.
 PYTEST=("$REPO_ROOT/backend/.venv/bin/python" -m pytest)
+# TARGET is still expressed relative to REPO_ROOT (the caller's convention,
+# and what the verdict file records) — strip the "backend/" prefix now that
+# pytest itself runs from inside backend/.
 TARGET="${1:-backend/tests/unit/}"
+PYTEST_TARGET="${TARGET#backend/}"
 LOG="$(mktemp -t ami_preflight_suite)"
 
 # Captured BEFORE the suite runs: HEAD can move during a twenty-minute run
@@ -65,7 +85,7 @@ if [ ! -x "$REPO_ROOT/backend/.venv/bin/python" ]; then
 fi
 
 echo "▶ running $TARGET …"
-"${PYTEST[@]}" "$TARGET" -q >"$LOG" 2>&1
+"${PYTEST[@]}" "$PYTEST_TARGET" -q >"$LOG" 2>&1
 SUITE_EXIT=$?
 
 SUMMARY="$(grep -E '^[0-9]+ (passed|failed)|passed|failed|error' "$LOG" | tail -1)"
