@@ -30,10 +30,12 @@ from app.services.room_prompts import _room_scoreboard, build_room_messages
 TS = datetime(2026, 9, 2, 12, 0, tzinfo=timezone.utc)
 
 
-def _msg(agent_id, stance=None, conviction=None, headline=None, role="agent"):
+def _msg(agent_id, stance=None, conviction=None, headline=None, role="agent",
+         size=None):
     return AgentMessage(
         agent_id=agent_id, role=role, content="prose body", timestamp=TS,
         stance=stance, conviction=conviction, headline=headline,
+        argued_size_pct=size,
     )
 
 
@@ -41,7 +43,7 @@ def _full_transcript():
     return [
         _msg(AgentId.MARKET_ANALYST, "for", "high", "Reclaimed the 200-day on volume"),
         _msg(AgentId.FUNDAMENTALS_ANALYST, "against", "medium", "Margins compressed 2 quarters"),
-        _msg(AgentId.NEUTRAL_DEBATOR, "neutral", "low", "Wait for the print"),
+        _msg(AgentId.NEUTRAL_DEBATOR, "neutral", "low", "Wait for the print", size=2.0),
     ]
 
 
@@ -60,17 +62,17 @@ def test_the_table_is_exact_and_column_aligned():
     out = _room_scoreboard(_full_transcript())
     body = out.split("\n")
     assert body[2] == (
-        "AGENT                    STANCE   CONVICTION  HEADLINE"
+        "AGENT                    STANCE          CONVICTION  HEADLINE"
     )
-    assert body[3] == "-----------------------  -------  ----------  --------"
+    assert body[3] == "-----------------------  --------------  ----------  --------"
     assert body[4] == (
-        "Technical Strategist     for      high        Reclaimed the 200-day on volume"
+        "Technical Strategist     for             high        Reclaimed the 200-day on volume"
     )
     assert body[5] == (
-        "Fundamentals Analyst     against  medium      Margins compressed 2 quarters"
+        "Fundamentals Analyst     against         medium      Margins compressed 2 quarters"
     )
     assert body[6] == (
-        "Risk Officer — Balanced  neutral  low         Wait for the print"
+        "Risk Officer — Balanced  neutral @ 2.0%  low         Wait for the print"
     )
 
 
@@ -164,27 +166,85 @@ def test_it_is_declared_a_tally_rather_than_another_voice():
 
 # ── DEF448: what a STANCE means differs by seat ───────────────────────────────
 
+import re  # noqa: E402
 
-def test_the_legend_glosses_only_the_seats_that_spoke():
-    out = _room_scoreboard(_full_transcript())
-    assert "What STANCE refers to in each seat" in out
-    assert "the four analysts" in out
-    assert "the three Risk Officers" in out
-    assert "Bull / Bear Researchers" not in out
-    assert "Execution Desk —" not in out
+_ALL_SEATS = [
+    _msg(AgentId.FUNDAMENTALS_ANALYST, "for", "high", "x"),
+    _msg(AgentId.MARKET_ANALYST, "for", "high", "x"),
+    _msg(AgentId.NEWS_ANALYST, "neutral", "low", "x"),
+    _msg(AgentId.SOCIAL_MEDIA_ANALYST, "against", "low", "x"),
+    _msg(AgentId.BULL_RESEARCHER, "for", "high", "x"),
+    _msg(AgentId.BEAR_RESEARCHER, "against", "high", "x"),
+    _msg(AgentId.RESEARCH_MANAGER, "for", "medium", "x"),
+    _msg(AgentId.TRADER, "for", "medium", "x"),
+    _msg(AgentId.AGGRESSIVE_DEBATOR, "for", "high", "x", size=5.0),
+    _msg(AgentId.CONSERVATIVE_DEBATOR, "against", "high", "x", size=1.0),
+    _msg(AgentId.NEUTRAL_DEBATOR, "for", "low", "x", size=2.5),
+]
+
+
+def _legend(out):
+    return out.split("What STANCE refers to in each seat")[1]
+
+
+def test_a_full_room_gets_one_gloss_line_per_seat_group():
+    legend = _legend(_room_scoreboard(_ALL_SEATS))
+    lines = [ln for ln in legend.split("\n") if ln.startswith("- ")]
+    assert lines[0].startswith(
+        "- Fundamentals Analyst / Technical Strategist / Macro & Events / "
+        "Flow & Positioning: a directional read"
+    )
+    assert lines[1].startswith("- Bull Researcher / Bear Researcher: argues the side")
+    assert lines[2].startswith("- Research Manager: its recommended stance")
+    assert "mandate" in lines[2]
+    assert lines[3].startswith("- Execution Desk: whether to act")
+    assert "HOLD/WAIT" in lines[3]
+    assert lines[4].startswith(
+        "- Risk Officer — Aggressive / Risk Officer — Conservative: stance is "
+        "settled by role"
+    )
+    assert lines[5].startswith("- Risk Officer — Balanced: the one Risk Officer")
+    assert len(lines) == 6
+
+
+def test_the_legend_names_only_the_seats_that_spoke():
+    legend = _legend(_room_scoreboard(_full_transcript()))
+    assert "Technical Strategist / Fundamentals Analyst" not in legend
+    assert "- Fundamentals Analyst / Technical Strategist: a directional read" in legend
+    assert "- Risk Officer — Balanced:" in legend
+    for absent in ("Bull Researcher", "Execution Desk", "Aggressive"):
+        assert absent not in legend
 
 
 def test_the_legend_forbids_a_tally_rather_than_offering_one():
     """CR106 T-VOTE: the seats are not equal votes, so the CIO gets a gloss,
-    never a consensus figure."""
-    out = _room_scoreboard(_full_transcript())
-    assert "not equal votes, so do not add them up into a count or a percentage" in out
-    assert " FOR" not in out and "consensus" not in out.lower()
+    never a consensus figure — no 'N of M for', no stance next to a %."""
+    out = _room_scoreboard(_ALL_SEATS)
+    legend = _legend(out)
+    assert "not equal votes, so do not add them up into a count or a percentage" in legend
+    tally = re.compile(r"\d+\s*(of\s*\d+\s*)?(for|against|neutral)\b", re.I)
+    assert not tally.search(legend)
+    assert not re.search(r"(for|against|neutral)\W{0,3}\(?\d+(\.\d+)?%", legend, re.I)
+    assert "consensus" not in out.lower()
 
 
-def test_the_risk_officer_gloss_ties_for_to_a_stated_size():
-    out = _room_scoreboard([_msg(AgentId.CONSERVATIVE_DEBATOR, "for", "low", "2%")])
-    assert "endorsement at the SIZE each one states" in out
+def test_a_risk_officer_stance_carries_its_argued_size():
+    """The SIZE is stripped from the prose with the envelope — the scoreboard
+    is the only place the CIO can see it."""
+    out = _room_scoreboard(_ALL_SEATS)
+    assert "for @ 5.0%" in out
+    assert "against @ 1.0%" in out
+    assert "for @ 2.5%" in out
+
+
+def test_a_missing_size_is_loud_and_only_officers_get_one():
+    out = _room_scoreboard([
+        _msg(AgentId.CONSERVATIVE_DEBATOR, "against", "high", "x"),
+        _msg(AgentId.TRADER, "for", "high", "x", size=3.0),
+    ])
+    assert "against @ size unparsed" in out
+    assert "@ 3.0%" not in out
+    assert "1 emitted no readable position" not in out
 
 
 def test_no_agent_rows_means_no_legend():

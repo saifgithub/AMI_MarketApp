@@ -3541,6 +3541,19 @@ def _scoreboard_cell(value: str | None) -> str:
     return value if value else _SCOREBOARD_UNPARSED
 
 
+def _stance_cell(m: AgentMessage) -> str:
+    """DEF448 — a Risk Officer's stance is an endorsement AT a size, and that
+    size is stripped from the prose with the envelope, so it rides here or the
+    CIO never sees it."""
+    cell = _scoreboard_cell(m.stance)
+    if m.stance and m.agent_id in _SIZE_DECLARING_AGENTS:
+        cell += (
+            f" @ {m.argued_size_pct:.1f}%" if m.argued_size_pct is not None
+            else f" @ size {_SCOREBOARD_UNPARSED}"
+        )
+    return cell
+
+
 def _room_scoreboard(transcript: list[AgentMessage]) -> str:
     """A fixed-width agent | stance | conviction | headline table.
 
@@ -3559,13 +3572,13 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
     cells = [
         (
             agent_display_name(m.agent_id),
-            _scoreboard_cell(m.stance),
+            _stance_cell(m),
             _scoreboard_cell(m.conviction),
             _scoreboard_cell(m.headline),
         )
         for m in rows
     ]
-    stated = sum(1 for _, stance, _, _ in cells if stance != _SCOREBOARD_UNPARSED)
+    stated = sum(1 for m in rows if m.stance)
     unparsed = len(cells) - stated
 
     headers = ("AGENT", "STANCE", "CONVICTION", "HEADLINE")
@@ -3609,50 +3622,63 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
 # analyst's directional read and a Risk Officer's endorsement of a specific
 # size as the same kind of "for". Deliberately a legend, never a tally: CR106
 # T-VOTE rejected any consensus figure because the seats are not equal votes.
-_STANCE_MEANING: tuple[tuple[frozenset[AgentId], str], ...] = (
+#
+# Aggressive/Conservative are told "your stance is settled by your role"
+# (overlay_generator) and CR197 measured them for/against on 117 of 118
+# convenes — so they get the same by-construction gloss as Bull/Bear; only the
+# Balanced officer's stance carries information of its own.
+_STANCE_MEANING: tuple[tuple[tuple[AgentId, ...], str], ...] = (
     (
-        frozenset({
+        (
             AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
             AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
-        }),
-        "the four analysts — a directional read of their own data lane on this "
-        "ticker. No size, entry or stop was proposed at that point.",
+        ),
+        "a directional read of its own data lane on this ticker. No size, entry "
+        "or stop had been proposed at that point.",
     ),
     (
-        frozenset({AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER}),
-        "Bull / Bear Researchers — each argues the side it was assigned, so a "
-        "Bull 'for' or a Bear 'against' is expected by construction. Weigh the "
-        "evidence they cite, not the tag; a Bull that lands 'against' (or a Bear "
-        "'for') is the notable case.",
+        (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER),
+        "argues the side it was assigned, so a Bull 'for' or a Bear 'against' is "
+        "expected by construction. Weigh the evidence cited, not the tag; a Bull "
+        "landing 'against' (or a Bear 'for') is the notable case.",
     ),
     (
-        frozenset({AgentId.RESEARCH_MANAGER}),
-        "Research Manager — which side of the Bull/Bear debate made the stronger "
-        "case.",
+        (AgentId.RESEARCH_MANAGER,),
+        "its recommended stance on taking the position, after adjudicating the "
+        "Bull/Bear debate against this user's mandate.",
     ),
     (
-        frozenset({AgentId.TRADER}),
-        "Execution Desk — whether to act on its own proposed plan (the entry, "
-        "size and stop in its turn).",
+        (AgentId.TRADER,),
+        "whether to act on its own proposed plan — on a BUY, the entry, size and "
+        "stop in its turn; on a HOLD/WAIT there is no entry or stop.",
     ),
     (
-        frozenset(_SIZE_DECLARING_AGENTS),
-        "the three Risk Officers — endorsement at the SIZE each one states in its "
-        "own turn, from its own risk posture. A 'for' at 1% and a 'for' at 5% "
-        "are different positions.",
+        (AgentId.AGGRESSIVE_DEBATOR, AgentId.CONSERVATIVE_DEBATOR),
+        "stance is settled by role (Aggressive argues for, Conservative against, "
+        "almost every convene). Weigh the argument and the size shown after '@', "
+        "not the tag.",
+    ),
+    (
+        (AgentId.NEUTRAL_DEBATOR,),
+        "the one Risk Officer whose stance genuinely varies — its read on whether "
+        "the evidence decides the trade, endorsed at the size shown after '@'.",
     ),
 )
 
 
 def _stance_legend(agent_ids: Iterable[AgentId]) -> str:
     present = set(agent_ids)
-    meanings = [text for seats, text in _STANCE_MEANING if seats & present]
-    if not meanings:
+    lines = []
+    for seats, text in _STANCE_MEANING:
+        spoke = [agent_display_name(a) for a in seats if a in present]
+        if spoke:
+            lines.append(f"- {' / '.join(spoke)}: {text}")
+    if not lines:
         return ""
     return (
         "\nWhat STANCE refers to in each seat — these are different questions, "
         "not equal votes, so do not add them up into a count or a percentage:\n"
-        + "\n".join(f"- 'for' from {text}" for text in meanings)
+        + "\n".join(lines)
         + "\n"
     )
 
