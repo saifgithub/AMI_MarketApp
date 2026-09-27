@@ -14,6 +14,8 @@ GET  /v1/sim/quotes?symbols=AAPL,MSFT,...    Batch quotes for ticker tape
 GET  /v1/sim/history/{ticker}?period=1m      OHLCV candles for the ticker-detail chart (Bundle 2)
 GET  /v1/sim/news/{ticker}?limit=5           Recent news articles for ticker (Bundle 4)
 GET  /v1/sim/earnings/{ticker}               Upcoming earnings info within 90 days (Bundle 5)
+GET  /v1/sim/company-profile/{ticker}        Company Review screen: overview/financials/filings/ownership (CR244)
+GET  /v1/sim/insider/{ticker}                Form 3/4/5 insider transactions, trailing 90 days (CR244)
 """
 
 from __future__ import annotations
@@ -31,10 +33,13 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.classification import ClassificationVerdict
+from app.schemas.company_profile import CompanyProfileResponse, InsiderResponse
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.liquidity import LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import OrderType, Side
+from app.services.company_profile import get_company_profile
+from app.services.edgar_ownership import get_insider_activity
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
@@ -1293,3 +1298,38 @@ async def earnings(
         "ex_dividend_date": info.ex_dividend_date if info else None,
         "dividend_rate": info.dividend_rate if info else None,
     }
+
+
+@router.get("/company-profile/{ticker}", response_model=CompanyProfileResponse)
+async def company_profile(ticker: str) -> CompanyProfileResponse:
+    """CR244 Part 1 — the Company Review screen's four data sections
+    (overview/financials/filings/ownership), each source-tagged and each
+    carrying its own `state`/`reason` so one source failing never blanks the
+    whole screen (CR040). Public — same as /quote and /earnings. Response
+    cached 6 hours server-side (`company_profile.get_company_profile`).
+
+    404 only when the ticker is unknown to BOTH yfinance and EDGAR's ticker
+    map — a known ticker with no SEC registrant (foreign/OTC) still returns
+    200 with `cik: null` and `filings.state = "not_available"`.
+    """
+    result = await asyncio.to_thread(get_company_profile, ticker)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown ticker: {ticker.upper()}")
+    return result
+
+
+@router.get("/insider/{ticker}", response_model=InsiderResponse)
+async def insider(ticker: str) -> InsiderResponse:
+    """CR244 Part 1 — Form 3/4/5 insider transactions over the trailing 90
+    days for the Insider tab. Public — same as /quote and /earnings.
+    Response cached 6 hours server-side (`edgar_ownership.get_insider_activity`)
+    — this is the slow endpoint, fetching up to 25 Form 4/5 XMLs at ≤10 req/s
+    under SEC's User-Agent rule on a cache miss.
+
+    `plan_type` on every transaction is a structural read of the Form 4/5
+    XML's own Rule 10b5-1 checkbox (`aff10b5One`) — never inferred from
+    footnote text (CR038: prompt/inference-only controls are not controls).
+    Only codes P/S carry a buy/sell `direction`; everything else is `other`
+    (an option exercise is not a buy — CR244's own mockup correction).
+    """
+    return await asyncio.to_thread(get_insider_activity, ticker)

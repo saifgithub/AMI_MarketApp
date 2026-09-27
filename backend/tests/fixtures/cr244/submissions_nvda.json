@@ -1,0 +1,58 @@
+{
+  "cik": "1045810",
+  "name": "NVIDIA CORP",
+  "sic": "3674",
+  "sicDescription": "Semiconductors & Related Devices",
+  "addresses": {
+    "business": {
+      "street1": "2788 SAN TOMAS EXPRESSWAY",
+      "city": "SANTA CLARA",
+      "stateOrCountry": "CA",
+      "zipCode": "95051"
+    }
+  },
+  "filings": {
+    "recent": {
+      "form": ["10-Q", "8-K", "4", "4", "DEF 14A", "10-K", "3"],
+      "accessionNumber": [
+        "0001045810-26-000123",
+        "0001045810-26-000110",
+        "0001696841-26-000014",
+        "0001199039-26-000016",
+        "0001045810-26-000090",
+        "0001045810-26-000050",
+        "0001696841-26-000001"
+      ],
+      "filingDate": [
+        "2026-08-27",
+        "2026-07-15",
+        "2026-09-23",
+        "2026-09-22",
+        "2026-06-01",
+        "2026-02-19",
+        "2026-01-05"
+      ],
+      "reportDate": [
+        "2026-07-27",
+        "2026-07-10",
+        "2026-09-21",
+        "2026-09-19",
+        null,
+        "2026-01-26",
+        null
+      ],
+      "primaryDocument": [
+        "nvda-20260727.htm",
+        "nvda-8k-20260715.htm",
+        "wk-form4_1790196985.xml",
+        "wk-form4_1790110579.xml",
+        "nvda-proxy-20260601.htm",
+        "nvda-20260126.htm",
+        "wk-form3_0001.xml"
+      ],
+      "primaryDocDescription": [
+        null, null, null, null, null, null, null
+      ]
+    }
+  }
+}
