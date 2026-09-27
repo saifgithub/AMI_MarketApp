@@ -4,7 +4,7 @@ confirms the tab's own key content renders — not just the tab loading, but
 the specific things a user would expect to see on it.
 
 Content-depth strings verified against mobile/lib/l10n/app_en.arb:
-  floorOmniboxCaption = "A ticker convenes your team. Anything else, AMI
+  floorOmniboxCaption = "A ticker convenes your team, or open Company Review first. Anything else, AMI
     answers." — the omnibox's own caption, and the stable proof that the
     persistent Concierge access point is on screen. It stands in for
     floorConciergeHeading ("AMI CONCIERGE"), now a dead key: present in all
