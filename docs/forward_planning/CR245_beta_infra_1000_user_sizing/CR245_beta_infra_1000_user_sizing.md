@@ -9,7 +9,17 @@
 (the stabilisation programme) is **not** absorbed — its audit-lane scope (security, DB
 migrations, sim engine) is broader than GTM and stays tracked on its own.
 **Source:** Saiful — "We also sized the cloud setup needed for Beta release" (1,000-user
-sizing request), then "Consolidate all the GTM activities into this CR. close the other CRs."
+sizing request), then "Consolidate all the GTM activities into this CR. close the other CRs,"
+then raised the real question underneath the sizing: "The problem is, whether we run on beta,
+is what we will run on full live access" — i.e., Beta's infra choice is also Production's
+infra choice, so it should be sized against where the app might actually end up, not just
+Beta's placeholder user count. Followed by: "Whatever tech stack we will use for Beta will be
+the same tech stack for production. Let's assume 1000 customers. If things go well, assume 1M
+users. And we will need to move Alpha to that stack first. So in the end, we will have 3
+independent environments" — confirmed as 3 separate GCP + Supabase projects (Alpha/Beta/Prod)
+running the same Terraform module with different variable values. **This is a strategy under
+active discussion, not a decided architecture — Saiful: "we are still planning."** §9 below
+captures the research and open questions; nothing in it should be read as committed scope.
 
 ---
 
@@ -331,6 +341,94 @@ the named CR221/CR222/CR170/CR171 slices) are the mechanism now closing that rem
 surface** — this section shouldn't duplicate that work, just track what it turns up that's
 GTM-relevant.
 
+### 9. Three-environment strategy (Alpha/Beta/Prod on GCP) — under discussion, not decided
+
+**Status: exploratory. Nothing below is committed scope — Saiful is still planning this.**
+Recorded here so the research and open questions don't have to be re-derived next time this
+comes up, and so a real decision (when it happens) has the numbers already gathered.
+
+**The idea:** move away from treating Beta as a disposable, cheap-mode deployment and instead
+run Alpha, Beta, and Production as **3 separate GCP projects + 3 separate Supabase projects**,
+each built from the *same* Terraform module (the one already in `infra/gcp/`) with different
+variable values (`min_instances`, `max_instances`, CPU/memory) per environment. Alpha would
+stop being melehost entirely and move onto this same stack. Target scale: Beta ~1,000 users,
+Production sized against "1,000 now, 1,000,000 if things go well."
+
+**Why this reframes the earlier sizing:** CR245 §3-5 sized Beta's architecture assuming
+scale-to-zero (`min_instances=0`) is fine — cold starts traded for near-zero idle cost. That
+assumption doesn't hold if the same deployment needs to be "up 24/7" the way Production would.
+An always-on instance (`min_instances=1`, current 2 vCPU/2GiB config) costs **~$130-140/mo in
+compute alone**, not the ~$0-30/mo the scale-to-zero estimate in §3 assumed — a real ~5x swing
+on the platform line, though still small next to the LLM cost.
+
+**Research findings (2026-09-28), with explicit confidence levels — see full findings in
+session history for citations:**
+
+- **Cloud Run pricing rates confirmed current**: $0.000024/vCPU-second, $0.0000025/GiB-second,
+  cross-checked across multiple sources (Google's own pricing page repeatedly failed to fetch
+  cleanly — triangulated via 3+ secondary sources instead of single-source-verified).
+- **Open risk, unconfirmed**: Cloud Run's always-free compute allotment may only apply in
+  specific US regions (us-central1/us-east1/us-west1) — **not `europe-west3`**, which is
+  locked in the actual Terraform (`infra/gcp/variables.tf:9`, per D-043). If true, even the
+  Beta-scale "$0-30/mo mostly-free-tier" estimate in §3 needs revising upward. **Not resolved
+  — needs a direct primary-source check against Google's own pricing page before anyone
+  budgets against the free tier.**
+- **No authoritative peak-concurrency-as-%-of-MAU benchmark exists for this app's category**
+  (session-based education/productivity, not social/gaming). DAU/MAU ratios exist (education
+  apps ~15-25% per one uncited secondary source) but don't convert cleanly to "peak concurrent
+  load" — the honest approach is deriving concurrency bottom-up from the app's own usage
+  envelope (12 Room + 30 1-on-1 sessions/user/month, clustering by peak hours), same method
+  CR245 §3 already used at 1,000 users, not an invented industry percentage. Not yet done at
+  1M-user scale.
+- **Supabase pricing confirmed current** (direct fetch, high confidence): Free/Pro tiers match
+  CR006's figures exactly, no drift. **The real constraint at high scale is not the MAU-based
+  billing but Supabase's direct-Postgres-connection ceiling, which flattens around ~490-500
+  connections regardless of compute tier paid for** (confirmed from Supabase's own
+  compute-add-ons documentation) — pooled connections scale further (up to ~12,000), but this
+  connection ceiling, not Cloud Run, is the more likely forcing function for architecture
+  change at real scale. No specific "Supabase becomes more expensive than self-hosting at N
+  users" breakeven was found — flagged as needing real modeling, not estimated here.
+- **LLM cost at 1,000,000 users has an unresolved ~2.2x arithmetic discrepancy that must be
+  fixed before this number goes into any budget.** Linear-scaling CR245 §5's 1,000-user figure
+  gives ~$2.22M/mo (Sonnet 5) or ~$1.08M/mo (GLM-5.2). A bottom-up attempt using CR006's own
+  per-tier breakdown and `tier_policy.py`'s actual per-agent model routing (Floor Pass gets
+  `cheap` tier, Trader gets `mid`, only Floor Manager gets `premium`/Sonnet-5-class routing —
+  confirmed against `backend/app/services/tier_policy.py:14-37`, not assumed) gives a
+  different, **not yet reconciled**, figure. The gap traces to how much of Trader's per-user
+  cost is Room-cost-bearing versus 1-on-1/Coach cost, which CR006's published tables don't
+  fully separate. **Whichever number is used, LLM cost dominates total cost by 2-3 orders of
+  magnitude at every scale checked (~95%+ of total spend)** — this is the load-bearing
+  qualitative finding regardless of which exact figure is right.
+- **Anthropic enterprise/volume discounts are real but only directionally known** (multiple
+  unverified secondary/blog sources suggest 15-30% off list at $250-500K+/mo committed spend)
+  — no primary Anthropic pricing page confirms this; would need an actual sales conversation,
+  not a published rate card.
+- **"One Terraform module, three environments" is sound practice for parameterizing
+  `min_instances`/`max_instances`/CPU/memory per environment** (this is what Terraform
+  variables are for, not a shortcut) — **but the underlying architecture is likely to need
+  real changes before 1M users, not just bigger numbers in the same module.** Two concrete
+  forcing functions, not vague scale-anxiety: (a) Supabase's connection ceiling above, and
+  (b) the single-Cloud-Run-service design (D-067) coupling fast API traffic with long-running
+  90-second Room-agent traffic on the same scaling knobs — `hosting.md`'s original 3-service
+  split (`ami-trade-api`/`ami-trade-agents`/`ami-trade-workers`) becomes the likely answer to
+  this, not a from-scratch redesign, since it's already specified and just currently deferred
+  by D-067. No authoritative source gives a hard user-count threshold for either — `hosting.md`'s
+  own "100K+ MAU" bracket for "consider self-hosting/GKE" is the only number on file, and it's
+  a repo-derived bracket, not an external citation.
+
+**Open items before any of this becomes a real decision:**
+- [ ] Resolve the $2.22M vs. bottom-up LLM-cost discrepancy at 1M-user scale (re-derive
+      Floor Pass/Trader/Floor Manager corrected per-user costs from `tier_policy.py`'s actual
+      routing, not linear-scale a possibly-imprecise midpoint).
+- [ ] Confirm whether Cloud Run's free compute allotment applies in `europe-west3` via a
+      direct, successful fetch of Google's own pricing page.
+- [ ] Build a bottom-up peak-concurrency model at 1M users from the app's actual usage
+      envelope, not an invented %-of-MAU figure.
+- [ ] Get a real cost model for self-hosted Postgres on GKE, to answer "at what user count
+      does Supabase's connection ceiling or price actually force a change."
+- [ ] Saiful decides: is this 3-environment strategy something to commit to now, or does it
+      wait until CR231's stabilisation programme clears and Beta itself is closer to real?
+
 ## Out of scope
 
 - Does not change any locked pricing, positioning, or compliance decision — this doc points to
@@ -353,6 +451,9 @@ GTM-relevant.
 - Does not actually run B12's load test against live infra, decide B7, resolve DEF421, or make
   any Terraform/infra changes — CR126's scaffolding is unchanged; these stay live follow-up
   items (§5), not closed by this consolidation.
+- **Does not decide the 3-environment (Alpha/Beta/Prod) strategy in §9** — exploratory only,
+  per Saiful: "we are still planning." No Terraform, no new GCP/Supabase projects, no Alpha
+  migration off melehost happens under this CR as filed.
 
 ## Acceptance
 
@@ -370,3 +471,10 @@ Additional items carried from CR006/CR126, still open:
       changes anything about the B7 timeline or the GLM-5.2 sign-off question.
 - [ ] B1 (GCP project) and B4 (Supabase project) — Saiful's external actions, unblock B5/B6.
 - [ ] B7 (cloud LLM provider decision) — stays open per D-068.
+
+Additional items from §9 (3-environment strategy), still exploratory, still open:
+- [ ] Resolve the $2.22M vs. bottom-up LLM-cost discrepancy at 1M-user scale.
+- [ ] Confirm whether Cloud Run's free compute allotment applies in `europe-west3`.
+- [ ] Build a bottom-up peak-concurrency model at 1M users from the app's usage envelope.
+- [ ] Get a real cost model for self-hosted Postgres on GKE as a Supabase-scale comparison.
+- [ ] Saiful decides whether/when to commit to the 3-environment (Alpha/Beta/Prod) strategy.
