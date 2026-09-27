@@ -188,7 +188,30 @@ def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list
     }
 
 
-def _extract(text: str, pattern: re.Pattern | None) -> str | None:
+def _extract(text: str, pattern: re.Pattern | None, json_key: str | None = None) -> str | None:
+    """`portfolio_manager` (CR240 PM-vote replay, 2026-09-27) answers in JSON
+    (`{"action": "APPROVE", ...}`), not the `Side:`/`[STANCE: ...]` tag shape
+    every other agent uses — pass --extract-json-key action for it. A
+    trailing disclaimer line ("Worked example — classroom simulation...")
+    sometimes follows the JSON block, so this parses only the first
+    balanced-looking `{...}` span, not the whole string.
+    """
+    if json_key:
+        start = text.find("{")
+        if start == -1:
+            return None
+        depth = 0
+        for i, ch in enumerate(text[start:], start):
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:i + 1]).get(json_key)
+                    except (json.JSONDecodeError, AttributeError):
+                        return None
+        return None
     if pattern:
         m = pattern.search(text)
         return m.group(1).strip() if m else None
@@ -209,6 +232,9 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--label", default="replay")
     parser.add_argument("--extract-pattern", default=None, help="regex with one capture group; default tries Side:/STANCE:")
+    parser.add_argument("--extract-json-key", default=None,
+                         help="portfolio_manager answers in JSON, not Side:/STANCE: — pass 'action' for it, "
+                              "takes priority over --extract-pattern if both given")
     parser.add_argument("--out-file", type=Path, default=None)
     parser.add_argument("--temperature", type=float, default=None,
                          help="vLLM only — RES009: temperature/seed are otherwise unset everywhere in this codebase; "
@@ -250,7 +276,7 @@ def main() -> int:
             out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature)
         else:
             out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature)
-        extracted = _extract(out["content"], pattern)
+        extracted = _extract(out["content"], pattern, json_key=args.extract_json_key)
         usage = out.get("usage") or {}
         usage_note = ""
         if usage.get("prompt_tokens") is not None:
