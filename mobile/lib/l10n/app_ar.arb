@@ -2709,6 +2709,7 @@
         "notifTypeRestingOrderFilled": "a5ce6ae9e707",
         "notifTypeRestingOrderRejected": "003ae77440cc",
         "notifTypeRestingOrderTriggered": "60875354480e",
+        "onboardingErrorTitleRejected": "237370318330",
         "onboardingHeader": "6adef0352d24",
         "onboardingSendAnswerTooltip": "18737070e41c",
         "oneOnOneCreditsBalance": "1e29193047aa",
@@ -3460,5 +3461,6 @@
     "companyReviewLastNDays": "{count, plural, =1{Last 1 day} other{Last {count} days}}",
     "companyReviewMissingCount": "—",
     "companyReviewOpenLinkFailed": "Couldn't open that link.",
-    "companyReviewShowLess": "Show less"
+    "companyReviewShowLess": "Show less",
+    "onboardingErrorTitleRejected": "REQUEST NOT ACCEPTED"
 }
