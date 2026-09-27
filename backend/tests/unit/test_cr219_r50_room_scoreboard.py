@@ -98,7 +98,7 @@ def test_a_malformed_envelope_renders_an_unparsed_row_in_position():
     transcript = _full_transcript()
     transcript.insert(1, _msg(AgentId.AGGRESSIVE_DEBATOR))
     out = _room_scoreboard(transcript)
-    rows = out.split("\n")[4:]
+    rows = out.split("\n\nWhat STANCE")[0].split("\n")[4:]
     assert rows[1].startswith("Risk Officer — Aggressive")
     assert rows[1].count("unparsed") == 3  # stance, conviction and headline
     assert len([r for r in rows if r.strip()]) == 4  # nothing dropped
@@ -160,6 +160,35 @@ def test_it_is_declared_a_tally_rather_than_another_voice():
     so the CIO does not read it as a thirteenth opinion."""
     out = _room_scoreboard(_full_transcript())
     assert "not a summary, and not another voice" in out
+
+
+# ── DEF448: what a STANCE means differs by seat ───────────────────────────────
+
+
+def test_the_legend_glosses_only_the_seats_that_spoke():
+    out = _room_scoreboard(_full_transcript())
+    assert "What STANCE refers to in each seat" in out
+    assert "the four analysts" in out
+    assert "the three Risk Officers" in out
+    assert "Bull / Bear Researchers" not in out
+    assert "Execution Desk —" not in out
+
+
+def test_the_legend_forbids_a_tally_rather_than_offering_one():
+    """CR106 T-VOTE: the seats are not equal votes, so the CIO gets a gloss,
+    never a consensus figure."""
+    out = _room_scoreboard(_full_transcript())
+    assert "not equal votes, so do not add them up into a count or a percentage" in out
+    assert " FOR" not in out and "consensus" not in out.lower()
+
+
+def test_the_risk_officer_gloss_ties_for_to_a_stated_size():
+    out = _room_scoreboard([_msg(AgentId.CONSERVATIVE_DEBATOR, "for", "low", "2%")])
+    assert "endorsement at the SIZE each one states" in out
+
+
+def test_no_agent_rows_means_no_legend():
+    assert _room_scoreboard([_msg(AgentId.TRADER, role="user")]) == ""
 
 
 # ── wiring: the CIO gets it, the eleven arguing agents do not ─────────────────

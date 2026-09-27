@@ -19,7 +19,7 @@ demo working when the LAN vLLM box is unreachable.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -3599,6 +3599,60 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
         "the agents' own stance lines (not a summary, and not another voice; "
         f"this is the transcript below, counted). {caption}.\n"
         + "\n".join(lines)
+        + "\n"
+        + _stance_legend(m.agent_id for m in rows)
+    )
+
+
+# DEF448 — every agent writes the same `for|against|neutral` tag, but it does
+# not answer the same question in every seat. Without this the CIO reads an
+# analyst's directional read and a Risk Officer's endorsement of a specific
+# size as the same kind of "for". Deliberately a legend, never a tally: CR106
+# T-VOTE rejected any consensus figure because the seats are not equal votes.
+_STANCE_MEANING: tuple[tuple[frozenset[AgentId], str], ...] = (
+    (
+        frozenset({
+            AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+            AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+        }),
+        "the four analysts — a directional read of their own data lane on this "
+        "ticker. No size, entry or stop was proposed at that point.",
+    ),
+    (
+        frozenset({AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER}),
+        "Bull / Bear Researchers — each argues the side it was assigned, so a "
+        "Bull 'for' or a Bear 'against' is expected by construction. Weigh the "
+        "evidence they cite, not the tag; a Bull that lands 'against' (or a Bear "
+        "'for') is the notable case.",
+    ),
+    (
+        frozenset({AgentId.RESEARCH_MANAGER}),
+        "Research Manager — which side of the Bull/Bear debate made the stronger "
+        "case.",
+    ),
+    (
+        frozenset({AgentId.TRADER}),
+        "Execution Desk — whether to act on its own proposed plan (the entry, "
+        "size and stop in its turn).",
+    ),
+    (
+        frozenset(_SIZE_DECLARING_AGENTS),
+        "the three Risk Officers — endorsement at the SIZE each one states in its "
+        "own turn, from its own risk posture. A 'for' at 1% and a 'for' at 5% "
+        "are different positions.",
+    ),
+)
+
+
+def _stance_legend(agent_ids: Iterable[AgentId]) -> str:
+    present = set(agent_ids)
+    meanings = [text for seats, text in _STANCE_MEANING if seats & present]
+    if not meanings:
+        return ""
+    return (
+        "\nWhat STANCE refers to in each seat — these are different questions, "
+        "not equal votes, so do not add them up into a count or a percentage:\n"
+        + "\n".join(f"- 'for' from {text}" for text in meanings)
         + "\n"
     )
 
