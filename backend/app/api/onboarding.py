@@ -42,12 +42,22 @@ async def start_onboarding(
     store: InMemorySessionStore = Depends(get_session_store),
 ) -> StartOnboardingResponse:
     """Create a new anonymous onboarding session. Returns the welcome + first question."""
+    welcome, first_q = make_welcome_messages()
+    # DEF449: `current_step` must name the question the caller is actually
+    # being asked, which is `first_q`'s own step (Q1_GOAL) — the WELCOME
+    # message is shown alongside it, not instead of it, and nothing ever
+    # answers WELCOME itself. Left at WELCOME here, DEF428 round 2's step
+    # guard on `submit_answer` (`req.step != session.current_step`) 409ed
+    # every single first answer: the client correctly echoes back Q1_GOAL
+    # (the step first_question said it was), the server was still on
+    # WELCOME, and no new user could ever get past question one. Confirmed
+    # live 2026-09-27: 10 consecutive /v1/onboarding/answer calls, 10
+    # consecutive 409s, zero successes in the preceding 24h.
     session = OnboardingSession(
         locale=req.locale,
         timezone=req.timezone,
-        current_step=ConversationStep.WELCOME,
+        current_step=first_q.step,
     )
-    welcome, first_q = make_welcome_messages()
     session.messages.append(welcome)
     await store.create(session)
 

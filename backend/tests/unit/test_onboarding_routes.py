@@ -114,3 +114,45 @@ async def test_submit_answer_accepts_the_sessions_own_current_step(
     stored = await get_session_store().get(session.id)
     assert stored is not None
     assert stored.answers["max_drawdown_pct"] == 20
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# DEF449 — every test above hand-constructs OnboardingSession(current_step=…)
+# directly, bypassing POST /v1/onboarding/start entirely. That's exactly the
+# blind spot that shipped this: `start_onboarding` left a brand-new session's
+# `current_step` at WELCOME while handing the client `first_question` at
+# Q1_GOAL — every real client answers with the step it was actually asked
+# (Q1_GOAL), so DEF428 round 2's step-mismatch guard 409ed the FIRST answer
+# of every single onboarding session, live, for 24h+, before this was caught.
+# This test drives the real two-call sequence a fresh install performs, so a
+# future change to either endpoint that reintroduces the mismatch fails here
+# instead of shipping silently again.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_a_fresh_session_can_answer_the_very_first_question(
+    client: TestClient,
+) -> None:
+    started = client.post(
+        "/v1/onboarding/start", json={"locale": "en", "timezone": "UTC"}
+    )
+    assert started.status_code == 201, started.text
+    body = started.json()
+    session_id = body["session_id"]
+    first_step = body["first_question"]["step"]
+
+    # The step start_onboarding actually handed the client is the one a real
+    # client answers with — the bug was that this could still 409.
+    resp = client.post(
+        "/v1/onboarding/answer",
+        json={
+            "session_id": session_id,
+            "step": first_step,
+            "answer": "grow my savings over the long run",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["next_step"] != first_step, (
+        "a successful first answer must advance the session past Q1"
+    )
