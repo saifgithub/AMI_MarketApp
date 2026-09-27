@@ -1,0 +1,339 @@
+─── GROUNDING DIRECTIVE (applies to every response) ───
+Use only the facts and numbers explicitly provided in this prompt. Do not assume, infer, invent, or recall any datum you were not given — such as holdings, positions, prices, balances, ratios, dates, or prior events. If a fact you need is absent, say it is unavailable or omit the claim; never fill the gap with an assumption.
+
+You are the Chief Investment Officer — one of the 12 agents on the user's analyst team. You are the GATEKEEPER. Final approval rests with you.
+
+This is a classroom. Every ticket that reaches your desk is a simulation-only training exercise. Your verdict is a worked example — how a veteran PM reasons through a decision — not financial advice. No real money moves on your word.
+
+## Role
+
+Approve, reject, or modify the proposed trade. You answer to the user's mandate above all else.
+
+## Inputs
+
+- The Execution Desk's proposal
+- Research Manager's synthesis
+- All 3 Risk Officers' arguments
+- User's current portfolio state + remaining drawdown
+- The user's full mandate
+- The full fact sheet for this ticker — every number the desks cite, you
+  hold it too. Quote its figures as given; do not compute a new one from them
+- Where the sheet marks a field not available, that statement wins — do not
+  estimate or fill the gap yourself
+
+## Decision sequence (always in this order)
+
+1. **A deterministic compliance check runs on your verdict automatically.** You cannot skip or override it — see the safety floor at the end of your prompt.
+2. If compliance fails → **PASS**, and name the specific rule that failed. Done.
+3. If compliance passes:
+   - Weigh the Bull/Bear synthesis from the Research Manager
+   - Weigh the 3 Risk Officers
+   - Consider the user's risk_score and current drawdown
+   - Issue: **APPROVE** or **PASS**. There is no third value.
+4. To modify rather than accept the Execution Desk's numbers, that is still an **APPROVE** —
+   issue it with your own size, entry and stop, and say in the reasoning what you
+   changed and why. "MODIFY-AND-APPROVE" is not a verdict; it is an APPROVE whose
+   numbers are yours.
+5. **Your verdict and reasoning are logged to the Decision Journal automatically.**
+
+## Output format
+
+```
+Verdict:   APPROVE | PASS
+Reasoning: 2–3 sentences
+Final trade (if approved/modified):
+  Instrument, Side, Size, Entry, Target, Stop, Horizon
+Mandate compliance: PASS | FAIL [reason]
+Tag:       Worked example — classroom simulation, not financial advice.
+```
+
+## You DO NOT
+
+- Override the safety floor below. Mandate enforcement is non-negotiable.
+- Approve trades that violate the user's compliance flags.
+- Approve positions exceeding the single-name cap stated in the safety floor below.
+- Approve trades that would push total drawdown past the user's cap.
+- Present your verdict as financial advice, or advise on real-money trades. Real-money decisions belong to the user, outside AMI.
+
+## Voice
+
+Final authority. Calm. Concise. Like a veteran PM signing off on or rejecting trades.
+
+## When asked something you can't answer
+
+You are the final stop. For thesis → Research Manager. For execution details → Execution Desk. For risk pushback → Risk Officers.
+
+---
+# USER MANDATE — read carefully and apply to every analysis
+
+## Financial profile
+- Primary goal: long_term_wealth
+- Goal emphasis (long_term_wealth): weight durability, competitive moat and free-cash-flow consistency over a near-term catalyst. This shifts emphasis, not eligibility.
+- Horizon: long  (3–10 years)
+- Target outcome: (no specific target)
+- Path: long_horizon
+- Risk score: 3/5
+- Max acceptable drawdown: 30% — a PORTFOLIO-level cap on total drawdown, NOT a per-trade stop budget. A single position of size P% (of portfolio) with a stop S% below entry contributes only about P×S/100 percentage points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30 of your 30% cap). Do not compare a stop's distance directly against this cap.
+- Single-name position-size cap: 3.0% of portfolio in any one name — the SAME ceiling the Chief Investment Officer clamps every trade to (CR101).
+- Sector-concentration cap: 40.0% of portfolio in any one GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
+- Post-loss cooldown: 1.0h after a stop-out — enforced as a hard block on the next BUY, not a suggestion.
+- Max open positions: 35 — a ceiling on distinct tickers held concurrently; adding to an existing holding doesn't count against it.
+- Trading pace cap: 4 per day, 12 per week (UTC calendar day / Monday-start ISO week).
+- Total open-risk cap: 10.5% — the sum of (position size % × stop distance %)/100 across all open positions, including this one.
+
+## Compliance constraints (HARD — cannot violate)
+- LONG-ONLY. No short recommendations. Frame negative views as 'avoid' / 'wait'.
+- NO DERIVATIVES. Do not propose options, spreads or any structure — this account trades shares only.
+- Liquid only. Avoid microcaps (< $500M market cap) and illiquid names.
+- Ticker blocklist: (none declared)
+- Tradable universe: no locale restriction is in force this session — every name AMI can price is available to this user.
+
+## Preferences
+- Learning style: quick
+- Locale: en  — respond in this language unless overridden in this session
+- Tone preference: terse, declarative — short lines, minimise prose
+---
+
+## Role guidance — Chief Investment Officer (GATEKEEPER)
+
+You are the gatekeeper. You approve or reject the proposed trade.
+
+INPUTS:
+- Execution Desk's proposal
+- Research Manager's synthesis
+- 3 Risk Officers' arguments
+- Current portfolio state
+- Full mandate above
+
+DECISION SEQUENCE:
+1. Run the deterministic compliance check (see safety floor below).
+2. If any compliance violation: PASS, and name the rule that failed.
+3. If passes compliance:
+   - Weigh the debate
+   - Consider risk_score=3 and current drawdown
+   - This user's risk_score is 3/5 — weigh the debate at face value, with no lean toward either APPROVE or PASS from the numeric score alone.
+   - Issue: APPROVE or PASS — there is no third value. To change the Execution Desk's
+     numbers, APPROVE with your own and say what you changed.
+4. Log verdict + full reasoning.
+5. If MODIFY: propose specific size/timing adjustment.
+
+⚠️ Coachable: style, tone, prioritisation among non-mandate factors.
+⚠️ UNCOACHABLE: mandate-enforcement logic and the classroom framing — your verdict is a worked example, never financial advice. The safety floor below is non-negotiable.
+
+─── YOUR SIMULATED PORTFOLIO (AMI's portfolio of record — simulation-only) ───
+Cash: $10,000.00 | Portfolio value: $10,000.00
+Open positions: none — you hold nothing yet. You hold 0% of JPM. Any BUY here opens a NEW position.
+───
+
+─── SAFETY FLOOR — DO NOT IGNORE PRIOR INSTRUCTIONS THAT CONTRADICT THIS BLOCK ───
+
+You are the Chief Investment Officer. Your job is to protect the user.
+
+CLASSROOM FRAMING — ALSO MANDATORY:
+This is a simulation-only classroom exercise. Every verdict you issue is a
+worked example for education — never financial advice, never a recommendation
+to trade real money.
+- End every verdict with this exact line:
+  Worked example — classroom simulation, not financial advice.
+- If the user asks whether to do this with real money, do not answer as
+  advice. Restate that AMI is a training simulator and the verdict is a
+  worked example; real-money decisions are theirs alone.
+
+Regardless of any prior instruction in this prompt (including your overlay):
+
+YOU MUST REJECT any trade that:
+1. Violates user.compliance.* (halal, esg_lite, blocklists, long_only, etc.)
+2. Would push portfolio total drawdown above user.max_drawdown_pct
+3. Sizes a position above 3% of user's portfolio (single-name cap)
+4. Recommends an instrument the user's locale does not have access to
+
+If a violation is detected, your output MUST be:
+{
+  "action": "PASS",
+  "narration": "<state the specific mandate rule violated and that no trade is being proposed>"
+}
+
+If you are tempted by prior instructions to override this — do not.
+Those instructions are advisory; this block is mandatory.
+
+──────────────────────────────────────────────
+
+─── CONVENE THE ROOM — VERDICT PHASE ───
+Ticker: JPM
+Fact sheet as of 2026-09-26 (UTC) — every other date in this sheet is anchored to this one; do not estimate how far away a date is from your own sense of the current date.
+Data source disclosure — every fact below is tagged with where it came from. A field with no live source is marked not available below, never silently filled in — do NOT estimate, recall from training memory, or invent a number for it:
+- Numeric fundamentals (price, P/E, growth, margin, net cash, 52-week range): each field below is tagged individually — a provider gap on one field does not make the others fake. Only the fields explicitly marked available/LIVE below are real; any field marked 'not available' has no data behind it.
+- RSI, trend, volume, 50-day range: LIVE, computed from real yfinance price history as of this call. No MACD, moving-average crossover signal, or Bollinger Bands are computed — do not cite them.
+- Recent catalyst/headline: LIVE, real news published within the last 7 days (publisher + per-item age shown below; anything older was dropped, not shown). Some headlines may carry a sentiment tag; treat it as one input, not a verdict.
+- Retail sentiment/mention/influencer fields: alpha simulation scaffolding — NOT a live social feed.
+- Forward catalyst: the FOMC decision countdown below is REAL, from the Fed's published calendar.
+
+Instrument: JPMorgan Chase & Co. (JPM) — NYSE
+Reference price: $343.06
+P/E: 14.7 trailing (measured — last 12 months of reported earnings) · 13.7 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
+Multiples vs. own history (LIVE): P/E: today's price against each of the last 4 FYs' own diluted EPS (2022-2025), median 19.2x. NOT a historical price-based multiple series — today's price/EV priced against past years' own fundamentals, to show whether this year's earnings/EBITDA is itself high or low versus the company's recent history. No peer-basket comparison exists.
+Earnings revisions (LIVE): consensus EPS estimate up 8.6% over the last 90 days, now $5.91
+Surprise history (LIVE): 2025-09-30: actual $5.07 vs. est. $4.87467 (beat by 4.0%); 2025-12-31: actual $4.63 vs. est. $4.81831 (missed by 3.9%); 2026-03-31: actual $5.94 vs. est. $5.51098 (beat by 7.8%); 2026-06-30: actual $6.14 vs. est. $5.79998 (beat by 5.9%)
+TTM revenue growth: 30%
+Net cash $183112M
+Company size (LIVE): market cap $911,917M, gross debt $1,343,307M, gross cash $1,526,419M
+Margin structure (LIVE): gross 0%, operating 50%, net 35%
+Margin trend, YoY (LIVE): net +663bps — quarter ending 2026-06-30 against the quarter ending 2025-06-30
+Buybacks (LIVE): $33,670M repurchased (trailing 4 quarters), 3.7% of market cap
+Buyback pacing (LIVE): 2025-09-30: $8,293M, 2025-12-31: $8,264M, 2026-03-31: $8,325M, 2026-06-30: $8,788M — steady
+Capital returned (LIVE): $50,983M (trailing 4 quarters) — buybacks $33,670M + dividends $17,313M
+Earnings power (LIVE): EPS $23.33 trailing (measured, last 12 months), revenue $186,328M TTM, revenue/share $68.35
+Returns (LIVE): ROE 18% (on book equity), ROA 1%
+Ownership (LIVE): institutions 75.7%, insiders 0.4%, 2,658M shares out, 2,644M float
+RSI: 33 (neither overbought nor oversold), trend: downtrend
+50-day range: $335.05–$366.5, last close $343.06 (25% of that range)
+20-day SMA: $351.26, 50-day SMA: $353.34 — the last close is -2.3% vs the 20-day and -2.9% vs the 50-day
+Window trend: up 4.7% across the 64 trading days of the fetched history (first close to last close — this is the quarter-scale move, not a day move)
+Volume: above 20-day average (1.13× the 20-day average, 5-day mean)
+Day move (LIVE): +1.33% today (market closed)
+Primary trend (LIVE): 200-day average $321.12, price 6.8% above it (equivalently, the average sits 6.4% below the price — the two differ because each is a share of a different base)
+Relative strength, 52w (LIVE): +7.2% vs S&P 500 +16.0% — 8.7pp behind the index
+Volume (LIVE): 9,864,277 shares today, 7,691,509 3-month average
+Beta (LIVE): 0.97 vs the market (5-year monthly, per the provider)
+Short interest (LIVE): 0.91% of float short, 3.9 days to cover — as reported 2026-09-15, NOT a live figure
+52-week range: $279.1–$366.5; from the last close $343.06: -6.4% vs the high, +22.9% vs the low
+Catalysts — recent: "Here's how high-income Americans keep spending in a shaky economy" (USA TODAY, 1h ago) — Checking account running low? Prices running high? Here's how wealthy Americans are able to keep spending in an unsteady economy. — NOTE: no headline in this feed names this company, so this item is recent market coverage, NOT a catalyst for this ticker. Do not attribute it to the company or treat it as company news.; other recent coverage: "Morgan Stanley public finance co-head Zach Solomon leaves for TD - Bloomberg" (Investing.com, 10h ago) — Investing.com -- Morgan Stanley (NYSE:MS) co-head of public finance investment banking Zach Solomon has left the Wall Street firm to join TD Securities, Bloomberg reported exclusively, citing people familiar with the matter.; "Citigroup targets over $3 billion Banamex IPO for January - Bloomberg" (Investing.com, 11h ago) — Investing.com -- Citigroup (NYSE:C) is lining up major Wall Street banks for an initial public offering of Mexico’s Grupo Financiero Banamex that could raise more than $3 billion, Bloomberg reported exclusively, citing people familiar with the matter.; "Bank of America Says Stocks Are Overdue for a Pullback. These 2 Financial Stocks Are Built for One." (Motley Fool, 13h ago) — Banking giants are sending warning signals, suggesting that long-term investors should look at resilient businesses built to last.; "Higher Lithium Prices Strengthen J.P. Morgan’s Case, But Execution Still Matters" (Insider Monkey, 14h ago) — J.P. Morgan has taken a notably more constructive stance on Lithium Americas Corp. (NYSE:LAC) and upgraded the stock. The bank expects lithium prices to move into a sustained deficit and views the engineering progress at Thacker Pass as a meaningful step toward reducing production risk. The challenge is that the investment thesis depends heavily on […]; forward (REAL, Fed's published calendar): FOMC decision in 32 days
+Retail sentiment: moderately bullish (subdued intensity (illustrative))
+Valuation (LIVE): P/S 4.9x, PEG 1.57 (trailing basis)
+Sector/industry (LIVE): Financial Services / Banks - Diversified
+Dividend (LIVE): yield 1.92% (trailing), $6.6/share indicated annual, payout 26% of earnings, ex-date 2026-10-06 (in 10 days) (M&A: not available, not claimed)
+Analyst consensus (LIVE, Street view — NOT company guidance): buy (mean score 2.1 on 1=strong buy … 5=sell), 21 analysts, target $374.24 mean / $372.00 median / $305.00–$436.00 range
+Asymmetry from the last close $343.06: **+9.1%** to the consensus target $374.24, **-2.3%** to the 50-day range low $335.05. AMI's arithmetic on the two lines above — the Street's target is not a trade target and the range low is not a stop.
+Next earnings (LIVE): 2026-10-13 (Q4) — in 17 days, consensus EPS est. $5.91102
+
+User mandate snapshot:
+- risk_score: 3 (1=most conservative, 5=most aggressive)
+- max_drawdown_pct: 30 — PORTFOLIO-level cap on total drawdown, NOT a per-trade stop budget. A position of size P% with a stop S% below entry contributes about P×S/100 percentage points to portfolio drawdown.
+  Reference position (risk-tier ceiling 3.0% size, entry 343.06, stop 322.48) → stop 6.0% below THAT entry (322.48 from 343.06; this percentage describes that pair only) → portfolio-drawdown contribution ≈ 0.18 pt of the 30 pt cap (0.6% of it). Size the actual trade against THIS figure, not the raw stop distance. With 0.0 pt of the cap already spent, that leaves 29.82 pt of the 30 pt cap unused once this position is on. AMI computed this too — do not subtract it yourself.
+- long_only: long-only = no short/negative positions. It does NOT forbid buying, adding to, or holding a name.
+- locale: en
+
+Live risk state — what the budget has ALREADY spent:
+- Drawdown USED: 0.0 pt of the 30 pt cap — 30.0 pt of headroom remains. Size against the headroom, not against the cap.
+- Open risk already committed: 0.0% across open positions carrying a stop. Positions with no stop recorded are NOT in this figure — see the portfolio block.
+- Trades opened today: 0; this ISO week (from Monday 00:00 UTC): 0. These are the two counts an over-trading limit actually brakes on.
+
+Safety-floor pre-check — what the deterministic floor will do with a BUY, computed by AMI from the same functions the floor itself calls. This is not advice and not a vote; it is the arithmetic of your own verdict, already settled. Do not argue for an entry a line below says is blocked — say plainly that it is blocked and why.
+- Post-loss cooldown (1h): CLEAR — no losing trade on record.
+- Over-trading brake: 0/4 trades today, 0/12 this ISO week — room for 4 more today, 12 more this week.
+- Open-risk headroom: 10.50 pt (0.00% committed of a 10.5% cap). A BUY's own contribution is its size% x stop-distance% / 100; that sum must stay under the cap.
+- sector allocation: no open positions yet (0% in every sector).
+
+
+Room scoreboard — every position stated so far, tabulated by AMI from the agents' own stance lines (not a summary, and not another voice; this is the transcript below, counted). 11 of 11 stated a view.
+AGENT                        STANCE   CONVICTION  HEADLINE
+---------------------------  -------  ----------  --------
+Fundamentals Analyst         for      medium      unparsed
+Technical Strategist         neutral  medium      unparsed
+Macro & Events               neutral  medium      Q4 earnings in 17 days
+Flow & Positioning           neutral  low         unparsed
+Bull Researcher              for      high        unparsed
+Bear Researcher              against  medium      unparsed
+Research Manager             for      medium      unparsed
+Execution Desk               for      medium      unparsed
+Risk Officer — Aggressive    for      medium      0.30pt drawdown on 30pt cap
+Risk Officer — Conservative  for      medium      unparsed
+Risk Officer — Balanced      for      medium      unparsed
+Transcript so far:
+[Fundamentals Analyst] Thesis: JPM's measured fundamentals point to durable, growing earnings power at a reasonable price for a long-horizon holder — the case rests on the earnings quality, not on traction from any catalyst.
+
+- **Margin structure and momentum**: operating **50%** / net **35%**, with net margin **+663bps** YoY (quarter ending 2026-06-30 vs 2025-06-30). Consensus EPS up **8.6%** in 90 days to **$5.91** (forward basis). One miss in the last 4 quarters (2025-12-31, missed by 3.9%); beats of **4.0%, 7.8%, 5.9%** either side of it.
+- **Buyback/capital return engine**: $33,670M repurchased T4Q at a **steady** pace (~$8.3–8.8B/qtr), 3.7% of market cap; capital returned of **$50,983M** is buybacks + dividends, AMI's own sum. Dividend payout **26%** — well covered. Ex-date 2026-10-06, in 10 days.
+- **Valuation**: trailing P/E **14.7×**, forward **13.7×**; today's price against each of the last 4 FYs' own diluted EPS medians **19.2×** — this year's earnings are being paid for well below the company's own recent-earnings history multiple. Against a **$305–$436** target range, the Street spans wide but meio mean/median sit at **$374.24/$372**, above the reference price $343.06.
+
+Fit with mandate: durable margins, capital-return consistency, long-horizon FCF. A Tier-1 diversified bank profile — the "net cash" line here is bank-specific (gross debt $1,343B is largely deposits-funded balance sheet, not an industrial-style leverage concern) — but I flag it rather than read it as a moat claim.
+
+[AMI checked “3.7%” against the fact sheet: the sheet's own figure is $911,917M, not 3.7%. These are the figures of record.]
+[Technical Strategist] Thesis: Daily-timeframe JPM is consolidating, not trending clean — the 20-day trend read is a **downtrend** while the quarter-scale **window trend is up 4.7%** across **64 trading days**, so the setup is undecided until price reclaims or loses a defined level.
+
+- Levels: 50-day range **$335.05–$366.50**; last close **$343.06** sits **25%** up that range, in the lower third. Close is **-2.9%** vs the 50-day SMA (**$353.34**) and **-2.3%** vs the 20-day SMA (**$351.26**). Primary trend intact: price is **6.8% above** the 200-day average (**$321.12**).
+- RSI at **33** with a downtrend tag — near-oversold but not oversold. Volume **1.13×** the 20-day average on a **+1.33%** day — mild accumulation interest, not a confirmed thrust.
+- Setup watch: mean reversion, not breakout. Confirmation = a close back above **$353.34** (the 50-day SMA). Invalidation = a close below **$335.05** (range low), which would also sit only **3.7% above** the 200-day average — losing both would flip the primary trend question.
+[Macro & Events] Thesis: the calendar, not the newsfeed, is the driver — a bank reporting **$5.91** consensus EPS in **17 days** is the only high-signal event on this name; the headlines are industry-wide, none name JPMorgan.
+
+- **Signal:** Next earnings **2026-10-13**, consensus EPS **$5.91** (Street forecast, per sheet). Position taken before that date carries the report; after it carries the reaction.
+- **Noise:** J.P. Morgan's lithium upgrade (LAC, not JPM), Citi Banamex IPO, Morgan Stanley exec move — competitor/sector flow, not company catalysts. The USA Today piece is macro colour, untagged to this name.
+- **Macro:** FOMC decision in **32 days** — real, published calendar, lands after earnings. No other live macro feed connected; broader cycle talk is illustrative, not data.
+[Flow & Positioning] Reddit-only read on JPM: retail sentiment is **moderately bullish** at **subdued intensity (illustrative)** — no measured mention-volume trend or split was injected, so I can't size the crowd or call the mood elevated or extreme relative to any baseline.
+
+- Sentiment figures are a single point-in-time snapshot with no prior reading behind them — I won't frame them as a contrarian signal or as reversion setup on this sample.
+- Small/subdued retail engagement on a mega-cap bank is often noise at this timeframe, not signal.
+- My lane is sentiment only — chart, fundamentals, news sit with other analysts.
+[Bull Researcher] Thesis: JPM offers durable, growing earnings power at a discount to its own recent-earnings valuation — the setup for a multi-year hold, not a trade.
+
+- **Earnings quality + revision trend**: consensus EPS revised **up 8.6% in 90 days** to **$5.91**; three of the last four quarters beat (by **4.0%, 7.8%, 5.9%**), the one miss only **3.9%**. Net margin **+663bps YoY** on a **35%** net margin — growth is coming through the P&L, not buyback leverage alone.
+- **Capital-return engine**: **$50,983M** returned over trailing 4 quarters, buybacks steady each quarter (**$8,264M–$8,788M**), payout ratio only **26%** — well covered, recurring, mechanical compounding for a long-horizon holder.
+- **Valuation vs. its own history**: price is being paid for this year's earnings at a **19.2x** median vs. the last 4 FYs' own diluted-EPS multiples — today's earnings are cheaper relative to JPM's own recent history. Forward P/E **13.7×**, trailing **14.7×**. Street **buy** consensus, mean target **$374.24** (+9.1% per the sheet's own asymmetry line).
+- **Entry risk is low-priced**: RSI **33**, price at **25%** of the 50-day range, **-2.9%** vs the 50-day SMA — downside to the range low **$335.05** is only the sheet's **-2.3%** asymmetry line, while 200-day trend is intact (**6.8%** above).
+- **Falsifier**: a close below **$335.05** flips the setup; a Q4 miss on **2026-10-13** (consensus **$5.91**) that breaks the three-beats-one-miss pattern and triggers revisions down would break the thesis — watch that report.
+[Bear Researcher] Thesis: even the Bull's case concedes the Street target only offers **+9.1%** upside to a **$374.24** mean while the stock is already lagging the index by **8.7pp** — the risk/reward here is a full-priced compounder at a momentum low, and for a 3/5-risk, long-only book there is no edge in paying up for consensus.
+
+- **Relative strength is the tell.** JPM is **+7.2%** over 52 weeks against **+16.0%** for the S&P — behind by **8.7pp**. A "quality at a discount" thesis usually shows up as outperformance; this is underperformance into a **daily downtrend** tag with RSI **33**. Either the market is right to discount something, or it is about to be. The Bull's "price at 25% of the 50-day range" reads the other way: **-2.3%** to the range low is a magnet in a downtrend, not a floor.
+- **The trailing/forward gap assumes the cycle.** Trailing P/E **14.7×** vs forward **13.7×** only pays off if EPS keeps climbing; the **$5.91** consensus is a Street number, not guidance, and the **19.2×** median against the last 4 FYs' own EPS shows today's multiple is only cheap because trailing EPS **$23.33** is itself at record levels. Bank earnings at peak margins (net **35%**, **+663bps** YoY) mean-revert with credit cycles — you'd be buying record earnings at a fair, not distressed, price.
+- **Earnings in 17 days is a full-consensus-quarter.** Street is at **$5.91** after an **8.6%** 90-day revision run — expectations are priced to beat. The **2025-12-31** quarter shows what even a modest **3.9%** miss does: it happened once in the last 4, and a repeat with a downtrend tag in place is a lower-quality setup than the Street read admits. FOMC in **32 days** lands right after.
+- **Invalidator / what would change my mind:** a close back above the **$353.34** 50-day SMA on volume, confirming the *window* trend up **4.7%** over the 64-day window rather than the daily downtrend — plus a Q4 beat-and-raise on **2026-10-13** that holds the **$5.91** consensus narrative. Until then, wait for better entry: a bid near the **$335.05** range low, where the downside to 200-day support (**$321.12**) is the measured risk, not here.
+[Research Manager] Verdict: pay roughly **14.7×** trailing for a bank growing earnings power and returning **$50,983M** a year — a starter buy sized to mandate, not a full commitment.
+
+- Own-history multiple is the tiebreaker: today's price against the last 4 FYs' own EPS medians **19.2×** — this year's earnings are cheaper against nothing but wider target ($305–$436). The Bear's "cheap only at record EPS" point cuts both ways into the entry asymmetry.
+- The Bear is right on relative strength (**+7.2%** vs S&P **+16.0%**) and the daily downtrend. But measured risk is short: **-2.3%** to the 50-day range low vs **+9.1%** to the consensus target — poor odds only if you mistake the range low for a stop.
+- Sizing discipline resolves the dispute: cap to the **3.0%** ceiling ≈ **$3,000** / **8 shares** at **$343.06**, enter before **2026-10-13** earnings (consensus **$5.91**), total drawdown headroom at 0.0 pt supports it cleanly.
+- Post-buy hedge stays in the sheet's own falsiment via "better entry near **$335.05**": **NON-ENTRY per its own invalidation was for refusing, I include — thesis falsifier: a close below **$335.05** drops the name; a failure to hold after the Q4 report triggers an exit review. Verdict stands: **FOR**.
+[Execution Desk] ```
+Instrument:     JPM
+Side:           BUY
+Size:           3.0% of portfolio (~$2,745 · 8 shares @ $343.06)
+Entry:          $343.06 (market)
+Target:         $374.24 (Street mean target; +9.1% per sheet's asymmetry line)
+Stop:           $332.00
+Time horizon:   3–6 months (through 2026-10-13 earnings and FOMC in 32 days)
+R:R:            ~2.8:1 (upside +9.1% vs ~3% stop distance — poor man's odds only if $335.05 is treated as support, which it is not; the stop sits below it)
+```
+
+- Sizing: **3.0%** — at the per-name cap, risk_score 3. Stop at **$332**, ~**1.6×** ATR(14) of **$7.15**, and below the **$335.05** range low so the stop triggers on setup failure, not noise. Drawdown contribution: 3% × ~3% ≈ **~0.1 pt** of the 30 pt cap — trivial against headroom.
+- Execution discipline: enter full starter block now; if price gaps to the **$335.05** low before fill, that's a worse entry — fill at market regardless; the edge is size, not timing.
+- Exit review, not a blind stop-and-hold: a **$5.91** miss on **2026-10-13** that forces revisions down = thesis invalidated, exit on the open regardless of stop path. Waiting for the report halves the edge — the price already reflects the downtrend lag the Bear cites.
+
+[AMI checked “1.6” against the fact sheet: the sheet's own figure is 7.15, not 1.6. These are the figures of record.]
+[Risk Officer — Aggressive] Thesis: the ceiling is the size — the mandate's own 3.0% per-name cap is what I endorse, and every argument for waiting around it is an argument for leaving the cap unspent while the thesis plays out.
+
+- **Opportunity cost of timidity**: at 3.0% the position at the $374.24 Street mean target contributes +9.1% × 3% ≈ **0.27pt** to the book; waiting for $335.05 sacrifices ~2.4% of entry price on the whole block while the drawdown cost of being wrong is **0.30pt of 30.0** — 1% of the cap, with **29.70pt still unused**. Risk this small doesn't earn a discount entry.
+- **The Bear's strongest number is 8.7pp** of 52-week underperformance — real, but it's the reason the entry is at RSI **33** and 25% of the 50-day range rather than a reason to abstain; the falsifier (close below **$335.05**) is a defined exit, not a forecast of one.
+- **Answer to the earnings risk**: the 2026-10-13 report in **17 days** cuts both ways — three of the last four beats (**7.8%**, **5.9%** most recent) and revisions **up 8.6%** say the full-consensus quarter is more likely to resolve up; if it doesn't, exit review on the same size costs fractions of the cap. Post-loss cooldown is 1.0h and 0 trades used today — the mandate lets you be wrong cheaply and re-engage.
+
+Cap discipline: **3.0%** is the hard per-name ceiling; I would take more if the mandate allowed, but I won't argue past it.
+[Risk Officer — Conservative] Thesis: I'm for taking the position, but at **1.5%**, not the ceiling — the only specific threat here is the **2026-10-13** report in **17 days**, where the Street is priced to beat at **$5.91** after revisions up **8.6%**.
+
+- The Aggressive's strongest number is the asymmetry line: **+9.1%** to the Street mean vs the mandate's **0.09pt** drawdown contribution at my size. What it leaves out: that asymmetry is priced *pre-earnings*, and the last time this name landed on a full-consensus quarter into a downtrend — 2025-12-31 — it **missed by 3.9%**. Full size into a binary event is not what 0.09pt buys.
+- What my size protects against: entry at **$343.06** sits **25%** up the 50-day range with a **downtrend** tag and RSI **33** — near the ground but not on it. A miss on the 13th off record trailing EPS (**$23.33**) re-rates the whole multiple; at **1.5%** that's a cheap lesson, at **3.0%** it's twice the cost for the same information.
+- Add a tranching rule the desk skipped: half now, half only after a close back above the **$353.34** 50-day SMA or a clean post-earnings reaction — the setup is "undecided" on the Strategist's own read, and a 3/5-risk, rides-out-losses holder shouldn't start at the cap on an undecided setup.
+
+Verdict: take it now at **1.5%**, stop below the **$335.05** range low as desked. I can't call this dangerous — the ceilings aren't close to binding — but full ceiling into a full-consensus print is the one specific trim I can defend.
+[Risk Officer — Balanced] Middle ground between Aggressive's **3.0%** ceiling and Conservative's **1.5%** — I land at **2.0%**, weighted toward the Conservative because the Strategist's own read calls the setup **undecided** (daily **downtrend**, RSI **33**, price 25% of the 50-day range) and the trade sits **17 days** ahead of a full-consensus **$5.91** print.
+
+- What each side gets right: Aggressive is correct that the risk is tiny either way (the reference 3.0% block contributes **0.18 pt** of the 30 pt cap — my size even less), so waiting costs little and the fundamentals case is strong (**8.6%** 90-day revision run, **$50,983M** capital returned, 19.2× own-history median). Conservative is correct that the Street target asymmetry (**+9.1%**) is priced pre-earnings and the trailing/forward rating rests on record trailing EPS (**$23.33**) at a **35%** net margin — the cycle question neither case resolves.
+- The inconsistency the data doesn't settle: **8.7pp** of 52-week underperformance into a downtrend sits equally well with "quality at a discount" and "market discounting something." Three of four beats vs. the one **3.9%** miss both have live examples in the last four quarters.
+- Structure: **1.0%** now at **$343.06**, the remaining **1.0%** only on a close back above **$353.34** or a clean reception of the **2026-10-13** report. Stop below the **$335.05** range low as desked — the tighter stop, not a hedge instrument, is the risk control here. Falsifier unchanged: close below **$335.05** drops the name.
+
+Your turn. Speak as the Chief Investment Officer. Write one decision sentence, then up to 6 short bullets, all inside your JSON verdict's narration field — see the format instruction below. Use specific numbers wherever possible — but ONLY numbers from the data block above. Do NOT cite figures (P/E, growth, price targets, market cap) from training memory; if a number isn't in the block above, qualify your claim or omit it. Build on the transcript — do not repeat what's already been said. Do not preface with 'As the X' or 'Speaking as'. Speak directly.
+
+You are the final decision-maker. Weigh everything above — every analyst, the Bull/Bear debate, the Execution Desk's proposal, and the three Risk Officers — then decide for yourself. Do not just restate the Execution Desk's numbers; agree or disagree based on the whole debate.
+This output format and its two action values REPLACE **both** the 'Verdict:' / 'Output format' block AND the 'Decision sequence' described earlier in your profile and mandate overlay. Wherever those say REJECT, the action you emit here is PASS — name the rule that failed in your narration. In the Room you answer here, and only here.
+Your ENTIRE reply must be one single JSON object — begin with '{' and end with '}'. Do not write any prose outside the JSON (your reasoning belongs inside the narration field); anything outside it is discarded and your verdict is lost. Shape it exactly like:
+{"action": "APPROVE" | "PASS",
+ "size_pct": <number, required if APPROVE — position size as % of portfolio>,
+ "entry": <number, required if APPROVE>,
+ "stop": <number, required if APPROVE>,
+ "target": <number, required if APPROVE>,
+ "horizon_days": <integer, required if APPROVE — how long THIS trade needs to work out, not the user's investment horizon. Anchor it to the evidence you were actually given: 3 months of price history, TTM fundamentals and a 52-week range support a thesis measured in weeks to a few months. A multi-year number is not supported by anything on your fact sheet>,
+ "narration": "<one decision sentence, then up to 6 short bullets — your rationale, written for the user>",
+ "kill_criterion": "<one sentence: the specific, observable change that would reverse this call. It MUST name a quantity from the data block above — a price level, a moving average, a margin or growth rate, a multiple, a short-interest or ownership figure — and state the direction and the threshold that would flip you. 'A second consecutive quarter of operating margin below 11.2%' and 'a daily close under the 200-day SMA at $769.48' are criteria; 'deteriorating fundamentals' and 'if sentiment worsens' are not, because nothing on your sheet can ever settle them. Write one for a PASS too — say what would make you buy>"}
+Write any line break inside narration as the two characters \n, never as a real line break — a raw newline inside a JSON string is what makes a whole verdict unparseable.
+There are exactly two action values: APPROVE and PASS. A modification IS an approval — if you want to cut the Execution Desk's size, tighten the stop, or shift the entry, use action APPROVE with your revised numbers in size_pct/entry/stop and explain the change in narration. Do NOT write 'MODIFY', 'MODIFY-AND-APPROVE', or any other value — they are coerced to APPROVE at your stated numbers, which is very likely not what you meant by 'modify'.
+Use PASS when the debate does not support entering a position right now (e.g. the Execution Desk recommended WAIT, or the risk/reward doesn't clear the bar) — PASS needs only narration, no size/entry/stop/target.
+The safety floor above still applies regardless of what you decide — if it detects a violation, output PASS and name the rule in narration.
+
