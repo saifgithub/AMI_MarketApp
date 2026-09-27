@@ -1,0 +1,32 @@
+{
+  "cr228-r1-20260926": {
+    "user_id": "9b016afd-717f-4692-97bb-bc6ce6c028c0",
+    "token": "scaffold:9b016afd717f469297bbbc6ce6c028c0:1792959833:1:0604281f0053bb9357017dd7640ad672f2e7a8ff86a23c0ea2f1cc8c7ee215f4",
+    "plan": "trader",
+    "created_at": "2026-09-25T20:23:53.372171+00:00"
+  },
+  "cr228-r2-20260926": {
+    "user_id": "885216f5-2ee1-4abb-bc19-5bb2a4980907",
+    "token": "scaffold:885216f52ee14abbbc195bb2a4980907:1792969573:1:3ded114df44c3f0c39f617aefca4cd848b8a072465e5d32f0465ba6a17891a9d",
+    "plan": "trader",
+    "created_at": "2026-09-25T23:06:13.269358+00:00"
+  },
+  "cr228-r3-20260926": {
+    "user_id": "01d00fb4-1eaf-4674-b46d-c204830e938b",
+    "token": "scaffold:01d00fb41eaf4674b46dc204830e938b:1792981486:1:c2dec3ea0e42eb3bf3741138c716fbea4f3e79a64d66cdbe5b9f4aa9777334f5",
+    "plan": "trader",
+    "created_at": "2026-09-26T02:24:46.519378+00:00"
+  },
+  "cr228-r4-20260926": {
+    "user_id": "b08191ed-6a01-42e4-a47d-3da6811de942",
+    "token": "scaffold:b08191ed6a0142e4a47d3da6811de942:1792992206:1:4ee66de3b98c4b725a567aea0e5313e1a0d0fbb2970aa97028c8d58b8122945f",
+    "plan": "trader",
+    "created_at": "2026-09-26T05:23:26.977347+00:00"
+  },
+  "cr228-r5-20260926": {
+    "user_id": "a5d1c8bf-5722-4a87-9c7e-c7048046e869",
+    "token": "scaffold:a5d1c8bf57224a879c7ec7048046e869:1793003919:1:566ff92855b5d49dac952eeeba5569b25a9c117ba3c331f822acb0e1ead4b66a",
+    "plan": "trader",
+    "created_at": "2026-09-26T08:38:39.433923+00:00"
+  }
+}
