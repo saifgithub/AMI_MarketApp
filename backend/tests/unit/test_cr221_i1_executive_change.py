@@ -1053,7 +1053,11 @@ def test_the_persona_guard_and_overlay_defer_to_the_sheet_label() -> None:
     assert f'Filing text reaches you only through the "{EXEC_CHANGE_LABEL}" line' in persona
     assert "regulatory-filings feed (8-K" not in persona
     assert "quote it as the filing's own words" not in persona  # invites verbatim propagation
-    assert "no macro indicator calendar and no other regulatory-filings feed" in persona
+    # CR244 Part 2 slice 1 (2026-09-27) narrowed this denial again: the
+    # filings INDEX now reaches the sheet too, so the honest residual is
+    # "no other regulatory-filings TEXT feed" — see
+    # test_cr244_recent_filings_feed.py and the CR219 guard's updated entry.
+    assert "no macro indicator calendar and no other regulatory-filings TEXT feed" in persona
     overlay = (_REPO / "backend" / "app" / "agents" / "overlay_generator.py").read_text()
     assert EXEC_CHANGE_LABEL in overlay
     assert "or regulatory-filings feed" not in overlay

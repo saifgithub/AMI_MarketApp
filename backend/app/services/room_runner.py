@@ -75,6 +75,7 @@ from app.services import (
     debt_maturity,
     dividend_growth,
     edgar_8k,
+    edgar_filings_feed,
     edgar_pit,
     edgar_tags,
     filing_dimensions,
@@ -1296,6 +1297,45 @@ def _overlay_executive_change(
     field_state["executive_change"] = LiveDataState.LIVE.value
 
 
+def _overlay_recent_filings(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR244 Part 2 slice 1 — the issuer's recent SEC filings INDEX (form
+    type + filed date + plain label, no document text), one `field_state`
+    key: `recent_filings`.
+
+    Live-fetched (`edgar_filings_feed.fetch_recent_filings`, itself reusing
+    `company_profile.py`'s submissions-JSON fetch/cache) rather than
+    store-backed like the 8-K precedent — there is no offline ingest for
+    this slice, so it does its own CIK resolve + submissions GET per call.
+    Populated regardless of `room_recent_filings_enabled`; the flag gates
+    the RENDER only, same convention as every other CR221/CR244 overlay, so
+    a flag flip is a render-only A/B against one cached profile.
+
+    Two states, and they must not blur (CR040): `live` (a CIK-mapped issuer
+    whose filings index parsed — an empty list is a real "nothing non-
+    insider in 180 days", not a gap) and `not_available` (no CIK, an EDGAR
+    outage, or an index this parser doesn't recognise). No mid-state exists
+    here because there is no scan/store to go stale — every call re-fetches
+    (through `company_profile`'s own 6h/5min cache), so "unscanned"/"stale"
+    have no analogue.
+    """
+    try:
+        state, items = edgar_filings_feed.fetch_recent_filings(ticker, as_of)
+    except Exception as exc:
+        logger.warn(
+            "edgar_recent_filings_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["recent_filings"] = LiveDataState.UNAVAILABLE.value
+        return
+    if state != "live":
+        field_state["recent_filings"] = LiveDataState.UNAVAILABLE.value
+        return
+    profile["recent_filings_items"] = items
+    field_state["recent_filings"] = LiveDataState.LIVE.value
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -1445,6 +1485,7 @@ def _profile_for_ticker(
         _overlay_filing_dimensions(profile, field_state, ticker, today)
         _overlay_executive_change(profile, field_state, ticker, today)
         _overlay_capital_returns(profile, field_state, ticker, today)
+        _overlay_recent_filings(profile, field_state, ticker, today)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
@@ -1454,6 +1495,7 @@ def _profile_for_ticker(
         profile["executive_change_state"] = "unscanned"
         field_state["dividend_growth"] = LiveDataState.UNAVAILABLE.value
         field_state["buyback_price"] = LiveDataState.UNAVAILABLE.value
+        field_state["recent_filings"] = LiveDataState.UNAVAILABLE.value
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

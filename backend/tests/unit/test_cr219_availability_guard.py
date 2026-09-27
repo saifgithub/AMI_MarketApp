@@ -464,6 +464,19 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
     {
         "persona": "fundamentals_analyst",
+        "anchor": "This is dates and types only, never the document text",
+        "category": "scope-true",
+        "why": (
+            "CR244 Part 2 slice 1 (2026-09-27) — the new \"Recent SEC filings\" sentence "
+            "describes what the FIELD structurally is (a dated filings index) and what it "
+            "is not (document text), the same shape as the market_analyst 'you were given "
+            "its value, not its path' entry above. TRUE: `edgar_filings_feed` renders form "
+            "type + filed date + a plain label only; no filing content is ever fetched or "
+            "rendered by this slice."
+        ),
+    },
+    {
+        "persona": "fundamentals_analyst",
         "anchor": "recent history. Still no peer-basket or sector-average comparison of any kind",
         "category": "scope-true",
         "why": (
@@ -523,17 +536,29 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     # store-backed line never renders here and an allowlisted entry carries no
     # collision markers to fire. The enforcing check lives in the slot's own
     # test file instead.
+    #
+    # CR244 Part 2 slice 1 (2026-09-27) narrowed this again: the filings
+    # INDEX (form/date/label, no document text) now also reaches the sheet
+    # as the "Recent SEC filings" line (live-fetched, flag-gated;
+    # services/edgar_filings_feed.py). The anchor now names what is STILL
+    # true — filing TEXT (S-1, 10-K narrative, MD&A, risk factors) is not
+    # connected — and the enforcing check for the new index line lives in
+    # this slice's own test file (test_cr244_recent_filings_feed.py), same
+    # convention as the 8-K line above.
     {
         "persona": "news_analyst",
-        "anchor": "no macro indicator calendar and no other regulatory-filings feed",
+        "anchor": "no macro indicator calendar and no other regulatory-filings TEXT feed",
         "category": "scope-true",
         "why": (
-            "CR221 I1 (2026-09-11) — 8-K Item 5.02 now reaches the sheet as the "
-            "\"Executive change (8-K Item 5.02)\" line (store-backed, flag-gated; "
-            "services/edgar_8k.py). The residual denial is TRUE: no CPI calendar and "
-            "no S-1/10-K text feed is connected. The deference clause is pinned by "
-            "test_cr221_i1_executive_change.py because allowlisted entries carry no "
-            "collision markers."
+            "CR244 Part 2 slice 1 (2026-09-27) — the filings INDEX (form type + filed "
+            "date + label, no document text) now reaches the sheet as the \"Recent SEC "
+            "filings\" line (live-fetched, flag-gated; services/edgar_filings_feed.py), "
+            "beside the 8-K Item 5.02 line CR221 I1 already ships. The residual denial "
+            "is TRUE at the level it now claims: no CPI calendar and no filing TEXT feed "
+            "(S-1, 10-K narrative, MD&A, risk factors) is connected — having a dated "
+            "index of what was filed is not having the documents themselves. Both "
+            "flag-gated lines are pinned by their own test files because allowlisted "
+            "entries carry no collision markers."
         ),
     },
     {

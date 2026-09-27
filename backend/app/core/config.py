@@ -962,6 +962,14 @@ class Settings(BaseSettings):
     # is the guard for the wrong order).
     room_executive_change_enabled: bool = False
 
+    # CR244 Part 2 slice 1 — the issuer's recent SEC filings INDEX (form type
+    # + filed date + label, no document text) from the same submissions JSON
+    # `company_profile.py` already fetches for the Company Review screen.
+    # Reaches News Analyst and Fundamentals Analyst. Own flag per the same
+    # per-item attribution convention; gates the RENDER only, the overlay
+    # always populates (a flag flip is an A/B against one cached profile).
+    room_recent_filings_enabled: bool = False
+
     # CR221 C8 — dividend growth from CR206's payment feed (no new call). 3
     # request lines from 3 agents. The series is the last REGULAR payment of
     # each year, not the year's sum: a monthly payer whose ex-date slips

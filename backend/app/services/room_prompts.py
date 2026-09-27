@@ -67,6 +67,7 @@ from app.services.fundamentals import (
 )
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
+from app.services.edgar_filings_feed import FEED_LABEL, recent_filings_line
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -2463,6 +2464,25 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {EXEC_CHANGE_LABEL}: not available this call — do not supply "
                 "an executive change from memory."
             )
+    # CR244 Part 2 slice 1 — the filings INDEX (form/date/label, no document
+    # text) reaches News AND Fundamentals: a two-domain reach rather than the
+    # 8-K bullet's single news-lane gate, because both personas already carry
+    # a "cite the filing, don't infer content" discipline this slots into.
+    # Not gated on `news_withheld_tenure`/paid-feed state — this is a free
+    # EDGAR read, independent of the news feed's own paywall/tenure gate.
+    if settings.room_recent_filings_enabled and (_in_lane("news") or _in_lane("fundamentals")):
+        if _is("recent_filings", "live"):
+            header_lines.append(
+                f"- {FEED_LABEL}: LIVE, read from the issuer's own SEC filings "
+                "index (form type + filed date + plain label only — no document "
+                "text); the line lists up to the newest 10 filings in the last "
+                "180 days, newest first."
+            )
+        else:
+            header_lines.append(
+                f"- {FEED_LABEL}: not available this call — do not supply a "
+                "filing from memory."
+            )
     if not _in_lane("social"):
         pass  # out of lane — named in the lane line below, not disclosed as absent
     elif social_withheld_tenure:
@@ -2953,6 +2973,21 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                       _capital_allocation_line(profile), _analyst_line(profile)):
             if extra:
                 lines.append(extra)
+    # CR244 Part 2 slice 1 — the filings index reaches both News and
+    # Fundamentals; rendered ONCE here (rather than inside each lane's own
+    # branch above) so a full-sheet agent (satisfying both) never sees it
+    # twice. Not folded into the 8-K line: that source is store-backed and
+    # scan-dated, this one is live-fetched with no scan to name.
+    if (
+        settings.room_recent_filings_enabled
+        and (_in_lane("news") or _in_lane("fundamentals"))
+        and _is("recent_filings", "live")
+    ):
+        filings_extra = recent_filings_line(
+            "live", profile.get("recent_filings_items"),
+        )
+        if filings_extra:
+            lines.append(filings_extra)
     # CR151 Tier A — the asymmetry, from two numbers already on the sheet.
     # Rendered for the FULL-SHEET agents only, which is the reconciliation
     # CR151 asked for explicitly ("say so in CR145 Tier C's matrix rather than

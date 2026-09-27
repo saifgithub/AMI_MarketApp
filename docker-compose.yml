@@ -463,6 +463,9 @@ services:
       # CR221 I1 — executive change from 8-K Item 5.02. Needs
       # `scripts/ingest_edgar_8k.py` to have run. See Settings.
       ROOM_EXECUTIVE_CHANGE_ENABLED: ${ROOM_EXECUTIVE_CHANGE_ENABLED:-false}
+      # CR244 Part 2 slice 1 — recent SEC filings index (News + Fundamentals
+      # Analyst). Live-fetched, no ingest script needed. See Settings.
+      ROOM_RECENT_FILINGS_ENABLED: ${ROOM_RECENT_FILINGS_ENABLED:-false}
       # CR221 C8/C7 — dividend growth history, and the implied buyback
       # execution price. C7 needs `ingest_edgar_facts.py --force` once for
       # the new TreasuryStockSharesAcquired tag. See Settings.
