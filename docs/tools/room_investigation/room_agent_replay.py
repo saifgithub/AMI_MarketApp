@@ -93,14 +93,14 @@ _SIDE_PATTERN = re.compile(r"Side:\s*([A-Z]+)")
 _STANCE_PATTERN = re.compile(r"\[STANCE:\s*([^\|]+?)\s*\|", re.IGNORECASE)
 
 
-def _call_kimi(api_key: str, system_prompt: str, messages: list[dict]) -> dict:
+def _call_kimi(api_key: str, system_prompt: str, messages: list[dict], max_tokens: int) -> dict:
     resp = httpx.post(
         f"{KIMI_BASE_URL}/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={
             "model": KIMI_MODEL,
             "messages": [{"role": "system", "content": system_prompt}, *messages],
-            "max_tokens": 2000,
+            "max_tokens": max_tokens,
             "thinking": {"type": "disabled"},
         },
         timeout=120,
@@ -123,7 +123,7 @@ def _call_kimi(api_key: str, system_prompt: str, messages: list[dict]) -> dict:
     }
 
 
-def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None) -> dict:
+def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None, max_tokens: int) -> dict:
     """RES009 (01-06) established temperature/seed are otherwise unset
     everywhere in this codebase — pinning it here is deliberate and only for
     this replay tool, not a change to production request shape.
@@ -131,7 +131,7 @@ def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dic
     body: dict = {
         "model": model,
         "messages": [{"role": "system", "content": system_prompt}, *messages],
-        "max_tokens": 2000,
+        "max_tokens": max_tokens,
     }
     if temperature is not None:
         body["temperature"] = temperature
@@ -151,7 +151,7 @@ def _call_vllm(base_url: str, model: str, system_prompt: str, messages: list[dic
     }
 
 
-def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None) -> dict:
+def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list[dict], temperature: float | None, max_tokens: int) -> dict:
     """CR240 — hosted-provider evaluation. DeepInfra's endpoint is OpenAI-
     compatible, same request shape as vLLM's, plus an API key. Not routed
     through LLMGateway/OpenAICompatibleProvider (backend/app/services/
@@ -163,7 +163,7 @@ def _call_deepinfra(api_key: str, model: str, system_prompt: str, messages: list
     body: dict = {
         "model": model,
         "messages": [{"role": "system", "content": system_prompt}, *messages],
-        "max_tokens": 2000,
+        "max_tokens": max_tokens,
     }
     if temperature is not None:
         body["temperature"] = temperature
@@ -244,6 +244,11 @@ def main() -> int:
     parser.add_argument("--vllm-model", default=os.environ.get("VLLM_MODEL", "ami-llm"))
     parser.add_argument("--deepinfra-model", default=DEEPINFRA_DEFAULT_MODEL,
                          help=f"e.g. zai-org/GLM-5.3-Flash or zai-org/GLM-5.3 (default: {DEEPINFRA_DEFAULT_MODEL})")
+    parser.add_argument("--max-tokens", type=int, default=5000,
+                         help="CR240 RES009 doc 16 (2026-09-27): the old 2000 default truncated 2/5 vLLM+Arabic-translated-"
+                              "prompt PM draws mid-JSON — non-English output can run longer per unit of meaning. "
+                              "5000 costs effectively nothing against ami-llm's 262k context or DeepInfra's per-token "
+                              "pricing (a few $0.001s even at the ceiling); raise further for a very long agent role.")
     args = parser.parse_args()
 
     if args.provider == "kimi":
@@ -271,11 +276,11 @@ def main() -> int:
     draws = []
     for i in range(args.repeats):
         if args.provider == "kimi":
-            out = _call_kimi(api_key, system_prompt, messages)
+            out = _call_kimi(api_key, system_prompt, messages, args.max_tokens)
         elif args.provider == "vllm":
-            out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature)
+            out = _call_vllm(args.vllm_base_url, args.vllm_model, system_prompt, messages, args.temperature, args.max_tokens)
         else:
-            out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature)
+            out = _call_deepinfra(api_key, args.deepinfra_model, system_prompt, messages, args.temperature, args.max_tokens)
         extracted = _extract(out["content"], pattern, json_key=args.extract_json_key)
         usage = out.get("usage") or {}
         usage_note = ""
