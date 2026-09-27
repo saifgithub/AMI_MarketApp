@@ -579,6 +579,8 @@ class _OverviewTab extends StatelessWidget {
       context: context,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -595,6 +597,8 @@ class _OverviewTab extends StatelessWidget {
       context: context,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -632,9 +636,24 @@ class _DetailSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
-            const SizedBox(height: AmiSpacing.m),
+            // A full-height sheet leaves no scrim to tap, so it carries the
+            // app's own back affordance (CR232: a back arrow, never an X).
+            Row(
+              children: [
+                IconButton(
+                  key: const Key('company_review_sheet_back'),
+                  icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: Text(title,
+                      style: AmiTypography.labelMono
+                          .copyWith(color: AmiColors.hexCyan)),
+                ),
+              ],
+            ),
+            const SizedBox(height: AmiSpacing.s),
             Flexible(child: SingleChildScrollView(child: child)),
           ],
         ),
@@ -851,7 +870,7 @@ class _OwnershipTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final fmtPct = NumberFormat.percentPattern();
+    final fmtPct = NumberFormat.decimalPercentPattern(decimalDigits: 2);
     final fmtShares = NumberFormat('#,##0');
     final inst = ownership.pctInstitutions;
     final ins = ownership.pctInsiders;
@@ -922,6 +941,8 @@ class _OwnershipTab extends StatelessWidget {
       context: context,
       backgroundColor: AmiColors.slate800,
       isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -946,7 +967,7 @@ class _HolderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmtPct = NumberFormat.percentPattern();
+    final fmtPct = NumberFormat.decimalPercentPattern(decimalDigits: 2);
     final fmtShares = NumberFormat('#,##0');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

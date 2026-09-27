@@ -280,6 +280,48 @@ void main() {
         findsWidgets);
   });
 
+  testWidgets('holder and ownership percentages show 2 decimal places',
+      (tester) async {
+    final profile = _liveProfile();
+    final holders = (profile['ownership'] as Map<String, dynamic>)['holders']
+        as List<dynamic>;
+    holders.add({
+      'name': 'Morgan Stanley',
+      'kind': 'institution',
+      'pct_held': 0.0033,
+      'shares': 1788291,
+      'date_reported': '2026-06-30',
+    });
+    await _pump(tester, api: _FakeApi(profileJson: profile));
+
+    await tester.tap(find.text('OWNERSHIP'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('8.24%'), findsWidgets);
+    expect(find.text('0.33%'), findsWidgets);
+    expect(find.text('67.40%'), findsOneWidget);
+    expect(find.text('0%'), findsNothing);
+  });
+
+  testWidgets('a full-detail sheet has a back arrow that closes it',
+      (tester) async {
+    await _pump(tester, api: _FakeApi(profileJson: _liveProfile()));
+    await tester.tap(find.text('OWNERSHIP'));
+    await tester.pumpAndSettle();
+
+    final seeAll = find.textContaining('See all reported holders');
+    await tester.ensureVisible(seeAll);
+    await tester.tap(seeAll);
+    await tester.pumpAndSettle();
+    final back = find.byKey(const Key('company_review_sheet_back'));
+    expect(back, findsOneWidget);
+
+    await tester.tap(back);
+    await tester.pumpAndSettle();
+    expect(back, findsNothing);
+    expect(find.text('OWNERSHIP'), findsOneWidget);
+  });
+
   testWidgets('B2 — Ownership not_available shows its reason', (tester) async {
     final profile = _liveProfile();
     (profile['ownership'] as Map<String, dynamic>)
