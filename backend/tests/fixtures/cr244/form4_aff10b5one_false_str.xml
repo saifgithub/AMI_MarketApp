@@ -5,42 +5,35 @@
 
     <documentType>4</documentType>
 
-    <periodOfReport>2026-09-18</periodOfReport>
-
-    <notSubjectToSection16>0</notSubjectToSection16>
+    <periodOfReport>2026-05-27</periodOfReport>
 
     <issuer>
-        <issuerCik>0001045810</issuerCik>
-        <issuerName>NVIDIA CORP</issuerName>
-        <issuerTradingSymbol>NVDA</issuerTradingSymbol>
+        <issuerCik>0000320193</issuerCik>
+        <issuerName>Apple Inc.</issuerName>
+        <issuerTradingSymbol>AAPL</issuerTradingSymbol>
         <issuerForeignTradingSymbol></issuerForeignTradingSymbol>
     </issuer>
 
     <reportingOwner>
         <reportingOwnerId>
-            <rptOwnerCik>0001199039</rptOwnerCik>
-            <rptOwnerName>STEVENS MARK A</rptOwnerName>
+            <rptOwnerCik>0001214128</rptOwnerCik>
+            <rptOwnerName>LEVINSON ARTHUR D</rptOwnerName>
         </reportingOwnerId>
         <reportingOwnerAddress>
             <rptOwnerNonUSAddressFlag>false</rptOwnerNonUSAddressFlag>
-            <rptOwnerStreet1>C/O NVIDIA CORPORATION</rptOwnerStreet1>
-            <rptOwnerStreet2>2788 SAN TOMAS EXPRESSWAY</rptOwnerStreet2>
-            <rptOwnerCity>SANTA CLARA</rptOwnerCity>
+            <rptOwnerStreet1>ONE APPLE PARK WAY</rptOwnerStreet1>
+            <rptOwnerStreet2></rptOwnerStreet2>
+            <rptOwnerCity>CUPERTINO</rptOwnerCity>
             <rptOwnerState>CA</rptOwnerState>
-            <rptOwnerZipCode>95051</rptOwnerZipCode>
+            <rptOwnerZipCode>95014</rptOwnerZipCode>
             <rptOwnerStateDescription></rptOwnerStateDescription>
         </reportingOwnerAddress>
         <reportingOwnerRelationship>
-            <isDirector>1</isDirector>
-            <isOfficer>0</isOfficer>
-            <isTenPercentOwner>0</isTenPercentOwner>
-            <isOther>0</isOther>
-            <officerTitle></officerTitle>
-            <otherText></otherText>
+            <isDirector>true</isDirector>
         </reportingOwnerRelationship>
     </reportingOwner>
 
-    <aff10b5One>0</aff10b5One>
+    <aff10b5One>false</aff10b5One>
 
     <nonDerivativeTable>
         <nonDerivativeTransaction>
@@ -48,7 +41,7 @@
                 <value>Common Stock</value>
             </securityTitle>
             <transactionDate>
-                <value>2026-09-18</value>
+                <value>2026-05-27</value>
             </transactionDate>
             <transactionCoding>
                 <transactionFormType>4</transactionFormType>
@@ -57,10 +50,10 @@
             </transactionCoding>
             <transactionAmounts>
                 <transactionShares>
-                    <value>1356000</value>
+                    <value>50000</value>
                 </transactionShares>
                 <transactionPricePerShare>
-                    <value>219.7219</value>
+                    <value>311.02</value>
                     <footnoteId id="F1"/>
                 </transactionPricePerShare>
                 <transactionAcquiredDisposedCode>
@@ -69,17 +62,13 @@
             </transactionAmounts>
             <postTransactionAmounts>
                 <sharesOwnedFollowingTransaction>
-                    <value>980531</value>
+                    <value>3764576</value>
                 </sharesOwnedFollowingTransaction>
             </postTransactionAmounts>
             <ownershipNature>
                 <directOrIndirectOwnership>
-                    <value>I</value>
+                    <value>D</value>
                 </directOrIndirectOwnership>
-                <natureOfOwnership>
-                    <value>By Trust</value>
-                    <footnoteId id="F2"/>
-                </natureOfOwnership>
             </ownershipNature>
         </nonDerivativeTransaction>
         <nonDerivativeTransaction>
@@ -87,20 +76,19 @@
                 <value>Common Stock</value>
             </securityTitle>
             <transactionDate>
-                <value>2026-09-18</value>
+                <value>2026-05-27</value>
             </transactionDate>
             <transactionCoding>
                 <transactionFormType>4</transactionFormType>
-                <transactionCode>S</transactionCode>
+                <transactionCode>G</transactionCode>
                 <equitySwapInvolved>0</equitySwapInvolved>
             </transactionCoding>
             <transactionAmounts>
                 <transactionShares>
-                    <value>10000</value>
+                    <value>65000</value>
                 </transactionShares>
                 <transactionPricePerShare>
-                    <value>220.4199</value>
-                    <footnoteId id="F3"/>
+                    <value>0</value>
                 </transactionPricePerShare>
                 <transactionAcquiredDisposedCode>
                     <value>D</value>
@@ -108,17 +96,13 @@
             </transactionAmounts>
             <postTransactionAmounts>
                 <sharesOwnedFollowingTransaction>
-                    <value>970531</value>
+                    <value>3699576</value>
                 </sharesOwnedFollowingTransaction>
             </postTransactionAmounts>
             <ownershipNature>
                 <directOrIndirectOwnership>
-                    <value>I</value>
+                    <value>D</value>
                 </directOrIndirectOwnership>
-                <natureOfOwnership>
-                    <value>By Trust</value>
-                    <footnoteId id="F2"/>
-                </natureOfOwnership>
             </ownershipNature>
         </nonDerivativeTransaction>
         <nonDerivativeHolding>
@@ -127,22 +111,7 @@
             </securityTitle>
             <postTransactionAmounts>
                 <sharesOwnedFollowingTransaction>
-                    <value>11544612</value>
-                </sharesOwnedFollowingTransaction>
-            </postTransactionAmounts>
-            <ownershipNature>
-                <directOrIndirectOwnership>
-                    <value>D</value>
-                </directOrIndirectOwnership>
-            </ownershipNature>
-        </nonDerivativeHolding>
-        <nonDerivativeHolding>
-            <securityTitle>
-                <value>Common Stock</value>
-            </securityTitle>
-            <postTransactionAmounts>
-                <sharesOwnedFollowingTransaction>
-                    <value>15017750</value>
+                    <value>56000</value>
                 </sharesOwnedFollowingTransaction>
             </postTransactionAmounts>
             <ownershipNature>
@@ -150,26 +119,18 @@
                     <value>I</value>
                 </directOrIndirectOwnership>
                 <natureOfOwnership>
-                    <value>By the Envy Trust</value>
-                    <footnoteId id="F4"/>
+                    <value>By Spouse</value>
                 </natureOfOwnership>
             </ownershipNature>
         </nonDerivativeHolding>
     </nonDerivativeTable>
 
-    <derivativeTable></derivativeTable>
-
     <footnotes>
-        <footnote id="F1">Represents weighted average sales price. The shares were sold at prices ranging from $219.40 to $220.35. The Reporting Person will provide upon request, to the Securities and Exchange Commission (the &quot;SEC&quot;), the Issuer or security holder of the Issuer, full information regarding the number of shares sold at each separate price.</footnote>
-        <footnote id="F2">Held by the Third Millennium Trust, of which the Reporting Person and his wife are co-trustees.</footnote>
-        <footnote id="F3">Represents weighted average sales price. The shares were sold at prices ranging from $220.41 to $220.48. The Reporting Person will provide upon request, to the SEC, the Issuer or security holder of the Issuer, full information regarding the number of shares sold at each separate price.</footnote>
-        <footnote id="F4">Held by the Envy Trust u/a/d December 7, 2021, of which the Reporting Person is trustee.</footnote>
+        <footnote id="F1">This transaction was executed in multiple trades at prices ranging from $310.76 to $311.42; the price reported above reflects the weighted average sale price. The reporting person hereby undertakes to provide full information regarding the number of shares and prices at which the transactions were effected upon request to the SEC staff, Apple, or a security holder of Apple.</footnote>
     </footnotes>
 
-    <remarks></remarks>
-
     <ownerSignature>
-        <signatureName>/s/ Tina Ashcraft, Attorney-in-Fact for Mark A. Stevens</signatureName>
-        <signatureDate>2026-09-22</signatureDate>
+        <signatureName>/s/ Sam Whittington, Attorney-in-Fact for Arthur D. Levinson</signatureName>
+        <signatureDate>2026-05-29</signatureDate>
     </ownerSignature>
 </ownershipDocument>

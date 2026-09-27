@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
@@ -93,6 +94,25 @@ def _require_ticker_or_422(ticker: str) -> None:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
         ) from exc
+
+
+# CR244 M3 — company-profile/insider accept any real-world ticker shape SEC
+# or yfinance might recognise (unlike `_require_ticker_or_422`, which checks
+# against our own DB-backed ticker reference table), so this is a cheap
+# FORMAT guard, not an existence check: reject a path segment that could
+# never be a ticker (empty, absurdly long, containing characters no US or
+# foreign-listed symbol carries) before it ever reaches yfinance/EDGAR.
+_TICKER_SHAPE_RE = re.compile(r"^[A-Z0-9.\-]{1,12}$")
+
+
+def _require_ticker_shape_or_422(ticker: str) -> str:
+    sym = (ticker or "").strip().upper()
+    if not _TICKER_SHAPE_RE.match(sym):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"not a valid ticker symbol: {ticker!r}",
+        )
+    return sym
 
 
 def _closed_trade_payload(
@@ -1311,10 +1331,16 @@ async def company_profile(ticker: str) -> CompanyProfileResponse:
     404 only when the ticker is unknown to BOTH yfinance and EDGAR's ticker
     map — a known ticker with no SEC registrant (foreign/OTC) still returns
     200 with `cik: null` and `filings.state = "not_available"`.
+
+    422 (M3) when `ticker` isn't even shaped like a ticker — this is a
+    format guard, not the DB-backed existence check `_require_ticker_or_422`
+    runs for trading routes; company-profile/insider accept any symbol
+    yfinance or EDGAR might recognise.
     """
-    result = await asyncio.to_thread(get_company_profile, ticker)
+    sym = _require_ticker_shape_or_422(ticker)
+    result = await asyncio.to_thread(get_company_profile, sym)
     if result is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown ticker: {ticker.upper()}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown ticker: {sym}")
     return result
 
 
@@ -1331,5 +1357,8 @@ async def insider(ticker: str) -> InsiderResponse:
     footnote text (CR038: prompt/inference-only controls are not controls).
     Only codes P/S carry a buy/sell `direction`; everything else is `other`
     (an option exercise is not a buy — CR244's own mockup correction).
+
+    422 (M3) when `ticker` isn't shaped like a ticker symbol.
     """
-    return await asyncio.to_thread(get_insider_activity, ticker)
+    sym = _require_ticker_shape_or_422(ticker)
+    return await asyncio.to_thread(get_insider_activity, sym)

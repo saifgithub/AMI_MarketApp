@@ -1,46 +1,54 @@
 <?xml version="1.0"?>
 <ownershipDocument>
-    <schemaVersion>X0508</schemaVersion>
+
+    <schemaVersion>X0607</schemaVersion>
+
     <documentType>3</documentType>
-    <periodOfReport>2026-01-05</periodOfReport>
+
+    <periodOfReport>2026-08-24</periodOfReport>
+
+    <noSecuritiesOwned>1</noSecuritiesOwned>
+
     <issuer>
         <issuerCik>0001045810</issuerCik>
         <issuerName>NVIDIA CORP</issuerName>
         <issuerTradingSymbol>NVDA</issuerTradingSymbol>
+        <issuerForeignTradingSymbol></issuerForeignTradingSymbol>
     </issuer>
+
     <reportingOwner>
         <reportingOwnerId>
-            <rptOwnerCik>0001696841</rptOwnerCik>
-            <rptOwnerName>New Director Example</rptOwnerName>
+            <rptOwnerCik>0002152188</rptOwnerCik>
+            <rptOwnerName>Parker Nicholas P.</rptOwnerName>
         </reportingOwnerId>
         <reportingOwnerAddress>
+            <rptOwnerNonUSAddressFlag>false</rptOwnerNonUSAddressFlag>
             <rptOwnerStreet1>C/O NVIDIA CORPORATION</rptOwnerStreet1>
+            <rptOwnerStreet2>2788 SAN TOMAS EXPRESSWAY</rptOwnerStreet2>
             <rptOwnerCity>SANTA CLARA</rptOwnerCity>
             <rptOwnerState>CA</rptOwnerState>
             <rptOwnerZipCode>95051</rptOwnerZipCode>
+            <rptOwnerStateDescription></rptOwnerStateDescription>
         </reportingOwnerAddress>
         <reportingOwnerRelationship>
-            <isDirector>1</isDirector>
-            <isOfficer>0</isOfficer>
+            <isDirector>0</isDirector>
+            <isOfficer>1</isOfficer>
             <isTenPercentOwner>0</isTenPercentOwner>
             <isOther>0</isOther>
+            <officerTitle>EVP, Worldwide Field Ops</officerTitle>
         </reportingOwnerRelationship>
     </reportingOwner>
-    <nonDerivativeTable>
-        <nonDerivativeHolding>
-            <securityTitle>
-                <value>Common Stock</value>
-            </securityTitle>
-            <postTransactionAmounts>
-                <sharesOwnedFollowingTransaction>
-                    <value>1000</value>
-                </sharesOwnedFollowingTransaction>
-            </postTransactionAmounts>
-            <ownershipNature>
-                <directOrIndirectOwnership>
-                    <value>D</value>
-                </directOrIndirectOwnership>
-            </ownershipNature>
-        </nonDerivativeHolding>
-    </nonDerivativeTable>
+
+    <nonDerivativeTable></nonDerivativeTable>
+
+    <derivativeTable></derivativeTable>
+
+    <footnotes></footnotes>
+
+    <remarks>Exhibit 24 - Power of Attorney.</remarks>
+
+    <ownerSignature>
+        <signatureName>/s/ Tina Ashcraft, Attorney-in-Fact for Nicholas P. Parker</signatureName>
+        <signatureDate>2026-09-03</signatureDate>
+    </ownerSignature>
 </ownershipDocument>

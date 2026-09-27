@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 SectionState = Literal["live", "partial", "not_available"]
 
@@ -120,7 +120,15 @@ class InsiderTransaction(BaseModel):
     direction: TransactionDirection
     shares: float | None = None
     price: float | None = None
-    plan_type: PlanType
+    plan_type: PlanType = Field(
+        description=(
+            "M5: a FILING-LEVEL Rule 10b5-1 checkbox (`aff10b5One`), not a "
+            "per-transaction fact — carried on P/S rows only; every other row "
+            "is `unstated`. `scheduled_10b5-1` = box ticked, "
+            "`discretionary` = box present and unticked, `unstated` = the "
+            "element is absent (pre-April-2023 filings) or unrecognised."
+        ),
+    )
     url: str
 
 

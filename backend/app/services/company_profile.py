@@ -11,14 +11,31 @@ website/sector/industry win from yfinance) so it is `partial` rather than
 
 Reuses `edgar_8k.SUBMISSIONS_URL`, `edgar_cik.resolve_cik`, and
 `fundamentals._EXCHANGE_NAMES` rather than inventing a second scheme for any
-of the three — this module fetches the submissions JSON with the exact same
-etiquette (`edgar_cik.USER_AGENT`, one retry) `edgar_8k.py`'s own ingest path
-uses, just read more broadly (every form type, not only 8-K Item 5.02).
+of the three. Every SEC GET goes through `edgar_cik.paced_get` (M4) — the
+same rate-limited, single-retry-on-429/5xx helper `edgar_ownership.py` and
+the CIK-map fetch use; this module does not keep its own pacing/retry
+scheme (the old docstring here claimed "one retry" without ever
+implementing it — `paced_get` is what actually does it now).
 
-Cached in-process 6h per ticker, matching the API contract's documented
-server cache and `fundamentals.py`'s own `_STATEMENTS_TTL_S` precedent for
-"how stale is tolerable" (quarterly filings/financials move at most a few
-times a year).
+**B5 — a yfinance `.info` payload for a ticker it does NOT know is not
+empty, it's `{'trailingPegRatio': None}`** (verified live, 2026-09-27,
+`yf.Ticker("ZZZZQXQ").info`) — a single all-None key, which is truthy as a
+dict. Treating any non-empty dict as "yfinance knows this ticker" would
+make an unknown symbol read as a company with every field blank rather than
+404ing. `_yf_profile_info` is therefore checked for an IDENTITY key
+(`longName`/`shortName`/`quoteType`/`regularMarketPrice`) before a caller
+may treat it as real; `_yf_has_identity` is that check. A ticker unknown to
+BOTH sources still 404s at the route; unlike before, "yfinance answered
+but every field in a section is null" now also collapses that SECTION to
+`not_available` rather than a `live` section full of nulls (a `live`
+section is a promise the fields mean something).
+
+Cached in-process: `live` results 6h (matches the API contract's documented
+server cache and `fundamentals.py`'s own `_STATEMENTS_TTL_S` precedent —
+quarterly filings/financials move at most a few times a year), a
+`not_available`/`partial` result only 5 minutes (M2) — a transient SEC or
+yfinance outage should not lock a symbol out of a section for 6 hours once
+the outage clears.
 """
 
 from __future__ import annotations
@@ -42,11 +59,17 @@ from app.schemas.company_profile import (
     OwnershipSection,
 )
 from app.services.edgar_8k import SUBMISSIONS_URL
-from app.services.edgar_cik import USER_AGENT, resolve_cik
-from app.services.fundamentals import _EXCHANGE_NAMES
+from app.services.edgar_cik import (
+    USER_AGENT,
+    CikResolutionUnavailable,
+    paced_get,
+    resolve_cik,
+)
 
 _FETCH_TIMEOUT_S = 15.0
 _TTL_SECONDS = 6 * 60 * 60.0
+_DEGRADED_TTL_SECONDS = 5 * 60.0  # M2
+_MAX_CACHE_ENTRIES = 512
 
 # Form 3/4/5 belong to the Insider tab (edgar_ownership.py), not the filings
 # list — excluded here regardless of amendment suffix (4/A etc.).
@@ -65,6 +88,9 @@ _FORM_LABELS: dict[str, str] = {
     "S-1": "Registration statement",
     "S-1/A": "Registration statement (amended)",
     "S-3": "Registration statement (shelf)",
+    "S-3ASR": "Registration statement (automatic shelf)",
+    "S-8": "Employee stock plan registration",
+    "S-8 POS": "Employee stock plan registration (post-effective)",
     "424B1": "Prospectus",
     "424B2": "Prospectus",
     "424B3": "Prospectus",
@@ -74,19 +100,54 @@ _FORM_LABELS: dict[str, str] = {
     "SC 13D/A": "Beneficial ownership statement (amended)",
     "SC 13G": "Beneficial ownership statement (passive)",
     "SC 13G/A": "Beneficial ownership statement (passive, amended)",
+    "SCHEDULE 13D": "Beneficial ownership statement",
+    "SCHEDULE 13D/A": "Beneficial ownership statement (amended)",
+    "SCHEDULE 13G": "Beneficial ownership statement (passive)",
+    "SCHEDULE 13G/A": "Beneficial ownership statement (passive, amended)",
     "11-K": "Employee stock plan annual report",
     "25": "Notice of delisting",
     "6-K": "Foreign private issuer report",
     "20-F": "Foreign private issuer annual report",
+    "144": "Notice of proposed insider sale (Form 144)",
+    "144/A": "Notice of proposed insider sale (amended)",
+    "SD": "Conflict minerals disclosure",
+    "FWP": "Free writing prospectus",
+    "13F-HR": "Institutional investment manager holdings report",
+    "N-PX": "Proxy voting record",
+    "ARS": "Annual report to shareholders",
+    "425": "Business combination communication",
 }
 
 _lock = threading.RLock()
 _cache: dict[str, tuple[CompanyProfileResponse, float]] = {}
 
+_IDENTITY_KEYS = ("longName", "shortName", "quoteType", "regularMarketPrice")
+
 
 def clear_company_profile_cache() -> None:
     with _lock:
         _cache.clear()
+
+
+def _sweep_expired_profile_cache_locked(now: float) -> None:
+    """Called with `_lock` held (M3): drop expired entries opportunistically
+    on insert, and cap total size, so the cache never grows unbounded."""
+    expired = [
+        k for k, (resp, cached_at) in _cache.items()
+        if (now - cached_at) >= (_TTL_SECONDS if _is_fully_live(resp) else _DEGRADED_TTL_SECONDS)
+    ]
+    for k in expired:
+        del _cache[k]
+    if len(_cache) >= _MAX_CACHE_ENTRIES:
+        for k, _ in sorted(_cache.items(), key=lambda kv: kv[1][1])[: len(_cache) - _MAX_CACHE_ENTRIES + 1]:
+            _cache.pop(k, None)
+
+
+def _is_fully_live(resp: CompanyProfileResponse) -> bool:
+    return all(
+        section.state == "live"
+        for section in (resp.overview, resp.financials, resp.filings, resp.ownership)
+    )
 
 
 def _yf_num(d: dict, key: str) -> float | None:
@@ -105,11 +166,20 @@ def _yf_int(d: dict, key: str) -> int | None:
     return int(v) if v is not None else None
 
 
+def _yf_has_identity(info: dict | None) -> bool:
+    """B5: a yfinance `.info` dict for an unknown ticker is not empty — it's
+    `{'trailingPegRatio': None}` (verified live). Only a dict carrying at
+    least one identity field counts as "yfinance knows this ticker"."""
+    if not info:
+        return False
+    return any(info.get(k) is not None for k in _IDENTITY_KEYS)
+
+
 def _fetch_company_submissions(cik: int) -> dict | None:
     url = SUBMISSIONS_URL.format(cik=cik)
     try:
         with httpx.Client(timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": USER_AGENT}) as client:
-            r = client.get(url)
+            r = paced_get(client, url)
             if r.status_code == 404:
                 return None
             r.raise_for_status()
@@ -132,7 +202,11 @@ def _filings_from_submissions(submissions: dict, cik: int) -> list[FilingItem] |
     """Newest-first, capped at MAX_FILINGS, every form except 3/4/5. None on
     a submissions shape this parser doesn't recognise (mirrors
     `edgar_8k.IndexUnreadable`'s "don't guess" rule) rather than a partial,
-    silently-wrong list."""
+    silently-wrong list. An empty result (zero non-3/4/5 rows after the
+    filter) is returned as `[]` — the caller (B/LOW) treats a truly empty
+    filings list the same as `edgar_8k.recent_block`'s "index unreadable"
+    read: a mapped CIK never has zero filings, so that shape means the
+    index moved, not a quiet filer."""
     filings = submissions.get("filings")
     recent = filings.get("recent") if isinstance(filings, dict) else None
     if not isinstance(recent, dict):
@@ -192,7 +266,7 @@ def _yf_profile_info(ticker: str) -> dict[str, Any] | None:
     except Exception as exc:  # pragma: no cover - defensive, mirrors fundamentals.py
         logger.warn("yfinance_company_profile_error", ticker=ticker, error=str(exc)[:200])
         return None
-    return info or None
+    return info if _yf_has_identity(info) else None
 
 
 def _yf_holders(ticker: str) -> tuple[list[HolderItem], bool]:
@@ -211,13 +285,26 @@ def _yf_holders(ticker: str) -> tuple[list[HolderItem], bool]:
                 name = row.get("Holder")
                 if not name:
                     continue
-                date_reported = row.get("Date Reported")
+                date_reported_raw = row.get("Date Reported")
+                date_reported = None
+                if date_reported_raw is not None:
+                    try:
+                        date_reported = date_reported_raw.date().isoformat()
+                    except AttributeError:
+                        try:
+                            date_reported = date.fromisoformat(str(date_reported_raw)[:10]).isoformat()
+                        except ValueError:
+                            date_reported = str(date_reported_raw)
+                row_dict = dict(row)
+                pct_held = _yf_num(row_dict, "pctHeld")
+                if pct_held is None:
+                    pct_held = _yf_num(row_dict, "% Out")
                 holders.append(HolderItem(
                     name=str(name),
                     kind=kind,
-                    pct_held=_yf_num(dict(row), "pctHeld") or _yf_num(dict(row), "% Out"),
-                    shares=_yf_num(dict(row), "Shares"),
-                    date_reported=str(date_reported) if date_reported is not None else None,
+                    pct_held=pct_held,  # LOW: real 0.0 must survive — never `or`
+                    shares=_yf_num(row_dict, "Shares"),
+                    date_reported=date_reported,
                 ))
     except Exception as exc:  # pragma: no cover - defensive
         logger.warn("yfinance_holders_error", ticker=ticker, error=str(exc)[:200])
@@ -225,15 +312,50 @@ def _yf_holders(ticker: str) -> tuple[list[HolderItem], bool]:
     return holders, True
 
 
+_EXCHANGE_DISPLAY_NAMES: dict[str, str] = {
+    "NASDAQ": "Nasdaq",
+    "NYSE": "NYSE",
+    "NYSE AMERICAN": "NYSE American",
+    "NYSE ARCA": "NYSE Arca",
+    "CBOE BZX": "Cboe BZX",
+}
+
+
+def _exchange_display(code: str) -> str | None:
+    """Contract-example casing ("Nasdaq"/"NYSE") layered on top of
+    `fundamentals._EXCHANGE_NAMES` (all-caps venue names) WITHOUT changing
+    that module's own output — this is a local display remap, not an edit
+    to `fundamentals.py`."""
+    from app.services.fundamentals import _EXCHANGE_NAMES
+
+    raw = _EXCHANGE_NAMES.get(str(code or "").upper())
+    if raw is None:
+        return None
+    return _EXCHANGE_DISPLAY_NAMES.get(raw.upper(), raw)
+
+
+def _all_fields_null(section_kwargs: dict[str, Any], *, exclude: tuple[str, ...]) -> bool:
+    return all(v is None for k, v in section_kwargs.items() if k not in exclude)
+
+
 def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
     """None ⇒ unknown to both sources (404 at the route)."""
     sym = ticker.upper().strip()
-    cik = resolve_cik(sym)
+    try:
+        cik = resolve_cik(sym)
+        cik_outage = False
+    except CikResolutionUnavailable:
+        cik = None
+        cik_outage = True
     info = _yf_profile_info(sym)
     submissions = _fetch_company_submissions(cik) if cik is not None else None
 
-    if info is None and submissions is None:
+    if info is None and submissions is None and not cik_outage:
         return None
+    # info is None and submissions is None and cik_outage: a CIK-resolver
+    # outage with yfinance also silent must still degrade loudly rather
+    # than 404 a ticker that might well be real (B3) — fall through and let
+    # each section report its own not_available/reason below.
 
     as_of = datetime.now(timezone.utc).isoformat()
 
@@ -252,7 +374,7 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
         employees = _yf_int(info, "fullTimeEmployees")
         website = info.get("website")
         phone = info.get("phone")
-        exchange = _EXCHANGE_NAMES.get(str(info.get("exchange") or "").upper())
+        exchange = _exchange_display(info.get("exchange"))
         addr_parts = [
             info.get("address1"), info.get("city"), info.get("state"), info.get("zip"),
         ]
@@ -276,10 +398,17 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
             if edgar_full:
                 address = edgar_full
 
-    if ov_sources:
+    ov_fields = dict(
+        legal_name=legal_name, display_name=display_name, description=description,
+        sector=sector, industry=industry, sic=sic, sic_description=sic_description,
+        exchange=exchange, employees=employees, website=website, address=address, phone=phone,
+    )
+    if ov_sources and not _all_fields_null(ov_fields, exclude=()):
         state = "live" if info and submissions else "partial"
         reason = None if state == "live" else (
-            "SEC EDGAR data unavailable for this symbol" if not submissions
+            ("SEC EDGAR is temporarily unavailable — try again shortly" if cik_outage else
+             "No SEC registrant found for this symbol" if cik is None else
+             "SEC EDGAR data unavailable for this symbol") if not submissions
             else "yfinance data unavailable for this symbol"
         )
     else:
@@ -312,27 +441,52 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
             (total_debt / total_equity) if total_debt is not None and total_equity else None
         )
         free_cash_flow = _yf_num(info, "freeCashflow")
-        dividend_yield = _yf_num(info, "dividendYield")
-        financials = FinancialsSection(
-            state="live", reason=None, sources=["yfinance"], currency=info.get("currency"),
+        # B4: yfinance (pinned >=1.0, this venv 1.3.0) returns `dividendYield`
+        # as a PERCENT (KO → 2.41), not a fraction — verified live 2026-09-27,
+        # same convention `fundamentals.trading_math.valuation.dividend_yield_pct`
+        # documents (CR046 M04). The CR244 contract wants a FRACTION
+        # (`"dividend_yield": 0.0002` for NVDA in its own example; KO ~0.024),
+        # so this divides by 100 rather than reusing `dividend_yield_pct`
+        # (which intentionally returns the percent figure for a different
+        # contract) — same source convention, different target shape.
+        dividend_yield_raw = _yf_num(info, "dividendYield")
+        dividend_yield = (dividend_yield_raw / 100.0) if dividend_yield_raw is not None else None
+
+        fin_fields = dict(
             market_cap=market_cap, revenue_ttm=revenue_ttm, gross_margin=gross_margin,
             operating_margin=operating_margin, net_margin=net_margin, trailing_pe=trailing_pe,
             forward_pe=forward_pe, eps_ttm=eps_ttm, debt_to_equity=debt_to_equity,
             free_cash_flow=free_cash_flow, dividend_yield=dividend_yield,
         )
+        if _all_fields_null(fin_fields, exclude=()):
+            financials = FinancialsSection(
+                state="not_available",
+                reason="yfinance returned no usable financial fields for this symbol", sources=[],
+            )
+        else:
+            financials = FinancialsSection(
+                state="live", reason=None, sources=["yfinance"], currency=info.get("currency"),
+                **fin_fields,
+            )
     else:
         financials = FinancialsSection(
             state="not_available", reason="yfinance data unavailable for this symbol", sources=[],
         )
 
     # ── filings ───────────────────────────────────────────────────────────
-    if cik is None:
+    if cik_outage and cik is None:
+        filings = FilingsSection(
+            state="not_available",
+            reason="SEC EDGAR is temporarily unavailable — try again shortly", sources=[],
+        )
+    elif cik is None:
         filings = FilingsSection(
             state="not_available", reason="No SEC registrant found for this symbol", sources=[],
         )
     elif submissions is None:
         filings = FilingsSection(
-            state="not_available", reason="SEC EDGAR data unavailable for this symbol", sources=[],
+            state="not_available",
+            reason="SEC EDGAR is temporarily unavailable — try again shortly", sources=[],
         )
     else:
         parsed = _filings_from_submissions(submissions, cik)
@@ -340,6 +494,14 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
             filings = FilingsSection(
                 state="not_available", reason="SEC EDGAR filings index is in an unrecognised format",
                 sources=[],
+            )
+        elif not parsed:
+            # A mapped CIK never has zero filings once 3/4/5 are excluded on
+            # a real operating company — an empty result here is the index
+            # having moved, same read `edgar_8k.recent_block` gives a
+            # zero-row `filings.recent`, not a quiet filer (LOW).
+            filings = FilingsSection(
+                state="not_available", reason="SEC filing index unreadable", sources=[],
             )
         else:
             filings = FilingsSection(state="live", reason=None, sources=["edgar"], items=parsed)
@@ -351,17 +513,26 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
         pct_institutions = _yf_num(info, "heldPercentInstitutions")
         pct_insiders = _yf_num(info, "heldPercentInsiders")
         holders, holders_ok = _yf_holders(sym)
-        if holders_ok:
-            ownership = OwnershipSection(
-                state="live", reason=None, sources=["yfinance"],
-                shares_outstanding=shares_outstanding, float_shares=float_shares,
-                pct_institutions=pct_institutions, pct_insiders=pct_insiders, holders=holders,
-            )
-        else:
+        own_fields_null = (
+            shares_outstanding is None and float_shares is None
+            and pct_institutions is None and pct_insiders is None and not holders
+        )
+        if not holders_ok:
             ownership = OwnershipSection(
                 state="partial", reason="Named holders list unavailable; share/float figures still shown",
                 sources=["yfinance"], shares_outstanding=shares_outstanding, float_shares=float_shares,
                 pct_institutions=pct_institutions, pct_insiders=pct_insiders, holders=[],
+            )
+        elif own_fields_null:
+            ownership = OwnershipSection(
+                state="not_available",
+                reason="yfinance returned no ownership fields for this symbol", sources=[],
+            )
+        else:
+            ownership = OwnershipSection(
+                state="live", reason=None, sources=["yfinance"],
+                shares_outstanding=shares_outstanding, float_shares=float_shares,
+                pct_institutions=pct_institutions, pct_insiders=pct_insiders, holders=holders,
             )
     else:
         ownership = OwnershipSection(
@@ -375,15 +546,19 @@ def _build_company_profile(ticker: str) -> CompanyProfileResponse | None:
 
 
 def get_company_profile(ticker: str) -> CompanyProfileResponse | None:
-    """Cached 6h per ticker. None ⇒ unknown to both sources (route returns 404)."""
+    """Cached 6h (fully-live) / 5min (any section degraded, M2) per ticker.
+    None ⇒ unknown to both sources (route returns 404)."""
     sym = ticker.upper().strip()
     now = time.monotonic()
     with _lock:
         cached = _cache.get(sym)
-        if cached is not None and (now - cached[1]) < _TTL_SECONDS:
-            return cached[0]
+        if cached is not None:
+            ttl = _TTL_SECONDS if _is_fully_live(cached[0]) else _DEGRADED_TTL_SECONDS
+            if (now - cached[1]) < ttl:
+                return cached[0]
     result = _build_company_profile(sym)
     if result is not None:
         with _lock:
-            _cache[sym] = (result, now)
+            _sweep_expired_profile_cache_locked(time.monotonic())
+            _cache[sym] = (result, time.monotonic())
     return result

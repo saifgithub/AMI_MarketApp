@@ -127,7 +127,7 @@ def test_full_blend_all_sections_live(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.overview.display_name == "NVIDIA Corporation"  # yfinance wins
     assert result.overview.sic == "3674"
     assert result.overview.sic_description == "Semiconductors & Related Devices"
-    assert result.overview.exchange == "NASDAQ"
+    assert result.overview.exchange == "Nasdaq"  # contract casing (LOW), not fundamentals' raw "NASDAQ"
     assert result.overview.employees == 29600
     assert sorted(result.overview.sources) == ["edgar", "yfinance"]
 
@@ -237,7 +237,9 @@ def test_edgar_submissions_failure_degrades_filings_only(monkeypatch: pytest.Mon
 
     result = cp.get_company_profile("NVDA")
     assert result.filings.state == "not_available"
-    assert result.filings.reason == "SEC EDGAR data unavailable for this symbol"
+    # B3: a submissions FETCH failure (vs. no CIK at all) is a transient
+    # EDGAR outage, and its reason must not say "for this symbol" (LOW).
+    assert result.filings.reason == "SEC EDGAR is temporarily unavailable — try again shortly"
     assert result.financials.state == "live"  # yfinance still answered
     assert result.overview.state == "partial"
 
@@ -333,3 +335,205 @@ def test_route_ticker_normalized(client: TestClient, monkeypatch: pytest.MonkeyP
     r = client.get("/v1/sim/company-profile/nvda")
     assert r.status_code == 200
     assert r.json()["ticker"] == "NVDA"
+
+
+def test_route_422s_a_malformed_ticker(client: TestClient) -> None:
+    r = client.get("/v1/sim/company-profile/not$a$ticker")
+    assert r.status_code == 422
+
+
+# ── B4: dividend_yield is yfinance PERCENT → contract FRACTION ──────────────
+
+
+def test_dividend_yield_converted_from_percent_to_fraction(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Real, verified live 2026-09-27: yfinance (venv 1.3.0, matching the
+    pinned >=1.0 convention `fundamentals.py`'s own `dividend_yield_pct`
+    documents) returns KO's `dividendYield` as `2.41` — a PERCENT, not a
+    fraction. The CR244 contract wants a FRACTION (its own NVDA example:
+    `"dividend_yield": 0.0002`; KO must land ~0.024)."""
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: None)
+    info = dict(_FULL_INFO)
+    info["dividendYield"] = 2.41  # KO's real live value, percent-form
+    _patch_yf(monkeypatch, info)
+
+    result = cp.get_company_profile("KO")
+    assert result is not None
+    assert result.financials.dividend_yield == pytest.approx(0.0241, abs=1e-6)
+
+
+def test_dividend_yield_none_passes_through(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: None)
+    info = dict(_FULL_INFO)
+    info.pop("dividendYield", None)
+    _patch_yf(monkeypatch, info)
+
+    result = cp.get_company_profile("TSLA")
+    assert result is not None
+    assert result.financials.dividend_yield is None
+
+
+# ── B5: yfinance {'trailingPegRatio': None} for an unknown ticker ───────────
+
+
+def test_unknown_ticker_yfinance_shape_treated_as_absent(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Real shape, verified live 2026-09-27:
+    `yf.Ticker("ZZZZQXQ").info == {'trailingPegRatio': None}` — truthy as a
+    dict, but carries no identity field. Must be treated as "yfinance does
+    not know this ticker", not as a company with every field blank."""
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: None)
+    _patch_yf(monkeypatch, {"trailingPegRatio": None})
+
+    assert cp.get_company_profile("ZZZZQXQ") is None  # 404 at the route
+
+
+def test_yf_has_identity_requires_an_identity_key() -> None:
+    assert cp._yf_has_identity({"trailingPegRatio": None}) is False
+    assert cp._yf_has_identity({}) is False
+    assert cp._yf_has_identity(None) is False
+    assert cp._yf_has_identity({"longName": "NVIDIA Corporation"}) is True
+    assert cp._yf_has_identity({"regularMarketPrice": 178.32}) is True
+
+
+def test_no_section_is_live_with_every_field_null(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A section must never read `live` with every field null (B5) — even
+    when yfinance answers WITH an identity key but the specific section's
+    own fields are all missing."""
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: None)
+    info = {"longName": "Shell Co", "shortName": "Shell Co"}  # no financial fields at all
+    _patch_yf(monkeypatch, info)
+
+    result = cp.get_company_profile("SHELLCO")
+    assert result is not None
+    assert result.financials.state == "not_available"
+    assert result.financials.reason
+
+
+# ── M2: degraded results cache 5 minutes, not 6 hours ───────────────────────
+
+
+def test_degraded_result_uses_short_ttl(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"n": 0}
+
+    def _fetch(cik):
+        calls["n"] += 1
+        return None  # EDGAR down — filings not_available
+
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: 1045810)
+    monkeypatch.setattr(cp, "_fetch_company_submissions", _fetch)
+    _patch_yf(monkeypatch, _FULL_INFO)
+
+    r1 = cp.get_company_profile("NVDA")
+    assert r1.filings.state == "not_available"
+    assert calls["n"] == 1
+
+    # Still within the 5-min degraded TTL — served from cache.
+    r2 = cp.get_company_profile("NVDA")
+    assert calls["n"] == 1
+    assert r2 is r1
+
+    # Force the degraded TTL to have elapsed (but well within the 6h live TTL).
+    sym = "NVDA"
+    with cp._lock:
+        resp, _ = cp._cache[sym]
+        cp._cache[sym] = (resp, cp._cache[sym][1] - cp._DEGRADED_TTL_SECONDS - 1)
+    cp.get_company_profile("NVDA")
+    assert calls["n"] == 2
+
+
+def test_fully_live_result_uses_long_ttl(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"n": 0}
+
+    def _fetch(cik):
+        calls["n"] += 1
+        return _load_submissions()
+
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: 1045810)
+    monkeypatch.setattr(cp, "_fetch_company_submissions", _fetch)
+    _patch_yf(monkeypatch, _FULL_INFO, institutional=_FakeFrame([
+        {"Holder": "The Vanguard Group, Inc.", "pctHeld": 0.0824, "Shares": 2.0e9, "Date Reported": "2026-06-30"},
+    ]))
+
+    r1 = cp.get_company_profile("NVDA")
+    assert cp._is_fully_live(r1)
+
+    # Force the SHORT (5-min) TTL to have elapsed but stay within the 6h one.
+    sym = "NVDA"
+    with cp._lock:
+        resp, cached_at = cp._cache[sym]
+        cp._cache[sym] = (resp, cached_at - cp._DEGRADED_TTL_SECONDS - 1)
+    cp.get_company_profile("NVDA")
+    assert calls["n"] == 1  # still cached — the LONG ttl applies to a fully-live result
+
+
+# ── LOW: exchange display casing ("Nasdaq"/"NYSE"), fundamentals unaffected ──
+
+
+def test_exchange_display_casing_matches_contract_example() -> None:
+    assert cp._exchange_display("NMS") == "Nasdaq"
+    assert cp._exchange_display("NYQ") == "NYSE"
+    assert cp._exchange_display("ASE") == "NYSE American"
+
+
+def test_exchange_display_does_not_mutate_fundamentals_own_map() -> None:
+    from app.services.fundamentals import _EXCHANGE_NAMES
+
+    before = dict(_EXCHANGE_NAMES)
+    cp._exchange_display("NMS")
+    assert _EXCHANGE_NAMES == before
+
+
+# ── LOW: pct_held real 0.0 must survive (not `or`-swallowed) ────────────────
+
+
+def test_holder_pct_held_zero_survives(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: 1045810)
+    monkeypatch.setattr(cp, "_fetch_company_submissions", lambda cik: _load_submissions())
+    _patch_yf(monkeypatch, _FULL_INFO, institutional=_FakeFrame([
+        {"Holder": "Zero Percent Fund", "pctHeld": 0.0, "Shares": 100.0, "Date Reported": "2026-06-30"},
+    ]))
+
+    result = cp.get_company_profile("NVDA")
+    holder = next(h for h in result.ownership.holders if h.name == "Zero Percent Fund")
+    assert holder.pct_held == 0.0
+
+
+# ── LOW: an empty filings.recent (zero rows) is not_available ──────────────
+
+
+def test_empty_filings_recent_is_not_available(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Consistent with `edgar_8k.recent_block`'s treatment of the same shape:
+    a mapped CIK never has zero filings once 3/4/5 are excluded, so an empty
+    result here means the index moved, not a quiet filer."""
+    empty_submissions = {
+        "filings": {
+            "recent": {
+                "form": [], "accessionNumber": [], "filingDate": [],
+                "reportDate": [], "primaryDocument": [], "primaryDocDescription": [],
+            },
+        },
+    }
+    monkeypatch.setattr(cp, "resolve_cik", lambda t: 1045810)
+    monkeypatch.setattr(cp, "_fetch_company_submissions", lambda cik: empty_submissions)
+    _patch_yf(monkeypatch, _FULL_INFO)
+
+    result = cp.get_company_profile("NVDA")
+    assert result.filings.state == "not_available"
+    assert result.filings.reason == "SEC filing index unreadable"
+
+
+# ── B3: CIK-resolution outage degrades loudly, distinct reason ─────────────
+
+
+def test_cik_resolution_outage_degrades_filings_with_distinct_reason(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise(t):
+        raise cp.CikResolutionUnavailable("boom")
+
+    monkeypatch.setattr(cp, "resolve_cik", _raise)
+    _patch_yf(monkeypatch, _FULL_INFO)
+
+    result = cp.get_company_profile("NVDA")
+    assert result is not None  # yfinance still answers
+    assert result.filings.state == "not_available"
+    assert result.filings.reason == "SEC EDGAR is temporarily unavailable — try again shortly"
+    assert result.filings.reason != "No SEC registrant found for this symbol"
+    assert result.financials.state == "live"
