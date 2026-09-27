@@ -21,6 +21,7 @@ import 'package:ami_trade/models/billing_identity.dart';
 import 'package:ami_trade/models/option_proposal.dart';
 import 'package:ami_trade/models/option_reprice.dart';
 import 'package:ami_trade/models/brief.dart';
+import 'package:ami_trade/models/company_profile.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
 import 'package:ami_trade/models/games.dart';
@@ -1328,6 +1329,28 @@ class ApiClient {
     final r = await _dio
         .get<Map<String, dynamic>>('/v1/sim/lots/$userId/$ticker');
     return HoldingLots.fromJson(r.data!);
+  }
+
+  /// Company Review screen (CR244): EDGAR + yfinance blend — overview,
+  /// financials, filings list, ownership. Server caches 6h. Always HTTP 200
+  /// for a ticker either source knows; a 404 only for a ticker neither
+  /// source knows (per-section `state`/`reason` carry CR040 degrade states
+  /// otherwise — no CIK match is `filings.state = not_available`, not a 404).
+  Future<CompanyProfile> companyProfile(String ticker) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/sim/company-profile/$ticker');
+    return CompanyProfile.fromJson(r.data!);
+  }
+
+  /// Company Review screen's Insider tab (CR244): Form 3/4/5 transactions
+  /// over a 90-day window. Server caches 6h — this is the slow endpoint
+  /// (up to 25 Form 4 XML fetches under SEC's rate etiquette), so callers
+  /// should treat it as a distinct, separately-loading section from
+  /// [companyProfile] rather than gate the whole screen on it.
+  Future<InsiderActivity> insiderActivity(String ticker) async {
+    final r =
+        await _dio.get<Map<String, dynamic>>('/v1/sim/insider/$ticker');
+    return InsiderActivity.fromJson(r.data!);
   }
 
   /// Sector-allocation donut feed + concentration-compliance (CR026).

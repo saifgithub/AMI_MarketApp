@@ -1006,6 +1006,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tickerDetailActionSetAlert => 'ALERT';
 
   @override
+  String get tickerDetailActionReview => 'REVIEW';
+
+  @override
   String priceAlertSheetTitle(String ticker) {
     return 'Set price alert — $ticker';
   }
@@ -4939,4 +4942,211 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get alpacaConnectDisclosure =>
       'Your Alpaca keys stay on this phone. For a paper account, AMI sends your account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record. A live account is shown on this phone only and never receives orders.';
+
+  @override
+  String get floorReviewCta => 'Company Review';
+
+  @override
+  String get companyReviewTitle => 'COMPANY REVIEW';
+
+  @override
+  String companyReviewAsOf(String date) {
+    return 'AS OF $date';
+  }
+
+  @override
+  String get companyReviewTabOverview => 'OVERVIEW';
+
+  @override
+  String get companyReviewTabFinancials => 'FINANCIALS';
+
+  @override
+  String get companyReviewTabFilings => 'FILINGS';
+
+  @override
+  String get companyReviewTabOwnership => 'OWNERSHIP';
+
+  @override
+  String get companyReviewTabInsider => 'INSIDER';
+
+  @override
+  String get companyReviewTabEvents => 'EVENTS';
+
+  @override
+  String get companyReviewSourceEdgar => 'EDGAR';
+
+  @override
+  String get companyReviewSourceYfinance => 'YFINANCE';
+
+  @override
+  String get companyReviewSourceForms345 => 'FORMS 3/4/5';
+
+  @override
+  String get companyReviewViewFullDetail => 'View full detail';
+
+  @override
+  String get companyReviewBusinessDescription => 'Business description';
+
+  @override
+  String get companyReviewClassification => 'Classification';
+
+  @override
+  String get companyReviewAddressContacts => 'Address & contacts';
+
+  @override
+  String get companyReviewFieldSic => 'SIC code';
+
+  @override
+  String get companyReviewFieldCik => 'CIK';
+
+  @override
+  String get companyReviewFieldEmployees => 'Employees';
+
+  @override
+  String get companyReviewFieldExchange => 'Exchange';
+
+  @override
+  String get companyReviewFinancialsHeading => 'Key financials';
+
+  @override
+  String get companyReviewFieldMarketCap => 'Market cap';
+
+  @override
+  String get companyReviewFieldRevenueTtm => 'Revenue (TTM)';
+
+  @override
+  String get companyReviewFieldGrossMargin => 'Gross margin';
+
+  @override
+  String get companyReviewFieldOperatingMargin => 'Operating margin';
+
+  @override
+  String get companyReviewFieldNetMargin => 'Net margin';
+
+  @override
+  String get companyReviewFieldTrailingPe => 'Trailing P/E';
+
+  @override
+  String get companyReviewFieldForwardPe => 'Forward P/E';
+
+  @override
+  String get companyReviewFieldEpsTtm => 'EPS (TTM)';
+
+  @override
+  String get companyReviewFieldDebtToEquity => 'Debt / equity';
+
+  @override
+  String get companyReviewFieldFreeCashFlow => 'Free cash flow';
+
+  @override
+  String get companyReviewFieldDividendYield => 'Dividend yield';
+
+  @override
+  String get companyReviewMostRecentFiling => 'Most recent filing';
+
+  @override
+  String companyReviewSeeAllFilings(int count) {
+    return 'See all $count on Filings tab';
+  }
+
+  @override
+  String get companyReviewFilingsHeading => 'All filings';
+
+  @override
+  String get companyReviewFilingOpen => 'Open';
+
+  @override
+  String get companyReviewOwnershipSplit => 'Ownership split';
+
+  @override
+  String get companyReviewFieldInstitutions => 'Institutions';
+
+  @override
+  String get companyReviewFieldInsiders => 'Insiders';
+
+  @override
+  String get companyReviewFieldPublicFloat => 'Public float';
+
+  @override
+  String get companyReviewMajorHolders => 'Major holders';
+
+  @override
+  String get companyReviewMajorHoldersBody =>
+      'Top institutional and mutual-fund holders, most recent quarterly reporting date.';
+
+  @override
+  String get companyReviewSeeAllHolders => 'See all reported holders';
+
+  @override
+  String companyReviewReportedOn(String date) {
+    return 'Reported $date';
+  }
+
+  @override
+  String get companyReviewOwnershipStateLine =>
+      'This list is yfinance\'s institutional/mutual-fund holder summary (quarterly, name + % + shares) — not yet a parsed SEC Schedule 13D/13G (true beneficial-ownership filings) or Form 13F feed. Those EDGAR filing types aren\'t ingested by this app today; this tab states which source backs each figure.';
+
+  @override
+  String get companyReviewInsiderLast90Days => 'Last 90 days';
+
+  @override
+  String get companyReviewNetSentiment => 'Net sentiment';
+
+  @override
+  String get companyReviewNetDirectionBuying => 'BUYING';
+
+  @override
+  String get companyReviewNetDirectionSelling => 'SELLING';
+
+  @override
+  String get companyReviewNetDirectionMixed => 'MIXED';
+
+  @override
+  String get companyReviewNetDirectionNone => 'NONE';
+
+  @override
+  String get companyReviewBuysSells => 'Buys / Sells';
+
+  @override
+  String get companyReviewFullTransactionList => 'Full transaction list';
+
+  @override
+  String get companyReviewRecentForm4s => 'Recent Form 4s';
+
+  @override
+  String get companyReviewBadgeBuy => 'BUY';
+
+  @override
+  String get companyReviewBadgeSell => 'SELL';
+
+  @override
+  String get companyReview10b51Tag => '10b5-1';
+
+  @override
+  String get companyReviewInsiderStateLine =>
+      'Sales under a Rule 10b5-1 plan are scheduled in advance — the filing states this, we don\'t infer intent beyond it.';
+
+  @override
+  String get companyReviewEventsHeading => 'Upcoming & recent events';
+
+  @override
+  String get companyReviewNoEvents =>
+      'No upcoming earnings and no recent 8-K filings for this ticker.';
+
+  @override
+  String get companyReviewNotAvailable => 'Not available';
+
+  @override
+  String get companyReviewNoSecRegistrant =>
+      'No SEC registrant found for this symbol.';
+
+  @override
+  String get companyReviewLoadFailedTitle => 'Couldn\'t load Company Review';
+
+  @override
+  String get companyReviewRetry => 'Retry';
+
+  @override
+  String get companyReviewInsiderLoadFailed =>
+      'Couldn\'t load insider transaction data.';
 }

@@ -1726,6 +1726,12 @@ abstract class AppLocalizations {
   /// **'ALERT'**
   String get tickerDetailActionSetAlert;
 
+  /// CR244 — secondary chip on Ticker Detail, opens the Company Review screen for this ticker (info-circle icon). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'REVIEW'**
+  String get tickerDetailActionReview;
+
   /// CR027 — title of the price-alert creation bottom sheet. {ticker} is the ticker it's being created for (read-only in this sheet). NEW key, needs ar/ms translation.
   ///
   /// In en, this message translates to:
@@ -8101,6 +8107,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Alpaca keys stay on this phone. AMI links Alpaca paper accounts only — a live account cannot be linked. AMI sends your paper account summary (cash, value, positions) with each Room and agent message so the agents can use it; it isn\'t stored as its own record.'**
   String get alpacaConnectDisclosure;
+
+  /// CR244 — accessibility label + tooltip for the 1/4-width Review split button beside CONVENE THE ROOM on the Floor screen (info-circle icon, no visible text label at this width). Opens the Company Review screen for the ticker currently in the omnibox. Disabled with the same gate CONVENE uses (no ticker armed / not yet validated). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Review'**
+  String get floorReviewCta;
+
+  /// CR244 — AppBar title of the Company Review screen, uppercase mono per ticker_detail_screen.dart's AppBar style. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'COMPANY REVIEW'**
+  String get companyReviewTitle;
+
+  /// CR244 — the small 'AS OF' tag next to the ticker/name header, e.g. 'AS OF 09/27'. {date} is already formatted by the caller. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'AS OF {date}'**
+  String companyReviewAsOf(String date);
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get companyReviewTabOverview;
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'FINANCIALS'**
+  String get companyReviewTabFinancials;
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'FILINGS'**
+  String get companyReviewTabFilings;
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'OWNERSHIP'**
+  String get companyReviewTabOwnership;
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'INSIDER'**
+  String get companyReviewTabInsider;
+
+  /// CR244 — Company Review tab label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'EVENTS'**
+  String get companyReviewTabEvents;
+
+  /// CR244 — source tag shown on a Company Review card sourced from SEC EDGAR. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'EDGAR'**
+  String get companyReviewSourceEdgar;
+
+  /// CR244 — source tag shown on a Company Review card sourced from yfinance. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'YFINANCE'**
+  String get companyReviewSourceYfinance;
+
+  /// CR244 — source tag on the Insider tab's summary card, naming the SEC ownership-forms feed. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'FORMS 3/4/5'**
+  String get companyReviewSourceForms345;
+
+  /// CR244 — the expand link on every Company Review summary card; opens a bottom sheet with every field/item for that section. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'View full detail'**
+  String get companyReviewViewFullDetail;
+
+  /// CR244 — Overview tab card heading (yfinance longBusinessSummary). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Business description'**
+  String get companyReviewBusinessDescription;
+
+  /// CR244 — Overview tab card heading (EDGAR SIC/CIK/exchange/employees). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get companyReviewClassification;
+
+  /// CR244 — Overview tab full-detail sheet heading (registered address, phone, website). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Address & contacts'**
+  String get companyReviewAddressContacts;
+
+  /// CR244 — Overview tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'SIC code'**
+  String get companyReviewFieldSic;
+
+  /// CR244 — Overview tab field label (SEC Central Index Key). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'CIK'**
+  String get companyReviewFieldCik;
+
+  /// CR244 — Overview tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees'**
+  String get companyReviewFieldEmployees;
+
+  /// CR244 — Overview tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange'**
+  String get companyReviewFieldExchange;
+
+  /// CR244 — Financials tab summary card heading. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Key financials'**
+  String get companyReviewFinancialsHeading;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Market cap'**
+  String get companyReviewFieldMarketCap;
+
+  /// CR244 — Financials tab field label, trailing twelve months. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue (TTM)'**
+  String get companyReviewFieldRevenueTtm;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross margin'**
+  String get companyReviewFieldGrossMargin;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating margin'**
+  String get companyReviewFieldOperatingMargin;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Net margin'**
+  String get companyReviewFieldNetMargin;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Trailing P/E'**
+  String get companyReviewFieldTrailingPe;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward P/E'**
+  String get companyReviewFieldForwardPe;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'EPS (TTM)'**
+  String get companyReviewFieldEpsTtm;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt / equity'**
+  String get companyReviewFieldDebtToEquity;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Free cash flow'**
+  String get companyReviewFieldFreeCashFlow;
+
+  /// CR244 — Financials tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend yield'**
+  String get companyReviewFieldDividendYield;
+
+  /// CR244 — Overview tab card heading showing the single newest filing. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent filing'**
+  String get companyReviewMostRecentFiling;
+
+  /// CR244 — Overview tab link under the most-recent-filing card, jumps to the Filings tab. {count} is the total filings.items length. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'See all {count} on Filings tab'**
+  String companyReviewSeeAllFilings(int count);
+
+  /// CR244 — Filings tab list heading. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'All filings'**
+  String get companyReviewFilingsHeading;
+
+  /// CR244 — link on a filing row that opens the SEC document URL externally. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get companyReviewFilingOpen;
+
+  /// CR244 — Ownership tab card heading (institutions/insiders/public float breakdown). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership split'**
+  String get companyReviewOwnershipSplit;
+
+  /// CR244 — Ownership tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Institutions'**
+  String get companyReviewFieldInstitutions;
+
+  /// CR244 — Ownership tab field label. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Insiders'**
+  String get companyReviewFieldInsiders;
+
+  /// CR244 — Ownership tab field label, computed client-side as 1 - institutions - insiders when both are present. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Public float'**
+  String get companyReviewFieldPublicFloat;
+
+  /// CR244 — Ownership tab card heading for the named institutional/mutual-fund holder list. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Major holders'**
+  String get companyReviewMajorHolders;
+
+  /// CR244 — Ownership tab major-holders card body copy, from the approved mockup. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Top institutional and mutual-fund holders, most recent quarterly reporting date.'**
+  String get companyReviewMajorHoldersBody;
+
+  /// CR244 — Ownership tab expand link for the major-holders list. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'See all reported holders'**
+  String get companyReviewSeeAllHolders;
+
+  /// CR244 — Ownership tab holder row sub-line, the holder's date_reported field. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported {date}'**
+  String companyReviewReportedOn(String date);
+
+  /// CR244 — Ownership tab's mandatory honesty state-line, verbatim from the approved mockup. Must never be dropped even when the ownership section is otherwise fully live — it's disclosure, not an error state. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'This list is yfinance\'s institutional/mutual-fund holder summary (quarterly, name + % + shares) — not yet a parsed SEC Schedule 13D/13G (true beneficial-ownership filings) or Form 13F feed. Those EDGAR filing types aren\'t ingested by this app today; this tab states which source backs each figure.'**
+  String get companyReviewOwnershipStateLine;
+
+  /// CR244 — Insider tab summary card heading. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get companyReviewInsiderLast90Days;
+
+  /// CR244 — Insider tab field label for summary.net_direction. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Net sentiment'**
+  String get companyReviewNetSentiment;
+
+  /// CR244 — Insider tab net_direction value display. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'BUYING'**
+  String get companyReviewNetDirectionBuying;
+
+  /// CR244 — Insider tab net_direction value display. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'SELLING'**
+  String get companyReviewNetDirectionSelling;
+
+  /// CR244 — Insider tab net_direction value display. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'MIXED'**
+  String get companyReviewNetDirectionMixed;
+
+  /// CR244 — Insider tab net_direction value display, shown when there is no P/S activity in the window. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'NONE'**
+  String get companyReviewNetDirectionNone;
+
+  /// CR244 — Insider tab field label for the buys/sells count pair. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Buys / Sells'**
+  String get companyReviewBuysSells;
+
+  /// CR244 — Insider tab expand link from the summary card to the full transaction list. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Full transaction list'**
+  String get companyReviewFullTransactionList;
+
+  /// CR244 — Insider tab transaction-list card heading. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Form 4s'**
+  String get companyReviewRecentForm4s;
+
+  /// CR244 — Insider tab transaction badge, shown ONLY for direction == buy (Form 4 code P, open-market purchase). Never shown for an M/A/F/G/other code. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'BUY'**
+  String get companyReviewBadgeBuy;
+
+  /// CR244 — Insider tab transaction badge, shown ONLY for direction == sell (Form 4 code S, open-market sale). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'SELL'**
+  String get companyReviewBadgeSell;
+
+  /// CR244 — small tag on a P/S transaction row when plan_type == scheduled_10b5-1, read structurally from the Form 4's own checkbox, never inferred. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'10b5-1'**
+  String get companyReview10b51Tag;
+
+  /// CR244 — Insider tab's mandatory disclosure state-line, verbatim from the approved mockup (CR244's structural 10b5-1 safety-floor requirement). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales under a Rule 10b5-1 plan are scheduled in advance — the filing states this, we don\'t infer intent beyond it.'**
+  String get companyReviewInsiderStateLine;
+
+  /// CR244 — Events tab heading, combining GET /v1/sim/earnings/{ticker} with the 8-K rows of filings.items. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming & recent events'**
+  String get companyReviewEventsHeading;
+
+  /// CR244 — Events tab empty state. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming earnings and no recent 8-K filings for this ticker.'**
+  String get companyReviewNoEvents;
+
+  /// CR244 — fallback card heading when a section's state is not_available and there's otherwise nothing to title the card with. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get companyReviewNotAvailable;
+
+  /// CR244 — fallback reason text shown when the backend's reason field is null but cik is null (foreign/OTC issuer, no EDGAR match) — matches the API contract's documented reason string so the UI never blanks silently. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'No SEC registrant found for this symbol.'**
+  String get companyReviewNoSecRegistrant;
+
+  /// CR244 — whole-screen error state title when the company-profile fetch itself fails (network/5xx), distinct from a per-section not_available state. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load Company Review'**
+  String get companyReviewLoadFailedTitle;
+
+  /// CR244 — retry button on the whole-screen error state. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get companyReviewRetry;
+
+  /// CR244 — Insider tab's own error state when GET /v1/sim/insider/{ticker} fails independently of the main company-profile fetch. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load insider transaction data.'**
+  String get companyReviewInsiderLoadFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -50,8 +50,10 @@ class FloorOmnibox extends StatefulWidget {
     required this.onAsk,
     required this.onPick,
     required this.validate,
+    this.onReview,
     this.fieldKey,
     this.ctaKey,
+    this.reviewKey,
   });
 
   /// The CR128 existence check — the same one behind the Convene sheet and the
@@ -70,8 +72,15 @@ class FloorOmnibox extends StatefulWidget {
   /// The empty-box path.
   final VoidCallback onPick;
 
+  /// CR244 — opens Company Review for the ticker currently in the box. Null
+  /// or disabled by the same gate CONVENE uses (ticker-shaped, validated) —
+  /// see `_reviewTicker` below. Optional so tests that don't care about
+  /// Review can omit it.
+  final ValueChanged<String>? onReview;
+
   final Key? fieldKey;
   final Key? ctaKey;
+  final Key? reviewKey;
 
   @override
   State<FloorOmnibox> createState() => _FloorOmniboxState();
@@ -130,11 +139,23 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
     }
   }
 
+  /// CR244 — the ticker Review would open, or null when the box isn't
+  /// currently armed on a validated ticker. Same gate as CONVENE: ticker-shaped
+  /// route, not mid-check, and not flagged unknown by the CR128 validator.
+  String? get _reviewTicker {
+    final decision = routeOmnibox(_ctrl.text);
+    if (decision.route != OmniboxRoute.convene) return null;
+    if (_validator.checking) return null;
+    if (_validator.unknownTicker != null) return null;
+    return decision.ticker;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final decision = routeOmnibox(_ctrl.text);
     final concierge = kAllAgents.last;
+    final reviewTicker = _reviewTicker;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -199,19 +220,40 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
           ),
         ],
         const SizedBox(height: AmiSpacing.s),
-        // Acceptance #2 — the only primary on the screen. Everything else on
-        // the Floor is a card, a row or a text button.
-        SizedBox(
-          key: widget.ctaKey,
-          child: HexButton(
-            label: switch (decision.route) {
-              OmniboxRoute.convene =>
-                l.floorConveneOn(decision.ticker!),
-              OmniboxRoute.concierge => l.floorAskAmi,
-              OmniboxRoute.picker => l.floorConveneCta,
-            },
-            color: AmiColors.hexGreen,
-            onPressed: _go,
+        // Acceptance #2 — CONVENE is still the only primary on the screen.
+        // CR244 adds Review beside it as a 1/4-width split button (Saiful's
+        // explicit mockup correction) — same row, never a second primary.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: SizedBox(
+                  key: widget.ctaKey,
+                  child: HexButton(
+                    label: switch (decision.route) {
+                      OmniboxRoute.convene =>
+                        l.floorConveneOn(decision.ticker!),
+                      OmniboxRoute.concierge => l.floorAskAmi,
+                      OmniboxRoute.picker => l.floorConveneCta,
+                    },
+                    color: AmiColors.hexGreen,
+                    onPressed: _go,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                flex: 1,
+                child: _ReviewSplitButton(
+                  key: widget.reviewKey,
+                  onTap: reviewTicker == null || widget.onReview == null
+                      ? null
+                      : () => widget.onReview!(reviewTicker),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AmiSpacing.xs),
@@ -221,6 +263,42 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
           style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
         ),
       ],
+    );
+  }
+}
+
+/// CR244 — the 1/4-width Review split button beside CONVENE THE ROOM. Same
+/// disabled treatment as [HexButton] (no ticker armed → dim, no tap): Review
+/// is never a second primary, so it never gets its own error state, only an
+/// on/off one that mirrors CONVENE's own gate.
+class _ReviewSplitButton extends StatelessWidget {
+  const _ReviewSplitButton({super.key, required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final enabled = onTap != null;
+    final color = enabled ? AmiColors.hexBlue : AmiColors.textLow;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: l.floorReviewCta,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(Icons.info_outline, color: color, size: 20),
+        ),
+      ),
     );
   }
 }

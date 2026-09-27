@@ -18,6 +18,7 @@ import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
+import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/screens/sim/price_alert_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/price_alert_providers.dart';
@@ -469,6 +470,12 @@ class _SecondaryActions extends ConsumerWidget {
     ));
   }
 
+  void _review(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => CompanyReviewScreen(ticker: ticker),
+    ));
+  }
+
   void _setAlert(BuildContext context) {
     PriceAlertSheet.show(context, ticker: ticker);
   }
@@ -503,6 +510,12 @@ class _SecondaryActions extends ConsumerWidget {
           label: l.tickerDetailActionConvene,
           color: AmiColors.hexPurple,
           onTap: () => _convene(context),
+        ),
+        _Chip(
+          icon: Icons.info_outline,
+          label: l.tickerDetailActionReview,
+          color: AmiColors.hexBlue,
+          onTap: () => _review(context),
         ),
         _Chip(
           icon: isWatched ? Icons.star : Icons.star_border,

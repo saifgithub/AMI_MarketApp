@@ -40,6 +40,7 @@ import 'package:ami_trade/screens/floor/team_calls_screen.dart';
 import 'package:ami_trade/screens/floor/your_firm_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
@@ -135,6 +136,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   void _convene(String ticker) {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => RoomScreen(ticker: ticker),
+    ));
+  }
+
+  void _review(String ticker) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => CompanyReviewScreen(ticker: ticker),
     ));
   }
 
@@ -271,6 +278,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     onConvene: _convene,
                     onAsk: _ask,
                     onPick: () => ConveneSheet.show(context),
+                    onReview: _review,
                   ),
                   const SizedBox(height: AmiSpacing.m),
 
