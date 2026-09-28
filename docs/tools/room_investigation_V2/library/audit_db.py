@@ -141,19 +141,40 @@ def run_psql(sql: str, params: Sequence[object] = ()) -> str:
     return result.stdout
 
 
-def list_calls(user_id: str) -> list[CallRow]:
+def _window_clauses(user_id: str, after: str | None,
+                    before: str | None) -> tuple[str, list[object]]:
+    clauses = ["user_id=%s"]
+    params: list[object] = [user_id]
+    if after is not None:
+        clauses.append("created_at >= %s")
+        params.append(after)
+    if before is not None:
+        clauses.append("created_at <= %s")
+        params.append(before)
+    return " AND ".join(clauses), params
+
+
+def list_calls(user_id: str, *, after: str | None = None,
+               before: str | None = None) -> list[CallRow]:
     """Every llm_audit call for a user_id, in created_at order.
+
+    `after`/`before` are inclusive created_at window bounds with the same
+    semantics as get_field's — needed because deterministic per-arm user_ids
+    (uuid5) mean a killed-then-resumed benchmark arm shares one user_id
+    across the partial and the completed convene; the window scopes the
+    listing to the convene of interest.
 
     Prints the v1 NOTE to stderr when more than 20 rows come back: one
     convene is ~17 rows, so a larger count means a batch driver reused this
     user_id across tickers and `get_field` needs after/before/nth to target
     the right convene.
     """
+    where, params = _window_clauses(user_id, after, before)
     sql = (
         "SELECT created_at, agent_id, provider, flow FROM llm_audit "
-        "WHERE user_id=%s ORDER BY created_at;"
+        f"WHERE {where} ORDER BY created_at;"
     )
-    out = run_psql(sql, [user_id])
+    out = run_psql(sql, params)
     rows: list[CallRow] = []
     for line in out.splitlines():
         line = line.strip()
@@ -176,8 +197,14 @@ def list_calls(user_id: str) -> list[CallRow]:
     return rows
 
 
-def call_metrics(user_id: str) -> list[CallMetrics]:
+def call_metrics(user_id: str, *, after: str | None = None,
+                 before: str | None = None) -> list[CallMetrics]:
     """Per-call token/error signals for one user_id, in created_at order.
+
+    `after`/`before` are inclusive created_at window bounds, same semantics
+    as get_field's — a killed-then-resumed arm shares its deterministic
+    user_id with the partial convene, and the window scopes the metrics to
+    the completed run so nth still lines up with get_field's nth.
 
     `nth` is the 0-indexed occurrence per agent_id in created_at order —
     the same semantics as get_field's `nth`, so a CallMetrics row and a
@@ -186,10 +213,11 @@ def call_metrics(user_id: str) -> list[CallMetrics]:
     from output_tokens is a heuristic: llm_audit has no finish_reason
     column.
     """
+    where, params = _window_clauses(user_id, after, before)
     out = run_psql(
         "SELECT agent_id, output_tokens, error, constraint_status "
-        "FROM llm_audit WHERE user_id=%s ORDER BY created_at;",
-        [user_id],
+        f"FROM llm_audit WHERE {where} ORDER BY created_at;",
+        params,
     )
     seen: dict[str, int] = {}
     rows: list[CallMetrics] = []

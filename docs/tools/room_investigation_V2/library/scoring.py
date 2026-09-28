@@ -24,11 +24,15 @@ per-convene FAIL-LOUDLY verification that every expected agent call exists,
 every prose turn carries its STANCE envelope, every portfolio_manager draw
 parses as JSON, and no turn sits at the token ceiling. It takes a
 dependency-injected audit module (anything with `list_calls`/`get_field`,
-optionally `call_metrics`) so this module stays importable without audit_db.
+optionally `call_metrics`) so this module stays importable without audit_db,
+and inclusive `after`/`before` created_at window bounds because deterministic
+per-arm user_ids mean a killed-then-resumed arm shares one user_id across the
+partial and the completed convene.
 """
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from collections import Counter
@@ -475,13 +479,43 @@ def _audit_exceptions(audit_module) -> tuple[type, type | None]:
     )
 
 
+def _supports_window(fn) -> bool:
+    """True when fn accepts after=/before= kwargs (directly or via **kwargs).
+
+    Chosen over a TypeError catch so a genuine TypeError raised INSIDE the
+    audit helper is never swallowed as a signature mismatch. Uninspectable
+    callables (C builtins) are assumed modern.
+    """
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return True
+    return "after" in params or any(
+        p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()
+    )
+
+
 def gate_report(
     user_id: str,
     *,
     audit_module,
+    after: str | None = None,
+    before: str | None = None,
     truncation_token_ceiling: int = 4900,
 ) -> GateReport:
     """CR247 D26 phase gate over one convene (one user_id = one convene).
+
+    `after`/`before` are inclusive created_at window bounds threaded into
+    list_calls/get_field/call_metrics. Why they exist: benchmark arms get
+    deterministic uuid5 user_ids (runner.arm_user_id), so an arm killed
+    mid-convene and then resumed shares ONE user_id across the partial and
+    the completed convene — an unwindowed gate_report sees both convenes'
+    rows and fails UNEXPECTED_CALL_COUNT on the clean one. Passing
+    after=<arm triggered_at> scopes the audit to the completed run. If the
+    injected module's helpers don't accept after/before (a duck-typed fake),
+    the window is dropped and the helper is called without it — detected via
+    inspect.signature (see _supports_window), never via a TypeError catch,
+    so a real TypeError inside a helper still surfaces.
 
     FAIL-LOUDLY checks:
     1. Exactly the 11 EXPECTED_PROSE_AGENTS once each and >= MIN_PM_DRAWS
@@ -515,10 +549,26 @@ def gate_report(
     no_rows_exc, ambiguous_exc = _audit_exceptions(audit_module)
     handled = (no_rows_exc,) if ambiguous_exc is None else (no_rows_exc, ambiguous_exc)
 
+    window: dict[str, str] = {}
+    if after is not None:
+        window["after"] = after
+    if before is not None:
+        window["before"] = before
+    windowed_fns: dict[int, bool] = {}
+
+    def invoke(fn, *args, **kwargs):
+        if window:
+            key = id(fn)
+            if key not in windowed_fns:
+                windowed_fns[key] = _supports_window(fn)
+            if windowed_fns[key]:
+                kwargs = {**kwargs, **window}
+        return fn(*args, **kwargs)
+
     findings: list[GateFinding] = []
     stances: dict[str, str] = {}
 
-    calls = audit_module.list_calls(user_id)
+    calls = invoke(audit_module.list_calls, user_id)
     counts = Counter(r.agent_id for r in calls)
 
     lo, hi = TOTAL_CALLS_RANGE
@@ -537,7 +587,8 @@ def gate_report(
 
     def fetch(agent_id: str, nth: int | None) -> str | None:
         try:
-            return audit_module.get_field(
+            return invoke(
+                audit_module.get_field,
                 user_id, agent_id, "response_text", nth=nth,
             )
         except handled as exc:
@@ -636,7 +687,7 @@ def gate_report(
 
     call_metrics_fn = getattr(audit_module, "call_metrics", None)
     if callable(call_metrics_fn):
-        for m in call_metrics_fn(user_id):
+        for m in invoke(call_metrics_fn, user_id):
             tokens = getattr(m, "output_tokens", None)
             if tokens is not None and tokens >= truncation_token_ceiling:
                 findings.append(GateFinding(

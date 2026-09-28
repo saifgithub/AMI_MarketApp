@@ -178,7 +178,16 @@ async def main_async(args: argparse.Namespace) -> int:
         for r in summary.results:
             if r.status != "completed":
                 continue
-            report = scoring.gate_report(r.user_id, audit_module=audit_db)
+            # after=<triggered_at> is load-bearing: a killed-then-resumed arm
+            # shares its deterministic user_id with the partial convene, and
+            # the window scopes the audit to THIS run's rows. before=
+            # finished_at closes it against any later retry of a failed arm
+            # under the same user_id. Both are UTC ISO, same as llm_audit's
+            # created_at.
+            report = scoring.gate_report(
+                r.user_id, audit_module=audit_db,
+                after=r.triggered_at, before=r.finished_at,
+            )
             label = r.arm.ticker if repeats == 1 else r.arm.key
             if report.ok:
                 print(f"  gate {label}: OK")
