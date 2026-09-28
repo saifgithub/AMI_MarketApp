@@ -479,6 +479,112 @@ session history for citations:**
 - [ ] Saiful decides: is this 3-environment strategy something to commit to now, or does it
       wait until CR231's stabilisation programme clears and Beta itself is closer to real?
 
+### 10. Production platform decision — options explored, no direction chosen yet
+
+**Status: genuinely undecided. This section is a ledger of what's been looked at and what
+was found, not a recommendation — Saiful: "we are still looking for a solution... write up
+all the options we have looked at, and still no direction."** Do not read anything below as
+a proposal to build; it exists so the next session picking this up doesn't have to
+re-discover the same findings.
+
+**The trigger for this whole line of inquiry:** Beta's infra choice is also Production's
+infra choice (§9), so a real workload-shape problem with Cloud Run surfaced that CR006's
+original research never tested for — Convene the Room is a single, long-lived SSE connection
+(`POST /v1/room/stream`), observed taking around 5 minutes end-to-end, most of it spent
+waiting on LLM responses rather than doing CPU work.
+
+**Option 1 — Cloud Run, as currently architected (live SSE connection held open for the
+whole convene).**
+- This is what's actually configured today (`infra/gcp/cloud_run.tf`, `timeout=300s`,
+  `concurrency=80`) and it has a real, live bug independent of everything else in this
+  section: **`timeout=300s` is already shorter than the ~5-minute convenes actually observed**
+  — this would time out in production as configured right now. Cloud Run supports up to
+  3600s, so raising the timeout is trivial, but it hasn't been done.
+- Holding one SSE connection open for 5 minutes on a `concurrency=80` instance means up to 80
+  such connections could land on one 2 vCPU/2GiB instance simultaneously — mostly idle-waiting
+  on the LLM, not CPU-bound, but Cloud Run's autoscaling doesn't know that; it just sees 80
+  open connections on one thin instance. This degrades latency under real concurrent load and
+  you're billed for the connection's full wall-clock duration regardless of how little actual
+  CPU work happens during it.
+- Fix within this option: drastically lower `concurrency` for this workload (e.g. 5-10, not
+  80) and raise `max_instances` instead, so Cloud Run's autoscaling math is honest about how
+  thin each Room-holding instance actually is. Cheap Terraform change, not yet made.
+
+**Option 2 — Cloud Run, but decouple the client's live-watching UX from the connection that
+does the actual work (async job + poll/push, not a held-open stream).**
+- The mobile UX for watching agents "come back" live (hex avatars, phase progress — a real,
+  deliberate product feature, not incidental chrome) doesn't strictly require a single
+  held-open connection. The backend already runs Room execution as a detached background
+  task independent of the SSE connection (`room_runner.py:5984`, `asyncio.create_task`), and
+  a working reconnect-via-polling path already exists (`GET /v1/room/{run_id}`, used today
+  when a client's SSE connection drops) — so the live view could be served by short, cheap,
+  repeated polls instead of one long-held connection, with no visible UX change to the user.
+- **This does not reduce the actual compute cost of the 5 minutes of Room orchestration** —
+  that work has to run somewhere for its full duration regardless of how the client watches
+  it. What it would change is only the connection-holding/concurrency-slot problem above.
+- **A more serious risk, found while investigating this option**: Cloud Run's default
+  request-based billing throttles a container's CPU to near-zero once the triggering HTTP
+  response is considered complete. A bare `asyncio.create_task()` background job — which is
+  exactly what `start_run()` uses today — is a documented, common failure pattern on Cloud
+  Run specifically: the background task can starve or freeze the moment nothing holds the
+  initiating connection open, unless CPU is set to always-allocated (which reintroduces the
+  §9 "always-on costs ~$130-140/mo per instance" tradeoff) or the work moves to a
+  purpose-built primitive.
+- **Cloud Run Jobs** is that purpose-built primitive — a separate GCP resource type for
+  run-to-completion background work with no live connection required, billed only for actual
+  execution time. Using it for Room execution would fix both the throttling risk and the
+  concurrency-slot problem, but it's a real backend re-architecture of how `start_run()`
+  launches its work, not a config change.
+- Mostly-existing groundwork for the client-facing half of this option: a reserved-but-empty
+  push-notification path already sits in the code (`backend/app/api/room.py`'s
+  `TODO B1: fire APNs push notification here` stub; mobile's `open_room_verdict` deep-link
+  route, also stubbed) — wiring these was already implicitly anticipated by
+  `docs/initial_specs/02_agents/convene_the_room.md`'s existing spec for Concierge-scheduled
+  background convenes ("No user wait — push notification when done"), just not yet extended
+  to manually-triggered convenes.
+
+**Option 3 — VPS (self-managed, same execution model as Alpha/melehost today).**
+- CR006 already priced real options: Contabo Cloud VPS 30 ($15/mo, 8vCPU/24GB, confirmed
+  pricing) and OVHcloud VPS-4 ($23/mo, same spec, confirmed) — both cheaper than Cloud Run's
+  likely real cost once either Option 1's concurrency-tuning or Option 2's Jobs
+  re-architecture is factored in, though CR006's original comparison only weighed VPS against
+  Cloud Run's near-free-tier Beta-scale cost, not against this workload's actual execution
+  constraints.
+- **The entire CPU-throttling/concurrency-slot problem in Options 1 and 2 does not exist on a
+  VPS** — it's a real machine running processes, same as melehost, so `asyncio.create_task()`
+  behaves exactly as documented with no platform-specific gotcha.
+- **The real, demonstrated tradeoff: security and ops burden becomes entirely the team's own,
+  ongoing responsibility — and melehost's own history shows this has already gone wrong once.**
+  `docs/governance/security_review_2026-07-29.md`'s finding C3 (promoted to Critical): Docker
+  Compose's default behavior publishes container ports on `0.0.0.0` and **bypasses `ufw`**
+  entirely — proven live, not theoretical, an ordinary LAN device connected to melehost's
+  Postgres as superuser with a default password and read all 30 tables, and Redis answered
+  with no auth at all. [CR123](../CR123_security_hardening_program/CR123_security_hardening_program.md)/[CR124](../CR124_melehost_compose_hardening/CR124_melehost_compose_hardening.md)
+  are the real, itemized remediation this required — port binding, real passwords, dedicated
+  low-privilege DB roles, IP-spoofing fixes in the rate limiter. None of this is automatic on
+  a VPS; a managed platform (Cloud Run + Secret Manager) makes the equivalent mistakes
+  structurally harder to make in the first place (private-by-default networking, secrets
+  injected by the platform rather than living in a `.env` file).
+- No autoscaling — a VPS is a fixed box. Likely fine at 1,000 users; at 1,000,000 users this
+  becomes a real constraint requiring either a much bigger box, multiple boxes behind a
+  self-run load balancer, or a move to container orchestration (Kubernetes) — real ops
+  engineering Cloud Run would provide natively. No cost/design work has been done on what
+  that would actually look like or cost at 1M-user scale.
+
+**What has NOT been resolved, explicitly:**
+- No decision on Cloud Run vs. VPS, or which Cloud Run sub-option (live-SSE vs. Jobs-based).
+- No engineering-effort estimate for the Cloud Run Jobs re-architecture, to weigh against a
+  VPS's lower ops-automation but simpler execution model.
+- No security/ops-burden cost model for a VPS at Beta or Production scale — melehost's
+  history establishes that the risk is real, not how much ongoing effort mitigating it would
+  actually take at higher stakes (a paying customer's data, not an internal test).
+- Self-hosted Kubernetes, managed Kubernetes (GKE), and other VPS providers beyond the two
+  CR006 priced were not evaluated for this specific workload shape.
+- Whether the same platform choice should even hold across all three environments (§9's
+  premise) once Option 2/3's tradeoffs are this different in kind, not just in cost, hasn't
+  been revisited — §9 assumed "one Terraform module, three environments" without yet knowing
+  about the execution-model mismatch this section found.
+
 ## Out of scope
 
 - Does not change any locked pricing, positioning, or compliance decision — this doc points to
@@ -504,6 +610,11 @@ session history for citations:**
 - **Does not decide the 3-environment (Alpha/Beta/Prod) strategy in §9** — exploratory only,
   per Saiful: "we are still planning." No Terraform, no new GCP/Supabase projects, no Alpha
   migration off melehost happens under this CR as filed.
+- **Does not pick a production platform in §10** — Cloud Run (live-SSE, or Jobs-based), VPS,
+  and any other option are all still on the table. Per Saiful: "we are still looking for a
+  solution... no direction" — §10 is a ledger of findings, not a recommendation, and no
+  platform-specific work (Terraform for a VPS, Cloud Run Jobs migration, etc.) starts until
+  a direction is actually chosen.
 
 ## Acceptance
 
