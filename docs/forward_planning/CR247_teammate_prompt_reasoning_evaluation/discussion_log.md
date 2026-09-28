@@ -305,6 +305,33 @@ and vetoes.** No LLM output decides whether it should be double-checked.
   it outputs "reconsider" and the CIO re-runs once with the audit note.
 - Both verdicts and any flip are narrated and journaled (degrade loudly).
 
+## D14 — Feasibility of the additional data, FREE sources only (Saiful's ask)
+*2026-09-28 · status: audited; two sources verified live*
+
+| Data wanted | Free source | Feasibility |
+|---|---|---|
+| SBC (share-based compensation) | SEC EDGAR XBRL `companyconcept/us-gaap/ShareBasedCompensation` — **verified live 2026-09-28**: AAPL returns 180 historical rows, no key, User-Agent only | ✅ trivial — one tag in `edgar_tags.py` + ingest; the PIT machinery already does everything else |
+| ROIC (NOPAT, invested capital) | Computed from XBRL tags already resolved (operating income, tax, debt, equity) | ✅ free — AMI computes and labels it; needs a documented tax-rate and WACC stance |
+| WACC inputs | Cost of debt already have (gated); cost of equity from beta — beta derivable from price history we already fetch (or yfinance `.info`, 5-yr monthly caveat) | ✅ free, with an estimation-honesty label |
+| Debt maturity wall, working capital, FCF history | Already fetched, **gated OFF** in config | ✅ zero new sourcing — enable + measure |
+| **Peer/sector comparison** | SEC submissions JSON carries SIC code + description per company — **verified live 2026-09-28** (AAPL → SIC 3571 "Electronic Computers"). Basket = same-SIC companies ranked by market cap; `edgar_cik.py`/`edgar_submissions.py` already map ticker↔CIK | ✅ feasible free — new build: peer-basket table + refresh job, then peer multiples from data already fetched per name |
+| Insider transactions | EDGAR ownership forms — `edgar_ownership.py` + CR244 in flight | ✅ already paid for |
+| Put/call ratio, options skew | yfinance option chains — already pulled by `option_chain.py` (CR172) | ✅ arithmetic on data in hand |
+| Institutional ownership trend (13F) | EDGAR 13F filings, free | ✅ feasible, quarterly + 45-day lag — say the lag on the label |
+| Multi-year price history | yfinance `period="max"` — the 3-month window is a choice, not a limit | ✅ free — a fetch-window decision + storage |
+| Filing TEXT (10-K MD&A, risk factors, 8-K earnings releases) | EDGAR full-text/submissions, free | ✅ feasible — new pipeline (extraction + size discipline); the FA persona currently says statements are NOT supplied, so this is the biggest honest upgrade |
+| Earnings-call transcripts | No free API. (FMP/Quartr/Seeking Alpha all paywalled or ToS-scrape) | ❌ not free — closest legal free proxy is the 8-K Item 2.02 earnings release text via EDGAR |
+| Retail-vs-institutional flow | Retail flow is proprietary (Robintrack is defunct) | ❌ not free — institutional side only, via 13F |
+| Macro calendar beyond FOMC | FRED API (free key) / BLS | ✅ free if wanted |
+
+SEC fair-access rules apply to all EDGAR rows: User-Agent header, ≤10 req/s,
+cache aggressively — the existing ingest scripts already honour this.
+
+**Bottom line:** everything on the teammate's list except earnings-call
+transcripts and retail flow is obtainable free, and most of it requires no new
+source at all — the two biggest asks (SBC, peer SIC baskets) were verified
+live against SEC endpoints today.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
