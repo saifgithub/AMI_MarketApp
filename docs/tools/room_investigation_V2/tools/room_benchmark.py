@@ -14,6 +14,15 @@ the `ami-llm` alias — D21) BEFORE any prompt change; phases 1-5 swap
 --diff-against) decides pass/fail at the gate. Scores are computed in code —
 LLMs never compute scores (house rule).
 
+Gate checks (CR247 D26): after the arms finish, every completed arm's convene
+goes through `scoring.gate_report` against llm_audit — any truncated turn or
+missing STANCE envelope FAILs the run loudly and forces exit code 1, the same
+as a failed arm. `--skip-gate` bypasses this for investigation-only runs.
+Concurrency: `--max-concurrent` always wins; when it is not passed, the
+benchmark file's optional `concurrency_by_provider` map picks the run
+provider's entry (absent provider entry -> 1); without the map the legacy
+default of 3 applies.
+
 YAML only: pyyaml is already in backend/.venv; nothing else is parsed.
 """
 from __future__ import annotations
@@ -27,7 +36,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from library import env_bootstrap, prompt_lab, provider_gateway, runner, scoring  # noqa: E402
+from library import audit_db, env_bootstrap, prompt_lab, provider_gateway, runner, scoring  # noqa: E402
 
 V2_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARKS_DIR = V2_ROOT / "benchmarks"
@@ -43,8 +52,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--provider", choices=sorted(provider_gateway.PROVIDERS), default=None,
                         help="override the benchmark file's provider")
     parser.add_argument("--model", default=None, help="provider model override (default: the provider's registered default)")
-    parser.add_argument("--max-concurrent", type=int, default=3,
-                        help="max Room convenes in flight at once; 1 = strictly sequential")
+    parser.add_argument("--max-concurrent", type=int, default=None,
+                        help="max Room convenes in flight at once; 1 = strictly sequential. "
+                             "Always wins over the benchmark file's concurrency_by_provider "
+                             "map; without either, defaults to 3")
+    parser.add_argument("--skip-gate", action="store_true",
+                        help="skip the post-run scoring.gate_report checks "
+                             "(investigation-only; a phase-gate run must never pass this)")
     parser.add_argument("--repeats", type=int, default=None,
                         help="override the benchmark file's repeat count")
     parser.add_argument("--diff-against", type=Path, default=None,
@@ -98,6 +112,19 @@ async def main_async(args: argparse.Namespace) -> int:
     prompt_variant = bench.get("prompt_variant", prompt_lab.BACKEND_DEFAULT_VARIANT)
     mandate = _resolve_mandate(bench.get("mandate") or {}, benchmark_path=benchmark_path)
 
+    concurrency_map = bench.get("concurrency_by_provider")
+    if concurrency_map is not None and not isinstance(concurrency_map, dict):
+        raise SystemExit(
+            f"{benchmark_path}: concurrency_by_provider must be a map of "
+            f"provider -> int, got {type(concurrency_map).__name__}"
+        )
+    if args.max_concurrent is not None:
+        max_concurrent = args.max_concurrent
+    elif concurrency_map:
+        max_concurrent = int(concurrency_map.get(provider, 1))
+    else:
+        max_concurrent = 3
+
     gateway = provider_gateway.force_provider(provider, model=args.model)
 
     arms = [
@@ -115,14 +142,14 @@ async def main_async(args: argparse.Namespace) -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.out_dir / f"runs_{name}.jsonl"
     print(f"benchmark: {name} ({benchmark_path}) — {len(tickers)} tickers x {repeats} repeats, "
-          f"provider={provider}, prompt_variant={prompt_variant}")
+          f"provider={provider}, prompt_variant={prompt_variant}, max_concurrent={max_concurrent}")
     summary = await runner.run_arms(
         arms,
         batch_id=name,
         out_path=out_path,
         benchmarks_dir=BENCHMARKS_DIR,
         gateway=gateway,
-        max_concurrent=args.max_concurrent,
+        max_concurrent=max_concurrent,
     )
 
     records = [
@@ -142,11 +169,30 @@ async def main_async(args: argparse.Namespace) -> int:
             f"agreement={row.agreement:.2f} {mark} dist={dict(row.actions)}"
         )
 
+    gate_failed = False
+    if args.skip_gate:
+        print("\ngate: SKIPPED (--skip-gate) — investigation-only run; "
+              "this output is not valid as a CR247 phase gate")
+    else:
+        print("\ngate report (scoring.gate_report):")
+        for r in summary.results:
+            if r.status != "completed":
+                continue
+            report = scoring.gate_report(r.user_id, audit_module=audit_db)
+            label = r.arm.ticker if repeats == 1 else r.arm.key
+            if report.ok:
+                print(f"  gate {label}: OK")
+            else:
+                gate_failed = True
+                print(f"  gate {label}: FAIL ({len(report.findings)} findings)")
+                for f in report.findings:
+                    print(f"    - {f.kind} [{f.agent_id}] {f.detail}")
+
     if args.diff_against:
         print()
         print(scoring.diff_batches(args.diff_against, out_path))
 
-    return 1 if summary.failed else 0
+    return 1 if (summary.failed or gate_failed) else 0
 
 
 def main() -> int:

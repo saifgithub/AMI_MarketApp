@@ -646,3 +646,25 @@ Two decisions from the smoke runs:
    the 32-char headline cap; `[AMI checked]` annotations show false
    positives; DeepInfra 429s under the 5x PM fan-out; PM
    `kill_criterion` chronically over the 240-char bound on GLM.
+
+## D26 — The phase gate: AAPL+V, per-provider concurrency, hard fail conditions (Saiful, 2026-09-29)
+*status: settled; implemented*
+
+Saiful reduced the standard phase gate to a fixed, comparable unit:
+**tickers AAPL + V on every run, repeats=1** — same pair each time so one
+gate run can be diffed against another. Concurrency is per-provider:
+**vLLM sequential (1 room at a time), DeepInfra 2 concurrent** (its
+GLM-5.3-Flash tier 429'd under the 5x PM fan-out on 2026-09-28 — keep the
+burst low). A gate run **fails loudly** unless every agent turn is
+untruncated and every agent produced a parseable STANCE envelope (PM draws
+must be parseable JSON verdicts).
+
+Implemented as: `benchmarks/room-gate.yaml` (the gate definition,
+`concurrency_by_provider` map), `scoring.gate_report` (per-convene check:
+call census, stance extraction, PM JSON parse, near-cap SUSPECT_TRUNCATION
+heuristic — documented as heuristic since `llm_audit` has no
+`finish_reason`), `audit_db.call_metrics` (per-call token/error/constraint
+feed), and `room_benchmark.py` post-run gate wiring (exit 1 on any gate
+failure; `--skip-gate` exists for investigation only). Validated against
+the two 2026-09-28 smokes: correctly flags the AAPL vLLM PM markdown draw,
+V DeepInfra arm clean.

@@ -25,6 +25,11 @@ wrong ticker's call.
 
 Requires: ssh access to `melehost` from the office LAN. No local Postgres
 driver, no DATABASE_URL — read-only SELECTs only.
+
+`call_metrics(user_id)` is the per-call token/error companion to
+`list_calls`: output_tokens, error, and constraint_status per row with the
+same nth-per-agent ordering `get_field` uses, so scoring.gate_report's
+truncation heuristic can line a metric row up with a response_text read.
 """
 from __future__ import annotations
 
@@ -69,6 +74,15 @@ class CallRow:
     agent_id: str
     provider: str
     flow: str
+
+
+@dataclass(frozen=True)
+class CallMetrics:
+    agent_id: str
+    nth: int
+    output_tokens: int | None
+    error: str | None
+    constraint_status: str | None
 
 
 class AmbiguousQueryError(RuntimeError):
@@ -159,6 +173,44 @@ def list_calls(user_id: str) -> list[CallRow]:
             f"AmbiguousQueryError rather than return the wrong ticker's call.",
             file=sys.stderr,
         )
+    return rows
+
+
+def call_metrics(user_id: str) -> list[CallMetrics]:
+    """Per-call token/error signals for one user_id, in created_at order.
+
+    `nth` is the 0-indexed occurrence per agent_id in created_at order —
+    the same semantics as get_field's `nth`, so a CallMetrics row and a
+    get_field(..., nth=n) call target the same llm_audit row. NULL columns
+    come back as None. The truncation signal scoring.gate_report derives
+    from output_tokens is a heuristic: llm_audit has no finish_reason
+    column.
+    """
+    out = run_psql(
+        "SELECT agent_id, output_tokens, error, constraint_status "
+        "FROM llm_audit WHERE user_id=%s ORDER BY created_at;",
+        [user_id],
+    )
+    seen: dict[str, int] = {}
+    rows: list[CallMetrics] = []
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split("|")
+        agent_id = parts[0]
+        tokens_raw = parts[1] if len(parts) > 1 else ""
+        error = "|".join(parts[2:-1]) or None
+        constraint_status = parts[-1] or None
+        nth = seen.get(agent_id, 0)
+        seen[agent_id] = nth + 1
+        rows.append(CallMetrics(
+            agent_id=agent_id,
+            nth=nth,
+            output_tokens=int(tokens_raw) if tokens_raw else None,
+            error=error,
+            constraint_status=constraint_status,
+        ))
     return rows
 
 

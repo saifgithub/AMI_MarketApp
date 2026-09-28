@@ -18,6 +18,13 @@ Threshold provenance: CR247's SPEC pins no numeric verdict-stability gate, so
 `stability_report`'s default `min_agreement` is a pending-calibration 0.8 per
 DESIGN §7 decision 3 — SPEC values first when one lands, calibrated after the
 first baseline with recorded rationale, never tweaked silently.
+
+Gate checks: `gate_report` is the CR247 D26 phase gate (Saiful 2026-09-29) —
+per-convene FAIL-LOUDLY verification that every expected agent call exists,
+every prose turn carries its STANCE envelope, every portfolio_manager draw
+parses as JSON, and no turn sits at the token ceiling. It takes a
+dependency-injected audit module (anything with `list_calls`/`get_field`,
+optionally `call_metrics`) so this module stays importable without audit_db.
 """
 
 from __future__ import annotations
@@ -52,6 +59,42 @@ _CONVICTION_CHAIN: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 _CONVICTION_FIELDS = ("stance", "conviction")
+
+# The convene's expected call shape (CR247 D26, 2026-09-29): the 11 prose
+# agents exactly once each, plus MIN_PM_DRAWS portfolio_manager draws (a 6th
+# PM row is the recovery reformat draw, legitimate) — 16..18 rows total.
+EXPECTED_PROSE_AGENTS: tuple[str, ...] = (
+    "fundamentals_analyst",
+    "market_analyst",
+    "news_analyst",
+    "social_media_analyst",
+    "bull_researcher",
+    "bear_researcher",
+    "research_manager",
+    "trader",
+    "aggressive_debator",
+    "conservative_debator",
+    "neutral_debator",
+)
+PM_AGENT = "portfolio_manager"
+MIN_PM_DRAWS = 5
+TOTAL_CALLS_RANGE = (16, 18)
+
+
+@dataclass(frozen=True)
+class GateFinding:
+    user_id: str
+    agent_id: str
+    kind: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class GateReport:
+    user_id: str
+    ok: bool
+    findings: list[GateFinding]
+    stances: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -414,3 +457,202 @@ def conviction_audit(user_id: str, *, audit_module) -> list[ConsistencyFinding]:
                     ),
                 ))
     return findings
+
+
+class _NeverRaised(Exception):
+    pass
+
+
+def _audit_exceptions(audit_module) -> tuple[type, type | None]:
+    """Resolve the injected module's NoRowsError/AmbiguousQueryError classes
+    by attribute so scoring never imports audit_db. Missing attributes
+    degrade to a never-raised placeholder."""
+    no_rows = getattr(audit_module, "NoRowsError", None)
+    ambiguous = getattr(audit_module, "AmbiguousQueryError", None)
+    return (
+        no_rows if isinstance(no_rows, type) else _NeverRaised,
+        ambiguous if isinstance(ambiguous, type) else None,
+    )
+
+
+def gate_report(
+    user_id: str,
+    *,
+    audit_module,
+    truncation_token_ceiling: int = 4900,
+) -> GateReport:
+    """CR247 D26 phase gate over one convene (one user_id = one convene).
+
+    FAIL-LOUDLY checks:
+    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each and >= MIN_PM_DRAWS
+       portfolio_manager draws; a missing agent is MISSING_CALL, a duplicated
+       prose agent (or a PM draw count below the floor) and a total row count
+       outside TOTAL_CALLS_RANGE are UNEXPECTED_CALL_COUNT (a 6th PM row is
+       the recovery reformat draw and is legitimate).
+    2. Each prose agent's response_text: empty/None -> EMPTY_RESPONSE; else
+       extract_decision must find a decision token -> else MISSING_STANCE.
+       The stance summary is "<STANCE>|<CONVICTION>" when both envelope tags
+       parse, else the extracted token verbatim.
+    3. Each PM draw's response_text must carry a parseable JSON object with
+       an "action" key (extract_decision with json_key="action") -> else
+       PM_JSON_UNPARSEABLE; per-draw actions join into
+       stances["portfolio_manager"], e.g. "PASS,PASS,APPROVE,PASS,PASS".
+    4. SUSPECT_TRUNCATION for any call with output_tokens >=
+       truncation_token_ceiling. This is a HEURISTIC: llm_audit has no
+       finish_reason column, so a natural long answer that happens to land
+       near the cap false-positives — the finding detail carries the actual
+       output_tokens value so a human can judge. Skipped entirely when the
+       injected audit module has no call_metrics.
+    5. ok = no findings of any kind.
+
+    audit_module is dependency-injected: anything with
+    list_calls(user_id) -> list of rows with .agent_id, and
+    get_field(user_id, agent_id, field, *, after=None, before=None, nth=None).
+    NoRowsError/AmbiguousQueryError are resolved by attribute name from the
+    injected module; NoRowsError becomes MISSING_CALL/EMPTY_RESPONSE and
+    AmbiguousQueryError on a prose agent becomes UNEXPECTED_CALL_COUNT.
+    """
+    no_rows_exc, ambiguous_exc = _audit_exceptions(audit_module)
+    handled = (no_rows_exc,) if ambiguous_exc is None else (no_rows_exc, ambiguous_exc)
+
+    findings: list[GateFinding] = []
+    stances: dict[str, str] = {}
+
+    calls = audit_module.list_calls(user_id)
+    counts = Counter(r.agent_id for r in calls)
+
+    lo, hi = TOTAL_CALLS_RANGE
+    if not lo <= len(calls) <= hi:
+        findings.append(GateFinding(
+            user_id=user_id,
+            agent_id="*",
+            kind="UNEXPECTED_CALL_COUNT",
+            detail=(
+                f"{len(calls)} llm_audit rows for this user_id; one convene "
+                f"is {lo}..{hi} (11 prose agents + {MIN_PM_DRAWS} PM draws, "
+                f"+1 reformat / +1 recovery draw) — this user_id may span "
+                f"multiple convenes or the convene died mid-run"
+            ),
+        ))
+
+    def fetch(agent_id: str, nth: int | None) -> str | None:
+        try:
+            return audit_module.get_field(
+                user_id, agent_id, "response_text", nth=nth,
+            )
+        except handled as exc:
+            if ambiguous_exc is not None and isinstance(exc, ambiguous_exc):
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=agent_id,
+                    kind="UNEXPECTED_CALL_COUNT",
+                    detail=f"get_field ambiguous: {exc}",
+                ))
+            else:
+                kind = "MISSING_CALL" if nth is None else "EMPTY_RESPONSE"
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=agent_id, kind=kind,
+                    detail=f"get_field found no rows: {exc}",
+                ))
+            return None
+
+    for agent in EXPECTED_PROSE_AGENTS:
+        n = counts.get(agent, 0)
+        if n == 0:
+            findings.append(GateFinding(
+                user_id=user_id, agent_id=agent, kind="MISSING_CALL",
+                detail="no llm_audit rows for this agent in the convene",
+            ))
+            continue
+        nth = None
+        if n > 1:
+            findings.append(GateFinding(
+                user_id=user_id, agent_id=agent, kind="UNEXPECTED_CALL_COUNT",
+                detail=f"{n} rows for a prose agent that must run exactly "
+                       f"once; auditing nth=0",
+            ))
+            nth = 0
+        text = fetch(agent, nth)
+        if text is None:
+            continue
+        if not text.strip():
+            findings.append(GateFinding(
+                user_id=user_id, agent_id=agent, kind="EMPTY_RESPONSE",
+                detail="response_text is empty (null-content completion)",
+            ))
+            continue
+        token = extract_decision(text)
+        if token is None:
+            findings.append(GateFinding(
+                user_id=user_id, agent_id=agent, kind="MISSING_STANCE",
+                detail="no [STANCE: ... | CONVICTION: ...] envelope and no "
+                       "Side: token parsed from response_text",
+            ))
+            continue
+        stance_m = _STANCE_PATTERN.search(text)
+        conviction_m = _CONVICTION_PATTERN.search(text)
+        if stance_m and conviction_m:
+            stances[agent] = (
+                f"{stance_m.group(1).strip()}|{conviction_m.group(1).strip()}"
+            )
+        else:
+            stances[agent] = token
+
+    n_pm = counts.get(PM_AGENT, 0)
+    if n_pm == 0:
+        findings.append(GateFinding(
+            user_id=user_id, agent_id=PM_AGENT, kind="MISSING_CALL",
+            detail="no portfolio_manager draws in the convene",
+        ))
+    elif n_pm < MIN_PM_DRAWS:
+        findings.append(GateFinding(
+            user_id=user_id, agent_id=PM_AGENT, kind="UNEXPECTED_CALL_COUNT",
+            detail=f"{n_pm} portfolio_manager draws; expected "
+                   f">= {MIN_PM_DRAWS}",
+        ))
+    pm_actions: list[str] = []
+    for nth in range(n_pm):
+        text = fetch(PM_AGENT, nth)
+        if text is None or not text.strip():
+            if text is not None:
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=PM_AGENT, kind="EMPTY_RESPONSE",
+                    detail=f"draw nth={nth}: response_text is empty",
+                ))
+            pm_actions.append("?")
+            continue
+        action = extract_decision(text, json_key="action")
+        if action is None:
+            findings.append(GateFinding(
+                user_id=user_id, agent_id=PM_AGENT,
+                kind="PM_JSON_UNPARSEABLE",
+                detail=f"draw nth={nth}: no parseable JSON object with an "
+                       f"'action' key in response_text",
+            ))
+            pm_actions.append("UNPARSEABLE")
+        else:
+            pm_actions.append(action)
+    if pm_actions:
+        stances[PM_AGENT] = ",".join(pm_actions)
+
+    call_metrics_fn = getattr(audit_module, "call_metrics", None)
+    if callable(call_metrics_fn):
+        for m in call_metrics_fn(user_id):
+            tokens = getattr(m, "output_tokens", None)
+            if tokens is not None and tokens >= truncation_token_ceiling:
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=m.agent_id,
+                    kind="SUSPECT_TRUNCATION",
+                    detail=(
+                        f"nth={m.nth} output_tokens={tokens} >= ceiling "
+                        f"{truncation_token_ceiling} — heuristic only: "
+                        f"llm_audit has no finish_reason column, so a natural "
+                        f"long answer near the cap false-positives"
+                    ),
+                ))
+
+    return GateReport(
+        user_id=user_id,
+        ok=not findings,
+        findings=findings,
+        stances=stances,
+    )

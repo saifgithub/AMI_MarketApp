@@ -1,0 +1,13 @@
+# CR247 phase gate (D26, Saiful 2026-09-29): THE standard gate run before any
+# prompt/persona change ships. AAPL + V every time so runs are comparable
+# one to another. vLLM runs sequentially (concurrency 1), DeepInfra at 2 —
+# GLM-5.3-Flash 429'd under a 5x PM fan-out on 2026-09-28, keep its burst low.
+# Gate FAILS LOUDLY on any truncated turn or missing STANCE envelope
+# (scoring.gate_report).
+name: room-gate-v1
+provider: vllm                 # overridden per run via --provider
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 1
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 1, deepinfra: 2, kimi: 1 }
