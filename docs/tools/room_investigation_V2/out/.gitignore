@@ -1,0 +1,3 @@
+# Run outputs stay local (DESIGN §2). Curated baselines are committed by explicit exception.
+*
+!.gitignore
