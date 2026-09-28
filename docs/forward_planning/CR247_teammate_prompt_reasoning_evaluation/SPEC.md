@@ -96,13 +96,15 @@ Computed in code, rendered as sheet lines in the News/Macro lane.
 | 8-K timing/item flags: filed Friday ≥16:00 ET; Item 4.01 (auditor change); Item 4.02 (non-reliance on prior financials) | `edgar_filings_feed.py` already fetches form type + filed date | Computed flags; Item 4.02 also extends the safety floor to hard-block BUY with the reason narrated (never a silent refusal) |
 
 Deferred: Loughran-McDonald uncertainty/litigious scoring, Gunning Fog on
-MD&A, YoY Risk-Factors word-count/similarity — all require the filing-text
-pipeline (separate CR, not specced here). That pipeline carries one hard
-requirement (D19): all extracted filing text routes through
-`prompt_safety.sanitize_for_prompt` (DEF370) — the same structural
-sanitizer already applied to Reddit, headlines, the filings feed, and 8-K
-text. GAAP/non-GAAP spread: refused (no reliable free source for non-GAAP
-figures).
+MD&A, YoY Risk-Factors word-count/similarity — all require filing text beyond
+the one channel that exists today. **Correction (D22):** filing-text
+ingestion is NOT greenfield — `edgar_8k.py` (CR221 I1) already fetches,
+parses, hidden-text-filters, and sanitizes the 8-K Item 5.02 section in
+production. The deferred CR is an *extension* of that proven machinery to
+more item types (4.01, 4.02) and document sections (10-K/10-Q MD&A, Risk
+Factors), with the standing requirement that all extracted text routes
+through `prompt_safety.sanitize_for_prompt` (DEF370). GAAP/non-GAAP spread:
+refused (no reliable free source for non-GAAP figures).
 
 ### 1E. Not sourced (recorded so they are not re-proposed)
 

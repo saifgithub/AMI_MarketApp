@@ -537,6 +537,29 @@ Notes:
   party; on-prem vLLM does not. Product decision, not technical.
 - Every baseline from this point is keyed to model identity per D20.
 
+## D22 — Correction to D14/D16: filing text IS ingested, narrowly
+*2026-09-28 · status: correction, supersedes two earlier claims*
+
+Saiful caught this: "don't we ingest filing text?" Verified —
+`edgar_8k.py` (CR221 I1) fetches the actual 8-K primary document from the
+EDGAR archive, parses the HTML, extracts the **Item 5.02** (executive/board
+change) section text in the filing's own words, applies a hidden-text filter
+(script/style/template elements, negative-offset inline styles, `hidden`
+attributes) and brackets the excerpt (`⟦filing text begins⟧…⟦ends⟧`) through
+the DEF370 sanitize seam. The News persona discloses exactly this channel.
+
+So D14's "nothing in the stack reads filing text today" and D16's "no
+filing-text pipeline today" were **overstatements**. The accurate statement:
+filing-text ingestion exists and is production-proven for exactly ONE item
+type (8-K 5.02). The deferred work is an EXTENSION of proven machinery —
+more 8-K item types (4.01, 4.02), 10-K/10-Q sections (MD&A, Risk Factors) —
+not a greenfield pipeline. That lowers the estimated cost of SPEC 1D's
+deferred CR materially.
+
+Lesson matches the CR's own methodology warning: verify the load-bearing
+claim against the code before writing it down — I read the persona's
+disclaimer and generalized it past what the code does.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
