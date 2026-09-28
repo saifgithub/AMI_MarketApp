@@ -10,6 +10,21 @@ evaluation... is to improve the quality of the LLM reasoning."* On minting:
 *"indicate that a deeper analysis is needed as improvements at this level
 requires higher effort."*
 
+## Preparation artifacts (discovery phase closed 2026-09-28, AT:K3)
+
+- **`SPEC.md`** — the execution spec for the builder: six phases,
+  measurement-gated, each item stating evidence, exact change, acceptance.
+- **`discussion_log.md`** — D1–D21: the full discovery record (process
+  evaluation, teammate-suite field-map verdicts, the four-questions
+  framework, second-pass decision tree, free-source feasibility audit,
+  forensic-alpha verdict, multi-model evaluation, provider shortlist).
+- **`teammate_suite/`** — the teammate's submitted prompts, renamed by
+  purpose (constitution, heuristics, 12 roles). Treated as thinking input,
+  not decision input (D17).
+
+The scope and acceptance below remain the CR's frame; where SPEC.md is more
+specific, SPEC.md wins for the builder.
+
 **This is a genuine evaluation, not an adoption or a rejection.** The
 teammate's perspective is external and worth taking seriously — some of
 it lands on real, unaddressed gaps; some of it re-proposes things already
