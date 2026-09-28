@@ -449,13 +449,13 @@ bounded: the floor is not an LLM and nothing auto-executes. Residual
 requirement added to SPEC: the future filing-text pipeline (1D deferred CR)
 must route through the same seam.
 
-**3. DSPy / self-rewriting prompts — refused.** Prompts here are versioned,
-reviewed, measurement-gated artifacts (`prompt_version.py`, CR/DEF
-governance). Outcome feedback is too slow and noisy to optimise against
-(CR197 needed 136 convenes for one p=0.004), and the optimisation target is
-learning quality, not Sharpe — this is a training simulator. The legitimate
-kernel (systematic prompt evaluation) already exists: CR035 harness +
-CR197-style replay. Our iteration loop is that machinery run deliberately.
+**3. DSPy / self-rewriting prompts — refused as auto-optimization; the
+governed version was adopted after Saiful's pushback (see D20).** Prompts
+here are versioned, reviewed, measurement-gated artifacts
+(`prompt_version.py`, CR/DEF governance). Outcome feedback is too slow and
+noisy to optimise against automatically (CR197 needed 136 convenes for one
+p=0.004), and the optimisation target is learning quality, not Sharpe — this
+is a training simulator.
 
 **4. Temperature variance / persona rotation across 5 CIOs — refused with
 the tribunal (D18).** Kernel adopted instead: if a second review pass is
@@ -463,6 +463,35 @@ ever added, differentiate reviewers by mandated *lens* (macro vs
 balance-sheet), not temperature. Temperature variance is already present as
 the measured ~12% same-prompt flip rate and carries no information;
 diversity of process beats diversity of sampling.
+
+## D20 — Prompt-evolution loop: the governed version (Saiful, 2026-09-28)
+*status: adopted as process design*
+
+Saiful's framing: versioning and measurement-gating are not arguments against
+automation — a parallel process can review prompt performance continuously
+and *propose* revisions, which then enter the normal versioned, reviewed,
+measurement-gated pipeline. Adopted. The distinction from D19's refused DSPy
+design: **the machine measures and proposes; governance disposes. Nothing
+auto-ships.**
+
+What already exists to build on: `weekly_room_retro.py`,
+`live_retro_pool.py`, `score_verdict_outcomes.py`, GAPS telemetry,
+`llm_audit`, `prompt_version.py`, CR085's review ritual.
+
+The new, narrow piece: a **periodic prompt-performance digest** — per-agent
+envelope parse rates, truncation vs `_AGENT_MAX_TOKENS`, GAPS want-list
+movement, stance/conviction distributions, citation accuracy, verdict
+outcomes — aggregated against baselines, with candidate prompt changes
+drafted as CRs carrying pre-registered measurement plans.
+
+Two constraints:
+1. **Cadence respects power.** Weekly digests flag; they don't conclude.
+   Conclusions need per-N-convenes or monthly aggregation (CR197: 136
+   convenes for one p=0.004).
+2. **Baselines are keyed to serving-model identity** (read `root` from
+   `/v1/models`, never the `ami-llm` alias — it silently renamed models on
+   2026-08-28 and 2026-09-17). A digest that ignores this measures model
+   swaps, not prompts.
 
 ---
 

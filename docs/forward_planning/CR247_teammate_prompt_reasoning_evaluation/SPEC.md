@@ -127,11 +127,9 @@ Explicitly refused: 0–100 numeric conviction scores (unverifiable precision;
 the system quantizes on purpose, `room_prompts.py:742-744`), fixed sizing
 tiers (sizing is per-mandate and code-computed), a hardcoded 180–730-day
 horizon (horizon is per-user), all-JSON agent turns (the prose is the
-product surface; CR106 B2), automated prompt self-optimization à la DSPy
-(prompts are versioned, reviewed, measurement-gated artifacts; the eval
-kernel already exists as the CR035 harness + CR197 replay, D19), and
-temperature/persona rotation across parallel CIO runs (variance without
-information; differentiate review lenses, not sampling, D19).
+product surface; CR106 B2), prompts that self-modify in production à la
+DSPy, and temperature/persona rotation across parallel CIO runs (variance
+without information; differentiate review lenses, not sampling, D19).
 
 ## Phase 3 — Interpretation guidance (Q4)
 
@@ -195,6 +193,19 @@ Rewrite evaluation per agent, in this order: Fundamentals, Bear, Bull,
 Research Manager, CIO, Trader, debators, remaining analysts. Standard per
 persona: every ask maps to a live sheet field; Room and 1-on-1 surfaces both
 hold; length guide and token budget move together; measured before ship.
+
+## Phase 6 — Standing prompt-evolution loop (D20)
+
+A periodic prompt-performance digest, run on a schedule: per-agent envelope
+parse rates, truncation vs `_AGENT_MAX_TOKENS`, GAPS want-list movement,
+stance/conviction distributions, citation accuracy, and verdict outcomes,
+aggregated against baselines **keyed to serving-model identity** (never the
+`ami-llm` alias). The digest flags anomalies and drafts candidate prompt
+changes as CRs with pre-registered measurement plans. Build on
+`weekly_room_retro.py` / `score_verdict_outcomes.py`; do not build a second
+pipeline. The machine measures and proposes; governance disposes; nothing
+auto-ships. Cadence flags weekly, concludes monthly or per-N-convenes
+(statistical power constraint, CR197).
 
 ---
 
