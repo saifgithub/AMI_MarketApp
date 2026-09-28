@@ -231,6 +231,50 @@ DEF421 still blocks any real Supabase migration regardless of these numbers.
 - **B7 decision** — which cloud LLM provider (Sonnet-5-everywhere vs. Sonnet+GLM-5.2-hybrid);
   stays open per D-068, informed but not settled by §4's correction.
 
+### 5b. Newer, separate LLM research — [CR240](../CR240_llm_provider_evaluation/CR240.md) found a far cheaper real option
+
+**§4/§5 above priced Sonnet 5 and GLM-5.2 — both frontier-tier models.** CR240 (filed
+2026-09-26, after CR006/CR245's original LLM research) is a separate, more current
+investigation: Saiful concluded the current self-hosted vLLM box (Qwen3.8-Flash-Next) "is
+not capable of running in full production mode" and asked for a hosted replacement. That
+search surfaced **GLM-5.3-Flash on DeepInfra** — $0.075/M input, $0.25/M output — 1-2 orders
+of magnitude cheaper than every model §4/§5 evaluated, because it's a different class of
+model (a cheap/flash-tier sibling), not a repriced version of GLM-5.2.
+
+**This is measured, not estimated.** Saiful pulled the DeepInfra usage dashboard directly
+before/after real Room convenes (`docs/Research/RES009_room_llm_consistency/`, docs 10-13):
+**~$0.0095/room convene, averaged across 46 real convenes** (12 agents, PM 5x
+self-consistency sampling, real market data). At this rate, 12 Room sessions/user/month costs
+**~$0.114/user/month** — the Room-cost line that dominated §4/§5's whole analysis would
+essentially disappear as a cost concern on this model.
+
+**The catch, already flagged in CR240 itself, not resolved:** GLM-5.3-Flash is genuinely
+smaller than the GLM-5.3 flagship (18B active params vs. an undisclosed larger flagship
+architecture), and a real quality test
+(`docs/Research/RES009_room_llm_consistency/11_cr240_9ticker_plus_aapl_deepinfra_vs_kimi.md`)
+found only **6/10 ticker-verdict agreement** against Kimi k3 on identical real market data —
+all 4 disagreements the same direction (Flash landing more conservative, PASS where Kimi
+APPROVEd, never the reverse). CR240 explicitly states this "could read either way depending
+on which failure mode the product cares more about" and is **not a production-readiness
+verdict** — the real 3-way comparison CR240 §5 calls for (Flash vs. GLM-5.3 flagship vs.
+current vLLM, on the Room's own captured prompts, 5x each) has not been run yet.
+
+**What this means for §4/§5's numbers above:** they are not wrong, but they priced the wrong
+tier of model for what CR240 is actually evaluating. If GLM-5.3-Flash clears the quality bar
+once CR240's real comparison runs, the entire LLM cost line in §4/§5/§9 — at every scale,
+1,000 users through 1,000,000 — drops by roughly two orders of magnitude, and LLM cost stops
+being the dominant line item it currently is. This is the single most consequential open
+item in this document and should be resolved (by running CR240 §5's actual measurement)
+before any of §4/§5/§9's cost projections are used for a real budget decision. Do not average
+or blend the Sonnet-5/GLM-5.2 figures with this GLM-5.3-Flash figure — they answer different
+questions (frontier-tier viability vs. flash-tier viability) and mixing them would produce a
+number that means nothing.
+
+**B7 decision (carried above) is directly affected**: GLM-5.3-Flash was not a candidate CR006
+considered when framing D-068, and its price point changes the shape of the B7 decision from
+"which frontier model" to "does a much cheaper flash-tier model actually clear the Room's
+quality bar" — a different, and arguably higher-value, question to resolve first.
+
 ### 6. Public launch (MVP) — GTM execution layer (not imminent)
 
 This section adds the *GTM-specific* detail the M1–M12 roadmap doesn't carry. It does not
@@ -398,7 +442,13 @@ session history for citations:**
   cost is Room-cost-bearing versus 1-on-1/Coach cost, which CR006's published tables don't
   fully separate. **Whichever number is used, LLM cost dominates total cost by 2-3 orders of
   magnitude at every scale checked (~95%+ of total spend)** — this is the load-bearing
-  qualitative finding regardless of which exact figure is right.
+  qualitative finding regardless of which exact figure is right. **Superseded in importance
+  by §5b: [CR240](../CR240_llm_provider_evaluation/CR240.md) found a real, measured
+  ~$0.0095/Room-convene option (GLM-5.3-Flash/DeepInfra) that is 1-2 orders of magnitude
+  cheaper than either Sonnet-5 or GLM-5.2 — if it clears CR240's still-pending quality bar,
+  this whole discrepancy becomes moot at every scale, not just resolved.** Fixing the
+  Sonnet-5/GLM-5.2 arithmetic gap is lower priority than running CR240 §5's actual quality
+  comparison.
 - **Anthropic enterprise/volume discounts are real but only directionally known** (multiple
   unverified secondary/blog sources suggest 15-30% off list at $250-500K+/mo committed spend)
   — no primary Anthropic pricing page confirms this; would need an actual sales conversation,
@@ -472,8 +522,17 @@ Additional items carried from CR006/CR126, still open:
 - [ ] B1 (GCP project) and B4 (Supabase project) — Saiful's external actions, unblock B5/B6.
 - [ ] B7 (cloud LLM provider decision) — stays open per D-068.
 
+Additional items from §5b, higher priority than the items below — a cheaper real option
+was found and its quality is still unverified:
+- [ ] Run [CR240](../CR240_llm_provider_evaluation/CR240.md) §5's actual quality comparison
+      (GLM-5.3-Flash vs. GLM-5.3 flagship vs. current vLLM, 5x each, on the Room's own
+      captured prompts) — the $25 DeepInfra credit already covers this, cost is not the
+      blocker. This is the single highest-leverage open item in this whole document: if
+      GLM-5.3-Flash clears the quality bar, every LLM-cost figure in §4/§5/§9 drops ~100x.
+
 Additional items from §9 (3-environment strategy), still exploratory, still open:
-- [ ] Resolve the $2.22M vs. bottom-up LLM-cost discrepancy at 1M-user scale.
+- [ ] Resolve the $2.22M vs. bottom-up LLM-cost discrepancy at 1M-user scale — lower priority
+      than the CR240 item above, since both figures may become moot together.
 - [ ] Confirm whether Cloud Run's free compute allotment applies in `europe-west3`.
 - [ ] Build a bottom-up peak-concurrency model at 1M users from the app's usage envelope.
 - [ ] Get a real cost model for self-hosted Postgres on GKE as a Supabase-scale comparison.
