@@ -577,13 +577,44 @@ does the actual work (async job + poll/push, not a held-open stream).**
   VPS's lower ops-automation but simpler execution model.
 - No security/ops-burden cost model for a VPS at Beta or Production scale — melehost's
   history establishes that the risk is real, not how much ongoing effort mitigating it would
-  actually take at higher stakes (a paying customer's data, not an internal test).
+  actually take at higher stakes (a paying customer's data, not an internal test). **§11
+  below is a first pass at closing this specific gap** (managed-VPS options that take on some
+  of that burden), not a full resolution.
 - Self-hosted Kubernetes, managed Kubernetes (GKE), and other VPS providers beyond the two
   CR006 priced were not evaluated for this specific workload shape.
 - Whether the same platform choice should even hold across all three environments (§9's
   premise) once Option 2/3's tradeoffs are this different in kind, not just in cost, hasn't
   been revisited — §9 assumed "one Terraform module, three environments" without yet knowing
   about the execution-model mismatch this section found.
+
+### 11. Managed VPS / server-management options — real candidates found, all with real gaps
+
+**Status: research only, no decision.** Saiful asked for VPS options plus providers offering
+more managed service specifically around security, backups, and updates — i.e., something
+between §10's raw VPS (melehost's own proven security-incident risk, §10 Option 3) and full
+Cloud Run (structurally safer by default, but the execution-model mismatch §10 found). Four
+real candidates, spanning that spectrum, with confidence levels marked:
+
+| Option | What's actually managed | Docker/multi-container fit | Price | Confidence |
+|---|---|---|---|---|
+| **Raw VPS** (Contabo/OVHcloud, CR006) | Nothing — same as melehost today, all security/patching/backups on the team | Full — it's just a Linux box, current Docker Compose stack ports directly | $15–23/mo | High (CR006's own confirmed pricing) |
+| **Netcup Managed Private Server** | "Complete management," OS kept "up-to-date, secure and reliable" per their own page — but exact patch cadence/firewall/backup specifics not disclosed publicly | **Ruled out** — explicitly "provided without root or sudo access" per their own FAQ, which Docker/Docker Compose fundamentally requires | €75–202/mo (4–16 vCPU tiers) | Confirmed pricing; management depth and the root-access blocker both confirmed from their own page |
+| **Cloudways** | Confirmed: automated OS security patches, managed firewall, Imunify360 (real-time threat detection/malicious-IP blocking), automated backups, SSL — SSH access retained for custom Python environments | Unclear — SSH access exists for custom Python/system packages, but their platform is built around a single-app-per-server model, not confirmed to run an unmodified multi-container Docker Compose stack (Postgres + Redis + FastAPI together) without adaptation | Not directly re-verified this pass — needs a fresh pricing-page fetch (an earlier fetch attempt in this pass returned a corrupted/binary response, not real content) | Management claims confirmed from multiple Cloudways-owned pages; Docker-Compose-stack fit and price NOT verified, flag before relying on it |
+| **Elestio** | Their own site: "setup, configuration, encryption, backups, updates, monitoring and more," daily backups, automated updates, TLS — but OS-patch cadence, intrusion detection, and SSH-hardening specifics not disclosed publicly | Supports custom deployments via CI/CD from GitHub/GitLab/Docker registries, not just their app catalog — but "one service = one VM" is their standard model (full isolation per service) and whether that cleanly maps to this app's multi-container stack, or would need re-splitting into separate VMs per service, is unconfirmed | Hourly, no commitment, plans "start at $11/mo" (their smallest single-service tier — a real multi-service stack would cost more, not itemized here) | Management claims confirmed from Elestio's own pages; multi-container fit and real all-in price NOT verified, flag before relying on it |
+
+**Read on this, plainly:** the "VPS but someone else handles security" category genuinely
+exists and isn't vaporware — Cloudways and Elestio both make specific, checkable claims
+(automated patching, managed firewall, automated backups) that go meaningfully further than
+a raw VPS. But **neither was verified against this app's actual shape** — a multi-container
+Docker Compose stack (FastAPI + Postgres + Redis), not a single PHP/WordPress site or a
+single containerized service. That's the concrete next step if this direction is worth
+pursuing further, not a reason to rule either out yet.
+
+**What this does and doesn't resolve from §10:** it adds two more points on the spectrum
+between "raw VPS, full ops burden" and "Cloud Run, full managed but workload-shape mismatch"
+— it does not resolve which point on that spectrum is right, and does not change §10's
+finding that Cloud Run itself still has the unresolved SSE-timeout/throttling problem
+regardless of what happens on the VPS side of this comparison.
 
 ## Out of scope
 
