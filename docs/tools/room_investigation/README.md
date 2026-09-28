@@ -37,7 +37,7 @@ would redirect ALL live users' traffic, not just a benchmark's calls).
 | `room_kimi_gateway.py` | (shared core, not run directly) — forces a `RoomRunner`'s `LLMGateway` to Kimi, vLLM, or DeepInfra, in-process only |
 | `room_risk_score_sweep.py` | "Does risk_score actually change this Room's verdict for this ticker, right now?" — one ticker, N risk_score values, any provider |
 | `room_repeat_consistency.py` | "Is this ticker/risk_score/provider's verdict stable, or did I see one draw of an unstable distribution?" — full Room, N repeats, `--mandate-file` to reproduce a real user's exact mandate |
-| `room_ticker_batch.py` | "Do these N tickers reach the same verdict on provider X as they did on provider Y?" — a list of tickers, one fixed mandate, one full Room convene each, any provider, resumable (CR240) |
+| `room_ticker_batch.py` | "Do these N tickers reach the same verdict on provider X as they did on provider Y?" — a list of tickers, one fixed mandate, one full Room convene each, any provider, resumable (CR240), runs tickers CONCURRENTLY (`--max-concurrent-rooms`, default 3 — a guess, not a measured provider rate limit; `1` = old sequential behavior) |
 | `room_agent_replay.py` | "Is THIS agent itself unstable on a fixed input, or did it just receive different upstream input?" — one agent, exact captured prompt, N repeats, any provider, optional pinned temperature (vLLM only), real per-call token usage + cost logged for DeepInfra |
 | `room_llm_audit_trace.py` | "What did agent X actually see/say in run Y?" — pull or diff captured `system_prompt`/`messages`/`response_text` from melehost's `llm_audit` table by `user_id` |
 
