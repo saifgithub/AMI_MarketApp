@@ -131,6 +131,133 @@ Open: what decision metric would the ensemble improve? (Approval-rate
 stability? Verdict quality vs outcomes? Teaching value?) — needs a measurable
 hypothesis before any build, per CR247 scope item 7.
 
+→ **Saiful answered, 2026-09-28: BOTH approval-rate stability AND verdict
+quality against outcomes.** See D10.
+
+## D7 — Teammate file inventory (renamed by purpose)
+*2026-09-28 · status: reference table*
+
+Originals arrived as opaque `gemini-code-<ts>.md` attachments; durable copies
+now live in `teammate_suite/` beside this log, renamed by purpose:
+
+| File | Purpose |
+|---|---|
+| `teammate_suite/00_global_constitution.md` | Global directives: epistemic wall, temporal anchor (hardcoded 180–730d), TIER sizing ontology, SCS 0–100 conviction scale, agentic isolation rule |
+| `teammate_suite/01_institutional_heuristics.md` | Reasoning frames for agents 1/5/6/7/12: SBC-as-cash-expense, accrual trap, ROIC>WACC, EV-over-P/E hygiene, value-trap filter, debt-wall mechanics, Dorsey moat typology |
+| `teammate_suite/agent01_fundamentals_analyst.md` | FA v2 (Blindfolded; 4-lens sequence; JSON out) |
+| `teammate_suite/agent02_technical_strategist.md` | Technical Strategist v2 (structure over daily chop; JSON out) |
+| `teammate_suite/agent03_macro_events.md` | Macro & Events v2 (catalyst pipeline, mgmt tone; JSON out) |
+| `teammate_suite/agent04_flow_positioning.md` | Flow & Positioning v2 (sentiment extremes, squeeze risk, retail-vs-institutional; JSON out) |
+| `teammate_suite/agent05_bull_researcher.md` | Bull v2 (steelman + re-rating catalyst; JSON out) |
+| `teammate_suite/agent06_bear_researcher.md` | Bear v2 (terminal vulnerabilities; JSON out) |
+| `teammate_suite/agent07_research_manager.md` | RM v2 (adjudication + LEAN BULL/BEAR/WAIT/PASS; JSON out) |
+| `teammate_suite/agent08_execution_desk.md` | Trader v2 (tier sizing, ATR stops, invalidation level; JSON out) |
+| `teammate_suite/agent09-11_risk_officers.md` | Three Risk Officers v2, one file (tier counter-proposals; JSON out) |
+| `teammate_suite/agent12_cio.md` | CIO v2 (dissent audit, conviction-tier alignment, "ensemble of 5"; JSON out) |
+
+## D8 — Q1 + Q3: the suggestions
+*2026-09-28 · status: proposals, none approved yet*
+
+**Q1 (feeding the right information) — suggested fixes, cheapest first:**
+1. Complete the scoreboard: render the debators' declared SIZE (D5 gap).
+2. Surface mandate horizon as a *weighing instruction* to Trader/debators/PM,
+   not just analysts — mandate-derived, teammate RULE 1's formulation adapted:
+   "short-term technicals may tune entry, never validate the thesis" when
+   `horizon` is long. This is critique 1's fix.
+3. Graduate flag-gated sheet fields that already exist and are measured
+   (`room_debt_maturity_enabled`, `room_cashflow_bridge_enabled`,
+   `room_fcf_history_enabled`, …) — each behind its own before/after
+   measurement per CR247 scope item 7.
+4. Keep the GAPS telemetry as the data-roadmap sensor (it already told us
+   interest coverage was the #1 want; it shipped).
+
+**Q3 (producer→consumer consistency) — suggested fixes:**
+1. Keep quantization. Reject SCS 0–100 floats: LLM-generated floats carry no
+   calibration; downstream readers treat 62 vs 68 as signal when it's noise.
+   Enums + AMI-computed numbers is the robust pattern.
+2. Fix the conviction-semantics collision (D4): same column, three
+   definitions. Either one shared definition, or the scoreboard relabels the
+   column per agent family ("evidence strength" / "threat specificity" /
+   "evidence clarity"). Relabelling is cheaper and preserves CR197's per-role
+   intent.
+3. Any new score an agent emits must be (a) from a fixed vocabulary, and
+   (b) consumed by code that tabulates it — never parsed from prose, never
+   re-interpreted by another LLM without the scoreboard pattern.
+
+## D9 — Q2: do we have the sources already?
+*2026-09-28 · status: audited against code*
+
+Mostly YES — the sources exist in-house; several are fetched and gated OFF:
+
+| Want | Source status |
+|---|---|
+| OCF vs Net Income (accrual trap) | **Have it.** EDGAR PIT concepts `OPERATING_CASH_FLOW` / `NET_INCOME` (`edgar_tags.py`), point-in-time resolved |
+| Working-capital trap | **Have it, gated OFF.** `cashflow_bridge_line` behind `room_cashflow_bridge_enabled` (default False, `config.py:911`) |
+| Debt maturity schedule / debt wall | **Have it, gated OFF.** EDGAR maturity tags (`edgar_tags.py:119-122`), `debt_maturity_line`, `room_debt_maturity_enabled` default False |
+| Cost of debt | **Have it, gated OFF.** `cost_of_debt_line`, `room_cost_of_debt_enabled` |
+| FCF history / conversion | **Have it, gated OFF.** `fcf_history_line`, `fcf_conversion_line` |
+| SBC | **One tag away.** `ShareBasedCompensation` is standard us-gaap; add to `edgar_tags.py` + ingest. Not fetched today |
+| ROIC | **Computable, not fetched.** Invested capital = debt+equity tags we already resolve; NOPAT from operating income. Must be AMI-computed and labelled (never LLM arithmetic). Needs a WACC stance |
+| Insider transactions | **In flight.** `edgar_ownership.py` + CR244 |
+| Put/call, options skew | **Derivable.** `option_chain.py` already pulls yfinance chains (volume/OI per strike) — a put/call ratio is arithmetic on data we fetch for CR172 |
+| Peer/sector comparison | **No source.** Needs a peer-basket decision (yfinance sector/industry + market-cap neighbours, or EDGAR SIC). Biggest genuine data gap |
+| Earnings-call transcripts / filing TEXT | **No source.** New pipeline (EDGAR full-text is public; nothing in the stack reads it today) |
+
+## D10 — Q4: the institutional-heuristics doc, evaluated for agents 1/5/6/7/12
+*2026-09-28 · status: verdict given*
+
+`teammate_suite/01_institutional_heuristics.md` is the best artifact the
+teammate has produced — it answers "what to DO with the data" (Q4) rather
+than demanding missing fields. Frames worth adopting: SBC-as-cash-expense,
+the accrual trap (NI up + OCF flat), EV-dominance over P/E, the value-trap
+filter, debt-wall mechanics, the four-moat typology.
+
+Constraints before any of it ships:
+1. **Each heuristic must name a sheet field that exists.** SBC, OCF-vs-NI
+   multi-period, and the debt wall currently fail that test on the live sheet
+   (sources exist per D9 — gates/tags first, text second). Otherwise this is
+   the FA v2 defect in fancier clothing.
+2. **No LLM arithmetic.** Net Debt/EBITDA, ROIC, FCF-minus-SBC must be
+   AMI-computed and labelled lines the agents quote — the house rule
+   (DEF066→DEF241 class, five measured recurrences).
+3. **Thresholds as guidance, not rules.** "Net Debt/EBITDA > 3.0x danger zone"
+   is a useful teaching heuristic and a bad absolute — sector-dependent, and
+   prompt-level rules run at ~30% compliance (CR038) regardless.
+4. Sequencing: enable/add the D9 fields first (measured), then adopt the
+   heuristic text that consumes them — FA persona primarily, echoed in
+   Bull/Bear/RM/CIO vocabulary.
+
+## D11 — (a) CIO ensemble: metrics confirmed + Kimi's counter-proposal recorded
+*2026-09-28 · status: Saiful confirmed the metrics; counter-proposal accepted
+as "may be a good idea", recorded for the CR*
+
+Saiful, 2026-09-28: the ensemble's targets are **both** approval-rate
+stability **and** verdict quality against outcomes.
+
+Both are measurable with existing machinery:
+- Stability: resampling variance — CR197 already built the instrument (the
+  8/8 noise-floor arm); an ensemble must beat that floor to justify itself.
+- Quality vs outcomes: the verdict-outcome ledger (`verdict_outcomes.py`,
+  `bank_verdict_outcome`, `scripts/score_verdict_outcomes.py`, CR219) banks
+  every verdict and scores it against what the ticker did next.
+
+Counter-proposal (recorded at Saiful's request):
+1. Single CIO + completed scoreboard (D5: add the SIZE column).
+2. A targeted **second pass on APPROVEs only** — the teammate's "Dissent
+   Audit" institutionalized: re-run the CIO (or a cheap reviewer persona) with
+   the explicit instruction to try to kill the approval; final verdict = AND
+   of the two. Cost: +1 LLM call on ~16% of convenes, not 4× on 100%.
+3. Measure both metrics before/after on a real ticker sample; the 5×-ensemble
+   (same model or 5 models) stays parked unless step 2's measurement says the
+   error budget is still large.
+
+Rationale: the ensemble's measured value would be variance reduction, and the
+cheap path to variance reduction is deciding *less often on one draw of a
+noisy read*, not averaging five draws of the same prompt (CR197: 12% flip on
+identical prompts). The 5-different-LLMs variant additionally costs 4 provider
+integrations, latency, user-data egress to 4 APIs, and imports
+alignment-driven disagreement that is not evidence.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
