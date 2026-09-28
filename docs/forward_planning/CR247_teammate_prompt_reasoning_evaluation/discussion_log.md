@@ -600,6 +600,20 @@ keyword-matched, load-bearing ones read). Findings that reshape this CR:
    CR143–CR156 (the per-agent audit CRs behind the current personas),
    CR164/CR169 (as-of mode), CR104 (no synthetic baselines).
 
+## D24 — CR247's override map over prior CRs (Saiful, 2026-09-28)
+*status: settled; written into the CR doc*
+
+Saiful's ruling: CR247 is the newest-evidence CR and overrides earlier ones
+where they disagree. The map is now a section of the CR doc ("Relationship to
+prior CRs"): **executes** CR221's open sourcing decisions + CR197 rec #2;
+**amends** CR240 (heterogeneous routing question added), CR201 (items
+transfer if the Risk Officer ships), CR127's "not a vote" copy (Phase 4's
+reviewer is an audit — UX must say so); **settles** the horizon-weighting and
+ordering questions older CRs left open; **does not override** the safety
+floor, lane-gating, drift guards, or the quantized envelope vocabulary. No
+other CR's registry row was touched — status changes on those rows happen
+when the work lands, not at spec time.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a

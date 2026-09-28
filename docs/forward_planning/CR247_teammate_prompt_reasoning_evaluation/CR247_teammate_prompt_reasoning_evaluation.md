@@ -33,6 +33,47 @@ so far has at least one checkable defect. All three of those need to be
 sorted out by someone doing the harder work this CR is scoped for, not
 assumed from a first read.
 
+## Relationship to prior CRs — what CR247 overrides, amends, or executes
+*(added 2026-09-28, AT:K3 — this CR carries the newest evidence; where it and
+an older CR disagree, this section says which one governs)*
+
+**CR247 executes (the older CR's open items become this CR's phases):**
+- **CR221** — its 36 open data asks / 14 sourcing decisions are SPEC Phase
+  1A/1B. Its ruled-out items (company guidance, Level 2 depth, dark-pool
+  prints, sentiment history) stay ruled out.
+- **CR197 recommendation #2** (render the parsed envelope into the PM's
+  transcript/scoreboard) — SPEC item 2.1 ships the SIZE column. CR197's other
+  open recommendations (live two-arm extremes benchmark, RISK geometry fix)
+  remain open and unowned by this CR.
+
+**CR247 amends (the older CR stays alive but its framing changes):**
+- **CR240** — it evaluates *one* hosted replacement for ami-llm. CR247 adds
+  the heterogeneous-routing question (role-mapped models, cross-model
+  reviewer), gated on the D18 split-model experiment. CR240 still owns the
+  production-provider decision; CR247's provider notes (D21) fold into it.
+- **CR201** — CR247 invests in the three-debator RISK channel (SIZE
+  rendering, conviction relabel). If CR201's structured Risk Officer ever
+  ships (currently flag-gated OFF), those items transfer to its payload.
+  Neither blocks the other.
+- **CR127's "THE PM DECIDES — THIS IS NOT A VOTE"** — Phase 4's second-pass
+  reviewer can flip a verdict. It is an audit, not a vote, but the product
+  copy and the Journal rendering must say that explicitly when Phase 4
+  ships, or the Room's UX story contradicts itself.
+
+**CR247 settles with new understanding (questions older CRs left open):**
+- The horizon-weighting question (DEF255 built the vocabulary; nothing
+  teaches the Trader/debators/PM to use it) — SPEC 2.3.
+- The Trader-before-Risk ordering question CR197 explicitly did not test —
+  D6/D11–D13's second-pass design absorbs it.
+
+**CR247 does NOT override (these stay constraints, not options):**
+- The deterministic safety floor and its philosophy (DEF059, CR040).
+- Lane-gating (CR145) and the drift guards (CR219, CR038, DEF370).
+- The quantized stance/conviction vocabulary (CR106 B2) — SCS-style numeric
+  scores stay refused (D8).
+
+---
+
 ## Why this needs real effort, not a quick swap
 
 Saiful's own instruction: this needs a **higher-effort pass**, because
