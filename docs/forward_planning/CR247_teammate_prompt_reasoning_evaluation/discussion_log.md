@@ -424,6 +424,46 @@ Refused, with reasons:
   per-(plan, agent); pointing tiers at different providers is config, not a
   new harness.
 
+## D19 — Teammate batch 3: cascade, injection, DSPy, tribunal variance
+*2026-09-28 · status: evaluated*
+
+**1. Bull/Bear information cascade — real hypothesis, and already half
+instrumented.** The claim: the second researcher anchors on the first's
+framing. CR219 R58 already randomises Bull/Bear order per run_id, so the
+existing corpus is a natural experiment: compare second-speaker citation
+overlap and stance against first-speaker content, Bull-first vs Bear-first.
+Zero-cost measurement before any redesign. If anchoring is confirmed, the
+candidate fix is blind parallel core theses + sequential cross-rebuttals +
+RM adjudicating four documents (+2 LLM calls/convene; requires a deliberate
+CR077-guard extension; personas' "anticipate the counter" moves to the
+rebuttal stage). Added to SPEC as 2.4.
+
+**2. Prompt injection in external text — already shipped (DEF370).**
+`prompt_safety.sanitize_for_prompt` neutralises third-party text at the
+render seam (Reddit, news headlines, EDGAR filings feed, 8-K line) by
+stripping *structure* (newlines, box-drawing glyphs that impersonate our
+section headers), explicitly NOT a phrase blocklist — the docstring refuses
+the teammate's exact keyword-strip approach: "a phrase blocklist is a
+blocklist, and prompt-level instruction is not a control." Blast radius is
+bounded: the floor is not an LLM and nothing auto-executes. Residual
+requirement added to SPEC: the future filing-text pipeline (1D deferred CR)
+must route through the same seam.
+
+**3. DSPy / self-rewriting prompts — refused.** Prompts here are versioned,
+reviewed, measurement-gated artifacts (`prompt_version.py`, CR/DEF
+governance). Outcome feedback is too slow and noisy to optimise against
+(CR197 needed 136 convenes for one p=0.004), and the optimisation target is
+learning quality, not Sharpe — this is a training simulator. The legitimate
+kernel (systematic prompt evaluation) already exists: CR035 harness +
+CR197-style replay. Our iteration loop is that machinery run deliberately.
+
+**4. Temperature variance / persona rotation across 5 CIOs — refused with
+the tribunal (D18).** Kernel adopted instead: if a second review pass is
+ever added, differentiate reviewers by mandated *lens* (macro vs
+balance-sheet), not temperature. Temperature variance is already present as
+the measured ~12% same-prompt flip rate and carries no information;
+diversity of process beats diversity of sampling.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a

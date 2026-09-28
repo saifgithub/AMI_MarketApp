@@ -97,8 +97,12 @@ Computed in code, rendered as sheet lines in the News/Macro lane.
 
 Deferred: Loughran-McDonald uncertainty/litigious scoring, Gunning Fog on
 MD&A, YoY Risk-Factors word-count/similarity — all require the filing-text
-pipeline (separate CR, not specced here). GAAP/non-GAAP spread: refused (no
-reliable free source for non-GAAP figures).
+pipeline (separate CR, not specced here). That pipeline carries one hard
+requirement (D19): all extracted filing text routes through
+`prompt_safety.sanitize_for_prompt` (DEF370) — the same structural
+sanitizer already applied to Reddit, headlines, the filings feed, and 8-K
+text. GAAP/non-GAAP spread: refused (no reliable free source for non-GAAP
+figures).
 
 ### 1E. Not sourced (recorded so they are not re-proposed)
 
@@ -117,12 +121,17 @@ is the model's job.
 | 2.1 | Scoreboard SIZE column | Render the parsed `argued_size_pct` (already journaled, CR197) as a column in `_room_scoreboard` (`room_prompts.py:3592`) | PM approved sizes vs declared debator sizes; approval-rate delta vs Phase 0.2 |
 | 2.2 | Conviction semantics | One word, three role-specific definitions today (D4). Relabel the scoreboard column per role family — "evidence strength" (Aggressive), "threat specificity" (Conservative), "evidence clarity" (Neutral) — or adopt one shared definition, per Phase 0.3's finding | PM narration references; verdict stability under resampling |
 | 2.3 | Horizon weighting | Add one mandate-derived line to the Trader, debator, and PM room blocks: when `mandate.horizon` is LONG/VERY_LONG, short-term technical readings inform entry timing only and cannot validate or invalidate the thesis. The analyst overlays already branch on horizon/path; this closes the downstream half | Ablation on long-horizon mandates: `horizon_days` distribution, technicals-vs-fundamentals citation mix in PM narrations |
+| 2.4 | Bull/Bear anchoring test (D19) | Step 1 is measurement only: CR219 R58 already randomises Bull/Bear order per run_id, so the existing corpus is a natural experiment — compare second-speaker citation overlap and stance Bull-first vs Bear-first. Step 2 (only if anchoring is measured): blind parallel core theses + sequential cross-rebuttals, RM adjudicates four documents; requires a deliberate CR077-guard extension and +2 LLM calls per convene | Step 1: overlap/stance deltas by order. Step 2: before/after on the same corpus, RM adjudication quality |
 
 Explicitly refused: 0–100 numeric conviction scores (unverifiable precision;
 the system quantizes on purpose, `room_prompts.py:742-744`), fixed sizing
 tiers (sizing is per-mandate and code-computed), a hardcoded 180–730-day
 horizon (horizon is per-user), all-JSON agent turns (the prose is the
-product surface; CR106 B2).
+product surface; CR106 B2), automated prompt self-optimization à la DSPy
+(prompts are versioned, reviewed, measurement-gated artifacts; the eval
+kernel already exists as the CR035 harness + CR197 replay, D19), and
+temperature/persona rotation across parallel CIO runs (variance without
+information; differentiate review lenses, not sampling, D19).
 
 ## Phase 3 — Interpretation guidance (Q4)
 
