@@ -543,6 +543,86 @@ does the actual work (async job + poll/push, not a held-open stream).**
   background convenes ("No user wait — push notification when done"), just not yet extended
   to manually-triggered convenes.
 
+**Option 2, scoped in detail (2026-09-28) — what a Cloud Run Jobs migration would actually
+touch, read directly from `room_runner.py`/`room.py`/`infra/gcp/*.tf`, not estimated:**
+
+*Already in place — the "Job writes, API reads" split is half-built:*
+- Run state is already persisted incrementally to Postgres (`RoomRunRow`, written by
+  `_checkpoint_run`/`_persist_run` after each of the 12 agents completes —
+  `room_runner.py:5091-5153`), and `GET /v1/room/{run_id}` (`room.py:422-439`) already reads
+  that row with a plain DB read, no dependency on any in-memory object. **A Cloud Run Job
+  calling the same `run()` code path against the shared Postgres would already produce a row
+  the existing polling endpoint can serve, from a different process, unmodified.**
+- No Redis anywhere in the Room path — confirmed by grep, all state is Postgres only. One
+  fewer moving part to design around.
+- `stream_room`'s own docstring (`room.py:142-152`) already states the design intent — "The
+  run executes as a background task independent of the SSE connection... a client disconnect
+  does NOT cancel the run" — the *intent* to decouple run lifetime from one request already
+  exists; only the *mechanism* (same-process `asyncio.create_task`, not a separate compute
+  unit) is what Jobs would replace.
+
+*The real seam to break — entirely in-memory, entirely per-process:*
+- Live SSE streaming (`room.py:311-371`, `async for ev in runner.subscribe(run_id)`) reads
+  from `_active_queues: dict[UUID, asyncio.Queue]`, a plain instance attribute on the
+  process-global `RoomRunner` singleton (`room_runner.py:5339`, `get_room_runner()` at
+  `:8455-8462`). `subscribe()` returns immediately with no events if the run isn't in this
+  dict on *that* process; `is_active()` (`:6209-6215`) is a pure in-memory membership check,
+  not a DB read. **If a Job runs the Room in a separate container from the API service
+  serving the SSE request, live streaming silently returns nothing — not an error** — which
+  is exactly the silent-degrade failure mode CR040 ("degrade loudly") exists to catch, so
+  this can't ship as a quiet fallback-to-polling; it needs an explicit signal.
+- Other in-memory, per-process state that a Job-as-separate-process split would need to
+  either duplicate, route around, or accept as lost on restart: `_pending_retry`
+  (`:5349`), `_retrying_runs` (`:5361` — its own comment notes correctness today depends on
+  uvicorn running with no `--workers` flag, an assumption a multi-process Job split breaks),
+  `_pump_tasks` (`:5336`, used for graceful-shutdown cancellation).
+- Crash/stuck-run recovery (`_sweep_stuck_runs()`, `:5439-5548`) already has a recorded,
+  rejected design alternative for exactly this multi-instance case: a `started_at <
+  process_start` check "was rejected here (see DEF425.architect.md round 2) — correct only
+  for today's single uvicorn worker; it would let one instance's boot steal a still-live run
+  from a sibling once CR126 (Cloud Run, multi-instance) lands" — i.e., this was already
+  flagged as unfinished multi-instance work, independent of the Jobs question specifically.
+  Respawn-on-stuck also re-runs the whole Room from scratch (transcript cleared) rather than
+  resuming from the last checkpoint — a **separate, pre-existing estimate of 10-12 days**
+  exists for mid-run checkpoint resumption specifically, and that number belongs to that
+  different piece of work, not to the Jobs migration itself.
+
+*Mobile — confirmed capable of a final-result-only fallback, not a full live substitute:*
+- `_recoverViaPolling()` (`mobile/lib/state/room_providers.dart:591-659`) polls every 3s for
+  up to 90s (hardcoded cap) but only acts on a **terminal** status — while running, it waits
+  silently. On completion it does a full one-shot reconstruction of transcript, verdict,
+  credit cost, refund flag — real final state, not partial.
+- What polling *cannot* reproduce: live per-phase labels, live per-token streaming text, the
+  mid-run `live_data_notice` disclosure, or `agent_withheld` events as they happen — all
+  SSE-only today. So a Jobs-based backend can still serve a correct final result over
+  polling, but the "watch the floor" live UX (§10 Option 2's original framing, confirmed
+  real product intent) needs either genuine push/re-subscribe wiring or the client accepts a
+  blank/waiting screen for the run's duration — and the 90s polling-cap is itself shorter
+  than the observed ~5min run, so it would need raising regardless of the Jobs question.
+- `notification_service.py`'s `notify()` path is confirmed to have no Room-specific caller
+  today, and `room.py:187`'s `TODO B1` push stub is confirmed still unwired — matches what
+  §10 Option 2 already stated above.
+
+*Infra — zero Jobs resources exist today:*
+- `infra/gcp/*.tf` is 100% Cloud Run **Services** — `google_cloud_run_v2_service.api`
+  (`cloud_run.tf:5`) is the only Cloud Run resource anywhere in the folder; no
+  `google_cloud_run_v2_job`, no Cloud Tasks/Pub-Sub/Eventarc trigger wiring exists. This
+  would be new Terraform, not a variant of what's there. Incidental confirmation: the
+  `timeout=300s` line (`cloud_run.tf:19`) sits directly under a comment reading "Convene the
+  Room may take ~90s + buffer (hosting.md)" — stale/wrong against the ~5min observed runtime,
+  a documentation-drift finding independent of the Jobs question, already noted under Option
+  1 above.
+- This is Beta/prod (GCP) infra specifically — Alpha runs on melehost/Docker Compose with no
+  Terraform at all, so none of this is live today; it's a Beta-readiness question, not an
+  active production bug yet.
+
+**Still not resolved by this scoping pass:** no engineering-effort estimate (the code-reading
+above narrows *what* would need to change, not how long it would take); no decision on
+whether live-SSE-from-Job should be built (Redis pub/sub or similar) or whether Job-originated
+runs simply always serve over polling with the live-watching UX accepted as degraded for that
+path; whether the `_active_queues`/`_retrying_runs`/`_pending_retry` in-memory state moves to
+Postgres/Redis or is redesigned around entirely.
+
 **Option 3 — VPS (self-managed, same execution model as Alpha/melehost today).**
 - CR006 already priced real options: Contabo Cloud VPS 30 ($15/mo, 8vCPU/24GB, confirmed
   pricing) and OVHcloud VPS-4 ($23/mo, same spec, confirmed) — both cheaper than Cloud Run's
@@ -573,8 +653,11 @@ does the actual work (async job + poll/push, not a held-open stream).**
 
 **What has NOT been resolved, explicitly:**
 - No decision on Cloud Run vs. VPS, or which Cloud Run sub-option (live-SSE vs. Jobs-based).
-- No engineering-effort estimate for the Cloud Run Jobs re-architecture, to weigh against a
-  VPS's lower ops-automation but simpler execution model.
+- No engineering-effort estimate for the Cloud Run Jobs re-architecture — the scoping pass
+  above narrows *what* code would need to change (the seam is `_active_queues` and the rest
+  of `RoomRunner`'s in-memory state, not the persistence layer, which is already
+  process-independent), but does not convert that into days/weeks, and doesn't weigh it
+  against a VPS's lower ops-automation but simpler execution model.
 - No security/ops-burden cost model for a VPS at Beta or Production scale — melehost's
   history establishes that the risk is real, not how much ongoing effort mitigating it would
   actually take at higher stakes (a paying customer's data, not an internal test). **§11
