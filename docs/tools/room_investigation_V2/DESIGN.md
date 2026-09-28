@@ -234,14 +234,16 @@ directly:
   measurement instrument, not the author).
 - V1 stays frozen and usable; v2 does not migrate v1's `out/` data.
 
-## 7. Open questions for Saiful
+## 7. Decisions (Saiful, 2026-09-28)
 
-1. Benchmark ticker set for the Phase 0 baseline — reuse CR228/CR240's
-   tickers for continuity, or pick a fresh fixed set with rationale?
-2. `prompt_lab` override granularity: whole-persona replacement only, or
-   section-level patching (e.g. swap just the sizing ontology block)?
-   Whole-persona is simpler and safer; section-level is more surgical but
-   couples the harness to prompt internal structure.
-3. Should `scoring.py`'s stability threshold defaults (e.g. min agreement
-   4/5) come from CR247's SPEC gates verbatim, or be tuned after the first
-   baseline run?
+1. **Baseline ticker set: reuse the CR228/CR240 tickers.** Continuity with
+   existing `out/` data — v2 baselines can be diffed against draws we
+   already have, and those tickers were chosen precisely because they
+   exposed instability (the BAC flip) and cross-provider divergence.
+2. **`prompt_lab` granularity: whole-persona replacement only.** Simple,
+   fail-loud, no coupling to prompt internal structure. Section-level
+   patching can be added later if a phase genuinely needs it.
+3. **Stability thresholds: start from the CR247 SPEC gate values verbatim,
+   calibrate after the first baseline with recorded rationale** (D20:
+   governed, measurement-gated changes — calibration is a recorded change,
+   not a silent tweak).
