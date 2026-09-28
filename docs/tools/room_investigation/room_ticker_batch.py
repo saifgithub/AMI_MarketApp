@@ -12,6 +12,36 @@ Resumable: skips any ticker already `status=completed` in the output JSONL
 through (provider outage, credit exhaustion — see RES009/CR228's Kimi 429s)
 picks up where it left off on re-run with the same --batch-id/--out-dir.
 
+## Concurrency (`--max-concurrent-rooms`)
+
+Tickers run through an `asyncio.Semaphore`-bounded pool, not a bare
+sequential loop — Saiful, 2026-09-28: "the deepinfra should be able to
+handle multiple sessions... look into improving the toolkit to be able to
+send multiple concurrent rooms at a time." Verified safe before adding this
+(2026-09-28 investigation): `RoomRunner.run()` builds everything it touches
+as local variables per call and never mutates `self` state that `run()`
+reads (the dedup dicts `_active_queues`/`_active_by_key` are `start_run()`-
+only, never touched by the direct `run()` path this toolkit uses); DB access
+goes through `get_session()`, a fresh pooled connection per call; the
+`Mandate` built once before the loop is read-only and safely shared by
+reference. `LLMGateway`/`OpenAICompatibleProvider` already serve concurrent
+traffic in production (12 agents fan out per single convene through one
+provider instance) — `OutputConstraint`'s own docstring says frozen
+specifically "because providers are shared singletons serving concurrent
+runs." The toolkit's OWN `_append_jsonl` was the one unsafe part (unguarded
+concurrent file writes) — fixed here with an `asyncio.Lock`.
+
+**`--max-concurrent-rooms` default is a conservative GUESS, not a measured
+limit.** No DeepInfra rate limit (RPS, concurrent connections, quota) is
+documented anywhere in this repo — the only existing precedent
+(RES009 doc 13) is a researcher's precaution ("run sequentially... to avoid
+overlapping API load"), not a measured number. Kimi's 429 behavior IS
+documented (RES009/CR228), but that's the Moonshot Open Platform, a
+different provider with different limits — do not assume it transfers.
+Start low (default 3) and watch for 429s / `room_agent_scripted_fallback
+reason=stream_error` spiking before raising it; there is no live evidence
+yet for what DeepInfra's real ceiling is.
+
 ## `backend/.env` does not exist — every setting below must be exported
 
 `Settings.model_config` has `env_file=".env"`, resolved relative to CWD. This
@@ -54,6 +84,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from room_kimi_gateway import base_mandate, force_gateway, run_one_ticker, snapshot_price  # noqa: E402
 
 POST_SPACING_S = 15.0  # matches run_local_kimi.py / room_benchmark.py's pacing between tickers
+DEFAULT_MAX_CONCURRENT_ROOMS = 3  # a guess, not a measured provider limit — see module docstring
 
 
 def _now_iso() -> str:
@@ -70,9 +101,14 @@ def _load_latest_records(runs_path: Path) -> dict[str, dict]:
     return latest
 
 
-def _append_jsonl(path: Path, record: dict) -> None:
-    with path.open("a") as f:
-        f.write(json.dumps(record, default=str) + "\n")
+async def _append_jsonl(lock: asyncio.Lock, path: Path, record: dict) -> None:
+    # Concurrent tickers all append to the SAME file — `open(..., "a")` +
+    # `write()` is not guaranteed atomic against interleaved writers on every
+    # platform/size, so every writer serializes through this one lock rather
+    # than relying on OS-level append semantics.
+    async with lock:
+        with path.open("a") as f:
+            f.write(json.dumps(record, default=str) + "\n")
 
 
 async def main_async(args: argparse.Namespace) -> int:
@@ -118,36 +154,57 @@ async def main_async(args: argparse.Namespace) -> int:
         risk_score=args.risk_score, display_name=f"{args.batch_id} R{args.risk_score} ({args.provider})",
     ))
 
+    to_run = [t for t in tickers if not (latest.get(t) and latest[t].get("status") == "completed")]
+    for t in tickers:
+        if t not in to_run:
+            print(f"{t}: already completed, skip")
+
+    write_lock = asyncio.Lock()
+    semaphore = asyncio.Semaphore(args.max_concurrent_rooms)
     failures: list[str] = []
-    for i, ticker in enumerate(tickers):
-        prior = latest.get(ticker)
-        if prior and prior.get("status") == "completed":
-            print(f"[{i + 1}/{len(tickers)}] {ticker}: already completed, skip")
-            continue
-        print(f"[{i + 1}/{len(tickers)}] {ticker}: starting…", flush=True)
-        triggered_at = _now_iso()
-        record = {
-            "batch_id": args.batch_id,
-            "ticker": ticker,
-            "user_id": str(user_id),
-            "ablation": False,
-            "triggered_at": triggered_at,
-        }
-        result = await run_one_ticker(runner, user_id, ticker, mandate)
-        record.update(result)
-        record["spot_price"] = snapshot_price(ticker)
-        record["finished_at"] = _now_iso()
-        _append_jsonl(runs_path, record)
-        verdict = record.get("verdict") or {}
+    completed_count = 0
+    total = len(to_run)
+
+    async def _run_one(ticker: str) -> None:
+        nonlocal completed_count
+        async with semaphore:
+            print(f"[{ticker}] starting… (slot acquired)", flush=True)
+            triggered_at = _now_iso()
+            record = {
+                "batch_id": args.batch_id,
+                "ticker": ticker,
+                "user_id": str(user_id),
+                "ablation": False,
+                "triggered_at": triggered_at,
+            }
+            result = await run_one_ticker(runner, user_id, ticker, mandate)
+            record.update(result)
+            record["spot_price"] = snapshot_price(ticker)
+            record["finished_at"] = _now_iso()
+            await _append_jsonl(write_lock, runs_path, record)
+            completed_count += 1
+            verdict = record.get("verdict") or {}
+            print(
+                f"[{ticker}] ({completed_count}/{total}) → {record.get('status')} "
+                f"action={verdict.get('action')} "
+                f"votes={verdict.get('approve_votes')}/{verdict.get('samples')} "
+                f"spot={record.get('spot_price')} duration_ms={record.get('duration_ms')}",
+                flush=True,
+            )
+            if record.get("status") != "completed":
+                failures.append(ticker)
+            # Post-spacing now means "hold this slot open a bit longer before
+            # freeing it for the next ticker" — keeps SOME pacing even under
+            # concurrency, rather than firing every ticker at once.
+            await asyncio.sleep(args.post_spacing)
+
+    if to_run:
         print(
-            f"    → {record.get('status')} action={verdict.get('action')} "
-            f"votes={verdict.get('approve_votes')}/{verdict.get('samples')} "
-            f"spot={record.get('spot_price')} duration_ms={record.get('duration_ms')}",
+            f"running {total} ticker(s), up to {args.max_concurrent_rooms} concurrent "
+            f"(--max-concurrent-rooms) …",
             flush=True,
         )
-        if record.get("status") != "completed":
-            failures.append(ticker)
-        await asyncio.sleep(args.post_spacing)
+        await asyncio.gather(*(_run_one(t) for t in to_run))
 
     print(f"\ndone: {len(tickers) - len(failures)}/{len(tickers)} completed → {runs_path}")
     if failures:
@@ -165,7 +222,15 @@ def main() -> int:
     parser.add_argument("--batch-id", required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--fresh-user", action="store_true")
-    parser.add_argument("--post-spacing", type=float, default=POST_SPACING_S)
+    parser.add_argument("--post-spacing", type=float, default=POST_SPACING_S,
+                         help="seconds to hold a concurrency slot open after a ticker finishes, "
+                              "before freeing it for the next queued ticker")
+    parser.add_argument("--max-concurrent-rooms", type=int, default=DEFAULT_MAX_CONCURRENT_ROOMS,
+                         help="max Room convenes in flight at once (asyncio.Semaphore-bounded). "
+                              f"Default {DEFAULT_MAX_CONCURRENT_ROOMS} is a conservative GUESS, not "
+                              "a measured provider limit — see module docstring's Concurrency "
+                              "section. --max-concurrent-rooms 1 reproduces the old strictly-"
+                              "sequential behavior.")
     parser.add_argument("--allow-mock-market-data", action="store_true",
                          help="skip the settings.use_real_market_data guard (see module docstring)")
     args = parser.parse_args()
