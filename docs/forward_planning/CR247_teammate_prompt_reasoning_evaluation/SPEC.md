@@ -165,10 +165,20 @@ Shape fixed by Phase 0.1:
   the audit note appended.
 - Routing, combination, and the veto are deterministic code; only the
   reviews are LLM calls (D13).
+- The review pass runs on a **different model than the CIO** (gateway
+  fallback provider, already wired) — tests whether CIO errors are
+  model-correlated at one extra call on ~16% of convenes (D18).
 - Metrics: approval-rate stability (resampling instrument from 0.2) and
   verdict quality vs outcomes (outcome ledger, baselined in 0.1).
-- Parked: 5× same-model ensemble; 5-provider ensemble. Revisit only if the
-  measured error budget after Phase 4 justifies the cost (D11).
+- Parked: 5× same-model ensemble; 5-provider tribunal (D18: privacy egress,
+  latency, verdict-aggregation problem, alignment-variance contamination).
+  Revisit only if the measured error budget after Phase 4 justifies the cost.
+
+Pre-experiment, independent of Phase 4 (D18): Bull and Bear on different
+models for a sample of convenes. If the CR197 stance constants de-correlate,
+model bias is load-bearing and tier-policy multi-provider routing earns
+investment; if not, the constants are prompt-shaped and the model mix
+question is closed.
 
 ## Phase 5 — Remaining personas
 

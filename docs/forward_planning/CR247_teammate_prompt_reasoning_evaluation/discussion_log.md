@@ -390,6 +390,40 @@ for its value, the exact change, and checkable acceptance — no editorial, no
 superlatives, no open questions disguised as instructions. SPEC.md rewritten
 to that standard on 2026-09-28.
 
+## D18 — Heterogeneous multi-model proposal: evaluated
+*2026-09-28 · status: partially adopted, core claim measured first*
+
+Teammate proposed per-role model assignment across five providers, a
+5-different-LLM CIO tribunal, and LangGraph/CrewAI as the harness.
+
+Fact-check: the claim that TradingAgents proves per-role model assignment
+"drastically increases Sharpe ratios" is **false** — the forked repo
+(`TradingAgent/tradingagents/default_config.py:16-17`) has two slots
+(`deep_think_llm`, `quick_think_llm`), same provider family, no per-agent
+models, no such measurement. Verdicts here stand on our own evidence.
+
+Adopted:
+1. **Cross-model second pass** — Phase 4's reviewer runs on a different model
+   than the CIO (gateway already wires Anthropic as fallback). Tests whether
+   CIO errors are model-correlated at 1/5 the tribunal's cost.
+2. **Bull/Bear split-model experiment** — Bull on model A, Bear on model B
+   for a sample of convenes. If the CR197 stance constants de-correlate,
+   correlated bias is load-bearing and multi-model earns investment; if not,
+   the theater is prompt-shaped and no model mix fixes it. Decisive before
+   any infrastructure spend.
+
+Refused, with reasons:
+- 5-provider tribunal: 4 new integrations; user data egressed to 4 external
+  APIs (a privacy-posture change); 5× verdict latency; the D6 aggregation
+  problem is unchanged (a verdict is size/entry/stop/target/kill-criterion,
+  not a vote); cross-lab disagreement is contaminated by alignment-behavior
+  differences, not just evidence evaluation.
+- LangGraph/CrewAI: discards `room_runner.py`'s measured guards (CR077,
+  DEF147, DEF125/DEF236/DEF289 token budgets) for no measured benefit.
+- Note: cognitive-load tiering already exists — `tier_policy.py` routes
+  per-(plan, agent); pointing tiers at different providers is config, not a
+  new harness.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
