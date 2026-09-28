@@ -1,0 +1,31 @@
+# cr247-phase0-baseline-v1 — CR247 Phase 0.2 baseline benchmark.
+#
+# What this is: the fixed measurement matrix every later CR247 prompt-variant
+# diff compares against. Run it BEFORE any prompt change, through
+# tools/room_benchmark.py; commit the resulting runs_*.jsonl as the reference
+# baseline. Phase gates 1-5 copy this file, swap `prompt_variant`, and the
+# scoring.diff_batches report against this baseline decides pass/fail.
+#
+# Serving-model rule: this benchmark is pinned to provider vllm (the
+# production-serving path) with NO model override — it runs whatever
+# `ami-llm` currently serves. Before running, verify the CURRENT serving
+# model via GET $VLLM_BASE_URL/v1/models and record the `root` field in the
+# run notes; never trust the `ami-llm` alias for identity (D21 lesson).
+# env_bootstrap.require_vllm prints the serving root(s) at startup.
+#
+# Ticker set (DESIGN.md §7 decision 1): the CR228/CR240 9-ticker set —
+# verified identical across two sources:
+#   - docs/tools/room_investigation/out/cr240_tickers_9_kimi_approved.txt
+#     (the 9 tickers scoring APPROVE 5/5 in CR228 r3 Kimi risk_score=3)
+#   - docs/tools/room_investigation/out/runs_cr240-deepinfra-glm53flash-9tickers-20260926.jsonl
+# No discrepancy between the sources. AAPL was deliberately excluded by
+# v1 (already run once as the room_ticker_batch smoke test, so not a clean
+# incremental data point on the same footing) — kept excluded here.
+
+name: cr247-phase0-baseline-v1
+provider: vllm
+tickers: [BAC, JPM, MA, MO, SLB, SO, T, V, WFC]
+mandate:
+  risk_score: 3
+repeats: 5
+prompt_variant: backend-default
