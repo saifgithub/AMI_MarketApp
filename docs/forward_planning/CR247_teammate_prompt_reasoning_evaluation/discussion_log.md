@@ -618,3 +618,31 @@ when the work lands, not at spec time.
 
 *Convention: new items append below. When an item is resolved by a build or a
 decision, append "→ resolved by …" referencing the CR/DEF/commit.*
+
+## D25 — Harness max_tokens floor 5000; Phase 0 closed (Saiful, 2026-09-28)
+*status: settled; implemented + recorded*
+
+Two decisions from the smoke runs:
+
+1. **Harness output floor raised to 5000 tokens.** Trigger: the DeepInfra
+   GLM-5.3-Flash smoke truncated `bear_researcher` at the cheap tier's
+   1400-token cap mid-argument (`room_agent_truncated`, chars=4914) — a
+   truncated producer is what every downstream agent consumed, which would
+   contaminate any baseline. `provider_gateway.HARNESS_MAX_TOKENS_FLOOR =
+   5000` now applies to every harness convene on every provider (uses
+   CR211's existing `max_tokens_floor` mechanism: `effective = max(caller,
+   floor)`). Harness-only; production caps unchanged.
+2. **Phase 0 closed without the full census/replay.** Saiful: "I don't
+   think these are necessary tests at the moment." What exists instead of
+   the SPEC's 0.1/0.2/0.3 writeups: the v2 harness itself, proven live —
+   AAPL convene on vLLM (`qwen38-flash-next-abliterated-nvfp4`, PASS 1/5)
+   and AAPL+V concurrent on DeepInfra GLM-5.3-Flash (AAPL PASS 0/4 —
+   cross-provider agreement; V APPROVE 3/5; CR246 race fix held). The
+   census (0.1) and conviction audit (0.3) tooling is built and verified
+   (`audit_db.fetch_verdict_outcomes`, `scoring.outcome_quality`,
+   `scoring.conviction_audit`) and can be run on demand when a later phase
+   needs those numbers. Smoke findings logged for later phases: PM draw
+   ignored the JSON schema (retry path absorbed it); 3 analysts exceeded
+   the 32-char headline cap; `[AMI checked]` annotations show false
+   positives; DeepInfra 429s under the 5x PM fan-out; PM
+   `kill_criterion` chronically over the 240-char bound on GLM.

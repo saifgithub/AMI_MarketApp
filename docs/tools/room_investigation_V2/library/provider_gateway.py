@@ -31,6 +31,12 @@ if TYPE_CHECKING:
 
 REASONING_TOKEN_TOLERANCE = 2  # RES009: kimi leaves ~1 residual even with thinking disabled
 
+# CR247 D25: every harness convene runs with a 5000-token output floor so a
+# cheap-tier truncation (bear_researcher cut at 1400 live on GLM-5.3-Flash,
+# 2026-09-28) can never contaminate a baseline measurement. Harness-only —
+# production caps are untouched.
+HARNESS_MAX_TOKENS_FLOOR = 5000
+
 _DIRECT_CALL_TIMEOUT_S = 300.0
 
 
@@ -126,6 +132,12 @@ def force_provider(
     from app.services.llm_gateway import LLMGateway, OpenAICompatibleProvider
 
     settings.llm_force_provider = name
+    settings.vllm_max_tokens_floor = max(
+        settings.vllm_max_tokens_floor or 0, HARNESS_MAX_TOKENS_FLOOR
+    )
+    settings.kimi_max_tokens_floor = max(
+        settings.kimi_max_tokens_floor or 0, HARNESS_MAX_TOKENS_FLOOR
+    )
     if name == "kimi":
         settings.kimi_base_url = base_url
         settings.kimi_model = resolved_model
@@ -155,6 +167,7 @@ def force_provider(
             base_url=base_url,
             model_name=resolved_model,
             api_key=api_key,
+            max_tokens_floor=HARNESS_MAX_TOKENS_FLOOR,
         )
 
     active = gateway._active_provider_name()  # noqa: SLF001 — verifying the force took
@@ -172,7 +185,8 @@ def force_provider(
             "wrong-model label"
         )
     note = ", thinking disabled" if spec.extra_body else ""
-    print(f"LLM gateway forced to: {active} ({base_url}, {resolved_model}{note})")
+    print(f"LLM gateway forced to: {active} ({base_url}, {resolved_model}{note}, "
+          f"max_tokens floor {HARNESS_MAX_TOKENS_FLOOR})")
     return gateway
 
 

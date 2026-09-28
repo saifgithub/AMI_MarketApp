@@ -30,6 +30,21 @@ Standing rules for every item:
 
 ## Phase 0 — Baselines (no behaviour change)
 
+**Status: CLOSED 2026-09-28 (Saiful, D25).** The 0.1 census and 0.3
+conviction audit were waived as not necessary at the moment; their tooling
+is built and verified in `docs/tools/room_investigation_V2/`
+(`audit_db.fetch_verdict_outcomes`, `scoring.outcome_quality`,
+`scoring.conviction_audit`) and can run on demand when a later phase needs
+the numbers — note Phase 4's shape decision (veto vs resurrection, D12) is
+therefore still formally open until the census runs. In place of the full
+0.2 replay, the harness itself was proven live: AAPL on vLLM (PASS 1/5)
+and AAPL+V concurrent on DeepInfra GLM-5.3-Flash (AAPL PASS 0/4 —
+cross-provider agreement — V APPROVE 3/5). Findings logged in D25:
+cheap-tier 1400-token truncation (→ harness floor now 5000), PM JSON-schema
+miss absorbed by the retry path, 32-char headline-cap overruns, `[AMI
+checked]` false positives, DeepInfra 429s under the PM fan-out,
+`kill_criterion` over-bound on GLM.
+
 Purpose: every later item is sized and judged against these numbers.
 
 | # | Item | Method | Output |
@@ -39,6 +54,8 @@ Purpose: every later item is sized and judged against these numbers.
 | 0.3 | Conviction-signal audit | From journaled envelopes: declared conviction × agent × outcome. Does conviction predict anything per role? | Sizes item 2.2 (relabel vs redefine) |
 
 Acceptance: `measurements/phase0.md` in this folder with the three result sets.
+*(Superseded by the D25 closure above — no phase0.md was produced; the
+census/audit tooling stands by for any phase that needs its numbers.)*
 
 ---
 
