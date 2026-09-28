@@ -332,6 +332,16 @@ transcripts and retail flow is obtainable free, and most of it requires no new
 source at all — the two biggest asks (SBC, peer SIC baskets) were verified
 live against SEC endpoints today.
 
+## D15 — SPEC written
+*2026-09-28 · status: spec drafted, awaiting Saiful's review*
+
+`SPEC.md` in this folder: five phases (0 baselines/census → 1 data feeds →
+2 scores/horizon → 3 heuristics → 4 second-pass decision layer → 5 remaining
+personas), dependency-ordered, each behaviour change gated on a measurement.
+Data pipelines flagged as separate CRs per the CR247 non-goals. SCS floats,
+all-JSON turns, tier sizing and the hardcoded horizon are recorded as
+evaluated-and-refused.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
