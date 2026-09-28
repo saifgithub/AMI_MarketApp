@@ -45,6 +45,29 @@ fix it if so), but the deliverable here is the general capability — a
 realistic multi-user simulation and a verdict on how the app holds up — not
 a patch for one code path.
 
+**Root cause of that one incident, confirmed** (kept here only as evidence
+the gap is real, not as this CR's task list): `SimEngine.ensure_portfolio`
+(`backend/app/services/sim_engine.py:961-984`) does an unlocked
+SELECT-then-INSERT, and `SimPortfolioRow`'s `UniqueConstraint(user_id,
+kind, run_id)` (`backend/app/db/models.py`) is silently ineffective for
+every training portfolio because `run_id IS NULL` for all of them and NULL
+never equals NULL in a SQL unique constraint — CR109 slice 2 widened this
+constraint and, in doing so, removed the real protection a plain
+`UNIQUE(user_id)` used to provide. This is reachable by REAL users, not
+just the research toolkit: `ensure_portfolio(user_id)` is called
+independently from at least four separate API surfaces (Room convenes,
+`GET /v1/portfolio/health/{user_id}`, `GET /v1/sector-watch/{user_id}`,
+the options-chain endpoints), and the mobile app's own Riverpod providers
+for sector-watch and portfolio-health fire independently/concurrently on
+first widget mount — so an ordinary brand-new user's first Floor-screen
+load can plausibly trigger this exact race with no double-tapping or
+multi-device session required. The toolkit itself was fixed separately
+(mints a distinct `user_id` per concurrent ticker instead of sharing one —
+see `room_ticker_batch.py`'s own docstring) — that fix only stops the
+TOOLKIT from triggering this, it does nothing for real users, who remain
+exposed until this CR's work (or a dedicated DEF, if the assigned agent
+prefers to split it out) actually fixes the constraint/locking gap.
+
 ## Why this is NOT already answered by other work
 
 - **CR245** (Beta infra 1000-user sizing, proposed) is capacity/cost

@@ -31,6 +31,40 @@ specifically "because providers are shared singletons serving concurrent
 runs." The toolkit's OWN `_append_jsonl` was the one unsafe part (unguarded
 concurrent file writes) — fixed here with an `asyncio.Lock`.
 
+**That check missed a real one: concurrent tickers sharing ONE `user_id`
+race `SimEngine.ensure_portfolio`.** Found live the first time this toolkit
+ran ≥2 convenes truly in parallel — `room_sim_holdings_failed`/
+`room_sector_context_holdings_failed` (`"Multiple rows were found when one
+or none was required"`) fired on nearly every ticker, and the resulting
+convenes came back corrupted (`REJECT` verdicts — a value the PM should
+never emit — on tickers unanimous `APPROVE` in every other arm/provider
+tested, e.g. MA). Root cause (confirmed by reading the actual code, not
+guessed): `ensure_portfolio` (`backend/app/services/sim_engine.py:961-984`)
+does an unlocked SELECT-then-INSERT, and `SimPortfolioRow`'s
+`UniqueConstraint(user_id, kind, run_id)` (`backend/app/db/models.py`) is
+**silently ineffective** for every training portfolio, because `run_id IS
+NULL` for all of them and NULL never equals NULL in a SQL unique
+constraint — CR109 slice 2 widened this constraint and, in doing so,
+removed the real protection a plain `UNIQUE(user_id)` used to provide. N
+concurrent callers for the same `user_id` can all see "no row" and all
+INSERT. **This is a real production defect, not a toolkit-only artifact**
+— filed as **CR246**, since ordinary concurrent widget loads (sector-watch
++ portfolio-health + a Room card, all independent Riverpod providers) can
+plausibly hit the same race for a real brand-new user's first app open.
+
+**Fixed HERE by minting a distinct `user_id` per ticker** (`uuid5`, seeded
+from the batch's base user_id + ticker — deterministic across resumes, not
+random) instead of sharing one `user_id` across the whole batch. Confirmed
+this costs nothing for this toolkit's own measurements: `run_one_ticker`
+never calls `sim.submit()`, so nothing accumulates across tickers for one
+user — every convene reads the same blank starting portfolio regardless.
+Re-smoke-tested after the fix on the exact 4 tickers that corrupted before
+(MA/BAC/MO/APD, `--max-concurrent-rooms 4`): zero `holdings_failed`
+warnings, MA correctly back to `APPROVE(5)`. **This toolkit fix does NOT
+close CR246** — the underlying production race is still live for real
+users and needs its own fix (a partial unique index on `(user_id, kind)
+WHERE run_id IS NULL`, or row-level locking around the check-then-insert).
+
 **`--max-concurrent-rooms` default is a conservative GUESS, not a measured
 limit.** No DeepInfra rate limit (RPS, concurrent connections, quota) is
 documented anywhere in this repo — the only existing precedent
@@ -78,7 +112,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from room_kimi_gateway import base_mandate, force_gateway, run_one_ticker, snapshot_price  # noqa: E402
@@ -142,17 +176,47 @@ async def main_async(args: argparse.Namespace) -> int:
 
     users = json.loads(users_path.read_text()) if users_path.exists() else {}
     if args.fresh_user or args.batch_id not in users:
-        user_id = uuid4()
-        users[args.batch_id] = {"user_id": str(user_id), "created_at": _now_iso()}
+        base_user_id = uuid4()
+        users[args.batch_id] = {"user_id": str(base_user_id), "created_at": _now_iso()}
         users_path.write_text(json.dumps(users, indent=2) + "\n")
     else:
-        user_id = UUID(users[args.batch_id]["user_id"])
-    print(f"batch user: {user_id} (local synthetic — not minted via /v1/auth/anon, "
-          f"never touches melehost's user table)")
+        base_user_id = UUID(users[args.batch_id]["user_id"])
+    print(f"batch base user: {base_user_id} (local synthetic — not minted via "
+          f"/v1/auth/anon, never touches melehost's user table)")
 
-    mandate = resolve_mandate(user_id, base_mandate(
-        risk_score=args.risk_score, display_name=f"{args.batch_id} R{args.risk_score} ({args.provider})",
-    ))
+    # One DISTINCT user_id per ticker, not one shared user_id for the whole
+    # batch — fixes a real race (2026-09-28): concurrent tickers sharing one
+    # user_id all call SimEngine.ensure_portfolio(user_id) (room_runner.py's
+    # _build_sim_holdings_block/_build_room_sector_context) at once, which
+    # does an unlocked SELECT-then-INSERT with no real uniqueness protection
+    # for the training-portfolio row (SimPortfolioRow's UniqueConstraint(
+    # user_id, kind, run_id) is silently ineffective when run_id IS NULL,
+    # the only shape any Room convene ever uses — NULL never equals NULL in
+    # a SQL unique constraint). N concurrent callers for the same user_id can
+    # all see "no row" and all INSERT, raising MultipleResultsFound on the
+    # next read and corrupting that convene's portfolio/sector-context block
+    # (observed live: REJECT verdicts — a value the PM should never emit —
+    # on tickers unanimous APPROVE in every other arm). This is filed as its
+    # own production defect (CR246 names the root cause), but this toolkit
+    # doesn't need to wait for that fix: nothing in this batch shape
+    # accumulates across tickers for one user (run_one_ticker never calls
+    # sim.submit(), every convene reads the same blank starting portfolio),
+    # so a distinct user_id per ticker changes nothing about what's being
+    # measured and makes the race structurally impossible — each ticker is
+    # the sole caller for its own never-shared user_id.
+    #
+    # Deterministic (uuid5), not random per run: reproducible across
+    # resumes/re-runs with the same --batch-id, and traceable back to the
+    # batch's base_user_id in users.json rather than an opaque random value.
+    def _user_id_for(ticker: str) -> UUID:
+        return uuid5(base_user_id, ticker)
+
+    mandates = {
+        t: resolve_mandate(_user_id_for(t), base_mandate(
+            risk_score=args.risk_score, display_name=f"{args.batch_id} R{args.risk_score} ({args.provider})",
+        ))
+        for t in tickers
+    }
 
     to_run = [t for t in tickers if not (latest.get(t) and latest[t].get("status") == "completed")]
     for t in tickers:
@@ -168,16 +232,17 @@ async def main_async(args: argparse.Namespace) -> int:
     async def _run_one(ticker: str) -> None:
         nonlocal completed_count
         async with semaphore:
-            print(f"[{ticker}] starting… (slot acquired)", flush=True)
+            ticker_user_id = _user_id_for(ticker)
+            print(f"[{ticker}] starting… (slot acquired, user={ticker_user_id})", flush=True)
             triggered_at = _now_iso()
             record = {
                 "batch_id": args.batch_id,
                 "ticker": ticker,
-                "user_id": str(user_id),
+                "user_id": str(ticker_user_id),
                 "ablation": False,
                 "triggered_at": triggered_at,
             }
-            result = await run_one_ticker(runner, user_id, ticker, mandate)
+            result = await run_one_ticker(runner, ticker_user_id, ticker, mandates[ticker])
             record.update(result)
             record["spot_price"] = snapshot_price(ticker)
             record["finished_at"] = _now_iso()
