@@ -258,6 +258,31 @@ identical prompts). The 5-different-LLMs variant additionally costs 4 provider
 integrations, latency, user-data egress to 4 APIs, and imports
 alignment-driven disagreement that is not evidence.
 
+## D12 — Why dissent-check APPROVEs only? (Saiful's challenge)
+*2026-09-28 · status: answered, measurement dependency added*
+
+Saiful asked why the second pass targets APPROVEs only. Answer given:
+
+1. **Base rate** — APPROVE is ~16% of convenes (CR197: 22/136), so the check
+   costs +1 call on 1-in-6 convenes instead of every convene.
+2. **Asymmetric consequence** — only an APPROVE puts a position on (size,
+   stop, drawdown contribution); the deterministic floor itself only vetoes
+   APPROVEs. A false PASS costs a missed simulated winner; a false APPROVE
+   costs a simulated loss plus a broken trust signal.
+3. **The dissent audit is structurally a veto** — "override to PASS when
+   terminal vulnerabilities were dismissed without evidence" has nothing to
+   bite on when the answer was already PASS.
+
+The honest hole: if **verdict quality vs outcomes** is the target (D11), a
+false PASS is also an error — a missed winner teaches overcaution, which is
+CR197's own warning about a Room that refuses too much. The symmetric design
+is a *resurrection audit* on PASSes ("prove the no was wrong").
+
+**Resolution path: measure, don't argue.** The verdict-outcome ledger scores
+both error types. First step of the D11 build is a census of false-APPROVE vs
+false-PASS rates on scored outcomes; that census decides veto-review,
+resurrection-review, or both.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
