@@ -493,6 +493,50 @@ Two constraints:
    2026-08-28 and 2026-09-17). A digest that ignores this measures model
    swaps, not prompts.
 
+## D21 — Provider review: DeepInfra + Kimi (Saiful's ask, 2026-09-28)
+*status: reviewed; candidates shortlisted, all gated on the D18 experiment*
+
+Sources pulled live: DeepInfra's OpenAI-compatible `/v1/openai/models`
+endpoint (public, with pricing) and Kimi's platform docs
+(`platform.moonshot.ai/docs/api/chat`).
+
+Integration surface: `llm_gateway.py` already speaks OpenAI-compatible with
+provider preference routing; `tier_policy.py` already maps (plan, agent) →
+tier. Both providers are OpenAI-compatible — adoption is config + keys, not a
+new harness.
+
+Hard constraints from our own code:
+1. PM verdict uses a JSON-schema decoding grammar (CR210). Kimi direct
+   supports `response_format: json_schema`; DeepInfra per-model support is
+   unverified — check at build time. Where absent, we fall back to
+   prompt+parser (pre-CR210 parse failure was ~22%, DEF058).
+2. The Trader's regex grammar (`trader_block_regex`) exists only on our
+   vLLM — moving the Trader off vLLM loses it. Trader stays put.
+
+Role → candidate mapping (if D18's experiment justifies multi-model):
+
+| Role | Need | Candidates (price per 1M tok in/out) |
+|---|---|---|
+| Analysts 1–4 | cheap, fast, format discipline | DeepInfra Qwen3.8-Flash ($0.11/$0.38, 1M ctx), DeepSeek-V4-Flash ($0.09/$0.18), GLM-5.3-Flash ($0.15/$0.50, 1M) |
+| Bull/Bear | reasoning, decorrelated priors | GLM-5.3 ($0.90/$4.00), DeepSeek-V4-Pro ($1.30/$2.60), Kimi-K2.6 |
+| Research Manager | strongest reasoning/$ | Kimi-K3 direct (effort=high; json_schema + prefix caching), DeepSeek-R1-0528 ($0.50/$2.15), Qwen3.5-397B ($0.45/$3.00) |
+| Trader | format rigidity | stays on vLLM (regex grammar) |
+| Risk debators | cheap | analyst pool |
+| CIO | grammar + rigidity | vLLM, or Kimi-K3 direct |
+| Second-pass reviewer (D18) | different lineage from CIO | Kimi-K3 or GLM-5.3 via one OpenAI-compatible endpoint |
+
+Notes:
+- Kimi direct offers automatic prefix context caching — our 12 per-convene
+  prompts share a large prefix, so cache hits directly cut Room cost.
+- DeepInfra hosts `moonshotai/Kimi-K3` ($2.85/$14.25) and `Kimi-K2.6`
+  ($0.75/$3.50) — hosted-Kimi vs direct-Kimi is a price/feature trade
+  (direct has caching + confirmed json_schema).
+- 1M-context models are wasted on today's computed fact sheet; they become
+  relevant only if the filing-text pipeline (SPEC 1D deferred CR) lands.
+- Privacy: any hosted route egresses mandate/portfolio context to a third
+  party; on-prem vLLM does not. Product decision, not technical.
+- Every baseline from this point is keyed to model identity per D20.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
