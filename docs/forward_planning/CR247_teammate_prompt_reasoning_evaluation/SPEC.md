@@ -46,6 +46,11 @@ Acceptance: `measurements/phase0.md` in this folder with the three result sets.
 
 ### 1A. Enable already-fetched fields
 
+These flags ARE CR221's open sourcing decisions (its census: 49 asks, 36
+open, 35 with verified free sources) — this phase executes them, it does not
+rediscover them. CR221's ruled-out items (company guidance, Level 2 depth,
+dark-pool prints, sentiment history) stay ruled out.
+
 The fields below are fetched, rendered, and tested today, each behind a
 `False`-default flag in `backend/app/core/config.py`. Enabling one adds its
 line to the fact sheet.
@@ -204,10 +209,25 @@ stance/conviction distributions, citation accuracy, and verdict outcomes,
 aggregated against baselines **keyed to serving-model identity** (never the
 `ami-llm` alias). The digest flags anomalies and drafts candidate prompt
 changes as CRs with pre-registered measurement plans. Build on
-`weekly_room_retro.py` / `score_verdict_outcomes.py`; do not build a second
-pipeline. The machine measures and proposes; governance disposes; nothing
-auto-ships. Cadence flags weekly, concludes monthly or per-N-convenes
-(statistical power constraint, CR197).
+`weekly_room_retro.py` / `score_verdict_outcomes.py` (CR157's loop); do not
+build a second pipeline. The machine measures and proposes; governance
+disposes; nothing auto-ships. Cadence flags weekly, concludes monthly or
+per-N-convenes (statistical power constraint, CR197).
+
+## Cross-CR dependencies and prior art (D23)
+
+- **CR240 owns the production-provider decision** — D21's provider review is
+  folded into it; this CR does not pick production providers.
+- **CR130**: Kimi Coding Plan is already integrated (`LLM_FORCE_PROVIDER`,
+  `kimi_max_tokens_floor`); the Open Platform vs Coding Plan key/host
+  distinction is a documented trap.
+- **CR217**: the GLM head-to-head harness exists — use it for the D18
+  split-model experiment.
+- **CR221**: Phase 1A executes its sourcing decisions; its ruled-out items
+  stay ruled out.
+- **CR211**: reasoning-model token floor — persona-length changes in Phase
+  3/5 must respect reasoning-token headroom.
+- **CR242/CR243**: persona rewrites interact with AR/MS prompt reliability.
 
 ---
 

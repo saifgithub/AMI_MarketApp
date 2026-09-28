@@ -560,6 +560,46 @@ Lesson matches the CR's own methodology warning: verify the load-bearing
 claim against the code before writing it down — I read the persona's
 disclaimer and generalized it past what the code does.
 
+## D23 — Prior-art sweep across the CR register (Saiful's prompt, 2026-09-28)
+*status: done; SPEC reconciled*
+
+Swept all ~196 register rows for prompt/agent/Room/model prior art (63
+keyword-matched, load-bearing ones read). Findings that reshape this CR:
+
+1. **CR130 — Kimi is ALREADY integrated.** `_PREFERENCE = vllm > anthropic >
+   kimi > mock`; `LLM_FORCE_PROVIDER` override; `kimi_max_tokens_floor`.
+   Documented trap: Saiful's key is a **Kimi Coding Plan** key
+   (`api.kimi.com/coding`; models `kimi-for-coding`/`k3`/`k3-256k`), NOT the
+   Open Platform (`api.moonshot.ai`; `kimi-k3`/`kimi-k2.6`) whose docs D21
+   reviewed — the Coding Plan key 401s on the Open Platform. D21's Kimi rows
+   describe the Open Platform product; what is wired is the Coding Plan.
+2. **CR240 (2026-09-26, in progress) owns the production-provider
+   evaluation** — DeepInfra/Z.ai/OpenRouter already compared, GLM-5.3-Flash
+   leading, $25 DeepInfra credit loaded, abliteration tradeoff explicitly
+   open. D21 folds into CR240 rather than standing alone. Discrepancy to
+   verify at build time: CR240 recorded GLM-5.3-Flash at $0.075/$0.25 per 1M;
+   the live DeepInfra list on 2026-09-28 showed $0.15/$0.50 — stale read or
+   different SKU, not asserted either way.
+3. **CR221 — the Room's data-demand census already exists:** 49 distinct
+   asks, 9 delivered, 36 open, 35 with verified FREE sources. Its open list
+   IS SPEC Phase 1A's flag list (debt maturity, cash-flow bridge, cost of
+   debt, segment revenue). Phase 1A executes CR221's sourcing decisions.
+   CR221 also already ruled OUT: company guidance, Level 2 depth, dark-pool
+   prints (no free source), sentiment history (structurally absent by cache
+   design).
+4. **CR217 — the GLM head-to-head harness is already built** (inert provider,
+   `LLM_FORCE_PROVIDER=glm`, results verified against `llm_audit.provider`).
+   The D18/D21 model experiments' instrument exists.
+5. **CR211** — the serving model is a reasoning model with
+   `vllm_max_tokens_floor=3600`; any Phase 3/5 persona-length change must
+   respect reasoning-token headroom, not just the visible-output budgets.
+6. **CR242/CR243** — Arabic/Malay prompt reliability; persona rewrites in
+   Phase 3/5 interact with the translate-then-respond design.
+7. Also noted: CR017 (routing research, closed), CR141 (routing build),
+   CR157 (weekly retro — SPEC Phase 6's base), CR196 (finance-tune program),
+   CR143–CR156 (the per-agent audit CRs behind the current personas),
+   CR164/CR169 (as-of mode), CR104 (no synthetic baselines).
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
