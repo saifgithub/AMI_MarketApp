@@ -1,166 +1,191 @@
 # CR247 — SPEC: Room reasoning-quality improvements
 
-Execution spec distilled from `discussion_log.md` (D1–D14). The teammate's
-prompt suite (`teammate_suite/`) is treated as *suggestions*; this spec is
-organized around Saiful's four questions (D3):
+Execution spec for the builder. Organized around four questions (discussion
+log D3): (1) are agents fed the right information, (2) what information is
+missing, (3) are agent-to-agent scores consistent, (4) do agents know what to
+do with the data. External prompt suggestions received during preparation
+were inputs to this analysis, not decisions; every item below is justified
+against this codebase's own measurements.
 
-1. Are we feeding the LLM the right information?
-2. What additional information do we need to supply?
-3. Are producer→consumer scores consistent and robust?
-4. Does the LLM know what to do with the data?
+Standing rules for every item:
 
-Plus the decision layer (CIO review). **Every item that changes behaviour
-ships behind a measurement** (CR247 scope item 7; CR197/CR228 methodology;
-current serving model is `qwen3.8-flash-next-abliterated` — CR197's Qwen3.6
-numbers do not transfer, only its methods).
-
-Governance: CR247 is the umbrella for the reasoning-quality evaluation and the
-prompt/decision-layer work. New **data pipelines** are separate CRs per the
-CR247 non-goals ("flag it, don't fold it in") — they are listed here as
-dependencies with their own minted IDs to be requested from the Architect.
+- Behaviour changes ship behind a before/after measurement on a real ticker
+  sample, pre-registered metric, noise-floor arm where the CR197 replay
+  pattern applies (`backend/scripts/pm_debate_ablation.py`).
+- Measurements run on the current serving model
+  (`qwen3.8-flash-next-abliterated`). CR197's numbers were measured on
+  Qwen3.6-35B and do not transfer; its methods do.
+- New sheet fields carry `field_state` provenance, a persona sentence naming
+  the field, and updates to the two anti-fabrication guards
+  (`backend/tests/unit/test_agent_prompts.py:61`,
+  `backend/tests/unit/test_cr219_availability_guard.py:528-537`).
+- New env flags are forwarded in `docker-compose.yml`
+  (`test_config_compose_parity.py`).
+- LLMs never compute figures. Ratios and aggregates are computed in code and
+  rendered as labelled lines (measured failure class DEF066→DEF241).
+- Data-pipeline items are separate CRs (IDs minted by the Architect); CR247
+  covers the prompt/decision-layer work and the measurements.
 
 ---
 
-## Phase 0 — Baselines and the census (no behaviour change)
+## Phase 0 — Baselines (no behaviour change)
 
-Pure measurement. Everything downstream is sized by what this finds.
+Purpose: every later item is sized and judged against these numbers.
 
 | # | Item | Method | Output |
 |---|---|---|---|
-| 0.1 | **Outcome census** | SQL + scoring over the verdict-outcome ledger (`verdict_outcomes`, `score_verdict_outcomes.py`): false-APPROVE rate (approved, then lost past stop / underperformed) vs false-PASS rate (passed, then rallied past would-be target), per horizon bucket | Decides veto-review vs resurrection-review vs both (D12/D13) |
-| 0.2 | **Current-model Room baseline** | Re-run CR197-style convene corpus on `qwen3.8-flash-next-abliterated` (same tickers/epochs where possible): approval rate, stance distribution, truncation, envelope parse rate | The new baseline every later phase compares against |
-| 0.3 | **Conviction-semantics audit** | Tabulate declared conviction × agent × outcome from the ledger/envelopes: does "high conviction" predict anything per role? | Sizes D4 — if conviction carries no signal per role, relabelling is cosmetic and a deeper fix is needed |
+| 0.1 | Outcome census | Query `verdict_outcomes` via `backend/scripts/score_verdict_outcomes.py`: false-APPROVE rate (approved, then stopped out / underperformed) vs false-PASS rate (passed, then rallied past the would-be target), per horizon bucket | Decides Phase 4 shape (D12) |
+| 0.2 | Current-model Room baseline | Replay a convene corpus on `qwen3.8-flash-next-abliterated` per CR197's arm design: approval rate, stance distribution, envelope parse rate, truncation rate | Baseline for Phases 2–4 |
+| 0.3 | Conviction-signal audit | From journaled envelopes: declared conviction × agent × outcome. Does conviction predict anything per role? | Sizes item 2.2 (relabel vs redefine) |
 
-Acceptance: three numbers written into the CR247 folder
-(`measurements/phase0.md`). No code change ships from this phase.
-
----
-
-## Phase 1 — Feed the right information (Q1 + Q2)
-
-### 1A. Graduate already-fetched fields (no new source)
-Each flag flips independently, each with a before/after convene sample:
-
-| Field | Flag (all default OFF) | Feeds |
-|---|---|---|
-| Working-capital bridge | `room_cashflow_bridge_enabled` | FA; the teammate's "trapped in working capital" ask becomes legal |
-| Debt maturity schedule | `room_debt_maturity_enabled` | FA, Bear (debt-wall heuristic) |
-| Cost of debt | `room_cost_of_debt_enabled` | FA, Bear |
-| FCF history + conversion | `room_fcf_history_enabled`, `room_fcf_conversion_enabled` | FA (accrual-trap heuristic) |
-| ROE history | `room_roe_history_enabled` | FA |
-| Debt split (industrial vs captive) | `room_debt_split_enabled` | FA |
-
-Each graduation: persona sentence added naming the field (the CR219 guard
-pattern), before/after convene sample measured, GAPS telemetry checked for
-the field disappearing from agents' want-lists.
-
-### 1B. New computed fields (small CRs — mint IDs)
-| Field | Source (D14, all free) | Notes |
-|---|---|---|
-| SBC + SBC-adjusted FCF | EDGAR `ShareBasedCompensation` (verified live) | AMI computes; labelled "SBC treated as a cash cost" |
-| ROIC (+ WACC stance note) | XBRL tags already resolved | AMI computes; estimation-honesty label on WACC |
-| Put/call ratio | Existing `option_chain.py` data | Arithmetic on data in hand; goes to Flow & Positioning's lane |
-
-### 1C. Peer comparison (medium CR — mint ID)
-SIC-basket build: SEC submissions JSON SIC + market-cap neighbours (verified
-live). New table + refresh job, then a computed "vs N same-SIC peers" line
-(median P/E, EV/EBITDA, margins). Removes the persona's two "no peer
-comparison" disclaimers **only when the line is live**.
-
-### 1D. Deliberately deferred (documented, not built)
-Earnings-call transcripts (no free source), retail-flow (proprietary),
-filing full-text pipeline (worth its own CR; largest honest upgrade —
-prerequisite for the linguistic-drift scores in 1E).
-
-### 1E. Forensic metadata flags (D16 — deterministic extraction only)
-Computed in code, rendered as sheet lines in the News/Macro lane with
-`field_state` provenance, visible to full-sheet agents:
-
-| Flag | Source | Cost |
-|---|---|---|
-| Insider open-market buy/sell ratio (90d), code-filtered (P/S only) | `edgar_ownership.py` (CR244) | ~free once CR244 lands |
-| 10b5-1 plan tag on insider sales (structural, per CR244) | CR244 extraction layer | already specified there |
-| Cluster-buy flag (≥3 insiders, open-market, 14d) | same | ~free |
-| 8-K timing/item-code flags: Friday 16:00+ ET filings; Item 4.01 (auditor change); Item 4.02 (non-reliance) | `edgar_filings_feed.py` (already fetched) | ~free — arithmetic + a small mapping table |
-| Item 4.02 floor rule: hard-block BUY with loud narration (never silent auto-PASS) | safety_floor extension | small — but a floor change, measured and documented |
-| Loughran-McDonald uncertainty/litigious scores, Gunning Fog on MD&A, YoY Risk-Factors word-count + similarity | filing-text pipeline (1D) | medium — parked behind 1D's CR |
-| GAAP/non-GAAP spread | no clean free source | refused for now |
-
-The LLM never detects these patterns; it receives the computed flags and
-synthesises them (D16's adopted half).
+Acceptance: `measurements/phase0.md` in this folder with the three result sets.
 
 ---
 
-## Phase 2 — Consistent scores and horizon discipline (Q3 + critique 1)
+## Phase 1 — Information supply (Q1, Q2)
 
-| # | Item | What changes | Measurement |
+### 1A. Enable already-fetched fields
+
+The fields below are fetched, rendered, and tested today, each behind a
+`False`-default flag in `backend/app/core/config.py`. Enabling one adds its
+line to the fact sheet.
+
+| Field | Flag | Consumer agents |
+|---|---|---|
+| Working-capital bridge (OCF→FCF walk, receivables/inventory/payables) | `room_cashflow_bridge_enabled` | Fundamentals Analyst |
+| Debt maturity schedule | `room_debt_maturity_enabled` | Fundamentals, Bear |
+| Cost of debt | `room_cost_of_debt_enabled` | Fundamentals, Bear |
+| FCF history + FCF conversion | `room_fcf_history_enabled`, `room_fcf_conversion_enabled` | Fundamentals |
+| ROE history | `room_roe_history_enabled` | Fundamentals |
+| Debt split (industrial vs captive finance) | `room_debt_split_enabled` | Fundamentals |
+
+Per flag, in order: enable in config; add the persona sentence naming the
+field's sheet label; update the two guards; measure a before/after convene
+sample (target metrics: citation accuracy on the new field, GAPS-telemetry
+want-list movement, no truncation regression per `_AGENT_MAX_TOKENS`);
+commit with the flag forwarded in `docker-compose.yml`.
+
+### 1B. New computed fields (separate CRs)
+
+| Field | Source | Change |
+|---|---|---|
+| SBC and SBC-adjusted FCF | EDGAR XBRL `ShareBasedCompensation` (endpoint verified 2026-09-28: AAPL returns 180 rows) | Add tag to `edgar_tags.py`, ingest, one computed line: TTM FCF, TTM SBC, FCF minus SBC, all labelled AMI-computed |
+| ROIC | XBRL tags already resolved (operating income, tax, debt, equity) | Computed line with a stated tax-rate assumption and a WACC-comparison note labelled as an estimate |
+| Put/call ratio | Existing `option_chain.py` fetch | Aggregated put/call volume and open-interest ratio, rendered in the Flow & Positioning lane |
+
+### 1C. Peer comparison (separate CR)
+
+SEC submissions JSON provides SIC code per company (verified 2026-09-28:
+`data.sec.gov/submissions/CIK*.json` returns `sic`, `sicDescription`).
+Build: peer-basket table (same 4-digit SIC, market-cap neighbours from data
+already fetched, refreshed weekly), then one computed line: median trailing
+P/E, EV/EBITDA, and net margin across the basket, with basket size stated.
+On the same ship, remove the two "no peer comparison" disclaimers in
+`content/agents/fundamentals_analyst.md` — only for the state where the line
+is live.
+
+### 1D. Forensic metadata flags (deterministic extraction; D16)
+
+Computed in code, rendered as sheet lines in the News/Macro lane.
+
+| Flag | Source | Change |
+|---|---|---|
+| Insider open-market buy/sell ratio (90d, transaction codes P/S only; M and F excluded) | `edgar_ownership.py` (CR244 dependency) | One computed line |
+| 10b5-1 plan tag on insider sales | CR244 extraction layer | Already specified in CR244; consumed here as a sheet label |
+| Cluster-buy flag (≥3 distinct insiders, code P, 14-day window) | Same source | Boolean line with the count and window dates |
+| 8-K timing/item flags: filed Friday ≥16:00 ET; Item 4.01 (auditor change); Item 4.02 (non-reliance on prior financials) | `edgar_filings_feed.py` already fetches form type + filed date | Computed flags; Item 4.02 also extends the safety floor to hard-block BUY with the reason narrated (never a silent refusal) |
+
+Deferred: Loughran-McDonald uncertainty/litigious scoring, Gunning Fog on
+MD&A, YoY Risk-Factors word-count/similarity — all require the filing-text
+pipeline (separate CR, not specced here). GAAP/non-GAAP spread: refused (no
+reliable free source for non-GAAP figures).
+
+### 1E. Not sourced (recorded so they are not re-proposed)
+
+Earnings-call transcripts (no free API), retail-flow data (proprietary).
+The teammate's LLM-reads-the-filing linguistics approach: refused — measured
+instruction compliance (~30%, CR038) and run-to-run variance make the model
+the wrong instrument for detection; detection is code's job (1D), synthesis
+is the model's job.
+
+---
+
+## Phase 2 — Score consistency and horizon discipline (Q3, critique 1)
+
+| # | Item | Change | Measurement |
 |---|---|---|---|
-| 2.1 | **Scoreboard SIZE column** (D5) | Render parsed `argued_size_pct` into `_room_scoreboard` | PM size decisions vs declared sizes; CR197's deferred recommendation, baseline now recorded |
-| 2.2 | **Conviction relabel** (D4) | Scoreboard column labelled per role family ("evidence strength" / "threat specificity" / "evidence clarity"), or one shared definition — decided by Phase 0.3 | Before/after: PM narration references to conviction; verdict stability |
-| 2.3 | **Horizon-weighting instruction** (critique 1 fix) | Mandate-derived line to Trader + debators + PM: when `horizon` is long, short-term technicals tune entry, never validate the thesis (teammate RULE 1, de-hardcoded). FA/MA/News/Social overlays already branch on horizon/path — this closes the downstream half | Ablation on long-horizon mandates: verdict horizon_days distribution, citation mix (technicals vs fundamentals) in PM narrations |
-| 2.4 | SCS 0–100 floats | **Rejected** (D8) — documented in the CR as evaluated-and-refused | — |
+| 2.1 | Scoreboard SIZE column | Render the parsed `argued_size_pct` (already journaled, CR197) as a column in `_room_scoreboard` (`room_prompts.py:3592`) | PM approved sizes vs declared debator sizes; approval-rate delta vs Phase 0.2 |
+| 2.2 | Conviction semantics | One word, three role-specific definitions today (D4). Relabel the scoreboard column per role family — "evidence strength" (Aggressive), "threat specificity" (Conservative), "evidence clarity" (Neutral) — or adopt one shared definition, per Phase 0.3's finding | PM narration references; verdict stability under resampling |
+| 2.3 | Horizon weighting | Add one mandate-derived line to the Trader, debator, and PM room blocks: when `mandate.horizon` is LONG/VERY_LONG, short-term technical readings inform entry timing only and cannot validate or invalidate the thesis. The analyst overlays already branch on horizon/path; this closes the downstream half | Ablation on long-horizon mandates: `horizon_days` distribution, technicals-vs-fundamentals citation mix in PM narrations |
 
-## Phase 3 — Teach interpretation (Q4)
+Explicitly refused: 0–100 numeric conviction scores (unverifiable precision;
+the system quantizes on purpose, `room_prompts.py:742-744`), fixed sizing
+tiers (sizing is per-mandate and code-computed), a hardcoded 180–730-day
+horizon (horizon is per-user), all-JSON agent turns (the prose is the
+product surface; CR106 B2).
 
-Adopt `teammate_suite/01_institutional_heuristics.md` as reasoning frames —
-**after** the fields they consume are live (D10 sequencing rule):
+## Phase 3 — Interpretation guidance (Q4)
 
-1. FA persona: SBC-as-cash-cost, accrual trap (NI vs OCF), EV-over-P/E
-   hygiene, value-trap filter, debt wall, moat typology. Each sentence names
-   a real sheet field; every ratio AMI-computed.
-2. Echo the vocabulary into Bull ("re-rating catalyst over the horizon"),
-   Bear ("terminal vulnerabilities"), RM, CIO — the shared glossary is what
-   makes producer→consumer reasoning commensurate (Q3 applied to prose).
-3. Deficit reporting: keep the shipped GAPS tail as the channel; fold the
-   teammate's per-field `DEFICIT` idea into it rather than adding a second
-   mechanism.
-4. No JSON-everything, no tier sizing, no hardcoded horizon (D2 — refused
-   with reasons recorded).
+Reasoning frames adopted into `content/agents/fundamentals_analyst.md`, each
+sentence naming a sheet field that is live when the sentence ships:
 
-## Phase 4 — Decision layer: the second pass (D11–D13)
+- SBC treated as a cash cost (consumes 1B SBC line)
+- Accrual check: net income rising while operating cash flow is flat or
+  falling (consumes 1A cashflow bridge)
+- EV-based multiples primary over P/E when debt is material (consumes
+  existing EV/EBITDA and net-debt lines)
+- Low multiple as a decline signal, not a buy signal, unless a catalyst is
+  named from sheet data
+- Debt maturities within the thesis horizon (consumes 1A debt maturity)
+- Moat classification (network effects / switching costs / intangibles /
+  cost advantage) as the framework for judging margin durability
 
-Shape decided by Phase 0.1's census:
+The same vocabulary is echoed in the Bull (re-rating catalyst over the
+mandate horizon), Bear (terminal vulnerabilities), Research Manager, and CIO
+personas so producer and consumer use one glossary. Deficit reporting stays
+in the shipped GAPS tail (CR219 R53); no second channel.
 
-- **Veto review** (on APPROVE): reviewer LLM, "kill this if Bear/Conservative
-  terminal vulnerabilities were dismissed without numbers"; AND-combination
-  in code; flips narrated + journaled.
-- **Resurrection review** (on PASS): outputs *reconsider* only (a PASS has no
-  size/entry/stop); CIO re-runs once with the audit note appended.
-- LLMs judge; code routes, combines, vetoes (D13 rule).
-- Metrics: approval-rate stability (CR197 resampling instrument) + verdict
-  quality vs outcomes (outcome ledger). Both baselined in Phase 0.
-- 5× same-model ensemble and 5-different-LLM variants: parked unless Phase 4
-  measurements leave a large error budget.
+Constraint: thresholds appear as guidance, never as rules; computed ratios
+come from code (standing rule above); every addition respects
+`_LENGTH_GUIDE` and `_AGENT_MAX_TOKENS` pairing (DEF125/DEF236).
+
+## Phase 4 — Second-pass verdict review (D11–D13)
+
+Shape fixed by Phase 0.1:
+
+- **Veto review (on APPROVE):** one additional LLM call instructed to fail
+  the approval if the Bear's or Conservative's specific, numbered objections
+  were not addressed with numbers in the CIO's narration. Combination is
+  code: final = APPROVE only if both passes approve. Flips are narrated and
+  journaled with the original verdict preserved.
+- **Resurrection review (on PASS):** one LLM call instructed to show the
+  PASS rested on evidence the mandate makes inadmissible (e.g., short-term
+  technicals under a long horizon). It cannot approve — a PASS carries no
+  size/entry/stop — it returns *reconsider*, and the CIO re-runs once with
+  the audit note appended.
+- Routing, combination, and the veto are deterministic code; only the
+  reviews are LLM calls (D13).
+- Metrics: approval-rate stability (resampling instrument from 0.2) and
+  verdict quality vs outcomes (outcome ledger, baselined in 0.1).
+- Parked: 5× same-model ensemble; 5-provider ensemble. Revisit only if the
+  measured error budget after Phase 4 justifies the cost (D11).
 
 ## Phase 5 — Remaining personas
 
-Evaluate/rewrite the other agents' prompts to the Phase-3 standard (each ask
-maps to a live field; dual-surface Room + 1-on-1 holds; length-guide/token
-budget pairing per DEF125/DEF236). Ordered by measured impact: FA → Bear →
-Bull → RM → CIO → Trader → debators → analysts 2–4.
+Rewrite evaluation per agent, in this order: Fundamentals, Bear, Bull,
+Research Manager, CIO, Trader, debators, remaining analysts. Standard per
+persona: every ask maps to a live sheet field; Room and 1-on-1 surfaces both
+hold; length guide and token budget move together; measured before ship.
 
 ---
-
-## Cross-cutting acceptance
-
-- Every shipped item: before/after measurement on a real ticker sample,
-  pre-registered metric, noise-floor arm where the CR197 pattern applies.
-- Every new sheet field: `field_state` provenance, persona sentence, and the
-  two anti-fabrication guards updated (`test_agent_prompts.py:61`,
-  `test_cr219_availability_guard.py:528-537`).
-- Every new env flag: forwarded in `docker-compose.yml`
-  (`test_config_compose_parity.py`).
-- `pytest backend/tests/unit/ -q` green; registers regenerated;
-  pathspec-only commits `(AT:K3 CR247)` for this CR's items, new IDs for
-  the data-pipeline CRs.
 
 ## Dependency order
 
 ```
-Phase 0 (census + baselines)
-   ├─► Phase 1A/1B (fields live) ─► Phase 3 (heuristics that consume them)
-   ├─► Phase 1C (peers, independent)
-   ├─► Phase 2 (scoreboard/conviction/horizon — independent of 1)
-   └─► Phase 4 (shape decided by 0.1)
-Phase 5 last, informed by everything measured above.
+Phase 0 (baselines)
+   ├─► Phase 1A/1B/1D (fields) ─► Phase 3 (guidance consuming those fields)
+   ├─► Phase 1C (peers — independent)
+   ├─► Phase 2 (independent of 1)
+   └─► Phase 4 (shape fixed by 0.1)
+Phase 5 last, informed by all prior measurements.
 ```

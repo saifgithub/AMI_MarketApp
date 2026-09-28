@@ -380,6 +380,16 @@ Lane: the flags belong to the News/Macro analyst's domain (Agent 3), visible
 to the full-sheet agents; rendered with `field_state` provenance like every
 other line.
 
+## D17 — Framing decision (Saiful, 2026-09-28)
+*status: settled*
+
+The teammate's material is thinking input, not decision input. All verdicts
+in this CR are ours, justified against this codebase's own measurements. The
+SPEC is written for the builder: every item states what it is, the evidence
+for its value, the exact change, and checkable acceptance — no editorial, no
+superlatives, no open questions disguised as instructions. SPEC.md rewritten
+to that standard on 2026-09-28.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
