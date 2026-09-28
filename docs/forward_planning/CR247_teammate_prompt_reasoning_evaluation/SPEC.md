@@ -69,7 +69,25 @@ comparison" disclaimers **only when the line is live**.
 
 ### 1D. Deliberately deferred (documented, not built)
 Earnings-call transcripts (no free source), retail-flow (proprietary),
-filing full-text pipeline (worth its own CR; largest honest upgrade).
+filing full-text pipeline (worth its own CR; largest honest upgrade —
+prerequisite for the linguistic-drift scores in 1E).
+
+### 1E. Forensic metadata flags (D16 — deterministic extraction only)
+Computed in code, rendered as sheet lines in the News/Macro lane with
+`field_state` provenance, visible to full-sheet agents:
+
+| Flag | Source | Cost |
+|---|---|---|
+| Insider open-market buy/sell ratio (90d), code-filtered (P/S only) | `edgar_ownership.py` (CR244) | ~free once CR244 lands |
+| 10b5-1 plan tag on insider sales (structural, per CR244) | CR244 extraction layer | already specified there |
+| Cluster-buy flag (≥3 insiders, open-market, 14d) | same | ~free |
+| 8-K timing/item-code flags: Friday 16:00+ ET filings; Item 4.01 (auditor change); Item 4.02 (non-reliance) | `edgar_filings_feed.py` (already fetched) | ~free — arithmetic + a small mapping table |
+| Item 4.02 floor rule: hard-block BUY with loud narration (never silent auto-PASS) | safety_floor extension | small — but a floor change, measured and documented |
+| Loughran-McDonald uncertainty/litigious scores, Gunning Fog on MD&A, YoY Risk-Factors word-count + similarity | filing-text pipeline (1D) | medium — parked behind 1D's CR |
+| GAAP/non-GAAP spread | no clean free source | refused for now |
+
+The LLM never detects these patterns; it receives the computed flags and
+synthesises them (D16's adopted half).
 
 ---
 

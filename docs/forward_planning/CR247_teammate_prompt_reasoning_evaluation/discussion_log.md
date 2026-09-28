@@ -342,6 +342,44 @@ Data pipelines flagged as separate CRs per the CR247 non-goals. SCS floats,
 all-JSON turns, tier sizing and the hardcoded horizon are recorded as
 evaluated-and-refused.
 
+## D16 — Teammate's forensic-alpha module: two halves, opposite verdicts
+*2026-09-28 · status: evaluated; deterministic half folded into SPEC Phase 1E*
+
+Teammate submitted (1) an "LLM reads the filings for linguistic drift"
+heuristics module (insider intent reading, YoY boilerplate diffs, Friday-dump
+detection, Fog-index obfuscation, evasive Q&A reading), then (2) argued
+against it themselves — non-deterministic variance — and proposed the
+deterministic/NLP version instead.
+
+**Half 1 (LLM linguistics): refused.** Teammate's own reason (variance) plus
+ours: CR038's ~30% instruction compliance, no filing-text pipeline today,
+150-page context cost, and the as-of/PIT problem. Asking an LLM to *detect*
+drift is asking it to compute — the DEF066 class, fifth appearance.
+
+**Half 2 (deterministic extraction, LLM synthesises): adopted.** This IS the
+house doctrine — AMI computes, the LLM quotes. Mapping to existing infra:
+
+| Signal | Cost | Notes |
+|---|---|---|
+| Form 4 code filter (P/S only; discard M/F), 10b5-1 discount, cluster-buy ≥3 insiders/14d | ~free | `edgar_ownership.py` + CR244 already land this; CR244 already mandates the 10b5-1 tag structurally — teammate independently hit the house rule |
+| 8-K item-code + timestamp flags (Friday 16:00+ dump; Item 4.01 auditor change; Item 4.02 non-reliance) | ~free | `edgar_filings_feed.py` already fetches form type + filed date; the flags are arithmetic on data in hand |
+| Loughran-McDonald lexicon, Gunning Fog, YoY Risk-Factors diff (word count / cosine) | new pipeline | needs filing text (D14 deferred item); lexicon is free/public; medium CR |
+| GAAP/non-GAAP spread | hard | non-GAAP metrics are not audited XBRL facts; press-release exhibits only; partial at best |
+
+Design disagreement recorded: teammate wants Item 4.02 to bypass the debate
+and force an automatic PASS. Two caveats: (a) the Room convenes on demand —
+no filing triggers a convene, so the flag surfaces at the NEXT convene on
+that ticker; (b) a silent auto-PASS deletes the teaching moment. Preferred
+shape: loud flag in the sheet + CIO told what it means + the floor may
+hard-block a BUY — but the narration says why.
+
+Overclaim noted: "spots Enron/Wirecard months early" is marketing; these are
+weak signals with education value, shipped behind measurement like all else.
+
+Lane: the flags belong to the News/Macro analyst's domain (Agent 3), visible
+to the full-sheet agents; rendered with `field_state` provenance like every
+other line.
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
