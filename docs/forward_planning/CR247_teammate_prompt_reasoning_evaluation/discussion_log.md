@@ -283,6 +283,28 @@ both error types. First step of the D11 build is a census of false-APPROVE vs
 false-PASS rates on scored outcomes; that census decides veto-review,
 resurrection-review, or both.
 
+## D13 — D12 decision tree: LLM vs deterministic split (Saiful's question)
+*2026-09-28 · status: answered*
+
+```
+CIO (LLM) verdict → safety floor (code) → second-pass policy (code, set once
+by the offline census) → APPROVE? veto review (LLM) : PASS? resurrection
+review (LLM) → combine by AND rule (code)
+```
+
+The division of labour, stated as a rule: **LLMs judge, code routes, combines,
+and vetoes.** No LLM output decides whether it should be double-checked.
+
+- Routing (`if action == APPROVE`), the AND aggregation, and the floor are
+  deterministic code.
+- The reviews are LLM calls — "was the Bear's evidence dismissed without
+  numbers" is judgment, not a rule.
+- The policy choice (veto / resurrection / both) is an offline script over
+  the verdict-outcome ledger, baked in as config — no LLM near it.
+- Resurrection cannot auto-APPROVE (a PASS never produced size/entry/stop) —
+  it outputs "reconsider" and the CIO re-runs once with the audit note.
+- Both verdicts and any flip are narrated and journaled (degrade loudly).
+
 ---
 
 *Convention: new items append below. When an item is resolved by a build or a
