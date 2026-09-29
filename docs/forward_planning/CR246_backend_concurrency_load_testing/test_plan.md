@@ -10,9 +10,11 @@ AT:K5). Companion to the CR itself:
 
 We stand up a **throwaway copy of the backend** on minihost (the spare Ubuntu
 machine at 192.168.20.14), pointed at a **fake LLM** so tests are free and
-deterministic. Then a **load script** on the Mac pretends to be **50 different
+deterministic. Then a **load script** on the Mac pretends to be **10 different
 users at the same time** — each doing realistic things (reading portfolios,
-onboarding, convening the Room, trading) — for 20 minutes. Afterwards we audit
+onboarding, convening the Room, trading) — for 20 minutes. (Scale set at **10**
+concurrent users, not 50: minihost is a small box — 4 cores / 15GB — and Saiful
+capped it accordingly.) Afterwards we audit
 the database for correctness: nobody saw anyone else's data, no duplicate rows,
 credit balances add up exactly. The result is a plain **pass / fail / partial
 verdict** against numbers we fix before running, plus a reusable script we can
@@ -45,7 +47,7 @@ re-run before every release.
    virtual users do, and it runs N of them in parallel, measuring every request.
    We already have a small k6 script (`backend/scripts/load_test_1on1.js`,
    CR126); this extends it.
-2. Before the run, the harness **mints ~60 fresh users** through the real
+2. Before the run, the harness **mints ~15 fresh users** through the real
    signup endpoint (`POST /v1/auth/anon`) — exactly how a real new user appears.
    It paces itself under the real 10-per-minute signup limit, so we test the
    system as it actually behaves, with no test-only backdoors.
@@ -83,7 +85,7 @@ re-run before every release.
 
 Set before the first run, reported against after:
 
-1. 50 distinct concurrent users, sustained 20 minutes.
+1. 10 distinct concurrent users, sustained 20 minutes.
 2. **Zero** data corruption (audits 1–2), **zero** cross-user leakage (audit 3).
 3. Server-error (5xx) rate under 1%.
 4. p99 latency under 2 seconds on all endpoints (possible because the mock LLM

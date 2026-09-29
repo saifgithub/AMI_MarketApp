@@ -138,8 +138,9 @@ prefers to split it out) actually fixes the constraint/locking gap.
 
 ## Decisions (2026-09-30, planning session with Saiful, AT:K5)
 
-1. **Scale: 50 concurrent distinct users**, 20-minute sustained run — ~5% of
-   CR245's 1,000-user Beta target online at once.
+1. **Scale: 10 concurrent distinct users**, 20-minute sustained run — minihost
+   is a small box (4 cores / 15GB), so Saiful capped the bar at 10 (revised from
+   50 during the same session).
 2. **LLM: mock** (`LLM_FORCE_PROVIDER=mock`) for the main run — deterministic,
    zero-cost, isolates app/DB correctness. Real-vLLM degradation testing is a
    deferred later phase. (Saiful initially said real vLLM, then corrected to
