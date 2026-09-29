@@ -58,21 +58,25 @@ def test_the_table_is_exact_and_column_aligned():
     CR160: rows are labelled by DISPLAY name, matching `_format_transcript`, so
     the table and the transcript beneath it name the same speakers. A wire id
     here would resurface a retired name beside prose that uses the new one.
+
+    CR247 Phase 2 item 2.1: the SIZE column sits between STANCE and
+    CONVICTION. Non-officer seats render '—' (never asked for a size); the
+    Balanced officer's declared 2.0% renders from its journaled envelope.
     """
     out = _room_scoreboard(_full_transcript())
     body = out.split("\n")
     assert body[2] == (
-        "AGENT                    STANCE          CONVICTION  HEADLINE"
+        "AGENT                    STANCE   SIZE  CONVICTION  HEADLINE"
     )
-    assert body[3] == "-----------------------  --------------  ----------  --------"
+    assert body[3] == "-----------------------  -------  ----  ----------  --------"
     assert body[4] == (
-        "Technical Strategist     for             high        Reclaimed the 200-day on volume"
+        "Technical Strategist     for      —     high        Reclaimed the 200-day on volume"
     )
     assert body[5] == (
-        "Fundamentals Analyst     against         medium      Margins compressed 2 quarters"
+        "Fundamentals Analyst     against  —     medium      Margins compressed 2 quarters"
     )
     assert body[6] == (
-        "Risk Officer — Balanced  neutral @ 2.0%  low         Wait for the print"
+        "Risk Officer — Balanced  neutral  2.0%  low         Wait for the print"
     )
 
 
@@ -96,13 +100,14 @@ def test_an_empty_transcript_renders_nothing():
 
 def test_a_malformed_envelope_renders_an_unparsed_row_in_position():
     """The row stays, in the order it spoke. Dropping it is what would let a
-    parser gap read as agreement."""
+    parser gap read as agreement. The officer's SIZE cell is `unparsed` too —
+    no envelope, no declared size — never a blank that could read as small."""
     transcript = _full_transcript()
     transcript.insert(1, _msg(AgentId.AGGRESSIVE_DEBATOR))
     out = _room_scoreboard(transcript)
     rows = out.split("\n\nWhat STANCE")[0].split("\n")[4:]
     assert rows[1].startswith("Risk Officer — Aggressive")
-    assert rows[1].count("unparsed") == 3  # stance, conviction and headline
+    assert rows[1].count("unparsed") == 4  # stance, size, conviction, headline
     assert len([r for r in rows if r.strip()]) == 4  # nothing dropped
 
 
@@ -117,7 +122,11 @@ def test_the_caption_counts_only_agents_that_stated_a_view():
 def test_a_full_room_caption_says_nothing_about_unparsed_rows():
     out = _room_scoreboard(_full_transcript())
     assert "3 of 3 stated a view." in out
-    assert "unparsed" not in out
+    # The table and caption make no absence claim; the legend below them names
+    # `unparsed` only as the SIZE column's vocabulary, which is not a claim
+    # that this Room produced one.
+    table_and_caption = out.split("\n\nWhat STANCE")[0]
+    assert "unparsed" not in table_and_caption
 
 
 def test_a_partial_envelope_marks_only_the_missing_fields():
@@ -184,7 +193,12 @@ _ALL_SEATS = [
 
 
 def _legend(out):
-    return out.split("What STANCE refers to in each seat")[1]
+    """The DEF448 STANCE gloss block only — the scoreboard now carries SIZE and
+    CONVICTION gloss blocks after it, and the seat-group assertions below are
+    scoped to STANCE."""
+    return out.split("What STANCE refers to in each seat")[1].split(
+        "What SIZE refers to in each seat"
+    )[0]
 
 
 def test_a_full_room_gets_one_gloss_line_per_seat_group():
@@ -228,23 +242,40 @@ def test_the_legend_forbids_a_tally_rather_than_offering_one():
     assert "consensus" not in out.lower()
 
 
-def test_a_risk_officer_stance_carries_its_argued_size():
-    """The SIZE is stripped from the prose with the envelope — the scoreboard
-    is the only place the CIO can see it."""
+def _row_cells(out: str, display_name: str) -> list[str]:
+    for ln in out.split("\n"):
+        if ln.startswith(display_name):
+            return [c.strip() for c in re.split(r"\s{2,}", ln) if c.strip()]
+    raise AssertionError(f"no scoreboard row for {display_name}")
+
+
+def test_a_risk_officer_row_carries_its_argued_size_in_the_size_column():
+    """CR247 Phase 2 item 2.1 — the declared size (stripped from the prose with
+    the envelope) renders in its own column, next to STANCE/CONVICTION; the
+    STANCE cell carries the tag alone."""
     out = _room_scoreboard(_ALL_SEATS)
-    assert "for @ 5.0%" in out
-    assert "against @ 1.0%" in out
-    assert "for @ 2.5%" in out
+    assert "for @ 5.0%" not in out
+    assert "against @ 1.0%" not in out
+    assert _row_cells(out, "Risk Officer — Aggressive")[1:3] == ["for", "5.0%"]
+    assert _row_cells(out, "Risk Officer — Conservative")[1:3] == ["against", "1.0%"]
+    assert _row_cells(out, "Risk Officer — Balanced")[1:3] == ["for", "2.5%"]
 
 
 def test_a_missing_size_is_loud_and_only_officers_get_one():
+    """An officer that argued without declaring a size renders `unparsed` in
+    the SIZE column; a non-officer's journaled size (the Desk proposes its own
+    in prose) is never lifted into the column — its cell stays '—'."""
     out = _room_scoreboard([
         _msg(AgentId.CONSERVATIVE_DEBATOR, "against", "high", "x"),
         _msg(AgentId.TRADER, "for", "high", "x", size=3.0),
     ])
-    assert "against @ size unparsed" in out
+    assert _row_cells(out, "Risk Officer — Conservative")[1:3] == [
+        "against", "unparsed",
+    ]
+    assert _row_cells(out, "Execution Desk")[1:3] == ["for", "—"]
     assert "@ 3.0%" not in out
-    assert "1 emitted no readable position" not in out
+    assert "2 of 2 stated a view." in out  # both envelopes stated; no absence claim
+    assert "emitted no readable position" not in out
 
 
 def test_no_agent_rows_means_no_legend():
@@ -273,9 +304,15 @@ def test_the_cio_prompt_carries_the_scoreboard_above_the_transcript():
 def test_the_arguing_agents_do_not_get_the_scoreboard():
     """Handing the aggregate to an agent whose turn is to state its OWN
     position replaces the judgement that turn exists to exercise — the same
-    scoping CR197 gives the option ladder."""
+    scoping CR197 gives the option ladder. Pinned on the block's own intro
+    line, not the bare words "Room scoreboard": a persona may legitimately
+    mention the scoreboard when explaining what its conviction field will be
+    read as (CR247 Phase 2 item 2.2), but the tabulated block itself is the
+    CIO's alone."""
     for agent_id in (
         AgentId.NEUTRAL_DEBATOR, AgentId.TRADER, AgentId.RESEARCH_MANAGER,
         AgentId.BULL_RESEARCHER,
     ):
-        assert "Room scoreboard" not in _prompt(agent_id), agent_id
+        prompt = _prompt(agent_id)
+        assert "Room scoreboard — every position stated so far" not in prompt, agent_id
+        assert "tabulated by AMI from the agents' own stance lines" not in prompt, agent_id

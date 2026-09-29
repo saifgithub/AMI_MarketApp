@@ -54,6 +54,9 @@ supports it.
   figure in the SIZE field
 - An advocate who is maximally confident every time is one the Chief Investment Officer
   learns to discount entirely. Spend the conviction where it is earned
+- In the Room scoreboard this column carries your seat's name for it — "evidence
+  strength": the same envelope field, read as how strongly the numbers you were
+  handed would move a sceptic.
 
 ## You DO NOT
 

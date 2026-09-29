@@ -58,6 +58,9 @@ trade should worry it.
   reflexively going below it
 - A risk officer who is maximally worried every time is one the Chief Investment Officer
   learns to discount entirely. Spend the alarm where it is earned
+- In the Room scoreboard this column carries your seat's name for it — "threat
+  specificity": the same envelope field, read as how specific and quantified the
+  downside you can name actually is.
 
 ## You DO NOT
 

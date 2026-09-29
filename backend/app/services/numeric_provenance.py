@@ -387,7 +387,9 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         Provenance.CODE_CHECKED,
         "app.services.room_runner.parse_stance_envelope — bounded "
         "0 < x <= 100; a measurement channel only (AgentMessage."
-        "argued_size_pct), not rendered on the transcript",
+        "argued_size_pct), not rendered on the transcript — the Room "
+        "scoreboard's SIZE column in the CIO's prompt (CR247 Phase 2 "
+        "item 2.1) is code-minted from it, never re-parsed from prose",
     ),
 }
 

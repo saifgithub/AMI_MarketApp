@@ -25,7 +25,7 @@ from typing import Any
 
 from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
 from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
-from app.schemas.mandate import Plan
+from app.schemas.mandate import Horizon, Plan
 from app.schemas.room import NextConveneDelta
 from app.services.agent_prompts import build_agent_prompt
 from app.services.fundamentals import (
@@ -974,6 +974,52 @@ _SIZE_DECLARING_AGENTS = frozenset(
 )
 
 
+# CR247 Phase 2 item 2.3 — the five agents whose turn proposes or weighs the
+# trade (EXECUTION, RISK, VERDICT) get one mandate-derived horizon discipline
+# line. The four analysts' overlays already branch on horizon/path
+# (`overlay_generator`); this closes the downstream half so a Trader arguing a
+# weekly RSI, a Risk Officer citing a support break, or the CIO weighing either
+# cannot treat short-term technicals as thesis evidence under a long horizon.
+# The analysts, researchers and Research Manager deliberately get nothing:
+# their turns predate a proposal, and their overlays already carry the branch.
+# The structured Risk Officer is a separate assembly (`build_risk_officer_
+# messages`) and is not in scope.
+_HORIZON_DISCIPLINE_AGENTS = frozenset(
+    {
+        AgentId.TRADER,
+        AgentId.AGGRESSIVE_DEBATOR,
+        AgentId.CONSERVATIVE_DEBATOR,
+        AgentId.NEUTRAL_DEBATOR,
+        AgentId.PORTFOLIO_MANAGER,
+    }
+)
+
+
+def _horizon_weighting_line(mandate: Mandate) -> str:
+    """CR247 Phase 2 item 2.3 — the horizon discipline line.
+
+    The branch is on the mandate's stored horizon value, in code — never on
+    prompt inference — and no horizon day-count is hardcoded here (the CR's
+    standing refusal; the thesis-horizon clamp the verdict schema enforces is
+    a different field, DEF255). `Mandate` config uses `use_enum_values`, so
+    `mandate.horizon` is the raw string; the enum members compare equal to it.
+    LONG and VERY_LONG get the long-horizon discipline; every other value gets
+    the short-horizon counterpart.
+    """
+    if mandate.horizon in (Horizon.LONG, Horizon.VERY_LONG):
+        return (
+            "- Horizon discipline: this mandate's horizon is "
+            f"{mandate.horizon} — short-term technical readings inform "
+            "entry timing only; they cannot validate or invalidate the thesis.\n"
+        )
+    return (
+        "- Horizon discipline: this mandate's horizon is "
+        f"{mandate.horizon} — position technicals carry weight per that "
+        "horizon: they can validate or invalidate the thesis, not just time "
+        "its entry.\n"
+    )
+
+
 def _risk_state_block(
     mandate: Mandate,
     current_drawdown_pct: float | None,
@@ -1853,6 +1899,16 @@ def build_room_messages(
             "buying, adding to, or holding a name.\n"
         )
 
+    # CR247 Phase 2 item 2.3 — one mandate-derived discipline line for the five
+    # agents that propose or weigh the trade. Empty for the other seven (their
+    # overlays already branch on horizon, or their turn predates a proposal), so
+    # their prompts stay byte-identical.
+    horizon_line = (
+        _horizon_weighting_line(mandate)
+        if agent_id in _HORIZON_DISCIPLINE_AGENTS
+        else ""
+    )
+
     # CR055 (extends CR046 M03 to the researchers): the Bull/Bear/Research-Manager
     # propose a size but did NOT carry the enforced single-name cap the Trader & PM see,
     # so they routinely suggested ~4x what the system enforces (the 10–15%-vs-3.0%
@@ -1928,6 +1984,7 @@ def build_room_messages(
         f"{drawdown_line}\n"
         f"{long_only_line}"
         f"- locale: {mandate.locale}\n"
+        f"{horizon_line}"
         f"{risk_state_block}"
         # CR219 R49 — directly under the consumption figures it is the verdict
         # of, and above the transcript for CR197's reason: this is AMI's
@@ -3769,21 +3826,26 @@ def _scoreboard_cell(value: str | None) -> str:
     return value if value else _SCOREBOARD_UNPARSED
 
 
-def _stance_cell(m: AgentMessage) -> str:
-    """DEF448 — a Risk Officer's stance is an endorsement AT a size, and that
-    size is stripped from the prose with the envelope, so it rides here or the
-    CIO never sees it."""
-    cell = _scoreboard_cell(m.stance)
-    if m.stance and m.agent_id in _SIZE_DECLARING_AGENTS:
-        cell += (
-            f" @ {m.argued_size_pct:.1f}%" if m.argued_size_pct is not None
-            else f" @ size {_SCOREBOARD_UNPARSED}"
-        )
-    return cell
+def _size_cell(m: AgentMessage) -> str:
+    """CR247 Phase 2 item 2.1 — the SIZE column.
+
+    Only the three Risk Officers are ever asked for a declared size (CR197), so
+    a seat outside `_SIZE_DECLARING_AGENTS` renders '—': the design, not a gap.
+    Those seats either speak before a size exists or (the Execution Desk)
+    propose one inside their own turn, which the transcript carries — nothing
+    is invented to fill the cell. An officer whose envelope carried no
+    parseable SIZE renders `unparsed`, the scoreboard's loud-absence word, so a
+    debated-but-undeclared size never reads as a small one.
+    """
+    if m.agent_id not in _SIZE_DECLARING_AGENTS:
+        return "—"
+    if m.argued_size_pct is not None:
+        return f"{m.argued_size_pct:.1f}%"
+    return _SCOREBOARD_UNPARSED
 
 
 def _room_scoreboard(transcript: list[AgentMessage]) -> str:
-    """A fixed-width agent | stance | conviction | headline table.
+    """A fixed-width agent | stance | size | conviction | headline table.
 
     Deterministic: same transcript in, same bytes out. Nothing here calls a
     model, and nothing here re-parses prose — it reads the envelope fields the
@@ -3800,7 +3862,8 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
     cells = [
         (
             agent_display_name(m.agent_id),
-            _stance_cell(m),
+            _scoreboard_cell(m.stance),
+            _size_cell(m),
             _scoreboard_cell(m.conviction),
             _scoreboard_cell(m.headline),
         )
@@ -3809,15 +3872,15 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
     stated = sum(1 for m in rows if m.stance)
     unparsed = len(cells) - stated
 
-    headers = ("AGENT", "STANCE", "CONVICTION", "HEADLINE")
+    headers = ("AGENT", "STANCE", "SIZE", "CONVICTION", "HEADLINE")
     widths = [
         max(len(headers[i]), max(len(c[i]) for c in cells))
-        for i in range(3)
+        for i in range(4)
     ]
 
     def _row(c: Sequence[str]) -> str:
         return "  ".join(
-            [c[i].ljust(widths[i]) for i in range(3)] + [c[3]]
+            [c[i].ljust(widths[i]) for i in range(4)] + [c[4]]
         ).rstrip()
 
     lines = [_row(headers), "  ".join("-" * w for w in widths) + "  " + "-" * 8]
@@ -3838,10 +3901,14 @@ def _room_scoreboard(transcript: list[AgentMessage]) -> str:
     return (
         "\nRoom scoreboard — every position stated so far, tabulated by AMI from "
         "the agents' own stance lines (not a summary, and not another voice; "
-        f"this is the transcript below, counted). {caption}.\n"
+        f"this is the transcript below, counted). {caption}. SIZE is the % of "
+        "portfolio a seat declared in its stance line; '—' marks seats that "
+        "declare no size (each seat's note below).\n"
         + "\n".join(lines)
         + "\n"
         + _stance_legend(m.agent_id for m in rows)
+        + _size_legend(m.agent_id for m in rows)
+        + _conviction_legend(m.agent_id for m in rows)
     )
 
 
@@ -3883,13 +3950,13 @@ _STANCE_MEANING: tuple[tuple[tuple[AgentId, ...], str], ...] = (
     (
         (AgentId.AGGRESSIVE_DEBATOR, AgentId.CONSERVATIVE_DEBATOR),
         "stance is settled by role (Aggressive argues for, Conservative against, "
-        "almost every convene). Weigh the argument and the size shown after '@', "
-        "not the tag.",
+        "almost every convene). Weigh the argument and its SIZE column, not the "
+        "tag.",
     ),
     (
         (AgentId.NEUTRAL_DEBATOR,),
         "the one Risk Officer whose stance genuinely varies — its read on whether "
-        "the evidence decides the trade, endorsed at the size shown after '@'.",
+        "the evidence decides the trade, endorsed at the size in its SIZE column.",
     ),
 )
 
@@ -3906,6 +3973,112 @@ def _stance_legend(agent_ids: Iterable[AgentId]) -> str:
     return (
         "\nWhat STANCE refers to in each seat — these are different questions, "
         "not equal votes, so do not add them up into a count or a percentage:\n"
+        + "\n".join(lines)
+        + "\n"
+    )
+
+
+# CR247 Phase 2 item 2.1 — what the SIZE column means per seat, the same gloss
+# shape DEF448 established for STANCE. The eight non-officer seats are never
+# asked for a size, so their '—' is explained as the design rather than left to
+# read as missing data; the three officers' cell is the CR197 declared size,
+# and `unparsed` there is a real absence, never a small number by default.
+_SIZE_MEANING: tuple[tuple[tuple[AgentId, ...], str], ...] = (
+    (
+        (
+            AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+            AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+            AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER,
+            AgentId.RESEARCH_MANAGER, AgentId.TRADER,
+        ),
+        "no position size had been proposed at that point in the Room — the "
+        "'—' is the design, not a gap.",
+    ),
+    (
+        (
+            AgentId.AGGRESSIVE_DEBATOR, AgentId.CONSERVATIVE_DEBATOR,
+            AgentId.NEUTRAL_DEBATOR,
+        ),
+        "the % of portfolio that officer endorses, parsed from the SIZE field "
+        "of its stance line; `unparsed` means it argued without declaring one.",
+    ),
+)
+
+
+def _size_legend(agent_ids: Iterable[AgentId]) -> str:
+    present = set(agent_ids)
+    lines = []
+    for seats, text in _SIZE_MEANING:
+        spoke = [agent_display_name(a) for a in seats if a in present]
+        if spoke:
+            lines.append(f"- {' / '.join(spoke)}: {text}")
+    if not lines:
+        return ""
+    return (
+        "\nWhat SIZE refers to in each seat — only the three Risk Officers are "
+        "asked for one, so the column means different things by seat:\n"
+        + "\n".join(lines)
+        + "\n"
+    )
+
+
+# CR247 Phase 2 item 2.2 (D4) — one envelope token, three seat-specific
+# meanings. The relabel is header-level only: the envelope keeps emitting the
+# word CONVICTION (the parser reads that token — changing it would break every
+# live Room), and each debator persona carries the matching one-sentence
+# register note. What changes is what the CIO is told to read out of the cell:
+# the Aggressive's value is evidence strength, the Conservative's is threat
+# specificity, the Balanced's is evidence clarity — three answers to three
+# different questions, minted from one field.
+#
+# The remaining eight seats keep the plain meaning and get one line saying so,
+# so the legend cannot be read as "conviction means something special for the
+# officers and nothing is said about the rest".
+_CONVICTION_OTHER_SEATS: tuple[AgentId, ...] = (
+    AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+    AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+    AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER,
+    AgentId.RESEARCH_MANAGER, AgentId.TRADER,
+)
+
+_CONVICTION_MEANING: tuple[tuple[tuple[AgentId, ...], str], ...] = (
+    (
+        (AgentId.AGGRESSIVE_DEBATOR,),
+        '"evidence strength" — how strongly the numbers in front of it would '
+        "move a sceptic, not how hard it is arguing.",
+    ),
+    (
+        (AgentId.CONSERVATIVE_DEBATOR,),
+        '"threat specificity" — how particular and quantified the downside it '
+        "can name actually is, not how cautious it feels.",
+    ),
+    (
+        (AgentId.NEUTRAL_DEBATOR,),
+        '"evidence clarity" — how clearly the evidence decides between the two '
+        "cases, not how hedged its middle is.",
+    ),
+)
+
+
+def _conviction_legend(agent_ids: Iterable[AgentId]) -> str:
+    present = set(agent_ids)
+    lines = []
+    for seats, text in _CONVICTION_MEANING:
+        spoke = [agent_display_name(a) for a in seats if a in present]
+        if spoke:
+            lines.append(f"- {' / '.join(spoke)}: {text}")
+    others = [a for a in _CONVICTION_OTHER_SEATS if a in present]
+    if others:
+        lines.append(
+            f"- {' / '.join(agent_display_name(a) for a in others)}: conviction "
+            "plain — how strongly it holds its stated view."
+        )
+    if not lines:
+        return ""
+    return (
+        "\nThe CONVICTION column is ONE envelope field under three seat-specific "
+        "names — the quoted name is what that seat's value means, so do not "
+        "compare a value in one seat against a value in another:\n"
         + "\n".join(lines)
         + "\n"
     )

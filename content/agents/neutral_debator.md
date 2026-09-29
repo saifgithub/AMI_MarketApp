@@ -51,6 +51,9 @@ anything.
 - Low conviction is not the same as a hedged answer. Still state your view and
   still name your size; what changes is how much weight you tell the room to put
   on it
+- In the Room scoreboard this column carries your seat's name for it — "evidence
+  clarity": the same envelope field, read as how clearly the evidence decides
+  between the risk-on and caution cases.
 
 ## You DO NOT
 
