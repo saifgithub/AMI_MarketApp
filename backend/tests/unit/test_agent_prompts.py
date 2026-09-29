@@ -131,6 +131,31 @@ def test_cr247_1b_personas_name_the_new_sheet_labels():
     )
 
 
+def test_cr247_1c_persona_names_the_peer_comparison_label():
+    """CR247 Phase 1C (2026-09-29): the peer-basket line ships, and the two
+    "no peer comparison" disclaimers it replaces are gone. Pin the exact
+    sheet label so a renderer rename and a persona rename cannot drift
+    apart, and pin the disclaimers' absence so the capability statement and
+    the denial cannot coexist. Whitespace-normalized, same rewrap-safety
+    reason as the 1A/1B pins."""
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    fundamentals = _flat(load_base_prompt(AgentId.FUNDAMENTALS_ANALYST))
+    assert "Peer comparison" in fundamentals, (
+        "fundamentals_analyst.md lost its 'Peer comparison' sentence"
+    )
+    for retired in (
+        "no peer-basket comparison is computed",
+        "Still no peer-basket or sector-average comparison of any kind",
+    ):
+        assert retired not in fundamentals, (
+            f"fundamentals_analyst.md still carries the retired 1C disclaimer: {retired!r}"
+        )
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)

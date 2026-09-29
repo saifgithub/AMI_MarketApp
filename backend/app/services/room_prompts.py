@@ -65,6 +65,7 @@ from app.services.fundamentals import (
     ownership_line,
     pe_line,
     peg_part,
+    peer_comparison_line,
     returns_line,
 )
 from app.core.config import settings
@@ -2601,6 +2602,41 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
         if hist_line:
             lines.append(hist_line)
+        # CR247 Phase 1C — the same-4-digit-SIC peer basket: median trailing
+        # P/E, EV/EBITDA and net margin across the market-cap neighbours, with
+        # the basket size, SIC and resolution date stated. All figures are
+        # born computed in `peer_basket.py` (CR179 Leg 4); the company's own
+        # trailing P/E rides beside the medians when the sheet has it live.
+        # Live-only: there is no historical peer store, so every non-live
+        # path — past-dated sheet, mock mode, unresolvable basket — carries
+        # its own reason string from the overlay, stated here, never a
+        # fabricated median (CR040/CR104).
+        if settings.room_peer_comparison_enabled:
+            if _is("peer_comparison", "live"):
+                pc_line = peer_comparison_line(
+                    profile.get("ticker"),
+                    profile.get("peer_comparison_sic"),
+                    profile.get("peer_comparison_sic_description"),
+                    profile.get("peer_comparison_basket_size"),
+                    profile.get("peer_comparison_as_of"),
+                    profile.get("peer_comparison_median_pe"),
+                    profile.get("peer_comparison_median_pe_n"),
+                    profile.get("peer_comparison_median_ev_ebitda"),
+                    profile.get("peer_comparison_median_ev_ebitda_n"),
+                    profile.get("peer_comparison_median_net_margin"),
+                    profile.get("peer_comparison_median_net_margin_n"),
+                    profile.get("pe") if _is("pe", "live") else None,
+                )
+                if pc_line:
+                    lines.append(pc_line)
+            else:
+                pc_reason = profile.get("peer_comparison_unavailable_reason") or (
+                    "the peer basket could not be assembled from data in hand"
+                )
+                lines.append(
+                    f"Peer comparison: not available this call — {pc_reason}. "
+                    "Do not estimate peer or sector-average figures from memory."
+                )
         # CR219 R21-DATA — unblocks WP04-R21's overlay rewrite: the demand
         # for "earnings revisions, surprise history" now has real fields
         # backing it. Fundamentals lane (WP06's own scoping). Explicitly
@@ -3208,8 +3244,10 @@ def _valuation_line(profile: dict[str, Any]) -> str | None:
 
 def _sector_line(profile: dict[str, Any]) -> str | None:
     """Real sector/industry classification (DEF053) — replaces the old
-    always-fake numeric `sector_pe`; this is a category, not a fabricated
-    peer-average P/E (yfinance has no peer-basket P/E to compute one from).
+    always-fake numeric `sector_pe`; this is a category, never a figure.
+    (The cross-company read this docstring used to deny now ships as CR247
+    Phase 1C's separate "Peer comparison" line, resolved by `peer_basket.py`
+    from SEC SIC codes — the category itself stays what it always was.)
     CR104/D8: gated on `field_state`, not presence alone.
 
     CR179 Leg 0 — the gate covered `sector` and not `industry`, so a profile

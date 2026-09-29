@@ -333,18 +333,12 @@ def _denial_hits(text: str) -> list[tuple[int, str]]:
 # short enough to survive a rewrite, specific enough not to fire on today's
 # sheet. See R14 above for why that is a heuristic, not a guarantee.
 _KNOWN_ABSENT: list[dict[str, Any]] = [
-    {
-        "row": "R7",
-        "persona": "fundamentals_analyst",
-        "claim": "no peer-basket / peer-average P/E comparison is computed",
-        "anchor": "no peer-basket comparison is computed",
-        "collision_markers": ("Peer ", "peer-average", "Peers:", "sector median P/E", "Industry P/E"),
-        "note": (
-            "WP01 R7 + WP06 R37: if a historical/peer multiples line ever ships, "
-            "these markers MUST fire and force this denial's rewrite. That firing "
-            "is the mechanism working, not a test bug."
-        ),
-    },
+    # CR247 Phase 1C (2026-09-29): R7's fundamentals peer-basket entry lived
+    # here until the field shipped — its own note said the collision markers
+    # firing was the mechanism working, and they did. The persona now carries
+    # the "Peer comparison" Inputs sentence instead (pinned in
+    # test_agent_prompts.py); the residual not-supplied tail is allowlisted
+    # below.
     {
         "row": "R2",
         "persona": "fundamentals_analyst",
@@ -440,6 +434,19 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
     {
         "persona": "fundamentals_analyst",
+        "anchor": "figures are simply not supplied for this run: never recall peer or sector-average",
+        "category": "runtime-deference",
+        "why": (
+            "CR247 Phase 1C (2026-09-29) — a CONDITIONAL absence, same shape as the "
+            "SBC entry above: the sentence fires only where the sheet omits the "
+            "\"Peer comparison\" line (insufficient same-SIC peer coverage, or the "
+            "basket not resolvable from data in hand). The residual clause forbids "
+            "recalling peer or sector-average multiples from training memory, which "
+            "is the CR104/DEF123 shape."
+        ),
+    },
+    {
+        "persona": "fundamentals_analyst",
         "anchor": "Not available: the full financial statements themselves",
         "category": "scope-true",
         "why": (
@@ -496,19 +503,14 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
             "rendered by this slice."
         ),
     },
-    {
-        "persona": "fundamentals_analyst",
-        "anchor": "recent history. Still no peer-basket or sector-average comparison of any kind",
-        "category": "scope-true",
-        "why": (
-            "TRUE and unaffected by R37: own-history multiples (today vs. this "
-            "company's own past years) and a peer/sector-average comparison "
-            "(this company vs. OTHER companies) are different claims. R37 ships "
-            "the first; the second still has no yfinance peer-basket P/E to build "
-            "from and stays denied — the R7 known-absent entry below is the one "
-            "that tracks THAT claim's truth, with its own collision markers."
-        ),
-    },
+    # CR247 Phase 1C (2026-09-29): the two peer-comparison denials this
+    # mapping used to carry are GONE — the field shipped. R7's known-absent
+    # entry ("no peer-basket comparison is computed") and this scope-true
+    # entry ("Still no peer-basket or sector-average comparison of any kind")
+    # both left with it, per their own notes: the markers firing was the
+    # mechanism working. The replacement "Peer comparison" Inputs sentence is
+    # pinned in test_agent_prompts.py; its conditional-absence tail is
+    # allowlisted below, same shape as the 1B SBC entry.
     {
         "persona": "market_analyst",
         "anchor": "where it marks a field not available, or names a set as not reconstructable",

@@ -51,12 +51,16 @@ class TestTheLineItself:
         assert "2025-2022" in line
 
     def test_says_explicitly_it_is_not_a_reconstructed_series(self):
-        """The self-disclosure that keeps the R7 peer-basket denial (and the
-        genuinely-different 'not a historical multiple series' claim) both
-        true at once — this line must never be mistaken for what it isn't."""
+        """The self-disclosure that keeps the genuinely-different 'not a
+        historical multiple series' claim true — this line must never be
+        mistaken for what it isn't. (The R7 peer-basket denial this docstring
+        used to also protect retired with CR247 Phase 1C: the cross-company
+        read now ships as the separate "Peer comparison" line, and the tail
+        points at it instead of denying it.)"""
         line = historical_multiples_line(15.7, 4, "2025-2022", None, None, None)
         assert "NOT a historical price-based multiple series" in line
-        assert "No peer-basket comparison exists" in line
+        assert "Peer comparison" in line
+        assert "not this one" in line
 
     def test_pe_half_alone_renders(self):
         line = historical_multiples_line(15.7, 4, "2025-2022", None, None, None)

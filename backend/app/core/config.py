@@ -1013,6 +1013,18 @@ class Settings(BaseSettings):
     # 0.64 / open interest 0.78 over the four nearest expiries).
     room_put_call_enabled: bool = True
 
+    # CR247 Phase 1C — the "Peer comparison" line on the fact sheet (`app/
+    # services/peer_basket.py`): median trailing P/E, EV/EBITDA and net margin
+    # across the basket of same-4-digit-SIC market-cap neighbours. SIC comes
+    # from the SEC submissions JSON CR244 already reads; peer market caps and
+    # multiples come from yfinance `.info`; the basket re-resolves at most
+    # once per 7 days per ticker, lazily on convene. Live-only (no historical
+    # peer store); fewer than 3 verified same-SIC peers render the line not
+    # available with that reason — the SIC is never widened to make up the
+    # count. Gates the RENDER only, the overlay always populates. ON since
+    # 2026-09-29 (CR247 Phase 1C — unit suite + live AAPL render probe).
+    room_peer_comparison_enabled: bool = True
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

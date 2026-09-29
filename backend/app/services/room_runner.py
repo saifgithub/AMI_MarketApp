@@ -80,6 +80,7 @@ from app.services import (
     edgar_tags,
     filing_dimensions,
     interest_cost,
+    peer_basket,
     put_call,
     roic,
     sbc,
@@ -1150,6 +1151,90 @@ def _overlay_put_call(
         )
 
 
+def _overlay_peer_comparison(
+    profile: dict[str, Any],
+    field_state: dict[str, str],
+    ticker: str,
+    as_of: date | None,
+) -> None:
+    """CR247 Phase 1C — the same-4-digit-SIC peer basket, Fundamentals lane.
+
+    Live-only, for `put_call`'s DEF334 reason: peer quotes have no historical
+    store, so a past-dated sheet gets `unavailable` with that reason rather
+    than today's peers read into a reconstructed sheet. The neighbourhood is
+    anchored on the company's OWN market cap (the same `.info` figure already
+    on the sheet) — when that is not live there is no anchor, and an
+    unanchored basket would not be the basket the line names, so it degrades
+    with that reason instead of guessing one.
+
+    The resolution itself (`peer_basket.refresh_peer_basket`) is weekly-throttled
+    per ticker and never fabricates: fewer than three verified same-SIC peers,
+    an unmaintained SIC group, or unserved quotes all come back as a reason
+    string, which the render states on the not-available line (CR040). One
+    state key for the block — the medians are born together at resolution, so
+    per-field keys could not disagree the way independent fetches can.
+    Populated regardless of `room_peer_comparison_enabled`; the flag gates the
+    RENDER only, same convention as every other overlay.
+    """
+    if as_of is not None:
+        field_state["peer_comparison"] = LiveDataState.UNAVAILABLE.value
+        profile["peer_comparison_unavailable_reason"] = (
+            "the peer basket is resolved from live quotes, which a past-dated "
+            "sheet cannot carry"
+        )
+        return
+    if not settings.use_real_market_data:
+        field_state["peer_comparison"] = LiveDataState.UNAVAILABLE.value
+        profile["peer_comparison_unavailable_reason"] = (
+            "market data is in deterministic mock mode, which serves no peer quotes"
+        )
+        return
+    target_cap: float | None = None
+    if field_state.get("market_cap") == LiveDataState.LIVE.value:
+        cap = profile.get("market_cap")
+        if isinstance(cap, (int, float)) and not isinstance(cap, bool) and cap > 0:
+            target_cap = float(cap) * 1_000_000  # sheet carries $M; `.info` is raw
+    if target_cap is None:
+        field_state["peer_comparison"] = LiveDataState.UNAVAILABLE.value
+        profile["peer_comparison_unavailable_reason"] = (
+            "the company's own market cap is not live this call, so market-cap "
+            "neighbours cannot be chosen"
+        )
+        return
+    try:
+        result = peer_basket.refresh_peer_basket(ticker, target_market_cap=target_cap)
+    except Exception as exc:
+        logger.warn(
+            "peer_basket_overlay_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["peer_comparison"] = LiveDataState.UNAVAILABLE.value
+        profile["peer_comparison_unavailable_reason"] = (
+            "the peer-basket resolution failed (see the peer_basket_* warnings)"
+        )
+        return
+    basket = result.basket
+    if basket is None:
+        field_state["peer_comparison"] = LiveDataState.UNAVAILABLE.value
+        profile["peer_comparison_unavailable_reason"] = (
+            result.reason or "the peer basket could not be assembled from data in hand"
+        )
+        return
+    medians = basket.medians
+    profile["peer_comparison_sic"] = basket.sic
+    if basket.sic_description:
+        profile["peer_comparison_sic_description"] = basket.sic_description
+    profile["peer_comparison_basket_size"] = len(basket.members)
+    profile["peer_comparison_as_of"] = basket.as_of.isoformat()
+    profile["peer_comparison_median_pe"] = medians.trailing_pe
+    profile["peer_comparison_median_pe_n"] = medians.trailing_pe_n
+    profile["peer_comparison_median_ev_ebitda"] = medians.ev_ebitda
+    profile["peer_comparison_median_ev_ebitda_n"] = medians.ev_ebitda_n
+    profile["peer_comparison_median_net_margin"] = medians.net_margin_pct
+    profile["peer_comparison_median_net_margin_n"] = medians.net_margin_n
+    field_state["peer_comparison"] = LiveDataState.LIVE.value
+
+
 _FILING_DIMENSION_BLOCKS = ("debt_split", "segment_revenue", "geographic_revenue")
 
 
@@ -1628,6 +1713,11 @@ def _profile_for_ticker(
     # CR247 Phase 1B — live-only by design (no historical options store);
     # the overlay itself records the right unavailable reason per path.
     _overlay_put_call(profile, field_state, ticker, as_of)
+
+    # CR247 Phase 1C — same-SIC peer basket, live-only by design (no
+    # historical peer store); the overlay records the right unavailable
+    # reason per path, same contract as the put/call overlay above.
+    _overlay_peer_comparison(profile, field_state, ticker, as_of)
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

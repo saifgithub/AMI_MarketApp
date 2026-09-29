@@ -485,6 +485,11 @@ services:
       ROOM_SBC_ENABLED: ${ROOM_SBC_ENABLED:-true}
       ROOM_ROIC_ENABLED: ${ROOM_ROIC_ENABLED:-true}
       ROOM_PUT_CALL_ENABLED: ${ROOM_PUT_CALL_ENABLED:-true}
+      # CR247 Phase 1C — the same-SIC "Peer comparison" line (SEC submissions
+      # JSON for SIC, yfinance `.info` for peer quotes, weekly-throttled
+      # basket). ON since 2026-09-29 (Phase 1C verification: unit suite + live
+      # AAPL render probe). The env var stays as the kill switch. See Settings.
+      ROOM_PEER_COMPARISON_ENABLED: ${ROOM_PEER_COMPARISON_ENABLED:-true}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

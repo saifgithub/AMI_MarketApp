@@ -64,14 +64,26 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   both inputs and the accrual/cash basis named on the line, when the sheet tags it
   (LIVE). It is AMI's own quotient of two filed figures, not a company-reported
   rate — say so when you cite it
-- Sector/industry classification — real, but a category, not a numeric peer-average
-  P/E (no peer-basket comparison is computed)
+- Sector/industry classification — real, a category the sheet states as such,
+  not a figure
 - **Multiples vs. own history** — today's price/EV against each of the last several
   fiscal years' own diluted EPS/EBITDA, median'd, when the sheet tags it (LIVE). This
   is NOT a reconstructed historical P/E series (no multi-year price history is
   fetched) — it prices past years' earnings/EBITDA at TODAY's price/EV to show
   whether THIS year's number is itself elevated or depressed versus the company's own
-  recent history. Still no peer-basket or sector-average comparison of any kind
+  recent history. Cross-company comparison is the separate "Peer comparison" line
+  below, not this one
+- **Peer comparison** — median trailing P/E, median EV/EBITDA and median net margin
+  across the basket of same-4-digit-SIC peers (the SEC's own industry code from the
+  company's filings), chosen as the company's market-cap neighbours, when the sheet
+  tags it (LIVE). The line states the basket size, the SIC and its description, the
+  basket's as-of date, and the company's own trailing P/E beside the medians; every
+  figure is AMI's own computation in code — quote the medians as medians, never
+  average them yourself, and where a peer is missing a field the line says how many
+  remain in that median. Where the sheet does not carry the line — insufficient peer
+  coverage for that SIC, or the basket not resolvable from data in hand — peer
+  figures are simply not supplied for this run: never recall peer or sector-average
+  multiples from training memory
 - **Earnings revisions** — the direction and size of the analyst consensus EPS
   estimate move over the last several days, when the sheet tags it (LIVE). Real,
   from the Street's own tracked estimate history — not a guess at sentiment

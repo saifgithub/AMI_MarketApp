@@ -159,6 +159,13 @@ _BACKEND_ALLOWLIST = {
     ("app/services/concierge_engine.py", "session_to_mandate_dict"): (
         "default value for the USER's display_name from onboarding, not an agent title"
     ),
+    # "PM" is Philip Morris International's actual NYSE ticker — an element of
+    # the SIC 2111 (cigarettes) candidate probe list in CR247 Phase 1C's peer
+    # basket, verified live against SEC submissions before it can enter any
+    # basket. Never an agent title anywhere near it.
+    ("app/services/peer_basket.py", "_CANDIDATES_BY_SIC"): (
+        "PM is Philip Morris's ticker in the SIC 2111 candidate list, not an agent title"
+    ),
 }
 
 

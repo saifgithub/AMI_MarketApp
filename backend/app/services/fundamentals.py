@@ -1188,9 +1188,12 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
             out["historical_pe_window"] = f"{eps_years[-1]}-{eps_years[0]}"
 
     # Real sector/industry classification replaces the old always-fake
-    # numeric `sector_pe` — a category, not a fabricated peer-average P/E
-    # (yfinance has no peer-basket P/E; computing one would need a peer
-    # mapping this app doesn't have).
+    # numeric `sector_pe` — a category, not a fabricated peer-average P/E.
+    # (The cross-company read CR166 said this pipeline couldn't support now
+    # exists as CR247 Phase 1C's "Peer comparison" line: a same-4-digit-SIC,
+    # market-cap-neighbour basket resolved by `peer_basket.py`. The category
+    # itself stays what it has always been — yfinance's own sector/industry
+    # strings.)
     sector = info.get("sector")
     if sector:
         out["sector"] = str(sector)
@@ -1417,7 +1420,8 @@ def historical_multiples_line(
         f"{line}. NOT a historical price-based multiple series — today's "
         "price/EV priced against past years' own fundamentals, to show "
         "whether this year's earnings/EBITDA is itself high or low versus "
-        "the company's recent history. No peer-basket comparison exists."
+        "the company's recent history. Cross-company comparison is the "
+        "separate \"Peer comparison\" line, not this one."
     )
 
 
@@ -2132,6 +2136,84 @@ def roic_line(
         f"fiscal year to {period_end}; invested capital is debt plus equity "
         f"minus cash. Compare against your own WACC estimate — no WACC is "
         f"sourced on this sheet."
+    )
+
+
+def peer_comparison_line(
+    ticker: str | None,
+    sic: str | None,
+    sic_description: str | None,
+    basket_size: int | None,
+    basket_as_of: str | None,
+    median_trailing_pe: float | None,
+    n_trailing_pe: int | None,
+    median_ev_ebitda: float | None,
+    n_ev_ebitda: int | None,
+    median_net_margin: float | None,
+    n_net_margin: int | None,
+    own_trailing_pe: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR247 Phase 1C — median multiples across the same-SIC peer basket.
+
+    The cross-company read the Fundamentals lane never had: is today's
+    multiple normal FOR THIS INDUSTRY, not just versus this company's own
+    past. Every figure arrives already computed from `peer_basket.py`
+    (same 4-digit SIC, market-cap neighbours, median'd in Python — CR179
+    Leg 4: the model never computes a figure); this function only renders.
+
+    Three disciplines are load-bearing and pinned in the tests:
+
+      * **Median, not mean** — one NVDA-style outlier must not drag the
+        "typical peer" figure with it; the sheet's code-computed discipline
+        is median everywhere (`roe_history_line`, R37's own-history line).
+      * **Effective n per median** — a peer missing a field is excluded from
+        THAT median only, and when the count drops below the basket size the
+        line says so ("6 of 7 peers report it"). A median of four wearing a
+        seven's label is the DEF053 shape.
+      * **The basket's own facts stated** — size, SIC code and description,
+        and the resolution date, so "7 peers in SIC 3674, basket as of …" can
+        be checked against the sheet's run date. A weekly snapshot is not a
+        live quote and never claims to be.
+
+    `own_trailing_pe` is the sheet's own trailing P/E string (gated live by
+    the caller), juxtaposed at the tail per the SPEC example; when the
+    company's own figure is not live the medians still render without it.
+    """
+    if not sic or not basket_size:
+        return None
+    parts: list[str] = []
+    if median_trailing_pe is not None:
+        part = f"median trailing P/E {median_trailing_pe}x"
+        if n_trailing_pe is not None and n_trailing_pe < basket_size:
+            part += f" ({n_trailing_pe} of {basket_size} peers report it)"
+        parts.append(part)
+    if median_ev_ebitda is not None:
+        part = f"median EV/EBITDA {median_ev_ebitda}x"
+        if n_ev_ebitda is not None and n_ev_ebitda < basket_size:
+            part += f" ({n_ev_ebitda} of {basket_size} peers report it)"
+        parts.append(part)
+    if median_net_margin is not None:
+        part = f"median net margin {median_net_margin:.0f}%"
+        if n_net_margin is not None and n_net_margin < basket_size:
+            part += f" ({n_net_margin} of {basket_size} peers report it)"
+        parts.append(part)
+    if not parts:
+        return None
+    who = f"across {basket_size} peers in SIC {sic}"
+    if sic_description:
+        who += f" ({sic_description})"
+    if basket_as_of:
+        who += f", basket as of {basket_as_of}"
+    parts.append(who)
+    line = _labelled("Peer comparison", live, parts)
+    if own_trailing_pe and ticker:
+        line += f"; {ticker} trades at {own_trailing_pe}x trailing P/E"
+    return (
+        f"{line}. AMI's own computation in code: the basket is the company's "
+        "same-4-digit-SIC market-cap neighbours from live quotes, median'd "
+        "here — quote the medians as medians, never average them yourself."
     )
 
 

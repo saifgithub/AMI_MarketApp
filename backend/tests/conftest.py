@@ -153,6 +153,16 @@ def _isolated_db(tmp_path: _Path) -> None:
     # always restored to the real one.
     from app.services import liquidity_lookup as _liq
     _liq.clear_on_demand_liquidity_cache()
+    # CR247 Phase 1C: the peer-basket store is keyed by TICKER and lives for a
+    # week, same leak shape as the statements cache — cleared so one test's
+    # basket cannot serve the next. The two fetchers are pinned to empty
+    # answers by default (the liquidity_lookup precedent): no test reaches SEC
+    # or Yahoo through the peer overlay; tests that exercise resolution
+    # install their own fakes via `peer_basket.set_peer_fetchers`.
+    from app.services import peer_basket as _pb
+    _pb.clear_peer_basket_store()
+    _pb.reset_peer_fetchers()
+    _pb.set_peer_fetchers(submissions=lambda _cik: None, info=lambda _ticker: None)
     # No test reaches Yahoo by default: `liquid_only` defaults True (CR220), so
     # every BUY of a name outside the snapshot would otherwise open a socket.
     # An empty answer resolves UNKNOWN, round 1's behaviour; tests that exercise
