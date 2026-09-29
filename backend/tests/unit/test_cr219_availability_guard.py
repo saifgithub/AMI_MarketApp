@@ -578,6 +578,18 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     # persona sentences are pinned in test_agent_prompts.py and their
     # conditional-absence clauses are allowlisted above.
     #
+    # CR247 Phase 1D (2026-09-29): four forensic flag lines (insider
+    # buy/sell ratio, 10b5-1 plan split, cluster buying, 8-K timing/item
+    # flags — all AMI-computed, News lane). In this fixture the synthetic
+    # ticker has no SEC CIK, so the NEWS sheet renders their
+    # not-available-with-reason lines, which no entry here denies; the
+    # personas' new sentences are conditional capability claims ("where your
+    # sheet carries …") with no absence tails, so the scanner maps no new
+    # hits for them — verified against _DENIAL_PATTERNS. The label pins live
+    # in test_agent_prompts.py; the per-flag render/degrade and the Item
+    # 4.02 safety-floor block live in test_cr247_1d_forensic_flags.py, same
+    # own-test-file convention as the 8-K line above.
+    #
     # CR244 Part 2 slice 1 (2026-09-27) narrowed this again: the filings
     # INDEX (form/date/label, no document text) now also reaches the sheet
     # as the "Recent SEC filings" line (live-fetched, flag-gated;

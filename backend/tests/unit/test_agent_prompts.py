@@ -156,6 +156,37 @@ def test_cr247_1c_persona_names_the_peer_comparison_label():
         )
 
 
+def test_cr247_1d_personas_name_the_new_sheet_labels():
+    """CR247 Phase 1D (2026-09-29): the four forensic flags ship, and the
+    three consuming personas carry the citation sentences — the News Analyst
+    names all four labels (its lane), the Bull and Bear name the insider
+    labels (their CR244 discipline: attribute to the filing/flag, never
+    infer motive). Pin the exact sheet labels so a renderer rename and a
+    persona rename cannot drift apart. Whitespace-normalized, same
+    rewrap-safety reason as the 1A/1B/1C pins."""
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    news = _flat(load_base_prompt(AgentId.NEWS_ANALYST))
+    for label in (
+        "Insider open-market buy/sell ratio (90d)",
+        "Insider sales under Rule 10b5-1 plans",
+        "Cluster buying",
+        "8-K forensic flags",
+    ):
+        assert label in news, f"news_analyst.md lost its {label!r} sentence"
+    for researcher, name in (
+        (AgentId.BULL_RESEARCHER, "bull_researcher.md"),
+        (AgentId.BEAR_RESEARCHER, "bear_researcher.md"),
+    ):
+        text = _flat(load_base_prompt(researcher))
+        for label in ("Insider open-market buy/sell ratio (90d)", "Cluster buying"):
+            assert label in text, f"{name} lost its {label!r} sentence"
+        assert "10b5-1" in text, f"{name} lost its plan-type distinction sentence"
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)

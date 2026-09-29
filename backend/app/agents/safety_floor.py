@@ -21,7 +21,7 @@ from app.schemas.classification import (
 )
 from app.schemas.liquidity import LiquidityStatus, LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
-from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
+from app.schemas.trade import ComplianceResult, Holding, ProposedTrade, Side
 from app.services.liquidity_lookup import resolve_liquidity_cached
 from app.services.sector_allocation import (
     sector_cap_breach as _sector_cap_breach,
@@ -1002,10 +1002,20 @@ def enforce_safety_floor(
     trade_open_timestamps: list[datetime] | None = None,
     existing_open_risk_pct: float | None = None,
     proposed_stop: float | None = None,
+    edgar_8k_item_402: str | None = None,
 ) -> Verdict:
     """Wrap an LLM-produced verdict. If APPROVE, re-check via deterministic function.
 
     If the deterministic check finds violations, override to REJECT.
+
+    edgar_8k_item_402: CR247 Phase 1D — the room's 8-K forensic flags overlay
+        passes its pre-computed narration (`edgar_forensics.item_402_block_reason`,
+        None when no in-window Item 4.02 exists). An 8-K Item 4.02 (non-reliance
+        on previously issued financial statements) inside the 180-day window
+        hard-blocks a BUY: the override REJECTs with the filing named in the
+        reason, never a silent refusal. Flag-gated (`room_edgar_8k_flags_enabled`)
+        so the flag-off control arm changes the verdict with the sheet line, and
+        BUY-gated — the exit side of a book must never be trapped by this block.
 
     now / last_loss_closed_at / trade_open_timestamps / existing_open_risk_pct /
         proposed_stop: forwarded verbatim to `check_mandate_compliance` — CR101-BE2
@@ -1015,6 +1025,24 @@ def enforce_safety_floor(
     """
     if llm_verdict.action != VerdictAction.APPROVE:
         return llm_verdict
+
+    # CR247 Phase 1D — the forensic flag is a deterministic veto exactly like
+    # the mandate rules below, not a prompt instruction (CR038). Checked first
+    # because its narration is the more specific reason when both fire.
+    if edgar_8k_item_402 and proposed.side == Side.BUY:
+        from app.core.config import settings
+
+        if settings.room_edgar_8k_flags_enabled:
+            return Verdict(
+                action=VerdictAction.REJECT,
+                reason=f"Forensic 8-K flag (safety floor override): {edgar_8k_item_402}",
+                violations=["8-K Item 4.02 non-reliance filing in the forensic window"],
+                overridden_from_llm=True,
+                # CR214 — the vote travels with the override, same as the
+                # mandate-violation branch below.
+                approve_votes=llm_verdict.approve_votes,
+                samples=llm_verdict.samples,
+            )
 
     result = check_mandate_compliance(
         proposed,

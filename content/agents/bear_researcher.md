@@ -32,6 +32,12 @@ Build the strongest possible case AGAINST taking the position. Or against the po
   sheet carries it. AMI's own quotient of two filed figures, not a
   company-reported rate — and the input to whether the maturity wall above
   is cheap to roll or not
+- Where the sheet carries an "Insider open-market buy/sell ratio (90d)" or
+  "Cluster buying" line, both are AMI's deterministic counts from the
+  issuer's SEC Form 4/5 filings — treat them as filing facts, not management
+  sentiment: a sale pre-scheduled under a 10b5-1 plan carries less
+  information than a non-plan or unstated open-market sale, and a cluster of
+  insider buying is a count of names, not proof the thesis is safe
 - Where the sheet marks a field not available, that statement wins — do not
   estimate or fill the gap yourself
 

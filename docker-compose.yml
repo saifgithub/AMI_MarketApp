@@ -490,6 +490,18 @@ services:
       # basket). ON since 2026-09-29 (Phase 1C verification: unit suite + live
       # AAPL render probe). The env var stays as the kill switch. See Settings.
       ROOM_PEER_COMPARISON_ENABLED: ${ROOM_PEER_COMPARISON_ENABLED:-true}
+      # CR247 Phase 1D — forensic metadata flags (News/Macro lane): the
+      # insider open-market buy/sell ratio, the Rule 10b5-1 plan split of
+      # insider sales, the cluster-buy flag (all three live-fetched from SEC
+      # Form 3/4/5, live-only), and the 8-K timing/item flags (Friday-after-
+      # close, Item 4.01, Item 4.02 — the last also hard-blocks a BUY at the
+      # safety floor, narrated). All AMI-computed in code. ON since 2026-09-29
+      # (Phase 1D verification: unit suite + live AAPL render probe). The env
+      # vars stay as kill switches. See Settings.
+      ROOM_INSIDER_RATIO_ENABLED: ${ROOM_INSIDER_RATIO_ENABLED:-true}
+      ROOM_INSIDER_PLAN_TAG_ENABLED: ${ROOM_INSIDER_PLAN_TAG_ENABLED:-true}
+      ROOM_INSIDER_CLUSTER_ENABLED: ${ROOM_INSIDER_CLUSTER_ENABLED:-true}
+      ROOM_EDGAR_8K_FLAGS_ENABLED: ${ROOM_EDGAR_8K_FLAGS_ENABLED:-true}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

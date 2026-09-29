@@ -71,6 +71,13 @@ from app.services.fundamentals import (
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
+from app.services.edgar_forensics import (
+    CLUSTER_BUY_LABEL,
+    EIGHT_K_FLAGS_LABEL,
+    INSIDER_PLAN_TAG_LABEL,
+    INSIDER_RATIO_LABEL,
+    forensic_not_available_line,
+)
 from app.services.put_call import put_call_line
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
@@ -2487,6 +2494,61 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {FEED_LABEL}: not available this call — do not supply a "
                 "filing from memory."
             )
+    # CR247 Phase 1D — the four forensic metadata flags, News/Macro lane.
+    # Free SEC reads like the filings index above: not gated on the news
+    # feed's paywall/tenure state. Every figure is AMI-computed in code and
+    # the line states its window; each flag carries its own field_state key.
+    if settings.room_insider_ratio_enabled and _in_lane("news"):
+        if _is("insider_ratio", "live"):
+            header_lines.append(
+                f"- {INSIDER_RATIO_LABEL}: LIVE, AMI-computed from the issuer's "
+                "own SEC Form 3/4/5 filings — open-market transaction codes only "
+                "(P buys, S sales; option exercises, tax withholdings and every "
+                "other code excluded); the line states the window and counts."
+            )
+        else:
+            header_lines.append(
+                f"- {INSIDER_RATIO_LABEL}: not available this call — do not "
+                "supply insider activity from memory."
+            )
+    if settings.room_insider_plan_tag_enabled and _in_lane("news"):
+        if _is("insider_plan_tag", "live"):
+            header_lines.append(
+                f"- {INSIDER_PLAN_TAG_LABEL}: LIVE, read from each Form 4's own "
+                "Rule 10b5-1 checkbox — a structural tag, never inferred from "
+                "footnotes; the line splits the window's open-market sales."
+            )
+        else:
+            header_lines.append(
+                f"- {INSIDER_PLAN_TAG_LABEL}: not available this call — do not "
+                "supply a plan tag from memory."
+            )
+    if settings.room_insider_cluster_enabled and _in_lane("news"):
+        if _is("insider_cluster", "live"):
+            header_lines.append(
+                f"- {CLUSTER_BUY_LABEL}: LIVE, a deterministic count — 3 or more "
+                "distinct insiders with open-market buys (code P) inside a 14-day "
+                "window; the line states YES with the span, or none."
+            )
+        else:
+            header_lines.append(
+                f"- {CLUSTER_BUY_LABEL}: not available this call — do not supply "
+                "a cluster read from memory."
+            )
+    if settings.room_edgar_8k_flags_enabled and _in_lane("news"):
+        if _is("edgar_8k_flags", "live"):
+            header_lines.append(
+                f"- {EIGHT_K_FLAGS_LABEL}: LIVE, AMI-computed from the issuer's "
+                "SEC filings index — Friday-after-close filings, Item 4.01 "
+                "auditor changes, and Item 4.02 non-reliance filings; an "
+                "in-window Item 4.02 hard-blocks a BUY at the safety floor, "
+                "with the reason narrated in the verdict."
+            )
+        else:
+            header_lines.append(
+                f"- {EIGHT_K_FLAGS_LABEL}: not available this call — do not "
+                "supply 8-K timing or item flags from memory."
+            )
     if not _in_lane("social"):
         pass  # out of lane — named in the lane line below, not disclosed as absent
     elif social_withheld_tenure:
@@ -3072,6 +3134,51 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
         if filings_extra:
             lines.append(filings_extra)
+    # CR247 Phase 1D — the four forensic flags, News/Macro lane. Rendered
+    # here (not inside the news branch's withheld split above) because these
+    # are free SEC reads — the news feed's tenure/paywall states say nothing
+    # about them, the same independence the filings index has. The lines were
+    # computed in `edgar_forensics` and carried on the profile, so the
+    # renderer appends them verbatim (all figures AMI-computed in code; the
+    # LLM never computes one). A non-live state degrades loudly with its
+    # reason, never silently.
+    if _in_lane("news"):
+        if settings.room_insider_ratio_enabled:
+            if _is("insider_ratio", "live"):
+                lines.append(profile["insider_ratio_line"])
+            else:
+                lines.append(forensic_not_available_line(
+                    INSIDER_RATIO_LABEL,
+                    profile.get("insider_unavailable_reason")
+                    or "the SEC insider feed could not be read",
+                ))
+        if settings.room_insider_plan_tag_enabled:
+            if _is("insider_plan_tag", "live"):
+                lines.append(profile["insider_plan_tag_line"])
+            else:
+                lines.append(forensic_not_available_line(
+                    INSIDER_PLAN_TAG_LABEL,
+                    profile.get("insider_unavailable_reason")
+                    or "the SEC insider feed could not be read",
+                ))
+        if settings.room_insider_cluster_enabled:
+            if _is("insider_cluster", "live"):
+                lines.append(profile["insider_cluster_line"])
+            else:
+                lines.append(forensic_not_available_line(
+                    CLUSTER_BUY_LABEL,
+                    profile.get("insider_unavailable_reason")
+                    or "the SEC insider feed could not be read",
+                ))
+        if settings.room_edgar_8k_flags_enabled:
+            if _is("edgar_8k_flags", "live"):
+                lines.extend(profile.get("edgar_8k_flag_lines") or [])
+            else:
+                lines.append(forensic_not_available_line(
+                    EIGHT_K_FLAGS_LABEL,
+                    profile.get("edgar_8k_flags_unavailable_reason")
+                    or "the SEC filings index could not be read",
+                ))
     # CR151 Tier A — the asymmetry, from two numbers already on the sheet.
     # Rendered for the FULL-SHEET agents only, which is the reconciliation
     # CR151 asked for explicitly ("say so in CR145 Tier C's matrix rather than

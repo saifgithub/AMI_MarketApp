@@ -192,9 +192,21 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # added bullets name a sheet label and what may be cited from it; neither
     # mentions size, sizing, allocation or a percentage, and the Output-style
     # section is untouched. bull unchanged. bear f1fca8c61b22 → 7e9e5b1fc7fd.
+    #
+    # CR247 Phase 1D review (2026-09-29): both files' "## Inputs" gain one
+    # bullet each naming the new forensic-flag sheet labels — "Insider
+    # open-market buy/sell ratio (90d)" and "Cluster buying" — plus the 10b5-1
+    # plan-type distinction (attribute to the filings, never infer motive), in
+    # the same register as 1A's bullets (a data source and its citation rule).
+    # The guard's question, answered by reading the diff: does any bullet ask
+    # a RESEARCHERS-phase agent to output a position size? **No** — the added
+    # bullets name sheet labels and a citation discipline; neither mentions
+    # size, sizing, allocation or a percentage, and the "not a position size"
+    # Output-style bullet is untouched. bull bf7a85ccd267 → 48c3261299d7,
+    # bear 7e9e5b1fc7fd → 81a9e0289000.
     expected = {
-        "bull_researcher.md": "bf7a85ccd267",
-        "bear_researcher.md": "7e9e5b1fc7fd",
+        "bull_researcher.md": "48c3261299d7",
+        "bear_researcher.md": "81a9e0289000",
     }
     actual = {
         name: hashlib.sha256(

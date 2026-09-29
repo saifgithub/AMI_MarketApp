@@ -1025,6 +1025,27 @@ class Settings(BaseSettings):
     # 2026-09-29 (CR247 Phase 1C — unit suite + live AAPL render probe).
     room_peer_comparison_enabled: bool = True
 
+    # CR247 Phase 1D — forensic metadata flags on the fact sheet (News/Macro
+    # lane; `app/services/edgar_forensics.py`). All four are AMI-computed in
+    # code from CR244's EDGAR reads — the LLM never computes a figure:
+    # insider open-market buy/sell ratio over the last 90 days (Form 4/5
+    # transaction codes P/S only, classification reused from
+    # `edgar_ownership`); the Rule 10b5-1 plan split of those sales (the
+    # Form 4's own checkbox, never inferred); a cluster-buy flag (>=3
+    # distinct insiders, code P, inside a 14-day window — absence rendered);
+    # and 8-K timing/item flags (Friday-after-close filings, Item 4.01
+    # auditor changes, Item 4.02 non-reliance — an in-window Item 4.02
+    # additionally hard-blocks a BUY at the safety floor, narrated). The
+    # insider trio is live-only (the SEC insider feed reads the last 90 days
+    # live; no historical store); the 8-K flags are PIT-windowed like the
+    # filings feed. Each flag gates its own RENDER only, the overlays always
+    # populate. ON since 2026-09-29 (CR247 Phase 1D — unit suite + live AAPL
+    # render probe).
+    room_insider_ratio_enabled: bool = True
+    room_insider_plan_tag_enabled: bool = True
+    room_insider_cluster_enabled: bool = True
+    room_edgar_8k_flags_enabled: bool = True
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

@@ -84,6 +84,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import logger
+from app.services import edgar_8k
 from app.services.asof_context import assert_dates_within
 from app.services.edgar_cik import USER_AGENT, CikResolutionUnavailable, paced_get, resolve_cik
 from app.services.edgar_submissions import (
@@ -152,9 +153,7 @@ def _fetch_company_submissions(cik: int) -> dict | None:
     `edgar_submissions.fetch_company_submissions`, kept as its own function
     (rather than reusing that one directly) only so this module's shorter
     timeout doesn't change the Filings-tab read's own 15s budget."""
-    from app.services.edgar_8k import SUBMISSIONS_URL
-
-    url = SUBMISSIONS_URL.format(cik=cik)
+    url = edgar_8k.SUBMISSIONS_URL.format(cik=cik)
     try:
         with httpx.Client(timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": USER_AGENT}) as client:
             r = paced_get(client, url)
@@ -340,6 +339,40 @@ def _recent_oldest_filed(recent: dict) -> date | None:
     return min(parsed) if parsed else None
 
 
+def _rows_with_page_coverage(
+    ticker: str, cik: int, filings: Any, recent: dict, rows: list | None,
+    *, since: date, as_of: date, parse,
+) -> list | None:
+    """Audit B2's page merge, shared by `fetch_recent_filings` and
+    `fetch_8k_item_flags`: when `filings.recent`'s own oldest row is younger
+    than `since`, fetch the overlapping `filings.files` page(s) and merge
+    their rows in, parsed by the CALLER's row parser (`_rows_from_recent`
+    for the feed's 4-tuples, `_eight_k_rows_from_recent` for the flags'
+    5-tuples). None (a not_available signal) when a needed page cannot be
+    fetched or a page's shape is unrecognised — never a truncated list
+    rendered as live."""
+    if rows is None:
+        return None
+    oldest_recent = _recent_oldest_filed(recent)
+    if oldest_recent is None or oldest_recent <= since:
+        return rows
+    files_index = filings.get("files") if isinstance(filings, dict) else None
+    page_names = _overlapping_pages(files_index, since, as_of)
+    for name in page_names:
+        page = _cached_submissions_page(cik, name)
+        if page is None:
+            logger.warn(
+                "edgar_recent_filings_page_unavailable",
+                ticker=ticker, cik=cik, page=name,
+            )
+            return None
+        page_rows = parse(page)
+        if page_rows is None:
+            return None
+        rows.extend(page_rows)
+    return rows
+
+
 def _overlapping_pages(files_index: Any, since: date, as_of: date) -> list[str]:
     """`filings.files[i].name` for every page whose [filingFrom, filingTo]
     overlaps `[since, as_of]` — a heavy filer's older history, paginated out
@@ -397,31 +430,17 @@ def fetch_recent_filings(ticker: str, as_of: date) -> tuple[str, list[dict[str, 
     if not isinstance(recent, dict):
         return "not_available", None
 
-    rows = _rows_from_recent(recent)
-    if rows is None:
-        return "not_available", None
-
     # Audit B2: `filings.recent` only covers "at least 1 year or 1000
     # filings" — for a heavy filer, its oldest row can be within the window
     # we need. When it doesn't reach back far enough, fetch the overlapping
     # `filings.files` page(s) and merge before windowing, rather than
     # silently rendering whatever `recent` alone happened to cover.
-    oldest_recent = _recent_oldest_filed(recent)
-    if oldest_recent is not None and oldest_recent > since:
-        files_index = filings.get("files") if isinstance(filings, dict) else None
-        page_names = _overlapping_pages(files_index, since, as_of)
-        for name in page_names:
-            page = _cached_submissions_page(cik, name)
-            if page is None:
-                logger.warn(
-                    "edgar_recent_filings_page_unavailable",
-                    ticker=sym, cik=cik, page=name,
-                )
-                return "not_available", None
-            page_rows = _rows_from_recent(page)
-            if page_rows is None:
-                return "not_available", None
-            rows.extend(page_rows)
+    rows = _rows_with_page_coverage(
+        sym, cik, filings, recent, _rows_from_recent(recent),
+        since=since, as_of=as_of, parse=_rows_from_recent,
+    )
+    if rows is None:
+        return "not_available", None
 
     capped = _window_items(rows, since=since, as_of=as_of)
     assert_dates_within(
@@ -450,3 +469,125 @@ def recent_filings_line(state: str | None, items: list[dict[str, Any]] | None) -
         f"{FEED_LABEL} (newest first, last {WINDOW_DAYS} days, max {MAX_FILINGS}): "
         + "; ".join(parts) + "." + _TRAILER
     )
+
+
+# ── CR247 Phase 1D — the 8-K rows behind the forensic flags ─────────────────
+#
+# The filings index above deliberately carries NO item numbers (slice 1's
+# scope: form type + filed date + label). The forensic flags need the item
+# codes and acceptance times, so this slice reads the same submissions JSON —
+# same per-CIK cache, same B2 page coverage, same PIT contract — through an
+# 8-K-only row parser. No document text is fetched here: Item 4.01/4.02 are
+# index facts, and D22's correction (filing-text ingestion stays inside the
+# proven edgar_8k.py machinery, sanitised via prompt_safety) is honoured by
+# never reaching for text at all.
+
+_EIGHT_K_FLAG_FORMS = frozenset({"8-K", "8-K/A"})
+
+
+def _eight_k_rows_from_recent(
+    recent: dict,
+) -> list[tuple[date, str, str, tuple[str, ...], Any]] | None:
+    """[(filed, form, accession, item_codes, acceptance_raw)] for every 8-K/
+    8-K/A row, newest-first not applied (the caller windows/sorts). None on a
+    shape this parser doesn't recognise. Item codes parse through
+    `edgar_8k.item_tokens` — the SAME renderer the 8-K ingest uses (DEF098:
+    one token rule, so an Item 4.02 filing can never parse in one path and
+    not the other); a malformed items string or unparseable date on an 8-K
+    row makes the whole read not_available (P26 — an index that can't be
+    read can't vouch for "none")."""
+    forms = recent.get("form")
+    filed_dates = recent.get("filingDate")
+    if not isinstance(forms, list) or not isinstance(filed_dates, list):
+        return None
+    n = len(forms)
+    if len(filed_dates) != n:
+        return None
+    items_col = recent.get("items")
+    accessions = recent.get("accessionNumber")
+    if not isinstance(items_col, list) or len(items_col) != n:
+        return None
+    if not isinstance(accessions, list) or len(accessions) != n:
+        return None
+    acceptances = recent.get("acceptanceDateTime")
+    if not isinstance(acceptances, list) or len(acceptances) != n:
+        acceptances = [None] * n
+
+    out: list[tuple[date, str, str, tuple[str, ...], Any]] = []
+    for i in range(n):
+        form = str(forms[i] or "")
+        if form not in _EIGHT_K_FLAG_FORMS:
+            continue
+        try:
+            filed = date.fromisoformat(str(filed_dates[i]))
+        except (ValueError, TypeError):
+            return None
+        try:
+            codes = edgar_8k.item_tokens(items_col[i], row=i)
+        except edgar_8k.IndexUnreadable:
+            return None
+        out.append((filed, form, str(accessions[i] or ""), codes, acceptances[i]))
+    return out
+
+
+def fetch_8k_item_flags(
+    ticker: str, as_of: date,
+) -> tuple[str, list[dict[str, Any]] | None]:
+    """(state, filings) for the forensic 8-K flags. `state` is one of:
+
+      "live"          — filings is every 8-K/8-K/A in the last
+                        EIGHT_K_FLAG_WINDOW_DAYS days (PIT-filtered to
+                        `filed <= as_of`), newest first, each
+                        {"form", "filed", "accession", "items", "acceptance"};
+      "not_available" — no CIK, an EDGAR outage, an unrecognised index, a
+                        malformed 8-K row, or a needed `filings.files` page
+                        that could not be fetched (audit B2 — never a
+                        truncated list rendered as live); filings is None.
+
+    An issuer with no 8-Ks in the window is `"live"` with an empty list —
+    the same "a quiet filer is not a failed fetch" rule
+    `fetch_recent_filings` documents.
+    """
+    from app.services import edgar_forensics
+
+    sym = ticker.upper().strip()
+    try:
+        cik = resolve_cik(sym)
+    except CikResolutionUnavailable:
+        return "not_available", None
+    if cik is None:
+        return "not_available", None
+    submissions = _cached_submissions(cik)
+    if submissions is None:
+        return "not_available", None
+    since = as_of - timedelta(days=edgar_forensics.EIGHT_K_WINDOW_DAYS)
+
+    filings_block = submissions.get("filings")
+    recent = filings_block.get("recent") if isinstance(filings_block, dict) else None
+    if not isinstance(recent, dict):
+        return "not_available", None
+
+    rows = _rows_with_page_coverage(
+        sym, cik, filings_block, recent, _eight_k_rows_from_recent(recent),
+        since=since, as_of=as_of, parse=_eight_k_rows_from_recent,
+    )
+    if rows is None:
+        return "not_available", None
+
+    in_window = [
+        {
+            "form": form,
+            "filed": filed.isoformat(),
+            "accession": accession,
+            "items": items,
+            "acceptance": acceptance,
+        }
+        for filed, form, accession, items, acceptance in rows
+        if since <= filed <= as_of
+    ]
+    in_window.sort(key=lambda r: r["filed"], reverse=True)
+    assert_dates_within(
+        [date.fromisoformat(r["filed"]) for r in in_window], as_of,
+        origin="edgar_filings_feed.fetch_8k_item_flags",
+    )
+    return "live", in_window

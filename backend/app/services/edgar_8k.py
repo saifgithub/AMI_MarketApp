@@ -142,7 +142,13 @@ _REQUIRED_COLUMNS = ("form", "items", "filingDate", "accessionNumber", "primaryD
 _ITEM_TOKEN = re.compile(r"^\d{1,2}\.\d{2}$")
 
 
-def _item_tokens(items: object, *, row: int) -> tuple[str, ...]:
+def item_tokens(items: object, *, row: int) -> tuple[str, ...]:
+    """`filings.recent.items` on one 8-K row → its `d.dd` item codes (the
+    `(row, items)` pair names the offending row on failure). PUBLIC because
+    CR247 Phase 1D's 8-K flag feed (`edgar_filings_feed.fetch_8k_item_flags`)
+    parses the same column through this one renderer — a second copy of the
+    token rule is how an Item 4.02 filing would slip past the safety floor's
+    block (DEF098)."""
     tokens = tuple(t.strip() for t in str(items or "").split(",") if t.strip())
     if not tokens or any(not _ITEM_TOKEN.match(t) for t in tokens):
         raise IndexUnreadable(f"row {row}: items {str(items)!r} is not a list of d.dd codes")
@@ -204,7 +210,7 @@ def select_502_filings(submissions: dict, *, since: date) -> list[FilingRef]:
             raise IndexUnreadable(f"row {i}: filingDate is empty on an 8-K")
         if filed < since:
             continue
-        tokens = _item_tokens(recent["items"][i], row=i)
+        tokens = item_tokens(recent["items"][i], row=i)
         if ITEM_CODE not in tokens:
             continue
         refs.append(FilingRef(

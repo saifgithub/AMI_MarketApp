@@ -40,7 +40,7 @@ import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field, replace as _dataclass_replace
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -76,6 +76,8 @@ from app.services import (
     dividend_growth,
     edgar_8k,
     edgar_filings_feed,
+    edgar_forensics,
+    edgar_ownership,
     edgar_pit,
     edgar_tags,
     filing_dimensions,
@@ -1546,6 +1548,136 @@ def _overlay_recent_filings(
     field_state["recent_filings"] = LiveDataState.LIVE.value
 
 
+def _overlay_insider_forensics(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date | None
+) -> None:
+    """CR247 Phase 1D — the insider half of the forensic flags, three
+    `field_state` keys: `insider_ratio`, `insider_plan_tag`, `insider_cluster`
+    (flags 1–3, all from `edgar_ownership.get_insider_activity`'s parsed Form
+    3/4/5 transactions — the P/S classification and the `plan_type` checkbox
+    tag are CR244's, reused here, never re-derived).
+
+    LIVE-ONLY by design: the insider feed's 90-day window is anchored to the
+    wall clock (it has no as-of parameter and there is no historical insider
+    store), so any past-dated sheet gets all three keys UNAVAILABLE with that
+    reason — the same contract `_overlay_put_call`/`_overlay_peer_comparison`
+    document. A `partial` feed (some filings unreadable, or the 25-filing cap
+    bitten) still computes: every count is real but a floor, and each line
+    carries the feed's own reason as an "incomplete feed" caveat.
+
+    The rendered lines are stored on the profile (all inputs are AMI-computed
+    or code-sanitised at the render seam in `edgar_forensics`), so the profile
+    stays JSON-native for the CR237 CIO snapshot.
+    """
+    keys = ("insider_ratio", "insider_plan_tag", "insider_cluster")
+    today = datetime.now(UTC).date()
+    if as_of is not None and as_of < today:
+        reason = (
+            "no historical insider store — the SEC insider feed reads the "
+            "last 90 days live, and a past-dated sheet cannot be served PIT-safely"
+        )
+        for key in keys:
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+        profile["insider_unavailable_reason"] = reason
+        return
+    window_end = as_of or today
+    window_start = window_end - timedelta(days=edgar_forensics.INSIDER_WINDOW_DAYS)
+
+    try:
+        resp = edgar_ownership.get_insider_activity(ticker)
+    except Exception as exc:
+        logger.warn(
+            "edgar_insider_forensics_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        for key in keys:
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+        profile["insider_unavailable_reason"] = "the SEC insider feed could not be read"
+        return
+    if resp.state == "not_available":
+        for key in keys:
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+        profile["insider_unavailable_reason"] = (
+            resp.reason or "the SEC insider feed could not be read"
+        )
+        return
+
+    partial_reason = resp.reason if resp.state == "partial" else None
+    transactions = resp.transactions
+    profile["insider_ratio_line"] = edgar_forensics.insider_ratio_line(
+        edgar_forensics.insider_ratio(
+            transactions, window_start=window_start, window_end=window_end,
+        ),
+        live=True, partial_reason=partial_reason,
+    )
+    profile["insider_plan_tag_line"] = edgar_forensics.insider_plan_tag_line(
+        edgar_forensics.insider_plan_tag(
+            transactions, window_start=window_start, window_end=window_end,
+        ),
+        live=True, partial_reason=partial_reason,
+    )
+    profile["insider_cluster_line"] = edgar_forensics.cluster_buy_line(
+        edgar_forensics.cluster_buy(
+            transactions, window_start=window_start, window_end=window_end,
+        ),
+        live=True, partial_reason=partial_reason,
+    )
+    for key in keys:
+        field_state[key] = LiveDataState.LIVE.value
+
+
+def _overlay_edgar_8k_flags(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date | None
+) -> None:
+    """CR247 Phase 1D — the 8-K half of the forensic flags, one `field_state`
+    key: `edgar_8k_flags` (flag 4: Friday-after-close filings, Item 4.01
+    auditor changes, Item 4.02 non-reliance). Unlike the insider trio this
+    one IS as-of capable: `edgar_filings_feed.fetch_8k_item_flags` windows
+    PIT against `as_of` with the same `filings.files` page coverage as the
+    filings index.
+
+    An in-window Item 4.02 additionally arms the safety floor: the overlay
+    stores `edgar_8k_item_402_block`, a ready narration the PM step hands to
+    `enforce_safety_floor` — the floor itself decides (DEF059: the safety
+    floor is the sole vetoer), and only when `room_edgar_8k_flags_enabled`
+    is on, so the flag-off control arm changes the verdict with the sheet.
+    """
+    today = datetime.now(UTC).date()
+    window_end = as_of or today
+    window_start = window_end - timedelta(days=edgar_forensics.EIGHT_K_WINDOW_DAYS)
+    try:
+        state, rows = edgar_filings_feed.fetch_8k_item_flags(ticker, window_end)
+    except Exception as exc:
+        logger.warn(
+            "edgar_8k_flags_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["edgar_8k_flags"] = LiveDataState.UNAVAILABLE.value
+        profile["edgar_8k_flags_unavailable_reason"] = "the SEC filings index could not be read"
+        return
+    if state != "live" or rows is None:
+        field_state["edgar_8k_flags"] = LiveDataState.UNAVAILABLE.value
+        profile["edgar_8k_flags_unavailable_reason"] = "the SEC filings index could not be read"
+        return
+
+    filings = [
+        edgar_forensics.EightKFiling(
+            form=str(r.get("form") or ""),
+            filed=date.fromisoformat(str(r["filed"])),
+            accession=str(r.get("accession") or ""),
+            items=tuple(str(t) for t in (r.get("items") or ())),
+            acceptance=edgar_forensics.parse_acceptance_datetime(r.get("acceptance")),
+        )
+        for r in rows
+    ]
+    flags = edgar_forensics.eight_k_flags(
+        filings, window_start=window_start, window_end=window_end,
+    )
+    profile["edgar_8k_flag_lines"] = edgar_forensics.eight_k_flags_lines(flags)
+    profile["edgar_8k_item_402_block"] = edgar_forensics.item_402_block_reason(flags)
+    field_state["edgar_8k_flags"] = LiveDataState.LIVE.value
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -1697,6 +1829,8 @@ def _profile_for_ticker(
         _overlay_capital_returns(profile, field_state, ticker, today)
         _overlay_recent_filings(profile, field_state, ticker, today)
         _overlay_sbc_and_roic(profile, field_state, ticker, today)
+        _overlay_insider_forensics(profile, field_state, ticker, as_of)
+        _overlay_edgar_8k_flags(profile, field_state, ticker, as_of)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
@@ -1709,6 +1843,13 @@ def _profile_for_ticker(
         field_state["recent_filings"] = LiveDataState.UNAVAILABLE.value
         field_state["sbc"] = LiveDataState.UNAVAILABLE.value
         field_state["roic"] = LiveDataState.UNAVAILABLE.value
+        for key in ("insider_ratio", "insider_plan_tag", "insider_cluster"):
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+        profile["insider_unavailable_reason"] = "mock mode — the SEC insider feed is not read"
+        field_state["edgar_8k_flags"] = LiveDataState.UNAVAILABLE.value
+        profile["edgar_8k_flags_unavailable_reason"] = (
+            "mock mode — the SEC filings index is not read"
+        )
 
     # CR247 Phase 1B — live-only by design (no historical options store);
     # the overlay itself records the right unavailable reason per path.
@@ -4551,6 +4692,26 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
             overridden_from_llm=True,
         )
 
+    # CR247 Phase 1D — the scripted path doesn't route through
+    # `enforce_safety_floor`, so the same forensic veto is applied here: an
+    # in-window 8-K Item 4.02 (non-reliance) blocks this verdict's BUY (the
+    # scripted proposal above is always side=BUY), with the overlay's
+    # narration naming the filing — never a silent refusal. The floor owns
+    # the flag gate, same as the live path.
+    if profile.get("edgar_8k_item_402_block"):
+        from app.core.config import settings
+
+        if settings.room_edgar_8k_flags_enabled:
+            return Verdict(
+                action=VerdictAction.REJECT,
+                reason=(
+                    "Forensic 8-K flag (safety floor override): "
+                    f"{profile['edgar_8k_item_402_block']}"
+                ),
+                violations=["8-K Item 4.02 non-reliance filing in the forensic window"],
+                overridden_from_llm=True,
+            )
+
     return Verdict(
         action=VerdictAction.APPROVE,
         size_pct=ctx.trader_size_pct,
@@ -5069,6 +5230,10 @@ async def _run_cio_step(
                     trade_open_timestamps=ctx.risk_trade_open_timestamps,
                     existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
                     proposed_stop=parsed.stop,
+                    # CR247 Phase 1D — an in-window 8-K Item 4.02 (non-reliance)
+                    # narrated by the forensic flags overlay; None = nothing to
+                    # block on. The floor owns the flag gate and the BUY check.
+                    edgar_8k_item_402=profile.get("edgar_8k_item_402_block"),
                 )
             else:
                 verdict = parsed  # PASS — nothing to check compliance on
