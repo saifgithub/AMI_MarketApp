@@ -700,3 +700,18 @@ parity). **Alpha action on next promote:** one-time
 then the overlay warns loudly by design. Note: build finished by a K2.8
 subagent after a K3 run hit the quota wall; both passed the same verify
 bar.
+
+## D29 — Phase 1C shipped; AAPL SIC constraint binds (Kimi, 2026-09-29)
+*status: implemented + verified; gate pending (runs with 1D)*
+
+Peer comparison live (commit fd0b7f69, suite 7380 green, NVDA live probe:
+7 verified 3674 peers, log-distance around $5.52T cap, effective-n medians).
+Design: membership verified live per candidate's own submissions JSON
+(hand list is a probe only, never rendered); <3 verified same-SIC peers →
+not_available "insufficient peer coverage", SIC never widened. **Finding:
+AAPL files SIC 3571 (Electronic Computers) — only 2 verified peers
+(DELL, SMCI)**, so AAPL's line degrades honestly; V likely similar (7389
+Business Services). If AAPL should carry the line, widening 3570+3571 is a
+deliberate spec decision for Saiful/Architect, not a silent agent choice.
+The two "no peer comparison" disclaimers in fundamentals_analyst.md are
+removed (live-state only), replaced by one Inputs sentence naming the label.
