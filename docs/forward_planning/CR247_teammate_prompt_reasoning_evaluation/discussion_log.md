@@ -684,3 +684,19 @@ deterministic routing/combination exactly as SPEC'd; the census re-runs when
 the ledger matures to validate which review earns its keep. Standing
 hygiene note: toolkit/harness convenes land in `excluded_user` — the ledger
 correctly quarantines synthetic users.
+
+## D28 — Phase 1B shipped (Kimi, 2026-09-29)
+*status: implemented + verified; gate pending*
+
+Three computed fields live (commit 9d5a2384, suite 7346 green, AAPL live
+probe): SBC-adjusted FCF (TTM FCF $136,683M − SBC $13,706M = $122,977M),
+ROIC 87.4% (NOPAT at filed 15.6% effective rate over debt+equity−cash,
+WACC note labelled estimate, no WACC sourced), put/call 0.79 volume / 0.78
+OI across nearest 4 expiries (Flow & Positioning lane → Social Media
+Analyst persona). All ratios computed in code, AMI-labelled. Flags
+`room_sbc/roic/put_call_enabled` (default true, env kill-switches, compose
+parity). **Alpha action on next promote:** one-time
+`ingest_edgar_facts.py --force` so the three new XBRL tags resolve — until
+then the overlay warns loudly by design. Note: build finished by a K2.8
+subagent after a K3 run hit the quota wall; both passed the same verify
+bar.
