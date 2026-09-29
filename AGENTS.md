@@ -6,6 +6,15 @@ high-level orientation and behaviour-critical rules here, canonical detail under
 
 ---
 
+## Standing instructions (override defaults)
+
+1. **Be succinct** — always, unless Saiful instructs otherwise. No filler, no restating,
+   no summaries he didn't ask for.
+2. **Numbered lists, always** — whenever you present a list (steps, options, findings),
+   use a numbered list, not bullets, so Saiful can refer to items by number.
+
+---
+
 ## Agent identity and track
 
 - **Track:** `K` · **Role:** `Kimi` · **Instance:** `<id-or->` (leave as `-` if not a fleet instance).
