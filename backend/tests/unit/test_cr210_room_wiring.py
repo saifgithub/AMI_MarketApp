@@ -127,8 +127,10 @@ def test_a_full_run_constrains_exactly_the_machine_read_surfaces(monkeypatch):
 
 
 def test_both_flags_off_is_byte_for_byte_todays_request(monkeypatch):
-    """The flags ship `false`, so landing this CR must not move production at
-    all. Anti-vacuity for every test above."""
+    """With both flags off the request carries no grammar at all — the kill
+    switch restores the pre-CR210 wire shape exactly. Anti-vacuity for every
+    test above; the ON default itself is pinned in
+    test_cr247_pm_json_constraint.py."""
     gw = _ConstraintRecordingGateway()
     events = _run(gw, monkeypatch, json_on=False, regex_on=False)
 

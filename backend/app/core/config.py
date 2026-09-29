@@ -861,6 +861,13 @@ class Settings(BaseSettings):
     # before/after is CR196's held-out instrument through the same
     # `eval_surfaces.py --stage score`. Flip it after that has run, not before.
     #
+    # ON since 2026-09-30 (CR247 Phase 2): the 1C/1D before-measurement
+    # (`measurements/phase1cd_gate.md`) recorded PM plain-text-template draws at
+    # ~50% on vLLM and ~25% on DeepInfra, up from ~1/10 — instructional JSON
+    # demands decay with prompt length (CR038), so the fix is structural. The
+    # env var stays as the kill switch. The Trader regex above stays OFF: it
+    # is a separate, still-unmeasured behaviour change.
+    #
     # The verdict and its reformatter move together, deliberately: the
     # reformatter exists to recover a PM reply that failed to parse, and a
     # recovery path weaker than the thing it recovers is not one. The Risk
@@ -872,7 +879,7 @@ class Settings(BaseSettings):
     # assumed from the endpoint being OpenAI-compatible). Every other provider
     # records `constraint_status='unsupported'` in llm_audit, logs it, and runs
     # on CR143's tolerant parser — a degraded path that says so.
-    room_json_constraints_enabled: bool = False
+    room_json_constraints_enabled: bool = True
 
     # CR210 — the Execution Desk's money block as a regex grammar. Separate from
     # the flag above on purpose, for the reason the two flags above give about

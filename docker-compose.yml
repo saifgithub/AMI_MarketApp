@@ -427,10 +427,13 @@ services:
       # measurement. See Settings.room_debate_order_seeded.
       ROOM_DEBATE_ORDER_SEEDED: ${ROOM_DEBATE_ORDER_SEEDED:-false}
       # CR210 — decoding grammars on the machine-read Room surfaces (CIO verdict,
-      # its reformatter, Risk Officer). Off until the held-out before/after has
-      # run; only the on-prem vLLM enforces them, every other provider records
-      # constraint_status='unsupported'. See Settings.room_json_constraints_enabled.
-      ROOM_JSON_CONSTRAINTS_ENABLED: ${ROOM_JSON_CONSTRAINTS_ENABLED:-false}
+      # its reformatter, Risk Officer). ON since 2026-09-30 (CR247 Phase 2): the
+      # phase1cd gate measured PM plain-text-template draws at ~50% on vLLM, and
+      # the schema makes format compliance structural instead of instructional.
+      # Only the on-prem vLLM enforces them; every other provider records
+      # constraint_status='unsupported' and runs the tolerant parser, said so
+      # out loud. See Settings.room_json_constraints_enabled.
+      ROOM_JSON_CONSTRAINTS_ENABLED: ${ROOM_JSON_CONSTRAINTS_ENABLED:-true}
       # CR210 — the Execution Desk's money block as a regex grammar. Separate flag
       # because it changes user-visible prose shape and makes AMI's geometry note
       # fire on every BUY turn. See Settings.room_trader_regex_enabled.

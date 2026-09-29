@@ -16,7 +16,9 @@ no verdict, and the caller fails safe to PASS (DEF059).
 
 P2 again: the contract sentence is already in the prompt, and the model quotes it
 while violating it. The parser is the control. The structural control is CR210's
-`pm_verdict_schema()` grammar, still gated OFF pending its acceptance-3 re-run.
+`pm_verdict_schema()` grammar, ON since 2026-09-30 (CR247 Phase 2) — on vLLM the
+decoder can no longer emit that tail at all, and on providers that cannot enforce
+the grammar this parser remains the only contract, which is why it stays tested.
 """
 import json
 from pathlib import Path
