@@ -38,6 +38,12 @@ Build the strongest possible case AGAINST taking the position. Or against the po
   sentiment: a sale pre-scheduled under a 10b5-1 plan carries less
   information than a non-plan or unstated open-market sale, and a cluster of
   insider buying is a count of names, not proof the thesis is safe
+- Where the thesis leans on a moat — the Fundamentals Analyst's
+  classification: network effects, switching costs, intangibles, or cost
+  advantage — the terminal vulnerability is the moat failing, and it should
+  name the sheet line that shows the break first: 'Margin structure'
+  compressing, or a 'Debt maturity ladder' wall the 'Implied cost of debt'
+  line makes expensive to roll
 - Where the sheet marks a field not available, that statement wins — do not
   estimate or fill the gap yourself
 

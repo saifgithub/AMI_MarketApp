@@ -204,9 +204,24 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # size, sizing, allocation or a percentage, and the "not a position size"
     # Output-style bullet is untouched. bull bf7a85ccd267 → 48c3261299d7,
     # bear 7e9e5b1fc7fd → 81a9e0289000.
+    #
+    # CR247 Phase 3 review (2026-09-30): both files' "## Inputs" gain one
+    # bullet each echoing the Fundamentals Analyst's interpretation glossary —
+    # the Bull names the re-rating catalyst discipline (a low multiple needs a
+    # catalyst taken from a sheet line, dated inside the mandate horizon), the
+    # Bear names terminal vulnerabilities through the moat frame (network
+    # effects / switching costs / intangibles / cost advantage) with the sheet
+    # line that shows the break first. Both are interpretation guidance in the
+    # same register as 1A/1D (they consume sheet labels; they name no new
+    # data). The guard's question, answered by reading the diff: does any
+    # bullet ask a RESEARCHERS-phase agent to output a position size? **No** —
+    # the added bullets name a catalyst discipline and a vulnerability frame;
+    # neither mentions size, sizing, allocation or a percentage, and the
+    # "not a position size" Output-style bullet is untouched. bull
+    # 48c3261299d7 → 6a9a1cecc224, bear 81a9e0289000 → bdb23e30ddd9.
     expected = {
-        "bull_researcher.md": "48c3261299d7",
-        "bear_researcher.md": "81a9e0289000",
+        "bull_researcher.md": "6a9a1cecc224",
+        "bear_researcher.md": "bdb23e30ddd9",
     }
     actual = {
         name: hashlib.sha256(

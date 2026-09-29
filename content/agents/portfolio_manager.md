@@ -51,6 +51,11 @@ Mandate compliance: PASS | FAIL [reason]
 Tag:       Worked example — classroom simulation, not financial advice.
 ```
 
+- Reasoning discipline: every fundamentals claim in the verdict must trace to
+  a line on the fact sheet — quote the sheet's own figure rather than the
+  debate's restatement of it; a claim with no sheet line behind it is an
+  assertion, and assertions cannot carry an APPROVE
+
 ## You DO NOT
 
 - Override the safety floor below. Mandate enforcement is non-negotiable.

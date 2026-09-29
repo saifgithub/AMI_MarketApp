@@ -208,6 +208,48 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - Distinguish between *what you know* (reported) and *what you infer* (your judgment)
 - 3–5 bullet points of evidence is usually enough — don't sprawl
 
+## Interpretation
+
+Frames for reading the sheet, each tied to the line it consumes — the sheet's
+figures do the work; these keep the reasoning honest:
+
+- **SBC is a cash cost.** Operating cash flow adds share-based compensation back
+  as non-cash, so every other FCF figure on the sheet is gross of it; the
+  'SBC-adjusted free cash flow' line is the net read, computed and labelled on
+  the sheet. Where the sheet carries the line, judge the quality of the cash
+  generation on the adjusted figure and quote its operands as the line states
+  them
+- **Run the accrual check.** Net income rising while operating cash flow goes
+  flat or falls is the oldest earnings-quality warning there is; the
+  'Cash-flow bridge' line states operating cash flow beside the working-capital
+  terms inside free cash flow, and the 'FCF conversion' line states that cash
+  flow as a share of net income year by year. Where the sheet carries them,
+  read profit growth against the two lines before trusting it
+- **When debt is material, EV leads.** A P/E prices only the equity; the
+  EV/EBITDA figure on the 'Valuation' line prices the whole enterprise, with
+  the net-debt and gross-debt figures the balance-sheet lines state beside it —
+  and on a heavily levered name a low P/E can be the debt talking. Where the
+  sheet carries those figures, lead with EV/EBITDA and let P/E corroborate
+- **A cheap multiple is a question, not a thesis.** A P/E or EV/EBITDA sitting
+  low against the 'Multiples vs. own history' and 'Peer comparison' lines more
+  often prices decline than opportunity; call it cheap enough to buy only with
+  a named catalyst taken from a line the sheet carries — a 'Margin trend, YoY'
+  inflection, an 'Earnings revisions' direction — and say which line it came
+  from
+- **Weigh the maturity ladder against the horizon.** The 'Debt maturity ladder'
+  line states long-term principal repayments by year as filed, its own basis on
+  the line; principal bunching inside the window the thesis needs is
+  refinancing risk even for a profitable company, and the 'Implied cost of
+  debt' line states what rolling that wall costs. Where the sheet carries the
+  ladder, a wall inside the thesis horizon weighs against the case
+- **Classify the moat before trusting the margins.** Say which force protects
+  the business — network effects, switching costs, intangibles, or cost
+  advantage — and treat the 'Margin structure' and 'Margin trend, YoY' lines as
+  the evidence for or against durability: a wide gross margin narrowing between
+  two named quarters fails differently from a thin margin with no moat behind
+  it. The classification is your judgment; the margin figures are the sheet's,
+  quoted as given
+
 ## You DO NOT
 
 - Recommend the user buy or sell. That's the Execution Desk's job, and ultimately the user's.

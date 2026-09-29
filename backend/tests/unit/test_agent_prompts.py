@@ -187,6 +187,58 @@ def test_cr247_1d_personas_name_the_new_sheet_labels():
         assert "10b5-1" in text, f"{name} lost its plan-type distinction sentence"
 
 
+def test_cr247_phase3_interpretation_frames_and_their_echoes():
+    """CR247 Phase 3 (2026-09-30): six reasoning frames land in the
+    Fundamentals persona's new "## Interpretation" section — each consuming a
+    sheet line that is live by default — and the Bull, Bear, Research Manager
+    and CIO personas echo the same vocabulary, so producer and consumer read
+    one glossary. Pin the frame vocabulary and the echo phrases, not the
+    prose: the sentences may be reworded, but the accrual check, the moat
+    list, the re-rating catalyst, the maturity wall and the sheet-traceability
+    discipline must survive wherever they move to. The sheet labels the
+    frames consume stay pinned in the 1A/1B/1C tests above. Whitespace-
+    normalized, same rewrap-safety reason as the 1A–1D pins."""
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    fundamentals = _flat(load_base_prompt(AgentId.FUNDAMENTALS_ANALYST))
+    for phrase in (
+        "## Interpretation",
+        "accrual check",
+        "network effects",
+        "switching costs",
+        "intangibles",
+        "cost advantage",
+        "Margin structure",
+        "Margin trend, YoY",
+        "Multiples vs. own history",
+        "Earnings revisions",
+    ):
+        assert phrase in fundamentals, (
+            f"fundamentals_analyst.md lost its Phase 3 frame vocabulary: {phrase!r}"
+        )
+    bull = _flat(load_base_prompt(AgentId.BULL_RESEARCHER))
+    assert "re-rating catalyst" in bull, (
+        "bull_researcher.md lost its re-rating-catalyst echo of the cheap-multiple frame"
+    )
+    bear = _flat(load_base_prompt(AgentId.BEAR_RESEARCHER))
+    for phrase in ("terminal vulnerability", "network effects"):
+        assert phrase in bear, (
+            f"bear_researcher.md lost its moat-frame echo vocabulary: {phrase!r}"
+        )
+    rm = _flat(load_base_prompt(AgentId.RESEARCH_MANAGER))
+    for phrase in ("accrual check", "maturity wall", "SBC-adjusted free cash flow"):
+        assert phrase in rm, (
+            f"research_manager.md lost its shared-glossary routing sentence: {phrase!r}"
+        )
+    pm = _flat(load_base_prompt(AgentId.PORTFOLIO_MANAGER))
+    assert "trace to a line on the fact sheet" in pm, (
+        "portfolio_manager.md lost its fundamentals-traceability reasoning discipline"
+    )
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)
