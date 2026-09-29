@@ -178,13 +178,15 @@ def test_a_ladder_filed_after_the_as_of_is_invisible(seeded) -> None:
     assert debt_maturity.fetch_debt_maturity("LADX", _FILED - timedelta(days=1)) is None
 
 
-def test_the_flag_is_off_and_the_resolver_does_not_read_it(monkeypatch) -> None:
-    """The gate is a render-layer decision, so `None` here means one thing only.
+def test_the_flag_is_on_by_default_and_the_resolver_does_not_read_it(monkeypatch) -> None:
+    """Default flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The
+    gate is still a render-layer decision, so `None` here means one thing only.
 
     A fetcher that returned None for a flag-off feature would make "we did not
     ask" and "the filer discloses nothing" the same value at the call site.
     """
-    assert settings.room_debt_maturity_enabled is False
+    assert settings.room_debt_maturity_enabled is True
+    monkeypatch.setattr(settings, "room_debt_maturity_enabled", False)
     off = debt_maturity.resolve_debt_maturity(_cat_facts(), _AS_OF)
     monkeypatch.setattr(settings, "room_debt_maturity_enabled", True)
     assert debt_maturity.resolve_debt_maturity(_cat_facts(), _AS_OF) == off

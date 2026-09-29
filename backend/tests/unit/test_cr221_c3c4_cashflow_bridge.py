@@ -181,13 +181,16 @@ def _sheet() -> str:
     return room_prompts._format_profile(_profile(), AgentId.FUNDAMENTALS_ANALYST)
 
 
-def test_the_flag_is_off_by_default() -> None:
+def test_the_flag_is_on_by_default() -> None:
     """C3's RENDER flag only. DEF400's basis flag is a separate switch and is
     on since 2026-09-17 — see `test_def400_is_on_by_default`. The two were
     always independent: the bridge is a new block on the sheet, the basis fix
     moves a number already shipped.
+
+    Flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The env var
+    stays as the kill switch; the flag-off render is still pinned below.
     """
-    assert settings.room_cashflow_bridge_enabled is False
+    assert settings.room_cashflow_bridge_enabled is True
 
 
 def test_the_same_profile_renders_nothing_with_the_flag_off() -> None:

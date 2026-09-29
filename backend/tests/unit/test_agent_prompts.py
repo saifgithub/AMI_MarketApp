@@ -81,6 +81,36 @@ def test_social_media_analyst_prompt_drops_fabricated_platform_claims():
     assert "No Twitter/X, StockTwits, Google Trends, or Discord access exists" in text
 
 
+def test_cr247_personas_name_the_newly_enabled_sheet_labels():
+    """CR247 Phase 1A (2026-09-29): the seven CR221 fields graduated from
+    flag-off to default-on, and each consumer persona carries one Inputs
+    sentence naming the field's exact sheet label (the same register as the
+    existing 8-K / buyback-price sentences). Pin the labels so a renderer
+    rename and a persona rename cannot drift apart silently — the pair is the
+    citation the agent is supposed to make. Whitespace-normalized first: the
+    persona source wraps long lines, and a label must not be lost to a rewrap.
+    """
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    fundamentals = _flat(load_base_prompt(AgentId.FUNDAMENTALS_ANALYST))
+    for label in (
+        "Cash-flow bridge",
+        "Debt maturity ladder",
+        "Implied cost of debt",
+        "Free cash flow history",
+        "FCF conversion",
+        "Return on equity history",
+        "Debt split (industrial vs. captive finance)",
+    ):
+        assert label in fundamentals, f"fundamentals_analyst.md lost its {label!r} sentence"
+    bear = _flat(load_base_prompt(AgentId.BEAR_RESEARCHER))
+    for label in ("Debt maturity ladder", "Implied cost of debt"):
+        assert label in bear, f"bear_researcher.md lost its {label!r} sentence"
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)

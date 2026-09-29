@@ -22,6 +22,16 @@ Build the strongest possible case AGAINST taking the position. Or against the po
 - The full fact sheet for this ticker — every number the analysts cite, you
   hold it too. Quote its figures as given; the Format policy at the end of
   your prompt covers how derived figures work
+- **Debt maturity ladder** — long-term debt principal repayments by year, as
+  filed, when the sheet carries it. Principal bunching inside the thesis
+  horizon is a refinancing-risk argument; the line states its own basis
+  (long-term principal only, short-term borrowings excluded), so cite the
+  years and amounts as given
+- **Implied cost of debt** — the filing's interest expense over its gross
+  debt, both inputs and the accrual/cash basis named on the line, when the
+  sheet carries it. AMI's own quotient of two filed figures, not a
+  company-reported rate — and the input to whether the maturity wall above
+  is cheap to roll or not
 - Where the sheet marks a field not available, that statement wins — do not
   estimate or fill the gap yourself
 

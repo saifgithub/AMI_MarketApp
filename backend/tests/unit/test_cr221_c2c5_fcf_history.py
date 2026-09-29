@@ -211,9 +211,11 @@ def _sheet(**flags) -> str:
     return room_prompts._format_profile(_profile(), AgentId.FUNDAMENTALS_ANALYST)
 
 
-def test_both_flags_are_off_by_default() -> None:
-    assert settings.room_fcf_history_enabled is False
-    assert settings.room_fcf_conversion_enabled is False
+def test_both_flags_are_on_by_default() -> None:
+    """Flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The env vars
+    stay as kill switches; the flag-off renders are still pinned below."""
+    assert settings.room_fcf_history_enabled is True
+    assert settings.room_fcf_conversion_enabled is True
 
 
 def test_neither_line_renders_with_the_flags_off() -> None:

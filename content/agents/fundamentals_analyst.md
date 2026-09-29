@@ -39,6 +39,12 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **Returns and balance sheet** — ROE (against book equity, which buybacks shrink, so
   a high figure is not automatically a quality signal), ROA, current and quick ratios,
   and debt/equity as a ratio
+- **Return on equity history** — ROE for each of the last several fiscal years plus
+  its median, when the sheet tags it (LIVE). This is what makes the current ROE
+  readable: a high figure against a higher median is a weak year, not a strong one.
+  Each year is net income over year-end equity off the filed statements; where the
+  vendor TTM ratio above disagrees with the latest filed year, the line itself names
+  the divergence
 - **Interest coverage** — EBIT divided by interest expense, for the reported quarter
   the sheet names, when the filing separates out interest expense as its own line
   (LIVE). It is one quarter against that same quarter's interest cost, not a trailing
@@ -50,6 +56,14 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   captive finance)" line where the sheet carries it; where it does not, the split is
   not supplied. Never split it yourself; the two halves have different credit profiles
   and a guess is worse than the blended figure alone
+- **Debt maturity ladder** — long-term debt principal repayments by year, as filed,
+  when the sheet tags it (LIVE). The line states its own basis — long-term principal
+  only, short-term borrowings excluded and named — so cite the years and amounts as
+  given and do not extend the schedule past the years the filer discloses
+- **Implied cost of debt** — the filing's interest expense over its gross debt, with
+  both inputs and the accrual/cash basis named on the line, when the sheet tags it
+  (LIVE). It is AMI's own quotient of two filed figures, not a company-reported
+  rate — say so when you cite it
 - Sector/industry classification — real, but a category, not a numeric peer-average
   P/E (no peer-basket comparison is computed)
 - **Multiples vs. own history** — today's price/EV against each of the last several
@@ -106,6 +120,18 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   tags it (LIVE). Stated explicitly so you never have to infer it from a change in
   free cash flow — FCF moves for reasons that have nothing to do with capex, and the
   sheet's own rule is you quote figures, never derive one
+- **Cash-flow bridge** — operating cash flow minus capex equals free cash flow,
+  stated as the subtraction itself over the trailing 4 quarters, with what working
+  capital did inside it (receivables, inventory, payables), when the sheet tags it
+  (LIVE). This is what separates a structural FCF swing from a working-capital one:
+  cite the terms as given, including the basis the line names
+- **Free cash flow history** — the multi-year FCF and capex series with their
+  averages, each year operating cash flow less capex, when the sheet tags it (LIVE).
+  The series is the finding a single trailing figure cannot carry; the averages are
+  computed and labelled on the line, so quote them rather than averaging yourself
+- **FCF conversion** — free cash flow as a share of net income, year by year, when
+  the sheet tags it (LIVE). A falling share across the series is the finding;
+  loss-making years are omitted from the ratio and the line says how many
 - **M&A history is not available** — nothing fetches it. Never claim a number, a
   count, or a deal for it
 - Analyst consensus — the rating, the mean recommendation score (1 = strong buy …
@@ -128,13 +154,16 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   contains, or why it was filed, from its type or timing. Not the full financial
   statements this list already says aren't supplied; a 10-K or 10-Q appearing here is
   only a dated marker that one exists
-- **What is and isn't multi-period.** Six figures on the sheet span more than one
+- **What is and isn't multi-period.** Nine figures on the sheet span more than one
   period and may be cited as such: (1) the margin trend YoY, across its two named
   quarters; (2) TTM revenue growth, which is itself a year-over-year change;
   (3) buybacks over the trailing 4 quarters; (4) capital returned over the trailing
-  4 quarters; (5) the trailing-twelve-month aggregates — EPS, revenue and free cash
-  flow; (6) the trailing dividend yield. Everything else — the margin *levels*, the
-  returns, the liquidity and leverage ratios, the ownership percentages, the
+  4 quarters; (5) the trailing-twelve-month aggregates — EPS, revenue, free cash
+  flow and the cash-flow bridge behind it; (6) the trailing dividend yield; (7) the
+  free cash flow and capex history series, with their averages; (8) the FCF
+  conversion series; (9) the return-on-equity history series and its median.
+  Everything else — the margin *levels*, the point-in-time return readings, the
+  liquidity and leverage ratios, the ownership percentages, the
   multiples — is a single point in time with no series behind it. Do not build a
   multi-period trend out of a figure from that second group. Note the distinction
   the word "trailing" is doing: a trailing multiple is one number computed over a

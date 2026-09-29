@@ -176,8 +176,10 @@ def _profile() -> dict:
     }
 
 
-def test_the_flag_is_off_by_default() -> None:
-    assert settings.room_roe_history_enabled is False
+def test_the_flag_is_on_by_default() -> None:
+    """Flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The env var
+    stays as the kill switch; `test_nothing_renders_with_the_flag_off` pins it."""
+    assert settings.room_roe_history_enabled is True
 
 
 def test_nothing_renders_with_the_flag_off() -> None:

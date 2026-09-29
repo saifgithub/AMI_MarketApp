@@ -435,29 +435,35 @@ services:
       # because it changes user-visible prose shape and makes AMI's geometry note
       # fire on every BUY turn. See Settings.room_trader_regex_enabled.
       ROOM_TRADER_REGEX_ENABLED: ${ROOM_TRADER_REGEX_ENABLED:-false}
-      # CR221 A1 — debt maturity ladder on the Room fact sheet. Off until §7's
-      # before/after replay has run. See Settings.room_debt_maturity_enabled.
-      ROOM_DEBT_MATURITY_ENABLED: ${ROOM_DEBT_MATURITY_ENABLED:-false}
+      # CR221 A1 — debt maturity ladder on the Room fact sheet. ON since
+      # 2026-09-29 (CR247 Phase 1A — §7's measurement rounds have run). The env
+      # var stays as the kill switch. See Settings.room_debt_maturity_enabled.
+      ROOM_DEBT_MATURITY_ENABLED: ${ROOM_DEBT_MATURITY_ENABLED:-true}
       # CR221 A3 — implied cost of debt on the fact sheet. Separate from A1's
-      # flag so §7 can attribute per item. See Settings.room_cost_of_debt_enabled.
-      ROOM_COST_OF_DEBT_ENABLED: ${ROOM_COST_OF_DEBT_ENABLED:-false}
+      # flag so §7 can attribute per item. ON since 2026-09-29 (CR247 Phase 1A).
+      # See Settings.room_cost_of_debt_enabled.
+      ROOM_COST_OF_DEBT_ENABLED: ${ROOM_COST_OF_DEBT_ENABLED:-true}
       # CR221 C3/C4 — cash-flow bridge + working-capital detail on the fact
-      # sheet. See Settings.room_cashflow_bridge_enabled.
-      ROOM_CASHFLOW_BRIDGE_ENABLED: ${ROOM_CASHFLOW_BRIDGE_ENABLED:-false}
+      # sheet. ON since 2026-09-29 (CR247 Phase 1A).
+      # See Settings.room_cashflow_bridge_enabled.
+      ROOM_CASHFLOW_BRIDGE_ENABLED: ${ROOM_CASHFLOW_BRIDGE_ENABLED:-true}
       # DEF400 — derive free cash flow from the statements (OCF - capex) instead
       # of `.info.freeCashflow`. ON since 2026-09-17: §7's measurement arm has
       # run. See Settings.fundamentals_fcf_from_statements_enabled.
       FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED: ${FUNDAMENTALS_FCF_FROM_STATEMENTS_ENABLED:-true}
       # CR221 C2/C5 — multi-year FCF/capex series and the conversion history.
+      # Both ON since 2026-09-29 (CR247 Phase 1A).
       # See Settings.room_fcf_history_enabled / room_fcf_conversion_enabled.
-      ROOM_FCF_HISTORY_ENABLED: ${ROOM_FCF_HISTORY_ENABLED:-false}
-      ROOM_FCF_CONVERSION_ENABLED: ${ROOM_FCF_CONVERSION_ENABLED:-false}
-      # CR221 B2 — cycle ROE history. See Settings.room_roe_history_enabled.
-      ROOM_ROE_HISTORY_ENABLED: ${ROOM_ROE_HISTORY_ENABLED:-false}
+      ROOM_FCF_HISTORY_ENABLED: ${ROOM_FCF_HISTORY_ENABLED:-true}
+      ROOM_FCF_CONVERSION_ENABLED: ${ROOM_FCF_CONVERSION_ENABLED:-true}
+      # CR221 B2 — cycle ROE history. ON since 2026-09-29 (CR247 Phase 1A).
+      # See Settings.room_roe_history_enabled.
+      ROOM_ROE_HISTORY_ENABLED: ${ROOM_ROE_HISTORY_ENABLED:-true}
       # CR221 A2 / D1 / D2 — captive-finance debt split, revenue by segment and
       # by geography, from the filings' XBRL instances. Need
-      # `scripts/ingest_edgar_dimensional.py` to have run. See Settings.
-      ROOM_DEBT_SPLIT_ENABLED: ${ROOM_DEBT_SPLIT_ENABLED:-false}
+      # `scripts/ingest_edgar_dimensional.py` to have run. A2 ON since
+      # 2026-09-29 (CR247 Phase 1A); D1/D2 stay off. See Settings.
+      ROOM_DEBT_SPLIT_ENABLED: ${ROOM_DEBT_SPLIT_ENABLED:-true}
       ROOM_SEGMENT_REVENUE_ENABLED: ${ROOM_SEGMENT_REVENUE_ENABLED:-false}
       ROOM_GEOGRAPHIC_REVENUE_ENABLED: ${ROOM_GEOGRAPHIC_REVENUE_ENABLED:-false}
       # CR221 I1 — executive change from 8-K Item 5.02. Needs

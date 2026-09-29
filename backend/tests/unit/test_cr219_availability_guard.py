@@ -441,10 +441,16 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "anchor": "is a single point in time with no series behind it",
         "category": "scope-true",
         "why": (
-            "R3's replacement, and TRUE: after naming the six genuinely multi-period "
-            "figures, this says the REST (margin levels, returns, liquidity/leverage "
-            "ratios, ownership, multiples) are point-in-time. Each of those is a single "
-            "scalar on the sheet with no prior-period value beside it."
+            "R3's replacement, and TRUE: after naming the genuinely multi-period "
+            "figures, this says the REST (margin levels, the point-in-time return "
+            "readings, liquidity/leverage ratios, ownership, multiples) are "
+            "point-in-time. Each of those is a single scalar on the sheet with no "
+            "prior-period value beside it. CR247 Phase 1A (2026-09-29): the count "
+            "went six -> nine when the FCF history, FCF conversion and ROE history "
+            "flags defaulted on; ROE moved OUT of the point-in-time group into item "
+            "(9) of the multi-period list, and the anchor list now reads "
+            "'point-in-time return readings' so ROA stays covered without denying "
+            "the ROE series that ships beside it."
         ),
     },
     {
@@ -536,6 +542,15 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     # store-backed line never renders here and an allowlisted entry carries no
     # collision markers to fire. The enforcing check lives in the slot's own
     # test file instead.
+    #
+    # CR247 Phase 1A (2026-09-29): the four statement-backed CR221 flags
+    # (cashflow bridge, FCF history, FCF conversion, ROE history) now DEFAULT
+    # on, so those lines DO render in this fixture's maximal sheet — the note
+    # above now applies only to the store-backed lines (8-K, debt maturity,
+    # cost of debt, debt split), which still need an ingested EDGAR store the
+    # fixture does not have. No known-absent or allowlisted entry denies any
+    # of the four, so nothing here contradicts them; the persona sentences
+    # naming them are pinned in test_agent_prompts.py instead.
     #
     # CR244 Part 2 slice 1 (2026-09-27) narrowed this again: the filings
     # INDEX (form/date/label, no document text) now also reaches the sheet

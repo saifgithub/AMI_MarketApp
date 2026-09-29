@@ -182,9 +182,19 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # the existing "not a position size" Output-style bullet is untouched.
     # bull bf7a85ccd267, bear f1fca8c61b22 (both files edited this round —
     # identical mechanical insertion per WP04_surfaces.md R23).
+    #
+    # CR247 Phase 1A review (2026-09-29): bear_researcher.md's "## Inputs"
+    # gains two bullets naming the newly default-on sheet lines — "Debt
+    # maturity ladder" and "Implied cost of debt" — in the same register as
+    # R23's fact-sheet line (a data source and its citation rule). The guard's
+    # question, answered by reading the diff: does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? **No** — the two
+    # added bullets name a sheet label and what may be cited from it; neither
+    # mentions size, sizing, allocation or a percentage, and the Output-style
+    # section is untouched. bull unchanged. bear f1fca8c61b22 → 7e9e5b1fc7fd.
     expected = {
         "bull_researcher.md": "bf7a85ccd267",
-        "bear_researcher.md": "f1fca8c61b22",
+        "bear_researcher.md": "7e9e5b1fc7fd",
     }
     actual = {
         name: hashlib.sha256(

@@ -889,26 +889,25 @@ class Settings(BaseSettings):
 
     # CR221 A1 — the debt maturity ladder on the Room's fact sheet, sourced from
     # the five `LongTermDebtMaturitiesRepaymentsOfPrincipalIn*` tags the EDGAR
-    # ingest now stores. Flagged not because the data is doubtful but because
-    # CR221 §7 measures it: the control arm has to be a flag flip against one
-    # cached profile, or "did the ask stop" is confounded by market data moving
-    # between fetches. See `app/services/debt_maturity.py`.
-    room_debt_maturity_enabled: bool = False
+    # ingest now stores. ON since 2026-09-29 (CR247 Phase 1A): §7's measurement
+    # rounds have run and the flip list says FLIP. The env var stays as the kill
+    # switch. See `app/services/debt_maturity.py`.
+    room_debt_maturity_enabled: bool = True
 
     # CR221 A3 — implied cost of debt on the fact sheet, from EDGAR interest
     # expense over EDGAR gross debt (`app/services/interest_cost.py`). Its own
     # flag rather than sharing A1's: §7 measures demand extinction PER ITEM, and
     # two fields behind one switch cannot be attributed separately. This one is
     # also the DEF399 fix vehicle — the numerator it sources is the one the
-    # shipped `interest_coverage` gets wrong.
-    room_cost_of_debt_enabled: bool = False
+    # shipped `interest_coverage` gets wrong. ON since 2026-09-29 (CR247 Phase 1A).
+    room_cost_of_debt_enabled: bool = True
 
     # CR221 C3/C4 — the cash-flow bridge (operating cash flow, capex, the
     # derived free cash flow) plus the working-capital detail behind it. Nine
     # request lines from six agents, every operand already on the frame the
     # statements fetch pulls. Own flag for the same per-item attribution reason
-    # as A1/A3 above.
-    room_cashflow_bridge_enabled: bool = False
+    # as A1/A3 above. ON since 2026-09-29 (CR247 Phase 1A).
+    room_cashflow_bridge_enabled: bool = True
 
     # DEF400 — take `free_cash_flow` (and everything derived from it: the FCF
     # yield, and CR218's capital-return share) from the statements, OCF minus
@@ -932,21 +931,24 @@ class Settings(BaseSettings):
     # the annual `tk.cashflow` frame. Its own flag from C5's below for the same
     # per-item attribution reason as A1/A3: two register items, two asks, two
     # different agents, and §7 has to be able to tell which one it moved.
-    room_fcf_history_enabled: bool = False
+    # Both ON since 2026-09-29 (CR247 Phase 1A).
+    room_fcf_history_enabled: bool = True
 
     # CR221 C5 — free cash flow as a share of net income, year by year.
-    room_fcf_conversion_enabled: bool = False
+    room_fcf_conversion_enabled: bool = True
 
     # CR221 B2 — return on equity across the cycle plus its median, the half of
     # the Research Manager's ask R37's median multiples did not cover.
-    room_roe_history_enabled: bool = False
+    # ON since 2026-09-29 (CR247 Phase 1A).
+    room_roe_history_enabled: bool = True
 
     # CR221 A2 — the industrial vs. captive-finance debt split, read from the
     # filing's own consolidating columns (`services/filing_dimensions.py`).
     # 18 request lines from 9 agents, the single largest item in the register.
     # Renders only for filers in `edgar_tags.CAPTIVE_FINANCE`; for everyone
     # else the line does not exist, which is not a gap.
-    room_debt_split_enabled: bool = False
+    # ON since 2026-09-29 (CR247 Phase 1A).
+    room_debt_split_enabled: bool = True
 
     # CR221 D1 / D2 — revenue by business segment and by geography, from the
     # same instance documents. Two flags, one per register item, for §7's

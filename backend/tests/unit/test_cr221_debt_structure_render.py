@@ -71,9 +71,11 @@ def _flags_restored():
      settings.room_cost_of_debt_enabled) = before
 
 
-def test_both_flags_are_off_by_default() -> None:
-    assert settings.room_debt_maturity_enabled is False
-    assert settings.room_cost_of_debt_enabled is False
+def test_both_flags_are_on_by_default() -> None:
+    """Flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The env vars
+    stay as kill switches; the flag-off render is still pinned below."""
+    assert settings.room_debt_maturity_enabled is True
+    assert settings.room_cost_of_debt_enabled is True
 
 
 def test_the_same_profile_renders_nothing_with_the_flags_off() -> None:

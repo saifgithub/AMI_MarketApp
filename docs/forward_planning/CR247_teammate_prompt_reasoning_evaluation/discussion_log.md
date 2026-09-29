@@ -668,3 +668,19 @@ feed), and `room_benchmark.py` post-run gate wiring (exit 1 on any gate
 failure; `--skip-gate` exists for investigation only). Validated against
 the two 2026-09-28 smokes: correctly flags the AAPL vLLM PM markdown draw,
 V DeepInfra arm clean.
+
+## D27 — Outcome census ran: ledger immature; Phase 4 builds both reviews (Kimi, 2026-09-29)
+*status: settled; recorded in SPEC Phase 4*
+
+Ran the deferred Phase 0.1 census with the new tooling
+(`audit_db.fetch_verdict_outcomes` + `scoring.outcome_quality`): **738 rows,
+zero scored** — 474 pending (ledger started 2026-09-06; even the 1-month
+bucket matures ~2026-10-06), 264 unscorable (234 excluded_user, 30
+no_reference_price). False-APPROVE vs false-PASS rates are therefore
+unknowable until ~October. Since the SPEC's shape selection ("fixed by 0.1")
+can't be data-driven, Phase 4 builds **both** the veto review (on APPROVE)
+and the resurrection review (on PASS) behind independent flags, with the
+deterministic routing/combination exactly as SPEC'd; the census re-runs when
+the ledger matures to validate which review earns its keep. Standing
+hygiene note: toolkit/harness convenes land in `excluded_user` — the ledger
+correctly quarantines synthetic users.

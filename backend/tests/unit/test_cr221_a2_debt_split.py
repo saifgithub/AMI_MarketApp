@@ -453,8 +453,11 @@ def _flag_restored():
     settings.room_debt_split_enabled = before
 
 
-def test_the_flag_is_off_by_default_and_the_same_profile_renders_nothing() -> None:
-    assert settings.room_debt_split_enabled is False
+def test_the_flag_is_on_by_default_and_flag_off_renders_nothing() -> None:
+    """Default flipped ON 2026-09-29 (CR247 Phase 1A — §7's rounds ran). The
+    env var stays as the kill switch, so the off render is still pinned."""
+    assert settings.room_debt_split_enabled is True
+    settings.room_debt_split_enabled = False
     assert "Debt split" not in room_prompts._format_profile(_profile(), AgentId.FUNDAMENTALS_ANALYST)
 
 
@@ -475,7 +478,9 @@ def test_presence_is_not_provenance() -> None:
 
 def test_the_three_flags_are_forwarded_in_the_api_alpha_block() -> None:
     compose = (Path(__file__).resolve().parents[3] / "docker-compose.yml").read_text()
-    for name in ("ROOM_DEBT_SPLIT_ENABLED", "ROOM_SEGMENT_REVENUE_ENABLED", "ROOM_GEOGRAPHIC_REVENUE_ENABLED"):
+    # A2 graduated to default-on (CR247 Phase 1A, 2026-09-29); D1/D2 stay off.
+    assert "ROOM_DEBT_SPLIT_ENABLED: ${ROOM_DEBT_SPLIT_ENABLED:-true}" in compose
+    for name in ("ROOM_SEGMENT_REVENUE_ENABLED", "ROOM_GEOGRAPHIC_REVENUE_ENABLED"):
         assert f"{name}: ${{{name}:-false}}" in compose
 
 
