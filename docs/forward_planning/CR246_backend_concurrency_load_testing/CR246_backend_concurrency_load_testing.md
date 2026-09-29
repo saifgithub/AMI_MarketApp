@@ -1,7 +1,9 @@
 # CR246 — Backend concurrency: simulate real-world multi-user load
 
-**Status: proposed, not started.** Filed by investigator session (AT:R85),
-2026-09-28, from Saiful: *"we need to test the back end system for
+**Status: proposed, planned.** Scenario, scale, environment, and pass/fail bar
+agreed with Saiful 2026-09-30 — see "Decisions" below and
+[`test_plan.md`](test_plan.md). Build not yet started. Filed by investigator
+session (AT:R85), 2026-09-28, from Saiful: *"we need to test the back end system for
 concurrency. We need to be sure that we can handle multiple users at the
 same time."* And, correcting an earlier draft of this CR that over-focused
 on one bug: *"the CR is not about the race condition. It is about the
@@ -133,6 +135,28 @@ prefers to split it out) actually fixes the constraint/locking gap.
   separate, already-shipped, client-side research tool with its own narrow
   concurrency (one synthetic user, controlled use), unrelated to this CR's
   question about real production traffic.
+
+## Decisions (2026-09-30, planning session with Saiful, AT:K5)
+
+1. **Scale: 50 concurrent distinct users**, 20-minute sustained run — ~5% of
+   CR245's 1,000-user Beta target online at once.
+2. **LLM: mock** (`LLM_FORCE_PROVIDER=mock`) for the main run — deterministic,
+   zero-cost, isolates app/DB correctness. Real-vLLM degradation testing is a
+   deferred later phase. (Saiful initially said real vLLM, then corrected to
+   mock.)
+3. **Environment: minihost** (192.168.20.14 — Ubuntu, Docker 29, Compose v2,
+   15GB RAM), as a second disposable compose project `ami-loadtest` with its
+   own Postgres/Redis/`SECRET_KEY`, deployed via rsync. Alpha untouched.
+4. **Harness: k6** from the Mac, extending `backend/scripts/load_test_1on1.js`
+   into a weighted multi-scenario mix (browse 50% / onboard 15% / convene 15% /
+   trade 15% / brief+1on1 5%), users minted via real `POST /v1/auth/anon`
+   paced under the real 10/min cap.
+5. **Pass/fail bar**: zero data corruption, zero cross-user leakage, 5xx < 1%,
+   p99 < 2s on all endpoints (single bar is possible because mock LLM removes
+   the LLM from timings).
+
+Full plain-language description of what will be built:
+[`test_plan.md`](test_plan.md).
 
 ## Acceptance (draft — refine at build time)
 
