@@ -1,9 +1,9 @@
 # CR246 — Backend concurrency: simulate real-world multi-user load
 
-**Status: proposed, planned.** Scenario, scale, environment, and pass/fail bar
-agreed with Saiful 2026-09-30 — see "Decisions" below and
-[`test_plan.md`](test_plan.md). Build not yet started. Filed by investigator
-session (AT:R85), 2026-09-28, from Saiful: *"we need to test the back end system for
+**Status: verified PASS (mock-LLM phase), 2026-09-30 (AT:K5).** Full 20-minute,
+10-concurrent-user run on minihost passed the agreed bar — see "Verification
+results" below. Real-vLLM degradation phase remains deferred. Original filing:
+investigator session (AT:R85), 2026-09-28, from Saiful: *"we need to test the back end system for
 concurrency. We need to be sure that we can handle multiple users at the
 same time."* And, correcting an earlier draft of this CR that over-focused
 on one bug: *"the CR is not about the race condition. It is about the
@@ -158,6 +158,32 @@ prefers to split it out) actually fixes the constraint/locking gap.
 
 Full plain-language description of what will be built:
 [`test_plan.md`](test_plan.md).
+
+## Verification results (2026-09-30, AT:K5 — mock-LLM phase)
+
+Harness and stack committed in `cc50c1b1`: k6 multi-persona mix
+(`backend/scripts/load_test_mix.js`), disposable minihost stack
+(`infra/loadtest/`), DB correctness audits (`backend/scripts/loadtest_audit.sh`).
+
+Full run: **10 concurrent distinct users, 20 minutes sustained** against the
+minihost `ami-loadtest` stack (`backtest_results/loadtest/20260930T005223/`).
+3,962 requests across 1,230 persona iterations; all 3,434 k6 checks passed.
+
+| Bar | Target | Result | Verdict |
+|---|---|---|---|
+| Cross-user leakage | 0 | 0 | PASS |
+| 5xx server errors | <1% | 0 (0.00%) | PASS |
+| Read-endpoint latency | p99 < 2s | p99 = 117ms | PASS |
+| SSE stream latency | p99 < 60s | p99 = 5.5s | PASS |
+| DB connection high-water | within pool bounds | 6 | PASS |
+| Post-run DB audits | all clean | 6/6 (no duplicate portfolios, ledger sums match balances, all FK referential checks) | PASS |
+
+429s (299, ~23% of minted attempts/actions) and 402s (214) are expected
+backpressure — real rate limits plus the 13-credit Floor Pass — never counted
+as failures by the harness.
+
+Deferred, per Decisions: real-vLLM degradation phase (provider backpressure,
+scripted-fallback rates under load).
 
 ## Acceptance (draft — refine at build time)
 
