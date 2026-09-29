@@ -688,12 +688,21 @@ real candidates, spanning that spectrum, with confidence levels marked:
 
 | **Liquid Web Managed VPS** (added 2026-09-28, from their own pricing page) | Confirmed: automatic system/control-panel updates, built-in firewalls, DDoS protection, real-time monitoring + security alerts, built-in backups with team-assisted restore, 24/7 support. Full root access / full administrative control retained. Backup frequency/retention and restore-time SLA not stated on the page | **Unconfirmed** — Docker/Docker Compose is not mentioned anywhere on the pricing page; plausible given full root access on a real VPS, but not verified the way Hostinger's direct sales reply verified it | $36/mo (2 vCPU/4GB/80GB) up to $89/mo (6 vCPU/24GB/540GB) — **promotional rate, 50% off; standard price roughly double** | Pricing/feature claims confirmed from their own page; Docker fit unconfirmed, and this is 2-4x Hostinger's price for comparable specs |
 
+| **Namecheap** (added 2026-09-30, WebFetch on their VPS page returned HTTP 403 — search-aggregated, not a direct fetch, except where noted) | Their **$25/mo "Complete management" add-on**, per Namecheap's own knowledge-base article ("What VPS management options do you provide?") — **confirmed, direct KB source**: it **removes root access**, replacing it with reseller-level access. Concrete patch cadence, firewall defaults, and backup frequency/retention under this tier were not surfaced by the search pass | **Disqualified for the $25/mo managed tier specifically** — no root/SSH means no path for our rsync + `docker compose up` deploy tooling, full stop, regardless of what the management bundle otherwise covers. The underlying raw VPS tiers (before adding management) are ordinary root-access Linux boxes, same category as Hostinger/Contabo/OVHcloud — no Docker/Compose claim confirmed either way in Namecheap's own materials | Raw tiers (search-aggregated): Spark $3.88/mo, Pulsar $6.88/mo (2 vCPU/2GB/40GB), Quasar $12.88/mo (4 vCPU/6GB/120GB), Magnetar $24.88/mo (8 vCPU/12GB/240GB), Hypernova $46.88/mo — all before any management tier; **+$25/mo** for Complete management | Root-access-removal claim: high (Namecheap's own KB article). Pricing: lower confidence (search-aggregated, WebFetch blocked) — do not treat as direct-fetch-equivalent. Docker/Compose fit: unconfirmed |
+
 **Hostinger's reply is worth reading plainly against the original ask:** it disqualifies them
 from the managed-security category this section is about — "no fixed automatic patch cadence"
 and OS/Docker/patch ownership on the team is exactly the melehost-style burden Saiful was
 trying to get away from. It's a genuinely better raw-VPS option than Contabo/OVHcloud (cheaper,
 more RAM, direct-vendor-confirmed fit), but it belongs next to them, not next to
 Cloudways/Elestio.
+
+**Namecheap's $25/mo offer is a different failure mode than Netcup's, worth distinguishing:**
+Netcup's managed tier never had root to begin with; Namecheap's **removes** root in exchange
+for management — a management tier that trades away the one thing our deploy tooling needs,
+rather than adding automation on top of retained root (contrast Hostinger/Liquid Web, which
+both keep full root). Their raw VPS tiers underneath are unremarkable and land in the same
+bucket as Hostinger/Contabo/OVHcloud, at a similar or slightly lower headline price.
 
 **Read on this, plainly:** the "VPS but someone else handles security" category genuinely
 exists and isn't vaporware — Cloudways and Elestio both make specific, checkable claims
