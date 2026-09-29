@@ -2043,6 +2043,98 @@ def fcf_conversion_line(
     )
 
 
+def sbc_adjusted_fcf_line(
+    free_cash_flow_ttm: int | None,
+    sbc_ttm: int | None,
+    sbc_period_start: str | None,
+    sbc_period_end: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR247 Phase 1B — TTM free cash flow net of stock-based compensation.
+
+    Every FCF figure on this sheet is gross of SBC: operating cash flow adds
+    the share-based expense back as non-cash, so the cash-flow bridge, the
+    history and the yield all count compensation the company pays in shares
+    as if it cost nothing. This line nets it out. The subtraction is computed
+    in code and labelled AMI's own arithmetic — the two operands come from
+    different stores (the FCF from the statement frames behind the bridge,
+    the SBC from the filed XBRL tag), so the SBC window is named beside the
+    figure and the FCF operand is named as the sheet's own bridge number.
+
+    When the bridge's FCF is not live the SBC still renders — the filed
+    figure is real either way — but the adjustment is NOT computed and the
+    line says so, rather than inviting the model to subtract against a
+    different FCF (CR179 Leg 4: handing over operands plus an instruction is
+    the failure class, four times measured).
+    """
+    if sbc_ttm is None:
+        return None
+    dated = ""
+    if sbc_period_start and sbc_period_end:
+        dated = f", 4 quarters {sbc_period_start} to {sbc_period_end}"
+    if free_cash_flow_ttm is None:
+        return _labelled(
+            "SBC-adjusted free cash flow", live,
+            [f"TTM stock-based compensation ${sbc_ttm:,}M as filed{dated}; "
+             "the sheet's TTM free cash flow is not live this call, so the "
+             "adjusted figure is NOT computed — do not compute it yourself "
+             "against any other FCF figure"],
+        )
+    adjusted = free_cash_flow_ttm - sbc_ttm
+    return _labelled(
+        "SBC-adjusted free cash flow", live,
+        [f"TTM FCF ${free_cash_flow_ttm:,}M − TTM stock-based compensation "
+         f"${sbc_ttm:,}M = ${adjusted:,}M"],
+    ) + (
+        f". AMI's own arithmetic, computed in code: the FCF is the cash-flow "
+        f"bridge figure above (operating cash flow less capex), the SBC is "
+        f"as filed{dated}"
+    )
+
+
+def roic_line(
+    operating_income: int | None,
+    tax_rate_pct: float | None,
+    nopat: int | None,
+    invested_capital: int | None,
+    roic_pct: float | None,
+    period_end: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR247 Phase 1B — return on invested capital, with every leg shown.
+
+    NOPAT is operating income taxed at the filed effective rate, and the line
+    states that rate because it is the assumption the whole figure turns on:
+    a realised historical rate, not a forecast and not a normalisation.
+    Invested capital is debt plus equity minus cash at the same fiscal year
+    end. Every figure is AMI's own computation off filed facts and the line
+    is labelled an estimate accordingly.
+
+    No WACC is computed, sourced or implied — the comparison that makes ROIC
+    decision-relevant is the reader's own, and the line says so explicitly so
+    no agent quotes a hurdle rate as if the sheet supplied one.
+    """
+    if (
+        operating_income is None or tax_rate_pct is None or nopat is None
+        or invested_capital is None or roic_pct is None or not period_end
+    ):
+        return None
+    line = _labelled(
+        "Return on invested capital", live,
+        [f"NOPAT ${nopat:,}M (operating income ${operating_income:,}M taxed "
+         f"at the filed effective rate {tax_rate_pct}%) over invested capital "
+         f"${invested_capital:,}M = ROIC {roic_pct}%"],
+    )
+    return (
+        f"{line}. AMI's estimate, computed in code from filed figures, "
+        f"fiscal year to {period_end}; invested capital is debt plus equity "
+        f"minus cash. Compare against your own WACC estimate — no WACC is "
+        f"sourced on this sheet."
+    )
+
+
 def capital_return_line(
     total_millions: int | None,
     buyback_millions: int | None,

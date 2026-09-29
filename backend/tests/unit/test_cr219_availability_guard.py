@@ -428,6 +428,18 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     },
     {
         "persona": "fundamentals_analyst",
+        "anchor": "the filed SBC figure is simply not supplied",
+        "category": "runtime-deference",
+        "why": (
+            "CR247 Phase 1B (2026-09-29) — a CONDITIONAL absence, same shape as the "
+            "C7 entry above: the sentence fires only where the sheet omits the "
+            "\"SBC-adjusted free cash flow\" line (flag off, or the ShareBasedCompensation "
+            "tag unresolved for the filer). The residual clause forbids recalling an "
+            "SBC figure from training memory, which is the CR104/DEF123 shape."
+        ),
+    },
+    {
+        "persona": "fundamentals_analyst",
         "anchor": "Not available: the full financial statements themselves",
         "category": "scope-true",
         "why": (
@@ -450,7 +462,10 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
             "flags defaulted on; ROE moved OUT of the point-in-time group into item "
             "(9) of the multi-period list, and the anchor list now reads "
             "'point-in-time return readings' so ROA stays covered without denying "
-            "the ROE series that ships beside it."
+            "the ROE series that ships beside it. CR247 Phase 1B (2026-09-29): the "
+            "SBC-adjusted FCF line joined item (5)'s trailing-aggregate group "
+            "(still nine groups — it is a TTM aggregate, not a series), and ROIC "
+            "joined the point-in-time group as a single-fiscal-year figure."
         ),
     },
     {
@@ -552,6 +567,15 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
     # of the four, so nothing here contradicts them; the persona sentences
     # naming them are pinned in test_agent_prompts.py instead.
     #
+    # CR247 Phase 1B (2026-09-29): three more lines — SBC-adjusted FCF and
+    # ROIC (both store-backed like the A1/A3 lines above, so they render only
+    # with an ingested EDGAR store this fixture does not have) and the
+    # put/call ratio (live option chain; in this fixture the provider stub
+    # serves no expiries, so with the flag on the SOCIAL sheet renders its
+    # not-available-with-reason line, which no entry here denies). Their
+    # persona sentences are pinned in test_agent_prompts.py and their
+    # conditional-absence clauses are allowlisted above.
+    #
     # CR244 Part 2 slice 1 (2026-09-27) narrowed this again: the filings
     # INDEX (form/date/label, no document text) now also reaches the sheet
     # as the "Recent SEC filings" line (live-fetched, flag-gated;
@@ -614,6 +638,18 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "anchor": "When no real data is injected (not configured, or nothing found",
         "category": "runtime-deference",
         "why": "CR040 — the loud-degradation instruction for an absent Reddit fetch.",
+    },
+    {
+        "persona": "social_media_analyst",
+        "anchor": "Where the sheet marks the line not available this call",
+        "category": "runtime-deference",
+        "why": (
+            "CR247 Phase 1B (2026-09-29) — the put/call bullet's deference clause, "
+            "same shape as the Reddit one above it: conditioned on the sheet's own "
+            "marking, and the residual clause forbids quoting a ratio from memory. "
+            "The chain is live yfinance data with no store, so an absent line is a "
+            "failed or empty fetch, stated on the sheet with its reason."
+        ),
     },
     {
         "persona": "social_media_analyst",

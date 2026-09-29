@@ -111,6 +111,26 @@ def test_cr247_personas_name_the_newly_enabled_sheet_labels():
         assert label in bear, f"bear_researcher.md lost its {label!r} sentence"
 
 
+def test_cr247_1b_personas_name_the_new_sheet_labels():
+    """CR247 Phase 1B (2026-09-29): the three new computed fields each carry a
+    persona sentence naming the field's exact sheet label, in the same
+    register as the 1A pins above. Fundamentals gets the SBC-adjusted FCF and
+    ROIC lines; the Flow & Positioning desk (social_media_analyst) gets the
+    put/call ratio. Whitespace-normalized, same rewrap-safety reason."""
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    fundamentals = _flat(load_base_prompt(AgentId.FUNDAMENTALS_ANALYST))
+    for label in ("SBC-adjusted free cash flow", "Return on invested capital"):
+        assert label in fundamentals, f"fundamentals_analyst.md lost its {label!r} sentence"
+    social = _flat(load_base_prompt(AgentId.SOCIAL_MEDIA_ANALYST))
+    assert "Put/call ratio" in social, (
+        "social_media_analyst.md lost its 'Put/call ratio' sentence"
+    )
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)

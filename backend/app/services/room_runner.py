@@ -80,6 +80,9 @@ from app.services import (
     edgar_tags,
     filing_dimensions,
     interest_cost,
+    put_call,
+    roic,
+    sbc,
 )
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
@@ -1030,6 +1033,123 @@ def _overlay_debt_structure(
         )
 
 
+def _overlay_sbc_and_roic(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date
+) -> None:
+    """CR247 Phase 1B — SBC (with the SBC-adjusted FCF operands) and ROIC,
+    both from the EDGAR fact store.
+
+    Same conventions as `_overlay_debt_structure`: one state key per block,
+    populated regardless of `room_sbc_enabled` / `room_roic_enabled` (the
+    flags gate the RENDER, so §7's control arm is a flag flip against one
+    cached profile). The SBC line's second operand, TTM FCF, is NOT resolved
+    here — it is the yfinance-statements bridge figure, gated at render time
+    on its own `field_state` entry, so a statements outage and a store outage
+    never blur into one state.
+    """
+    try:
+        sbc_ttm = sbc.fetch_sbc_ttm(ticker, as_of)
+        roic_result = roic.fetch_roic(ticker, as_of)
+    except Exception as exc:
+        # Same contract as the debt overlay: an unreadable store costs this
+        # block, never the whole profile — and it is logged, not silent.
+        logger.warn(
+            "edgar_sbc_roic_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        field_state["sbc"] = LiveDataState.UNAVAILABLE.value
+        field_state["roic"] = LiveDataState.UNAVAILABLE.value
+        return
+
+    if sbc_ttm is not None:
+        profile["sbc_ttm"] = round(sbc_ttm.ttm / 1_000_000)
+        profile["sbc_period_start"] = sbc_ttm.period_start.isoformat()
+        profile["sbc_period_end"] = sbc_ttm.period_end.isoformat()
+        field_state["sbc"] = LiveDataState.LIVE.value
+    else:
+        field_state["sbc"] = LiveDataState.UNAVAILABLE.value
+
+    if roic_result is not None:
+        profile["roic_operating_income"] = round(roic_result.operating_income / 1_000_000)
+        profile["roic_tax_rate_pct"] = roic_result.tax_rate_pct
+        profile["roic_nopat"] = round(roic_result.nopat / 1_000_000)
+        profile["roic_invested_capital"] = round(roic_result.invested_capital / 1_000_000)
+        profile["roic_pct"] = roic_result.roic_pct
+        profile["roic_period_end"] = roic_result.period_end.isoformat()
+        field_state["roic"] = LiveDataState.LIVE.value
+    else:
+        field_state["roic"] = LiveDataState.UNAVAILABLE.value
+
+    # CR040 loud degrade, the A1 shape: the SBC and tax tags joined
+    # INGEST_TAGS_US_GAAP with this phase, so a store last ingested before
+    # that holds nothing under them — indistinguishable at the sheet from a
+    # filer that discloses neither, distinguishable in the logs.
+    if sbc_ttm is not None or roic_result is not None:
+        return
+    try:
+        ingested = edgar_pit.tags_ever_ingested(
+            edgar_tags.SHARE_BASED_COMPENSATION + edgar_tags.INCOME_TAX_EXPENSE
+            + edgar_tags.PRETAX_INCOME
+        )
+    except Exception:
+        return
+    if not ingested:
+        logger.warn(
+            "edgar_sbc_roic_tags_not_ingested",
+            ticker=ticker.upper(),
+            fix="re-run backend/scripts/ingest_edgar_facts.py --force",
+        )
+
+
+def _overlay_put_call(
+    profile: dict[str, Any],
+    field_state: dict[str, str],
+    ticker: str,
+    as_of: date | None,
+) -> None:
+    """CR247 Phase 1B — the put/call ratio, Flow & Positioning lane, live-only.
+
+    Unlike the EDGAR overlays this one is NOT populated in as-of mode, for
+    DEF334's reason: the chain fetch is a live provider call that knows
+    nothing about the backtest clock, and there is no historical options
+    store (`AsOfStoreProvider` declines chains by design). Every non-live
+    path carries its own reason string so the render's not-available line
+    says WHICH absence this is — a past-dated sheet, a mock-data run and a
+    failed fetch are three different facts.
+    """
+    if as_of is not None:
+        field_state["put_call"] = LiveDataState.UNAVAILABLE.value
+        profile["put_call_unavailable_reason"] = (
+            "options chains are a live snapshot with no historical store, so "
+            "a past-dated sheet carries none"
+        )
+        return
+    if not settings.use_real_market_data:
+        field_state["put_call"] = LiveDataState.UNAVAILABLE.value
+        profile["put_call_unavailable_reason"] = (
+            "market data is in deterministic mock mode, which serves no "
+            "option chains"
+        )
+        return
+    try:
+        ratio = put_call.fetch_put_call_ratio(ticker)
+    except Exception as exc:
+        logger.warn(
+            "put_call_overlay_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        ratio = None
+    profile["put_call_ratio"] = ratio
+    if ratio is not None:
+        field_state["put_call"] = LiveDataState.LIVE.value
+    else:
+        field_state["put_call"] = LiveDataState.UNAVAILABLE.value
+        profile["put_call_unavailable_reason"] = (
+            "the provider served no usable option chain for the nearest "
+            "expiries (see the put_call_* warnings)"
+        )
+
+
 _FILING_DIMENSION_BLOCKS = ("debt_split", "segment_revenue", "geographic_revenue")
 
 
@@ -1491,6 +1611,7 @@ def _profile_for_ticker(
         _overlay_executive_change(profile, field_state, ticker, today)
         _overlay_capital_returns(profile, field_state, ticker, today)
         _overlay_recent_filings(profile, field_state, ticker, today)
+        _overlay_sbc_and_roic(profile, field_state, ticker, today)
     else:
         field_state["debt_maturity"] = LiveDataState.UNAVAILABLE.value
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
@@ -1501,6 +1622,12 @@ def _profile_for_ticker(
         field_state["dividend_growth"] = LiveDataState.UNAVAILABLE.value
         field_state["buyback_price"] = LiveDataState.UNAVAILABLE.value
         field_state["recent_filings"] = LiveDataState.UNAVAILABLE.value
+        field_state["sbc"] = LiveDataState.UNAVAILABLE.value
+        field_state["roic"] = LiveDataState.UNAVAILABLE.value
+
+    # CR247 Phase 1B — live-only by design (no historical options store);
+    # the overlay itself records the right unavailable reason per path.
+    _overlay_put_call(profile, field_state, ticker, as_of)
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout

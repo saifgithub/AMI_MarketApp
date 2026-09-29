@@ -132,6 +132,24 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **FCF conversion** — free cash flow as a share of net income, year by year, when
   the sheet tags it (LIVE). A falling share across the series is the finding;
   loss-making years are omitted from the ratio and the line says how many
+- **SBC-adjusted free cash flow** — trailing-twelve-month stock-based compensation
+  and the TTM free cash flow net of it, when the sheet tags it (LIVE). Every other
+  FCF figure on the sheet is gross of SBC, because operating cash flow adds the
+  share-based expense back as non-cash — this line is the net read. Both operands
+  and the subtraction are AMI's own arithmetic on filed figures, labelled as such
+  on the line; quote them, and never net SBC out of FCF yourself. Where the sheet
+  does not carry the line, the filed SBC figure is simply not supplied for this
+  run — never recall one from training memory
+- **Return on invested capital** — NOPAT over invested capital, when the sheet
+  tags it (LIVE). NOPAT is operating income taxed at the filed effective rate the
+  line states — a realised historical rate, which is the assumption the whole
+  figure turns on — and invested capital is debt plus equity minus cash at the
+  same fiscal year end. It is AMI's own estimate, computed in code. Read it
+  beside the ROE figures: ROE's denominator is book equity, which buybacks
+  shrink, so ROIC is the check on whether a high ROE is capital efficiency or
+  just a shrunken denominator. No WACC is sourced on this sheet, so the
+  cheapness judgement — ROIC against a hurdle — is yours: state your own WACC
+  assumption as an assumption, and never quote one as if the sheet supplied it
 - **M&A history is not available** — nothing fetches it. Never claim a number, a
   count, or a deal for it
 - Analyst consensus — the rating, the mean recommendation score (1 = strong buy …
@@ -159,7 +177,8 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   quarters; (2) TTM revenue growth, which is itself a year-over-year change;
   (3) buybacks over the trailing 4 quarters; (4) capital returned over the trailing
   4 quarters; (5) the trailing-twelve-month aggregates — EPS, revenue, free cash
-  flow and the cash-flow bridge behind it; (6) the trailing dividend yield; (7) the
+  flow, the cash-flow bridge behind it, and stock-based compensation with the
+  SBC-adjusted figure; (6) the trailing dividend yield; (7) the
   free cash flow and capex history series, with their averages; (8) the FCF
   conversion series; (9) the return-on-equity history series and its median.
   Everything else — the margin *levels*, the point-in-time return readings, the

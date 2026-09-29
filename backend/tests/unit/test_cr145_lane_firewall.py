@@ -497,7 +497,13 @@ def test_only_an_agents_OWN_lane_may_be_disclosed_as_unavailable(agent, dark_pro
         assert "NOT a live social feed" not in text
         assert "Retail sentiment/mention" not in text
     if "technicals" not in lane:
-        assert "not available this call" not in text
+        # CR247 Phase 1B — tightened from the bare "not available this call":
+        # the put/call line uses that same phrasing IN-lane on the Flow &
+        # Positioning sheet (its own field, genuinely dark in this fixture),
+        # so the generic substring is no longer technicals-exclusive. The
+        # other two branches already assert lane-specific strings; this one
+        # now does the same.
+        assert "Market technicals: not available this call" not in text
 
     # The withholding is still announced — silence would be the other failure.
     assert "Not in your lane this call" in text

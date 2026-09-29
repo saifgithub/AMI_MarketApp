@@ -986,6 +986,33 @@ class Settings(BaseSettings):
     # Gates the RENDER only, the overlay always populates.
     room_buyback_price_enabled: bool = False
 
+    # CR247 Phase 1B — SBC-adjusted free cash flow on the fact sheet (TTM FCF
+    # from the statement bridge minus TTM `ShareBasedCompensation` from the
+    # EDGAR store; `app/services/sbc.py`). Fundamentals lane. Needs
+    # `ingest_edgar_facts.py --force` once for the new tag; until then the
+    # overlay's `edgar_sbc_roic_tags_not_ingested` warn is the tell. Gates the
+    # RENDER only, the overlay always populates. ON since 2026-09-29 (CR247
+    # Phase 1B): verified by the unit suite plus the live AAPL render probe
+    # (TTM SBC $13,706M). The env var stays as the kill switch.
+    room_sbc_enabled: bool = True
+
+    # CR247 Phase 1B — return on invested capital on the fact sheet, every
+    # leg computed in code from the EDGAR store (`app/services/roic.py`) with
+    # the filed effective tax rate stated and the WACC comparison left to the
+    # reader by name. Fundamentals lane. Same ingest precondition and same
+    # render-only gating as the SBC line above. ON since 2026-09-29 (CR247
+    # Phase 1B — live probe: AAPL FY2025 ROIC 87.4% at a 15.6% filed rate).
+    room_roic_enabled: bool = True
+
+    # CR247 Phase 1B — the put/call ratio (volume and open interest over the
+    # nearest four listed expiries; `app/services/put_call.py`), Flow &
+    # Positioning lane. Live-only: there is no historical options store, so
+    # as-of runs render it not available with that reason. A failed chain
+    # fetch degrades loudly with its reason on the line. Gates the RENDER
+    # only. ON since 2026-09-29 (CR247 Phase 1B — live probe: AAPL volume
+    # 0.64 / open interest 0.78 over the four nearest expiries).
+    room_put_call_enabled: bool = True
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

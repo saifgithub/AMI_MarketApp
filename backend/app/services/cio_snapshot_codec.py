@@ -30,6 +30,7 @@ from typing import Any
 from app.services.buyback_price import BuybackPrice
 from app.services.dividend_growth import DividendGrowth
 from app.services.news_context import LiveHeadline
+from app.services.put_call import PutCallRatio
 
 TAG = "__cr237__"
 
@@ -37,6 +38,10 @@ _RECORD_TYPES: dict[str, type] = {
     "LiveHeadline": LiveHeadline,
     "DividendGrowth": DividendGrowth,
     "BuybackPrice": BuybackPrice,
+    # CR247 Phase 1B — the Room profile carries the aggregated put/call
+    # object for the Flow & Positioning lane; without this entry the
+    # snapshot write would fail loudly on every convene where it resolved.
+    "PutCallRatio": PutCallRatio,
 }
 
 

@@ -493,11 +493,12 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
 #   `fcf_conversion_line`, `roe_history_line`, `eps_revisions_line`,
 #   `surprise_history_line`, `capital_return_line`, `capex_line`,
 #   `earnings_power_line`, `returns_line`, `balance_sheet_line`,
-#   `ownership_line`, `next_earnings` — each is either multi-value/compound,
-#   carries its own basis/date qualifier that a label match cannot capture
-#   (per those functions' own docstrings, e.g. `margin_trend_line`'s "the
-#   basis is stated in the line itself, deliberately"), or gated behind a
-#   settings flag not universally on. Widening `_FIELD_SPECS` to any of
+#   `ownership_line`, `next_earnings`, and CR247 Phase 1B's
+#   `sbc_adjusted_fcf_line`, `roic_line` and `put_call_line` — each is either
+#   multi-value/compound, carries its own basis/date qualifier that a label
+#   match cannot capture (per those functions' own docstrings, e.g.
+#   `margin_trend_line`'s "the basis is stated in the line itself,
+#   deliberately"), or gated behind a settings flag not universally on. Widening `_FIELD_SPECS` to any of
 #   these is future work — each needs its own disambiguation design, not a
 #   mechanical copy of this table's shape.
 

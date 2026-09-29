@@ -52,6 +52,8 @@ from app.services.fundamentals import (
     historical_multiples_line,
     interest_coverage_line,
     roe_history_line,
+    roic_line,
+    sbc_adjusted_fcf_line,
     liquidity_line,
     margin_structure_line,
     margin_trend_line,
@@ -68,6 +70,7 @@ from app.services.fundamentals import (
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
+from app.services.put_call import put_call_line
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -2722,6 +2725,19 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("fcf_conversion_pct")
                 if _is("fcf_conversion_pct", "live") else None,
             ) if settings.room_fcf_conversion_enabled else None,
+            # CR247 Phase 1B — the bridge figure net of stock-based
+            # compensation. The SBC operand is store-backed (one block key,
+            # the A1/A3 convention); the FCF operand is the statements
+            # bridge figure, gated on its own key so a statements outage and
+            # a store outage never blur.
+            sbc_adjusted_fcf_line(
+                profile.get("free_cash_flow_ttm")
+                if _is("free_cash_flow_ttm", "live") else None,
+                profile.get("sbc_ttm"),
+                profile.get("sbc_period_start"),
+                profile.get("sbc_period_end"),
+            ) if (settings.room_sbc_enabled
+                  and _is("sbc", "live")) else None,
             # CR221 B2 — the cycle context for the ROE the sheet already has.
             roe_history_line(
                 profile.get("roe_history_years")
@@ -2733,6 +2749,19 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("return_on_equity")
                 if _is("return_on_equity", "live") else None,
             ) if settings.room_roe_history_enabled else None,
+            # CR247 Phase 1B — ROIC beside the ROE history it complements:
+            # ROE's denominator is book equity (buybacks shrink it), ROIC's
+            # is debt-plus-equity-minus-cash. Store-backed like A1/A3, so
+            # the flag and the block state fold together the same way.
+            roic_line(
+                profile.get("roic_operating_income"),
+                profile.get("roic_tax_rate_pct"),
+                profile.get("roic_nopat"),
+                profile.get("roic_invested_capital"),
+                profile.get("roic_pct"),
+                profile.get("roic_period_end"),
+            ) if (settings.room_roic_enabled
+                  and _is("roic", "live")) else None,
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
             # mentions, 9/12 agents) in the CR219 measurement. Ratio and
             # quarter are gated on separate field_state keys — the same
@@ -2968,6 +2997,25 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})"
         )
         lines += _social_detail_lines(profile)
+        # CR247 Phase 1B — the put/call ratio. Free yfinance chain data, so
+        # it renders beside the sentiment block even when the Reddit feed is
+        # paywalled (withheld_paid strips the FEED's fields, not this one) —
+        # the same independence the 8-K line has from the news feed. A failed
+        # fetch is stated with its reason, never silently blank (CR040), and
+        # never estimated (CR104).
+        if settings.room_put_call_enabled:
+            if _is("put_call", "live"):
+                pc_line = put_call_line(profile.get("put_call_ratio"))
+                if pc_line:
+                    lines.append(pc_line)
+            else:
+                reason = profile.get("put_call_unavailable_reason") or (
+                    "the option-chain fetch failed"
+                )
+                lines.append(
+                    f"Put/call ratio: not available this call — {reason}. "
+                    "Do not estimate one from memory."
+                )
     if _in_lane("fundamentals"):
         for extra in (_valuation_line(profile), _sector_line(profile),
                       _capital_allocation_line(profile), _analyst_line(profile)):

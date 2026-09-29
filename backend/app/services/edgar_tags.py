@@ -69,6 +69,22 @@ DIVIDENDS_PAID_COMMON = (
 )
 DILUTED_SHARES = ("WeightedAverageNumberOfDilutedSharesOutstanding",)
 
+# CR247 Phase 1B — stock-based compensation, the expense the SBC-adjusted FCF
+# line nets out. Verified live 2026-09-29 against AAPL's companyconcept
+# endpoint: 180 USD duration rows, cumulative year-to-date per fiscal year —
+# exactly the shape `edgar_pit.quarterly_series` differences into quarters.
+# One tag: the concept is not multiply-spelled the way revenue or capex are.
+SHARE_BASED_COMPENSATION = ("ShareBasedCompensation",)
+# CR247 Phase 1B — the two halves of the filed effective tax rate ROIC's NOPAT
+# is struck on. Verified live 2026-09-29 (AAPL FY2025: $20,719M over
+# $132,729M = 15.6%). The pretax tag is the standard consolidated concept; the
+# short second spelling is the older variant some filers still carry.
+INCOME_TAX_EXPENSE = ("IncomeTaxExpenseBenefit",)
+PRETAX_INCOME = (
+    "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+    "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+)
+
 # Instant concepts (balance-sheet points) — resolved at latest period_end filed <= as_of.
 CASH_ANCHOR = ("CashAndCashEquivalentsAtCarryingValue",)
 CASH_OPTIONAL_ADD = ("ShortTermInvestments",)
@@ -277,6 +293,9 @@ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
     + DEPRECIATION_AMORTIZATION
     + DIVIDENDS_PAID_COMMON
     + DILUTED_SHARES
+    + SHARE_BASED_COMPENSATION
+    + INCOME_TAX_EXPENSE
+    + PRETAX_INCOME
     + CASH_ANCHOR
     + CASH_OPTIONAL_ADD
     + DEBT_ANCHOR
