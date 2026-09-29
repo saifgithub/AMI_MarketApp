@@ -182,8 +182,34 @@ minihost `ami-loadtest` stack (`backtest_results/loadtest/20260930T005223/`).
 backpressure — real rate limits plus the 13-credit Floor Pass — never counted
 as failures by the harness.
 
-Deferred, per Decisions: real-vLLM degradation phase (provider backpressure,
-scripted-fallback rates under load).
+## Verification results (2026-09-30, AT:K5 — real-vLLM degradation phase)
+
+Triggered by Saiful's report of a user complaint: *"while one room is being
+convened, the backend isn't doing anything for anyone."* Method: loadtest api
+pointed at the real on-prem vLLM (`192.168.20.74:8000`, model `ami-llm`) via a
+temporary ssh reverse tunnel + compose override (both removed afterwards;
+stack restored to mock). Continuous read probes from a third user plus an
+LLM-bound 1-on-1 probe measured before/during/after concurrent convenes.
+
+| Question | Result |
+|---|---|
+| Do reads stall during convenes? | **No.** 333 reads during 2 concurrent real convenes: avg 75ms, p95 144ms, max 690ms, zero over 1s — identical to the 82ms-avg baseline |
+| Do LLM features starve during a convene? | **No.** 1-on-1 message mid-convene: 21.9s total (idle baseline 22.1s), TTFB 85ms |
+| Real convene duration | 283s / 318s / 368s (3 convenes, all completed: `scripted_turns: 0`, `scripted_agents: []`, no refunds, real PM verdicts) |
+
+**Verdict: suspicion not reproduced.** One convene puts 12 concurrent streams
+on the GPU; the event loop stays async throughout (`httpx.AsyncClient`,
+single uvicorn process), so neither DB reads nor other users' LLM calls block.
+The complaint most likely reflects the convene's own ~5-minute runtime — long
+enough to *feel* like a freeze to the user watching it.
+
+Two caveats from this phase: (1) minihost's ufw drops docker-bridge→host
+traffic, so the first two attempts unknowingly ran on scripted fallback — which
+incidentally proved the degrade-loudly path works end to end (partial-outage
+detection, automatic 8-credit refund, NO_VERDICT); (2) minihost sshd needed
+`GatewayPorts clientspecified` + `MaxSessions 100` (drop-in
+`99-loadtest-tunnel.conf`) and ufw a bridge→18000 rule for the tunnel to work
+at all — left in place, commented as CR246-temporary.
 
 ## Acceptance (draft — refine at build time)
 
