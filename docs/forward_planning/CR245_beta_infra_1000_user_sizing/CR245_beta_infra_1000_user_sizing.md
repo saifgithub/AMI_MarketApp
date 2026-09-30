@@ -718,6 +718,27 @@ between "raw VPS, full ops burden" and "Cloud Run, full managed but workload-sha
 finding that Cloud Run itself still has the unresolved SSE-timeout/throttling problem
 regardless of what happens on the VPS side of this comparison.
 
+### 12. Daily check-in 2026-09-30 — gate status and Saiful's answers
+
+**Active phase:** CR231 stabilisation (Phase 1b). External beta (Phase 2) is not triggered.
+
+**Saiful's answers (2026-09-30):**
+1. **Founders-cohort recruitment (§2 open question): not started.** No invites beyond internal tracks. External stays gated on the §2 checklist.
+2. **CR248 Hermes ops team:** the network/system engineer persona stands up first (melehost is the single point of failure for Alpha).
+3. **CR240 hosted-LLM evaluation:** stays `proposed`; testing is in progress, with DeepInfra and glm3-flash currently leading (see §5b).
+4. **CR247:** not done. Shipped Phases 0-6 are code and tests, not the goal (better Room reasoning). Open: Phase 4 ledger re-validation, the kimi-key env defect, the locale-leak finding (通过), and the follow-ups indexed in the SPEC sweep. The weekly-digest schedule is undecided.
+
+**CR231 audit lanes: all six COMPLETE** (latest verdicts): SIM-OPTIONS r2, PM-FLOOR r2, SECURITY r4, MIGRATIONS r3, CR221 slots 1/3 + CR170/171 (RETRO-CR221-S13) r1, CR222-C r1. This corrects an earlier same-day miscount of three. Follow-on lanes CR237, CR222-D and DEF439 also reached COMPLETE by round 3.
+
+**The single blocker for the next gate is closing CR221, CR222 and CR228** (row status flipped). Status of each, from the docs and git log; nothing re-measured:
+1. **CR228:** Steps 2-4 built and audited. The success target is the monotonic R1→R5 spread (2026-09-25), judged by `score_dial.py`, with the criterion committed before the run. All 5 pilot arms completed (`b92f301b`, `4257d855`), but no scored verdict is in the repo (only the pre-widening `pilot_scored_2026-09-22.txt`). **To close:** run `score_dial.py` on the 5-arm data and record PASS or FAIL by its letter.
+2. **CR222:** slices B, C and D audited COMPLETE; build +114 shipped with CR222. All four features are behind default-off flags, and no record shows which are on in Alpha. Slice A has no audit verdict I could find. **To close:** Saiful decides whether "closed" means built and audited, or flags flipped on (the toll is a money path; the Day Trader pre-registration exemption is his ruling).
+3. **CR221:** slots 1-5 built; the 5-flag flip on Alpha is recorded (`075a0901`); slots 6-9 were split out to CR238, so that decision is made. The CR221 doc still says "all three flags remain OFF" in one place, which is stale. **To close:** flip the row and fix that text.
+
+**Suggested order:** score CR228, close CR221, then Saiful decides CR222's meaning of "closed".
+
+**Remaining after those three (§2 checklist):** feature freeze, E5 device matrix, DEF375 status flip (audited COMPLETE), external TestFlight, Play closed testing.
+
 ## Out of scope
 
 - Does not change any locked pricing, positioning, or compliance decision — this doc points to
