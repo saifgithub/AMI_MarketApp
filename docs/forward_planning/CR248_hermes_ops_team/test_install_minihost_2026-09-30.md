@@ -115,6 +115,38 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## CS group listen-all + 12h digest to home group (same day, ninth slice — the refined intent)
+
+Saiful's actual requirement: customer support listens to ALL messages in the customer
+support group, takes notes, and sends HIM a summary every 12 hours in the home group.
+Supersedes the open-ingress experiment (reverted: allowlist groups, allow-all removed,
+catch-all route dropped).
+
+1. **Listen-all:** `WHATSAPP_FREE_RESPONSE_CHATS=120363408342824493@g.us` — verified in
+   source (`whatsapp_common.py:258`): per-group exemption from require_mention, so every
+   message in that group becomes a customersupport turn. (Considered and rejected:
+   modifying vendored `bridge.js` for silent capture — `hermes update` would
+   conflict/overwrite; bridge `/messages` queue is drained by the gateway, no parallel
+   read path; messageStore is poll/quote-internal, not a history feed.)
+2. **Notes:** SOUL instructs a one-line-per-message append to `group_notes.md`. Prompt-level,
+   not structural — the only honest capture point available without forking vendored code.
+   Degradation is visible (bad notes = bad digest).
+3. **Digest:** `cs-group-digest` cron `0 6,18 * * *` (06:00/18:00 UTC = 09:00/21:00
+   Riyadh) on customersupport — reads the notes, produces a fixed 5-section digest
+   (topics / questions+answers / complaints / human action items / verbatim bug
+   quotes), archives them into the continuity notepad, truncates the notes file,
+   `[SILENT]` on empty windows. Delivered to the home group
+   `whatsapp:120363430641676589@g.us` (**assumption: home group = the neteng-ops
+   group** — one-line change if wrong).
+4. **Verified end-to-end with seeded test notes:** digest delivered to the home group
+   (bridge `fromMe` appends to …6589), correct 5-section shape, KB-grounded
+   classification, notes truncated after consumption, run completed clean.
+
+Open caveats: other CS-group participants may still hit the sender allowlist (only
+the owner's number is on `WHATSAPP_ALLOWED_USERS`) — their numbers surface in
+bridge.log `allowlist_mismatch` events with `senderAltId`; add as they appear. Every
+CS-group message now costs one vLLM turn (prompt + short reply) — fine at alpha scale.
+
 ## Open group ingress (same day, eighth slice)
 
 Direction from Saiful: receive from all groups and any DM, with rules deciding which
