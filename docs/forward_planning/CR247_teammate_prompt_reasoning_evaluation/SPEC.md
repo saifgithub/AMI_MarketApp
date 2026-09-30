@@ -1,5 +1,20 @@
 # CR247 — SPEC: Room reasoning-quality improvements
 
+> **Build status (2026-09-30, AT:K3): Phases 0–6 ALL SHIPPED.** Phase 0
+> closed per D25 (harness proven via live smokes). 1A (a5ee49bc), 1B
+> (9d5a2384), 1C (fd0b7f69), 1D (12084875), 2.1–2.3 (cf1ad8f7) + PM
+> JSON-schema default-ON (6c6942f7), 2.4 step-1 measured NO-GO (b092979e —
+> natural experiment absent, flag off), 3 (ab7a5281), 4 (d4218071), 5
+> (af8dbd86), 6 (41c93681). Gate measurements per phase under
+> `measurements/` — the final gate (phase5_gate.md, commit 0aa04463) is
+> green on all four arms (AAPL+V × vLLM/DeepInfra): no truncation, full
+> stance envelopes, PM JSON enforced on vLLM. Suite: 7501 passed.
+> Open follow-ups: D27 ledger re-validation (~October), D29 AAPL SIC-3571
+> grouping decision, D30 CR237-retry review placement, D31 locale-leak DEF
+> + digest scheduling. Promotion to Alpha is a separate operator step
+> (`/promote-to-alpha`); Alpha needs the one-time EDGAR `--force` ingest
+> for the 1B tags (D28).
+
 Execution spec for the builder. Organized around four questions (discussion
 log D3): (1) are agents fed the right information, (2) what information is
 missing, (3) are agent-to-agent scores consistent, (4) do agents know what to
