@@ -63,6 +63,34 @@ no messaging gateway personas, no production scope.
 5. **The notepad (`--continuity`) gives the learning/escalation loop** — consecutive-
    failure escalation and cross-pass diffs are just KV the persona maintains itself.
 
+## Customer support persona (same day, second slice)
+
+1. **Profile `customersupport` created** on minihost — vLLM provider/model (same pattern),
+   SOUL.md written (KB-mandatory procedure, WhatsApp voice, simulation-only +
+   no-account-actions hard limits, escalation shape), 39 KB articles copied from
+   `content/support_kb/` into the profile, whatsapp toolset structurally restricted to
+   `[clarify, memory, skills, file, session_search]` — **no terminal/web/shell on the
+   customer channel** (config-level, not prompt-level).
+2. **Multiplex constraint discovered + fixed:** the Baileys WhatsApp bridge is **shared
+   ingress owned by the default profile** — per-profile `WHATSAPP_ENABLED` does nothing
+   under multiplex. My earlier `migrate --multiplex` had silently **stopped serving
+   whatsapp for `meem`**. Fix: copied meem's Baileys session to the default profile home
+   (`~/.hermes/whatsapp/session`), moved `WHATSAPP_*` (incl. allowlist) to the default
+   `.env`, set `gateway.multiplex_profiles: true` + `profile_routes` (Saiful's number →
+   `meem`) on the default config. Bridge reconnected on the copied session — meem's
+   whatsapp restored, no re-pair needed.
+3. **Routing model:** one Baileys bridge = one WhatsApp account for the whole host;
+   personas are reached via `gateway.profile_routes` (chat_id → profile). A dedicated
+   support *number* needs either a second paired account (standalone gateway, second
+   SIM) or WhatsApp Business Cloud API (Meta WABA — the ToS-clean route, needs
+   provisioning). Until then, "customer support whatsapp" = routed chats on the shared
+   number.
+4. **Verified:** KB-grounded one-shot — "charged twice" question answered from
+   `billing_double_charge_refund.md` (alpha free tier, email-escalation path, no refund
+   promises, human-follow-up boundary), WhatsApp-appropriate tone. Live inbound test
+   pending: needs a second allowlisted WhatsApp number routed → `customersupport`, then
+   a real message from that number.
+
 ## Operational notes
 
 - Stop/pause a persona routine: `ssh minihost "hermes -p neteng cron pause alpha-health-watch"`.
