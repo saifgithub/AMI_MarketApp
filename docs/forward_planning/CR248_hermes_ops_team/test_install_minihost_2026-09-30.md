@@ -115,6 +115,19 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Group chats (same day, fourth slice)
+
+Saiful wants the persona in selected group chats. Config on the default profile
+(whatsapp is shared ingress): `WHATSAPP_GROUP_POLICY=allowlist` +
+`WHATSAPP_GROUP_ALLOWED_USERS=120363408342824493@g.us`, route
+`ami-group-1` (that group JID) → `customersupport` in `gateway.profile_routes`,
+`whatsapp.require_mention: true` (in-group it answers only @mentions / replies to
+its messages / `/commands` — flip to `false` for open participation).
+Caveat recorded: with `WHATSAPP_ALLOWED_USERS` set, group participants must also be
+on the sender allowlist — today only the owner's number is; admitting every group
+member requires dropping the sender allowlist (DMs then deny-all/ignore by policy),
+a follow-up decision for Saiful.
+
 ## Operational notes
 
 - Stop/pause a persona routine: `ssh minihost "hermes -p neteng cron pause alpha-health-watch"`.
