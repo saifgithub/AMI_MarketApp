@@ -715,3 +715,23 @@ Business Services). If AAPL should carry the line, widening 3570+3571 is a
 deliberate spec decision for Saiful/Architect, not a silent agent choice.
 The two "no peer comparison" disclaimers in fundamentals_analyst.md are
 removed (live-state only), replaced by one Inputs sentence naming the label.
+
+## D30 — Phase 4 shipped (Kimi, 2026-09-30)
+*status: implemented + verified; re-validation todo open*
+
+Second-pass verdict review live (commit d4218071, suite 7476 green): veto
+review on APPROVE (unaddressed numbered Bear/Conservative objections →
+deterministic flip to PASS, never REJECT; original verdict journaled on the
+verdict's `verdict_review` record, trade levels cleared, vote/samples
+carried per CR214), resurrection review on PASS (inadmissible-evidence
+audit per the 2.3 horizon discipline → `reconsider` triggers exactly one
+CIO re-run with the audit note appended; re-run verdict final, structurally
+unable to loop). Audit runs on the gateway fallback provider (Anthropic on
+Alpha; Mac has no key → loud skip + journaled, verdict unchanged). Flags
+`room_veto_review_enabled` / `room_resurrection_review_enabled`, both
+True-default per D27. Judgment calls recorded: review tier = mid; the
+resurrection re-run is ONE draw even under 5-sample self-consistency (cost
+bound); CR237 retry verdicts are also reviewed (defensible, one-line move
+if Saiful disagrees). **Open todo from D27:** when the verdict_outcomes
+ledger matures (~October), re-run the census and re-validate which review
+earns its keep.
