@@ -119,6 +119,16 @@ own "fit is moot if the first question is no" pattern from the sales-outreach dr
    framing; a persona is a Hermes Agent instance, and "Claude-operated track" work
    (e.g. track R triage) is a candidate to migrate onto it.
 
+## Test install (2026-09-30, AT:K6)
+
+First two personas (network engineer, application support) test-installed as Hermes
+Agent profiles on minihost, wired to the on-prem vLLM, with cron routines firing
+autonomously and verified end-to-end — full spike report:
+[test_install_minihost_2026-09-30.md](test_install_minihost_2026-09-30.md). Notable
+side effect: minihost's per-profile gateways were converged onto one multiplexed
+systemd gateway (touches the live `meem` assistant). Still `proposed` — a test
+install, not the go-ahead for the other four personas.
+
 ## Acceptance
 
 Not yet defined — this CR stays `proposed` until Saiful answers the open questions
