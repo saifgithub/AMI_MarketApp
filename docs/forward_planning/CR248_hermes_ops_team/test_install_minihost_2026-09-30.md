@@ -115,6 +115,30 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Self-service: neteng manages its own group routing (same day, seventh slice)
+
+Saiful: group routing "should be done by the network engineer". Delivered:
+
+1. Verified in source (`gateway/run.py`): `profile_routes` and the whatsapp group
+   allowlist are read at gateway/bridge start — `reconcile_served_profiles` reloads
+   the served set only, not config. **A gateway restart is unavoidable** for now.
+2. So the restart is *deferred*: neteng replies first, then
+   `nohup bash -c 'sleep 20; systemctl --user restart hermes-gateway' &` fires.
+   Mechanism verified (bridge reconnects, service active).
+3. `wa-route` skill installed on the neteng profile (`skills/wa-route/SKILL.md`):
+   the `ami-wa-route` commands, the deferred-restart rule (never restart
+   synchronously from your own turn), and boundaries (neteng routes only; DM
+   allowlist and other personas' routes are owner-only).
+4. neteng SOUL.md extended: it owns its group plumbing, uses wa-route itself.
+5. Smoke test (one-shot, `-s wa-route`): listed routing state correctly, identified
+   its own group, offered to route the still-unconnected group — and **found a real
+   bug**: `ami-wa-route` failed under the agent's terminal env (its python3 lacks
+   yaml). Fixed: shebang pinned to `/usr/bin/python3`.
+
+Live test for Saiful: message in a new group, then in neteng-ops say
+"@neteng add that group to your channel" — neteng should JID-hunt, route, defer the
+restart, and confirm.
+
 ## Group routing tool (same day, sixth slice)
 
 Manual per-group wiring (JID from log, two config edits, restart) was flagged as
