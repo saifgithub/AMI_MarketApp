@@ -386,8 +386,12 @@ def test_the_distance_to_both_moving_averages_is_stated(base_mandate):
     and doing the subtraction itself is the class Leg 4 exists to close."""
     from app.schemas import AgentId
 
+    # CR247 Phase 5: the market_analyst persona bullet now also names the
+    # "20-day SMA / 50-day SMA" label, so match the RENDERED SHEET line's
+    # shape ("20-day SMA: $…, 50-day SMA: $… — …"), not any mention of the
+    # words — the persona line precedes the sheet in the assembled prompt.
     line = [ln for ln in _tech_prompt(base_mandate, AgentId.MARKET_ANALYST).splitlines()
-            if "20-day SMA" in ln][0]
+            if ln.startswith("20-day SMA: ")][0]
     assert "vs the 20-day" in line and "vs the 50-day" in line
 
 
@@ -397,8 +401,10 @@ def test_both_distances_share_one_naming_clause(base_mandate):
     the two-prices confusion this sheet has already had to reconcile once."""
     from app.schemas import AgentId
 
+    # Same selector fix as the test above: the persona bullet names the label
+    # too now (CR247 Phase 5) — anchor on the rendered sheet line's shape.
     line = [ln for ln in _tech_prompt(base_mandate, AgentId.MARKET_ANALYST).splitlines()
-            if "20-day SMA" in ln][0]
+            if ln.startswith("20-day SMA: ")][0]
     assert line.count("the last close is") == 1, line
 
 

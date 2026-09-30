@@ -239,6 +239,42 @@ def test_cr247_phase3_interpretation_frames_and_their_echoes():
     )
 
 
+def test_cr247_phase5_remaining_personas_name_the_live_sheet_labels():
+    """CR247 Phase 5 (2026-09-30): the four remaining personas each gain
+    sentences naming the exact live sheet labels they consume — the Execution
+    Desk names the 'Ownership' and 'Volume (LIVE)' fill-context lines (the
+    float and the 3-month average already rendered by the CR166/CR179
+    builders) and heeds the horizon discipline line; the Technical Strategist
+    names its RSI / 20-day SMA / 50-day SMA / Volume lines against the exact
+    rendered labels and the 'Put/call ratio' line as the Flow & Positioning
+    desk's corroborating input; the Macro & Events desk names the in-window
+    Item 4.02 stop-press override. Pin the labels so a renderer rename and a
+    persona rename cannot drift apart silently. Whitespace-normalized, same
+    rewrap-safety reason as the 1A–1D pins."""
+    import re
+
+    def _flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text)
+
+    trader = _flat(load_base_prompt(AgentId.TRADER))
+    for phrase in (
+        "Ownership",
+        "Volume (LIVE)",
+        "3-month average",
+        "horizon discipline",
+    ):
+        assert phrase in trader, f"trader.md lost its Phase 5 sentence naming {phrase!r}"
+    market = _flat(load_base_prompt(AgentId.MARKET_ANALYST))
+    for phrase in ("20-day SMA", "Put/call ratio"):
+        assert phrase in market, (
+            f"market_analyst.md lost its Phase 5 sentence naming {phrase!r}"
+        )
+    news = _flat(load_base_prompt(AgentId.NEWS_ANALYST))
+    assert "stop-press" in news, (
+        "news_analyst.md lost its Item 4.02 stop-press sentence"
+    )
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)

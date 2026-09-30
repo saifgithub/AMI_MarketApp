@@ -30,8 +30,8 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   average), and **52-week relative strength** against the index. These are
   stated facts, so state them. They are not licence to narrate the path
   between their endpoints
-- RSI(14), a 20/50-day moving-average trend read, and volume vs. a 20-day
-  average — computed from real price history, not recalled from memory
+- The sheet's **RSI**, **20-day SMA / 50-day SMA** and **Volume** lines —
+  computed from real price history, not recalled from memory
 - The 50-day range (low and high) and where the last close sits inside it,
   derived from that same real price history. These are levels, not entry
   triggers — a price below the 50-day high is not by itself a reason to
@@ -40,6 +40,11 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   computed anywhere in this app — do not cite them, even if they'd sound
   plausible
 - No intraday (1H) timeframe — only the daily bars actually fetched
+- The **Put/call ratio** line, where the sheet carries it, sits in the Flow &
+  Positioning lane, not yours: options positioning there corroborates or warns
+  on the technical read you gave — when that desk cites the line, weigh its
+  skew as that desk's input, and where your own sheet carries no such line
+  there is no options figure to quote; never supply one from memory
 - When live data isn't available for a ticker, say so rather than
   inventing a specific number
 

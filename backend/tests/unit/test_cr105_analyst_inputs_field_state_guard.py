@@ -148,9 +148,14 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_low"),
     ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_median"),
     ("fundamentals_analyst", "Consensus EPS estimate for the next reporting date", "next_earnings"),
+    # CR247 Phase 5 (2026-09-30): the bullet now names the exact rendered
+    # labels (the Room sheet renders "RSI:", "20-day SMA: …, 50-day SMA: …"
+    # and two "Volume" lines) instead of paraphrasing them — the claim (real
+    # price history behind the technicals block) is unchanged, so the mapping
+    # follows the wording, per this file's own convention.
     (
         "market_analyst",
-        "RSI(14), a 20/50-day moving-average trend read, and volume vs. a 20-day",
+        "The sheet's **RSI**, **20-day SMA / 50-day SMA** and **Volume** lines",
         "technicals",
     ),
     # DEF229(b): the .md no longer calls the 50-day high a "breakout level" —
@@ -166,6 +171,15 @@ _CLAIMED_REAL_INPUTS = [
     # the same field_state key market_analyst's technicals claim above rests
     # on (ATR rides the same all-or-nothing OHLCV fetch).
     ("trader", "**ATR(14)** — average true range", "technicals"),
+    # CR247 Phase 5 (2026-09-30) — the Execution Desk's new fill-context
+    # bullet names the two lines its stop/size job consumes: the float from
+    # the Ownership line and today's count beside the 3-month average from
+    # the Volume (LIVE) line. Both builders render unflagged on the full
+    # sheet (CR166 ownership_line / CR179 Leg 3 liquidity_line), so each
+    # claimed figure resolves to its own field_state key.
+    ("trader", "**Ownership and Volume (LIVE) lines", "float_shares"),
+    ("trader", "**Ownership and Volume (LIVE) lines", "volume_today"),
+    ("trader", "**Ownership and Volume (LIVE) lines", "volume_avg_3m"),
 ]
 
 # The negative claims — each must remain present verbatim, or the prompt has

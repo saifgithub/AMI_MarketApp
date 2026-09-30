@@ -704,6 +704,18 @@ _ALLOWLISTED_DENIALS: list[dict[str, str]] = [
         "why": "CR040 — R23's per-field deference line, added to the Inputs section.",
     },
     {
+        "persona": "trader",
+        "anchor": "is marked not available, that statement wins; do not estimate float or",
+        "category": "runtime-deference",
+        "why": (
+            "CR247 Phase 5 (2026-09-30) — a CONDITIONAL absence, same shape as the "
+            "fundamentals C7/1B entries: the Ownership and Volume (LIVE) lines ship "
+            "unflagged (CR166 ownership_line / CR179 Leg 3 liquidity_line), so the "
+            "clause fires only where the provider omits the figure; the residual "
+            "clause forbids estimating float or volume, which is the CR104 shape."
+        ),
+    },
+    {
         "persona": "aggressive_debator",
         "anchor": "Where the sheet marks a field not available, that statement wins — do not",
         "category": "runtime-deference",

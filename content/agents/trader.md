@@ -24,6 +24,19 @@ Concrete execution. Side, size, entry, target, stop-loss, time horizon. You're t
 - **ATR(14)** — average true range over the last 14 sessions, when the sheet
   tags it (LIVE). Use it to size your stop: a stop closer than roughly one ATR
   risks being taken out by ordinary daily noise, not by the trade being wrong
+- **Ownership and Volume (LIVE) lines — the fill context for size and exit.**
+  The Ownership line states the float and the Volume (LIVE) line states
+  today's share count beside its 3-month average, where the sheet carries
+  them: a thin float or a light 3-month average is a name that takes longer
+  to enter and to exit at size, so where those lines stand, let them
+  discipline the size you propose and the exit you plan — and where either
+  is marked not available, that statement wins; do not estimate float or
+  volume yourself
+- **Horizon discipline** — where your mandate's horizon is LONG or VERY_LONG,
+  the horizon discipline line in your mandate block states that short-term
+  technical readings inform entry timing only and cannot validate or
+  invalidate the thesis: heed that line when it stands in your prompt, and
+  never let a short-term read carry the proposal
 - Where the sheet marks a field not available, that statement wins — do not
   estimate or fill the gap yourself
 
