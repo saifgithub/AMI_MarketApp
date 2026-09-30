@@ -735,3 +735,24 @@ bound); CR237 retry verdicts are also reviewed (defensible, one-line move
 if Saiful disagrees). **Open todo from D27:** when the verdict_outcomes
 ledger matures (~October), re-run the census and re-validate which review
 earns its keep.
+
+## D31 — Phase 6 shipped; digest's first live run found a real defect (Kimi, 2026-09-30)
+*status: implemented + live-verified; scheduling recommendation pending ops*
+
+Prompt-evolution digest live (commit 41c93681, suite 7501 green, 24 tests):
+weekly/monthly aggregates over llm_audit + room_runs + GAPS + the verdict
+ledger, keyed to the serving-model root fetched live at run time (first run
+stamped `/models/qwen38-flash-next-abliterated-nvfp4` — note the spelling
+differs from the SPEC's `qwen3.8-…`; the server root is authoritative),
+baseline deltas with documented thresholds, anomalies draft CR proposals
+only (governance disposes; nothing auto-ships). Live dry-run inside the
+Alpha container measured 537 real-user convenes (2703 synthetic runs
+excluded per CR051). **First-run findings:** (1) a PM verdict action
+containing `通过` — a locale leak into the JSON action enum (zh string in a
+enum{APPROVE,PASS} field); candidate Defect for the Architect — the digest
+will now track PM action distribution per locale. (2) aggressive_debator
+truncation suspects 4.7% (24 rows) — hypothesis recorded as a proposal,
+measurement plan pre-registered. (3) deepinfra dominates the audited
+provider mix — visible per agent for CR240. Scheduling: weekly Saturday
+08:30 + monthly 1st, melehost user-crontab, after the script promotes —
+recommendation only, no infra files edited.
