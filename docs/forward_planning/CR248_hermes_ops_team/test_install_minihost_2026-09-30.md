@@ -115,6 +115,24 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Open group ingress (same day, eighth slice)
+
+Direction from Saiful: receive from all groups and any DM, with rules deciding which
+persona responds. Findings:
+
+1. **Groups flipped to `WHATSAPP_GROUP_POLICY=open`** (deferred restart): any group
+   the bot is added to is live immediately; persona assignment still via
+   `profile_routes` (wa-route / neteng self-service). Allowlist mode retained as a
+   one-flag fallback.
+2. **Content-based routing is NOT native**: `profile_routes` matches identity
+   (chat_id/user_id) only; unrouted chats fall to the default profile and stick
+   (per-chat sessions). A "which persona answers, decided by the message" engine
+   needs a routing plugin on the gateway hook surface — candidate follow-up CR;
+   must verify the exact pre-dispatch hook API in v0.21.5 before committing.
+3. **Open DMs held**: `WHATSAPP_ALLOW_ALL_USERS=true` would let any stranger talk to
+   the AMI line (token cost/abuse; persona toolsets are safe). Product-level call —
+   not flipped without Saiful's explicit go.
+
 ## Self-service: neteng manages its own group routing (same day, seventh slice)
 
 Saiful: group routing "should be done by the network engineer". Delivered:
