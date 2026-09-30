@@ -91,6 +91,30 @@ no messaging gateway personas, no production scope.
    pending: needs a second allowlisted WhatsApp number routed → `customersupport`, then
    a real message from that number.
 
+## meem retired, connections moved to AMI (same day, third slice)
+
+Saiful, 2026-09-30: "we can stop supporting meem. they are history. whatever
+connections now belongs to AMI."
+
+1. **Ownership moves:** meem's Google creds (`google_client_secret.json`,
+   `google_token.json`) and `GEMINI_API_KEY` copied into the `customersupport`
+   profile; the WhatsApp Baileys session stays on the default profile (shared
+   ingress) but the line now serves AMI.
+2. **Routing re-pointed:** default-profile `profile_routes` now sends
+   Saiful's number → `customersupport` (was → `meem`). The owner gets the same
+   support treatment as any user.
+3. **meem made inert, not deleted:** its `.env` renamed to `.env.retired` (no
+   tokens → nothing of it can serve), its one cron job (`MEEM weekly chase -
+   TECH`) paused. Memories/sessions left on disk; deletion
+   (`hermes profile delete meem`) is Saiful's call when he's sure.
+4. **Verified:** gateway restarted, WhatsApp bridge reconnected
+   (`status: connected`, session at `~/.hermes/whatsapp/session`), all four AMI
+   profiles served by the one multiplexer.
+
+Live test now possible: any allowlisted number messaging the line lands on
+`customersupport`. A second test-customer number still needs allowlisting when
+provided.
+
 ## Operational notes
 
 - Stop/pause a persona routine: `ssh minihost "hermes -p neteng cron pause alpha-health-watch"`.
