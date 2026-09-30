@@ -115,6 +115,16 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Network engineer's ops group (same day, fifth slice)
+
+New group `120363430641676589@g.us` allowlisted (`WHATSAPP_GROUP_ALLOWED_USERS` now
+holds both groups) and routed `neteng-ops` → `neteng`. neteng SOUL.md extended for
+group presence: mention-gated, terse group replies, group requests treated like owner
+requests for *checks* but infrastructure changes remain Saiful-only direct — even in
+the group, it produces commands for humans to run, never runs them. Note: neteng keeps
+its terminal toolset on whatsapp (diagnostics are its job) — acceptable for a private
+ops group; revisit before any wider membership.
+
 ## Group chats (same day, fourth slice)
 
 Saiful wants the persona in selected group chats. Config on the default profile
