@@ -1053,6 +1053,40 @@ class Settings(BaseSettings):
     room_insider_cluster_enabled: bool = True
     room_edgar_8k_flags_enabled: bool = True
 
+    # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review. Both
+    # reviews are built behind INDEPENDENT flags because the Phase 0.1 outcome
+    # census came back with a zero-scored ledger (D27): false-APPROVE vs
+    # false-PASS rates are unknowable until the ledger matures (~October), so
+    # the SPEC's data-driven shape selection cannot run and BOTH reviews ship,
+    # with deterministic routing/combination exactly as SPEC'd; the census
+    # re-runs at maturity to validate which review earns its keep.
+    #
+    # Veto review (on APPROVE): one extra LLM call on the gateway's fallback
+    # provider (a DIFFERENT model than the CIO — D18's model-correlation
+    # test), instructed to fail the approval when the Bear's or Conservative's
+    # specific, numbered objections were not addressed with numbers in the
+    # CIO's narration. Combination is code: final = APPROVE only if the audit
+    # upholds; a veto flips to PASS (never REJECT), narrated and journaled
+    # with the original verdict preserved. An unparseable audit counts as
+    # not-approve (veto-to-PASS) — it must not silently uphold an approval it
+    # could not read. A routed-but-unrunnable audit (no fallback provider
+    # registered) skips LOUDLY (warn + journal record), verdict unchanged.
+    # Cost: +1 call on ~16% of convenes (approvals only, D12's base rate).
+    room_veto_review_enabled: bool = True
+
+    # Resurrection review (on PASS): one extra LLM call on the fallback
+    # provider, instructed to show the PASS rested on evidence the mandate
+    # makes inadmissible (the Phase 2.3 horizon line defines inadmissibility;
+    # the prompt states the mandate horizon and the discipline). It CANNOT
+    # approve — a PASS carries no size/entry/stop — it returns reconsider and
+    # the CIO re-runs ONCE with the audit note appended (the DEF058 reformat
+    # retry is the model for the one-shot re-run); the re-run's verdict is
+    # final, floor-checked like any APPROVE, and never reviewed a second time
+    # (one resurrection per convene, enforced in code). An unparseable audit
+    # fails closed (no re-run) with a loud journal record. Neither review
+    # fires on scripted/outage/fail-safe verdicts — nothing real to audit.
+    room_resurrection_review_enabled: bool = True
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

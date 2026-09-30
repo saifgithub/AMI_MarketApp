@@ -1205,6 +1205,28 @@ class LLMGateway:
                 return name
         return "mock"
 
+    def pick_review_provider(self) -> str | None:
+        """CR247 Phase 4 — the provider a second-pass verdict review runs on.
+
+        The review must execute on a DIFFERENT model than the CIO so a
+        model-correlated CIO error cannot silently repeat in its own audit
+        (D18). The gateway's own preference chain IS the fallback ordering —
+        on Alpha the CIO is the vLLM and the first fallback is Anthropic, the
+        provider D18 names — so the review provider is the first REGISTERED
+        provider in `_PREFERENCE` that is neither the active provider nor the
+        mock (the mock answers nothing real, so auditing against it would be
+        theater). None when no such provider exists: the caller degrades
+        loudly (warn + journal record, verdict unchanged) rather than auditing
+        on the same model or skipping silently (CR040).
+        """
+        active = self._active_provider_name()
+        for name in self._PREFERENCE:
+            if name == "mock" or name == active:
+                continue
+            if name in self._providers:
+                return name
+        return None
+
     def status(self) -> dict[str, object]:
         """Snapshot of what the gateway will actually do at call time.
 
@@ -1281,14 +1303,37 @@ class LLMGateway:
         plan: Plan | None = None,
         agent_id: AgentId | None = None,
         constraint: OutputConstraint | None = None,
+        provider_name: str | None = None,
     ) -> AsyncIterator[str]:
+        """Stream one chat completion.
+
+        CR247 Phase 4 — [provider_name] pins ONE call to a named provider (the
+        second-pass verdict review uses it to run on the fallback provider, a
+        different model than the CIO). The name must be REGISTERED: the only
+        call site resolves it through `pick_review_provider()`, which returns
+        registered names or None (the caller then skips loudly rather than
+        calling here). An unregistered name is a programming error and raises,
+        because falling through to the normal pick would audit a verdict on
+        the very model it was meant to be independent of — silently, which is
+        the failure the pin exists to prevent. None keeps today's behaviour
+        exactly (`_pick_provider` decides).
+        """
         import time
         from app.services.audit import record_llm_call
         # CR158 — local, like the import above: prompt_version imports the
         # prompt builders, which import this module's GROUNDING_DIRECTIVE.
         from app.services.prompt_version import prompt_version_for
 
-        provider = self._pick_provider(locale, model_tier, plan=plan, agent_id=agent_id)
+        if provider_name is not None:
+            if provider_name not in self._providers:
+                raise ValueError(
+                    f"stream_chat: provider {provider_name!r} is not registered"
+                )
+            provider = self._providers[provider_name]
+        else:
+            provider = self._pick_provider(
+                locale, model_tier, plan=plan, agent_id=agent_id
+            )
         # DEF125: always give the provider somewhere to report the stop reason,
         # even when the caller did not ask for it — the length-stop warning below
         # is what makes a silent truncation visible on EVERY flow (room,

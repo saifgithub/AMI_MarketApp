@@ -41,7 +41,7 @@ from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field, replace as _dataclass_replace
 from datetime import UTC, date, datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import delete, or_, select
@@ -122,6 +122,7 @@ from app.services.social_context import (
 from app.services.llm_gateway import (
     ChatMessage,
     LLMGateway,
+    ModelTier,
     OutputConstraint,
     get_llm_gateway,
 )
@@ -140,12 +141,20 @@ from app.services.room_prompts import (
     PM_KILL_CRITERION_MIN_CHARS,
     PM_NARRATION_MAX_CHARS,
     STANCE_HEADLINE_MAX_CHARS,
+    VETO_REVIEW_SYSTEM,
+    RESURRECTION_REVIEW_SYSTEM,
+    build_resurrection_audit_note,
+    build_resurrection_review_case,
     build_risk_officer_messages,
     build_room_messages,
+    build_veto_review_case,
     max_tokens_for,
     pm_verdict_schema,
+    resurrection_review_schema,
     trader_block_regex,
+    veto_review_schema,
 )
+from app.schemas.room import VerdictReviewRecord
 from app.services.credit_service import (
     balance_for,
     live_data_surcharge,
@@ -5188,55 +5197,29 @@ async def _run_cio_step(
                 if not pm_text:
                     pm_text = verdict.reason
             elif parsed.action == VerdictAction.APPROVE:
-                proposed = ProposedTrade(
-                    ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
-                    quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
-                    limit_price=parsed.entry,
-                )
-                # CR046 M06 / DEF095: flag (never veto) an APPROVE whose
-                # narrated R:R contradicts its own levels, and SURFACE it —
-                # rewrite the PM's verdict narration so the ratio the user
-                # reads is AMI's computed one, not a log nobody sees. The
-                # safety floor still owns vetoes; this only corrects text.
-                _rr_sig = _pm_rr_coherence_signal(
-                    pm_text, parsed.entry, parsed.stop, parsed.target
-                )
-                if _rr_sig is not None:
-                    logger.warning(
-                        "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
-                    )
-                    pm_text, _ = _annotate_rr_against_levels(
-                        pm_text, parsed.entry, parsed.stop,
-                        parsed.target, parsed.size_pct,
-                    )
-                verdict = enforce_safety_floor(
-                    llm_verdict=parsed, proposed=proposed,
-                    portfolio_value=ctx.portfolio_value,
-                    current_drawdown_pct=ctx.current_drawdown_pct,
-                    mandate=mandate, halal_universe=ctx.halal_universe,
-                    classification_universe=ctx.classification_universe,
-                    locale_allowed_universe=ctx.locale_allowed_universe,
-                    # CR026: veto a PM APPROVE that breaches the sector cap.
-                    holdings=ctx.sector_holdings,
-                    quotes=ctx.sector_marks,
-                    sector_map=ctx.sector_map,
-                    # CR101-BE2 round 2: same trade-history context
-                    # sim_engine.py supplies at submit()/preview() —
-                    # previously omitted here, so a set post-loss
-                    # cooldown / over-trading brake / open-risk cap
-                    # was silently unenforced on the live PM's own
-                    # APPROVE (round-1 BLOCKER).
-                    last_loss_closed_at=ctx.risk_last_loss_closed_at,
-                    trade_open_timestamps=ctx.risk_trade_open_timestamps,
-                    existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
-                    proposed_stop=parsed.stop,
-                    # CR247 Phase 1D — an in-window 8-K Item 4.02 (non-reliance)
-                    # narrated by the forensic flags overlay; None = nothing to
-                    # block on. The floor owns the flag gate and the BUY check.
-                    edgar_8k_item_402=profile.get("edgar_8k_item_402_block"),
+                pm_text, verdict = _floor_pm_approve(
+                    parsed, pm_text, run_id=run_id, ctx=ctx,
+                    mandate=mandate, profile=profile,
                 )
             else:
                 verdict = parsed  # PASS — nothing to check compliance on
+        # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review.
+        # Deterministic routing + combination live in `_apply_verdict_review`
+        # (code routes, LLMs judge — D13); only the audit itself is an LLM
+        # call, on the gateway's fallback provider (a different model than
+        # the CIO — D18). Sits here, after the decision tail and before the
+        # restream/transcript append, so the verdict AND the narration the
+        # user watches are the post-review ones on every path — including a
+        # veto flip or a resurrection re-run. The router is a pure function
+        # of the verdict shape, so outage/fail-safe verdicts cost nothing.
+        verdict, _review_pm_text = await _apply_verdict_review(
+            verdict=verdict, pm_outage=_pm_outage, parsed=parsed, live=live,
+            run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
+            mandate=mandate, run=run, gateway=gateway,
+            agent_timeout_s=agent_timeout_s,
+        )
+        if _review_pm_text is not None:
+            pm_text = _review_pm_text
         async for ev in _restream_for_ui(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -5358,6 +5341,519 @@ async def _run_cio_step(
     if defer_outage_verdict_event and is_outage_shaped_verdict(verdict.model_dump()):
         return
     yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
+
+
+def _floor_pm_approve(
+    parsed: Verdict,
+    pm_text: str,
+    *,
+    run_id: UUID,
+    ctx: _RoomContext,
+    mandate: Mandate,
+    profile: dict[str, Any],
+) -> tuple[str, Verdict]:
+    """The APPROVE half of the CIO decision tail, factored into ONE function
+    (CR247 Phase 4) so the main draw and the resurrection re-run meet the
+    SAME safety floor with the SAME kwargs — DEF384's one-tail rule: a second
+    inlined copy of a floor call is how a call site quietly loses kwargs
+    (CR101-BE2 round 1 shipped one missing five).
+
+    Returns (possibly R:R-annotated pm_text, floored verdict). The floor
+    still owns vetoes; the R:R coherence pass only corrects narration text.
+    """
+    proposed = ProposedTrade(
+        ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
+        quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
+        limit_price=parsed.entry,
+    )
+    # CR046 M06 / DEF095: flag (never veto) an APPROVE whose
+    # narrated R:R contradicts its own levels, and SURFACE it —
+    # rewrite the PM's verdict narration so the ratio the user
+    # reads is AMI's computed one, not a log nobody sees. The
+    # safety floor still owns vetoes; this only corrects text.
+    _rr_sig = _pm_rr_coherence_signal(
+        pm_text, parsed.entry, parsed.stop, parsed.target
+    )
+    if _rr_sig is not None:
+        logger.warning(
+            "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
+        )
+        pm_text, _ = _annotate_rr_against_levels(
+            pm_text, parsed.entry, parsed.stop,
+            parsed.target, parsed.size_pct,
+        )
+    verdict = enforce_safety_floor(
+        llm_verdict=parsed, proposed=proposed,
+        portfolio_value=ctx.portfolio_value,
+        current_drawdown_pct=ctx.current_drawdown_pct,
+        mandate=mandate, halal_universe=ctx.halal_universe,
+        classification_universe=ctx.classification_universe,
+        locale_allowed_universe=ctx.locale_allowed_universe,
+        # CR026: veto a PM APPROVE that breaches the sector cap.
+        holdings=ctx.sector_holdings,
+        quotes=ctx.sector_marks,
+        sector_map=ctx.sector_map,
+        # CR101-BE2 round 2: same trade-history context
+        # sim_engine.py supplies at submit()/preview() —
+        # previously omitted here, so a set post-loss
+        # cooldown / over-trading brake / open-risk cap
+        # was silently unenforced on the live PM's own
+        # APPROVE (round-1 BLOCKER).
+        last_loss_closed_at=ctx.risk_last_loss_closed_at,
+        trade_open_timestamps=ctx.risk_trade_open_timestamps,
+        existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+        proposed_stop=parsed.stop,
+        # CR247 Phase 1D — an in-window 8-K Item 4.02 (non-reliance)
+        # narrated by the forensic flags overlay; None = nothing to
+        # block on. The floor owns the flag gate and the BUY check.
+        edgar_8k_item_402=profile.get("edgar_8k_item_402_block"),
+    )
+    return pm_text, verdict
+
+
+# ── CR247 Phase 4 — second-pass verdict review (D11–D13, D27) ──────────────
+#
+# Routing and combination are deterministic code; only the audits are LLM
+# calls, executed on the gateway's FALLBACK provider — a different model than
+# the CIO (D18's model-correlation test at +1 call on ~16% of convenes, the
+# approval base rate from D12). Both reviews ship behind independent flags
+# because the Phase 0.1 census returned a zero-scored ledger (D27); the
+# census re-runs at maturity to validate which review earns its keep.
+
+# The reviewer is a judgment lens, not a display agent: mid tier on the
+# fallback provider (on Alpha, Anthropic's sonnet alias), and a small output
+# budget — the reply is one decision plus a handful of bounded reasons.
+_REVIEW_MODEL_TIER: ModelTier = "mid"
+_REVIEW_MAX_TOKENS = 700
+
+# Suffix appended to a resurrection re-run's narration so the verdict card
+# says the decision was reconsidered — the journal carries the full record.
+_REVIEWED_SUFFIX = " (Reconsidered once at the audit's request.)"
+
+
+def _verdict_review_route(
+    *,
+    verdict: Verdict,
+    pm_outage: bool,
+    parsed: Verdict | None,
+    live: bool,
+) -> Literal["veto", "resurrection"] | None:
+    """CR247 Phase 4 (D13) — the deterministic router. LLMs never decide
+    whether a verdict gets double-checked; code does.
+
+    Fires only when there is something real to audit: a LIVE convene (the
+    scripted demo path never reviews), a real PM turn behind the verdict
+    (the DEF059 outage PASS and the parse-fail-safe PASS are code-built,
+    not decisions), and the matching flag. The veto additionally needs real
+    dissent to audit — the Bear/Conservative scripted check happens in
+    `_apply_verdict_review`, where the transcript is in scope.
+    """
+    if not live or pm_outage or parsed is None:
+        return None
+    if verdict.action == VerdictAction.APPROVE:
+        return "veto" if settings.room_veto_review_enabled else None
+    if verdict.action == VerdictAction.PASS:
+        return "resurrection" if settings.room_resurrection_review_enabled else None
+    return None
+
+
+def _parse_verdict_review(text: str, *, kind: str) -> dict[str, Any] | None:
+    """Tolerant reader for a review reply. The grammar is DEMANDED via
+    OutputConstraint when `room_json_constraints_enabled`, but the Alpha
+    fallback (Anthropic) declares no grammar support — the gateway drops it
+    LOUDLY and this parser is the only contract on the reply, exactly the
+    CR210 division. A reply whose decision is absent or outside the kind's
+    enum is unreadable, full stop: combination treats that per kind (a veto
+    audit that cannot be read is NOT an approve; a resurrection audit that
+    cannot be read fails closed)."""
+    parsed = extract_json_object(text)
+    if not isinstance(parsed, dict):
+        return None
+    decision = parsed.get("decision")
+    allowed = ("uphold", "veto") if kind == "veto" else ("reconsider", "uphold")
+    if decision not in allowed:
+        return None
+    reasons = parsed.get("reasons")
+    cleaned = [
+        str(r).strip() for r in (reasons if isinstance(reasons, list) else [])
+        if str(r).strip()
+    ]
+    return {"decision": decision, "reasons": cleaned[:5]}
+
+
+async def _apply_verdict_review(
+    *,
+    verdict: Verdict,
+    pm_outage: bool,
+    parsed: Verdict | None,
+    live: bool,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    mandate: Mandate,
+    run: RoomRun,
+    gateway: LLMGateway,
+    agent_timeout_s: float,
+) -> tuple[Verdict, str | None]:
+    """Route → audit → combine. Returns (final_verdict, pm_text_override).
+
+    pm_text_override is not None only when the user-facing narration changed
+    (a veto flip, or a resurrection re-run that produced a verdict) — the
+    caller replays it as the PM turn so the transcript and the card agree.
+
+    NEVER raises into the convene: a second-pass audit must not be able to
+    take down a delivered verdict. Every failure mode lands on the verdict
+    UNCHANGED with a `VerdictReviewRecord` explaining itself and a loud log
+    line (CR040) — except the two designed combination outcomes (a veto, an
+    unparseable veto audit), which change the verdict BY DESIGN.
+    """
+    kind = _verdict_review_route(
+        verdict=verdict, pm_outage=pm_outage, parsed=parsed, live=live,
+    )
+    if kind is None:
+        return verdict, None
+    record = VerdictReviewRecord(
+        kind=kind, original=verdict.model_dump(mode="json"),
+    )
+    pm_text_override: str | None = None
+
+    try:
+        final_verdict, pm_text_override = await _run_verdict_review(
+            kind=kind, record=record, verdict=verdict,
+            run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
+            mandate=mandate, run=run, gateway=gateway,
+            agent_timeout_s=agent_timeout_s,
+        )
+    except Exception as exc:  # noqa: BLE001 — the audit never breaks the convene
+        logger.exception(
+            "room_verdict_review_failed",
+            run_id=str(run_id), kind=kind,
+            error=str(exc)[:200],
+        )
+        record.skipped_reason = f"review_error: {str(exc)[:120]}"
+        final_verdict = verdict
+    return final_verdict.model_copy(update={"verdict_review": record}), pm_text_override
+
+
+async def _run_verdict_review(
+    *,
+    kind: str,
+    record: VerdictReviewRecord,
+    verdict: Verdict,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    mandate: Mandate,
+    run: RoomRun,
+    gateway: LLMGateway,
+    agent_timeout_s: float,
+) -> tuple[Verdict, str | None]:
+    """The review itself: gather inputs, one fallback-provider call, combine.
+
+    Split from `_apply_verdict_review` only so the broad never-break-the-
+    convene guard has one clean boundary. All skip/flip/re-run outcomes are
+    written onto `record` and returned as (verdict, pm_text_override)."""
+    bear_text: str | None = None
+    conservative_text: str | None = None
+    if kind == "veto":
+        # The audit needs the two dissenting voices' captured outputs, and
+        # both must be REAL: a scripted Bear/Conservative turn is canned
+        # text, and auditing a response to canned text is theater — the
+        # structured-path guard, exactly (nothing real to audit).
+        if (
+            AgentId.BEAR_RESEARCHER in ctx.scripted_turns
+            or AgentId.CONSERVATIVE_DEBATOR in ctx.scripted_turns
+        ):
+            record.skipped_reason = "scripted_dissent"
+            logger.warning(
+                "room_verdict_review_skipped",
+                run_id=str(run_id), kind=kind, reason=record.skipped_reason,
+            )
+            return verdict, None
+        for m in run.transcript:
+            if m.role != "agent":
+                continue
+            if m.agent_id == AgentId.BEAR_RESEARCHER:
+                bear_text = m.content
+            elif m.agent_id == AgentId.CONSERVATIVE_DEBATOR:
+                conservative_text = m.content
+        if bear_text is None or conservative_text is None:
+            record.skipped_reason = "missing_dissent_transcript"
+            logger.warning(
+                "room_verdict_review_skipped",
+                run_id=str(run_id), kind=kind, reason=record.skipped_reason,
+            )
+            return verdict, None
+        system_prompt = VETO_REVIEW_SYSTEM
+        case_text = build_veto_review_case(
+            mandate=mandate, verdict=verdict, bear_text=bear_text,
+            conservative_text=conservative_text, ticker=ctx.ticker,
+        )
+    else:
+        system_prompt = RESURRECTION_REVIEW_SYSTEM
+        case_text = build_resurrection_review_case(
+            mandate=mandate, verdict=verdict, ticker=ctx.ticker,
+        )
+
+    # The different-model requirement (D18): the audit runs on the gateway's
+    # fallback provider. None means none is registered (e.g. no ANTHROPIC_API
+    # KEY in this environment) — degrade loudly and KEEP the verdict: a
+    # review that cannot run must never change what it could not audit.
+    picker = getattr(gateway, "pick_review_provider", None)
+    provider_name = picker() if callable(picker) else None
+    if provider_name is None:
+        record.skipped_reason = "no_fallback_provider"
+        logger.error(
+            "room_verdict_review_no_provider",
+            run_id=str(run_id), kind=kind,
+            detail=(
+                "a verdict review was routed but no fallback provider is "
+                "registered — the audit did not run and the verdict stands "
+                "unchanged (CR247 Phase 4 / CR040)"
+            ),
+        )
+        return verdict, None
+    record.provider = provider_name
+
+    review_meta: dict[str, Any] = {}
+    try:
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=[ChatMessage(role="user", content=case_text)],
+                model_tier=_REVIEW_MODEL_TIER,
+                locale=ctx.mandate.locale,
+                max_tokens=_REVIEW_MAX_TOKENS,
+                audit_user_id=ctx.user_id,
+                audit_agent_id=None,
+                audit_flow=f"room_{kind}_review",
+                meta=review_meta,
+                constraint=(
+                    OutputConstraint(
+                        name=f"{kind}_review",
+                        json_schema=(
+                            veto_review_schema() if kind == "veto"
+                            else resurrection_review_schema()
+                        ),
+                    )
+                    if settings.room_json_constraints_enabled
+                    else None
+                ),
+                provider_name=provider_name,
+            )),
+            timeout=agent_timeout_s,
+        )
+    except TimeoutError:
+        record.skipped_reason = "review_timeout"
+        logger.error(
+            "room_verdict_review_timeout",
+            run_id=str(run_id), kind=kind, provider=provider_name,
+            timeout_s=agent_timeout_s,
+        )
+        return verdict, None
+    if review_meta.get("stream_error"):
+        record.skipped_reason = "review_stream_error"
+        logger.error(
+            "room_verdict_review_stream_error",
+            run_id=str(run_id), kind=kind, provider=provider_name,
+            error=str(review_meta["stream_error"])[:200],
+        )
+        return verdict, None
+    review = _parse_verdict_review("".join(chunks).strip(), kind=kind)
+    if review is None:
+        return _combine_unparseable_review(
+            kind=kind, record=record, verdict=verdict, run_id=run_id,
+        )
+    record.decision = review["decision"]
+    record.reasons = review["reasons"]
+    if kind == "veto":
+        if review["decision"] == "uphold":
+            logger.info(
+                "room_verdict_review_upheld",
+                run_id=str(run_id), provider=provider_name,
+                reasons=len(review["reasons"]),
+            )
+            return verdict, None
+        return _veto_flip(verdict, record), None
+
+    # Resurrection: only "reconsider" does anything, and it re-runs the CIO
+    # ONCE with the audit note — one resurrection per convene, and the
+    # re-run's verdict is final (never reviewed again: `_stream_pm_response`
+    # is called directly here, not through this router).
+    if review["decision"] == "uphold":
+        logger.info(
+            "room_verdict_review_upheld",
+            run_id=str(run_id), provider=provider_name,
+            reasons=len(review["reasons"]),
+        )
+        return verdict, None
+    return await _resurrection_rerun(
+        record=record, reasons=review["reasons"], verdict=verdict,
+        run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
+        mandate=mandate, run=run, gateway=gateway,
+        agent_timeout_s=agent_timeout_s,
+    )
+
+
+def _combine_unparseable_review(
+    *,
+    kind: str,
+    record: VerdictReviewRecord,
+    verdict: Verdict,
+    run_id: UUID,
+) -> tuple[Verdict, str | None]:
+    """A routed review whose reply cannot be read. The two kinds fail in
+    opposite safe directions (pinned by the suite):
+
+    * veto — an approval the audit could not read is NOT an approval:
+      final = APPROVE only if both passes approve, and this pass produced
+      nothing approvable. Flip to PASS, narrated, original preserved.
+    * resurrection — fail closed: no re-run on an unreadable audit. The
+      verdict stands; the record says why.
+    """
+    record.parse_failed = True
+    logger.error(
+        "room_verdict_review_unparseable",
+        run_id=str(run_id), kind=kind, provider=record.provider,
+    )
+    if kind == "resurrection":
+        return verdict, None
+    return _veto_flip(verdict, record, unparseable=True), None
+
+
+def _veto_flip(
+    verdict: Verdict, record: VerdictReviewRecord, *, unparseable: bool = False,
+) -> Verdict:
+    """Combination for a failed (or unreadable) veto audit: APPROVE → PASS.
+
+    Never REJECT — the veto denies the approval, it does not assert the
+    opposite (D13). The PASS carries no levels, so the trade fields clear;
+    the vote the CR214 samples recorded travels with the flip, same as the
+    safety-floor override; the original verdict is preserved on `record`.
+    """
+    if unparseable:
+        reason = (
+            "Veto review (audit): audit unparseable — the second pass "
+            "returned no readable decision, and an approval the audit "
+            "could not read is treated as not approved. The original "
+            "APPROVE is preserved in this run's journal record."
+        )
+    else:
+        grounds = "; ".join(record.reasons) or (
+            "specific numbered objections stand unanswered"
+        )
+        reason = (
+            f"Veto review (audit): {grounds}. The original APPROVE and "
+            "the CIO's narration are preserved in this run's journal record."
+        )
+    logger.warning(
+        "room_verdict_vetoed",
+        action="PASS",
+        grounds=(None if unparseable else len(record.reasons)),
+    )
+    return verdict.model_copy(update={
+        "action": VerdictAction.PASS,
+        "size_pct": None, "entry": None, "stop": None, "target": None,
+        "time_horizon_days": None, "structure": None,
+        "level_provenance": None,
+        "overridden_from_llm": True,
+        "reason": reason,
+    })
+
+
+async def _resurrection_rerun(
+    *,
+    record: VerdictReviewRecord,
+    reasons: list[str],
+    verdict: Verdict,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    mandate: Mandate,
+    run: RoomRun,
+    gateway: LLMGateway,
+    agent_timeout_s: float,
+) -> tuple[Verdict, str | None]:
+    """The resurrection: the CIO re-runs ONCE with the audit note appended.
+
+    The DEF058 reformat/retry path is the model for this one-shot re-run:
+    a single buffered draw through `_stream_pm_response` (the self-consistency
+    fan-out does NOT re-run — the re-run is one draw by design, or an audit on
+    a marginal PASS would cost six premium calls), the same tolerant parse,
+    the same reformat retry recovering only an APPROVE, the same fail-safe
+    PASS when nothing readable comes back, and the SAME safety floor for a
+    re-run APPROVE (`_floor_pm_approve` — one floor, both callers).
+
+    The re-run verdict is FINAL: no second review (enforced structurally —
+    this path calls `_stream_pm_response` directly, not the router) and no
+    loop back. A repeated PASS is the answer. The vote fields clear: a single
+    re-decision is not a vote — the original vote is preserved on
+    `record.original`.
+    """
+    record.rerun = True
+    note = build_resurrection_audit_note(mandate, reasons)
+    logger.info(
+        "room_verdict_resurrection_rerun",
+        run_id=str(run_id), provider=record.provider,
+        reasons=len(reasons),
+    )
+    rerun_text = await _stream_pm_response(
+        run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
+        run=run, gateway=gateway, agent_timeout_s=agent_timeout_s,
+        extra_user_note=note,
+    )
+    if not rerun_text:
+        # The re-run produced nothing readable; the original PASS is a real,
+        # readable decision and stays final. The record carries the attempt.
+        record.rerun_parse_failed = True
+        logger.error(
+            "room_verdict_resurrection_no_reply",
+            run_id=str(run_id),
+        )
+        return verdict, None
+    rerun_pm_text, rerun_parsed = _parse_pm_verdict(rerun_text, ctx)
+    if rerun_parsed is None:
+        reformatted = await _reformat_pm_response(
+            rerun_text, ctx=ctx, gateway=gateway,
+            agent_timeout_s=agent_timeout_s,
+        )
+        if reformatted:
+            rerun_pm_text, recovered = _parse_pm_verdict(reformatted, ctx)
+            # DEF067: the reformatter exists only to RECOVER an APPROVE — a
+            # recovered PASS is discarded, same rule as the main tail.
+            if recovered is not None and recovered.action == VerdictAction.APPROVE:
+                rerun_parsed = recovered
+            elif recovered is not None:
+                logger.warning(
+                    "room_pm_reformat_downgrade_rejected", run_id=str(run_id),
+                )
+    if rerun_parsed is None:
+        record.rerun_parse_failed = True
+        logger.error(
+            "room_verdict_resurrection_unparseable",
+            run_id=str(run_id),
+        )
+        return verdict, None
+    if rerun_parsed.action == VerdictAction.APPROVE:
+        _, rerun_verdict = _floor_pm_approve(
+            rerun_parsed, rerun_pm_text or "", run_id=run_id, ctx=ctx,
+            mandate=mandate, profile=profile,
+        )
+    else:
+        rerun_verdict = rerun_parsed
+    record.rerun_action = rerun_verdict.action
+    final_verdict = rerun_verdict.model_copy(update={
+        "samples": None, "approve_votes": None,
+        "reason": f"{rerun_verdict.reason}{_REVIEWED_SUFFIX}",
+    })
+    logger.info(
+        "room_verdict_resurrected",
+        run_id=str(run_id), action=str(final_verdict.action),
+    )
+    return final_verdict, final_verdict.reason
 
 
 # ── Streaming the contributions ───────────────────────────────────────────
@@ -8469,6 +8965,7 @@ async def _stream_pm_response(
     run: RoomRun,
     gateway: LLMGateway,
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+    extra_user_note: str | None = None,
 ) -> str:
     """Buffer the PM's raw LLM response and return it verbatim (DEF056).
 
@@ -8477,6 +8974,11 @@ async def _stream_pm_response(
     `_assemble_verdict` APPROVE is reserved for the non-live demo path). A
     non-empty return still needs parsing by `_parse_pm_verdict` — this
     function makes no attempt to interpret the response, it only fetches it.
+
+    CR247 Phase 4 — [extra_user_note] (the resurrection re-run's audit note)
+    rides the user message, AFTER the stock "Convene on {ticker}." kickoff.
+    The user message trails the system prompt, so the note is the last thing
+    the CIO reads without displacing the safety floor's position inside it.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
     plan = effective_plan_for_user(ctx.user_id)
@@ -8539,6 +9041,13 @@ async def _stream_pm_response(
         # convene did not change mid-run.
         prior_convene=ctx.next_convene_delta,
     )
+    if extra_user_note:
+        messages = [
+            ChatMessage(
+                role="user",
+                content=f"{messages[0].content}\n\n{extra_user_note}",
+            )
+        ]
     # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
     # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of
     # runs) suspected exactly that cap clipping the JSON's closing brace. Route

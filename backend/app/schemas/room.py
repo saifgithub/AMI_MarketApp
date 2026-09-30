@@ -68,6 +68,57 @@ class NextConveneDelta(BaseModel):
     prior_kill_criterion: str | None = None
 
 
+class VerdictReviewRecord(BaseModel):
+    """CR247 Phase 4 (D11–D13, D27) — one second-pass verdict review, journaled
+    on the verdict it audited.
+
+    Routing and combination are deterministic code (`room_runner`); only the
+    audit itself is an LLM call, run on the gateway's fallback provider — a
+    DIFFERENT model than the CIO (D18's model-correlation test at one extra
+    call on ~16% of convenes). The record rides the verdict JSONB, so the
+    Decision Journal snapshot (`build_journal_entry_for_run`'s payload) carries
+    it automatically — flips are journaled with the ORIGINAL verdict preserved
+    (`original` below), exactly the D13 rule.
+
+    `None` on `Verdict.verdict_review` means the run was never routed to a
+    review (flag off, scripted/outage/fail-safe verdict, or a pre-Phase-4 run)
+    — never "a review happened and said nothing". A review that WAS routed but
+    could not run (no fallback provider registered, or the audited inputs were
+    themselves scripted) records `skipped_reason` — the loud degrade, verdict
+    unchanged (CR040). A routed review whose reply could not be read records
+    `parse_failed` and no `decision`; the combination layer treats that per
+    kind — a veto audit that could not be read is NOT an approve (the approval
+    it could not vouch for is flipped to PASS), while a resurrection audit that
+    could not be read fails closed (no re-run). One review per verdict: the
+    resurrection re-run's verdict is final and is never itself reviewed.
+    """
+
+    kind: Literal["veto", "resurrection"]
+    # Which fallback provider ran the call; None when routed but skipped before
+    # any call (`skipped_reason` says why).
+    provider: str | None = None
+    # The audit's own output — "uphold"/"veto" (veto review) or
+    # "reconsider"/"uphold" (resurrection review). None when the call never ran
+    # or its reply could not be parsed.
+    decision: Literal["uphold", "veto", "reconsider"] | None = None
+    reasons: list[str] = Field(default_factory=list)
+    parse_failed: bool = False
+    skipped_reason: str | None = None
+    # The verdict the review audited, preserved in full (levels, narration,
+    # kill criterion, vote) before any flip or re-run touched it.
+    original: dict | None = None
+    # Resurrection only: the audit returned reconsider and the CIO re-ran once
+    # with the audit note appended. `rerun_action` is that re-run's final
+    # action after the safety floor — the verdict the user sees.
+    rerun: bool = False
+    rerun_action: Literal["APPROVE", "PASS", "REJECT"] | None = None
+    # Resurrection only: the re-run itself produced nothing readable (empty
+    # reply or unparseable even after the DEF058 reformat retry). The
+    # original PASS stands — a real, readable decision is never destroyed by
+    # a failed re-attempt.
+    rerun_parse_failed: bool = False
+
+
 class Verdict(BaseModel):
     """The Portfolio Manager's final verdict on a Room run."""
 
@@ -230,6 +281,16 @@ class Verdict(BaseModel):
     # says so by omission rather than by a "no prior data" line that reads as
     # information.
     next_convene_delta: NextConveneDelta | None = None
+
+    # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review, when this
+    # verdict was routed to one. Absent (None) on every run that predates the
+    # field and on every verdict the deterministic router never sent to review
+    # — a flag-off convene, a scripted/outage/fail-safe verdict, a floor REJECT
+    # or no-verdict shape: all journal their absence by omission, never a
+    # stand-in record (T-BACKFILL, the same rule `level_provenance` is read
+    # under). See `VerdictReviewRecord` for the field meanings and the two
+    # degrade shapes (routed-but-skipped, parse-failed).
+    verdict_review: VerdictReviewRecord | None = None
 
 
 class RoomRun(BaseModel):

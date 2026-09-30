@@ -505,6 +505,19 @@ services:
       ROOM_INSIDER_PLAN_TAG_ENABLED: ${ROOM_INSIDER_PLAN_TAG_ENABLED:-true}
       ROOM_INSIDER_CLUSTER_ENABLED: ${ROOM_INSIDER_CLUSTER_ENABLED:-true}
       ROOM_EDGAR_8K_FLAGS_ENABLED: ${ROOM_EDGAR_8K_FLAGS_ENABLED:-true}
+      # CR247 Phase 4 — the second-pass verdict review (D11–D13, D27): the
+      # veto review on APPROVE (fail the approval when the Bear's/Conservative's
+      # numbered objections went unanswered; a veto flips to PASS, narrated and
+      # journaled, original verdict preserved) and the resurrection review on
+      # PASS (show the PASS rested on mandate-inadmissible evidence; reconsider
+      # re-runs the CIO once with the audit note, floor-checked, final). Both
+      # run on the gateway's fallback provider (a different model than the CIO,
+      # D18). Independent flags, both ON since 2026-09-30 — the Phase 0.1
+      # census ledger was zero-scored (D27), so the SPEC's shape selection
+      # cannot pick one and both ship; the census re-validates at maturity.
+      # Env vars are the kill switches. See Settings.
+      ROOM_VETO_REVIEW_ENABLED: ${ROOM_VETO_REVIEW_ENABLED:-true}
+      ROOM_RESURRECTION_REVIEW_ENABLED: ${ROOM_RESURRECTION_REVIEW_ENABLED:-true}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

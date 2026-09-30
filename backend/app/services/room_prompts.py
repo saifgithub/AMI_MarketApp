@@ -676,6 +676,209 @@ def pm_verdict_schema(option_candidates: Sequence[Any] | None = None) -> dict[st
     }
 
 
+# ── CR247 Phase 4 — second-pass verdict review (D11–D13, D27) ──────────────
+#
+# Two audits, routed deterministically by room_runner (LLMs judge; code routes,
+# combines and vetoes — D13):
+#   * veto review, on APPROVE — try to FAIL the approval when the Bear's or the
+#     Conservative's specific, numbered objections were not addressed WITH
+#     NUMBERS in the CIO's narration. Combination is code: final = APPROVE only
+#     if the audit upholds; a veto flips to PASS (never REJECT — the veto
+#     denies the approval, it does not assert the opposite).
+#   * resurrection review, on PASS — try to SHOW the PASS rested on evidence
+#     the mandate makes inadmissible (the Phase 2.3 `_horizon_weighting_line`
+#     defines inadmissibility). It cannot approve (a PASS carries no
+#     size/entry/stop): reconsider re-runs the CIO once with the audit note.
+#
+# Both run on the gateway's FALLBACK provider — a different model than the CIO
+# (D18's model-correlation test). Only the audits are LLM calls; everything
+# else here is prompt/schema assembly.
+
+
+VERDICT_REVIEW_REASON_MAX_CHARS = 400
+
+
+def _verdict_review_schema(decisions: Sequence[str]) -> dict[str, Any]:
+    """The shared shape of a review reply: one decision enum + reasons[].
+
+    `minItems` on reasons and a per-reason cap: a veto/uphold with no stated
+    ground is an audit that cannot be journaled or narrated, and the reasons
+    are rendered into the user-facing flip narration, so they stay bounded.
+    """
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["decision", "reasons"],
+        "properties": {
+            "decision": {"type": "string", "enum": list(decisions)},
+            "reasons": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "string",
+                    "maxLength": VERDICT_REVIEW_REASON_MAX_CHARS,
+                },
+            },
+        },
+    }
+
+
+def veto_review_schema() -> dict[str, Any]:
+    """CR247 Phase 4 — the veto review's decoding grammar (`uphold`/`veto`)."""
+    return _verdict_review_schema(["uphold", "veto"])
+
+
+def resurrection_review_schema() -> dict[str, Any]:
+    """CR247 Phase 4 — the resurrection review's grammar (`reconsider`/`uphold`).
+
+    Deliberately there is no approve value: a PASS produced no size/entry/stop
+    to approve INTO — the only power the audit has is to send the verdict back
+    for one re-run with the note appended (D13).
+    """
+    return _verdict_review_schema(["reconsider", "uphold"])
+
+
+VETO_REVIEW_SYSTEM = (
+    "You are AMI's second-pass verdict auditor. A Chief Investment Officer "
+    "has APPROVED a simulated trade. Your single job is to try to VETO that "
+    "approval.\n"
+    "Veto grounds — and the only grounds: the Bear Researcher or the "
+    "Conservative Risk Officer raised specific, numbered objections, and the "
+    "CIO's narration did not answer them WITH NUMBERS. \"Addressed\" means the "
+    "narration engages the objection's actual figures — the same numbers, or "
+    "counter-figures taken from the fact sheet — not a restatement of the "
+    "thesis, a dismissal in prose, or a number-free assurance. An objection "
+    "answered with numbers is settled; one waved at is not.\n"
+    "Do not re-judge the trade. Do not substitute your own view of the "
+    "ticker, the timing, or the sizing, and do not raise objections the Bear "
+    "or the Conservative did not raise — the mandate's deterministic floor "
+    "already checked compliance. The ONLY question is whether this approval "
+    "answered the dissent it was given.\n"
+    "Decide:\n"
+    "- \"uphold\" — every specific, numbered objection the Bear or the "
+    "Conservative raised is answered with numbers in the CIO's narration (or "
+    "is not specific/numbered enough to require an answer).\n"
+    "- \"veto\" — at least one specific, numbered objection stands unanswered, "
+    "or answered without numbers.\n"
+    "Output ONE JSON object, no prose outside it, shaped exactly like:\n"
+    '{"decision": "uphold" | "veto",\n'
+    ' "reasons": ["<one short string per standing objection — on veto cite '
+    'the objection and the number the narration never engaged; on uphold, one '
+    'string saying the numbered objections were answered>"]}\n'
+    "Begin your response with '{'."
+)
+
+RESURRECTION_REVIEW_SYSTEM = (
+    "You are AMI's second-pass verdict auditor. A Chief Investment Officer "
+    "has PASSED on a simulated trade — declined to enter a position. You "
+    "cannot approve anything: a PASS carries no size, entry or stop, so the "
+    "only output that changes anything is \"reconsider\".\n"
+    "Your single job: show the PASS rested on evidence the user's mandate "
+    "makes INADMISSIBLE. The mandate's rule is stated in the case below — "
+    "when the horizon is long, short-term technical readings (RSI, MACD, "
+    "daily moving-average crosses, one-week price action) may inform entry "
+    "timing ONLY; they cannot validate or invalidate the thesis. A PASS that "
+    "rests on them — \"overbought\", \"below the 50-day\", \"choppy tape\" — "
+    "is a refusal built on evidence the mandate says weighs nothing. "
+    "Fundamental evidence (growth, margins, valuation, balance sheet, the "
+    "Bear's structural objections) is ALWAYS admissible.\n"
+    "Do not re-judge the trade and do not weigh admissible evidence against "
+    "inadmissible evidence — a PASS resting on admissible fundamental "
+    "evidence upholds even if you would have decided differently.\n"
+    "Decide:\n"
+    "- \"reconsider\" — with the inadmissible evidence set aside, the PASS "
+    "has no stated basis, or its stated basis is inadmissible.\n"
+    "- \"uphold\" — the PASS rests on admissible evidence.\n"
+    "Output ONE JSON object, no prose outside it, shaped exactly like:\n"
+    '{"decision": "reconsider" | "uphold",\n'
+    ' "reasons": ["<on reconsider: the inadmissible evidence relied on, with '
+    'the phrase from the narration that shows it; on uphold: the admissible '
+    'basis that carries the PASS>"]}\n'
+    "Begin your response with '{'."
+)
+
+
+def _review_mandate_block(mandate: Mandate) -> str:
+    """The compact mandate summary both review cases carry."""
+    return (
+        "USER MANDATE:\n"
+        f"- horizon: {mandate.horizon}\n"
+        f"- risk_score: {mandate.risk_score} (1=most conservative, 5=most aggressive)\n"
+        f"- max_drawdown_pct: {mandate.max_drawdown_pct}\n"
+        f"- long_only: {mandate.compliance.long_only}\n"
+    )
+
+
+def build_veto_review_case(
+    *,
+    mandate: Mandate,
+    verdict: Any,
+    bear_text: str,
+    conservative_text: str,
+    ticker: str,
+) -> str:
+    """The veto review's user message: the CIO's narration + kill criterion,
+    the Bear's and Conservative's captured Room outputs verbatim, and the
+    mandate. The auditor finds the numbered objections inside the two voices'
+    text — extracting them is judgment, so it is the LLM's half of the task."""
+    return (
+        f"ROOM CONVENE ON {ticker}\n\n"
+        f"{_review_mandate_block(mandate)}\n"
+        "CHIEF INVESTMENT OFFICER'S VERDICT (APPROVE):\n"
+        f"narration: {verdict.reason}\n"
+        f"kill_criterion: {verdict.kill_criterion or '(none stated)'}\n\n"
+        "BEAR RESEARCHER'S CASE (verbatim, as delivered in the Room):\n"
+        f"{bear_text}\n\n"
+        "CONSERVATIVE RISK OFFICER'S OBJECTIONS (verbatim, as delivered):\n"
+        f"{conservative_text}"
+    )
+
+
+def build_resurrection_review_case(*, mandate: Mandate, verdict: Any, ticker: str) -> str:
+    """The resurrection review's user message: the CIO's PASS narration +
+    kill criterion, the mandate, and the Phase 2.3 horizon discipline — the
+    line that DEFINES what evidence is inadmissible under this mandate."""
+    return (
+        f"ROOM CONVENE ON {ticker}\n\n"
+        f"{_review_mandate_block(mandate)}\n"
+        f"{_horizon_weighting_line(mandate)}\n"
+        "CHIEF INVESTMENT OFFICER'S VERDICT (PASS):\n"
+        f"narration: {verdict.reason}\n"
+        f"kill_criterion: {verdict.kill_criterion or '(none stated)'}"
+    )
+
+
+# The marker a re-run prompt carries when a resurrection review sent the CIO
+# back — pinned by the suite (the re-run's user message must contain it) and
+# greppable in llm_audit.
+RESURRECTION_AUDIT_NOTE_SENTINEL = (
+    "─── VERDICT AUDIT NOTE — RECONSIDER THIS DECISION ───"
+)
+
+
+def build_resurrection_audit_note(mandate: Mandate, reasons: Sequence[str]) -> str:
+    """The audit note appended to the CIO's one re-run prompt.
+
+    Named as what it is: an audit the user will read about in the journal,
+    not a hidden retry. The re-run keeps the same fact sheet, mandate and
+    safety floor — only this note is new — and a repeated PASS stands: the
+    audit asks the question again, it does not dictate the answer.
+    """
+    reason_lines = "\n".join(f"- {r}" for r in reasons)
+    return (
+        f"{RESURRECTION_AUDIT_NOTE_SENTINEL}\n"
+        "A second-pass audit (a different model, run by AMI) found that this "
+        "PASS rests on evidence your user's mandate makes inadmissible:\n"
+        f"{reason_lines}\n"
+        f"{_horizon_weighting_line(mandate)}"
+        "Re-decide now as the Chief Investment Officer, from the SAME fact "
+        "sheet, the SAME mandate and the SAME safety floor, in the same JSON "
+        "verdict format. If, with the inadmissible evidence set aside, the "
+        "debate still does not support a position, PASS again — a repeated "
+        "PASS stands."
+    )
+
+
 # DEF236 — STYLE only. The shape (a thesis sentence, then how many bullets) is
 # stated once, in `_LENGTH_GUIDE`, and no longer restated here in a different
 # unit. See that dict for what the contradiction cost.
