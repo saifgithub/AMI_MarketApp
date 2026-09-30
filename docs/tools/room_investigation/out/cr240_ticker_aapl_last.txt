@@ -1,0 +1,5 @@
+# CR240 — AAPL, run separately as the 10th/last ticker, after the 9
+# Kimi-approved tickers complete. See cr240_tickers_9_kimi_approved.txt for
+# why AAPL is split out (already used once as the wiring smoke test, on mock
+# data — that run is not reused; this is a fresh real-market-data run).
+AAPL

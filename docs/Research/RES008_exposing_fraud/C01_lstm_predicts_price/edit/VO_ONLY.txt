@@ -1,0 +1,49 @@
+C01 — An LSTM predicts tomorrow's stock price — VO ONLY
+For TTS / voice recording. Read exactly as written. Timecodes are cue points, not hard cuts.
+
+[0:00]
+LSTM stock price prediction — the chart where the predicted line sits right on top of the real one. We built it as taught: two published recipes, ten stocks, three training runs each. Then we drew one more line on the chart. No network, no training: tomorrow's price equals today's. On the error score these tutorials quote, that line beat the neural network in sixty runs out of sixty. One of our own four predictions was wrong, too — we'll show you which.
+
+[0:33]
+That chart is usually offered as proof the network sees tomorrow coming. And if you believe it, there's an obvious next step: trade the forecast, or pay for something that claims to trade it for you. So the chart has to earn that. A pretty overlay isn't enough — we need to know what it's actually made of.
+
+[0:56]
+Before we trained anything, we wrote down what would change our minds, in public, with a timestamp. In a fair version of this test — no peeking at the test data while training — any one of three things would do it: beat "tomorrow = today" on error by five percent at the midpoint, and in at least four runs out of five; call direction better than always guessing "up", on seven stocks out of ten; or make more money than just holding the stock. Any one of those, and the verdict is "holds" or "partly holds".
+
+[1:35]
+The recipe, as it's usually taught: feed the network a stock's own past closing prices, nothing else, and ask it to guess the next close. A hundred days of history in the window, three stacked layers, a hundred training passes. We also built a second, more compact version people teach — sixty days of history, fewer layers, twenty passes. Nine large stocks and an S&P 500 fund, prices from 2012 through this year, with the most recent slice held back and never shown during training.
+
+And here's the chart it produces. The forecast follows every rise and fall of the real price, for five years. We reproduced it.
+
+[2:33]
+Now we zoom that same chart into sixty days. Look closely: the forecast has the right shape, but it's late, and it sits well below the real price. Add our third line, "no change" — it hugs the real price far more closely, for free.
+
+Here's the error score by the numbers. On one stock, one run: the network's error was seventeen dollars and twelve cents. "No change" scored three dollars and forty-four cents. Across all ninety price-forecasting runs — two recipes, ten stocks, three runs each, plus a version with a common mistake fixed — the network's typical error was two to about four and a half times bigger than just saying "no change". Never once, in ninety runs, was the network smaller.
+
+So that's error. Now direction. Right or wrong on up-versus-down tomorrow, the network called it correctly forty-eight point five percent of the time. A coin gets you fifty. Simply always guessing "up" got fifty-two point five, because the market spent more days up than down. The forecast was worse than a coin, and worse than the laziest possible guess.
+
+And money. Trade that forecast — long when it says up, flat otherwise — and the typical run turned a hundred dollars into a hundred and twenty-four. Simply holding the stock turned it into a hundred and ninety-two. Only three of thirty runs beat holding at all.
+
+[4:40]
+Here's the mechanism. Today's closing price is already an excellent guess at tomorrow's — stocks don't usually jump far in a day. A network that's rewarded for small errors finds that guess and settles on it. Its forecast for tomorrow actually matches the real price from one to several days earlier — in every single one of the sixty as-taught runs.
+
+Slide the forecast back by a day, and its turns line up with the real ones. Over five years, a line that is a day late looks just like a line that is on time. That's the illusion.
+
+Two more things worth knowing. Part of that low error score comes from a common setup mistake — a scaling step that gets to see the test prices before the network is even trained. Fix that mistake, and the error gets worse in twenty-six of thirty runs. And when you ask this same network to project thirty days into the future on its own, the line comes out almost flat. It carries forward about twelve percent of the real day-to-day jitter, because there's nothing in the recipe telling it what tomorrow's move should be — only what yesterday's price was.
+
+[6:20]
+Here's where we have to be straight with you about our own test.
+
+We predicted this forecast would carry no information at all about tomorrow's actual move — a range that includes zero. We measured a small positive number instead: a correlation of about zero point zero two, on a scale where one is a perfect forecast. That accounts for roughly three hundredths of one percent of the daily movement — and by our own math the range does not include zero. It's tiny — it never turned into better direction calls or better returns — and we have to flag something that cuts against us here too: the range we calculated for that number wasn't planned in advance, and we think it's probably too tight, because three of our training runs per stock share the exact same real prices. We have not gone back and recalculated it now that we've seen the result.
+
+But we wrote down "zero", and we didn't get zero. So by our own rule, one of our four predictions failed — and the honest verdict is "not supported", not "disproved". We reserve that stronger word for when every one of our predictions holds. This time, one didn't.
+
+One more thing a single tutorial run will never show you: the exact same recipe, same stock, different random seed, produced wildly different behavior — one seed had its trading rule sitting in cash on every single day, another had it in the market on more than half of them.
+
+[8:21]
+Three questions for the next prediction chart somebody shows you. Where is the "tomorrow equals today" line — does anyone plot it next to theirs? What does the chart look like zoomed into one month, instead of five years? And is it actually predicting the change — or just repeating the level it already knows?
+
+If a chart can't answer those three, the overlay is doing the convincing, not the network.
+
+[9:04]
+AMI Trade is a simulator. You direct a team of twelve analysts, on simulated money, and the record of every decision is kept for you. It is simulation-only, and it promises no edge. The test, the code and every number from this video are in the description.
