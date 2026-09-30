@@ -7,16 +7,23 @@ Saiful's own label for this request is **CR036-R001**. Register ID stays a norma
 sequential `CR248` per this repo's minting convention (no `CR###-R###` pattern exists
 elsewhere); `CR036-R001` is kept here as his reference handle, not a second ID.
 
-**Naming, resolved (Saiful, 2026-09-30):** "Hermes" is **one AI agent system that can
-carry multiple personas** — not a naming collision to avoid. The melehost UAT-device
-Hermes ([[project_hermes_uat_operator]] memory; harness at `.../AMI_MarketApps/appium/`,
-reports at `.../hermes_folder/reports/appium/`) is **specific to melehost and not
-involved with the six personas below** (Saiful, 2026-09-30: "the hermes installed on
-melehost is specific to melehost, and not involved with the rest of the persona"). It's
-kept in this doc purely as **a worked example of how we've used the Hermes concept
-before** — one persona, one machine, one fixed job — not as an existing member of this
-CR's team. The six roles below are a separate, new set of personas under the same
-Hermes system.
+**Naming + system, resolved (Saiful, 2026-09-30):** "Hermes" is **Nous Research's
+Hermes Agent** — the open-source (MIT), self-hosted agentic harness: persistent memory
+(SQLite), self-written skills, a messaging gateway (19 platforms incl. Telegram /
+Discord / Slack), scheduled cron tasks, sandboxed command execution, sub-agent
+delegation, and an OpenAI-compatible model endpoint (so it can run against the on-prem
+vLLM at `192.168.20.74:8000`). **One harness, multiple personas** — a persona is a
+Hermes Agent instance with its own system prompt / skills / memory.
+
+The melehost UAT-device operator ([[project_hermes_uat_operator]] memory; harness at
+`.../AMI_MarketApps/appium/`, reports at `.../hermes_folder/reports/appium/`) is a
+**real Hermes Agent instance already in production** (Saiful, 2026-09-30: "melehost has
+a hermes agent") — but it is **specific to melehost and not involved with the six
+personas below** ("the hermes installed on melehost is specific to melehost, and not
+involved with the rest of the persona"). It stays in this doc as the **worked precedent
+of a Hermes persona doing a job** — one persona, one machine, one fixed job — not as a
+member of this CR's team. The six roles below would be new personas on the same
+Hermes Agent system.
 
 ---
 
@@ -105,8 +112,12 @@ own "fit is moot if the first question is no" pattern from the sales-outreach dr
    half-finished groundwork (CR088 + DEF104); is that the one to stand up first, or is
    there a more urgent one (e.g. network/system engineer, given melehost is the single
    point of failure for all of Alpha)?
-2. Real hire vs. Claude-operated track vs. scheduled job, per persona — same question
-   as scope item 1 above, needs his call per persona rather than one blanket answer.
+2. Per-persona operating form — with the system resolved as Hermes Agent, the remaining
+   question per persona is its concrete configuration: which model endpoint, which
+   skills/tools, which triggers (cron / messaging-gateway events / polled), and what
+   requires Saiful sign-off vs. runs unattended. Real-hire is no longer the default
+   framing; a persona is a Hermes Agent instance, and "Claude-operated track" work
+   (e.g. track R triage) is a candidate to migrate onto it.
 
 ## Acceptance
 
