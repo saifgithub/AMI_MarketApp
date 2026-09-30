@@ -115,6 +115,15 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Group routing tool (same day, sixth slice)
+
+Manual per-group wiring (JID from log, two config edits, restart) was flagged as
+cumbersome — replaced with `~/bin/ami-wa-route` on minihost: `list` shows seen
+groups + routes; `add <jid|latest> <profile> [name]` allowlists, routes, restarts,
+and verifies bridge reconnection; `remove <jid>` reverses. Idempotent, yaml-safe.
+One observed caveat: profile_routes hot-reload on gateway rescan is unproven (no
+log evidence), so the tool restarts the gateway (~10s whatsapp reconnect).
+
 ## Network engineer's ops group (same day, fifth slice)
 
 New group `120363430641676589@g.us` allowlisted (`WHATSAPP_GROUP_ALLOWED_USERS` now
