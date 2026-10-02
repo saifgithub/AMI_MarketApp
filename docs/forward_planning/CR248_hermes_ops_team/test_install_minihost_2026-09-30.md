@@ -121,6 +121,18 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Pending decision — group sender admission (2026-10-02, NOT applied)
+
+Saiful asked how customersupport can answer users in the Volunteer User Group without
+adding each number to `WHATSAPP_ALLOWED_USERS`. Analysis (`gateway/authz_mixin.py`):
+the sender allowlist gates group senders; **without it, group policy admits every
+participant of an allowlisted group** (JID trust), and DMs flip to pairing-code
+gating (his DM would need a one-time operator pairing). WhatsApp has no per-group
+sender list (Telegram/WeCom do). Offered variants: A1 = user group listen-all,
+A2 = @-only in user group (recommended). **Saiful: "neither — make a note."** Current
+state unchanged: allowlist = Saiful + Siti Ahmad; user group listen-all via
+free_response. Revisit when the user group goes live.
+
 ## Angelia — Chief of Staff persona (2026-10-02)
 
 Saiful: duplicate of `meem`, named **Angelia**, with terminal access and capability to
