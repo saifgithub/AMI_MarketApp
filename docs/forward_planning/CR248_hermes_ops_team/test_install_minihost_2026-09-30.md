@@ -135,10 +135,8 @@ change the Hermes config; responds to exactly ONE whatsapp group, "AMI-Chief Of 
    admin_changelog.md audit line per change.
 3. Whatsapp toolset (cloned from meem): clarify, connections, memory, skills,
    terminal — terminal on whatsapp is the point for this persona.
-4. Routing: pending — the "AMI-Chief Of Staff" group JID has not appeared in the
-   bridge log yet (bot not in the group or no traffic). When it appears:
-   `ami-wa-route add <jid> angelia chief-of-staff`. No DM route, no other groups —
-   angelia answers only there.
+4. Routing: done 2026-10-02 — "AMI-Chief Of Staff" = `120363412619576892@g.us`,
+   routed `chief-of-staff` → angelia. No DM route, no other groups.
 5. **Wiring as of 2026-10-02:** 4 groups seen — "Hermès AI" → customersupport
    (listen-all), "AT:network" → neteng, "AmiTrade Volunteer User Group" →
    customersupport (listen-all, added to `WHATSAPP_FREE_RESPONSE_CHATS`; SOUL
