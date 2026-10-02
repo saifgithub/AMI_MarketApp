@@ -137,11 +137,13 @@ change the Hermes config; responds to exactly ONE whatsapp group, "AMI-Chief Of 
    terminal — terminal on whatsapp is the point for this persona.
 4. Routing: done 2026-10-02 — "AMI-Chief Of Staff" = `120363412619576892@g.us`,
    routed `chief-of-staff` → angelia. No DM route, no other groups.
-5. **Wiring as of 2026-10-02:** 4 groups seen — "Hermès AI" → customersupport
+5. **Wiring as of 2026-10-02:** 5 groups seen — "Hermès AI" → customersupport
    (listen-all), "AT:network" → neteng, "AmiTrade Volunteer User Group" →
-   customersupport (listen-all, added to `WHATSAPP_FREE_RESPONSE_CHATS`; SOUL
-   updated to name both customer-facing groups), "Siti saiful ahmed Muneeb"
-   (family) unwired. DM → customersupport.
+   customersupport (listen-all), "AMI-Chief of Staff" → angelia (listen-all —
+   added to `WHATSAPP_FREE_RESPONSE_CHATS`; SOUL updated), "Siti saiful ahmed
+   Muneeb" (family) unwired. DM → customersupport.
+   `/sethome` verified per-profile (source: `slash_commands.py` → per-profile home
+   channel + env); only customersupport has a home set (Hermès AI group).
 
 ## CS group listen-all + 12h digest to home group (same day, ninth slice — the refined intent)
 
