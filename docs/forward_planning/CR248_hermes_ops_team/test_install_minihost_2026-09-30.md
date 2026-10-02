@@ -135,6 +135,10 @@ change the Hermes config; responds to exactly ONE whatsapp group, "AMI-Chief Of 
    admin_changelog.md audit line per change.
 3. Whatsapp toolset (cloned from meem): clarify, connections, memory, skills,
    terminal — terminal on whatsapp is the point for this persona.
+   **Tightened 2026-10-02:** group intake admits every participant (verified: bridge
+   group path checks group JIDs, not the DM sender allowlist), so Angelia's SOUL now
+   restricts state-changing actions (config changes, restarts) to explicit requests
+   from Saiful's number in the group; everyone else gets read-only answers.
 4. Routing: done 2026-10-02 — "AMI-Chief Of Staff" = `120363412619576892@g.us`,
    routed `chief-of-staff` → angelia. No DM route, no other groups.
 5. **Wiring as of 2026-10-02:** 5 groups seen — "Hermès AI" → customersupport
