@@ -139,6 +139,11 @@ change the Hermes config; responds to exactly ONE whatsapp group, "AMI-Chief Of 
    bridge log yet (bot not in the group or no traffic). When it appears:
    `ami-wa-route add <jid> angelia chief-of-staff`. No DM route, no other groups —
    angelia answers only there.
+5. **Wiring as of 2026-10-02:** 4 groups seen — "Hermès AI" → customersupport
+   (listen-all), "AT:network" → neteng, "AmiTrade Volunteer User Group" →
+   customersupport (listen-all, added to `WHATSAPP_FREE_RESPONSE_CHATS`; SOUL
+   updated to name both customer-facing groups), "Siti saiful ahmed Muneeb"
+   (family) unwired. DM → customersupport.
 
 ## CS group listen-all + 12h digest to home group (same day, ninth slice — the refined intent)
 
