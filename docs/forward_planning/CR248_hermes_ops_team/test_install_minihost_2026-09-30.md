@@ -115,6 +115,12 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+3. **meem disabled 2026-10-02** (Saiful: "disable the profile meem"): cron paused,
+   profile directory moved to `~/.hermes/profiles.disabled-meem/` — out of the served
+   set (multiplexer dropped it on rescan), data preserved, reversible by moving it
+   back. Its connections had already been migrated (whatsapp session → default
+   profile, google creds + GEMINI key → customersupport, angelia cloned from it).
+
 ## Angelia — Chief of Staff persona (2026-10-02)
 
 Saiful: duplicate of `meem`, named **Angelia**, with terminal access and capability to
