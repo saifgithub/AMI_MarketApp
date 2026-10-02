@@ -115,6 +115,25 @@ Live test now possible: any allowlisted number messaging the line lands on
 `customersupport`. A second test-customer number still needs allowlisting when
 provided.
 
+## Angelia — Chief of Staff persona (2026-10-02)
+
+Saiful: duplicate of `meem`, named **Angelia**, with terminal access and capability to
+change the Hermes config; responds to exactly ONE whatsapp group, "AMI-Chief Of Staff".
+
+1. `hermes profile create angelia --clone-from meem` — cloned config (ami-llm),
+   SOUL.md replaced (Chief of Staff: runs the machine room, config admin for the
+   persona fleet, executive register), meem's full skill library carried over.
+2. New `hermes-admin` skill: config.yaml/.env/profile/routes/cron management on
+   minihost, with the deferred-restart rule (never restart synchronously from own
+   turn), no-secrets-into-chat, no-weakening-persona-safety-limits, and an
+   admin_changelog.md audit line per change.
+3. Whatsapp toolset (cloned from meem): clarify, connections, memory, skills,
+   terminal — terminal on whatsapp is the point for this persona.
+4. Routing: pending — the "AMI-Chief Of Staff" group JID has not appeared in the
+   bridge log yet (bot not in the group or no traffic). When it appears:
+   `ami-wa-route add <jid> angelia chief-of-staff`. No DM route, no other groups —
+   angelia answers only there.
+
 ## CS group listen-all + 12h digest to home group (same day, ninth slice — the refined intent)
 
 Saiful's actual requirement: customer support listens to ALL messages in the customer
