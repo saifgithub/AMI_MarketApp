@@ -55,7 +55,11 @@ Our own minihost deployment is the dogfood demo.
 ## Open questions for Saiful
 
 15. Does this get its own brand/repo now, or live as a section of CR248 until the
-    first external client appears?
+    first external client appears? **Update 2026-10-03:** Saiful frames the product
+    as a packaged **"office assistant"** — deployable/developable offshoot. Today's
+    email-channel work added a reusable component: persona-owned email support inbox
+    (per-profile adapter + allow-all-with-DMARC + firewall pattern) — a standard
+    office-assistant feature, now dogfooded.
 16. First-client trigger: what event makes us build the bootstrap script — an
     actual prospect, or beta-launch spare capacity?
 17. Do we productize the launch-team design doc (launch_ai_team_design.md) as the

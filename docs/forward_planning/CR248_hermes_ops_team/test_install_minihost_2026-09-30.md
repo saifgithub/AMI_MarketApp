@@ -121,6 +121,35 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Email channel live — DEF104 replacement path (2026-10-03, AT:K6)
+
+Pick #1 from the video review, implemented and verified:
+
+1. **Mailbox:** `support.ai@agenticmarketintel.ai` hosted at `server900.web-hosting.com`
+   (IMAP 993 / SMTP 587) — creds moved from the retired `ami_support.py` on melehost
+   into `~/.hermes/profiles/customersupport/.env` (chmod 600) without transiting the
+   chat. **The DEF104 hardcoded-credential script should now be retired/deleted on
+   melehost — pending Saiful's go.**
+2. **Config:** email is a per-profile adapter (NOT shared ingress — only whatsapp/relay
+   are). Required `platforms.email.enabled: true` in the profile config in addition to
+   the `EMAIL_*` env. `EMAIL_ALLOW_ALL_USERS=true` (support inbox must accept
+   strangers; DMARC/SPF/DKIM `Authentication-Results` still enforced by default),
+   poll 60s.
+3. **Firewall:** minihost's deny-out ufw blocked IMAP/SMTP — two temporary allow-out
+   rules to `209.74.67.36` (993/587), same pattern as the vLLM rule.
+4. **Verified:** test mail (subscription-cancel question, from ami.ai@) → intake →
+   routed to `agent:customersupport:email:dm:…` → KB-grounded reply (3 LLM calls,
+   58s) → SMTP dispatch logged without error. Recipient-side mailbox check was
+   blocked (ami.ai@ sends via Resend, creds don't match the mailbox) — final hop
+   confirmed via clean send log only.
+5. **Ops friction note:** when the Mac moves networks, tailscale stops and the ssh
+   agent drops the key — recovery is `tailscale up` + `ssh-add --apple-load-keychain`
+   (Keychain holds the passphrase). Added `minihost-ts`/`melehost` tailnet aliases
+   to ~/.ssh config.
+
+Remaining video picks: squads/delegation formalization and the 08:00 morning
+briefing cron — not yet done.
+
 ## Pending decision — group sender admission (2026-10-02, NOT applied)
 
 Saiful asked how customersupport can answer users in the Volunteer User Group without
