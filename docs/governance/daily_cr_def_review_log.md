@@ -1139,3 +1139,7 @@ run, but is more useful than a gap).
 Not run. Saiful, after 13:00 Riyadh when the Architect offered it: *"Skip the run. Build CR237"*.
 No proposed CR or open Defect was reviewed today. **CR237** moved `proposed` → `in_progress`
 on that instruction (its earlier "After +113" timing brought forward).
+
+## 2026-10-03
+
+Review offered at 20:34 Asia/Riyadh (no earlier section today); Saiful deferred the full run — wanted the CR248 next step only. No items asked or ruled. Registers verified clean (no drift) beforehand.
