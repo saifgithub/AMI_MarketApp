@@ -1,0 +1,21 @@
+# cr247-tm-all-gate — wholesale teammate-suite gate (D17 follow-up, Saiful 2026-10-03:
+# "build V2 to test out all the changes suggested by the teammate").
+#
+# What this is: the D26 standard gate (AAPL + V, R3, repeats=1) run with the
+# FULL teammate_suite installed as whole-persona overrides — global
+# constitution prepended to every agent's persona, risk officers split into
+# three resolved postures. One batch overrides all twelve Room agents
+# (prompt_lab process-wide constraint). Measures what wholesale adoption
+# would actually do to the Room contract, scored against the Phase-5 baseline
+# gate (out/gate-5/*/runs_room-gate-v1.jsonl) via --diff-against.
+#
+# Refused-design elements are deliberately left IN (SCS 0-100 floats, TIER
+# sizing ontology, hardcoded 180-730d horizon, all-JSON output demands):
+# this run measures them; it does not adopt them (measurement != adoption).
+name: cr247-tm-all-gate
+provider: vllm                 # overridden per run via --provider
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 1
+prompt_variant: tm-all
+concurrency_by_provider: { vllm: 1, deepinfra: 2, kimi: 1 }
