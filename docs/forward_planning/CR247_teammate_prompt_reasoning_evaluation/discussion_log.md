@@ -756,3 +756,56 @@ measurement plan pre-registered. (3) deepinfra dominates the audited
 provider mix — visible per agent for CR240. Scheduling: weekly Saturday
 08:30 + monthly 1st, melehost user-crontab, after the script promotes —
 recommendation only, no infra files edited.
+
+
+---
+
+## D32 — Wholesale teammate-suite test: tm-all variant built, gates queued (Kimi, 2026-10-03)
+*status: variant built + offline-verified; gate runs blocked on LAN at build time*
+
+Saiful's directive (post-compact, 2026-10-03): "build V2 to test out all the
+changes suggested by the teammate." This supersedes D17's "mine for questions,
+don't adopt" **for testing only** — measurement is not adoption; any element
+still needs a gate win + normal governance to ship.
+
+**Design — one wholesale variant, not 12 micro-variants.**
+`benchmarks/tm-all/prompts/<agent_id>.md` (committed e3b6d398): the global
+constitution prepended verbatim to every agent persona; `agent09-11` split
+into three files with the posture switch resolved per agent (aggressive/
+conservative/neutral); installed as one prompt_lab whole-persona batch
+overriding all twelve Room agents. Deliberately faithful naive port:
+- `{injected_timestamp}` / `{injected_ticker}` placeholders left verbatim
+  (their imagined harness injects them; ours doesn't — the gate measures
+  that too, per D2's "imagined product" finding).
+- Refused-design elements left IN (SCS 0–100 floats, TIER sizing ontology,
+  8% hard cap, hardcoded 180–730d horizon, all-JSON output demands): the
+  run measures what wholesale adoption does to the Room contract
+  (STANCE envelopes, computed sizes, mandate horizon), it does not adopt.
+
+**Why not per-agent variants first:** the suite is architected as a single
+system (constitution + roles referencing its RULEs); isolating one agent
+tests a persona whose cross-references dangle. tm-all is the decisive unit.
+Per-family or per-agent arms follow only if tm-all diffs show something
+worth isolating.
+
+**Offline verification (passed):** `prompt_lab.load_variant` accepts all 12
+files against `app.schemas.TWELVE_AGENT_IDS`; `apply_overrides` installs,
+probe-renders every overridden agent + one control, and restores cleanly.
+
+**Not persona-testable (mechanisms, unchanged verdicts):** CIO ensemble-of-5
+(D6/D11 — built differently as Phase 4 veto+resurrection), blind-parallel
+Bull/Bear + cross-examination (D19.1 — 2.4 instrumentation ready, step-2
+NO-GO), heterogeneous-model tribunal (D18 — refused; split-model experiment
+is the cheap test), DSPy auto-rewrite (D19.3 — Phase 6 digest is the
+governed version). These need mechanism CRs, not prompt_lab arms.
+
+**Queued runs (both providers, AAPL+V R3, D26 gate, diff vs out/gate-5):**
+- `--benchmark cr247-tm-all-gate --provider vllm --out-dir out/gate-tm-all/vllm --diff-against out/gate-5/vllm/runs_room-gate-v1.jsonl`
+- `--benchmark cr247-tm-all-gate --provider deepinfra --out-dir out/gate-tm-all/deepinfra --diff-against out/gate-5/deepinfra/runs_room-gate-v1.jsonl`
+- plus the approved-14 Qwen3.8-Flash resume (JPM/T/WU, /tmp/approved_14.txt
+  recreated — the three-way matrix still open from the pre-compact session)
+
+**Blocker at build time:** this Mac is not on the 192.168.20 LAN (no
+192.168.x iface, gateway 100% loss) — melehost (DB tunnel) and the vLLM host
+both unreachable, so no harness run can journal. All three runs fire as soon
+as the LAN path is back.
