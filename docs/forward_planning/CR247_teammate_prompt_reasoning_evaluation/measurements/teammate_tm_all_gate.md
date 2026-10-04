@@ -51,23 +51,78 @@ open item). These absents are ambient, not variant effects.
 
 ### Gate reports (truncation / STANCE envelope / PM JSON)
 
-*pending — filled from scoring.gate_report output at run completion*
+vLLM arm (run 2026-10-04 09:50-10:08 UTC, resumed-skipped then gated
+directly via scoring.gate_report — the resume path of room_benchmark does
+not re-run the gate on skipped arms; see "Harness gaps"):
+
+- AAPL tm-all: **gate OK** (no truncation, no missing envelope, PM JSON parsed)
+- V tm-all: **gate OK**
 
 ### Verdict diff vs Phase-5 baseline (scoring.diff_batches)
 
-*pending*
+| Ticker | Baseline (vLLM) | tm-all (vLLM) | Flag |
+|---|---|---|---|
+| AAPL | APPROVE 2.2%, horizon 90 | **PASS** | **FLIPPED** |
+| V | APPROVE 2.5%, horizon 90 | APPROVE 2.0%, **horizon 180** | params shifted |
 
-| Ticker | Baseline verdict (vLLM) | tm-all verdict (vLLM) | Baseline (DeepInfra) | tm-all (DeepInfra) |
-|---|---|---|---|---|
-| AAPL | APPROVE 2.2% | ? | ? | ? |
-| V | ? | ? | ? | ? |
+n=1 per arm (the D26 unit). The AAPL flip is one draw under CR197's ~12%
+same-prompt flip noise; the stance-level chain below is the corroborating
+evidence, not the verdict bit alone.
 
-### Contract-breakage findings
+### Contract behavior (stance census, AAPL arm)
 
-*pending — e.g. SCS floats in envelopes, TIER_0–3 language vs computed
-sizes, hardcoded-horizon overrides, JSON-instead-of-STANCE failures*
+- **STANCE envelope survived wholesale:** all 11 non-PM agents in both
+  arms produced parseable STANCE lines. The personas' "strict JSON" output
+  demands did NOT break the envelope — the Room addition block's format
+  instructions (appended after the persona) won. No SCS floats in any
+  envelope (SCS schema mentions: 0).
+- **TIER language is live but contained:** TIER_1 tokens appear in
+  conservative/neutral debator responses; SIZE fields still emitted in %
+  (envelope held). But tm-all aggressive_debator argued **SIZE 5.0%**
+  vs baseline's 3.0% mandate cap — the TIER_2 band top (2.51-5.00%)
+  displaced the computed cap in the argument (PM did not take it).
+- **Hardcoded horizon leaked into trade params:** tm-all V verdict carries
+  `time_horizon_days=180` vs baseline 90 — the constitution's 180-730d
+  HORIZON_MANDATE overrode the R3 mandate's horizon in the emitted trade.
+  This is the refused-hardcoded-horizon element measurably overriding
+  mandate-driven behavior (D2's conflict, observed live).
+
+### Why AAPL flipped (producer→consumer chain)
+
+| Agent | Baseline stance | tm-all stance |
+|---|---|---|
+| fundamentals_analyst | for / high | for / high (unchanged) |
+| market_analyst | for / medium | for / medium (unchanged) |
+| bull_researcher | for / medium | for / **high** |
+| bear_researcher | against / medium | against / medium (unchanged) |
+| research_manager | for / medium | **neutral** / medium |
+| trader | **for** / medium | **against / high** ("-1.7% asymmetry to target") |
+| aggressive_debator | for / low, 3.0% | for / high, **5.0%** |
+| conservative_debator | neutral / low, 1.5% | neutral / medium, 1.5% ("R:R 0.3:1 poor") |
+| neutral_debator | for / medium, 2.2% | for / medium, 2.0% |
+
+Mechanism: the tm-all Trader persona ("do not place tight, intraday stops
+for a HORIZON_MANDATE trade" + Technical Strategist's structural floor)
+placed a wide structural stop ($289.16, -13.3%) against a $345.34 target
+(+3.5%) → R:R 0.3:1. The Trader itself turned **against**; the Research
+Manager de-escalated to neutral; the PM (0/5 approve votes) passed on the
+asymmetry. The flip is **internal to the teammate suite's own design
+tension**: horizon-mandated wide stops vs the CIO's conviction-alignment
+gate on R:R. It is not a contract failure and not noise in the usual sense
+— it is the persona architecture working as written, and its output is a
+worse trade decision on the gate's reference ticker (PASS on AAPL at R3
+with ROIC 87.4% and 5/5 room agreement on quality).
+
+### Harness gaps found by this run
+
+1. room_benchmark resume-skip does not re-run gate_report on skipped arms
+   (gate silently evaluates nothing; worked around by calling
+   scoring.gate_report directly). Fix deferred — one line + JSONL reload.
+2. audit_db hardcoded `ssh melehost` — fixed: AMI_AUDIT_SSH_HOST env
+   override (6096e314); melehost-ts alias over Tailscale.
 
 ## Decision inputs
 
 *pending — GO/NO-GO per element, referencing D2/D8/D15/D17 verdicts and
-whether the measurement confirms or overturns each refusal*
+whether the measurement confirms or overturns each refusal. Awaiting the
+DeepInfra arm before concluding (GLM behavior under the same variant).*
