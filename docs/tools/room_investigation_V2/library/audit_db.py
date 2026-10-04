@@ -24,7 +24,9 @@ and `NoRowsError` on zero rows. It is now impossible to silently read the
 wrong ticker's call.
 
 Requires: ssh access to `melehost` from the office LAN. No local Postgres
-driver, no DATABASE_URL — read-only SELECTs only.
+driver, no DATABASE_URL — read-only SELECTs only. When the Mac is off the
+LAN, set AMI_AUDIT_SSH_HOST to a reachable alias (e.g. `melehost-ts` over
+Tailscale, D32a); the default stays the LAN alias.
 
 `call_metrics(user_id)` is the per-call token/error companion to
 `list_calls`: output_tokens, error, and constraint_status per row with the
@@ -35,13 +37,14 @@ from __future__ import annotations
 
 import difflib
 import json
+import os
 import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
 from typing import Sequence
 
-SSH_HOST = "melehost"
+SSH_HOST = os.environ.get("AMI_AUDIT_SSH_HOST", "melehost")
 PG_CONTAINER = "ami_postgres"
 PG_DB = "ami_trade"
 PG_USER = "postgres"
