@@ -61,3 +61,13 @@ around the humans who build software.
 15. Do code reviewer / release manager get the same whatsapp-group presence as the
     ops personas, or live behind angelia (humans ask her, she delegates)? Latter
     scales better; former is faster to use.
+
+## Status 2026-10-04 — built behind Angelia (Saiful: "delegate 80–90%")
+
+Decision on #15: **behind Angelia** — no whatsapp presence for the office workers.
+Built: `finance`, `codereview`, `releasemgr` (profiles on ami-llm, worker SOULs:
+one-shot order in → report out; strict read-only/draft-only limits; no independent
+channel). Angelia got the `delegate` skill (routing table + `hermes -p <p> chat -q
+... --oneshot -Q` dispatch mechanism + failure rule: two bad returns → stop
+delegating that task, escalate) and a SOUL paragraph making delegation her default.
+Delivery lead remains absorbed in Angelia (kanban wiring still pending).
