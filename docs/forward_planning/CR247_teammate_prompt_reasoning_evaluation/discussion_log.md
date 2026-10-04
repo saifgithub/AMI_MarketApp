@@ -809,3 +809,34 @@ governed version). These need mechanism CRs, not prompt_lab arms.
 192.168.x iface, gateway 100% loss) — melehost (DB tunnel) and the vLLM host
 both unreachable, so no harness run can journal. All three runs fire as soon
 as the LAN path is back.
+
+
+---
+
+## D32a — Blocker resolved via Tailscale; runs live (Kimi, 2026-10-04)
+*status: runs in flight; results land in measurements/teammate_tm_all_gate.md*
+
+Saiful corrected the network assumption: the LAN isn't required — the hosts
+are on Tailscale. Verified mapping (`tailscale status`): **melehost =
+100.110.14.31** (Saiful's "100.79.86.15" is `ami-host`, a different box — ssh
+there is pubkey-denied and unneeded) and **ami-host:8000 = the vLLM server**,
+reachable directly over the tailnet. Mac = 100.84.67.105.
+
+Working configuration (reusable whenever the Mac is off the LAN):
+- pg tunnel: `ssh -f -N -L 5434:127.0.0.1:5434 saiful@100.110.14.31`
+- harness env overrides (process env beats .env — `load_repo_env(override=False)`):
+  `VLLM_BASE_URL=http://100.79.86.15:8000` plus the usual
+  `DATABASE_URL=...@127.0.0.1:5434/ami_trade` + `USE_REAL_MARKET_DATA=true`.
+- Serving identity verified BEFORE the run (D20 rule): ami-llm root =
+  `/models/qwen38-flash-next-abliterated-nvfp4` — identical to the Phase-5
+  baseline gate, so diff comparability holds.
+
+Run startup verified clean: `prompt_variant=tm-all` installed in-process,
+gateway forced vllm via the tailnet address, 5K floor active.
+
+Side observation (not a regression): JPM's resume run logs
+`sbc_absent` / `roic_absent` — the 1B XBRL tags exist in code but the
+one-time `ingest_edgar_facts.py --force` backfill on Alpha (D28 open item)
+hasn't run, so non-AAPL tickers degrade loudly by design until it does.
+The tm-all measurement should read these absents as ambient, not as
+variant effects.
