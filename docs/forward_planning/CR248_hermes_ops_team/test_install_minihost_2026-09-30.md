@@ -121,6 +121,15 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Team principals on whatsapp (2026-10-04)
+
+Saiful ruled the whatsapp instruction-givers are exactly four numbers:
++966506064830 (Saiful), +966508163452 (Siti Ahmad), +966510727510, +966535339817.
+All four are on `WHATSAPP_ALLOWED_USERS`, and Angelia's + neteng's SOULs name them as
+the principals who may authorize state changes (worded "the team principals" so the
+list can grow without SOUL edits — but note the number list itself is still in the
+SOUL text; adding a 5th means editing both SOULs again).
+
 ## Email channel live — DEF104 replacement path (2026-10-03, AT:K6)
 
 Pick #1 from the video review, implemented and verified:
