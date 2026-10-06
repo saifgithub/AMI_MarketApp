@@ -8335,7 +8335,11 @@ async def _attempt_trader_geometry_repair(
                 max_tokens=max_tokens,
                 audit_user_id=user_id,
                 audit_agent_id=AgentId.TRADER.value,
-                audit_flow="room",
+                # `room_pm_reformat`'s precedent: a repair/retry is audited
+                # under its OWN flow, not the base one — the scoring gate
+                # counts prose agents exactly once per run (UNEXPECTED_CALL_
+                # COUNT), and the repair is a deliberate, bounded second call.
+                audit_flow="room_trader_repair",
                 meta=meta,
                 constraint=_agent_constraint(AgentId.TRADER, ticker),
             )),
