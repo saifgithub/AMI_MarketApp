@@ -117,22 +117,33 @@ def trim(s: str, n: int) -> str:
     return s if len(s) <= n else s[: n - 40] + " …[tail trimmed for state cap]…"
 
 
-def fetch_turns(dsn: str, limit: int) -> list[dict]:
+def fetch_turns(dsn: str, limit: int, provider: str | None = None,
+                after: str | None = None, before: str | None = None) -> list[dict]:
     from sqlalchemy import create_engine, text
 
     eng = create_engine(dsn)
+    where = ["flow = 'room'", "error IS NULL", "response_text IS NOT NULL"]
+    params: dict = {}
+    if provider:
+        where.append("provider = :provider")
+        params["provider"] = provider
+    if after:
+        where.append("created_at >= :after")
+        params["after"] = after
+    if before:
+        where.append("created_at < :before")
+        params["before"] = before
     with eng.connect() as conn:
         rows = conn.execute(text(
-            """
+            f"""
             SELECT agent_id, provider, tier, created_at::text AS created_at,
                    system_prompt, messages, response_text
             FROM llm_audit
-            WHERE flow = 'room' AND error IS NULL AND response_text IS NOT NULL
-              AND created_at >= now() - interval '5 days'
+            WHERE {' AND '.join(where)}
             ORDER BY created_at DESC
             LIMIT 200
             """
-        )).mappings().all()
+        ), params).mappings().all()
     turns = [dict(r) for r in rows]
     # Spread across distinct agents, keep the newest per agent first.
     seen: dict[str, int] = {}
@@ -150,6 +161,9 @@ def fetch_turns(dsn: str, limit: int) -> list[dict]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=12)
+    ap.add_argument("--provider", default=None, help="llm_audit provider filter")
+    ap.add_argument("--after", default=None, help="ISO created_at lower bound")
+    ap.add_argument("--before", default=None, help="ISO created_at upper bound")
     ap.add_argument("--out", default=str(
         Path(__file__).resolve().parents[1] / "out" / "jev_v1_pilot" / "jev_v1_pilot.jsonl"))
     args = ap.parse_args()
@@ -162,7 +176,8 @@ def main() -> None:
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    turns = fetch_turns(dsn, args.limit)
+    turns = fetch_turns(dsn, args.limit, provider=args.provider,
+                        after=args.after, before=args.before)
     print(f"pulled {len(turns)} analyst turns from llm_audit")
 
     total_in = total_out = 0
