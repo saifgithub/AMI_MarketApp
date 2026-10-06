@@ -1,0 +1,17 @@
+# cr249-verify — repair-gate verification benchmark.
+#
+# Same persona variant and gate shape as cr247-tm-all-gate (teammate suite
+# wholesale — the variant that produced stop=$50 on GLM AAPL 2026-10-06),
+# with repeats=3 to draw multiple Trader proposals per ticker: the repair
+# gate (CR249, 6c512b49) fires only when DEF237 detects an implausible
+# level, which is a per-draw event. Success signal in the run log:
+#   room_trader_geometry_repaired      — violation caught and re-placed
+#   room_trader_geometry_repair_failed — violation kept, flagged (DEF059)
+# Measurement only; production prompts unaffected by this variant.
+name: cr249-verify
+provider: deepinfra            # overridden per run via --provider
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 3
+prompt_variant: tm-all
+concurrency_by_provider: { vllm: 1, deepinfra: 2, kimi: 1 }
