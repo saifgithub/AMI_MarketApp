@@ -1,0 +1,11 @@
+# CR251 risk matrix — risk_score 3 arm. 30 tickers (CR228 universe) x 2
+# repeats, vLLM production prompts. Part of the 30x5 monotonicity matrix;
+# run all five arms before analysis. One yaml per level because the runner
+# takes risk_score only from the yaml (no CLI override).
+name: cr251-risk-matrix-r3
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 3 }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
