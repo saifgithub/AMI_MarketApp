@@ -186,7 +186,14 @@ def main() -> None:
             try:
                 result = jev_eval(key, state)
             except Exception as exc:  # noqa: BLE001 — pilot records, never dies mid-batch
-                fh.write(json.dumps({"agent_id": t["agent_id"], "error": str(exc)[:200]}) + "\n")
+                fh.write(json.dumps({
+                    "logged_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "agent_id": t["agent_id"], "provider": t["provider"],
+                    "created_at": t["created_at"],
+                    "request": {"state": state, "model": "jev-latest",
+                                "questions": QUESTIONS},
+                    "error": str(exc)[:200],
+                }) + "\n")
                 print(f"[{i:2d}] {t['agent_id']:24s} ERROR {exc}")
                 continue
             latency_ms = int((time.time() - started) * 1000)
@@ -194,8 +201,15 @@ def main() -> None:
             total_in += usage.get("input_tokens", 0)
             total_out += usage.get("output_tokens", 0)
             rec = {
+                # Full request/response logging (Saiful 2026-10-06): every
+                # service call is replayable for later quality analysis —
+                # the state AS SENT, the questions, and the raw response.
+                "logged_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "agent_id": t["agent_id"], "provider": t["provider"],
                 "created_at": t["created_at"], "latency_ms": latency_ms,
+                "request": {"state": state, "model": "jev-latest",
+                            "questions": QUESTIONS},
+                "raw_response": result,
                 "model": result.get("model"), "usage": usage,
                 "answers": result.get("answers"),
             }
