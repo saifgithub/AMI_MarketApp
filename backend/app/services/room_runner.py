@@ -8273,6 +8273,108 @@ async def _collect_agent_stream(gen) -> list[str]:
     return buf
 
 
+def _implausible_trade_levels(text: str, reference_close: float | None) -> dict[str, float]:
+    """CR249 — the implausible-level half of `_verify_and_annotate_geometry`'s
+    DEF237 gate, exposed separately so the Trader's live turn can earn one
+    re-placement attempt before the transcript commits. Re-parses the level
+    triple the same way; a level more than `_MAX_PLAUSIBLE_LEVEL_RATIO` from
+    the run's own close is not a price level, and every downstream ratio
+    built on it is fiction."""
+    if not text or reference_close is None:
+        return {}
+    bad: dict[str, float] = {}
+    for name in ("entry", "stop", "target"):
+        level = _match_level(text, name)
+        if level is not None and _level_is_implausible(level, reference_close):
+            bad[name] = level
+    return bad
+
+
+async def _attempt_trader_geometry_repair(
+    *,
+    gateway: LLMGateway,
+    system_prompt: str,
+    messages: list[ChatMessage],
+    tier: Any,
+    locale: str,
+    user_id: UUID | None,
+    ticker: str,
+    max_tokens: int,
+    timeout_s: float,
+    implausible: dict[str, float],
+    reference_close: float,
+    size_pct: float | None,
+) -> tuple[str, dict[str, Any] | None, _StanceEnvelope] | None:
+    """CR249 — regenerate the Trader's proposal once with the violation named,
+    same provider/tier/constraint as the original call (DEF058/DEF067's
+    reformat-retry is the precedent). Returns the re-verified text, its
+    geometry signal, and its parsed envelope; every None path leaves the
+    original flag-only annotation in place — DEF059 is untouched: a second
+    opinion, never a veto, and a failed repair changes nothing downstream."""
+    detail = "; ".join(
+        f"{name} ${value:.2f} ({abs(value - reference_close) / reference_close:.0%} from the close)"
+        for name, value in implausible.items()
+    )
+    repair_note = (
+        f"[AMI fact-check] The trade levels in your previous proposal are not "
+        f"plausible: {detail} — with the reference close at ${reference_close:.2f}, "
+        f"a level more than {_MAX_PLAUSIBLE_LEVEL_RATIO:g}x away from the close is "
+        f"not a real price level for {ticker}. Re-issue the SAME proposal with "
+        f"entry/stop/target re-placed at defensible levels near the current "
+        f"price, recompute the risk/reward, and keep the STANCE envelope format. "
+        f"Change nothing else about the thesis."
+    )
+    meta: dict[str, Any] = {}
+    try:
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=[*messages, ChatMessage(role="user", content=repair_note)],
+                model_tier=tier,
+                locale=locale,
+                max_tokens=max_tokens,
+                audit_user_id=user_id,
+                audit_agent_id=AgentId.TRADER.value,
+                audit_flow="room",
+                meta=meta,
+                constraint=_agent_constraint(AgentId.TRADER, ticker),
+            )),
+            timeout=timeout_s,
+        )
+    except Exception as exc:
+        logger.warning(
+            "room_trader_geometry_repair_failed",
+            reason="call_error", error=(str(exc) or repr(exc))[:200],
+        )
+        return None
+    if meta.get("stream_error"):
+        logger.warning("room_trader_geometry_repair_failed", reason="stream_error")
+        return None
+    repaired = "".join(chunks).strip()
+    if not repaired:
+        logger.warning("room_trader_geometry_repair_failed", reason="empty")
+        return None
+    repaired, env = parse_stance_envelope(repaired)
+    repaired = repaired.strip()
+    if not repaired:
+        logger.warning(
+            "room_trader_geometry_repair_failed", reason="envelope_only_no_prose",
+        )
+        return None
+    repaired = _mark_if_truncated(repaired, agent_id=AgentId.TRADER, meta=meta)
+    verified, sig = _verify_and_annotate_geometry(
+        repaired, size_pct=size_pct, reference_close=reference_close,
+    )
+    if _implausible_trade_levels(verified, reference_close):
+        logger.warning("room_trader_geometry_repair_failed", reason="still_implausible")
+        return None
+    logger.info(
+        "room_trader_geometry_repaired",
+        levels_before=implausible, reference_close=reference_close,
+    )
+    return verified, sig, env
+
+
 async def _typewriter(
     run_id: UUID,
     agent_id: AgentId,
@@ -8528,6 +8630,35 @@ async def _compute_agent_text(
         size_pct=ctx.trader_size_pct,
         reference_close=_reference_close(ctx.profile),
     )
+    # CR249: an implausible level from the Trader (DEF237's gate) used to
+    # continue to the transcript flag-only — the debators and the PM then
+    # reasoned from a stop 85% below the close (tm-all GLM AAPL 2026-10-06:
+    # stop $50 vs close $332.89). The Trader's live turn earns ONE
+    # re-placement attempt with the violation named; a failed or absent
+    # repair leaves exactly today's annotation in place (DEF059 — never a
+    # veto). Only the live path: a scripted turn is deterministic by design.
+    if live and agent_id is AgentId.TRADER:
+        _ref_close = _reference_close(ctx.profile)
+        _bad = _implausible_trade_levels(text, _ref_close)
+        if _bad and _ref_close is not None:
+            _repaired = await _attempt_trader_geometry_repair(
+                gateway=gateway,
+                system_prompt=system_prompt,
+                messages=messages,
+                tier=tier,
+                locale=ctx.mandate.locale,
+                user_id=ctx.user_id,
+                ticker=ctx.ticker,
+                max_tokens=max_tokens_for(agent_id),
+                timeout_s=agent_timeout_s,
+                implausible=_bad,
+                reference_close=_ref_close,
+                size_pct=ctx.trader_size_pct,
+            )
+            if _repaired is not None:
+                text, geom_sig, _env = _repaired
+                if _env.stance:
+                    envelope = _env
     # CR219 R59-F1 — the sheet-figure checker: a labelled restatement of a
     # sheet field ("the P/E is 25", "RSI at 61") that disagrees with the
     # fact sheet's own value for that field earns a loud annotation, in
