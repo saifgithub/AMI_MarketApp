@@ -518,7 +518,10 @@ def gate_report(
     so a real TypeError inside a helper still surfaces.
 
     FAIL-LOUDLY checks:
-    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each and >= MIN_PM_DRAWS
+    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each (base "room" flow;
+       bounded repair/retry calls under their own flows — room_trader_repair,
+       the room_pm_reformat precedent — never count against the once-each
+       contract) and >= MIN_PM_DRAWS
        portfolio_manager draws; a missing agent is MISSING_CALL, a duplicated
        prose agent (or a PM draw count below the floor) and a total row count
        outside TOTAL_CALLS_RANGE are UNEXPECTED_CALL_COUNT (a 6th PM row is
@@ -570,6 +573,14 @@ def gate_report(
 
     calls = invoke(audit_module.list_calls, user_id)
     counts = Counter(r.agent_id for r in calls)
+    # CR249: a bounded repair/regeneration of a prose turn is audited under
+    # its OWN flow (room_trader_repair — the room_pm_reformat precedent), so
+    # the once-per-agent contract applies to the BASE flow only. Rows without
+    # a flow attribute (duck-typed test fakes) default to "room" and keep the
+    # pre-CR249 behavior.
+    base_flow_counts = Counter(
+        r.agent_id for r in calls if getattr(r, "flow", "room") == "room"
+    )
 
     lo, hi = TOTAL_CALLS_RANGE
     if not lo <= len(calls) <= hi:
@@ -607,7 +618,7 @@ def gate_report(
             return None
 
     for agent in EXPECTED_PROSE_AGENTS:
-        n = counts.get(agent, 0)
+        n = base_flow_counts.get(agent, 0)
         if n == 0:
             findings.append(GateFinding(
                 user_id=user_id, agent_id=agent, kind="MISSING_CALL",
@@ -621,6 +632,11 @@ def gate_report(
                 detail=f"{n} rows for a prose agent that must run exactly "
                        f"once; auditing nth=0",
             ))
+            nth = 0
+        elif counts.get(agent, 0) > 1:
+            # CR249: exactly one BASE call but extra rows under repair flows
+            # (room_trader_repair). nth=None would raise ambiguous against
+            # those; nth=0 is the base call — repairs sort after it.
             nth = 0
         text = fetch(agent, nth)
         if text is None:

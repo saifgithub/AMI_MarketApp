@@ -60,6 +60,43 @@ PM's parse failures, extended upstream to the Trader's level proposals.
 - Unit: `backend/tests/unit/test_cr249_trader_geometry_repair.py` (16 tests:
   helper boundaries, every repair outcome branch, e2e RoomRunner runs).
 
+## Measurement (2026-10-06, out/cr249-verify/deepinfra/)
+
+6 rooms — tm-all personas on GLM-5.3-Flash, AAPL×3 + V×3, R3, conc 2
+(benchmark `cr249-verify`). This is the persona/model pair that produced
+`stop=$50` three days earlier, i.e. the hardest available repair test.
+
+| Arm | Geometry event | Repair | Verdict | Gate |
+|---|---|---|---|---|
+| AAPL-rep1 | debator levels $1.7/$3.0 implausible | n/a (Trader-only by design) | PASS | OK |
+| AAPL-rep2 | **Trader entry $2026** implausible | **repaired** (`room_trader_geometry_repaired`, ~45s) | PASS | OK |
+| AAPL-rep3 | debator levels $10.2/$6.0 implausible | n/a | PASS | OK |
+| V-rep1 | none | — | PASS | OK |
+| V-rep2 | none | — | PASS | OK |
+| V-rep3 | none | — | **APPROVE** | OK |
+
+Plus the earlier 2-room run (`out/cr249-tm-all-deepinfra/`): Trader
+implausible → repair attempted → re-issue still implausible →
+`room_trader_geometry_repair_failed`, flagged fallback, DEF059 intact.
+
+Reading:
+
+- **Repair success: 1/1 when the Trader was the violator.** The single
+  Trader-level violation was caught, re-placed at defensible levels, and the
+  re-verified proposal entered the transcript with AMI's figures of record.
+- **Debators also state garbage levels under tm-all GLM (2/6 rooms)** —
+  caught by the DEF095 annotation (levels struck, ratios refused) but NOT
+  repaired, by design: they don't own the trade. If persona adoption were
+  ever revisited, debator level-proposals are a known noise source.
+- **Wall-clock cost of a repair: ~45s** (one extra GLM call), only on
+  violation. No repair fired in sane rooms (acceptance criterion met).
+- **V-rep3 APPROVE** is the first tm-all GLM approval observed (baseline was
+  0/2) — consistent with per-draw variance, not an effect; logged for the
+  record.
+- Harness fix shipped alongside: the phase gate's prose-agent count is now
+  base-flow-aware (`scoring.py`) — repair rows under `room_trader_repair`
+  no longer trip UNEXPECTED_CALL_COUNT; all 6 arms re-gated OK after the fix.
+
 ## Deferred (separate CRs)
 
 - V1 post-analyst evidence-support scoring (LLM or System-1-style verifier).
