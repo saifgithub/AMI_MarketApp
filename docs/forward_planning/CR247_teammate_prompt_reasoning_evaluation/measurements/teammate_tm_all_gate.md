@@ -2,9 +2,8 @@
 
 **CR247 · D32/D32a · 2026-10-04 · AT:K3**
 
-*Status: RUNS IN FLIGHT — this doc is the skeleton; results sections are
-filled when the batches land. Do not cite verdict numbers until the
-"Results" section is complete.*
+*Status: RUNS COMPLETE (vLLM 2026-10-04, DeepInfra 2026-10-06). Verdict
+numbers below are final for this gate.*
 
 ## What is being measured
 
@@ -58,16 +57,64 @@ not re-run the gate on skipped arms; see "Harness gaps"):
 - AAPL tm-all: **gate OK** (no truncation, no missing envelope, PM JSON parsed)
 - V tm-all: **gate OK**
 
+DeepInfra arm (run 2026-10-06 07:38-09:31 UTC, GLM-5.3-Flash, conc 2):
+
+- AAPL tm-all: **gate FAIL (1 finding)** — PM_JSON_UNPARSEABLE, PM
+  self-consistency draw 4 of 5: no parseable JSON object with an 'action'
+  key. CR143's tolerant parser could not recover it. 1 of 10 PM draws
+  across both GLM arms. Envelope and truncation otherwise clean.
+- V tm-all: **gate OK**
+
 ### Verdict diff vs Phase-5 baseline (scoring.diff_batches)
 
-| Ticker | Baseline (vLLM) | tm-all (vLLM) | Flag |
-|---|---|---|---|
-| AAPL | APPROVE 2.2%, horizon 90 | **PASS** | **FLIPPED** |
-| V | APPROVE 2.5%, horizon 90 | APPROVE 2.0%, **horizon 180** | params shifted |
+| Ticker | Base (vLLM) | tm-all (vLLM) | Base (GLM) | tm-all (GLM) |
+|---|---|---|---|---|
+| AAPL | APPROVE 2.2%, h90 | **PASS** | PASS | PASS (gate FAIL: PM draw 4 unparseable) |
+| V | APPROVE 2.5%, h90 | APPROVE 2.0%, **h180** | PASS | PASS |
 
-n=1 per arm (the D26 unit). The AAPL flip is one draw under CR197's ~12%
-same-prompt flip noise; the stance-level chain below is the corroborating
-evidence, not the verdict bit alone.
+n=1 per arm (the D26 unit). The AAPL flip exists only on vLLM; GLM is
+insensitive (its baseline is already PASS — GLM's conservatism swamps
+persona-level drift at n=1). The vLLM stance chain below remains the
+corroborating evidence for the flip.
+
+### DeepInfra-arm contract behavior
+
+- **Trader structural-stop failure reproduces cross-provider.** AAPL
+  tm-all GLM emitted **stop=50.0 vs close 332.89**
+  (`room_geometry_implausible_level`, stop/close ratio beyond 5.0) and
+  aggressive_debator implied **R:R 0.3:1** — the same 0.3 tension as the
+  vLLM AAPL flip. On vLLM the wide stop killed the trade by arithmetic;
+  on GLM it produced geometric nonsense. The teammate Trader's stop
+  logic is the dominant failure mode of the suite on both models.
+- **PM verbosity:** `room_pm_kill_criterion_over_bound` (240-char bound)
+  fired on every PM draw, both GLM arms. Warning-level, not a gate
+  failure — the tm-all PM persona writes longer kill criteria than the
+  production PM.
+- **Verdict reviews exercised live:** VLLM_BASE_URL was set for this run,
+  so veto/resurrection reviews ran on ami-llm (previously 401-routed to
+  kimi on this Mac). JPM veto review upheld (2 reasons), T upheld,
+  WU resurrection review upheld (3 reasons), AAPL/V tm-all resurrection
+  upheld. Fail-safe path works end-to-end when vLLM is reachable.
+- **Production-prompt noise on GLM:** WU arm logged
+  `room_stance_envelope_displaced` (GLM chatter before the STANCE line;
+  envelope recovered downstream), and T's neutral_debator hit the
+  scripted-fallback path (`room_partial_outage`, scripted=1 < threshold
+  4, room still completed). Both production-suite, not tm-all.
+
+### Three-way same-family model matrix (approved-14, R5, production prompts)
+
+| Model | Provider | APPROVE |
+|---|---|---|
+| qwen38-flash-next-abliterated-nvfp4 | vLLM (ami-host) | **14/14** |
+| zai-org/GLM-5.3-Flash | DeepInfra | 4/11 on this subset (4/26 on the 30-ticker universe) |
+| Qwen/Qwen3.8-Flash (hosted) | DeepInfra | **6/14** — DHR, JPM, PLD, SLB, T, V |
+
+Hosted Qwen3.8-Flash sits between the two: stricter than the local
+abliterated serve, looser than GLM. JPM completed APPROVE 2/3 after PM
+draw losses + upheld veto review (its first attempt was a 429-storm
+NO_VERDICT; record deleted and re-run). BAC — approved by both vLLM and
+GLM — flips to PASS on hosted Qwen3.8-Flash; the abstention cluster
+(APD, BA, MA, PYPL, RIVN, WU) holds across all three models.
 
 ### Contract behavior (stance census, AAPL arm)
 
@@ -123,6 +170,33 @@ with ROIC 87.4% and 5/5 room agreement on quality).
 
 ## Decision inputs
 
-*pending — GO/NO-GO per element, referencing D2/D8/D15/D17 verdicts and
-whether the measurement confirms or overturns each refusal. Awaiting the
-DeepInfra arm before concluding (GLM behavior under the same variant).*
+Per-element GO/NO-GO for wholesale teammate-suite adoption, measured
+cross-provider (vLLM ami-llm + GLM-5.3-Flash). Confirms or overturns the
+D2/D8/D15/D17 refusals.
+
+| Element | D-ref | Measurement | Verdict |
+|---|---|---|---|
+| STANCE envelope vs "strict JSON" demands | D8 | Survived on vLLM (11/11 both arms). Broken 1/10 PM draws on GLM (AAPL draw 4 unparseable → gate FAIL) | **NO-GO as-is** — envelope survives abliterated-serve, not GLM |
+| SCS 0-100 floats | D15 | Zero SCS floats in any envelope, both providers | confirmed refusal (harmless dead weight) |
+| TIER sizing ontology | D15 | Contaminates arguments on both providers (vLLM 5.0% vs 3.0% cap; GLM R:R 0.3 advocacy); envelope sizing stayed % in all observed cases — contained, not adopted | confirmed refusal |
+| Hardcoded 180-730d horizon | D2 | Leaked into trade params on vLLM V (h90→h180). GLM PASS arms carry no params, so unobservable there | confirmed refusal |
+| Trader wide-stop / "no tight stops on horizon mandate" | — (new) | Dominant failure mode, BOTH providers: vLLM AAPL −13.3% stop → R:R 0.3:1 → flip to PASS; GLM AAPL stop=$50 (implausible geometry) | **NO-GO** — this instruction alone kills the suite |
+| PM kill_criterion verbosity | — (new) | Over 240-char bound on 10/10 GLM draws, 0 gate failures | trim, not blocking |
+| CIO/PM output discipline overall | — | vLLM gate clean; GLM 1 PM draw lost | needs per-provider output-contract work before any GLM prod use |
+
+**Bottom line:** wholesale adoption (D17's original question) is measured
+NO. The suite's value is the per-agent salvage map already extracted
+(D17); the two elements that would change Room behavior if adopted —
+hardcoded horizon and TIER sizing — are exactly the two the measurement
+shows overriding mandate-driven and computed outputs. The new finding
+this gate adds: the teammate Trader's stop placement is a
+cross-provider failure and must not be ported in any form. AAPL's flip
+is real (stance-chain corroborated) but vLLM-specific at n=1; GLM's
+baseline conservatism masks persona drift, so GLM is not a useful drift
+detector at gate scale.
+
+Non-blocking harness gaps carried forward: resume-skip gate re-run (one
+line), kill_criterion bound sizing vs persona verbosity.
+
+*Measurement is not adoption (D32). Adoption decisions stay with
+Saiful.*
