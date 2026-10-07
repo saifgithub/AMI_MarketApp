@@ -50,7 +50,7 @@ from app.services.llm_gateway import ChatMessage
 # `full_context`. Unknown/empty → full_context.
 _VALID_CONTEXT_MODES = frozenset({"saver", "full_context", "embedding"})
 # Soft cap for the lesson-context block (chars/4 token estimate). The
-# corpus is 334 lessons and growing (CR054 later waves + CR058); the
+# corpus is 380 lessons as of 2026-10-07 and growing (CR054 later waves + CR058); the
 # on-prem vLLM `ami-llm` has a 262k context window, so a ~13-20k index
 # is a non-issue. `embedding` mode (CR019) remains the escape hatch once
 # the catalogue reaches many hundreds and full_context stops being the
@@ -81,7 +81,7 @@ def build_concierge_messages(
     tail**, in that order, so the head lands as a whole-block prefix-cache
     hit on the serving vLLM host (block size 2,096 tokens; caching is
     whole-block only, so anything user-specific this early costs the
-    entire reuse). The head is the 342-lesson catalogue — byte-identical
+    entire reuse). The head is the 380-lesson catalogue (EN, as of 2026-10-07) — byte-identical
     for every user, changing only when a lesson is added. Everything
     derived from `mandate`, `user_id`, or `recent_journal` (the base
     prompt's mandate overlay, the mandate one-liner, the journal, the
