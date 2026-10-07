@@ -121,6 +121,34 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Concierge rename + app knowledge + question filter (2026-10-07, AT:K6)
+
+Saiful: sync the app Concierge's context to the Customer Service profile, name it
+with C, use it for app questions, and pre-filter so it answers questions only.
+
+1. **App-side audit** (`concierge_prompts.py` + `content/agents/concierge.md`):
+   context is DB-generated (inherently current); DO-NOTs verified still true (no
+   in-app scheduler, no agent mute/promote, convene 8 credits / 1-on-1 1 credit);
+   only stale items were comment counts (334/342 → 380 EN lessons) — fixed
+   `d04f75c5`.
+2. **Knowledge pack** on the Hermes profile: `kb/app_concierge.md` (adapted in-app
+   brief — external-support flavor, same hard DO-NOTs, no journal/mandate access)
+   + `kb/lessons_index.md` (all 380 lessons, code + title + track, generated from
+   `content/lessons/`). SOUL procedure: app questions → app_concierge.md first,
+   lesson routing strictly by code from lessons_index.md.
+3. **Rename:** `customersupport` → **`concierge`** (`hermes profile rename` —
+   multiplex hot-served it; all live references sed-updated: routes, SOULs,
+   delegate skill, digest cron; historical cron outputs left untouched).
+4. **Question filter (the "JEV" gate):** concierge's two groups removed from
+   `WHATSAPP_FREE_RESPONSE_CHATS` (CoS group stays listen-all — Angelia needs
+   everything); added `WHATSAPP_MENTION_PATTERNS` (regex, gateway-level): any
+   message containing `?`, a wh-word, or support keywords (help/stuck/broken/not
+   working/can't/error) wakes the routed persona — otherwise silence. @mentions
+   and replies still always work. **Side effect:** patterns are global, so
+   question-shaped chatter in AT:network also wakes neteng — accepted for now,
+   tune if noisy. Live test pending: ask a non-question in a concierge group
+   (silence expected) then a question (answer expected).
+
 ## Team principals on whatsapp (2026-10-04)
 
 Saiful ruled the whatsapp instruction-givers are exactly four numbers:
