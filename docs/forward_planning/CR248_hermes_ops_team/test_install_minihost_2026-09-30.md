@@ -121,6 +121,18 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Unlock rules knowledge gap closed (2026-10-07, third pass)
+
+Saiful's "how do I unlock the agents?" exposed a knowledge gap: the concierge honestly
+said the KB had no unlock mechanic. The authoritative rule lives in the backend
+(`agent_gateways.AGENT_GATEWAYS` — 5 curated gateway lessons per agent, unlock on
+quiz pass, from `lessons_service._check_agent_unlocks`). Generated
+`kb/unlock_rules.md` (12 agents × 5 lessons, code + title, source-verified), wired
+into the SOUL procedure, and re-tested with Saiful's exact question: correct direct
+answer with lesson codes, 49s. Note for the office-assistant framing: app-truth
+docs like this one are derived from source, not hand-written — a regeneration script
+belongs in the product repo when it exists.
+
 ## Display tone + stale-session cleanup (2026-10-07, second pass)
 
 1. Saiful: raw tool-progress bubbles ("🔎 Searching files…", "⚙️ tool_describe…",
