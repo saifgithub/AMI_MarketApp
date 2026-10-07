@@ -34,7 +34,10 @@ from app.services import put_call, room_prompts
 from app.services.market_data import OptionChain, OptionQuote
 from app.services.put_call import aggregate_chains, fetch_put_call_ratio, put_call_line
 
-_TODAY = date(2026, 9, 29)
+# DEF: this test pinned a fixed "today" (2026-09-29), so the suite started
+# failing every day once the calendar passed it (first red 2026-10-06). The
+# window is defined RELATIVE to today — the pin must roll with it.
+_TODAY = date.today()
 _EXPIRIES = [_TODAY + timedelta(days=d) for d in (4, 11, 18, 25, 32)]
 
 
@@ -189,7 +192,7 @@ def test_the_line_states_both_ratios_the_counts_and_the_window() -> None:
     assert "volume 0.80 (640 puts / 800 calls)" in line
     assert "open interest 1.10 (8,800 puts / 8,000 calls)" in line
     assert f"4 expiries {_EXPIRIES[0].isoformat()} to {_EXPIRIES[3].isoformat()}" in line
-    assert "chain as of 2026-09-29" in line
+    assert f"chain as of {_TODAY.isoformat()}" in line
 
 
 def test_an_unserved_half_is_named_on_the_line() -> None:
