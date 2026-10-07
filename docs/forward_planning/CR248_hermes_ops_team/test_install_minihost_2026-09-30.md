@@ -121,6 +121,23 @@ provided.
    back. Its connections had already been migrated (whatsapp session → default
    profile, google creds + GEMINI key → customersupport, angelia cloned from it).
 
+## Display tone + stale-session cleanup (2026-10-07, second pass)
+
+1. Saiful: raw tool-progress bubbles ("🔎 Searching files…", "⚙️ tool_describe…",
+   "⏳ Working — 3 min — iteration 4, clarify") are not customer-appropriate. Fixed
+   structurally on the default profile's whatsapp display config:
+   `display.platforms.whatsapp.tool_progress: off`, `busy_ack_detail: false`,
+   `long_running_notifications: false` (whatsapp defaults were TIER_MEDIUM). Human
+   voice now comes from the agent's own interim narration — concierge SOUL instructs
+   one brief human line ("Let me check that for you.") instead of tool names.
+2. Root cause of the slow/failing turn found in `errors.log`: pre-rename sessions
+   cached `/profiles/customersupport/...` paths that no longer exist after the
+   Oct-07 rename — every file search failed and burned iterations. Deleted the three
+   pre-rename sessions (`hermes -p concierge sessions delete`); the active one was
+   lease-locked mid-turn and cleared after the display-config restart. Rename
+   lesson: after any future profile rename, reset that profile's pre-rename chat
+   sessions.
+
 ## Concierge rename + app knowledge + question filter (2026-10-07, AT:K6)
 
 Saiful: sync the app Concierge's context to the Customer Service profile, name it
