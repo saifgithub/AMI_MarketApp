@@ -1,0 +1,17 @@
+# cr252-heur-gate — institutional-heuristics A/B gate (Saiful 2026-10-07:
+# "add it. and convene a room with it as part of the prompt. lets see the
+# difference.")
+#
+# Variant `cr252-heur`: production persona + teammate 01_institutional_heuristics
+# module appended verbatim (SBC penalty, accrual trap, ROIC>WACC law,
+# EV/EBITDA hygiene, debt-wall/leverage limits, Dorsey moat typology) for all
+# 12 agents. BEFORE = cr251-risk-matrix-r3 AAPL+V arms (production prompts,
+# same ticker/risk/provider, n=4). Measures what the CFA-style evaluation
+# parameter set does to stances, trade geometry, and verdicts.
+name: cr252-heur-gate
+provider: vllm
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 2
+prompt_variant: cr252-heur
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
