@@ -62,8 +62,24 @@ rather than passing" — the verdict schema already carries size_pct).
   baseline rate, AND RIOT ≤1/15 approvals. → fold-in CR (production prompt
   change, own gate) + full 30×5 re-baseline.
 - **NO-GO:** curve unchanged → prose dispositions can't beat the size
-  anchor; the result itself justifies escalation to the measured evidence
-  bar (Phase 2 — separate CR, pending Saiful's target-curve policy).
+  anchor; the result itself justifies escalation to Phase 2.
+
+## Phase 2 (deferred within this CR — NOT for the first build)
+
+**The measured evidence bar (Option C):** risk level sets a required Jev
+mean-support threshold; the PM's context carries the room's measured
+support + per-turn quality flags, so the bar is a number, not a vibe.
+Pre-computed calibration from the frozen baseline: LEVI/DHR/FCEL/APD/PYPL
+(support ≥0.77, baseline approvals only at R4+) are the movers a well-set
+R2–R3 bar should pull forward; RIOT (support 0.76–0.80, 0/10) is the
+thesis-shaped holdout that proves the bar must be thesis-aware, not a bare
+threshold.
+
+**Hard dependency before Phase 2 can be specified:** Saiful's target-curve
+policy — what SHOULD the R1–R5 approval slope be (e.g. 5/15/30/45/60%)? The
+per-level thresholds are fit to that target; without it there is no right
+answer to fit. Phase 2 spec + thresholds land in a follow-up doc under this
+CR once the policy is set.
 
 ## Boundaries
 
