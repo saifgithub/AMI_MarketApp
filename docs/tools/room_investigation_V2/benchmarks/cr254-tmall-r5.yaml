@@ -1,0 +1,12 @@
+# cr254-tmall-r5 — tm-all (teammate suite, wholesale verbatim incl. global
+# constitution) at risk 5 on the 30-ticker universe, 2 reps. The tm-all arm
+# of the DSV4 comparison: parallel agent's cr251-risk-matrix-r5 (production
+# prompts, ~/cr251_v2_dsv4/r5 on melehost) is the production arm. Same
+# tickers/mandate/model → per-desk adoption evidence under CR254's mission.
+name: cr254-tmall-r5
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 5 }
+repeats: 2
+prompt_variant: tm-all
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
