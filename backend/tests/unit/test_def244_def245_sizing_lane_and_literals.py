@@ -219,9 +219,18 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # neither mentions size, sizing, allocation or a percentage, and the
     # "not a position size" Output-style bullet is untouched. bull
     # 48c3261299d7 → 6a9a1cecc224, bear 81a9e0289000 → bdb23e30ddd9.
+    # CR252 review (2026-10-08): both files gain the appended "## Evaluation
+    # parameters" checklist (earnings quality/SBC, ROIC>WACC, valuation
+    # hygiene, balance sheet, moat typology — CR252 production fold-in). The
+    # guard's question, answered by reading the diff: does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? **No** — the added
+    # section is interpretation guidance in the same register as Phase 3; it
+    # names no size, sizing, allocation or percentage, and the "not a position
+    # size" Output-style bullet is untouched. bull 6a9a1cecc224 → dcf57da48d1e,
+    # bear bdb23e30ddd9 → dea413259494.
     expected = {
-        "bull_researcher.md": "6a9a1cecc224",
-        "bear_researcher.md": "bdb23e30ddd9",
+        "bull_researcher.md": "dcf57da48d1e",
+        "bear_researcher.md": "dea413259494",
     }
     actual = {
         name: hashlib.sha256(

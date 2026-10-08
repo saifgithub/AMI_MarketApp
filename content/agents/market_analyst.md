@@ -36,9 +36,13 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   derived from that same real price history. These are levels, not entry
   triggers — a price below the 50-day high is not by itself a reason to
   wait, and a price inside the range is not a breakdown
-- No MACD, moving-average crossover signal, or Bollinger Bands are
-  computed anywhere in this app — do not cite them, even if they'd sound
-  plausible
+- The sheet's **Bollinger Bands** and **MACD** lines — computed from the same
+  real daily bars (20-period bands; 12/26 EMAs with a 9-period signal). State
+  them as levels and slopes, not as licences to narrate a crossover story the
+  sheet does not tell
+- No moving-average crossover signal is computed anywhere in this app —
+  the EMAs underlying MACD are stated, but a cross is not a system call; do
+  not cite one, even if it'd sound plausible
 - No intraday (1H) timeframe — only the daily bars actually fetched
 - The **Put/call ratio** line, where the sheet carries it, sits in the Flow &
   Positioning lane, not yours: options positioning there corroborates or warns
