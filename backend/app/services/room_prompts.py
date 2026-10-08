@@ -55,6 +55,7 @@ from app.services.fundamentals import (
     roic_line,
     sbc_adjusted_fcf_line,
     liquidity_line,
+    wacc_estimate_line,
     margin_structure_line,
     margin_trend_line,
     primary_trend_line,
@@ -2676,11 +2677,25 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     elif market_withheld:
         pass  # stripped below; no scaffolding line to contradict it with
     elif technicals_live:
+        # The header names only the families this profile actually carries —
+        # a hand-built or degraded profile can be live for the range/trend
+        # block with no Bollinger/MACD values, and the header must not claim
+        # LIVE for a fact the body never states.
+        families = "RSI, trend, volume, 50-day range"
+        if (
+            profile.get("bollinger_upper") is not None
+            and profile.get("bollinger_lower") is not None
+        ):
+            families += ", Bollinger bands"
+        if (
+            profile.get("macd_line") is not None
+            and profile.get("macd_signal") is not None
+        ):
+            families += ", MACD"
         header_lines.append(
-            "- RSI, trend, volume, 50-day range: LIVE, computed from "
-            "real yfinance price history as of this call. No MACD, "
-            "moving-average crossover signal, or Bollinger Bands are "
-            "computed — do not cite them."
+            f"- {families}: LIVE, computed from real yfinance price history "
+            "as of this call. No moving-average crossover signal is computed "
+            "— do not cite one."
         )
     else:
         header_lines.append(
@@ -3122,8 +3137,21 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("roic_invested_capital"),
                 profile.get("roic_pct"),
                 profile.get("roic_period_end"),
+                wacc_estimate_pct=(
+                    profile.get("wacc_estimate_pct") if _is("wacc", "live") else None
+                ),
             ) if (settings.room_roic_enabled
                   and _is("roic", "live")) else None,
+            # CR253 lane B(b) — the CAPM WACC estimate beside the ROIC it
+            # hurdles (CR252's CFA checklist makes the spread mandatory).
+            # Emitted only when the inputs exist (beta live); when they do
+            # not, the ROIC tail above states the absence — no second line,
+            # no fabricated hurdle rate (CR040).
+            wacc_estimate_line(
+                profile.get("wacc_estimate_pct"),
+                profile.get("wacc_beta"),
+            ) if (settings.room_wacc_enabled
+                  and _is("wacc", "live")) else None,
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
             # mentions, 9/12 agents) in the CR219 measurement. Ratio and
             # quarter are gated on separate field_state keys — the same
@@ -3260,6 +3288,17 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             atr_line = _atr_line(profile)
             if atr_line:
                 lines.append(atr_line)
+        # CR253 lane A — Bollinger + MACD, the Market Analyst's own claimed
+        # breadth, finally on the sheet. No narrower gate than the branch
+        # itself: unlike ATR these are not stop-sizing figures, and the lane
+        # matrix is default-open, so full-sheet agents see them too; the
+        # firewalled News/Social analysts stay out (no technicals lane).
+        bollinger_line = _bollinger_line(profile)
+        if bollinger_line:
+            lines.append(bollinger_line)
+        macd_line = _macd_line(profile)
+        if macd_line:
+            lines.append(macd_line)
         lines.append(_moving_average_line(profile))
         lines.append(_period_trend_line(profile))
         lines.append(_volume_line(profile))
@@ -3367,7 +3406,11 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # never estimated (CR104).
         if settings.room_put_call_enabled:
             if _is("put_call", "live"):
-                pc_line = put_call_line(profile.get("put_call_ratio"))
+                pc_line = put_call_line(
+                    profile.get("put_call_ratio"),
+                    volume_baseline=profile.get("put_call_volume_baseline"),
+                    oi_baseline=profile.get("put_call_oi_baseline"),
+                )
                 if pc_line:
                     lines.append(pc_line)
             else:
@@ -3507,6 +3550,13 @@ def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
         out.append(f"  Snapshot: {profile['social_fetched_age']}")
     if profile.get("mention_trend"):
         out.append(f"  Mentions: {profile['mention_trend']}")
+    # CR253 lane B(a) — the rolling-baseline companion: today's sentiment
+    # score and mention volume against this ticker's own trailing-90d median,
+    # or the explicit "no baseline on file yet" absence. Pre-formatted in the
+    # overlay by ratio_baselines' helpers (CR179 Leg 4 — never recomputed
+    # here); rendered verbatim like the Adanos lines above it.
+    if profile.get("social_baselines"):
+        out.append(f"  Baselines: {profile['social_baselines']}")
     if profile.get("pattern"):
         out.append(f"  {profile['pattern']}")
     if profile.get("sentiment_split"):
@@ -3588,6 +3638,41 @@ def _atr_line(profile: dict[str, Any]) -> str | None:
     if atr14 is None:
         return None
     return f"ATR(14): ${atr14} (average true range, simple 14-session average)"
+
+
+def _bollinger_line(profile: dict[str, Any]) -> str | None:
+    """CR253 lane A — Bollinger bands (20-period SMA ± 2σ) off the same
+    daily closes as the range/trend block. Unlike ATR this one IS the Market
+    Analyst's own claimed family, so it renders for every agent whose lane
+    includes technicals — the call site is the plain `technicals_live`
+    branch, not a narrower allowlist. None when the family was not computed
+    (honest absence, never a fabricated band).
+    """
+    upper = profile.get("bollinger_upper")
+    lower = profile.get("bollinger_lower")
+    if upper is None or lower is None:
+        return None
+    line = (
+        f"Bollinger bands (20-day, 2σ): upper ${upper}, lower ${lower}"
+    )
+    width = profile.get("bollinger_width_pct")
+    if width is not None:
+        line += f" — band width {width}% of the 20-day average"
+    return line
+
+
+def _macd_line(profile: dict[str, Any]) -> str | None:
+    """CR253 lane A — MACD (12/26 EMAs, 9-period EMA signal) with the
+    histogram stated beside its two legs, same lane reasoning as
+    `_bollinger_line`. None when the family was not computed.
+    """
+    macd_line = profile.get("macd_line")
+    signal = profile.get("macd_signal")
+    if macd_line is None or signal is None:
+        return None
+    histogram = profile.get("macd_histogram")
+    hist = f", histogram {histogram}" if histogram is not None else ""
+    return f"MACD (12/26/9): line {macd_line}, signal {signal}{hist}"
 
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:

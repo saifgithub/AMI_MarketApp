@@ -1034,6 +1034,15 @@ class Settings(BaseSettings):
     # since 2026-09-29 (CR247 Phase 1C — unit suite + live AAPL render probe).
     room_peer_comparison_enabled: bool = True
 
+    # CR253 lane B(b) — the CAPM WACC estimate beside the ROIC it hurdles
+    # (`app/services/wacc.py`), so the CFA checklist's "ROIC > WACC?" read is
+    # a sheet question. Deterministic: risk-free 4.2% + beta × ERP 4.6%,
+    # emitted only when the sheet's own live beta exists; when beta is not
+    # live the ROIC line's tail states the absence. A cost-of-equity proxy —
+    # no debt weighting is applied and the line says so. Gates the RENDER
+    # only, the estimate is computed on the profile regardless.
+    room_wacc_enabled: bool = True
+
     # CR247 Phase 1D — forensic metadata flags on the fact sheet (News/Macro
     # lane; `app/services/edgar_forensics.py`). All four are AMI-computed in
     # code from CR244's EDGAR reads — the LLM never computes a figure:

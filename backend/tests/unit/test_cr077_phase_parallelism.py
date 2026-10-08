@@ -124,18 +124,27 @@ _AGENT_DELAYS = {
     "social_media_analyst": 0.010,
 }
 
+def _enveloped(agent_key: str, prose: str) -> str:
+    """CR253 — canned live turns open with the stance envelope, the shape the
+    production prompt asks for. A bare-prose turn earns the envelope-presence
+    repair (room_envelope_repair flow), and these probes assert on which
+    desks were CALLED, where a deliberate bounded second call is
+    indistinguishable from a regression without this."""
+    return f"[STANCE: for | CONVICTION: high | HEADLINE: {agent_key} view]\n{prose}"
+
+
 _REPLIES = {
-    "fundamentals_analyst": "FA: P/E reasonable, growth steady.",
-    "market_analyst": "MA: trend consolidating, RSI 58.",
-    "news_analyst": "NA: recent catalyst noted.",
-    "social_media_analyst": "SMA: retail sentiment mixed.",
-    "bull_researcher": "Bull: thesis defended, 4% size.",
-    "bear_researcher": "Bear: compression risk capped at 2%.",
-    "research_manager": "RM: lean constructive, 3% start.",
-    "trader": "Trader: BUY 3% at $150, stop $141, target $172.",
-    "aggressive_debator": "Push to 4.5%.",
-    "conservative_debator": "Cap at 2%.",
-    "neutral_debator": "Hold at 3%.",
+    "fundamentals_analyst": _enveloped("fundamentals_analyst", "FA: P/E reasonable, growth steady."),
+    "market_analyst": _enveloped("market_analyst", "MA: trend consolidating, RSI 58."),
+    "news_analyst": _enveloped("news_analyst", "NA: recent catalyst noted."),
+    "social_media_analyst": _enveloped("social_media_analyst", "SMA: retail sentiment mixed."),
+    "bull_researcher": _enveloped("bull_researcher", "Bull: thesis defended, 4% size."),
+    "bear_researcher": _enveloped("bear_researcher", "Bear: compression risk capped at 2%."),
+    "research_manager": _enveloped("research_manager", "RM: lean constructive, 3% start."),
+    "trader": _enveloped("trader", "Trader: BUY 3% at $150, stop $141, target $172."),
+    "aggressive_debator": _enveloped("aggressive_debator", "Push to 4.5%."),
+    "conservative_debator": _enveloped("conservative_debator", "Cap at 2%."),
+    "neutral_debator": _enveloped("neutral_debator", "Hold at 3%."),
     "portfolio_manager": (
         '{"action": "APPROVE", "size_pct": 3.0, "entry": 150, "stop": 141, '
         '"target": 172, "horizon_days": 42, '
@@ -263,8 +272,14 @@ def test_analysts_are_blind_to_each_other_but_downstream_sees_them_all():
     _run(runner, user_id=uuid4(), ticker="AAPL", mandate=mandate,
          char_delay_min=0.0, char_delay_max=0.0)
 
-    # No analyst's prompt carries another analyst's reply text.
-    other_replies = {k: v for k, v in _REPLIES.items() if k in _AGENT_DELAYS}
+    # No analyst's prompt carries another analyst's reply text. The stance
+    # envelope is stripped before the transcript commit (CR106 B2 — the
+    # machine channel never reads as another agent's argument), so prompts
+    # carry the PROSE half of each canned turn; that is what the blindness
+    # check matches on.
+    other_replies = {
+        k: v.split("\n", 1)[1] for k, v in _REPLIES.items() if k in _AGENT_DELAYS
+    }
     for me in _AGENT_DELAYS:
         prompt = gw.prompts[me]
         for other, reply in other_replies.items():
@@ -276,6 +291,13 @@ def test_analysts_are_blind_to_each_other_but_downstream_sees_them_all():
     bull_prompt = gw.prompts["bull_researcher"]
     for reply in other_replies.values():
         assert reply in bull_prompt
+    # CR106 B2, pinned: no analyst's machine channel leaked into the
+    # downstream prompt. Each canned turn's headline is unique to its agent
+    # (the prompt's own format instructions legitimately contain the bare
+    # "[STANCE:" template, so the headline is the precise fingerprint) — the
+    # four analysts' headlines must be absent while their prose is present.
+    for me in _AGENT_DELAYS:
+        assert f"HEADLINE: {me} view" not in bull_prompt
 
 
 # ── §Build 5: the "build on the transcript" line is rescoped when parallel ──

@@ -215,18 +215,25 @@ def test_room_uses_gateway_for_every_agent_when_live():
     transcript; the PM's own JSON verdict (DEF056) becomes the Verdict,
     subject to the deterministic safety floor as a veto/cap on top.
     """
+    # CR253 — the canned turns open with the stance envelope (the shape the
+    # production prompt asks for); a bare-prose turn would earn the
+    # envelope-presence repair and this test's once-per-agent call invariant
+    # would count the deliberate bounded retry as a regression.
+    def _enveloped(agent_key: str, prose: str) -> str:
+        return f"[STANCE: for | CONVICTION: high | HEADLINE: {agent_key} view]\n{prose}"
+
     fake = _FakeGateway(replies={
-        "fundamentals_analyst": "FA: P/E reasonable, growth steady.",
-        "market_analyst": "MA: trend up, RSI 58.",
-        "news_analyst": "NA: Fed dovish, sector tailwinds.",
-        "social_media_analyst": "SMA: bullish chatter.",
-        "bull_researcher": "Bull: thesis defended, 4% size.",
-        "bear_researcher": "Bear: multiple-compression risk capped at 2%.",
-        "research_manager": "RM: lean constructive, 3% start.",
-        "trader": "Trader: BUY 3% at $150, stop $141, target $172.",
-        "aggressive_debator": "Push to 4.5%.",
-        "conservative_debator": "Cap at 2%.",
-        "neutral_debator": "Hold at 3%.",
+        "fundamentals_analyst": _enveloped("fundamentals_analyst", "FA: P/E reasonable, growth steady."),
+        "market_analyst": _enveloped("market_analyst", "MA: trend up, RSI 58."),
+        "news_analyst": _enveloped("news_analyst", "NA: Fed dovish, sector tailwinds."),
+        "social_media_analyst": _enveloped("social_media_analyst", "SMA: bullish chatter."),
+        "bull_researcher": _enveloped("bull_researcher", "Bull: thesis defended, 4% size."),
+        "bear_researcher": _enveloped("bear_researcher", "Bear: multiple-compression risk capped at 2%."),
+        "research_manager": _enveloped("research_manager", "RM: lean constructive, 3% start."),
+        "trader": _enveloped("trader", "Trader: BUY 3% at $150, stop $141, target $172."),
+        "aggressive_debator": _enveloped("aggressive_debator", "Push to 4.5%."),
+        "conservative_debator": _enveloped("conservative_debator", "Cap at 2%."),
+        "neutral_debator": _enveloped("neutral_debator", "Hold at 3%."),
         "portfolio_manager": (
             '{"action": "APPROVE", "size_pct": 3.0, "entry": 150, "stop": 141, '
             '"target": 172, "horizon_days": 42, '

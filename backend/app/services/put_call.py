@@ -39,6 +39,7 @@ from app.services.market_data import (
     OptionChain,
     get_market_data_provider,
 )
+from app.services.ratio_baselines import RatioBaseline, no_baseline_clause
 
 # The nearest four listed expiries. Four weeklies is about a month of the
 # board, four monthlies about a quarter — the window is stated on the line
@@ -159,25 +160,50 @@ def fetch_put_call_ratio(ticker: str) -> PutCallRatio | None:
     return aggregate_chains(chains, today)
 
 
-def put_call_line(ratio: PutCallRatio | None, *, live: bool = True) -> str | None:
+def put_call_line(
+    ratio: PutCallRatio | None, *, live: bool = True,
+    volume_baseline: RatioBaseline | None = None,
+    oi_baseline: RatioBaseline | None = None,
+) -> str | None:
     """The one computed line. Ratios the provider could not support are
     stated as not served rather than dropped silently — a volume ratio missing
-    beside an open-interest ratio present is a fact about the feed."""
+    beside an open-interest ratio present is a fact about the feed.
+
+    CR253 lane B(a) — each served half gains its rolling-baseline companion
+    ("vs trailing-90d median 0.85 (12 daily reads on file)") so "is 0.46
+    high?" is answered against this ticker's own history. The baselines are
+    medians of observations the overlay persisted on earlier live reads,
+    computed in code (CR179 Leg 4); until enough days exist the half states
+    "no baseline on file yet" — absence is stated, never fabricated (CR040).
+    """
     if ratio is None:
         return None
     marker = " (AMI's own quotient, LIVE)" if live else " (AMI's own quotient)"
+
+    def _baseline_suffix(baseline: RatioBaseline | None) -> str:
+        # The half above already states today's ratio; the companion names
+        # the baseline and its honest n, or says the absence out loud.
+        if baseline is None:
+            return no_baseline_clause()
+        return (
+            f"trailing-{baseline.window_days}d baseline "
+            f"{baseline.median:.2f} ({baseline.n} daily reads on file)"
+        )
+
     parts: list[str] = []
     if ratio.volume_ratio is not None:
         parts.append(
             f"volume {ratio.volume_ratio:.2f} "
-            f"({ratio.put_volume:,} puts / {ratio.call_volume:,} calls)"
+            f"({ratio.put_volume:,} puts / {ratio.call_volume:,} calls) — "
+            + _baseline_suffix(volume_baseline)
         )
     else:
         parts.append("volume not served by the provider")
     if ratio.oi_ratio is not None:
         parts.append(
             f"open interest {ratio.oi_ratio:.2f} "
-            f"({ratio.put_open_interest:,} puts / {ratio.call_open_interest:,} calls)"
+            f"({ratio.put_open_interest:,} puts / {ratio.call_open_interest:,} calls) — "
+            + _baseline_suffix(oi_baseline)
         )
     else:
         parts.append("open interest not served by the provider")

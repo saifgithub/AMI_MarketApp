@@ -1,4 +1,5 @@
-"""Technical indicators — RSI, SMA, ATR, and an RSI overbought/oversold tone.
+"""Technical indicators — RSI, SMA, ATR, EMA, Bollinger bands, MACD, and an
+RSI overbought/oversold tone.
 
 Pure functions over a list of close (and, for ATR, high/low) prices. Ported
 verbatim from app/services/technicals.py (DEF052) so the computation is
@@ -17,6 +18,8 @@ reason, deliberately — see its own docstring.
 """
 
 from __future__ import annotations
+
+import math
 
 DEFAULT_RSI_PERIOD = 14
 
@@ -96,3 +99,75 @@ def atr(
             abs(lows[i] - closes[i - 1]),
         ))
     return sum(true_ranges[-period:]) / period
+
+
+def _ema_series(values: list[float], window: int) -> list[float] | None:
+    """The full EMA series, seeded with the SMA of the first `window` points.
+
+    None when fewer than `window` points exist. The SMA seed is the
+    mainstream convention (TA-Lib, pandas) and, unlike a first-point seed, it
+    does not bake one arbitrary close into every later value — a difference
+    that is largest exactly where our history is shortest. Documented rather
+    than chosen silently because CR046 D1 already pins this module's
+    simple-average RSI/ATR convention: EMA is a different family with its own
+    standard, and MACD's signal line is only coherent as an EMA.
+    """
+    if len(values) < window:
+        return None
+    k = 2.0 / (window + 1)
+    seed = sum(values[:window]) / window
+    out = [seed]
+    for v in values[window:]:
+        out.append((v - out[-1]) * k + out[-1])
+    return out
+
+
+def ema(values: list[float], window: int) -> float | None:
+    """The last EMA value, or None when `window` points do not exist."""
+    series = _ema_series(values, window)
+    return series[-1] if series else None
+
+
+def bollinger_bands(
+    closes: list[float], window: int = 20, num_std: float = 2.0,
+) -> tuple[float, float, float] | None:
+    """Bollinger bands over the last `window` closes: (middle, upper, lower).
+
+    The middle is the same simple average `sma` returns; the bands are the
+    middle ± `num_std` POPULATION standard deviations of that same window —
+    the conventional Bollinger calculation (population, not sample: the
+    window is the whole population being described, not a draw from it).
+    None when fewer than `window` closes exist.
+    """
+    if len(closes) < window:
+        return None
+    window_closes = closes[-window:]
+    middle = sum(window_closes) / window
+    variance = sum((c - middle) ** 2 for c in window_closes) / window
+    half_width = num_std * math.sqrt(variance)
+    return middle, middle + half_width, middle - half_width
+
+
+def macd(
+    closes: list[float],
+    fast: int = 12, slow: int = 26, signal: int = 9,
+) -> tuple[float, float, float] | None:
+    """MACD (fast/slow EMAs, EMA signal line): (macd line, signal, histogram).
+
+    None when the series is too short for a signal value: the MACD line
+    exists once the slow EMA seeds (`slow` bars), and the signal is an EMA
+    over `signal` MACD values, so the minimum is `slow + signal - 1` bars.
+    The histogram is the MACD line minus the signal — the two never get out
+    of step, because both are read off the same final bar.
+    """
+    if len(closes) < slow + signal - 1:
+        return None
+    fast_series = _ema_series(closes, fast)
+    slow_series = _ema_series(closes, slow)
+    assert fast_series is not None and slow_series is not None
+    macd_series = [f - s for f, s in zip(fast_series[-len(slow_series):], slow_series, strict=True)]
+    signal_series = _ema_series(macd_series, signal)
+    assert signal_series is not None
+    macd_line = macd_series[-1]
+    signal_line = signal_series[-1]
+    return macd_line, signal_line, macd_line - signal_line

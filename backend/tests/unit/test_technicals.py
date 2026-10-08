@@ -235,4 +235,10 @@ def test_build_technicals_context_block_present_when_enabled(monkeypatch):
     block = technicals.build_technicals_context_block("AAPL")
     assert block is not None
     assert "LIVE TECHNICALS — AAPL" in block
-    assert "MACD" in block  # explicit "do NOT claim MACD" disclaimer present
+    # CR253 lane A — MACD and Bollinger are computed now and render as real
+    # lines (they used to appear only inside the "do NOT claim" disclaimer).
+    assert "MACD (12/26/9): line" in block
+    assert "Bollinger bands (20-day, 2σ): upper" in block
+    # The crossover-signal half of the old disclaimer survives: no such
+    # signal is computed.
+    assert "crossover signal — none is computed" in block

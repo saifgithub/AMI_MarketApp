@@ -2944,3 +2944,28 @@ class VerdictOutcomeRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
     )
+
+
+class RatioBaselineRow(Base):
+    """CR253 lane B(a) — one observed daily ratio value, for rolling baselines.
+
+    Every live read of a baseline-bearing metric (put/call volume + open
+    interest, Reddit sentiment score + mention volume) upserts one row per
+    (ticker, metric, calendar day); `ratio_baselines.trailing_baseline` then
+    medians the trailing 90 days so the sheet can answer "is 0.46 high?"
+    with this ticker's own history instead of the agent's training memory.
+    Values are observations, never fabrications: a day with no live read
+    writes no row, and the baseline renderer states the absence (CR040).
+    """
+
+    __tablename__ = "ratio_baselines"
+    __table_args__ = (
+        UniqueConstraint("ticker", "metric", "observed_on", name="uq_ratio_baselines_day"),
+        Index("ix_ratio_baselines_ticker_metric_date", "ticker", "metric", "observed_on"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String(16), nullable=False)
+    metric: Mapped[str] = mapped_column(String(32), nullable=False)
+    observed_on: Mapped[date] = mapped_column(Date, nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)

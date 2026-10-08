@@ -284,6 +284,19 @@ _COMPUTED_NOT_RENDERED: dict[str, str] = {
     "atr14": "rendered on its own ATR(14) line, gated narrower than the rest of "
              "the technicals block (Trader/Risk Officer only — see "
              "`_ATR_LANE_AGENTS`, room_prompts.py)",
+    # CR253 lane A — Bollinger bands + MACD on their own fact-sheet lines
+    # (`_bollinger_line` / `_macd_line`, room_prompts.py). Same group-gate
+    # shape as `atr14`'s entry above: the Direction-2 roster scan only covers
+    # the fundamentals tuples, while these ride `field_state["technicals"]`
+    # like every sibling in this dict. Unlike ATR there is no narrower WHO
+    # gate — every technicals-lane agent reads them, per the default-open
+    # lane matrix (CR145 Tier C).
+    "bollinger_upper": "rendered on the Bollinger bands line (CR253 lane A)",
+    "bollinger_lower": "rendered on the Bollinger bands line (CR253 lane A)",
+    "bollinger_width_pct": "rendered on the Bollinger bands line (CR253 lane A)",
+    "macd_line": "rendered on the MACD line (CR253 lane A)",
+    "macd_signal": "rendered on the MACD line (CR253 lane A)",
+    "macd_histogram": "rendered on the MACD line (CR253 lane A)",
 }
 
 

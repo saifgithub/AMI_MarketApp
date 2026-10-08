@@ -361,12 +361,22 @@ _KNOWN_ABSENT: list[dict[str, Any]] = [
     # exactly the event the retired entry's markers were armed to catch. The
     # persona now defers to the sheet's "Debt split" line; its residual
     # "not supplied" clause is allowlisted below as runtime deference.
+    # CR253 lane A (2026-10-08): MACD and Bollinger bands SHIP on the sheet —
+    # computed in technicals.py from the same daily bars the range/trend block
+    # already used — so the old denial ("no MACD … or Bollinger Bands are
+    # computed") is retired and the claim narrows to the one part of that
+    # sentence still true: no moving-average CROSSOVER SIGNAL is computed.
+    # The old "MACD"/"Bollinger" markers went with the field, exactly the
+    # lifecycle R12 documents ("the day a field ships, its stale denial goes
+    # red by itself"); the persona-side sentence rewrite rides the same CR.
+    # The anchor stays a substring of today's sentence so R12's vacuity check
+    # still binds the entry to real persona text.
     {
         "row": "R7",
         "persona": "market_analyst",
-        "claim": "no MACD, MA-crossover signal, or Bollinger Bands are computed",
-        "anchor": "No MACD, moving-average crossover signal, or Bollinger Bands are",
-        "collision_markers": ("MACD", "Bollinger", "crossover:", "golden cross", "death cross"),
+        "claim": "no moving-average crossover signal is computed",
+        "anchor": "moving-average crossover signal",
+        "collision_markers": ("crossover:", "golden cross", "death cross"),
     },
     {
         "row": "R7",
@@ -837,10 +847,10 @@ def sheet_body(sheet: str) -> str:
     `_format_profile` emits a header block (source disclosure + the out-of-lane
     notice) and then, after a blank line, the facts. Collision markers must be
     matched against the FACTS only: the header legitimately NAMES the absent
-    things ("No MACD, moving-average crossover signal, or Bollinger Bands are
-    computed — do not cite them"), so matching the whole sheet would report
-    every true denial as a collision and the guard would be unusable — the
-    classic way a control gets weakened until it means nothing.
+    things ("No moving-average crossover signal is computed — do not cite
+    one"), so matching the whole sheet would report every true denial as a
+    collision and the guard would be unusable — the classic way a control
+    gets weakened until it means nothing.
 
     A denial is falsified when the sheet starts stating the thing as a FACT, and
     that is exactly what this split isolates.

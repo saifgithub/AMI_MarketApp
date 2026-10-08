@@ -260,6 +260,16 @@ _TECH_SENTINEL = Technicals(
     # test asserted the evidence snapshot's content) — fixed here so the
     # Trader/Risk Officer sheets in the regenerated evidence are honest.
     atr14=4.21,
+    # CR253 lane A — Bollinger + MACD. Same lesson as atr14 above, applied
+    # pre-emptively: the defaults are None, which would leave these fields
+    # invisible to this sentinel and let a render regression slip past the
+    # parity guard the way the atr14 gap did.
+    bollinger_upper=455.11,
+    bollinger_lower=411.55,
+    bollinger_width_pct=9.9,
+    macd_line=3.321,
+    macd_signal=2.211,
+    macd_histogram=1.11,
 )
 
 # CR148 Tier B — the snapshot's age renders as a date + a relative age, so its
@@ -988,6 +998,14 @@ def env(monkeypatch):
             "volume_ratio": "1.47",
             "return_period_pct": "up 19.83%",
             "period_candles": "63 trading days",
+            # CR253 lane A — the new breadth, each fingerprint including its
+            # label so one leg passing cannot fingerprint another.
+            "bollinger_upper": "upper $455.11",
+            "bollinger_lower": "lower $411.55",
+            "bollinger_width_pct": "width 9.9% of the 20-day average",
+            "macd_line": "line 3.321",
+            "macd_signal": "signal 2.211",
+            "macd_histogram": "histogram 1.11",
         },
         "social": {
             "buzz_score": "buzz score 88", "sentiment_score": "+0.42",

@@ -10,9 +10,13 @@ yfinance OHLCV (`MarketDataProvider.history()`, already flowing for the
 mobile Ticker Detail chart) — no new external API, just a computation layer
 over data already being fetched.
 
-MACD, moving-average-crossover signals, and Bollinger Bands are explicitly
-NOT computed here (DEF052's scope decision, AT:R58) — the prompt no longer
-claims them rather than half-implementing a third indicator family.
+MACD and Bollinger Bands joined that list at CR253 lane A (2026-10-08):
+~140 measured analyst turns demanded them while the sheet claimed only
+RSI/trend/range/volume, so the Market Analyst reached for training memory to
+fill the gap — the exact behaviour the grounding directive forbids. Both are
+computed here from the same daily bars (Bollinger 20-period SMA ± 2σ;
+MACD 12/26 EMAs with a 9-period EMA signal). A moving-average-crossover
+SIGNAL (golden/death cross dates) is still not computed.
 
 Never raises. Returns None when history is unavailable or too short for a
 reliable read — callers fall back to the synthetic profile block, same
@@ -36,6 +40,8 @@ from app.services.market_data import (
 # Re-exported under the original private names so this module's internals and
 # any importers are unchanged; the computation is identical (Cutler's RSI).
 from app.trading_math.indicators import atr as _atr
+from app.trading_math.indicators import bollinger_bands as _bollinger_bands
+from app.trading_math.indicators import macd as _macd
 from app.trading_math.indicators import rsi as _rsi
 from app.trading_math.indicators import rsi_tone as _rsi_tone
 from app.trading_math.indicators import sma as _sma
@@ -99,6 +105,23 @@ class Technicals(NamedTuple):
     # mean "not computed" the way `period_candles: int = 0` safely can for a
     # count.
     atr14: float | None = None
+    # CR253 lane A — Bollinger bands (20-period SMA ± 2σ) and MACD (12/26
+    # EMAs, 9-period EMA signal), the breadth the Market Analyst's own agent
+    # profile claims and the fact sheet never carried (~140 measured GAPS
+    # turns). Same end-of-tuple default contract as `atr14`: every existing
+    # positional fixture keeps working, and `None` per family is the honest
+    # "not enough bars / not computed" absence — a band at $0 or a MACD line
+    # at 0.0 is a real reading, so absence cannot wear those values. The
+    # 50-bar minimum `compute_technicals` already enforces covers both
+    # families' bar minimums (20 for the bands, 34 for MACD) with room to
+    # spare, so on a live fetch these are always populated — the None default
+    # is fixture-safety, not an expected runtime state.
+    bollinger_upper: float | None = None
+    bollinger_lower: float | None = None
+    bollinger_width_pct: float | None = None
+    macd_line: float | None = None
+    macd_signal: float | None = None
+    macd_histogram: float | None = None
 
 
 def window_trend_phrase(return_pct: float, candles: int) -> str:
@@ -232,6 +255,13 @@ def compute_technicals(ticker: str) -> Technicals | None:
         # relying on it, not assumed.
         atr14 = _atr(highs, lows, closes, period=_ATR_PERIOD)
 
+        # CR253 lane A — Bollinger bands and MACD off the same closes. Each
+        # family emits only when its own bar minimum is met (the enforced
+        # 50-bar minimum covers both, but the gates are stated per family so
+        # a future shorter fetch degrades each honestly, not both at once).
+        bb = _bollinger_bands(closes)
+        macd_t = _macd(closes)
+
         return Technicals(
             rsi=round(rsi),
             rsi_tone=_rsi_tone(rsi),
@@ -246,6 +276,15 @@ def compute_technicals(ticker: str) -> Technicals | None:
             sma_long=round(sma_long, 2),
             volume_ratio=volume_ratio,
             atr14=round(atr14, 2) if atr14 is not None else None,
+            bollinger_upper=round(bb[1], 2) if bb is not None else None,
+            bollinger_lower=round(bb[2], 2) if bb is not None else None,
+            bollinger_width_pct=(
+                round((bb[1] - bb[2]) / bb[0] * 100, 1)
+                if bb is not None and bb[0] else None
+            ),
+            macd_line=round(macd_t[0], 3) if macd_t is not None else None,
+            macd_signal=round(macd_t[1], 3) if macd_t is not None else None,
+            macd_histogram=round(macd_t[2], 3) if macd_t is not None else None,
         )
     except Exception as exc:
         logger.warn("technicals_compute_error", ticker=ticker, error=str(exc)[:200])
@@ -272,6 +311,22 @@ def build_technicals_context_block(ticker: str) -> str | None:
     # the 50-day high by definition. It is a level; let the agent reason.
     pct = range_position_pct(t.price, t.support, t.breakout)
     position = f" — last close ${t.price} sits at {pct}% of that range" if pct is not None else ""
+    # CR253 lane A — the Bollinger/MACD lines render only when the families
+    # were computed (same honest-absence contract as every other line); on a
+    # real 3-month fetch they always are.
+    bollinger = (
+        f"Bollinger bands (20-day, 2σ): upper ${t.bollinger_upper}, "
+        f"lower ${t.bollinger_lower}, width {t.bollinger_width_pct}% of the "
+        f"20-day average\n"
+        if t.bollinger_upper is not None and t.bollinger_lower is not None
+        else ""
+    )
+    macd = (
+        f"MACD (12/26/9): line {t.macd_line}, signal {t.macd_signal}, "
+        f"histogram {t.macd_histogram}\n"
+        if t.macd_line is not None and t.macd_signal is not None
+        else ""
+    )
     return (
         f"─── LIVE TECHNICALS — {sym} ───\n"
         f"RSI(14): {t.rsi} ({t.rsi_tone})\n"
@@ -290,8 +345,9 @@ def build_technicals_context_block(ticker: str) -> str | None:
         + f"Volume: {t.volume_tone} ({t.volume_ratio:.2f}× the 20-day average, "
         f"5-day mean)\n"
         f"50-day range — low: ${t.support}, high: ${t.breakout}{position}\n"
-        f"(Real yfinance OHLCV for {sym}, computed this call. Use these "
-        f"numbers when discussing {sym}'s technicals. Do NOT claim MACD, a "
-        f"moving-average crossover signal, or Bollinger Bands — none of "
-        f"those are computed.)"
+        + bollinger
+        + macd
+        + f"(Real yfinance OHLCV for {sym}, computed this call. Use these "
+        f"numbers when discussing {sym}'s technicals. Do NOT claim a "
+        f"moving-average crossover signal — none is computed.)"
     )

@@ -29,6 +29,7 @@ from app.core.time import relative_day_phrase
 from app.schemas import AgentId
 from app.services import edgar_tags
 from app.services.market_data import get_market_data_provider
+from app.services.wacc import EQUITY_RISK_PREMIUM_PCT, RISK_FREE_RATE_PCT
 from app.trading_math.valuation import (
     dividend_yield_pct,
     fcf_yield_pct,
@@ -2105,6 +2106,7 @@ def roic_line(
     roic_pct: float | None,
     period_end: str | None,
     *,
+    wacc_estimate_pct: float | None = None,
     live: bool = True,
 ) -> str | None:
     """CR247 Phase 1B — return on invested capital, with every leg shown.
@@ -2116,9 +2118,11 @@ def roic_line(
     end. Every figure is AMI's own computation off filed facts and the line
     is labelled an estimate accordingly.
 
-    No WACC is computed, sourced or implied — the comparison that makes ROIC
-    decision-relevant is the reader's own, and the line says so explicitly so
-    no agent quotes a hurdle rate as if the sheet supplied one.
+    CR253 lane B(b) — the tail names the WACC half of the comparison
+    honestly in whichever state it is in: when the CAPM estimate is on the
+    sheet the line points at it; when it is absent (beta not live) the line
+    keeps the pre-CR253 wording — the reader compares against their own
+    estimate and the sheet does not pretend to carry a hurdle rate.
     """
     if (
         operating_income is None or tax_rate_pct is None or nopat is None
@@ -2131,11 +2135,48 @@ def roic_line(
          f"at the filed effective rate {tax_rate_pct}%) over invested capital "
          f"${invested_capital:,}M = ROIC {roic_pct}%"],
     )
+    if wacc_estimate_pct is not None:
+        return (
+            f"{line}. AMI's estimate, computed in code from filed figures, "
+            f"fiscal year to {period_end}; invested capital is debt plus "
+            "equity minus cash. The CAPM WACC estimate beside this line is "
+            "AMI's own — spread ROIC against it, and say which side of it "
+            "the company lands on."
+        )
     return (
         f"{line}. AMI's estimate, computed in code from filed figures, "
         f"fiscal year to {period_end}; invested capital is debt plus equity "
         f"minus cash. Compare against your own WACC estimate — no WACC is "
         f"sourced on this sheet."
+    )
+
+
+def wacc_estimate_line(
+    wacc_pct: float | None,
+    beta: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR253 lane B(b) — the CAPM WACC estimate beside the ROIC it hurdles.
+
+    Every input is stated on the line (risk-free constant, beta, ERP
+    constant) because the figure is only as checkable as its inputs, and the
+    line names what it is NOT: a debt-weighted WACC — no capital-structure
+    weights are sourced, so the estimate is a cost-of-equity proxy and says
+    so, never a sourced hurdle rate wearing that label (CR040). None when the
+    estimate or beta is absent.
+    """
+    if wacc_pct is None or beta is None:
+        return None
+    line = _labelled(
+        "WACC estimate", live,
+        [f"{wacc_pct}%"],
+    )
+    return (
+        f"{line} (CAPM): risk-free {RISK_FREE_RATE_PCT}% + beta {beta} × "
+        f"equity risk premium {EQUITY_RISK_PREMIUM_PCT}%. AMI's own estimate, "
+        "computed in code — a cost-of-equity proxy with no debt weighting "
+        "applied, so read it as an estimate, not a sourced hurdle rate."
     )
 
 

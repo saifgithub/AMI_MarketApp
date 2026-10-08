@@ -84,8 +84,10 @@ from app.services import (
     interest_cost,
     peer_basket,
     put_call,
+    ratio_baselines,
     roic,
     sbc,
+    wacc,
 )
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
@@ -1113,6 +1115,30 @@ def _overlay_sbc_and_roic(
         )
 
 
+def _overlay_wacc(profile: dict[str, Any], field_state: dict[str, str]) -> None:
+    """CR253 lane B(b) — the CAPM WACC estimate beside ROIC, so "ROIC > WACC?"
+    is a sheet question, not the reader's homework.
+
+    Beta is the only fetched input (the two rate constants live in wacc.py,
+    documented there); when the sheet's own beta is live the estimate is,
+    and when it is not the ROIC line's tail states the absence — never a
+    fabricated hurdle rate (CR040). One state key for the block: the
+    estimate and its beta are born together here. Populated regardless of
+    `room_wacc_enabled`; the flag gates the RENDER only, same convention as
+    every other overlay.
+    """
+    if field_state.get("beta") == LiveDataState.LIVE.value:
+        wacc_pct = wacc.estimate_wacc_pct(profile.get("beta"))
+        if wacc_pct is not None:
+            profile["wacc_estimate_pct"] = wacc_pct
+            profile["wacc_beta"] = profile["beta"]
+            field_state["wacc"] = LiveDataState.LIVE.value
+        else:
+            field_state["wacc"] = LiveDataState.UNAVAILABLE.value
+    else:
+        field_state["wacc"] = LiveDataState.UNAVAILABLE.value
+
+
 def _overlay_put_call(
     profile: dict[str, Any],
     field_state: dict[str, str],
@@ -1154,6 +1180,24 @@ def _overlay_put_call(
     profile["put_call_ratio"] = ratio
     if ratio is not None:
         field_state["put_call"] = LiveDataState.LIVE.value
+        # CR253 lane B(a) — persist today's read for the rolling baseline
+        # and fetch the trailing baseline for the render. The store is
+        # best-effort-loud on its own (ratio_baselines logs its failures);
+        # the ratios above are already live regardless.
+        if ratio.volume_ratio is not None:
+            ratio_baselines.record_observation(
+                ticker, ratio_baselines.METRIC_PUT_CALL_VOLUME, ratio.volume_ratio,
+            )
+        if ratio.oi_ratio is not None:
+            ratio_baselines.record_observation(
+                ticker, ratio_baselines.METRIC_PUT_CALL_OI, ratio.oi_ratio,
+            )
+        profile["put_call_volume_baseline"] = ratio_baselines.trailing_baseline(
+            ticker, ratio_baselines.METRIC_PUT_CALL_VOLUME,
+        )
+        profile["put_call_oi_baseline"] = ratio_baselines.trailing_baseline(
+            ticker, ratio_baselines.METRIC_PUT_CALL_OI,
+        )
     else:
         field_state["put_call"] = LiveDataState.UNAVAILABLE.value
         profile["put_call_unavailable_reason"] = (
@@ -1835,6 +1879,8 @@ def _profile_for_ticker(
                 profile[f] = live[f]
                 field_state[f] = LiveDataState.LIVE.value
 
+    _overlay_wacc(profile, field_state)
+
     # CR221 A1/A3 — debt structure, from the EDGAR store rather than yfinance;
     # A2/D1/D2 — the filing's own columns; I1 — 8-K Item 5.02 text.
     # Attempted exactly when the fundamentals overlay above was attempted, so a
@@ -1881,9 +1927,9 @@ def _profile_for_ticker(
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout
         # computed from real yfinance OHLCV — one coherent block, so one
         # state covers all of it (unlike fundamentals, yfinance can't
-        # return "RSI but not trend"). MACD/moving-average-crossover/
-        # Bollinger Bands are deliberately not computed (see
-        # technicals.py) — the prompt no longer claims them.
+        # return "RSI but not trend"). MACD and Bollinger bands ride the
+        # same block since CR253 lane A; a moving-average-crossover SIGNAL
+        # remains uncomputed (see technicals.py).
         #
         # CR098 — Market withheld (roster pull-back): skip the fetch (bank
         # the yfinance OHLCV pull, scope item 4). `_format_profile` reads
@@ -1922,6 +1968,16 @@ def _profile_for_ticker(
                 # render side (`_format_profile`) narrows WHO sees it, this
                 # line only carries the value into the profile at all.
                 profile["atr14"] = technicals.atr14
+                # CR253 lane A — Bollinger bands + MACD, the breadth the
+                # Market Analyst's lane claimed without data. Same single
+                # technicals state: they are computed from the same closes
+                # as the range/trend block above them.
+                profile["bollinger_upper"] = technicals.bollinger_upper
+                profile["bollinger_lower"] = technicals.bollinger_lower
+                profile["bollinger_width_pct"] = technicals.bollinger_width_pct
+                profile["macd_line"] = technicals.macd_line
+                profile["macd_signal"] = technicals.macd_signal
+                profile["macd_histogram"] = technicals.macd_histogram
                 field_state["technicals"] = LiveDataState.LIVE.value
             else:
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value
@@ -2064,6 +2120,36 @@ def _profile_for_ticker(
         community_lines = format_subreddit_split(sentiment)
         if community_lines:
             profile["subreddit_split"] = list(community_lines)
+        # CR253 lane B(a) — persist today's reads and attach the trailing
+        # baselines, so "is this sentiment/mention level extreme?" is judged
+        # against this ticker's own history rather than the agent's memory.
+        # Store failures are loud inside ratio_baselines and never reach here.
+        ratio_baselines.record_observation(
+            ticker, ratio_baselines.METRIC_SENTIMENT_SCORE, sentiment.sentiment_score,
+        )
+        ratio_baselines.record_observation(
+            ticker, ratio_baselines.METRIC_MENTION_VOLUME, float(sentiment.mentions),
+        )
+        _score_base = ratio_baselines.trailing_baseline(
+            ticker, ratio_baselines.METRIC_SENTIMENT_SCORE,
+        )
+        _mention_base = ratio_baselines.trailing_baseline(
+            ticker, ratio_baselines.METRIC_MENTION_VOLUME,
+        )
+        _clauses = [
+            c for c in (
+                ratio_baselines.comparison_clause(
+                    "sentiment score", sentiment.sentiment_score, _score_base,
+                ),
+                ratio_baselines.comparison_clause(
+                    "mention volume", float(sentiment.mentions), _mention_base,
+                    decimals=0, signed=False,
+                ),
+            ) if c
+        ]
+        profile["social_baselines"] = (
+            "; ".join(_clauses) if _clauses else ratio_baselines.no_baseline_clause()
+        )
     field_state["social"] = sf.state.value
 
     # Derive narrative strings (the `_TEMPLATES` scripted-demo fallback used
@@ -8387,6 +8473,100 @@ async def _attempt_trader_geometry_repair(
     return verified, sig, env
 
 
+async def _attempt_envelope_repair(
+    *,
+    gateway: LLMGateway,
+    system_prompt: str,
+    messages: list[ChatMessage],
+    tier: Any,
+    locale: str,
+    user_id: UUID | None,
+    agent_id: AgentId,
+    ticker: str,
+    max_tokens: int,
+    timeout_s: float,
+    profile: dict[str, Any],
+) -> tuple[str, "_StanceEnvelope"] | None:
+    """CR253 — regenerate a live prose turn ONCE when it produced no parseable
+    stance envelope, same provider/tier/constraint as the original call (the
+    CR249 trader-repair / room_pm_reformat precedent). A null stance is a
+    supported outcome — the comb's gutter renders it — but a LIVE turn that
+    says nothing machine-readable wastes the envelope channel the prompt
+    names, so the turn earns one bounded re-ask that names the omission.
+
+    Returns the re-stripped prose and the retry's envelope; every None path
+    (call error, stream error, empty reply, retry still envelope-less) leaves
+    exactly the pre-CR253 state in place: the original prose, an empty
+    envelope, and `envelope_parsed` False downstream. Audited under its OWN
+    flow (`room_envelope_repair`) — the scoring gate counts prose agents
+    exactly once per run on the base "room" flow, so a new flow name is safe
+    by construction (the room_trader_repair precedent).
+    """
+    repair_note = (
+        "[AMI fact-check] Your response did not open with the required "
+        "stance envelope, so none of what you said could be recorded in the "
+        "machine channel. Re-issue the SAME analysis with everything "
+        "unchanged except that the response OPENS with the envelope line in "
+        "the exact shape your instructions specify: "
+        "[STANCE: for|against|neutral | CONVICTION: low|medium|high | "
+        "HEADLINE: <short headline>] — the envelope first, the analysis "
+        "after it. Change nothing else about the analysis."
+    )
+    meta: dict[str, Any] = {}
+    try:
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=[*messages, ChatMessage(role="user", content=repair_note)],
+                model_tier=tier,
+                locale=locale,
+                max_tokens=max_tokens,
+                audit_user_id=user_id,
+                audit_agent_id=agent_id.value,
+                audit_flow="room_envelope_repair",
+                meta=meta,
+                constraint=_agent_constraint(agent_id, ticker),
+            )),
+            timeout=timeout_s,
+        )
+    except Exception as exc:
+        logger.warning(
+            "room_envelope_repair_failed",
+            agent_id=agent_id.value, reason="call_error",
+            error=(str(exc) or repr(exc))[:200],
+        )
+        return None
+    if meta.get("stream_error"):
+        logger.warning(
+            "room_envelope_repair_failed", agent_id=agent_id.value, reason="stream_error",
+        )
+        return None
+    repaired = "".join(chunks).strip()
+    if not repaired:
+        logger.warning(
+            "room_envelope_repair_failed", agent_id=agent_id.value, reason="empty",
+        )
+        return None
+    stripped, env = parse_stance_envelope(repaired)
+    if stripped == repaired:
+        # Byte-identical return means the locator found nothing shaped like
+        # an envelope — the same signal `_compute_agent_text` uses (CR219 R57).
+        logger.warning(
+            "room_envelope_repair_failed", agent_id=agent_id.value, reason="still_no_envelope",
+        )
+        return None
+    # The retry's HEADLINE gets the same sheet-figure check the original
+    # envelope got (CR219 R59-F3): an unverifiable assertion loses its
+    # qualifier, never a cut or annotated claim.
+    if env.headline and find_sheet_mismatches(env.headline, profile):
+        env = _dataclass_replace(env, headline=None)
+    stripped = stripped.strip()
+    if stripped:
+        stripped = _mark_if_truncated(stripped, agent_id=agent_id, meta=meta)
+    logger.info("room_envelope_repaired", agent_id=agent_id.value)
+    return stripped, env
+
+
 async def _typewriter(
     run_id: UUID,
     agent_id: AgentId,
@@ -8588,6 +8768,32 @@ async def _compute_agent_text(
             # unverifiable), same as every other call site in this module.
             if envelope.headline and find_sheet_mismatches(envelope.headline, profile):
                 envelope = _dataclass_replace(envelope, headline=None)
+            # CR253 — envelope-presence re-ask: a live prose turn that
+            # produced NO parseable envelope gets ONE regeneration naming the
+            # omission (the CR249 repair precedent: same gateway/tier/timeout,
+            # its own audit flow, failure changes nothing). Skipped when the
+            # turn already fell back to the scripted template (empty stream,
+            # stream error): re-asking a provider that just failed is a retry
+            # of a failed call, not a content repair, and the scripted
+            # contribution is already the honest state.
+            _repaired_env: tuple[str, _StanceEnvelope] | None = None
+            if not envelope_parsed and agent_id not in ctx.scripted_turns:
+                _repaired_env = await _attempt_envelope_repair(
+                    gateway=gateway,
+                    system_prompt=system_prompt,
+                    messages=messages,
+                    tier=tier,
+                    locale=ctx.mandate.locale,
+                    user_id=ctx.user_id,
+                    agent_id=agent_id,
+                    ticker=ctx.ticker,
+                    max_tokens=max_tokens_for(agent_id),
+                    timeout_s=agent_timeout_s,
+                    profile=profile,
+                )
+                if _repaired_env is not None:
+                    text, envelope = _repaired_env
+                    envelope_parsed = True
             # CR219 R53 — the four analysts only, same set `_GAPS_FORMAT` was
             # appended to (room_prompts.py). Parsed off the STANCE-stripped
             # text so a leaked machine channel never appears inside a gap
@@ -8602,7 +8808,12 @@ async def _compute_agent_text(
             # an empty stream two lines up, rather than a blank contribution.
             # The stance itself parsed and is kept — it is what the agent said.
             text = text or _fall_back_to_script("envelope_only_no_prose")
-            text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
+            if _repaired_env is None:
+                # The truncation mark asserts the ORIGINAL call's stop reason;
+                # a successful envelope repair replaced `text` with retry
+                # prose the repair already marked with the RETRY's own meta,
+                # so the original meta must not annotate text it never saw.
+                text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
         except asyncio.TimeoutError:
             logger.warning(
                 "room_agent_timeout",
