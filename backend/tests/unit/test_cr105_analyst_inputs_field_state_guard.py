@@ -185,7 +185,13 @@ _CLAIMED_REAL_INPUTS = [
 # The negative claims — each must remain present verbatim, or the prompt has
 # silently reopened the exact capability-drift class DEF129 was.
 _NEGATIVE_CLAIMS = [
-    ("market_analyst", "No MACD, moving-average crossover signal, or Bollinger Bands are"),
+    # CR253 lane A (2026-10-08): Bollinger Bands and MACD now SHIP, so the old
+    # "No MACD, moving-average crossover signal, or Bollinger Bands are
+    # computed" claim became false and was retired from the persona. The
+    # surviving negative claim — no crossover SIGNAL is computed (the EMAs
+    # exist, a system cross does not) — keeps the vacuity guard honest. The
+    # R7/R12 availability-guard entries carry the same retirement note.
+    ("market_analyst", "No moving-average crossover signal is computed anywhere in this app"),
     ("social_media_analyst", "No Twitter/X, StockTwits, Google Trends, or Discord access exists"),
 ]
 
