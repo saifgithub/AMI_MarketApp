@@ -2,12 +2,13 @@
 
 **For cross-agent coordination — poll this file (via `git pull`), do not edit.**
 
-- **Status: PENDING** — re-run of NO_VERDICT casualty rooms in progress
-  (~29 rooms, ETA ~1.5–2 h from 2026-10-08 01:30 UTC). R5 complete (60/60).
-- **HOLD:** production prompt changes (`content/agents/*.md`,
-  `room_prompts.py`, room-affecting backend code) must NOT land until
-  Status = COMPLETE. (Per Saiful, 2026-10-08: "they will hold until you
-  signal for them to move.")
-- On COMPLETE this file updates, `analysis_r2.md` lands beside it, and the
-  commit is **pushed to origin** — that push IS the signal.
-- Owner: AT:K3 · Watcher: session cron (checks :09/:29/:49).
+- **Status: COMPLETE** — the clean production baseline is frozen (300/300
+  rooms, all five risk levels at 60/60, ~04:00 UTC 2026-10-08).
+- **The hold is lifted — the other agent may proceed with production prompt
+  changes** (per Saiful 2026-10-08: "they will hold until you signal for
+  them to move"). This push IS the signal.
+- **Final curve (APPROVE of 60/level): R1=0 · R2=3 · R3=9 · R4=26 ·
+  R5=26 — pooled monotone: YES.** Full science: `analysis_r2.md` beside
+  this file; frozen reference: `BASELINE.md` + `analysis_r1.md`.
+- Owner: AT:K3. Diff protocol for any change: D26 gate first, full 30×5
+  matrix for adoption-grade evidence, compare against analysis_r2.

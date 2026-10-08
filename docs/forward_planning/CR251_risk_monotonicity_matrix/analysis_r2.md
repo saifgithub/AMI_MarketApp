@@ -6,34 +6,34 @@ APPROVE counts per ticker across risk levels 1–5 (n=2 reps each):
 |---|---|---|---|---|---|---|---|
 | AAPL | 0 | 0 | 1 | 2 | 2 | ✓ | 0.69 |
 | APD | 0 | 0 | 1 | 0 | 0 | ✗ | 0.77 |
-| BA | 0 | 0 | 0 | 0 | 0 | ✓ | 0.69 |
+| BA | 0 | 0 | 0 | 0 | 0 | ✓ | 0.72 |
 | BAC | 0 | 0 | 0 | 1 | 1 | ✓ | 0.72 |
-| BGS | 0 | 0 | 0 | 0 | 0 | ✓ | 0.76 |
-| CAG | 0 | 0 | 0 | 0 | 2 | ✓ | 0.78 |
-| DE | 0 | 0 | 0 | 1 | 1 | ✓ | 0.78 |
-| DHR | 0 | 0 | 0 | 1 | 1 | ✓ | 0.78 |
-| FCEL | 0 | 0 | 0 | 0 | 1 | ✓ | 0.80 |
-| JPM | 0 | 1 | 0 | 0 | 1 | ✗ | 0.68 |
-| LEVI | 0 | 1 | 0 | 1 | 0 | ✗ | 0.87 |
-| MA | 0 | 1 | 0 | 2 | 2 | ✗ | 0.65 |
+| BGS | 0 | 0 | 0 | 0 | 0 | ✓ | 0.77 |
+| CAG | 0 | 0 | 0 | 0 | 2 | ✓ | 0.77 |
+| DE | 0 | 0 | 0 | 1 | 1 | ✓ | 0.76 |
+| DHR | 0 | 0 | 0 | 1 | 1 | ✓ | 0.81 |
+| FCEL | 0 | 0 | 0 | 0 | 1 | ✓ | 0.82 |
+| JPM | 0 | 1 | 1 | 2 | 1 | ✗ | 0.65 |
+| LEVI | 0 | 1 | 2 | 1 | 0 | ✗ | 0.86 |
+| MA | 0 | 1 | 2 | 2 | 2 | ✓ | 0.64 |
 | MO | 0 | 0 | 1 | 1 | 2 | ✓ | 0.68 |
-| NKE | 0 | 0 | 1 | 1 | 0 | ✗ | 0.69 |
-| PLD | 0 | 0 | 0 | 2 | 1 | ✗ | 0.72 |
-| PYPL | 0 | 0 | 0 | 2 | 1 | ✗ | 0.80 |
-| RIOT | 0 | 0 | 0 | 0 | 0 | ✓ | 0.81 |
+| NKE | 0 | 0 | 1 | 1 | 0 | ✗ | 0.68 |
+| PLD | 0 | 0 | 0 | 2 | 1 | ✗ | 0.73 |
+| PYPL | 0 | 0 | 0 | 2 | 1 | ✗ | 0.81 |
+| RIOT | 0 | 0 | 0 | 0 | 0 | ✓ | 0.79 |
 | RIVN | 0 | 0 | 0 | 0 | 0 | ✓ | 0.74 |
-| SEDG | 0 | 0 | 0 | 1 | 0 | ✗ | 0.83 |
+| SEDG | 0 | 0 | 0 | 1 | 0 | ✗ | 0.80 |
 | SLB | 0 | 0 | 0 | 1 | 1 | ✓ | 0.77 |
-| SNAP | 0 | 0 | 0 | 1 | 2 | ✓ | 0.75 |
+| SNAP | 0 | 0 | 0 | 1 | 2 | ✓ | 0.74 |
 | SO | 0 | 0 | 0 | 0 | 2 | ✓ | 0.75 |
-| SPCE | 0 | 0 | 0 | 0 | 0 | ✓ | 0.75 |
+| SPCE | 0 | 0 | 0 | 0 | 0 | ✓ | 0.74 |
 | T | 0 | 0 | 0 | 2 | 2 | ✓ | 0.78 |
-| TMO | 0 | 0 | 0 | 2 | 1 | ✗ | 0.69 |
+| TMO | 0 | 0 | 0 | 2 | 1 | ✗ | 0.75 |
 | V | 0 | 0 | 0 | 2 | 2 | ✓ | 0.73 |
-| WFC | 0 | 0 | 0 | 0 | 1 | ✓ | 0.74 |
-| WU | 0 | 0 | 0 | 0 | 0 | ✓ | 0.78 |
-| XPEV | 0 | 0 | 0 | 0 | 0 | ✓ | 0.75 |
-| XRX | 0 | 0 | 0 | 1 | 0 | ✗ | 0.73 |
+| WFC | 0 | 0 | 0 | 0 | 1 | ✓ | 0.75 |
+| WU | 0 | 0 | 0 | 0 | 0 | ✓ | 0.77 |
+| XPEV | 0 | 0 | 0 | 0 | 0 | ✓ | 0.76 |
+| XRX | 0 | 0 | 0 | 1 | 0 | ✗ | 0.76 |
 
 ## Pooled APPROVE counts (of 60 convenes per level)
 
@@ -41,8 +41,8 @@ APPROVE counts per ticker across risk levels 1–5 (n=2 reps each):
 |---|---|
 | R1 | 0 |
 | R2 | 3 |
-| R3 | 4 |
-| R4 | 24 |
+| R3 | 9 |
+| R4 | 26 |
 | R5 | 26 |
 
 Pooled monotonic: YES
@@ -51,9 +51,9 @@ Pooled monotonic: YES
 
 | Risk | APPROVE rooms (n, mean) | PASS rooms (n, mean) | Δ |
 |---|---|---|---|
-| R2 | 6, 0.68 | 54, 0.76 | -0.07 |
-| R3 | 8, 0.74 | 52, 0.75 | -0.01 |
-| R4 | 34, 0.74 | 26, 0.74 | -0.01 |
+| R2 | 6, 0.69 | 54, 0.75 | -0.06 |
+| R3 | 14, 0.72 | 46, 0.77 | -0.04 |
+| R4 | 36, 0.74 | 24, 0.76 | -0.02 |
 | R5 | 36, 0.71 | 24, 0.74 | -0.03 |
 
 ## Risk-bar curve (min evidence score among APPROVEs)
@@ -61,23 +61,22 @@ Pooled monotonic: YES
 | Risk | min support of an approving room |
 |---|---|
 | R1 | — |
-| R2 | 0.5909090909090909 |
-| R3 | 0.6363636363636364 |
+| R2 | 0.6363636363636364 |
+| R3 | 0.5909090909090909 |
 | R4 | 0.5454545454545454 |
 | R5 | 0.5555555555555556 |
 
 ## Stability across the 2 repeats
 
-- comparable cells: 131
-- verdict flips: 26 (20%)
-- Jev room-score flips (>0.10): 41 (31%)
+- comparable cells: 150
+- verdict flips: 29 (19%)
+- Jev room-score flips (>0.10): 52 (35%)
 
 ## Monotonicity violations — decomposition
 
 - **APD** counts [0, 0, 1, 0, 0] → **decision-limited (support present, verdict curve still breaks)**
-- **JPM** counts [0, 1, 0, 0, 1] → **decision-limited (support present, verdict curve still breaks)**
-- **LEVI** counts [0, 1, 0, 1, 0] → **decision-limited (support present, verdict curve still breaks)**
-- **MA** counts [0, 1, 0, 2, 2] → **decision-limited (support present, verdict curve still breaks)**
+- **JPM** counts [0, 1, 1, 2, 1] → **decision-limited (support present, verdict curve still breaks)**
+- **LEVI** counts [0, 1, 2, 1, 0] → **decision-limited (support present, verdict curve still breaks)**
 - **NKE** counts [0, 0, 1, 1, 0] → **decision-limited (support present, verdict curve still breaks)**
 - **PLD** counts [0, 0, 0, 2, 1] → **decision-limited (support present, verdict curve still breaks)**
 - **PYPL** counts [0, 0, 0, 2, 1] → **decision-limited (support present, verdict curve still breaks)**
@@ -89,14 +88,14 @@ Pooled monotonic: YES
 
 | Agent | mean support | n |
 |---|---|---|
-| aggressive_debator | 0.49 | 291 |
-| neutral_debator | 0.57 | 259 |
-| bull_researcher | 0.62 | 286 |
-| bear_researcher | 0.74 | 294 |
-| conservative_debator | 0.74 | 282 |
-| news_analyst | 0.77 | 267 |
-| social_media_analyst | 0.78 | 264 |
-| fundamentals_analyst | 0.79 | 273 |
-| research_manager | 0.90 | 294 |
-| market_analyst | 0.90 | 270 |
-| trader | 0.92 | 295 |
+| aggressive_debator | 0.50 | 286 |
+| neutral_debator | 0.58 | 265 |
+| bull_researcher | 0.60 | 283 |
+| conservative_debator | 0.73 | 280 |
+| bear_researcher | 0.74 | 289 |
+| news_analyst | 0.77 | 271 |
+| fundamentals_analyst | 0.80 | 276 |
+| social_media_analyst | 0.80 | 272 |
+| research_manager | 0.90 | 289 |
+| market_analyst | 0.90 | 274 |
+| trader | 0.92 | 293 |
