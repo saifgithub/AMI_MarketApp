@@ -1,0 +1,10 @@
+# cr252-adapted-aapl — single-room smoke of the ADAPTED CFA section
+# (production_section.md, parallel-agent conversion) on AAPL, R3, vLLM.
+# Variant cr252-adapted = production persona + adapted section, all 12 agents.
+name: cr252-adapted-aapl
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 3 }
+repeats: 1
+prompt_variant: cr252-adapted
+concurrency_by_provider: { vllm: 2, deepinfra: 2, kimi: 1 }
