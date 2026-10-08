@@ -29,7 +29,7 @@ JEV_KEY="$(grep '^JEV_API_KEY=' "$REPO_ROOT/.env" | cut -d= -f2- | tr -d '"'"'")
 ssh melehost-ts 'bash -s' <<REMOTE
 set -euo pipefail
 cd ~/ami_trade
-mkdir -p ~/cr251_v2
+mkdir -p ~/cr251_v2 && chmod -R a+rwx ~/cr251_v2
 # Backend reachability preflight (LAN path, not the relay).
 curl -sf -m 5 http://192.168.20.74:8000/v1/models >/dev/null || { echo "vLLM unreachable on LAN"; exit 1; }
 PGPW=\$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)

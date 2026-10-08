@@ -21,7 +21,7 @@ JEV_KEY="$(grep '^JEV_API_KEY=' "$REPO_ROOT/.env" | cut -d= -f2- | tr -d '"'"'")
 ssh melehost-ts 'bash -s' <<REMOTE
 set -euo pipefail
 cd ~/ami_trade
-mkdir -p ~/cr251_v2_dsv4
+mkdir -p ~/cr251_v2_dsv4 && chmod -R a+rwx ~/cr251_v2_dsv4
 # Backend reachability preflight over Tailscale (alpha-spark, not the LAN box).
 curl -sf -m 8 http://100.94.223.38:8003/v1/models >/dev/null || { echo "dsv4 unreachable"; exit 1; }
 PGPW=\$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
