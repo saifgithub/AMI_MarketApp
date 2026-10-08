@@ -1,0 +1,11 @@
+# cr252-post-gate — AFTER arm of the CR252 production fold-in (Saiful:
+# adopt the CFA checklist into production). Runs whatever production
+# personas are at run time (post-fold-in = heuristics ON). Pair with
+# cr252-pre252-gate (frozen heuristics-OFF variant) for the diff.
+name: cr252-post-gate
+provider: vllm
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }

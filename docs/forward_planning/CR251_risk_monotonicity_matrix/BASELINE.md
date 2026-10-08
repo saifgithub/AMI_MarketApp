@@ -11,8 +11,11 @@ re-run after NO_VERDICT infrastructure casualties — see analysis_r2).
 
 ## The canonical numbers (first pass, committed as analysis_r1.md)
 
-Pooled APPROVE counts: **R1=0, R2=3, R3=4, R4=24, R5=13** (of 60/level;
-R5 denominator maimed by 25 infrastructure NO_VERDICTs). Key findings:
+Pooled APPROVE counts, first pass: R1=0, R2=3, R3=4, R4=24, R5=13 (R5
+maimed by 25 infrastructure NO_VERDICTs). **CORRECTED (analysis_r2, R5
+re-run to full 60): R1=0, R2=3, R3=4, R4=24, R5=26 — MONOTONE: TRUE**
+at the pooled level; per-ticker violations 15→10. The R4→R5 dip was a
+denominator artifact, not system behavior. Key findings:
 
 1. Risk knob moves approvals 0%→43% but as an R3→R4 cliff, not a ramp.
 2. **Zero evidence discrimination** — mean Jev support of APPROVE rooms

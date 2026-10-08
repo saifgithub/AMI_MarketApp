@@ -1,0 +1,10 @@
+# cr252-pre252-gate — BEFORE arm: the frozen heuristics-OFF production
+# personas (benchmarks/baseline-pre252), preserving BASELINE.md diff
+# capability after the CR252 fold-in changes content/agents.
+name: cr252-pre252-gate
+provider: vllm
+tickers: [AAPL, V]
+mandate: { risk_score: 3 }
+repeats: 2
+prompt_variant: baseline-pre252
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
