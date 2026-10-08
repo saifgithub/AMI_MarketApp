@@ -21,13 +21,18 @@ first baseline with recorded rationale, never tweaked silently.
 
 Gate checks: `gate_report` is the CR247 D26 phase gate (Saiful 2026-09-29) —
 per-convene FAIL-LOUDLY verification that every expected agent call exists,
-every prose turn carries its STANCE envelope, every portfolio_manager draw
-parses as JSON, and no turn sits at the token ceiling. It takes a
-dependency-injected audit module (anything with `list_calls`/`get_field`,
-optionally `call_metrics`) so this module stays importable without audit_db,
-and inclusive `after`/`before` created_at window bounds because deterministic
-per-arm user_ids mean a killed-then-resumed arm shares one user_id across the
-partial and the completed convene.
+every prose turn's OPERATIVE text (the newest of its base + repair-flow rows —
+a successful envelope repair replaced the base turn) carries its STANCE
+envelope, every portfolio_manager draw parses as JSON, and no turn sits at
+the token ceiling. Call-shape totals are flow-aware (CR253): the 16..18 bound
+applies to base flows only and bounded repair/recovery flows
+(room_trader_repair, room_envelope_repair, room_pm_reformat,
+room_veto_review, room_resurrection_review) are counted separately against
+their own cap. It takes a dependency-injected audit module (anything with
+`list_calls`/`get_field`, optionally `call_metrics`) so this module stays
+importable without audit_db, and inclusive `after`/`before` created_at window
+bounds because deterministic per-arm user_ids mean a killed-then-resumed arm
+shares one user_id across the partial and the completed convene.
 """
 
 from __future__ import annotations
@@ -65,8 +70,12 @@ _CONVICTION_CHAIN: tuple[tuple[str, tuple[str, ...]], ...] = (
 _CONVICTION_FIELDS = ("stance", "conviction")
 
 # The convene's expected call shape (CR247 D26, 2026-09-29): the 11 prose
-# agents exactly once each, plus MIN_PM_DRAWS portfolio_manager draws (a 6th
-# PM row is the recovery reformat draw, legitimate) — 16..18 rows total.
+# agents exactly once each on the base flow, plus MIN_PM_DRAWS
+# portfolio_manager draws — 16..18 base rows total (a 6th base PM row is the
+# recovery draw, legitimate). Repair/recovery calls (CR249 trader geometry,
+# CR253 envelope re-ask, the room_pm_reformat precedent, verdict review,
+# resurrection) are audited under their OWN flows and counted separately
+# against MAX_REPAIR_FLOW_CALLS — they never count against the base shape.
 EXPECTED_PROSE_AGENTS: tuple[str, ...] = (
     "fundamentals_analyst",
     "market_analyst",
@@ -83,6 +92,23 @@ EXPECTED_PROSE_AGENTS: tuple[str, ...] = (
 PM_AGENT = "portfolio_manager"
 MIN_PM_DRAWS = 5
 TOTAL_CALLS_RANGE = (16, 18)
+
+# Flow buckets (CR253 gate fix): base flows carry the convene's expected
+# shape; repair/recovery flows are bounded extras under their own names.
+# Rows without a flow attribute (duck-typed test fakes, pre-flow audit rows)
+# default to "room" and stay in the base bucket, the CR249 precedent.
+_BASE_FLOWS = ("room", "room_pm")
+_REPAIR_FLOWS = (
+    "room_trader_repair",        # CR249 trader geometry repair
+    "room_envelope_repair",      # CR253 envelope-presence re-ask
+    "room_pm_reformat",          # DEF058/DEF067 PM JSON reformat retry
+    "room_veto_review",          # CR247 Phase 4 verdict review
+    "room_resurrection_review",  # post-resurrection verdict review
+)
+# Generous cap on COMBINED repair/recovery rows: a healthy convene needs at
+# most a handful (the post-CR252 V arm measured 3). Beyond the cap something
+# is looping, and the finding names each flow's count.
+MAX_REPAIR_FLOW_CALLS = 6
 
 
 @dataclass(frozen=True)
@@ -518,18 +544,28 @@ def gate_report(
     so a real TypeError inside a helper still surfaces.
 
     FAIL-LOUDLY checks:
-    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each (base "room" flow;
-       bounded repair/retry calls under their own flows — room_trader_repair,
-       the room_pm_reformat precedent — never count against the once-each
-       contract) and >= MIN_PM_DRAWS
-       portfolio_manager draws; a missing agent is MISSING_CALL, a duplicated
-       prose agent (or a PM draw count below the floor) and a total row count
-       outside TOTAL_CALLS_RANGE are UNEXPECTED_CALL_COUNT (a 6th PM row is
-       the recovery reformat draw and is legitimate).
-    2. Each prose agent's response_text: empty/None -> EMPTY_RESPONSE; else
-       extract_decision must find a decision token -> else MISSING_STANCE.
-       The stance summary is "<STANCE>|<CONVICTION>" when both envelope tags
-       parse, else the extracted token verbatim.
+    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each on the base "room"
+       flow, plus >= MIN_PM_DRAWS portfolio_manager draws; a missing agent
+       is MISSING_CALL, a duplicated prose agent is UNEXPECTED_CALL_COUNT.
+       Row-count totals are FLOW-AWARE (CR253): the 16..18 bound applies to
+       BASE-flow rows only ('room'/'room_pm' — 11 prose + the PM draws), and
+       repair/recovery rows (room_trader_repair, room_envelope_repair,
+       room_pm_reformat, room_veto_review, room_resurrection_review) are
+       counted separately against MAX_REPAIR_FLOW_CALLS, with each flow's
+       count in the finding detail when the cap breaks. A trader geometry
+       repair plus envelope repairs therefore cannot fail a healthy convene
+       on arithmetic that predates the repair flows.
+    2. Each prose agent's operative turn: the NEWEST of its base + repair
+       flow rows, because that is the text that entered the transcript — a
+       successful envelope repair (CR253) replaced the base turn, so a base
+       call with no envelope plus a successful repair must NOT flag
+       MISSING_STANCE (the room did the right thing; this check exists to
+       catch the room NOT doing it). When the newest row yields no decision
+       token (a failed repair), older operative rows are tried — the
+       transcript then carries the newest turn the room could actually use.
+       Empty/None -> EMPTY_RESPONSE; no decision token anywhere ->
+       MISSING_STANCE. The stance summary is "<STANCE>|<CONVICTION>" when
+       both envelope tags parse, else the extracted token verbatim.
     3. Each PM draw's response_text must carry a parseable JSON object with
        an "action" key (extract_decision with json_key="action") -> else
        PM_JSON_UNPARSEABLE; per-draw actions join into
@@ -543,11 +579,12 @@ def gate_report(
     5. ok = no findings of any kind.
 
     audit_module is dependency-injected: anything with
-    list_calls(user_id) -> list of rows with .agent_id, and
-    get_field(user_id, agent_id, field, *, after=None, before=None, nth=None).
-    NoRowsError/AmbiguousQueryError are resolved by attribute name from the
-    injected module; NoRowsError becomes MISSING_CALL/EMPTY_RESPONSE and
-    AmbiguousQueryError on a prose agent becomes UNEXPECTED_CALL_COUNT.
+    list_calls(user_id) -> list of rows with .agent_id/.flow/.created_at in
+    created_at order, and get_field(user_id, agent_id, field, *,
+    after=None, before=None, nth=None). NoRowsError/AmbiguousQueryError are
+    resolved by attribute name from the injected module; NoRowsError becomes
+    MISSING_CALL/EMPTY_RESPONSE and AmbiguousQueryError on a prose agent
+    becomes UNEXPECTED_CALL_COUNT.
     """
     no_rows_exc, ambiguous_exc = _audit_exceptions(audit_module)
     handled = (no_rows_exc,) if ambiguous_exc is None else (no_rows_exc, ambiguous_exc)
@@ -568,6 +605,11 @@ def gate_report(
                 kwargs = {**kwargs, **window}
         return fn(*args, **kwargs)
 
+    def flow_of(row) -> str:
+        # Missing attribute (duck-typed fakes) or empty value (a legacy row
+        # written before the flow column carried names) is a base call.
+        return getattr(row, "flow", None) or "room"
+
     findings: list[GateFinding] = []
     stances: dict[str, str] = {}
 
@@ -579,20 +621,40 @@ def gate_report(
     # a flow attribute (duck-typed test fakes) default to "room" and keep the
     # pre-CR249 behavior.
     base_flow_counts = Counter(
-        r.agent_id for r in calls if getattr(r, "flow", "room") == "room"
+        r.agent_id for r in calls if flow_of(r) == "room"
     )
 
+    # Flow-aware totals (CR253): the convene-shape bound applies to base
+    # flows only; repair/recovery flows get their own generous cap with
+    # per-flow detail, so a legitimate repair era cannot fail the arithmetic.
+    base_total = sum(1 for r in calls if flow_of(r) in _BASE_FLOWS)
+    repair_rows = [r for r in calls if flow_of(r) in _REPAIR_FLOWS]
     lo, hi = TOTAL_CALLS_RANGE
-    if not lo <= len(calls) <= hi:
+    if not lo <= base_total <= hi:
         findings.append(GateFinding(
             user_id=user_id,
             agent_id="*",
             kind="UNEXPECTED_CALL_COUNT",
             detail=(
-                f"{len(calls)} llm_audit rows for this user_id; one convene "
-                f"is {lo}..{hi} (11 prose agents + {MIN_PM_DRAWS} PM draws, "
-                f"+1 reformat / +1 recovery draw) — this user_id may span "
-                f"multiple convenes or the convene died mid-run"
+                f"{base_total} base-flow ('room'/'room_pm') llm_audit rows "
+                f"for this user_id; one convene is {lo}..{hi} (11 prose "
+                f"agents + {MIN_PM_DRAWS} PM draws, +1 recovery draw) — this "
+                f"user_id may span multiple convenes or the convene died "
+                f"mid-run"
+            ),
+        ))
+    if len(repair_rows) > MAX_REPAIR_FLOW_CALLS:
+        by_flow = Counter(flow_of(r) for r in repair_rows)
+        findings.append(GateFinding(
+            user_id=user_id,
+            agent_id="*",
+            kind="UNEXPECTED_CALL_COUNT",
+            detail=(
+                f"{len(repair_rows)} repair/recovery rows exceed the cap of "
+                f"{MAX_REPAIR_FLOW_CALLS}: "
+                + ", ".join(f"{f}={n}" for f, n in sorted(by_flow.items()))
+                + " — a healthy convene needs at most a handful of bounded "
+                "repairs; this looks like a loop"
             ),
         ))
 
@@ -625,35 +687,51 @@ def gate_report(
                 detail="no llm_audit rows for this agent in the convene",
             ))
             continue
-        nth = None
         if n > 1:
             findings.append(GateFinding(
                 user_id=user_id, agent_id=agent, kind="UNEXPECTED_CALL_COUNT",
-                detail=f"{n} rows for a prose agent that must run exactly "
-                       f"once; auditing nth=0",
+                detail=f"{n} base-flow rows for a prose agent that must run "
+                       f"exactly once; auditing the newest",
             ))
-            nth = 0
-        elif counts.get(agent, 0) > 1:
-            # CR249: exactly one BASE call but extra rows under repair flows
-            # (room_trader_repair). nth=None would raise ambiguous against
-            # those; nth=0 is the base call — repairs sort after it.
-            nth = 0
-        text = fetch(agent, nth)
+        # CR253: audit the OPERATIVE turn — the newest of the agent's base +
+        # repair-flow rows — because that is the text that entered the
+        # transcript. A successful envelope repair (room_envelope_repair)
+        # replaced the base turn, so a base call with no envelope plus a
+        # successful repair must NOT flag MISSING_STANCE: the room did the
+        # right thing, and this check exists to catch the room NOT doing it.
+        # When the newest row yields no decision token (a failed repair), fall
+        # back to older operative rows — the transcript then carries the
+        # newest turn the room could actually use. `calls` is in created_at
+        # order, so the index within the agent's rows IS get_field's nth.
+        agent_rows = [r for r in calls if r.agent_id == agent]
+        operative = [
+            i for i, r in enumerate(agent_rows)
+            if flow_of(r) in _BASE_FLOWS + _REPAIR_FLOWS
+        ]
+        texts: list[str | None] = [fetch(agent, i) for i in reversed(operative)]
+        text = next(
+            (t for t in texts if t is not None and extract_decision(t) is not None),
+            None,
+        )
         if text is None:
-            continue
-        if not text.strip():
-            findings.append(GateFinding(
-                user_id=user_id, agent_id=agent, kind="EMPTY_RESPONSE",
-                detail="response_text is empty (null-content completion)",
-            ))
-            continue
-        token = extract_decision(text)
-        if token is None:
-            findings.append(GateFinding(
-                user_id=user_id, agent_id=agent, kind="MISSING_STANCE",
-                detail="no [STANCE: ... | CONVICTION: ...] envelope and no "
-                       "Side: token parsed from response_text",
-            ))
+            # Nothing parseable anywhere: report against the newest operative
+            # row, the one that would have entered the transcript.
+            newest = texts[0] if texts else None
+            if newest is None:
+                continue  # fetch already recorded MISSING_CALL/EMPTY_RESPONSE
+            if not newest.strip():
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=agent, kind="EMPTY_RESPONSE",
+                    detail="operative response_text is empty (null-content completion)",
+                ))
+            else:
+                findings.append(GateFinding(
+                    user_id=user_id, agent_id=agent, kind="MISSING_STANCE",
+                    detail="no [STANCE: ... | CONVICTION: ...] envelope and no "
+                           "Side: token parsed from any operative row "
+                           f"({len(texts)} base/repair turn(s), newest first) "
+                           "— and no successful repair replaced the turn",
+                ))
             continue
         stance_m = _STANCE_PATTERN.search(text)
         conviction_m = _CONVICTION_PATTERN.search(text)
@@ -662,7 +740,7 @@ def gate_report(
                 f"{stance_m.group(1).strip()}|{conviction_m.group(1).strip()}"
             )
         else:
-            stances[agent] = token
+            stances[agent] = extract_decision(text)
 
     n_pm = counts.get(PM_AGENT, 0)
     if n_pm == 0:
