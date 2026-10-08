@@ -41,6 +41,8 @@ JEK_ENV() { docker compose run --rm --no-deps --entrypoint python \
   -e "VLLM_BASE_URL=http://192.168.20.74:8000" \
   -e USE_REAL_MARKET_DATA=true \
   -e "JEV_API_KEY=$JEV_KEY" \
+  -e ROOM_VETO_REVIEW_ENABLED=false \
+  -e ROOM_RESURRECTION_REVIEW_ENABLED=false \
   api-alpha "\$@"; }
 for R in 5 4 3 2 1; do
   echo "=== V2 MATRIX RISK LEVEL \$R \$(date -u +%H:%M:%S) ==="
