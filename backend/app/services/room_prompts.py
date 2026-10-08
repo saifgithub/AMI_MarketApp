@@ -2948,6 +2948,10 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                     profile.get("peer_comparison_median_net_margin"),
                     profile.get("peer_comparison_median_net_margin_n"),
                     profile.get("pe") if _is("pe", "live") else None,
+                    peer_group=(
+                        tuple(profile["peer_comparison_peer_group"])
+                        if profile.get("peer_comparison_peer_group") else None
+                    ),
                 )
                 if pc_line:
                     lines.append(pc_line)

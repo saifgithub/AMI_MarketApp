@@ -1026,10 +1026,12 @@ class Settings(BaseSettings):
     # from the SEC submissions JSON CR244 already reads; peer market caps and
     # multiples come from yfinance `.info`; the basket re-resolves at most
     # once per 7 days per ticker, lazily on convene. Live-only (no historical
-    # peer store); fewer than 3 verified same-SIC peers render the line not
-    # available with that reason — the SIC is never widened to make up the
-    # count. Gates the RENDER only, the overlay always populates. ON since
-    # 2026-09-29 (CR247 Phase 1C — unit suite + live AAPL render probe).
+    # peer store); fewer than 3 verified same-SIC peers first tries the D29
+    # disclosed peer group (`_PEER_GROUP_BY_SIC`, e.g. AAPL's 3571/3572
+    # computer-hardware group — pooled candidates still live-verified, the
+    # group basis named on the line) and only then renders not available with
+    # that reason. Gates the RENDER only, the overlay always populates. ON
+    # since 2026-09-29 (CR247 Phase 1C — unit suite + live AAPL render probe).
     room_peer_comparison_enabled: bool = True
 
     # CR247 Phase 1D — forensic metadata flags on the fact sheet (News/Macro

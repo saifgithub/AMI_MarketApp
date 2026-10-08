@@ -20,8 +20,17 @@ basket:
     `.info`, the same source the sheet's own `market_cap` comes from. No
     screener integration exists or is wanted: if the basket cannot be
     assembled from data in hand, the resolution is `None` with a reason
-    and the renderer states it (CR040), never a fabricated or widened
-    basket — the SIC is never fuzzy-matched to make up the count.
+    and the renderer states it (CR040), never a fabricated basket.
+
+    D29 (CR253) — the SIC screen is never fuzzy-matched to make up the
+    count, but a NARROW disclosed fallback now exists: when (and only
+    when) the strict same-SIC screen lands fewer than `_MIN_PEERS` verified
+    peers, a hand-maintained `_PEER_GROUP_BY_SIC` mapping may pool
+    candidates across a small set of sibling SICs — each candidate still
+    live-verified, the target's own SIC always in the group. A group
+    basket is never silent: `PeerBasket.group_sics` records the SIC set
+    and the rendered line names the group basis. A strict success never
+    widens.
   * **Figures** — median trailing P/E, median EV/EBITDA, median net margin
     across the basket, computed here in code (CR179 Leg 4: the model never
     computes a figure). A peer missing a field is excluded from THAT
@@ -267,6 +276,23 @@ _CANDIDATES_BY_SIC: dict[str, tuple[str, ...]] = {
              "WLTW", "AJG", "MMC", "AON", "BRO"),
 }
 
+# D29 (CR253) — the disclosed narrow-SIC fallback. Hand-maintained, keyed by
+# a target's own 4-digit SIC; the value is the full SIC set forming that
+# target's peer group. Used ONLY when the strict same-SIC screen lands fewer
+# than `_MIN_PEERS` verified peers (and only when the target's own SIC is in
+# the group, which the dict shape guarantees): candidates are then pooled
+# across every SIC in the group, each still live-verified against its own
+# submissions JSON. AAPL's real case: SIC 3571 (electronic computers) files
+# too few same-SIC US-listed names for a median, so its group pools the
+# computer-hardware siblings 3571/3572. Membership is still verified live per
+# candidate and the group basis is disclosed on the rendered line — this is
+# a declared neighbourhood, never a fuzzy match. Extend only with sibling SIC
+# pairs that are one industry by any reading; a group of convenience is the
+# fabrication the strict screen exists to prevent.
+_PEER_GROUP_BY_SIC: dict[str, tuple[str, ...]] = {
+    "3571": ("3571", "3572"),
+}
+
 # Fetcher shapes: the submissions JSON by CIK (the shared CR244 read) and the
 # yfinance `.info` dict by ticker. Both return None on any failure — a fetch
 # problem degrades its own resolution, never raises through the overlay.
@@ -312,7 +338,13 @@ class PeerMedians:
 
 @dataclass(frozen=True)
 class PeerBasket:
-    """One weekly resolution for one target ticker."""
+    """One weekly resolution for one target ticker.
+
+    `group_sics` is the D29 disclosure: `None` means the basket is the strict
+    same-SIC screen; a tuple means the strict screen found fewer than
+    `_MIN_PEERS` and the basket pools the group's SICs instead — the rendered
+    line names the group basis so the widening is never silent.
+    """
 
     ticker: str
     sic: str
@@ -320,6 +352,7 @@ class PeerBasket:
     members: tuple[PeerRow, ...]
     as_of: date
     medians: PeerMedians
+    group_sics: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -443,47 +476,96 @@ def _resolve(sym: str, target_market_cap: float, day: date) -> PeerBasketResult:
         return _fail("the company's SEC filings carry no usable 4-digit SIC code")
     sic_description = submissions.get("sicDescription")
     candidates = _CANDIDATES_BY_SIC.get(sic_raw, ())
-    if not candidates:
+    group_sics: tuple[str, ...] | None = None
+    if not candidates and sic_raw not in _PEER_GROUP_BY_SIC:
         return _fail(f"insufficient peer coverage — no candidate universe is maintained for SIC {sic_raw}")
 
     # Verify membership live: a candidate enters the basket only if its OWN
-    # submissions JSON files under the target's exact SIC. The probe list is
-    # never trusted and never rendered. A candidate whose submissions could
-    # not be READ is counted separately from one that read back a different
-    # SIC: below the floor, throttling ("unverified") and genuine lack of
-    # coverage ("0 same-SIC peers") are different facts and must not blur.
-    verified: list[tuple[str, int]] = []
-    unverified_fetch_failures = 0
-    for cand in candidates:
-        if cand == sym:
-            continue
-        try:
-            c_cik = resolve_cik(cand)
-        except CikResolutionUnavailable:
-            c_cik = None
-        if c_cik is None:
-            continue
-        c_sub = _submissions_fetcher(c_cik)
-        if not c_sub:
-            unverified_fetch_failures += 1
-            continue
-        if str(c_sub.get("sic") or "").strip() == sic_raw:
-            verified.append((cand, c_cik))
+    # submissions JSON files under the accepted SIC set — the target's exact
+    # SIC on the strict pass, the disclosed peer group's SICs on the D29
+    # fallback pass. The probe list is never trusted and never rendered. A
+    # candidate whose submissions could not be READ is counted separately from
+    # one that read back a non-member SIC: below the floor, throttling
+    # ("unverified") and genuine lack of coverage ("0 same-SIC peers") are
+    # different facts and must not blur.
+    def _verify(
+        accepted: frozenset[str], pool: tuple[str, ...],
+    ) -> tuple[list[tuple[str, int, str]], int]:
+        members: list[tuple[str, int, str]] = []
+        fetch_failures = 0
+        for cand in dict.fromkeys(pool):
+            if cand == sym:
+                continue
+            try:
+                c_cik = resolve_cik(cand)
+            except CikResolutionUnavailable:
+                c_cik = None
+            if c_cik is None:
+                continue
+            c_sub = _submissions_fetcher(c_cik)
+            if not c_sub:
+                fetch_failures += 1
+                continue
+            cand_sic = str(c_sub.get("sic") or "").strip()
+            if cand_sic in accepted:
+                members.append((cand, c_cik, cand_sic))
+        return members, fetch_failures
+
+    verified, unverified_fetch_failures = _verify(frozenset({sic_raw}), candidates)
     if len(verified) < _MIN_PEERS:
-        if unverified_fetch_failures:
+        # D29 (CR253) — the disclosed narrow-SIC fallback: pool the hand-
+        # maintained peer group's SICs, each candidate still live-verified.
+        # Fires ONLY below the strict floor — a strict success never widens —
+        # and the target's own SIC is in the group structurally (the mapping
+        # is keyed by it).
+        group = _PEER_GROUP_BY_SIC.get(sic_raw)
+        if group is not None and sic_raw in group:
+            group_sics = group
+            pooled: list[tuple[str, int, str]] = []
+            pooled_failures = 0
+            for g_sic in group:
+                g_members, g_failures = _verify(
+                    frozenset(group), _CANDIDATES_BY_SIC.get(g_sic, ()),
+                )
+                pooled.extend(g_members)
+                pooled_failures += g_failures
+            # A ticker listed under two of the group's SICs verifies twice;
+            # it is one company and enters the basket once.
+            unique: dict[str, tuple[str, int, str]] = {}
+            for member in pooled:
+                unique.setdefault(member[0], member)
+            verified = list(unique.values())
+            unverified_fetch_failures = pooled_failures
+        if len(verified) < _MIN_PEERS:
+            if group_sics is not None:
+                basis = "/".join(group_sics)
+                if unverified_fetch_failures:
+                    return _fail(
+                        f"insufficient peer coverage — {unverified_fetch_failures} "
+                        "candidate submissions could not be read this call, so "
+                        "their peer-group membership is unverified (only "
+                        f"{len(verified)} verified across SIC {basis}, "
+                        f"{_MIN_PEERS} needed)"
+                    )
+                return _fail(
+                    f"insufficient peer coverage — {len(verified)} verified peers "
+                    f"across peer group SIC {basis} from data in hand, "
+                    f"{_MIN_PEERS} needed"
+                )
+            if unverified_fetch_failures:
+                return _fail(
+                    f"insufficient peer coverage — {unverified_fetch_failures} candidate "
+                    "submissions could not be read this call, so their same-SIC "
+                    f"membership is unverified (only {len(verified)} verified, "
+                    f"{_MIN_PEERS} needed)"
+                )
             return _fail(
-                f"insufficient peer coverage — {unverified_fetch_failures} candidate "
-                "submissions could not be read this call, so their same-SIC "
-                f"membership is unverified (only {len(verified)} verified, "
-                f"{_MIN_PEERS} needed)"
+                f"insufficient peer coverage — {len(verified)} same-SIC peers "
+                f"from data in hand, {_MIN_PEERS} needed"
             )
-        return _fail(
-            f"insufficient peer coverage — {len(verified)} same-SIC peers "
-            f"from data in hand, {_MIN_PEERS} needed"
-        )
 
     rows: list[PeerRow] = []
-    for cand, c_cik in verified:
+    for cand, c_cik, cand_sic in verified:
         info = _info_fetcher(cand)
         if not info:
             logger.info("peer_quote_unserved", peer=cand, ticker=sym)
@@ -492,7 +574,7 @@ def _resolve(sym: str, target_market_cap: float, day: date) -> PeerBasketResult:
         rows.append(PeerRow(
             ticker=cand,
             cik=c_cik,
-            sic=sic_raw,
+            sic=cand_sic,
             market_cap=_num(info, "marketCap"),
             trailing_pe=_num(info, "trailingPE"),
             ev_to_ebitda=_num(info, "enterpriseToEbitda"),
@@ -523,6 +605,7 @@ def _resolve(sym: str, target_market_cap: float, day: date) -> PeerBasketResult:
         members=tuple(members),
         as_of=day,
         medians=medians,
+        group_sics=group_sics,
     ))
 
 

@@ -1179,11 +1179,14 @@ def _overlay_peer_comparison(
     with that reason instead of guessing one.
 
     The resolution itself (`peer_basket.refresh_peer_basket`) is weekly-throttled
-    per ticker and never fabricates: fewer than three verified same-SIC peers,
-    an unmaintained SIC group, or unserved quotes all come back as a reason
-    string, which the render states on the not-available line (CR040). One
-    state key for the block — the medians are born together at resolution, so
-    per-field keys could not disagree the way independent fetches can.
+    per ticker and never fabricates: an unmaintained SIC with no peer group,
+    fewer than three verified peers even across the D29 disclosed peer group
+    (a strict shortfall first tries the hand-maintained group, live-verified
+    per candidate), or unserved quotes all come back as a reason string, which
+    the render states on the not-available line (CR040). One state key for the
+    block — the medians are born together at resolution, so per-field keys
+    could not disagree the way independent fetches can. A strict same-SIC
+    success never widens; a group basket always names its basis on the line.
     Populated regardless of `room_peer_comparison_enabled`; the flag gates the
     RENDER only, same convention as every other overlay.
     """
@@ -1233,6 +1236,11 @@ def _overlay_peer_comparison(
         return
     medians = basket.medians
     profile["peer_comparison_sic"] = basket.sic
+    if basket.group_sics:
+        # D29 — the disclosed group basis rides the profile so the render
+        # names it; a strict basket leaves the key absent and the line reads
+        # exactly as it always has.
+        profile["peer_comparison_peer_group"] = list(basket.group_sics)
     if basket.sic_description:
         profile["peer_comparison_sic_description"] = basket.sic_description
     profile["peer_comparison_basket_size"] = len(basket.members)

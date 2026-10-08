@@ -2153,6 +2153,7 @@ def peer_comparison_line(
     n_net_margin: int | None,
     own_trailing_pe: str | None,
     *,
+    peer_group: tuple[str, ...] | None = None,
     live: bool = True,
 ) -> str | None:
     """CR247 Phase 1C — median multiples across the same-SIC peer basket.
@@ -2160,8 +2161,8 @@ def peer_comparison_line(
     The cross-company read the Fundamentals lane never had: is today's
     multiple normal FOR THIS INDUSTRY, not just versus this company's own
     past. Every figure arrives already computed from `peer_basket.py`
-    (same 4-digit SIC, market-cap neighbours, median'd in Python — CR179
-    Leg 4: the model never computes a figure); this function only renders.
+    (market-cap neighbours, median'd in Python — CR179 Leg 4: the model never
+    computes a figure); this function only renders.
 
     Three disciplines are load-bearing and pinned in the tests:
 
@@ -2176,6 +2177,13 @@ def peer_comparison_line(
         and the resolution date, so "7 peers in SIC 3674, basket as of …" can
         be checked against the sheet's run date. A weekly snapshot is not a
         live quote and never claims to be.
+
+    D29 (CR253) — `peer_group` is the disclosed narrow-SIC fallback: set
+    exactly when the strict same-SIC screen found fewer than three verified
+    peers and the basket pooled the group's SICs instead. The line then
+    names the group basis ("the disclosed peer group (SIC 3571/3572)") so
+    the widening is a stated fact, never a silent one; `None` is the strict
+    same-SIC basket and the line reads exactly as it always has.
 
     `own_trailing_pe` is the sheet's own trailing P/E string (gated live by
     the caller), juxtaposed at the tail per the SPEC example; when the
@@ -2201,7 +2209,10 @@ def peer_comparison_line(
         parts.append(part)
     if not parts:
         return None
-    who = f"across {basket_size} peers in SIC {sic}"
+    if peer_group:
+        who = f"across {basket_size} peers in the disclosed peer group (SIC {'/'.join(peer_group)})"
+    else:
+        who = f"across {basket_size} peers in SIC {sic}"
     if sic_description:
         who += f" ({sic_description})"
     if basket_as_of:
@@ -2210,6 +2221,15 @@ def peer_comparison_line(
     line = _labelled("Peer comparison", live, parts)
     if own_trailing_pe and ticker:
         line += f"; {ticker} trades at {own_trailing_pe}x trailing P/E"
+    if peer_group:
+        return (
+            f"{line}. AMI's own computation in code: the strict same-SIC screen "
+            f"found fewer than three verified peers, so the basket pools the "
+            f"hand-maintained peer group SIC {'/'.join(peer_group)} — every "
+            "member still live-verified against its own SEC filings — and the "
+            "medians are median'd here. Quote the medians as medians, never "
+            "average them yourself."
+        )
     return (
         f"{line}. AMI's own computation in code: the basket is the company's "
         "same-4-digit-SIC market-cap neighbours from live quotes, median'd "
