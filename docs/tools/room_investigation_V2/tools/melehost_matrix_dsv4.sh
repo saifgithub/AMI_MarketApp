@@ -27,7 +27,7 @@ curl -sf -m 8 http://100.94.223.38:8003/v1/models >/dev/null || { echo "dsv4 unr
 PGPW=\$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
 [ -n "\$PGPW" ] || { echo "POSTGRES_PASSWORD missing in ~/ami_trade/.env"; exit 1; }
 DSV4_ENV() { docker compose run --rm --no-deps --entrypoint python \
-  -v ~/ami_trade/docs/tools/room_investigation_V2:/harness:ro \
+  -v ~/ami_trade:/harness:ro \
   -v ~/cr251_v2_dsv4:/out \
   -e "DATABASE_URL=postgresql+psycopg2://postgres:\$PGPW@postgres:5432/ami_trade" \
   -e VLLM_BASE_URL=http://100.94.223.38:8003 \
@@ -37,7 +37,7 @@ DSV4_ENV() { docker compose run --rm --no-deps --entrypoint python \
   api-alpha "\$@"; }
 for R in 5 4 3 2 1; do
   echo "=== V2 MATRIX (dsv4) RISK LEVEL \$R \$(date -u +%H:%M:%S) ==="
-  DSV4_ENV /harness/tools/room_benchmark.py \
+  DSV4_ENV /harness/docs/tools/room_investigation_V2/tools/room_benchmark.py \
     --benchmark cr251-risk-matrix-r\$R --provider vllm \
     --skip-gate --max-concurrent 4 \
     --out-dir /out/r\$R || echo "R\$R exited non-zero — continuing"

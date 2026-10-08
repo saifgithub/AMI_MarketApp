@@ -69,14 +69,17 @@ case $? in
 #!/usr/bin/env bash
 cd ~/ami_trade
 PGPW=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
+# Mount the REPO ROOT (not the V2 dir): env_bootstrap resolves REPO_ROOT as
+# parents[4] of library/env_bootstrap.py, so the harness path inside the
+# container must be /harness/docs/tools/room_investigation_V2/... .
 docker compose run --rm --no-deps --entrypoint python \
-  -v ~/ami_trade/docs/tools/room_investigation_V2:/harness:ro \
+  -v ~/ami_trade:/harness:ro \
   -v ~/cr251_smoke:/out \
   -e "DATABASE_URL=postgresql+psycopg2://postgres:${PGPW}@postgres:5432/ami_trade" \
   -e VLLM_BASE_URL=http://192.168.20.74:8000 \
   -e USE_REAL_MARKET_DATA=true \
-  api-alpha /harness/tools/room_sweep.py --ticker AAPL --risk-scores 5,4,3,2,1 \
-    --provider vllm --out-dir /out
+  api-alpha /harness/docs/tools/room_investigation_V2/tools/room_sweep.py \
+    --ticker AAPL --risk-scores 5,4,3,2,1 --provider vllm --out-dir /out
 rc=$?
 echo "sweep exit: $rc" >> /tmp/v2_sweep.log
 if [ $rc -eq 0 ]; then touch ~/cr251_smoke/.sweep_done; else touch ~/cr251_smoke/.sweep_failed; fi

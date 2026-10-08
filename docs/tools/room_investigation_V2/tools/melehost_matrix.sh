@@ -35,7 +35,7 @@ curl -sf -m 5 http://192.168.20.74:8000/v1/models >/dev/null || { echo "vLLM unr
 PGPW=\$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
 [ -n "\$PGPW" ] || { echo "POSTGRES_PASSWORD missing in ~/ami_trade/.env"; exit 1; }
 JEK_ENV() { docker compose run --rm --no-deps --entrypoint python \
-  -v ~/ami_trade/docs/tools/room_investigation_V2:/harness:ro \
+  -v ~/ami_trade:/harness:ro \
   -v ~/cr251_v2:/out \
   -e "DATABASE_URL=postgresql+psycopg2://postgres:\$PGPW@postgres:5432/ami_trade" \
   -e "VLLM_BASE_URL=http://192.168.20.74:8000" \
@@ -44,7 +44,7 @@ JEK_ENV() { docker compose run --rm --no-deps --entrypoint python \
   api-alpha "\$@"; }
 for R in 5 4 3 2 1; do
   echo "=== V2 MATRIX RISK LEVEL \$R \$(date -u +%H:%M:%S) ==="
-  JEK_ENV /harness/tools/room_benchmark.py \
+  JEK_ENV /harness/docs/tools/room_investigation_V2/tools/room_benchmark.py \
     --benchmark cr251-risk-matrix-r\$R --provider vllm \
     --skip-gate --max-concurrent 8 \
     --out-dir /out/r\$R || echo "R\$R exited non-zero — continuing"
