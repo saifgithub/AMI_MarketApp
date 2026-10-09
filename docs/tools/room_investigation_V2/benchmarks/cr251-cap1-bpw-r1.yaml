@@ -1,0 +1,9 @@
+# cap-1% flip-flop probe: BAC, PYPL, WFC at risk 1. Reuses the cap1 mandate
+# snapshot so sizes pin at 1% across all levels.
+name: cr251-cap1-bpw-r1
+provider: vllm
+tickers: [BAC, PYPL, WFC]
+mandate: { file: mandates/cap1-r1.json }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
