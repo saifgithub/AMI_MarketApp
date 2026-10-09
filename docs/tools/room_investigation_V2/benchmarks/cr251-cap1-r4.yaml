@@ -1,0 +1,11 @@
+# CR251 cap-1% arm - risk_score 4 with single_name_cap_pct pinned to 1.0.
+# Isolates the size variable: every level sizes identically, so any remaining
+# verdict variation across R1-R5 is attributable to the non-size mandate
+# channels (sector cap, pace, cooldown, open-risk, intent language).
+name: cr251-cap1-r4
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { file: mandates/cap1-r4.json }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
