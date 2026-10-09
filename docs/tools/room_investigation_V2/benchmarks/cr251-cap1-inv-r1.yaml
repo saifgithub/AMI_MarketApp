@@ -1,0 +1,10 @@
+# cap-1% R4->R5 inversion probe: the 9 names that lost approvals from R4 to R5
+# uncapped, run across all levels with size pinned at 1%. If the inversion was
+# size-driven, these curves should flatten/step up instead of peaking at R4.
+name: cr251-cap1-inv-r1
+provider: vllm
+tickers: [BAC, CAG, DE, DHR, JPM, LEVI, MO, SO, TMO]
+mandate: { file: mandates/cap1-r1.json }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
