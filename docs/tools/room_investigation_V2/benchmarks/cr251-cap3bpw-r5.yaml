@@ -1,0 +1,9 @@
+# cap-dose probe at R5: BAC/PYPL/WFC with single_name_cap pinned at 3%.
+# Dose-response arm — does approval rate on the flip-floppers track the size cap?
+name: cr251-cap3bpw-r5
+provider: vllm
+tickers: [BAC, PYPL, WFC]
+mandate: { file: mandates/cap3-r5.json }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 2, deepinfra: 2, kimi: 1 }

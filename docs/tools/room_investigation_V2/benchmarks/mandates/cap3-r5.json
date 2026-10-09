@@ -1,0 +1,13 @@
+{
+  "display_name": "Room bench R5 cap3",
+  "primary_goal": "long_term_wealth",
+  "horizon": "long",
+  "path": "long_horizon",
+  "risk_score": 5,
+  "drawdown_response": 5,
+  "regret_asymmetry": 0,
+  "concentration_tolerance": 5,
+  "max_drawdown_pct": 30,
+  "single_name_cap_pct": 3.0,
+  "compliance": {}
+}
