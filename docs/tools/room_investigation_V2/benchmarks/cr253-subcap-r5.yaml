@@ -1,0 +1,10 @@
+# CR253 sub-cap conditional test — the 11 size-sensitive tickers at R5,
+# native uncapped mandate, PM on the sub-cap variant, n=3 reps (per CR253 spec:
+# n=2 cannot separate a real shift from 19-20% flip noise).
+name: cr253-subcap-r5
+provider: vllm
+tickers: [BAC, CAG, DE, DHR, JPM, LEVI, MO, PYPL, SO, TMO, WFC]
+mandate: { risk_score: 5 }
+repeats: 3
+prompt_variant: cr253-subcap
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }

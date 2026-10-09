@@ -1,0 +1,10 @@
+# cap-ladder fill for the 8 inversion tickers (excl. BAC) at R5, cap 2%.
+# Completes each ticker's approve-vs-size curve: 1% (cap1 arm) -> 2/3/4% (this)
+# -> 5% (uncapped main arm).
+name: cr251-cap2inv-r5
+provider: vllm
+tickers: [CAG, DE, DHR, JPM, LEVI, MO, SO, TMO]
+mandate: { file: mandates/cap2-r5.json }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
