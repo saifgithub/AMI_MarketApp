@@ -1,0 +1,12 @@
+# CR254 converted-tm-all matrix — full 30x5 on DSV4. Production personas +
+# mandate-compliant converted teammate frameworks (CR254 conversion rules:
+# horizon mandate-referenced, sizing vocabulary-only mapped to the computed
+# cap, JSON subordinate to the STANCE envelope, SCS floats dropped).
+# Out-dir on melehost: ~/cr254_tmall_matrix/r{1..5}. Lane spec: EXPERIMENT_LOG.md §4.
+name: cr254-tmall-r2
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 2 }
+repeats: 2
+prompt_variant: cr254-tmall
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
