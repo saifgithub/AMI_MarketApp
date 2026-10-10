@@ -1,0 +1,10 @@
+# CR253 disposition-only isolation — the 11 size-sensitive tickers at R5, n=3.
+# Identical to cr253-subcap-r5 EXCEPT no sub-cap conditional in the PM variant.
+# Isolates which prompt block drove the willingness shift in the sub-cap arm.
+name: cr253-disposition-r5
+provider: vllm
+tickers: [BAC, CAG, DE, DHR, JPM, LEVI, MO, PYPL, SO, TMO, WFC]
+mandate: { risk_score: 5 }
+repeats: 3
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
