@@ -1,0 +1,11 @@
+# CR253 disposition variant — full 30x5 matrix at risk 5.
+# PM on production + disposition table (NO sub-cap line). Native uncapped
+# mandate. The curve this arm produces is diffed against the CR255 target
+# (5/15/30/45/60) and the production-prompt arms (analysis_r3/r5).
+name: cr253-disp-matrix-r5
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 5 }
+repeats: 2
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
