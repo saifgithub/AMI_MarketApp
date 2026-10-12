@@ -67,3 +67,25 @@ Our own minihost deployment is the dogfood demo.
 
 ---
 *Append new entries below with date + author tag.*
+
+---
+## 2026-10-12 (AT:K6) — Paperclip discovered (github.com/paperclipai/paperclip)
+
+Open-source (MIT) Node.js+React **control plane for agent teams** — org charts,
+ticket tasks with atomic checkout, heartbeats, budgets w/ hard stops, governance
+gates, routines, secrets manager, skills+evals, multi-org, and **portable company
+templates** (export/import orgs, secret-scrubbed). Adapters hire external agents
+(Claude Code, Codex, CLI, any HTTP/webhook bot).
+
+Impact on this note:
+1. The packaging questions in sections 7–11 are largely answered features in
+   Paperclip — the "AI office in a box" product can be Paperclip + our persona
+   packs + deployment service rather than home-grown orchestration.
+2. Complementary to Hermes: Paperclip has NO whatsapp surface and no on-prem
+   model story — Hermes stays the customer-facing runtime; Paperclip can even
+   orchestrate our personas via the webhook adapter.
+3. Commoditized: org/task/approval plumbing. Still ours: whatsapp presence,
+   KB/app-knowledge packs, AR/MS, deployment+administration as the service.
+4. Next step when Saiful says go: `npx paperclipai test-drive` on minihost
+   (Node 24+, outbound 443 already open; NOT on the Mac per standing rule).
+   Then decide: adopt as the office orchestration layer vs stay Hermes-native.
