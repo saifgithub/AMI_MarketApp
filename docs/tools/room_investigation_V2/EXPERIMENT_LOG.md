@@ -71,6 +71,8 @@ mandate snapshots: `benchmarks/mandates/cap{1,2,3,4}-r5.json`; prompt variants:
 `benchmarks/cr253-disposition/prompts/portfolio_manager.md` (production + disposition
 table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measured inert).
 
+| 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
+
 ## 2. Methodology (load-bearing — replicate exactly)
 
 1. **Model:** DeepSeek-V4-Flash via OpenAI-compatible vLLM at `http://100.94.223.38:8003`
