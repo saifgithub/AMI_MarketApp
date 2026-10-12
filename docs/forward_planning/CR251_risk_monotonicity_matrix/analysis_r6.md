@@ -11,12 +11,12 @@ PROVISIONAL.
 | CR255 target | 5 | 15 | 30 | 45 | 60 | ✓ |
 | dsv4 production (arm 1) | 5 | 11 | 22 | 27 | 17 | ✗ (R5 inverts) |
 | **dsv4 disposition (arm 9)** | 1 | 7 | 13 | 15 | 19 | **✓** |
-| ami-llm production CLEAN (arm 10 + fix) | 0 | 0 | 4* | 10 | **20** | **✓** |
+| ami-llm production CLEAN (arm 10 + fix) | 0 | 0 | 10 | 10 | **20** | **✓** |
 
-\* R3 re-run in flight (first pass had 83% Jev coverage). The first-pass
-R2=0/R5=2 numbers were CONTAMINATION ARTIFACT (DGX died mid-run, 644+1433
-connection failures); the re-run (~1+2 errors, healthy 11.5-min durations)
-is the valid measurement.
+\* R3 re-ran clean 2026-10-12 (10/60 — the first pass's 4 was also contamination-depressed). The first-pass
+R2=0/R5=2/R3=4 numbers were CONTAMINATION ARTIFACT (DGX died mid-run, 644+1433
+connection failures); the re-runs (~1+2 errors, healthy 11.5-min durations)
+are the valid measurements. Final clean ami curve: **0/0/10/10/20**.
 
 ## CORRECTION to the provisional readings
 
