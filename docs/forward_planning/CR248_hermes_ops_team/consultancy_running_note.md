@@ -89,3 +89,18 @@ Impact on this note:
 4. Next step when Saiful says go: `npx paperclipai test-drive` on minihost
    (Node 24+, outbound 443 already open; NOT on the Mac per standing rule).
    Then decide: adopt as the office orchestration layer vs stay Hermes-native.
+
+---
+## 2026-10-12 (AT:K6) — Paperclip test-drive live; Angelia + concierge hired
+
+Test company running on minihost (loopback :3100, tunnel from Mac), all-agent brain =
+on-prem vLLM via opencode provider override (`openrouter` provider -> vLLM baseURL,
+explicit `models` list REQUIRED or model lookup fails silently). CEO brief rewritten
+as **Angelia** (AGENTS.md + SOUL.md on disk, delegation-first, principal
+authorization rule); **concierge** created via API (role "general"). Agent rename
+via API: no route found — rename "CEO" -> "Angelia" in the UI by hand.
+
+Architecture decision (Saiful): Paperclip = company layer, Hermes = customer-facing
+body. Two Angelia instances for now (Paperclip CEO / whatsapp CoS); unify later via
+heartbeat->HTTP bridge to Hermes if divergence hurts. The 12 in-app trading agents
+stay in the app (safety floor + mandate are app-runtime-structural).
