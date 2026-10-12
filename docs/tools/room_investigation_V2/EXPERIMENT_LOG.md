@@ -26,6 +26,7 @@ Handoff rules for parallel lanes are in §4.
 | 7 | sub-cap variant | 33 (11×3, R5) | disposition + sub-cap | uncapped | dsv4 | DONE | out/cr253-subcap | analysis_r4 |
 | 8 | disposition-only variant | 33 (11×3, R5) | disposition only | uncapped | dsv4 | DONE | out/cr253-disposition | analysis_r5 |
 | 9 | **disposition matrix** | **300 (30×5×2)** | **disposition only** | **uncapped** | **dsv4** | **RUNNING (ETA ~18:00 UTC 2026-10-10)** | → ~/cr253_disp_matrix | analysis_r6 (pending) |
+| 11 | converted tm-all matrix | 300 (30×5×2) | cr254-tmall (converted teammate frameworks) | uncapped | dsv4 | DONE | → ~/cr254_tmall_matrix | analysis_r7 |
 | 10 | clean ami-llm matrix | 300 (30×5×2) | production | uncapped | ami-llm | DONE (R2/R5 re-ran clean after DGX death contaminated the first pass) | out/cr251-v2-ami + cr251-v2-ami-fix → ~/cr251_v2, ~/cr251_v2_fix | analysis_r6 (cross-model discrimination failure) |
 | 11 | tm-all converted (CR254 lane) | 300 (30×5×2) | tm-all converted | uncapped | dsv4 | DONE | out/cr254-tmall → ~/cr254_tmall_matrix | read by track K below |
 
