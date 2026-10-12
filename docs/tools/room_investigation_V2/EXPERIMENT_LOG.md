@@ -13,6 +13,21 @@ Each arm = one row in the board + a short findings entry. Methodology facts in �
 are load-bearing — a lane that ignores them produces data that cannot be diffed.
 Handoff rules for parallel lanes are in §4.
 
+## 0. Pre-matrix arms (CR247/249 era, DeepInfra spend ≈ $18)
+
+| Arm | Provider/model | Rooms | Result |
+|---|---|---|---|
+| cr247-30t-r5 | DeepInfra `zai-org/GLM-5.3-Flash` | 30 @ R5 (CR247 persona) | 4 APPROVE — vs 14 on ami-llm same messages |
+| cr247-30t-r5 | vLLM ami-llm (control) | 30 @ R5 | 14 APPROVE |
+| cr247-approved14-qwen38flash | DeepInfra `Qwen/Qwen3.8-Flash` | 14 | 6 APPROVE |
+| cr249-tm-all-gate | DeepInfra GLM-5.3-Flash | 2 (gate) | 0 APPROVE |
+| cr249-verify | DeepInfra GLM-5.3-Flash | 6 | 1 APPROVE |
+
+These predate the matrix program and were not Jev-scored at the time, but they
+are the only GLM-5.3-Flash room data in existence (52 rooms) — and the first
+model-impact datapoint: same persona/messages, GLM approved 4/30 where
+ami-llm approved 14/30.
+
 ## 1. Arm board
 
 | # | Arm | Rooms | Prompt | Mandate | Model | Status | Data (local → melehost) | Analysis |
