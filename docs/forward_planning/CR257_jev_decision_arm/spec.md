@@ -111,3 +111,49 @@ stays as the enforcement layer regardless of which decision reader wins.
 
 Filled at measurement time: per-arm curves, holdout pass/fail matrix, replay flip
 rate, discrimination r, disagreement-audit table, GO/NO-GO + Saiful sign-off.
+
+---
+
+## 7. Acceptance record (filled 2026-10-12, AT:K3)
+
+Dataset: 900 rooms across 3 arms (prod-dsv4, disposition-dsv4, ami-llm), 2
+replays = 1,800 typed decision calls. Instrumentation bug found and fixed
+during the run (jev_eval hardcoded the shared evidence questions into the
+wire body — 12df3056); all numbers below are from the corrected pass.
+
+**§4.1 Holdouts: FAIL.** RIOT passes everywhere (6/6 rooms). APD passes in
+prod-dsv4 and ami-llm but is approved 2/2 in the disposition arm; BA 1/2 in
+the disposition arm. The judge approves the disposition-arm *debate* for the
+value names — the debates themselves carry the willingness shift.
+
+**§4.2 Curve shape: FAIL.** Jev-decision curves track the PM's debates
+(the judge reads the same transcript): prod 11/15/22/20/16 (non-monotone,
+like the PM's 5/11/22/27/17); disposition 8/16/14/12/18; ami 1/0/3/3/0.
+Neither approaches the 5/15/30/45/60 target — no reader of the current
+debates can, because the willingness lives in the debates, not the reader.
+
+**§4.3 Discrimination: FAIL (narrow).** r(Jev-approve vs net support):
++0.199 prod-dsv4 (PM +0.19 — ties, not materially above), +0.114
+disposition. The judge reads the evidence gradient no better than the PM.
+
+**§4.4 Agreement: 93-94%** per arm, balanced both directions
+(prod: 10 PM-only vs 8 Jev-only; disposition: 17 vs 4; ami: 2 vs 11).
+Stratified hand-read of disagreements: OPEN (enumeration in
+out/cr257/*/jev_decision; ~52 disagreement rooms).
+
+**Stability (secondary): PASS, decisively.** Replay flips 0.0% / 1.3% /
+0.0% vs the PM's 14-27%. A typed-decision judge is a perfect stabilizer.
+
+**Secondary check (AAPL-class):** high-grounding/negative-asymmetry rooms
+stay PASS under Jev in the arms sampled.
+
+**Verdict: NO-GO for Jev-as-decider (replacement).** The judge of the same
+debate inherits the debate's prior: it cannot fix curve shape, ties the PM
+on discrimination, and fails the disposition-arm holdouts. **Measured
+value where predicted:** a perfect-stability, equal-discrimination, 0.4 s
+second signal — per §5, the fold-in shape keeps CR256's deterministic
+composite as the enforcement layer; a Jev decision belongs inside the
+composite as a stability vote, never the decision path. The willingness
+lever remains C7/CR256's job, now with stronger evidence: no reader of the
+current debates reaches the target curve — the debates themselves must
+change (or the decision must stop being read from prose).
