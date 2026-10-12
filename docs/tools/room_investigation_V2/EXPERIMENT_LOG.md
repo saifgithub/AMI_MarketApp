@@ -28,6 +28,27 @@ are the only GLM-5.3-Flash room data in existence (52 rooms) — and the first
 model-impact datapoint: same persona/messages, GLM approved 4/30 where
 ami-llm approved 14/30.
 
+## 0b. Model × test coverage matrix
+
+| Test | dsv4 (alpha-spark) | ami-llm (DGX) | GLM-5.3-Flash (DeepInfra) | Qwen3.8-Flash (DeepInfra) |
+|---|---|---|---|---|
+| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — |
+| Production prompts, 30×5 (heuristics-off v1) | — | ✓ 0/3/4/24/26 (frozen baseline) | — | — |
+| CR247 persona, 30 tickers @R5 | — | ✓ 14/30 | ✓ 4/30 | — |
+| Approved-14 re-run | — | ✓ | — | ✓ 6/14 |
+| Cap-1% pinned, 30×5 | ✓ 11/13/16/15/23 | — | — | — |
+| Cap probes (dose 2/3/4%, ladder, inversion) | ✓ | — | — | — |
+| Disposition variant (probe + full 30×5) | ✓ 1/7/13/15/19 ✓ | — pending twin | — | — |
+| Sub-cap variant | ✓ (inert) | — | — | — |
+| tm-all converted, 30×5 | ✓ 4/6/15/16/17 ✗ | — | ✓ (gate, 2 rooms) | — |
+| CR249 verify/gate runs | — | ✓ | ✓ (6+2 rooms) | — |
+| AAPL sweep (smoke) | ✓ | ✓ | — | — |
+| Jev evidence scoring | ✓ full | ✓ full | — | — |
+| Production alpha traffic | ✓ (bridge 10-08→10-12) | ✓ (default + post-revert) | — | — |
+
+Jev-based quality metrics (discrimination, net-support, threshold lift) exist
+only where Jev scoring ran: dsv4 and ami-llm arms.
+
 ## 1. Arm board
 
 | # | Arm | Rooms | Prompt | Mandate | Model | Status | Data (local → melehost) | Analysis |
@@ -40,7 +61,7 @@ ami-llm approved 14/30.
 | 6 | cap ladder (8 inv tickers) | 48 (R5) | production | caps 2/3/4% | dsv4 | DONE | out/cap1-ladder | analysis_r4 |
 | 7 | sub-cap variant | 33 (11×3, R5) | disposition + sub-cap | uncapped | dsv4 | DONE | out/cr253-subcap | analysis_r4 |
 | 8 | disposition-only variant | 33 (11×3, R5) | disposition only | uncapped | dsv4 | DONE | out/cr253-disposition | analysis_r5 |
-| 9 | **disposition matrix** | **300 (30×5×2)** | **disposition only** | **uncapped** | **dsv4** | **RUNNING (ETA ~18:00 UTC 2026-10-10)** | → ~/cr253_disp_matrix | analysis_r6 (pending) |
+| 9 | **disposition matrix** | **300 (30×5×2)** | **disposition only** | **uncapped** | **dsv4** | **DONE 2026-10-10 08:18 UTC (curve 1/7/13/15/19, monotone)** | → ~/cr253_disp_matrix | analysis_r6 |
 | 11 | converted tm-all matrix | 300 (30×5×2) | cr254-tmall (converted teammate frameworks) | uncapped | dsv4 | DONE | → ~/cr254_tmall_matrix | analysis_r7 |
 | 10 | clean ami-llm matrix | 300 (30×5×2) | production | uncapped | ami-llm | DONE (R2/R5 re-ran clean after DGX death contaminated the first pass) | out/cr251-v2-ami + cr251-v2-ami-fix → ~/cr251_v2, ~/cr251_v2_fix | analysis_r6 (cross-model discrimination failure) |
 | 11 | tm-all converted (CR254 lane) | 300 (30×5×2) | tm-all converted | uncapped | dsv4 | DONE | out/cr254-tmall → ~/cr254_tmall_matrix | read by track K below |
