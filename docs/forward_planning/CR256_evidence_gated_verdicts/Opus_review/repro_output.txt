@@ -1,0 +1,109 @@
+
+#### votes — PM self-consistency (samples=5, CR228 graded bar 4/4/3/2/2)
+
+dsv4-prod (arm 1)
+  R1 bar=4/5 votes0..5=[49, 2, 3, 1, 4, 1] none=0 | approvals if bar=1..5: [11, 9, 6, 5, 1]
+  R2 bar=4/5 votes0..5=[44, 2, 2, 1, 1, 10] none=0 | approvals if bar=1..5: [16, 14, 12, 11, 10]
+  R3 bar=3/5 votes0..5=[37, 0, 1, 0, 7, 15] none=0 | approvals if bar=1..5: [23, 23, 22, 22, 15]
+  R4 bar=2/5 votes0..5=[32, 1, 0, 2, 3, 22] none=0 | approvals if bar=1..5: [28, 27, 27, 25, 22]
+  R5 bar=2/5 votes0..5=[40, 3, 0, 0, 1, 16] none=0 | approvals if bar=1..5: [20, 17, 17, 17, 16]
+  flipped pairs=26; of which BOTH reps unanimous (0/5 vs 5/5)=15
+
+dsv4-disp (arm 9)
+  R1 bar=4/5 votes0..5=[53, 1, 4, 1, 1, 0] none=0 | approvals if bar=1..5: [7, 6, 2, 1, 0]
+  R2 bar=4/5 votes0..5=[46, 1, 1, 5, 5, 2] none=0 | approvals if bar=1..5: [14, 13, 12, 7, 2]
+  R3 bar=3/5 votes0..5=[42, 3, 2, 0, 4, 9] none=0 | approvals if bar=1..5: [18, 15, 13, 13, 9]
+  R4 bar=2/5 votes0..5=[45, 0, 0, 0, 3, 12] none=0 | approvals if bar=1..5: [15, 15, 15, 15, 12]
+  R5 bar=2/5 votes0..5=[39, 2, 0, 0, 2, 17] none=0 | approvals if bar=1..5: [21, 19, 19, 19, 17]
+  flipped pairs=31; of which BOTH reps unanimous (0/5 vs 5/5)=17
+
+ami-clean (arm 10+fix)
+  R1 bar=4/5 votes0..5=[58, 2, 0, 0, 0, 0] none=0 | approvals if bar=1..5: [2, 0, 0, 0, 0]
+  R2 bar=4/5 votes0..5=[52, 7, 0, 1, 0, 0] none=0 | approvals if bar=1..5: [8, 1, 1, 0, 0]
+  R3 bar=3/5 votes0..5=[31, 11, 1, 1, 1, 2] none=13 | approvals if bar=1..5: [16, 5, 4, 3, 2]
+  R4 bar=2/5 votes0..5=[36, 13, 4, 3, 3, 1] none=0 | approvals if bar=1..5: [24, 11, 7, 4, 1]
+  R5 bar=2/5 votes0..5=[28, 11, 12, 1, 3, 5] none=0 | approvals if bar=1..5: [32, 21, 9, 8, 5]
+  flipped pairs=22; of which BOTH reps unanimous (0/5 vs 5/5)=2
+
+dsv4-tmall (arm 11)
+  R1 bar=4/5 votes0..5=[47, 2, 6, 1, 2, 2] none=0 | approvals if bar=1..5: [13, 11, 5, 4, 2]
+  R2 bar=4/5 votes0..5=[50, 1, 2, 1, 1, 5] none=0 | approvals if bar=1..5: [10, 9, 7, 6, 5]
+  R3 bar=3/5 votes0..5=[42, 3, 0, 1, 4, 10] none=0 | approvals if bar=1..5: [18, 15, 15, 14, 10]
+  R4 bar=2/5 votes0..5=[42, 2, 0, 1, 1, 14] none=0 | approvals if bar=1..5: [18, 16, 16, 15, 14]
+  R5 bar=2/5 votes0..5=[43, 0, 0, 0, 4, 13] none=0 | approvals if bar=1..5: [17, 17, 17, 17, 13]
+  flipped pairs=40; of which BOTH reps unanimous (0/5 vs 5/5)=24
+
+#### proxies — CR256 Layer-3 quantile gate simulated on proxy scores
+desk_net      = net_support.py today (desk-membership sign, discrete grades)
+desk_net_cont = same, Jev probability-weighted (continuous; removes ties)
+stance_signed = mean over non-trader turns of STANCE sign x E[Jev support]
+stance_only   = mean STANCE sign (no grounding at all)
+early_signed  = stance_signed over analysts + researchers only (pre-synthesis)
+
+dsv4-prod (arm 1): rooms with Jev=300; actual non-monotone ticker-rep paths=20/60
+  [desk_net     ] r/level +0.02 +0.33 +0.32 +0.23 +0.00 | distinct [8, 9, 9, 7, 8] | test-retest r=+0.21 | gate approvals [9, 21, 32, 47, 60] | gate flips 35/150=23% | non-monotone paths 18/60 | holdouts R1..R5 {'RIOT': [0, 0, 1, 2, 2], 'APD': [0, 0, 0, 1, 2], 'BA': [0, 1, 0, 2, 2]}
+  [desk_net_cont] r/level +0.01 +0.37 +0.31 +0.27 +0.09 | distinct [57, 60, 59, 58, 55] | test-retest r=+0.18 | gate approvals [5, 15, 30, 45, 60] | gate flips 37/150=25% | non-monotone paths 13/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 2, 2], 'BA': [0, 0, 0, 2, 2]}
+  [stance_only  ] r/level +0.38 +0.55 +0.78 +0.78 +0.69 | distinct [14, 12, 12, 12, 13] | test-retest r=+0.83 | gate approvals [11, 19, 32, 49, 60] | gate flips 17/150=11% | non-monotone paths 3/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 2, 2], 'BA': [0, 0, 0, 1, 2]}
+  [stance_signed] r/level +0.36 +0.54 +0.78 +0.77 +0.67 | distinct [59, 59, 60, 59, 59] | test-retest r=+0.84 | gate approvals [5, 15, 30, 45, 60] | gate flips 17/150=11% | non-monotone paths 1/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 2, 2], 'BA': [0, 0, 0, 0, 2]}
+  [early_signed ] r/level +0.28 +0.45 +0.70 +0.58 +0.50 | distinct [59, 60, 60, 57, 59] | test-retest r=+0.82 | gate approvals [5, 15, 30, 46, 60] | gate flips 16/150=11% | non-monotone paths 2/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 2, 2], 'BA': [0, 0, 0, 0, 2]}
+
+dsv4-disp (arm 9): rooms with Jev=300; actual non-monotone ticker-rep paths=20/60
+  [desk_net     ] r/level +0.37 +0.09 +0.09 +0.06 +0.11 | distinct [8, 8, 7, 8, 9] | test-retest r=+0.11 | gate approvals [5, 24, 32, 49, 59] | gate flips 36/149=24% | non-monotone paths 15/59 | holdouts R1..R5 {'RIOT': [0, 1, 1, 1, 2], 'APD': [0, 1, 0, 1, 2], 'BA': [0, 0, 1, 1, 2]}
+  [desk_net_cont] r/level +0.30 +0.08 +0.20 +0.10 +0.16 | distinct [55, 59, 54, 58, 54] | test-retest r=+0.21 | gate approvals [5, 15, 30, 45, 59] | gate flips 33/149=22% | non-monotone paths 12/59 | holdouts R1..R5 {'RIOT': [0, 1, 0, 1, 2], 'APD': [0, 0, 0, 0, 2], 'BA': [0, 0, 0, 0, 2]}
+  [stance_only  ] r/level +0.14 +0.53 +0.55 +0.64 +0.67 | distinct [14, 13, 14, 11, 16] | test-retest r=+0.73 | gate approvals [8, 24, 30, 52, 60] | gate flips 16/150=11% | non-monotone paths 2/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 1, 2, 2], 'BA': [0, 0, 0, 2, 2]}
+  [stance_signed] r/level +0.15 +0.53 +0.54 +0.61 +0.64 | distinct [59, 59, 56, 58, 59] | test-retest r=+0.73 | gate approvals [5, 15, 30, 45, 60] | gate flips 25/150=17% | non-monotone paths 1/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 1, 2, 2], 'BA': [0, 0, 0, 1, 2]}
+  [early_signed ] r/level +0.11 +0.48 +0.40 +0.41 +0.50 | distinct [57, 58, 59, 58, 60] | test-retest r=+0.75 | gate approvals [5, 15, 30, 45, 60] | gate flips 19/150=13% | non-monotone paths 3/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 2, 2], 'BA': [0, 0, 0, 1, 2]}
+
+ami-clean (arm 10+fix): rooms with Jev=290; actual non-monotone ticker-rep paths=7/50
+  [desk_net     ] r/level +nan +nan +0.30 +0.06 +0.09 | distinct [6, 7, 7, 6, 7] | test-retest r=-0.11 | gate approvals [9, 24, 26, 59, 60] | gate flips 34/143=24% | non-monotone paths 12/47 | holdouts R1..R5 {'RIOT': [0, 0, 1, 2, 2], 'APD': [0, 2, 0, 2, 2], 'BA': [0, 0, 0, 2, 2]}
+  [desk_net_cont] r/level +nan +nan +0.21 +0.17 +0.18 | distinct [59, 55, 46, 56, 59] | test-retest r=-0.10 | gate approvals [4, 15, 24, 45, 60] | gate flips 30/143=21% | non-monotone paths 14/47 | holdouts R1..R5 {'RIOT': [0, 0, 1, 2, 2], 'APD': [0, 2, 0, 2, 2], 'BA': [0, 0, 1, 2, 2]}
+  [stance_only  ] r/level +nan +nan +0.33 +0.34 +0.48 | distinct [7, 10, 9, 13, 9] | test-retest r=+0.78 | gate approvals [18, 22, 30, 53, 60] | gate flips 17/145=12% | non-monotone paths 5/50 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 1, 2, 2], 'BA': [0, 0, 1, 2, 2]}
+  [stance_signed] r/level +nan +nan +0.39 +0.37 +0.45 | distinct [57, 59, 50, 58, 59] | test-retest r=+0.78 | gate approvals [5, 15, 25, 45, 60] | gate flips 22/145=15% | non-monotone paths 2/50 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 1, 2, 2], 'BA': [0, 0, 0, 0, 2]}
+  [early_signed ] r/level +nan +nan +0.28 +0.27 +0.42 | distinct [59, 57, 49, 58, 59] | test-retest r=+0.77 | gate approvals [5, 15, 25, 45, 60] | gate flips 26/145=18% | non-monotone paths 2/50 | holdouts R1..R5 {'RIOT': [0, 0, 0, 1, 2], 'APD': [0, 0, 0, 1, 2], 'BA': [0, 0, 0, 0, 2]}
+
+dsv4-tmall (arm 11): rooms with Jev=300; actual non-monotone ticker-rep paths=21/60
+  [desk_net     ] r/level +0.08 -0.16 -0.07 +0.30 +0.16 | distinct [8, 8, 8, 8, 9] | test-retest r=+0.25 | gate approvals [15, 22, 35, 45, 60] | gate flips 43/150=29% | non-monotone paths 25/60 | holdouts R1..R5 {'RIOT': [2, 0, 2, 0, 2], 'APD': [0, 0, 2, 1, 2], 'BA': [1, 0, 2, 0, 2]}
+  [desk_net_cont] r/level +0.08 -0.01 +0.09 +0.25 +0.28 | distinct [59, 56, 57, 57, 56] | test-retest r=+0.23 | gate approvals [5, 15, 30, 45, 60] | gate flips 35/150=23% | non-monotone paths 17/60 | holdouts R1..R5 {'RIOT': [0, 0, 1, 1, 2], 'APD': [0, 0, 1, 1, 2], 'BA': [0, 0, 1, 0, 2]}
+  [stance_only  ] r/level +0.34 +0.49 +0.65 +0.64 +0.69 | distinct [14, 13, 12, 11, 12] | test-retest r=+0.71 | gate approvals [8, 16, 32, 45, 60] | gate flips 27/150=18% | non-monotone paths 6/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 0, 2], 'APD': [0, 0, 2, 2, 2], 'BA': [0, 0, 0, 2, 2]}
+  [stance_signed] r/level +0.32 +0.44 +0.62 +0.61 +0.66 | distinct [58, 58, 59, 58, 59] | test-retest r=+0.75 | gate approvals [5, 15, 30, 45, 60] | gate flips 13/150=9% | non-monotone paths 5/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 0, 2], 'APD': [0, 0, 2, 2, 2], 'BA': [0, 0, 0, 1, 2]}
+  [early_signed ] r/level +0.24 +0.37 +0.48 +0.41 +0.52 | distinct [60, 60, 58, 60, 59] | test-retest r=+0.75 | gate approvals [5, 15, 30, 45, 60] | gate flips 19/150=13% | non-monotone paths 4/60 | holdouts R1..R5 {'RIOT': [0, 0, 0, 0, 2], 'APD': [0, 0, 2, 2, 2], 'BA': [0, 0, 0, 2, 2]}
+
+#### conviction — self-reported CONVICTION vs Jev
+
+dsv4-prod (arm 1)
+  stated low    n= 583 justified mean=2.10/3 weak-or-worse=8% Jev well_supported=67%
+  stated medium n=1090 justified mean=1.75/3 weak-or-worse=24% Jev well_supported=43%
+  stated high   n= 716 justified mean=2.12/3 weak-or-worse=15% Jev well_supported=56%
+  stated-HIGH share by desk: {'bear_researcher': '57%', 'bull_researcher': '17%', 'fundamentals_analyst': '59%', 'market_analyst': '33%', 'news_analyst': '13%', 'research_manager': '25%', 'social_media_analyst': '1%', 'trader': '34%'}
+
+dsv4-disp (arm 9)
+  stated low    n= 527 justified mean=2.11/3 weak-or-worse=9% Jev well_supported=67%
+  stated medium n=1070 justified mean=1.71/3 weak-or-worse=28% Jev well_supported=39%
+  stated high   n= 791 justified mean=2.13/3 weak-or-worse=14% Jev well_supported=56%
+  stated-HIGH share by desk: {'bear_researcher': '59%', 'bull_researcher': '22%', 'fundamentals_analyst': '63%', 'market_analyst': '39%', 'news_analyst': '9%', 'research_manager': '28%', 'social_media_analyst': '3%', 'trader': '42%'}
+
+ami-clean (arm 10+fix)
+  stated low    n= 679 justified mean=2.13/3 weak-or-worse=9% Jev well_supported=73%
+  stated medium n=1330 justified mean=1.83/3 weak-or-worse=13% Jev well_supported=53%
+  stated high   n= 287 justified mean=2.33/3 weak-or-worse=4% Jev well_supported=71%
+  stated-HIGH share by desk: {'bear_researcher': '31%', 'bull_researcher': '2%', 'fundamentals_analyst': '20%', 'market_analyst': '4%', 'news_analyst': '1%', 'research_manager': '16%', 'social_media_analyst': '0%', 'trader': '25%'}
+
+dsv4-tmall (arm 11)
+  stated low    n= 541 justified mean=2.17/3 weak-or-worse=6% Jev well_supported=70%
+  stated medium n=1080 justified mean=1.69/3 weak-or-worse=27% Jev well_supported=32%
+  stated high   n= 771 justified mean=2.05/3 weak-or-worse=17% Jev well_supported=44%
+  stated-HIGH share by desk: {'bear_researcher': '63%', 'bull_researcher': '21%', 'fundamentals_analyst': '58%', 'market_analyst': '35%', 'news_analyst': '10%', 'research_manager': '27%', 'social_media_analyst': '5%', 'trader': '37%'}
+
+#### sbc — literal holdout rule 'negative SBC-adjusted FCF' (dsv4 R5 fact sheets)
+  negative (7): ['APD', 'BA', 'FCEL', 'RIOT', 'RIVN', 'SNAP', 'SPCE']
+  datum absent (9): ['BAC', 'JPM', 'MO', 'PLD', 'SO', 'T', 'WFC', 'WU', 'XPEV']
+
+#### split-fit — thresholds fit on rep1, applied to rep2 (target per 30 = 2.5/7.5/15/22.5/30)
+  dsv4-prod (arm 1)        [stance_signed] rep2 approvals under rep1-fit T: [1, 11, 15, 21, 30]
+  dsv4-prod (arm 1)        [desk_net_cont] rep2 approvals under rep1-fit T: [4, 12, 17, 13, 30]
+  dsv4-disp (arm 9)        [stance_signed] rep2 approvals under rep1-fit T: [2, 6, 12, 26, 29]
+  dsv4-disp (arm 9)        [desk_net_cont] rep2 approvals under rep1-fit T: [2, 8, 14, 24, 30]
+  ami-clean (arm 10+fix)   [stance_signed] rep2 approvals under rep1-fit T: [1, 9, 13, 24, 30]
+  ami-clean (arm 10+fix)   [desk_net_cont] rep2 approvals under rep1-fit T: [1, 7, 6, 23, 29]
+  dsv4-tmall (arm 11)      [stance_signed] rep2 approvals under rep1-fit T: [4, 11, 15, 18, 30]
+  dsv4-tmall (arm 11)      [desk_net_cont] rep2 approvals under rep1-fit T: [4, 6, 18, 24, 29]
