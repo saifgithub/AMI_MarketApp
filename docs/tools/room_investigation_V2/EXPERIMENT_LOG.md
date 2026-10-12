@@ -26,7 +26,8 @@ Handoff rules for parallel lanes are in §4.
 | 7 | sub-cap variant | 33 (11×3, R5) | disposition + sub-cap | uncapped | dsv4 | DONE | out/cr253-subcap | analysis_r4 |
 | 8 | disposition-only variant | 33 (11×3, R5) | disposition only | uncapped | dsv4 | DONE | out/cr253-disposition | analysis_r5 |
 | 9 | **disposition matrix** | **300 (30×5×2)** | **disposition only** | **uncapped** | **dsv4** | **RUNNING (ETA ~18:00 UTC 2026-10-10)** | → ~/cr253_disp_matrix | analysis_r6 (pending) |
-| 10 | clean ami-llm matrix | 300 (30×5×2) | production | uncapped | ami-llm | QUEUED (DGX ~2 days out; hourly watcher 01M4HPV4ZND7A60H9MWK1CH9C5) | → ~/cr251_v2 | analysis_r6 (provider control) |
+| 10 | clean ami-llm matrix | 300 (30×5×2) | production | uncapped | ami-llm | DONE (R2/R5 re-ran clean after DGX death contaminated the first pass) | out/cr251-v2-ami + cr251-v2-ami-fix → ~/cr251_v2, ~/cr251_v2_fix | analysis_r6 (cross-model discrimination failure) |
+| 11 | tm-all converted (CR254 lane) | 300 (30×5×2) | tm-all converted | uncapped | dsv4 | DONE | out/cr254-tmall → ~/cr254_tmall_matrix | read by track K below |
 
 Benchmark yamls for every arm: `benchmarks/cr251-*.yaml`, `benchmarks/cr253-*.yaml`;
 mandate snapshots: `benchmarks/mandates/cap{1,2,3,4}-r5.json`; prompt variants:
@@ -82,6 +83,17 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
   Stability untouched by both — flips are upstream of the PM.
 - **Arm 9 (running):** does the disposition table move the full curve toward the
   CR255 target (R1=5/15/30/45/60 per 60)?
+- **Arm 10 (ami clean):** 0/0/4/10/20 monotone, conservative. First-pass R2/R5
+  were contamination (DGX died mid-run); re-ran clean. Cross-model headline:
+  discrimination failure is present on ami-llm too (net-support r=+0.03, lift 0,
+  Δ −0.05/−0.11) — the verdict layer ignoring evidence is structural, not
+  provider-specific.
+- **Arm 11 (tm-all, CR254 lane):** curve 4/6/15/16/17 monotone-BY-FLATNESS
+  (plateaus at R3, never willing); **flips 27% — worst of any arm**; rooms 30%
+  faster (4.9 min — shallower deliberation); discrimination Δ negative at every
+  level (−0.05…−0.13); net-support r=+0.07, threshold lift +1 pt. Sizing still
+  pins to caps (CR249 gate robust across personas). Verdict: the Oct-6 NO-GO
+  re-confirmed at n=300 — no dimension improved, stability sharply worse.
 - **Decisions locked:** target curve 5/15/30/45/60 (Saiful); single-metric evidence
   bar DEAD (net-support ties) → C7 composite score; sub-cap = future structural
   computation, never prose.
