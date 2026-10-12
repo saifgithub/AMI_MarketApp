@@ -31,14 +31,22 @@ is the valid measurement.
   full new-stack curve is uniformly more restrictive than the heuristics-off
   baseline but properly shaped.
 
-## Per-arm quality metrics
+## Per-arm quality metrics (FINAL for scored arms)
 
-| Metric | dsv4 production | dsv4 disposition | ami-llm (valid levels) |
+| Metric | dsv4 production | dsv4 disposition | ami-llm clean |
 |---|---|---|---|
-| Verdict flips | 17% | 21% | ~10% (caveated) |
-| Discrimination Δ (all levels) | −0.06…−0.13 | −0.03…−0.13 | TBD post-fix |
-| Net-support threshold lift | +0 pts | +0–2 pts | TBD post-fix |
+| Verdict flips | 17% | 21% | 14% |
+| Discrimination Δ | −0.06…−0.13 | −0.03…−0.13 | −0.05 (R4), −0.11 (R5) |
+| Net-support r | +0.19 | — | **+0.03** |
+| Net-support threshold lift | +0 pts | +0–2 pts | **+0 pts** |
 | Sub-cap spontaneous rate | 2.6% (2/78) | — | — |
+
+**The discrimination failure is cross-model.** ami-llm-clean shows the same
+disease as dsv4: APPROVE rooms score lower than PASS rooms, net support has no
+usable correlation with the verdict (r=+0.03), and a threshold adds nothing
+over always-PASS. The verdict layer does not read the evidence on either
+model — this is now the program's most robust finding and the definitive
+justification for CR255 C7 (composite evidence bar) + C8 (deterministic gate).
 
 ## Findings
 
