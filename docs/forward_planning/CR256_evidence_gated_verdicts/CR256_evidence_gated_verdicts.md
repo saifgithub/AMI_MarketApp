@@ -5,6 +5,57 @@ consumes CR253 (disposition fold-in pending), CR255 (target curve + program fram
 
 ---
 
+## 0. Purpose and background — the week this CR comes from
+
+**Where this started.** CR247 (2026-09) asked a quality question about the
+Room: 12 agents, 6 stages — are the prompts feeding the LLMs right, and do the
+agents' decisions hold together? The investigation that followed converged on
+a product question Saiful posed for the risk-knob feature (CR228/CR251): *with
+5 risk appetites and 30 benchmark tickers, approval rate should rise
+monotonically from R1 to R5 — does it?* The frozen heuristics-off baseline
+(Oct-07, ami-llm, 300 rooms) answered: **no** — approvals went
+0/3/4/24/26, a switch between R3 and R4, not a slope; and Jev-scored evidence
+showed **zero discrimination**: APPROVE rooms were no better-supported than
+PASS rooms at every level. The risk knob moved sizes, not judgment.
+
+**What the week established** (each step measured, all artifacts committed;
+`docs/tools/room_investigation_V2/EXPERIMENT_LOG.md` is the canonical map):
+
+1. **The stack shipped** (Oct-08/09: CR249 trader-geometry repair, CR252 CFA
+   evaluation parameters folded into all 12 personas, CR253 data lanes, D28
+   EDGAR ingest) and was re-measured as a full 300-room matrix on dsv4
+   (ami-host had died — the first of three deaths; dsv4 on alpha-spark was the
+   bridge). The new stack made dsv4 more willing but **inverted at R5**
+   (5/11/22/27/17) — approving less at max aggression than at R4.
+2. **The R5 inversion was dissected to a mechanism**: commitment size raises
+   the evidence bar (pinning size to 1% removed the inversion; per-name size
+   thresholds measured — DHR/MO approve ≤3%, refuse ≥4%). "Size ≠ worthiness"
+   (CR253's thesis) got its quantitative proof.
+3. **Every prompt-level fix was tried and measured dead.** Disposition table:
+   fixed curve *shape* (first monotone curve, 1/7/13/15/19) but not
+   discrimination or stability. Sub-cap conditional: inert — sizing below cap
+   happens spontaneously (~13%) and narration cannot carry control ("cut
+   2.0% to 3.5%"). tm-all suite: re-confirmed NO-GO at n=300 with the worst
+   flip rate (27%). The rule the whole week converged on: **personas move
+   priors; structure moves evidence and stability.**
+4. **The disease was proven cross-model.** When the DGX returned, the clean
+   ami-llm control arm showed the same failure (r=+0.03, Δ negative, lift 0)
+   with a conservative-but-monotone curve (0/0/4/10/20). No model swap fixes
+   this — it is structural.
+5. **The target was set.** Saiful locked the policy the bar must implement:
+   R1–R5 = 5/15/30/45/60 approvals per 60 rooms
+   (`CR255_decision_consistency/target_curve.md`).
+
+**Why this CR is the conclusion.** The week's experiments bracket the design
+space: prose interventions are measured exhaustively (points 3–4), and the
+single-metric evidence bar was tried and died of score-ties. What remains —
+and all that remains — is to make evidence a computed, structured input to a
+gated verdict. That is Layer 1–3 below. The acceptance criteria in §4 are the
+program's original question restated as testable gates: monotone curve that
+tracks the target, decisions that track evidence, holdouts that stay out.
+
+---
+
 ## 1. Problem statement (measured — do not re-litigate without new data)
 
 The Room's final verdict does not read the evidence the debate produces.
