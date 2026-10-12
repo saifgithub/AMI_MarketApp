@@ -138,7 +138,7 @@ def decide_room(api_key: str, arm: dict) -> dict:
         "request": {"state": state, "model": "jev-latest", "questions": QUESTIONS},
     }
     try:
-        result = jev_eval(api_key, state)
+        result = jev_eval(api_key, state, questions=QUESTIONS)
         rec["raw_response"] = result
         rec["model"] = result.get("model")
         rec["usage"] = result.get("usage")

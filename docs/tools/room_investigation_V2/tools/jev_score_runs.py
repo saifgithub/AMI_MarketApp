@@ -25,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from jev_v1_pilot import jev_eval, load_jev_key, trim  # noqa: E402
+from jev_v1_pilot import QUESTIONS, jev_eval, load_jev_key, trim  # noqa: E402
 
 PROSE_AGENTS = {
     "fundamentals_analyst", "market_analyst", "news_analyst", "social_media_analyst",
@@ -82,7 +82,7 @@ def score_turn(api_key: str, arm: dict, t: dict) -> dict:
         "request": {"state": state, "model": "jev-latest", "questions": QUESTIONS},
     }
     try:
-        result = jev_eval(api_key, state)
+        result = jev_eval(api_key, state, questions=QUESTIONS)
         rec["latency_ms"] = int((time.time() - started) * 1000)
         rec["raw_response"] = result
         rec["model"] = result.get("model")

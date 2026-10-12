@@ -89,8 +89,8 @@ def load_jev_key() -> str:
     raise SystemExit("JEV_API_KEY not found in repo .env")
 
 
-def jev_eval(api_key: str, state: dict, retries: int = 3) -> dict:
-    body = json.dumps({"state": state, "model": "jev-latest", "questions": QUESTIONS}).encode()
+def jev_eval(api_key: str, state: dict, questions: dict | None = None, retries: int = 3) -> dict:
+    body = json.dumps({"state": state, "model": "jev-latest", "questions": questions or QUESTIONS}).encode()
     delay = 2.0
     for attempt in range(retries):
         req = urllib.request.Request(
