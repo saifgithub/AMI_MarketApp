@@ -11,9 +11,25 @@ PROVISIONAL.
 | CR255 target | 5 | 15 | 30 | 45 | 60 | ✓ |
 | dsv4 production (arm 1) | 5 | 11 | 22 | 27 | 17 | ✗ (R5 inverts) |
 | **dsv4 disposition (arm 9)** | 1 | 7 | 13 | 15 | 19 | **✓** |
-| ami-llm clean (arm 10) | 0 | 0* | 4 | 10 | 2* | ✗ (R4→R5 drop) |
+| ami-llm production CLEAN (arm 10 + fix) | 0 | 0 | 4* | 10 | **20** | **✓** |
 
-\* R2/R5 provisional — contaminated (see below).
+\* R3 re-run in flight (first pass had 83% Jev coverage). The first-pass
+R2=0/R5=2 numbers were CONTAMINATION ARTIFACT (DGX died mid-run, 644+1433
+connection failures); the re-run (~1+2 errors, healthy 11.5-min durations)
+is the valid measurement.
+
+## CORRECTION to the provisional readings
+
+- **The R5 inversion is NOT confirmed on ami-llm** — the clean ami curve
+  (0/0/4/10/20) is monotone. The earlier "stack-level" claim rested on
+  contaminated R5 data. Current evidence: the inversion is real on dsv4
+  (healthy run, verified) and absent on ami-llm-clean. It may be
+  dsv4-specific after all — final word needs the ami disposition twin
+  (disposition × ami-llm 30×5) to separate model from prompt.
+- **ami-llm's conservatism vs the frozen baseline (0/3/4/24/26) is real but
+  smaller than the contaminated read**: clean R5 = 20/60, not 2/60. The
+  full new-stack curve is uniformly more restrictive than the heuristics-off
+  baseline but properly shaped.
 
 ## Per-arm quality metrics
 
@@ -44,9 +60,10 @@ PROVISIONAL.
    uninvestable tail (≈11 names) makes 100% at R5 unattainable by construction
    — the target needs a floor-adjusted reading (e.g. % of investable universe).
 
-4. **ami-llm flips less than dsv4** (~10% vs 17–21%) — preliminary, since the
-   contaminated levels could be artificially stable (degraded rooms agreeing
-   on PASS). Confirm on the fix arm.
+4. **ami-llm flips less than dsv4** (~10% on the first pass) — but this too
+   needs the clean re-run before trusting: degraded rooms can agree
+   artificially. Flip rates for the fix levels are computed with the final
+   numbers below.
 
 5. **Contamination record:** the DGX hard-died ~19:43 UTC 2026-10-11 during
    the ami matrix's R5 (644 + 1433 'connection attempts failed'; R2 rooms
