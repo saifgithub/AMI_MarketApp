@@ -1,17 +1,24 @@
-# CR255 — Target-curve policy (Saiful, 2026-10-10)
+# CR255 — Target-curve policy (Saiful, 2026-10-10; amended 2026-10-13)
+
+**Amendment 2026-10-13 (Saiful, via CR256 review B2):** R5 is re-anchored to
+the investable universe. The code-computed holdout predicate (negative
+SBC-adjusted FCF) bars 7 of 30 tickers (APD, BA, FCEL, RIOT, RIVN, SNAP,
+SPCE — published list, with a data-absent branch for the 9 tickers lacking
+the datum). R5 therefore approves every non-barred name: **46/60 target**
+(tolerance ±8 → 38–54). Holdouts stay out at every level (AC3).
 
 **Policy:** the Room should approve, per 60 convenes (30 tickers × 2 reps):
 
-| Risk | Target approvals | % of universe |
-|---|---|---|
-| R1 | 5 | 8% |
-| R2 | 15 | 25% |
-| R3 | 30 | 50% |
-| R4 | 45 | 75% |
-| R5 | 60 | 100% |
+| Risk | Target approvals | % of universe | % of investable (23) |
+|---|---|---|---|
+| R1 | 5 | 8% | 22% |
+| R2 | 15 | 25% | 65% |
+| R3 | 30 | 50% | — |
+| R4 | 45 | 75% | — |
+| R5 | **46** | 77% | 100% |
 
-Shape: monotone ramp, not a switch. R5 = approve any defensible thesis;
-R1 = only exceptional evidence.
+Shape: monotone ramp. R5 = approve any defensible thesis among investable
+names; R1 = only exceptional evidence.
 
 **Why this is the anchor for the evidence bar (CR255 Phase C7):** the per-level
 net-thesis-support thresholds are FIT to reproduce this curve on the

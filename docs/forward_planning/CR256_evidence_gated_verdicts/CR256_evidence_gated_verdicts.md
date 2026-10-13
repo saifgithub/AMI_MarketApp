@@ -1,6 +1,11 @@
-# CR256 — Evidence-gated verdicts (spec for review)
+# CR256 — Evidence-gated verdicts (spec v2, review-complete)
 
-**Status:** proposed, awaiting review · **Spec:** AT:K3 · **Supersedes:** nothing;
+**Status:** proposed — review complete (Opus review accepted 14/modified 3, see
+`review_response.md`); Saiful's four decisions (2026-10-13): R5 re-anchored to
+the investable universe (46/60), 7-name holdout list approved with absent-datum
+branch, CR228 vote bar frozen-and-recorded during measurement, shared CR257
+evaluation harness. **Spec v2 = v1 + review amendments integrated.**
+**Spec:** AT:K3 · **Supersedes:** the v1 text at 48d46ea0 (preserved in git);
 consumes CR253 (disposition fold-in pending), CR255 (target curve + program frame)
 
 ---
@@ -127,15 +132,25 @@ the full checklist census, identical in structure every run.
 `evidence_score(room) = w1·net_support + w2·(−unresolved_objections) +
 w3·catalyst_proximity + w4·factor_coverage`, where:
 
-- `net_support` = mean(support_grade of bull-side cards, Jev-audit corrected)
-  − mean(bear-side cards) — the metric `tools/net_support.py` computes today,
-  upgraded from turn-prose grades to card grades (fixes the resolution/tie
-  problem: the single-metric bar died because ~40/60 rooms tied at net=+0.33;
-  card-level grades + objection counts + coverage add the missing dimensions).
-- `catalyst_proximity` = days to nearest filed catalyst (from claim cards'
-  key_numbers; already in the data the desks cite).
-- `factor_coverage` = fraction of checklist items with data_present=yes.
-- Weights `w*` are fit, not hand-set (§4).
+- `net_support` = mean(support_grade of FOR-direction cards) − mean
+  (AGAINST-direction cards) — **signed by each card's own `direction` field,
+  never by desk membership** (review B4: desk-signing is the measured flaw —
+  fundamentals argues against in some rooms; desk-signed scores re-test at
+  r = −0.11…+0.25, direction-signed at +0.84). The v1 reference to
+  `tools/net_support.py` (desk-based) is superseded; the stance-only
+  direction signal (no grades at all) is the **baseline the composite must
+  beat** (rep-to-rep r = +0.71…+0.83).
+- `unresolved_objections` = count of objections with no opposite-direction
+  card on the same item at grade ≥ the objection's (computed, per M3).
+- Weights `w*` are fit against test-retest reliability + agreement with the
+  independent label — NOT against the curve (review M5: any weights reproduce
+  the curve under a quantile fit).
+- ~~catalyst_proximity~~ and ~~factor_coverage~~ are DROPPED from
+  `evidence_score` (review M4/M2: timing preference ≠ evidence quality, and
+  coverage is a ticker constant). Catalyst proximity becomes a separate
+  explicit policy rule ("APPROVE-eligible but catalyst ≤ N days → sub-cap or
+  wait"); factor coverage is normalized against the fact-sheet registry as a
+  diagnostic only.
 
 Self-grades are the runtime signal; **Jev audits a stratified sample per run**
 (2 cards/desk) and systematic divergence between self-grade and Jev-grade
@@ -160,29 +175,55 @@ vetoes):
   sub-cap APPROVE if within the sub-cap band); the verdict record carries
   `bar_blocked: true` and the computed score. The LLM narrates; the action
   set is code.
-- **Holdout rules override thresholds both ways:** thesis-broken shapes
-  (RIOT-pattern: high grounding, negative thesis) are barred at every level;
-  grounded-bear cases (APD-pattern: negative SBC-adjusted FCF) pass at every
-  level regardless of score. These are the two named patterns from
-  analysis_r3; encoded as data checks, not vibes.
+- **Holdout rules are exclusions applied before the threshold** (Saiful
+  2026-10-13): the code-computed predicate `SBC_adjusted_FCF < 0` bars
+  **APD, BA, FCEL, RIOT, RIVN, SNAP, SPCE** (7 of 30; published list fixed
+  before fitting, with a `data_present: no` branch for the 9 tickers lacking
+  the datum — absent ≠ barred). Barred names are excluded from the approval
+  set at every level; AC1's R5 target is re-anchored to 46/60 (the investable
+  universe). The RIOT-shaped "high grounding, broken thesis" pattern remains
+  a falsifier the fitted bar must not approve — validated per model, not
+  encoded as a second predicate in v1.
 
 Sub-cap sizing (structural, replaces the dead prose route): on APPROVE,
-`size = cap(level) · f(evidence_score, ATR)` — a monotone map from score to
-size within the mandate cap (CR129 `single_name_cap_pct`,
-`backend/app/schemas/mandate.py`; the map's parameters ship in the same fit).
-The PM receives the computed size as context and narrates around it; it cannot
-argue a different number past `check_mandate_compliance`
-(`backend/app/agents/safety_floor.py:175`), which already runs.
+`size = cap(level) · f(evidence_score)` — a **continuous monotone map from the
+threshold upward** (review §5 Q4: borderline rooms get minimum size, no step
+discontinuities; ATR dropped from v1 — the measured size-coupling evidence is
+per-name, not per-level volatility). The PM receives the computed size as
+context and narrates around it; it cannot argue a different number past
+`check_mandate_compliance` (`backend/app/agents/safety_floor.py:175`), which
+already runs.
 
-### Determinism hardening (prerequisite)
+**Relationship to the existing CR228 vote bar (review B5):** the PM
+self-consistency graded vote (4/4/3/2/2 of 5, `room_runner.py:9224`) stays
+FROZEN during measurement (Saiful 2026-10-13); the evidence gate fits on top of
+it and the decision record gains `samples` + vote outcome. Retirement is a
+production-fold-in decision, not a measurement-phase one — on ami-llm the vote
+bar binds (R4: 24 approvals at 1-vote vs 10 actual) and retiring it would
+confound the model comparison.
 
-- `_researchers_order(run_id)` (`backend/app/services/room_runner.py:249`,
-  CR219 R58) is deterministic by run_id; **harness runs must stop disabling it**
-  (log line `seeded=False` — find and remove the harness-side switch,
-  `docs/tools/room_investigation_V2/library/runner.py`).
-- Analyst temperature pinning per provider via
-  `force_provider()` (`docs/tools/room_investigation_V2/library/provider_gateway.py:96`)
-  — `supports_temperature` exists in the ProviderSpec; pin analysts to 0.2.
+### Determinism notes (corrected per review B3)
+
+- Debate order: the v1 "enable seeding" bullet was wrong — `seeded=False` IS
+  the fixed Bull→Bear order (config default, `config.py:851`); enabling seeding
+  would ADD variance. No change.
+- Temperature pinning is NOT plumbed (`force_provider` raises; nothing in
+  backend reads temperature). Defer to a post-pilot `direct_call` replay
+  measurement; if it helps, land as new backend plumbing with compose-parity
+  (CR040). Not a v1 prerequisite.
+
+**Gate failure semantics (review M6):** an uncomputable `evidence_score`
+(malformed cards beyond the parse-fail budget) → **PASS**, honest reason, the
+existing DEF058/DEF059 fail-safe — the gate is computed BEFORE the PM call
+and the allowed actions + computed size are passed as context, so a PM that
+still emits a disallowed action is a parse failure → PASS with
+`overridden_from_llm=true` (`schemas/room.py:135`); APPROVE narration is never
+printed under a PASS record. The gate is never silently skipped.
+
+**Prerequisite (review M7):** debator turns must be present in `llm_audit`
+and Jev-scored — they are absent from all four arms' Jev logs today, and
+objections (a gate input) cannot be audited without them. Reconcile the
+card-level Jev audit question with CR257's question-set freeze.
 
 ## 3. Code touchpoints (anchors as of bf0fa99f)
 
@@ -203,9 +244,14 @@ argue a different number past `check_mandate_compliance`
 
 ## 4. Acceptance criteria (all four, fresh 30×5, per model)
 
-1. Curve within tolerance of target (each level ±8 approvals).
-2. Verdict flips < 10%.
-3. Holdouts out at every level (RIOT/APD-shaped names 0 approvals).
+1. Curve within tolerance of the amended target — R1–R5 = 5/15/30/45/46 of
+   60 (investable-universe anchor; ±8 per level, net of the published 7-name
+   holdout list).
+2. Verdict flips < 10% **with its 95% CI stated** (n=150 pairs ⇒ ±5pt), paired
+   with a pilotable leading indicator: `evidence_score` test-retest r ≥ 0.85
+   on the card pilot (review M8).
+3. Holdouts (published list) 0 approvals at every level; holdout recall
+   reported as an explicit accuracy measure (review B1).
 4. Discrimination Δ positive at every level (APPROVE rooms score higher).
 
 Validated first **retroactively on the 1,350 existing scored rooms** (cards
@@ -214,7 +260,16 @@ run is spent. Then: fresh 30×5 on dsv4 → on ami-llm → production fold-in CR
 (with the CR253 disposition table, which this gate subsumes at the action
 level).
 
-## 5. Boundaries
+## 5. Standing limitations (review §7, adopted)
+
+- The stance proxies validate what a direction-aware score CAN do; they do
+  not forecast card performance — the card pilot is the arbiter.
+- The gate mostly re-expresses the debate's direction. Its measured value is
+  stability, calibration, and per-name monotonicity. Whether the debate's
+  direction is CORRECT remains unmeasured until the independent label (AC4)
+  exists — do not market this as a correctness fix.
+
+## 5b. Boundaries
 
 - DEF059 holds: the gate restricts the action set; the PM's narration is never
   rewritten post-hoc.
@@ -225,18 +280,18 @@ level).
 - llm_audit immutability: the evidence record is additive; no historical rows
   change.
 
-## 6. Open questions for the reviewer
+## 6. Open questions — RESOLVED (review §5, Saiful 2026-10-13)
 
-1. **Card grade trust:** self-graded support with Jev audit-sampling assumes
-   desks grade themselves honestly. The review session (CR255 jev_review)
-   partially covers the judge side; do we also need a self-grade bias
-   measurement before fitting weights?
-2. **Gate bypass surface:** an LLM that knows the gate can phrase narration to
-   game `data_present` flags. Is the card schema's `key_numbers` requirement
-   (must cite the datum) a sufficient structural defense, or do we need
-   arithmetic verification of cited numbers against the data payload?
-3. **Fit stability:** quantile-fit thresholds on n=60/level are themselves
-   noisy (the R4/R5 10-room gaps in our own arms). Do we accept n=60 fit, or
-   require the calibration arm at n=3 reps (90/level) for the fit run?
-4. **Sub-cap map shape:** linear vs step function from score to size — any
-   product preference (user-facing copy implications)?
+1. **Card grade trust:** self-grades are **tie-breakers only**, never the
+   primary term. Direction carries the signal (stance-only r = +0.71…+0.83);
+   adding grades mainly breaks ties. Jev audit sampling stays as drift detection.
+2. **Gate bypass:** closed structurally per review M3 — `data_present` is
+   computed from the fact-sheet registry, cited `key_numbers` are verified
+   arithmetically against the payload (machinery exists at
+   `room_runner.py:4675-4700`, DEF237/DEF242 lineage; do NOT use Jev
+   `figures_consistent` — 0.46–0.65 on clean turns per jev_review §1.5).
+3. **Fit stability:** fit **one monotone ladder T(1)≥…≥T(5)** over all 300
+   calibration rooms (not five independent quantiles); bootstrap T(1); spend
+   extra reps on **held-out tickers**, not a third rep of the same 30.
+4. **Sub-cap map:** continuous and monotone from T upward (review §5 Q4
+   reasoning; validate on the pilot).
