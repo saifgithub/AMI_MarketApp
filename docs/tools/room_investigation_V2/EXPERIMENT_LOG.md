@@ -30,9 +30,9 @@ ami-llm approved 14/30.
 
 ## 0b. Model × test coverage matrix
 
-| Test | dsv4 (alpha-spark) | ami-llm (DGX) | GLM-5.3-Flash (DeepInfra) | Qwen3.8-Flash (DeepInfra) |
-|---|---|---|---|---|
-| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — |
+| Test | dsv4 (alpha-spark) | ami-llm (DGX) | GLM-5.3-Flash (DeepInfra) | Qwen3.8-Flash (DeepInfra) | Kolibri-1 (100.98.142.64:8002) |
+|---|---|---|---|---|---|
+| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — | gate running |
 | Production prompts, 30×5 (heuristics-off v1) | — | ✓ 0/3/4/24/26 (frozen baseline) | — | — |
 | CR247 persona, 30 tickers @R5 | — | ✓ 14/30 | ✓ 4/30 | — |
 | Approved-14 re-run | — | ✓ | — | ✓ 6/14 |
@@ -72,6 +72,7 @@ mandate snapshots: `benchmarks/mandates/cap{1,2,3,4}-r5.json`; prompt variants:
 table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measured inert).
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
+| 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, gate first | GATE v3 RUNNING 2026-10-13 | → ~/cr255_kolibri | pending |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
@@ -166,3 +167,26 @@ after **arm 9 completes**. Rules:
   model-specific) and the full CR253 acceptance benchmark.
 - Track K next build: CR255 C7 composite decision score; Phase D regression suite.
 - Revert the alpha LLM bridge (LLM_FORCE_PROVIDER=glm) after ami-host is stable.
+
+## 6. Reasoning-model harness notes (Kolibri-1, arm 13)
+
+Kolibri-1 is a reasoning model: `max_tokens` is spent on the reasoning channel
+FIRST, content comes after. Three knobs must move together for such a model,
+measured on the arm-13 gate 2026-10-13:
+
+1. `VLLM_MAX_TOKENS_FLOOR=16384` (env → `settings.vllm_max_tokens_floor`;
+   floor clamps every per-agent budget up). At the default 5000 the four
+   analysts ALL hit `finish_reason=length` with **zero content chars** —
+   reasoning alone consumed the budget — and the room silently fell back to
+   scripted desks. Data from such rooms is garbage; discard, don't score.
+2. `VLLM_REQUEST_TIMEOUT_S=1200` (transport, default 360). Long reasoning
+   decodes exceed the default.
+3. `ROOM_AGENT_TIMEOUT_S=780` (orchestration guard, default 180, must stay
+   BELOW transport) AND `ROOM_BENCH_AGENT_TIMEOUT_S=780` — the V2 runner had
+   its OWN hardcoded 300 s desk timeout (`runner.run_arm` default) that killed
+   desks even with 1+2 raised; now env-overridable (`runner.py`, default 300
+   unchanged for other lanes).
+
+Watch `llm_call_length_stop` (chars=0 = reasoning starved) and
+`room_agent_scripted_fallback` in the batch log — either event at material
+rates = the arm's numbers are not model behavior.

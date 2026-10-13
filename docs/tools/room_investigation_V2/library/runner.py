@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -199,7 +200,7 @@ async def run_arms(
     gateway,
     max_concurrent: int = 3,
     post_spacing_s: float = 15.0,
-    agent_timeout_s: float = 300.0,
+    agent_timeout_s: float = float(os.environ.get("ROOM_BENCH_AGENT_TIMEOUT_S", "300")),
     fresh_user: bool = False,
 ) -> RunSummary:
     """Run one full Room convene per arm against the passed (forced) gateway.
