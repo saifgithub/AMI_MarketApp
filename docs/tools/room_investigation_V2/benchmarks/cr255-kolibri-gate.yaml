@@ -1,0 +1,11 @@
+# CR255 model-coverage arm — Kolibri-1 (Aleph-Alpha) on vLLM 100.98.142.64:8002.
+# GATE ONLY: 2 rooms @ R5, production prompts, before the full 30x5 matrix.
+# Kolibri-1 is a REASONING model (reasoning channel consumes token budget) —
+# this gate exists to catch JSON truncation / NO_VERDICT failure before 300 rooms.
+name: cr255-kolibri-gate
+provider: vllm
+tickers: [AAPL, BA]
+mandate: { risk_score: 5 }
+repeats: 1
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 1 }

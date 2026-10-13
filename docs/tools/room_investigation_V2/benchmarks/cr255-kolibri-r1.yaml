@@ -1,0 +1,11 @@
+# CR255 model-coverage arm 13 — Kolibri-1 matrix, risk 1.
+# Production prompts (backend-default), native uncapped mandate, 30 tickers x 2 reps.
+# Diff target: arm 1 (dsv4 prod 5/11/22/27/17), arm 10 (ami clean 0/0/4/10/20),
+# frozen BASELINE.md, CR255 target curve 5/15/30/45/60.
+name: cr255-kolibri-r1
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 1 }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
