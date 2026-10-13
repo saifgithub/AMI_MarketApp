@@ -589,6 +589,8 @@ Keep this log honest. The "why" matters more than the "what."
 
 ### D-073 — Build on the personal developer accounts, migrate to the company account at the end
 
+> **Update 2026-10-13 (CR258):** executing now — company role mailboxes exist; plan + identity register in `docs/forward_planning/CR258_company_account_migration/`.
+
 - **Decided** (2026-09-22): development continues on Saiful's **personal** Apple and
   Google developer accounts through the rest of the build. The migration to the
   **company account** (Agentic Market Intelligence) happens **once, at the end of
