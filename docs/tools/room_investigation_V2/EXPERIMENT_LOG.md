@@ -32,7 +32,7 @@ ami-llm approved 14/30.
 
 | Test | dsv4 (alpha-spark) | ami-llm (DGX) | GLM-5.3-Flash (DeepInfra) | Qwen3.8-Flash (DeepInfra) | Kolibri-1 native (100.98.142.64:8002) | Kolibri-1 thinking-off |
 |---|---|---|---|---|---|---|
-| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — | running (32K floor) | running (standard knobs) |
+| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — | running (32K floor) | stopped by Saiful (resumable) |
 | Production prompts, 30×5 (heuristics-off v1) | — | ✓ 0/3/4/24/26 (frozen baseline) | — | — |
 | CR247 persona, 30 tickers @R5 | — | ✓ 14/30 | ✓ 4/30 | — |
 | Approved-14 re-run | — | ✓ | — | ✓ 6/14 |
@@ -73,7 +73,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
 | 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, NATIVE mode | GATE CLEAN 2026-10-14; 16K pass CONTAMINATED (8 starved desks/20 rooms, bear-skewed) → restarted at floor 32768; MATRIX RUNNING 06:44 UTC, levels R5→R1, conc 2 | → ~/cr255_kolibri | pending |
-| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}` (probe: reasoning_tokens 0); standard knobs (floor 5000, default timeouts) | RUNNING 06:52 UTC, levels R5→R1, conc 3, shares the box with arm 13 | → ~/cr255_kolibri_nt | pending — the arm-13↔14 diff IS the reasoning-value measurement |
+| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}` (probe: reasoning_tokens 0); standard knobs (floor 5000, default timeouts) | STOPPED by Saiful ~07:05 UTC (partial r5 rows kept in ~/cr255_kolibri_nt — resumable; launcher ~/run_kolibri_nt_matrix.sh retained) | → ~/cr255_kolibri_nt | not produced |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
