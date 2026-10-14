@@ -39,10 +39,11 @@ in how the Room runs its risk stage.
   answers meaningfully. `figures_consistent` / `conviction_justified` /
   `envelope_matches_prose` return None — they are prose-stance rubric and the officer
   output is structured JSON with no STANCE envelope.
-- **Pending (Jev fund 402):** `cr253-disp-matrix` (19/300 scored before the 402),
-  `cr254-tmall-matrix`, `cr251-v2-ami-fix` officer turns. Contaminated files were
-  deleted (error rows only); re-run with `--agents risk_officer` once the account is
-  topped up (~660 calls ≈ trivial cost).
+- **COMPLETE (2026-10-14, fund topped up):** all four arms' officer turns
+  re-scored clean with `--agents risk_officer` — cr251-v2-dsv4 (300),
+  cr253-disp-matrix (300), cr254-tmall-matrix (300), cr251-v2-ami-fix +
+  original-dir r1/r4 (300). Zero errors. `jev_officer/` holds 60 turns per
+  level per arm, exactly one per room.
 
 ## CR256 consequence
 

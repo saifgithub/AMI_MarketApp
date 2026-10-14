@@ -1,9 +1,8 @@
-# analysis_r7_parity — ami-llm × arm parity vs dsv4 (INTERIM 1)
+# analysis_r7_parity — ami-llm × arm parity vs dsv4 (INTERIM 2)
 
-**Status: INTERIM.** Covers disposition 30×5 (complete) + cap1 30×5 (R2–R5
-complete, R1 in flight). tm-all 30×5 and the 7 probe arms are still running on
-melehost (`/tmp/ami_parity_v2.sh`); Jev evidence-scoring for these arms is
-pending (fund 402). Verdict-layer read only — no Jev r in this interim.
+**Status: INTERIM 2 (Jev complete for covered arms).** Disposition 30×5 +
+cap1 30×5 (R2–R5) Jev-scored (4,354 turns, zero errors, 2026-10-14, funded
+account). tm-all + probes still running. Evidence-tracking r now included.
 
 Source: `docs/tools/room_investigation_V2/out/ami-parity-v2/` (rsync of
 `~/ami_parity` from melehost, 2026-10-14). All rows `status=completed`.
@@ -61,7 +60,37 @@ size pin that HALVED dsv4's instability does nothing for ami (30–47% pinned).
 The consistency disease is model-level, and the CR255 mechanism finding
 (size-pin as stabilizer) does not transfer.
 
-## 4. PM vote distribution (CR228 bar context)
+## 4. Evidence-tracking discrimination (Jev, 2026-10-14) — the headline
+
+Direction-signed evidence score (stance sign × Jev support, per card's own
+direction) vs verdict, per level. Positive r + positive Δ (APPROVE mean −
+PASS mean) = the room approves what the evidence supports.
+
+| arm | R1 | R2 | R3 | R4 | R5 |
+|---|---|---|---|---|---|
+| ami disposition r | (no approvals) | (no approvals) | **+0.37** | **+0.62** | **+0.62** |
+| ami disposition Δ | — | — | +0.37 | +0.28 | +0.29 |
+| ami cap1 r | — | +0.14 | +0.11 | +0.04 | +0.06 |
+| ami cap1 Δ | — | +0.32 | +0.12 | +0.04 | +0.04 |
+| dsv4 disp r (Step-0 ref) | +0.15 | +0.53 | +0.54 | +0.61 | +0.65 |
+| prod disease (measured) | ami r=+0.03, APPROVE rooms score LOWER |
+
+**Two findings:**
+
+1. **The disposition prompt fix gives ami-llm real discrimination.** r=+0.62
+   at R4–R5 with Δ≈+0.3 — APPROVE rooms genuinely carry stronger
+   direction-signed evidence. Against the production-prompt disease on the
+   same model (r=+0.03, approvals anti-correlated), this is a **prompt-layer
+   cure on ami**, in the same band as dsv4's disposition arm. Production does
+   not yet carry the disposition table — this is the measured case for
+   promoting it (per-model acceptance run first, per §7.1).
+2. **The 1% size pin destroys discrimination on ami.** Under cap1 the r
+   collapses to +0.04…+0.14 and Δ to ~+0.04 — approvals decouple from
+   evidence. Combined with §2/§3: on ami the pin makes the room both stricter
+   AND evidence-blind. The cap1 mechanism (CR255's dsv4 stabilizer) is
+   anti-discriminative on this model. Do not port.
+
+## 5. PM vote distribution (CR228 bar context)
 
 ami disposition votes (approve_votes/5): R1 — 52 rooms at 0/5, 6 at 1/5;
 R3 — 49 at 0/5; R5 — 17 at 1/5, 11 at 2/5, 8 at 3/5, 11 at 4/5, 8 at 5/5.
@@ -79,11 +108,13 @@ in either arm (spot check).
 
 ## 6. What this interim does NOT settle
 
-- Evidence-tracking r (Jev) for these arms — fund 402; the discrimination
-  question (does ami track evidence better or worse than dsv4?) stays open.
 - tm-all + probes: whether ami reproduces dsv4's tm-all NO-GO shape.
-- Holdout behavior at the fitted bar (CR256 AC3): needs the full arm set +
-  Jev scores before the Step-0 extension can run on ami.
+- Holdout behavior at the fitted bar (CR256 AC3): needs the full arm set
+  before the Step-0 extension can run on ami.
+- Stability mechanism: disposition-arm decisions now track evidence but still
+  flip 27–37% at R4–R5 (§3). The remaining disease on the fixed arm is
+  instability, not discrimination — that is CR256's bar (and CR259's paid
+  stability story) exactly.
 
 ## 7. Program consequences (measured, do not re-litigate)
 
