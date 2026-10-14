@@ -94,6 +94,59 @@ def _resolve(name: str) -> tuple[ProviderSpec, str, str | None]:
     return spec, base_url, None
 
 
+class _RetryTransient:
+    """Wrap a provider's stream_chat: retry pre-first-chunk 429/5xx with
+    capped exponential backoff.
+
+    DeepInfra's hosted models intermittently answer HTTP 429
+    "engine_overloaded" (measured on DeepSeek-V4-Flash 2026-10-14: a ~10 min
+    burst during the CR256 card-pilot smoke turned two rooms into scripted
+    NO_VERDICTs). Without this, one 429 at an analyst call is fatal to the
+    whole room (scripted fallback). Retries are safe ONLY before the first
+    yielded chunk — a mid-stream retry would duplicate content — so the
+    wrapper buffers nothing and gives up on any error after streaming began.
+    """
+
+    def __init__(self, inner, attempts: int = 6):
+        self._inner = inner
+        self._attempts = attempts
+        self.name = getattr(inner, "name", "deepinfra")
+
+    def __getattr__(self, item):
+        return getattr(self._inner, item)
+
+    async def stream_chat(self, **kwargs):
+        import asyncio
+
+        # The inner provider does NOT raise on 429: it logs, writes
+        # meta["stream_error"], yields a one-shot "[AMI error: ...]" sentinel
+        # and returns (backend llm_gateway.py non-200 branch). So retry must
+        # (a) detect via meta, and (b) buffer chunks until the attempt is
+        # known-good — yielding the sentinel first would poison the turn.
+        # Agent turns are a few KB; buffering is free at harness scale.
+        delay = 3.0
+        for attempt in range(self._attempts):
+            meta = kwargs.get("meta")
+            if isinstance(meta, dict):
+                meta.pop("stream_error", None)
+            buf = []
+            async for chunk in self._inner.stream_chat(**kwargs):
+                buf.append(chunk)
+            err = ""
+            if isinstance(kwargs.get("meta"), dict):
+                err = kwargs["meta"].get("stream_error", "") or ""
+            if ("429" in err or "engine_overloaded" in err) \
+                    and attempt < self._attempts - 1:
+                print(f"deepinfra 429 (attempt {attempt + 1}/{self._attempts}) "
+                      f"— retrying in {delay:.0f}s", flush=True)
+                await asyncio.sleep(delay)
+                delay = min(delay * 2.5, 90)
+                continue
+            for chunk in buf:
+                yield chunk
+            return
+
+
 def vllm_extra_body() -> dict | None:
     """Optional per-run extra body for the forced vllm provider.
 
@@ -183,13 +236,17 @@ def force_provider(
         )
     elif name == "deepinfra":
         # Not registered by LLMGateway.__init__ at all — injected the same
-        # way kimi's extra_body override is.
-        gateway._providers["deepinfra"] = OpenAICompatibleProvider(  # noqa: SLF001
-            name="deepinfra",
-            base_url=base_url,
-            model_name=resolved_model,
-            api_key=api_key,
-            max_tokens_floor=HARNESS_MAX_TOKENS_FLOOR,
+        # way kimi's extra_body override is. Wrapped with 429-retry: the
+        # hosted models intermittently answer HTTP 429 engine_overloaded,
+        # and one unclewed 429 at an agent call scripted-fallbacks the room.
+        gateway._providers["deepinfra"] = _RetryTransient(  # noqa: SLF001
+            OpenAICompatibleProvider(
+                name="deepinfra",
+                base_url=base_url,
+                model_name=resolved_model,
+                api_key=api_key,
+                max_tokens_floor=HARNESS_MAX_TOKENS_FLOOR,
+            )
         )
     if name == "vllm" and (vllm_extra := vllm_extra_body()):
         # Env-driven extra body (e.g. thinking-off for a reasoning-served
