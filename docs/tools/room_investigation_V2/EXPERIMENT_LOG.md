@@ -72,7 +72,7 @@ mandate snapshots: `benchmarks/mandates/cap{1,2,3,4}-r5.json`; prompt variants:
 table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measured inert).
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
-| 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, gate first | GATE v3 RUNNING 2026-10-13 | → ~/cr255_kolibri | pending |
+| 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model | GATE CLEAN 2026-10-14 (AAPL/BA @R5 both PASS, ~22 min/room, 0 fallbacks); MATRIX RUNNING, levels R5→R1 sequential, concurrency 2 | → ~/cr255_kolibri | pending |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
