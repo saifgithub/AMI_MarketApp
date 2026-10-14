@@ -157,3 +157,70 @@ composite as a stability vote, never the decision path. The willingness
 lever remains C7/CR256's job, now with stronger evidence: no reader of the
 current debates reaches the target curve — the debates themselves must
 change (or the decision must stop being read from prose).
+
+---
+
+## 8. v2 — same-inputs (PM-prompt) variant (2026-10-14, AT:K4)
+
+**Basis:** Saiful 2026-10-14 — "select the 300 from one of the latest batches to
+DSV4 and use the PM input for JEV."
+
+**Why:** v1 confounded the decider with its inputs — the judge saw an 8-turn
+trimmed transcript, no fact sheet, no debator/risk content, a 4-field mandate,
+and a custom rubric, while the PM saw the full record. The v1 NO-GO is therefore
+scoped to a *reduced-record* judge, not to Jev-as-decider on equal footing.
+
+**Design (zero new room runs):**
+1. Dataset: `cr251-v2-dsv4`, all 300 rooms. PM inputs verified present in alpha
+   `llm_audit` for 300/300 rooms (5 `portfolio_manager` calls/room; the full PM
+   input is one ~50K-char `system_prompt`: CIO brief, mandate+sizing rules, fact
+   sheet, full transcript incl. risk content, verdict schema).
+2. Per room: first PM candidate's `system_prompt` + user message, verbatim
+   (candidate inputs hash-checked for identity). Jev `decision`/`contested`
+   questions unchanged except the instructions referencing `pm_input`.
+3. Tool: `tools/jev_decision_arm_v2.py`; output
+   `out/cr257/cr251_v2_dsv4/jev_decision_pm_input/r{1..5}.jsonl` (git-ignored),
+   300 rooms × 2 replays = 600 calls.
+4. Comparisons: **v2 vs v1** = information effect (fact sheet + risk content +
+   full mandate); **v2 vs recorded PM verdicts** = decider effect on identical
+   inputs. §4 criteria unchanged; holdouts incl. APD-rep2 R5.
+
+**Acceptance record (v2):** filled after the run below this line.
+
+Run 2026-10-14 (AT:K4): 300/300 rooms, 600 calls, 0 errors, 8.84M input tokens
+(~15.7K/call), ~2 min wall time. Pre-flight: 300/300 PM inputs present, 5
+candidates/room, candidate prompts identical within every room. Targets are the
+amended per-60 counts 5/15/30/45/46.
+
+**§4.1 Holdouts: PASS (this arm).** APD, BA, RIOT all PASS at every level, both
+replays (P(approve) ≤ 0.02 everywhere). Note v1 also passed holdouts in the dsv4
+arm; its holdout failures were in the disposition arm, which v2 has not run.
+
+**§4.2 Curve shape: FAIL.** v2 = **1/4/20/21/14** vs PM 5/11/22/27/17 and v1
+11/15/22/20/16 (target 5/15/30/45/46). Full input makes the judge MORE
+conservative, not less: the information effect (v1→v2) is 30 flips, 27 of them
+approve→pass, concentrated at R1/R2 (11→1, 15→4). v2 is the farthest of the
+three readers from the target at R4/R5.
+
+**§4.3 Discrimination: FAIL (tie).** net-support r: v2 +0.201 ≈ v1 +0.204 ≈ PM
++0.186. Bear-support r: v2 +0.299, BELOW v1 +0.421 and PM +0.368 — with the full
+record the judge weights less purely on the bear turn. Continuous v2
+P(approve) vs bear support: +0.386.
+
+**§4.4 Agreement: v2 approvals are a STRICT SUBSET of the PM's.** Disagreement
+matrix: 22 rooms PM=APPROVE/v2=pass, **zero** rooms PM=PASS/v2=approve (60
+shared approvals, 218 shared passes). So PM∩v2 ≡ v2, and the open question is
+whether the 22 filtered approvals are the bad ones. Their v2 P(approve) spans
+0.14–0.48 (no hard refusals); several have strong bear evidence (MO-rep1 R1
+bear 0.855, NKE-rep2 R5 0.850, net −0.500) but some have strong bull evidence
+(WFC-rep1 R2 net +0.500, bear 0.285). The 22-room one-directional pool is the
+hand-audit set for "who is right".
+
+**Stability (secondary): PASS.** 299/300 replay choice agreement (99.7%),
+mean |ΔP| = 0.008. AAPL secondary: v2 tracks PM/v1 (pass R1–R3, approve R4/R5).
+
+**Verdict (v2): NO-GO as PM replacement, now on identical inputs.** The v1
+NO-GO was not an artifact of the reduced record. New measured shape: on the
+full PM input Jev becomes a conservative second reader whose approvals are a
+strict subset of the PM's — a candidate evidence filter, not a decider.
+Whether that filter adds or destroys value is exactly the 22-room audit.

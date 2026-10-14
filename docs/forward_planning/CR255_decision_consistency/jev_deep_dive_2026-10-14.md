@@ -246,3 +246,35 @@ Findings:
 5. If a real jury is ever wanted: differentiate Jev roles (advocate/skeptic/rubric
    variants), not seeds — identical Jev calls are ~deterministic, so extra Jev
    seats add weight, never diversity.
+
+## 9. CR257 v2: Jev on the PM's OWN input (2026-10-14)
+
+Motivation: v1 confounded decider with inputs (no fact sheet, no risk content,
+4-field mandate). v2 fed the judge the exact recorded `portfolio_manager`
+`system_prompt` per room (300/300 present in llm_audit, ~50K chars, candidate
+prompts identical). Tool `tools/jev_decision_arm_v2.py`; 600 calls, 0 errors,
+8.84M tokens; full acceptance record in `CR257_jev_decision_arm/spec.md` §8.
+
+| Metric | PM | v1 (reduced) | v2 (full PM input) | target/60 |
+|---|---|---|---|---|
+| Curve R1–R5 | 5/11/22/27/17 | 11/15/22/20/16 | **1/4/20/21/14** | 5/15/30/45/46 |
+| net-support r | +0.186 | +0.204 | +0.201 | — |
+| bear-support r | +0.368 | +0.421 | +0.299 | — |
+| Replay choice agreement | — | 100% | 99.7% | — |
+| Holdouts APD/BA/RIOT | some fail | pass (this arm) | pass all levels | out |
+
+Key findings:
+1. **Identical inputs do not rescue Jev-as-decider.** v2 NO-GO on the same
+   gates as v1: curve worse (most conservative reader), discrimination ties
+   the PM. The v1 NO-GO was not a reduced-record artifact.
+2. **Information effect = more conservative:** v1→v2 = 30 flips, 27 toward
+   pass, concentrated at R1/R2 (11→1, 15→4). Seeing the full fact sheet and
+   risk stage makes the judge stricter, not more willing.
+3. **v2 approvals are a strict subset of PM approvals** (22 PM-approve→v2-pass,
+   0 reverse) — a conservative filter shape, not a replacement shape. The
+   22-room one-directional disagreement pool (v2 P 0.14–0.48; mixes of strong
+   bear and strong bull cases) is the hand-audit set that decides whether this
+   filter has value.
+4. Natural next tests: the 22-room audit (who is right), and v2 on the
+   disposition arm — the arm where v1 actually failed holdouts (APD 2/2,
+   BA 1/2) — to see whether full input fixes the holdout failures too.
