@@ -278,3 +278,44 @@ Key findings:
 4. Natural next tests: the 22-room audit (who is right), and v2 on the
    disposition arm — the arm where v1 actually failed holdouts (APD 2/2,
    BA 1/2) — to see whether full input fixes the holdout failures too.
+
+## 10. Why would a stock be OK at R1 but not R5? (payoff-shape tests)
+
+Saiful's two candidate rational explanations for inversions, tested on the dsv4
+300 rooms (features parsed from recorded market_analyst/trader text, no new
+calls; range50 n=187, dist200 n=169 of 300; trader entry/target/stop too sparse
++ selection-biased to use — geometry exists almost only where the trader
+proposed, and at R3+ no PASS room has it):
+
+**H1 — "return doesn't warrant the risk at bigger size" (Kelly/utility).**
+Economically valid, but implies RESIZE not REFUSE: higher cap only expands the
+feasible set, so any R1 position is still available at R5. Supports: cap-1%
+pinning removed the R4→R5 inversion (EXPERIMENT_LOG arm 2), and sub-cap
+approvals are rare (~11%) — the room mostly refuses instead of resizing.
+
+**H2 — "a high-risk investor WANTS riskier, higher-upside names" (payoff-shape
+preference).** This one *can* legitimize inversions (a boring name approved at
+R1 may rationally be passed at R5). But the room demonstrably does NOT do it:
+
+- 50-day range width (volatility proxy), mean approve vs pass:
+  R2 18.6 vs 27.8 · R3 19.8 vs 31.7 · R4 20.9 vs 34.0 · R5 21.2 vs 34.0
+  (R1 24.6 vs 27.6, n=2 approvals). At R5 the room still passes WIDE-RANGE
+  (riskier, bigger-swing) names — the opposite of moonshot selection.
+  Per-level r(range50, approve): −0.04/−0.23/−0.53/−0.41/−0.32.
+- Distance above/below the 200-day: approvals +4…+7% vs passes −5…−10% at
+  EVERY level. The room's selection is "uptrend + low volatility", invariant
+  across risk levels; risk appetite moves only counts and size.
+- Inversions (14 ticker-reps approved at R1–R3 then passed at R4/R5) therefore
+  read as noise around stable trend/vol filters plus R5 size-coupling, not as
+  rational preference expression.
+
+**The policy fork this exposes (needs Saiful, not more mechanism):**
+1. Risk appetite = size ceiling only → selection should be level-invariant.
+2. Risk appetite = evidence-bar loosening (the locked target curve's current
+   semantics) → inversions are always bugs; R5 approves every defensible name.
+3. Risk appetite = payoff-shape preference (Saiful's moonshot semantics) →
+   inversions for low-upside names are CORRECT, and the target curve needs a
+   per-ticker composition dimension, not just approval counts.
+Whichever is chosen, the room currently lacks the numeric payoff inputs
+(expected upside, volatility) to implement it deliberately — that, not more
+prompt nuance, is the missing piece.
