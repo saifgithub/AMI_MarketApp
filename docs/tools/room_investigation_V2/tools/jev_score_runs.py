@@ -31,6 +31,10 @@ PROSE_AGENTS = {
     "fundamentals_analyst", "market_analyst", "news_analyst", "social_media_analyst",
     "bull_researcher", "bear_researcher", "research_manager", "trader",
     "aggressive_debator", "conservative_debator", "neutral_debator",
+    # CR201 consolidated risk stage (M7): on Alpha ROOM_RISK_OFFICER_ENABLED=true,
+    # so the debate stage is ONE structured call (agent_id=risk_officer) instead
+    # of three prose debator turns. Without it the risk stage is invisible to Jev.
+    "risk_officer",
 }
 
 
@@ -41,10 +45,10 @@ def fetch_arm_turns(dsn: str, arm: dict) -> list[dict]:
     with eng.connect() as conn:
         rows = conn.execute(text(
             """
-            SELECT agent_id, provider, created_at::text AS created_at,
+            SELECT agent_id, provider, flow, created_at::text AS created_at,
                    system_prompt, messages, response_text
             FROM llm_audit
-            WHERE user_id = :uid AND flow = 'room' AND error IS NULL
+            WHERE user_id = :uid AND flow IN ('room', 'room_risk_officer') AND error IS NULL
               AND response_text IS NOT NULL
               AND created_at >= :after AND created_at <= :before
             ORDER BY created_at ASC
@@ -78,6 +82,7 @@ def score_turn(api_key: str, arm: dict, t: dict) -> dict:
         "logged_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "arm_key": arm.get("arm_key"), "ticker": arm.get("ticker"),
         "risk_score": arm.get("risk_score"), "agent_id": t["agent_id"],
+        "flow": t.get("flow"),
         "provider": t["provider"], "created_at": t["created_at"],
         "request": {"state": state, "model": "jev-latest", "questions": QUESTIONS},
     }
@@ -98,7 +103,11 @@ def main() -> None:
     ap.add_argument("--runs", required=True, help="runs_<bench>.jsonl from room_benchmark")
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--agents", default=None,
+                    help="comma list — score only these agent_ids (post-fetch filter)")
     args = ap.parse_args()
+
+    only = {a.strip() for a in args.agents.split(",")} if args.agents else None
 
     dsn = os.environ.get("DATABASE_URL")
     if not dsn:
@@ -116,7 +125,10 @@ def main() -> None:
     with out_path.open("w") as fh, ThreadPoolExecutor(args.workers) as pool:
         futures = {}
         for arm in arms:
-            for t in fetch_arm_turns(dsn, arm):
+            turns = fetch_arm_turns(dsn, arm)
+            if only is not None:
+                turns = [t for t in turns if t["agent_id"] in only]
+            for t in turns:
                 total += 1
                 futures[pool.submit(score_turn, key, arm, t)] = (arm, t)
         for fut in futures:
