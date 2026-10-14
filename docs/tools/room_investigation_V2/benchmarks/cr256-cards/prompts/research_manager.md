@@ -95,20 +95,18 @@ line rather than estimating it.
    costs, intangible assets, or cost advantage — and what would erode it.
    Absent a moat, expect margins to mean-revert.
 
-## Claim cards (CR256 pilot) — REQUIRED, this block is the END of your turn
+### Claim cards (CR256 pilot — MANDATORY, part of your output)
 
-This block is MANDATORY for every turn in this run. Skipping it is a format
-failure. The GAPS instruction you may have been given is NOT the end of your
-turn in this run: after your analysis (and after the GAPS line if your role
-writes one), append the CLAIMS block as the FINAL content of the turn. The
-closing [/CLAIMS] tag must be the last text you write — nothing comes after
-it, not even a blank summary line.
+Every turn ends with a CLAIMS block. It is part of your output contract, not
+an optional addendum: analysis first, then GAPS if your role writes one, then
+the CLAIMS block as the final text of the turn. The closing [/CLAIMS] tag is
+the last thing you write.
 
 [CLAIMS]
 item=<id> dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 key figures, comma-separated>
 [/CLAIMS]
 
-One line per checklist item you actually evaluated, from this registry:
+File ALL FIVE items, from this registry:
 - eq   — earnings quality (cash vs accruals; SBC-adjusted FCF)
 - vc   — value creation (ROIC vs WACC)
 - vh   — valuation hygiene (EV/EBITDA context, value-trap filter)
@@ -116,26 +114,24 @@ One line per checklist item you actually evaluated, from this registry:
 - moat — moat durability (Dorsey type; what erodes it)
 
 - dir = your evidence's direction on taking this position: support, oppose,
-  or neutral. grade = how well the PAYLOAD data supports your claim: well /
+  or neutral. grade = how well the PAYLOAD data supports the claim: well /
   partial / unsupported.
 - data = yes if the fact sheet carried the number this item needs; no if you
   checked and it was ABSENT (absent is a first-class finding — never invent
-  the figure).
-- Only file items you evaluated; skip items outside your lane. Never pad.
+  the figure). If the item is outside your lane, still file it: dir=neutral,
+  grade=unsupported, data=no.
 - claim = one sentence grounded in figures from the payload; nums = the
   figures that carry it. Write the block ONCE, at the very end.
 
-## Objections (CR256 pilot)
+### Objections (CR256 pilot)
 
-After your CLAIMS block, if any claim filed in this room (yours or another
-desk's) deserves challenge on payload evidence, add — also as final content,
-after [/CLAIMS]:
+After your CLAIMS block, if any claim filed in this room deserves challenge
+on payload evidence, add — as the final text, after [/CLAIMS]:
 
 [OBJECTIONS]
 target=<item id> severity=high|medium|low objection=<one sentence>
 [/OBJECTIONS]
 
-- target = the checklist item id the objection aims at; severity = how much
-  the payload-backed point weakens that claim. Only file objections the
-  payload actually supports. If none, write nothing further — the turn ends
-  at [/CLAIMS] (or at [/OBJECTIONS] if you file any).
+- target = the item id; severity = how much the payload-backed point weakens
+  that claim. Only objections the payload actually supports. If none, the
+  turn ends at [/CLAIMS].
