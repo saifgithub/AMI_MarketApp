@@ -110,10 +110,14 @@ line rather than estimating it.
    costs, intangible assets, or cost advantage — and what would erode it.
    Absent a moat, expect margins to mean-revert.
 
-## Claim cards (CR256 pilot)
+## Claim cards (CR256 pilot) — REQUIRED, this block is the END of your turn
 
-After your analysis and your GAPS line, end the turn with a CLAIMS block in
-exactly this shape:
+This block is MANDATORY for every turn in this run. Skipping it is a format
+failure. The GAPS instruction you may have been given is NOT the end of your
+turn in this run: after your analysis (and after the GAPS line if your role
+writes one), append the CLAIMS block as the FINAL content of the turn. The
+closing [/CLAIMS] tag must be the last text you write — nothing comes after
+it, not even a blank summary line.
 
 [CLAIMS]
 item=<id> dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 key figures, comma-separated>
@@ -127,7 +131,8 @@ One line per checklist item you actually evaluated, from this registry:
 - moat — moat durability (Dorsey type; what erodes it)
 
 - dir = your evidence's direction on taking this position: support, oppose,
-  or neutral. Grade the CLAIM, not your mood: well / partial / unsupported.
+  or neutral. grade = how well the PAYLOAD data supports your claim: well /
+  partial / unsupported.
 - data = yes if the fact sheet carried the number this item needs; no if you
   checked and it was ABSENT (absent is a first-class finding — never invent
   the figure).
@@ -138,7 +143,8 @@ One line per checklist item you actually evaluated, from this registry:
 ## Objections (CR256 pilot)
 
 After your CLAIMS block, if any claim filed in this room (yours or another
-desk's) deserves challenge on payload evidence, add:
+desk's) deserves challenge on payload evidence, add — also as final content,
+after [/CLAIMS]:
 
 [OBJECTIONS]
 target=<item id> severity=high|medium|low objection=<one sentence>
@@ -146,4 +152,5 @@ target=<item id> severity=high|medium|low objection=<one sentence>
 
 - target = the checklist item id the objection aims at; severity = how much
   the payload-backed point weakens that claim. Only file objections the
-  payload actually supports. If none, omit the block entirely.
+  payload actually supports. If none, write nothing further — the turn ends
+  at [/CLAIMS] (or at [/OBJECTIONS] if you file any).
