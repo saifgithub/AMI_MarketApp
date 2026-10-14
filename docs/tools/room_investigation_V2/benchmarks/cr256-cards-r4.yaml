@@ -1,0 +1,12 @@
+# CR256 card pilot — 30 tickers x risk 4 x 3 reps, DeepInfra V4-Flash.
+# Desks file CLAIMS cards (5-item CFA registry) + bear/RM file OBJECTIONS.
+# Gate: card-direction composite test-retest r >= 0.85 across the 3 reps.
+# Baseline for comparison: evidence_bar stance_only/stance_signed proxies.
+name: cr256-cards-r4
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 4 }
+repeats: 3
+prompt_variant: cr256-cards
+concurrency_by_provider: { deepinfra: 2 }

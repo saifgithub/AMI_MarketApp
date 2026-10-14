@@ -1,0 +1,11 @@
+# CR256 card pilot smoke — 2 tickers x risk 4 x 3 reps.
+# Gates the parser: cards appear in all 7 desk turns, objections in bear/RM,
+# verdicts complete. Full pilot fires only if this passes.
+name: cr256-cards-smoke
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [AAPL, V]
+mandate: { risk_score: 4 }
+repeats: 3
+prompt_variant: cr256-cards
+concurrency_by_provider: { deepinfra: 2 }
