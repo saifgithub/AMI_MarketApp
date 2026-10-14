@@ -17,6 +17,7 @@ would silently score vLLM under a Kimi label.
 """
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -91,6 +92,27 @@ def _resolve(name: str) -> tuple[ProviderSpec, str, str | None]:
         return spec, spec.base_url, key
     base_url, _ = env_bootstrap.require_vllm()
     return spec, base_url, None
+
+
+def vllm_extra_body() -> dict | None:
+    """Optional per-run extra body for the forced vllm provider.
+
+    Set VLLM_EXTRA_BODY_JSON='{"chat_template_kwargs":{"enable_thinking":false}}'
+    to run a thinking-capable served model with thinking disabled (Kolibri-1,
+    Qwen-template family, probed working 2026-10-14: reasoning_tokens 0). Unset
+    = native behavior, identical to every pre-existing arm. Malformed JSON
+    refuses to run (CR040) rather than silently dropping the body.
+    """
+    raw = os.environ.get("VLLM_EXTRA_BODY_JSON")
+    if not raw:
+        return None
+    try:
+        body = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"VLLM_EXTRA_BODY_JSON is not valid JSON: {exc}")
+    if not isinstance(body, dict):
+        raise SystemExit("VLLM_EXTRA_BODY_JSON must decode to a JSON object")
+    return body
 
 
 def force_provider(
@@ -169,6 +191,19 @@ def force_provider(
             api_key=api_key,
             max_tokens_floor=HARNESS_MAX_TOKENS_FLOOR,
         )
+    if name == "vllm" and (vllm_extra := vllm_extra_body()):
+        # Env-driven extra body (e.g. thinking-off for a reasoning-served
+        # model). The gateway's own vllm branch takes no extra_body, so the
+        # entry is replaced exactly the way kimi's is — same base_url/model/
+        # floor the gateway would have used.
+        gateway._providers["vllm"] = OpenAICompatibleProvider(  # noqa: SLF001
+            name="vllm",
+            base_url=base_url,
+            model_name=resolved_model,
+            api_key=None,
+            max_tokens_floor=settings.vllm_max_tokens_floor,
+            extra_body=vllm_extra,
+        )
 
     active = gateway._active_provider_name()  # noqa: SLF001 — verifying the force took
     if active != name:
@@ -184,7 +219,7 @@ def force_provider(
             f"the requested {resolved_model!r} — refusing to run under a "
             "wrong-model label"
         )
-    note = ", thinking disabled" if spec.extra_body else ""
+    note = ", thinking disabled" if (spec.extra_body or (name == "vllm" and vllm_extra_body())) else ""
     print(f"LLM gateway forced to: {active} ({base_url}, {resolved_model}{note}, "
           f"max_tokens floor {HARNESS_MAX_TOKENS_FLOOR})")
     return gateway
@@ -228,7 +263,7 @@ async def direct_call(
         url = f"{base_url}/v1/chat/completions"
         resolved_model = model or os.environ.get("VLLM_MODEL", spec.default_model)
         headers = {}
-        extra = {}
+        extra = vllm_extra_body() or {}
     else:  # deepinfra — the one place the /v1/openai suffix lives
         api_key = env_bootstrap.require_keys(spec.api_key_env)[spec.api_key_env]
         url = f"{spec.base_url}/v1/openai/chat/completions"

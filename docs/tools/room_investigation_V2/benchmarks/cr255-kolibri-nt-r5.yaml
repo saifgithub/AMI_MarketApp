@@ -1,0 +1,12 @@
+# CR255 arm 14 — Kolibri-1 THINKING-OFF matrix, risk 5.
+# Same production prompts/mandates/tickers as arm 13 (native); the ONLY delta
+# is VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}
+# on the launcher (probed 2026-10-14: reasoning_tokens 0). Standard harness
+# knobs (5000 floor, default timeouts) — comparable to arms 1/9/10/11 config.
+name: cr255-kolibri-nt-r5
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 5 }
+repeats: 2
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
