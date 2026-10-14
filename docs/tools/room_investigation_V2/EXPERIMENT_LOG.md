@@ -72,7 +72,7 @@ mandate snapshots: `benchmarks/mandates/cap{1,2,3,4}-r5.json`; prompt variants:
 table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measured inert).
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
-| 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model | GATE CLEAN 2026-10-14 (AAPL/BA @R5 both PASS, ~22 min/room, 0 fallbacks); MATRIX RUNNING, levels R5→R1 sequential, concurrency 2 | → ~/cr255_kolibri | pending |
+| 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model | GATE CLEAN 2026-10-14; 16K pass CONTAMINATED (8 starved desks/20 rooms, bear-skewed) → restarted at floor 32768; MATRIX RUNNING 06:44 UTC, levels R5→R1, conc 2 | → ~/cr255_kolibri | pending |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
@@ -174,11 +174,20 @@ Kolibri-1 is a reasoning model: `max_tokens` is spent on the reasoning channel
 FIRST, content comes after. Three knobs must move together for such a model,
 measured on the arm-13 gate 2026-10-13:
 
-1. `VLLM_MAX_TOKENS_FLOOR=16384` (env → `settings.vllm_max_tokens_floor`;
+1. `VLLM_MAX_TOKENS_FLOOR` (env → `settings.vllm_max_tokens_floor`;
    floor clamps every per-agent budget up). At the default 5000 the four
    analysts ALL hit `finish_reason=length` with **zero content chars** —
    reasoning alone consumed the budget — and the room silently fell back to
    scripted desks. Data from such rooms is garbage; discard, don't score.
+   Measured 2026-10-14 at floor 16384: 68/240 calls drew ≥8K tokens and
+   8 desks (bear×4, news×2, fundamentals, market) burned the ENTIRE 16384
+   reasoning with zero content (`llm_audit`: output_tokens=16384,
+   response empty) → scripted fallback. Contamination hit ~40% of rooms and
+   skews bearish (bear = biggest brief) — arm restarted at floor 32768 with
+   `VLLM_REQUEST_TIMEOUT_S=1500` / `ROOM_AGENT_TIMEOUT_S=900` /
+   `ROOM_BENCH_AGENT_TIMEOUT_S=900`. If starvation persists at 32K the
+   honest model-coverage verdict is "doesn't fit the 12-agent room", not a
+   lower ceiling.
 2. `VLLM_REQUEST_TIMEOUT_S=1200` (transport, default 360). Long reasoning
    decodes exceed the default.
 3. `ROOM_AGENT_TIMEOUT_S=780` (orchestration guard, default 180, must stay
