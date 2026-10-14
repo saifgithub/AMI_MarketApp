@@ -202,3 +202,47 @@ with code keeping all policy enforcement.
    the fundamentals-grounding defect (33% unsupported).
 5. **Prompt/QA targets:** bull_researcher grounding (all models), tm-all
    fundamentals conversion, high-conviction gating for social/news desks.
+
+## 8. Jev/PM 5-seat panel mixes (Saiful's "3 Jev + 2 PM?" question)
+
+Exact offline simulation over the 600 fully joined rooms (300/arm): runs records
+carry `approve_votes` k of 5 PM samples; CR257 supplies the Jev vote (replay-1;
+replay agreement 98.7–100% justifies treating the Jev bloc as unanimous). For a
+j-Jev + p-PM panel, P(approve) per room is enumerated exactly over hypergeometric
+PM-candidate subsets. Script: throwaway `/tmp/jev_panel.py`.
+
+**Mechanical trap: 3J+2PM ≡ 4J+1PM ≡ 5J exactly.** A unanimous 3-vote bloc in a
+5-seat majority panel decides every room; the 2 PM calls can never change any
+outcome. "3 Jevs + 2 PMs" is therefore not a hedge — it is full Jev-as-decider
+(currently NO-GO per §6) with two decorative PM calls. Only 1J+4PM and 2J+3PM are
+genuine mixes (2J+3PM = Jev decides unless the 3 sampled PMs unanimously override).
+
+| Mix | dsv4 curve (exp/60) | disp curve | bear-r dsv4/disp | flip% dsv4/disp | dist-to-target dsv4/disp |
+|---|---|---|---|---|---|
+| 0J+5PM (status quo) | 6/12/22/27/17 | 2/12/13/15/19 | +0.379/+0.258 | 18.7/22.0 | 0.790/0.896 |
+| 1J+4PM | 7/13/22/26/17 | 4/13/14/15/19 | +0.399/+0.264 | 19.3/22.4 | 0.798/0.891 |
+| 2J+3PM | 9/14/22/24/16 | 5/14/14/15/18 | +0.418/+0.275 | 18.9/23.8 | 0.820/0.896 |
+| 3J+2PM (=5J) | 11/15/22/20/16 | 8/16/14/12/18 | +0.421/+0.309 | 20.0/26.7 | 0.860/0.931 |
+
+(Expected flips across rep1/rep2; realized PM-majority flips 17.3%/20.7% for
+reference. Curves rounded; dsv4 0J R1 shows 6 vs realized 5 because the expected
+panel samples PM candidates probabilistically.)
+
+Findings:
+1. Mixes interpolate only marginally: +0.02–0.04 bear-r for 1–2 Jev seats, low-end
+   approvals up slightly, **curve distance to target gets WORSE with more Jev**
+   (Jev's R4 dip dominates), **flips do not improve** (disp worsens 22.0→26.7%).
+2. Holdouts are mix-invariant: all mixes PASS APD/RIOT in dsv4; all mixes APPROVE
+   the disposition APD-rep2 violation (PM was 5/5 approve AND Jev approve — the
+   violation is shared, so no panel can catch it; code must).
+3. **There is no sweet spot.** If the goal is cost: one Jev call already equals the
+   whole 3J+2PM panel — but that is the NO-GO replacement path. If the goal is a
+   hedge keeping PM character: 1J+4PM buys +0.02 bear-r at zero measured stability
+   or curve benefit — not worth the complexity on current evidence.
+4. The decision-relevant measurement is still the missing CR257 criterion 4:
+   **who is right in the 18–21 disagreement rooms per arm?** Jev winning those
+   justifies Jev-dominant panels; PM winning them confirms 5PM. Mix arithmetic
+   cannot substitute for that audit.
+5. If a real jury is ever wanted: differentiate Jev roles (advocate/skeptic/rubric
+   variants), not seeds — identical Jev calls are ~deterministic, so extra Jev
+   seats add weight, never diversity.
