@@ -107,6 +107,25 @@ class Settings(BaseSettings):
     # promotion — that is the whole point of the knob.
     vllm_max_tokens_floor: int = 0
 
+    # CR259 — hybrid-thinking pilot (harness-only until measured GO). The
+    # served Qwen3-Next checkpoint is a HYBRID reasoning model: thinking is
+    # OFF at the server (verified 2026-10-14 — no kwarg or
+    # enable_thinking:false both return reasoning_tokens=0) and ON only when
+    # a call passes chat_template_kwargs {"enable_thinking": true}
+    # (reasoning_tokens>0, content clean — the reasoning text is not
+    # surfaced, so stance-envelope parsing is structurally unaffected).
+    # `vllm_enable_thinking` makes the vLLM provider attach that kwarg to
+    # EVERY call (blanket arm; stage-scoping is a phase-2 ablation if the
+    # blanket arm shows signal). `vllm_thinking_max_tokens` is a CR211-style
+    # floor for the same measured reason: thinking spends the ceiling on
+    # invisible tokens before any visible content, and the Room's per-agent
+    # budgets (600-1600) starve it. 0 = no floor. Default OFF — flipping
+    # this in production is a measured-fold-in decision, not an operator
+    # toggle, because the timeout stack (DEF389/DEF390) and the DGX Spark's
+    # ~22 tok/s decode ceiling make thinking rooms ~10x slower.
+    vllm_enable_thinking: bool = False
+    vllm_thinking_max_tokens: int = 0
+
     # DEF389 — the HTTP read timeout for a vLLM completion. This is the
     # TRANSPORT budget and it must sit OUTSIDE the Room's orchestration budget
     # (`room_runner._AGENT_LLM_TIMEOUT_S`, 90s), not inside it. It used to be a

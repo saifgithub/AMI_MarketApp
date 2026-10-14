@@ -1,0 +1,13 @@
+# CR259 — hybrid-thinking pilot arm, risk 4, 30x2.
+# A/B: identical to cr253-disp-matrix-r4 (same prompts, tickers, mandate,
+# variant) except the job runs with VLLM_ENABLE_THINKING=true +
+# VLLM_THINKING_MAX_TOKENS=8192 + widened timeout envs. Baseline = the
+# parity chain's ami-llm disposition/r4 (thinking OFF, same conditions).
+# Read: curve, rep flips, evidence-tracking r, wall-time per room.
+name: cr259-thinking-r4
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 1 }

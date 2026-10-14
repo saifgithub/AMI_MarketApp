@@ -181,6 +181,10 @@ services:
       # budget on invisible chain-of-thought. 0 = off. See config.py for the
       # measured 800-fails/1200-works curve on qwen3.8-flash-next.
       VLLM_MAX_TOKENS_FLOOR: ${VLLM_MAX_TOKENS_FLOOR:-0}
+      # CR259 — hybrid-thinking pilot knobs (both default OFF; harness sets
+      # them per-job until the measured GO earns a production value).
+      VLLM_ENABLE_THINKING: ${VLLM_ENABLE_THINKING:-false}
+      VLLM_THINKING_MAX_TOKENS: ${VLLM_THINKING_MAX_TOKENS:-0}
       # CR192 — prefix-cache counter sampling interval. Forwarded because
       # test_config_compose_parity.py fails the build otherwise (P1: DEF038
       # and DEF063 were both a setting that existed locally and never

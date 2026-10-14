@@ -863,7 +863,13 @@ class VLLMProvider(OpenAICompatibleProvider):
         api_key: str | None = None,
         timeout_seconds: float | None = None,
         max_tokens_floor: int | None = None,
+        enable_thinking: bool = False,
+        thinking_max_tokens: int | None = None,
     ) -> None:
+        # CR259 — when thinking is on, the thinking floor dominates any
+        # caller-requested floor (both are "raise max_tokens to at least X";
+        # the larger of the two is the binding one).
+        floor = max(max_tokens_floor or 0, thinking_max_tokens or 0) or None
         super().__init__(
             name="vllm",
             base_url=base_url,
@@ -873,7 +879,14 @@ class VLLMProvider(OpenAICompatibleProvider):
             # CR211 — see `Settings.vllm_max_tokens_floor`. None when the
             # setting is 0, so a non-reasoning server carries no floor at all
             # rather than a floor of zero that reads as one.
-            max_tokens_floor=max_tokens_floor,
+            max_tokens_floor=floor,
+            # CR259 — `extra_body` exists for exactly this (CR017 §3). Sent
+            # on every call; the server defaults thinking OFF, so absent a
+            # flag this body would be a no-op even if sent.
+            extra_body=(
+                {"chat_template_kwargs": {"enable_thinking": True}}
+                if enable_thinking else None
+            ),
             # CR210 — both verified live against `ami-llm` on vLLM
             # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
             # `response_format` json_schema held a float enum against a direct
@@ -988,6 +1001,8 @@ class LLMGateway:
                 api_key=settings.vllm_api_key or None,
                 max_tokens_floor=settings.vllm_max_tokens_floor or None,
                 timeout_seconds=settings.vllm_request_timeout_s,
+                enable_thinking=settings.vllm_enable_thinking,
+                thinking_max_tokens=settings.vllm_thinking_max_tokens or None,
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -998,6 +1013,11 @@ class LLMGateway:
                 # silently rewrites every caller's max_tokens, so which value
                 # was in force has to be recoverable from the boot log.
                 max_tokens_floor=settings.vllm_max_tokens_floor,
+                # CR259 — same recoverability reason as the floor: thinking
+                # rewrites every call's latency profile, so the boot log must
+                # show whether it was in force.
+                enable_thinking=settings.vllm_enable_thinking,
+                thinking_max_tokens=settings.vllm_thinking_max_tokens,
                 # DEF389 — same reason as the floor: which transport budget
                 # was in force has to be recoverable from the boot log, since
                 # exceeding it is silent at the call site.

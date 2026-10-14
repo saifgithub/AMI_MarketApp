@@ -1,0 +1,11 @@
+# CR259 smoke — one room (AAPL, R4, disposition variant) with thinking on.
+# Gates the full pilot: thinking actually engages (llm_audit output_tokens
+# bloats), verdict parses, no envelope truncation, room completes inside the
+# widened timeout envs.
+name: cr259-thinking-smoke
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 1
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 1 }
