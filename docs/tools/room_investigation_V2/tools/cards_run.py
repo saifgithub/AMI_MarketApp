@@ -34,8 +34,11 @@ sys_path = Path(__file__).resolve().parent
 import sys
 sys.path.insert(0, str(sys_path))
 
-DESKS = ["fundamentals_analyst", "market_analyst", "news_analyst",
-         "social_media_analyst", "bull_researcher", "bear_researcher",
+# v3 (smoke-measured): only the four evidence desks carry cards. The CFA
+# item registry is fundamentals-lane; forcing it on the flow analysts
+# produced systematic skips/junk (smoke v1+v2, 2026-10-14). Composite is
+# direction-signed across THESE desks' cards.
+DESKS = ["fundamentals_analyst", "bull_researcher", "bear_researcher",
          "research_manager"]
 OBJ_DESKS = {"bear_researcher", "research_manager"}
 ITEMS = ("eq", "vc", "vh", "bs", "moat")
