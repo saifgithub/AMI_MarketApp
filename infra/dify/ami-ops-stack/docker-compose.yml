@@ -1,0 +1,390 @@
+# AMI Ops — dedicated stripped Dify CE 1.17.1 stack on melehost (CR200-R003 slice 1).
+# Conversational admin agent ("AMI Ops"); tools-only, no knowledge bases, no plugins,
+# no marketplace, single operator account. Fully independent of the live alpha stack
+# (ami_api_alpha / ami_postgres / ami_redis / ami_tunnel / ami_website_api) and of the
+# prime_radiant frontend-dify stack on minihost (read-only reference, untouched).
+# Run from /home/saiful/ami-ops-dify/:
+#   docker compose --env-file .env -f docker-compose.yml up -d
+# Project name comes from COMPOSE_PROJECT_NAME in .env (no hardcoded name: field).
+# Required in .env (no defaults): AMIOPS_BIND_IP (melehost Tailscale IP),
+# AMIOPS_NGINX_PORT (8081), AMIOPS_DATA_DIR (absolute host path for bind mounts),
+# DIFY_SECRET_KEY, DIFY_DB_PASSWORD, DIFY_REDIS_PASSWORD, DIFY_SANDBOX_API_KEY,
+# DIFY_PLUGIN_DAEMON_KEY, DIFY_INNER_API_KEY, DIFY_AGENT_API_TOKEN,
+# DIFY_AGENT_SERVER_SECRET_KEY, INIT_PASSWORD.
+# Tailscale addresses only. nginx publishes ONLY on the Tailscale IP (8081 -> 80).
+#
+# Adapted from minihost prime_radiant_frontend/docker/docker-compose.dify.yml
+# (itself adapted from upstream langgenius/dify 1.17.1 docker/docker-compose.yaml):
+# - PR_* env vars renamed AMIOPS_*; hardcoded `name: frontend-dify` removed
+# - web image = upstream langgenius/dify-web:1.17.1 (the prime branded build
+#   dify-web:1.17.1-ami is a local prime_radiant image, not on a registry)
+# - strip list (CR200-R003 §5.5): MARKETPLACE_ENABLED=false,
+#   ENABLE_WEBSITE_JINAREADER/FIRECRAWL/WATERCRAWL=false, ALLOW_EMBED=false;
+#   plugin_daemon FORCE_VERIFYING_SIGNATURE=true (kept from known-good)
+# - no vector store configured: no knowledge bases in scope and the Dify vector
+#   client connects lazily, so nothing touches it at boot (see §5.5 strip list)
+# - ssrf allow-list adds 192.168.20.0/24 so agent tools can reach the LAN-direct
+#   alpha admin API (http://192.168.20.59:8001)
+# - every writable path is a bind mount under $AMIOPS_DATA_DIR (no named volumes);
+#   capped json-file log per service
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Shared env for api / worker / worker_beat (same image, same wiring).
+x-dify-shared-env: &dify-shared-env
+  SECRET_KEY: ${DIFY_SECRET_KEY:?set DIFY_SECRET_KEY}
+  DB_TYPE: postgresql
+  DB_USERNAME: postgres
+  DB_PASSWORD: ${DIFY_DB_PASSWORD:?set DIFY_DB_PASSWORD}
+  DB_HOST: db_postgres
+  DB_PORT: 5432
+  DB_DATABASE: dify
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${DIFY_REDIS_PASSWORD:?set DIFY_REDIS_PASSWORD}
+  REDIS_DB: 0
+  CELERY_BROKER_URL: redis://:${DIFY_REDIS_PASSWORD}@redis:6379/1
+  CELERY_BACKEND: redis
+  STORAGE_TYPE: opendal
+  OPENDAL_SCHEME: fs
+  OPENDAL_FS_ROOT: storage
+  # No VECTOR_STORE configured: knowledge bases are out of scope for this agent
+  # and the Dify vector client connects lazily, so boot needs no vector backend.
+  CODE_EXECUTION_ENDPOINT: http://sandbox:8194
+  CODE_EXECUTION_API_KEY: ${DIFY_SANDBOX_API_KEY:?set DIFY_SANDBOX_API_KEY}
+  PLUGIN_DAEMON_URL: http://plugin_daemon:5002
+  PLUGIN_DAEMON_KEY: ${DIFY_PLUGIN_DAEMON_KEY:?set DIFY_PLUGIN_DAEMON_KEY}
+  PLUGIN_DIFY_INNER_API_URL: http://api:5001
+  PLUGIN_DIFY_INNER_API_KEY: ${DIFY_INNER_API_KEY:?set DIFY_INNER_API_KEY}
+  INNER_API_KEY_FOR_PLUGIN: ${DIFY_INNER_API_KEY}
+  SSRF_PROXY_HTTP_URL: http://ssrf_proxy:3128
+  SSRF_PROXY_HTTPS_URL: http://ssrf_proxy:3128
+  # Public base URL = tailnet-only nginx on 8081
+  CONSOLE_API_URL: http://${AMIOPS_BIND_IP:?set AMIOPS_BIND_IP (melehost Tailscale IP)}:${AMIOPS_NGINX_PORT:-8081}
+  CONSOLE_WEB_URL: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}
+  SERVICE_API_URL: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}
+  APP_API_URL: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}
+  APP_WEB_URL: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}
+  TRIGGER_URL: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}
+  ENDPOINT_URL_TEMPLATE: http://${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}/e/{hook_id}
+  MIGRATION_ENABLED: "true"
+  DEPLOY_ENV: PRODUCTION
+  ETL_TYPE: dify
+  # Strip list (CR200-R003 §5.5): no marketplace, no website crawlers, no embed
+  MARKETPLACE_ENABLED: "false"
+  ENABLE_WEBSITE_JINAREADER: "false"
+  ENABLE_WEBSITE_FIRECRAWL: "false"
+  ENABLE_WEBSITE_WATERCRAWL: "false"
+  ALLOW_EMBED: "false"
+  # Auth hardening: invite-only, no open registration, no self-serve workspaces
+  ALLOW_REGISTER: "false"
+  ALLOW_CREATE_WORKSPACE: "false"
+  ENABLE_EMAIL_PASSWORD_LOGIN: "true"
+  ENABLE_SOCIAL_OAUTH_LOGIN: "false"
+  ENABLE_COLLABORATION_MODE: "false"   # api_websocket service not deployed
+  # Initial operator password for first-run admin creation (see flask admin CLI
+  # check in the deploy runbook; also accepted by the /install first-run flow)
+  INIT_PASSWORD: ${INIT_PASSWORD:?set INIT_PASSWORD}
+  AGENT_BACKEND_BASE_URL: http://agent_backend:5050
+  AGENT_BACKEND_API_TOKEN: ${DIFY_AGENT_API_TOKEN:?set DIFY_AGENT_API_TOKEN}
+  PLUGIN_MAX_PACKAGE_SIZE: 52428800
+  LOG_LEVEL: INFO
+
+services:
+  # One-shot: fix ownership of the app storage bind mount, then exit
+  init_permissions:
+    image: busybox:latest
+    command:
+      - sh
+      - -c
+      - |
+        FLAG_FILE="/app/api/storage/.init_permissions"
+        if [ -f "$${FLAG_FILE}" ]; then
+          echo "Permissions already initialized. Exiting."
+          exit 0
+        fi
+        echo "Initializing permissions for /app/api/storage"
+        chown -R 1001:1001 /app/api/storage && touch "$${FLAG_FILE}"
+        echo "Permissions initialized. Exiting."
+    volumes:
+      - ${AMIOPS_DATA_DIR:?set AMIOPS_DATA_DIR}/dify/app/storage:/app/api/storage
+    logging: *logging
+    restart: "no"
+
+  api:
+    image: langgenius/dify-api:1.17.1
+    environment:
+      <<: *dify-shared-env
+      MODE: api
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      db_postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      agent_backend:
+        condition: service_started
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/app/storage:/app/api/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+      - default
+    restart: unless-stopped
+
+  worker:
+    image: langgenius/dify-api:1.17.1
+    environment:
+      <<: *dify-shared-env
+      MODE: worker
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      db_postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      agent_backend:
+        condition: service_started
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/app/storage:/app/api/storage
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+      - default
+    restart: unless-stopped
+
+  worker_beat:
+    image: langgenius/dify-api:1.17.1
+    environment:
+      <<: *dify-shared-env
+      MODE: beat
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      db_postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+      - default
+    restart: unless-stopped
+
+  web:
+    image: langgenius/dify-web:1.17.1
+    environment:
+      # Same-origin behind nginx — public URLs stay empty
+      CONSOLE_API_URL: ""
+      APP_API_URL: ""
+      SERVER_CONSOLE_API_URL: http://api:5001
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SOCKET_URL: ""
+      MARKETPLACE_ENABLED: "false"
+    logging: *logging
+    networks:
+      - default
+    restart: unless-stopped
+
+  db_postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DIFY_DB_PASSWORD}
+      POSTGRES_DB: dify
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: >
+      postgres -c 'max_connections=100'
+               -c 'shared_buffers=128MB'
+               -c 'work_mem=4MB'
+               -c 'maintenance_work_mem=64MB'
+               -c 'effective_cache_size=4096MB'
+               -c 'statement_timeout=0'
+               -c 'idle_in_transaction_session_timeout=0'
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/db/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "db_postgres", "-U", "postgres", "-d", "dify"]
+      interval: 1s
+      timeout: 3s
+      retries: 60
+    logging: *logging
+    networks:
+      - default
+    restart: unless-stopped
+
+  redis:
+    image: redis:6-alpine
+    environment:
+      REDISCLI_AUTH: ${DIFY_REDIS_PASSWORD}
+    command: redis-server --requirepass ${DIFY_REDIS_PASSWORD}
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/redis/data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${DIFY_REDIS_PASSWORD} ping | grep -q PONG"]
+    logging: *logging
+    networks:
+      - default
+    restart: unless-stopped
+
+  sandbox:
+    image: langgenius/dify-sandbox:0.2.15
+    environment:
+      API_KEY: ${DIFY_SANDBOX_API_KEY}
+      GIN_MODE: release
+      WORKER_TIMEOUT: 15
+      ENABLE_NETWORK: "true"
+      HTTP_PROXY: http://ssrf_proxy:3128
+      HTTPS_PROXY: http://ssrf_proxy:3128
+      SANDBOX_PORT: 8194
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/sandbox/dependencies:/dependencies
+      - ./dify/sandbox/config.yaml:/conf/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8194/health"]
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+    restart: unless-stopped
+
+  plugin_daemon:
+    image: langgenius/dify-plugin-daemon:0.6.10-local
+    environment:
+      DB_TYPE: postgresql
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DIFY_DB_PASSWORD}
+      DB_HOST: db_postgres
+      DB_PORT: 5432
+      DB_DATABASE: dify_plugin
+      DB_SSL_MODE: disable
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${DIFY_REDIS_PASSWORD}
+      REDIS_DB: 0
+      SERVER_PORT: 5002
+      SERVER_KEY: ${DIFY_PLUGIN_DAEMON_KEY}
+      DIFY_INNER_API_URL: http://api:5001
+      DIFY_INNER_API_KEY: ${DIFY_INNER_API_KEY}
+      PLUGIN_STORAGE_TYPE: local
+      PLUGIN_STORAGE_LOCAL_ROOT: /app/storage
+      PLUGIN_WORKING_PATH: /app/storage/cwd
+      PLUGIN_INSTALLED_PATH: plugin
+      PLUGIN_PACKAGE_CACHE_PATH: plugin_packages
+      PLUGIN_MEDIA_CACHE_PATH: assets
+      PLUGIN_REMOTE_INSTALLING_HOST: 0.0.0.0
+      PLUGIN_REMOTE_INSTALLING_PORT: 5003
+      FORCE_VERIFYING_SIGNATURE: "true"
+      PLUGIN_PYTHON_ENV_INIT_TIMEOUT: 120
+      PLUGIN_MAX_EXECUTION_TIMEOUT: 600
+    volumes:
+      - ${AMIOPS_DATA_DIR}/dify/plugin_daemon:/app/storage
+    depends_on:
+      db_postgres:
+        condition: service_healthy
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+      - default
+    restart: unless-stopped
+
+  # Kept because api/worker declare a hard dependency on it (Dify Agent v2 backend).
+  # local_sandbox/agent_ssrf_proxy are NOT deployed, so agent shell workspaces are unavailable.
+  agent_backend:
+    image: langgenius/dify-agent-backend:1.17.1
+    environment:
+      DIFY_AGENT_REDIS_URL: redis://:${DIFY_REDIS_PASSWORD}@redis:6379/2
+      DIFY_AGENT_PLUGIN_DAEMON_URL: http://plugin_daemon:5002
+      DIFY_AGENT_PLUGIN_DAEMON_API_KEY: ${DIFY_PLUGIN_DAEMON_KEY}
+      DIFY_AGENT_INNER_API_URL: http://api:5001
+      DIFY_AGENT_INNER_API_KEY: ${DIFY_INNER_API_KEY}
+      DIFY_AGENT_RUNTIME_BACKEND: local
+      DIFY_AGENT_LOCAL_SANDBOX_ENDPOINT: http://local_sandbox:5004
+      DIFY_AGENT_STUB_API_BASE_URL: http://agent_backend:5050/agent-stub
+      DIFY_AGENT_SANDBOX_FILES_BASE_URL: http://api:5001
+      DIFY_AGENT_SERVER_SECRET_KEY: ${DIFY_AGENT_SERVER_SECRET_KEY:?set DIFY_AGENT_SERVER_SECRET_KEY}
+      DIFY_AGENT_API_TOKEN: ${DIFY_AGENT_API_TOKEN}
+    depends_on:
+      redis:
+        condition: service_started
+      plugin_daemon:
+        condition: service_started
+    logging: *logging
+    networks:
+      - default
+    restart: unless-stopped
+
+  # SSRF proxy for workflow/tool HTTP egress. Tailnet targets (100.64.0.0/10) and
+  # the alpha LAN segment (192.168.20.0/24, alpha admin API on :8001) are
+  # allow-listed; everything else private is denied.
+  ssrf_proxy:
+    image: ubuntu/squid:latest
+    volumes:
+      - ./dify/ssrf_proxy/squid.conf.template:/etc/squid/squid.conf.template
+      - ./dify/ssrf_proxy/squid-common.conf.template:/etc/squid/dify_common.conf.template
+      - ./dify/ssrf_proxy/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh",
+      ]
+    environment:
+      HTTP_PORT: 3128
+      COREDUMP_DIR: /var/spool/squid
+      SSRF_PROXY_ALLOW_PRIVATE_IPS: 100.64.0.0/10 192.168.20.0/24
+    logging: *logging
+    networks:
+      - ssrf_proxy_network
+      - default
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./dify/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./dify/nginx/proxy.conf.template:/etc/nginx/proxy.conf.template
+      - ./dify/nginx/https.conf.template:/etc/nginx/https.conf.template
+      - ./dify/nginx/conf.d:/etc/nginx/conf.d
+      - ./dify/nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh",
+      ]
+    environment:
+      NGINX_SERVER_NAME: _
+      NGINX_HTTPS_ENABLED: "false"
+      NGINX_PORT: 80
+      NGINX_WORKER_PROCESSES: auto
+      NGINX_SOCKET_IO_UPSTREAM: api:5001   # collaboration websocket service not deployed; harmless fallback
+      NGINX_CLIENT_MAX_BODY_SIZE: 100M
+      NGINX_KEEPALIVE_TIMEOUT: 65
+      NGINX_PROXY_READ_TIMEOUT: 3600s
+      NGINX_PROXY_SEND_TIMEOUT: 3600s
+    depends_on:
+      - api
+      - web
+    ports:
+      # Tailscale-IP bind only — nothing on LAN/0.0.0.0
+      - "${AMIOPS_BIND_IP}:${AMIOPS_NGINX_PORT:-8081}:80"
+    logging: *logging
+    networks:
+      - default
+    restart: unless-stopped
+
+networks:
+  ssrf_proxy_network:
+    driver: bridge
+    internal: true
