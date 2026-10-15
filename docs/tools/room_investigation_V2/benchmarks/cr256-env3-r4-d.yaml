@@ -1,0 +1,13 @@
+# CR256 envelope run 3 shard d/6 — the v6-matched instrument: 30 tickers x 3
+# reps, risk 4, DeepInfra V4-Flash, backend-default prompts +
+# ROOM_CARDS_ENVELOPE_ENABLED=true. env2 (10 tickers) measured 0.842 with FCEL
+# the sole drag (drop-FCEL 0.907) — this run is the definitive n=30-subject
+# gate census, paired ticker-for-ticker against the v6 90-room arm (0.62 raw /
+# 0.67 repaired). Analyse a..f TOGETHER; never mix with v3/v6/env2 rooms.
+name: cr256-env3-r4-d
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [NFLX,NVDA,PFE,PG,PYPL]
+mandate: { risk_score: 4 }
+repeats: 3
+concurrency_by_provider: { deepinfra: 1 }
