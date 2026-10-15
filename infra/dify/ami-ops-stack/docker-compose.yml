@@ -10,7 +10,7 @@
 # AMIOPS_NGINX_PORT (8081), AMIOPS_DATA_DIR (absolute host path for bind mounts),
 # DIFY_SECRET_KEY, DIFY_DB_PASSWORD, DIFY_REDIS_PASSWORD, DIFY_SANDBOX_API_KEY,
 # DIFY_PLUGIN_DAEMON_KEY, DIFY_INNER_API_KEY, DIFY_AGENT_API_TOKEN,
-# DIFY_AGENT_SERVER_SECRET_KEY, INIT_PASSWORD.
+# DIFY_AGENT_SERVER_SECRET_KEY, INIT_PASSWORD, ADMIN_API_KEY.
 # Tailscale addresses only. nginx publishes ONLY on the Tailscale IP (8081 -> 80).
 #
 # Adapted from minihost prime_radiant_frontend/docker/docker-compose.dify.yml
@@ -35,6 +35,10 @@ x-logging: &logging
 
 # Shared env for api / worker / worker_beat (same image, same wiring).
 x-dify-shared-env: &dify-shared-env
+  # Server-to-server console auth (bypasses CSRF; admin key in X-WORKSPACE-ID
+  # requests). Generate with: openssl rand -hex 32
+  ADMIN_API_KEY_ENABLE: "true"
+  ADMIN_API_KEY: ${ADMIN_API_KEY:?set ADMIN_API_KEY}
   SECRET_KEY: ${DIFY_SECRET_KEY:?set DIFY_SECRET_KEY}
   DB_TYPE: postgresql
   DB_USERNAME: postgres
