@@ -216,10 +216,24 @@ alpha stack untouched. First login at `/install` (init-gated).
 1. Backend: `chart.svg` endpoint + tests (the only code delta in slice 1).
    **Done 2026-10-15 (AT:K1, `7756a5a2`):** 18 tests, full suite green.
 2. Dify stack on melehost. **Done 2026-10-15 (AT:K1, `580c8249`).**
-   Remaining: first-login setup, import `tools-openapi.yaml`, create the
-   Agent app, wire vLLM provider.
-3. Live walkthrough of slice 1 against Alpha.
-4. Slice 2 action tools, one at a time, each exercised live with the
+3. In-Dify configuration. **Done 2026-10-15 (AT:K1, `fe524181` +
+   `e0b9fc48`):** provider `openai_api_compatible` + model `ami-llm`
+   (validated, HTTP 200 against vLLM), tool `ami_trade_admin` (11 tools)
+   imported, Agent app "AMI Ops" (`da495729-…`) created with the system
+   prompt + all tools. Smoke test live: "how many signups in the last 30
+   days" → real tool call → correct answer (56, with the Sep 22–Oct 1
+   clustering surfaced). Console scripting rides the `ADMIN_API_KEY`
+   bearer (CSRF-bypassing server-to-server auth), not a user session.
+   Field fixes found on the way: admin API port is **8000** (8001 is the
+   website API); Dify's api-key credential default prefix is `basic` and
+   must be set to `bearer`; agent-mode tool bindings take the provider's
+   row UUID, not its name.
+   **Known slice-2 input:** in the smoke test the model answered from
+   tools but then fabricated an external image URL for the chart instead
+   of calling the `chart` tool (DEF059 class) — needs a prompt-tuning
+   pass or a fixed workflow.
+4. Live walkthrough of slice 1 against Alpha. **Done** (the smoke test).
+5. Slice 2 action tools, one at a time, each exercised live with the
    preview/confirm guard demonstrated.
-5. Document the runbook (`.agents/skills/` copy when stable) so the
+6. Document the runbook (`.agents/skills/` copy when stable) so the
    agent's rebuild path isn't tribal knowledge.
