@@ -148,6 +148,23 @@ doesn't have files its own CR instead of reaching around it.
 
 ### 5.5 Dify-side config (versioned in this repo)
 
+**Deployment decision (Saiful, 2026-10-15): dedicated stripped stack on
+melehost.** The existing Dify that inspired this (`frontend-dify-*` on
+minihost, compose project under `prime_radiant_frontend`) serves another
+project on another host, so nothing can be removed from it globally — and
+AMI infrastructure runs on melehost anyway. AMI Ops gets its own compose
+stack on melehost (`ami-ops-dify`, host dir `/home/saiful/ami-ops-dify/`,
+Tailscale-only nginx on `100.110.14.31:8081`), with the facilities it
+doesn't need disabled: `MARKETPLACE_ENABLED=false` (no plugin marketplace),
+`ENABLE_WEBSITE_JINAREADER/FIRECRAWL/WATERCRAWL=false` (no knowledge
+crawlers), `ALLOW_EMBED=false`, `ALLOW_REGISTER=false`, no OAuth,
+`FORCE_VERIFYING_SIGNATURE=true`; single operator account; agent app uses
+tools only — no knowledge bases, no code nodes, no plugins. Compose +
+sanitized env live in the repo under `infra/dify/ami-ops-stack/`; the real
+`.env` (secrets) stays on melehost only. **Shipped 2026-10-15 (AT:K1,
+`580c8249`):** all 11 services up on melehost, healthy first-run state,
+alpha stack untouched. First login at `/install` (init-gated).
+
 1. `infra/dify/admin-agent/` — tool OpenAPI specs, agent instructions
    (system prompt), and setup notes. The agent instructions carry the
    house rules: AMI naming, confirmation-before-send, "tables and charts
@@ -197,8 +214,10 @@ doesn't have files its own CR instead of reaching around it.
 ## 8. Build sequencing
 
 1. Backend: `chart.svg` endpoint + tests (the only code delta in slice 1).
-2. Tool specs for §5.2 read-only set; configure Dify app on minihost;
-   wire vLLM provider.
+   **Done 2026-10-15 (AT:K1, `7756a5a2`):** 18 tests, full suite green.
+2. Dify stack on melehost. **Done 2026-10-15 (AT:K1, `580c8249`).**
+   Remaining: first-login setup, import `tools-openapi.yaml`, create the
+   Agent app, wire vLLM provider.
 3. Live walkthrough of slice 1 against Alpha.
 4. Slice 2 action tools, one at a time, each exercised live with the
    preview/confirm guard demonstrated.
