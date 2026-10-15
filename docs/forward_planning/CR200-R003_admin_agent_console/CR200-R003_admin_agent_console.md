@@ -136,7 +136,14 @@ doesn't have files its own CR instead of reaching around it.
    existing analytics service queries, hand-rolled SVG line/bar render,
    `get_admin`-gated, cacheable. Parameters: `series`, `days`, optional
    `format=svg`. This is the only new backend code in slice 1.
-2. No migration, no new env vars, no compose change (LAN-direct HTTP to
+2. Slice 2 adds one small delta: `get_admin` honors an `X-Admin-Operator`
+   header (sanitized label) when auth is the static bearer, so
+   `admin_audit.operator` records `dify-agent` instead of `static_bearer`
+   — otherwise chat-initiated sends are unattributable in the audit trail.
+   Verified against `services/admin_audit.py`: operator comes from
+   `AdminIdentity`, which for the bearer fallback is hardcoded
+   `static_bearer` today.
+3. No migration, no new env vars, no compose change (LAN-direct HTTP to
    the alpha host, same posture as `scripts/messages.sh`).
 
 ### 5.5 Dify-side config (versioned in this repo)

@@ -1,0 +1,133 @@
+# CR200-R003 slice 1 — AMI Ops tool surface (read-only).
+# Imported into Dify as a custom tool; auth is Bearer with the Alpha
+# ADMIN_SECRET (configured in Dify, never in this file). Server is the
+# LAN-direct alpha API; override via the servers block if the port moves.
+openapi: 3.0.3
+info:
+  title: AMI Trade Admin API (read-only subset)
+  version: 0.1.0
+servers:
+  - url: http://192.168.20.59:8001
+paths:
+  /v1/admin/users:
+    get:
+      operationId: user_search
+      summary: Find a user by exact email or device_user_id (one is required).
+      parameters:
+        - name: email
+          in: query
+          schema: { type: string }
+        - name: device_user_id
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Up to 20 matching users }
+  /v1/admin/users/{user_id}:
+    get:
+      operationId: user_detail
+      summary: Full profile for one user — plan, credits, devices, trial, suspension.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: User detail }
+  /v1/admin/overview:
+    get:
+      operationId: health_overview
+      summary: Ops heartbeat — readiness probes, build sha, LLM status and cache rate, release floor, market-data mode.
+      responses:
+        '200': { description: Overview }
+  /v1/admin/config-check:
+    get:
+      operationId: config_check
+      summary: Which configured features are live vs dark (degrade-loudly diagnostic).
+      responses:
+        '200': { description: Config coverage }
+  /v1/admin/analytics/summary:
+    get:
+      operationId: analytics_summary
+      summary: Headline scalars — total/DAU/WAU/MAU users and related counts.
+      responses:
+        '200': { description: Summary }
+  /v1/admin/analytics/timeseries:
+    get:
+      operationId: analytics_timeseries
+      summary: Per-day series (signups, active_users, room_runs, credits_spent), zero-filled, oldest to newest.
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 30, minimum: 1, maximum: 365 }
+      responses:
+        '200': { description: Timeseries }
+  /v1/admin/analytics/revenuecat:
+    get:
+      operationId: analytics_revenuecat
+      summary: RevenueCat event counts and recent feed.
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 30, minimum: 1, maximum: 365 }
+      responses:
+        '200': { description: RevenueCat }
+  /v1/admin/chart.svg:
+    get:
+      operationId: chart
+      summary: Render one timeseries as an SVG chart. Embed the URL in chat as a markdown image — it renders as a real chart.
+      parameters:
+        - name: series
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [signups, active_users, room_runs, credits_spent]
+        - name: days
+          in: query
+          schema: { type: integer, default: 30, minimum: 1, maximum: 365 }
+      responses:
+        '200':
+          description: SVG chart (image/svg+xml)
+          content:
+            image/svg+xml: {}
+  /v1/admin/messages:
+    get:
+      operationId: broadcasts_list
+      summary: Past admin broadcasts with reply counts.
+      responses:
+        '200': { description: Broadcasts }
+  /v1/admin/messages/replies:
+    get:
+      operationId: replies_list
+      summary: Inbound tester replies to broadcasts, newest first, optionally filtered by time.
+      parameters:
+        - name: since
+          in: query
+          description: ISO-8601 timestamp with Z suffix, e.g. 2026-10-08T00:00:00Z
+          schema: { type: string, format: date-time }
+      responses:
+        '200': { description: Replies }
+  /v1/admin/bugs:
+    get:
+      operationId: bug_list
+      summary: Bug reports with per-status counts across all reports.
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0, minimum: 0 }
+      responses:
+        '200': { description: Bug list }
+components:
+  securitySchemes:
+    bearer:
+      type: apiKey
+      in: header
+      name: Authorization
+security:
+  - bearer: []
