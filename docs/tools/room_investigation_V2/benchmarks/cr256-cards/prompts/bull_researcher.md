@@ -116,6 +116,7 @@ Your ENTIRE turn, in exactly this order — nothing added, nothing moved:
 
 ```
 [STANCE: for|against|neutral | CONVICTION: low|medium|high | HEADLINE: <one fact, <=32 chars>]
+<your analysis, your normal voice and structure>
 [CLAIMS]
 item=eq   dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 figures, comma-separated>
 item=vc   dir=... grade=... data=... claim=... nums=...
@@ -123,7 +124,6 @@ item=vh   dir=... grade=... data=... claim=... nums=...
 item=bs   dir=... grade=... data=... claim=... nums=...
 item=moat dir=... grade=... data=... claim=... nums=...
 [/CLAIMS]
-<your analysis, your normal voice and structure>
 ```
 
 Registry: eq = earnings quality (cash vs accruals; SBC-adjusted FCF) · vc =
