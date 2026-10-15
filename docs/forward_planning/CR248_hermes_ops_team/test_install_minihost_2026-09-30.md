@@ -381,3 +381,16 @@ no persona answered, pairing stayed pending/unapproved). Saiful: switch to silen
 ignore. `whatsapp.unauthorized_dm_behavior: ignore` set on the default profile,
 stale pending pairing cleared, gateway restarted. Unknown DMs now get silence;
 new numbers are added to WHATSAPP_ALLOWED_USERS manually.
+
+## Asana bridge for partner contract work (2026-10-15)
+
+Context: AMI has a contract with a company whose system of record is Asana — the
+bridge makes the partner's Asana our office's inbox. Token verified (HTTP 200,
+account saiful@agenticmarketintel.ai) but it currently sees only "My workspace" —
+the partner workspace join/invite is pending; ASANA_WORKSPACE on minihost must be
+re-pointed to the partner workspace gid once membership lands (`GET /workspaces`).
+Built: `asana-bridge` skill on angelia (poll/diff/acknowledge/report/procedure/
+limits: never complete without a principal's in-group word), `asana-watch` cron
+every 15 min delivering new-task reports to the Chief of Staff whatsapp group,
+token staged in angelia's .env (chmod 600, from the Mac .env source of truth under
+ASANA_ACCESS_TOKEN). Semi-auto v1: acknowledge + report, work starts on "go".
