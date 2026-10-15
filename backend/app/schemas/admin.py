@@ -11,7 +11,9 @@ from datetime import datetime
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from app.schemas.messages import Audience
 
 
 # ── Request bodies ────────────────────────────────────────────────────────────
@@ -232,10 +234,20 @@ class AdminBugResolveRequest(BaseModel):
 # ── Push console (CR200) ──────────────────────────────────────────────────────
 
 class AdminPushPreviewRequest(BaseModel):
-    # Exactly one of the two identifies the target; the endpoint 400s on
-    # neither and resolves email → user server-side.
+    # Exactly one of the three identifies the target; more than one is a loud
+    # 422 from the validator, none is a 400 from the endpoint (CR200-R003).
     user_id: Optional[UUID] = None
     email: Optional[str] = None
+    audience: Optional[Audience] = None
+
+    @model_validator(mode="after")
+    def _at_most_one_target(self) -> AdminPushPreviewRequest:
+        provided = sum(
+            1 for v in (self.user_id, self.email, self.audience) if v is not None
+        )
+        if provided > 1:
+            raise ValueError("provide exactly one of user_id, email, audience")
+        return self
 
 
 class AdminPushPreviewResponse(BaseModel):
@@ -246,8 +258,20 @@ class AdminPushPreviewResponse(BaseModel):
     push_configured: bool
 
 
+class AdminPushAudiencePreviewResponse(BaseModel):
+    # Audience-mode counterpart of AdminPushPreviewResponse (CR200-R003) — a
+    # separate model, not nullable fields on the CR200 shape, so the
+    # single-user response the SPA consumes stays byte-identical.
+    audience_mode: str
+    recipient_count: int
+    push_configured: bool
+
+
 class AdminPushSendRequest(BaseModel):
-    user_id: UUID
+    # Exactly one of user_id / audience — both or neither is a loud 422
+    # (CR200-R003).
+    user_id: Optional[UUID] = None
+    audience: Optional[Audience] = None
     title: str = Field(min_length=1, max_length=200)
     body: str = Field(min_length=1, max_length=1000)
     type: str = Field(default="admin_message", max_length=64)
@@ -255,8 +279,24 @@ class AdminPushSendRequest(BaseModel):
     ticker: Optional[str] = None
     params: Optional[dict[str, str]] = None
 
+    @model_validator(mode="after")
+    def _exactly_one_target(self) -> AdminPushSendRequest:
+        if (self.user_id is None) == (self.audience is None):
+            raise ValueError("provide exactly one of user_id, audience")
+        return self
+
 
 class AdminPushSendResponse(BaseModel):
     notification_id: UUID
     push_status: str
     push_detail: Optional[str] = None
+
+
+class AdminPushAudienceSendResponse(BaseModel):
+    # Audience-mode counterpart of AdminPushSendResponse (CR200-R003) — see
+    # AdminPushAudiencePreviewResponse for why this is a separate model.
+    # status_counts buckets per-user notify() outcomes by push_status, plus
+    # "error" for raised exceptions (CR040: partial failure reported, never
+    # swallowed).
+    recipient_count: int
+    status_counts: dict[str, int]
