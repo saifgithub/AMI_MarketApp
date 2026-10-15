@@ -5,6 +5,10 @@ server {
     server_name ${NGINX_SERVER_NAME};
     resolver 127.0.0.11 valid=30s ipv6=off;
 
+    location /console/api/explore/ {
+      return 404;
+    }
+
     location /console/api {
       set $api_upstream api:5001;
       proxy_pass http://$api_upstream;
