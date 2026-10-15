@@ -372,3 +372,12 @@ a follow-up decision for Saiful.
 - Gateway service: `systemctl --user status hermes-gateway.service` on minihost.
 - Teardown: pause both routines, `sudo ufw delete allow out to 192.168.20.74 port 8000`,
   optionally `hermes profile delete neteng appsupport`.
+
+## DM policy tightened (2026-10-15)
+
+Unknown number +60123451123 DM'd the line and received the automatic pairing-code
+reply (default `unauthorized_dm_behavior: pair` — gateway-level, not a persona;
+no persona answered, pairing stayed pending/unapproved). Saiful: switch to silent
+ignore. `whatsapp.unauthorized_dm_behavior: ignore` set on the default profile,
+stale pending pairing cleared, gateway restarted. Unknown DMs now get silence;
+new numbers are added to WHATSAPP_ALLOWED_USERS manually.
