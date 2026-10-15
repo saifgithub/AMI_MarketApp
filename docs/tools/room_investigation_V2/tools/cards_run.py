@@ -145,9 +145,45 @@ def pearson(x, y):
     return c / math.sqrt(vx * vy) if vx and vy else float("nan")
 
 
+def icc_2_1(by_ticker: dict) -> float:
+    """Two-way random-effects, single-measure, ABSOLUTE-AGREEMENT ICC
+    (McGraw & Wong ICC(A,1)) — the standard test-retest metric for k reps
+    per subject. Unlike pooled pearson it models the subject (ticker) mean,
+    so tickers that SHOULD separate (AAPL high, SNAP low) do not fake
+    negative reliability; the question is only whether reps of the SAME
+    ticker land close in ABSOLUTE terms, which is what a per-level bar needs.
+    """
+    rows = [[v for _, v in sorted(d.items()) if v is not None]
+            for d in by_ticker.values()]
+    rows = [r for r in rows if len(r) >= 2]
+    if not rows:
+        return float("nan")
+    k = min(len(r) for r in rows)
+    rows = [r[:k] for r in rows if len(r) >= k]
+    n = len(rows)
+    if n < 3 or k < 2:
+        return float("nan")
+    grand = sum(sum(r) for r in rows) / (n * k)
+    sm = [st.mean(r) for r in rows]
+    rm = [st.mean(rows[j][i] for j in range(n)) for i in range(k)]
+    ss_subj = k * sum((v - grand) ** 2 for v in sm)
+    ss_rep = n * sum((v - grand) ** 2 for v in rm)
+    ss_err = sum((rows[j][i] - sm[j] - rm[i] + grand) ** 2
+                 for j in range(n) for i in range(k))
+    ms_subj = ss_subj / (n - 1)
+    ms_rep = ss_rep / (k - 1)
+    ms_err = ss_err / ((n - 1) * (k - 1))
+    return (ms_subj - ms_err) / (
+        ms_subj + (k - 1) * ms_err + (k / n) * (ms_rep - ms_err))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--runs", required=True)
+    ap.add_argument("--runs", default=None,
+                    help="runs_<bench>.jsonl (DB fetch mode)")
+    ap.add_argument("--turns-file", default=None,
+                    help="cards_repair.py output (repaired-census mode; "
+                         "skips the DB fetch)")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--dsn", default=None,
                     help="DATABASE_URL default (fallback: env)")
@@ -155,41 +191,61 @@ def main() -> None:
 
     import os
     dsn = args.dsn or os.environ.get("DATABASE_URL")
-    if not dsn:
-        raise SystemExit("DATABASE_URL not set")
 
-    arms = [json.loads(l) for l in open(args.runs)]
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rooms, absent_rooms = {}, 0
-    for arm in arms:
-        key = (arm["arm_key"], int(arm["risk_score"]))
-        if arm.get("status") != "completed":
-            continue
-        turns = fetch_turns(dsn, arm)
-        if not turns:
-            absent_rooms += 1
-            continue
-        pr = parse_room(turns)
-        pr["ticker"], pr["rep"] = arm["arm_key"].rsplit("-rep", 1)
-        pr["verdict"] = (arm.get("verdict") or {}).get("action")
-        rooms[key] = pr
+    if args.turns_file:
+        for line in open(args.turns_file):
+            rec = json.loads(line)
+            pr = parse_room(rec["turns"])
+            pr["ticker"], pr["rep"] = rec["ticker"], rec["rep"]
+            pr["verdict"] = rec.get("verdict")
+            pr["repaired_turns"] = sum(1 for t in rec["turns"] if t.get("repaired"))
+            rooms[(rec["arm_key"], int(rec["risk_score"]))] = pr
+    else:
+        if not dsn:
+            raise SystemExit("DATABASE_URL not set")
+        if not args.runs:
+            raise SystemExit("--runs or --turns-file required")
+        arms = [json.loads(l) for l in open(args.runs)]
+        for arm in arms:
+            key = (arm["arm_key"], int(arm["risk_score"]))
+            if arm.get("status") != "completed":
+                continue
+            turns = fetch_turns(dsn, arm)
+            if not turns:
+                absent_rooms += 1
+                continue
+            pr = parse_room(turns)
+            pr["ticker"], pr["rep"] = arm["arm_key"].rsplit("-rep", 1)
+            pr["verdict"] = (arm.get("verdict") or {}).get("action")
+            rooms[key] = pr
 
-    # Test-retest across reps (pooled pairs + per-ticker)
+    # Test-retest: ICC(A,1) across reps (the correct stat — pooled pearson
+    # fakes negative r because tickers legitimately separate), plus
+    # same-sign rate and mean within-ticker spread as secondary reads.
     by_ticker = collections.defaultdict(dict)
     for pr in rooms.values():
         by_ticker[pr["ticker"]][pr["rep"]] = pr["evidence_score"]
     pairs, per_ticker = [], {}
+    same_sign = sign_tot = 0
+    spreads = []
     for t, reps in by_ticker.items():
         vals = {r: v for r, v in reps.items() if v is not None}
         keys = sorted(vals)
         ps = [(vals[keys[i]], vals[keys[j]])
               for i in range(len(keys)) for j in range(i + 1, len(keys))]
+        sv = list(vals.values())
+        if len(sv) >= 2:
+            spreads.append(max(sv) - min(sv))
+            sign_tot += 1
+            same_sign += (min(sv) > 0) or (max(sv) < 0) or (min(sv) == max(sv) == 0)
         per_ticker[t] = {"n": len(vals), "scores": vals,
-                         "pair_r": pearson([p[0] for p in ps], [p[1] for p in ps]) if len(keys) >= 3 else None}
+                         "spread": (max(sv) - min(sv)) if len(sv) >= 2 else None}
         pairs.extend(ps)
-    trt = pearson([p[0] for p in pairs], [p[1] for p in pairs])
+    trt = icc_2_1(by_ticker)
 
     n_cards = sum(r["card_count"] for r in rooms.values())
     n_malformed = sum(r["flags"].get("card_malformed", 0) for r in rooms.values())
@@ -200,13 +256,16 @@ def main() -> None:
     report = {
         "rooms_parsed": len(rooms), "rooms_no_turns": absent_rooms,
         "desk_turns": desk_turns,
+        "repaired_turns": sum(r.get("repaired_turns", 0) for r in rooms.values()),
         "cards_filed": n_cards, "cards_per_room": round(n_cards / max(len(rooms), 1), 2),
         "card_malformed": n_malformed,
         "malformed_rate": round(n_malformed / max(n_cards + n_malformed, 1), 4),
         "desk_absent_blocks": n_absent,
         "absent_rate": round(n_absent / max(desk_turns, 1), 4),
-        "test_retest_r": round(trt, 3),
-        "gate_r_required": 0.85,
+        "test_retest_icc": round(trt, 3),
+        "gate_icc_required": 0.85,
+        "same_sign_rate": round(same_sign / max(sign_tot, 1), 3),
+        "mean_within_ticker_spread": round(st.mean(spreads), 3) if spreads else None,
         "gate_pass": bool(trt >= 0.85),
         "per_ticker": per_ticker,
         "rooms": {f"{k[0]}|{k[1]}": {kk: vv for kk, vv in r.items()
@@ -220,15 +279,17 @@ def main() -> None:
          f"malformed: {n_malformed} ({100*report['malformed_rate']:.1f}%) | "
          f"desks without CLAIMS block: {n_absent} ({100*report['absent_rate']:.1f}%)",
          "",
-         f"**test-retest r = {trt:+.3f}** (gate >= 0.85) → "
-         f"{'PASS' if report['gate_pass'] else 'FAIL'}", ""]
-    L.append("| ticker | n | rep scores | pair r |")
+         f"**test-retest ICC(A,1) = {trt:+.3f}** (gate >= 0.85) → "
+         f"{'PASS' if report['gate_pass'] else 'FAIL'}",
+         f"same-sign across reps: {same_sign}/{sign_tot} | "
+         f"mean within-ticker spread: {report['mean_within_ticker_spread']}", ""]
+    L.append("| ticker | n | rep scores | spread |")
     L.append("|---|---|---|---|")
     for t, d in sorted(per_ticker.items()):
         sc = ", ".join(f"r{r}={v:+.3f}" for r, v in sorted(d["scores"].items()))
-        L.append(f"| {t} | {d['n']} | {sc} | {d['pair_r']} |")
+        L.append(f"| {t} | {d['n']} | {sc} | {d['spread']} |")
     (out_dir / "report.md").write_text("\n".join(L))
-    print("\n".join(L[:7]))
+    print("\n".join(L[:8]))
     print(f"\nwritten: {out_dir}/report.md + report.json")
 
 
