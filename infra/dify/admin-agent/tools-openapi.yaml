@@ -123,11 +123,102 @@ paths:
           schema: { type: integer, default: 0, minimum: 0 }
       responses:
         '200': { description: Bug list }
+  /v1/admin/messages/preview:
+    post:
+      operationId: message_preview
+      summary: Dry-run a broadcast — resolves the audience and returns the exact recipient count. Sends nothing. ALWAYS call this before message_send.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body, audience]
+              properties:
+                title: { type: string }
+                body: { type: string }
+                priority: { type: string, enum: [normal, high], default: normal }
+                audience: { $ref: '#/components/schemas/Audience' }
+      responses:
+        '200':
+          description: '{recipient_count: int}'
+          content:
+            application/json: {}
+  /v1/admin/messages:
+    post:
+      operationId: message_send
+      summary: Fan out an in-app broadcast to the resolved audience. NEVER call without a message_preview of the identical payload in the same session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body, audience]
+              properties:
+                title: { type: string }
+                body: { type: string }
+                priority: { type: string, enum: [normal, high], default: normal }
+                audience: { $ref: '#/components/schemas/Audience' }
+      responses:
+        '200':
+          description: '{broadcast_id, recipient_count}'
+          content:
+            application/json: {}
+  /v1/admin/push/preview:
+    post:
+      operationId: push_preview
+      summary: Dry-run a push broadcast — resolves the audience, returns recipient count and whether push is configured. Sends nothing. ALWAYS call this before push_send.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audience]
+              properties:
+                audience: { $ref: '#/components/schemas/Audience' }
+      responses:
+        '200':
+          description: '{audience_mode, recipient_count, push_configured}'
+          content:
+            application/json: {}
+  /v1/admin/push:
+    post:
+      operationId: push_send
+      summary: Push-notify every resolved user (notifications row + OneSignal). NEVER call without a push_preview in the same session; refuse on zero recipients.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audience, title, body]
+              properties:
+                audience: { $ref: '#/components/schemas/Audience' }
+                title: { type: string }
+                body: { type: string }
+      responses:
+        '200':
+          description: '{recipient_count, status_counts}'
+          content:
+            application/json: {}
 components:
   securitySchemes:
     bearer:
       type: apiKey
       in: header
       name: Authorization
+  schemas:
+    Audience:
+      type: object
+      required: [mode]
+      additionalProperties: false
+      properties:
+        mode: { type: string, enum: [all, build, activity, user] }
+        app_version_lt: { type: string, description: 'mode=build only, with +<build> suffix e.g. 0.1.0+92' }
+        active_within_days: { type: integer, minimum: 1 }
+        dormant_beyond_days: { type: integer, minimum: 1 }
+        user_ids: { type: array, items: { type: string, format: uuid } }
 security:
   - bearer: []
