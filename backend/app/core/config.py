@@ -1117,6 +1117,18 @@ class Settings(BaseSettings):
     # fires on scripted/outage/fail-safe verdicts — nothing real to audit.
     room_resurrection_review_enabled: bool = True
 
+    # CR256 — in-turn claim-card enforcement for the four evidence desks
+    # (fundamentals_analyst, bull/bear_researcher, research_manager). The card
+    # pilot measured why this must be mechanical: self-filed cards scored
+    # test-retest ICC 0.93 while voluntary filing was salience noise (raw ICC
+    # 0.62 at n=30 across six prompt variants), and post-hoc repair only
+    # rescues as top-up, never as foundation. When on, those four prompts gain
+    # the CLAIMS/OBJECTIONS turn contract and the runner re-asks a desk ONCE
+    # (the CR253 bounded-repair pattern) when its turn arrives without a
+    # parseable CLAIMS block. Off by default: a behaviour change that ships by
+    # a measured GO (D32), not a deploy.
+    room_cards_envelope_enabled: bool = False
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

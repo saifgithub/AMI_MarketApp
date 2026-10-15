@@ -528,6 +528,10 @@ services:
       # Env vars are the kill switches. See Settings.
       ROOM_VETO_REVIEW_ENABLED: ${ROOM_VETO_REVIEW_ENABLED:-true}
       ROOM_RESURRECTION_REVIEW_ENABLED: ${ROOM_RESURRECTION_REVIEW_ENABLED:-true}
+      # CR256 — in-turn claim-card enforcement on the four evidence desks
+      # (pilot-measured: voluntary filing is salience noise, self-filed cards
+      # ICC 0.93). Default off; ships on a measured GO only.
+      ROOM_CARDS_ENVELOPE_ENABLED: ${ROOM_CARDS_ENVELOPE_ENABLED:-false}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

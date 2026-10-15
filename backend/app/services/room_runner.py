@@ -4536,6 +4536,166 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     )
 
 
+# CR256 — the in-turn CLAIMS/OBJECTIONS machine channel on the four evidence
+# desks, on the same DEF147 idiom as the stance envelope above: locate-and-
+# strip is loose, parse is strict, and the two jobs are decoupled so a
+# malformed card costs the card, never the prose. The prompt half of the
+# contract is `room_prompts.py`'s `_CLAIMS_FORMAT_*`; the block is telemetry
+# like GAPS — stripped before the transcript so neither the user nor a
+# downstream desk reads machine syntax as argument (DEF095). The locator
+# patterns are the card pilot's measured-validated ones (tools/cards_run.py,
+# 90-room corpus): explicit [CLAIMS]…[/CLAIMS] tags, tolerant line grammar.
+# What is NOT tolerated is an unclosed block — an opening tag with no closer
+# is a truncation artefact, and reading past it would swallow the analysis
+# body as card text, so the precision-biased read is to recognise nothing and
+# let enforcement re-ask.
+_CLAIMS_BLOCK_RE = re.compile(r"\[CLAIMS\](.*?)\[/CLAIMS\]", re.S | re.I)
+_OBJECTIONS_BLOCK_RE = re.compile(r"\[OBJECTIONS\](.*?)\[/OBJECTIONS\]", re.S | re.I)
+_CARD_LINE_RE = re.compile(
+    r"item=(\S+)\s+dir=(\S+)\s+grade=(\S+)\s+data=(\S+)\s+claim=(.+?)"
+    r"(?:\s+nums=(.*))?$",
+    re.I,
+)
+_OBJECTION_LINE_RE = re.compile(
+    r"target=(\S+)\s+severity=(\S+)\s+objection=(.+)$", re.I
+)
+# The five-item CFA registry and the value sets — the pilot-validated shape,
+# kept byte-compatible with the harness composite (tools/cards_run.py), which
+# reads the SAME blocks post-hoc out of llm_audit: the runner's strip only
+# protects the transcript, the audit trail keeps the raw turn.
+_CARD_ITEM_IDS = ("eq", "vc", "vh", "bs", "moat")
+_CARD_DIRS = ("support", "oppose", "neutral")
+_CARD_GRADES = ("well", "partial", "unsupported")
+_CARD_DATA_FLAGS = ("yes", "no")
+
+# The four evidence desks, byte-identical to `room_prompts._CARD_DESKS` — the
+# prompt-side contract and the runner-side enforcement must name the same set,
+# and the CR256 tests pin both.
+_CARD_DESKS = frozenset(
+    {
+        AgentId.FUNDAMENTALS_ANALYST,
+        AgentId.BULL_RESEARCHER,
+        AgentId.BEAR_RESEARCHER,
+        AgentId.RESEARCH_MANAGER,
+    }
+)
+
+
+@dataclass(frozen=True)
+class _ClaimCard:
+    item: str
+    direction: str
+    grade: str
+    data: str
+    claim: str
+    nums: str | None
+
+
+@dataclass(frozen=True)
+class _Objection:
+    target: str
+    severity: str
+    objection: str
+
+
+@dataclass(frozen=True)
+class _ClaimCards:
+    cards: tuple[_ClaimCard, ...]
+    objections: tuple[_Objection, ...]
+    malformed_cards: int = 0
+    malformed_objections: int = 0
+
+
+def _cards_channel_absent(cards: _ClaimCards | None) -> bool:
+    """The CR256 enforcement trigger. The channel is absent when there is no
+    closed block, or when the block yielded zero parseable cards — a block
+    whose lines ALL failed the line grammar is an absent channel in
+    everything but name (its lines are already counted malformed upstream).
+    """
+    return cards is None or not cards.cards
+
+
+def parse_claim_cards(text: str) -> tuple[str, _ClaimCards | None]:
+    """Split a card desk's turn into (prose, claim cards).
+
+    Returns `(text, None)` unchanged when no closed `[CLAIMS]` block exists —
+    absence is the enforcement trigger, never silently coerced to an empty
+    census (the same None discipline `parse_data_gaps` applies). Every
+    recognised block is stripped regardless of what its lines parse to, and
+    an `[OBJECTIONS]` block is stripped with it: both are machine channels.
+    Individual malformed lines are counted, never guessed at — a card the
+    grammar cannot read is dropped, exactly the CR143 precision bias.
+    """
+    claims_m = _CLAIMS_BLOCK_RE.search(text)
+    if claims_m is None:
+        return text, None
+    objections_m = _OBJECTIONS_BLOCK_RE.search(text)
+
+    # Splice both spans out of the ORIGINAL text (indices are relative to it),
+    # removing objections first so the claims splice cannot shift them.
+    body = text
+    for start, end in sorted(
+        [claims_m.span()]
+        + ([objections_m.span()] if objections_m is not None else []),
+        reverse=True,
+    ):
+        body = body[:start] + body[end:]
+    body = re.sub(r"\n{3,}", "\n\n", body).strip()
+
+    cards: list[_ClaimCard] = []
+    malformed_cards = 0
+    for raw in claims_m.group(1).strip().splitlines():
+        line = _ENVELOPE_TRIM_RE.sub("", raw).strip().lstrip("-*").strip()
+        if not line:
+            continue
+        m = _CARD_LINE_RE.match(line)
+        if (
+            m is None
+            or m.group(1).lower() not in _CARD_ITEM_IDS
+            or m.group(2).lower() not in _CARD_DIRS
+            or m.group(3).lower() not in _CARD_GRADES
+            or m.group(4).lower() not in _CARD_DATA_FLAGS
+        ):
+            malformed_cards += 1
+            continue
+        cards.append(
+            _ClaimCard(
+                item=m.group(1).lower(),
+                direction=m.group(2).lower(),
+                grade=m.group(3).lower(),
+                data=m.group(4).lower(),
+                claim=m.group(5).strip()[:400],
+                nums=(m.group(6) or "").strip()[:200] or None,
+            )
+        )
+
+    objections: list[_Objection] = []
+    malformed_objections = 0
+    if objections_m is not None:
+        for raw in objections_m.group(1).strip().splitlines():
+            line = _ENVELOPE_TRIM_RE.sub("", raw).strip().lstrip("-*").strip()
+            if not line:
+                continue
+            m = _OBJECTION_LINE_RE.match(line)
+            if m is None or m.group(1).lower() not in _CARD_ITEM_IDS:
+                malformed_objections += 1
+                continue
+            objections.append(
+                _Objection(
+                    target=m.group(1).lower(),
+                    severity=m.group(2).lower(),
+                    objection=m.group(3).strip()[:400],
+                )
+            )
+
+    return body, _ClaimCards(
+        cards=tuple(cards),
+        objections=tuple(objections),
+        malformed_cards=malformed_cards,
+        malformed_objections=malformed_objections,
+    )
+
+
 # CR219 R53 — the GAPS telemetry tail, on the same DEF147 idiom as the stance
 # envelope just above (locate-and-strip is loose; parse is strict; the two
 # jobs are independent so a malformed tail costs the field, never the prose).
@@ -8567,6 +8727,116 @@ async def _attempt_envelope_repair(
     return stripped, env
 
 
+async def _attempt_cards_repair(
+    *,
+    gateway: LLMGateway,
+    system_prompt: str,
+    messages: list[ChatMessage],
+    tier: Any,
+    locale: str,
+    user_id: UUID | None,
+    agent_id: AgentId,
+    ticker: str,
+    max_tokens: int,
+    timeout_s: float,
+    profile: dict[str, Any],
+) -> tuple[str, _StanceEnvelope, _ClaimCards] | None:
+    """CR256 — regenerate a live card-desk turn ONCE when it produced no
+    parseable CLAIMS block, same provider/tier/constraint as the original
+    call (the CR253 envelope-repair precedent it sits beside). The card
+    pilot measured why voluntary filing cannot be trusted: salience noise
+    across six prompt variants, raw ICC 0.62 at n=30 — so the channel is
+    enforced the same way the stance envelope is: one bounded re-ask naming
+    the omission, adopted only when the retry carries a parseable block.
+
+    The repair note pastes the card template LITERALLY, per the pilot's
+    repair-corpus lesson: an ask that names "the shape your instructions
+    specify" comes back as a condensed `eq: …` prose list that fails the
+    line grammar — the retry must be handed the exact lines to emit.
+
+    Returns (re-stripped prose, retry envelope, retry cards); every None
+    path leaves the pre-CR256 state in place, exactly as CR253 does. Audited
+    under its own flow (`room_cards_repair`) — the scoring gate counts card
+    desks once per run on the base "room" flow, the same safety the
+    room_envelope_repair flow name already carries.
+    """
+    repair_note = (
+        "[AMI fact-check] Your response did not carry a parseable CLAIMS "
+        "block, so none of your evidence claims could be recorded in the "
+        "machine channel. Re-issue the SAME analysis with everything "
+        "unchanged except that it includes the CLAIMS block in exactly this "
+        "shape:\n"
+        "[CLAIMS]\n"
+        "item=eq   dir=support|oppose|neutral grade=well|partial|unsupported "
+        "data=yes|no claim=<one sentence> nums=<1-3 figures, "
+        "comma-separated>\n"
+        "item=vc   dir=... grade=... data=... claim=... nums=...\n"
+        "item=vh   dir=... grade=... data=... claim=... nums=...\n"
+        "item=bs   dir=... grade=... data=... claim=... nums=...\n"
+        "item=moat dir=... grade=... data=... claim=... nums=...\n"
+        "[/CLAIMS]\n"
+        "File all five items, one per line. Change nothing else about the "
+        "analysis."
+    )
+    meta: dict[str, Any] = {}
+    try:
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=[*messages, ChatMessage(role="user", content=repair_note)],
+                model_tier=tier,
+                locale=locale,
+                max_tokens=max_tokens,
+                audit_user_id=user_id,
+                audit_agent_id=agent_id.value,
+                audit_flow="room_cards_repair",
+                meta=meta,
+                constraint=_agent_constraint(agent_id, ticker),
+            )),
+            timeout=timeout_s,
+        )
+    except Exception as exc:
+        logger.warning(
+            "room_cards_repair_failed",
+            agent_id=agent_id.value, reason="call_error",
+            error=(str(exc) or repr(exc))[:200],
+        )
+        return None
+    if meta.get("stream_error"):
+        logger.warning(
+            "room_cards_repair_failed", agent_id=agent_id.value, reason="stream_error",
+        )
+        return None
+    repaired = "".join(chunks).strip()
+    if not repaired:
+        logger.warning(
+            "room_cards_repair_failed", agent_id=agent_id.value, reason="empty",
+        )
+        return None
+    stripped, env = parse_stance_envelope(repaired)
+    stripped, cards = parse_claim_cards(stripped)
+    if _cards_channel_absent(cards):
+        logger.warning(
+            "room_cards_repair_failed", agent_id=agent_id.value,
+            reason="still_no_cards",
+        )
+        return None
+    # `_cards_channel_absent` is a bool, not a TypeGuard — pin the narrow.
+    assert cards is not None
+    # The retry's HEADLINE gets the same sheet-figure check the original
+    # envelope and the CR253 retry both get (CR219 R59-F3).
+    if env.headline and find_sheet_mismatches(env.headline, profile):
+        env = _dataclass_replace(env, headline=None)
+    stripped = stripped.strip()
+    if stripped:
+        stripped = _mark_if_truncated(stripped, agent_id=agent_id, meta=meta)
+    logger.info(
+        "room_cards_repaired", agent_id=agent_id.value,
+        cards=len(cards.cards) if cards else 0,
+    )
+    return stripped, env, cards
+
+
 async def _typewriter(
     run_id: UUID,
     agent_id: AgentId,
@@ -8713,6 +8983,11 @@ async def _compute_agent_text(
             existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
             last_loss_closed_at=ctx.risk_last_loss_closed_at,
             trade_open_timestamps=ctx.risk_trade_open_timestamps,
+            # CR256 — the CLAIMS/OBJECTIONS turn contract reaches the four
+            # evidence desks' prompts only when in-turn enforcement is on.
+            # The PM's own call site below omits it: the PM is not a card
+            # desk, and the gate inside build_room_messages is agent-scoped.
+            cards_envelope=settings.room_cards_envelope_enabled,
         )
         # DEF125: the provider reports its terminal stop reason here.
         stream_meta: dict[str, Any] = {}
@@ -8794,6 +9069,46 @@ async def _compute_agent_text(
                 if _repaired_env is not None:
                     text, envelope = _repaired_env
                     envelope_parsed = True
+            # CR256 — the CLAIMS card channel on the four evidence desks.
+            # Stripped here, off the stance-stripped text, so the
+            # fundamentals desk's slot-2 block comes off before the GAPS tail
+            # parse below (GAPS stays the turn's last line — the two machine
+            # channels never overlap). An absent channel earns ONE bounded
+            # re-ask (`_attempt_cards_repair`); a retry that still carries no
+            # parseable block leaves the original turn in place — the same
+            # failure discipline as the CR253 envelope repair above, and the
+            # same agent-set gate (scripted turns are never re-asked).
+            claim_cards: _ClaimCards | None = None
+            if settings.room_cards_envelope_enabled and agent_id in _CARD_DESKS:
+                text, claim_cards = parse_claim_cards(text)
+                if claim_cards is not None and (
+                    claim_cards.malformed_cards
+                    or claim_cards.malformed_objections
+                ):
+                    logger.info(
+                        "room_claim_cards_malformed",
+                        agent_id=agent_id.value,
+                        malformed_cards=claim_cards.malformed_cards,
+                        malformed_objections=claim_cards.malformed_objections,
+                    )
+                if _cards_channel_absent(claim_cards) and (
+                    agent_id not in ctx.scripted_turns
+                ):
+                    _repaired_cards = await _attempt_cards_repair(
+                        gateway=gateway,
+                        system_prompt=system_prompt,
+                        messages=messages,
+                        tier=tier,
+                        locale=ctx.mandate.locale,
+                        user_id=ctx.user_id,
+                        agent_id=agent_id,
+                        ticker=ctx.ticker,
+                        max_tokens=max_tokens_for(agent_id),
+                        timeout_s=agent_timeout_s,
+                        profile=profile,
+                    )
+                    if _repaired_cards is not None:
+                        text, envelope, claim_cards = _repaired_cards
             # CR219 R53 — the four analysts only, same set `_GAPS_FORMAT` was
             # appended to (room_prompts.py). Parsed off the STANCE-stripped
             # text so a leaked machine channel never appears inside a gap

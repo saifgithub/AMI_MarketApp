@@ -1066,6 +1066,99 @@ _GAPS_FORMAT = (
     "- Write this line ONCE, at the very end, after your analysis is complete."
 )
 
+# CR256 — the in-turn CLAIMS card channel for the four evidence desks
+# (fundamentals_analyst, bull/bear_researcher, research_manager). This is the
+# pilot's measured-validated contract (v6, b0d74a70): the five-item CFA
+# registry, one card per item per turn, direction/grade/data/claim/nums per
+# card, objections on bear/research_manager only. The pilot is why the
+# contract exists in this shape: self-filed cards measured test-retest ICC
+# 0.93, so the format is frozen; what failed was VOLUNTARY filing (salience
+# noise across six prompt variants, raw ICC 0.62), which is what the runner's
+# flag-gated enforcement repairs. Two desk-class placements, per the pilot's
+# slot-2-anchor measurement: the fundamentals desk files the block immediately
+# after the stance line (its native structure kept swallowing appended
+# sections — 100% filing measured at slot 2), the three researchers file it
+# CLOSING (their native Raises/Lowers structures occupy the analysis body and
+# survive a closing append). GAPS keeps its terminal slot for the analysts —
+# no two instructions contest the same slot, the DEF251 discipline.
+_CLAIMS_REGISTRY = (
+    "Registry: eq = earnings quality (cash vs accruals; SBC-adjusted FCF) · "
+    "vc = value creation (ROIC vs WACC) · vh = valuation hygiene · "
+    "bs = balance-sheet survival (debt wall) · moat = moat durability "
+    "(Dorsey type; what erodes it)."
+)
+_CLAIMS_CARD_TEMPLATE = (
+    "item=eq   dir=support|oppose|neutral grade=well|partial|unsupported "
+    "data=yes|no claim=<one sentence> nums=<1-3 figures, comma-separated>\n"
+    "item=vc   dir=... grade=... data=... claim=... nums=...\n"
+    "item=vh   dir=... grade=... data=... claim=... nums=...\n"
+    "item=bs   dir=... grade=... data=... claim=... nums=...\n"
+    "item=moat dir=... grade=... data=... claim=... nums=..."
+)
+_CLAIMS_RULES = (
+    "- File all five items, every turn. Outside your lane → dir=neutral, "
+    "grade=unsupported, data=no.\n"
+    "- dir = your evidence's direction on THIS position. grade = how well the "
+    "PAYLOAD supports the claim. data = yes only if the fact sheet carried the "
+    "number; no if absent — never invent a figure.\n"
+    "- claim = one sentence grounded in payload figures; nums = the figures."
+)
+# The analyst desk's slot-2 placement: stance line, then the block, then the
+# analysis; GAPS stays the turn's last line, unchanged.
+_CLAIMS_FORMAT_SLOT2 = (
+    "\n\nImmediately AFTER the stance line, as the second block of your turn, "
+    "in exactly this shape:\n"
+    "[CLAIMS]\n"
+    f"{_CLAIMS_CARD_TEMPLATE}\n"
+    "[/CLAIMS]\n"
+    f"{_CLAIMS_REGISTRY}\n"
+    f"{_CLAIMS_RULES}\n"
+    "- The CLAIMS block is a machine channel: it is stripped before your turn "
+    "reaches the transcript, so the user and the other desks never see it — "
+    "your analysis carries the argument, the cards carry the record.\n"
+    "- Write the block ONCE, at slot 2 only. Your analysis follows it."
+)
+# The researchers' closing placement: stance line, analysis, then the block
+# as the turn's closing content.
+_CLAIMS_FORMAT_CLOSING = (
+    "\n\nAt the END of your turn, after the analysis, as the closing content, "
+    "in exactly this shape:\n"
+    "[CLAIMS]\n"
+    f"{_CLAIMS_CARD_TEMPLATE}\n"
+    "[/CLAIMS]\n"
+    f"{_CLAIMS_REGISTRY}\n"
+    f"{_CLAIMS_RULES}\n"
+    "- The CLAIMS block is a machine channel: it is stripped before your turn "
+    "reaches the transcript, so the user and the other desks never see it — "
+    "your analysis carries the argument, the cards carry the record.\n"
+    "- Write the block ONCE, as the closing block only."
+)
+# Objections are the bear/research_manager-only challenge channel, filed after
+# the CLAIMS block, and are OPTIONAL by contract — a desk that finds nothing
+# to challenge ends at [/CLAIMS]. The runner therefore never enforces them;
+# only the CLAIMS block is re-asked.
+_OBJECTIONS_FORMAT = (
+    "\n\nAfter the CLAIMS block, if any claim filed in this room deserves "
+    "challenge on payload evidence, end with — as the final content:\n"
+    "[OBJECTIONS]\n"
+    "target=<item id> severity=high|medium|low objection=<one sentence>\n"
+    "[/OBJECTIONS]\n"
+    "- Only objections the payload actually supports. If none, end at "
+    "[/CLAIMS]."
+)
+_CARD_DESKS = frozenset(
+    {
+        AgentId.FUNDAMENTALS_ANALYST,
+        AgentId.BULL_RESEARCHER,
+        AgentId.BEAR_RESEARCHER,
+        AgentId.RESEARCH_MANAGER,
+    }
+)
+_OBJECTION_DESKS = frozenset(
+    {AgentId.BEAR_RESEARCHER, AgentId.RESEARCH_MANAGER}
+)
+_ANALYST_CARD_DESKS = frozenset({AgentId.FUNDAMENTALS_ANALYST})
+
 
 def trader_block_regex(*, ticker: str) -> str:
     r"""CR210 — the Execution Desk's turn as a decoding grammar.
@@ -1891,6 +1984,11 @@ def build_room_messages(
     # never touches `field_state` or a price to build the delta, only to
     # render one it was handed.
     prior_convene: NextConveneDelta | None = None,
+    # CR256 — the runner's `settings.room_cards_envelope_enabled`, threaded so
+    # the four evidence desks' prompts carry the CLAIMS/OBJECTIONS turn
+    # contract when (and only when) in-turn enforcement is on. False leaves
+    # every prompt byte-identical to pre-CR256.
+    cards_envelope: bool = False,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -1966,6 +2064,20 @@ def build_room_messages(
         format_instruction = prose_format + (
             _STANCE_FORMAT_RISK if agent_id in _SIZE_DECLARING_AGENTS else _STANCE_FORMAT
         )
+        # CR256 — the CLAIMS card channel on the four evidence desks only,
+        # gated by the runner's flag. Instruction text lands between the
+        # stance format and GAPS; the TURN slots it names are desk-class
+        # (slot 2 for the fundamentals desk, closing for the researchers),
+        # so no instruction pair contests one slot — the DEF251 discipline
+        # the GAPS comment below exists for.
+        if cards_envelope and agent_id in _CARD_DESKS:
+            format_instruction += (
+                _CLAIMS_FORMAT_SLOT2
+                if agent_id in _ANALYST_CARD_DESKS
+                else _CLAIMS_FORMAT_CLOSING
+            )
+            if agent_id in _OBJECTION_DESKS:
+                format_instruction += _OBJECTIONS_FORMAT
         # CR219 R53 — appended last, after the stance envelope: STANCE leads the
         # turn (DEF147) and GAPS trails it, so the two instructions name two
         # different slots rather than competing for "the very first line" the

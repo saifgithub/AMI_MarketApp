@@ -1,0 +1,13 @@
+# CR256 envelope re-pilot shard b/2 — 5 tickers x risk 4 x 3 reps, DeepInfra V4-Flash.
+# backend-default prompts + ROOM_CARDS_ENVELOPE_ENABLED=true: the CLAIMS/OBJECTIONS
+# contract now ships from the backend flag (room_prompts.py), enforced in-turn by
+# the runner (one bounded re-ask per desk). NOT the cr256-cards prompt_variant —
+# mixing prompt-version rooms in one ICC is forbidden (v3-partial vs v6-90 are
+# separate instruments; this is a third).
+name: cr256-env-r4-b
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [CAG, DE, DHR, FCEL, JPM]
+mandate: { risk_score: 4 }
+repeats: 3
+concurrency_by_provider: { deepinfra: 1 }
