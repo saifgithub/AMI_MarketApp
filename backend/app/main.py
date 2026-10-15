@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.admin import router as admin_router
 from app.api.admin_analytics import router as admin_analytics_router
 from app.api.admin_bugs import router as admin_bugs_router
+from app.api.admin_chart import router as admin_chart_router
 from app.api.admin_overview import router as admin_overview_router
 from app.api.admin_push import router as admin_push_router
 from app.api.admin_room import router as admin_room_router
@@ -622,6 +623,7 @@ async def _unhandled_exception_with_request_id(request: Request, exc: Exception)
 # Routers
 app.include_router(admin_router)
 app.include_router(admin_bugs_router)  # CR200 — console bug triage
+app.include_router(admin_chart_router)  # CR200-R003 — SVG charts for the admin agent
 app.include_router(admin_overview_router)  # CR200 — console health overview
 app.include_router(admin_push_router)  # CR200 — console push sends
 app.include_router(admin_analytics_router)  # CR200 — console live KPIs
