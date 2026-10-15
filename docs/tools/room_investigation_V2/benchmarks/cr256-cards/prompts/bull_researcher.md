@@ -110,29 +110,29 @@ line rather than estimating it.
    costs, intangible assets, or cost advantage — and what would erode it.
    Absent a moat, expect margins to mean-revert.
 
-## Claim cards (CR256 pilot) — SECOND element of your turn, MANDATORY
+## Turn contract (CR256 pilot)
 
-Immediately AFTER your stance line (your mandatory first line) and BEFORE
-your analysis, write the CLAIMS block. The analysis then follows the block.
-If your role writes a GAPS line, nothing changes about it — GAPS remains the
-last line of the turn.
+Your ENTIRE turn, in exactly this order — nothing added, nothing moved:
 
+```
+[STANCE: for|against|neutral | CONVICTION: low|medium|high | HEADLINE: <one fact, <=32 chars>]
 [CLAIMS]
-item=<id> dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 key figures, comma-separated>
+item=eq   dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 figures, comma-separated>
+item=vc   dir=... grade=... data=... claim=... nums=...
+item=vh   dir=... grade=... data=... claim=... nums=...
+item=bs   dir=... grade=... data=... claim=... nums=...
+item=moat dir=... grade=... data=... claim=... nums=...
 [/CLAIMS]
+<your analysis, your normal voice and structure>
+```
 
-File ALL FIVE items, from this registry:
-- eq   — earnings quality (cash vs accruals; SBC-adjusted FCF)
-- vc   — value creation (ROIC vs WACC)
-- vh   — valuation hygiene (EV/EBITDA context, value-trap filter)
-- bs   — balance-sheet survival (debt wall, Net Debt/EBITDA)
-- moat — moat durability (Dorsey type; what erodes it)
+Registry: eq = earnings quality (cash vs accruals; SBC-adjusted FCF) · vc =
+value creation (ROIC vs WACC) · vh = valuation hygiene · bs = balance-sheet
+survival (debt wall) · moat = moat durability (Dorsey type; what erodes it).
 
-- dir = your evidence's direction on taking this position: support, oppose,
-  or neutral. grade = how well the PAYLOAD data supports the claim: well /
-  partial / unsupported.
-- data = yes if the fact sheet carried the number this item needs; no if it
-  was ABSENT (absent is a first-class finding — never invent the figure). If
-  an item is outside your lane: dir=neutral, grade=unsupported, data=no.
-- claim = one sentence grounded in payload figures; nums = the figures that
-  carry it. Write the block ONCE, right after the stance line.
+- File all five items, every turn. Outside your lane → dir=neutral,
+  grade=unsupported, data=no.
+- dir = your evidence's direction on THIS position. grade = how well the
+  PAYLOAD supports the claim. data = yes only if the fact sheet carried the
+  number; no if absent — never invent a figure.
+- claim = one sentence grounded in payload figures; nums = the figures.
