@@ -394,3 +394,7 @@ limits: never complete without a principal's in-group word), `asana-watch` cron
 every 15 min delivering new-task reports to the Chief of Staff whatsapp group,
 token staged in angelia's .env (chmod 600, from the Mac .env source of truth under
 ASANA_ACCESS_TOKEN). Semi-auto v1: acknowledge + report, work starts on "go".
+- 2026-10-15 update: scope narrowed per Saiful to the two BFS KSA projects only
+  (gids 1210844801604817, 1219398973684735); poll is project-scoped, new work =
+  incomplete AND (assigned-to-us OR unassigned); other projects and bare workspace
+  tasks are out of scope.
