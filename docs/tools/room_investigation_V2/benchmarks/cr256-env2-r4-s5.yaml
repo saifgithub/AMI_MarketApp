@@ -1,0 +1,13 @@
+# CR256 envelope re-pilot (resharded) s5/5 — backend-default prompts +
+# ROOM_CARDS_ENVELOPE_ENABLED=true. Same instrument as cr256-env-r4-a/b
+# (10 tickers x 3 reps, risk 4, DeepInfra V4-Flash); re-sharded 2-way -> 5-way
+# after the first launch showed ~11 min/room serial under DeepInfra 429s.
+# Arms partition the 30-room census; analyse s1..s5 TOGETHER, never mixed
+# with v3-partial or v6-90 rooms.
+name: cr256-env2-r4-s5
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [FCEL,JPM]
+mandate: { risk_score: 4 }
+repeats: 3
+concurrency_by_provider: { deepinfra: 1 }
