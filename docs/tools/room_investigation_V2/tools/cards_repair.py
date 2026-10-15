@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -34,9 +35,20 @@ from cards_run import CLAIMS_BLOCK, CARD_LINE, DESKS, ITEMS, fetch_turns  # noqa
 
 REPAIR_ASK = (
     "{original}\n\n---\nYour turn above is missing its CLAIMS block. Output "
-    "ONLY the [CLAIMS] block for all five items (eq, vc, vh, bs, moat), one "
-    "line per item, in exactly the shape your instructions specify. Do not "
-    "rewrite your analysis, do not comment. Output nothing except the block."
+    "ONLY a [CLAIMS] block in EXACTLY this shape — five lines, one per item, "
+    "nothing before or after the block:\n\n"
+    "[CLAIMS]\n"
+    "item=eq dir=support|oppose|neutral grade=well|partial|unsupported "
+    "data=yes|no claim=<one sentence> nums=<1-3 figures, comma-separated>\n"
+    "item=vc dir=... grade=... data=... claim=... nums=...\n"
+    "item=vh dir=... grade=... data=... claim=... nums=...\n"
+    "item=bs dir=... grade=... data=... claim=... nums=...\n"
+    "item=moat dir=... grade=... data=... claim=... nums=...\n"
+    "[/CLAIMS]\n\n"
+    "dir = your evidence's direction on the position. grade = how well the "
+    "payload data supports the claim. data = yes only if the fact sheet "
+    "carried the number; no if absent. Base the claims on your analysis "
+    "above. Do not rewrite your analysis."
 )
 
 
@@ -56,32 +68,53 @@ def has_valid_block(text: str) -> bool:
 
 def parse_repair_reply(text: str) -> str | None:
     m = CLAIMS_BLOCK.search(text or "")
-    if not m:
-        return None
+    if m:
+        body, closing = m.group(1), True
+    else:
+        # tolerate a missing [/CLAIMS]: take from the opening tag to the end
+        open_m = re.search(r"\[CLAIMS\](.*)$", text or "", re.S | re.I)
+        if not open_m:
+            return None
+        body, closing = open_m.group(1), False
     valid = 0
-    for line in m.group(1).strip().splitlines():
+    lines = []
+    for line in body.strip().splitlines():
         line = line.strip().lstrip("-*").strip()
         if not line:
             continue
         cm = CARD_LINE.match(line)
         if cm and cm.group(1).lower() in ITEMS:
             valid += 1
-    return m.group(0) if valid >= 3 else None
+            lines.append(line)
+    if valid < 3:
+        return None
+    block = "[CLAIMS]\n" + "\n".join(lines) + "\n[/CLAIMS]"
+    return block
 
 
 async def repair_turn(provider: str, model: str, t: dict) -> str | None:
+    import httpx
     from provider_gateway import direct_call
 
     system = (t.get("system_prompt") or "")[:24000]
     ask = REPAIR_ASK.format(original=(t.get("response_text") or "")[:6000])
-    r = await direct_call(
-        provider,
-        system_prompt=system,
-        messages=[{"role": "user", "content": ask}],
-        model=model,
-        max_tokens=1500,
-    )
-    return parse_repair_reply(r.get("text") or "")
+    delay = 3.0
+    for attempt in range(6):
+        try:
+            r = await direct_call(
+                provider,
+                system_prompt=system,
+                messages=[{"role": "user", "content": ask}],
+                model=model,
+                max_tokens=1500,
+            )
+            return parse_repair_reply(r.get("text") or "")
+        except httpx.HTTPStatusError as exc:
+            code = exc.response.status_code
+            if code != 429 or attempt == 5:
+                raise
+            await asyncio.sleep(delay)
+            delay = min(delay * 2.5, 90)
 
 
 async def main() -> None:
