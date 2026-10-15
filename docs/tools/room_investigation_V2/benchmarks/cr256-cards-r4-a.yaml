@@ -1,0 +1,9 @@
+# CR256 card pilot shard a/3 — 10 tickers x risk 4 x 3 reps, DeepInfra V4-Flash.
+name: cr256-cards-r4-a
+provider: deepinfra
+model: deepseek-ai/DeepSeek-V4-Flash
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM]
+mandate: { risk_score: 4 }
+repeats: 3
+prompt_variant: cr256-cards
+concurrency_by_provider: { deepinfra: 1 }
