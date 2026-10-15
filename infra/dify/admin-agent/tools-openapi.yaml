@@ -7,7 +7,7 @@ info:
   title: AMI Trade Admin API (read-only subset)
   version: 0.1.0
 servers:
-  - url: http://192.168.20.59:8001
+  - url: http://192.168.20.59:8000
 paths:
   /v1/admin/users:
     get:

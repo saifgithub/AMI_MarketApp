@@ -32,16 +32,27 @@ definition + sanitized env: `../ami-ops-stack/`.
 ## Rebuild path
 
 1. Dify (melehost, `ami-ops-dify` stack) → Tools → Custom → import
-   `tools-openapi.yaml`. Set the tool's auth to **API key / Bearer** with
-   the Alpha `ADMIN_SECRET` (from `infra/alpha.env` — never committed).
-   Set the server URL to the LAN-direct alpha API `http://192.168.20.59:8001`
-   (same posture as `scripts/messages.sh`; override with the `servers` block
-   if the port differs).
-2. Create an Agent app → model provider: OpenAI-compatible →
-   `http://192.168.20.74:8000/v1` (on-prem vLLM), model per the gateway
-   preference (vllm first).
-3. Paste `agent-instructions.md` into Instructions. Enable the imported
-   tools.
+   `tools-openapi.yaml`. Set the tool's auth to **API key in header**
+   (`api_key_header: Authorization`, `api_key_header_prefix: bearer`) with
+   the raw Alpha `ADMIN_SECRET` as the key value (from `infra/alpha.env` —
+   never committed). The bearer prefix field is mandatory: Dify defaults it
+   to `basic` and silently sends `Authorization: Basic Bearer <secret>`,
+   which the alpha API 403s. The server URL is the LAN-direct alpha API
+   `http://192.168.20.59:8000` — port 8000, not 8001 (host 8001 is
+   localhost-only and belongs to ami_website_api).
+2. Model provider: the marketplace is disabled (`MARKETPLACE_ENABLED=false`),
+   so install `langgenius/openai_api_compatible` from a local package —
+   download the `.difypkg` via the marketplace `download-url` API (full
+   `org/name:version@checksum` identifier required; a known-good one is
+   installed on the minihost `frontend-dify` stack) and POST it to
+   `/console/api/workspaces/current/plugin/upload/pkg`, then install via
+   `/plugin/install/pkg`. Add model `ami-llm`, endpoint
+   `http://192.168.20.74:8000/v1` (per `/v1/models` on the vLLM host).
+3. Create an Agent app ("AMI Ops", mode agent-chat). Wire the model, paste
+   `agent-instructions.md` into Instructions, enable the imported tools.
+   In `agent_mode.tools[]` each tool's `provider_id` must be the custom
+   tool provider's **row UUID** (`tool_api_providers.id`), not its name —
+   a name poisons the session with `invalid input syntax for type uuid`.
 4. Smoke-test: "How many signups in the last 30 days?" must return a tool
    call, then either a markdown table or a `![chart](...)` image link that
    renders.
