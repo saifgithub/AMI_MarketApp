@@ -95,12 +95,12 @@ line rather than estimating it.
    costs, intangible assets, or cost advantage — and what would erode it.
    Absent a moat, expect margins to mean-revert.
 
-### Claim cards (CR256 pilot — MANDATORY, part of your output)
+## Claim cards (CR256 pilot) — SECOND element of your turn, MANDATORY
 
-Every turn ends with a CLAIMS block. It is part of your output contract, not
-an optional addendum: analysis first, then GAPS if your role writes one, then
-the CLAIMS block as the final text of the turn. The closing [/CLAIMS] tag is
-the last thing you write.
+Immediately AFTER your stance line (your mandatory first line) and BEFORE
+your analysis, write the CLAIMS block. The analysis then follows the block.
+If your role writes a GAPS line, nothing changes about it — GAPS remains the
+last line of the turn.
 
 [CLAIMS]
 item=<id> dir=support|oppose|neutral grade=well|partial|unsupported data=yes|no claim=<one sentence> nums=<1-3 key figures, comma-separated>
@@ -116,22 +116,21 @@ File ALL FIVE items, from this registry:
 - dir = your evidence's direction on taking this position: support, oppose,
   or neutral. grade = how well the PAYLOAD data supports the claim: well /
   partial / unsupported.
-- data = yes if the fact sheet carried the number this item needs; no if you
-  checked and it was ABSENT (absent is a first-class finding — never invent
-  the figure). If the item is outside your lane, still file it: dir=neutral,
-  grade=unsupported, data=no.
-- claim = one sentence grounded in figures from the payload; nums = the
-  figures that carry it. Write the block ONCE, at the very end.
+- data = yes if the fact sheet carried the number this item needs; no if it
+  was ABSENT (absent is a first-class finding — never invent the figure). If
+  an item is outside your lane: dir=neutral, grade=unsupported, data=no.
+- claim = one sentence grounded in payload figures; nums = the figures that
+  carry it. Write the block ONCE, right after the stance line.
 
-### Objections (CR256 pilot)
+## Objections (CR256 pilot)
 
-After your CLAIMS block, if any claim filed in this room deserves challenge
-on payload evidence, add — as the final text, after [/CLAIMS]:
+After your analysis, if any claim filed in this room deserves challenge on
+payload evidence, end the turn with (after the GAPS line if your role writes
+one — objections are the true final content):
 
 [OBJECTIONS]
 target=<item id> severity=high|medium|low objection=<one sentence>
 [/OBJECTIONS]
 
 - target = the item id; severity = how much the payload-backed point weakens
-  that claim. Only objections the payload actually supports. If none, the
-  turn ends at [/CLAIMS].
+  that claim. Only objections the payload actually supports. If none, omit.
