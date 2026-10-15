@@ -398,3 +398,10 @@ ASANA_ACCESS_TOKEN). Semi-auto v1: acknowledge + report, work starts on "go".
   (gids 1210844801604817, 1219398973684735); poll is project-scoped, new work =
   incomplete AND (assigned-to-us OR unassigned); other projects and bare workspace
   tasks are out of scope.
+- 2026-10-15: Angelia's terminal failed closed on `meem_terminal_guard.sh`
+  (`hooks.pre_tool_call` in her config, cloned from meem; the script lived in
+  meem's profile dir, which was moved to profiles.disabled-meem on Oct 4 — every
+  terminal call blocked since, fail_closed). Fixed: unset `hooks.pre_tool_call`,
+  cleared the stale shell-hooks-allowlist, restart, verified. Lesson: profile
+  clones carry hook references to the SOURCE profile's paths — check after any
+  future clone or source-profile disable.
