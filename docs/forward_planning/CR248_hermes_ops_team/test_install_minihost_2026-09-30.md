@@ -420,3 +420,12 @@ ASANA_ACCESS_TOKEN). Semi-auto v1: acknowledge + report, work starts on "go".
      concierge: escalation handoffs; angelia: restart completions, repeated
      delegate failures, 24h-unanswered Asana task, config-change heads-up).
   Verified: test line delivered to the CoS group, audit line written.
+- 2026-10-16 (b): asana-watch rebuilt deterministic. The LLM-driven poll kept
+  failing inside cron turns (terminal heredocs and execute_code are blocked
+  fail-closed unattended — by design), so Angelia reported every failure to the
+  CoS group ("spewing complaints"). Replaced with `asana_poll.py` (script-only
+  cron on angelia, own seen-file seeded with the 110 existing gids): polls both
+  BFS projects, posts acknowledgments, prints a report only for genuinely new
+  tasks (delivered to the CoS group), silent otherwise — verified silent on the
+  seeded run. Skill updated: her job is now the post-"go" handling only; manual
+  polls must use plain curl (no heredocs/execute_code in unattended turns).
