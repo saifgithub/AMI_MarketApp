@@ -233,7 +233,31 @@ alpha stack untouched. First login at `/install` (init-gated).
    of calling the `chart` tool (DEF059 class) — needs a prompt-tuning
    pass or a fixed workflow.
 4. Live walkthrough of slice 1 against Alpha. **Done** (the smoke test).
-5. Slice 2 action tools, one at a time, each exercised live with the
-   preview/confirm guard demonstrated.
+5. Slice 2, first item — "Broadcast to All Users". **Done 2026-10-16
+   (AT:K1, backend `0343984c`, promotion `alpha-2026-10-16-1`, Dify
+   `ba37ef20`):**
+   1. Backend: `/v1/admin/push` + `/preview` extended with audience modes
+      (reuse `resolve_audience`; one `admin_audit` "push_broadcast" row;
+      per-user failures bucketed into `status_counts`, loop never aborts).
+      Union response models — single-user CR200 responses byte-identical.
+      Measured live: `{"mode":"all"}` previews **330 recipients** (up from
+      CR102's 79).
+   2. Workflow app "Broadcast to All Users" (`d0a81560-…`, published):
+      inputs title/body/priority/also_push/confirm → in-app preview →
+      optional push preview → structural `confirm == "SEND"` gate →
+      sends → markdown summary with deep link. Abort path verified live
+      with proof of zero sends (broadcast count 0 → 0).
+   3. Tool provider now lists **15 tools** (yaml fix: duplicate
+      `/v1/admin/messages:` key was clobbering `broadcasts_list`).
+   4. **Caveat recorded:** Dify flattens `$ref` body params to strings —
+      `audience` must be passed as a JSON **string** or it is Python-repr'd
+      and the backend 422s. The workflow handles it via a code node; the
+      agent's instruction tweak for this is pending (slice-2 prompt pass).
+   5. Promotion notes: suite gate had 2 pre-existing failures in
+      `test_cr253_lane_b_ratio_baselines.py` (another lane's in-flight
+      work, zero overlap with the shipped import graph) — promoted under
+      Saiful's explicit override; postflight suite check records FAIL by
+      design, all other checks (incl. config, market, identity, tree)
+      green.
 6. Document the runbook (`.agents/skills/` copy when stable) so the
    agent's rebuild path isn't tribal knowledge.
