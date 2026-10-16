@@ -57,6 +57,20 @@ definition + sanitized env: `../ami-ops-stack/`.
    call, then either a markdown table or a `![chart](...)` image link that
    renders.
 
+## Workflow apps
+
+1. `workflows/broadcast-to-all.workflow.json` — "Broadcast to All Users"
+   (workflow app, id `d0a81560-fb57-49e3-9ad3-2af341d7c78d` on the melehost
+   instance): start inputs (title, body, priority, also_push, confirm) →
+   `message_preview` → optional `push_preview` (also_push == yes) →
+   `confirm == SEND` gate → `message_send` (+ optional `push_send`) → end.
+   The confirm gate is structural — any other value previews and exits with
+   an ABORTED answer; nothing sends. Tool nodes here take `audience` as a
+   **JSON string** variable (`{"mode":"all"}`) produced by a code node, not
+   an object: Dify string-casts tool parameters, so a dict becomes a Python
+   repr the backend 422s; a JSON string is parsed back by the inline
+   `type: object` schema before the request goes out.
+
 ## Slice status
 
 1. Slice 1 (read-only tools + chart endpoint): chart endpoint shipped

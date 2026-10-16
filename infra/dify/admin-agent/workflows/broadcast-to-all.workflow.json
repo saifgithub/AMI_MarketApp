@@ -1,0 +1,692 @@
+{
+ "graph": {
+  "nodes": [
+   {
+    "id": "start",
+    "type": "start",
+    "position": {
+     "x": 0,
+     "y": 0
+    },
+    "data": {
+     "type": "start",
+     "title": "Start",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "title",
+       "label": "title",
+       "type": "text-input",
+       "required": true
+      },
+      {
+       "variable": "body",
+       "label": "body",
+       "type": "paragraph",
+       "required": true
+      },
+      {
+       "variable": "priority",
+       "label": "priority",
+       "type": "select",
+       "required": false,
+       "options": [
+        "normal",
+        "high"
+       ],
+       "default": "normal"
+      },
+      {
+       "variable": "also_push",
+       "label": "also_push",
+       "type": "select",
+       "required": false,
+       "options": [
+        "yes",
+        "no"
+       ],
+       "default": "yes"
+      },
+      {
+       "variable": "confirm",
+       "label": "confirm (must be SEND to send)",
+       "type": "text-input",
+       "required": true
+      }
+     ]
+    }
+   },
+   {
+    "id": "msg_preview",
+    "type": "tool",
+    "position": {
+     "x": 0,
+     "y": 160
+    },
+    "data": {
+     "type": "tool",
+     "title": "A: in-app preview (sends nothing)",
+     "version": "1",
+     "provider_type": "api",
+     "provider_id": "116599ca-e25d-4cf4-a54d-f0a9153b7504",
+     "provider_name": "ami_trade_admin",
+     "tool_name": "message_preview",
+     "tool_label": "message_preview",
+     "tool_configurations": {},
+     "tool_parameters": {
+      "title": {
+       "type": "variable",
+       "value": [
+        "start",
+        "title"
+       ]
+      },
+      "body": {
+       "type": "variable",
+       "value": [
+        "start",
+        "body"
+       ]
+      },
+      "priority": {
+       "type": "variable",
+       "value": [
+        "start",
+        "priority"
+       ]
+      },
+      "audience": {
+       "type": "variable",
+       "value": [
+        "aud_cfg",
+        "audience_json"
+       ]
+      }
+     },
+     "tool_node_version": "2"
+    }
+   },
+   {
+    "id": "parse_preview",
+    "type": "code",
+    "position": {
+     "x": 0,
+     "y": 320
+    },
+    "data": {
+     "type": "code",
+     "title": "parse in-app preview",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "json",
+       "value_selector": [
+        "msg_preview",
+        "json"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "def main(json=None):\n    data = json[0] if isinstance(json, list) and json else (json or {})\n    return {\"recipient_count\": data.get(\"recipient_count\", 0)}\n",
+     "outputs": {
+      "recipient_count": {
+       "type": "number"
+      }
+     }
+    }
+   },
+   {
+    "id": "if_also_push",
+    "type": "if-else",
+    "position": {
+     "x": 0,
+     "y": 480
+    },
+    "data": {
+     "type": "if-else",
+     "title": "also_push == yes?",
+     "version": "1",
+     "cases": [
+      {
+       "case_id": "push_yes",
+       "logical_operator": "and",
+       "conditions": [
+        {
+         "variable_selector": [
+          "start",
+          "also_push"
+         ],
+         "comparison_operator": "is",
+         "value": "yes"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "push_preview",
+    "type": "tool",
+    "position": {
+     "x": 280,
+     "y": 480
+    },
+    "data": {
+     "type": "tool",
+     "title": "B: push preview (sends nothing)",
+     "version": "1",
+     "provider_type": "api",
+     "provider_id": "116599ca-e25d-4cf4-a54d-f0a9153b7504",
+     "provider_name": "ami_trade_admin",
+     "tool_name": "push_preview",
+     "tool_label": "push_preview",
+     "tool_configurations": {},
+     "tool_parameters": {
+      "audience": {
+       "type": "variable",
+       "value": [
+        "aud_cfg",
+        "audience_json"
+       ]
+      }
+     },
+     "tool_node_version": "2"
+    }
+   },
+   {
+    "id": "parse_push",
+    "type": "code",
+    "position": {
+     "x": 280,
+     "y": 640
+    },
+    "data": {
+     "type": "code",
+     "title": "parse push preview",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "json",
+       "value_selector": [
+        "push_preview",
+        "json"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "def main(json=None):\n    data = json[0] if isinstance(json, list) and json else (json or {})\n    return {\"push_recipients\": data.get(\"recipient_count\", 0), \"push_configured\": bool(data.get(\"push_configured\", False))}\n",
+     "outputs": {
+      "push_recipients": {
+       "type": "number"
+      },
+      "push_configured": {
+       "type": "boolean"
+      }
+     }
+    }
+   },
+   {
+    "id": "if_confirm",
+    "type": "if-else",
+    "position": {
+     "x": 0,
+     "y": 800
+    },
+    "data": {
+     "type": "if-else",
+     "title": "C: confirm == SEND?",
+     "version": "1",
+     "cases": [
+      {
+       "case_id": "confirmed",
+       "logical_operator": "and",
+       "conditions": [
+        {
+         "variable_selector": [
+          "start",
+          "confirm"
+         ],
+         "comparison_operator": "is",
+         "value": "SEND"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "code_abort",
+    "type": "code",
+    "position": {
+     "x": -280,
+     "y": 800
+    },
+    "data": {
+     "type": "code",
+     "title": "abort text",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "recipient_count",
+       "value_selector": [
+        "parse_preview",
+        "recipient_count"
+       ]
+      },
+      {
+       "variable": "push_recipients",
+       "value_selector": [
+        "parse_push",
+        "push_recipients"
+       ]
+      },
+      {
+       "variable": "push_configured",
+       "value_selector": [
+        "parse_push",
+        "push_configured"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "def main(recipient_count=None, push_recipients=None, push_configured=None):\n    n = recipient_count if recipient_count is not None else \"?\"\n    if push_recipients is None:\n        tail = \"in-app {0} recipients (push not requested)\".format(n)\n    else:\n        pc = \"\" if push_configured else \" (push not configured)\"\n        tail = \"in-app {0} recipients, push {1} recipients{2}\".format(n, push_recipients, pc)\n    return {\"text\": \"ABORTED \u2014 nothing was sent. Preview counts: \" + tail + \". Re-run with confirm=SEND to send.\"}\n",
+     "outputs": {
+      "text": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   {
+    "id": "end_abort",
+    "type": "end",
+    "position": {
+     "x": -280,
+     "y": 960
+    },
+    "data": {
+     "type": "end",
+     "title": "END (aborted)",
+     "version": "1",
+     "outputs": [
+      {
+       "variable": "result",
+       "value_type": "string",
+       "value_selector": [
+        "code_abort",
+        "text"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "msg_send",
+    "type": "tool",
+    "position": {
+     "x": 0,
+     "y": 960
+    },
+    "data": {
+     "type": "tool",
+     "title": "D: SEND in-app broadcast",
+     "version": "1",
+     "provider_type": "api",
+     "provider_id": "116599ca-e25d-4cf4-a54d-f0a9153b7504",
+     "provider_name": "ami_trade_admin",
+     "tool_name": "message_send",
+     "tool_label": "message_send",
+     "tool_configurations": {},
+     "tool_parameters": {
+      "title": {
+       "type": "variable",
+       "value": [
+        "start",
+        "title"
+       ]
+      },
+      "body": {
+       "type": "variable",
+       "value": [
+        "start",
+        "body"
+       ]
+      },
+      "priority": {
+       "type": "variable",
+       "value": [
+        "start",
+        "priority"
+       ]
+      },
+      "audience": {
+       "type": "variable",
+       "value": [
+        "aud_cfg",
+        "audience_json"
+       ]
+      }
+     },
+     "tool_node_version": "2"
+    }
+   },
+   {
+    "id": "parse_send",
+    "type": "code",
+    "position": {
+     "x": 0,
+     "y": 1120
+    },
+    "data": {
+     "type": "code",
+     "title": "parse send result",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "json",
+       "value_selector": [
+        "msg_send",
+        "json"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "def main(json=None):\n    data = json[0] if isinstance(json, list) and json else (json or {})\n    return {\"broadcast_id\": str(data.get(\"broadcast_id\", \"?\")), \"sent_recipients\": data.get(\"recipient_count\", 0)}\n",
+     "outputs": {
+      "broadcast_id": {
+       "type": "string"
+      },
+      "sent_recipients": {
+       "type": "number"
+      }
+     }
+    }
+   },
+   {
+    "id": "if_push_send",
+    "type": "if-else",
+    "position": {
+     "x": 0,
+     "y": 1280
+    },
+    "data": {
+     "type": "if-else",
+     "title": "also push?",
+     "version": "1",
+     "cases": [
+      {
+       "case_id": "push_yes2",
+       "logical_operator": "and",
+       "conditions": [
+        {
+         "variable_selector": [
+          "start",
+          "also_push"
+         ],
+         "comparison_operator": "is",
+         "value": "yes"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "push_send",
+    "type": "tool",
+    "position": {
+     "x": 280,
+     "y": 1280
+    },
+    "data": {
+     "type": "tool",
+     "title": "E: SEND push",
+     "version": "1",
+     "provider_type": "api",
+     "provider_id": "116599ca-e25d-4cf4-a54d-f0a9153b7504",
+     "provider_name": "ami_trade_admin",
+     "tool_name": "push_send",
+     "tool_label": "push_send",
+     "tool_configurations": {},
+     "tool_parameters": {
+      "audience": {
+       "type": "variable",
+       "value": [
+        "aud_cfg",
+        "audience_json"
+       ]
+      },
+      "title": {
+       "type": "variable",
+       "value": [
+        "start",
+        "title"
+       ]
+      },
+      "body": {
+       "type": "variable",
+       "value": [
+        "start",
+        "body"
+       ]
+      }
+     },
+     "tool_node_version": "2"
+    }
+   },
+   {
+    "id": "parse_push_send",
+    "type": "code",
+    "position": {
+     "x": 280,
+     "y": 1440
+    },
+    "data": {
+     "type": "code",
+     "title": "parse push result",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "json",
+       "value_selector": [
+        "push_send",
+        "json"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "import json as _json\ndef main(json=None):\n    data = json[0] if isinstance(json, list) and json else (json or {})\n    return {\"push_sent\": data.get(\"recipient_count\", 0), \"status_counts\": _json.dumps(data.get(\"status_counts\", {}))}\n",
+     "outputs": {
+      "push_sent": {
+       "type": "number"
+      },
+      "status_counts": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   {
+    "id": "code_summary",
+    "type": "code",
+    "position": {
+     "x": 0,
+     "y": 1600
+    },
+    "data": {
+     "type": "code",
+     "title": "summary text",
+     "version": "1",
+     "variables": [
+      {
+       "variable": "broadcast_id",
+       "value_selector": [
+        "parse_send",
+        "broadcast_id"
+       ]
+      },
+      {
+       "variable": "sent_recipients",
+       "value_selector": [
+        "parse_send",
+        "sent_recipients"
+       ]
+      },
+      {
+       "variable": "push_sent",
+       "value_selector": [
+        "parse_push_send",
+        "push_sent"
+       ]
+      },
+      {
+       "variable": "status_counts",
+       "value_selector": [
+        "parse_push_send",
+        "status_counts"
+       ]
+      }
+     ],
+     "code_language": "python3",
+     "code": "def main(broadcast_id=None, sent_recipients=None, push_sent=None, status_counts=None):\n    lines = [\"SENT \u2014 broadcast dispatched.\", \"\"]\n    lines.append(\"- in-app: broadcast_id `{0}`, {1} recipients\".format(broadcast_id, sent_recipients))\n    if push_sent is None:\n        lines.append(\"- push: not requested\")\n    else:\n        lines.append(\"- push: {0} recipients, status_counts {1}\".format(push_sent, status_counts))\n    lines.append(\"\")\n    lines.append(\"Console: https://api-alpha.agenticmarketintel.ai/admin (MESSAGES tab)\")\n    return {\"text\": \"\\n\".join(lines)}\n",
+     "outputs": {
+      "text": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   {
+    "id": "end_summary",
+    "type": "end",
+    "position": {
+     "x": 0,
+     "y": 1760
+    },
+    "data": {
+     "type": "end",
+     "title": "END (sent)",
+     "version": "1",
+     "outputs": [
+      {
+       "variable": "result",
+       "value_type": "string",
+       "value_selector": [
+        "code_summary",
+        "text"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "aud_cfg",
+    "type": "code",
+    "position": {
+     "x": 0,
+     "y": 80
+    },
+    "data": {
+     "type": "code",
+     "title": "audience = all",
+     "version": "1",
+     "variables": [],
+     "code_language": "python3",
+     "code": "import json as _json\ndef main():\n    return {\"audience_json\": _json.dumps({\"mode\": \"all\"})}\n",
+     "outputs": {
+      "audience_json": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  ],
+  "edges": [
+   {
+    "source": "msg_preview",
+    "target": "parse_preview"
+   },
+   {
+    "source": "parse_preview",
+    "target": "if_also_push"
+   },
+   {
+    "source": "if_also_push",
+    "target": "push_preview",
+    "sourceHandle": "push_yes"
+   },
+   {
+    "source": "push_preview",
+    "target": "parse_push"
+   },
+   {
+    "source": "parse_push",
+    "target": "if_confirm"
+   },
+   {
+    "source": "if_also_push",
+    "target": "if_confirm",
+    "sourceHandle": "false"
+   },
+   {
+    "source": "if_confirm",
+    "target": "code_abort",
+    "sourceHandle": "false"
+   },
+   {
+    "source": "code_abort",
+    "target": "end_abort"
+   },
+   {
+    "source": "if_confirm",
+    "target": "msg_send",
+    "sourceHandle": "confirmed"
+   },
+   {
+    "source": "msg_send",
+    "target": "parse_send"
+   },
+   {
+    "source": "parse_send",
+    "target": "if_push_send"
+   },
+   {
+    "source": "if_push_send",
+    "target": "push_send",
+    "sourceHandle": "push_yes2"
+   },
+   {
+    "source": "push_send",
+    "target": "parse_push_send"
+   },
+   {
+    "source": "parse_push_send",
+    "target": "code_summary"
+   },
+   {
+    "source": "if_push_send",
+    "target": "code_summary",
+    "sourceHandle": "false"
+   },
+   {
+    "source": "code_summary",
+    "target": "end_summary"
+   },
+   {
+    "source": "start",
+    "target": "aud_cfg"
+   },
+   {
+    "source": "aud_cfg",
+    "target": "msg_preview"
+   }
+  ],
+  "viewport": {
+   "x": 0,
+   "y": 0,
+   "zoom": 0.5
+  }
+ },
+ "features": {},
+ "hash": "22a5f5f6b7e02d1b1444453aefe6e6debae4cdb170c29aa4494cd93f676d4555"
+}

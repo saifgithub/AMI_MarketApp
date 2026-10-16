@@ -90,12 +90,6 @@ paths:
           description: SVG chart (image/svg+xml)
           content:
             image/svg+xml: {}
-  /v1/admin/messages:
-    get:
-      operationId: broadcasts_list
-      summary: Past admin broadcasts with reply counts.
-      responses:
-        '200': { description: Broadcasts }
   /v1/admin/messages/replies:
     get:
       operationId: replies_list
@@ -138,13 +132,28 @@ paths:
                 title: { type: string }
                 body: { type: string }
                 priority: { type: string, enum: [normal, high], default: normal }
-                audience: { $ref: '#/components/schemas/Audience' }
+                audience:
+                    type: object
+                    description: 'JSON object, e.g. {"mode":"all"}'
+                    additionalProperties: false
+                    required: [mode]
+                    properties:
+                      mode: { type: string, enum: [all, build, activity, user] }
+                      app_version_lt: { type: string, description: 'mode=build only, with +<build> suffix e.g. 0.1.0+92' }
+                      active_within_days: { type: integer, minimum: 1 }
+                      dormant_beyond_days: { type: integer, minimum: 1 }
+                      user_ids: { type: array, items: { type: string, format: uuid } }
       responses:
         '200':
           description: '{recipient_count: int}'
           content:
             application/json: {}
   /v1/admin/messages:
+    get:
+      operationId: broadcasts_list
+      summary: Past admin broadcasts with reply counts.
+      responses:
+        '200': { description: Broadcasts }
     post:
       operationId: message_send
       summary: Fan out an in-app broadcast to the resolved audience. NEVER call without a message_preview of the identical payload in the same session.
@@ -159,7 +168,17 @@ paths:
                 title: { type: string }
                 body: { type: string }
                 priority: { type: string, enum: [normal, high], default: normal }
-                audience: { $ref: '#/components/schemas/Audience' }
+                audience:
+                    type: object
+                    description: 'JSON object, e.g. {"mode":"all"}'
+                    additionalProperties: false
+                    required: [mode]
+                    properties:
+                      mode: { type: string, enum: [all, build, activity, user] }
+                      app_version_lt: { type: string, description: 'mode=build only, with +<build> suffix e.g. 0.1.0+92' }
+                      active_within_days: { type: integer, minimum: 1 }
+                      dormant_beyond_days: { type: integer, minimum: 1 }
+                      user_ids: { type: array, items: { type: string, format: uuid } }
       responses:
         '200':
           description: '{broadcast_id, recipient_count}'
@@ -177,7 +196,17 @@ paths:
               type: object
               required: [audience]
               properties:
-                audience: { $ref: '#/components/schemas/Audience' }
+                audience:
+                    type: object
+                    description: 'JSON object, e.g. {"mode":"all"}'
+                    additionalProperties: false
+                    required: [mode]
+                    properties:
+                      mode: { type: string, enum: [all, build, activity, user] }
+                      app_version_lt: { type: string, description: 'mode=build only, with +<build> suffix e.g. 0.1.0+92' }
+                      active_within_days: { type: integer, minimum: 1 }
+                      dormant_beyond_days: { type: integer, minimum: 1 }
+                      user_ids: { type: array, items: { type: string, format: uuid } }
       responses:
         '200':
           description: '{audience_mode, recipient_count, push_configured}'
@@ -195,7 +224,17 @@ paths:
               type: object
               required: [audience, title, body]
               properties:
-                audience: { $ref: '#/components/schemas/Audience' }
+                audience:
+                    type: object
+                    description: 'JSON object, e.g. {"mode":"all"}'
+                    additionalProperties: false
+                    required: [mode]
+                    properties:
+                      mode: { type: string, enum: [all, build, activity, user] }
+                      app_version_lt: { type: string, description: 'mode=build only, with +<build> suffix e.g. 0.1.0+92' }
+                      active_within_days: { type: integer, minimum: 1 }
+                      dormant_beyond_days: { type: integer, minimum: 1 }
+                      user_ids: { type: array, items: { type: string, format: uuid } }
                 title: { type: string }
                 body: { type: string }
       responses:
