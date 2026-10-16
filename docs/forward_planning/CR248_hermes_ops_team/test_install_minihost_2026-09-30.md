@@ -405,3 +405,18 @@ ASANA_ACCESS_TOKEN). Semi-auto v1: acknowledge + report, work starts on "go".
   cleared the stale shell-hooks-allowlist, restart, verified. Lesson: profile
   clones carry hook references to the SOURCE profile's paths — check after any
   future clone or source-profile disable.
+- 2026-10-16: Proactive notifications, structurally gated (Saiful: "send a
+  notification to the user, only in specific circumstances"):
+  1. `~/bin/ami-notify <persona> <cos|saiful> <message>` — the ONLY sanctioned
+     proactive path; target whitelist hardcoded (CoS group or Saiful's DM),
+     every send audited to `~/ami_notify.log`. Personas have no other way to
+     initiate a human message.
+  2. Deterministic layer: `alpha-outage-watchdog` (script-only cron, no LLM) on
+     neteng every 15 min — alerts the CoS group at the 2nd consecutive failed
+     health check and on recovery; direct Saiful alert at 2 failures.
+  3. Judgment layer: per-persona "Proactive notifications (STRICT)" SOUL blocks
+     listing the exact allowed circumstances (neteng: edge/DNS/TLS + latency
+     beyond the watchdog; appsupport: stack down / new critical errors;
+     concierge: escalation handoffs; angelia: restart completions, repeated
+     delegate failures, 24h-unanswered Asana task, config-change heads-up).
+  Verified: test line delivered to the CoS group, audit line written.
