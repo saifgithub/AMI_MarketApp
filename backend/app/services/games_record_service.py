@@ -369,6 +369,11 @@ def get_record(user_id: UUID) -> dict:
                 float(e.alpha_scored_pct) if e.alpha_scored_pct is not None else None
             ),
             "career_points_delta": e.career_points_delta,
+            "busted_at": e.busted_at.isoformat() if e.busted_at else None,
+            "nav_shortfall": (
+                float(e.nav_shortfall) if e.nav_shortfall is not None else None
+            ),
+            "trade_count": e.trade_count,
             "starts_on": f.starts_on.isoformat(),
             "ends_on": f.ends_on.isoformat(),
         }

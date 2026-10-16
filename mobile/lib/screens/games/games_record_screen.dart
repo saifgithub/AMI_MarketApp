@@ -342,8 +342,25 @@ class _HistoryRow extends StatelessWidget {
   /// home this slice) rather than opening a screen guaranteed to fail.
   bool get _isForfeit => entry.state == 'forfeit';
 
+  /// DEF452 — a bust is `state == 'bust'` until its field is scored, and
+  /// `get_close_payload` 409s on anything but finished/void. Answer inline.
   bool get _canOpenClose =>
-      !_isForfeit && entry.runId != null && entry.runId!.isNotEmpty;
+      !_isForfeit &&
+      !entry.isBust &&
+      entry.runId != null &&
+      entry.runId!.isNotEmpty;
+
+  String get _windowLabel {
+    final from = entry.startsOn;
+    final to = entry.endsOn;
+    final fmt = DateFormat('MMM d');
+    if (from != null && to != null) {
+      return '${fmt.format(from)} – ${fmt.format(to)}';
+    }
+    return entry.closedAt != null
+        ? fmt.format(entry.closedAt!)
+        : entry.state.toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +368,8 @@ class _HistoryRow extends StatelessWidget {
     final deltaColor = delta > 0
         ? AmiColors.hexGreen
         : (delta < 0 ? AmiColors.hexRed : AmiColors.textMed);
-    final tappable = _canOpenClose || _isForfeit;
+    final tappable = _canOpenClose || _isForfeit || entry.isBust;
+    final showState = entry.state != 'finished';
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -359,18 +377,25 @@ class _HistoryRow extends StatelessWidget {
         children: [
           HexChip(
             label: entry.cadence.toUpperCase(),
-            color: _stateColor(entry.state),
+            color: cadenceColor(entry.cadence),
             variant: HexChipVariant.outlined,
           ),
           const SizedBox(width: AmiSpacing.s),
           Expanded(
             child: Text(
-              entry.closedAt != null
-                  ? DateFormat('MMM d').format(entry.closedAt!)
-                  : entry.state.toUpperCase(),
+              _windowLabel,
               style: AmiTypography.bodySm,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (showState) ...[
+            Text(
+              entry.state.toUpperCase(),
+              style: AmiTypography.caption
+                  .copyWith(color: _stateColor(entry.state)),
+            ),
+            const SizedBox(width: AmiSpacing.s),
+          ],
           Text(
             _isolateNumeric('${delta >= 0 ? '+' : ''}$delta'),
             style: AmiTypography.dataMd.copyWith(color: deltaColor),
@@ -385,7 +410,9 @@ class _HistoryRow extends StatelessWidget {
 
     if (!tappable) return row;
     return InkWell(
-      onTap: () => _isForfeit
+      onTap: () => entry.isBust
+          ? _showBustNote(context)
+          : _isForfeit
           ? _showWindUpNote(context)
           : Navigator.of(context).push(
               MaterialPageRoute(
@@ -420,8 +447,44 @@ class _HistoryRow extends StatelessWidget {
     );
   }
 
+  void _showBustNote(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final shortfall = entry.navShortfall;
+    showDialog<void>(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: AmiColors.slate800,
+        child: Padding(
+          padding: const EdgeInsets.all(AmiSpacing.m),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.gamesCloseTitleForfeit, style: AmiTypography.h4),
+              const SizedBox(height: AmiSpacing.s),
+              Text(l.gamesWindUpBust, style: AmiTypography.body),
+              if (shortfall != null) ...[
+                const SizedBox(height: AmiSpacing.s),
+                Text(
+                  l.gamesWindUpShortfall(
+                    _isolateNumeric(
+                      NumberFormat.currency(symbol: r'$').format(shortfall),
+                    ),
+                  ),
+                  style: AmiTypography.caption,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Color _stateColor(String state) {
     switch (state) {
+      case 'bust':
+        return AmiColors.hexRed;
       case 'forfeit':
         return AmiColors.hexBlue;
       case 'void':
@@ -429,5 +492,23 @@ class _HistoryRow extends StatelessWidget {
       default:
         return AmiColors.hexGreen;
     }
+  }
+}
+
+/// One colour per cadence so a Record row's period reads at a glance.
+Color cadenceColor(String cadence) {
+  switch (cadence) {
+    case 'week':
+      return AmiColors.hexCyan;
+    case 'month':
+      return AmiColors.hexPurple;
+    case 'quarter':
+      return AmiColors.hexAmber;
+    case 'half':
+      return AmiColors.hexPink;
+    case 'year':
+      return AmiColors.hexGreen;
+    default:
+      return AmiColors.hexBlue;
   }
 }

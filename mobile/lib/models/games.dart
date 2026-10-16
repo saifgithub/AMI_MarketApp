@@ -1251,6 +1251,9 @@ class GameRecordRunHistoryEntry {
     this.entrantCount,
     this.careerPointsDelta = 0,
     this.finalTwrPct,
+    this.startsOn,
+    this.endsOn,
+    this.navShortfall,
   });
 
   final String entryId;
@@ -1261,13 +1264,24 @@ class GameRecordRunHistoryEntry {
   final String? runId;
   final String cadence;
 
-  /// 'entered' | 'active' | 'finished' | 'forfeit' | 'void'.
+  /// 'entered' | 'active' | 'bust' | 'finished' | 'forfeit' | 'void'.
   final String state;
   final DateTime? closedAt;
   final int? rank;
   final int? entrantCount;
   final int careerPointsDelta;
   final double? finalTwrPct;
+
+  /// The field's own window — shown on the row so two entries of the same
+  /// cadence can be told apart.
+  final DateTime? startsOn;
+  final DateTime? endsOn;
+
+  /// DEF452 — how far past zero a busted book went. A bust has no Close
+  /// until its field is scored, so the row answers inline from this.
+  final double? navShortfall;
+
+  bool get isBust => state == 'bust';
 
   /// `games_record_service.py.get_record`'s `run_history` rows carry no
   /// `entry_id` at all (only `run_id`) and no `closed_at`/`scored_at` —
@@ -1286,6 +1300,9 @@ class GameRecordRunHistoryEntry {
         careerPointsDelta: (j['career_points_delta'] as num?)?.toInt() ?? 0,
         finalTwrPct: ((j['final_twr_pct'] ?? j['twr_pct']) as num?)
             ?.toDouble(),
+        startsOn: _parseDate(j['starts_on']),
+        endsOn: _parseDate(j['ends_on']),
+        navShortfall: (j['nav_shortfall'] as num?)?.toDouble(),
       );
 }
 

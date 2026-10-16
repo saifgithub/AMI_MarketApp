@@ -54,7 +54,7 @@ from app.services.games_scoring import (
     trade_fee,
 )
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
-from app.services.sim_engine import get_sim_engine
+from app.services.sim_engine import GAME_QUOTE_UNAVAILABLE_REASON, get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
 from app.trading_math.shorts import nav_floor, short_buyin_trigger_price
 from app.trading_math.shorts import short_cover_proceeds as _short_cover_proceeds
@@ -1404,6 +1404,14 @@ def process_queued_orders(*, now: datetime | None = None) -> dict:
                 target=t["target"],
                 horizon_days=t["horizon_days"],
             )
+            if result.reason == GAME_QUOTE_UNAVAILABLE_REASON:
+                # DEF453 — feed outage, not a verdict on the order: stay
+                # queued, the next tick retries.
+                logger.warn(
+                    "game_queue_fill_deferred_no_live_quote",
+                    order_id=str(t["id"]), ticker=t["ticker"],
+                )
+                continue
             with get_session() as s:
                 row = s.execute(
                     select(GameQueuedOrderRow).where(GameQueuedOrderRow.id == t["id"])
@@ -1508,6 +1516,7 @@ def sweep_forced_buyins(*, now: datetime | None = None, sim=None) -> dict:
                 ticker=t["ticker"],
                 side=Side.BUY,
                 quantity=t["quantity"],
+                cover_reason="buyin",
             )
             if not result.accepted:
                 logger.warn(

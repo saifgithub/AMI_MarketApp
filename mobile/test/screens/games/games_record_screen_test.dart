@@ -212,4 +212,42 @@ void main() {
       },
     );
   });
+
+  group('DEF452 — busted run with no Close yet', () {
+    testWidgets(
+      'shows the cadence, the from–to window, and answers inline',
+      (tester) async {
+        await _pump(
+          tester,
+          record: GameRecord(
+            careerPoints: 0,
+            enteredCount: 1,
+            finishedCount: 0,
+            forfeitCount: 0,
+            runHistory: [
+              GameRecordRunHistoryEntry(
+                entryId: 'e4',
+                runId: 'r4',
+                cadence: 'week',
+                state: 'bust',
+                startsOn: DateTime(2026, 10, 12),
+                endsOn: DateTime(2026, 10, 16),
+                navShortfall: 365003.32,
+              ),
+            ],
+          ),
+        );
+
+        expect(find.text('WEEK'), findsOneWidget);
+        expect(find.text('Oct 12 – Oct 16'), findsOneWidget);
+        expect(find.text('BUST'), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.chevron_right));
+        await tester.pumpAndSettle();
+
+        expect(find.text('CHAPTER CLOSED'), findsOneWidget);
+        expect(find.text('YOUR RECORD'), findsOneWidget);
+      },
+    );
+  });
 }

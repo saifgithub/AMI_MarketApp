@@ -80,6 +80,7 @@ from app.services.market_data import (
     MockWalkProvider,
     NewsItem,
     Quote,
+    SYNTHETIC_HISTORY_SOURCES,
     get_market_data_provider,
 )
 from app.services.classification_universe import default_classification_universe
@@ -455,6 +456,15 @@ class SubmitResult:
     # trade confirmation reads this field; nothing derives it from the cash
     # delta, which a concurrent bracket sweep could move underneath a client.
     toll_charged: float | None = None
+
+
+GAME_QUOTE_UNAVAILABLE_REASON = (
+    "AMI can't get a live price for this ticker right now — nothing was filled. "
+    "Try again in a few minutes."
+)
+"""DEF453 — the refusal a game fill returns when the live feed is down and
+only a fabricated mock-walk price is left. The queue drain keys off this exact
+string to leave the order queued instead of cancelling it."""
 
 
 @dataclass
@@ -2172,6 +2182,7 @@ class SimEngine:
         target: float | None = None,
         horizon_days: int | None = None,
         now: datetime | None = None,
+        cover_reason: str = "user",
     ) -> GameSubmitResult:
         """CR109 slice 2, §7.1 — the game trade path's second public entry
         point, structurally distinct from `submit()`: it never calls
@@ -2199,6 +2210,22 @@ class SimEngine:
         ticker = ticker.upper().strip()
         portfolio = self.ensure_portfolio(user_id, kind="game", run_id=run_id)
         game_quote = self.current_quote(ticker)
+        if (
+            game_quote.source in SYNTHETIC_HISTORY_SOURCES
+            and self.provider_name != MockWalkProvider.name
+        ):
+            # DEF453 — the live feed failed and the chain fell through to a
+            # fabricated price. A scored fill on it is a fake loss (AIXI
+            # covered at the mock 174.62 vs a real high of 2.20).
+            logger.warn(
+                "game_fill_refused_synthetic_quote",
+                user_id=str(user_id), run_id=str(run_id), ticker=ticker,
+                source=game_quote.source,
+            )
+            return GameSubmitResult(
+                accepted=False, trade=None, fee=0.0,
+                reason=GAME_QUOTE_UNAVAILABLE_REASON,
+            )
         mark = game_quote.price
         # CR170 §3 — the same P10 ternary, hoisted here too, with **no routing**.
         # The games lane has no resting book and this call site is inert in
@@ -2213,6 +2240,7 @@ class SimEngine:
         routed = self._route_game_short(
             user_id=user_id, run_id=run_id, portfolio=portfolio,
             ticker=ticker, side=side, quantity=quantity, fill_price=fill_price,
+            cover_reason=cover_reason,
         )
         if routed is not None:
             return routed
@@ -2269,6 +2297,7 @@ class SimEngine:
         side: Side,
         quantity: float,
         fill_price: float,
+        cover_reason: str = "user",
     ) -> GameSubmitResult | None:
         """Decide whether this game fill is a short open, a short cover, a
         refusal, or an ordinary long fill.
@@ -2365,7 +2394,7 @@ class SimEngine:
                 return refuse(f"no open short in {ticker} to cover")
             realised = cover_short(
                 s, portfolio_row=p_row, short_row=short_row,
-                close_price=fill_price, fee=fee, reason="user",
+                close_price=fill_price, fee=fee, reason=cover_reason,
             )
             s.flush()
             snapshot = _portfolio_from_row(p_row)
