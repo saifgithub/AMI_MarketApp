@@ -54,7 +54,7 @@ paths:
   /v1/admin/analytics/timeseries:
     get:
       operationId: analytics_timeseries
-      summary: Per-day series (signups, active_users, room_runs, credits_spent), zero-filled, oldest to newest.
+      summary: Per-day series (signups, active_users, room_runs, credits_spent, trades, game_players), zero-filled, oldest to newest.
       parameters:
         - name: days
           in: query
@@ -81,7 +81,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [signups, active_users, room_runs, credits_spent]
+            enum: [signups, active_users, room_runs, credits_spent, trades, game_players]
         - name: days
           in: query
           schema: { type: integer, default: 30, minimum: 1, maximum: 365 }
