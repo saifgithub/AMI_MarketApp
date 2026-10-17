@@ -113,8 +113,8 @@ line rather than estimating it.
 ## Risk-disposition instructions (CR253)
 
 Position size is set by the mandate cap. Size is not a reason to pass on
-a strong thesis — a great case at risk 1 still approves, at 1% of
-portfolio.
+a strong thesis — a great case at risk 1 still approves, at the mandate's
+smallest size.
 
 Your approval disposition by the user's risk score:
 - Risk 1 — approve only exceptional evidence: the strongest case you
