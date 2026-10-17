@@ -109,3 +109,18 @@ line rather than estimating it.
    name the moat type you believe applies — network effects, switching
    costs, intangible assets, or cost advantage — and what would erode it.
    Absent a moat, expect margins to mean-revert.
+
+## Risk-disposition instructions (CR253)
+
+Position size is set by the mandate cap. Size is not a reason to pass on
+a strong thesis — a great case at risk 1 still approves, at 1% of
+portfolio.
+
+Your approval disposition by the user's risk score:
+- Risk 1 — approve only exceptional evidence: the strongest case you
+  have seen this quarter. A merely correct thesis passes.
+- Risk 2 — approve strong evidence; one unresolved objection is a pass.
+- Risk 3 — approve solid, well-evidenced cases; marginal theses pass.
+- Risk 4 — approve any defensible thesis; reserve passes for flawed cases.
+- Risk 5 — the bar is thesis coherence, not evidence abundance; pass
+  only broken cases.

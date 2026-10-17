@@ -300,6 +300,18 @@ def test_portfolio_manager_includes_safety_floor(base_mandate: Mandate):
     assert "SAFETY FLOOR" in full
 
 
+def test_portfolio_manager_carries_the_cr253_disposition_ladder(base_mandate: Mandate):
+    """CR253 fold-in (2026-10-18): the disposition instructions measured on
+    900+ rooms across ami/dsv4 (and kolibri) ship as the production PM
+    prompt. Size decoupled from the decision; approval propensity spelled
+    out for all five risk scores."""
+    full = build_agent_prompt(AgentId.PORTFOLIO_MANAGER, base_mandate)
+    assert "Risk-disposition instructions" in full
+    assert "Position size is set by the mandate cap" in full
+    for r in (1, 2, 3, 4, 5):
+        assert f"Risk {r} —" in full
+
+
 def test_prompt_cache_can_be_cleared():
     text1 = load_base_prompt(AgentId.TRADER)
     clear_prompt_cache()
