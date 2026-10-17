@@ -51,3 +51,20 @@ operator asking AMI Ops "how many trades this month?" gets nothing.
    `ami_trade_admin` provider lists the updated chart enum after
    re-import; a live "trades last 30 days" question via AMI Ops returns a
    tool-shaped answer.
+
+## Build record
+
+**Done 2026-10-18 (AT:K1):** backend `88eb7f57` (4 new tests) + tool spec
+`f67764ff`; promoted as `alpha-2026-10-18-1` (`ccdabaf3`). Live verified
+via AMI Ops: "trades last 7 days" → 73 (tool-called, matches backend
+exactly); "game players last 30 days" → 43 with honest caveats. Suite at
+promote time had 3 reds, all other lanes' register/CR hygiene (CR253 ×2,
+CR260-row P30), zero overlap with this CR — promoted under Saiful's
+standing "promote the Dify work" direction.
+
+**Known follow-up (slice-2 prompt pass, recorded in CR200-R003):** the
+chart tool returns SVG *content*, not a URL — the agent now calls the
+tool correctly but writes a placeholder image link. Fix: instruction
+telling it to compose
+`http://192.168.20.59:8000/v1/admin/chart.svg?series=<s>&days=<n>`, or a
+backend response change that returns the URL.
