@@ -115,8 +115,12 @@ class Settings(BaseSettings):
     # (reasoning_tokens>0, content clean — the reasoning text is not
     # surfaced, so stance-envelope parsing is structurally unaffected).
     # `vllm_enable_thinking` makes the vLLM provider attach that kwarg to
-    # EVERY call (blanket arm; stage-scoping is a phase-2 ablation if the
-    # blanket arm shows signal). `vllm_thinking_max_tokens` is a CR211-style
+    # EVERY call, carrying this value EXPLICITLY — false included. False used
+    # to omit the kwarg, which made "off" mean "the server's default": right
+    # for `ami-llm` (default off), silently thinking-ON for `kolibri-1`
+    # (default on, measured 2026-10-17). See the VLLMProvider extra_body.
+    # Stage-scoping is a phase-2 ablation if the blanket arm shows signal.
+    # `vllm_thinking_max_tokens` is a CR211-style
     # floor for the same measured reason: thinking spends the ceiling on
     # invisible tokens before any visible content, and the Room's per-agent
     # budgets (600-1600) starve it. 0 = no floor. Default OFF — flipping

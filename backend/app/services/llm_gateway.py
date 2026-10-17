@@ -880,13 +880,19 @@ class VLLMProvider(OpenAICompatibleProvider):
             # setting is 0, so a non-reasoning server carries no floor at all
             # rather than a floor of zero that reads as one.
             max_tokens_floor=floor,
-            # CR259 — `extra_body` exists for exactly this (CR017 §3). Sent
-            # on every call; the server defaults thinking OFF, so absent a
-            # flag this body would be a no-op even if sent.
-            extra_body=(
-                {"chat_template_kwargs": {"enable_thinking": True}}
-                if enable_thinking else None
-            ),
+            # CR259 — `extra_body` exists for exactly this (CR017 §3). Sent on
+            # every call. The kwarg carries the SETTING'S value explicitly,
+            # not only when True: `ami-llm`'s server defaults thinking OFF
+            # (an explicit false is a no-op there), but `kolibri-1`'s server
+            # defaults it ON — measured 2026-10-17, 686 of 850 completion
+            # tokens were reasoning with no kwarg, and explicit
+            # `enable_thinking: false` took reasoning to zero. Omitting the
+            # kwarg when the setting is False made "thinking off" mean
+            # "server default" — right on one server, silently wrong on the
+            # other.
+            extra_body={
+                "chat_template_kwargs": {"enable_thinking": enable_thinking}
+            },
             # CR210 — both verified live against `ami-llm` on vLLM
             # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
             # `response_format` json_schema held a float enum against a direct
