@@ -58,6 +58,21 @@ Per convened ticker, the Room agents (and later the 1-on-1 surface) can cite:
    must be compose-forwarded (compose-parity gate).
 5. **Source abstraction** — the service owns the yfinance call; a Benzinga
    swap later is a backend change only, invisible to prompts/app.
+5. **LANE ASSIGNMENT (Saiful ruling 2026-10-18: lane-pure)** — the payload
+   alone is not enough: `room_prompts._format_profile` withholds per lane
+   (CR145 Tier C), so each new field needs an explicit domain tag.
+   - **Split counts** (strong-buy/buy/hold/sell/strong-sell + 3-month
+     history) → `fundamentals` domain → **Fundamentals Analyst** + all
+     full-sheet agents. Sits beside the existing consensus line; same
+     `suppress_analyst_consensus` ablation gate.
+   - **Action tape** (dated per-firm rows: firm, grade change,
+     Raises/Lowers/Maintains, prior→current PT) → `news` domain →
+     **News Analyst** + all full-sheet agents. Rationale: upgrades/
+     downgrades are dated *events* (the blueprint already routes
+     `next_earnings` to news on the same "scheduled event" logic), and the
+     News Analyst currently has the weakest numeric grounding of the four
+     analysts. Bounded render (e.g. latest N=5 rows per ticker) to keep
+     prompts compact.
 
 ## 5. Licensing position
 
