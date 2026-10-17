@@ -1,0 +1,11 @@
+# CR255 kolibri-off arm — kolibri-1 THINKING OFF (explicit enable_thinking:false, CR259 amendment) x CR253 disposition prompts, risk 3. Paired against cr255-kolibri-r3 (thinking ON, production prompts) and cr253-disp-matrix-r3 (ami, thinking off).
+# PM on production + disposition table (NO sub-cap line). Native uncapped
+# mandate. The curve this arm produces is diffed against the CR255 target
+# (5/15/30/45/60) and the production-prompt arms (analysis_r3/r5).
+name: cr255-kolibri-off-r3
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 3 }
+repeats: 2
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
