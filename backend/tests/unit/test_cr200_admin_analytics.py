@@ -5,6 +5,8 @@ counting real users; DAU/WAU derive from the activity union; timeseries
 zero-fills, buckets by UTC day (boundary case: an event just before/after
 midnight lands in the right bucket), and sums credits_spent from the
 subscription event's from→to delta; revenuecat counts by event_type.
+CR200-R004: trades and game_players series/scalars — real-user filtered,
+game_players deduped per user per UTC day.
 """
 
 from __future__ import annotations
@@ -20,8 +22,10 @@ from app.api.admin_analytics import router as analytics_router
 from app.core.config import settings
 from app.db import get_session, init_schema
 from app.db.models import (
+    GameEntryRow,
     RevenueCatEventRow,
     RoomRunRow,
+    SimTradeRow,
     SubscriptionEventRow,
     User,
 )
@@ -60,6 +64,26 @@ def _mk_room_run(user_id: UUID, started_at: datetime) -> None:
         s.add(RoomRunRow(
             user_id=user_id, ticker="AAPL", started_at=started_at,
             mandate_version=1, model_tier="mid", status="complete",
+        ))
+
+
+def _mk_trade(user_id: UUID, opened_at: datetime) -> None:
+    # Closed status keeps the conftest ledger/holdings guard at zero open
+    # quantity for a hand-seeded trade row.
+    with get_session() as s:
+        s.add(SimTradeRow(
+            user_id=user_id, portfolio_id=uuid4(), ticker="AAPL",
+            side="buy", quantity=1, entry_price=100,
+            opened_at=opened_at, status="closed", closed_price=110,
+        ))
+
+
+def _mk_entry(user_id: UUID, entered_at: datetime, field_id: UUID | None = None) -> None:
+    with get_session() as s:
+        s.add(GameEntryRow(
+            id=uuid4(), field_id=field_id or uuid4(), user_id=user_id,
+            run_id=uuid4(), state="entered", entered_at=entered_at,
+            fees_paid=0, trade_count=0,
         ))
 
 
@@ -115,6 +139,83 @@ def test_timeseries_credits_spent_delta() -> None:
     t = timeseries(days=2)
     today = datetime.now(timezone.utc).date().isoformat()
     assert t["credits_spent"][t["days"].index(today)] >= 8
+
+
+def test_timeseries_trades_and_game_players_zero_filled() -> None:
+    uid = _mk_user()
+    today = datetime.now(timezone.utc).date().isoformat()
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    midday = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    ) + timedelta(minutes=1)
+    _mk_trade(uid, midday)
+    _mk_trade(uid, midday + timedelta(minutes=1))
+    _mk_entry(uid, midday)
+    t = timeseries(days=7)
+    assert len(t["trades"]) == 7
+    assert len(t["game_players"]) == 7
+    assert t["trades"][t["days"].index(today)] == 2
+    assert t["game_players"][t["days"].index(today)] == 1
+    assert t["trades"][t["days"].index(yesterday)] == 0
+    assert t["game_players"][t["days"].index(yesterday)] == 0
+
+
+def test_timeseries_game_players_dedupes_same_user_same_day() -> None:
+    u1 = _mk_user()
+    u2 = _mk_user()
+    midday = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    ) + timedelta(hours=1)
+    # Same user enters two fields the same day — one player; second user → 2.
+    _mk_entry(u1, midday, field_id=uuid4())
+    _mk_entry(u1, midday, field_id=uuid4())
+    _mk_entry(u2, midday, field_id=uuid4())
+    t = timeseries(days=7)
+    today = midday.date().isoformat()
+    assert t["game_players"][t["days"].index(today)] == 2
+
+
+def test_timeseries_trades_and_game_players_exclude_synthetics() -> None:
+    synthetic = _mk_user(last_app_version="room-benchmark")
+    probe = _mk_user(user_id=_EXCLUDED_USER_IDS[0])
+    real = _mk_user()
+    midday = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    ) + timedelta(hours=2)
+    _mk_trade(synthetic, midday)
+    _mk_trade(probe, midday)
+    _mk_entry(synthetic, midday)
+    _mk_entry(probe, midday)
+    t = timeseries(days=7)
+    idx = t["days"].index(midday.date().isoformat())
+    assert t["trades"][idx] == 0
+    assert t["game_players"][idx] == 0
+    _mk_trade(real, midday)
+    _mk_entry(real, midday)
+    t = timeseries(days=7)
+    assert t["trades"][idx] == 1
+    assert t["game_players"][idx] == 1
+
+
+def test_summary_trades_and_game_players_scalars() -> None:
+    uid = _mk_user()
+    s0 = summary()
+    assert s0["total_trades"] == 0
+    assert s0["total_game_players"] == 0
+    now = datetime.now(timezone.utc)
+    _mk_trade(uid, now)
+    _mk_trade(uid, now)
+    _mk_entry(uid, now, field_id=uuid4())
+    _mk_entry(uid, now, field_id=uuid4())
+    s1 = summary()
+    assert s1["total_trades"] == 2
+    assert s1["total_game_players"] == 1  # distinct users, not entries
+    synthetic = _mk_user(last_app_version="room-benchmark")
+    _mk_trade(synthetic, now)
+    _mk_entry(synthetic, now)
+    s2 = summary()
+    assert s2["total_trades"] == 2
+    assert s2["total_game_players"] == 1
 
 
 def test_revenuecat_endpoint() -> None:

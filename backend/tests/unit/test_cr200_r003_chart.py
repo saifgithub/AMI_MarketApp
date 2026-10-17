@@ -18,7 +18,9 @@ from app.services import chart_svg
 _SECRET = "test-admin-secret-cr200-r003"
 _HDR = {"Authorization": f"Bearer {_SECRET}"}
 
-_VALID_SERIES = ("signups", "active_users", "room_runs", "credits_spent")
+_VALID_SERIES = (
+    "signups", "active_users", "room_runs", "credits_spent", "trades", "game_players",
+)
 
 
 @pytest.fixture(autouse=True)

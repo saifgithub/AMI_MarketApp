@@ -5,12 +5,13 @@ fixture); day bucketing happens in Python because Alpha-scale volumes are
 tiny and `AT TIME ZONE` isn't portable. The nightly CR051 report keeps its
 PG-only SQL — this module is the live subset the HEALTH/ANALYTICS tabs need.
 
-Real-human counts by default: user counts apply the deterministic exclusion
-filter from the standing alpha-report rule (13 CR035 room-benchmark
-synthetics by `last_app_version='room-benchmark'`, 10 seed fixtures by the
-2026-05-24 05:10 burst shape, and the CR125/DEF227-229 probe users by id).
-Activity/room-run counts are NOT filtered — those probes' room_runs are real
-LLM verdicts; it is only the *user* counts they distort.
+Real-human counts by default: user counts AND the CR200-R004
+trades/game_players counts apply the deterministic exclusion filter from the
+standing alpha-report rule (13 CR035 room-benchmark synthetics by
+`last_app_version='room-benchmark'`, 10 seed fixtures by the 2026-05-24 05:10
+burst shape, and the CR125/DEF227-229 probe users by id). Activity/room-run
+counts are NOT filtered — those probes' room_runs are real LLM verdicts; it
+is only the *user-shaped* counts they distort.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from sqlalchemy import and_, func, not_, select
 
 from app.db import get_session
 from app.db.models import (
+    GameEntryRow,
     JournalEntryRow,
     LessonProgressRow,
     OneOnOneMessageRow,
@@ -181,6 +183,17 @@ def summary() -> dict[str, Any]:
             select(func.count()).select_from(User)
             .where(real, User.alpaca_linked_at.isnot(None))
         ).scalar_one()
+        total_trades = s.execute(
+            select(func.count()).select_from(SimTradeRow)
+            .join(User, SimTradeRow.user_id == User.id)
+            .where(real)
+        ).scalar_one()
+        total_game_players = s.execute(
+            select(func.count(func.distinct(GameEntryRow.user_id)))
+            .select_from(GameEntryRow)
+            .join(User, GameEntryRow.user_id == User.id)
+            .where(real)
+        ).scalar_one()
 
         events = _activity_events(s, now - timedelta(days=30))
         def _active(days: int) -> int:
@@ -203,6 +216,8 @@ def summary() -> dict[str, Any]:
                 "wau": _active(7),
                 "mau": _active(30),
             },
+            "total_trades": total_trades,
+            "total_game_players": total_game_players,
         }
 
 
@@ -242,6 +257,23 @@ def timeseries(days: int = 30) -> dict[str, Any]:
             k = ts.date().isoformat()
             if k in active_by_day:
                 active_by_day[k].add(uid)
+        trades = [
+            _as_utc(ts) for (ts,) in s.execute(
+                select(SimTradeRow.opened_at)
+                .join(User, SimTradeRow.user_id == User.id)
+                .where(_real_users_clause(), SimTradeRow.opened_at >= since)
+            )
+        ]
+        game_entries = s.execute(
+            select(GameEntryRow.user_id, GameEntryRow.entered_at)
+            .join(User, GameEntryRow.user_id == User.id)
+            .where(_real_users_clause(), GameEntryRow.entered_at >= since)
+        ).all()
+        players_by_day: dict[str, set] = {k: set() for k in day_keys}
+        for uid, ts in game_entries:
+            k = _as_utc(ts).date().isoformat()
+            if k in players_by_day:
+                players_by_day[k].add(uid)
         spent_rows = s.execute(
             select(SubscriptionEventRow.created_at,
                    SubscriptionEventRow.from_value,
@@ -268,6 +300,8 @@ def timeseries(days: int = 30) -> dict[str, Any]:
         "active_users": [len(active_by_day[k]) for k in day_keys],
         "room_runs": [_bucket(rooms)[k] for k in day_keys],
         "credits_spent": [credits_spent[k] for k in day_keys],
+        "trades": [_bucket(trades)[k] for k in day_keys],
+        "game_players": [len(players_by_day[k]) for k in day_keys],
     }
 
 

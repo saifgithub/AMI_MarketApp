@@ -8,6 +8,7 @@ queries — this router is pure glue, no new business logic (CR200-R003 §5.1).
 
 Endpoint map:
   GET /v1/admin/chart.svg?series=<name>&days=30   SVG line chart
+  series: signups | active_users | room_runs | credits_spent | trades | game_players
 """
 
 from __future__ import annotations
@@ -25,7 +26,9 @@ router = APIRouter(
     dependencies=[Depends(get_admin)],
 )
 
-ChartSeries = Literal["signups", "active_users", "room_runs", "credits_spent"]
+ChartSeries = Literal[
+    "signups", "active_users", "room_runs", "credits_spent", "trades", "game_players",
+]
 
 
 @router.get("/chart.svg")
