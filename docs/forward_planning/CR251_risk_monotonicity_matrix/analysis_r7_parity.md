@@ -129,3 +129,60 @@ in either arm (spot check).
 4. The R4–R5 instability on the model users get (ami is the production model)
    is 27–47% flip — the strongest-yet business case for CR256's gate and/or
    CR259's paid thinking tier (stability as a sellable artifact).
+
+## 8. FINAL — chain complete, all arms landed (2026-10-17)
+
+The parity chain finished 2026-10-15 16:32 melehost ("PARITY V2 ALL DONE").
+Every arm closed at 300/300 rooms (disposition, cap1, tm-all — 30 × 5 risk
+levels each) plus 108 probe rooms. This section closes §6's open questions;
+it supersedes the interim reads above wherever they differ.
+
+### 8.1 Final ami-llm curves (approve/60, flip = non-unanimous reps of 30 tickers)
+
+| arm | R1 | R2 | R3 | R4 | R5 | flips R4 | flips R5 |
+|---|---|---|---|---|---|---|---|
+| disposition | 0/60 | 0/60 | 3/60 | 22/60 | 36/60 | 11/30 (37%) | 8/30 (27%) |
+| cap1 (size-pin) | 0/60 | 1/60 | 5/60 | 9/60 | 11/60 | 12/30 (40%) | 14/30 (47%) |
+| **tm-all** | 0/60 | 1/60 | 4/60 | 7/60 | 16/60 | 7/30 (23%) | 6/30 (20%) |
+| dsv4 ref: disposition | 1/60 | 7/60 | 13/60 | 15/60 | 19/60 | — | — |
+| dsv4 ref: cap1 | 11/60 | 13/60 | 16/60 | 15/60 | 23/60 | — | — |
+| dsv4 ref: tm-all R5 | — | — | — | — | 17/60 (28%) | — | — |
+
+### 8.2 §6 answered — ami reproduces the tm-all NO-GO shape
+
+tm-all on ami-llm is monotone (0→16) but flat: no mid-level discrimination
+(R3 4/60, R4 7/60), R5 lands at 27% — the same R5 rate dsv4's tm-all scored
+(28%). The wholesale teammate suite does not transfer: on BOTH models it is a
+NO-GO for the risk-monotonicity gate. The converted disposition arm remains
+the only prompt-side cure measured (ami R3–R5 r=+0.37/+0.62/+0.62), and its
+R4–R5 flip rate (27–37%) is the residual disease. **CR254's salvage
+conclusion is final and model-general: tm-all is dead; per-model converted
+arms are the path.**
+
+### 8.3 Probes (R5 re-runs, approve/total)
+
+| probe | approve |
+|---|---|
+| disposition-r5 | 26/33 |
+| subcap-r5 | 24/33 |
+| cap1-inv-r5 | 6/18 |
+| cap1-bpw-r5 / cap2bpw / cap3bpw / cap4bpw | 2/6, 2/6, 4/6, 3/6 |
+
+The bpw dose ladder shows no monotone dose-response (2→2→4→3 of 6) — the
+buyback-weighting probes do not move the R5 approval rate systematically.
+
+### 8.4 Consequences (final, measured)
+
+1. **Per-model everything, reconfirmed on the full matrix.** The acceptance
+   bar, sub-cap map, and any prompt fold-in ship per-model with their own
+   30×5 fit. dsv4 numbers never gate ami.
+2. **CR256 acceptance on ami-llm needs its own 30×5** (layer-2 card stability
+   passed on dsv4 at 0.868; the acceptance curve fit is a separate instrument).
+3. **CR259's business case strengthens**: the production model shows 27–47%
+   flip rates at R4–R5 on every measured arm — stability is the sellable
+   artifact, and the card-channel gate (CR256) is the enforcement layer.
+4. Production stays on disposition-converted prompts (CR253 line) until the
+   CR256 evidence bar lands; nothing in this chain authorizes a tm-all fold-in.
+
+Data: `docs/tools/room_investigation_V2/out/parity_v2/{tmall,disposition,cap1,probes}/`
+(me lehost: `~/ami_parity/`, launcher `/tmp/ami_parity_v2.sh`).
