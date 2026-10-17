@@ -74,7 +74,20 @@ Per convened ticker, the Room agents (and later the 1-on-1 surface) can cite:
      analysts. Bounded render (e.g. latest N=5 rows per ticker) to keep
      prompts compact.
 
-## 5. Licensing position
+## 5. User-facing delivery (Saiful ruling 2026-10-18)
+
+The analyst data is NOT prompt-internal only — it must reach the user. The
+SB/B/H/S/SS counts and the consensus attributes (mean/median/high/low price
+target, analyst count, rating) are displayed to the customer as part of the
+Room delivery (the rendered report/board the user reads after a Convene),
+with source attribution. The action tape rows may render as recent-analyst-
+action entries in the same delivery. Exact placement/copy is a mobile/UX
+decision; the backend obligation is that these fields exist in the Room
+result payload the delivery renders from — which makes the
+`test_prompt_data_parity`-style guard (acceptance #2) a user-visible
+correctness gate, not just a prompt one.
+
+## 6. Licensing position
 
 - yfinance/Yahoo scraping is the build + Alpha path — same source and same
   posture as the fundamentals overlay already displayed to users.
