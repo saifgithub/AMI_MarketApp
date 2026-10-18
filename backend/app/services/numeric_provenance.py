@@ -266,6 +266,21 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "to_state are all str) — so the only numeric leaf in the whole "
         "subtree is price_move_pct, computed the same way",
     ),
+    # CR260 (commit b1351d09) — found by check 1's exhaustiveness walk firing
+    # for real, the same way the R60 pair above was. analyst_view's numerics
+    # (rating_split counts, target band, opinion_count, tape PTs) are provider
+    # data lifted out of the run's own fact sheet by
+    # room_runner._analyst_view_from_profile at bank time, each field gated on
+    # its LIVE field_state entry; unparseable rows are skipped, never coerced.
+    # Zero LLM involvement — the model never states, computes, or rewrites any
+    # of these figures.
+    ("verdict", "analyst_view"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.room_runner._analyst_view_from_profile — per-field LIVE "
+        "field_state gate over the CR260 yfinance-sourced fact sheet "
+        "(analyst_targets.fetch_analyst_detail), stamped at the same "
+        "_stamp_next_convene_basis site as reference_price/next_convene_delta",
+    ),
     (
         "verdict", "structure",
     ): ProvenanceRow(
