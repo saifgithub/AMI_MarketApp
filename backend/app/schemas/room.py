@@ -119,6 +119,55 @@ class VerdictReviewRecord(BaseModel):
     rerun_parse_failed: bool = False
 
 
+class RatingSplit(BaseModel):
+    """CR260 — the strong-buy→strong-sell count distribution behind the
+    consensus word. Sums to the analyst count; the individual buckets are
+    what the consensus word flattens."""
+
+    strong_buy: int
+    buy: int
+    hold: int
+    sell: int
+    strong_sell: int
+
+
+class AnalystTapeItem(BaseModel):
+    """CR260 — one dated per-firm action from `upgrades_downgrades`."""
+
+    date: str  # YYYY-MM-DD, from the feed's own GradeDate
+    firm: str
+    to_grade: str
+    from_grade: str
+    action: str = ""        # main / reit / init — the feed's own action kind
+    pt_action: str = ""     # Raises / Lowers / Maintains / "" — may be absent
+    current_pt: float | None = None  # None = the action carried no price target
+    prior_pt: float | None = None
+
+
+class AnalystView(BaseModel):
+    """CR260 — the Street-view block shown to the user as part of the Room
+    delivery (Saiful 2026-10-18): the SB/B/H/S/SS counts and the consensus
+    attributes, with the newest per-firm tape rows.
+
+    Every field is `None`/empty when its source field was not LIVE on this
+    run's sheet — absence, never a backfill (the same T-BACKFILL rule
+    `sheet_state` is read under). Built once by `room_runner` at verdict
+    bank time from the fact sheet the desks argued from, so the user sees
+    exactly what the agents saw (no second fetch that could drift).
+    """
+
+    rating_split: RatingSplit | None = None
+    # The consensus band the split sits behind — the same figures the
+    # Fundamentals Analyst's fact-sheet line renders.
+    rating: str | None = None
+    target_mean: float | None = None
+    target_median: float | None = None
+    target_high: float | None = None
+    target_low: float | None = None
+    opinion_count: int | None = None
+    tape: list[AnalystTapeItem] = Field(default_factory=list)
+
+
 class Verdict(BaseModel):
     """The Portfolio Manager's final verdict on a Room run."""
 
@@ -281,6 +330,17 @@ class Verdict(BaseModel):
     # says so by omission rather than by a "no prior data" line that reads as
     # information.
     next_convene_delta: NextConveneDelta | None = None
+
+    # CR260 — the analyst Street-view block (SB/B/H/S/SS split, consensus
+    # band, newest per-firm tape rows) displayed to the user as part of the
+    # Room delivery. Rides the verdict JSONB like `sheet_state` above (no
+    # migration, same scope-item-1 precedent). Built at verdict bank time
+    # from THIS run's fact sheet (`room_runner._analyst_view_from_profile`),
+    # never re-fetched — the user sees what the desks saw. `None` on every
+    # run before CR260 and on any run whose analyst fields were not LIVE
+    # (suppressed, gated-off, or a failed fetch): absence, not an empty
+    # block (T-BACKFILL).
+    analyst_view: AnalystView | None = None
 
     # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review, when this
     # verdict was routed to one. Absent (None) on every run that predates the

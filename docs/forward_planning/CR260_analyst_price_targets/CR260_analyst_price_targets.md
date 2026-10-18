@@ -1,6 +1,7 @@
 # CR260 — Analyst price targets in the Room
 
-**Status:** proposed · **Date:** 2026-10-18 · **Track:** AT:K3
+**Status:** in_progress (backend built 2026-10-19, AT:K3 — not yet promoted;
+mobile render of `verdict.analyst_view` pending) · **Date:** 2026-10-18 · **Track:** AT:K3
 
 > "Tell the users the target prices (buy and sell) announced by the internet
 > market analysts of the tickers in the room they convened." — Saiful, 2026-10-18
@@ -80,7 +81,10 @@ The analyst data is NOT prompt-internal only — it must reach the user. The
 SB/B/H/S/SS counts and the consensus attributes (mean/median/high/low price
 target, analyst count, rating) are displayed to the customer as part of the
 Room delivery (the rendered report/board the user reads after a Convene),
-with source attribution. The action tape rows may render as recent-analyst-
+with source attribution. Every count renders WITH its label ("6 strong
+buy / 19 buy / …"), never as a bare positional sequence — the agent-side
+line sets the wording precedent, and a stacked-bar mobile render carries a
+keyed legend for the same reason. The action tape rows may render as recent-analyst-
 action entries in the same delivery. Exact placement/copy is a mobile/UX
 decision; the backend obligation is that these fields exist in the Room
 result payload the delivery renders from — which makes the

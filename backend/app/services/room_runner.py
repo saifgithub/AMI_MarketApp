@@ -62,7 +62,10 @@ from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
 from app.schemas.options import costed_structure
 from app.schemas.room import (
+    AnalystTapeItem,
+    AnalystView,
     NextConveneDelta,
+    RatingSplit,
     RoomRun,
     RoomStatus,
     SheetFieldTransition,
@@ -71,6 +74,7 @@ from app.schemas.room import (
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services import (
+    analyst_targets,
     buyback_price,
     debt_maturity,
     dividend_growth,
@@ -1899,6 +1903,16 @@ def _profile_for_ticker(
         field_state["cost_of_debt"] = LiveDataState.UNAVAILABLE.value
         for block in _FILING_DIMENSION_BLOCKS:
             field_state[block] = LiveDataState.UNAVAILABLE.value
+
+    # CR260 — analyst split + tape: live runs only. Neither surface has a
+    # point-in-time source, so an as-of (CR164) run records UNAVAILABLE
+    # rather than injecting today's Street view into a historical sheet —
+    # the same treatment CR164's PIT dict gives consensus-derived fields.
+    if as_of is None and settings.use_real_market_data:
+        _overlay_analyst_targets(profile, field_state, ticker)
+    else:
+        for key in ("analyst_rating_split", "analyst_rating_split_history", "analyst_tape"):
+            field_state[key] = LiveDataState.UNAVAILABLE.value
         field_state["executive_change"] = LiveDataState.UNAVAILABLE.value
         profile["executive_change_state"] = "unscanned"
         field_state["dividend_growth"] = LiveDataState.UNAVAILABLE.value
@@ -4073,6 +4087,87 @@ def _reference_close(profile: dict[str, Any]) -> float | None:
         return None
 
 
+def _overlay_analyst_targets(
+    profile: dict[str, Any], field_state: dict[str, str], ticker: str,
+) -> None:
+    """CR260 — the SB/B/H/S/SS split (+ prior-month history) and the per-firm
+    action tape, from yfinance surfaces `.info` doesn't carry (see
+    `analyst_targets.py`). Live runs only: neither surface has a
+    point-in-time source, and the caller's `as_of is None` gate is what
+    keeps today's Street view out of a CR164 historical sheet. UNAVAILABLE
+    (never absent-with-no-record) when gated off or the fetch failed — the
+    render sites only ever fire on LIVE."""
+    detail = analyst_targets.fetch_analyst_detail(ticker)
+    if not detail:
+        for key in ("analyst_rating_split", "analyst_rating_split_history", "analyst_tape"):
+            field_state[key] = LiveDataState.UNAVAILABLE.value
+        return
+    for key in ("analyst_rating_split", "analyst_rating_split_history", "analyst_tape"):
+        if detail.get(key):
+            profile[key] = detail[key]
+            field_state[key] = LiveDataState.LIVE.value
+
+
+def _analyst_view_from_profile(profile: dict[str, Any]) -> AnalystView | None:
+    """CR260 — lift the Street-view block out of the fact sheet for the
+    user-facing delivery (and the verdict JSONB that carries it). LIVE-gated
+    per field exactly the way `_format_profile` gates (CR104): a suppressed
+    or failed fetch leaves the key absent and the corresponding AnalystView
+    field None. Rows that don't parse are skipped, never coerced (DEF053).
+    Returns None when nothing was live — absence, not an empty block."""
+    state = profile.get("field_state") or {}
+
+    def _live(key: str) -> bool:
+        return state.get(key) == LiveDataState.LIVE.value
+
+    split = None
+    if _live("analyst_rating_split"):
+        raw = profile.get("analyst_rating_split") or {}
+        try:
+            split = RatingSplit(**{k: int(raw.get(k, 0)) for k in (
+                "strong_buy", "buy", "hold", "sell", "strong_sell")})
+        except (TypeError, ValueError):
+            split = None
+    tape: list[AnalystTapeItem] = []
+    if _live("analyst_tape"):
+        for row in profile.get("analyst_tape") or []:
+            if not isinstance(row, dict) or not row.get("firm") or not row.get("date"):
+                continue
+            try:
+                tape.append(AnalystTapeItem(
+                    date=str(row["date"]), firm=str(row["firm"]),
+                    to_grade=str(row.get("to_grade", "")),
+                    from_grade=str(row.get("from_grade", "")),
+                    action=str(row.get("action", "")),
+                    pt_action=str(row.get("pt_action", "")),
+                    current_pt=row.get("current_pt"),
+                    prior_pt=row.get("prior_pt"),
+                ))
+            except (TypeError, ValueError):
+                continue  # unparseable row — skipped, never coerced
+
+    def _f(key: str) -> float | None:
+        value = profile.get(key)
+        return float(value) if _live(key) and value is not None else None
+
+    view = AnalystView(
+        rating_split=split,
+        rating=str(profile["analyst_rating"]) if _live("analyst_rating") else None,
+        target_mean=_f("analyst_target_price"),
+        target_median=_f("analyst_target_median"),
+        target_high=_f("analyst_target_high"),
+        target_low=_f("analyst_target_low"),
+        opinion_count=int(profile["analyst_opinion_count"])
+        if _live("analyst_opinion_count") and profile.get("analyst_opinion_count") is not None
+        else None,
+        tape=tape,
+    )
+    if view.rating_split is None and not view.tape and view.target_mean is None:
+        return None
+    return view
+
+
+
 def _stamp_next_convene_basis(
     verdict: "Verdict", profile: dict[str, Any], next_convene_delta: Any,
 ) -> "Verdict":
@@ -4084,6 +4179,10 @@ def _stamp_next_convene_basis(
         "sheet_state": dict(profile.get("field_state") or {}),
         "reference_price": _reference_close(profile),
         "next_convene_delta": next_convene_delta,
+        # CR260 — the Street-view block the Room delivery renders for the
+        # user, stamped at the same single site so a run and its CIO retry
+        # can never disagree about what was shown.
+        "analyst_view": _analyst_view_from_profile(profile),
     })
 
 

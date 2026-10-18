@@ -71,6 +71,7 @@ from app.services.fundamentals import (
 )
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
+from app.services.analyst_targets import analyst_split_line, analyst_tape_line
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
 from app.services.edgar_forensics import (
     CLUSTER_BUY_LABEL,
@@ -2784,6 +2785,11 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             "none available live this call — every such field below is "
             "marked not available."
         )
+    if _in_lane("fundamentals") and _is("analyst_rating_split", "live"):
+        header_lines.append(
+            "- Analyst rating split: LIVE, the strong-buy through strong-sell "
+            "count distribution behind the consensus line below."
+        )
     if not _in_lane("technicals"):
         pass  # out of lane — named in the lane line below, not disclosed as absent
     elif market_withheld:
@@ -2844,6 +2850,16 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         header_lines.append(
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
+        )
+    # CR260 — the tape's disclosure line sits beside the feed's (the same
+    # slot the 8-K and filings-index free sources use): it is a real dated
+    # source of its own, not part of the news feed and not under its 7-day
+    # floor or paywall.
+    if _in_lane("news") and not news_withheld_tenure and _is("analyst_tape", "live"):
+        header_lines.append(
+            "- Recent analyst actions: LIVE, real dated ratings and "
+            "price-target changes from named research firms (newest shown "
+            "below, per-row dates)."
         )
     # CR221 I1 — the 8-K line is a free source with its own provenance key, so
     # its disclosure sits beside the feed's rather than inside it: the feed's
@@ -3483,6 +3499,11 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
     else:
         lines.append(_catalyst_line(profile))
+        # CR260 — the per-firm action tape, news lane. Sits with the catalyst
+        # so tenure-withholding strips it (same rule the 8-K line follows).
+        tape_line = _analyst_tape_line(profile)
+        if tape_line:
+            lines.append(tape_line)
         # CR221 I1 — sits with the catalyst so tenure-withholding strips it,
         # renders under withheld_paid because the paywall is on the FEED and
         # this source is free, and carries its own field_state key because
@@ -3535,7 +3556,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 )
     if _in_lane("fundamentals"):
         for extra in (_valuation_line(profile), _sector_line(profile),
-                      _capital_allocation_line(profile), _analyst_line(profile)):
+                      _capital_allocation_line(profile), _analyst_line(profile),
+                      _analyst_split_line(profile)):
             if extra:
                 lines.append(extra)
     # CR244 Part 2 slice 1 — the filings index reaches both News and
@@ -3880,6 +3902,28 @@ def _analyst_line(profile: dict[str, Any]) -> str | None:
         profile.get("analyst_target_median") if _field_is_live(profile, "analyst_target_median") else None,
         profile.get("analyst_rating_score") if _field_is_live(profile, "analyst_rating_score") else None,
     )
+
+
+def _analyst_split_line(profile: dict[str, Any]) -> str | None:
+    """CR260 — the SB/B/H/S/SS distribution, fundamentals lane. Rides the
+    same `suppress_analyst_consensus` ablation gate as the consensus line
+    (both are stripped at the fetch site in `analyst_targets.py`)."""
+    if not _field_is_live(profile, "analyst_rating_split"):
+        return None
+    return analyst_split_line(
+        profile.get("analyst_rating_split"),
+        profile.get("analyst_rating_split_history")
+        if _field_is_live(profile, "analyst_rating_split_history") else None,
+    )
+
+
+def _analyst_tape_line(profile: dict[str, Any]) -> str | None:
+    """CR260 — the dated per-firm action tape, news lane (lane ruling
+    Saiful 2026-10-18: upgrades/downgrades are events, same domain logic
+    that routes `next_earnings` to news). Bounded at the fetch site."""
+    if not _field_is_live(profile, "analyst_tape"):
+        return None
+    return analyst_tape_line(profile.get("analyst_tape"))
 
 
 def _run_date(profile: dict[str, Any]) -> date | None:
