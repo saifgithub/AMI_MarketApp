@@ -109,3 +109,19 @@ approves junk — it refuses good rooms.
    completing arm 14 is the only path to a Kolibri operational candidate,
    and the 13↔14 diff would be the cleanest reasoning-value measurement
    in the program.
+
+## Addendum (2026-10-18) — thinking-off R5 result, arm stopped
+
+Arm 14 ran to a complete R5 (60/60, 1h36m — the predicted ~5 min/room) plus
+34 R4 rooms before Saiful stopped it: **R5 7/60 APPROVE vs native 18/60**,
+all seven approvals single-rep (AAPL, JPM, MA, MO, TMO, V, WFC); R4 partial
+2/34 (BAC, DHR). **LEVI reverts to 0/2** — the holdout resolution was a
+reasoning-mode effect, not a model-family effect.
+
+Reasoning-value verdict: the reasoning channel is **load-bearing for the
+PM's willingness, not just its latency** — removing it cuts approvals ~3×
+and eliminates every double-rep approval. Kolibri is ruled out as a
+production candidate in both modes: native too slow (53.7 min/room),
+thinking-off too conservative (7/60 at R5 vs dsv4 17, ami 26). Retained
+data: `~/cr255_kolibri_nt/` (R5 complete, R4 partial) for any future
+R5-level discrimination scoring.

@@ -32,7 +32,7 @@ ami-llm approved 14/30.
 
 | Test | dsv4 (alpha-spark) | ami-llm (DGX) | GLM-5.3-Flash (DeepInfra) | Qwen3.8-Flash (DeepInfra) | Kolibri-1 native (100.98.142.64:8002) | Kolibri-1 thinking-off |
 |---|---|---|---|---|---|---|
-| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — | running (32K floor) | stopped by Saiful (resumable) |
+| Production prompts, 30×5 (new stack) | ✓ 5/11/22/27/17 ✗ | ✓ 0/0/4/10/20 ✓ | — | — | ✓ 0/0/12/17/18 ✓ (arm 13) | stopped — R5 7/60, too low (arm 14) |
 | Production prompts, 30×5 (heuristics-off v1) | — | ✓ 0/3/4/24/26 (frozen baseline) | — | — |
 | CR247 persona, 30 tickers @R5 | — | ✓ 14/30 | ✓ 4/30 | — |
 | Approved-14 re-run | — | ✓ | — | ✓ 6/14 |
@@ -73,7 +73,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
 | 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, NATIVE mode | **DONE 2026-10-17 (curve 0/0/12/17/18, strictly monotone — program first; 26/30 per-ticker; 10% flips; zero discrimination 3rd family; ~53.7 min/room; box ceiling 4)** | → ~/cr255_kolibri | analysis_r8 |
-| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}` (probe: reasoning_tokens 0); standard knobs (floor 5000, default timeouts) | RUNNING 2026-10-18 19:14 (resumed after Saiful's post-analysis go; conc 3; ETA ~18-24h) — the arm-13↔14 diff IS the reasoning-value measurement | → ~/cr255_kolibri_nt | pending (diff vs analysis_r8) |
+| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}`; standard knobs | **STOPPED by Saiful 2026-10-18 ~21:40 UTC — R5 7/60 APPROVE (vs native 18/60), "far too low"; R4 partial 2/34.** Thinking-off retained data: nt-R5 60 rooms (7A: AAPL JPM MA MO TMO V WFC, all singles; LEVI 0/2 vs native 2/2), nt-R4 34 rooms (2A: BAC DHR). Verdict: thinking-off guts willingness (~3× fewer approvals, no doubles) — reasoning channel is load-bearing for the PM's willingness, not just latency. Kolibri ruled out as production candidate in BOTH modes (native too slow @ 53.7min/room; no-think too conservative) | → ~/cr255_kolibri_nt | R5-level diff in analysis_r8 §pending addendum |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
