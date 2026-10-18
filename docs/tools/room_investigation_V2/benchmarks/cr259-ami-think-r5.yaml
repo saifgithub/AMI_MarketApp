@@ -1,0 +1,11 @@
+# CR259 arm 15 — ami-llm THINKING ON x disposition prompts, risk 5. Mirrors arm 13 recipe (FLOOR=32768, REQ=1500, AGENT=900; conc 5; 16K proven contaminated on reasoning models). VLLM_ENABLE_THINKING=true explicit post-amendment. Pairs with ami-off arms (r2 frozen 0/0/4/10/20? see analysis_r2) and kolibri 13-v-14.
+# PM on production + disposition table (NO sub-cap line). Native uncapped
+# mandate. The curve this arm produces is diffed against the CR255 target
+# (5/15/30/45/60) and the production-prompt arms (analysis_r3/r5).
+name: cr259-ami-think-r5
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 5 }
+repeats: 2
+prompt_variant: cr253-disposition
+concurrency_by_provider: { vllm: 4, deepinfra: 2, kimi: 1 }
