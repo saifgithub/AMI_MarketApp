@@ -73,7 +73,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 
 | 12 | **ami-llm parity program** | 1,020 (3×300 + probes) | disposition / cap1 / tm-all / probes — every dsv4 arm replicated | uncapped + caps | ami-llm | **RUNNING (launched 2026-10-12 ~16:00 UTC; ETA ~2 days)** | → ~/ami_parity | analysis_r7 (parity diff) |
 | 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, NATIVE mode | **DONE 2026-10-17 (curve 0/0/12/17/18, strictly monotone — program first; 26/30 per-ticker; 10% flips; zero discrimination 3rd family; ~53.7 min/room; box ceiling 4)** | → ~/cr255_kolibri | analysis_r8 |
-| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}` (probe: reasoning_tokens 0); standard knobs (floor 5000, default timeouts) | STOPPED by Saiful ~07:05 UTC (partial r5 rows kept in ~/cr255_kolibri_nt — resumable; launcher ~/run_kolibri_nt_matrix.sh retained) | → ~/cr255_kolibri_nt | not produced |
+| 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}` (probe: reasoning_tokens 0); standard knobs (floor 5000, default timeouts) | RUNNING 2026-10-18 19:14 (resumed after Saiful's post-analysis go; conc 3; ETA ~18-24h) — the arm-13↔14 diff IS the reasoning-value measurement | → ~/cr255_kolibri_nt | pending (diff vs analysis_r8) |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
