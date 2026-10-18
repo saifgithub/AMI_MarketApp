@@ -25,7 +25,7 @@ companion line, never the convene (the `_overlay_put_call` precedent).
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -42,7 +42,13 @@ from app.services.ratio_baselines import (
     trailing_baseline,
 )
 
-_TODAY = date.today()
+# DEF456 — this anchor MUST be the UTC clock, not local date.today(): the
+# overlay under test records at datetime.now(UTC).date()
+# (ratio_baselines.record_observation's own clock), so in the local-midnight→
+# UTC-midnight window the overlay's daily upsert lands on the SAME calendar
+# day as the seed's last row and silently replaces it — two tests red every
+# morning KL before 08:00, green by afternoon, no code change in between.
+_TODAY = datetime.now(UTC).date()
 _METRIC = "put_call_volume"
 
 
