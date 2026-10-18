@@ -1,0 +1,9 @@
+# CR262 arm — Ling-3.0-flash-Fin-fp4 x PRODUCTION prompts (backend-default = disposition folded in), thinking OFF (explicit enable_thinking:false), risk 3. Purpose-trained finance model; purpose: test production prompt on the finance-biased candidate. Gate: AAPL/BA PASS/PASS 0 fallbacks.
+# (backend-default = disposition ladder folded in), thinking OFF (explicit
+# enable_thinking:false, production config). Mirrors arm 13's gate shape.
+name: cr262-ling-prod-r3
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 3 }
+repeats: 2
+concurrency_by_provider: { vllm: 1 }
