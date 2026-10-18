@@ -1,0 +1,9 @@
+# Ling-3.0-flash-Fin-fp4 gate smoke — AAPL/BA @ R5, production prompt state
+# (backend-default = disposition ladder folded in), thinking OFF (explicit
+# enable_thinking:false, production config). Mirrors arm 13's gate shape.
+name: cr262-ling-smoke
+provider: vllm
+tickers: [AAPL, BA]
+mandate: { risk_score: 5 }
+repeats: 1
+concurrency_by_provider: { vllm: 2 }
