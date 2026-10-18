@@ -228,6 +228,14 @@ class TestTheFetcherEpsTrend:
         out = self._run(et)
         assert (out or {}).get("eps_revisions_direction") is None
 
+    def test_0q_row_with_no_columns_produces_nothing_and_does_not_raise(self):
+        """DEF454 — an uncovered micro-cap (AIXI, 2026-10-18): yfinance returns
+        the four period rows with zero estimate columns. Raised KeyError and
+        killed the Room before any desk spoke."""
+        et = pd.DataFrame(index=["0q", "+1q", "0y", "+1y"])
+        out = self._run(et)
+        assert (out or {}).get("eps_revisions_direction") is None
+
     def test_a_zero_90_days_ago_estimate_produces_nothing(self):
         """Division-by-zero guard — a real if unusual case (a name with a
         just-initiated, near-zero estimate 90 days ago)."""

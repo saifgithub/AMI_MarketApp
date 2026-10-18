@@ -646,7 +646,7 @@ def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
             ago_90d = eps_trend.loc["0q", "90daysAgo"]
             current = float(current) if current is not None else None
             ago_90d = float(ago_90d) if ago_90d is not None else None
-        except (TypeError, ValueError):
+        except (KeyError, TypeError, ValueError):
             current = ago_90d = None
         if (
             current is not None and ago_90d is not None
