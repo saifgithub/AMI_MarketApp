@@ -1,0 +1,86 @@
+area: floor
+code: FLOOR
+title: Floor tab & home shell
+order: 5
+covers:
+  - mobile/lib/screens/floor/**
+  - mobile/lib/screens/home_shell.dart
+summary: |
+  The Floor is client composition over other areas' endpoints (journal team
+  calls, sector watch, daily challenge, Academy unlock state, inbox bell). The
+  API cases prove a brand-new user's cold-start Floor reads answer cleanly with
+  honest empty states and are private; the manual cases cover the shell and
+  the visual checks. Bottom tabs are Floor / Portfolio / [Game, flag-gated] /
+  Lessons / You.
+cases:
+  - id: UAT-FLOOR-001
+    title: Sector Watch answers 200 with an explicit empty state for a new user
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/sector-watch/{user_id} for a user with no watchlist or holdings
+      - GET another user's sector watch; GET with no token
+    expected:
+      - 200 with state "empty", tickers_considered 0 and null sector, leader and headline (degrade states ride the body, CR183/CR040)
+      - Another user's id is 404 (CR183 - it must not confirm the id exists); no token is 401
+
+  - id: UAT-FLOOR-002
+    title: Every read the Floor makes on cold start succeeds for a brand-new user
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET journal (team calls), lessons by_lesson, lesson requirements, daily_challenge today, messages, notifications unread_count, sector-watch
+    expected:
+      - All 200 with empty-but-valid bodies - no 5xx, and no null where the client expects a list
+      - The Floor Pass journal read reports retention_days 30
+      - requirements lists the 12 agents all locked (the Your Firm screen's source)
+
+  - id: UAT-FLOOR-003
+    title: Bottom navigation shows the right tabs in the right order
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone
+    steps:
+      - Launch signed in and read the bottom bar; tap each tab
+      - Repeat with the Game flag off, then on
+    expected:
+      - Tabs read FLOOR, PORTFOLIO, LESSONS, YOU; with the flag on a GAME tab sits between Portfolio and Lessons
+      - Each tab keeps its own navigation stack (go deep, switch away, switch back, still deep)
+      - The ad banner and ticker tape sit below the bar; a paid plan has no ad banner
+
+  - id: UAT-FLOOR-004
+    title: Floor cards render sensible empty and filled states
+    layer: manual
+    plans: [floor_pass, trader]
+    preconditions:
+      - One brand-new account, one account with holdings, a watchlist and a past Room run
+    steps:
+      - Open the Floor tab on each account
+      - Pull to refresh; toggle light and dark
+    expected:
+      - On the new account the portfolio, team calls, sector watch and unactioned calls cards show honest empty states, not spinners or zeroes dressed as data
+      - On the filled account the cards show real tickers, deltas and a sector leader headline; unactioned calls open the right ticker
+      - The daily challenge card is present on both and nothing clips at iPhone 13 width
+
+  - id: UAT-FLOOR-005
+    title: Your Firm shows locked and unlocked agents and unlocks after the fifth lesson
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - A Floor Pass tester who has passed four of the five Fundamentals Analyst gateway lessons
+    steps:
+      - Open Your Firm; tap the locked Fundamentals Analyst
+      - Pass the fifth gateway quiz in Lessons and return to the Floor
+    expected:
+      - The locked sheet lists the five gateway lessons with 4 of 5 done
+      - After the pass the agent shows unlocked on the Floor without a restart, with the unlock celebration shown once
+
+  - id: UAT-FLOOR-006
+    title: The Floor bell opens the inbox inside the tab navigator
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - Tap the bell on the Floor; open a message; go back
+    expected:
+      - The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen

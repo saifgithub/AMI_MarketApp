@@ -1,0 +1,90 @@
+area: daily_challenge
+code: DAILY
+title: Daily challenge & reminder
+order: 13
+covers:
+  - backend/app/api/daily_challenge.py
+summary: |
+  Today's challenge is served without its answer, one attempt per user per
+  challenge is recorded server-side (a repeat returns the stored result), a
+  wrong answer still counts as trying, and the reminder preference round-trips.
+cases:
+  - id: UAT-DAILY-001
+    title: Today's challenge is served without the answer or explanation
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/daily_challenge/today with no token
+      - GET by_id for that challenge, by_date for today's date, and /all
+      - GET by_date with a malformed date; GET by_id for an unknown id
+    expected:
+      - 200 with a date, an id, a scenario, a question and at least two options
+      - No response view (today, by_id, by_date, all) contains answer or explanation keys (DEF042)
+      - my_attempt is null for an anonymous caller
+      - Malformed date is 400; unknown id is 404
+
+  - id: UAT-DAILY-002
+    title: An attempt is recorded once; a repeat returns the stored result
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/daily_challenge/{id}/attempt with option 0
+      - POST again with a different option
+      - GET /v1/daily_challenge/today as that user
+    expected:
+      - First attempt returns correct, correct_option, explanation and already_attempted false
+      - The repeat returns already_attempted true with the FIRST selected_option and the same correct flag, not a re-grade
+      - today.my_attempt carries the stored selection, correct_option and explanation
+
+  - id: UAT-DAILY-003
+    title: A wrong answer is recorded and journalled; bad attempts are refused
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Attempt with an option other than the correct one
+      - Read the journal
+      - Attempt with an out-of-range option, an unknown challenge id, and with no token
+    expected:
+      - The wrong attempt returns correct false, is stored, and shows in the journal as a daily_challenge entry tagged wrong with a loss outcome (trying counts, daily_and_streaks.md)
+      - Out-of-range option is 400; unknown challenge is 404; unauthenticated is 401
+      - Another user's attempt on the same challenge is independent (their today.my_attempt is still null)
+
+  - id: UAT-DAILY-004
+    title: Reminder preference sets, preserves and clears the hour and timezone
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - PUT /v1/daily_challenge/reminder {hour 9, timezone Asia/Kuala_Lumpur}
+      - PUT {timezone Asia/Riyadh} only
+      - PUT {daily_reminder_hour null}
+      - PUT an unknown timezone, an hour of 24, and no token
+    expected:
+      - The first PUT echoes hour 9 and the timezone
+      - A timezone-only PUT keeps hour 9 (CR095 audit) and changes only the timezone
+      - Explicit null turns reminders off (hour null) and keeps the timezone
+      - Unknown timezone is 400; hour 24 is 422; unauthenticated is 401
+
+  - id: UAT-DAILY-005
+    title: Streak counts trying, not being right
+    layer: api
+    status: blocked
+    blocked_on: The streak has no HTTP surface since the Floor streak chip was removed (CR109 slice 7, floor_screen.dart); reputation_service.streak() is only reachable in-process, so an API test has nothing to read. Needs Saiful to decide whether to re-home the streak read.
+    plans: [floor_pass]
+    steps:
+      - Attempt today's challenge wrong, read the streak
+    expected:
+      - Streak is 1 after a wrong attempt (daily_and_streaks.md), never reset by being wrong
+
+  - id: UAT-DAILY-006
+    title: Daily challenge card and reminder push feel right on iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone with notifications allowed
+    steps:
+      - Open the Floor tab and answer the daily challenge card
+      - Reopen the app, then relaunch it
+      - In the reminder settings choose an hour two minutes from now
+    expected:
+      - The card shows the result and explanation after answering, and the same result after relaunch
+      - A push arrives at the chosen local hour and opens the challenge; no second push the same day

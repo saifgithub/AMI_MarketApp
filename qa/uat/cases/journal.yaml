@@ -1,0 +1,106 @@
+area: journal
+code: JRNL
+title: Decision journal, trash & the You tab
+order: 14
+covers:
+  - backend/app/api/journal.py
+  - mobile/lib/screens/journal/**
+  - mobile/lib/screens/you/**
+summary: |
+  What the user does is captured to a private journal. Floor Pass reads a
+  30-day window, paid plans read everything. Delete is a soft delete that
+  round-trips through the trash and restore. Entries are owner-only and cannot
+  be forged over HTTP (DEF371).
+cases:
+  - id: UAT-JRNL-001
+    title: Journal list reports the plan's retention window
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - GET /v1/journal/{user_id} as a Floor Pass user
+      - Admin-set the same user to trader and GET again
+      - Pass a lesson quiz first so the list is not empty
+    expected:
+      - Floor Pass response has retention_days 30 (FLOOR_PASS_RETENTION_DAYS)
+      - Trader response has retention_days null (unlimited), and the entry is still listed
+      - total equals the number of entries returned
+
+  - id: UAT-JRNL-002
+    title: Lesson completion is journalled and readable as an entry
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Pass a lesson quiz
+      - GET the journal with entry_type=lesson_complete, and with a non-matching filter and a search term
+      - GET the entry by id; GET an unknown entry id
+    expected:
+      - A lesson_complete entry names the lesson, carries the score payload and has no deleted_at
+      - The type filter returns it, a different type filter does not, and q matches the lesson title
+      - GET entry returns the same entry; an unknown id is 404
+
+  - id: UAT-JRNL-003
+    title: A note, tags and outcome persist on an entry
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/journal/{user_id}/entry/{id}/note with note, tags and outcome win
+      - GET the entry and the list
+      - POST a note to an unknown entry id
+    expected:
+      - The response and a fresh GET both carry the note, tags and outcome
+      - The note shows in the list view too
+      - Unknown entry is 404
+
+  - id: UAT-JRNL-004
+    title: Delete, trash and restore round-trip
+    layer: api
+    plans: [trader]
+    steps:
+      - DELETE an entry
+      - GET the list and GET /trash
+      - POST restore
+      - GET the list and trash again
+      - DELETE and restore with unknown ids
+    expected:
+      - Delete is 204; the entry leaves the list and appears in trash with deleted_at set (retention_days null on trash)
+      - Restore is 204; the entry returns to the list with deleted_at cleared and leaves the trash
+      - Unknown ids are 404 for both delete and restore
+
+  - id: UAT-JRNL-005
+    title: Journal is private to its owner and cannot be forged
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - User B lists, reads, annotates, deletes and restores user A's entry; reads A's trash
+      - The same list route with no token
+      - POST /v1/journal as an authenticated user
+    expected:
+      - Cross-user calls are 403 and A's entry is untouched
+      - Unauthenticated is 401
+      - The bare POST creates nothing (route removed by DEF371) - 404 or 405, never 2xx
+
+  - id: UAT-JRNL-006
+    title: Floor Pass window drops entries older than 30 days
+    layer: api
+    status: blocked
+    blocked_on: Needs an entry backdated beyond 30 days; the only backdating hook (journal_store test helper) is not exposed over HTTP and there is no admin route for it. Needs Saiful's go for a UAT-only backdating route or a DB seed on melehost.
+    plans: [floor_pass, trader]
+    steps:
+      - Create an entry dated 31 days ago for a Floor Pass user, list, upgrade to trader, list
+    expected:
+      - Floor Pass list omits the old entry; trader list includes it
+
+  - id: UAT-JRNL-007
+    title: Journal, trash and You tab behave on iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone with at least three journal entries
+    steps:
+      - On the You tab, scroll the insights section; open the journal and an entry detail; add a note
+      - Swipe an entry to delete and tap UNDO on the snackbar
+      - Delete another, open Trash, restore it
+    expected:
+      - Insights and journal render without clipping in light and dark
+      - UNDO brings the entry straight back in place; Trash lists the deleted one and restore returns it
+      - A 409 "newer entry has taken its place" restore shows the explanatory message, not "not found"
