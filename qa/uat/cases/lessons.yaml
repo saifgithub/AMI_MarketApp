@@ -1,0 +1,131 @@
+area: lessons
+code: LESS
+title: Lessons, quizzes, Agent Academy unlocks & glossary
+order: 12
+covers:
+  - backend/app/api/lessons.py
+  - backend/app/api/glossary.py
+  - mobile/lib/screens/lessons/**
+summary: |
+  The curriculum is served, quizzes grade server-side (all answers right to
+  pass), and passing a documented agent's five gateway lessons unlocks that
+  agent on every plan, Floor Pass included. Failing never unlocks. The
+  glossary is non-empty and well-formed.
+cases:
+  - id: UAT-LESS-001
+    title: Lesson catalogue is non-empty, consistent and anonymous-readable
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/lessons with no token
+    expected:
+      - 200; total_lessons equals the sum of lessons across tracks and is at least 100
+      - Every lesson meta has a unique id, a title, a track and a code; the foundations track is present
+
+  - id: UAT-LESS-002
+    title: A lesson serves its body and quiz without the answer key
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/lessons/280_what_is_a_stock with no token
+      - GET the same lesson with locale=ar, locale=ms and an unauthored locale
+      - GET /v1/lessons/does_not_exist
+    expected:
+      - 200 with markdown blocks and at least one quiz question that has options
+      - The raw response text contains no answer_index (DEF294)
+      - Other locales answer 200 for the same lesson id (EN fallback, never a 404)
+      - An unknown lesson id is 404
+
+  - id: UAT-LESS-003
+    title: Starting a lesson records progress for that user only
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET progress for a fresh user
+      - POST /v1/lessons/start for a real lesson
+      - GET progress/by_lesson
+      - POST /v1/lessons/start for an unknown lesson
+    expected:
+      - Fresh progress is 0 completed of a non-zero total, no agents unlocked
+      - The started lesson appears with started_at set, quiz_attempts 0, quiz_passed false
+      - Unknown lesson is 404
+
+  - id: UAT-LESS-004
+    title: Wrong or partial quiz answers never pass, complete or unlock
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Submit no answers to a two-question quiz
+      - Submit one right and one wrong answer
+      - Read progress, by_lesson, activations and the journal
+    expected:
+      - Both submissions return passed false with a score below 1.0 and no unlocked_agents
+      - The response reveals the correct index and explanation per question
+      - quiz_attempts counts both tries, quiz_passed stays false, completed_at stays null
+      - lessons_completed stays 0 and no lesson_complete journal entry exists
+      - A fully correct submission afterwards passes, completes the lesson and journals it
+
+  - id: UAT-LESS-005
+    title: Five gateway quizzes unlock the documented agent on Floor Pass; four or a failed fifth do not
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET requirements and pick fundamentals_analyst (five gateway lessons)
+      - Pass four of the five gateway quizzes
+      - Fail the fifth, then pass it
+      - Pass the fifth a second time
+      - Read requirements, activations, progress and the journal
+    expected:
+      - After four passes the agent is locked with passed_count 4 and remaining_count 1; no unlocked_agents were reported
+      - A failed fifth attempt leaves the agent locked
+      - The passing fifth reports unlocked_agents ["fundamentals_analyst"] and creates one earn_path activation naming the triggering lesson
+      - Requirements flip to unlocked and progress.agents_unlocked lists it; the journal holds an agent_unlock entry
+      - Re-passing does not announce the unlock again or add a second activation
+
+  - id: UAT-LESS-006
+    title: Every agent has a five-lesson gateway and starts locked
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/lessons/requirements/{user_id} for a fresh user
+    expected:
+      - 12 agents, each with exactly 5 gateway lessons that all exist, each locked with remaining_count 5
+
+  - id: UAT-LESS-007
+    title: Progress, quiz and unlock routes are private to the owner
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - User B reads and writes user A's progress, by_lesson, requirements, activations, start and quiz
+      - The same routes with no token
+    expected:
+      - Every cross-user call is 403 and no state changes for A
+      - Unauthenticated calls are 401
+      - The removed founder-grant route (POST /v1/lessons/activations/grant) does not exist
+
+  - id: UAT-LESS-008
+    title: Glossary catalogue and term lookup are well-formed
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/glossary/en, /ar, /ms with no token
+      - GET one term by id, then an unknown term
+    expected:
+      - Each locale is 200, total_terms equals the entry count, categories are non-empty
+      - Every entry has a unique id and non-empty term, definition and category
+      - A term fetched by id equals its catalogue entry; an unknown term is 404
+
+  - id: UAT-LESS-009
+    title: Lessons tab, track browsing, reader and quiz feel right on iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone, signed in as a Floor Pass tester
+    steps:
+      - Open the Lessons tab; scroll the honeycomb of tracks
+      - Open a track and a lesson; swipe through the beat deck; answer the quiz wrong, then right
+      - Open a glossary term from inside a lesson
+    expected:
+      - Tiles and hex avatars render without clipping; locked and done lessons are visually distinct
+      - The reader paginates smoothly, animations play, the quiz shows the explanation after each answer
+      - A pass shows completion and any unlock celebration; the glossary sheet opens and dismisses

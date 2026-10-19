@@ -1,0 +1,109 @@
+area: inbox_notifications
+code: INBOX
+title: Inbox, notification centre & push
+order: 15
+covers:
+  - backend/app/api/messages.py
+  - backend/app/api/notifications.py
+  - mobile/lib/screens/inbox/**
+  - mobile/lib/screens/notifications/**
+summary: |
+  A tester sees their own broadcasts and replies (inbox) and their own durable
+  notification rows (centre). Both are owner-only; notification preferences
+  round-trip and reject unknown types loudly. Producing rows needs a sender
+  the API suite is barred from using, so the read/reply goals ride the manual
+  layer and two blocked API cases.
+cases:
+  - id: UAT-INBOX-001
+    title: A new user has an empty inbox and an empty, zero-unread notification centre
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/messages
+      - GET /v1/notifications/{user_id}, /unread_count
+      - POST /v1/notifications/{user_id}/read_all
+    expected:
+      - Inbox is 200 with an empty list
+      - Notifications list is empty with total 0; unread is 0
+      - read_all is 200 with updated 0, and unread stays 0
+
+  - id: UAT-INBOX-002
+    title: Notification preferences list every type, round-trip and reject unknown types
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/notifications/{user_id}/preferences
+      - PATCH one type to false, GET again, PATCH it back to true
+      - PATCH an unknown type; PATCH an empty updates map
+    expected:
+      - Every known type is listed and enabled by default
+      - The disabled type reads enabled false (with updated_at set) and the others are untouched; re-enabling restores it
+      - Unknown type and empty updates are 422, and nothing changes
+
+  - id: UAT-INBOX-003
+    title: Inbox and notification routes are owner-only and 404 on unknown rows
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - User B reads and writes user A's notifications, unread_count, read_all and preferences
+      - All inbox and notification routes with no token
+      - Mark an unknown notification read; mark read / toasted / reply to an unknown message id
+    expected:
+      - Cross-user path access is 403, unauthenticated is 401
+      - Unknown notification and unknown message ids are 404 (indistinguishable from another user's row)
+      - A reply to an unknown message stores nothing
+
+  - id: UAT-INBOX-004
+    title: unread_count tracks single read and read_all
+    layer: api
+    status: blocked
+    blocked_on: A UAT user cannot be given a notification row without calling admin push (barred for this suite) or a price alert (spends an LLM call for commentary and waits on the 5-minute evaluator). Needs Saiful's go for a UAT-only seeding route, or for admin push to a tagged UAT user id.
+    plans: [floor_pass]
+    steps:
+      - Give a UAT user three notifications
+      - Mark one read; then read_all
+    expected:
+      - unread goes 3, 2, 0; read is idempotent; read_all returns updated 2 then 0
+
+  - id: UAT-INBOX-005
+    title: Inbox reply is stored and read state is server-side
+    layer: api
+    status: blocked
+    blocked_on: Same input gap - an inbox row exists only after an admin broadcast, which this suite must not call. Needs a go for a broadcast to a single tagged UAT user id (mode=user).
+    plans: [floor_pass]
+    steps:
+      - Broadcast to one UAT user; list the inbox
+      - Mark read; mark toasted; reply
+      - List the inbox again
+    expected:
+      - The broadcast row appears direction out with read_at null; read and toasted stamp it once
+      - The reply is stored direction in, threaded to the message via reply_to_id, and visible in the admin reply feed
+
+  - id: UAT-INBOX-006
+    title: Broadcast arrives as a push and in the inbox; reply reaches the admin feed
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone with notifications allowed, signed in
+      - Saiful sends a normal-priority broadcast to himself from the admin console
+    steps:
+      - Lock the phone and wait for the push; tap it
+      - Open the inbox from the Floor bell; read the message; send a reply
+      - Send a second broadcast with priority high and cold-start the app
+    expected:
+      - The push arrives within a minute and opens the message
+      - Unread badge on the bell drops when the message is read; the reply shows in the thread and in the admin reply feed
+      - The high-priority message toasts exactly once on cold start, not again after relaunch
+
+  - id: UAT-INBOX-007
+    title: Notification centre, bell and preferences behave on iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - At least two notifications exist for the tester (e.g. a price alert or resting-order fill)
+    steps:
+      - Open the notification centre from the bell; tap a notification; use mark all read
+      - Open notification preferences; turn one type off and trigger it
+    expected:
+      - Tapping deep-links to the right screen (e.g. the ticker), marks it read and the bell count drops
+      - Mark all read clears the count; a disabled type still appears in the centre but sends no push

@@ -1,0 +1,142 @@
+area: support
+code: SUPP
+title: Bug reports, AMI help library & telemetry
+order: 16
+covers:
+  - backend/app/api/feedback.py
+  - backend/app/api/ai_coach.py
+  - backend/app/api/telemetry.py
+  - mobile/lib/screens/feedback/**
+  - mobile/lib/screens/coach/**
+summary: |
+  Users can report a bug with or without a session; the endpoint is
+  IP-rate-limited and refuses bad input. The resolution feed is private.
+  Telemetry ingest is per-user and idempotent while the segment read is
+  admin-only. The help library (ai_coach) serves static, well-formed Q&A with
+  no LLM call. Bug reports filed by this suite land in the real triage queue and
+  are prefixed "[CR263 UAT - ignore]"; at most two are filed per run.
+cases:
+  - id: UAT-SUPP-001
+    title: A signed-in user can submit a bug report
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/feedback/bug (multipart) with a valid category, a "[CR263 UAT - ignore]" title, app_version, platform ios and a bearer token
+    expected:
+      - 201 with an id, status open and created_at; no attachment path
+      - The same user's GET /v1/feedback/updates is still empty (open reports are not resolution updates)
+
+  - id: UAT-SUPP-002
+    title: An anonymous caller can still submit a bug report
+    layer: api
+    plans: [anon]
+    steps:
+      - POST /v1/feedback/bug with no Authorization header and platform android_gms
+    expected:
+      - 201 with an id and status open (the report is kept even without a user_id)
+
+  - id: UAT-SUPP-003
+    title: Missing fields, an empty title and a disallowed attachment are refused
+    layer: api
+    plans: [anon]
+    steps:
+      - POST with missing required fields, an empty title, an unsupported attachment MIME (text/plain)
+    expected:
+      - Missing fields and empty title are 422; text/plain attachment is 415
+      - Nothing is stored for any of these
+
+  - id: UAT-SUPP-004
+    title: Bug-report submission is rate-limited per IP
+    layer: api
+    plans: [anon]
+    steps:
+      - From one client IP, POST 6 requests in a row (invalid, so nothing enters the triage queue)
+    expected:
+      - The first five are answered normally (422); the sixth is 429 rate_limit_exceeded (DEF186, 5 per hour)
+      - A different client IP is not limited by the first one's budget
+
+  - id: UAT-SUPP-005
+    title: Resolution updates and acknowledgements are private to the reporter
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/feedback/updates with and without a token
+      - POST /v1/feedback/{random_id}/ack with and without a token
+    expected:
+      - Updates is 200 and a list for the owner, 401 with no token
+      - Ack of an unknown report is 404 for a signed-in user (same as someone else's), 401 with no token
+
+  - id: UAT-SUPP-006
+    title: Telemetry ingest is per-user, validated and idempotent
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/telemetry/events with two events
+      - POST the same batch again
+      - POST an unknown event_type, an empty batch, and a batch with no token
+    expected:
+      - First batch returns accepted 2, duplicates 0; the replay returns accepted 0, duplicates 2
+      - Unknown event_type is 422 naming the allowed set; empty batch is 422; no token is 401
+      - The payload has no way to name another user (extra user_id is ignored, rows land under the token's user)
+
+  - id: UAT-SUPP-007
+    title: Telemetry segment counts are admin-only
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/telemetry/segments with no token and with a normal user token
+      - GET with the admin secret over a window containing a just-ingested event
+      - GET with since >= until
+    expected:
+      - Anonymous and normal-user calls are 403 and return no counts
+      - Admin gets 200 with users, bounce, convene, depth, locales and dropped_events, counting the UAT user (users at least 1)
+      - since >= until is 422
+
+  - id: UAT-SUPP-008
+    title: AMI help library serves static, well-formed Q&A without the LLM
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/ai_coach/categories
+      - GET by_category for each category; GET /search?q=stop loss; GET by_id for a hit
+      - GET search with an empty q, an over-long q and limit 0; GET by_id for an unknown id
+    expected:
+      - Non-empty category list; every category returns a non-empty item list whose total equals its length
+      - Every item has non-empty question, short_answer and long_answer, and a unique id
+      - Search returns scored hits (stop-loss query hits the stop-loss Q&A); by_id returns the same record
+      - Empty q, q over 200 chars and limit 0 are 422; unknown id is 404; a nonsense query returns 200 with zero hits
+
+  - id: UAT-SUPP-011
+    title: An unknown bug category or platform is a client error, never a 500
+    layer: api
+    plans: [anon]
+    steps:
+      - POST with category "nonsense" (valid platform)
+      - POST with platform "palm" (valid category)
+    expected:
+      - Both are 422 (or another 4xx) naming the bad field, not 500 internal server error
+      - Nothing is stored
+
+  - id: UAT-SUPP-009
+    title: In-app bug reporter and resolution toast work on iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone
+      - Saiful flips one tester report to resolved with a resolution note from the admin side
+    steps:
+      - Open the bug reporter, pick a category, write a title prefixed "[CR263 UAT - ignore]", attach a screenshot, submit
+      - Cold-start the app after the report is marked resolved
+    expected:
+      - Submit shows a confirmation and the photo is accepted; no crash on a large screenshot
+      - A resolution toast shows the note verbatim exactly once and does not return on the next cold start
+
+  - id: UAT-SUPP-010
+    title: AMI help screen reads well and answers offline-style questions
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - Open the help / coach screen; browse a category; search for "stop loss" and for gibberish
+    expected:
+      - Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
+      - No screen says "the AI" - the assistant is named AMI
