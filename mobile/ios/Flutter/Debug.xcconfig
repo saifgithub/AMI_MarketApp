@@ -1,2 +1,6 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+// DEF465: Xcode 27's lipo accepts one arch per -verify_arch; Flutter 3.41.9
+// passes "arm64 x86_64" for Simulator builds and fails. Apple Silicon only
+// needs arm64. Debug-only — device/release builds are arm64 already.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
