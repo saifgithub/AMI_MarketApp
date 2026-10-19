@@ -25,7 +25,7 @@ STATUSES = ("active", "blocked")
 PLANS = ("anon", "floor_pass", "trial_trader", "trader", "floor_manager", "any")
 ID_RE = re.compile(r"^UAT-([A-Z0-9]+)-(\d{3})$")
 
-_AREA_KEYS = {"area", "code", "title", "order", "summary", "cases"}
+_AREA_KEYS = {"area", "code", "title", "order", "summary", "covers", "cases"}
 _CASE_KEYS = {
     "id", "title", "layer", "plans", "preconditions", "steps", "expected",
     "status", "blocked_on", "llm", "platforms", "notes",
@@ -56,6 +56,7 @@ class Area:
     title: str
     order: int
     summary: str
+    covers: tuple[str, ...] = ()
     cases: tuple[Case, ...] = field(default_factory=tuple)
     source: str = ""
 
@@ -82,11 +83,13 @@ def _load_area(path: Path) -> Area:
     unknown = set(raw) - _AREA_KEYS
     if unknown:
         raise CatalogueError(f"{where}: unknown keys {sorted(unknown)}")
-    for key in ("area", "code", "title", "order", "cases"):
+    for key in ("area", "code", "title", "order", "covers", "cases"):
         if key not in raw:
             raise CatalogueError(f"{where}: missing '{key}'")
     if raw["area"] != path.stem:
         raise CatalogueError(f"{where}: area '{raw['area']}' must match the file name")
+    if not raw["covers"]:
+        raise CatalogueError(f"{where}: covers must list the source globs this area tests")
     code = raw["code"]
     if not re.fullmatch(r"[A-Z0-9]+", str(code)):
         raise CatalogueError(f"{where}: code must be upper-case alphanumeric")
@@ -130,7 +133,8 @@ def _load_area(path: Path) -> Area:
         ))
     return Area(
         area=raw["area"], code=code, title=raw["title"], order=int(raw["order"]),
-        summary=raw.get("summary", ""), cases=tuple(cases), source=where,
+        summary=raw.get("summary", ""), covers=_tuple(raw["covers"], where),
+        cases=tuple(cases), source=where,
     )
 
 

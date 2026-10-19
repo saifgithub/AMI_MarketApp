@@ -2,6 +2,11 @@ area: platform
 code: PLAT
 title: Platform, version gate & UAT seeding
 order: 1
+covers:
+  - backend/app/main.py
+  - backend/app/api/dependencies.py
+  - backend/app/services/client_release_floor.py
+  - mobile/lib/screens/version_gate/**
 summary: |
   The backend is up, ready, and tells old builds to update. Also proves the UAT
   seeding path itself (tagged anonymous user, admin plan/credit changes) so

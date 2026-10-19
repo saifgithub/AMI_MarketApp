@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import re
 import sys
 from pathlib import Path
@@ -75,7 +76,7 @@ def test_no_test_cites_an_unknown_or_wrong_layer_case():
 
 def test_validation_rejects_bad_ids(tmp_path):
     (tmp_path / "demo.yaml").write_text(
-        "area: demo\ncode: DEMO\ntitle: Demo\norder: 1\ncases:\n"
+        "area: demo\ncode: DEMO\ntitle: Demo\norder: 1\ncovers: [x]\ncases:\n"
         "  - id: UAT-OTHER-001\n    title: t\n    layer: api\n    steps: [s]\n    expected: [e]\n"
     )
     try:
@@ -88,7 +89,7 @@ def test_validation_rejects_bad_ids(tmp_path):
 
 def test_validation_requires_blocked_reason(tmp_path):
     (tmp_path / "demo.yaml").write_text(
-        "area: demo\ncode: DEMO\ntitle: Demo\norder: 1\ncases:\n"
+        "area: demo\ncode: DEMO\ntitle: Demo\norder: 1\ncovers: [x]\ncases:\n"
         "  - id: UAT-DEMO-001\n    title: t\n    layer: api\n    status: blocked\n"
         "    steps: [s]\n    expected: [e]\n"
     )
@@ -98,3 +99,25 @@ def test_validation_requires_blocked_reason(tmp_path):
         assert "blocked_on" in str(exc)
     else:
         raise AssertionError("blocked case without a reason was accepted")
+
+
+COVERAGE_ROOTS = ("mobile/lib/screens/**/*.dart", "backend/app/api/*.py")
+_COVERAGE_EXEMPT = {"backend/app/api/__init__.py"}
+
+
+def source_files() -> list[str]:
+    files = set()
+    for pattern in COVERAGE_ROOTS:
+        files |= {p.relative_to(REPO_ROOT).as_posix() for p in REPO_ROOT.glob(pattern)}
+    return sorted(files - _COVERAGE_EXEMPT)
+
+
+def test_every_screen_and_router_belongs_to_an_area():
+    """A new screen or router with no UAT area is a feature the script doesn't
+    know exists — the structural half of "the script must be updated"."""
+    globs = [g for a in catalogue.load() for g in a.covers]
+    orphans = [f for f in source_files() if not any(fnmatch.fnmatch(f, g) for g in globs)]
+    assert not orphans, (
+        f"{len(orphans)} source files belong to no UAT area — add them to an area's "
+        "covers: (and give that area cases):\n" + "\n".join(orphans)
+    )
