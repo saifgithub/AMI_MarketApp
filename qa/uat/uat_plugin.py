@@ -4,8 +4,9 @@ Appium harness both load it, so both record results the same way.
 1. Registers the `uat(*ids)` and `llm` markers.
 2. `--uat-ids a,b` / `--uat-ids @file` runs only tests citing those cases.
 3. `--no-llm` skips tests marked `llm`.
-4. On session end, writes `{layer, platform, results: {case_id: outcome}}` to
-   `$UAT_RESULTS_JSON` for `ledger.py record`. `$UAT_LAYER` (api|device) and
+4. After every test (and at session end), writes `{layer, platform,
+   exitstatus, results: {case_id: outcome}}` to `$UAT_RESULTS_JSON` for
+   `ledger.py record` — so a killed run keeps what it finished. `$UAT_LAYER` (api|device) and
    `$UAT_PLATFORM` (api|ios|android) label the run.
 
 A case cited by several tests takes its worst outcome — it passes only if
@@ -79,17 +80,28 @@ def pytest_runtest_makereport(item, call):
         for case_id in marker.args:
             prior = _RESULTS.get(case_id, "passed")
             _RESULTS[case_id] = max(prior, result, key=_RANK.__getitem__)
+        _write(None)
 
 
-def pytest_sessionfinish(session, exitstatus):
+def _write(exitstatus: int | None) -> None:
+    """Written after every test, not only at session end: a run killed an hour
+    in (SIGTERM, measured 2026-10-19) must keep the evidence it gathered.
+    `exitstatus` stays null until the session actually finishes."""
     out = os.environ.get("UAT_RESULTS_JSON")
     if not out:
         return
     layer = os.environ.get("UAT_LAYER", "api")
-    Path(out).parent.mkdir(parents=True, exist_ok=True)
-    Path(out).write_text(json.dumps({
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps({
         "layer": layer,
         "platform": os.environ.get("UAT_PLATFORM", "api" if layer == "api" else ""),
-        "exitstatus": int(exitstatus),
+        "exitstatus": exitstatus,
         "results": _RESULTS,
     }, indent=2, sort_keys=True))
+    tmp.replace(path)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    _write(int(exitstatus))
