@@ -100,11 +100,11 @@ class Seeder:
         # /v1/auth/anon is limited to 10/min per IP; parallel suites share the
         # Mac's IP, so back off on 429 rather than fail the precondition.
         with new_client() as anon:
-            for attempt in range(6):
+            for attempt in range(12):
                 r = anon.post("/v1/auth/anon", json=self._anon_body(locale))
                 if r.status_code != 429:
                     break
-                time.sleep(10 * (attempt + 1))
+                time.sleep(min(10 * (attempt + 1), 60))
         r.raise_for_status()
         body = r.json()
         user = UatUser(
