@@ -11,7 +11,6 @@
 from __future__ import annotations
 
 import fnmatch
-import re
 import sys
 from pathlib import Path
 
@@ -22,21 +21,12 @@ sys.path.insert(0, str(UAT_ROOT))
 import catalogue  # noqa: E402
 import render  # noqa: E402
 
-EXECUTORS = {
-    "api": UAT_ROOT / "api",
-    "device": REPO_ROOT / "qa" / "appium" / "tests",
-}
-_CITE_RE = re.compile(r"""mark\.uat\(\s*((?:["']UAT-[A-Z0-9]+-\d{3}["']\s*,?\s*)+)\)""")
-_ID_RE = re.compile(r"UAT-[A-Z0-9]+-\d{3}")
+EXECUTORS = catalogue.EXECUTORS
 
 
 def _cited(root: Path) -> dict[str, list[str]]:
-    out: dict[str, list[str]] = {}
-    for path in sorted(root.rglob("test_*.py")):
-        for m in _CITE_RE.finditer(path.read_text()):
-            for case_id in _ID_RE.findall(m.group(1)):
-                out.setdefault(case_id, []).append(path.name)
-    return out
+    layer = next(k for k, v in EXECUTORS.items() if v == root)
+    return {cid: [p.name for p in paths] for cid, paths in catalogue.citations(layer).items()}
 
 
 def test_catalogue_loads():

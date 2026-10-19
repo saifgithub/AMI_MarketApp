@@ -18,7 +18,15 @@ from pathlib import Path
 import yaml
 
 UAT_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = UAT_ROOT.parents[1]
 CASES_DIR = UAT_ROOT / "cases"
+
+EXECUTORS = {
+    "api": UAT_ROOT / "api",
+    "device": REPO_ROOT / "qa" / "appium" / "tests",
+}
+_CITE_RE = re.compile(r"""mark\.uat\(\s*((?:["']UAT-[A-Z0-9]+-\d{3}["']\s*,?\s*)+)\)""")
+_CITED_ID_RE = re.compile(r"UAT-[A-Z0-9]+-\d{3}")
 
 LAYERS = ("api", "device", "manual")
 STATUSES = ("active", "blocked")
@@ -155,3 +163,15 @@ def load(cases_dir: Path = CASES_DIR) -> list[Area]:
 
 def all_cases(areas: list[Area] | None = None) -> dict[str, Case]:
     return {c.id: c for a in (areas or load()) for c in a.cases}
+
+
+def citations(layer: str) -> dict[str, list[Path]]:
+    """case id -> test files in that layer's executor citing it via mark.uat."""
+    out: dict[str, list[Path]] = {}
+    for path in sorted(EXECUTORS[layer].rglob("test_*.py")):
+        for m in _CITE_RE.finditer(path.read_text()):
+            for case_id in _CITED_ID_RE.findall(m.group(1)):
+                out.setdefault(case_id, [])
+                if path not in out[case_id]:
+                    out[case_id].append(path)
+    return out

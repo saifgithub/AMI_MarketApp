@@ -10,58 +10,14 @@ run loudly rather than leaving live accounts behind (CR040 — degrade loudly).
 
 from __future__ import annotations
 
-import json
 import os
 import time
-from pathlib import Path
 
 import pytest
 
-from client import Seeder, admin_secret, base_url, new_client
+from client import Seeder, admin_secret, new_client
 
-_RESULTS: dict[str, str] = {}
-
-
-def pytest_addoption(parser):
-    parser.addoption("--no-llm", action="store_true",
-                     help="skip cases marked llm (Room streams, 1-on-1, Brief turns)")
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers", "uat(*ids): the UAT catalogue case(s) this test executes")
-    config.addinivalue_line("markers", "llm: spends real LLM calls on Alpha")
-
-
-def pytest_collection_modifyitems(config, items):
-    if not config.getoption("--no-llm"):
-        return
-    skip = pytest.mark.skip(reason="--no-llm")
-    for item in items:
-        if item.get_closest_marker("llm"):
-            item.add_marker(skip)
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    rep = outcome.get_result()
-    marker = item.get_closest_marker("uat")
-    if marker is None:
-        return
-    if rep.when == "call" or (rep.when == "setup" and rep.outcome != "passed"):
-        result = "skipped" if rep.skipped else rep.outcome
-        for case_id in marker.args:
-            prior = _RESULTS.get(case_id)
-            if prior != "failed":
-                _RESULTS[case_id] = result
-
-
-def pytest_sessionfinish(session, exitstatus):
-    out = os.environ.get("UAT_RESULTS_JSON")
-    if out:
-        Path(out).parent.mkdir(parents=True, exist_ok=True)
-        Path(out).write_text(json.dumps({"layer": "api", "base_url": base_url(),
-                                         "results": _RESULTS}, indent=2, sort_keys=True))
+pytest_plugins = ["uat_plugin"]
 
 
 @pytest.fixture(scope="session")
