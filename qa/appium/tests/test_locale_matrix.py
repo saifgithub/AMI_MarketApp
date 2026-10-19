@@ -32,6 +32,8 @@ harness ships test tooling only, never app copy).
 
 from __future__ import annotations
 
+import os
+
 import pytest
 from selenium.common.exceptions import NoSuchElementException
 
@@ -45,7 +47,15 @@ from helpers.locators import all_by_id, interactive_elements, wait_visible_text
 from helpers.report import annotate_png
 from pages.base_page import content_band, open_tab, open_you_segment, probe_content
 
-pytestmark = [pytest.mark.phase3, pytest.mark.locale]
+pytestmark = [
+    pytest.mark.phase3,
+    pytest.mark.locale,
+    # DEF466: on iOS the semantics tree goes dark once Settings > PROFILE scrolls
+    # into view, and the Language row sits below it. Non-strict: params that
+    # never switch locale still pass.
+    pytest.mark.xfail(os.environ.get("AMI_PLATFORM") == "ios", strict=False,
+                      reason="DEF466 — iOS accessibility tree goes dark at Settings > PROFILE"),
+]
 
 _LOCALE_CODES = ("en", "ar", "ms")
 

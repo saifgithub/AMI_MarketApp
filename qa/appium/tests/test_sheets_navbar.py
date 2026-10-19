@@ -16,6 +16,8 @@ seeded-account scenario for it.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from conftest import snap
@@ -90,6 +92,8 @@ def test_trade_ticket_sheet_navbar(driver, device, run_dir, flags):
     )
 
 
+@pytest.mark.xfail(os.environ.get("AMI_PLATFORM") == "ios", strict=False,
+                   reason="DEF466 — scrolls through Settings > PROFILE, which darkens the iOS tree")
 def test_bug_report_sheet_navbar(driver, device, run_dir, flags):
     # CR133 — Settings is a YOU segment now, not a destination. The version
     # chip lives at the bottom of the Settings pane, so wait for the pane's own
