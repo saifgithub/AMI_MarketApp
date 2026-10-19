@@ -1,0 +1,170 @@
+area: billing
+code: BILL
+title: Billing, plans, credits & ads
+order: 17
+covers:
+  - backend/app/api/billing.py
+  - backend/app/api/webhooks.py
+  - backend/app/services/entitlements.py
+  - backend/app/services/credit_service.py
+  - mobile/lib/widgets/paywall/**
+  - mobile/lib/state/ads_providers.dart
+summary: |
+  Money-path goals: the RevenueCat webhook fails CLOSED (no valid secret, no
+  grant), a real purchase event maps to exactly the right plan and credits,
+  every plan reads back the right allowance and Room price, and credits never go
+  negative. Ads are Floor Pass only. The real store purchase and restore can only
+  be proven on an iPhone with a sandbox Apple account.
+cases:
+  - id: UAT-BILL-001
+    title: Billing identity returns the id the RevenueCat SDK must log in with
+    layer: api
+    plans: [anon, floor_pass]
+    steps:
+      - GET /v1/billing/identity with no token
+      - GET /v1/billing/identity as a fresh user
+    expected:
+      - No token is 401
+      - The user gets user_id equal to app_user_id equal to their own users.id
+
+  - id: UAT-BILL-002
+    title: Webhook refuses every call without the exact secret and grants nothing
+    layer: api
+    plans: [anon, floor_pass]
+    steps:
+      - POST a fully valid-shaped INITIAL_PURCHASE (entitlement trader) for a seeded user with no Authorization header
+      - Repeat with a wrong secret, an empty header, "Bearer <real secret>", and the real secret plus trailing whitespace
+      - POST a credit-pack NON_RENEWING_PURCHASE with no secret
+      - Read the user via the admin API after each
+    expected:
+      - Every call is 401 (or 503 only if the secret were unconfigured, which on Alpha it is not) and never 200
+      - The user's plan and credit_balance are unchanged after every attempt
+      - No plan_changed or credits_added event row is recorded for the user
+
+  - id: UAT-BILL-003
+    title: A genuine subscription event grants the right plan and allowance, once
+    layer: api
+    plans: [floor_pass, trader, floor_manager]
+    steps:
+      - POST INITIAL_PURCHASE (entitlement trader) with the real secret for a floor_pass user
+      - POST the identical event id again
+      - POST INITIAL_PURCHASE (entitlement floor_manager) with a new event id
+    expected:
+      - First call is 200 status ok, plan reads trader, credits read 150
+      - The replay is 200 status duplicate and changes nothing
+      - The upgrade reads plan floor_manager and credits 500
+      - Each transition leaves one plan_changed event with source revenuecat
+
+  - id: UAT-BILL-004
+    title: Cancellation and expiry drop the user to Floor Pass and its allowance
+    layer: api
+    plans: [trader]
+    steps:
+      - Grant trader via the webhook
+      - POST EXPIRATION with a new event id
+    expected:
+      - 200 status ok, plan reads floor_pass
+      - The next mandate read shows credit_allowance 13 and a balance no larger than 13
+      - Credits are never negative
+
+  - id: UAT-BILL-005
+    title: Credit pack grants the pack size on top of the allowance; bad inputs are refused loudly
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST NON_RENEWING_PURCHASE product credits_starter with the real secret
+      - POST NON_RENEWING_PURCHASE with an unknown product id
+      - POST INITIAL_PURCHASE for a random unknown user id
+      - POST INITIAL_PURCHASE with an unmappable entitlement and product
+      - POST a non-actionable TEST event, and a payload with no event object
+    expected:
+      - Starter pack adds exactly 60 credits and records credits_added
+      - Unknown product is 422, unknown user is 404, unmappable subscription is 422, none of them changes any balance
+      - TEST is 200 status ignored and touches nothing; a missing event object is 400
+
+  - id: UAT-BILL-006
+    title: Each plan reads back its own allowance, Room price and effective plan
+    layer: api
+    plans: [floor_pass, trial_trader, trader, floor_manager]
+    steps:
+      - For each of floor_pass, trader, floor_manager, and a user with an admin-granted trial, GET /v1/mandate/{id}
+      - Compare to the admin view of the same user
+    expected:
+      - floor_pass plan floor_pass, allowance 13, room_cost 8
+      - Active trial reads plan trial_trader, allowance 150, room_cost 8
+      - trader allowance 150, room_cost 8
+      - floor_manager allowance 500, room_cost 25
+      - A bare trial_trader plan with no trial window is effectively floor_pass
+      - credit_balance is never negative and equals the admin view
+
+  - id: UAT-BILL-007
+    title: Credits can never go negative
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Admin deducts far more credits than the user holds
+      - Read the balance via admin and via the mandate
+      - Admin posts a zero delta
+    expected:
+      - Balance clamps at 0, never below, on both views
+      - A zero delta is 400
+
+  - id: UAT-BILL-008
+    title: Real purchase of Trader and Floor Manager works end to end on an iPhone
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - A TestFlight build on an iPhone signed into an Apple sandbox account
+      - A Floor Pass user
+    steps:
+      - Hit the Room out-of-credits wall (or Settings, Upgrade) to open the paywall
+      - Check the prices shown against the App Store Connect sandbox prices
+      - Buy Trader monthly with the sandbox account
+      - Wait for the purchase sheet to close
+    expected:
+      - Prices come from the store, not hard-coded text
+      - The plan chip reads Trader and credits read 150 within a few seconds of the purchase completing
+      - Ads disappear immediately
+      - The admin console shows the matching RevenueCat event for that user
+
+  - id: UAT-BILL-009
+    title: Restore purchases brings the plan back on a fresh install
+    layer: manual
+    plans: [trader]
+    platforms: [ios]
+    preconditions:
+      - UAT-BILL-008 completed with the same sandbox account
+    steps:
+      - Delete and reinstall the app (or sign in on a second iPhone)
+      - Open the paywall and tap Restore
+    expected:
+      - The plan returns to Trader with no second charge
+      - Restore with a sandbox account that never bought anything says so plainly and changes nothing
+
+  - id: UAT-BILL-010
+    title: Paywall visuals and degrade state look right
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    steps:
+      - Open the paywall from the Room wall and from Settings
+      - Check Trader, Floor Manager (monthly, annual) and the three credit packs
+      - Turn on airplane mode and reopen the paywall
+    expected:
+      - Layout is not clipped on iPhone 13 or 17, text is legible, packs and tiers are clearly separated
+      - Offline or with no offering it shows the "upgrades not available yet" card with the credit reset date and a Restore button, never a dead buy button
+
+  - id: UAT-BILL-011
+    title: Ads show for Floor Pass only and vanish on upgrade
+    layer: manual
+    plans: [floor_pass, trial_trader, trader, floor_manager]
+    platforms: [ios]
+    steps:
+      - As a Floor Pass user, browse the Floor and the Room
+      - Have Saiful switch the same user to trader in the admin console, then pull to refresh
+      - Repeat as trial_trader and floor_manager
+    expected:
+      - Floor Pass shows the banner and approved placements only
+      - Trader, Trial Trader and Floor Manager never show an ad
+      - After the upgrade the ad is gone in the same session
