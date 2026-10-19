@@ -1,0 +1,323 @@
+area: auth
+code: AUTH
+title: Authentication, sessions & account identity
+order: 2
+covers:
+  - backend/app/api/auth.py
+  - backend/app/api/me.py
+  - mobile/lib/screens/auth/**
+summary: |
+  Anonymous-first sign-in: the device bootstraps an anonymous user, can claim it
+  with email magic-link / Apple / Google, signs out for real (the old token dies
+  server-side), and keeps a once-only pseudonymous handle. Guards the goals that
+  matter: a token you do not own never yields someone else's account, a signed-out
+  token cannot come back to life, and a merge only ever moves data the caller was
+  recorded as adopting. Full email sign-in and merge are blocked on a test inbox;
+  Apple and Google need a real device.
+cases:
+  - id: UAT-AUTH-001
+    title: Anonymous bootstrap mints a tagged anonymous user whose token works
+    layer: api
+    plans: [anon]
+    steps:
+      - 'POST /v1/auth/anon with a fresh device_user_id, locale "ar", timezone "Asia/Riyadh" and the UAT device tag'
+      - 'GET /v1/auth/me with the returned token'
+    expected:
+      - '200 with is_new true, a signed token, and a user with is_anonymous true, claimed_at null and no email / apple_id / google_id'
+      - '/v1/auth/me returns the same user id with the bearer token'
+      - 'The admin view of the user shows locale "ar" and last_app_version "uat"'
+
+  - id: UAT-AUTH-002
+    title: Anonymous bootstrap rejects a malformed device id
+    layer: api
+    plans: [anon]
+    steps:
+      - 'POST /v1/auth/anon with device_user_id "not-a-uuid"'
+    expected:
+      - '422 naming body.device_user_id; no user is created and no token is returned'
+
+  - id: UAT-AUTH-003
+    title: The rightful device re-bootstraps to the same user
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous user and its token from UAT-AUTH-001'
+    steps:
+      - 'POST /v1/auth/anon with the user''s own id as device_user_id and the user''s bearer token'
+    expected:
+      - '200 with is_new false and the SAME user id (the portfolio, journal and credits behind it are kept)'
+      - 'The returned token authenticates GET /v1/auth/me for that user'
+
+  - id: UAT-AUTH-004
+    title: Knowing someone's user id does not yield their token
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'Two anonymous users, "victim" and "attacker"'
+    steps:
+      - 'POST /v1/auth/anon with device_user_id = the victim''s id and NO bearer'
+      - 'POST /v1/auth/anon with device_user_id = the victim''s id and the ATTACKER''s bearer'
+    expected:
+      - 'Both calls mint a brand-new user (is_new true) whose id is neither the victim''s nor the attacker''s'
+      - 'Neither returned token authenticates as the victim; GET /v1/auth/me with each returns the new user, never the victim'
+
+  - id: UAT-AUTH-005
+    title: Missing, malformed, tampered and query-string tokens are all 401
+    layer: api
+    plans: [anon]
+    steps:
+      - 'GET /v1/auth/me with no Authorization header'
+      - 'GET /v1/auth/me with Bearer "garbage"'
+      - 'GET /v1/auth/me with a valid token whose last four characters are altered'
+      - 'GET /v1/auth/me with a valid token sent without the "Bearer " scheme'
+      - 'GET /v1/auth/me?token=<valid token> with no header'
+    expected:
+      - 'Every call is 401 with detail "authentication required" (no credential) or "invalid or expired token" (bad credential)'
+      - 'The query-string variant never authenticates (DEF181)'
+
+  - id: UAT-AUTH-006
+    title: Sign-out revokes the token server-side and it cannot be re-minted
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous user with a valid token'
+    steps:
+      - 'GET /v1/auth/me (baseline)'
+      - 'DELETE /v1/auth/session'
+      - 'GET /v1/auth/me with the same token'
+      - 'POST /v1/auth/anon with the signed-out token as bearer and the user''s id as device_user_id'
+      - 'GET /v1/auth/me with the OLD token again'
+    expected:
+      - 'Sign-out returns 200 {"signed_out": true}'
+      - 'The old token is 401 "invalid or expired token" on /v1/auth/me straight afterwards'
+      - 'The re-bootstrap does not resurrect the account: it mints a new user with a different id (is_new true)'
+      - 'The old token is still 401 after the re-bootstrap'
+
+  - id: UAT-AUTH-007
+    title: Sign-out requires a valid session
+    layer: api
+    plans: [anon]
+    steps:
+      - 'DELETE /v1/auth/session with no token'
+      - 'DELETE /v1/auth/session with Bearer "garbage"'
+    expected:
+      - 'Both are 401; no user''s token_version is touched'
+
+  - id: UAT-AUTH-008
+    title: A suspended account is locked out
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous UAT user (the admin suspends only this UAT user)'
+    steps:
+      - 'Admin POST /v1/admin/users/<id>/suspend for the UAT user'
+      - 'GET /v1/auth/me with the user''s token'
+      - 'POST /v1/auth/anon with the suspended user''s token and id'
+    expected:
+      - '/v1/auth/me is 403 "account_suspended"'
+      - 'The re-bootstrap does not hand the suspended account back; it mints a different user'
+
+  - id: UAT-AUTH-009
+    title: Apple and Google sign-in reject unauthenticated, malformed and garbage tokens
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous user with a valid bearer'
+    steps:
+      - 'POST /v1/auth/apple and POST /v1/auth/google with a valid bearer but identity_token "x.y.z"'
+      - 'POST each with NO bearer and a token body'
+      - 'POST each with a valid bearer and an empty body'
+    expected:
+      - 'Garbage identity tokens are 400 with an "undecodable header" style detail (never 200, never 500)'
+      - 'No bearer is 401 "authentication required"'
+      - 'A missing identity_token is 422 on body.identity_token'
+      - 'The anonymous user is still anonymous afterwards (GET /v1/auth/me has is_anonymous true and no apple_id / google_id)'
+
+  - id: UAT-AUTH-010
+    title: Magic-link start accepts an authenticated request and never leaks the code
+    layer: api
+    plans: [anon]
+    notes: Respects the 3/min rate limit — this suite calls magic_link/start exactly twice (this case).
+    steps:
+      - 'POST /v1/auth/magic_link/start {"email": "uat-cr263@example.com"} with a valid bearer'
+      - 'POST the same body with NO bearer'
+    expected:
+      - 'The authenticated call is 200 {"sent": true} with debug_code null (only env=local returns the code)'
+      - 'The unauthenticated call is 401 "authentication required"'
+
+  - id: UAT-AUTH-011
+    title: Magic-link verify refuses without a session and without a live challenge
+    layer: api
+    plans: [anon]
+    steps:
+      - 'POST /v1/auth/magic_link/verify {"email": "...", "code": "123456"} with NO bearer'
+      - 'POST /v1/auth/magic_link/verify with a valid bearer, an email that never had a challenge, and code "000000"'
+      - 'POST /v1/auth/magic_link/verify with a valid bearer and a body missing "code"'
+    expected:
+      - 'No bearer is 401 "authentication required"'
+      - 'A code with no challenge is 401 "invalid or expired code"; the user stays anonymous'
+      - 'A missing field is 422'
+
+  - id: UAT-AUTH-012
+    title: Account merge only works for a recorded adoption
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'Two anonymous users "caller" and "other", with no adoption event between them'
+    steps:
+      - 'GET /v1/auth/merge/preview/<other id> as caller'
+      - 'GET /v1/auth/merge/preview/<random uuid> as caller'
+      - 'POST /v1/auth/merge {"from_user_id": <other id>} as caller'
+      - 'Repeat the preview and the merge with no bearer'
+    expected:
+      - 'All authenticated attempts are 403 "no recorded adoption from this user_id to the caller" — a user cannot pull another user''s data into their own account'
+      - 'The unauthenticated attempts are 401'
+      - '"other" keeps its own data and still authenticates (GET /v1/auth/me is 200)'
+
+  - id: UAT-AUTH-013
+    title: Handle is readable, regenerates exactly once, and needs a session
+    layer: api
+    plans: [anon]
+    steps:
+      - 'GET /v1/me'
+      - 'PATCH /v1/me/handle'
+      - 'GET /v1/me'
+      - 'PATCH /v1/me/handle a second time'
+      - 'GET /v1/me and PATCH /v1/me/handle with no token'
+    expected:
+      - 'The first read returns a handle key (null before first generation)'
+      - 'The first PATCH returns a new non-empty handle and the next GET returns the same string'
+      - 'The second PATCH is 409 "already_regenerated" and the handle is unchanged'
+      - 'Without a token both calls are 401'
+
+  - id: UAT-AUTH-014
+    title: Legacy league handle path still works for one release and shares the once-only rule
+    layer: api
+    plans: [anon]
+    steps:
+      - 'PATCH /v1/league/handle as a fresh user'
+      - 'PATCH /v1/me/handle as the same user'
+    expected:
+      - 'The legacy alias returns 200 with a handle'
+      - 'The new path then returns 409 "already_regenerated" (one regeneration across both paths)'
+
+  - id: UAT-AUTH-015
+    title: Handles are per user
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Two users each GET /v1/me, then user A PATCHes /v1/me/handle'
+      - 'Re-read both'
+    expected:
+      - 'User A''s handle changes; user B''s is untouched and B can still regenerate once'
+
+  - id: UAT-AUTH-020
+    title: Email sign-in claims the anonymous user
+    layer: api
+    status: blocked
+    blocked_on: "test email inbox (IMAP) not supplied yet"
+    plans: [anon]
+    steps:
+      - 'POST /v1/auth/magic_link/start for an inbox the suite controls'
+      - 'Read the 6-digit code from the inbox'
+      - 'POST /v1/auth/magic_link/verify with the code'
+      - 'GET /v1/auth/me with the returned token'
+    expected:
+      - 'Verify returns claimed true, a token, and is_anonymous false with the email set and claimed_at stamped'
+      - 'The user id is unchanged when the email is new (the portfolio travels with the claim)'
+
+  - id: UAT-AUTH-021
+    title: Wrong or reused magic-link codes are refused and capped
+    layer: api
+    status: blocked
+    blocked_on: "test email inbox (IMAP) not supplied yet"
+    plans: [anon]
+    steps:
+      - 'Start a challenge, then verify with a wrong code until the attempt cap'
+      - 'Verify with the right code after the cap; verify the right code twice'
+    expected:
+      - 'Wrong codes are 401; after the cap even the right code is refused until a new challenge is started'
+      - 'A used code cannot be replayed'
+
+  - id: UAT-AUTH-022
+    title: Signing in to an existing email adopts it and merge preserves the anonymous user's portfolio
+    layer: api
+    status: blocked
+    blocked_on: "test email inbox (IMAP) not supplied yet"
+    plans: [anon]
+    preconditions:
+      - 'Account A already claimed with the inbox email; anonymous user B with sim trades, a journal entry and a watchlist ticker'
+    steps:
+      - 'As B, start and verify a magic link for A''s email'
+      - 'GET /v1/auth/merge/preview/<B id> and POST /v1/auth/merge as A'
+    expected:
+      - 'Verify returns adopted_from_user_id = B and a token for A'
+      - 'Preview counts match what B held; merge moves them all to A in one transaction'
+      - 'A''s mandate is kept when both had one, and B no longer exists (a repeat merge is 404)'
+
+  - id: UAT-AUTH-030
+    title: Sign in with Apple on iPhone
+    layer: manual
+    platforms: [ios]
+    preconditions:
+      - 'TestFlight build on an iPhone signed in to an Apple ID; the app is on a fresh install (guest)'
+    steps:
+      - 'Open You > Settings > Account (status shows Guest)'
+      - 'Tap Sign in, then Sign in with Apple, and complete the Apple sheet'
+      - 'Reopen Settings > Account'
+    expected:
+      - 'The Apple sheet appears; after approval the app returns without an error banner'
+      - 'Account status shows "Signed in" and the pseudonymous handle; "Manage account" replaces Sign in'
+      - 'Cancelling the Apple sheet leaves the user a guest with no error crash'
+
+  - id: UAT-AUTH-031
+    title: Sign in with Google on Android
+    layer: manual
+    platforms: [android]
+    preconditions:
+      - 'Android (Google Play) device with a Google account; app on a fresh install'
+    steps:
+      - 'Open Settings > Account > Sign in and tap "Sign in with Google"'
+      - 'Pick the Google account'
+    expected:
+      - 'Account status flips to Signed in; mandate, journal and portfolio created as a guest are still there'
+
+  - id: UAT-AUTH-032
+    title: Email sign-in screen flow
+    layer: manual
+    preconditions:
+      - 'A mailbox Saiful can read'
+    steps:
+      - 'Settings > Account > Sign in > Use email instead'
+      - 'Enter the address and tap SEND CODE; try RESEND CODE after the button re-enables'
+      - 'Enter a wrong code and tap VERIFY & CLAIM, then the right code from the email'
+    expected:
+      - 'An email with a 6-digit code arrives; the wrong code shows "Code did not verify. Try again." and stays on the screen'
+      - 'The right code signs in and returns to Settings with Account status Signed in'
+      - 'No code is ever shown on screen (the dev-code line is absent on Alpha)'
+
+  - id: UAT-AUTH-033
+    title: Signing in to an existing account offers the merge sheet
+    layer: manual
+    preconditions:
+      - 'An existing signed-in account on another device or earlier install; this device is a guest with some trades or journal entries'
+    steps:
+      - 'Sign in with that account''s Apple ID or email'
+      - 'Read the WELCOME BACK sheet; tap MERGE EVERYTHING'
+      - 'Repeat on another guest and tap KEEP SEPARATE'
+    expected:
+      - 'The sheet lists journal entries / simulated trades / watchlist / Room runs and the mandate line ("yours stays")'
+      - 'MERGE EVERYTHING shows "Merged into your account." and the data appears in the account'
+      - 'KEEP SEPARATE closes the sheet and moves nothing; an empty guest sees the "Nothing carried over" body with GOT IT'
+
+  - id: UAT-AUTH-034
+    title: Sign out from Settings
+    layer: manual
+    preconditions:
+      - 'Signed in'
+    steps:
+      - 'Settings > Account > Sign out'
+      - 'Navigate back into the app'
+    expected:
+      - 'The sign-in screen opens with the "You''ve been signed out." banner'
+      - 'The app does not silently log back in to the previous account; the next session is a fresh guest'
