@@ -1,0 +1,215 @@
+area: room
+code: ROOM
+title: Convene the Room
+order: 6
+covers:
+  - backend/app/api/room.py
+  - backend/app/api/sse.py
+  - mobile/lib/screens/room/**
+summary: |
+  The 12-desk Room: a funded run streams every desk to a CIO verdict, is billed
+  at the documented price, and is refused cleanly (no run, no verdict) when the
+  user cannot pay. The cases test the guarantee, not the status code: a failure
+  must never surface as a confident APPROVE (DEF059), and a run belongs to its
+  owner alone. Alpha runs the Winzip funnel (GTM_FUNNEL=winzip), so a Floor Pass
+  wall is the soft, cooldown-carrying kind. Tenure pull-back of analysts
+  (CR098) is disabled on Alpha (ROOM_PULLBACK_DAYS_* = 0), so a withheld chair
+  cannot be reached with a fresh account; the roster case asserts the full desk.
+cases:
+  - id: UAT-ROOM-001
+    title: A funded Room streams every desk through to a CIO verdict
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - Fresh Floor Pass user holding exactly 8 credits (one Basic Room)
+    steps:
+      - POST /v1/room/stream for AAPL and read the SSE stream to the end
+      - GET /v1/room/{run_id} from the X-Room-Run-Id header
+    expected:
+      - The stream is started, then phase / agent_token / agent_done events, exactly one verdict, then done; no error event and no event kind outside the documented set
+      - At least 8 real desks finish speaking and the Chief Investment Officer (portfolio_manager) is one of them
+      - The verdict has an action from APPROVE / REJECT / MODIFY / PASS / NO_VERDICT and a non-empty reason
+      - The persisted run is completed, its verdict equals the streamed one, and every transcript entry names a real agent with content
+
+  - id: UAT-ROOM-002
+    title: A Floor Pass Room debits exactly the Basic price and no surcharge it cannot afford
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - Fresh Floor Pass user holding exactly 8 credits
+    steps:
+      - Run the Room as in UAT-ROOM-001
+      - Read the admin view of the balance afterwards
+    expected:
+      - done.credit_cost is 8 and the balance fell from 8 to 0 (or, if the run was refunded, is back at 8)
+      - live_data_notice reports surcharge_charged 0 because the balance could not cover base plus surcharge
+      - The persisted run's credit_cost is 8
+
+  - id: UAT-ROOM-003
+    title: The Room price shown to each plan matches the documented price list
+    layer: api
+    plans: [floor_pass, trader, floor_manager]
+    steps:
+      - For a Floor Pass, a Trader and a Floor Manager user, GET /v1/mandate/{user_id}
+    expected:
+      - room_cost is 8 for Floor Pass, 8 for Trader and 25 for Floor Manager
+
+  - id: UAT-ROOM-004
+    title: A Floor Manager Room debits the premium price
+    layer: api
+    plans: [floor_manager]
+    llm: true
+    preconditions:
+      - Fresh Floor Manager user holding 500 credits
+    steps:
+      - POST /v1/room/stream for KO and read it to the end
+    expected:
+      - done.credit_cost is 25 plus 0, 2 or 4 live-data surcharge and refunded is false
+      - The balance fell by exactly done.credit_cost
+
+  - id: UAT-ROOM-005
+    title: A Floor Pass user with no credits is refused, with no run and no verdict
+    layer: api
+    plans: [floor_pass]
+    preconditions:
+      - Fresh Floor Pass user holding 0 credits
+    steps:
+      - POST /v1/room/stream for AAPL
+      - If the response carries a funnel cooldown, POST again during the cooldown
+      - GET /v1/room/user/{user_id}
+    expected:
+      - 402 with detail.code insufficient_credits, cost 8, plan floor_pass, and no SSE body at all (no fabricated verdict or approval)
+      - No X-Room-Run-Id header and the user's run list stays empty
+      - Under the Winzip funnel the 402 carries cooldown_until / retry_after_seconds, and a second attempt inside the cooldown is refused the same way
+
+  - id: UAT-ROOM-006
+    title: A paid-plan user short of credits hits the hard wall untouched
+    layer: api
+    plans: [trader]
+    preconditions:
+      - Fresh Trader user holding 5 credits
+    steps:
+      - POST /v1/room/stream for AAPL
+    expected:
+      - 402 insufficient_credits with balance 5, cost 8, plan trader, a resets_at date, and no funnel field
+      - The balance is still 5 and no run exists
+
+  - id: UAT-ROOM-007
+    title: Nobody else can read, retry or replay another user's run
+    layer: api
+    plans: [floor_pass, trader]
+    llm: true
+    steps:
+      - With a finished run owned by user A, as user B GET /v1/room/{run_id}
+      - As B GET /v1/room/user/{A}, POST /v1/room/runs/{run_id}/cio-retry, and POST /v1/room/stream with A's user_id in the body
+    expected:
+      - Each is refused 403 and returns no transcript, verdict or stream
+      - B's own run list does not contain A's run, and A can still read it
+
+  - id: UAT-ROOM-008
+    title: Bad requests and missing auth are refused before anything is charged
+    layer: api
+    plans: [trader, anon]
+    steps:
+      - GET and cio-retry an unknown run id, and GET a malformed id
+      - POST /v1/room/stream with a nonexistent ticker (ZZZZZZ), a blank ticker, and another user's id in the body
+      - Call the Room routes with no bearer token
+    expected:
+      - Unknown run 404, malformed id 422, nonexistent ticker 422, blank ticker 400/422, mismatched body user 403
+      - The user's balance is unchanged and no run row is created
+      - Every Room route returns 401 without a token
+
+  - id: UAT-ROOM-009
+    title: Asking the CIO again is free and only offered after a CIO outage
+    layer: api
+    plans: [trader]
+    llm: true
+    steps:
+      - After a finished run, read cio_retry_available from GET /v1/room/{run_id} and from the done event
+      - POST /v1/room/runs/{run_id}/cio-retry and read the stream
+    expected:
+      - The two availability flags agree
+      - The retry never changes the balance
+      - For a run with a reasoned verdict (flag false) the retry is declined with an error event and a done event, no new verdict, and the stored verdict is untouched
+      - For an outage PASS (flag true) the retry yields a verdict or an error, never silent success
+
+  - id: UAT-ROOM-010
+    title: A failed or scripted CIO never yields a confident approval
+    layer: api
+    plans: [floor_pass, trader, floor_manager]
+    llm: true
+    steps:
+      - For each completed Room produced in this suite, read the persisted run
+    expected:
+      - Every run reached completed
+      - An APPROVE is never issued by a scripted CIO or built on a scripted Execution Desk
+      - An outage-shaped verdict (CIO down => PASS, or too few live desks => NO_VERDICT) is never a trade call, is flagged refunded, and the full price is returned
+      - Out-of-credit attempts (UAT-ROOM-005/006) produced no verdict at all
+
+  - id: UAT-ROOM-011
+    title: A new account sees the full analyst roster
+    layer: api
+    plans: [floor_pass, trader]
+    llm: true
+    steps:
+      - Read the SSE events and verdict of a Floor Pass run and a Trader run on day-0 accounts
+    expected:
+      - No agent_withheld event and verdict.opinions_not_included is empty
+      - Fundamentals Analyst and Technical Strategist both finish speaking
+    notes: Tenure pull-back (CR098) is off on Alpha (ROOM_PULLBACK_DAYS_*=0); revisit when a threshold is enabled and an aged account can be seeded.
+
+  - id: UAT-ROOM-012
+    title: Reconnecting to a finished run replays it and charges nothing
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - The Floor Pass user from UAT-ROOM-001, now holding 0 credits
+    steps:
+      - POST /v1/room/stream again for the same ticker
+    expected:
+      - 200 (not 402), the same run id, X-Room-Cached true, a replayed verdict equal to the original, and a done event
+      - The user still has exactly one run and the balance is unchanged
+
+  - id: UAT-ROOM-013
+    title: The live-data surcharge is disclosed and matches the debit
+    layer: api
+    plans: [trader]
+    llm: true
+    preconditions:
+      - Fresh Trader user holding 150 credits
+    steps:
+      - Run a Room for MSFT and read live_data_notice and done
+    expected:
+      - live_data_notice.surcharge_charged is 0, 2 or 4
+      - done.credit_cost and the persisted credit_cost equal 8 plus that surcharge, and the balance drop equals it - unless the run was an outage (DEF432), in which case refunded is true and the whole charge, surcharge included, is back
+
+  - id: UAT-ROOM-014
+    title: Convene sheet, live console, verdict card and cost line on a real iPhone
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - TestFlight build on an iPhone, signed in as a Trader with credits
+    steps:
+      - Open the Room tab, pick a ticker and convene
+      - Watch the console stream; lock the phone for 20 seconds mid-run, then unlock
+      - Read the verdict card and the cost line; tap through the desk transcripts
+    expected:
+      - The sheet shows the Room price before convening; desks light up in order with colour per family
+      - After the lock/unlock the run resumes or shows the finished verdict (the run is not lost)
+      - The verdict card shows action, levels and reason; the cost line states what the Room cost
+      - Agent names read Chief Investment Officer, Risk Officer, Execution Desk, Technical Strategist, Flow & Positioning, Macro & Events
+
+  - id: UAT-ROOM-015
+    title: Out-of-credits wall on a real iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - A Floor Pass test account with no credits (Saiful drains it from the admin console)
+    steps:
+      - Try to convene a Room
+    expected:
+      - A wall (not a crash or an empty console) with the credit price and, under Winzip, a live countdown to the next free Room
+      - No verdict card appears and nothing is added to the Journal

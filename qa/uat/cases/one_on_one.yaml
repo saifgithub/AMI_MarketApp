@@ -1,0 +1,114 @@
+area: one_on_one
+code: ONE
+title: 1-on-1 agent chat
+order: 7
+covers:
+  - backend/app/api/one_on_one.py
+  - mobile/lib/screens/agent/agent_unlocked_screen.dart
+  - mobile/lib/screens/agent/one_on_one_screen.dart
+summary: |
+  A private chat with one of the desk's agents. Floor Pass users must earn each
+  agent (the Concierge is always open); paid plans skip the gate. Every turn is
+  billed at the flat 1-on-1 price and a broke user is refused before any reply
+  streams. A session is private to its owner. Briefing screens belong to the
+  Brief area.
+cases:
+  - id: UAT-ONE-001
+    title: Floor Pass must earn agents, but the Concierge is always open
+    layer: api
+    plans: [floor_pass]
+    preconditions:
+      - Fresh Floor Pass user with no unlocked agents
+    steps:
+      - POST /v1/agents/one_on_one/start for each of the 12 desk agents
+      - Repeat for the Chief Investment Officer with mandate_override {plan floor_manager}
+      - POST start for the Concierge, then for an unknown agent id
+    expected:
+      - Every desk agent returns 403 with detail.reason agent_locked and the agent_id
+      - The mandate_override cannot talk past the gate (still 403)
+      - The Concierge returns 201 with a session owned by the caller; an unknown agent id returns 422
+
+  - id: UAT-ONE-002
+    title: Trader and Floor Manager open every agent without unlocking
+    layer: api
+    plans: [trader, floor_manager]
+    steps:
+      - For a Trader and a Floor Manager user, start a session with each of the 12 agents and the Concierge
+    expected:
+      - Every start returns 201 with the requested agent_id
+
+  - id: UAT-ONE-003
+    title: A turn streams a real reply and costs exactly 1 credit
+    layer: api
+    plans: [trader]
+    llm: true
+    preconditions:
+      - Fresh Trader user holding 20 credits
+    steps:
+      - Start a Technical Strategist session and send one short question
+    expected:
+      - The stream carries token events, no error event, and ends with done whose chars is above 0
+      - The reply is real text with no "[AMI error" sentinel leaked
+      - The balance fell from 20 to 19
+
+  - id: UAT-ONE-004
+    title: A turn with no credits is refused before any reply streams
+    layer: api
+    plans: [trader]
+    preconditions:
+      - Fresh Trader user holding 0 credits and an open session
+    steps:
+      - POST /v1/agents/one_on_one/message five times in a row
+    expected:
+      - Every attempt returns 402 insufficient_credits (cost 1, balance 0, plan trader) with no SSE body
+      - The balance stays 0 and a refused turn never leaks a stream slot (the fifth attempt is still 402, not 429)
+
+  - id: UAT-ONE-005
+    title: A session belongs to its owner
+    layer: api
+    plans: [trader]
+    steps:
+      - User A opens a session; user B GETs it and POSTs a message to it
+      - Both users GET and POST against an unknown session id
+      - Call the three routes with no token
+    expected:
+      - B gets 403 on both calls, receives no stream and is not charged; A can still read the session
+      - Unknown session 404 on read and message
+      - No token gives 401 everywhere
+
+  - id: UAT-ONE-006
+    title: Oversized or malformed turns are rejected without charge
+    layer: api
+    plans: [trader]
+    steps:
+      - Send a user_message of 8001 characters, a history of 101 turns, and a history turn with role "system"
+    expected:
+      - All three return 422 and the balance is unchanged
+
+  - id: UAT-ONE-007
+    title: A Floor Pass user can chat with the Concierge and is charged 1 credit
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - Fresh Floor Pass user holding 13 credits
+    steps:
+      - Start a Concierge session and send one message
+    expected:
+      - A non-empty reply streams with no error event and no "[AMI error" text
+      - The balance fell from 13 to 12
+
+  - id: UAT-ONE-008
+    title: Locked-agent sheet, unlock celebration and chat on a real iPhone
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - TestFlight build on an iPhone, fresh Floor Pass account
+    steps:
+      - Open the Floor, tap a locked agent, and read the sheet
+      - Complete the gateway lesson for one agent and return
+      - Open that agent's 1-on-1, send a message, and scroll the reply
+    expected:
+      - The locked sheet names the lessons needed and offers the upgrade; nothing opens the chat early
+      - Passing the lesson shows the agent-unlocked screen and the agent becomes chat-able
+      - The reply streams into a readable bubble with the agent's display name (Chief Investment Officer, Risk Officer, Execution Desk, Technical Strategist, Flow & Positioning, Macro & Events), and the credit pill drops by 1

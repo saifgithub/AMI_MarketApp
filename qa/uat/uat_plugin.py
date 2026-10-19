@@ -74,7 +74,9 @@ def pytest_runtest_makereport(item, call):
         rep.when == "setup" and rep.skipped
     ):
         if hasattr(rep, "wasxfail"):
-            result = "xfailed" if rep.skipped else "failed"
+            # skipped = it failed as expected; passed = non-strict XPASS (the
+            # defect may be fixed — still green); failed = strict XPASS.
+            result = {"skipped": "xfailed", "passed": "passed"}.get(rep.outcome, "failed")
         else:
             result = "skipped" if rep.skipped else rep.outcome
         for case_id in marker.args:

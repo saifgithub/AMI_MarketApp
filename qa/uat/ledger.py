@@ -1,7 +1,8 @@
 """The UAT run ledger (CR263): which case passed, on what, at which fingerprint.
 
-A case's fingerprint hashes three things: the case itself, every test file that
-cites it, and every source file its area `covers:`. Change any of them and the
+A case's fingerprint hashes three things: the case itself, the test functions
+that cite it (plus their file's shared helpers/fixtures), and every source file
+its area `covers:`. Change any of them and the
 old pass no longer counts — the release gate (`scripts/uat/uat_gate.py`) then
 demands a fresh run. That is how "the added/updated tests must have been run"
 is enforced structurally rather than by memory.
@@ -16,7 +17,9 @@ does the nightly run. Only `record` writes it.
 
 from __future__ import annotations
 
+import ast
 import fnmatch
+import functools
 import hashlib
 import json
 import subprocess
@@ -52,6 +55,39 @@ def _hash_file(h, path: Path) -> None:
     h.update(b"\0")
 
 
+@functools.lru_cache(maxsize=None)
+def _test_file_parts(path: Path) -> tuple[str, dict[str, str]]:
+    """Split a test file into its shared code (imports, helpers, fixtures —
+    everything that is not a top-level test function) and, per case id, the
+    source of the test functions citing it. A case's fingerprint takes the
+    shared code plus only its own tests, so editing one test does not force a
+    re-run of every case in the file."""
+    text = path.read_text()
+    lines = text.splitlines(keepends=True)
+    own: dict[str, list[str]] = {}
+    cut: list[tuple[int, int]] = []
+    for node in ast.parse(text).body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+            start = min([d.lineno for d in node.decorator_list] + [node.lineno]) - 1
+            segment = "".join(lines[start:node.end_lineno])
+            cut.append((start, node.end_lineno))
+            for m in catalogue._CITE_RE.finditer(segment):
+                for cid in catalogue._CITED_ID_RE.findall(m.group(1)):
+                    own.setdefault(cid, []).append(segment)
+    keep = [ln for i, ln in enumerate(lines) if not any(a <= i < b for a, b in cut)]
+    return "".join(keep), {cid: "\0".join(segs) for cid, segs in own.items()}
+
+
+def _hash_test(h, path: Path, case_id: str) -> None:
+    shared, own = _test_file_parts(path)
+    h.update(path.relative_to(REPO_ROOT).as_posix().encode())
+    h.update(b"\0")
+    h.update(shared.encode())
+    h.update(b"\0")
+    h.update(own.get(case_id, "").encode())
+    h.update(b"\0")
+
+
 def fingerprints() -> dict[str, str]:
     """case id -> fingerprint, for every case in the catalogue."""
     areas = catalogue.load()
@@ -67,7 +103,7 @@ def fingerprints() -> dict[str, str]:
             h.update(json.dumps(asdict(c), sort_keys=True).encode())
             h.update(area_digest.encode())
             for f in sorted(cites.get(c.layer, {}).get(c.id, [])):
-                _hash_file(h, f)
+                _hash_test(h, f, c.id)
             out[c.id] = h.hexdigest()
     return out
 
