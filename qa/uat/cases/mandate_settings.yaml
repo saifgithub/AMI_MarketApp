@@ -1,0 +1,341 @@
+area: mandate_settings
+code: MAND
+title: Mandate, risk limits, compliance & Settings
+order: 4
+covers:
+  - backend/app/api/mandate.py
+  - mobile/lib/screens/settings/**
+summary: |
+  The user's mandate: read, edit, version history and rollback; the seven risk
+  limits and the Day Trader preset; Halal / ESG / tobacco / fossil compliance and
+  ticker block/allow lists; language and profile; and the Settings screen that
+  edits them. Guards the goals that matter: a mandate is only ever readable and
+  writable by its owner, entitlement fields cannot be set from a PATCH, rollback is
+  forward-only and restores the old values, and a compliance setting actually stops
+  a non-compliant trade in the deterministic safety floor (not just in a prompt).
+cases:
+  - id: UAT-MAND-001
+    title: A new user's mandate is the documented default, stamped with live plan state
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/mandate/<user id> for a user who has never edited the mandate'
+    expected:
+      - '200 with version 1, risk_score 3, max_drawdown_pct 30, and compliance long_only true, liquid_only true, halal / esg / tobacco / fossil / derivatives false, empty blocklist and a null allowlist'
+      - 'plan "trader", a positive credit_balance equal to credit_allowance, room_cost and credits_reset_at set (read from the user, not the stored mandate)'
+      - 'resolved carries all seven concrete limits (sector_cap_pct, single_name_cap_pct, max_open_positions, post_loss_cooldown_hours, max_trades_per_day, max_trades_per_week, max_open_risk_pct), none null'
+      - 'day_trader_preset.overrides holds the seven permissive values and a non-empty disclosure'
+      - 'No version history exists yet'
+
+  - id: UAT-MAND-002
+    title: A mandate is private to its owner
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'Two UAT users "owner" and "intruder"'
+    steps:
+      - 'GET, PATCH, versions, versions/1, rollback/1 and audit on the owner''s mandate id, as the intruder'
+      - 'Repeat GET with no token and with a garbage token'
+      - 'GET /v1/mandate/not-a-uuid as the owner'
+    expected:
+      - 'Every intruder call is 403 "access denied"'
+      - 'No token is 401; a garbage token is 401'
+      - 'A malformed id is 422'
+      - 'The owner''s mandate is unchanged after the intruder''s PATCH attempt'
+
+  - id: UAT-MAND-003
+    title: PATCH merges, bumps the version and keeps untouched fields
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH {"max_drawdown_pct": 20}'
+      - 'PATCH {"compliance": {"halal": true}}'
+      - 'PATCH {"risk_components": {"concentration_tolerance": 5}}'
+      - 'GET the mandate'
+    expected:
+      - 'Each PATCH returns 200; the first edit of a never-edited mandate persists as version 1, every later edit raises the version by exactly 1, and the GET equals the last PATCH response'
+      - 'The nested compliance merge sets halal but keeps long_only and liquid_only true'
+      - 'The nested risk_components merge sets concentration_tolerance 5 and keeps drawdown_response and regret_asymmetry'
+      - 'max_drawdown_pct stays 20 across the later PATCHes'
+
+  - id: UAT-MAND-004
+    title: Invalid values are rejected and the mandate is left as it was
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH risk_score 9; max_drawdown_pct 0, 101 and "abc"; primary_goal "get_rich"'
+      - 'GET the mandate'
+    expected:
+      - 'Each is 422 naming the offending field'
+      - 'The mandate version and values are exactly as before the attempts'
+
+  - id: UAT-MAND-005
+    title: Entitlement fields cannot be set through the mandate
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH {"plan": "floor_manager", "credit_balance": 99999, "credit_allowance": 99999}'
+      - 'GET the mandate and the admin view of the user'
+    expected:
+      - 'The PATCH is accepted but ignores those fields: plan stays "trader" and credit_balance and credit_allowance are the real values'
+      - 'The admin view still shows plan trader and the unchanged credit balance (no paywall bypass)'
+
+  - id: UAT-MAND-006
+    title: History lists every version newest first with plain-English summaries
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH max_drawdown_pct 20, then PATCH risk_score 4, then PATCH locale "ar"'
+      - 'GET /v1/mandate/<id>/versions'
+    expected:
+      - 'Versions are listed newest first, exactly one is_current and it is the highest'
+      - 'change_summary reads in plain English, e.g. "max drawdown 30% → 20%", "risk score 3 → 4", "locale En → Ar"'
+
+  - id: UAT-MAND-007
+    title: A historical version can be fetched; unknown versions are 404
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH max_drawdown_pct 20 then 40'
+      - 'GET /v1/mandate/<id>/versions/<first> and /versions/999'
+    expected:
+      - 'The first version''s snapshot has max_drawdown_pct 20 while current is 40'
+      - 'Version 999 is 404 "mandate version 999 not found for this user"'
+
+  - id: UAT-MAND-008
+    title: Rollback restores the earlier values as a new version and keeps history
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH max_drawdown_pct 20 (version A), PATCH max_drawdown_pct 40 and halal true (version B)'
+      - 'POST /v1/mandate/<id>/rollback/<A>'
+      - 'GET the mandate, the versions list and version B'
+    expected:
+      - 'Rollback returns 200 with a NEW version number (B + 1), max_drawdown_pct 20 and halal false'
+      - 'The current mandate equals that response; versions A and B still exist unchanged (B still 40 / halal true)'
+      - 'The newest history row''s summary is "Rolled back to v<A>."'
+
+  - id: UAT-MAND-009
+    title: Rollback to an unknown version is 404
+    layer: api
+    plans: [trader]
+    steps:
+      - 'POST /v1/mandate/<id>/rollback/999'
+      - 'GET the mandate'
+    expected:
+      - '404 "mandate version 999 not found for this user" and the current mandate is unchanged'
+
+  - id: UAT-MAND-010
+    title: Each version carries its own timestamp
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH max_drawdown_pct 20, wait two seconds, PATCH max_drawdown_pct 40'
+      - 'GET /v1/mandate/<id>/versions'
+    expected:
+      - 'The two versions have different created_at values, the later one strictly later, so the history can show when each edit happened'
+
+  - id: UAT-MAND-011
+    title: Day Trader preset applies all seven limits and leaves compliance alone
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH halal true'
+      - 'PATCH the mandate with day_trader_preset.overrides exactly as served by GET'
+      - 'GET the mandate and history'
+      - 'PATCH the seven fields back to null'
+    expected:
+      - 'After the preset, resolved shows sector_cap_pct 100, single_name_cap_pct 100, post_loss_cooldown_hours 0, max_open_risk_pct 100 and max_open_positions / max_trades_per_day / max_trades_per_week 999999'
+      - 'compliance.halal is still true (the preset cannot touch compliance)'
+      - 'The newest history summary starts "Day Trader preset applied"'
+      - 'Setting the seven back to null returns resolved to the risk-profile values (single_name_cap_pct 3.0, sector_cap_pct 40.0 for risk 3)'
+
+  - id: UAT-MAND-012
+    title: Explicit risk limits override the risk profile and null returns to it
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH sector_cap_pct 25, single_name_cap_pct 10, max_open_positions 8, max_trades_per_day 2'
+      - 'GET the mandate, then PATCH sector_cap_pct and single_name_cap_pct to null'
+    expected:
+      - 'resolved shows exactly the explicit numbers (25, 10, 8, 2) and the stored fields hold them'
+      - 'The history summary mentions "sector cap following your risk profile → 25%" style wording for each field'
+      - 'After null, resolved is back to the profile values (40.0 / 3.0)'
+
+  - id: UAT-MAND-013
+    title: A raised concentration limit actually changes what the safety floor allows
+    layer: api
+    plans: [trader]
+    steps:
+      - 'POST /v1/sim/preview a BUY of AAPL sized to about 6% of the portfolio (quantity from the first preview''s notional)'
+      - 'Apply the Day Trader preset by PATCH and preview the same order again'
+    expected:
+      - 'Under the default 3% single-name cap the preview is not accepted and blocked_by is "concentration"'
+      - 'After the preset the same order''s concentration block is gone (accepted true)'
+
+  - id: UAT-MAND-014
+    title: Halal compliance blocks a non-compliant ticker in the deterministic floor
+    layer: api
+    plans: [trader]
+    steps:
+      - 'POST /v1/sim/preview a BUY of 1 MO (tobacco) with halal off'
+      - 'PATCH compliance.halal true'
+      - 'Preview the same MO buy; preview XOM (permitted); POST /v1/sim/submit the MO buy'
+      - 'GET /v1/sim/portfolio/<id>'
+    expected:
+      - 'With halal off MO is accepted'
+      - 'With halal on MO is not accepted, blocked_by "compliance", sharia_verdict.status "screened_out" and a violation naming the AAOIFI screen'
+      - 'XOM is still accepted (the filter is selective)'
+      - 'Submit returns ok false with the same compliance block and the portfolio holds no MO'
+
+  - id: UAT-MAND-015
+    title: Halal still binds after the Day Trader preset
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH halal true, then apply the Day Trader preset'
+      - 'Preview a BUY of 1 MO'
+    expected:
+      - 'MO is still blocked by compliance; removing risk limits does not remove the Halal rule'
+
+  - id: UAT-MAND-016
+    title: Tobacco/alcohol/gambling and fossil-fuel filters block their sectors
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH compliance no_tobacco_alcohol_gambling true and no_fossil_fuels true'
+      - 'Preview BUYs of 1 MO, 1 XOM and 1 KO'
+    expected:
+      - 'MO is blocked by compliance citing the tobacco / alcohol / gambling exclusion'
+      - 'XOM is blocked by compliance citing the fossil-fuel exclusion'
+      - 'KO is accepted'
+
+  - id: UAT-MAND-017
+    title: Ticker blocklist and allowlist are enforced and case-normalised
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH compliance.ticker_blocklist ["xom", "XOM"]; preview a BUY of XOM'
+      - 'Clear the blocklist; PATCH ticker_allowlist ["XOM"]; preview XOM and KO'
+      - 'PATCH ticker_allowlist null; preview KO'
+    expected:
+      - 'The stored blocklist is ["XOM"] (upper-cased, de-duplicated) and the XOM preview is blocked_by "blocklist"'
+      - 'With the allowlist set XOM is accepted and KO is blocked_by "allowlist"'
+      - 'null removes the allowlist and KO is accepted again'
+
+  - id: UAT-MAND-018
+    title: Ticker rule edits that would silently do nothing are refused
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH ticker_blocklist ["ZZZZNOTREAL"]'
+      - 'PATCH ticker_allowlist [] and [""]'
+      - 'PATCH ticker_blocklist "TSLA" (a string)'
+    expected:
+      - 'An unknown ticker is 422 naming it'
+      - 'An empty or blank allowlist is 422 "send null to remove the allowlist instead"'
+      - 'A non-list is 422'
+      - 'The mandate version is unchanged after all attempts'
+
+  - id: UAT-MAND-019
+    title: Identity and language fields save and show in history
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH display_name "UAT Tester", locale "ms", timezone "Asia/Kuala_Lumpur"'
+      - 'GET the mandate and versions'
+    expected:
+      - 'The values persist on GET'
+      - 'The history summary names display name, timezone and locale changes in plain English'
+
+  - id: UAT-MAND-020
+    title: Holdings audit runs against the current mandate
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/mandate/<id>/audit for a user with no holdings'
+      - 'GET it as another user'
+    expected:
+      - '200 with passed true, mandate_version equal to the current version, no breaches and no violations'
+      - 'Another user''s call is 403'
+
+  - id: UAT-MAND-021
+    title: Mandate PATCH ignores unknown fields without changing behaviour
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH {"zzz": 1}'
+      - 'GET the mandate'
+    expected:
+      - '200 and every real field is unchanged'
+
+  - id: UAT-MAND-030
+    title: Settings screen shows the mandate sections and saves edits
+    layer: manual
+    preconditions:
+      - 'A TestFlight build, signed in or guest, with a mandate'
+    steps:
+      - 'Open You > Settings'
+      - 'Read the section headings (MY MANDATE, RISK LIMITS, COMPLIANCE, PROFILE, TICKER RULES, YOUR OWN WORDS)'
+      - 'Change max drawdown, tap Save, close and relaunch the app, reopen Settings'
+    expected:
+      - 'Every section is present and reflects the server mandate'
+      - 'Save succeeds with a visible confirmation and on a mandate that was already edited the "mandate v<N>" label goes up by one'
+      - 'The edit is still there after relaunch'
+
+  - id: UAT-MAND-031
+    title: Risk limits editor and Day Trader disclosure
+    layer: manual
+    preconditions:
+      - 'A user with a few simulated holdings'
+    steps:
+      - 'Settings > RISK LIMITS > "Set my own limits"'
+      - 'Set a tighter single-name cap than one of the current holdings and save'
+      - 'Choose the Day Trader preset'
+    expected:
+      - 'Each limit shows "Following your risk profile" with the resolved number until the user sets their own'
+      - 'Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders'
+      - 'The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing'
+
+  - id: UAT-MAND-032
+    title: Compliance toggles stop a trade in the app
+    layer: manual
+    preconditions:
+      - 'Halal switched on in Settings > COMPLIANCE and saved'
+    steps:
+      - 'Open the trade ticket for MO and try to buy'
+      - 'Switch Halal off, save, and try again'
+    expected:
+      - 'With Halal on the ticket explains the block (AAOIFI screen) and offers no way to proceed'
+      - 'With Halal off the buy goes through'
+
+  - id: UAT-MAND-033
+    title: Ticker rules editor validates tickers
+    layer: manual
+    steps:
+      - 'Settings > TICKER RULES, add "ZZZZNOTREAL" to the blocklist and save'
+      - 'Add a real ticker such as TSLA to the blocklist and save'
+      - 'Clear every row of the allowlist'
+    expected:
+      - 'The unknown ticker is rejected with an error and nothing is saved'
+      - 'TSLA saves and is then blocked in the trade ticket'
+      - 'Clearing the allowlist removes it (everything tradable again), it does not block all trading'
+
+  - id: UAT-MAND-034
+    title: Language switch re-localises the app
+    layer: manual
+    steps:
+      - 'Settings > Language > Arabic, then Bahasa Melayu, then English'
+    expected:
+      - 'Each switch re-renders the app in that language (Arabic right-to-left) without a restart and the choice survives a relaunch'
+      - 'Educational content shows its translation or an English fallback, never a blank'
+
+  - id: UAT-MAND-035
+    title: Account section shows guest or signed-in state
+    layer: manual
+    steps:
+      - 'As a guest open Settings > ACCOUNT'
+      - 'After signing in open it again'
+    expected:
+      - 'Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button'
+      - 'Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button'

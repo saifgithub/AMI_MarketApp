@@ -1,0 +1,219 @@
+area: onboarding
+code: ONB
+title: Onboarding interview (Concierge) & mandate creation
+order: 3
+covers:
+  - backend/app/api/onboarding.py
+  - mobile/lib/screens/onboarding/**
+summary: |
+  The anonymous-first Concierge interview: seven scripted questions (deterministic,
+  no LLM), a readback the user confirms, and a mandate built from exactly what they
+  said. Guards the goals that matter: no answer is ever silently replaced by a
+  default (an unreadable drawdown is re-asked, not stored as 30%), a restricting
+  constraint is never loosened by omission, a failed confirm does not strand the
+  session, and only an explicit, authenticated "restart" can overwrite a stored
+  mandate.
+cases:
+  - id: UAT-ONB-001
+    title: Starting an interview needs no account and opens on question one
+    layer: api
+    plans: [anon]
+    steps:
+      - 'POST /v1/onboarding/start {"locale": "en", "timezone": "Asia/Riyadh"} with no token'
+    expected:
+      - '201 with a session_id, a welcome_message at step "welcome" and a first_question at step "q1_goal" with answer chips'
+      - 'The Concierge introduces itself as the Concierge and names the 12 analysts'
+
+  - id: UAT-ONB-002
+    title: A session can be re-read, and unknown ids are handled
+    layer: api
+    plans: [anon]
+    steps:
+      - 'GET /v1/onboarding/<session_id> after start'
+      - 'GET /v1/onboarding/<random uuid>'
+      - 'GET /v1/onboarding/xyz'
+    expected:
+      - '200 with current_step "q1_goal", the welcome message in messages, completed false and the locale / timezone sent at start'
+      - 'Unknown id is 404 "session not found or expired"'
+      - 'A malformed id is 422'
+
+  - id: UAT-ONB-003
+    title: The seven questions walk to a readback that reflects the answers
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Start a session and answer q1_goal "I want to learn to trade", q2_horizon "5 to 10 years", the three scenario questions, q6_max_drawdown "20%", q7_constraints "halal only, long only"'
+      - 'Note next_step after each answer'
+    expected:
+      - 'next_step advances q1 > q2 > q3 > q4 > q5 > q6 > q7 > readback, one question at a time, each reply a Concierge message'
+      - 'The final reply carries a readback_summary with primary_goal learning_to_trade, max_drawdown_pct 20, compliance.halal true and long_only true, the user''s three scenario answers in risk_quotes, and a risk_score 1-5'
+      - 'The readback text the user reads names the same goal, drawdown and constraints'
+
+  - id: UAT-ONB-004
+    title: An unreadable drawdown is re-asked, never defaulted to 30%
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Answer q1-q5, then answer q6_max_drawdown with "banana", "$10,000", "0.5%" and "150%" in turn'
+      - 'Check the session after each'
+      - 'Then answer "20%"'
+    expected:
+      - 'Each unreadable answer keeps next_step at q6_max_drawdown with a clarifying reply (asks for a percentage); the session records no max_drawdown_pct'
+      - 'The session never advances to q7 on an unreadable answer'
+      - '"20%" then advances to q7_constraints and 20 is what the readback shows'
+
+  - id: UAT-ONB-005
+    title: A free-text drawdown is honoured exactly; "no cap" is 100
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Run three sessions answering q6 with "45%", "12.5%" and "no cap"'
+      - 'Read the readback_summary.max_drawdown_pct of each'
+    expected:
+      - '45 (not snapped to a chip), 12 (fractions round down to the stricter cap) and 100'
+
+  - id: UAT-ONB-006
+    title: Answers must be for the session's current question
+    layer: api
+    plans: [anon]
+    steps:
+      - 'On a fresh session at q1_goal, POST /v1/onboarding/answer for step q6_max_drawdown'
+      - 'POST an answer with step "nope"'
+      - 'POST an answer for an unknown session id'
+      - 'Re-fetch the session'
+    expected:
+      - 'Skipping ahead is 409 naming the current step; nothing is recorded and the session is still at q1_goal'
+      - 'An unknown step is 422; an unknown session is 404'
+
+  - id: UAT-ONB-007
+    title: Constraint answers never loosen a safety default by omission
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Finish three sessions with q7 "no hard rules", "I want to short sometimes", and "long only, though I want to short sometimes"'
+      - 'Read compliance in each readback_summary'
+    expected:
+      - '"no hard rules" keeps long_only true and liquid_only true (the schema defaults stand)'
+      - 'An explicit "want to short" sets long_only false'
+      - 'Restriction language wins over opt-out language in the same answer (long_only stays true)'
+
+  - id: UAT-ONB-008
+    title: Confirming without an account returns a preview and persists nothing
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Complete the interview, then POST /v1/onboarding/readback/confirm {"confirm": "confirm"} with no token'
+      - 'Repeat with "restart": true but still no token'
+      - 'Check an unrelated UAT user''s mandate'
+    expected:
+      - '200 with completed true, final_step "complete", a Concierge follow-up and a mandate_preview whose user_id is "anonymous-pending-claim"'
+      - 'restart without a token behaves identically (it cannot overwrite anything)'
+      - 'No mandate row is created for any user by these calls'
+
+  - id: UAT-ONB-009
+    title: An authenticated restart replaces the user's mandate with the interview's
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/mandate/<user id> (default: max drawdown 30, halal false)'
+      - 'Complete an interview (locale "ar", drawdown 20%, halal) and POST readback/confirm with restart true and the user''s bearer'
+      - 'GET /v1/mandate/<user id>'
+    expected:
+      - 'The mandate now has max_drawdown_pct 20, compliance.halal true, primary_goal learning_to_trade, the interview''s risk_score, locale "ar"'
+      - 'The plan and credit balance are the user''s real ones (the interview cannot grant credits or a plan)'
+
+  - id: UAT-ONB-010
+    title: A signed-in confirm without restart leaves the stored mandate alone
+    layer: api
+    plans: [trader]
+    steps:
+      - 'PATCH the user''s mandate max_drawdown_pct to 40'
+      - 'Complete an interview with drawdown 10% and POST readback/confirm with the bearer but restart false'
+      - 'GET the mandate'
+    expected:
+      - '200 with a preview, but the stored mandate still has max_drawdown_pct 40 and the same version'
+
+  - id: UAT-ONB-011
+    title: Readback edit is not implemented and does not damage the session
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Walk to readback, then POST readback/confirm {"confirm": "edit", "edits": {"max_drawdown_pct": 10}}'
+      - 'GET the session'
+    expected:
+      - '501 with a "restart the session" message'
+      - 'The session is unchanged: completed false, current_step "readback", the original 20% drawdown answer intact'
+
+  - id: UAT-ONB-012
+    title: Confirm validates its inputs
+    layer: api
+    plans: [anon]
+    steps:
+      - 'POST readback/confirm for an unknown session id'
+      - 'POST readback/confirm with confirm "maybe"'
+    expected:
+      - 'Unknown session is 404; an invalid confirm value is 422'
+
+  - id: UAT-ONB-013
+    title: A confirm that fails does not strand the session
+    layer: api
+    plans: [anon]
+    notes: DEF428 principle — a failed claim/confirm must leave the session retryable.
+    steps:
+      - 'Start a session and POST readback/confirm immediately (no drawdown answered)'
+      - 'GET the session and try to answer q1_goal'
+    expected:
+      - 'The confirm is refused with a 409 that names the missing drawdown (no fabricated default)'
+      - 'The session is NOT marked completed and is still at q1_goal, so the user can carry on answering'
+
+  - id: UAT-ONB-030
+    title: Claiming an account at the end of onboarding saves the interview's mandate
+    layer: api
+    status: blocked
+    blocked_on: "test email inbox (IMAP) not supplied yet"
+    plans: [anon]
+    steps:
+      - 'Complete an interview, then sign in by email passing onboarding_session_id on magic_link/verify'
+      - 'GET /v1/mandate/<claimed user id>'
+    expected:
+      - 'The claimed user''s mandate equals the interview''s answers (not the generic default), and the session is bound to the user'
+      - 'Replaying the same session id on a later sign-in does not overwrite a mandate edited since'
+
+  - id: UAT-ONB-040
+    title: First-run interview on iPhone
+    layer: manual
+    platforms: [ios]
+    preconditions:
+      - 'A fresh TestFlight install (delete the app first so the device has no session)'
+    steps:
+      - 'Launch the app and read the Concierge welcome'
+      - 'Answer all seven questions, mixing tapping chips and typing free text (include a free-text drawdown such as "15%")'
+      - 'Read the readback and confirm it'
+    expected:
+      - 'Messages appear one at a time with chips; typed answers are accepted'
+      - 'A nonsense drawdown such as "lots" gets a clarifying re-ask rather than moving on'
+      - 'The readback matches what was said, and confirming leads to the claim prompt'
+
+  - id: UAT-ONB-041
+    title: Claim prompt at the end of onboarding
+    layer: manual
+    preconditions:
+      - 'Finished the interview as in UAT-ONB-040'
+    steps:
+      - 'On the claim prompt, tap "Skip for now"'
+      - 'Repeat on a fresh install and tap the save-team option and sign in'
+    expected:
+      - 'Skip lands on the main app as a guest with the interview''s mandate visible in Settings'
+      - 'Signing in keeps that same mandate on the account'
+
+  - id: UAT-ONB-042
+    title: Retaking the interview from Settings asks first and then replaces the mandate
+    layer: manual
+    preconditions:
+      - 'A user who already completed onboarding'
+    steps:
+      - 'Settings > restart onboarding; read the confirmation; cancel once, then confirm'
+      - 'Complete the interview with different answers'
+    expected:
+      - 'Cancel changes nothing; confirm runs the interview again'
+      - 'After the new readback is confirmed Settings shows the new mandate values and version'
