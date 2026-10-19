@@ -31,6 +31,13 @@ def _form(**fields) -> dict:
 GOOD = dict(category="other", title=UAT_TITLE, app_version="uat", platform="ios")
 
 
+def _close_out(admin, report_id: str) -> None:
+    """Resolve the report at once so /bug-monitor (which reads status='open')
+    never files a DEF for it — the nightly would otherwise feed it two a day."""
+    r = admin.post(f"/v1/admin/bugs/{report_id}/resolve", json={"note": "CR263 UAT automated check — no action needed."})
+    assert r.status_code == 200, r.text
+
+
 @pytest.mark.uat("UAT-SUPP-001")
 def test_signed_in_bug_report(seed):
     u = seed.user(plan="floor_pass")
@@ -41,14 +48,16 @@ def test_signed_in_bug_report(seed):
     assert uuid.UUID(body["id"]) and body["status"] == "open" and body["created_at"]
     assert body["attachment_path"] is None
     assert u.get("/v1/feedback/updates").json() == []
+    _close_out(seed.admin, body["id"])
 
 
 @pytest.mark.uat("UAT-SUPP-002")
-def test_anonymous_bug_report(api):
+def test_anonymous_bug_report(api, admin):
     r = api.post("/v1/feedback/bug", files=_form(**{**GOOD, "platform": "android_gms"}),
                  headers=_fake_ip())
     assert r.status_code == 201, r.text
     assert uuid.UUID(r.json()["id"]) and r.json()["status"] == "open"
+    _close_out(admin, r.json()["id"])
 
 
 @pytest.mark.uat("UAT-SUPP-003")
