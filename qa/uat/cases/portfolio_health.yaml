@@ -1,0 +1,160 @@
+area: portfolio_health
+code: HLTH
+title: Portfolio health & sector analytics
+order: 10
+covers:
+  - backend/app/api/portfolio.py
+  - backend/app/api/sector_watch.py
+  - mobile/lib/screens/sim/portfolio_health_finding_screen.dart
+summary: |
+  Portfolio Health tiles (free in every gate mode), the plan-aware gate report,
+  sector allocation vs the mandate cap, Sector Watch, Day Trader outcomes, and
+  the gated, LLM-backed Finding. Alpha gate at time of writing: mode trial,
+  3 trial Findings, 2/day cap, 30-day cadence. Total LLM spend for this area is
+  one Finding per run (UAT-HLTH-009); a Finding takes minutes on the reasoning
+  model.
+cases:
+  - id: UAT-HLTH-001
+    title: Tiles for an empty book are free and say there is nothing to measure
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/portfolio/health/{uid} on a Floor Pass account with no holdings
+    expected:
+      - 200 with status no_holdings, an engine_version and as_of, and a gate block with the full key set
+      - Never a 402/429 on a free plan (the tiles are not gated)
+
+  - id: UAT-HLTH-002
+    title: Tiles are measured from the real book
+    layer: api
+    plans: [trader]
+    preconditions:
+      - Trader account holding 5 AAPL
+    steps:
+      - GET the portfolio and GET /v1/portfolio/health/{uid}
+    expected:
+      - status ok, one holding AAPL in sector Technology included at 100% invested weight, nothing dropped
+      - total_value, invested_value and cash_fraction agree with the portfolio endpoint
+      - Each metric block is either sufficient with a value, or insufficient with a stated cause
+      - One holding reads as total concentration (concentration 1.0, effective bets 1.0) and positive volatility
+
+  - id: UAT-HLTH-003
+    title: The gate is reported truthfully per plan
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - GET the health gate for a fresh Floor Pass user and for a Trader
+    expected:
+      - Floor Pass has plan_has_access false, trial_active true (in trial mode) and zero Findings used; Trader has plan_has_access true
+      - Same mode for both; daily cap and trial budget are positive; cadence is not blocked
+
+  - id: UAT-HLTH-004
+    title: Sector allocation matches the book and reads the cap from the mandate
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - GET /v1/portfolio/sector-allocation/{uid} for an empty book and for a book holding AAPL
+      - Lower the mandate sector cap to 5% and read again
+    expected:
+      - Empty book has no allocation and is compliant
+      - Held book splits into Technology and Cash summing to 1, matching holding value / total value
+      - max_allowed comes from the mandate; with a 5% cap the Technology weight is flagged compliant false
+
+  - id: UAT-HLTH-005
+    title: Sector Watch is honest when it cannot say anything
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - GET /v1/sector-watch/{uid} for an empty user and a user holding AAPL
+      - GET another user's sector watch; GET unauthenticated
+    expected:
+      - Empty user gets state empty with no sector or move
+      - A holder gets ok (with sector, leader, headline, non-mock quote source) or unavailable with a reason and null move/leader/headline - never a fabricated 0.0%
+      - Another user's id is 404 (does not confirm the id exists); unauthenticated is 401
+
+  - id: UAT-HLTH-006
+    title: Sector Watch resolves a headline for a liquid holding
+    layer: api
+    plans: [trader]
+    steps:
+      - GET /v1/sector-watch/{uid} for a user whose only holding is AAPL
+    expected:
+      - state ok, sector Technology, leader AAPL, a headline title
+    notes: |
+      FINDING 2026-10-19: returns unavailable / no_news because /v1/sim/news/* returns
+      nothing on Alpha (UAT-SIM-004). `xfail(strict)`.
+
+  - id: UAT-HLTH-007
+    title: Finding refuses before spending anything it should not
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - POST /v1/portfolio/health/{uid}/finding on an empty book
+      - Cross-user and unauthenticated Finding, tiles and sector-allocation calls
+      - Fire the Finding endpoint 8 times quickly on the empty book
+    expected:
+      - 409 with code portfolio_health_unavailable and reason no_holdings (no Finding narrated over nothing)
+      - Cross-user is 403, unauthenticated is 401
+      - The per-user rate limit (5/min) returns 429 before any LLM work; only 409 and 429 are seen
+
+  - id: UAT-HLTH-008
+    title: Day Trader outcomes never judge a user with no history
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/portfolio/day-trader-outcomes/{uid} for a user who never applied the preset
+      - Apply the Day Trader preset by PATCHing the served overrides, read again
+      - Read another user's outcomes
+    expected:
+      - not_in_cohort, then too_early with only status and message (no numeric comparison)
+      - Another user's id is 403
+
+  - id: UAT-HLTH-009
+    title: A Finding is generated once and its replay is free
+    layer: api
+    plans: [trader]
+    llm: true
+    preconditions:
+      - Trader holding 5 AAPL, no Finding yet today
+    steps:
+      - POST /v1/portfolio/health/{uid}/finding (waits minutes on the reasoning model)
+      - POST it again
+    expected:
+      - created true with a journal_entry_id, as_of and non-empty sections; daily_used and trial_findings_used rise by exactly 1
+      - The replay returns created false, the same journal_entry_id and identical sections, and spends no budget
+
+  - id: UAT-HLTH-010
+    title: Finding is refused with 402 when not entitled and 429 when the daily cap or cadence is spent
+    layer: api
+    plans: [floor_pass, trader]
+    status: blocked
+    blocked_on: Alpha runs gate mode "trial" with a 3-Finding trial, a 2/day cap and a 30-day cadence; reaching a 402 or the cap needs gate mode "plan" or at least 3 paid Findings (3+ LLM calls, minutes each), which exceeds this wave's LLM budget. Covered by backend unit tests until Saiful flips PORTFOLIO_HEALTH_GATE_MODE=plan on a staging stack.
+    steps:
+      - Exhaust the trial budget on a Floor Pass user, then POST a Finding
+      - On a Trader, generate a second Finding inside the cadence window
+    expected:
+      - 402 with code portfolio_health_gate_closed and the gate block
+      - 429 with portfolio_health_daily_cap_reached or portfolio_health_cadence_not_elapsed (cadence carries next_eligible_at)
+
+  - id: UAT-HLTH-011
+    title: Portfolio Health card and Finding screen render all states
+    layer: manual
+    plans: [floor_pass, trader]
+    steps:
+      - Open a Floor Pass account with no holdings, then one with holdings, on the Portfolio screen
+      - Tap to generate a Finding; read all sections; reopen it
+    expected:
+      - Empty book shows the empty state; insufficient metrics render the amber state with a cause, not a zero
+      - The trial/CTA state matches the gate (Floor Pass sees the trial, not a paywall, until the budget is spent)
+      - The Finding screen shows every section, a loading state while the LLM runs, and a clear error (not a blank screen) on 409/402/429
+
+  - id: UAT-HLTH-012
+    title: Sector donut and concentration breach copy
+    layer: manual
+    plans: [trader]
+    steps:
+      - Hold two tech names, open the Portfolio sector allocation card
+      - Lower the sector cap in Settings below the weight
+    expected:
+      - Donut slices and legend add up to 100% including Cash; Other is shown but never flagged as a breach
+      - After lowering the cap the card shows the breach copy using the mandate's own number

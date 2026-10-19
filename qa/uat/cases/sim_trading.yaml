@@ -1,0 +1,360 @@
+area: sim_trading
+code: SIM
+title: Sim trading & market data
+order: 9
+covers:
+  - backend/app/api/sim.py
+  - backend/app/api/options.py
+  - backend/app/api/tickers.py
+  - mobile/lib/screens/sim/**
+summary: |
+  The training simulator: quotes/history/news/earnings/profile/insider, market
+  and resting orders, the deterministic mandate check that refuses an order
+  (not merely warns), lots and realised P&L, manual close, reset, ownership,
+  and the options gate. Market hours do not matter: off-hours Alpha serves the
+  last Yahoo close (`source: yfinance`, `market_state: CLOSED`) and market
+  orders still fill at it. All figures are asserted from the fill the server
+  reports, never an assumed price.
+cases:
+  - id: UAT-SIM-001
+    title: Single and batch quotes return a real, labelled price
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/sim/quote/AAPL
+      - GET /v1/sim/quotes?symbols=aapl, MSFT
+      - GET /v1/sim/quotes?symbols= (empty)
+    expected:
+      - Quote has price > 0, a non-"unavailable" source, a change_pct and a market_state
+      - Batch returns upper-cased tickers in request order, each with a price
+      - Empty symbol list returns []
+
+  - id: UAT-SIM-002
+    title: History candles are well formed on every chart period
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/sim/history/AAPL for 1d, 1w, 1m, 3m, 1y, 5y
+      - GET with period=1M (uppercase chip label) and period=9y
+    expected:
+      - Each period returns at least 2 candles, ascending in time, with low <= open/close <= high, low > 0, volume >= 0
+      - The uppercase label is accepted and echoed in canonical lower case (DEF151)
+      - An unknown period is a 422
+
+  - id: UAT-SIM-003
+    title: Earnings and dividend fields are served for a major ticker
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/sim/earnings/AAPL
+    expected:
+      - Response carries earnings_date, quarter, eps_estimate, ex_dividend_date, dividend_rate and a source that is not "unavailable"
+      - A present earnings_date is an ISO date; a present dividend_rate is positive
+
+  - id: UAT-SIM-004
+    title: Recent news is served for a major ticker
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/sim/news/AAPL?limit=3
+    expected:
+      - 1 to 3 articles, each with a title and an http link, source not "unavailable"
+    notes: |
+      FINDING 2026-10-19: Alpha returns `source: unavailable`, `articles: []` for AAPL and MSFT
+      on every attempt, so the ticker-detail news list and Sector Watch card 3 are dark. The test
+      is `xfail(strict)` so it flips loudly when news is fixed.
+
+  - id: UAT-SIM-005
+    title: Company profile and insider activity are sourced and stateful
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/sim/company-profile/AAPL
+      - GET /v1/sim/insider/AAPL
+    expected:
+      - Profile has cik 0000320193, overview.state live or partial with a legal name, and a state on each of overview, financials, filings, ownership
+      - Insider window is 90 days, state is live/partial/not_available, every transaction direction is buy/sell/other and only codes P/S carry buy/sell
+
+  - id: UAT-SIM-006
+    title: A bogus ticker is never passed off as real and can never be traded
+    layer: api
+    plans: [trader]
+    steps:
+      - GET /v1/tickers/validate for zzzzq and aapl
+      - GET quote and history for ZZZZQ
+      - GET company-profile for ZZZZQ and for a malformed symbol; GET insider for ZZZZQ
+      - POST /v1/sim/preview and /v1/sim/submit for ZZZZQ
+    expected:
+      - Validate says exists false for ZZZZQ and exists true with a company name for AAPL
+      - Quote/history for ZZZZQ, if served at all, are labelled mock_walk or unavailable, never a live source
+      - Profile is 404 for the unknown symbol and 422 for the malformed one; insider is state not_available with no transactions
+      - Preview and submit are 422 naming exists false, and the book is unchanged
+    notes: |
+      Observation (not asserted as a defect): quote/history return HTTP 200 with a
+      fabricated mock-walk series for an unknown symbol. They are labelled, so the
+      app can tell, but a raw 404 would be cleaner.
+
+  - id: UAT-SIM-007
+    title: A buy moves cash by exactly qty x fill and creates the holding and lot
+    layer: api
+    plans: [trader]
+    steps:
+      - Read the portfolio (10,000 starting capital)
+      - POST /v1/sim/preview then /v1/sim/submit a market buy of 3 AAPL
+      - Read the portfolio, lots and trade ledger
+    expected:
+      - Preview is accepted and changes nothing
+      - Cash falls by 3 x the reported fill plus the toll when the toll flag is on (toll_charged null while it is off), within 2 cents
+      - The holding has quantity 3 and avg_cost equal to the fill; exactly one open lot at the fill price; the trade is in the ledger with status open
+      - Total value is still about 10,000 (the buy converts cash to shares)
+
+  - id: UAT-SIM-008
+    title: A sell realises P&L from the lot's real cost and cannot oversell
+    layer: api
+    plans: [trader]
+    steps:
+      - Buy 2 MSFT, sell 1, read portfolio and lots
+      - Sell 5 (more than the 1 held)
+      - Sell the last 1
+    expected:
+      - Cash rises by the sell fill minus any toll; the holding drops to 1; the lot is partially_closed with 1 closed
+      - Lot realised_pnl equals (sell fill - buy fill) for the closed share
+      - Selling more than held is refused as long_only with cash unchanged
+      - After the final sale the holding is gone, quantity_open is 0 and total realised P&L is the sum of both sells against the entry
+
+  - id: UAT-SIM-009
+    title: Manual close returns the lot to cash at the close price
+    layer: api
+    plans: [trader]
+    steps:
+      - Buy 4 KO, POST /v1/sim/trades/{uid}/close with that trade id
+      - Close the same trade again; close an unknown trade id
+    expected:
+      - Trade becomes closed with a closed_at and closed_price; realised_pnl equals (closed price - entry) x 4
+      - Cash rises by 4 x the close price and the holding is gone
+      - A second close and an unknown id are both 404
+
+  - id: UAT-SIM-010
+    title: Halal, blocklist and allowlist rules are enforced by the deterministic check
+    layer: api
+    plans: [trader]
+    steps:
+      - Set halal on; preview and submit JPM (screened out) and preview AAPL
+      - Set a blocklist of TSLA; submit TSLA
+      - Set an allowlist of MSFT; submit AAPL and preview MSFT
+    expected:
+      - The excluded order returns ok false, compliance.passed false, a violation sentence and a blocked_by (compliance for the Sharia screen, blocklist, allowlist)
+      - The halal preview exposes the AAOIFI screened_out verdict
+      - The book (cash, holdings, resting orders) is byte-identical afterwards
+      - Names that pass the rule still trade (the floor is not a blanket no)
+
+  - id: UAT-SIM-011
+    title: Risk limits refuse oversized and over-concentrated orders
+    layer: api
+    plans: [trader]
+    steps:
+      - Single-name cap 3%; submit 1 AAPL (about 3.4% of 10,000)
+      - Hold AAPL, cap open positions at 1; submit a new name, then add to AAPL
+      - Sector cap 5% with Technology occupied; submit MSFT
+      - Single-name cap 100%; submit 500 NVDA (far more than the cash)
+    expected:
+      - Each oversize order is refused (ok false, blocked_by concentration / max_open_positions / compliance, a violation sentence) with the book unchanged
+      - Adding to an existing holding is unaffected by the open-positions cap
+      - The cash-exceeding order is refused, not partially filled
+
+  - id: UAT-SIM-012
+    title: A long-only mandate refuses to open a short
+    layer: api
+    plans: [trader]
+    steps:
+      - Confirm compliance.long_only is true
+      - Submit a market sell of 1 XOM with none held
+    expected:
+      - ok false, blocked_by long_only, a sentence saying the mandate is long-only
+      - No short position appears and cash is unchanged
+
+  - id: UAT-SIM-013
+    title: A client cannot loosen the stored mandate per order
+    layer: api
+    plans: [trader]
+    steps:
+      - Store a blocklist of TSLA
+      - Submit and preview TSLA carrying mandate_override that empties the blocklist, turns long_only off, or raises the cap
+    expected:
+      - Every variant is still refused as blocklist (submit) / not accepted (preview); the book is unchanged
+
+  - id: UAT-SIM-014
+    title: Preview applies the same check as submit and never persists
+    layer: api
+    plans: [trader]
+    steps:
+      - With TSLA blocklisted, preview then submit TSLA
+      - Preview a 2-share KO buy
+    expected:
+      - Preview and submit give the same blocked_by and the same violation text; nothing is persisted
+      - The valid preview reports notional equal to 2 x fill_price and the cash_available, and changes no cash or holdings
+
+  - id: UAT-SIM-015
+    title: Malformed orders are rejected before they touch the book
+    layer: api
+    plans: [trader]
+    steps:
+      - POST preview and submit with quantity 0, quantity negative, unknown side, limit with no price, stop with no trigger, negative limit price, unknown tif, tif on a market order, unknown ticker
+    expected:
+      - Every request is a 422 on both routes and the book is unchanged
+
+  - id: UAT-SIM-016
+    title: A resting limit order commits cash without spending it and can be cancelled
+    layer: api
+    plans: [trader]
+    steps:
+      - Submit a day buy limit for 1 MSFT at 100 (far below market)
+      - Read portfolio and /v1/sim/orders
+      - Cancel it, cancel it again, cancel an unknown id
+    expected:
+      - ok true, resting true, order state working; current_cash unchanged but cash_committed rises, cash_available falls and resting_order_count is +1; no holding
+      - Cancel returns cancelled true / state cancelled and restores the committed figures
+      - A second cancel returns cancelled false with the true state; an unknown id is 404
+
+  - id: UAT-SIM-017
+    title: Another user's book is unreachable
+    layer: api
+    plans: [trader]
+    steps:
+      - As a second user (and unauthenticated), read portfolio, history, trades, orders, lots of the first user
+      - Submit/preview with the first user's id, reset, close, evaluate and cancel on it
+    expected:
+      - Authenticated cross-user calls are 403 and unauthenticated calls are 401 on every route
+      - The victim's book is identical before and after
+
+  - id: UAT-SIM-018
+    title: Portfolio reset is limited to once a day and a refused reset changes nothing
+    layer: api
+    plans: [trader]
+    steps:
+      - On a freshly created account, POST /v1/sim/portfolio/{uid}/reset
+    expected:
+      - 429 with detail reset_cooldown and a Retry-After between 1 and 86,400 seconds
+      - The portfolio response is exactly what it was before
+    notes: |
+      "Reset restores starting cash" cannot be run over the API on a fresh test user
+      because of the 24 h cooldown and there is no admin back-date; it is UAT-SIM-027
+      (manual, on an account older than a day).
+
+  - id: UAT-SIM-019
+    title: Trade ledger paging, history and the evaluate sweep behave
+    layer: api
+    plans: [trader]
+    steps:
+      - GET trades unpaged, with limit=2&offset=1, with bad limit/offset, and with status_filter=closed
+      - GET portfolio history, then with limit=0
+      - POST /v1/sim/trades/{uid}/evaluate
+    expected:
+      - total equals the unpaged length; a page is the matching slice of the ledger; limit 0 / 501 and offset -1 are 422; the closed filter returns only closed trades
+      - History returns points and a twr_pct field; limit 0 is 422
+      - Evaluate is 200 ok true with no updates when nothing is bracketed, and moves no cash
+
+  - id: UAT-SIM-020
+    title: Options are blocked until derivatives are allowed and money checks still apply
+    layer: api
+    plans: [trader]
+    steps:
+      - Confirm derivatives_allowed is false; POST /v1/sim/options/propose for AAPL bullish
+      - POST /options/open the first candidate
+      - POST /options/reprice with the shown premiums and spot
+      - Enable derivatives and open a structure that costs more than the cash on hand
+    expected:
+      - Each candidate carries a compliance block that fails and names derivatives
+      - Open returns accepted false, blocked_by compliance, no strategy id or net cost; no cash moves and no option leg appears
+      - Reprice is read-only and returns drift (spot_then/spot_now and per-leg premium_then/premium_now) with a structure whose compliance still fails
+      - With derivatives on, an unaffordable structure is still refused and charges nothing
+
+  - id: UAT-SIM-021
+    title: Option routes validate input and enforce ownership
+    layer: api
+    plans: [trader]
+    steps:
+      - Propose/open as another user and unauthenticated
+      - Propose with an unknown ticker and an invalid direction
+      - Open with no legs, a bad right, a negative strike, and a client-stated premium
+    expected:
+      - Cross-user is 403, unauthenticated is 401
+      - Unknown ticker, bad direction, empty/invalid legs are 422
+      - A client-supplied premium is never honoured (422, or a not-accepted result)
+
+  - id: UAT-SIM-022
+    title: Trade ticket previews, blocks and confirms an order
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - TestFlight build; a Trader account with a halal mandate set in Settings
+    steps:
+      - Open a ticker, tap Trade, enter a quantity
+      - Read the preview (fill, notional, cash available); change side to Sell with nothing held
+      - Enter a halal-excluded ticker such as JPM
+      - Place a valid buy and confirm
+    expected:
+      - Preview figures match the server; no cash moves until confirm
+      - A refused order shows the violation sentence and cannot be placed; the app never offers a way to override it
+      - After a valid buy the confirmation appears and the Portfolio shows the new holding and reduced cash
+
+  - id: UAT-SIM-023
+    title: Portfolio screen tabs and holding cards agree with the server
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - An account with at least one holding, one resting order and one closed trade
+    steps:
+      - Open the Portfolio screen; check the value card, holding cards, Orders and History tabs
+      - Pull to refresh; cancel the resting order from the Orders tab
+    expected:
+      - Value, cash, holding quantity/avg cost/unrealised P&L match what a second device or the admin console shows
+      - The quote-source pill is honest (live vs delayed vs mock)
+      - Cancelling removes the order and releases the committed cash
+
+  - id: UAT-SIM-024
+    title: Ticker detail, chart periods and fullscreen chart
+    layer: manual
+    plans: [any]
+    steps:
+      - Open AAPL; switch chart periods 1D to 5Y; open the fullscreen chart and rotate
+      - Scroll the news, earnings and company sections
+    expected:
+      - Each period draws a plausible chart with no blank frame; fullscreen opens and closes cleanly
+      - Earnings/dividend chips show for AAPL; an empty news list shows an explicit empty state, not a spinner forever
+
+  - id: UAT-SIM-025
+    title: Company Review screen shows four sourced sections and degrades per section
+    layer: manual
+    plans: [any]
+    steps:
+      - From a ticker, open Company Review; visit overview, financials, filings, ownership/insider
+      - Open the review for a foreign or OTC ticker with no SEC registrant
+    expected:
+      - Each section shows its source and a state; a failing section shows its reason without blanking the rest
+      - The no-registrant ticker shows filings as not available, not an error screen
+
+  - id: UAT-SIM-026
+    title: Option reprice sheet shows what moved before the user consents
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - Derivatives enabled in the mandate
+    steps:
+      - Propose an option structure, wait a minute, tap to open it
+    expected:
+      - A re-price step shows the then/now premium and net-cost change before any charge
+      - Declining leaves cash and positions untouched
+
+  - id: UAT-SIM-027
+    title: Reset portfolio restores the starting cash
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - A tester account whose portfolio is older than 24 hours with trades and a holding
+    steps:
+      - Reset the portfolio from the app and confirm
+      - Immediately try to reset again
+    expected:
+      - Cash returns to the starting capital; holdings, orders and trades are cleared
+      - The second attempt is refused with a clear cooldown message
