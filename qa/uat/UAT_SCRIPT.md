@@ -4,11 +4,27 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**4 cases** — 3 api, 0 device, 1 manual; 0 blocked.
+**197 cases** — 151 api, 0 device, 46 manual; 10 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 4 cases
+2. [Authentication, sessions & account identity](#auth) — 23 cases
+3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 17 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
+5. [Floor tab & home shell](#floor) — 6 cases
+6. [Sim trading & market data](#sim-trading) — 27 cases
+7. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
+8. [Watchlist & price alerts](#watchlist-alerts) — 12 cases
+9. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 9 cases
+10. [Daily challenge & reminder](#daily-challenge) — 6 cases
+11. [Decision journal, trash & the You tab](#journal) — 7 cases
+12. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
+13. [Bug reports, AMI help library & telemetry](#support) — 11 cases
+14. [Billing, plans, credits & ads](#billing) — 11 cases
+15. [Alpaca paper account link](#alpaca) — 7 cases
+16. [Admin back-office & LLM status](#admin) — 6 cases
+17. [Games (dark-launched) & dev preview](#games) — 5 cases
 
 <a id="platform"></a>
 ## Platform, version gate & UAT seeding
@@ -58,6 +74,2175 @@ _API (automated, live Alpha) · plans: floor_pass, trader_
 2. Plan reads trader and credits rose by 5
 3. The user's own bearer token authenticates GET /v1/auth/me
 
+<a id="auth"></a>
+## Authentication, sessions & account identity
+
+Anonymous-first sign-in: the device bootstraps an anonymous user, can claim it
+with email magic-link / Apple / Google, signs out for real (the old token dies
+server-side), and keeps a once-only pseudonymous handle. Guards the goals that
+matter: a token you do not own never yields someone else's account, a signed-out
+token cannot come back to life, and a merge only ever moves data the caller was
+recorded as adopting. Full email sign-in and merge are blocked on a test inbox;
+Apple and Google need a real device.
+
+### API (automated, live Alpha)
+
+#### UAT-AUTH-001 — Anonymous bootstrap mints a tagged anonymous user whose token works
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/auth/anon with a fresh device_user_id, locale "ar", timezone "Asia/Riyadh" and the UAT device tag
+2. GET /v1/auth/me with the returned token
+
+**Expected**
+1. 200 with is_new true, a signed token, and a user with is_anonymous true, claimed_at null and no email / apple_id / google_id
+2. /v1/auth/me returns the same user id with the bearer token
+3. The admin view of the user shows locale "ar" and last_app_version "uat"
+
+#### UAT-AUTH-002 — Anonymous bootstrap rejects a malformed device id
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/auth/anon with device_user_id "not-a-uuid"
+
+**Expected**
+1. 422 naming body.device_user_id; no user is created and no token is returned
+
+#### UAT-AUTH-003 — The rightful device re-bootstraps to the same user
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous user and its token from UAT-AUTH-001
+
+**Steps**
+1. POST /v1/auth/anon with the user's own id as device_user_id and the user's bearer token
+
+**Expected**
+1. 200 with is_new false and the SAME user id (the portfolio, journal and credits behind it are kept)
+2. The returned token authenticates GET /v1/auth/me for that user
+
+#### UAT-AUTH-004 — Knowing someone's user id does not yield their token
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. Two anonymous users, "victim" and "attacker"
+
+**Steps**
+1. POST /v1/auth/anon with device_user_id = the victim's id and NO bearer
+2. POST /v1/auth/anon with device_user_id = the victim's id and the ATTACKER's bearer
+
+**Expected**
+1. Both calls mint a brand-new user (is_new true) whose id is neither the victim's nor the attacker's
+2. Neither returned token authenticates as the victim; GET /v1/auth/me with each returns the new user, never the victim
+
+#### UAT-AUTH-005 — Missing, malformed, tampered and query-string tokens are all 401
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/auth/me with no Authorization header
+2. GET /v1/auth/me with Bearer "garbage"
+3. GET /v1/auth/me with a valid token whose last four characters are altered
+4. GET /v1/auth/me with a valid token sent without the "Bearer " scheme
+5. GET /v1/auth/me?token=<valid token> with no header
+
+**Expected**
+1. Every call is 401 with detail "authentication required" (no credential) or "invalid or expired token" (bad credential)
+2. The query-string variant never authenticates (DEF181)
+
+#### UAT-AUTH-006 — Sign-out revokes the token server-side and it cannot be re-minted
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous user with a valid token
+
+**Steps**
+1. GET /v1/auth/me (baseline)
+2. DELETE /v1/auth/session
+3. GET /v1/auth/me with the same token
+4. POST /v1/auth/anon with the signed-out token as bearer and the user's id as device_user_id
+5. GET /v1/auth/me with the OLD token again
+
+**Expected**
+1. Sign-out returns 200 {"signed_out": true}
+2. The old token is 401 "invalid or expired token" on /v1/auth/me straight afterwards
+3. The re-bootstrap does not resurrect the account: it mints a new user with a different id (is_new true)
+4. The old token is still 401 after the re-bootstrap
+
+#### UAT-AUTH-007 — Sign-out requires a valid session
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. DELETE /v1/auth/session with no token
+2. DELETE /v1/auth/session with Bearer "garbage"
+
+**Expected**
+1. Both are 401; no user's token_version is touched
+
+#### UAT-AUTH-008 — A suspended account is locked out
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous UAT user (the admin suspends only this UAT user)
+
+**Steps**
+1. Admin POST /v1/admin/users/<id>/suspend for the UAT user
+2. GET /v1/auth/me with the user's token
+3. POST /v1/auth/anon with the suspended user's token and id
+
+**Expected**
+1. /v1/auth/me is 403 "account_suspended"
+2. The re-bootstrap does not hand the suspended account back; it mints a different user
+
+#### UAT-AUTH-009 — Apple and Google sign-in reject unauthenticated, malformed and garbage tokens
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous user with a valid bearer
+
+**Steps**
+1. POST /v1/auth/apple and POST /v1/auth/google with a valid bearer but identity_token "x.y.z"
+2. POST each with NO bearer and a token body
+3. POST each with a valid bearer and an empty body
+
+**Expected**
+1. Garbage identity tokens are 400 with an "undecodable header" style detail (never 200, never 500)
+2. No bearer is 401 "authentication required"
+3. A missing identity_token is 422 on body.identity_token
+4. The anonymous user is still anonymous afterwards (GET /v1/auth/me has is_anonymous true and no apple_id / google_id)
+
+#### UAT-AUTH-010 — Magic-link start accepts an authenticated request and never leaks the code
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/auth/magic_link/start {"email": "uat-cr263@example.com"} with a valid bearer
+2. POST the same body with NO bearer
+
+**Expected**
+1. The authenticated call is 200 {"sent": true} with debug_code null (only env=local returns the code)
+2. The unauthenticated call is 401 "authentication required"
+
+> Respects the 3/min rate limit — this suite calls magic_link/start exactly twice (this case).
+
+#### UAT-AUTH-011 — Magic-link verify refuses without a session and without a live challenge
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/auth/magic_link/verify {"email": "...", "code": "123456"} with NO bearer
+2. POST /v1/auth/magic_link/verify with a valid bearer, an email that never had a challenge, and code "000000"
+3. POST /v1/auth/magic_link/verify with a valid bearer and a body missing "code"
+
+**Expected**
+1. No bearer is 401 "authentication required"
+2. A code with no challenge is 401 "invalid or expired code"; the user stays anonymous
+3. A missing field is 422
+
+#### UAT-AUTH-012 — Account merge only works for a recorded adoption
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. Two anonymous users "caller" and "other", with no adoption event between them
+
+**Steps**
+1. GET /v1/auth/merge/preview/<other id> as caller
+2. GET /v1/auth/merge/preview/<random uuid> as caller
+3. POST /v1/auth/merge {"from_user_id": <other id>} as caller
+4. Repeat the preview and the merge with no bearer
+
+**Expected**
+1. All authenticated attempts are 403 "no recorded adoption from this user_id to the caller" — a user cannot pull another user's data into their own account
+2. The unauthenticated attempts are 401
+3. "other" keeps its own data and still authenticates (GET /v1/auth/me is 200)
+
+#### UAT-AUTH-013 — Handle is readable, regenerates exactly once, and needs a session
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/me
+2. PATCH /v1/me/handle
+3. GET /v1/me
+4. PATCH /v1/me/handle a second time
+5. GET /v1/me and PATCH /v1/me/handle with no token
+
+**Expected**
+1. The first read returns a handle key (null before first generation)
+2. The first PATCH returns a new non-empty handle and the next GET returns the same string
+3. The second PATCH is 409 "already_regenerated" and the handle is unchanged
+4. Without a token both calls are 401
+
+#### UAT-AUTH-014 — Legacy league handle path still works for one release and shares the once-only rule
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. PATCH /v1/league/handle as a fresh user
+2. PATCH /v1/me/handle as the same user
+
+**Expected**
+1. The legacy alias returns 200 with a handle
+2. The new path then returns 409 "already_regenerated" (one regeneration across both paths)
+
+#### UAT-AUTH-015 — Handles are per user
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Two users each GET /v1/me, then user A PATCHes /v1/me/handle
+2. Re-read both
+
+**Expected**
+1. User A's handle changes; user B's is untouched and B can still regenerate once
+
+#### UAT-AUTH-020 — Email sign-in claims the anonymous user
+
+_API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox (IMAP) not supplied yet_
+
+**Steps**
+1. POST /v1/auth/magic_link/start for an inbox the suite controls
+2. Read the 6-digit code from the inbox
+3. POST /v1/auth/magic_link/verify with the code
+4. GET /v1/auth/me with the returned token
+
+**Expected**
+1. Verify returns claimed true, a token, and is_anonymous false with the email set and claimed_at stamped
+2. The user id is unchanged when the email is new (the portfolio travels with the claim)
+
+#### UAT-AUTH-021 — Wrong or reused magic-link codes are refused and capped
+
+_API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox (IMAP) not supplied yet_
+
+**Steps**
+1. Start a challenge, then verify with a wrong code until the attempt cap
+2. Verify with the right code after the cap; verify the right code twice
+
+**Expected**
+1. Wrong codes are 401; after the cap even the right code is refused until a new challenge is started
+2. A used code cannot be replayed
+
+#### UAT-AUTH-022 — Signing in to an existing email adopts it and merge preserves the anonymous user's portfolio
+
+_API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox (IMAP) not supplied yet_
+
+**Preconditions**
+1. Account A already claimed with the inbox email; anonymous user B with sim trades, a journal entry and a watchlist ticker
+
+**Steps**
+1. As B, start and verify a magic link for A's email
+2. GET /v1/auth/merge/preview/<B id> and POST /v1/auth/merge as A
+
+**Expected**
+1. Verify returns adopted_from_user_id = B and a token for A
+2. Preview counts match what B held; merge moves them all to A in one transaction
+3. A's mandate is kept when both had one, and B no longer exists (a repeat merge is 404)
+
+<a id="onboarding"></a>
+## Onboarding interview (Concierge) & mandate creation
+
+The anonymous-first Concierge interview: seven scripted questions (deterministic,
+no LLM), a readback the user confirms, and a mandate built from exactly what they
+said. Guards the goals that matter: no answer is ever silently replaced by a
+default (an unreadable drawdown is re-asked, not stored as 30%), a restricting
+constraint is never loosened by omission, a failed confirm does not strand the
+session, and only an explicit, authenticated "restart" can overwrite a stored
+mandate.
+
+### API (automated, live Alpha)
+
+#### UAT-ONB-001 — Starting an interview needs no account and opens on question one
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/onboarding/start {"locale": "en", "timezone": "Asia/Riyadh"} with no token
+
+**Expected**
+1. 201 with a session_id, a welcome_message at step "welcome" and a first_question at step "q1_goal" with answer chips
+2. The Concierge introduces itself as the Concierge and names the 12 analysts
+
+#### UAT-ONB-002 — A session can be re-read, and unknown ids are handled
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/onboarding/<session_id> after start
+2. GET /v1/onboarding/<random uuid>
+3. GET /v1/onboarding/xyz
+
+**Expected**
+1. 200 with current_step "q1_goal", the welcome message in messages, completed false and the locale / timezone sent at start
+2. Unknown id is 404 "session not found or expired"
+3. A malformed id is 422
+
+#### UAT-ONB-003 — The seven questions walk to a readback that reflects the answers
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Start a session and answer q1_goal "I want to learn to trade", q2_horizon "5 to 10 years", the three scenario questions, q6_max_drawdown "20%", q7_constraints "halal only, long only"
+2. Note next_step after each answer
+
+**Expected**
+1. next_step advances q1 > q2 > q3 > q4 > q5 > q6 > q7 > readback, one question at a time, each reply a Concierge message
+2. The final reply carries a readback_summary with primary_goal learning_to_trade, max_drawdown_pct 20, compliance.halal true and long_only true, the user's three scenario answers in risk_quotes, and a risk_score 1-5
+3. The readback text the user reads names the same goal, drawdown and constraints
+
+#### UAT-ONB-004 — An unreadable drawdown is re-asked, never defaulted to 30%
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Answer q1-q5, then answer q6_max_drawdown with "banana", "$10,000", "0.5%" and "150%" in turn
+2. Check the session after each
+3. Then answer "20%"
+
+**Expected**
+1. Each unreadable answer keeps next_step at q6_max_drawdown with a clarifying reply (asks for a percentage); the session records no max_drawdown_pct
+2. The session never advances to q7 on an unreadable answer
+3. "20%" then advances to q7_constraints and 20 is what the readback shows
+
+#### UAT-ONB-005 — A free-text drawdown is honoured exactly; "no cap" is 100
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Run three sessions answering q6 with "45%", "12.5%" and "no cap"
+2. Read the readback_summary.max_drawdown_pct of each
+
+**Expected**
+1. 45 (not snapped to a chip), 12 (fractions round down to the stricter cap) and 100
+
+#### UAT-ONB-006 — Answers must be for the session's current question
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. On a fresh session at q1_goal, POST /v1/onboarding/answer for step q6_max_drawdown
+2. POST an answer with step "nope"
+3. POST an answer for an unknown session id
+4. Re-fetch the session
+
+**Expected**
+1. Skipping ahead is 409 naming the current step; nothing is recorded and the session is still at q1_goal
+2. An unknown step is 422; an unknown session is 404
+
+#### UAT-ONB-007 — Constraint answers never loosen a safety default by omission
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Finish three sessions with q7 "no hard rules", "I want to short sometimes", and "long only, though I want to short sometimes"
+2. Read compliance in each readback_summary
+
+**Expected**
+1. "no hard rules" keeps long_only true and liquid_only true (the schema defaults stand)
+2. An explicit "want to short" sets long_only false
+3. Restriction language wins over opt-out language in the same answer (long_only stays true)
+
+#### UAT-ONB-008 — Confirming without an account returns a preview and persists nothing
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Complete the interview, then POST /v1/onboarding/readback/confirm {"confirm": "confirm"} with no token
+2. Repeat with "restart": true but still no token
+3. Check an unrelated UAT user's mandate
+
+**Expected**
+1. 200 with completed true, final_step "complete", a Concierge follow-up and a mandate_preview whose user_id is "anonymous-pending-claim"
+2. restart without a token behaves identically (it cannot overwrite anything)
+3. No mandate row is created for any user by these calls
+
+#### UAT-ONB-009 — An authenticated restart replaces the user's mandate with the interview's
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/mandate/<user id> (default: max drawdown 30, halal false)
+2. Complete an interview (locale "ar", drawdown 20%, halal) and POST readback/confirm with restart true and the user's bearer
+3. GET /v1/mandate/<user id>
+
+**Expected**
+1. The mandate now has max_drawdown_pct 20, compliance.halal true, primary_goal learning_to_trade, the interview's risk_score, locale "ar"
+2. The plan and credit balance are the user's real ones (the interview cannot grant credits or a plan)
+
+#### UAT-ONB-010 — A signed-in confirm without restart leaves the stored mandate alone
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH the user's mandate max_drawdown_pct to 40
+2. Complete an interview with drawdown 10% and POST readback/confirm with the bearer but restart false
+3. GET the mandate
+
+**Expected**
+1. 200 with a preview, but the stored mandate still has max_drawdown_pct 40 and the same version
+
+#### UAT-ONB-011 — Readback edit is not implemented and does not damage the session
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Walk to readback, then POST readback/confirm {"confirm": "edit", "edits": {"max_drawdown_pct": 10}}
+2. GET the session
+
+**Expected**
+1. 501 with a "restart the session" message
+2. The session is unchanged: completed false, current_step "readback", the original 20% drawdown answer intact
+
+#### UAT-ONB-012 — Confirm validates its inputs
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST readback/confirm for an unknown session id
+2. POST readback/confirm with confirm "maybe"
+
+**Expected**
+1. Unknown session is 404; an invalid confirm value is 422
+
+#### UAT-ONB-013 — A confirm that fails does not strand the session
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Start a session and POST readback/confirm immediately (no drawdown answered)
+2. GET the session and try to answer q1_goal
+
+**Expected**
+1. The confirm is refused with a 409 that names the missing drawdown (no fabricated default)
+2. The session is NOT marked completed and is still at q1_goal, so the user can carry on answering
+
+> DEF428 principle — a failed claim/confirm must leave the session retryable.
+
+#### UAT-ONB-030 — Claiming an account at the end of onboarding saves the interview's mandate
+
+_API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox (IMAP) not supplied yet_
+
+**Steps**
+1. Complete an interview, then sign in by email passing onboarding_session_id on magic_link/verify
+2. GET /v1/mandate/<claimed user id>
+
+**Expected**
+1. The claimed user's mandate equals the interview's answers (not the generic default), and the session is bound to the user
+2. Replaying the same session id on a later sign-in does not overwrite a mandate edited since
+
+<a id="mandate-settings"></a>
+## Mandate, risk limits, compliance & Settings
+
+The user's mandate: read, edit, version history and rollback; the seven risk
+limits and the Day Trader preset; Halal / ESG / tobacco / fossil compliance and
+ticker block/allow lists; language and profile; and the Settings screen that
+edits them. Guards the goals that matter: a mandate is only ever readable and
+writable by its owner, entitlement fields cannot be set from a PATCH, rollback is
+forward-only and restores the old values, and a compliance setting actually stops
+a non-compliant trade in the deterministic safety floor (not just in a prompt).
+
+### API (automated, live Alpha)
+
+#### UAT-MAND-001 — A new user's mandate is the documented default, stamped with live plan state
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/mandate/<user id> for a user who has never edited the mandate
+
+**Expected**
+1. 200 with version 1, risk_score 3, max_drawdown_pct 30, and compliance long_only true, liquid_only true, halal / esg / tobacco / fossil / derivatives false, empty blocklist and a null allowlist
+2. plan "trader", a positive credit_balance equal to credit_allowance, room_cost and credits_reset_at set (read from the user, not the stored mandate)
+3. resolved carries all seven concrete limits (sector_cap_pct, single_name_cap_pct, max_open_positions, post_loss_cooldown_hours, max_trades_per_day, max_trades_per_week, max_open_risk_pct), none null
+4. day_trader_preset.overrides holds the seven permissive values and a non-empty disclosure
+5. No version history exists yet
+
+#### UAT-MAND-002 — A mandate is private to its owner
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. Two UAT users "owner" and "intruder"
+
+**Steps**
+1. GET, PATCH, versions, versions/1, rollback/1 and audit on the owner's mandate id, as the intruder
+2. Repeat GET with no token and with a garbage token
+3. GET /v1/mandate/not-a-uuid as the owner
+
+**Expected**
+1. Every intruder call is 403 "access denied"
+2. No token is 401; a garbage token is 401
+3. A malformed id is 422
+4. The owner's mandate is unchanged after the intruder's PATCH attempt
+
+#### UAT-MAND-003 — PATCH merges, bumps the version and keeps untouched fields
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH {"max_drawdown_pct": 20}
+2. PATCH {"compliance": {"halal": true}}
+3. PATCH {"risk_components": {"concentration_tolerance": 5}}
+4. GET the mandate
+
+**Expected**
+1. Each PATCH returns 200; the first edit of a never-edited mandate persists as version 1, every later edit raises the version by exactly 1, and the GET equals the last PATCH response
+2. The nested compliance merge sets halal but keeps long_only and liquid_only true
+3. The nested risk_components merge sets concentration_tolerance 5 and keeps drawdown_response and regret_asymmetry
+4. max_drawdown_pct stays 20 across the later PATCHes
+
+#### UAT-MAND-004 — Invalid values are rejected and the mandate is left as it was
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH risk_score 9; max_drawdown_pct 0, 101 and "abc"; primary_goal "get_rich"
+2. GET the mandate
+
+**Expected**
+1. Each is 422 naming the offending field
+2. The mandate version and values are exactly as before the attempts
+
+#### UAT-MAND-005 — Entitlement fields cannot be set through the mandate
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH {"plan": "floor_manager", "credit_balance": 99999, "credit_allowance": 99999}
+2. GET the mandate and the admin view of the user
+
+**Expected**
+1. The PATCH is accepted but ignores those fields: plan stays "trader" and credit_balance and credit_allowance are the real values
+2. The admin view still shows plan trader and the unchanged credit balance (no paywall bypass)
+
+#### UAT-MAND-006 — History lists every version newest first with plain-English summaries
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH max_drawdown_pct 20, then PATCH risk_score 4, then PATCH locale "ar"
+2. GET /v1/mandate/<id>/versions
+
+**Expected**
+1. Versions are listed newest first, exactly one is_current and it is the highest
+2. change_summary reads in plain English, e.g. "max drawdown 30% → 20%", "risk score 3 → 4", "locale En → Ar"
+
+#### UAT-MAND-007 — A historical version can be fetched; unknown versions are 404
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH max_drawdown_pct 20 then 40
+2. GET /v1/mandate/<id>/versions/<first> and /versions/999
+
+**Expected**
+1. The first version's snapshot has max_drawdown_pct 20 while current is 40
+2. Version 999 is 404 "mandate version 999 not found for this user"
+
+#### UAT-MAND-008 — Rollback restores the earlier values as a new version and keeps history
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH max_drawdown_pct 20 (version A), PATCH max_drawdown_pct 40 and halal true (version B)
+2. POST /v1/mandate/<id>/rollback/<A>
+3. GET the mandate, the versions list and version B
+
+**Expected**
+1. Rollback returns 200 with a NEW version number (B + 1), max_drawdown_pct 20 and halal false
+2. The current mandate equals that response; versions A and B still exist unchanged (B still 40 / halal true)
+3. The newest history row's summary is "Rolled back to v<A>."
+
+#### UAT-MAND-009 — Rollback to an unknown version is 404
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. POST /v1/mandate/<id>/rollback/999
+2. GET the mandate
+
+**Expected**
+1. 404 "mandate version 999 not found for this user" and the current mandate is unchanged
+
+#### UAT-MAND-010 — Each version carries its own timestamp
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH max_drawdown_pct 20, wait two seconds, PATCH max_drawdown_pct 40
+2. GET /v1/mandate/<id>/versions
+
+**Expected**
+1. The two versions have different created_at values, the later one strictly later, so the history can show when each edit happened
+
+#### UAT-MAND-011 — Day Trader preset applies all seven limits and leaves compliance alone
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH halal true
+2. PATCH the mandate with day_trader_preset.overrides exactly as served by GET
+3. GET the mandate and history
+4. PATCH the seven fields back to null
+
+**Expected**
+1. After the preset, resolved shows sector_cap_pct 100, single_name_cap_pct 100, post_loss_cooldown_hours 0, max_open_risk_pct 100 and max_open_positions / max_trades_per_day / max_trades_per_week 999999
+2. compliance.halal is still true (the preset cannot touch compliance)
+3. The newest history summary starts "Day Trader preset applied"
+4. Setting the seven back to null returns resolved to the risk-profile values (single_name_cap_pct 3.0, sector_cap_pct 40.0 for risk 3)
+
+#### UAT-MAND-012 — Explicit risk limits override the risk profile and null returns to it
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH sector_cap_pct 25, single_name_cap_pct 10, max_open_positions 8, max_trades_per_day 2
+2. GET the mandate, then PATCH sector_cap_pct and single_name_cap_pct to null
+
+**Expected**
+1. resolved shows exactly the explicit numbers (25, 10, 8, 2) and the stored fields hold them
+2. The history summary mentions "sector cap following your risk profile → 25%" style wording for each field
+3. After null, resolved is back to the profile values (40.0 / 3.0)
+
+#### UAT-MAND-013 — A raised concentration limit actually changes what the safety floor allows
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. POST /v1/sim/preview a BUY of AAPL sized to about 6% of the portfolio (quantity from the first preview's notional)
+2. Apply the Day Trader preset by PATCH and preview the same order again
+
+**Expected**
+1. Under the default 3% single-name cap the preview is not accepted and blocked_by is "concentration"
+2. After the preset the same order's concentration block is gone (accepted true)
+
+#### UAT-MAND-014 — Halal compliance blocks a non-compliant ticker in the deterministic floor
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. POST /v1/sim/preview a BUY of 1 MO (tobacco) with halal off
+2. PATCH compliance.halal true
+3. Preview the same MO buy; preview XOM (permitted); POST /v1/sim/submit the MO buy
+4. GET /v1/sim/portfolio/<id>
+
+**Expected**
+1. With halal off MO is accepted
+2. With halal on MO is not accepted, blocked_by "compliance", sharia_verdict.status "screened_out" and a violation naming the AAOIFI screen
+3. XOM is still accepted (the filter is selective)
+4. Submit returns ok false with the same compliance block and the portfolio holds no MO
+
+#### UAT-MAND-015 — Halal still binds after the Day Trader preset
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH halal true, then apply the Day Trader preset
+2. Preview a BUY of 1 MO
+
+**Expected**
+1. MO is still blocked by compliance; removing risk limits does not remove the Halal rule
+
+#### UAT-MAND-016 — Tobacco/alcohol/gambling and fossil-fuel filters block their sectors
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH compliance no_tobacco_alcohol_gambling true and no_fossil_fuels true
+2. Preview BUYs of 1 MO, 1 XOM and 1 KO
+
+**Expected**
+1. MO is blocked by compliance citing the tobacco / alcohol / gambling exclusion
+2. XOM is blocked by compliance citing the fossil-fuel exclusion
+3. KO is accepted
+
+#### UAT-MAND-017 — Ticker blocklist and allowlist are enforced and case-normalised
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH compliance.ticker_blocklist ["xom", "XOM"]; preview a BUY of XOM
+2. Clear the blocklist; PATCH ticker_allowlist ["XOM"]; preview XOM and KO
+3. PATCH ticker_allowlist null; preview KO
+
+**Expected**
+1. The stored blocklist is ["XOM"] (upper-cased, de-duplicated) and the XOM preview is blocked_by "blocklist"
+2. With the allowlist set XOM is accepted and KO is blocked_by "allowlist"
+3. null removes the allowlist and KO is accepted again
+
+#### UAT-MAND-018 — Ticker rule edits that would silently do nothing are refused
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH ticker_blocklist ["ZZZZNOTREAL"]
+2. PATCH ticker_allowlist [] and [""]
+3. PATCH ticker_blocklist "TSLA" (a string)
+
+**Expected**
+1. An unknown ticker is 422 naming it
+2. An empty or blank allowlist is 422 "send null to remove the allowlist instead"
+3. A non-list is 422
+4. The mandate version is unchanged after all attempts
+
+#### UAT-MAND-019 — Identity and language fields save and show in history
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH display_name "UAT Tester", locale "ms", timezone "Asia/Kuala_Lumpur"
+2. GET the mandate and versions
+
+**Expected**
+1. The values persist on GET
+2. The history summary names display name, timezone and locale changes in plain English
+
+#### UAT-MAND-020 — Holdings audit runs against the current mandate
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/mandate/<id>/audit for a user with no holdings
+2. GET it as another user
+
+**Expected**
+1. 200 with passed true, mandate_version equal to the current version, no breaches and no violations
+2. Another user's call is 403
+
+#### UAT-MAND-021 — Mandate PATCH ignores unknown fields without changing behaviour
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH {"zzz": 1}
+2. GET the mandate
+
+**Expected**
+1. 200 and every real field is unchanged
+
+<a id="floor"></a>
+## Floor tab & home shell
+
+The Floor is client composition over other areas' endpoints (journal team
+calls, sector watch, daily challenge, Academy unlock state, inbox bell). The
+API cases prove a brand-new user's cold-start Floor reads answer cleanly with
+honest empty states and are private; the manual cases cover the shell and
+the visual checks. Bottom tabs are Floor / Portfolio / [Game, flag-gated] /
+Lessons / You.
+
+### API (automated, live Alpha)
+
+#### UAT-FLOOR-001 — Sector Watch answers 200 with an explicit empty state for a new user
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/sector-watch/{user_id} for a user with no watchlist or holdings
+2. GET another user's sector watch; GET with no token
+
+**Expected**
+1. 200 with state "empty", tickers_considered 0 and null sector, leader and headline (degrade states ride the body, CR183/CR040)
+2. Another user's id is 404 (CR183 - it must not confirm the id exists); no token is 401
+
+#### UAT-FLOOR-002 — Every read the Floor makes on cold start succeeds for a brand-new user
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET journal (team calls), lessons by_lesson, lesson requirements, daily_challenge today, messages, notifications unread_count, sector-watch
+
+**Expected**
+1. All 200 with empty-but-valid bodies - no 5xx, and no null where the client expects a list
+2. The Floor Pass journal read reports retention_days 30
+3. requirements lists the 12 agents all locked (the Your Firm screen's source)
+
+<a id="sim-trading"></a>
+## Sim trading & market data
+
+The training simulator: quotes/history/news/earnings/profile/insider, market
+and resting orders, the deterministic mandate check that refuses an order
+(not merely warns), lots and realised P&L, manual close, reset, ownership,
+and the options gate. Market hours do not matter: off-hours Alpha serves the
+last Yahoo close (`source: yfinance`, `market_state: CLOSED`) and market
+orders still fill at it. All figures are asserted from the fill the server
+reports, never an assumed price.
+
+### API (automated, live Alpha)
+
+#### UAT-SIM-001 — Single and batch quotes return a real, labelled price
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/sim/quote/AAPL
+2. GET /v1/sim/quotes?symbols=aapl, MSFT
+3. GET /v1/sim/quotes?symbols= (empty)
+
+**Expected**
+1. Quote has price > 0, a non-"unavailable" source, a change_pct and a market_state
+2. Batch returns upper-cased tickers in request order, each with a price
+3. Empty symbol list returns []
+
+#### UAT-SIM-002 — History candles are well formed on every chart period
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/sim/history/AAPL for 1d, 1w, 1m, 3m, 1y, 5y
+2. GET with period=1M (uppercase chip label) and period=9y
+
+**Expected**
+1. Each period returns at least 2 candles, ascending in time, with low <= open/close <= high, low > 0, volume >= 0
+2. The uppercase label is accepted and echoed in canonical lower case (DEF151)
+3. An unknown period is a 422
+
+#### UAT-SIM-003 — Earnings and dividend fields are served for a major ticker
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/sim/earnings/AAPL
+
+**Expected**
+1. Response carries earnings_date, quarter, eps_estimate, ex_dividend_date, dividend_rate and a source that is not "unavailable"
+2. A present earnings_date is an ISO date; a present dividend_rate is positive
+
+#### UAT-SIM-004 — Recent news is served for a major ticker
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/sim/news/AAPL?limit=3
+
+**Expected**
+1. 1 to 3 articles, each with a title and an http link, source not "unavailable"
+
+> FINDING 2026-10-19: Alpha returns `source: unavailable`, `articles: []` for AAPL and MSFT
+on every attempt, so the ticker-detail news list and Sector Watch card 3 are dark. The test
+is `xfail(strict)` so it flips loudly when news is fixed.
+
+
+#### UAT-SIM-005 — Company profile and insider activity are sourced and stateful
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/sim/company-profile/AAPL
+2. GET /v1/sim/insider/AAPL
+
+**Expected**
+1. Profile has cik 0000320193, overview.state live or partial with a legal name, and a state on each of overview, financials, filings, ownership
+2. Insider window is 90 days, state is live/partial/not_available, every transaction direction is buy/sell/other and only codes P/S carry buy/sell
+
+#### UAT-SIM-006 — A bogus ticker is never passed off as real and can never be traded
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/tickers/validate for zzzzq and aapl
+2. GET quote and history for ZZZZQ
+3. GET company-profile for ZZZZQ and for a malformed symbol; GET insider for ZZZZQ
+4. POST /v1/sim/preview and /v1/sim/submit for ZZZZQ
+
+**Expected**
+1. Validate says exists false for ZZZZQ and exists true with a company name for AAPL
+2. Quote/history for ZZZZQ, if served at all, are labelled mock_walk or unavailable, never a live source
+3. Profile is 404 for the unknown symbol and 422 for the malformed one; insider is state not_available with no transactions
+4. Preview and submit are 422 naming exists false, and the book is unchanged
+
+> Observation (not asserted as a defect): quote/history return HTTP 200 with a
+fabricated mock-walk series for an unknown symbol. They are labelled, so the
+app can tell, but a raw 404 would be cleaner.
+
+
+#### UAT-SIM-007 — A buy moves cash by exactly qty x fill and creates the holding and lot
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Read the portfolio (10,000 starting capital)
+2. POST /v1/sim/preview then /v1/sim/submit a market buy of 3 AAPL
+3. Read the portfolio, lots and trade ledger
+
+**Expected**
+1. Preview is accepted and changes nothing
+2. Cash falls by 3 x the reported fill plus the toll when the toll flag is on (toll_charged null while it is off), within 2 cents
+3. The holding has quantity 3 and avg_cost equal to the fill; exactly one open lot at the fill price; the trade is in the ledger with status open
+4. Total value is still about 10,000 (the buy converts cash to shares)
+
+#### UAT-SIM-008 — A sell realises P&L from the lot's real cost and cannot oversell
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Buy 2 MSFT, sell 1, read portfolio and lots
+2. Sell 5 (more than the 1 held)
+3. Sell the last 1
+
+**Expected**
+1. Cash rises by the sell fill minus any toll; the holding drops to 1; the lot is partially_closed with 1 closed
+2. Lot realised_pnl equals (sell fill - buy fill) for the closed share
+3. Selling more than held is refused as long_only with cash unchanged
+4. After the final sale the holding is gone, quantity_open is 0 and total realised P&L is the sum of both sells against the entry
+
+#### UAT-SIM-009 — Manual close returns the lot to cash at the close price
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Buy 4 KO, POST /v1/sim/trades/{uid}/close with that trade id
+2. Close the same trade again; close an unknown trade id
+
+**Expected**
+1. Trade becomes closed with a closed_at and closed_price; realised_pnl equals (closed price - entry) x 4
+2. Cash rises by 4 x the close price and the holding is gone
+3. A second close and an unknown id are both 404
+
+#### UAT-SIM-010 — Halal, blocklist and allowlist rules are enforced by the deterministic check
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Set halal on; preview and submit JPM (screened out) and preview AAPL
+2. Set a blocklist of TSLA; submit TSLA
+3. Set an allowlist of MSFT; submit AAPL and preview MSFT
+
+**Expected**
+1. The excluded order returns ok false, compliance.passed false, a violation sentence and a blocked_by (compliance for the Sharia screen, blocklist, allowlist)
+2. The halal preview exposes the AAOIFI screened_out verdict
+3. The book (cash, holdings, resting orders) is byte-identical afterwards
+4. Names that pass the rule still trade (the floor is not a blanket no)
+
+#### UAT-SIM-011 — Risk limits refuse oversized and over-concentrated orders
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Single-name cap 3%; submit 1 AAPL (about 3.4% of 10,000)
+2. Hold AAPL, cap open positions at 1; submit a new name, then add to AAPL
+3. Sector cap 5% with Technology occupied; submit MSFT
+4. Single-name cap 100%; submit 500 NVDA (far more than the cash)
+
+**Expected**
+1. Each oversize order is refused (ok false, blocked_by concentration / max_open_positions / compliance, a violation sentence) with the book unchanged
+2. Adding to an existing holding is unaffected by the open-positions cap
+3. The cash-exceeding order is refused, not partially filled
+
+#### UAT-SIM-012 — A long-only mandate refuses to open a short
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Confirm compliance.long_only is true
+2. Submit a market sell of 1 XOM with none held
+
+**Expected**
+1. ok false, blocked_by long_only, a sentence saying the mandate is long-only
+2. No short position appears and cash is unchanged
+
+#### UAT-SIM-013 — A client cannot loosen the stored mandate per order
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Store a blocklist of TSLA
+2. Submit and preview TSLA carrying mandate_override that empties the blocklist, turns long_only off, or raises the cap
+
+**Expected**
+1. Every variant is still refused as blocklist (submit) / not accepted (preview); the book is unchanged
+
+#### UAT-SIM-014 — Preview applies the same check as submit and never persists
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. With TSLA blocklisted, preview then submit TSLA
+2. Preview a 2-share KO buy
+
+**Expected**
+1. Preview and submit give the same blocked_by and the same violation text; nothing is persisted
+2. The valid preview reports notional equal to 2 x fill_price and the cash_available, and changes no cash or holdings
+
+#### UAT-SIM-015 — Malformed orders are rejected before they touch the book
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. POST preview and submit with quantity 0, quantity negative, unknown side, limit with no price, stop with no trigger, negative limit price, unknown tif, tif on a market order, unknown ticker
+
+**Expected**
+1. Every request is a 422 on both routes and the book is unchanged
+
+#### UAT-SIM-016 — A resting limit order commits cash without spending it and can be cancelled
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Submit a day buy limit for 1 MSFT at 100 (far below market)
+2. Read portfolio and /v1/sim/orders
+3. Cancel it, cancel it again, cancel an unknown id
+
+**Expected**
+1. ok true, resting true, order state working; current_cash unchanged but cash_committed rises, cash_available falls and resting_order_count is +1; no holding
+2. Cancel returns cancelled true / state cancelled and restores the committed figures
+3. A second cancel returns cancelled false with the true state; an unknown id is 404
+
+#### UAT-SIM-017 — Another user's book is unreachable
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. As a second user (and unauthenticated), read portfolio, history, trades, orders, lots of the first user
+2. Submit/preview with the first user's id, reset, close, evaluate and cancel on it
+
+**Expected**
+1. Authenticated cross-user calls are 403 and unauthenticated calls are 401 on every route
+2. The victim's book is identical before and after
+
+#### UAT-SIM-018 — Portfolio reset is limited to once a day and a refused reset changes nothing
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. On a freshly created account, POST /v1/sim/portfolio/{uid}/reset
+
+**Expected**
+1. 429 with detail reset_cooldown and a Retry-After between 1 and 86,400 seconds
+2. The portfolio response is exactly what it was before
+
+> "Reset restores starting cash" cannot be run over the API on a fresh test user
+because of the 24 h cooldown and there is no admin back-date; it is UAT-SIM-027
+(manual, on an account older than a day).
+
+
+#### UAT-SIM-019 — Trade ledger paging, history and the evaluate sweep behave
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET trades unpaged, with limit=2&offset=1, with bad limit/offset, and with status_filter=closed
+2. GET portfolio history, then with limit=0
+3. POST /v1/sim/trades/{uid}/evaluate
+
+**Expected**
+1. total equals the unpaged length; a page is the matching slice of the ledger; limit 0 / 501 and offset -1 are 422; the closed filter returns only closed trades
+2. History returns points and a twr_pct field; limit 0 is 422
+3. Evaluate is 200 ok true with no updates when nothing is bracketed, and moves no cash
+
+#### UAT-SIM-020 — Options are blocked until derivatives are allowed and money checks still apply
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Confirm derivatives_allowed is false; POST /v1/sim/options/propose for AAPL bullish
+2. POST /options/open the first candidate
+3. POST /options/reprice with the shown premiums and spot
+4. Enable derivatives and open a structure that costs more than the cash on hand
+
+**Expected**
+1. Each candidate carries a compliance block that fails and names derivatives
+2. Open returns accepted false, blocked_by compliance, no strategy id or net cost; no cash moves and no option leg appears
+3. Reprice is read-only and returns drift (spot_then/spot_now and per-leg premium_then/premium_now) with a structure whose compliance still fails
+4. With derivatives on, an unaffordable structure is still refused and charges nothing
+
+#### UAT-SIM-021 — Option routes validate input and enforce ownership
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Propose/open as another user and unauthenticated
+2. Propose with an unknown ticker and an invalid direction
+3. Open with no legs, a bad right, a negative strike, and a client-stated premium
+
+**Expected**
+1. Cross-user is 403, unauthenticated is 401
+2. Unknown ticker, bad direction, empty/invalid legs are 422
+3. A client-supplied premium is never honoured (422, or a not-accepted result)
+
+<a id="portfolio-health"></a>
+## Portfolio health & sector analytics
+
+Portfolio Health tiles (free in every gate mode), the plan-aware gate report,
+sector allocation vs the mandate cap, Sector Watch, Day Trader outcomes, and
+the gated, LLM-backed Finding. Alpha gate at time of writing: mode trial,
+3 trial Findings, 2/day cap, 30-day cadence. Total LLM spend for this area is
+one Finding per run (UAT-HLTH-009); a Finding takes minutes on the reasoning
+model.
+
+### API (automated, live Alpha)
+
+#### UAT-HLTH-001 — Tiles for an empty book are free and say there is nothing to measure
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/portfolio/health/{uid} on a Floor Pass account with no holdings
+
+**Expected**
+1. 200 with status no_holdings, an engine_version and as_of, and a gate block with the full key set
+2. Never a 402/429 on a free plan (the tiles are not gated)
+
+#### UAT-HLTH-002 — Tiles are measured from the real book
+
+_API (automated, live Alpha) · plans: trader_
+
+**Preconditions**
+1. Trader account holding 5 AAPL
+
+**Steps**
+1. GET the portfolio and GET /v1/portfolio/health/{uid}
+
+**Expected**
+1. status ok, one holding AAPL in sector Technology included at 100% invested weight, nothing dropped
+2. total_value, invested_value and cash_fraction agree with the portfolio endpoint
+3. Each metric block is either sufficient with a value, or insufficient with a stated cause
+4. One holding reads as total concentration (concentration 1.0, effective bets 1.0) and positive volatility
+
+#### UAT-HLTH-003 — The gate is reported truthfully per plan
+
+_API (automated, live Alpha) · plans: floor_pass, trader_
+
+**Steps**
+1. GET the health gate for a fresh Floor Pass user and for a Trader
+
+**Expected**
+1. Floor Pass has plan_has_access false, trial_active true (in trial mode) and zero Findings used; Trader has plan_has_access true
+2. Same mode for both; daily cap and trial budget are positive; cadence is not blocked
+
+#### UAT-HLTH-004 — Sector allocation matches the book and reads the cap from the mandate
+
+_API (automated, live Alpha) · plans: floor_pass, trader_
+
+**Steps**
+1. GET /v1/portfolio/sector-allocation/{uid} for an empty book and for a book holding AAPL
+2. Lower the mandate sector cap to 5% and read again
+
+**Expected**
+1. Empty book has no allocation and is compliant
+2. Held book splits into Technology and Cash summing to 1, matching holding value / total value
+3. max_allowed comes from the mandate; with a 5% cap the Technology weight is flagged compliant false
+
+#### UAT-HLTH-005 — Sector Watch is honest when it cannot say anything
+
+_API (automated, live Alpha) · plans: floor_pass, trader_
+
+**Steps**
+1. GET /v1/sector-watch/{uid} for an empty user and a user holding AAPL
+2. GET another user's sector watch; GET unauthenticated
+
+**Expected**
+1. Empty user gets state empty with no sector or move
+2. A holder gets ok (with sector, leader, headline, non-mock quote source) or unavailable with a reason and null move/leader/headline - never a fabricated 0.0%
+3. Another user's id is 404 (does not confirm the id exists); unauthenticated is 401
+
+#### UAT-HLTH-006 — Sector Watch resolves a headline for a liquid holding
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/sector-watch/{uid} for a user whose only holding is AAPL
+
+**Expected**
+1. state ok, sector Technology, leader AAPL, a headline title
+
+> FINDING 2026-10-19: returns unavailable / no_news because /v1/sim/news/* returns
+nothing on Alpha (UAT-SIM-004). `xfail(strict)`.
+
+
+#### UAT-HLTH-007 — Finding refuses before spending anything it should not
+
+_API (automated, live Alpha) · plans: floor_pass, trader_
+
+**Steps**
+1. POST /v1/portfolio/health/{uid}/finding on an empty book
+2. Cross-user and unauthenticated Finding, tiles and sector-allocation calls
+3. Fire the Finding endpoint 8 times quickly on the empty book
+
+**Expected**
+1. 409 with code portfolio_health_unavailable and reason no_holdings (no Finding narrated over nothing)
+2. Cross-user is 403, unauthenticated is 401
+3. The per-user rate limit (5/min) returns 429 before any LLM work; only 409 and 429 are seen
+
+#### UAT-HLTH-008 — Day Trader outcomes never judge a user with no history
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/portfolio/day-trader-outcomes/{uid} for a user who never applied the preset
+2. Apply the Day Trader preset by PATCHing the served overrides, read again
+3. Read another user's outcomes
+
+**Expected**
+1. not_in_cohort, then too_early with only status and message (no numeric comparison)
+2. Another user's id is 403
+
+#### UAT-HLTH-009 — A Finding is generated once and its replay is free
+
+_API (automated, live Alpha) · plans: trader · uses LLM_
+
+**Preconditions**
+1. Trader holding 5 AAPL, no Finding yet today
+
+**Steps**
+1. POST /v1/portfolio/health/{uid}/finding (waits minutes on the reasoning model)
+2. POST it again
+
+**Expected**
+1. created true with a journal_entry_id, as_of and non-empty sections; daily_used and trial_findings_used rise by exactly 1
+2. The replay returns created false, the same journal_entry_id and identical sections, and spends no budget
+
+#### UAT-HLTH-010 — Finding is refused with 402 when not entitled and 429 when the daily cap or cadence is spent
+
+_API (automated, live Alpha) · plans: floor_pass, trader · **BLOCKED** — Alpha runs gate mode "trial" with a 3-Finding trial, a 2/day cap and a 30-day cadence; reaching a 402 or the cap needs gate mode "plan" or at least 3 paid Findings (3+ LLM calls, minutes each), which exceeds this wave's LLM budget. Covered by backend unit tests until Saiful flips PORTFOLIO_HEALTH_GATE_MODE=plan on a staging stack._
+
+**Steps**
+1. Exhaust the trial budget on a Floor Pass user, then POST a Finding
+2. On a Trader, generate a second Finding inside the cadence window
+
+**Expected**
+1. 402 with code portfolio_health_gate_closed and the gate block
+2. 429 with portfolio_health_daily_cap_reached or portfolio_health_cadence_not_elapsed (cadence carries next_eligible_at)
+
+<a id="watchlist-alerts"></a>
+## Watchlist & price alerts
+
+Watchlist add/remove with live quotes and idempotent adds; price alerts
+(stop / target / manual above / manual below) as soft-cancelled audit rows
+with a cap of 10 active. Firing is a background evaluator on live prices, so
+it is verified on a phone (UAT-WATCH-012), not asserted from the API.
+
+### API (automated, live Alpha)
+
+#### UAT-WATCH-001 — Watchlist add is idempotent and remove is final
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST aapl (lower case) with notes, POST " AAPL " again with no notes, POST AAPL with new notes
+2. Add MSFT, GET the list, DELETE aapl, DELETE it again, DELETE MSFT
+
+**Expected**
+1. 201 with the ticker upper-cased, the notes kept, a quote price > 0 and a price_source
+2. A duplicate add returns the same entry id (no second row); an add without notes keeps the old notes; an add with notes updates them
+3. List total equals the items and every item has a quote
+4. First delete 204, second delete 404 "ticker not on watchlist"; the list ends empty
+
+#### UAT-WATCH-002 — Watchlist rejects unknown and blank tickers
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST ZZZZQ, a blank ticker, no body fields, and a non-string ticker
+
+**Expected**
+1. Unknown ticker is 422 with exists false; blank is 400; missing or wrong-typed field is 422
+2. The list is unchanged
+
+#### UAT-WATCH-003 — A watchlist belongs to its owner
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. As another user (and unauthenticated), GET, POST and DELETE on the first user's watchlist
+
+**Expected**
+1. Cross-user is 403, unauthenticated is 401 on all three
+2. The owner's list is unchanged and the stranger's own list stays empty
+
+#### UAT-WATCH-004 — Buying a ticker puts it on the watchlist
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. On a fresh Trader account with an empty watchlist, buy 1 KO
+2. GET the watchlist
+
+**Expected**
+1. KO is on the watchlist without a separate add
+
+#### UAT-WATCH-005 — Price alert create, list, filter and cancel
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST one alert of each type (stop, target, manual_above, manual_below) for aapl
+2. GET the list and the status=active filter; DELETE the stop alert; GET status=cancelled
+3. DELETE it again; DELETE an unknown id
+
+**Expected**
+1. Each is 201, ticker upper-cased, status active, fired_at and cancelled_at null, owned by the caller
+2. List is newest first and the total matches; all four appear under active
+3. Cancel returns status cancelled with cancelled_at; the row moves to the cancelled filter and still appears in the full list (soft cancel)
+4. A second cancel is 409 "already cancelled"; an unknown id is 404
+
+#### UAT-WATCH-006 — Price alert rejects a bad type, unknown ticker, bad price type and a foreign trade
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST threshold_type bogus; ticker ZZZZQ; no threshold_price; threshold_price "cheap"; a random trade_ref
+
+**Expected**
+1. 422 for bad type, unknown ticker (exists false), missing price and non-numeric price; 400 for a trade_ref that is not the caller's
+2. No alert is created
+
+#### UAT-WATCH-007 — Price alert rejects a non-positive price
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST a stop alert with threshold_price 0 and with -5
+
+**Expected**
+1. 400 or 422 for both; nothing is created
+
+> FINDING 2026-10-19: both are accepted (201, active). The phone sheet blocks
+<= 0 client-side; the API does not. `xfail(strict)`.
+
+
+#### UAT-WATCH-008 — Price alert with an absurd price is a client error, not a 500
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST a target alert with threshold_price 1e12
+
+**Expected**
+1. 400 or 422
+
+> FINDING 2026-10-19: returns HTTP 500 "internal server error". `xfail(strict)`.
+
+
+#### UAT-WATCH-009 — The 10 active alert cap closes the oldest
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Create 10 active alerts, then an 11th
+
+**Expected**
+1. The 11th is created active and survives; exactly 10 are active; the oldest alert is the one cancelled (with cancelled_at)
+
+#### UAT-WATCH-010 — Price alerts belong to their owner
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. As another user, list, create and cancel against the first user's id; cancel the first user's alert id inside the second user's own namespace
+2. Repeat unauthenticated
+
+**Expected**
+1. Cross-user routes are 403; the foreign alert id under one's own id is 404; unauthenticated is 401
+2. The owner's alerts are unchanged and the stranger has none
+
+<a id="lessons"></a>
+## Lessons, quizzes, Agent Academy unlocks & glossary
+
+The curriculum is served, quizzes grade server-side (all answers right to
+pass), and passing a documented agent's five gateway lessons unlocks that
+agent on every plan, Floor Pass included. Failing never unlocks. The
+glossary is non-empty and well-formed.
+
+### API (automated, live Alpha)
+
+#### UAT-LESS-001 — Lesson catalogue is non-empty, consistent and anonymous-readable
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/lessons with no token
+
+**Expected**
+1. 200; total_lessons equals the sum of lessons across tracks and is at least 100
+2. Every lesson meta has a unique id, a title, a track and a code; the foundations track is present
+
+#### UAT-LESS-002 — A lesson serves its body and quiz without the answer key
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/lessons/280_what_is_a_stock with no token
+2. GET the same lesson with locale=ar, locale=ms and an unauthored locale
+3. GET /v1/lessons/does_not_exist
+
+**Expected**
+1. 200 with markdown blocks and at least one quiz question that has options
+2. The raw response text contains no answer_index (DEF294)
+3. Other locales answer 200 for the same lesson id (EN fallback, never a 404)
+4. An unknown lesson id is 404
+
+#### UAT-LESS-003 — Starting a lesson records progress for that user only
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET progress for a fresh user
+2. POST /v1/lessons/start for a real lesson
+3. GET progress/by_lesson
+4. POST /v1/lessons/start for an unknown lesson
+
+**Expected**
+1. Fresh progress is 0 completed of a non-zero total, no agents unlocked
+2. The started lesson appears with started_at set, quiz_attempts 0, quiz_passed false
+3. Unknown lesson is 404
+
+#### UAT-LESS-004 — Wrong or partial quiz answers never pass, complete or unlock
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Submit no answers to a two-question quiz
+2. Submit one right and one wrong answer
+3. Read progress, by_lesson, activations and the journal
+
+**Expected**
+1. Both submissions return passed false with a score below 1.0 and no unlocked_agents
+2. The response reveals the correct index and explanation per question
+3. quiz_attempts counts both tries, quiz_passed stays false, completed_at stays null
+4. lessons_completed stays 0 and no lesson_complete journal entry exists
+5. A fully correct submission afterwards passes, completes the lesson and journals it
+
+#### UAT-LESS-005 — Five gateway quizzes unlock the documented agent on Floor Pass; four or a failed fifth do not
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET requirements and pick fundamentals_analyst (five gateway lessons)
+2. Pass four of the five gateway quizzes
+3. Fail the fifth, then pass it
+4. Pass the fifth a second time
+5. Read requirements, activations, progress and the journal
+
+**Expected**
+1. After four passes the agent is locked with passed_count 4 and remaining_count 1; no unlocked_agents were reported
+2. A failed fifth attempt leaves the agent locked
+3. The passing fifth reports unlocked_agents ["fundamentals_analyst"] and creates one earn_path activation naming the triggering lesson
+4. Requirements flip to unlocked and progress.agents_unlocked lists it; the journal holds an agent_unlock entry
+5. Re-passing does not announce the unlock again or add a second activation
+
+#### UAT-LESS-006 — Every agent has a five-lesson gateway and starts locked
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/lessons/requirements/{user_id} for a fresh user
+
+**Expected**
+1. 12 agents, each with exactly 5 gateway lessons that all exist, each locked with remaining_count 5
+
+#### UAT-LESS-007 — Progress, quiz and unlock routes are private to the owner
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. User B reads and writes user A's progress, by_lesson, requirements, activations, start and quiz
+2. The same routes with no token
+
+**Expected**
+1. Every cross-user call is 403 and no state changes for A
+2. Unauthenticated calls are 401
+3. The removed founder-grant route (POST /v1/lessons/activations/grant) does not exist
+
+#### UAT-LESS-008 — Glossary catalogue and term lookup are well-formed
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/glossary/en, /ar, /ms with no token
+2. GET one term by id, then an unknown term
+
+**Expected**
+1. Each locale is 200, total_terms equals the entry count, categories are non-empty
+2. Every entry has a unique id and non-empty term, definition and category
+3. A term fetched by id equals its catalogue entry; an unknown term is 404
+
+<a id="daily-challenge"></a>
+## Daily challenge & reminder
+
+Today's challenge is served without its answer, one attempt per user per
+challenge is recorded server-side (a repeat returns the stored result), a
+wrong answer still counts as trying, and the reminder preference round-trips.
+
+### API (automated, live Alpha)
+
+#### UAT-DAILY-001 — Today's challenge is served without the answer or explanation
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/daily_challenge/today with no token
+2. GET by_id for that challenge, by_date for today's date, and /all
+3. GET by_date with a malformed date; GET by_id for an unknown id
+
+**Expected**
+1. 200 with a date, an id, a scenario, a question and at least two options
+2. No response view (today, by_id, by_date, all) contains answer or explanation keys (DEF042)
+3. my_attempt is null for an anonymous caller
+4. Malformed date is 400; unknown id is 404
+
+#### UAT-DAILY-002 — An attempt is recorded once; a repeat returns the stored result
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/daily_challenge/{id}/attempt with option 0
+2. POST again with a different option
+3. GET /v1/daily_challenge/today as that user
+
+**Expected**
+1. First attempt returns correct, correct_option, explanation and already_attempted false
+2. The repeat returns already_attempted true with the FIRST selected_option and the same correct flag, not a re-grade
+3. today.my_attempt carries the stored selection, correct_option and explanation
+
+#### UAT-DAILY-003 — A wrong answer is recorded and journalled; bad attempts are refused
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Attempt with an option other than the correct one
+2. Read the journal
+3. Attempt with an out-of-range option, an unknown challenge id, and with no token
+
+**Expected**
+1. The wrong attempt returns correct false, is stored, and shows in the journal as a daily_challenge entry tagged wrong with a loss outcome (trying counts, daily_and_streaks.md)
+2. Out-of-range option is 400; unknown challenge is 404; unauthenticated is 401
+3. Another user's attempt on the same challenge is independent (their today.my_attempt is still null)
+
+#### UAT-DAILY-004 — Reminder preference sets, preserves and clears the hour and timezone
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. PUT /v1/daily_challenge/reminder {hour 9, timezone Asia/Kuala_Lumpur}
+2. PUT {timezone Asia/Riyadh} only
+3. PUT {daily_reminder_hour null}
+4. PUT an unknown timezone, an hour of 24, and no token
+
+**Expected**
+1. The first PUT echoes hour 9 and the timezone
+2. A timezone-only PUT keeps hour 9 (CR095 audit) and changes only the timezone
+3. Explicit null turns reminders off (hour null) and keeps the timezone
+4. Unknown timezone is 400; hour 24 is 422; unauthenticated is 401
+
+#### UAT-DAILY-005 — Streak counts trying, not being right
+
+_API (automated, live Alpha) · plans: floor_pass · **BLOCKED** — The streak has no HTTP surface since the Floor streak chip was removed (CR109 slice 7, floor_screen.dart); reputation_service.streak() is only reachable in-process, so an API test has nothing to read. Needs Saiful to decide whether to re-home the streak read._
+
+**Steps**
+1. Attempt today's challenge wrong, read the streak
+
+**Expected**
+1. Streak is 1 after a wrong attempt (daily_and_streaks.md), never reset by being wrong
+
+<a id="journal"></a>
+## Decision journal, trash & the You tab
+
+What the user does is captured to a private journal. Floor Pass reads a
+30-day window, paid plans read everything. Delete is a soft delete that
+round-trips through the trash and restore. Entries are owner-only and cannot
+be forged over HTTP (DEF371).
+
+### API (automated, live Alpha)
+
+#### UAT-JRNL-001 — Journal list reports the plan's retention window
+
+_API (automated, live Alpha) · plans: floor_pass, trader_
+
+**Steps**
+1. GET /v1/journal/{user_id} as a Floor Pass user
+2. Admin-set the same user to trader and GET again
+3. Pass a lesson quiz first so the list is not empty
+
+**Expected**
+1. Floor Pass response has retention_days 30 (FLOOR_PASS_RETENTION_DAYS)
+2. Trader response has retention_days null (unlimited), and the entry is still listed
+3. total equals the number of entries returned
+
+#### UAT-JRNL-002 — Lesson completion is journalled and readable as an entry
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Pass a lesson quiz
+2. GET the journal with entry_type=lesson_complete, and with a non-matching filter and a search term
+3. GET the entry by id; GET an unknown entry id
+
+**Expected**
+1. A lesson_complete entry names the lesson, carries the score payload and has no deleted_at
+2. The type filter returns it, a different type filter does not, and q matches the lesson title
+3. GET entry returns the same entry; an unknown id is 404
+
+#### UAT-JRNL-003 — A note, tags and outcome persist on an entry
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/journal/{user_id}/entry/{id}/note with note, tags and outcome win
+2. GET the entry and the list
+3. POST a note to an unknown entry id
+
+**Expected**
+1. The response and a fresh GET both carry the note, tags and outcome
+2. The note shows in the list view too
+3. Unknown entry is 404
+
+#### UAT-JRNL-004 — Delete, trash and restore round-trip
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. DELETE an entry
+2. GET the list and GET /trash
+3. POST restore
+4. GET the list and trash again
+5. DELETE and restore with unknown ids
+
+**Expected**
+1. Delete is 204; the entry leaves the list and appears in trash with deleted_at set (retention_days null on trash)
+2. Restore is 204; the entry returns to the list with deleted_at cleared and leaves the trash
+3. Unknown ids are 404 for both delete and restore
+
+#### UAT-JRNL-005 — Journal is private to its owner and cannot be forged
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. User B lists, reads, annotates, deletes and restores user A's entry; reads A's trash
+2. The same list route with no token
+3. POST /v1/journal as an authenticated user
+
+**Expected**
+1. Cross-user calls are 403 and A's entry is untouched
+2. Unauthenticated is 401
+3. The bare POST creates nothing (route removed by DEF371) - 404 or 405, never 2xx
+
+#### UAT-JRNL-006 — Floor Pass window drops entries older than 30 days
+
+_API (automated, live Alpha) · plans: floor_pass, trader · **BLOCKED** — Needs an entry backdated beyond 30 days; the only backdating hook (journal_store test helper) is not exposed over HTTP and there is no admin route for it. Needs Saiful's go for a UAT-only backdating route or a DB seed on melehost._
+
+**Steps**
+1. Create an entry dated 31 days ago for a Floor Pass user, list, upgrade to trader, list
+
+**Expected**
+1. Floor Pass list omits the old entry; trader list includes it
+
+<a id="inbox-notifications"></a>
+## Inbox, notification centre & push
+
+A tester sees their own broadcasts and replies (inbox) and their own durable
+notification rows (centre). Both are owner-only; notification preferences
+round-trip and reject unknown types loudly. Producing rows needs a sender
+the API suite is barred from using, so the read/reply goals ride the manual
+layer and two blocked API cases.
+
+### API (automated, live Alpha)
+
+#### UAT-INBOX-001 — A new user has an empty inbox and an empty, zero-unread notification centre
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/messages
+2. GET /v1/notifications/{user_id}, /unread_count
+3. POST /v1/notifications/{user_id}/read_all
+
+**Expected**
+1. Inbox is 200 with an empty list
+2. Notifications list is empty with total 0; unread is 0
+3. read_all is 200 with updated 0, and unread stays 0
+
+#### UAT-INBOX-002 — Notification preferences list every type, round-trip and reject unknown types
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/notifications/{user_id}/preferences
+2. PATCH one type to false, GET again, PATCH it back to true
+3. PATCH an unknown type; PATCH an empty updates map
+
+**Expected**
+1. Every known type is listed and enabled by default
+2. The disabled type reads enabled false (with updated_at set) and the others are untouched; re-enabling restores it
+3. Unknown type and empty updates are 422, and nothing changes
+
+#### UAT-INBOX-003 — Inbox and notification routes are owner-only and 404 on unknown rows
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. User B reads and writes user A's notifications, unread_count, read_all and preferences
+2. All inbox and notification routes with no token
+3. Mark an unknown notification read; mark read / toasted / reply to an unknown message id
+
+**Expected**
+1. Cross-user path access is 403, unauthenticated is 401
+2. Unknown notification and unknown message ids are 404 (indistinguishable from another user's row)
+3. A reply to an unknown message stores nothing
+
+#### UAT-INBOX-004 — unread_count tracks single read and read_all
+
+_API (automated, live Alpha) · plans: floor_pass · **BLOCKED** — A UAT user cannot be given a notification row without calling admin push (barred for this suite) or a price alert (spends an LLM call for commentary and waits on the 5-minute evaluator). Needs Saiful's go for a UAT-only seeding route, or for admin push to a tagged UAT user id._
+
+**Steps**
+1. Give a UAT user three notifications
+2. Mark one read; then read_all
+
+**Expected**
+1. unread goes 3, 2, 0; read is idempotent; read_all returns updated 2 then 0
+
+#### UAT-INBOX-005 — Inbox reply is stored and read state is server-side
+
+_API (automated, live Alpha) · plans: floor_pass · **BLOCKED** — Same input gap - an inbox row exists only after an admin broadcast, which this suite must not call. Needs a go for a broadcast to a single tagged UAT user id (mode=user)._
+
+**Steps**
+1. Broadcast to one UAT user; list the inbox
+2. Mark read; mark toasted; reply
+3. List the inbox again
+
+**Expected**
+1. The broadcast row appears direction out with read_at null; read and toasted stamp it once
+2. The reply is stored direction in, threaded to the message via reply_to_id, and visible in the admin reply feed
+
+<a id="support"></a>
+## Bug reports, AMI help library & telemetry
+
+Users can report a bug with or without a session; the endpoint is
+IP-rate-limited and refuses bad input. The resolution feed is private.
+Telemetry ingest is per-user and idempotent while the segment read is
+admin-only. The help library (ai_coach) serves static, well-formed Q&A with
+no LLM call. Bug reports filed by this suite land in the real triage queue and
+are prefixed "[CR263 UAT - ignore]"; at most two are filed per run.
+
+### API (automated, live Alpha)
+
+#### UAT-SUPP-001 — A signed-in user can submit a bug report
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/feedback/bug (multipart) with a valid category, a "[CR263 UAT - ignore]" title, app_version, platform ios and a bearer token
+
+**Expected**
+1. 201 with an id, status open and created_at; no attachment path
+2. The same user's GET /v1/feedback/updates is still empty (open reports are not resolution updates)
+
+#### UAT-SUPP-002 — An anonymous caller can still submit a bug report
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/feedback/bug with no Authorization header and platform android_gms
+
+**Expected**
+1. 201 with an id and status open (the report is kept even without a user_id)
+
+#### UAT-SUPP-003 — Missing fields, an empty title and a disallowed attachment are refused
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST with missing required fields, an empty title, an unsupported attachment MIME (text/plain)
+
+**Expected**
+1. Missing fields and empty title are 422; text/plain attachment is 415
+2. Nothing is stored for any of these
+
+#### UAT-SUPP-004 — Bug-report submission is rate-limited per IP
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. From one client IP, POST 6 requests in a row (invalid, so nothing enters the triage queue)
+
+**Expected**
+1. The first five are answered normally (422); the sixth is 429 rate_limit_exceeded (DEF186, 5 per hour)
+2. A different client IP is not limited by the first one's budget
+
+#### UAT-SUPP-005 — Resolution updates and acknowledgements are private to the reporter
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/feedback/updates with and without a token
+2. POST /v1/feedback/{random_id}/ack with and without a token
+
+**Expected**
+1. Updates is 200 and a list for the owner, 401 with no token
+2. Ack of an unknown report is 404 for a signed-in user (same as someone else's), 401 with no token
+
+#### UAT-SUPP-006 — Telemetry ingest is per-user, validated and idempotent
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/telemetry/events with two events
+2. POST the same batch again
+3. POST an unknown event_type, an empty batch, and a batch with no token
+
+**Expected**
+1. First batch returns accepted 2, duplicates 0; the replay returns accepted 0, duplicates 2
+2. Unknown event_type is 422 naming the allowed set; empty batch is 422; no token is 401
+3. The payload has no way to name another user (extra user_id is ignored, rows land under the token's user)
+
+#### UAT-SUPP-007 — Telemetry segment counts are admin-only
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/telemetry/segments with no token and with a normal user token
+2. GET with the admin secret over a window containing a just-ingested event
+3. GET with since >= until
+
+**Expected**
+1. Anonymous and normal-user calls are 403 and return no counts
+2. Admin gets 200 with users, bounce, convene, depth, locales and dropped_events, counting the UAT user (users at least 1)
+3. since >= until is 422
+
+#### UAT-SUPP-008 — AMI help library serves static, well-formed Q&A without the LLM
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/ai_coach/categories
+2. GET by_category for each category; GET /search?q=stop loss; GET by_id for a hit
+3. GET search with an empty q, an over-long q and limit 0; GET by_id for an unknown id
+
+**Expected**
+1. Non-empty category list; every category returns a non-empty item list whose total equals its length
+2. Every item has non-empty question, short_answer and long_answer, and a unique id
+3. Search returns scored hits (stop-loss query hits the stop-loss Q&A); by_id returns the same record
+4. Empty q, q over 200 chars and limit 0 are 422; unknown id is 404; a nonsense query returns 200 with zero hits
+
+#### UAT-SUPP-011 — An unknown bug category or platform is a client error, never a 500
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST with category "nonsense" (valid platform)
+2. POST with platform "palm" (valid category)
+
+**Expected**
+1. Both are 422 (or another 4xx) naming the bad field, not 500 internal server error
+2. Nothing is stored
+
+<a id="billing"></a>
+## Billing, plans, credits & ads
+
+Money-path goals: the RevenueCat webhook fails CLOSED (no valid secret, no
+grant), a real purchase event maps to exactly the right plan and credits,
+every plan reads back the right allowance and Room price, and credits never go
+negative. Ads are Floor Pass only. The real store purchase and restore can only
+be proven on an iPhone with a sandbox Apple account.
+
+### API (automated, live Alpha)
+
+#### UAT-BILL-001 — Billing identity returns the id the RevenueCat SDK must log in with
+
+_API (automated, live Alpha) · plans: anon, floor_pass_
+
+**Steps**
+1. GET /v1/billing/identity with no token
+2. GET /v1/billing/identity as a fresh user
+
+**Expected**
+1. No token is 401
+2. The user gets user_id equal to app_user_id equal to their own users.id
+
+#### UAT-BILL-002 — Webhook refuses every call without the exact secret and grants nothing
+
+_API (automated, live Alpha) · plans: anon, floor_pass_
+
+**Steps**
+1. POST a fully valid-shaped INITIAL_PURCHASE (entitlement trader) for a seeded user with no Authorization header
+2. Repeat with a wrong secret, an empty header, "Bearer <real secret>", and the real secret plus trailing whitespace
+3. POST a credit-pack NON_RENEWING_PURCHASE with no secret
+4. Read the user via the admin API after each
+
+**Expected**
+1. Every call is 401 (or 503 only if the secret were unconfigured, which on Alpha it is not) and never 200
+2. The user's plan and credit_balance are unchanged after every attempt
+3. No plan_changed or credits_added event row is recorded for the user
+
+#### UAT-BILL-003 — A genuine subscription event grants the right plan and allowance, once
+
+_API (automated, live Alpha) · plans: floor_pass, trader, floor_manager_
+
+**Steps**
+1. POST INITIAL_PURCHASE (entitlement trader) with the real secret for a floor_pass user
+2. POST the identical event id again
+3. POST INITIAL_PURCHASE (entitlement floor_manager) with a new event id
+
+**Expected**
+1. First call is 200 status ok, plan reads trader, credits read 150
+2. The replay is 200 status duplicate and changes nothing
+3. The upgrade reads plan floor_manager and credits 500
+4. Each transition leaves one plan_changed event with source revenuecat
+
+#### UAT-BILL-004 — Cancellation and expiry drop the user to Floor Pass and its allowance
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Grant trader via the webhook
+2. POST EXPIRATION with a new event id
+
+**Expected**
+1. 200 status ok, plan reads floor_pass
+2. The next mandate read shows credit_allowance 13 and a balance no larger than 13
+3. Credits are never negative
+
+#### UAT-BILL-005 — Credit pack grants the pack size on top of the allowance; bad inputs are refused loudly
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST NON_RENEWING_PURCHASE product credits_starter with the real secret
+2. POST NON_RENEWING_PURCHASE with an unknown product id
+3. POST INITIAL_PURCHASE for a random unknown user id
+4. POST INITIAL_PURCHASE with an unmappable entitlement and product
+5. POST a non-actionable TEST event, and a payload with no event object
+
+**Expected**
+1. Starter pack adds exactly 60 credits and records credits_added
+2. Unknown product is 422, unknown user is 404, unmappable subscription is 422, none of them changes any balance
+3. TEST is 200 status ignored and touches nothing; a missing event object is 400
+
+#### UAT-BILL-006 — Each plan reads back its own allowance, Room price and effective plan
+
+_API (automated, live Alpha) · plans: floor_pass, trial_trader, trader, floor_manager_
+
+**Steps**
+1. For each of floor_pass, trader, floor_manager, and a user with an admin-granted trial, GET /v1/mandate/{id}
+2. Compare to the admin view of the same user
+
+**Expected**
+1. floor_pass plan floor_pass, allowance 13, room_cost 8
+2. Active trial reads plan trial_trader, allowance 150, room_cost 8
+3. trader allowance 150, room_cost 8
+4. floor_manager allowance 500, room_cost 25
+5. A bare trial_trader plan with no trial window is effectively floor_pass
+6. credit_balance is never negative and equals the admin view
+
+#### UAT-BILL-007 — Credits can never go negative
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Admin deducts far more credits than the user holds
+2. Read the balance via admin and via the mandate
+3. Admin posts a zero delta
+
+**Expected**
+1. Balance clamps at 0, never below, on both views
+2. A zero delta is 400
+
+<a id="alpaca"></a>
+## Alpaca paper account link
+
+The host holds no Alpaca credential (CR202): the device keeps the key and talks
+to the paper endpoint itself, and the backend only records a self-reported
+link flag and an order outcome log, both for claimed accounts only. D-075: a
+live Alpaca account must be impossible to link; that refusal is enforced on
+the device, so it is proven by hand on an iPhone. The paper credential used
+here is the dedicated UAT paper key and never leaves the test environment.
+
+### API (automated, live Alpha)
+
+#### UAT-ALPACA-001 — Alpaca routes refuse unauthenticated and unclaimed callers
+
+_API (automated, live Alpha) · plans: anon, floor_pass_
+
+**Steps**
+1. POST /v1/alpaca/link_state, /link and /order_log with no token
+2. Repeat as an anonymous (unclaimed) user with valid-shaped bodies
+3. Read the user via the admin API
+
+**Expected**
+1. No token is 401
+2. An unclaimed user gets 403 "account not claimed" on all three and nothing is recorded
+3. The user's alpaca_linked state is unchanged, and the OAuth exchange is never reached or leaks tokens
+
+#### UAT-ALPACA-002 — The dedicated paper credential reaches a paper account and cannot reach the live endpoint
+
+_API (automated, live Alpha) · plans: any_
+
+**Steps**
+1. Read ALPACA_PAPER_* from the UAT env
+2. GET /account (v2 API) on the paper base URL with the key
+3. GET /account (v2 API) on the live endpoint (api.alpaca.markets) with the same key
+
+**Expected**
+1. The paper base URL is a paper-api host, and the account is 200 and ACTIVE
+2. The live endpoint rejects the paper key with 401 or 403 (the premise the app's live-refusal relies on), so a paper key can never produce a live link
+3. Nothing is ordered; no credential is printed
+
+#### UAT-ALPACA-003 — Claimed user's link-state report and order log are accepted and visible to admin
+
+_API (automated, live Alpha) · plans: floor_pass · **BLOCKED** — Needs a claimed (non-anonymous) UAT user, which needs the test inbox for a magic-link claim (CR263 credentials still to come)_
+
+**Steps**
+1. Claim a UAT user via magic link
+2. POST /v1/alpaca/link_state with linked true, then linked false
+3. POST /v1/alpaca/order_log with a refused-client-side outcome for the paper destination
+
+**Expected**
+1. link_state returns linked true with a timestamp, then linked false with none
+2. order_log returns 204 and the admin analytics alpaca_linked count moves with the flag
+3. The log carries no key or secret
+
+<a id="admin"></a>
+## Admin back-office & LLM status
+
+The back-office is the most powerful surface on the host, so the goal is that
+no user token and no anonymous caller can read or change anything through it,
+while the real admin secret can run the read-only views and manage users. Only
+users this suite created are ever modified. Broadcast messages, push, the
+release floor, backtest runs and LLM translate are deliberately not exercised
+(they reach real users or spend LLM).
+
+### API (automated, live Alpha)
+
+#### UAT-ADMIN-001 — Admin reads refuse anonymous callers, user tokens and a wrong secret
+
+_API (automated, live Alpha) · plans: anon, floor_pass, floor_manager_
+
+**Steps**
+1. GET config-check, overview, bugs, analytics summary/timeseries/revenuecat, LLM status/cache_rate, room runs, ticker-interest, verdict-outcomes with no token, a floor_manager user token, and a wrong admin secret
+2. POST the backtest room-run endpoint the same three ways with a deliberately invalid ticker
+
+**Expected**
+1. Every call is 401 or 403, never 200
+2. The backtest call is refused before it can start a run (no 202)
+
+#### UAT-ADMIN-002 — A user token cannot change plan, credits, trial or suspension, even on itself
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. As a floor_pass user, PATCH own plan to floor_manager, POST own credits +1000, POST own trial, suspend own account
+2. Read the user via the admin API
+
+**Expected**
+1. Every call is 401 or 403
+2. Plan, credits, trial and suspension state are exactly as before (no privilege escalation)
+
+#### UAT-ADMIN-003 — Read-only admin views work with the admin secret
+
+_API (automated, live Alpha) · plans: any_
+
+**Steps**
+1. GET config-check, overview, bugs list, analytics summary/timeseries/revenuecat, LLM status and cache_rate
+2. GET a user search with no parameters, and with an unknown device id
+
+**Expected**
+1. All 200 with their documented shapes (config-check has gates and an env, overview has ready and llm blocks, analytics summary has user counts and active users, LLM status has an active provider)
+2. cache_rate returns a status and a null rate whenever status is not ok, never a fake 0
+3. Search without a filter is 400; an unknown device id returns an empty list
+4. Fetching a bug that does not exist is 404
+
+#### UAT-ADMIN-004 — Admin user management on a seeded user
+
+_API (automated, live Alpha) · plans: floor_pass, trader, trial_trader_
+
+**Steps**
+1. Look the user up by device_user_id and by id
+2. Change plan (including an invalid plan), grant a trial, extend it, revoke it
+3. Adjust credits up and down, with a zero delta
+4. Suspend, suspend again, reinstate, reinstate again
+5. List the user's events
+
+**Expected**
+1. Lookup finds exactly the one user; an unknown id is 404
+2. Invalid plan is 400; trial grant gives trial_trader with trial_active, revoke returns to floor_pass
+3. Credits move by the delta and floor at 0; zero delta is 400
+4. Double suspend and double reinstate are 409
+5. Every change shows in the events list with the right type
+
+#### UAT-ADMIN-005 — A suspended user is locked out
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Suspend a seeded user via admin
+2. Call GET /v1/auth/me and GET /v1/mandate/{id} with that user's token
+3. Reinstate and call again
+
+**Expected**
+1. While suspended the user cannot use the API (401 or 403)
+2. After reinstating, the same token works again
+
+<a id="games"></a>
+## Games (dark-launched) & dev preview
+
+The game (CR109) is dark-launched: the backend keeps it out of the OpenAPI
+schema and the app only builds it in behind the AMI_GAMES dart-define, so no
+store build can reach it. This is a contract-level set: it is gated and
+authenticated, entry is free and single-use per field, runs are private to
+their owner, and bad trades are refused before any state changes.
+
+### API (automated, live Alpha)
+
+#### UAT-GAME-001 — Game routes need a token and are absent from the public API schema
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/games/cadences, /runs, /record, /desks with no token
+2. GET /openapi.json
+
+**Expected**
+1. Every games route is 401 without a token
+2. No /v1/games path appears in the OpenAPI schema (dark launch)
+
+#### UAT-GAME-002 — Cadences, desks, record and PR board return their contracts
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. GET /v1/games/cadences, /desks, /record, /record/prs as a fresh user
+
+**Expected**
+1. cadences lists the weekly field with state, deadline and already_held false
+2. desks lists named desks each with a rule and a universe
+3. A new user's record is zero points, zero runs, title apprentice, and no PR is invented (has_any_finished_runs false, every best_* null)
+
+#### UAT-GAME-003 — Entry is free, single-use per field, and the run is private to its owner
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/games/enter, then enter again
+2. GET /v1/games/runs and the run detail
+3. A second user fetches the first user's run and tries to trade on it
+4. GET a random run id
+
+**Expected**
+1. First entry is 200 with a run id and state entered; no credits are spent
+2. Second entry is 409
+3. The owner sees exactly that run in /runs and its detail is 200
+4. Another user gets 404 for it on detail, close and trade, and so does a random id
+
+#### UAT-GAME-004 — Invalid trades are refused before anything is queued
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. On an entered run, POST a trade with quantity 0, a negative quantity and an unknown ticker
+2. POST a quote with both or neither of quantity and notional
+3. Read the run's queued orders
+
+**Expected**
+1. Each is 422
+2. The run has no queued orders afterwards
+
 ## Manual — iPhone checklist
 
 #### UAT-PLAT-004 — Old build sees the forced-update screen
@@ -72,3 +2257,679 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. A blocking "Update required" screen with a working store button; no other screen is reachable
+
+#### UAT-AUTH-030 — Sign in with Apple on iPhone
+
+_Manual (iPhone checklist) · plans: any · platforms: ios_
+
+**Preconditions**
+1. TestFlight build on an iPhone signed in to an Apple ID; the app is on a fresh install (guest)
+
+**Steps**
+1. Open You > Settings > Account (status shows Guest)
+2. Tap Sign in, then Sign in with Apple, and complete the Apple sheet
+3. Reopen Settings > Account
+
+**Expected**
+1. The Apple sheet appears; after approval the app returns without an error banner
+2. Account status shows "Signed in" and the pseudonymous handle; "Manage account" replaces Sign in
+3. Cancelling the Apple sheet leaves the user a guest with no error crash
+
+#### UAT-AUTH-031 — Sign in with Google on Android
+
+_Manual (iPhone checklist) · plans: any · platforms: android_
+
+**Preconditions**
+1. Android (Google Play) device with a Google account; app on a fresh install
+
+**Steps**
+1. Open Settings > Account > Sign in and tap "Sign in with Google"
+2. Pick the Google account
+
+**Expected**
+1. Account status flips to Signed in; mandate, journal and portfolio created as a guest are still there
+
+#### UAT-AUTH-032 — Email sign-in screen flow
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A mailbox Saiful can read
+
+**Steps**
+1. Settings > Account > Sign in > Use email instead
+2. Enter the address and tap SEND CODE; try RESEND CODE after the button re-enables
+3. Enter a wrong code and tap VERIFY & CLAIM, then the right code from the email
+
+**Expected**
+1. An email with a 6-digit code arrives; the wrong code shows "Code did not verify. Try again." and stays on the screen
+2. The right code signs in and returns to Settings with Account status Signed in
+3. No code is ever shown on screen (the dev-code line is absent on Alpha)
+
+#### UAT-AUTH-033 — Signing in to an existing account offers the merge sheet
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. An existing signed-in account on another device or earlier install; this device is a guest with some trades or journal entries
+
+**Steps**
+1. Sign in with that account's Apple ID or email
+2. Read the WELCOME BACK sheet; tap MERGE EVERYTHING
+3. Repeat on another guest and tap KEEP SEPARATE
+
+**Expected**
+1. The sheet lists journal entries / simulated trades / watchlist / Room runs and the mandate line ("yours stays")
+2. MERGE EVERYTHING shows "Merged into your account." and the data appears in the account
+3. KEEP SEPARATE closes the sheet and moves nothing; an empty guest sees the "Nothing carried over" body with GOT IT
+
+#### UAT-AUTH-034 — Sign out from Settings
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. Signed in
+
+**Steps**
+1. Settings > Account > Sign out
+2. Navigate back into the app
+
+**Expected**
+1. The sign-in screen opens with the "You've been signed out." banner
+2. The app does not silently log back in to the previous account; the next session is a fresh guest
+
+#### UAT-ONB-040 — First-run interview on iPhone
+
+_Manual (iPhone checklist) · plans: any · platforms: ios_
+
+**Preconditions**
+1. A fresh TestFlight install (delete the app first so the device has no session)
+
+**Steps**
+1. Launch the app and read the Concierge welcome
+2. Answer all seven questions, mixing tapping chips and typing free text (include a free-text drawdown such as "15%")
+3. Read the readback and confirm it
+
+**Expected**
+1. Messages appear one at a time with chips; typed answers are accepted
+2. A nonsense drawdown such as "lots" gets a clarifying re-ask rather than moving on
+3. The readback matches what was said, and confirming leads to the claim prompt
+
+#### UAT-ONB-041 — Claim prompt at the end of onboarding
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. Finished the interview as in UAT-ONB-040
+
+**Steps**
+1. On the claim prompt, tap "Skip for now"
+2. Repeat on a fresh install and tap the save-team option and sign in
+
+**Expected**
+1. Skip lands on the main app as a guest with the interview's mandate visible in Settings
+2. Signing in keeps that same mandate on the account
+
+#### UAT-ONB-042 — Retaking the interview from Settings asks first and then replaces the mandate
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A user who already completed onboarding
+
+**Steps**
+1. Settings > restart onboarding; read the confirmation; cancel once, then confirm
+2. Complete the interview with different answers
+
+**Expected**
+1. Cancel changes nothing; confirm runs the interview again
+2. After the new readback is confirmed Settings shows the new mandate values and version
+
+#### UAT-MAND-030 — Settings screen shows the mandate sections and saves edits
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A TestFlight build, signed in or guest, with a mandate
+
+**Steps**
+1. Open You > Settings
+2. Read the section headings (MY MANDATE, RISK LIMITS, COMPLIANCE, PROFILE, TICKER RULES, YOUR OWN WORDS)
+3. Change max drawdown, tap Save, close and relaunch the app, reopen Settings
+
+**Expected**
+1. Every section is present and reflects the server mandate
+2. Save succeeds with a visible confirmation and on a mandate that was already edited the "mandate v<N>" label goes up by one
+3. The edit is still there after relaunch
+
+#### UAT-MAND-031 — Risk limits editor and Day Trader disclosure
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A user with a few simulated holdings
+
+**Steps**
+1. Settings > RISK LIMITS > "Set my own limits"
+2. Set a tighter single-name cap than one of the current holdings and save
+3. Choose the Day Trader preset
+
+**Expected**
+1. Each limit shows "Following your risk profile" with the resolved number until the user sets their own
+2. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders
+3. The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing
+
+#### UAT-MAND-032 — Compliance toggles stop a trade in the app
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. Halal switched on in Settings > COMPLIANCE and saved
+
+**Steps**
+1. Open the trade ticket for MO and try to buy
+2. Switch Halal off, save, and try again
+
+**Expected**
+1. With Halal on the ticket explains the block (AAOIFI screen) and offers no way to proceed
+2. With Halal off the buy goes through
+
+#### UAT-MAND-033 — Ticker rules editor validates tickers
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Settings > TICKER RULES, add "ZZZZNOTREAL" to the blocklist and save
+2. Add a real ticker such as TSLA to the blocklist and save
+3. Clear every row of the allowlist
+
+**Expected**
+1. The unknown ticker is rejected with an error and nothing is saved
+2. TSLA saves and is then blocked in the trade ticket
+3. Clearing the allowlist removes it (everything tradable again), it does not block all trading
+
+#### UAT-MAND-034 — Language switch re-localises the app
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Settings > Language > Arabic, then Bahasa Melayu, then English
+
+**Expected**
+1. Each switch re-renders the app in that language (Arabic right-to-left) without a restart and the choice survives a relaunch
+2. Educational content shows its translation or an English fallback, never a blank
+
+#### UAT-MAND-035 — Account section shows guest or signed-in state
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. As a guest open Settings > ACCOUNT
+2. After signing in open it again
+
+**Expected**
+1. Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button
+2. Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button
+
+#### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone
+
+**Steps**
+1. Launch signed in and read the bottom bar; tap each tab
+2. Repeat with the Game flag off, then on
+
+**Expected**
+1. Tabs read FLOOR, PORTFOLIO, LESSONS, YOU; with the flag on a GAME tab sits between Portfolio and Lessons
+2. Each tab keeps its own navigation stack (go deep, switch away, switch back, still deep)
+3. The ad banner and ticker tape sit below the bar; a paid plan has no ad banner
+
+#### UAT-FLOOR-004 — Floor cards render sensible empty and filled states
+
+_Manual (iPhone checklist) · plans: floor_pass, trader_
+
+**Preconditions**
+1. One brand-new account, one account with holdings, a watchlist and a past Room run
+
+**Steps**
+1. Open the Floor tab on each account
+2. Pull to refresh; toggle light and dark
+
+**Expected**
+1. On the new account the portfolio, team calls, sector watch and unactioned calls cards show honest empty states, not spinners or zeroes dressed as data
+2. On the filled account the cards show real tickers, deltas and a sector leader headline; unactioned calls open the right ticker
+3. The daily challenge card is present on both and nothing clips at iPhone 13 width
+
+#### UAT-FLOOR-005 — Your Firm shows locked and unlocked agents and unlocks after the fifth lesson
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A Floor Pass tester who has passed four of the five Fundamentals Analyst gateway lessons
+
+**Steps**
+1. Open Your Firm; tap the locked Fundamentals Analyst
+2. Pass the fifth gateway quiz in Lessons and return to the Floor
+
+**Expected**
+1. The locked sheet lists the five gateway lessons with 4 of 5 done
+2. After the pass the agent shows unlocked on the Floor without a restart, with the unlock celebration shown once
+
+#### UAT-FLOOR-006 — The Floor bell opens the inbox inside the tab navigator
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Tap the bell on the Floor; open a message; go back
+
+**Expected**
+1. The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
+
+#### UAT-SIM-022 — Trade ticket previews, blocks and confirms an order
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. TestFlight build; a Trader account with a halal mandate set in Settings
+
+**Steps**
+1. Open a ticker, tap Trade, enter a quantity
+2. Read the preview (fill, notional, cash available); change side to Sell with nothing held
+3. Enter a halal-excluded ticker such as JPM
+4. Place a valid buy and confirm
+
+**Expected**
+1. Preview figures match the server; no cash moves until confirm
+2. A refused order shows the violation sentence and cannot be placed; the app never offers a way to override it
+3. After a valid buy the confirmation appears and the Portfolio shows the new holding and reduced cash
+
+#### UAT-SIM-023 — Portfolio screen tabs and holding cards agree with the server
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. An account with at least one holding, one resting order and one closed trade
+
+**Steps**
+1. Open the Portfolio screen; check the value card, holding cards, Orders and History tabs
+2. Pull to refresh; cancel the resting order from the Orders tab
+
+**Expected**
+1. Value, cash, holding quantity/avg cost/unrealised P&L match what a second device or the admin console shows
+2. The quote-source pill is honest (live vs delayed vs mock)
+3. Cancelling removes the order and releases the committed cash
+
+#### UAT-SIM-024 — Ticker detail, chart periods and fullscreen chart
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Open AAPL; switch chart periods 1D to 5Y; open the fullscreen chart and rotate
+2. Scroll the news, earnings and company sections
+
+**Expected**
+1. Each period draws a plausible chart with no blank frame; fullscreen opens and closes cleanly
+2. Earnings/dividend chips show for AAPL; an empty news list shows an explicit empty state, not a spinner forever
+
+#### UAT-SIM-025 — Company Review screen shows four sourced sections and degrades per section
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. From a ticker, open Company Review; visit overview, financials, filings, ownership/insider
+2. Open the review for a foreign or OTC ticker with no SEC registrant
+
+**Expected**
+1. Each section shows its source and a state; a failing section shows its reason without blanking the rest
+2. The no-registrant ticker shows filings as not available, not an error screen
+
+#### UAT-SIM-026 — Option reprice sheet shows what moved before the user consents
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. Derivatives enabled in the mandate
+
+**Steps**
+1. Propose an option structure, wait a minute, tap to open it
+
+**Expected**
+1. A re-price step shows the then/now premium and net-cost change before any charge
+2. Declining leaves cash and positions untouched
+
+#### UAT-SIM-027 — Reset portfolio restores the starting cash
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. A tester account whose portfolio is older than 24 hours with trades and a holding
+
+**Steps**
+1. Reset the portfolio from the app and confirm
+2. Immediately try to reset again
+
+**Expected**
+1. Cash returns to the starting capital; holdings, orders and trades are cleared
+2. The second attempt is refused with a clear cooldown message
+
+#### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
+
+_Manual (iPhone checklist) · plans: floor_pass, trader_
+
+**Steps**
+1. Open a Floor Pass account with no holdings, then one with holdings, on the Portfolio screen
+2. Tap to generate a Finding; read all sections; reopen it
+
+**Expected**
+1. Empty book shows the empty state; insufficient metrics render the amber state with a cause, not a zero
+2. The trial/CTA state matches the gate (Floor Pass sees the trial, not a paywall, until the budget is spent)
+3. The Finding screen shows every section, a loading state while the LLM runs, and a clear error (not a blank screen) on 409/402/429
+
+#### UAT-HLTH-012 — Sector donut and concentration breach copy
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Steps**
+1. Hold two tech names, open the Portfolio sector allocation card
+2. Lower the sector cap in Settings below the weight
+
+**Expected**
+1. Donut slices and legend add up to 100% including Cash; Other is shown but never flagged as a breach
+2. After lowering the cap the card shows the breach copy using the mandate's own number
+
+#### UAT-WATCH-011 — Watchlist tab add, swipe-to-remove and quotes
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. On the Portfolio screen's Watchlist tab, add a valid ticker, add a bogus one, add a duplicate
+2. Swipe a row to delete; tap a row to open its ticker detail
+
+**Expected**
+1. Valid add shows the row with a live price and day change; a bogus ticker shows an inline "no such ticker" message (with a suggestion when one exists), not a crash
+2. A duplicate does not create a second row; swipe deletes the row; tapping a row opens its ticker detail
+
+#### UAT-WATCH-012 — A price alert fires and the phone is told
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. Push notifications enabled on the iPhone; US market open (or an after-hours move)
+
+**Steps**
+1. From Ticker Detail open the price alert sheet; create a manual_above alert a few cents above the current price on a liquid ticker
+2. Wait for the price to cross; open the notification
+
+**Expected**
+1. The sheet refuses an empty or zero price; the alert appears as active
+2. When crossed the alert becomes fired with a timestamp (and commentary if enabled) and a push arrives that opens the right ticker
+
+#### UAT-LESS-009 — Lessons tab, track browsing, reader and quiz feel right on iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone, signed in as a Floor Pass tester
+
+**Steps**
+1. Open the Lessons tab; scroll the honeycomb of tracks
+2. Open a track and a lesson; swipe through the beat deck; answer the quiz wrong, then right
+3. Open a glossary term from inside a lesson
+
+**Expected**
+1. Tiles and hex avatars render without clipping; locked and done lessons are visually distinct
+2. The reader paginates smoothly, animations play, the quiz shows the explanation after each answer
+3. A pass shows completion and any unlock celebration; the glossary sheet opens and dismisses
+
+#### UAT-DAILY-006 — Daily challenge card and reminder push feel right on iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone with notifications allowed
+
+**Steps**
+1. Open the Floor tab and answer the daily challenge card
+2. Reopen the app, then relaunch it
+3. In the reminder settings choose an hour two minutes from now
+
+**Expected**
+1. The card shows the result and explanation after answering, and the same result after relaunch
+2. A push arrives at the chosen local hour and opens the challenge; no second push the same day
+
+#### UAT-JRNL-007 — Journal, trash and You tab behave on iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone with at least three journal entries
+
+**Steps**
+1. On the You tab, scroll the insights section; open the journal and an entry detail; add a note
+2. Swipe an entry to delete and tap UNDO on the snackbar
+3. Delete another, open Trash, restore it
+
+**Expected**
+1. Insights and journal render without clipping in light and dark
+2. UNDO brings the entry straight back in place; Trash lists the deleted one and restore returns it
+3. A 409 "newer entry has taken its place" restore shows the explanatory message, not "not found"
+
+#### UAT-INBOX-006 — Broadcast arrives as a push and in the inbox; reply reaches the admin feed
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone with notifications allowed, signed in
+2. Saiful sends a normal-priority broadcast to himself from the admin console
+
+**Steps**
+1. Lock the phone and wait for the push; tap it
+2. Open the inbox from the Floor bell; read the message; send a reply
+3. Send a second broadcast with priority high and cold-start the app
+
+**Expected**
+1. The push arrives within a minute and opens the message
+2. Unread badge on the bell drops when the message is read; the reply shows in the thread and in the admin reply feed
+3. The high-priority message toasts exactly once on cold start, not again after relaunch
+
+#### UAT-INBOX-007 — Notification centre, bell and preferences behave on iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. At least two notifications exist for the tester (e.g. a price alert or resting-order fill)
+
+**Steps**
+1. Open the notification centre from the bell; tap a notification; use mark all read
+2. Open notification preferences; turn one type off and trigger it
+
+**Expected**
+1. Tapping deep-links to the right screen (e.g. the ticker), marks it read and the bell count drops
+2. Mark all read clears the count; a disabled type still appears in the centre but sends no push
+
+#### UAT-SUPP-009 — In-app bug reporter and resolution toast work on iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. TestFlight build on an iPhone
+2. Saiful flips one tester report to resolved with a resolution note from the admin side
+
+**Steps**
+1. Open the bug reporter, pick a category, write a title prefixed "[CR263 UAT - ignore]", attach a screenshot, submit
+2. Cold-start the app after the report is marked resolved
+
+**Expected**
+1. Submit shows a confirmation and the photo is accepted; no crash on a large screenshot
+2. A resolution toast shows the note verbatim exactly once and does not return on the next cold start
+
+#### UAT-SUPP-010 — AMI help screen reads well and answers offline-style questions
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Open the help / coach screen; browse a category; search for "stop loss" and for gibberish
+
+**Expected**
+1. Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
+2. No screen says "the AI" - the assistant is named AMI
+
+#### UAT-BILL-008 — Real purchase of Trader and Floor Manager works end to end on an iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. A TestFlight build on an iPhone signed into an Apple sandbox account
+2. A Floor Pass user
+
+**Steps**
+1. Hit the Room out-of-credits wall (or Settings, Upgrade) to open the paywall
+2. Check the prices shown against the App Store Connect sandbox prices
+3. Buy Trader monthly with the sandbox account
+4. Wait for the purchase sheet to close
+
+**Expected**
+1. Prices come from the store, not hard-coded text
+2. The plan chip reads Trader and credits read 150 within a few seconds of the purchase completing
+3. Ads disappear immediately
+4. The admin console shows the matching RevenueCat event for that user
+
+#### UAT-BILL-009 — Restore purchases brings the plan back on a fresh install
+
+_Manual (iPhone checklist) · plans: trader · platforms: ios_
+
+**Preconditions**
+1. UAT-BILL-008 completed with the same sandbox account
+
+**Steps**
+1. Delete and reinstall the app (or sign in on a second iPhone)
+2. Open the paywall and tap Restore
+
+**Expected**
+1. The plan returns to Trader with no second charge
+2. Restore with a sandbox account that never bought anything says so plainly and changes nothing
+
+#### UAT-BILL-010 — Paywall visuals and degrade state look right
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Steps**
+1. Open the paywall from the Room wall and from Settings
+2. Check Trader, Floor Manager (monthly, annual) and the three credit packs
+3. Turn on airplane mode and reopen the paywall
+
+**Expected**
+1. Layout is not clipped on iPhone 13 or 17, text is legible, packs and tiers are clearly separated
+2. Offline or with no offering it shows the "upgrades not available yet" card with the credit reset date and a Restore button, never a dead buy button
+
+#### UAT-BILL-011 — Ads show for Floor Pass only and vanish on upgrade
+
+_Manual (iPhone checklist) · plans: floor_pass, trial_trader, trader, floor_manager · platforms: ios_
+
+**Steps**
+1. As a Floor Pass user, browse the Floor and the Room
+2. Have Saiful switch the same user to trader in the admin console, then pull to refresh
+3. Repeat as trial_trader and floor_manager
+
+**Expected**
+1. Floor Pass shows the banner and approved placements only
+2. Trader, Trial Trader and Floor Manager never show an ad
+3. After the upgrade the ad is gone in the same session
+
+#### UAT-ALPACA-004 — Link a paper account on the iPhone
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. A claimed account on a TestFlight build
+2. The UAT paper key id and secret from qa/uat/.uat.env
+
+**Steps**
+1. Settings, Alpaca, Connect Alpaca Paper
+2. Enter the paper key id and secret and connect
+3. Open the account summary and positions
+
+**Expected**
+1. It verifies against the paper endpoint and shows linked, with paper balances
+2. Everything on the screen is labelled paper
+3. The credential is not visible after linking
+
+#### UAT-ALPACA-005 — A live Alpaca account cannot be linked (D-075)
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. A claimed account on a TestFlight build
+
+**Steps**
+1. Try a key id starting "AK" (live-shaped, any secret)
+2. Try a paper key against an endpoint field that names the live host api.alpaca.markets
+3. Try the OAuth tab, if it is visible
+
+**Expected**
+1. The AK-shaped key is refused before any network call with a clear message
+2. A non-paper host in the endpoint field is refused
+3. OAuth is unreachable or only requests paper (env=paper)
+4. Nothing is stored and the screen still reads not linked
+
+#### UAT-ALPACA-006 — Unlink clears the credential and the server flag
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. UAT-ALPACA-004 completed
+
+**Steps**
+1. Unlink Alpaca in Settings
+2. Reopen the Alpaca screen and the trade ticket
+
+**Expected**
+1. The screen reads not linked and asks for credentials again
+2. No Alpaca order option remains on the ticket
+3. Admin analytics alpaca_linked drops by one
+
+#### UAT-ALPACA-007 — One tiny paper market order goes to the paper account only
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. UAT-ALPACA-004 completed, during US market hours
+
+**Steps**
+1. Place a 1-share market buy of a liquid ticker from the AMI trade ticket with the Alpaca paper destination
+2. Check the order in Alpaca's paper dashboard
+
+**Expected**
+1. The ticket success banner shows and the order appears in the paper account, never a live one
+2. The mandate safety floor applies to this order exactly as to an AMI sim order
+
+#### UAT-ADMIN-006 — Admin console works in the browser behind Cloudflare Access
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Saiful opens the admin console in a browser
+2. Open Overview, Users, Bugs, Analytics
+3. Search a tester by email
+
+**Expected**
+1. Sign-in goes through Cloudflare Access, not a shared URL
+2. Each page loads with real numbers and no console errors, and the user detail matches what the app shows that tester
+
+#### UAT-GAME-005 — The game and dev preview are unreachable in a store build
+
+_Manual (iPhone checklist) · plans: any · platforms: ios_
+
+**Preconditions**
+1. A TestFlight build made by build_testflight.sh (no AMI_GAMES define)
+
+**Steps**
+1. Look for the game entry on the Floor and in Settings
+2. Look for the dev preview screen anywhere in the app
+
+**Expected**
+1. Neither is reachable by any tap path
+2. A debug build with AMI_GAMES on shows the lobby, a weekly run, the trade ticket and the record screen without layout errors
