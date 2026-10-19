@@ -357,6 +357,25 @@ fi
 # Placed AFTER the schema-parity check on purpose: parity is two HTTP calls and
 # this is ~40s, so the cheaper refusal goes first. Both are above the pubspec
 # bump (DEF279) — a block must not spend a build number.
+# UAT GATE (CR263) — the whole-app UAT script must be updated for what changed,
+# and every changed case must have passed on api + iOS, before a TestFlight build.
+# Above the build/bump: a block must not spend a build number.
+# Escape hatch: UAT_GATE_OVERRIDE="<reason>" (logged, never silent).
+if ! "${PROJECT_ROOT}/backend/.venv/bin/python" "${PROJECT_ROOT}/scripts/uat/uat_gate.py" --for testflight; then
+  cat >&2 <<'UATGATE'
+
+✗ RELEASE BLOCKED — the UAT gate did not pass (CR263).
+
+  Update qa/uat/cases/<area>.yaml (or add a "UAT-Impact: none (<reason>)"
+  commit trailer), then run what is pending:
+      scripts/uat/run_uat.sh --api --changed-only
+      scripts/uat/run_uat.sh --device ios --changed-only
+  No build number has been spent.
+
+UATGATE
+  exit 1
+fi
+
 if ! "${PROJECT_ROOT}/scripts/check_release_flutter_suite.sh"; then
   cat >&2 <<'EOF'
 

@@ -123,7 +123,19 @@ scripts/promotion/preflight_local_gate.sh || {
   exit 1
 }
 
-# CI STATUS (AT:R85 CR235) — runs SIXTH, and is the only WARNING in this list.
+# UAT GATE (CR263) — runs SIXTH. Saiful, 2026-10-19: "before ... promote-to-alpha,
+# the test scripts must be updated. the added/updated tests must have been run".
+# Checks: every changed screen/router's UAT area was updated (or a commit says
+# `UAT-Impact: none (<reason>)`), and every changed device case passed on iOS or
+# Android. API cases for backend changes can only pass once deployed, so those
+# are demanded in step 7d, right after the deploy. Run bare (DEF405).
+backend/.venv/bin/python scripts/uat/uat_gate.py --for alpha || {
+  echo "UAT GATE — the UAT script is not updated / changed cases not run. Aborting."
+  echo "  run: scripts/uat/run_uat.sh --device ios --changed-only"
+  exit 1
+}
+
+# CI STATUS (AT:R85 CR235) — runs SEVENTH, and is the only WARNING in this list.
 # Saiful's explicit choice: CI's result for this exact commit is printed, never
 # blocks. The tests that must gate now run in the two steps above; this line is
 # purely "does the clean-checkout job on GitHub agree" — informational, and it
@@ -566,6 +578,22 @@ Two operational facts it encodes, both measured rather than assumed:
 
 **Do not treat a green step 7/7b as a substitute for this.** They report; this
 decides.
+
+### 7d. UAT postflight — changed API cases against the deployed code (CR263)
+
+Backend API cases can only pass once the change is live, so the pre-deploy UAT
+gate (step 1) defers them to here. Run the cases whose case, test or covered
+source changed, then gate on them — both bare, never through a pipe (DEF405):
+
+```bash
+scripts/uat/run_uat.sh --api --changed-only
+backend/.venv/bin/python scripts/uat/uat_gate.py --for alpha-post
+```
+
+`VERDICT: FAIL` here means the promotion **completed and a changed feature fails
+its UAT on Alpha** — same standing as a postflight `1`: fix forward or
+`/rollback-alpha`, and report it as a failed promotion in step 8. A `--no-llm`
+run does not satisfy the gate (skipped is not evidence).
 
 ### 8. Report the outcome
 

@@ -43,3 +43,25 @@ A case with no test behind it is a script line nobody runs, which is the gap thi
 
 ## Findings log
 1. 2026-10-19: `IOS_TESTFLIGHT_JOIN_URL` is unset on Alpha. The iOS forced-update button falls back to the generic TestFlight page; this is CR121's deliberate, logged fallback. Saiful needs to set the public TestFlight join link.
+
+## Release gate + nightly (Saiful, 2026-10-19: "before sending the app to testflight, play store and promote-to-alpha, the test scripts must be updated. the added/updated tests must have been run … and a full test run using the simulator daily, say at 3am")
+1. `scripts/uat/uat_gate.py --for alpha|testflight|playstore|alpha-post` runs three checks, in order:
+   1. Catalogue guards, including "every screen/router belongs to an area".
+   2. Script updated: every changed source file's area must have changed its cases/tests, or the commit carries a `UAT-Impact: none (<reason>)` trailer.
+   3. Tests run: every active case for the activity has a passing ledger entry at its current fingerprint. The fingerprint covers the case, its own test functions plus their file's shared code, and the area's covered sources.
+2. Where it is wired:
+   1. `build_testflight.sh` requires api + iOS.
+   2. `publish_playstore.sh` requires api + Android.
+   3. `/promote-to-alpha` step 1 runs `alpha` (device evidence before the deploy). Step 7d runs `alpha-post`: changed API cases against the deployed code.
+3. Escape hatch: `UAT_GATE_OVERRIDE="<reason>"`, logged to `.deliveryos/uat_overrides.log`.
+4. Ledger: git-ignored `.deliveryos/uat_ledger.json`. Only `ledger.py record` writes to it. The results plugin writes after every test, so a killed run keeps the evidence it has gathered.
+5. Nightly: LaunchAgent `ai.agenticmarketintel.uat-nightly` runs at 03:00 and calls `scripts/uat/nightly.sh` → `run_uat.sh --all` (API + iOS Simulator). macOS privacy controls block a launchd-started bash from reading the external volume, so the job goes through Terminal. It posts a macOS notification and prunes runs older than 14 days. The Mac wake needs `sudo pmset repeat wakeorpoweron MTWRFSU 02:55:00`.
+
+## Findings log (cont.)
+2. 2026-10-19 full API run: 168 passed, 9 known xfails (each with a DEF). Filed DEF458–464, DEF466 (iOS accessibility tree goes dark at Settings > PROFILE) and DEF467 (1-on-1/Brief streams stall with no keepalive). DEF465 was the toolchain failure (Xcode 27 lipo); fixed.
+3. Open decisions for Saiful:
+   1. Streak has no HTTP surface (DAILY-005 blocked).
+   2. UAT-only seeding of inbox/notification rows (INBOX-004/005 blocked).
+   3. Health 402/daily-cap needs plan gate mode (HLTH-010 blocked).
+   4. A `mock_walk` quote for unknown tickers vs a 404.
+4. Next: device-layer UAT cases (Appium journeys cited by UAT ids), the Android rig wired into `run_uat.sh`, and the test inbox for AUTH-020–022 / ONB-030 / ALPACA-003.

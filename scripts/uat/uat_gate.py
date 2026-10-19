@@ -57,9 +57,10 @@ import catalogue  # noqa: E402
 import ledger  # noqa: E402
 
 OVERRIDE_LOG = REPO_ROOT / ".deliveryos" / "uat_overrides.log"
-# The commit that introduced the gate — the "changed since" floor until an
-# activity has passed once.
-GATE_EPOCH = "df26645a"
+# The commit the gate was wired into the release paths at — the "changed
+# since" floor until an activity has passed once. Earlier commits predate the
+# rule and are not held against it.
+GATE_EPOCH = "48ba26b8"
 ACTIVITIES = {
     "testflight": [["api"], ["ios"]],
     "playstore": [["api"], ["android"]],
