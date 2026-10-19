@@ -38,6 +38,7 @@ import 'package:ami_trade/screens/floor/floor_cards.dart';
 import 'package:ami_trade/screens/floor/floor_providers.dart';
 import 'package:ami_trade/screens/floor/team_calls_screen.dart';
 import 'package:ami_trade/screens/floor/your_firm_screen.dart';
+import 'package:ami_trade/screens/inbox/inbox_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/company_review_screen.dart';
@@ -420,7 +421,8 @@ class _InboxBell extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.notifications_outlined,
                 color: AmiColors.textLow),
-            onPressed: () => Navigator.of(context).pushNamed('/inbox'),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const InboxScreen())),
           ),
           if (count > 0)
             Positioned(

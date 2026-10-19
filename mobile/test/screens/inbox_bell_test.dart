@@ -8,6 +8,7 @@ import 'package:ami_trade/models/inbox_message.dart';
 import 'package:ami_trade/models/sector_watch.dart';
 import 'package:ami_trade/screens/floor/floor_providers.dart';
 import 'package:ami_trade/screens/floor/floor_screen.dart';
+import 'package:ami_trade/screens/inbox/inbox_screen.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:dio/dio.dart';
@@ -57,10 +58,15 @@ Future<void> _pumpFloor(
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const FloorScreen(),
-      routes: {
-        '/inbox': (_) => const Scaffold(body: Text('INBOX-ROUTE')),
-      },
+      // Mirrors home_shell's _TabNavigator (CR232): the tab's nested
+      // Navigator answers EVERY route name with the Floor pane, so a
+      // pushNamed('/inbox') never reaches the app route table.
+      home: Navigator(
+        onGenerateRoute: (settings) => MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => const FloorScreen(),
+        ),
+      ),
     ),
   ));
   // The Floor's league + daily-challenge providers each fire a Dio request
@@ -127,10 +133,11 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
-  testWidgets('tapping the bell pushes /inbox', (t) async {
+  testWidgets('tapping the bell opens the inbox inside the tab navigator',
+      (t) async {
     await _pumpFloor(t, inbox: [_unread('m1')]);
     await t.tap(find.byIcon(Icons.notifications_outlined));
-    await t.pumpAndSettle();
-    expect(find.text('INBOX-ROUTE'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 500));
+    expect(find.byType(InboxScreen), findsOneWidget);
   });
 }
