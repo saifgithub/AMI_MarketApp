@@ -1,0 +1,55 @@
+area: platform
+code: PLAT
+title: Platform, version gate & UAT seeding
+order: 1
+summary: |
+  The backend is up, ready, and tells old builds to update. Also proves the UAT
+  seeding path itself (tagged anonymous user, admin plan/credit changes) so
+  every later area can trust its preconditions.
+cases:
+  - id: UAT-PLAT-001
+    title: Health and readiness report green
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/health
+      - GET /v1/ready
+    expected:
+      - /v1/health is 200 with status "ok" and a git sha version
+      - /v1/ready is 200 with ready true and no failed probes
+
+  - id: UAT-PLAT-002
+    title: Release floor blocks builds below min_build and passes current ones
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/client/release-floor to read min_build
+      - GET /v1/client/release-floor?build=<min_build - 1>&platform=ios
+      - GET /v1/client/release-floor?build=<min_build>&platform=android
+    expected:
+      - The below-floor build gets action "block" and an Apple store/TestFlight URL (the generic TestFlight page until IOS_TESTFLIGHT_JOIN_URL is set — CR121)
+      - The at-floor build gets action "ok" (or "nag"), and the Android store URL is a Play Store link
+
+  - id: UAT-PLAT-003
+    title: UAT seeding creates a tagged anonymous user the admin API can re-plan and credit
+    layer: api
+    plans: [floor_pass, trader]
+    steps:
+      - POST /v1/auth/anon with the UAT device tag
+      - Admin PATCH plan to trader, admin POST credits +5
+      - Admin GET the user
+    expected:
+      - The user exists with last_app_version "uat" (excluded from real-user counts)
+      - Plan reads trader and credits rose by 5
+      - The user's own bearer token authenticates GET /v1/auth/me
+
+  - id: UAT-PLAT-004
+    title: Old build sees the forced-update screen
+    layer: manual
+    plans: [any]
+    preconditions:
+      - An iPhone with a TestFlight build older than the current release floor (or Saiful raises the floor temporarily via the admin console)
+    steps:
+      - Launch the app
+    expected:
+      - A blocking "Update required" screen with a working store button; no other screen is reachable
