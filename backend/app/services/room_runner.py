@@ -6778,6 +6778,59 @@ class RoomRunner:
                     error=str(exc)[:200],
                 )
 
+    def _fail_stranded_run(self, run_id: UUID, exc: Exception) -> None:
+        """DEF455 — the pump-level backstop for an exception `run()` let escape.
+
+        `run()`'s own `except Exception` (fail + CR039 refund + log) only
+        covers its main try; anything raised in the setup above it (profile
+        build, sector/risk context, option candidates — DEF454's AIXI
+        KeyError) reached the pump, which only enqueued an SSE `error`: no
+        log, row left `running`, no refund, and dedup tier 1 attached every
+        re-convene to the dead run until the next boot's sweep.
+
+        Keyed on the row, not on the exception site, so it holds for any line
+        added above `run()`'s try later. A row `run()` already marked failed
+        is left alone, and `refund_recorded` gates the refund — never a
+        second one (CR237 round 3).
+        """
+        logger.error(
+            "room_run_crashed",
+            run_id=str(run_id),
+            error=str(exc)[:500],
+            exc_info=exc,
+        )
+        try:
+            with get_session() as s:
+                row = s.get(RoomRunRow, run_id)
+                if row is None or row.status != "running":
+                    return
+                row.status = "failed"
+                row.error_message = f"crashed: {exc!s}"[:500]
+                user_id, credit_cost = row.user_id, row.credit_cost
+                owes_refund = bool(credit_cost) and not row.refund_recorded
+        except Exception as db_exc:
+            logger.error(
+                "room_run_crashed_mark_failed_failed",
+                run_id=str(run_id),
+                error=str(db_exc)[:200],
+            )
+            return
+        if not owes_refund:
+            return
+        try:
+            refund(user_id, credit_cost, reason=f"room_failed:{run_id}")
+            with get_session() as s:
+                row = s.get(RoomRunRow, run_id)
+                if row is not None:
+                    row.refund_recorded = True
+        except Exception as refund_exc:
+            logger.error(
+                "room_refund_failed",
+                run_id=str(run_id),
+                credits=credit_cost,
+                error=str(refund_exc)[:200],
+            )
+
     async def resume_pending_retries(self) -> None:
         """Spawn background tasks for runs claimed by _sweep_stuck_runs.
 
@@ -6924,6 +6977,7 @@ class RoomRunner:
                 ):
                     await q.put(ev)
             except Exception as exc:
+                await asyncio.to_thread(self._fail_stranded_run, p.run_id, exc)
                 await q.put(RoomEvent(
                     kind="error", run_id=p.run_id, text=str(exc)[:300],
                 ))
@@ -7300,6 +7354,7 @@ class RoomRunner:
                         ):
                             await q.put(ev)
                 except Exception as exc:
+                    await asyncio.to_thread(self._fail_stranded_run, run_id, exc)
                     await q.put(RoomEvent(kind="error", run_id=run_id, text=str(exc)[:300]))
                 finally:
                     await q.put(None)
@@ -7401,6 +7456,7 @@ class RoomRunner:
                 ):
                     await q.put(ev)
             except Exception as exc:
+                await asyncio.to_thread(self._fail_stranded_run, run_id, exc)
                 await q.put(RoomEvent(kind="error", run_id=run_id, text=str(exc)[:300]))
             finally:
                 await q.put(None)  # sentinel — unblocks any waiting subscribe() call

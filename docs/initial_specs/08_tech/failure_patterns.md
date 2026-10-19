@@ -2351,3 +2351,28 @@ consumer is not a safety net; it is a log line an operator would have to go
 looking for, on the same premise P1's config-forwarding gap and DEF326's
 buried "errors" bucket both share: the failure mode isn't the mechanism being
 wrong, it's the mechanism being unread.
+
+## P39 — a detached task's catch-all that reports to the client and nobody else
+
+**Symptom.** A background task wraps its work in `except Exception` and the
+only thing the handler does is hand the error to the live listener (an SSE
+`error` event). No log line, no state transition, no compensating action. The
+user sees "something went wrong"; the server has no record; the persisted row
+sits in its in-progress state, still charged, still matched by dedup.
+
+**Instance.** DEF454/DEF455 (2026-10-18): AIXI's yfinance `eps_trend` (rows,
+no columns) raised `KeyError` in `run()`'s setup, above the try that carries
+the fail + refund + log handling. All three Room pumps (`start_run`, backtest,
+boot respawn) caught it with `q.put(RoomEvent(kind="error"))` and nothing else.
+The same AIXI failure had already happened 10-16/17 (DEF453 notes the failed
+runs) and went un-root-caused because the logs were empty; a 10-18 respawn of
+the stuck run then failed the same way, silently, a second time.
+
+**The fix.** Every pump's handler calls `RoomRunner._fail_stranded_run`,
+keyed on the row rather than the raise site: log `room_run_crashed` with the
+traceback; flip a still-`running` row to `failed`; refund once, gated on
+`refund_recorded`. Holds for any line later added above `run()`'s try.
+
+**Enforcing check:** `backend/tests/unit/test_def455_pre_try_crash_not_stranded.py`
+— a setup-phase raise must leave the row `failed`, the balance whole, a
+`room_run_crashed` event, a fresh run on re-convene, and no second refund.
