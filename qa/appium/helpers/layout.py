@@ -35,6 +35,7 @@ import numpy as np
 from PIL import Image
 
 from helpers.gestures import Band, screenshot_png, swipe_up
+from helpers.platform import is_ios
 from helpers.locators import element_description, interactive_elements, scrollable_exists
 
 
@@ -52,10 +53,24 @@ def label(driver, element) -> str:
     return element_description(driver, element)
 
 
+def _ios_keyboard_top(driver) -> int | None:
+    """Top edge of the on-screen iOS keyboard, or None. Its globe/dictation keys
+    sit in the bottom-inset band by design and are the OS's, not the app's — a
+    sheet that autofocuses a field (Convene) would otherwise report them as
+    nav-bar overlaps (measured: the globe key labelled 'العربية')."""
+    if not is_ios(driver):
+        return None
+    keyboards = driver.find_elements("class name", "XCUIElementTypeKeyboard")
+    return int(keyboards[0].rect["y"]) if keyboards else None
+
+
 def find_navbar_overlaps(driver, navbar_top_y: int, *, tol: int = 2, screen: str = "") -> list[dict]:
     findings = []
+    keyboard_top = _ios_keyboard_top(driver)
     for element in interactive_elements(driver):
         x1, y1, x2, y2 = bounds(element)
+        if keyboard_top is not None and y1 >= keyboard_top:
+            continue
         overlap = y2 - navbar_top_y
         if overlap <= tol:
             continue
