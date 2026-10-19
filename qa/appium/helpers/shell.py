@@ -31,6 +31,7 @@ import time
 
 from config.semantics_ids import NAV_IDS
 from helpers.locators import exists_id, exists_text
+from helpers.platform import is_ios
 
 # Layers to dismiss before concluding the shell is absent rather than covered.
 # Deep enough for a sheet opened from a pushed route; shallow enough that a
@@ -56,6 +57,42 @@ def wait_for_shell(driver, floor_label: str, *, timeout_s: float) -> bool:
             return True
         time.sleep(0.5)
     return False
+
+
+def tree_is_dark(driver) -> bool:
+    """True when the app is on screen but exposes no accessibility tree.
+
+    Measured on the iOS Simulator: after a long-lived session the Flutter
+    semantics tree can drop to the bare Application/Window skeleton while the
+    app keeps painting normally, and it STAYS that way across new Appium
+    sessions (`noReset=True` keeps the process). Every locator then misses, so
+    the failure reads as "shell never appeared" / "onboarding did not reach
+    Floor" (a 480s blind walk) rather than what it is. Only an app relaunch
+    brings the tree back. Distinguish it from a covered shell by the page
+    source carrying no labelled or identified node at all.
+    """
+    if not is_ios(driver):
+        return False
+    try:
+        source = driver.page_source
+    except Exception:
+        return False
+    return source.count('label="') + source.count(' name="ami.') <= 1
+
+
+def relaunch_if_dark(driver, app_id: str | None, *, why: str) -> bool:
+    """Terminate and re-activate the app when its tree is dark. True if it ran.
+
+    Announces itself — a suite that silently restarts the app under test hides
+    the dark-tree app/engine problem this exists to survive."""
+    if not app_id or not tree_is_dark(driver):
+        return False
+    print(f"    [shell] accessibility tree is empty ({why}) — relaunching {app_id}")
+    driver.terminate_app(app_id)
+    time.sleep(1.0)
+    driver.activate_app(app_id)
+    time.sleep(6.0)
+    return True
 
 
 def recover_to_shell(driver, floor_label: str, *, quiet: bool = False) -> bool:

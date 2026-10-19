@@ -40,9 +40,10 @@ from config.locales import LOCALES
 from helpers.gestures import screenshot_png
 from helpers.layout import find_navbar_overlaps, find_scroll_overflow
 from helpers.locale_switch import switch_locale
-from helpers.locators import all_by_text, interactive_elements, wait_visible_text
+from config.semantics_ids import NAV_IDS
+from helpers.locators import all_by_id, interactive_elements, wait_visible_text
 from helpers.report import annotate_png
-from pages.base_page import content_band, open_tab, probe_content
+from pages.base_page import content_band, open_tab, open_you_segment, probe_content
 
 pytestmark = [pytest.mark.phase3, pytest.mark.locale]
 
@@ -51,12 +52,17 @@ _LOCALE_CODES = ("en", "ar", "ms")
 # base_page.TAB_LABELS key -> config/locales.py strings keys hard-asserted on
 # that tab, structurally guaranteed at the top of the screen with no scroll
 # or data dependency (same split Phase 1's tests/test_*.py already made).
+# Journal and Settings are YOU segments since CR133, not bottom-nav tabs.
 _TAB_CONTENT_KEYS = {
     "Floor": ("floor_omnibox_caption",),
     "Portfolio": ("portfolio_total_value", "portfolio_cash"),
     "Journal": ("journal_filter_all",),
     "Settings": ("settings_mandate",),
 }
+_YOU_SEGMENTS = ("Journal", "Settings")
+# Flutter merges a section's descendants into one semantics node, so these
+# strings are a substring of a label, not the label (see tests/test_settings.py).
+_CONTAINS_KEYS = ("settings_mandate",)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -68,18 +74,14 @@ def _reset_to_english_after_module(driver):
         print(f"(locale-matrix teardown reset to English also failed: {exc})")
 
 
-def _bottom_nav_tab_center_x(driver, text: str) -> float:
-    """The bottom-nav cell, not any other on-screen element sharing the same
-    text — Arabic has no case distinction, so e.g. tabSettings and
-    settingsHeading are the identical string 'الإعدادات' where their EN/MS
-    equivalents differ by case ('Settings' vs 'SETTINGS'). The nav cell is
-    always the lowest such element on screen (pinned via Scaffold's
-    bottomNavigationBar slot), so picking max-y disambiguates it."""
-    candidates = all_by_text(driver, text)
-    if not candidates:
-        raise NoSuchElementException(f"no element with exact text {text!r}")
-    element = max(candidates, key=lambda e: e.rect["y"])
-    rect = element.rect
+def _bottom_nav_tab_center_x(driver, tab: str) -> float:
+    """Centre-x of a bottom-nav cell, resolved by semantics identifier — the
+    cell's text is not a safe handle (translated per locale, and a heading
+    elsewhere on screen can share it)."""
+    cells = all_by_id(driver, NAV_IDS[tab])
+    if not cells:
+        raise NoSuchElementException(f"no bottom-nav cell with identifier {NAV_IDS[tab]!r}")
+    rect = cells[0].rect
     return rect["x"] + rect["width"] / 2
 
 
@@ -90,9 +92,15 @@ def test_tab_content_and_scroll_per_locale(driver, device, run_dir, flags, local
     band = content_band(device)
 
     for tab_key, content_keys in _TAB_CONTENT_KEYS.items():
-        open_tab(driver, tab_key, locale=locale)
+        if tab_key in _YOU_SEGMENTS:
+            open_you_segment(driver, tab_key, locale=locale)
+        else:
+            open_tab(driver, tab_key, locale=locale)
         exact = tuple(profile.strings[k] for k in content_keys)
-        signals = probe_content(driver, f"{tab_key.lower()} [{locale}]", exact=exact)
+        if any(k in _CONTAINS_KEYS for k in content_keys):
+            signals = probe_content(driver, f"{tab_key.lower()} [{locale}]", contains=exact)
+        else:
+            signals = probe_content(driver, f"{tab_key.lower()} [{locale}]", exact=exact)
         for content_key, string in zip(content_keys, exact):
             assert signals[string], (
                 f"{tab_key} ({locale}) should show {content_key}={string!r} — "
@@ -171,15 +179,15 @@ def test_bottom_nav_mirrors_under_rtl(driver, flags, locale):
     explicit textDirection override, so Flutter mirrors it automatically
     under ambient RTL Directionality like any other Row — a structural
     guarantee, not a heuristic. "Floor" is the first item (leftmost under
-    LTR, rightmost under RTL); "Settings" is the last (mirrored the other
+    LTR, rightmost under RTL); "You" is the last (mirrored the other
     way). Unlike the scroll/navbar checks above, a mismatch here is a
     confirmed bug, so this hard-asserts instead of only recording a finding.
     """
     switch_locale(driver, locale)
     profile = LOCALES[locale]
-    floor_x = _bottom_nav_tab_center_x(driver, "Floor")  # tabFloor untranslated in every locale today
-    settings_x = _bottom_nav_tab_center_x(driver, profile.tab_labels["Settings"])
-    mirrored = floor_x > settings_x
+    floor_x = _bottom_nav_tab_center_x(driver, "Floor")
+    you_x = _bottom_nav_tab_center_x(driver, "You")
+    mirrored = floor_x > you_x
 
     if mirrored != profile.rtl:
         flags.add(
@@ -191,12 +199,12 @@ def test_bottom_nav_mirrors_under_rtl(driver, flags, locale):
                 "note": (
                     f"expected mirrored={profile.rtl} for locale={locale!r} (rtl={profile.rtl}) but "
                     f"bottom-nav gave mirrored={mirrored} (Floor center_x={floor_x}, "
-                    f"Settings center_x={settings_x})"
+                    f"You center_x={you_x})"
                 ),
             }
         )
 
     assert mirrored == profile.rtl, (
         f"HexBottomNav did not mirror as expected under locale={locale!r} (rtl={profile.rtl}): "
-        f"Floor center_x={floor_x}, Settings center_x={settings_x}"
+        f"Floor center_x={floor_x}, You center_x={you_x}"
     )

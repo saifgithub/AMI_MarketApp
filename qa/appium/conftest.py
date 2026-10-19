@@ -28,9 +28,9 @@ from config.locales import LOCALES
 from helpers import device as device_helpers
 from helpers.driver_factory import new_driver
 from helpers.gestures import screen_scale
-from helpers.onboarding import ensure_onboarded
+from helpers.onboarding import _app_id, ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
-from helpers.shell import recover_to_shell, shell_is_up
+from helpers.shell import recover_to_shell, relaunch_if_dark, shell_is_up
 from helpers.system_alerts import dismiss_system_alert_if_present
 from tools import harness_manifest
 
@@ -156,6 +156,10 @@ def driver(device_profile):
         # permission decision (or prompt) from an earlier module's session
         # can still be sitting on screen when this module's driver attaches.
         dismiss_system_alert_if_present(drv)
+        # A dark accessibility tree outlives the session that darkened it (see
+        # helpers/shell.py::tree_is_dark) and would otherwise burn the whole
+        # onboarding budget on a screen it cannot see.
+        relaunch_if_dark(drv, _app_id(drv), why="module setup")
         ensure_onboarded(drv)
     except Exception:
         # DEF436 — a setup-phase failure here (most often `ensure_onboarded`
@@ -267,7 +271,8 @@ def _shell_precondition(request):
             f"    [shell] {request.node.name} did not start on the shell — a "
             f"previous test left something open. Recovering."
         )
-        recover_to_shell(drv, floor_label)
+        if not relaunch_if_dark(drv, _app_id(drv), why=request.node.name):
+            recover_to_shell(drv, floor_label)
     yield
 
 
