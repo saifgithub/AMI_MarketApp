@@ -1,0 +1,92 @@
+area: admin
+code: ADMIN
+title: Admin back-office & LLM status
+order: 19
+covers:
+  - backend/app/api/admin.py
+  - backend/app/api/admin_*.py
+  - backend/app/api/backtest_admin.py
+  - backend/app/api/llm.py
+summary: |
+  The back-office is the most powerful surface on the host, so the goal is that
+  no user token and no anonymous caller can read or change anything through it,
+  while the real admin secret can run the read-only views and manage users. Only
+  users this suite created are ever modified. Broadcast messages, push, the
+  release floor, backtest runs and LLM translate are deliberately not exercised
+  (they reach real users or spend LLM).
+cases:
+  - id: UAT-ADMIN-001
+    title: Admin reads refuse anonymous callers, user tokens and a wrong secret
+    layer: api
+    plans: [anon, floor_pass, floor_manager]
+    steps:
+      - GET config-check, overview, bugs, analytics summary/timeseries/revenuecat, LLM status/cache_rate, room runs, ticker-interest, verdict-outcomes with no token, a floor_manager user token, and a wrong admin secret
+      - POST the backtest room-run endpoint the same three ways with a deliberately invalid ticker
+    expected:
+      - Every call is 401 or 403, never 200
+      - The backtest call is refused before it can start a run (no 202)
+
+  - id: UAT-ADMIN-002
+    title: A user token cannot change plan, credits, trial or suspension, even on itself
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - As a floor_pass user, PATCH own plan to floor_manager, POST own credits +1000, POST own trial, suspend own account
+      - Read the user via the admin API
+    expected:
+      - Every call is 401 or 403
+      - Plan, credits, trial and suspension state are exactly as before (no privilege escalation)
+
+  - id: UAT-ADMIN-003
+    title: Read-only admin views work with the admin secret
+    layer: api
+    plans: [any]
+    steps:
+      - GET config-check, overview, bugs list, analytics summary/timeseries/revenuecat, LLM status and cache_rate
+      - GET a user search with no parameters, and with an unknown device id
+    expected:
+      - All 200 with their documented shapes (config-check has gates and an env, overview has ready and llm blocks, analytics summary has user counts and active users, LLM status has an active provider)
+      - cache_rate returns a status and a null rate whenever status is not ok, never a fake 0
+      - Search without a filter is 400; an unknown device id returns an empty list
+      - Fetching a bug that does not exist is 404
+
+  - id: UAT-ADMIN-004
+    title: Admin user management on a seeded user
+    layer: api
+    plans: [floor_pass, trader, trial_trader]
+    steps:
+      - Look the user up by device_user_id and by id
+      - Change plan (including an invalid plan), grant a trial, extend it, revoke it
+      - Adjust credits up and down, with a zero delta
+      - Suspend, suspend again, reinstate, reinstate again
+      - List the user's events
+    expected:
+      - Lookup finds exactly the one user; an unknown id is 404
+      - Invalid plan is 400; trial grant gives trial_trader with trial_active, revoke returns to floor_pass
+      - Credits move by the delta and floor at 0; zero delta is 400
+      - Double suspend and double reinstate are 409
+      - Every change shows in the events list with the right type
+
+  - id: UAT-ADMIN-005
+    title: A suspended user is locked out
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Suspend a seeded user via admin
+      - Call GET /v1/auth/me and GET /v1/mandate/{id} with that user's token
+      - Reinstate and call again
+    expected:
+      - While suspended the user cannot use the API (401 or 403)
+      - After reinstating, the same token works again
+
+  - id: UAT-ADMIN-006
+    title: Admin console works in the browser behind Cloudflare Access
+    layer: manual
+    plans: [any]
+    steps:
+      - Saiful opens the admin console in a browser
+      - Open Overview, Users, Bugs, Analytics
+      - Search a tester by email
+    expected:
+      - Sign-in goes through Cloudflare Access, not a shared URL
+      - Each page loads with real numbers and no console errors, and the user detail matches what the app shows that tester

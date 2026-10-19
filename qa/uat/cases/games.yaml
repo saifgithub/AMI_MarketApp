@@ -1,0 +1,77 @@
+area: games
+code: GAME
+title: Games (dark-launched) & dev preview
+order: 20
+covers:
+  - backend/app/api/games.py
+  - mobile/lib/screens/games/**
+  - mobile/lib/screens/dev_preview_screen.dart
+summary: |
+  The game (CR109) is dark-launched: the backend keeps it out of the OpenAPI
+  schema and the app only builds it in behind the AMI_GAMES dart-define, so no
+  store build can reach it. This is a contract-level set: it is gated and
+  authenticated, entry is free and single-use per field, runs are private to
+  their owner, and bad trades are refused before any state changes.
+cases:
+  - id: UAT-GAME-001
+    title: Game routes need a token and are absent from the public API schema
+    layer: api
+    plans: [anon]
+    steps:
+      - GET /v1/games/cadences, /runs, /record, /desks with no token
+      - GET /openapi.json
+    expected:
+      - Every games route is 401 without a token
+      - No /v1/games path appears in the OpenAPI schema (dark launch)
+
+  - id: UAT-GAME-002
+    title: Cadences, desks, record and PR board return their contracts
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - GET /v1/games/cadences, /desks, /record, /record/prs as a fresh user
+    expected:
+      - cadences lists the weekly field with state, deadline and already_held false
+      - desks lists named desks each with a rule and a universe
+      - A new user's record is zero points, zero runs, title apprentice, and no PR is invented (has_any_finished_runs false, every best_* null)
+
+  - id: UAT-GAME-003
+    title: Entry is free, single-use per field, and the run is private to its owner
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/games/enter, then enter again
+      - GET /v1/games/runs and the run detail
+      - A second user fetches the first user's run and tries to trade on it
+      - GET a random run id
+    expected:
+      - First entry is 200 with a run id and state entered; no credits are spent
+      - Second entry is 409
+      - The owner sees exactly that run in /runs and its detail is 200
+      - Another user gets 404 for it on detail, close and trade, and so does a random id
+
+  - id: UAT-GAME-004
+    title: Invalid trades are refused before anything is queued
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - On an entered run, POST a trade with quantity 0, a negative quantity and an unknown ticker
+      - POST a quote with both or neither of quantity and notional
+      - Read the run's queued orders
+    expected:
+      - Each is 422
+      - The run has no queued orders afterwards
+
+  - id: UAT-GAME-005
+    title: The game and dev preview are unreachable in a store build
+    layer: manual
+    plans: [any]
+    platforms: [ios]
+    preconditions:
+      - A TestFlight build made by build_testflight.sh (no AMI_GAMES define)
+    steps:
+      - Look for the game entry on the Floor and in Settings
+      - Look for the dev preview screen anywhere in the app
+    expected:
+      - Neither is reachable by any tap path
+      - A debug build with AMI_GAMES on shows the lobby, a weekly run, the trade ticket and the record screen without layout errors

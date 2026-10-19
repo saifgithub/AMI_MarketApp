@@ -1,0 +1,118 @@
+area: alpaca
+code: ALPACA
+title: Alpaca paper account link
+order: 18
+covers:
+  - backend/app/api/alpaca.py
+  - mobile/lib/screens/settings/alpaca_connect_screen.dart
+summary: |
+  The host holds no Alpaca credential (CR202): the device keeps the key and talks
+  to the paper endpoint itself, and the backend only records a self-reported
+  link flag and an order outcome log, both for claimed accounts only. D-075: a
+  live Alpaca account must be impossible to link; that refusal is enforced on
+  the device, so it is proven by hand on an iPhone. The paper credential used
+  here is the dedicated UAT paper key and never leaves the test environment.
+cases:
+  - id: UAT-ALPACA-001
+    title: Alpaca routes refuse unauthenticated and unclaimed callers
+    layer: api
+    plans: [anon, floor_pass]
+    steps:
+      - POST /v1/alpaca/link_state, /link and /order_log with no token
+      - Repeat as an anonymous (unclaimed) user with valid-shaped bodies
+      - Read the user via the admin API
+    expected:
+      - No token is 401
+      - An unclaimed user gets 403 "account not claimed" on all three and nothing is recorded
+      - The user's alpaca_linked state is unchanged, and the OAuth exchange is never reached or leaks tokens
+
+  - id: UAT-ALPACA-002
+    title: The dedicated paper credential reaches a paper account and cannot reach the live endpoint
+    layer: api
+    plans: [any]
+    steps:
+      - Read ALPACA_PAPER_* from the UAT env
+      - GET /account (v2 API) on the paper base URL with the key
+      - GET /account (v2 API) on the live endpoint (api.alpaca.markets) with the same key
+    expected:
+      - The paper base URL is a paper-api host, and the account is 200 and ACTIVE
+      - The live endpoint rejects the paper key with 401 or 403 (the premise the app's live-refusal relies on), so a paper key can never produce a live link
+      - Nothing is ordered; no credential is printed
+
+  - id: UAT-ALPACA-003
+    title: Claimed user's link-state report and order log are accepted and visible to admin
+    layer: api
+    status: blocked
+    blocked_on: Needs a claimed (non-anonymous) UAT user, which needs the test inbox for a magic-link claim (CR263 credentials still to come)
+    plans: [floor_pass]
+    steps:
+      - Claim a UAT user via magic link
+      - 'POST /v1/alpaca/link_state with linked true, then linked false'
+      - POST /v1/alpaca/order_log with a refused-client-side outcome for the paper destination
+    expected:
+      - link_state returns linked true with a timestamp, then linked false with none
+      - order_log returns 204 and the admin analytics alpaca_linked count moves with the flag
+      - The log carries no key or secret
+
+  - id: UAT-ALPACA-004
+    title: Link a paper account on the iPhone
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - A claimed account on a TestFlight build
+      - The UAT paper key id and secret from qa/uat/.uat.env
+    steps:
+      - Settings, Alpaca, Connect Alpaca Paper
+      - Enter the paper key id and secret and connect
+      - Open the account summary and positions
+    expected:
+      - It verifies against the paper endpoint and shows linked, with paper balances
+      - Everything on the screen is labelled paper
+      - The credential is not visible after linking
+
+  - id: UAT-ALPACA-005
+    title: A live Alpaca account cannot be linked (D-075)
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - A claimed account on a TestFlight build
+    steps:
+      - Try a key id starting "AK" (live-shaped, any secret)
+      - Try a paper key against an endpoint field that names the live host api.alpaca.markets
+      - Try the OAuth tab, if it is visible
+    expected:
+      - The AK-shaped key is refused before any network call with a clear message
+      - A non-paper host in the endpoint field is refused
+      - OAuth is unreachable or only requests paper (env=paper)
+      - Nothing is stored and the screen still reads not linked
+
+  - id: UAT-ALPACA-006
+    title: Unlink clears the credential and the server flag
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - UAT-ALPACA-004 completed
+    steps:
+      - Unlink Alpaca in Settings
+      - Reopen the Alpaca screen and the trade ticket
+    expected:
+      - The screen reads not linked and asks for credentials again
+      - No Alpaca order option remains on the ticket
+      - Admin analytics alpaca_linked drops by one
+
+  - id: UAT-ALPACA-007
+    title: One tiny paper market order goes to the paper account only
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - UAT-ALPACA-004 completed, during US market hours
+    steps:
+      - Place a 1-share market buy of a liquid ticker from the AMI trade ticket with the Alpaca paper destination
+      - Check the order in Alpaca's paper dashboard
+    expected:
+      - The ticket success banner shows and the order appears in the paper account, never a live one
+      - The mandate safety floor applies to this order exactly as to an AMI sim order
