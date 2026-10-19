@@ -1,0 +1,147 @@
+area: watchlist_alerts
+code: WATCH
+title: Watchlist & price alerts
+order: 11
+covers:
+  - backend/app/api/watchlist.py
+  - backend/app/api/price_alerts.py
+  - mobile/lib/screens/sim/price_alert_sheet.dart
+summary: |
+  Watchlist add/remove with live quotes and idempotent adds; price alerts
+  (stop / target / manual above / manual below) as soft-cancelled audit rows
+  with a cap of 10 active. Firing is a background evaluator on live prices, so
+  it is verified on a phone (UAT-WATCH-012), not asserted from the API.
+cases:
+  - id: UAT-WATCH-001
+    title: Watchlist add is idempotent and remove is final
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST aapl (lower case) with notes, POST " AAPL " again with no notes, POST AAPL with new notes
+      - Add MSFT, GET the list, DELETE aapl, DELETE it again, DELETE MSFT
+    expected:
+      - 201 with the ticker upper-cased, the notes kept, a quote price > 0 and a price_source
+      - A duplicate add returns the same entry id (no second row); an add without notes keeps the old notes; an add with notes updates them
+      - List total equals the items and every item has a quote
+      - First delete 204, second delete 404 "ticker not on watchlist"; the list ends empty
+
+  - id: UAT-WATCH-002
+    title: Watchlist rejects unknown and blank tickers
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST ZZZZQ, a blank ticker, no body fields, and a non-string ticker
+    expected:
+      - Unknown ticker is 422 with exists false; blank is 400; missing or wrong-typed field is 422
+      - The list is unchanged
+
+  - id: UAT-WATCH-003
+    title: A watchlist belongs to its owner
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - As another user (and unauthenticated), GET, POST and DELETE on the first user's watchlist
+    expected:
+      - Cross-user is 403, unauthenticated is 401 on all three
+      - The owner's list is unchanged and the stranger's own list stays empty
+
+  - id: UAT-WATCH-004
+    title: Buying a ticker puts it on the watchlist
+    layer: api
+    plans: [trader]
+    steps:
+      - On a fresh Trader account with an empty watchlist, buy 1 KO
+      - GET the watchlist
+    expected:
+      - KO is on the watchlist without a separate add
+
+  - id: UAT-WATCH-005
+    title: Price alert create, list, filter and cancel
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST one alert of each type (stop, target, manual_above, manual_below) for aapl
+      - GET the list and the status=active filter; DELETE the stop alert; GET status=cancelled
+      - DELETE it again; DELETE an unknown id
+    expected:
+      - Each is 201, ticker upper-cased, status active, fired_at and cancelled_at null, owned by the caller
+      - List is newest first and the total matches; all four appear under active
+      - Cancel returns status cancelled with cancelled_at; the row moves to the cancelled filter and still appears in the full list (soft cancel)
+      - A second cancel is 409 "already cancelled"; an unknown id is 404
+
+  - id: UAT-WATCH-006
+    title: Price alert rejects a bad type, unknown ticker, bad price type and a foreign trade
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST threshold_type bogus; ticker ZZZZQ; no threshold_price; threshold_price "cheap"; a random trade_ref
+    expected:
+      - 422 for bad type, unknown ticker (exists false), missing price and non-numeric price; 400 for a trade_ref that is not the caller's
+      - No alert is created
+
+  - id: UAT-WATCH-007
+    title: Price alert rejects a non-positive price
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST a stop alert with threshold_price 0 and with -5
+    expected:
+      - 400 or 422 for both; nothing is created
+    notes: |
+      FINDING 2026-10-19: both are accepted (201, active). The phone sheet blocks
+      <= 0 client-side; the API does not. `xfail(strict)`.
+
+  - id: UAT-WATCH-008
+    title: Price alert with an absurd price is a client error, not a 500
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST a target alert with threshold_price 1e12
+    expected:
+      - 400 or 422
+    notes: |
+      FINDING 2026-10-19: returns HTTP 500 "internal server error". `xfail(strict)`.
+
+  - id: UAT-WATCH-009
+    title: The 10 active alert cap closes the oldest
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - Create 10 active alerts, then an 11th
+    expected:
+      - The 11th is created active and survives; exactly 10 are active; the oldest alert is the one cancelled (with cancelled_at)
+
+  - id: UAT-WATCH-010
+    title: Price alerts belong to their owner
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - As another user, list, create and cancel against the first user's id; cancel the first user's alert id inside the second user's own namespace
+      - Repeat unauthenticated
+    expected:
+      - Cross-user routes are 403; the foreign alert id under one's own id is 404; unauthenticated is 401
+      - The owner's alerts are unchanged and the stranger has none
+
+  - id: UAT-WATCH-011
+    title: Watchlist tab add, swipe-to-remove and quotes
+    layer: manual
+    plans: [any]
+    steps:
+      - On the Portfolio screen's Watchlist tab, add a valid ticker, add a bogus one, add a duplicate
+      - Swipe a row to delete; tap a row to open its ticker detail
+    expected:
+      - Valid add shows the row with a live price and day change; a bogus ticker shows an inline "no such ticker" message (with a suggestion when one exists), not a crash
+      - A duplicate does not create a second row; swipe deletes the row; tapping a row opens its ticker detail
+
+  - id: UAT-WATCH-012
+    title: A price alert fires and the phone is told
+    layer: manual
+    plans: [trader]
+    preconditions:
+      - Push notifications enabled on the iPhone; US market open (or an after-hours move)
+    steps:
+      - From Ticker Detail open the price alert sheet; create a manual_above alert a few cents above the current price on a liquid ticker
+      - Wait for the price to cross; open the notification
+    expected:
+      - The sheet refuses an empty or zero price; the alert appears as active
+      - When crossed the alert becomes fired with a timestamp (and commentary if enabled) and a push arrives that opens the right ticker
