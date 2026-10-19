@@ -204,7 +204,7 @@ def test_rollback_to_unknown_version_404(trader):
 
 @pytest.mark.uat("UAT-MAND-010")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: GET /v1/mandate/{id}/versions returns the SAME created_at for every version "
+    "DEF460 —  GET /v1/mandate/{id}/versions returns the SAME created_at for every version "
     "(MandateStore.upsert copies the first row's created_at onto each new version row), so the "
     "BL5 history cannot say when any edit happened; updated_at is the per-version time. "
     "Observed live 2026-10-19: 9 versions, one identical created_at."))

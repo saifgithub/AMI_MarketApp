@@ -178,7 +178,7 @@ def test_price_alert_rejects_bad_type_ticker_and_foreign_trade(me):
 
 @pytest.mark.uat("UAT-WATCH-007")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: POST /v1/price_alerts accepts threshold_price 0 and negative values (201, "
+    "DEF462 —  POST /v1/price_alerts accepts threshold_price 0 and negative values (201, "
     "status active). Such an alert can never be meaningfully evaluated and sits ACTIVE, "
     "occupying one of the user's 10 slots. The phone sheet blocks <= 0 client-side "
     "(price_alert_sheet.dart:_submit) but the API does not."))
@@ -197,7 +197,7 @@ def test_price_alert_rejects_non_positive_price(me):
 
 @pytest.mark.uat("UAT-WATCH-008")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: POST /v1/price_alerts with threshold_price 1e12 returns HTTP 500 "
+    "DEF463 —  POST /v1/price_alerts with threshold_price 1e12 returns HTTP 500 "
     "'internal server error' (unhandled; likely a numeric-column overflow) instead of a 422. Any absurd "
     "price a client sends takes the alert route down for that request."))
 def test_price_alert_absurd_price_is_a_client_error_not_a_500(me):

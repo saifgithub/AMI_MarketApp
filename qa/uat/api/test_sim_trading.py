@@ -167,7 +167,7 @@ def test_earnings_and_dividend_fields(api):
 
 @pytest.mark.uat("UAT-SIM-004")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: GET /v1/sim/news/AAPL and /MSFT return source 'unavailable' with no "
+    "DEF461 —  GET /v1/sim/news/AAPL and /MSFT return source 'unavailable' with no "
     "articles on Alpha (checked 2026-10-19, repeatedly); the Ticker Detail news list "
     "and Sector Watch card 3 (reason no_news) are therefore dark for every ticker"))
 def test_news_for_a_major_ticker_is_served(api):

@@ -185,7 +185,7 @@ def test_sector_watch_is_honest_when_it_cannot_say_anything(seed, free, rich, ap
 
 @pytest.mark.uat("UAT-HLTH-006")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: Sector Watch (Floor card 3) is 'unavailable' / no_news for a user whose "
+    "DEF461 —  Sector Watch (Floor card 3) is 'unavailable' / no_news for a user whose "
     "only touched ticker is AAPL, because /v1/sim/news/* returns nothing on Alpha "
     "(see UAT-SIM-004). The card never leaves its degraded state."))
 def test_sector_watch_resolves_a_headline_for_a_liquid_holding(rich):

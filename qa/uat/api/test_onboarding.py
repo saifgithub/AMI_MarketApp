@@ -236,7 +236,7 @@ def test_confirm_validates_inputs(api):
 
 @pytest.mark.uat("UAT-ONB-013")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: POST /v1/onboarding/readback/confirm on a session with no drawdown answer returns "
+    "DEF459 —  POST /v1/onboarding/readback/confirm on a session with no drawdown answer returns "
     "409 but has already saved completed=True / current_step=complete (api/onboarding.py saves the "
     "session before session_to_mandate_dict raises), so the session can no longer be answered "
     "(every /answer is then 409 'session is on complete'). Live 2026-10-19."))

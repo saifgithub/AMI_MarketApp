@@ -72,7 +72,7 @@ def test_missing_fields_and_bad_attachment_refused(api):
 
 @pytest.mark.uat("UAT-SUPP-011")
 @pytest.mark.xfail(strict=True, reason=(
-    "FINDING: POST /v1/feedback/bug with an unknown category or platform returns "
+    "DEF458 —  POST /v1/feedback/bug with an unknown category or platform returns "
     "500 internal server error - BugReportRequest(...) raises a pydantic "
     "ValidationError inside the handler instead of a 422."))
 def test_unknown_category_or_platform_is_a_client_error(api):
