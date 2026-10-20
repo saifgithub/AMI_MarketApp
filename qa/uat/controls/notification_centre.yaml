@@ -29,7 +29,7 @@ controls:
   - label: "<notification card: title, body, 'Nm ago'>"
     kind: list_row
     expect: navigate
-    target: "ami.screen.<deep link target of the notification>"
+    target: "dynamic"
     state: "Marks the notification read (dot clears, badge decrements) then switches to the owning tab and opens the linked screen (price alert -> ticker, order fill -> orders, game -> game, etc.)"
     when: "at least one notification"
     line: 169
