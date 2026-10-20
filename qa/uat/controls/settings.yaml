@@ -1,0 +1,188 @@
+screen: ami.screen.settings
+source: mobile/lib/screens/settings/settings_screen.dart
+# Settings is rendered embedded as the SETTINGS segment of YOU (ami.screen.you); the embedded form has no header,
+# so its Save button lives in you_screen.dart (see you.yaml). The non-embedded form (own Scaffold) keeps the header Save below.
+controls:
+  - label: "SAVE"
+    kind: button
+    expect: destructive
+    line: 317
+    when: "non-embedded Settings only, and there are unsaved edits (embedded: header Save in YOU, see you.yaml)"
+    note: "PATCH /v1/mandate/{user_id} with only the changed fields; bumps mandate version, writes a mandate_edit journal entry, shows snackbar 'Mandate updated.', refreshes sim portfolio; if max_open_positions/max_open_risk_pct were touched runs holdings audit and may open the retro-tightening dialog"
+  - label: "Risk score"
+    kind: field
+    expect: state
+    state: "slider (1-5) moves; label text under it changes (profile description); mandate marked dirty (SAVE appears); all seven risk limits reset to 'Following your risk profile'"
+    line: 603
+    note: "Slider, 4 divisions"
+  - label: "Day Trader"
+    kind: chip
+    expect: dialog
+    target: ami.screen.day_trader_disclosure_dialog
+    when: "server serves a full Day Trader preset (dayTraderPresetOfferable)"
+    line: 352
+    note: "Chip key riskPresetDayTrader. Confirm stages the server's seven override values (no save yet); caption flips to 'Day Trader preset active'. Tapping when already selected re-opens the dialog (cannot deselect via this chip)."
+  - label: "10%"
+    kind: chip
+    expect: state
+    state: "selected max-drawdown chip moves to this value (amber), mandate dirty, SAVE appears"
+    line: 676
+    note: "Five chips 10/20/30/50/100%. One entry for the set; label pattern '<N>%'"
+  - label: "Custom (<N>%)"
+    kind: chip
+    expect: none
+    when: "mandate max_drawdown_pct is off-grid (not 10/20/30/50/100)"
+    line: 694
+    note: "No-op by design: mirrors the already-selected typed value (DEF428 round 2), offers nothing to pick. Key drawdownCustomChip."
+  - label: "Sharia screen — AAOIFI"
+    kind: toggle
+    expect: state
+    state: "halal compliance switch flips; mandate dirty, SAVE appears"
+    line: 959
+    note: "Switch in _ComplianceToggles._row. Enforced server-side after Save."
+  - label: "ESG-lite"
+    kind: toggle
+    expect: state
+    state: "ESG-lite switch flips; mandate dirty"
+    line: 959
+  - label: "No tobacco / alcohol / gambling"
+    kind: toggle
+    expect: state
+    state: "switch flips; mandate dirty"
+    line: 959
+  - label: "No fossil fuels"
+    kind: toggle
+    expect: state
+    state: "switch flips; mandate dirty"
+    line: 959
+  - label: "Long-only"
+    kind: toggle
+    expect: state
+    state: "switch flips; mandate dirty"
+    line: 959
+  - label: "Liquid-only"
+    kind: toggle
+    expect: state
+    state: "switch flips; mandate dirty"
+    line: 959
+  - label: "<compliance flag label> (i)"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.settings.compliance_explain_sheet
+    line: 926
+    note: "repeated x6 (halal, ESG-lite, tobacco/alcohol/gambling, fossil, long-only, liquid-only). Tapping the LABEL (not the switch) opens a bottom sheet with title + plain-English explanation; sheet has no controls, dismiss by swipe/barrier."
+  - label: "Timezone"
+    kind: field
+    expect: state
+    state: "dropdown opens listing 16 IANA zones (plus current value if off-list); choosing one updates the value shown and marks mandate dirty"
+    line: 1917
+    note: "DropdownButton key timezoneField"
+  - label: "Upgrade or manage plan"
+    kind: button
+    expect: sheet
+    target: ami.screen.upgrade_paywall
+    line: 1110
+    note: "Opens the RevenueCat paywall bottom sheet (showUpgradeSheet); on successful purchase refreshes mandate so plan/credit rows update. A purchase inside is destructive (documented by the paywall's own file)."
+  - label: "REGENERATE HANDLE"
+    kind: button
+    expect: destructive
+    line: 1146
+    when: "pseudonymous handle exists (IDENTITY section only renders then)"
+    note: "Server regenerates the games-board handle; ONE-SHOT - backend allows a single regeneration (409 afterwards). Snackbar 'HANDLE: <new>' on success, 'Couldn't change your handle - you get only one change.' on failure. No confirmation dialog before the irreversible one-time change."
+  - label: "SIGN IN"
+    kind: button
+    expect: navigate
+    target: ami.screen.sign_in
+    when: "guest/anonymous user (label is 'MANAGE ACCOUNT' once signed in)"
+    line: 1201
+  - label: "MANAGE ACCOUNT"
+    kind: button
+    expect: navigate
+    target: ami.screen.sign_in
+    when: "signed-in (non-anonymous) user"
+    line: 1201
+    note: "SUPPOSED effect: open an account-management surface (manage/sign-out/linked identities). ACTUAL: pushes SignInScreen which for a claimed user shows only a 'Signed in as <handle>' card - nothing to manage. See report finding."
+  - label: "Sign out"
+    kind: button
+    expect: destructive
+    target: ami.screen.sign_in
+    when: "signed-in (non-anonymous) user"
+    line: 1213
+    note: "Ends the session (authNotifier.signOut) then pushes SignInScreen with 'You've been signed out.' banner. No confirmation dialog. Label is hardcoded English (not l10n)."
+  - label: "System"
+    kind: list_row
+    expect: state
+    state: "radio moves to the tapped language; app re-localizes immediately (rows: System / English / العربية / Bahasa Melayu); RTL flips for Arabic"
+    line: 1256
+    note: "repeated x4 (_LanguageRow InkWell at 1293). Persisted immediately - no Save needed."
+  - label: "ALPHA"
+    kind: list_row
+    expect: state
+    state: "radio moves; active backend (Alpha/Beta/Prod) switches and the 'Active:' URL line below updates; disabled rows labelled 'not in this build' do nothing"
+    when: "build compiled with ALLOW_BACKEND_SWITCH=true (DEVELOPER section)"
+    line: 1414
+    note: "repeated x3 (ALPHA/BETA/PROD). Switching backend repoints every API call - effectively a different data universe."
+  - label: "Restart app tour"
+    kind: list_row
+    expect: state
+    state: "snackbar 'Tour restarts next time you visit each section.'; all coach-mark tours are re-armed"
+    line: 1493
+  - label: "restart onboarding"
+    kind: list_row
+    expect: dialog
+    target: ami.screen.confirm_restart_onboarding
+    line: 1530
+    note: "Handler at 1552. Opens confirm dialog (RESTART ONBOARDING? / CANCEL / RESTART). On confirm: onboarding state reset(isRestart:true) and pushReplacementNamed('/onboarding') -> ami.screen.onboarding. Destructive effect is documented on the dialog's RESTART button."
+  - label: "AI Coach — Q&A library"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.ai_coach
+    line: 1573
+  - label: "Report a problem"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.bug_report_sheet
+    line: 1602
+  - label: "Terms of Service"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.legal
+    line: 1634
+    note: "In-app WebView of https://www.agenticmarketintel.ai/terms/ (title 'Terms of Service')"
+  - label: "Privacy Policy"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.legal
+    line: 1634
+    note: "In-app WebView of https://www.agenticmarketintel.ai/privacy/ (title 'Privacy Policy')"
+  - label: "Do Not Sell or Share My Personal Information"
+    kind: toggle
+    expect: state
+    state: "CCPA do-not-sell switch flips and is persisted at once; on write failure it reverts and snackbar says the save failed"
+    when: "AdMob-enabled build only (AdMobConfig.isConfigured)"
+    line: 854
+  - label: "Manage ad consent"
+    kind: list_row
+    expect: external
+    when: "AdMob-enabled build AND UMP says a privacy-options form is required"
+    line: 862
+    note: "Opens Google UMP privacy-options form (native overlay). On failure snackbar 'consent form failed'."
+  - label: "Connect"
+    kind: button
+    expect: navigate
+    target: ami.screen.alpaca_connect
+    when: "signed-in (non-anonymous) user; Alpaca paper not linked (label 'Relink' when a stale non-paper credential is stored)"
+    line: 1778
+    note: "CONNECTED ACCOUNTS section. 'Relink' first wipes the stale stored credential (1795) then opens the connect screen - backing out afterwards leaves it unlinked."
+  - label: "Disconnect"
+    kind: button
+    expect: destructive
+    when: "signed-in user with Alpaca paper linked"
+    line: 1778
+    note: "Handler _disconnect at 1818. Clears the on-device Alpaca credential immediately, tells backend link=false (best-effort), invalidates portfolio/positions caches; row flips to 'Not connected'. No confirmation dialog."
+  - label: "<app version / build identity>"
+    kind: link
+    expect: sheet
+    target: ami.screen.bug_report_sheet
+    line: 1662
+    note: "LONG-PRESS (not tap) on the grey version string at the bottom; legacy door to bug report, 'Report a problem' row is the labelled one."

@@ -1,0 +1,14 @@
+screen: ami.screen.you.unsaved_dialog
+source: mobile/lib/screens/you/you_screen.dart
+controls:
+  - label: "keep editing"
+    kind: button
+    expect: back
+    line: 143
+    when: "switching away from SETTINGS segment with unsaved mandate edits"
+    note: "Dialog closes; stays on SETTINGS, edits kept."
+  - label: "discard changes"
+    kind: button
+    expect: destructive
+    line: 147
+    note: "Dialog closes and the segment switches. NOTE: the pane is kept alive by IndexedStack, so the pending edits are NOT actually reverted - they remain staged in Settings (SAVE and the pip persist). Label says 'discard' but nothing is discarded; see report."

@@ -1,0 +1,22 @@
+screen: ami.screen.merge_sheet
+source: mobile/lib/screens/auth/merge_sheet.dart
+controls:
+  - label: "MERGE EVERYTHING"
+    id: ami.sheet.merge.cta
+    kind: button
+    expect: destructive
+    line: 180
+    when: "preview is non-empty"
+    note: "Declared id ami.sheet.merge.cta in semantics_ids.dart is NOT attached in this file (see report). Executes the account merge (re-keys the orphan anonymous account's journal, trades, watchlists, lessons, messages, room runs into the signed-in account); irreversible. Success: sheet closes + snackbar; failure: snackbar, sheet stays."
+  - label: "KEEP SEPARATE"
+    kind: button
+    expect: back
+    line: 203
+    when: "preview is non-empty"
+    note: "Closes the sheet; the orphan data stays unmerged (no later UI to merge it - see report)."
+  - label: "GOT IT"
+    kind: button
+    expect: back
+    line: 172
+    when: "preview is empty (nothing to merge)"
+    note: "Closes the sheet."

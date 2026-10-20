@@ -1,0 +1,13 @@
+screen: ami.screen.day_trader_disclosure_dialog
+source: mobile/lib/screens/settings/day_trader_disclosure_dialog.dart
+controls:
+  - label: "Keep my limits"
+    kind: button
+    expect: back
+    line: 49
+    note: "Dialog closes with false; mandate/pending limits untouched. Key dayTraderCancel."
+  - label: "Apply Day Trader preset"
+    kind: button
+    expect: back
+    line: 54
+    note: "Dialog closes with true; Settings stages the server's seven Day Trader limit values (not saved until SAVE) and the caption flips to 'Day Trader preset active'. Key dayTraderConfirm."

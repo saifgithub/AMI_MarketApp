@@ -1,0 +1,9 @@
+screen: ami.screen.legal
+source: mobile/lib/screens/settings/legal_screen.dart
+controls:
+  - label: "back"
+    id: ami.nav.back
+    kind: icon
+    expect: back
+    line: 61
+    note: "AppBar chevron; returns to Settings. The page body is a WebView (Terms of Service / Privacy Policy on agenticmarketintel.ai); links inside it are not restricted by the app."

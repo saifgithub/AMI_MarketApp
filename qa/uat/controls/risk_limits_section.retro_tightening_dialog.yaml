@@ -1,0 +1,9 @@
+screen: ami.screen.risk_limits_section.retro_tightening_dialog
+source: mobile/lib/screens/settings/risk_limits_section.dart
+controls:
+  - label: "Got it"
+    kind: button
+    expect: back
+    line: 601
+    when: "shown after a Save that touched max_open_positions or max_open_risk_pct and the holdings audit reports a retro breach"
+    note: "Dismisses the dialog; nothing is changed (information only)."

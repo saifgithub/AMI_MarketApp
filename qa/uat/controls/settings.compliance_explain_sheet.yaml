@@ -1,0 +1,8 @@
+screen: ami.screen.settings.compliance_explain_sheet
+source: mobile/lib/screens/settings/settings_screen.dart
+controls:
+  - label: "<scrim / swipe down>"
+    kind: link
+    expect: back
+    line: 992
+    note: "Read-only explanation sheet (title + body for the tapped compliance flag); no buttons. Dismiss by tapping outside or swiping down."

@@ -1,0 +1,21 @@
+screen: ami.screen.risk_limits_section
+source: mobile/lib/screens/settings/risk_limits_section.dart
+# Section embedded in Settings (MY RISK LIMITS card). Not a screen of its own.
+controls:
+  - label: "Set my own limits"
+    kind: list_row
+    expect: state
+    state: "section expands/collapses (chevron flips) revealing seven limit rows (plus four option-limit rows when derivatives are permitted)"
+    line: 255
+  - label: "Following your risk profile"
+    kind: chip
+    expect: state
+    state: "clears that limit's override: number field empties, chip selected (amber), limit reverts to risk-profile preset; mandate dirty; a 'back to your risk profile' disclosure may show"
+    line: 487
+    note: "repeated x7 (sector cap, single-name cap, post-loss cooldown, max open positions, trades/day, trades/week, total open-risk cap; +4 option limits when derivatives allowed, where the chip reads 'OFF'). Label becomes 'Following your risk profile - <N><unit>' when the server serves a resolved number. Keys riskLimitOff_<field>."
+  - label: "<limit number field>"
+    kind: field
+    expect: state
+    state: "typing a number sets an explicit override (chip deselects, 'Set by you' caption appears, looser-than-current edits show an amber disclosure, 100% shows its own warning); clearing the field returns to profile; mandate dirty"
+    line: 511
+    note: "repeated x7 (+4 option limits). Digits and '.' only. Applies on every keystroke (onChanged), no submit. Keys riskLimitField_<field>."

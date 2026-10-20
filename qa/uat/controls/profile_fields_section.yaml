@@ -1,0 +1,40 @@
+screen: ami.screen.profile_fields_section
+source: mobile/lib/screens/settings/profile_fields_section.dart
+# Widgets embedded in Settings: PROFILE card (display name + 4 choice rows) and RISK QUOTES card.
+controls:
+  - label: "Display name"
+    kind: field
+    expect: state
+    state: "text (max 40 chars) edits the name analysts call the user; mandate dirty (SAVE appears); an empty name is never saved"
+    line: 215
+    note: "Key displayNameField. Applies on each keystroke (trimmed)."
+  - label: "Retirement"
+    kind: chip
+    expect: state
+    state: "primary goal switches to the chip; shown value on the right of the row changes; mandate dirty"
+    line: 136
+    note: "Primary goal row: Retirement / Long-term wealth / Income now / A specific goal / Learning to trade / Exploring. Keys primaryGoal_<value>."
+  - label: "Under 1 year"
+    kind: chip
+    expect: state
+    state: "horizon switches to the chip; mandate dirty"
+    line: 136
+    note: "Horizon row: Under 1 year / 1-3 years / 3-10 years / 10+ years. Keys horizon_<value>."
+  - label: "Active trading"
+    kind: chip
+    expect: state
+    state: "path switches to the chip; mandate dirty"
+    line: 136
+    note: "Path row: Active trading / Long horizon / Both. Keys path_<value>."
+  - label: "Quick and direct"
+    kind: chip
+    expect: state
+    state: "learning style switches to the chip; mandate dirty"
+    line: 136
+    note: "Learning style row: Quick and direct / Explain with stories / Visual / Hands-on. Keys learningStyle_<value>."
+  - label: "On a drawdown"
+    kind: field
+    expect: state
+    state: "verbatim interview quote (max 140 chars) is editable; mandate dirty"
+    line: 215
+    note: "repeated x3: 'On a drawdown', 'On regret', 'On concentration'. Keys riskQuoteField_0..2. Not injected into any agent prompt (CR220 D5)."
