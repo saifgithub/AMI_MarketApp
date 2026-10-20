@@ -1,0 +1,10 @@
+screen: ami.screen.ticker_not_found_panel
+source: mobile/lib/widgets/ticker_not_found_panel.dart
+controls:
+  - label: "Did you mean <TICKER> — <Company>?"
+    kind: button
+    expect: state
+    state: "Rewrites the host's ticker field with the suggested ticker and re-validates it, clearing the amber not-found panel"
+    when: "validation returned a suggestion (without one the panel is text only)"
+    line: 226
+    note: "shared - under the ticker field in Convene the Room, the trade ticket, watchlist add and the Floor omnibox"

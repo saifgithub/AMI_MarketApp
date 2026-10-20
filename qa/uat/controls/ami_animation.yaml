@@ -1,0 +1,15 @@
+screen: ami.screen.ami_animation
+source: mobile/lib/widgets/lessons/ami_animation.dart
+controls:
+  - label: "<animation canvas>"
+    kind: list_row
+    expect: state
+    state: "Replays the animation from the start"
+    line: 145
+    note: "shared - every lesson animation block"
+  - label: "Replay"
+    kind: icon
+    expect: state
+    state: "Replays the animation from the start"
+    line: 168
+    note: "IconButton tooltip 'Replay'; same effect as tapping the canvas"

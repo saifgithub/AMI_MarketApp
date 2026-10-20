@@ -1,0 +1,9 @@
+screen: ami.screen.nav_change_sheet
+source: mobile/lib/features/tour/nav_change_sheet.dart
+controls:
+  - label: "Got it"
+    kind: button
+    expect: back
+    state: "Dismisses the 'navigation changed' explainer sheet"
+    line: 77
+    note: "UNREACHABLE today: NavChangeSheet.show is not called anywhere in mobile/lib."

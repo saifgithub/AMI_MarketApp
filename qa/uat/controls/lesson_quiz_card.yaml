@@ -1,0 +1,24 @@
+screen: ami.screen.lesson_quiz_card
+source: mobile/lib/widgets/lessons/lesson_quiz_card.dart
+controls:
+  - label: "<answer option row>"
+    kind: list_row
+    expect: state
+    state: "Marks that option selected (green border); after submit the card is locked and shows correct/wrong + explanation"
+    when: "not locked (no result yet)"
+    line: 71
+    note: "shared - used by the book reader and the beat deck. Repeated per option."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Resets the quiz so it can be retaken"
+    when: "LessonResultPanel with a failed result"
+    line: 230
+    note: "shared - LessonResultPanel"
+  - label: "DONE / BACK TO LESSONS"
+    kind: button
+    expect: back
+    state: "Leaves the reader (pop)"
+    when: "LessonResultPanel; DONE on pass, BACK TO LESSONS on fail"
+    line: 241
+    note: "shared - LessonResultPanel"

@@ -1,0 +1,30 @@
+screen: ami.screen.games_close
+source: mobile/lib/screens/games/games_close_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 101
+    note: "AMI_GAMES builds only. Framework AppBar automatic back button; no ami.nav.back identifier."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches this run's close result"
+    when: "close result failed to load"
+    line: 134
+    note: "AMI_GAMES builds only"
+  - label: "FULL DEBRIEF"
+    kind: button
+    expect: sheet
+    target: ami.screen.games_close.debrief_sheet
+    state: "Opens the full-debrief sheet (basis, alpha, intent, wildness, costs, trade count)"
+    line: 160
+    note: "AMI_GAMES builds only. The sheet has no controls (swipe down to dismiss)."
+  - label: "ENTER THE NEXT FIELD"
+    kind: button
+    expect: sheet
+    target: ami.screen.games_entry_sheet
+    state: "Opens the entry sheet for the same cadence as the closed run"
+    when: "user does not already hold that cadence (button disabled when alreadyHolds)"
+    line: 648
+    note: "AMI_GAMES builds only"

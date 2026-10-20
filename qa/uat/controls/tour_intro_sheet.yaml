@@ -1,0 +1,15 @@
+screen: ami.screen.tour_intro_sheet
+source: mobile/lib/features/tour/tour_intro_sheet.dart
+controls:
+  - label: "Take the tour"
+    kind: button
+    expect: back
+    state: "Closes the sheet returning true so the caller can start the tour"
+    line: 58
+    note: "UNREACHABLE today: TourIntroSheet is not referenced anywhere in mobile/lib (no caller shows it)."
+  - label: "Skip for now"
+    kind: button
+    expect: back
+    state: "Closes the sheet returning false (tour skipped)"
+    line: 65
+    note: "UNREACHABLE today, same as above"

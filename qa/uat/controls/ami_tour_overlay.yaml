@@ -1,0 +1,8 @@
+screen: ami.screen.ami_tour_overlay
+source: mobile/lib/features/tour/ami_tour_overlay.dart
+controls:
+  - label: "<dimmed backdrop>"
+    kind: list_row
+    expect: none
+    line: 319
+    note: "By design: the scrim absorbs every tap (onTap: () {}) so nothing under the tour is reachable until Skip tour / Next. Pressing it must do nothing - a crawler should treat 'no visible effect' here as correct. The actual controls (Skip tour, Next) are in ami.screen.tour_card."

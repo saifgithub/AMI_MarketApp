@@ -1,0 +1,55 @@
+screen: ami.screen.ticker_chart
+source: mobile/lib/widgets/ticker_chart.dart
+controls:
+  - label: "1D"
+    kind: chip
+    expect: state
+    state: "Reloads the chart with 1-day candles"
+    line: 176
+    note: "period cell (octagon-cut chip); selected cell turns solid blue. Shared - on ticker_detail and chart_fullscreen."
+  - label: "1W"
+    kind: chip
+    expect: state
+    state: "Reloads the chart with 1-week candles"
+    line: 176
+  - label: "1M"
+    kind: chip
+    expect: state
+    state: "Reloads the chart with 1-month candles (default selection)"
+    line: 176
+  - label: "3M"
+    kind: chip
+    expect: state
+    state: "Reloads the chart as a line chart for 3 months"
+    line: 176
+  - label: "1Y"
+    kind: chip
+    expect: state
+    state: "Reloads the chart as a line chart for 1 year"
+    line: 176
+  - label: "5Y"
+    kind: chip
+    expect: state
+    state: "Reloads the chart as a line chart for 5 years (may show 'No price history for this period.')"
+    line: 176
+  - label: "Expand chart"
+    kind: icon
+    expect: navigate
+    target: ami.screen.chart_fullscreen
+    state: "Opens the fullscreen/landscape chart"
+    when: "chart hosted in portrait (onExpand supplied by TickerDetailScreen); absent in the fullscreen route"
+    line: 143
+    note: "IconButton(Icons.fullscreen) inside a Tooltip"
+  - label: "Chart unavailable. Tap to retry."
+    kind: button
+    expect: state
+    state: "Re-fetches the price history"
+    when: "history failed with a retryable error (non-retryable errors and empty history are not tappable)"
+    line: 295
+  - label: "<chart body>"
+    kind: list_row
+    expect: state
+    state: "Touch / drag shows a crosshair with price and date readout"
+    when: "history loaded with candles"
+    line: 329
+    note: "GestureDetector onTapDown/onTapUp, no navigation"

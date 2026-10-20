@@ -1,0 +1,15 @@
+screen: ami.screen.confirm_restart_onboarding
+source: mobile/lib/widgets/confirm_restart_onboarding.dart
+controls:
+  - label: "CANCEL"
+    kind: button
+    expect: back
+    state: "Dismisses the 'RESTART ONBOARDING?' dialog; nothing changes"
+    line: 45
+    note: "dialog opened from the Settings restart-onboarding row (settings_screen.dart:1553, other owner)"
+  - label: "RESTART"
+    kind: button
+    expect: destructive
+    state: "Dialog closes, the onboarding interview state is reset and the app replaces the current route with /onboarding"
+    line: 49
+    note: "The dialog itself only returns true; the reset + navigation happen in the caller (settings_screen.dart:1556-1560). Per the dialog copy the existing mandate, portfolio and trades are untouched, but the onboarding progress is wiped and the full interview reruns."

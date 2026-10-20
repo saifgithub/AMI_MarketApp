@@ -1,0 +1,10 @@
+screen: ami.screen.empty_state
+source: mobile/lib/widgets/empty_state.dart
+controls:
+  - label: "<empty-state CTA>"
+    kind: button
+    expect: state
+    state: "Runs the host screen's callback (typically opens an add/create flow); the label and effect are supplied by each caller"
+    when: "caller passes both ctaLabel and onCta; otherwise no button is drawn"
+    line: 58
+    note: "shared - AmiEmptyState is used by portfolio_screen (lines 1419, 1724, 2129), ticker_detail_screen, notification_centre_screen and health_card. Each host's CTA label/destination must be asserted by that host's own catalogue file."

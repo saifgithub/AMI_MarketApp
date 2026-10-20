@@ -1,0 +1,22 @@
+screen: ami.screen.agent_action_sheet
+source: mobile/lib/widgets/agent_action_sheet.dart
+controls:
+  - label: "1-ON-1"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.one_on_one
+    state: "Closes the sheet and opens a 1-on-1 chat with that agent"
+    line: 56
+    note: "sheet opened from the Floor daily-challenge card and the Your Firm screen (other owners)"
+  - label: "BRIEF"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.brief
+    state: "Closes the sheet and opens Brief Your Agent for that agent"
+    when: "agent is not the Concierge (Concierge row is dimmed with 'Not available for Concierge' and is inert)"
+    line: 72
+  - label: "CANCEL"
+    kind: button
+    expect: back
+    state: "Dismisses the sheet with no navigation"
+    line: 83

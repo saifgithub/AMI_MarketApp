@@ -1,0 +1,94 @@
+screen: ami.screen.games_trade_ticket
+source: mobile/lib/screens/games/games_trade_ticket_screen.dart
+controls:
+  - label: "Back arrow (AmiScreenHeader)"
+    id: ami.nav.back
+    kind: icon
+    expect: back
+    line: 177
+    note: "AMI_GAMES builds only. Shared AmiScreenHeader showBack:true."
+  - label: "CANCEL"
+    id: ami.trade_ticket.cancel
+    kind: button
+    expect: back
+    state: "Leaves the ticket without placing an order"
+    line: 186
+    note: "AMI_GAMES builds only"
+  - label: "LONG"
+    kind: chip
+    expect: state
+    state: "Sets direction to a buy (long)"
+    when: "opening a new position (not SELL or COVER mode)"
+    line: 288
+    note: "AMI_GAMES builds only"
+  - label: "SHORT"
+    kind: chip
+    expect: state
+    state: "Sets direction to short; fee note (0.3%), collateral note and risk note appear"
+    when: "opening a new position (not SELL or COVER mode)"
+    line: 294
+    note: "AMI_GAMES builds only"
+  - label: "<watchlist ticker chip>"
+    kind: chip
+    expect: state
+    state: "Picks that ticker; size picker and confirm card appear"
+    when: "user has watchlist entries (first six shown)"
+    line: 345
+    note: "AMI_GAMES builds only; repeated"
+  - label: "or type one"
+    kind: field
+    expect: state
+    state: "Submitting (keyboard return) picks the typed ticker; size picker and confirm card appear"
+    line: 368
+    note: "AMI_GAMES builds only; TextField, submit on return only"
+  - label: "10% / 25% / 50% / ALL-IN (CLOSE IT when selling)"
+    kind: chip
+    expect: state
+    state: "Sets the order size to that share of available cash (or of the held position); readout and confirm card update"
+    when: "ticker picked, not COVER mode"
+    line: 640
+    note: "AMI_GAMES builds only; repeated size presets - exact preset values come from kGamesTicketSizeChipPcts"
+  - label: "<size slider>"
+    kind: field
+    expect: state
+    state: "Dragging sets the size 1-100%; commits on release and refreshes the quote"
+    when: "ticker picked, not COVER mode"
+    line: 662
+    note: "AMI_GAMES builds only"
+  - label: "When does this fill? (i)"
+    kind: icon
+    expect: dialog
+    target: ami.screen.games_queue_note
+    state: "Opens the 'When does this fill?' explanation dialog"
+    line: 263
+    note: "AMI_GAMES builds only; GamesQueueInfoIcon (see games_queue_note.yaml)"
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the price quote for the pick"
+    when: "quote fetch failed"
+    line: 797
+    note: "AMI_GAMES builds only"
+  - label: "PLACE ORDER"
+    kind: button
+    expect: destructive
+    state: "Button reads PLACING..., then a result banner says Filled or Queued (fills at next US open)"
+    when: "ticker + size picked and a quote is loaded; disabled while submitting"
+    line: 873
+    note: "AMI_GAMES builds only. Submits a game order (buy / sell / short / cover) to the server - fills immediately in market hours or queues for the next open; costs a modeled trading fee. Queued orders can be cancelled from the run screen, fills cannot."
+  - label: "SEE QUEUED ORDERS"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_run
+    state: "Intended: takes the user to the run screen where the queued orders (and Cancel buttons) live"
+    when: "no cash available to deploy because it is committed to queued orders"
+    line: 997
+    note: "AMI_GAMES builds only. Code only pops the ticket (see report finding): lands on the run screen only if the ticket was opened from it."
+  - label: "SEE POSITIONS"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_run
+    state: "Intended: takes the user to the run screen where positions and their SELL buttons live"
+    when: "no cash available because every unit is in open positions"
+    line: 997
+    note: "AMI_GAMES builds only. Same pop-only handler as SEE QUEUED ORDERS."

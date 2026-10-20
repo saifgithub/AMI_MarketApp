@@ -1,0 +1,11 @@
+screen: ami.screen.no_rules_disclosure
+source: mobile/lib/widgets/games/no_rules_disclosure.dart
+controls:
+  - label: "NO MANDATE · NO HALAL SCREEN"
+    kind: chip
+    expect: dialog
+    target: ami.screen.no_rules_disclosure.dialog
+    state: "Opens a dialog with the full NO ARENA RULES disclosure text"
+    when: "user has entered a game field before (compressed chip form on the entry sheet)"
+    line: 64
+    note: "AMI_GAMES builds only. The dialog has no buttons (tap outside to dismiss)."

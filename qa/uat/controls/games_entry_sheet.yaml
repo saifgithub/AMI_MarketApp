@@ -1,0 +1,18 @@
+screen: ami.screen.games_entry_sheet
+source: mobile/lib/screens/games/games_entry_sheet.dart
+controls:
+  - label: "ENTER THIS FIELD"
+    kind: button
+    expect: destructive
+    state: "Button reads ENTERING... then the sheet closes and the user holds a live run for that cadence (home/lobby refresh); an error line appears on failure"
+    when: "enabled once the disclosure-seen flag has loaded"
+    line: 135
+    note: "AMI_GAMES builds only. Creates a game run with 10,000 AMI Cash (free) on the server and marks the no-rules disclosure as seen - cannot be undone from the UI; the run must play out or be forfeited."
+  - label: "NO MANDATE · NO HALAL SCREEN"
+    kind: chip
+    expect: dialog
+    target: ami.screen.no_rules_disclosure
+    state: "Opens a dialog with the full no-arena-rules disclosure"
+    when: "user has seen the disclosure before (compressed chip form); first time the full panel is shown inline instead"
+    line: 64
+    note: "AMI_GAMES builds only; defined in widgets/games/no_rules_disclosure.dart"

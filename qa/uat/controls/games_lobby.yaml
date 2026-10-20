@@ -1,0 +1,23 @@
+screen: ami.screen.games_lobby
+source: mobile/lib/screens/games/games_lobby_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 68
+    note: "AMI_GAMES builds only. Framework AppBar automatic back button (Navigator pop), not AmiScreenHeader; no ami.nav.back identifier."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the cadence list"
+    when: "cadences failed to load"
+    line: 83
+    note: "AMI_GAMES builds only"
+  - label: "ENTER THIS FIELD"
+    kind: button
+    expect: sheet
+    target: ami.screen.games_entry_sheet
+    state: "Opens the entry sheet for that cadence"
+    when: "cadence entry is open and the user does not already hold it; otherwise a 'You're in' chip or 'Entry closed' text replaces the button"
+    line: 206
+    note: "AMI_GAMES builds only; repeated per cadence card (Weekly, Monthly, Quarterly, Half-year, Annual)"

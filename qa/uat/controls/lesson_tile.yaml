@@ -1,0 +1,24 @@
+screen: ami.screen.lesson_tile
+source: mobile/lib/widgets/lessons/lesson_tile.dart
+controls:
+  - label: "<lesson title row>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Opens the lesson reader in full mode"
+    line: 41
+    note: "shared - appears on every screen using LessonTile (track_lessons). Repeated per lesson."
+  - label: "READ"
+    kind: button
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Opens the lesson reader in full mode (same as tapping the row)"
+    line: 146
+    note: "shared - repeated per lesson tile"
+  - label: "QUIZ ONLY"
+    kind: button
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Opens the reader with only the quiz blocks and a QUIZ ONLY badge; no BOOK/INTERACTIVE toggle"
+    line: 158
+    note: "shared - repeated per lesson tile. A pass still counts toward agent unlocks."
