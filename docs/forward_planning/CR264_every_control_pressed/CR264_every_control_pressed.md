@@ -1,0 +1,38 @@
+# CR264: Every screen reached, every control pressed
+
+**Status:** in_progress · **Filed:** 2026-10-20 · **Track:** Q (UAT) · **Extends:** CR263, CR163
+
+## What
+Saiful asked on 2026-10-20: *"I want every menu item tested, every button pressed."* On the same day he chose "Crawler + coverage gate" and "Press on throwaway UAT users".
+
+About 340 tap handlers (`onTap:`/`onPressed:`) sit across 104 files in `mobile/lib`. Writing one test per button would be brittle. Instead:
+
+1. **Identity (app, QA-safe).**
+   1. Every screen and sheet root gets `Semantics(identifier: 'ami.screen.<name>')`.
+   2. Every icon-only control gets a semantic label or tooltip, so automation can see it.
+   3. A Flutter guard test fails if a screen file lacks a root id, or an `IconButton` lacks a tooltip or label.
+2. **Exhaustive crawl (harness).** CR163's crawler gains an exhaustive mode:
+   1. The time budget is per screen, not global.
+   2. It visits every reachable screen and presses every clickable element.
+   3. Each press goes through four oracles: no crash, no new error-sink entry, no overflow or clipping, and something happened (navigation, a sheet, or a state change). A press with no visible effect is a "dead tap" finding.
+   4. Results go to a per-control coverage file.
+3. **Destructive controls.** Examples: reset portfolio, sign out/delete, submit bug report, send message, buy credits.
+   1. They are pressed LAST in a session, on a QA build whose device user is tagged `device_model ami-uat-*` (excluded from real-user counts).
+   2. The effect is checked, then the app is reset (pm clear or reinstall).
+   3. Bug reports are auto-resolved. Purchases run in the store sandbox only.
+   4. A small explicit list covers controls that can never be pressed automatically (e.g. a real App Store purchase sheet). Each entry carries a reason.
+4. **Gate.**
+   1. A new UAT area `controls` holds device case "every screen reached, every control pressed". Its test is the crawl.
+   2. The test fails on any screen not reached, or any discovered control not pressed and not exempted.
+   3. It goes through the CR263 ledger, so TestFlight and Play need it green on their platform.
+   4. It also runs nightly.
+
+## Phasing
+1. A: screen root ids and icon labels, plus the Flutter guard (app code, mechanical).
+2. B: crawler exhaustive mode, per-control coverage file, and destructive-last handling (harness).
+3. C: the `controls` UAT area, gate wiring, and the first full crawl on iOS and Android. Findings are filed as DEFs.
+
+## Acceptance
+1. The Flutter guard is green, and every screen file has a root id.
+2. A full crawl reaches every screen and presses every control on iOS (Simulator) and on Android (A17 rig), or each gap is listed with a reason.
+3. The `controls` case is in the ledger and the release gate reads it.
