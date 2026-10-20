@@ -11,8 +11,8 @@
 # .deliveryos/uat_ledger.json (what scripts/uat/uat_gate.py reads), and renders
 # qa/uat/_runs/<ts>/report.md. Exit 0 only if every layer that ran is green.
 #
-# Android device runs execute on the melehost rig (Galaxy A17); wiring them in
-# here is the CR263 device wave. Until then --device android refuses loudly.
+# Android runs on the melehost rig (Galaxy A17) via scripts/uat/android_rig.sh:
+# fresh APK, additive harness sync, the rig's own flock, results copied back.
 
 set -uo pipefail
 
@@ -76,8 +76,23 @@ fi
 SEL=""
 
 if [[ "$DEVICE" == "android" ]]; then
-  echo "── android: device runs live on the melehost rig and are not wired into run_uat.sh yet (CR263 device wave)" >&2
-  OVERALL=1
+  echo "── android (melehost rig, Galaxy A17)"
+  RARGS=()
+  (( BUILD )) || RARGS+=(--no-build)
+  if (( CHANGED )); then
+    SEL="$(ids_arg android)" || { echo "ledger failed"; exit 2; }
+    [[ "$SEL" != "SKIP" ]] && RARGS+=(--uat-ids-file "${RUN_DIR}/android_pending.txt")
+  fi
+  if [[ "$SEL" == "SKIP" ]]; then
+    echo "   nothing pending"
+  else
+    "${PROJECT_ROOT}/scripts/uat/android_rig.sh" "$RUN_DIR" "${RARGS[@]}"
+    rc=$?
+    echo "   android exit ${rc}"
+    (( rc != 0 && rc != 5 )) && OVERALL=1
+    [[ -f "${RUN_DIR}/android/uat_results.json" ]] && "$PY" "${UAT}/ledger.py" record "${RUN_DIR}/android/uat_results.json"
+  fi
+  SEL=""
 fi
 
 if [[ "$DEVICE" == "ios" ]]; then
