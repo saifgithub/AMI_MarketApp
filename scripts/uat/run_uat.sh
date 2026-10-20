@@ -86,7 +86,7 @@ if [[ "$DEVICE" == "android" ]]; then
   if [[ "$SEL" == "SKIP" ]]; then
     echo "   nothing pending"
   else
-    "${PROJECT_ROOT}/scripts/uat/android_rig.sh" "$RUN_DIR" "${RARGS[@]}"
+    "${PROJECT_ROOT}/scripts/uat/android_rig.sh" "$RUN_DIR" ${RARGS[@]+"${RARGS[@]}"}
     rc=$?
     echo "   android exit ${rc}"
     (( rc != 0 && rc != 5 )) && OVERALL=1
