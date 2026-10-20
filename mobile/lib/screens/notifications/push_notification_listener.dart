@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/nav/home_shell_navigation.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/services/notifications/app_navigator_key.dart';
 import 'package:ami_trade/services/notifications/deep_link_dispatcher.dart';
 import 'package:ami_trade/services/notifications/notification_models.dart';
@@ -124,7 +125,11 @@ class _PushNotificationListenerState
     final l = AppLocalizations.of(context);
     final agreed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Semantics(
+        identifier: ScreenIds.pushSoftAskDialog,
+        container: true,
+        explicitChildNodes: true,
+        child: AlertDialog(
         title: Text(l.pushSoftAskTitle),
         content: Text(l.pushSoftAskBody),
         actions: [
@@ -137,7 +142,7 @@ class _PushNotificationListenerState
             child: Text(l.pushSoftAskAccept),
           ),
         ],
-      ),
+      )),
     );
     if (agreed == true) {
       await service.requestPermission();

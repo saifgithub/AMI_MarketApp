@@ -5,20 +5,23 @@ controls:
   - label: "SETTINGS"
     id: ami.you.settings
     kind: tab
-    expect: state
+    expect: navigate
+    target: ami.screen.you.settings
     state: "segment becomes active; Settings pane (MY MANDATE etc.) shown; header shows 'mandate v<N>'"
     line: 211
     note: "AmiSegmentBar segment; switching AWAY from SETTINGS with unsaved edits first opens the UNSAVED MANDATE EDITS dialog (ami.screen.you.unsaved_dialog). A small amber hex pip on the segment marks pending edits."
   - label: "JOURNAL"
     id: ami.you.journal
     kind: tab
-    expect: state
+    expect: navigate
+    target: ami.screen.you.journal
     state: "segment becomes active; Journal pane shown; header shows trash icon"
     line: 211
   - label: "INSIGHTS"
     id: ami.you.insights
     kind: tab
-    expect: state
+    expect: navigate
+    target: ami.screen.you.insights
     state: "segment becomes active; Insights pane (decision-pattern cards or empty state) shown"
     line: 211
   - label: "SAVE"

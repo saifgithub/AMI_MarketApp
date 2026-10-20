@@ -277,7 +277,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             child: IndexedStack(
               index: _selectedTab,
               children: [
-                _PositionsTab(
+                _paneRoot(ScreenIds.portfolioPositionsPane, _PositionsTab(
                   holdings: p.holdings,
                   // CR170 — a user whose only activity is a resting order has
                   // traded; telling them otherwise is a hint that contradicts
@@ -290,9 +290,10 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                   hasOptions: p.options.isNotEmpty,
                   sharesCommitted: p.sharesCommitted,
                   onTradeTicket: () => TradeTicketSheet.show(context),
-                ),
-                const _OrdersTab(),
-                _HistoryTab(closedTrades: transactions, watchlist: watchlist),
+                )),
+                _paneRoot(ScreenIds.portfolioOrdersPane, const _OrdersTab()),
+                _paneRoot(ScreenIds.portfolioHistoryPane,
+                    _HistoryTab(closedTrades: transactions, watchlist: watchlist)),
               ],
             ),
           ),
@@ -301,6 +302,11 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
     );
   }
 }
+
+/// Gives a segment pane its own stable screen id so the crawl can tell which
+/// pane is showing while the host id stays in the tree.
+Widget _paneRoot(String id, Widget child) => Semantics(
+    identifier: id, container: true, explicitChildNodes: true, child: child);
 
 /// CR234 — now built on the shared `ValueCard` shell
 /// (`widgets/sim/value_card.dart`) so AMI's own card and Alpaca's account

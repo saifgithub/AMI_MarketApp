@@ -120,7 +120,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => SafeArea(
+    builder: (_) => Semantics(identifier: ScreenIds.lockedAgentSheet, container: true, explicitChildNodes: true, child: SafeArea(
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AmiSpacing.l),
@@ -254,7 +254,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
           ),
         ),
       ),
-    ),
+    )),
   );
 }
 

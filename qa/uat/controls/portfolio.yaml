@@ -21,18 +21,21 @@ controls:
     note: "Gesture on the Positions/Orders/History area, not a button"
   - label: "POSITIONS <count>"
     kind: tab
-    expect: state
+    expect: navigate
+    target: "ami.screen.portfolio.positions"
     state: "Positions tab shown: equity chart, sector allocation, portfolio health card, shorts, options, holdings, Alpaca positions"
     line: 562
     note: "Count combines AMI + Alpaca positions; may show a small spinner/warning marker while Alpaca count loads"
   - label: "ORDERS <count>"
     kind: tab
-    expect: state
+    expect: navigate
+    target: "ami.screen.portfolio.orders"
     state: "Orders tab shown: AMI resting orders then linked Alpaca open orders"
     line: 577
   - label: "HISTORY <count>"
     kind: tab
-    expect: state
+    expect: navigate
+    target: "ami.screen.portfolio.history"
     state: "History tab shown: trade summary, transaction log, Alpaca closed orders, journal pointer, watchlist"
     line: 586
   - label: "NEW TRADE"
@@ -95,7 +98,7 @@ controls:
   - label: "REVIEW IN JOURNAL"
     kind: link
     expect: navigate
-    target: "ami.screen.journal"
+    target: "ami.screen.you.journal"
     line: 1992
     when: "History tab with transactions"
     note: "Switches the bottom nav to YOU with the Journal segment selected (not a pushed page). Target id is the Journal segment of the YOU screen."

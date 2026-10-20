@@ -67,11 +67,14 @@ class _YouScreenState extends ConsumerState<YouScreen> {
   /// The panes, in [YouSegment] order. Kept alive by `IndexedStack` so
   /// switching back does not reload the journal or drop a half-finished
   /// mandate edit.
-  static const _panes = <Widget>[
-    SettingsScreen(embedded: true),
-    JournalScreen(embedded: true),
-    InsightsSection(),
+  static final _panes = <Widget>[
+    _paneRoot(ScreenIds.youSettingsPane, const SettingsScreen(embedded: true)),
+    _paneRoot(ScreenIds.youJournalPane, const JournalScreen(embedded: true)),
+    _paneRoot(ScreenIds.youInsightsPane, const InsightsSection()),
   ];
+
+  static Widget _paneRoot(String id, Widget child) => Semantics(
+      identifier: id, container: true, explicitChildNodes: true, child: child);
 
   /// CR180 — `YOU` is the one tab with nothing behind it the user has seen
   /// before: its two familiar halves arrived from elsewhere and its third did

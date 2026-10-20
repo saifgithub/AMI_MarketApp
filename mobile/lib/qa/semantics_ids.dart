@@ -215,6 +215,7 @@ class ScreenIds {
   static const String lessonReaderScreen = 'ami.screen.lesson_reader';
   static const String lessonsScreen = 'ami.screen.lessons';
   static const String mergeSheet = 'ami.screen.merge_sheet';
+  static const String lockedAgentSheet = 'ami.screen.locked_agent_sheet';
   static const String messageDetailScreen = 'ami.screen.message_detail';
   static const String navChangeSheet = 'ami.screen.nav_change_sheet';
   static const String noRulesDisclosure = 'ami.screen.no_rules_disclosure';
@@ -227,7 +228,11 @@ class ScreenIds {
   static const String optionRepriceSheet = 'ami.screen.option_reprice_sheet';
   static const String portfolioHealthFindingScreen = 'ami.screen.portfolio_health_finding';
   static const String portfolioScreen = 'ami.screen.portfolio';
+  static const String portfolioHistoryPane = 'ami.screen.portfolio.history';
+  static const String portfolioOrdersPane = 'ami.screen.portfolio.orders';
+  static const String portfolioPositionsPane = 'ami.screen.portfolio.positions';
   static const String priceAlertSheet = 'ami.screen.price_alert_sheet';
+  static const String pushSoftAskDialog = 'ami.screen.push_soft_ask_dialog';
   static const String roomScreen = 'ami.screen.room';
   static const String settingsScreen = 'ami.screen.settings';
   static const String signInScreen = 'ami.screen.sign_in';
@@ -239,6 +244,9 @@ class ScreenIds {
   static const String upgradePaywall = 'ami.screen.upgrade_paywall';
   static const String versionGateScreen = 'ami.screen.version_gate';
   static const String watchlistSheet = 'ami.screen.watchlist_sheet';
+  static const String youInsightsPane = 'ami.screen.you.insights';
+  static const String youJournalPane = 'ami.screen.you.journal';
+  static const String youSettingsPane = 'ami.screen.you.settings';
   static const String yourFirmScreen = 'ami.screen.your_firm';
   static const String youScreen = 'ami.screen.you';
 
@@ -274,6 +282,7 @@ class ScreenIds {
     lessonReaderScreen,
     lessonsScreen,
     mergeSheet,
+    lockedAgentSheet,
     messageDetailScreen,
     navChangeSheet,
     noRulesDisclosure,
@@ -286,7 +295,11 @@ class ScreenIds {
     optionRepriceSheet,
     portfolioHealthFindingScreen,
     portfolioScreen,
+    portfolioHistoryPane,
+    portfolioOrdersPane,
+    portfolioPositionsPane,
     priceAlertSheet,
+    pushSoftAskDialog,
     roomScreen,
     settingsScreen,
     signInScreen,
@@ -298,6 +311,9 @@ class ScreenIds {
     upgradePaywall,
     versionGateScreen,
     watchlistSheet,
+    youInsightsPane,
+    youJournalPane,
+    youSettingsPane,
     yourFirmScreen,
     youScreen,
   ];

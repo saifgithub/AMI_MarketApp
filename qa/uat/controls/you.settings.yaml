@@ -1,0 +1,4 @@
+screen: "ami.screen.you.settings"
+source: "mobile/lib/screens/you/you_screen.dart"
+# Segment pane of ami.screen.you; its controls are catalogued in you.yaml (and, for an embedded screen, that screen's own file).
+controls: []
