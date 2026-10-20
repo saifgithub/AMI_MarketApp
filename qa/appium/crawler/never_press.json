@@ -1,0 +1,12 @@
+{
+  "_doc": "CR264 - controls the exhaustive crawler must NEVER press automatically. Key = accessibility id or exact label (case-insensitive); '<screen id>#<key>' scopes to one screen; a '~' before the key makes it a label substring. Value = the reason, copied into control_coverage.json and counted as an exemption. Keep this short: everything else is pressed (destructive ones LAST, then the app is reset).",
+  "Send report": "submits a real bug report to the shared triage queue; the crawler rig has no admin credentials to auto-resolve it afterwards (the API layer, UAT-SUPP-001/002, already exercises submission)",
+  "Take photo": "opens the system camera/permission UI, which the driver cannot return from reliably",
+  "Choose from library": "opens the system photo picker, outside the app's accessibility tree",
+  "ami.screen.upgrade_paywall#~buy": "real-money purchase (Trader / Floor Manager / credit packs); the sandbox purchase is a manual iPhone case",
+  "ami.screen.upgrade_paywall#~credit": "credit pack purchase: real money, sandbox purchase is a manual iPhone case",
+  "ami.screen.upgrade_paywall#~trader": "plan purchase: real money, sandbox purchase is a manual iPhone case",
+  "ami.screen.upgrade_paywall#~floor manager": "plan purchase: real money, sandbox purchase is a manual iPhone case",
+  "~open settings": "jumps to the OS Settings app, which the driver cannot return from",
+  "~open in browser": "leaves the app for an external browser"
+}

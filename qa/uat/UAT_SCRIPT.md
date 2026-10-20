@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**235 cases** — 185 api, 0 device, 50 manual; 10 blocked.
+**236 cases** — 185 api, 1 device, 50 manual; 10 blocked.
 
 ## Areas
 
@@ -28,6 +28,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 18. [Alpaca paper account link](#alpaca) — 7 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
 20. [Games (dark-launched) & dev preview](#games) — 5 cases
+21. [Every screen reached, every control pressed](#controls) — 1 cases
 
 <a id="platform"></a>
 ## Platform, version gate & UAT seeding
@@ -2743,6 +2744,31 @@ _API (automated, live Alpha) · plans: floor_pass_
 **Expected**
 1. Each is 422
 2. The run has no queued orders afterwards
+
+<a id="controls"></a>
+## Every screen reached, every control pressed
+
+The exhaustive crawler (CR264) visits every screen and sheet and presses every
+control, judging each press: no crash, no new error-sink entry, no overflow,
+not a dead tap, and the effect matches the control-intent catalogue
+(qa/uat/controls/*.yaml). Destructive controls are pressed last, then the app
+is reset. Credit-spending controls (Room, 1-on-1, Brief) are pressed once per
+crawl; real-money purchases are never pressed (crawler/never_press.json).
+
+### Device (automated, Appium)
+
+#### UAT-CTRL-001 — Every screen is reached and every control pressed with the expected effect
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Run the exhaustive crawl on a throwaway UAT user (qa/appium/tests/test_every_control.py)
+
+**Expected**
+1. Every known screen id is reached
+2. Every discovered control is pressed, or exempt with a stated reason
+3. No press crashes the app, adds an error-sink entry, overflows, or does nothing
+4. Every control has a catalogue entry and its observed effect matches it
 
 ## Manual — iPhone checklist
 

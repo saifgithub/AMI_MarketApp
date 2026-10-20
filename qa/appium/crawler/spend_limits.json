@@ -1,0 +1,22 @@
+{
+  "_doc": "CR264 - controls that spend real credits / LLM runs. At most `limit` presses per crawl in each group; the rest are recorded as exempt ('covered by intent, not pressed: <group> budget'). A group only counts a press when the catalogue says the control is destructive (or has no catalogue entry): opening the empty convene sheet is free and is always pressed.",
+  "room": {
+    "limit": 1,
+    "label_regex": "^(convene( the room)?( ·.*)?|convene again|convene now|try again|aapl|msft|nvda|googl|meta|tsla|amzn)$",
+    "intent_label_contains": ["suggested ticker chip"],
+    "intent_targets": ["ami.screen.room"],
+    "why": "opening the Room auto-starts a 12-agent run and spends a Room credit"
+  },
+  "one_on_one": {
+    "limit": 1,
+    "screens": ["ami.screen.one_on_one"],
+    "label_regex": "^send.*$",
+    "why": "each 1-on-1 send is a real LLM turn"
+  },
+  "brief": {
+    "limit": 1,
+    "screens": ["ami.screen.brief"],
+    "label_regex": "^send.*$",
+    "why": "each Brief chat send is a real LLM turn"
+  }
+}

@@ -101,6 +101,11 @@ def _build_ios(device: DeviceProfile, *, no_reset: bool) -> XCUITestOptions:
             "appium:settings[snapshotMaxDepth]": 62,
         }
     )
+    # CR264: a second simulator needs its own WDA port or the two sessions
+    # fight over 8100.
+    wda_port = os.environ.get("AMI_WDA_PORT")
+    if wda_port:
+        options.load_capabilities({"appium:wdaLocalPort": int(wda_port)})
     return options
 
 

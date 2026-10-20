@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -106,13 +107,22 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--out", type=Path, required=True, help="run directory for evidence")
     parser.add_argument("--budget", type=float, default=240.0, help="wall-clock seconds to explore")
     parser.add_argument("--depth", type=int, default=3)
-    parser.add_argument("--sim-name", default="iPhone 17")
+    parser.add_argument("--sim-name", default=os.environ.get("AMI_IOS_SIM_NAME", "iPhone 17"))
+    parser.add_argument("--exhaustive", action="store_true",
+                        help="CR264: press every control on every screen; writes control_coverage.json")
+    parser.add_argument("--per-screen", type=float, default=90.0, help="exhaustive: seconds per screen")
+    parser.add_argument("--cap", type=float, default=5400.0, help="exhaustive: global wall-clock cap, seconds")
+    parser.add_argument("--platform", choices=["ios", "android"], default="ios")
+    parser.add_argument("--serial", default=os.environ.get("AMI_SERIAL", ""), help="android adb serial")
     parser.add_argument("--no-ledger", action="store_true",
                         help="report everything, including findings already triaged")
     args = parser.parse_args(argv[1:])
 
     run_dir: Path = args.out
     (run_dir / "screenshots").mkdir(parents=True, exist_ok=True)
+
+    if args.exhaustive:
+        return _main_exhaustive(args, run_dir)
 
     udid = device_helpers.resolve_ios_udid(args.sim_name)
     device_helpers.boot_ios(udid)
@@ -210,6 +220,26 @@ def main(argv: list[str]) -> int:
     # scheduled run look broken every time it worked. Exit 2 only when the run
     # could not do its job.
     return 2 if sink_error else 0
+
+
+def _main_exhaustive(args, run_dir: Path) -> int:
+    from config.devices import GALAXY_A17
+    from crawler.exhaustive_run import run_exhaustive
+
+    if args.platform == "ios":
+        udid = device_helpers.resolve_ios_udid(args.sim_name)
+        device_helpers.boot_ios(udid)
+        profile = IOS_SIM.__class__(**{**IOS_SIM.__dict__, "serial": udid})
+    else:
+        profile = GALAXY_A17.__class__(**{**GALAXY_A17.__dict__, "serial": args.serial or GALAXY_A17.serial})
+    out = run_exhaustive(profile, run_dir, per_screen_s=args.per_screen, global_cap_s=args.cap,
+                         depth=args.depth if args.depth > 3 else 6, use_ledger=not args.no_ledger)
+    t = out.coverage.totals()
+    print(f"\n{json.dumps(t)}\nruntime {out.runtime_s / 60:.1f} min\n{len(out.gate_failures)} gate failure(s)")
+    for f in out.gate_failures[:40]:
+        print(f"  - {f}")
+    print(f"coverage: {run_dir / 'coverage.md'}")
+    return 0
 
 
 if __name__ == "__main__":

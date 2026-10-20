@@ -1,0 +1,25 @@
+area: controls
+code: CTRL
+title: Every screen reached, every control pressed
+order: 21
+covers:
+  - mobile/lib/**
+summary: |
+  The exhaustive crawler (CR264) visits every screen and sheet and presses every
+  control, judging each press: no crash, no new error-sink entry, no overflow,
+  not a dead tap, and the effect matches the control-intent catalogue
+  (qa/uat/controls/*.yaml). Destructive controls are pressed last, then the app
+  is reset. Credit-spending controls (Room, 1-on-1, Brief) are pressed once per
+  crawl; real-money purchases are never pressed (crawler/never_press.json).
+cases:
+  - id: UAT-CTRL-001
+    title: Every screen is reached and every control pressed with the expected effect
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - Run the exhaustive crawl on a throwaway UAT user (qa/appium/tests/test_every_control.py)
+    expected:
+      - Every known screen id is reached
+      - Every discovered control is pressed, or exempt with a stated reason
+      - No press crashes the app, adds an error-sink entry, overflows, or does nothing
+      - Every control has a catalogue entry and its observed effect matches it
