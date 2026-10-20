@@ -86,8 +86,8 @@ def validate_doc(doc, origin: str, warns: list[str] | None = None) -> tuple[list
         if expect not in EXPECTS:
             errs.append(f"{where}: expect {expect!r} not in {sorted(EXPECTS)}")
         target = c.get("target") or ""
-        if expect in NEEDS_TARGET and not (isinstance(target, str) and target.startswith("ami.")):
-            errs.append(f"{where}: expect={expect} needs `target` (an ami.* id)")
+        if expect in NEEDS_TARGET and not (isinstance(target, str) and (target.startswith("ami.") or target == "dynamic")):
+            errs.append(f"{where}: expect={expect} needs `target` (an ami.* id, or 'dynamic')")
         state = c.get("state") or ""
         if expect == "state" and not (isinstance(state, str) and state):
             errs.append(f"{where}: expect=state needs a human-readable `state`")
@@ -232,17 +232,60 @@ def _actual(before, after, left_app: bool) -> str:
     return "did nothing visible"
 
 
-def check_expectation(intent: Intent, before, after, *, left_app: bool, prev_key: str | None) -> Verdict:
+def _surface_present(target: str, after, catalogue: "Catalogue | None") -> bool:
+    """Is the `target` surface on screen?
+
+    1. A real root id (`ami.screen.<name>`, in SCREEN_IDS) is matched by id.
+    2. Anything else - a dotted inline sheet/dialog (`ami.screen.x.dialog`), or a
+       surface the app gave no root id yet - has no id of its own. It is
+       recognised by the expected labels / ids of ITS OWN catalogue controls
+       appearing: at least one must, and it must not be the host's own."""
+    ids = _screen_ids(after)
+    if target in ids or after.key == target:
+        return True
+    if target in _real_roots():
+        return False
+    if catalogue is None:
+        return False
+    own = catalogue.by_screen.get(target, [])
+    if not own:
+        return False
+    shown = {n.ident for n in after.nodes if n.ident and n.visible}
+    labels = {_norm(n.label) for n in after.nodes if n.label and n.visible}
+    for e in own:
+        if e.ident and e.ident in shown:
+            return True
+        if e.label and (_norm(e.label) in labels
+                        or any(label_pattern(_norm(e.label)).fullmatch(l) for l in labels)):
+            return True
+    return False
+
+
+def _real_roots() -> set[str]:
+    try:
+        from config import semantics_ids
+        return set(getattr(semantics_ids, "SCREEN_IDS", {}).values()) if isinstance(
+            getattr(semantics_ids, "SCREEN_IDS", None), dict) else set(getattr(semantics_ids, "SCREEN_IDS", ()))
+    except Exception:
+        return set()
+
+
+def check_expectation(intent: Intent, before, after, *, left_app: bool, prev_key: str | None,
+                      catalogue: "Catalogue | None" = None) -> Verdict:
     """Assert `intent.expect` against what the press did.
 
     `destructive` is a scheduling instruction (press last), not an effect to
     assert, so it always passes here; likewise `none`, which also means a dead
-    tap is the correct outcome (handled by the caller)."""
+    tap is the correct outcome (handled by the caller). `target: dynamic`
+    (notification deep links) accepts any destination, provided the screen or
+    sheet changed."""
     e = intent.expect
     ok = True
     if e in ("navigate", "sheet", "dialog"):
-        ids = _screen_ids(after)
-        ok = intent.target in ids or after.key == intent.target
+        if intent.target == "dynamic":
+            ok = after.key != before.key or after.sheets != before.sheets or after.sig != before.sig or left_app
+        else:
+            ok = _surface_present(intent.target, after, catalogue)
         want = f"to open {intent.target}"
     elif e == "back":
         ok = (after.key == prev_key) if prev_key else (after.key != before.key)

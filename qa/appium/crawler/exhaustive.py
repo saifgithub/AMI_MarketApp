@@ -327,7 +327,16 @@ class ExhaustiveCrawler:
                 finding = "unexplained control (no entry in the control catalogue)"
             else:
                 ctl.expect = intent.expect
-                v = check_expectation(intent, before, after, left_app=left_app, prev_key=prev_key)
+                if intent.expect in ("navigate", "sheet", "dialog") and intent.target.startswith("ami.screen.") and not left_app:
+                    # The root id can lag the transition by a frame or two.
+                    for _ in range(3):
+                        from crawler.intents import _surface_present
+                        if _surface_present(intent.target, after, self.catalogue):
+                            break
+                        time.sleep(0.8)
+                        after = self._observe()
+                v = check_expectation(intent, before, after, left_app=left_app, prev_key=prev_key,
+                                      catalogue=self.catalogue)
                 ctl.intent = v.status
                 if v.status == "mismatch":
                     finding = v.detail
