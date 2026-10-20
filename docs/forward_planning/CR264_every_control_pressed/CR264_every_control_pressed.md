@@ -36,3 +36,8 @@ About 340 tap handlers (`onTap:`/`onPressed:`) sit across 104 files in `mobile/l
 1. The Flutter guard is green, and every screen file has a root id.
 2. A full crawl reaches every screen and presses every control on iOS (Simulator) and on Android (A17 rig), or each gap is listed with a reason.
 3. The `controls` case is in the ledger and the release gate reads it.
+
+## Phase D: control-intent catalogue (Saiful, 2026-10-20: "tapping on each button, also means you need to know what each button is supposed to do")
+1. `qa/uat/controls/<screen>.yaml` is one file per surface. Each entry gives the control's label or id, kind, expected effect (`navigate|sheet|dialog|state|external|back|destructive|none`), the target root id, any precondition, and the source line.
+2. The intent comes from the handler code and the label/spec. Where the code contradicts the label, the *supposed* effect is recorded and the contradiction is filed as a finding (the DEF457 class).
+3. The crawler asserts each press's expected effect. A mismatch is a finding. A control discovered with no catalogue entry is an "unexplained control" finding. So a new button cannot ship without a stated purpose, and UAT-CTRL-001 fails on either kind of finding.
