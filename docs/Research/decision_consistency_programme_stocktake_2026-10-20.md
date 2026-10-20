@@ -45,7 +45,9 @@ teammate wholesale suite, "cap1" = size pinned at 1%.
 | 3 | dsv4 | off | disp | 1/7/13/15/19 | — | — | 300 |
 | 4 | ami | off | disp | 0/0/3/22/36 | 0/0/10/37/27% | ~50 | 300 |
 | 5 | ami | off | cap1 | 1/5/9/11/11 | — | — | 300 |
-| 6 | dsv4 + ami | off | tm-all | NO-GO (R5 28%, flat) | 20–27% | — | 90+300 |
+| 6a | dsv4 | off | tm-all | R5 h2h: 20 vs prod 17 | — | — | 60×2 |
+| 6b | dsv4 | off | tm-all converted | monotone, 27% flips, horizon still broken | 27% | — | 300 |
+| 6c | ami | off | tm-all | 0/1/4/7/16 NO-GO | 20–27% | — | 300 |
 | 7 | kolibri-1 (Aleph-Alpha 78B MoE, 3.46B active) | **on** | prod | **0/0/12/17/18** | **10%** | 53.7 | 300 |
 | 8 | kolibri-1 | off | disp | 3/1/9/17/14 | 10/3/33/37/27% | 10.9 | 300 |
 | 9 | kolibri-1 | off | prod | R5 7/60 → **stopped** (too conservative) | — | ~6 | 101 |
@@ -66,6 +68,18 @@ bounded re-asks, zero transcript leaks).
    ami R3–R5 correlation r=+0.62, dsv4 smooth 1/7/13/15/19. The wholesale
    teammate suite (tm-all) failed on two models; size-pinning (cap1) killed
    discrimination (r +0.04). Prompt iteration beyond this was measured-dead.
+   **The tm-all comparative record (three runs):** (a) a controlled dsv4
+   head-to-head at R5 (same tickers/mandate/model/day-window) found tm-all
+   contract-viable — zero parse/envelope/NO_VERDICT failures on a third
+   model family, slightly more permissive than production (20 vs 17/60),
+   sizes argued wider (1.5–5.0% vs 3.5–5.0%) — but its hardcoded constitution
+   overrode the mandate horizon (60–365d vs mandate-driven), the D2 refusal;
+   (b) the converted suite (mandate-referenced horizon, CR254 salvage) went
+   monotone on dsv4 but kept 27% flips and still needed horizon enforcement;
+   (c) on ami the full converted matrix was flat (0/1/4/7/16) — NO-GO
+   reproduced on a second model. Verdict: the personas' *analysis* content
+   moves stances (13/30 tickers on dsv4); their *constitutional overrides*
+   are the poison; wholesale adoption dead, per-element salvage only.
 2. **Enforcement lever — in-turn card channel (CR256).** LLM evidence
    claims are only reproducible when filing is mechanical: prompts alone
    produced 0–92% per-desk filing rates (salience noise, ICC 0.62); a
