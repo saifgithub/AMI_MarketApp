@@ -8,13 +8,14 @@ import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class DevPreviewScreen extends StatelessWidget {
   const DevPreviewScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.devPreviewScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -153,7 +154,7 @@ class DevPreviewScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

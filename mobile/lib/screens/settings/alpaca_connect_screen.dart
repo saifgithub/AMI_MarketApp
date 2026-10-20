@@ -160,7 +160,7 @@ class _AlpacaConnectScreenState extends ConsumerState<AlpacaConnectScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.alpacaConnectScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.slate900,
@@ -176,7 +176,7 @@ class _AlpacaConnectScreenState extends ConsumerState<AlpacaConnectScreen>
         leading: Semantics(
           button: true,
           identifier: ExitIds.navBack,
-          child: IconButton(
+          child: IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back_ios_new, size: 18),
             onPressed: () => Navigator.of(context).pop(false),
           ),
@@ -206,7 +206,7 @@ class _AlpacaConnectScreenState extends ConsumerState<AlpacaConnectScreen>
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -404,7 +404,7 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
               controller: _secretCtrl,
               style: const TextStyle(color: AmiColors.textHigh, fontFamily: 'monospace'),
               decoration: _inputDecoration('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx').copyWith(
-                suffixIcon: IconButton(
+                suffixIcon: IconButton(tooltip: _secretVisible ? 'Hide secret key' : 'Show secret key', 
                   icon: Icon(
                     _secretVisible ? Icons.visibility_off : Icons.visibility,
                     color: AmiColors.slate500,

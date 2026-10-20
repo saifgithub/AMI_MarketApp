@@ -173,3 +173,132 @@ class ExitIds {
   static const String navBack = 'ami.nav.back';
   static const String tradeTicketCancel = 'ami.trade_ticket.cancel';
 }
+
+/// CR264 — one root identifier per screen, sheet and dialog, so the exhaustive
+/// UAT crawl can name the surface it is on without matching rendered text.
+///
+/// The suffix is the source file's basename, so the id is derivable from the
+/// file and unique by construction. `mobile/test/qa/screen_root_ids_test.dart`
+/// fails if a `*_screen.dart` / `*_sheet.dart` drops its root id or an id here
+/// stops being used. Mirror: `SCREEN_IDS` in `qa/appium/config/semantics_ids.py`.
+class ScreenIds {
+  const ScreenIds._();
+
+  static const String agentActionSheet = 'ami.screen.agent_action_sheet';
+  static const String agentUnlockedScreen = 'ami.screen.agent_unlocked';
+  static const String aiCoachScreen = 'ami.screen.ai_coach';
+  static const String alpacaConnectScreen = 'ami.screen.alpaca_connect';
+  static const String briefHistoryScreen = 'ami.screen.brief_history';
+  static const String briefScreen = 'ami.screen.brief';
+  static const String bugReportSheet = 'ami.screen.bug_report_sheet';
+  static const String chartFullscreenScreen = 'ami.screen.chart_fullscreen';
+  static const String companyReviewScreen = 'ami.screen.company_review';
+  static const String confirmRestartOnboarding = 'ami.screen.confirm_restart_onboarding';
+  static const String conveneSheet = 'ami.screen.convene_sheet';
+  static const String dayTraderDisclosureDialog = 'ami.screen.day_trader_disclosure_dialog';
+  static const String devPreviewScreen = 'ami.screen.dev_preview';
+  static const String floorScreen = 'ami.screen.floor';
+  static const String gamesBoardScreen = 'ami.screen.games_board';
+  static const String gamesCloseScreen = 'ami.screen.games_close';
+  static const String gamesEntrySheet = 'ami.screen.games_entry_sheet';
+  static const String gamesHomeScreen = 'ami.screen.games_home';
+  static const String gamesLobbyScreen = 'ami.screen.games_lobby';
+  static const String gamesRecordScreen = 'ami.screen.games_record';
+  static const String gamesRunScreen = 'ami.screen.games_run';
+  static const String gamesTradeTicketScreen = 'ami.screen.games_trade_ticket';
+  static const String houseAdInterstitial = 'ami.screen.house_ad_interstitial';
+  static const String inboxScreen = 'ami.screen.inbox';
+  static const String journalDetailScreen = 'ami.screen.journal_detail';
+  static const String journalScreen = 'ami.screen.journal';
+  static const String journalTrashScreen = 'ami.screen.journal_trash';
+  static const String legalScreen = 'ami.screen.legal';
+  static const String lessonReaderScreen = 'ami.screen.lesson_reader';
+  static const String lessonsScreen = 'ami.screen.lessons';
+  static const String mergeSheet = 'ami.screen.merge_sheet';
+  static const String messageDetailScreen = 'ami.screen.message_detail';
+  static const String navChangeSheet = 'ami.screen.nav_change_sheet';
+  static const String noRulesDisclosure = 'ami.screen.no_rules_disclosure';
+  static const String notificationCentreScreen = 'ami.screen.notification_centre';
+  static const String notificationPreferencesScreen = 'ami.screen.notification_preferences';
+  static const String onboardingScreen = 'ami.screen.onboarding';
+  static const String oneOnOneScreen = 'ami.screen.one_on_one';
+  static const String optionDisclosureDialog = 'ami.screen.option_disclosure_dialog';
+  static const String optionProposalTicket = 'ami.screen.option_proposal_ticket';
+  static const String optionRepriceSheet = 'ami.screen.option_reprice_sheet';
+  static const String portfolioHealthFindingScreen = 'ami.screen.portfolio_health_finding';
+  static const String portfolioScreen = 'ami.screen.portfolio';
+  static const String priceAlertSheet = 'ami.screen.price_alert_sheet';
+  static const String roomScreen = 'ami.screen.room';
+  static const String settingsScreen = 'ami.screen.settings';
+  static const String signInScreen = 'ami.screen.sign_in';
+  static const String teamCallsScreen = 'ami.screen.team_calls';
+  static const String tickerDetailScreen = 'ami.screen.ticker_detail';
+  static const String tourIntroSheet = 'ami.screen.tour_intro_sheet';
+  static const String trackLessonsScreen = 'ami.screen.track_lessons';
+  static const String tradeTicketSheet = 'ami.screen.trade_ticket_sheet';
+  static const String upgradePaywall = 'ami.screen.upgrade_paywall';
+  static const String versionGateScreen = 'ami.screen.version_gate';
+  static const String watchlistSheet = 'ami.screen.watchlist_sheet';
+  static const String yourFirmScreen = 'ami.screen.your_firm';
+  static const String youScreen = 'ami.screen.you';
+
+  static const List<String> all = [
+    agentActionSheet,
+    agentUnlockedScreen,
+    aiCoachScreen,
+    alpacaConnectScreen,
+    briefHistoryScreen,
+    briefScreen,
+    bugReportSheet,
+    chartFullscreenScreen,
+    companyReviewScreen,
+    confirmRestartOnboarding,
+    conveneSheet,
+    dayTraderDisclosureDialog,
+    devPreviewScreen,
+    floorScreen,
+    gamesBoardScreen,
+    gamesCloseScreen,
+    gamesEntrySheet,
+    gamesHomeScreen,
+    gamesLobbyScreen,
+    gamesRecordScreen,
+    gamesRunScreen,
+    gamesTradeTicketScreen,
+    houseAdInterstitial,
+    inboxScreen,
+    journalDetailScreen,
+    journalScreen,
+    journalTrashScreen,
+    legalScreen,
+    lessonReaderScreen,
+    lessonsScreen,
+    mergeSheet,
+    messageDetailScreen,
+    navChangeSheet,
+    noRulesDisclosure,
+    notificationCentreScreen,
+    notificationPreferencesScreen,
+    onboardingScreen,
+    oneOnOneScreen,
+    optionDisclosureDialog,
+    optionProposalTicket,
+    optionRepriceSheet,
+    portfolioHealthFindingScreen,
+    portfolioScreen,
+    priceAlertSheet,
+    roomScreen,
+    settingsScreen,
+    signInScreen,
+    teamCallsScreen,
+    tickerDetailScreen,
+    tourIntroSheet,
+    trackLessonsScreen,
+    tradeTicketSheet,
+    upgradePaywall,
+    versionGateScreen,
+    watchlistSheet,
+    yourFirmScreen,
+    youScreen,
+  ];
+}

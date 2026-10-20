@@ -38,7 +38,7 @@ class _LegalScreenState extends State<LegalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.legalScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.slate900,
@@ -56,7 +56,7 @@ class _LegalScreenState extends State<LegalScreen> {
         leading: Semantics(
           button: true,
           identifier: ExitIds.navBack,
-          child: IconButton(
+          child: IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back_ios_new, size: 18),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -69,6 +69,6 @@ class _LegalScreenState extends State<LegalScreen> {
             const Center(child: CircularProgressIndicator(color: AmiColors.hexCyan)),
         ],
       ),
-    );
+    ));
   }
 }

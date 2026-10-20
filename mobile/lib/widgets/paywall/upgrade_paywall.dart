@@ -22,6 +22,7 @@ import 'package:ami_trade/state/purchase_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class UpgradePaywall extends ConsumerWidget {
   const UpgradePaywall({
@@ -47,7 +48,7 @@ class UpgradePaywall extends ConsumerWidget {
     final offeringAsync = ref.watch(offeringProvider);
     final busy = ref.watch(purchaseControllerProvider).busy;
 
-    return Column(
+    return Semantics(identifier: ScreenIds.upgradePaywall, container: true, explicitChildNodes: true, child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (showHeader) ...[
@@ -94,7 +95,7 @@ class UpgradePaywall extends ConsumerWidget {
           ),
         ),
       ],
-    );
+    ));
   }
 
   Future<void> _buy(BuildContext context, WidgetRef ref, AppLocalizations l,

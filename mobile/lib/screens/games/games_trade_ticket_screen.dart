@@ -161,7 +161,7 @@ class _GamesTradeTicketScreenState
     // `SafeArea` and floats under the status bar (caught on
     // `trade_ticket_sheet.dart`'s sibling from a TestFlight build; fixed
     // here at the same time rather than shipping the same defect twice).
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesTradeTicketScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       // Tap-to-dismiss for the keyboard, matching `trade_ticket_sheet.dart`.
       // This ticket's only `TextField` (manual ticker entry) has a normal
@@ -469,7 +469,7 @@ class _GamesTradeTicketScreenState
           ]),
         ),
       ),
-    );
+    ));
   }
 }
 

@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class JournalScreen extends ConsumerStatefulWidget {
   const JournalScreen({super.key, this.embedded = false});
@@ -143,12 +144,12 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
           ],
         );
 
-    return widget.embedded
+    return Semantics(identifier: ScreenIds.journalScreen, container: true, explicitChildNodes: true, child: widget.embedded
         ? body
         : Scaffold(
             backgroundColor: AmiColors.slate900,
             body: SafeArea(child: body),
-          );
+          ));
   }
 
   Widget _body(BuildContext context, JournalState state) {
@@ -341,7 +342,7 @@ class _SearchBarState extends ConsumerState<_SearchBar> {
           hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow, fontSize: 13),
           prefixIcon: const Icon(Icons.search, color: AmiColors.textLow, size: 20),
           suffixIcon: _ctrl.text.isNotEmpty
-              ? IconButton(
+              ? IconButton(tooltip: MaterialLocalizations.of(context).closeButtonTooltip, 
                   icon: const Icon(Icons.close, color: AmiColors.textLow, size: 18),
                   onPressed: _clear,
                 )

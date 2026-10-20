@@ -39,6 +39,7 @@ import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class GamesHomeScreen extends ConsumerWidget {
   const GamesHomeScreen({super.key});
@@ -51,7 +52,7 @@ class GamesHomeScreen extends ConsumerWidget {
     // when it was written; CR133 promoted it to a tab, which left it the only
     // one of five wearing different chrome (and an unusable back affordance in
     // a tab position). The header is the shared component the other four use.
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesHomeScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(children: [
@@ -98,7 +99,7 @@ class GamesHomeScreen extends ConsumerWidget {
           ),
         ]),
       ),
-    );
+    ));
   }
 }
 

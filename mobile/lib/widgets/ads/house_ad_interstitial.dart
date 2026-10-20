@@ -22,6 +22,7 @@ import 'package:ami_trade/widgets/ads/ad_badge.dart';
 import 'package:ami_trade/widgets/ads/house_ad_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// Fire-and-forget from the lesson-completion listener. Never throws into
 /// the caller; a refusal is silent for the user and loud in the gate's log.
@@ -91,7 +92,7 @@ class _HouseAdInterstitialPageState
     final cta = widget.creative.targetTier == HouseAdTargetTier.floorManager
         ? l.houseAdCtaFloorManager
         : l.houseAdCtaTrader;
-    return PopScope(
+    return Semantics(identifier: ScreenIds.houseAdInterstitial, container: true, explicitChildNodes: true, child: PopScope(
       canPop: _skippable,
       child: Scaffold(
         backgroundColor: AmiColors.slate900,
@@ -142,6 +143,6 @@ class _HouseAdInterstitialPageState
           ),
         ),
       ),
-    );
+    ));
   }
 }

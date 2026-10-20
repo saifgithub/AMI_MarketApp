@@ -40,6 +40,7 @@ import 'package:ami_trade/models/option_reprice.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 final _money = NumberFormat('#,##0.00');
 
@@ -96,7 +97,7 @@ class OptionRepriceSheet extends StatelessWidget {
     final drift = result.drift;
     final moved = drift?.hasMoved ?? false;
 
-    return Container(
+    return Semantics(identifier: ScreenIds.optionRepriceSheet, container: true, explicitChildNodes: true, child: Container(
       decoration: const BoxDecoration(
         color: AmiColors.slate800,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AmiRadii.card)),
@@ -181,7 +182,7 @@ class OptionRepriceSheet extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 
   String _heading(AppLocalizations l, bool moved) {

@@ -9,6 +9,7 @@ import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class PriceAlertSheet extends ConsumerStatefulWidget {
   const PriceAlertSheet({super.key, required this.ticker});
@@ -60,7 +61,7 @@ class _PriceAlertSheetState extends ConsumerState<PriceAlertSheet> {
     final price = double.tryParse(_price.text.trim());
     final canSubmit = !controllerState.busy && price != null && price > 0;
 
-    return Padding(
+    return Semantics(identifier: ScreenIds.priceAlertSheet, container: true, explicitChildNodes: true, child: Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
         AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
@@ -133,7 +134,7 @@ class _PriceAlertSheetState extends ConsumerState<PriceAlertSheet> {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

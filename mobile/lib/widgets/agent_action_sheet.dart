@@ -11,6 +11,7 @@ import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 
 class AgentActionSheet extends StatelessWidget {
@@ -36,7 +37,7 @@ class AgentActionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return Semantics(identifier: ScreenIds.agentActionSheet, container: true, explicitChildNodes: true, child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AmiSpacing.l,
@@ -93,7 +94,7 @@ class AgentActionSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

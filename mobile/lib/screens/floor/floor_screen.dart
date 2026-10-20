@@ -57,6 +57,7 @@ import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class FloorScreen extends ConsumerStatefulWidget {
   const FloorScreen({super.key});
@@ -188,7 +189,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final hasUnactioned =
         ref.watch(unactionedCallsProvider).valueOrNull?.isNotEmpty ?? false;
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.floorScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: Stack(
         children: [
@@ -326,7 +327,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -418,7 +419,7 @@ class _InboxBell extends ConsumerWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          IconButton(
+          IconButton(tooltip: AppLocalizations.of(context).inboxTitle, 
             icon: const Icon(Icons.notifications_outlined,
                 color: AmiColors.textLow),
             onPressed: () => Navigator.of(context).push(

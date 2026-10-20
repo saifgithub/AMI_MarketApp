@@ -18,6 +18,7 @@ import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 const _kCategories = [
   ('ui_glitch', 'UI glitch'),
@@ -159,7 +160,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
     // isn't drawn under the Android system nav (was viewInsets.bottom only).
     final bottom = sheetBottomInset(MediaQuery.of(context));
 
-    return Padding(
+    return Semantics(identifier: ScreenIds.bugReportSheet, container: true, explicitChildNodes: true, child: Padding(
       padding: EdgeInsets.fromLTRB(AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.m + bottom),
       child: Form(
         key: _formKey,
@@ -304,7 +305,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
         ),
         ),
       ),
-    );
+    ));
   }
 }
 

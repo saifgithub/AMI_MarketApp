@@ -24,13 +24,18 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:flutter/material.dart';
 
 Future<bool> confirmRestartOnboarding(BuildContext context) async {
   final l = AppLocalizations.of(context);
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
+    builder: (ctx) => Semantics(
+      identifier: ScreenIds.confirmRestartOnboarding,
+      container: true,
+      explicitChildNodes: true,
+      child: AlertDialog(
       backgroundColor: AmiColors.slate800,
       title: Text(
         l.floorRestartOnboardingConfirmTitle,
@@ -53,6 +58,7 @@ Future<bool> confirmRestartOnboarding(BuildContext context) async {
           ),
         ),
       ],
+    ),
     ),
   );
   return confirmed == true;

@@ -17,6 +17,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// Pushes the merge sheet as a modal bottom-sheet, fetches the preview
 /// first, and returns once the user has chosen an action. Surfaces a
@@ -102,7 +103,7 @@ class _MergeSheetState extends ConsumerState<_MergeSheet> {
       lines.add(l.mergeSheetMandate);
     }
 
-    return SafeArea(
+    return Semantics(identifier: ScreenIds.mergeSheet, container: true, explicitChildNodes: true, child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AmiSpacing.m,
@@ -208,6 +209,6 @@ class _MergeSheetState extends ConsumerState<_MergeSheet> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

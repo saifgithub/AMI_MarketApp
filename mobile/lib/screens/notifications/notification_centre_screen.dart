@@ -28,6 +28,7 @@ import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class NotificationCentreScreen extends ConsumerWidget {
   const NotificationCentreScreen({super.key});
@@ -47,7 +48,7 @@ class NotificationCentreScreen extends ConsumerWidget {
     final page = ref.watch(notificationPageProvider);
     final hasUnread =
         (page.valueOrNull?.items.any((n) => n.isUnread) ?? false);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.notificationCentreScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -104,7 +105,7 @@ class NotificationCentreScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

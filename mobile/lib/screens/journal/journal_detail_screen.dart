@@ -21,6 +21,7 @@ import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// DEF150 — true when the board below already renders this entry's reasoning,
 /// in which case `entry.summary` above it is a **second, worse copy** and must
@@ -110,7 +111,7 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
             ));
     _initFrom(entry);
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.journalDetailScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -181,7 +182,7 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -201,7 +202,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),

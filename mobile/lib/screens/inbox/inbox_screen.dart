@@ -20,6 +20,7 @@ import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// "14m ago" / "3h ago" / "2d ago" — same shape as the CR186 order-book rows.
 String inboxRelativeTime(AppLocalizations l, DateTime t) {
@@ -37,7 +38,7 @@ class InboxScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final inbox = ref.watch(inboxProvider);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.inboxScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -83,7 +84,7 @@ class InboxScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

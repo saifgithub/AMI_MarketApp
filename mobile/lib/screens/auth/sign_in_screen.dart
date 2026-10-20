@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 // OAuth 2.0 **Web client ID** from GCP Console. Stamped into the Google
 // ID token as `aud`; the backend verifies against `GOOGLE_AUDIENCES`.
@@ -238,7 +239,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final auth = ref.watch(authNotifierProvider);
     final user = auth.user;
     final l = AppLocalizations.of(context);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.signInScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.glassChrome,
@@ -331,7 +332,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

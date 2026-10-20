@@ -15,6 +15,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/lessons/lesson_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// Short display labels for each track — mirrors the spec table.
 const _trackShortLabel = {
@@ -46,7 +47,7 @@ class TrackLessonsScreen extends ConsumerWidget {
     final state = ref.watch(lessonsNotifierProvider);
     final heading = _trackShortLabel[trackId] ?? trackId.toUpperCase();
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.trackLessonsScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -56,7 +57,7 @@ class TrackLessonsScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(BuildContext context, WidgetRef ref, LessonsState state) {
@@ -172,10 +173,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: const Icon(Icons.arrow_back_ios_new,
-                size: 18, color: AmiColors.textMed),
+          Semantics(
+            label: MaterialLocalizations.of(context).backButtonTooltip,
+            button: true,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  size: 18, color: AmiColors.textMed),
+            ),
           ),
           const SizedBox(width: AmiSpacing.m),
           Text(heading,

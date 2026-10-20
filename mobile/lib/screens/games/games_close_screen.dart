@@ -74,6 +74,7 @@ import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// CR106 T-BIDI: isolate signed/numeric runs so RTL layout cannot scramble
 /// sign/digits. Per-file copy, matching this codebase's existing
@@ -96,7 +97,7 @@ class GamesCloseScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final closeAsync = ref.watch(gamesCloseProvider(runId));
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesCloseScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(title: Text(l.gamesCloseAppBarTitle)),
       body: SafeArea(
@@ -108,7 +109,7 @@ class GamesCloseScreen extends ConsumerWidget {
           data: (result) => _CloseBody(result: result),
         ),
       ),
-    );
+    ));
   }
 }
 

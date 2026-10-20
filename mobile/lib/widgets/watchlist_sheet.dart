@@ -12,6 +12,7 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,11 @@ void showWatchlistSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (sheetCtx) => SafeArea(
+    builder: (sheetCtx) => Semantics(
+      identifier: ScreenIds.watchlistSheet,
+      container: true,
+      explicitChildNodes: true,
+      child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(AmiSpacing.l),
         child: Column(
@@ -116,6 +121,7 @@ void showWatchlistSheet(
           ],
         ),
       ),
+    ),
     ),
   );
 }

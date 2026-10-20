@@ -14,6 +14,7 @@ import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class OneOnOneScreen extends ConsumerStatefulWidget {
   const OneOnOneScreen({super.key, required this.agent, this.initialMessage});
@@ -95,7 +96,7 @@ class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
       (_, __) => _scrollToBottom(),
     );
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.oneOnOneScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -110,7 +111,7 @@ class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(OneOnOneState state) {
@@ -175,7 +176,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -323,7 +324,7 @@ class _InputBar extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AmiSpacing.s),
-              IconButton(
+              IconButton(tooltip: AppLocalizations.of(context).onboardingSendAnswerTooltip, 
                 onPressed: disabled ? null : onSend,
                 icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
                 style: IconButton.styleFrom(

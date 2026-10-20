@@ -33,6 +33,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// CR244 audit fix L6 — opens `uri` externally, surfacing a snackbar when
 /// `launchUrl` fails (rather than the tap silently doing nothing). Shared by
@@ -88,7 +89,7 @@ class _CompanyReviewScreenState extends ConsumerState<CompanyReviewScreen>
     final profileAsync =
         ref.watch(companyProfileProvider(widget.ticker));
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.companyReviewScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.glassChrome,
@@ -115,7 +116,7 @@ class _CompanyReviewScreenState extends ConsumerState<CompanyReviewScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

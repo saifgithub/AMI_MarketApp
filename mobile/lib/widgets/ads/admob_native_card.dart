@@ -60,7 +60,7 @@ class _AdMobNativeCardState extends State<AdMobNativeCard> {
             children: [
               const AdBadge(sponsored: true),
               const Spacer(),
-              IconButton(
+              IconButton(tooltip: MaterialLocalizations.of(context).closeButtonTooltip, 
                 onPressed: () {
                   _disposeAd();
                   widget.onDismiss();

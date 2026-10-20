@@ -128,10 +128,14 @@ class _FloorReactionCardState extends ConsumerState<FloorReactionCard> {
                     style: AmiTypography.labelMono
                         .copyWith(fontSize: 11, color: AmiColors.hexPink)),
               ),
-              GestureDetector(
-                onTap: _dismiss,
-                child: const Icon(Icons.close,
-                    size: 16, color: AmiColors.textLow),
+              Semantics(
+                label: MaterialLocalizations.of(context).closeButtonTooltip,
+                button: true,
+                child: GestureDetector(
+                  onTap: _dismiss,
+                  child: const Icon(Icons.close,
+                      size: 16, color: AmiColors.textLow),
+                ),
               ),
             ],
           ),

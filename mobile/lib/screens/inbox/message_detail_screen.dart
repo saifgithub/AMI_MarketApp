@@ -28,6 +28,7 @@ import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class MessageDetailScreen extends ConsumerStatefulWidget {
   const MessageDetailScreen({super.key, required this.messageId});
@@ -114,7 +115,7 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
     final inbox = ref.watch(inboxProvider);
     final rows = inbox.valueOrNull;
     if (rows != null) _maybeMarkRead(rows);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.messageDetailScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -146,7 +147,7 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _errorPanel(AppLocalizations l) {

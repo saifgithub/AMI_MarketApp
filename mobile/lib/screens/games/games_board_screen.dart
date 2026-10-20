@@ -52,6 +52,7 @@ import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class GamesBoardScreen extends ConsumerWidget {
   const GamesBoardScreen({super.key, required this.runId});
@@ -69,7 +70,7 @@ class GamesBoardScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final boardAsync = ref.watch(gamesBoardProvider(runId));
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesBoardScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -173,7 +174,7 @@ class GamesBoardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
