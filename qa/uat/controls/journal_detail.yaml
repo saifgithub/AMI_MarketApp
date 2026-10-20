@@ -23,7 +23,7 @@ controls:
   - label: "<agent hex on the board>"
     kind: list_row
     expect: sheet
-    target: ami.screen.agent_peek_sheet
+    target: ami.screen.room_transcript_rows.agent_peek_sheet
     state: "Opens a peek sheet with that agent's gist and a read-full-debate action"
     when: "Room run entry, BOARD mode"
     line: 480

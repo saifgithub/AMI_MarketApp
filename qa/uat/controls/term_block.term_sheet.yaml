@@ -1,0 +1,16 @@
+screen: "ami.screen.term_block.term_sheet"
+source: "mobile/lib/widgets/lessons/term_block.dart"
+controls:
+  - label: "<related term chip>"
+    kind: chip
+    expect: sheet
+    target: "ami.screen.term_block.term_sheet"
+    state: "Current sheet closes and the sheet for the related term opens"
+    when: "entry has seeAlso terms that resolve in the registry"
+    line: 180
+    note: "repeated"
+  - label: "<outside the sheet / swipe down>"
+    kind: button
+    expect: back
+    state: "Sheet dismisses back to the lesson"
+    line: 87

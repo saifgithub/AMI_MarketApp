@@ -1,0 +1,14 @@
+screen: "ami.screen.brief_history.rollback_dialog"
+source: "mobile/lib/screens/agent/brief_history_screen.dart"
+controls:
+  - label: "CANCEL"
+    kind: button
+    expect: back
+    state: "Dialog closes; the agent's brief stays on the current version"
+    line: 120
+  - label: "ROLLBACK"
+    kind: button
+    expect: destructive
+    state: "Dialog closes; the chosen older brief version becomes the agent's active version and the history list shows it as active"
+    line: 128
+    note: "Changes the agent's live behaviour (reversible by rolling back again). Button tinted with the agent colour."

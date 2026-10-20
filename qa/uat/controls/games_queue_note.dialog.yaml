@@ -1,0 +1,8 @@
+screen: "ami.screen.games_queue_note.dialog"
+source: "mobile/lib/widgets/games/games_queue_note.dart"
+controls:
+  - label: "Got it"
+    kind: button
+    expect: back
+    state: "Dialog closes; the queue-first explanation was informational only"
+    line: 71

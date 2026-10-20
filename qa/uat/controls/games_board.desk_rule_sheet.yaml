@@ -1,0 +1,9 @@
+screen: "ami.screen.games_board.desk_rule_sheet"
+source: "mobile/lib/screens/games/games_board_screen.dart"
+controls:
+  - label: "<outside the sheet / swipe down>"
+    kind: button
+    expect: back
+    state: "Sheet dismisses back to the board; it shows the desk's handle, the desks intro and the server-supplied naming rule, with no buttons of its own"
+    line: 725
+    note: "No in-sheet buttons by design; dismissal is the only interaction."

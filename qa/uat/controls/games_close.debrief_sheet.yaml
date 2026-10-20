@@ -1,0 +1,9 @@
+screen: "ami.screen.games_close.debrief_sheet"
+source: "mobile/lib/screens/games/games_close_screen.dart"
+controls:
+  - label: "<outside the sheet / swipe down>"
+    kind: button
+    expect: back
+    state: "Sheet dismisses back to the Close screen; it is a read-only debrief (basis, alpha scored/display, intent, wildness, fees, trade count, marker) with no buttons of its own"
+    line: 682
+    note: "No in-sheet buttons by design; dismissal is the only interaction."
