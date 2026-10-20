@@ -1,0 +1,17 @@
+screen: "ami.screen.room_board"
+source: "mobile/lib/widgets/room/room_board.dart"
+controls:
+  - label: "<consensus comb hex: one per voice>"
+    kind: icon
+    expect: sheet
+    target: "ami.screen.room_transcript_rows.agent_peek_sheet"
+    state: "Opens that agent's peek sheet (stance, conviction, contribution)"
+    when: "Room settled and Board view selected"
+    line: 931
+    note: "repeated. Semantics label = the agent's display name."
+  - label: "WHY →"
+    kind: button
+    expect: state
+    state: "Verdict reason expands to full text and the arrow flips to ↑; tap again collapses to two lines"
+    when: "verdict is APPROVE"
+    line: 1188

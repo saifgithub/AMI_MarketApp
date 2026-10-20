@@ -1,0 +1,10 @@
+screen: "ami.screen.room_transcript_rows"
+source: "mobile/lib/widgets/room/room_transcript_rows.dart"
+controls:
+  - label: "<agent transcript row: hex + name + stance>"
+    kind: list_row
+    expect: state
+    state: "Row expands to show that agent's full contribution (markdown); tap again collapses"
+    when: "Room settled, TRANSCRIPT view, agent spoke (withheld / empty rows are inert)"
+    line: 260
+    note: "repeated (one per voice). Jumping from a peek sheet's READ THE FULL DEBATE pre-expands and highlights the row."

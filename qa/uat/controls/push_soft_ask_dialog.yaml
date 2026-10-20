@@ -1,0 +1,14 @@
+screen: "ami.screen.push_soft_ask_dialog"
+source: "mobile/lib/screens/notifications/push_notification_listener.dart"
+controls:
+  - label: "Not now"
+    kind: button
+    expect: state
+    state: "Dialog closes; no OS permission prompt; never asked again (once per install)"
+    when: "shown once per install, shortly after launch, when push is configured and OS permission not yet granted"
+    line: 132
+  - label: "Turn on"
+    kind: button
+    expect: external
+    state: "Dialog closes and the OS notification permission prompt appears"
+    line: 136

@@ -1,0 +1,9 @@
+screen: "ami.screen.room_transcript_rows.agent_peek_sheet"
+source: "mobile/lib/widgets/room/room_transcript_rows.dart"
+controls:
+  - label: "READ THE FULL DEBATE →"
+    kind: button
+    expect: state
+    state: "Sheet closes and the Room switches to TRANSCRIPT view with that agent's row expanded and highlighted"
+    when: "agent spoke (hidden for withheld / empty agents)"
+    line: 468

@@ -1,0 +1,9 @@
+screen: "ami.screen.hex_toast"
+source: "mobile/lib/widgets/hex/hex_toast.dart"
+controls:
+  - label: "<toast message>"
+    kind: link
+    expect: state
+    state: "Tapping the toast dismisses it immediately (otherwise it auto-dismisses)"
+    line: 105
+    note: "shared -- appears wherever HexToast.show is called."

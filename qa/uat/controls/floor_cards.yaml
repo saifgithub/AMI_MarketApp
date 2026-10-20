@@ -1,0 +1,16 @@
+screen: "ami.screen.floor_cards"
+source: "mobile/lib/screens/floor/floor_cards.dart"
+controls:
+  - label: "<sector watch body: '{sector} {move} — {ticker} leads.'>"
+    kind: link
+    expect: navigate
+    target: "ami.screen.ticker_detail"
+    when: "SECTOR WATCH loaded in state ok with a leader ticker (Flutter Key 'sector_watch_tap', not a Semantics identifier)"
+    line: 179
+    note: "Opens TickerDetailScreen for the sector leader."
+  - label: "<team call row>"
+    kind: list_row
+    expect: none
+    when: "TeamCallRow in the Floor card (compact) and in TeamCallsScreen; onTap is null in both"
+    line: 356
+    note: "repeated. TeamCallRow supports onTap but no caller passes one, so rows are inert by design (the card as a whole navigates; see floor.yaml)."

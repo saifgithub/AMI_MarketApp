@@ -1,0 +1,17 @@
+screen: "ami.screen.house_ad_card"
+source: "mobile/lib/widgets/ads/house_ad_card.dart"
+controls:
+  - label: "Dismiss ad (close icon)"
+    kind: icon
+    expect: state
+    state: "The sponsored card disappears from the screen for this view (returns on next placement/rebuild)"
+    when: "free plan and an inline ad slot fills with a house ad"
+    line: 78
+    note: "shared -- inline AdSlot placements across screens."
+  - label: "See Trader plans / See Floor Manager plans"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "same"
+    line: 101
+    note: "Label depends on the creative's target tier. Opens the upgrade paywall sheet (openHouseAdPaywall)."

@@ -1,0 +1,43 @@
+screen: "ami.screen.floor_omnibox"
+source: "mobile/lib/widgets/floor/floor_omnibox.dart"
+controls:
+  - label: "Type a ticker — or ask AMI anything…"
+    kind: field
+    expect: navigate
+    target: "ami.screen.room"
+    when: "text is ticker-shaped (1-5 letters) AND passes validateTicker; keyboard Go behaves exactly like the primary CTA"
+    line: 205
+    note: "Free text (not ticker-shaped) -> OneOnOneScreen with the Concierge carrying the text (ami.screen.one_on_one); empty -> ConveneSheet picker (ami.screen.convene_sheet). Unknown ticker shows TickerNotFoundPanel and does NOT navigate. Tap outside dismisses the keyboard (line 210)."
+  - label: "CONVENE THE ROOM · <TICKER>"
+    kind: button
+    expect: destructive
+    target: "ami.screen.room"
+    when: "ticker typed and valid"
+    line: 258
+    note: "Label morphs with the text. Opens the Room, which auto-convenes on open (RoomNotifier start via provider microtask) and spends a Room credit. Keyboard Go on the field does the same."
+  - label: "ASK AMI"
+    kind: button
+    expect: navigate
+    target: "ami.screen.one_on_one"
+    when: "text typed is not ticker-shaped (a question or sentence)"
+    line: 258
+    note: "Same widget as CONVENE; label depends on text."
+  - label: "CONVENE THE ROOM"
+    kind: button
+    expect: sheet
+    target: "ami.screen.convene_sheet"
+    when: "box is empty"
+    line: 258
+  - label: "Company Review"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.company_review"
+    when: "box holds a validated ticker; disabled (no tap) otherwise. Rendered as info_outlined icon with tooltip/Semantics label 'Company Review'"
+    line: 267
+    note: "Re-validates the ticker before navigating."
+  - label: "<suggested ticker> (TickerNotFoundPanel)"
+    kind: link
+    expect: state
+    state: "Box text is replaced with the suggested ticker; panel clears and CTA re-arms on it"
+    when: "typed symbol unknown and a suggestion exists"
+    line: 232

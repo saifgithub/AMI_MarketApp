@@ -1,0 +1,27 @@
+screen: "ami.screen.message_detail"
+source: "mobile/lib/screens/inbox/message_detail_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 125
+    note: "shared AmiScreenHeader back arrow"
+  - label: "Write a reply…"
+    kind: field
+    expect: state
+    state: "Reply draft typed (max 2000 chars, grows to 4 lines)"
+    line: 222
+  - label: "SEND"
+    kind: button
+    expect: destructive
+    state: "Toast 'Reply sent.'; field clears; the reply appears in the thread under 'You'"
+    when: "draft non-empty and not already sending; on failure a red toast and the draft is kept"
+    line: 237
+    note: "Sends a reply message to the AMI team server-side (cannot be unsent)."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Re-fetches the inbox"
+    when: "inbox load failed or the message id vanished"
+    line: 167

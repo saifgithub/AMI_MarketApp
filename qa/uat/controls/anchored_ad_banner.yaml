@@ -1,0 +1,10 @@
+screen: "ami.screen.anchored_ad_banner"
+source: "mobile/lib/widgets/ads/anchored_ad_banner.dart"
+controls:
+  - label: "<AdMob anchored banner>"
+    kind: link
+    expect: external
+    state: "Tapping the banner opens the advertiser's page in the browser / store"
+    when: "free plan and AdMob fills the shell banner slot (a house-ad strip may fill instead, see house_ad_banner_strip.yaml); collapses to zero height on paid plans or no fill"
+    line: 120
+    note: "shared -- sits between the bottom nav and the ticker tape on every screen. SDK-owned touch target, no handler of ours (line is the file start)."

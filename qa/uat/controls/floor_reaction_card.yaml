@@ -1,0 +1,20 @@
+screen: "ami.screen.floor_reaction_card"
+source: "mobile/lib/widgets/floor/floor_reaction_card.dart"
+controls:
+  - label: "Too much? Not enough? Say it plainly."
+    kind: field
+    expect: state
+    state: "Free-text feedback typed into the card"
+    when: "card shown (a Floor-visit counter decides)"
+    line: 139
+  - label: "SEND"
+    kind: button
+    expect: destructive
+    line: 155
+    when: "text non-empty; label shows SENDING… while in flight"
+    note: "Submits a feature_request bug report titled 'Floor v0.2 reaction' to the server (irreversible), shows a snackbar ('Sent. Thank you…' or 'Couldn't send that just now'), and the card disappears for good either way."
+  - label: "close (X icon)"
+    kind: icon
+    expect: state
+    state: "Reaction card disappears and is marked done; never asked again"
+    line: 132

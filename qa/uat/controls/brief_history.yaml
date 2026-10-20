@@ -1,0 +1,29 @@
+screen: "ami.screen.brief_history"
+source: "mobile/lib/screens/agent/brief_history_screen.dart"
+controls:
+  - label: "back (arrow_back icon)"
+    kind: icon
+    expect: back
+    line: 164
+    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings)."
+  - label: "ROLLBACK TO THIS"
+    kind: button
+    expect: dialog
+    target: "ami.screen.brief_history.rollback_dialog"
+    when: "version card is not the ACTIVE one"
+    line: 259
+    note: "repeated per non-active version. Opens 'Rollback to v{N}?' confirm dialog."
+  - label: "Cancel"
+    kind: button
+    expect: state
+    state: "Dialog closes, nothing changes"
+    when: "rollback dialog open"
+    line: 120
+    note: "surface ami.screen.brief_history.rollback_dialog"
+  - label: "ROLLBACK"
+    kind: button
+    expect: destructive
+    state: "Dialog closes; the chosen version becomes ACTIVE; the agent uses it immediately; newer versions stay in history"
+    when: "rollback dialog open"
+    line: 128
+    note: "surface ami.screen.brief_history.rollback_dialog. Changes the agent's live behaviour (reversible by rolling back again)."

@@ -1,0 +1,35 @@
+screen: "ami.screen.daily_challenge_card.screen"
+source: "mobile/lib/screens/floor/daily_challenge_card.dart"
+controls:
+  - label: "back (Material AppBar arrow, title 'Daily · <date>')"
+    kind: icon
+    expect: back
+    line: 258
+    note: "Uses the stock Material AppBar back button, not AmiScreenHeader (no ami.nav.back identifier) -- see findings."
+  - label: "<option A / B / C / D>"
+    kind: list_row
+    expect: state
+    state: "Tapped option gets a blue border (selected); previous selection clears. SUBMIT becomes enabled"
+    when: "challenge not yet answered; after answering options are inert"
+    line: 293
+    note: "repeated"
+  - label: "SUBMIT"
+    kind: button
+    expect: destructive
+    state: "After submit: options show green (correct) / red (selected wrong), CORRECT or INCORRECT, explanation, 'Next challenge in HH:MM:SS' countdown"
+    when: "an option is selected and not already submitting"
+    line: 301
+    note: "Submits the attempt to the server, graded server-side; one attempt per day, irreversible. Correct answer triggers a small celebration."
+  - label: "RELATED LESSON"
+    kind: link
+    expect: navigate
+    target: "ami.screen.lesson_reader"
+    when: "answered and challenge has a related lesson"
+    line: 331
+  - label: "RELATED AGENT"
+    kind: link
+    expect: sheet
+    target: "ami.screen.agent_action_sheet"
+    when: "answered and challenge has a related agent"
+    line: 350
+    note: "Opens the 1-ON-1 / BRIEF chooser for that agent."

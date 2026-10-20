@@ -1,0 +1,10 @@
+screen: "ami.screen.ami_segment_bar"
+source: "mobile/lib/widgets/hex/ami_segment_bar.dart"
+controls:
+  - label: "<segment label>"
+    id: "<AmiSegment.semanticsId, caller-supplied, optional>"
+    kind: tab
+    expect: state
+    state: "Tapped segment fills hexBlue and the pane below switches to that segment's content; the previous one dims"
+    line: 120
+    note: "shared -- repeated per segment; used by YOU (SETTINGS / JOURNAL / INSIGHTS) and other tabbed screens. Concrete segment labels and ids belong to each caller's file."

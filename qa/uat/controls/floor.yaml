@@ -1,0 +1,37 @@
+screen: "ami.screen.floor"
+source: "mobile/lib/screens/floor/floor_screen.dart"
+controls:
+  - label: "Inbox bell (notifications_outlined icon, amber unread badge)"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.inbox"
+    line: 424
+    note: "Semantics label 'Messages' / 'N unread messages'. Opens the Inbox (messages from the team). NOT the notification centre (that is NotificationBell, used elsewhere)."
+  - label: "YOUR TEAM'S CALLS card (carousel card 2)"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.team_calls"
+    line: 245
+    note: "Whole card is tappable."
+  - label: "NOT ACTIONED card (carousel card 4)"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.team_calls"
+    when: "at least one unactioned call exists; otherwise the card is omitted"
+    line: 262
+  - label: "YOUR FIRM row (3 hex faces, 'YOUR FIRM', 'N/12 seats filled')"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.your_firm"
+    line: 294
+    note: "Also records telemetry firm_open."
+  - label: "SIM PORTFOLIO card (carousel card 1)"
+    kind: list_row
+    expect: none
+    line: 241
+    note: "FloorCard 'portfolio' has no onTap by design (rule 3: portfolio has its own tab). Card is wrapped in an InkWell so it ripples on tap but goes nowhere -- see findings."
+  - label: "SECTOR WATCH card (carousel card 3)"
+    kind: list_row
+    expect: none
+    line: 254
+    note: "Card-level onTap is null by design; the tap lives in the body (see floor_cards.yaml sector_watch_tap)."

@@ -1,0 +1,22 @@
+screen: "ami.screen.inbox"
+source: "mobile/lib/screens/inbox/inbox_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 48
+    note: "shared AmiScreenHeader back arrow"
+  - label: "<message card: title, first line, 'Nm ago'>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.message_detail"
+    when: "inbox has at least one broadcast (direction 'out') message"
+    line: 134
+    note: "repeated. Opens the thread; opening marks the message read and clears its unread dot / bell badge."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Re-fetches the inbox; spinner then list (or the error again)"
+    when: "inbox load failed ('Couldn't load your messages.')"
+    line: 115

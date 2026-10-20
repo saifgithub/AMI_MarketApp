@@ -1,0 +1,11 @@
+screen: "ami.screen.ami_screen_header"
+source: "mobile/lib/widgets/hex/ami_screen_header.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    state: "Pops the current screen off the tab's navigator (or runs the caller's onBack override) and returns to the previous screen"
+    when: "header built with showBack: true"
+    line: 87
+    note: "shared -- appears on every screen using AmiScreenHeader. Trailing `actions` are caller-supplied and documented per screen."

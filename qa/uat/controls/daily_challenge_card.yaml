@@ -1,0 +1,10 @@
+screen: "ami.screen.daily_challenge_card"
+source: "mobile/lib/screens/floor/daily_challenge_card.dart"
+controls:
+  - label: "<daily challenge card: 'Tap to attempt →' / 'Answered — tap to review'>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.daily_challenge_card.screen"
+    when: "today's challenge loaded; the card is absent on error / no challenge"
+    line: 39
+    note: "Opens DailyChallengeScreen (a separate surface in this same file, below)."

@@ -1,0 +1,10 @@
+screen: "ami.screen.house_ad_banner_strip"
+source: "mobile/lib/widgets/ads/house_ad_banner_strip.dart"
+controls:
+  - label: "<house ad strip: AD badge, headline, 'See Trader plans' / 'See Floor Manager plans'>"
+    kind: link
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "free plan and a house ad fills the shell banner slot"
+    line: 38
+    note: "shared -- appears in the shell chrome on every tab. Opens the upgrade paywall sheet. The strip has no dismiss control."

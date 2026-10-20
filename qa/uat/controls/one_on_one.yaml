@@ -1,0 +1,29 @@
+screen: "ami.screen.one_on_one"
+source: "mobile/lib/screens/agent/one_on_one_screen.dart"
+controls:
+  - label: "back (arrow_back icon)"
+    kind: icon
+    expect: back
+    line: 180
+    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings)."
+  - label: "Brief this agent (tune icon)"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.brief"
+    when: "agent is not the Concierge (AMI); the Concierge has no Brief surface so the icon is absent"
+    line: 206
+    note: "Tooltip 'Brief this agent'."
+  - label: "Ask anything…"
+    kind: field
+    expect: destructive
+    state: "Enter submits the message: the field clears, the user's bubble appears and the agent's reply streams in; field is disabled and shows 'Streaming…' while the agent answers"
+    when: "session open and not streaming; text non-empty"
+    line: 301
+    note: "Sending spends a 1-on-1 credit / free allowance (see credits line above the field) and cannot be unsent. Same effect as the arrow-up button. When opened from the Floor omnibox the typed text is auto-sent once on open."
+  - label: "send (arrow_upward icon)"
+    kind: icon
+    expect: destructive
+    state: "Same as pressing Enter in the field"
+    when: "not streaming, session open"
+    line: 327
+    note: "Spends a 1-on-1 credit / free message; message cannot be unsent."

@@ -1,0 +1,65 @@
+screen: "ami.screen.brief"
+source: "mobile/lib/screens/agent/brief_screen.dart"
+controls:
+  - label: "back (arrow_back icon)"
+    kind: icon
+    expect: back
+    line: 229
+    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings)."
+  - label: "Version history (history icon)"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.brief_history"
+    line: 265
+    note: "Tooltip 'Version history'. On return the brief reloads its history."
+  - label: "close (X on refusal banner)"
+    kind: icon
+    expect: state
+    state: "Refusal banner (PROTECTED -- safety floor / mandate rule / EDIT LIMIT REACHED) disappears"
+    when: "a proposal was refused"
+    line: 354
+  - label: "PROPOSE CHANGE"
+    kind: button
+    expect: state
+    state: "Label becomes DRAFTING…; then AMI shows a proposal card (plain-English summary + overlay addition) or a refusal card"
+    when: "no pending proposal and at least 2 messages exchanged"
+    line: 536
+    note: "Costs an LLM call; no change is saved until ACCEPT."
+  - label: "Tell me what to change…"
+    kind: field
+    expect: destructive
+    state: "Enter sends the message into the briefing chat; reply streams in"
+    when: "session open and not streaming"
+    line: 550
+    note: "Spends a credit / allowance; cannot be unsent."
+  - label: "send (arrow_upward icon)"
+    kind: icon
+    expect: destructive
+    state: "Same as Enter in the field"
+    line: 573
+    note: "Spends a credit / allowance."
+  - label: "ACCEPT"
+    kind: button
+    expect: destructive
+    state: "Overlay saved as the new version; HexToast 'Saved as v{N} — {summary}'; proposal card and bottom banner update to the new CURRENT OVERLAY"
+    when: "pending proposal that was not refused"
+    line: 438
+    note: "Persists a new agent overlay server-side and consumes one of the tier's limited edits. Rollback is possible from history."
+  - label: "REFINE"
+    kind: button
+    expect: state
+    state: "Proposal text is copied into the composer and focused so the user can amend it"
+    when: "pending proposal not refused"
+    line: 451
+  - label: "DISMISS"
+    kind: button
+    expect: state
+    state: "Refused-proposal card disappears"
+    when: "pending proposal was refused"
+    line: 451
+  - label: "REJECT"
+    kind: button
+    expect: state
+    state: "Pending proposal is discarded (and reported rejected to the server); card disappears, nothing saved"
+    when: "pending proposal not refused"
+    line: 460
