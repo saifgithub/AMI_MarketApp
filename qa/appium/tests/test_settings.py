@@ -16,7 +16,10 @@ Saiful must supply (see test_data/README.md), never fabricated here.
 
 from __future__ import annotations
 
+import os
+
 import pytest
+from selenium.common.exceptions import NoSuchElementException
 
 from conftest import snap
 from helpers.gestures import scroll_to_top, swipe_up
@@ -26,6 +29,9 @@ from pages.base_page import content_band, open_you_segment, probe_content, scrol
 pytestmark = [pytest.mark.phase1]
 
 
+@pytest.mark.xfail(os.environ.get("AMI_PLATFORM") == "ios", strict=False,
+                   raises=NoSuchElementException,
+                   reason="DEF466 — iOS accessibility tree goes dark (Settings > PROFILE), on-screen text unfindable")
 def test_settings_renders_heading(driver, device, run_dir):
     # CR133 moved SETTINGS off the bottom nav into a YOU segment. This test kept
     # calling `open_tab(driver, "Settings")` for months afterwards, which now

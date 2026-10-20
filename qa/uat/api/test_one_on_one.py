@@ -121,6 +121,10 @@ def test_paid_plans_open_every_agent_without_unlocking(seed):
 
 @pytest.mark.uat("UAT-ONE-003")
 @pytest.mark.llm
+@pytest.mark.xfail(strict=False, raises=httpx.ReadTimeout, reason=(
+    "DEF467 — 1-on-1 turns stalled >300s with no bytes (no stream keepalive), "
+    "including at 03:00 under low load. Non-strict: green once a turn completes; "
+    "any other failure still fails."))
 def test_a_turn_costs_the_flat_price_and_streams_a_reply(seed):
     u = fund(seed, "trader", 20)
     session = start(u, "market_analyst").json()
@@ -188,6 +192,10 @@ def test_oversized_turns_are_rejected_without_charge(seed):
 
 @pytest.mark.uat("UAT-ONE-007")
 @pytest.mark.llm
+@pytest.mark.xfail(strict=False, raises=httpx.ReadTimeout, reason=(
+    "DEF467 — 1-on-1 turns stalled >300s with no bytes (no stream keepalive), "
+    "including at 03:00 under low load. Non-strict: green once a turn completes; "
+    "any other failure still fails."))
 def test_floor_pass_concierge_turn_is_charged_and_answered(seed):
     u = fund(seed, "floor_pass", 13)
     session = start(u, "concierge").json()

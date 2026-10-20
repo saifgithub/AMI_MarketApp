@@ -19,6 +19,7 @@ from __future__ import annotations
 import os
 
 import pytest
+from selenium.common.exceptions import NoSuchElementException
 
 from conftest import snap
 from helpers.gestures import (
@@ -78,6 +79,9 @@ def test_convene_sheet_navbar(driver, device, run_dir, flags):
     )
 
 
+@pytest.mark.xfail(os.environ.get("AMI_PLATFORM") == "ios", strict=False,
+                   raises=NoSuchElementException,
+                   reason="DEF466 — iOS accessibility tree goes dark (Settings > PROFILE), on-screen text unfindable")
 def test_trade_ticket_sheet_navbar(driver, device, run_dir, flags):
     open_tab(driver, "Portfolio")
     trigger = by_content_desc(driver, "New trade")

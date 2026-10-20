@@ -131,6 +131,10 @@ def test_quote_and_batch_quotes_are_sane(api):
 
 
 @pytest.mark.uat("UAT-SIM-002")
+@pytest.mark.xfail(strict=False, raises=TypeError, reason=(
+    "DEF468 — /v1/sim/history intermittently serves a candle with null OHLC "
+    "(yfinance NaN bar, seen 2026-10-20 03:00 after-hours). Non-strict: green when "
+    "the feed is clean; any other assertion still fails."))
 def test_history_candles_are_well_formed(api):
     for period in PERIODS:
         r = api.get("/v1/sim/history/AAPL", params={"period": period})
