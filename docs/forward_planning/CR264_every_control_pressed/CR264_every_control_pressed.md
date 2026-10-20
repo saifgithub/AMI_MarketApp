@@ -41,3 +41,17 @@ About 340 tap handlers (`onTap:`/`onPressed:`) sit across 104 files in `mobile/l
 1. `qa/uat/controls/<screen>.yaml` is one file per surface. Each entry gives the control's label or id, kind, expected effect (`navigate|sheet|dialog|state|external|back|destructive|none`), the target root id, any precondition, and the source line.
 2. The intent comes from the handler code and the label/spec. Where the code contradicts the label, the *supposed* effect is recorded and the contradiction is filed as a finding (the DEF457 class).
 3. The crawler asserts each press's expected effect. A mismatch is a finding. A control discovered with no catalogue entry is an "unexplained control" finding. So a new button cannot ship without a stated purpose, and UAT-CTRL-001 fails on either kind of finding.
+
+## Status 2026-10-20 (after Phases A, B and D)
+1. A (merged): 57 root `ami.screen.*` ids, 25 icon controls labelled, and the Flutter guard. The full suite passes: 1897 tests.
+2. D (merged): the catalogue covers 124 surfaces and 495 controls, and has a dangling-target guard. 19 verified findings were filed as DEF470–481.
+3. B (merged): the exhaustive crawler with intent checking, `never_press.json`, `spend_limits.json`, and UAT-CTRL-001. The first real crawl reached 13 of 57 screens and pressed 57 of 61 controls it found. It produced 15 findings and one real overflow (DEF482).
+4. UAT-CTRL-001 is **parked** (Saiful, 2026-10-20). It runs nightly and reports, but does not block releases until Phase C reaches every screen.
+
+## Phase C (in progress)
+1. App: root ids for the Floor tab content, the Portfolio and YOU segment panes, `locked_agent_sheet` and `push_soft_ask_dialog`.
+2. Harness:
+   1. Route-driving from the catalogue's target graph (a path from a root tab to every surface).
+   2. Replay that waits on `ami.screen.*` ids.
+   3. State seeding for the tagged device user before the crawl, via the admin/API layer: credits, a holding, Journal entries, a price alert and the watchlist. This makes `when:`-gated surfaces reachable.
+3. Done when the crawl reaches every screen, or each unreachable one is listed with a reason. At that point UAT-CTRL-001 is un-parked.
