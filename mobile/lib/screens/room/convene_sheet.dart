@@ -15,6 +15,7 @@ import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 const _suggestedTickers = [
   'AAPL',
@@ -97,7 +98,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
     // here rather than in the line widget so a rebuild of just the field
     // (typing) doesn't re-derive it.
     final mandate = ref.watch(mandateNotifierProvider).mandate;
-    return SingleChildScrollView(
+    return Semantics(identifier: ScreenIds.conveneSheet, container: true, explicitChildNodes: true, child: SingleChildScrollView(
       // CR236: the sheet's fixed-height Column could overflow at large text
       // scale once the credits line's extra row of content is added (caught
       // at 320dp/1.3x — the pre-existing heading Row's own narrower overflow
@@ -216,6 +217,6 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

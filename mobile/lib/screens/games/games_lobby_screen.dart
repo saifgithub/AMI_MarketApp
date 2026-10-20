@@ -35,6 +35,7 @@ import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 final _dayMonth = DateFormat('d MMM');
 
@@ -63,7 +64,7 @@ class GamesLobbyScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final cadencesAsync = ref.watch(gamesCadencesProvider);
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesLobbyScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(title: Text(l.gamesLobbyTitle)),
       body: SafeArea(
@@ -100,7 +101,7 @@ class GamesLobbyScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

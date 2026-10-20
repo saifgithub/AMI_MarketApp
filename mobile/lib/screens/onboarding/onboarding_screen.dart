@@ -76,7 +76,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       (_, __) => _scrollToBottom(),
     );
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.onboardingScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -92,7 +92,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(OnboardingState state) {

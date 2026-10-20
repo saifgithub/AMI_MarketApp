@@ -16,6 +16,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class NoRulesDisclosurePanel extends StatelessWidget {
   const NoRulesDisclosurePanel({super.key});
@@ -23,7 +24,7 @@ class NoRulesDisclosurePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Container(
+    return Semantics(identifier: ScreenIds.noRulesDisclosure, container: true, explicitChildNodes: true, child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -50,7 +51,7 @@ class NoRulesDisclosurePanel extends StatelessWidget {
           Text(l.gamesDisclosureBody, style: AmiTypography.body),
         ],
       ),
-    );
+    ));
   }
 }
 

@@ -66,6 +66,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// Wraps a numeric run (sign + digits, optionally a parenthesised percent)
 /// in Unicode directional isolates so RTL reordering cannot scramble it.
@@ -135,7 +136,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
 
     final state = ref.watch(simNotifierProvider);
     final watchlist = ref.watch(watchlistNotifierProvider);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.portfolioScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -158,7 +159,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(

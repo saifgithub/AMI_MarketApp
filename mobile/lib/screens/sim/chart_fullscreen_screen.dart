@@ -50,7 +50,7 @@ class _ChartFullscreenScreenState extends State<ChartFullscreenScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.chartFullscreenScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: LayoutBuilder(
@@ -77,7 +77,7 @@ class _ChartFullscreenScreenState extends State<ChartFullscreenScreen> {
                         child: Semantics(
                           button: true,
                           identifier: ExitIds.navBack,
-                          child: IconButton(
+                          child: IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
                             icon: const Icon(Icons.arrow_back_ios_new,
                                 color: AmiColors.hexCyan, size: 18),
                             onPressed: () => Navigator.of(context).pop(),
@@ -107,6 +107,6 @@ class _ChartFullscreenScreenState extends State<ChartFullscreenScreen> {
           },
         ),
       ),
-    );
+    ));
   }
 }

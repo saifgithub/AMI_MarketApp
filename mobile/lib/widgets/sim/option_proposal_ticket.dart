@@ -55,6 +55,7 @@ import 'package:ami_trade/widgets/sim/option_disclosure_dialog.dart';
 import 'package:flutter/material.dart';
 // `intl` exports its own `TextDirection`, which shadows `dart:ui`'s.
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 final _money = NumberFormat('#,##0.00');
 final _count = NumberFormat('#,##0.##');
@@ -124,7 +125,7 @@ class _OptionProposalTicketState extends State<OptionProposalTicket> {
     final c = _p.compliance;
     final refused = _p.isRefused;
 
-    return Container(
+    return Semantics(identifier: ScreenIds.optionProposalTicket, container: true, explicitChildNodes: true, child: Container(
       decoration: const BoxDecoration(
         color: AmiColors.slate800,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AmiRadii.sheet)),
@@ -194,7 +195,7 @@ class _OptionProposalTicketState extends State<OptionProposalTicket> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _header(AppLocalizations l) {

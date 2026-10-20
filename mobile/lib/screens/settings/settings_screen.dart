@@ -43,6 +43,7 @@ import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/screens/settings/legal_screen.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.embedded = false});
@@ -529,12 +530,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         );
 
-    return widget.embedded
+    return Semantics(identifier: ScreenIds.settingsScreen, container: true, explicitChildNodes: true, child: widget.embedded
         ? body
         : Scaffold(
             backgroundColor: AmiColors.slate900,
             body: SafeArea(child: body),
-          );
+          ));
   }
 }
 

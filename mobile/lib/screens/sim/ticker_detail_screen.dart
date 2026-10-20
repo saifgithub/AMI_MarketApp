@@ -34,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class TickerDetailScreen extends ConsumerStatefulWidget {
   const TickerDetailScreen({super.key, required this.ticker});
@@ -67,7 +68,7 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return OrientationBuilder(
+    return Semantics(identifier: ScreenIds.tickerDetailScreen, container: true, explicitChildNodes: true, child: OrientationBuilder(
       builder: (context, orientation) {
         // Side-effect: rotation to landscape pushes the fullscreen route.
         // The fullscreen route is the only one that unlocks orientation,
@@ -79,7 +80,7 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
         }
         return _buildPortrait(context);
       },
-    );
+    ));
   }
 
   Widget _buildPortrait(BuildContext context) {

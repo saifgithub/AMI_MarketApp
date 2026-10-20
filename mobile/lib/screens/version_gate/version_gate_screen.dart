@@ -19,6 +19,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 Future<void> _openStore(String? url) async {
   if (url == null || url.isEmpty) return;
@@ -54,7 +55,7 @@ class _VersionGateBlockScreenState
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final floor = widget.floor;
-    return PopScope(
+    return Semantics(identifier: ScreenIds.versionGateScreen, container: true, explicitChildNodes: true, child: PopScope(
       // Non-dismissible: no back gesture, no system-back. The only ways
       // off this screen are updating (which re-launches the app) or the
       // gate itself re-resolving to "ok"/"nag" on recheck.
@@ -130,7 +131,7 @@ class _VersionGateBlockScreenState
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

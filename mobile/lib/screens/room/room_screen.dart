@@ -42,6 +42,7 @@ import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class RoomScreen extends ConsumerStatefulWidget {
   const RoomScreen({super.key, required this.ticker});
@@ -105,7 +106,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     final mode = _sessionMode ?? storedMode;
     final showBoard = settled && !mode.showsTranscript;
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.roomScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -233,7 +234,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   /// The one place `setMode` is called from, shared by the live and the settled
@@ -318,7 +319,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),

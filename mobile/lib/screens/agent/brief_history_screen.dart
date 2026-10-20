@@ -14,6 +14,7 @@ import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class BriefHistoryScreen extends ConsumerStatefulWidget {
   const BriefHistoryScreen({super.key, required this.agent});
@@ -37,7 +38,7 @@ class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
     final state = ref.watch(briefNotifierProvider(widget.agent.id));
     final history = state.history;
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.briefHistoryScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -61,7 +62,7 @@ class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(BriefState state) {
@@ -159,7 +160,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),

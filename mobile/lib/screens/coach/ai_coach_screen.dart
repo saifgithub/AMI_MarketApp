@@ -17,6 +17,7 @@ import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class AICoachScreen extends ConsumerStatefulWidget {
   const AICoachScreen({super.key});
@@ -77,7 +78,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.aiCoachScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.slate900,
@@ -112,7 +113,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body() {

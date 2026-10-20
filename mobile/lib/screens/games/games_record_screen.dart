@@ -37,6 +37,7 @@ import 'package:ami_trade/widgets/hex/hex_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 /// CR106 T-BIDI: isolate signed/numeric runs so RTL layout cannot scramble
 /// sign/digits. Per-file copy, matching this codebase's existing
@@ -50,7 +51,7 @@ class GamesRecordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final recordAsync = ref.watch(gamesRecordProvider);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesRecordScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(title: Text(l.gamesRecordTitle)),
       body: SafeArea(
@@ -62,7 +63,7 @@ class GamesRecordScreen extends ConsumerWidget {
           data: (record) => _RecordBody(record: record),
         ),
       ),
-    );
+    ));
   }
 }
 

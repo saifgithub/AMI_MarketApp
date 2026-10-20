@@ -23,6 +23,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class OptionDisclosureDialog extends StatelessWidget {
   const OptionDisclosureDialog({super.key, required this.advisories});
@@ -43,7 +44,7 @@ class OptionDisclosureDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return AlertDialog(
+    return Semantics(identifier: ScreenIds.optionDisclosureDialog, container: true, explicitChildNodes: true, child: AlertDialog(
       backgroundColor: AmiColors.slate800,
       title: Text(l.optionTicketDisclosureTitle, style: AmiTypography.h4),
       content: SingleChildScrollView(
@@ -83,6 +84,6 @@ class OptionDisclosureDialog extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ));
   }
 }
