@@ -55,3 +55,17 @@ About 340 tap handlers (`onTap:`/`onPressed:`) sit across 104 files in `mobile/l
    2. Replay that waits on `ami.screen.*` ids.
    3. State seeding for the tagged device user before the crawl, via the admin/API layer: credits, a holding, Journal entries, a price alert and the watchlist. This makes `when:`-gated surfaces reachable.
 3. Done when the crawl reaches every screen, or each unreachable one is listed with a reason. At that point UAT-CTRL-001 is un-parked.
+
+## Phase C result + Phase E (2026-10-20)
+1. Phase C (merged) delivered:
+   1. Route-driving from the catalogue graph.
+   2. Replay that waits on screen ids.
+   3. Seeding for iOS Simulator users: read `device_user_id` from the app plist, then plan, credits and an inbox message via the admin API.
+2. The crawl still reached only **14 of 65** screens. Root cause: the catalogue identifies controls by *description*, which often differs from the rendered label (e.g. "ASK AMI" against "Type a ticker — or ask AMI anything…"). About 35 route steps failed on that.
+3. **Phase E:** every catalogued control gets a stable `Semantics(identifier: 'ami.<surface>.<control>')`, recorded in the catalogue as `id:`. The crawler matches id first, so routes stop depending on copy.
+4. A guard (after E lands) checks that every catalogue entry has an id and that the id appears in `mobile/lib`.
+5. Known unreachable surfaces, each with a reason, are excluded from the reach requirement:
+   1. `games_*`: AMI_GAMES builds only.
+   2. `sign_in` / `alpaca_connect`: need a claimed account, which is blocked on the test inbox.
+   3. Options surfaces: need an LLM option verdict.
+   4. One-off states: version gate, onboarding replays, merge.
