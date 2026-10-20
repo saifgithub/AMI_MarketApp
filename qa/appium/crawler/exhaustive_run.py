@@ -23,6 +23,7 @@ from crawler.exhaustive import ExhaustiveCrawler, Fatal
 from crawler.intents import Catalogue, load_dir
 from crawler.ledger import Ledger
 from crawler.oracles import screen_oracles
+from crawler.seed import seed_for_crawl
 from helpers import device as device_helpers
 from helpers.driver_factory import new_driver
 from helpers.gestures import screen_scale
@@ -50,7 +51,8 @@ def _app_path() -> str | None:
 
 def run_exhaustive(profile, out: Path, *, per_screen_s: float = 90.0, global_cap_s: float = 5400.0,
                    depth: int = 6, driver=None, catalogue: Catalogue | None = None,
-                   use_ledger: bool = True, log=print) -> Outcome:
+                   use_ledger: bool = True, seed: bool = True, targets: list[str] | None = None,
+                   seed_plan: str = "trader", log=print) -> Outcome:
     out.mkdir(parents=True, exist_ok=True)
     (out / "screenshots").mkdir(exist_ok=True)
     t0 = time.monotonic()
@@ -70,6 +72,19 @@ def run_exhaustive(profile, out: Path, *, per_screen_s: float = 90.0, global_cap
             ensure_onboarded(driver)
         except Exception as exc:
             notes.append(f"could not reach the shell ({exc}); crawl covers the pre-shell surface only")
+        if seed:
+            res = seed_for_crawl(profile, plan=seed_plan)
+            notes += [f"seed: {n}" for n in res.notes]
+            notes += [f"seed unlocked: {u}" for u in res.unlocked]
+            if res.unlocked:
+                try:  # the app reads plan / credits / inbox at start-up
+                    driver.terminate_app(profile.app_id)
+                    time.sleep(1)
+                    driver.activate_app(profile.app_id)
+                    time.sleep(4)
+                    ensure_onboarded(driver)
+                except Exception as exc:
+                    notes.append(f"seed: relaunch after seeding failed ({exc.__class__.__name__}); crawl continues on the stale session")
         window = driver.get_window_size()
         bottom_y, _ = device_helpers.obstructed_bottom_y(profile, display_height=int(window["height"]))
         geom = {"display": (int(window["width"]), int(window["height"])), "navbar_top_y": bottom_y,
@@ -115,10 +130,11 @@ def run_exhaustive(profile, out: Path, *, per_screen_s: float = 90.0, global_cap
             per_screen_s=per_screen_s, global_cap_s=global_cap_s, max_depth=depth,
             sink_reader=sink_reader, screen_oracles=oracles, fresh_session=fresh, log=log)
         try:
-            crawler.run()
+            crawler.run(targets)
         except Fatal as exc:
             notes.append(f"FATAL: {exc}")
         notes += crawler.notes
+        notes += [f"route: {r}" for r in crawler.route_log]
         findings = crawler.screen_findings
         if catalogue is not None and len(catalogue):
             seen = {(c.screen, (c.ident or c.label).lower()) for c in cov.controls.values()}
