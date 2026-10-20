@@ -1,0 +1,56 @@
+screen: ami.screen.games_home
+source: mobile/lib/screens/games/games_home_screen.dart
+controls:
+  - label: "your record"
+    kind: icon
+    expect: navigate
+    target: ami.screen.games_record
+    state: "Opens YOUR RECORD (career points, PRs, run history)"
+    line: 69
+    note: "AMI_GAMES builds only. Header action IconButton(military_tech_outlined), tooltip 'your record'."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the user's game runs"
+    when: "runs failed to load ('Couldn't load your game runs.')"
+    line: 124
+    note: "AMI_GAMES builds only"
+  - label: "MY RUN"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_run
+    state: "Opens the live run: cash, positions, queued orders"
+    when: "user holds a live run (State B hero card)"
+    line: 228
+    note: "AMI_GAMES builds only"
+  - label: "TRADE"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_trade_ticket
+    state: "Opens the game trade ticket for the live run"
+    when: "user holds a live run"
+    line: 237
+    note: "AMI_GAMES builds only. Pushes the ticket directly (not via the run screen) - see report finding on the ticket's 'See queued orders' CTA."
+  - label: "When does this fill? (i)"
+    kind: icon
+    expect: dialog
+    target: ami.screen.games_queue_note
+    state: "Opens a dialog explaining queued orders fill at the next US open"
+    when: "live run hero card"
+    line: 213
+    note: "AMI_GAMES builds only; control defined in widgets/games/games_queue_note.dart"
+  - label: "ALL GAMES"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_lobby
+    state: "Opens the cadence lobby (weekly / monthly / quarterly / half-year / annual)"
+    line: 271
+    note: "AMI_GAMES builds only. Appears both under the live-run hero (line 271) and in the no-run fallback (line 382)."
+  - label: "ENTER THIS WEEK'S FIELD"
+    kind: button
+    expect: sheet
+    target: ami.screen.games_entry_sheet
+    state: "Opens the entry sheet for the weekly cadence"
+    when: "no live run and the user does not already hold the weekly field (button disabled when alreadyHolds)"
+    line: 368
+    note: "AMI_GAMES builds only"

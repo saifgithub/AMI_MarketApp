@@ -1,0 +1,19 @@
+screen: ami.screen.lesson_markdown
+source: mobile/lib/widgets/lessons/lesson_markdown.dart
+controls:
+  - label: "<inline term, blue underline>"
+    kind: link
+    expect: sheet
+    target: ami.screen.term_block.term_sheet
+    state: "Opens the glossary term bottom sheet"
+    when: "term id in glossary (otherwise plain bold text)"
+    line: 260
+    note: "repeated - {{term:ID}} tokens inside lesson prose"
+  - label: "<inline lesson code, cyan underline> e.g. 'TECH 12'"
+    kind: link
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Pushes the referenced lesson's reader"
+    when: "lesson id present in the catalogue (otherwise plain text)"
+    line: 300
+    note: "repeated - {{lesson:ID}} tokens"

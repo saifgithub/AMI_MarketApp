@@ -1,0 +1,17 @@
+screen: ami.screen.lessons
+source: mobile/lib/screens/lessons/lessons_screen.dart
+controls:
+  - label: "<track hex>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.track_lessons
+    state: "Opens that track's lesson list; hex shows completed/total for the track"
+    when: "catalogue loaded"
+    line: 127
+    note: "repeated - one hex per track the API served (13 today). Labels as rendered: FOUNDATIONS, FUNDAMENTALS, TECHNICAL, NEWS & MACRO, SENTIMENT, RISK, EDGE, ASSET CLASSES, ECONOMICS, QUANT, ETHICS, ISLAMIC FINANCE, EVALUATION. Widget is TrackHexButton (widgets/hex, other owner). Unknown tracks render with the uppercased API title."
+  - label: "Back arrow (AmiScreenHeader)"
+    kind: icon
+    expect: back
+    when: "Navigator.canPop() - only when Lessons is pushed rather than shown as the bottom-nav tab"
+    line: 85
+    note: "shared AmiScreenHeader (documented in its own file); Lessons is normally a tab so no back arrow is rendered"

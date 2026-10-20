@@ -1,0 +1,67 @@
+screen: ami.screen.games_run
+source: mobile/lib/screens/games/games_run_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 69
+    note: "AMI_GAMES builds only. Framework AppBar automatic back button, not AmiScreenHeader; no ami.nav.back identifier."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the run detail"
+    when: "run detail failed to load"
+    line: 174
+    note: "AMI_GAMES builds only"
+  - label: "SELL"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_trade_ticket
+    state: "Opens the trade ticket in SELL mode for that position (size = share of the position)"
+    when: "run holds a long position"
+    line: 619
+    note: "AMI_GAMES builds only; repeated per position row"
+  - label: "COVER"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_trade_ticket
+    state: "Opens the trade ticket in COVER mode for that short (buys the whole short back; no size step)"
+    when: "run holds an open short"
+    line: 550
+    note: "AMI_GAMES builds only; repeated per short row"
+  - label: "Cancel"
+    kind: button
+    expect: dialog
+    target: ami.screen.games_run.cancel_order_dialog
+    state: "Opens 'Cancel this order?' confirmation for that queued order"
+    when: "run has queued orders (waiting for the open)"
+    line: 851
+    note: "AMI_GAMES builds only; repeated per queued order. The text button reads 'Cancel' in amber; shows a spinner while the cancel is in flight."
+  - label: "Cancel (dialog confirm)"
+    kind: button
+    expect: destructive
+    state: "Cancels the queued order; row disappears and a toast says 'Order cancelled.' (or 'Too late - that order already filled.')"
+    when: "cancel-order dialog open"
+    line: 775
+    note: "AMI_GAMES builds only. Server-side cancel of a queued order; irreversible, though the user can place the order again."
+  - label: "Keep it"
+    kind: button
+    expect: back
+    state: "Dismisses the dialog; order stays queued"
+    when: "cancel-order dialog open"
+    line: 771
+    note: "AMI_GAMES builds only"
+  - label: "TRADE"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_trade_ticket
+    state: "Opens the trade ticket for this run"
+    line: 132
+    note: "AMI_GAMES builds only"
+  - label: "SEE THE FIELD"
+    kind: button
+    expect: navigate
+    target: ami.screen.games_board
+    state: "Opens the standings board for this run's field"
+    line: 145
+    note: "AMI_GAMES builds only"

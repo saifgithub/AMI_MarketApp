@@ -1,0 +1,17 @@
+screen: ami.screen.portfolio_equity_chart
+source: mobile/lib/widgets/portfolio_equity_chart.dart
+controls:
+  - label: "<equity curve error notice>"
+    kind: button
+    expect: state
+    state: "Re-fetches the portfolio history; notice is replaced by the curve or loading state"
+    when: "history failed with a retryable error (a non-retryable error shows the same notice with no tap)"
+    line: 120
+    note: "refresh glyph + error text, whole card is an InkWell"
+  - label: "<equity curve>"
+    kind: list_row
+    expect: state
+    state: "Touch / horizontal drag shows a crosshair and a date + value readout; releasing hides it"
+    when: "curve has points"
+    line: 241
+    note: "GestureDetector drag/tap-down, not a navigation"

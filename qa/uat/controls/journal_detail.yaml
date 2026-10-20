@@ -1,0 +1,76 @@
+screen: ami.screen.journal_detail
+source: mobile/lib/screens/journal/journal_detail_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 206
+    note: "custom _Header IconButton(Icons.arrow_back) - no tooltip, no ami.nav.back identifier"
+  - label: "BOARD"
+    kind: tab
+    expect: state
+    state: "Switches the Room replay to the graphical verdict board"
+    when: "entry is a Room run with a reconstructable board"
+    line: 471
+    note: "RoomSubHeader segmented toggle (widgets/room, other owner). NOTE it writes the global ami_room_view_mode preference, so it also changes the Room screen's default view."
+  - label: "TRANSCRIPT"
+    kind: tab
+    expect: state
+    state: "Switches the Room replay to the per-agent transcript rows"
+    when: "entry is a Room run with a reconstructable board"
+    line: 471
+    note: "same toggle as BOARD"
+  - label: "<agent hex on the board>"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.agent_peek_sheet
+    state: "Opens a peek sheet with that agent's gist and a read-full-debate action"
+    when: "Room run entry, BOARD mode"
+    line: 480
+    note: "repeated; sheet lives in widgets/room/room_transcript_rows.dart (other owner). Its 'read full debate' action (line 484) switches this screen to TRANSCRIPT and expands that agent."
+  - label: "SEE CHART"
+    kind: button
+    expect: navigate
+    target: ami.screen.ticker_detail
+    state: "Opens the live ticker detail for the entry's ticker"
+    when: "Room run entry with a ticker"
+    line: 524
+  - label: "RE-RUN WITH CURRENT MANDATE"
+    kind: button
+    expect: navigate
+    target: ami.screen.room
+    state: "Opens the Room for the same ticker so the debate can be run again under today's rules"
+    when: "Room run entry with a ticker"
+    line: 541
+    note: "May start a new Room run that spends credits - verify on a throwaway user; the destination RoomScreen(ticker) is constructed straight from the stale entry's ticker."
+  - label: "YOUR NOTE"
+    kind: field
+    expect: state
+    state: "Free-text note (4 lines) for the entry"
+    line: 623
+    note: "TextField, no onChanged; value is only sent by SAVE NOTE"
+  - label: "WIN"
+    kind: chip
+    expect: state
+    state: "Selects the WIN outcome (tap again to clear)"
+    when: "entry type is not a compliance block"
+    line: 655
+    note: "outcome ChoiceChip; nothing is sent until SAVE NOTE"
+  - label: "LOSS"
+    kind: chip
+    expect: state
+    state: "Selects the LOSS outcome (tap again to clear)"
+    when: "entry type is not a compliance block"
+    line: 655
+  - label: "PENDING"
+    kind: chip
+    expect: state
+    state: "Selects the PENDING outcome (tap again to clear)"
+    when: "entry type is not a compliance block"
+    line: 655
+  - label: "SAVE NOTE"
+    kind: button
+    expect: state
+    state: "Saves note and outcome to the entry; snackbar 'Note saved'"
+    line: 675
+    note: "Server write (annotate) but editable/overwritable, so not destructive."

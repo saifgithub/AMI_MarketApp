@@ -1,0 +1,11 @@
+screen: ami.screen.ticker_tape
+source: mobile/lib/widgets/ticker_tape.dart
+controls:
+  - label: "<tape quote> e.g. 'AAPL $230.10 ↑0.4%'"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.watchlist_sheet
+    state: "Tape pauses for 2 s and a bottom sheet opens for that symbol with price and actions"
+    when: "tape has quotes"
+    line: 166
+    note: "repeated (list is doubled for the seamless scroll, so each symbol appears twice); tape sits above the bottom nav on home_shell. The symbol moves continuously, so target by text, not coordinates."

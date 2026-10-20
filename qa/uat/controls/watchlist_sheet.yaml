@@ -1,0 +1,30 @@
+screen: ami.screen.watchlist_sheet
+source: mobile/lib/widgets/watchlist_sheet.dart
+controls:
+  - label: "OPEN TRADE TICKET"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.trade_ticket_sheet
+    state: "Closes this sheet and opens the sim trade ticket pre-filled with the ticker"
+    line: 76
+  - label: "ASK THE TECHNICAL STRATEGIST"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.one_on_one
+    state: "Closes this sheet and opens a 1-on-1 chat with the Technical Strategist (market_analyst)"
+    line: 85
+    note: "Opens a blank chat - the ticker is not passed into the conversation."
+  - label: "CONVENE THE ROOM"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.convene_sheet
+    state: "Closes this sheet and opens the Convene the Room sheet"
+    line: 99
+    note: "ConveneSheet.show takes no ticker, so the tapped symbol is NOT pre-filled - the user must type it again (see report)."
+  - label: "REMOVE FROM WATCHLIST"
+    kind: list_row
+    expect: destructive
+    state: "Closes the sheet and removes the ticker from the user's watchlist"
+    when: "showRemove is true (hosts that list watchlist entries); the ticker tape does not show it"
+    line: 109
+    note: "Server-side watchlist delete; ticker can be re-added, no undo prompt."

@@ -1,0 +1,16 @@
+screen: ami.screen.track_lessons
+source: mobile/lib/screens/lessons/track_lessons_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 176
+    note: "custom header: bare GestureDetector around Icons.arrow_back_ios_new - no tooltip, no Semantics label, no ami.nav.back identifier, tap target is the 18px icon only"
+  - label: "<lesson tile row>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Opens the lesson in the reader (full read + quiz)"
+    when: "track has lessons"
+    line: 145
+    note: "repeated - the tile's own READ / QUIZ ONLY controls are in ami.screen.lesson_tile; handlers are wired here (onRead -> LessonReaderScreen, onQuizOnly -> LessonReaderScreen quizOnly:true)"

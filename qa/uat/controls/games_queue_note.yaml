@@ -1,0 +1,17 @@
+screen: ami.screen.games_queue_note
+source: mobile/lib/widgets/games/games_queue_note.dart
+controls:
+  - label: "When does this fill?"
+    kind: icon
+    expect: dialog
+    target: ami.screen.games_queue_note.dialog
+    state: "Opens a dialog titled 'When does this fill?' explaining queued orders fill at the next US open and are free to cancel"
+    line: 63
+    note: "AMI_GAMES builds only. Info icon (Icons.info_outline, 16px) wrapped in Semantics(button, label 'When does this fill?'); appears on the games home hero card and the trade ticket."
+  - label: "Got it"
+    kind: button
+    expect: back
+    state: "Dismisses the dialog"
+    when: "dialog open"
+    line: 71
+    note: "AMI_GAMES builds only"

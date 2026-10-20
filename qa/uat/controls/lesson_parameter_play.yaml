@@ -1,0 +1,10 @@
+screen: ami.screen.lesson_parameter_play
+source: mobile/lib/widgets/lessons/lesson_parameter_play.dart
+controls:
+  - label: "<parameter slider> (DRAG TO EXPLORE)"
+    kind: field
+    expect: state
+    state: "Dragging moves the parameter; the canvas, readouts and any breach message against the user's mandate update live"
+    when: "interactive-mode play card is current"
+    line: 120
+    note: "pure client-side, nothing posted"

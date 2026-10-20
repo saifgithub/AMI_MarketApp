@@ -1,0 +1,24 @@
+screen: ami.screen.tour_card
+source: mobile/lib/features/tour/tour_card.dart
+controls:
+  - label: "Skip tour"
+    id: ami.tour.skip
+    kind: button
+    expect: state
+    state: "Dismisses the coach-mark overlay immediately; no completion toast"
+    line: 82
+    note: "shared - appears on every screen's tour (Floor, Portfolio, Lessons, Journal, You)"
+  - label: "Next →"
+    id: ami.tour.next
+    kind: button
+    expect: state
+    state: "Advances the spotlight to the next step; on the final step the label reads 'Got it' and pressing it closes the tour and shows the section's completion toast"
+    line: 131
+    note: "shared - one id for both labels (Next → / Got it). Preferred dismissal path for the harness."
+  - label: "<try-now action>"
+    kind: button
+    expect: none
+    state: "Intended: ends the tour and runs a screen-specific action"
+    when: "only when a step supplies both tryNowLabel and onTryNow"
+    line: 102
+    note: "No tour step in the codebase currently passes onTryNow/tryNowLabel, so this button is never rendered today (dead branch)."

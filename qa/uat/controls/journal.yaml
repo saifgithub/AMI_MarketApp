@@ -1,0 +1,96 @@
+screen: ami.screen.journal
+source: mobile/lib/screens/journal/journal_screen.dart
+controls:
+  - label: "Back arrow (AmiScreenHeader)"
+    kind: icon
+    expect: back
+    when: "not embedded (JournalScreen pushed as its own screen); in the YOU tab it is embedded and has no header of its own"
+    line: 114
+    note: "shared AmiScreenHeader"
+  - label: "TRASH"
+    kind: icon
+    expect: navigate
+    target: ami.screen.journal_trash
+    state: "Opens the trash list of deleted entries"
+    when: "not embedded; when embedded in YOU the trash button is drawn by YouScreen's header instead (other owner)"
+    line: 122
+    note: "IconButton Icons.delete_outline, tooltip 'TRASH'"
+  - label: "ALL"
+    kind: chip
+    expect: state
+    state: "Filter chip: list shows entries of every type"
+    line: 264
+    note: "ChoiceChip row, horizontally scrollable; selected chip turns blue-tinted"
+  - label: "ROOM"
+    kind: chip
+    expect: state
+    state: "List filtered to Room-run entries"
+    line: 264
+  - label: "TRADE"
+    kind: chip
+    expect: state
+    state: "List filtered to simulated-trade entries"
+    line: 264
+  - label: "1-ON-1"
+    kind: chip
+    expect: state
+    state: "List filtered to 1-on-1 chat entries"
+    line: 264
+  - label: "BRIEF"
+    kind: chip
+    expect: state
+    state: "List filtered to agent-brief entries"
+    line: 264
+  - label: "LESSONS"
+    kind: chip
+    expect: state
+    state: "List filtered to lesson-complete entries"
+    line: 264
+  - label: "UNLOCKS"
+    kind: chip
+    expect: state
+    state: "List filtered to agent-unlock entries"
+    line: 264
+  - label: "CHALLENGES"
+    kind: chip
+    expect: state
+    state: "List filtered to daily-challenge entries"
+    line: 264
+  - label: "BLOCKED"
+    kind: chip
+    expect: state
+    state: "List filtered to compliance-blocked trade entries"
+    line: 264
+  - label: "Search entries…"
+    kind: field
+    expect: state
+    state: "Typing (400 ms debounce) filters the list by text; empty result shows 'No entries match your search.'"
+    line: 337
+  - label: "Clear search (x)"
+    kind: icon
+    expect: state
+    state: "Empties the search field and restores the unfiltered list"
+    when: "search field has text"
+    line: 346
+    note: "IconButton Icons.close with NO tooltip or label"
+  - label: "<journal entry card>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.journal_detail
+    state: "Opens the entry detail"
+    when: "journal has entries"
+    line: 229
+    note: "repeated"
+  - label: "<journal entry card> swipe left"
+    kind: list_row
+    expect: destructive
+    state: "Swipe past 70% removes the card from the list and shows an 'Entry removed' snackbar with UNDO"
+    when: "journal has entries"
+    line: 203
+    note: "Soft-delete via notifier.deleteEntry (entry moves to TRASH, restorable; auto-hidden after 30 days). Dismissible gesture, not a tap."
+  - label: "UNDO"
+    kind: button
+    expect: state
+    state: "Restores the just-removed entry to the list"
+    when: "within 4 s of a swipe delete (snackbar action)"
+    line: 222

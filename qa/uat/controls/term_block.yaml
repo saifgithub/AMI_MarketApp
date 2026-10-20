@@ -1,0 +1,19 @@
+screen: ami.screen.term_block
+source: mobile/lib/widgets/lessons/term_block.dart
+controls:
+  - label: "<glossary term chip>"
+    kind: chip
+    expect: sheet
+    target: ami.screen.term_block.term_sheet
+    state: "Opens a bottom sheet with the term's category, definition, SEE ALSO and RELATED LESSONS"
+    when: "term id exists in the glossary asset"
+    line: 53
+    note: "repeated; shared - appears wherever a lesson has a term block"
+  - label: "<SEE ALSO term chip>"
+    kind: chip
+    expect: sheet
+    target: ami.screen.term_block.term_sheet
+    state: "Closes the current term sheet and opens the related term's sheet"
+    when: "term has see-also ids and the related id is in the glossary (else the chip is greyed and inert)"
+    line: 180
+    note: "repeated. The RELATED LESSONS chips in the same sheet are styled like chips but have no handler (plain Container) - see report finding."

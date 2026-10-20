@@ -1,0 +1,65 @@
+screen: ami.screen.lesson_beat_deck
+source: mobile/lib/screens/lessons/lesson_beat_deck.dart
+controls:
+  - label: "Previous card"
+    kind: icon
+    expect: state
+    state: "Animates the deck to the previous card; counter 'n / total' decrements"
+    when: "not on the first card (disabled on card 1)"
+    line: 120
+    note: "IconButton tooltip 'Previous card'"
+  - label: "Next card"
+    kind: icon
+    expect: state
+    state: "Animates the deck to the next card; counter increments, progress bar fills"
+    when: "not on the last card (disabled on the last)"
+    line: 139
+    note: "IconButton tooltip 'Next card'"
+  - label: "<card swipe>"
+    kind: list_row
+    expect: state
+    state: "Horizontal swipe pages between cards, same as prev/next"
+    line: 91
+    note: "PageView gesture"
+  - label: "TAP TO REVEAL"
+    kind: list_row
+    expect: state
+    state: "Reveals the 'trap' markdown in place of the amber placeholder"
+    when: "reveal card is current"
+    line: 257
+    note: "client-side only, nothing posted"
+  - label: "CHAT WITH <AGENT>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.one_on_one
+    state: "Opens a 1-on-1 chat with the lesson's agent"
+    when: "chat card is current"
+    line: 292
+  - label: "<quiz option row>"
+    kind: list_row
+    expect: state
+    state: "Selects an answer on the quiz card"
+    when: "quiz card is current"
+    line: 71
+    note: "repeated, LessonQuizCard (widgets/lessons/lesson_quiz_card.dart)"
+  - label: "SUBMIT QUIZ"
+    kind: button
+    expect: destructive
+    state: "Button reads CHECKING... then the result panel replaces it"
+    when: "last (check) card; enabled only when every quiz is answered"
+    line: 374
+    note: "Same server round trip as book mode: records the attempt; a pass completes the lesson and may unlock agents. Not undoable from the UI."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Clears result and answers"
+    when: "check card shows a failed result"
+    line: 102
+    note: "LessonResultPanel via onRetry"
+  - label: "DONE / BACK TO LESSONS"
+    kind: button
+    expect: back
+    state: "Closes the reader"
+    when: "check card shows a result"
+    line: 102
+    note: "LessonResultPanel via onDone -> Navigator.pop"

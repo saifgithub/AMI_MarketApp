@@ -1,0 +1,13 @@
+screen: ami.screen.dev_preview
+source: mobile/lib/screens/dev_preview_screen.dart
+controls:
+  - label: "CONVENE"
+    kind: button
+    expect: none
+    line: 101
+    note: "design-system showcase HexButton with an empty onPressed. Screen is only reachable via the '/dev-preview' named route (app.dart:80); nothing in the UI links to it."
+  - label: "COACH"
+    kind: button
+    expect: none
+    line: 105
+    note: "design-system showcase outlined HexButton, empty onPressed"

@@ -1,0 +1,66 @@
+screen: ami.screen.lesson_reader
+source: mobile/lib/screens/lessons/lesson_reader_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 271
+    note: "custom _Header IconButton(Icons.arrow_back) - no tooltip, no ami.nav.back identifier"
+  - label: "BOOK"
+    id: lesson_mode_book
+    kind: tab
+    expect: state
+    state: "Switches the body to the scrolling book reader (markdown blocks + inline quiz)"
+    when: "lesson is in the interactive registry and not quiz-only"
+    line: 153
+    note: "AmiSegmentBar segment; persists the choice via lessonViewModeProvider. Semantics id is the bare string lesson_mode_book (no ami. prefix)."
+  - label: "INTERACTIVE"
+    id: lesson_mode_interactive
+    kind: tab
+    expect: state
+    state: "Switches the body to the swipeable beat deck (ami.screen.lesson_beat_deck)"
+    when: "lesson is in the interactive registry and not quiz-only"
+    line: 153
+    note: "Semantics id is the bare string lesson_mode_interactive. Default mode may already be interactive from the mandate learning style."
+  - label: "<prerequisite chip> e.g. 'FND 3 · Title'"
+    kind: chip
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Pushes another reader for the prerequisite lesson on top of this one"
+    when: "lesson has prerequisites present in the catalogue (otherwise plain text, not tappable)"
+    line: 511
+    note: "repeated"
+  - label: "CHAT WITH <AGENT>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.one_on_one
+    state: "Opens a 1-on-1 chat with the named agent (default concierge)"
+    when: "lesson has a chat_with block (book mode)"
+    line: 420
+  - label: "<quiz option row>"
+    kind: list_row
+    expect: state
+    state: "Highlights the chosen answer for that question; locked after submit"
+    when: "quiz block visible (book mode)"
+    line: 71
+    note: "repeated - implemented in LessonQuizCard (ami.screen.lesson_quiz_card); disabled once a result exists"
+  - label: "SUBMIT QUIZ"
+    kind: button
+    expect: destructive
+    state: "Button reads CHECKING... then the result panel replaces it (PASSED / NOT QUITE, n / total correct)"
+    when: "enabled only when every question is answered; hidden once a result exists"
+    line: 227
+    note: "Sends the answers to /v1/lessons/quiz - records an attempt; a pass completes the lesson and may unlock agents (celebration, journal entry, possible post-lesson interstitial ad). Not undoable from the UI; retry allowed."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Clears the result and answers so the quiz can be retaken"
+    when: "result shown and not passed"
+    line: 241
+    note: "LessonResultPanel (ami.screen.lesson_quiz_card)"
+  - label: "DONE / BACK TO LESSONS"
+    kind: button
+    expect: back
+    state: "Pops the reader back to the track lesson list"
+    when: "result shown (label DONE on pass, BACK TO LESSONS on fail)"
+    line: 244

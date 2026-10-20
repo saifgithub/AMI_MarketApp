@@ -1,0 +1,23 @@
+screen: ami.screen.games_board
+source: mobile/lib/screens/games/games_board_screen.dart
+controls:
+  - label: "Back arrow (AmiScreenHeader)"
+    kind: icon
+    expect: back
+    line: 80
+    note: "AMI_GAMES builds only. Shared AmiScreenHeader showBack:true."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the standings"
+    when: "board failed to load"
+    line: 101
+    note: "AMI_GAMES builds only"
+  - label: "<house desk row>"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.games_board.desk_rule_sheet
+    state: "Opens a sheet with the desk's published trading rule (server-authored)"
+    when: "row is a house desk (DESK chip); human entrants, including YOU, are not tappable"
+    line: 715
+    note: "AMI_GAMES builds only; repeated. The YOU-row variant (line 695) opens the same sheet when the user's row is a desk. The sheet has no controls (swipe down to dismiss)."

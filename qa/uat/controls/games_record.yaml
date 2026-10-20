@@ -1,0 +1,23 @@
+screen: ami.screen.games_record
+source: mobile/lib/screens/games/games_record_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 55
+    note: "AMI_GAMES builds only. Framework AppBar automatic back button; no ami.nav.back identifier."
+  - label: "RETRY"
+    kind: button
+    expect: state
+    state: "Re-fetches the career record"
+    when: "record failed to load"
+    line: 88
+    note: "AMI_GAMES builds only"
+  - label: "<run history row>"
+    kind: list_row
+    expect: navigate
+    target: ami.screen.games_close
+    state: "Opens THE CLOSE for that finished run"
+    when: "row has a run id; a bust row opens a 'CHAPTER CLOSED' wind-up dialog instead, a forfeit row opens a forfeit-note dialog"
+    line: 413
+    note: "AMI_GAMES builds only; repeated. Three behaviours depending on row state: finished/void -> push GamesCloseScreen; bust -> dialog (shortfall note); forfeit -> dialog (forfeit note). Dialogs have no buttons (tap outside to dismiss)."

@@ -1,0 +1,15 @@
+screen: ami.screen.journal_trash
+source: mobile/lib/screens/journal/journal_trash_screen.dart
+controls:
+  - label: "Back arrow"
+    kind: icon
+    expect: back
+    line: 129
+    note: "custom _Header IconButton(Icons.arrow_back) - no tooltip, no ami.nav.back identifier"
+  - label: "RESTORE"
+    kind: button
+    expect: state
+    state: "Moves the entry out of the trash back into the journal; row disappears and snackbar 'Entry restored' appears"
+    when: "trash has entries"
+    line: 219
+    note: "repeated per deleted entry"
