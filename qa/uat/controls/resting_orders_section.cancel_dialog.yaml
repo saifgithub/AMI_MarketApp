@@ -1,0 +1,14 @@
+screen: "ami.screen.resting_orders_section.cancel_dialog"
+source: "mobile/lib/widgets/sim/resting_orders_section.dart"
+controls:
+  - label: "KEEP WAITING"
+    kind: button
+    expect: back
+    state: "Dialog closes; the order stays working"
+    line: 155
+  - label: "CANCEL ORDER"
+    kind: button
+    expect: destructive
+    state: "Dialog closes; order is cancelled on the server and its card shows Cancelled; snackbar confirms (amber snackbar if it had already filled)"
+    line: 161
+    note: "Cancels a sim resting order. Server verdict decides the snackbar, so a cancel that lost a race with a fill reports the real state."

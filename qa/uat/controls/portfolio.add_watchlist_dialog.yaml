@@ -1,0 +1,26 @@
+screen: "ami.screen.portfolio.add_watchlist_dialog"
+source: "mobile/lib/screens/sim/portfolio_screen.dart"
+controls:
+  - label: "Ticker (e.g. NVDA)"
+    kind: field
+    expect: state
+    state: "Typing validates the ticker live; an unknown symbol shows the amber not-found panel under the field. Keyboard submit acts like ADD."
+    line: 1516
+  - label: "Use suggested ticker"
+    kind: button
+    expect: state
+    state: "Replaces the typed text with the suggested ticker"
+    line: 1525
+    when: "typed ticker not found and a suggestion exists"
+    note: "Button text and implementation live in widgets/ticker_not_found_panel.dart (not in this group's paths)"
+  - label: "CANCEL"
+    kind: button
+    expect: back
+    state: "Dialog closes, nothing added"
+    line: 1535
+  - label: "ADD"
+    kind: button
+    expect: state
+    state: "Ticker is validated; if valid the dialog closes and the ticker appears in the WATCHLIST section of the History tab. If unknown the dialog stays open with the not-found panel."
+    line: 1539
+    when: "ticker field non-empty and not mid-validation"

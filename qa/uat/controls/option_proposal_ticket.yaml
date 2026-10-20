@@ -1,0 +1,16 @@
+screen: "ami.screen.option_proposal_ticket"
+source: "mobile/lib/widgets/sim/option_proposal_ticket.dart"
+controls:
+  - label: "NO"
+    kind: button
+    expect: back
+    state: "Sheet closes; nothing is opened"
+    line: 503
+    note: "Only control when the proposal is refused or unpriceable (no accept button exists then)"
+  - label: "YES — OPEN IT"
+    kind: button
+    expect: dialog
+    target: "ami.screen.option_disclosure_dialog"
+    line: 525
+    when: "proposal passed compliance and carries advisories (requires disclosure)"
+    note: "With no advisories it closes the sheet directly as accepted and the re-price sheet follows. Does not place the order itself."

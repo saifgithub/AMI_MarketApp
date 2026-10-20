@@ -1,0 +1,74 @@
+screen: "ami.screen.ticker_detail"
+source: "mobile/lib/screens/sim/ticker_detail_screen.dart"
+controls:
+  - label: "Back"
+    kind: icon
+    expect: back
+    state: "Returns to the screen that opened this ticker (Portfolio, Room, etc.)"
+    line: 129
+    note: "Default AppBar back arrow"
+  - label: "Pull to refresh"
+    kind: list_row
+    expect: state
+    state: "Portfolio and watchlist reload; position/watch status card updates"
+    line: 141
+    note: "Gesture"
+  - label: "Expand chart"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.chart_fullscreen"
+    line: 155
+    note: "Expand button lives in TickerChart (widgets/ticker_chart.dart, other owner); handler is _pushFullscreen here. Rotating the phone to landscape does the same push. Period chips are also in TickerChart."
+  - label: "TRADE"
+    kind: button
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 439
+    note: "Label reads TRADE MORE when the ticker is already held. Opens the ticket with this ticker prefilled."
+  - label: "ASK"
+    kind: chip
+    expect: navigate
+    target: "ami.screen.one_on_one"
+    line: 506
+    note: "Opens a one-on-one chat with the Market Analyst agent. The ticker is NOT passed, so the chat is not about this ticker unless the user types it (see findings)."
+  - label: "CONVENE"
+    kind: chip
+    expect: navigate
+    target: "ami.screen.room"
+    line: 512
+    note: "Starts the Room for this ticker (RoomScreen(ticker)); Room convening spends credits"
+  - label: "REVIEW"
+    kind: chip
+    expect: navigate
+    target: "ami.screen.company_review"
+    line: 518
+  - label: "WATCH"
+    kind: chip
+    expect: state
+    state: "Star toggles filled/empty; ticker is added to or removed from the watchlist; a small celebration plays on add"
+    line: 524
+  - label: "ALERT"
+    kind: chip
+    expect: sheet
+    target: "ami.screen.price_alert_sheet"
+    line: 530
+  - label: "SELL"
+    kind: chip
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 549
+    when: "user holds this ticker"
+    note: "Opens the ticket with side fixed to SELL and quantity = whole holding"
+  - label: "Cancel this alert"
+    kind: icon
+    expect: destructive
+    state: "That alert row disappears from the ALERTS list"
+    line: 974
+    when: "ticker has at least one active price alert; disabled while a request is in flight"
+    note: "repeated. Cancels the server-side price alert, no confirm dialog."
+  - label: "<news article row>"
+    kind: list_row
+    expect: external
+    line: 1020
+    when: "news articles loaded for the ticker"
+    note: "repeated. Opens the article link in the external browser."

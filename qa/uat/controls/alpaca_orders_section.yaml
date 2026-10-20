@@ -1,0 +1,10 @@
+screen: "ami.screen.alpaca_orders_section"
+source: "mobile/lib/widgets/sim/alpaca_orders_section.dart"
+controls:
+  - label: "CANCEL ORDER"
+    kind: button
+    expect: dialog
+    target: "ami.screen.alpaca_orders_section.cancel_dialog"
+    line: 420
+    when: "linked Alpaca paper account, order on the Orders tab is open and cancellable (not closed, not pending_cancel)"
+    note: "repeated per open Alpaca order. Opens a confirm dialog; nothing is cancelled yet. Closed orders in History have no controls."

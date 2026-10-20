@@ -1,0 +1,10 @@
+screen: "ami.screen.option_verdict_cta"
+source: "mobile/lib/widgets/sim/option_verdict_cta.dart"
+controls:
+  - label: "REVIEW THE STRUCTURE"
+    kind: button
+    expect: sheet
+    target: "ami.screen.option_proposal_ticket"
+    line: 109
+    when: "Room verdict proposes an option structure and it has not been opened yet; disabled while busy"
+    note: "Starts a three-step flow (review ticket, disclosure if any, re-price sheet). Nothing is opened until 'OPEN AT THIS PRICE'. Shared - used on the Room screen (room_screen.dart lines 1441 and 1645)."

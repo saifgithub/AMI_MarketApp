@@ -1,0 +1,101 @@
+screen: "ami.screen.portfolio"
+source: "mobile/lib/screens/sim/portfolio_screen.dart"
+controls:
+  - label: "New trade"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 153
+    note: "Header + icon (tooltip text). Opens a blank trade ticket page."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Portfolio is re-fetched; spinner shows, then the portfolio or the error again"
+    line: 191
+    when: "initial load failed and the error is retryable"
+  - label: "Pull to refresh"
+    kind: list_row
+    expect: state
+    state: "Portfolio, watchlist and Alpaca data (account, positions, orders) all reload; values update"
+    line: 219
+    note: "Gesture on the Positions/Orders/History area, not a button"
+  - label: "POSITIONS <count>"
+    kind: tab
+    expect: state
+    state: "Positions tab shown: equity chart, sector allocation, portfolio health card, shorts, options, holdings, Alpaca positions"
+    line: 562
+    note: "Count combines AMI + Alpaca positions; may show a small spinner/warning marker while Alpaca count loads"
+  - label: "ORDERS <count>"
+    kind: tab
+    expect: state
+    state: "Orders tab shown: AMI resting orders then linked Alpaca open orders"
+    line: 577
+  - label: "HISTORY <count>"
+    kind: tab
+    expect: state
+    state: "History tab shown: trade summary, transaction log, Alpaca closed orders, journal pointer, watchlist"
+    line: 586
+  - label: "NEW TRADE"
+    kind: button
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 774
+    when: "new-trader hint visible (no holdings, shorts, options or resting orders) on Positions tab"
+  - label: "SELL"
+    kind: button
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 888
+    when: "a holding row is expanded"
+    note: "Opens the ticket with the ticker filled, side fixed to SELL, quantity = whole holding (editable)"
+  - label: "PER-LOT DETAIL"
+    kind: button
+    expect: navigate
+    target: "ami.screen.ticker_detail"
+    line: 897
+    when: "a holding row is expanded"
+    note: "Opens the ticker detail screen, whose LOTS section shows the per-lot cost basis. Holding row expand/collapse itself is documented in position_card.yaml."
+  - label: "ADD"
+    kind: button
+    expect: dialog
+    target: "ami.screen.portfolio.add_watchlist_dialog"
+    line: 1402
+    when: "History tab has at least one transaction (the empty-history branch renders no watchlist at all, see portfolio_screen.dart:1712)"
+  - label: "ADD (empty watchlist CTA)"
+    kind: button
+    expect: dialog
+    target: "ami.screen.portfolio.add_watchlist_dialog"
+    line: 1424
+    when: "History tab has at least one transaction and the watchlist is empty"
+  - label: "<watchlist row>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.ticker_detail"
+    line: 1569
+    when: "History tab has at least one transaction"
+    note: "repeated. Tap opens that ticker's detail screen."
+  - label: "<watchlist row> swipe left"
+    kind: list_row
+    expect: destructive
+    state: "Row removed from the watchlist; snackbar 'Removed from watchlist' with UNDO"
+    line: 1567
+    note: "repeated. Needs a deliberate swipe past ~70% width. Removes the ticker from the watchlist server-side; recoverable via UNDO for 4 seconds."
+  - label: "UNDO"
+    kind: button
+    expect: state
+    state: "Removed ticker returns to the watchlist"
+    line: 1658
+    when: "within 4 seconds of a watchlist swipe-delete (snackbar action)"
+  - label: "SHOW ALL <n>"
+    kind: button
+    expect: state
+    state: "History list expands in place to show every transaction instead of the latest few"
+    line: 1806
+    when: "more transactions than the cap"
+  - label: "REVIEW IN JOURNAL"
+    kind: link
+    expect: navigate
+    target: "ami.screen.journal"
+    line: 1992
+    when: "History tab with transactions"
+    note: "Switches the bottom nav to YOU with the Journal segment selected (not a pushed page). Target id is the Journal segment of the YOU screen."

@@ -1,0 +1,14 @@
+screen: "ami.screen.option_disclosure_dialog"
+source: "mobile/lib/widgets/sim/option_disclosure_dialog.dart"
+controls:
+  - label: "GO BACK"
+    kind: button
+    expect: back
+    state: "Dialog closes; the proposal ticket stays open and nothing is accepted"
+    line: 64
+  - label: "I UNDERSTAND — CONTINUE"
+    kind: button
+    expect: state
+    state: "Dialog closes and the proposal is accepted, so the re-price sheet follows"
+    line: 78
+    note: "Acknowledgement only; no order is placed here. The order opens only after the later 'OPEN AT THIS PRICE' confirm."

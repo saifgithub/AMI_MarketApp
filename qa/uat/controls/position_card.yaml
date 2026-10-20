@@ -1,0 +1,9 @@
+screen: "ami.screen.position_card"
+source: "mobile/lib/widgets/sim/position_card.dart"
+controls:
+  - label: "<position row>"
+    kind: list_row
+    expect: state
+    state: "Row expands in place to show value, P&L and actions (chevron turns down); tapping again collapses it"
+    line: 102
+    note: "shared - appears for every AMI holding and every Alpaca position on the Portfolio Positions tab. Only expandable when the caller supplies detail content (both do). Row carries no navigation of its own."

@@ -1,0 +1,49 @@
+screen: "ami.screen.portfolio_health_card"
+source: "mobile/lib/widgets/portfolio_health/health_card.dart"
+controls:
+  - label: "AMI's engine did not respond. Tap to retry."
+    kind: button
+    expect: state
+    state: "Card shows the loading skeleton, then the health measurement or the error again"
+    line: 88
+    when: "portfolio health request failed"
+    note: "Whole notice is the tap target"
+  - label: "AMI's engine returned a result this version of the app does not recognise. Tap to retry."
+    kind: button
+    expect: state
+    state: "Card reloads (skeleton, then result or the same notice)"
+    line: 132
+    when: "server returned a status outside ok / no_holdings / refused_mock_data"
+  - label: "RISK VS MONEY"
+    kind: toggle
+    expect: state
+    state: "Section expands to show the risk-vs-money bars with legend and caption (chevron flips); tapping again collapses"
+    line: 691
+    when: "health card populated (status ok with measurable data)"
+  - label: "FULL FINDING"
+    kind: button
+    expect: navigate
+    target: "ami.screen.portfolio_health_finding"
+    line: 795
+    when: "gate state generate (Findings available)"
+    note: "Opens the Finding page, which generates a stored Finding and may spend budget. On return the card's gate numbers refresh."
+  - label: "FULL FINDING (trial)"
+    kind: button
+    expect: navigate
+    target: "ami.screen.portfolio_health_finding"
+    line: 808
+    when: "gate state trial (shows 'N of M' trial Findings left under the button)"
+    note: "Same destination as FULL FINDING; spends one trial Finding"
+  - label: "FULL FINDING (disabled)"
+    kind: button
+    expect: none
+    line: 838
+    when: "daily cap reached"
+    note: "Intentionally disabled (onPressed null); a caption under it states used/cap for today. Pressing must do nothing."
+  - label: "SEE PLANS"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    line: 864
+    when: "gate state upgrade (no trial or subscription)"
+    note: "On purchase the card reloads"
