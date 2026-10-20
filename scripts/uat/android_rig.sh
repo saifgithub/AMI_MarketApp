@@ -58,6 +58,9 @@ rsync -a \
   --exclude '.pytest_cache/' --exclude '.DS_Store' --exclude 'test_data/.env' \
   "${PROJECT_ROOT}/qa/appium/" "${HOST}:${RIG}/harness/" || { echo "   rig: harness rsync failed" >&2; exit 3; }
 rsync -a "${PROJECT_ROOT}/qa/uat/uat_plugin.py" "${HOST}:${RIG}/harness/uat_plugin.py" || exit 3
+# CR264 control-intent catalogue: the crawler reads it at harness/../uat/controls.
+ssh -o BatchMode=yes "$HOST" "mkdir -p ${RIG}/uat" && \
+  rsync -a "${PROJECT_ROOT}/qa/uat/controls/" "${HOST}:${RIG}/uat/controls/" || exit 3
 REMOTE_IDS=""
 if [[ -n "$IDS_FILE" ]]; then
   REMOTE_IDS="${RIG}/reports/${RUN_ID}.ids"
@@ -81,6 +84,8 @@ fi
 OUTDIR="${REPORTS_DIR}/${RUN_ID}"
 mkdir -p "$OUTDIR"
 cd "$HARNESS_DIR"
+# Keep the rig venv in step with the synced harness (CR264 added PyYAML).
+"$PYTHON" -m pip install -q -r requirements.txt >/dev/null 2>&1 || { echo "rig: pip install -r requirements.txt failed"; exit 3; }
 # Rig-only secrets (Alpaca paper keys, the phone's unlock PIN) — never in git.
 if [[ -f test_data/.env ]]; then set -a; source test_data/.env; set +a; fi
 export AMI_PLATFORM=android AMI_SERIAL="$DEVICE_SERIAL" AMI_REPORT_DIR="$OUTDIR" \
