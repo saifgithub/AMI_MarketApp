@@ -53,6 +53,19 @@ from helpers.locators import (
 from helpers.platform import is_ios
 from helpers.shell import recover_to_shell, shell_is_up, wait_for_shell
 
+#: What the last `ensure_onboarded` walk actually passed through, in order:
+#: "chips" (answer chips were on screen), "readback" (the LOOKS RIGHT confirmation was
+#: shown), "claim" (the claim-your-team screen was shown), "floor". CR263's
+#: onboarding journey asserts on it; an empty list means the app was already
+#: onboarded and nothing was walked.
+walk_milestones: list[str] = []
+
+
+def _mark(name: str) -> None:
+    if name not in walk_milestones:
+        walk_milestones.append(name)
+
+
 _SKIP_FOR_NOW = "SKIP FOR NOW"
 _LOOKS_RIGHT_CONTINUE = "LOOKS RIGHT — CONTINUE"
 _BACKEND_ERROR_TITLE = "CAN'T REACH THE BACKEND"
@@ -330,6 +343,7 @@ def ensure_onboarded(
     wall-clock on a run that was going to fail anyway. Replace this with a real
     Android measurement when a device is next on the cable.
     """
+    walk_milestones.clear()
     if floor_label is None:
         floor_label = LOCALES["en"].tab_labels["Floor"]
     if timeout_s is None:
@@ -457,6 +471,7 @@ def ensure_onboarded(
 
         if shell_is_up(driver, floor_label):
             print("    [onboarding] landed on Floor")
+            _mark("floor")
             return
 
         if exists_text(driver, _BACKEND_ERROR_TITLE, retry=False):
@@ -474,6 +489,7 @@ def ensure_onboarded(
             continue
 
         if exists_text(driver, _SKIP_FOR_NOW, retry=False):
+            _mark("claim")
             wait_visible_text(driver, _SKIP_FOR_NOW, timeout_s=3).click()
             turn += 1
             last_progress_at = time.monotonic()
@@ -482,6 +498,7 @@ def ensure_onboarded(
             continue
 
         if exists_text(driver, _LOOKS_RIGHT_CONTINUE, retry=False):
+            _mark("readback")
             wait_visible_text(driver, _LOOKS_RIGHT_CONTINUE, timeout_s=3).click()
             turn += 1
             last_progress_at = time.monotonic()
@@ -506,6 +523,7 @@ def ensure_onboarded(
         # the reason a chip question wedges.
         chips = all_by_id(driver, ONBOARDING_ANSWER_CHIP, retry=False)
         if chips:
+            _mark("chips")
             try:
                 tap_element(driver, chips[0])
                 turn += 1

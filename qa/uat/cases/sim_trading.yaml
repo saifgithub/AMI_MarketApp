@@ -358,3 +358,25 @@ cases:
     expected:
       - Cash returns to the starting capital; holdings, orders and trades are cleared
       - The second attempt is refused with a clear cooldown message
+
+  - id: UAT-SIM-028
+    title: A one-share buy fills, appears as a holding and takes cash out of the portfolio
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'Portfolio > New trade; pick a low-priced ticker that fits the single-name cap; leave quantity 1; SUBMIT TRADE'
+      - 'Read the confirmation; open Portfolio'
+    expected:
+      - 'The ticket confirms "Filled: BUY 1 <ticker> @ $<price>"'
+      - 'Portfolio cash is lower by about the fill price and the holding is listed with "1 sh" (or its quantity rises by one)'
+
+  - id: UAT-SIM-029
+    title: An order that breaks the single-name cap is refused with a visible reason and moves no cash
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'Portfolio > New trade; ticker NFLX; quantity 100 (about 70% of the book); SUBMIT TRADE'
+    expected:
+      - 'The ticket shows SAFETY FLOOR - TRADE BLOCKED with the reason (position size exceeds the single-name cap)'
+      - 'Portfolio cash and holdings are unchanged'
+      - 'The refusal is not overridable from the ticket'

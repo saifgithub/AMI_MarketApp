@@ -129,3 +129,15 @@ cases:
       - Tiles and hex avatars render without clipping; locked and done lessons are visually distinct
       - The reader paginates smoothly, animations play, the quiz shows the explanation after each answer
       - A pass shows completion and any unlock celebration; the glossary sheet opens and dismisses
+
+  - id: UAT-LESS-010
+    title: Opening a lesson, reading it and passing its quiz records progress
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'Lessons > a small track (EVALUATION); READ the first lesson not yet completed'
+      - 'Scroll to the end, answer the quiz and SUBMIT QUIZ (retry on NOT QUITE)'
+    expected:
+      - 'The reader shows the lesson body and a QUIZ'
+      - 'A wrong answer reads NOT QUITE and can be retried; a right one reads PASSED'
+      - 'The Lessons tab progress counter ("N / total lessons") rises by one'

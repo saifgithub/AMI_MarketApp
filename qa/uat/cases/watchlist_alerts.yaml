@@ -145,3 +145,27 @@ cases:
     expected:
       - The sheet refuses an empty or zero price; the alert appears as active
       - When crossed the alert becomes fired with a timestamp (and commentary if enabled) and a push arrives that opens the right ticker
+
+  - id: UAT-WATCH-013
+    title: Adding a ticker to the watchlist lists it in the Portfolio watchlist and removing it takes it off
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'Portfolio > ADD in the WATCHLIST section; type a ticker; confirm'
+      - 'Read the watchlist'
+    expected:
+      - 'The ticker is listed under WATCHLIST'
+      - 'Removing it takes it off the list again'
+
+  - id: UAT-WATCH-014
+    title: A price alert created from a ticker detail appears in its PRICE ALERTS list and can be cancelled
+    layer: device
+    plans: [floor_pass]
+    preconditions:
+      - 'A held ticker whose detail screen is reachable (UAT-SIM-028)'
+    steps:
+      - 'Portfolio > holding > PER-LOT DETAIL > ALERT; pick "Price falls below"; price far below the market; Create alert'
+      - 'Cancel the alert'
+    expected:
+      - 'PRICE ALERTS lists "Price falls below $<price>"'
+      - 'After cancelling, the alert is gone'

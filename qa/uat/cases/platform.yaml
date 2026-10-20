@@ -58,3 +58,13 @@ cases:
       - Launch the app
     expected:
       - A blocking "Update required" screen with a working store button; no other screen is reachable
+
+  - id: UAT-PLAT-005
+    title: A current build launches past the version gate to the Floor
+    layer: device
+    plans: [any]
+    steps:
+      - 'Cold-launch the app'
+    expected:
+      - 'No forced-update screen appears'
+      - 'The Floor and its bottom bar are on screen'

@@ -140,3 +140,15 @@ cases:
     expected:
       - Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
       - No screen says "the AI" - the assistant is named AMI
+
+  - id: UAT-SUPP-012
+    title: The bug-report sheet opens from Settings and refuses an empty submission (nothing is sent)
+    layer: device
+    plans: [any]
+    steps:
+      - 'You > SETTINGS > HELP > Report a problem'
+      - 'Tap submit with the title empty'
+    expected:
+      - 'The sheet opens with a category, title and steps field'
+      - 'Submitting with the required fields empty shows a validation message and sends nothing'
+    notes: Never submits - submissions land in the real triage queue. On iOS blocked by DEF466 (the pane that holds Report a problem is below PROFILE).

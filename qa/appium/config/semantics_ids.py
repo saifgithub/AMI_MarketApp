@@ -154,3 +154,9 @@ SCREEN_IDS: tuple[str, ...] = (
     "ami.screen.your_firm",
     "ami.screen.you",
 )
+
+# CR232 — exit affordances. `NAV_BACK` is the single id for AmiScreenHeader's back
+# chevron on every pushed page; `TRADE_TICKET_CANCEL` is the ticket header's text
+# Cancel (the ticket carries both). Mirrors `ExitIds` in the Dart file.
+NAV_BACK = "ami.nav.back"
+TRADE_TICKET_CANCEL = "ami.trade_ticket.cancel"

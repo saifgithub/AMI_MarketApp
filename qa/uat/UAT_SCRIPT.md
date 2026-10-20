@@ -4,27 +4,27 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**236 cases** — 185 api, 1 device, 50 manual; 11 blocked.
+**250 cases** — 185 api, 15 device, 50 manual; 11 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 4 cases
+1. [Platform, version gate & UAT seeding](#platform) — 5 cases
 2. [Authentication, sessions & account identity](#auth) — 23 cases
-3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 17 cases
+3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
-5. [Floor tab & home shell](#floor) — 6 cases
-6. [Convene the Room](#room) — 15 cases
+5. [Floor tab & home shell](#floor) — 8 cases
+6. [Convene the Room](#room) — 16 cases
 7. [1-on-1 agent chat](#one-on-one) — 8 cases
-8. [Brief Your Agent](#brief) — 15 cases
-9. [Sim trading & market data](#sim-trading) — 27 cases
+8. [Brief Your Agent](#brief) — 16 cases
+9. [Sim trading & market data](#sim-trading) — 29 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 12 cases
-12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 9 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 14 cases
+12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 7 cases
+14. [Decision journal, trash & the You tab](#journal) — 8 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 11 cases
-17. [Billing, plans, credits & ads](#billing) — 11 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 12 cases
+17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 7 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
 20. [Games (dark-launched) & dev preview](#games) — 5 cases
@@ -77,6 +77,19 @@ _API (automated, live Alpha) · plans: floor_pass, trader_
 1. The user exists with last_app_version "uat" (excluded from real-user counts)
 2. Plan reads trader and credits rose by 5
 3. The user's own bearer token authenticates GET /v1/auth/me
+
+### Device (automated, Appium)
+
+#### UAT-PLAT-005 — A current build launches past the version gate to the Floor
+
+_Device (automated, Appium) · plans: any_
+
+**Steps**
+1. Cold-launch the app
+
+**Expected**
+1. No forced-update screen appears
+2. The Floor and its bottom bar are on screen
 
 <a id="auth"></a>
 ## Authentication, sessions & account identity
@@ -542,6 +555,26 @@ _API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox 
 1. The claimed user's mandate equals the interview's answers (not the generic default), and the session is bound to the user
 2. Replaying the same session id on a later sign-in does not overwrite a mandate edited since
 
+### Device (automated, Appium)
+
+#### UAT-ONB-043 — A fresh install walks the Concierge interview to a mandate readback and lands on the Floor
+
+_Device (automated, Appium) · plans: anon_
+
+**Preconditions**
+1. App deleted and reinstalled so the device holds no session
+
+**Steps**
+1. Launch; the Concierge interview opens with answer chips
+2. Answer every question by tapping chips until the mandate readback appears
+3. Confirm the readback ("LOOKS RIGHT"), then skip the claim prompt
+
+**Expected**
+1. The interview shows answer chips (not an empty or error screen)
+2. A readback with a LOOKS RIGHT confirmation is shown before the app hands over
+3. The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU
+4. Settings > MY MANDATE then shows the interview's mandate, not a blank one
+
 <a id="mandate-settings"></a>
 ## Mandate, risk limits, compliance & Settings
 
@@ -868,6 +901,33 @@ _API (automated, live Alpha) · plans: floor_pass_
 2. The Floor Pass journal read reports retention_days 30
 3. requirements lists the 12 agents all locked (the Your Firm screen's source)
 
+### Device (automated, Appium)
+
+#### UAT-FLOOR-007 — Your Firm shows all twelve agents locked and a locked agent opens its unlock sheet
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. On the Floor scroll to the YOUR FIRM row and open it
+2. Tap the Fundamentals Analyst
+
+**Expected**
+1. The firm wall lists the twelve agents by their CR160 titles with an "N of 12 unlocked" summary
+2. A locked agent opens a sheet with HOW TO UNLOCK, its five gateway lessons, GO TO LESSONS and an "N / 5 gateway lessons passed" progress line
+3. Dismissing the sheet returns to the firm wall
+
+#### UAT-FLOOR-008 — The Floor inbox bell opens the inbox with the bottom bar still visible
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. On the Floor tap the bell in the header
+2. Go back
+
+**Expected**
+1. The MESSAGES inbox opens and the bottom bar (FLOOR / PORTFOLIO / LESSONS / YOU) is still on screen (DEF457)
+2. Back returns to the Floor
+
 <a id="room"></a>
 ## Convene the Room
 
@@ -1063,6 +1123,24 @@ _API (automated, live Alpha) · plans: trader · uses LLM_
 **Expected**
 1. live_data_notice.surcharge_charged is 0, 2 or 4
 2. done.credit_cost and the persisted credit_cost equal 8 plus that surcharge, and the balance drop equals it - unless the run was an outage (DEF432), in which case refunded is true and the whole charge, surcharge included, is back
+
+### Device (automated, Appium)
+
+#### UAT-ROOM-016 — Convening the Room on AAPL streams to a CIO verdict card with a decision
+
+_Device (automated, Appium) · plans: floor_pass · uses LLM_
+
+**Preconditions**
+1. The account has Room credits (the Convene sheet shows the price and the balance)
+
+**Steps**
+1. On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL; tap CONVENE
+2. Wait for the run to finish (up to ten minutes)
+
+**Expected**
+1. The Convene sheet states the Room price and the user's credits before anything is charged
+2. The Room opens on AAPL and streams desk by desk
+3. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
 
 <a id="one-on-one"></a>
 ## 1-on-1 agent chat
@@ -1365,6 +1443,23 @@ _API (automated, live Alpha) · plans: trader_
 1. start is 201, history is 200, accept returns ok false and reject returns ok false (no 500s)
 
 > Currently fails on Alpha (FINDING) - the shim awaits sync handlers, so these return 500; marked xfail(strict) until fixed. Old +17 builds still call these routes.
+
+### Device (automated, Appium)
+
+#### UAT-BRIEF-016 — An unlocked agent's Brief screen opens and its version history shows the edit limit, without starting a turn
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Preconditions**
+1. At least one agent unlocked (five gateway lessons passed); the test earns the Fundamentals Analyst through Lessons if none is
+
+**Steps**
+1. Floor > YOUR FIRM > tap an unlocked agent > BRIEF
+2. Open the version history
+
+**Expected**
+1. The Brief screen opens for that agent
+2. The history header reads "N edits made - M remaining" (the Floor Pass cap) or unlimited, with no chat turn started
 
 <a id="sim-trading"></a>
 ## Sim trading & market data
@@ -1669,6 +1764,32 @@ _API (automated, live Alpha) · plans: trader_
 2. Unknown ticker, bad direction, empty/invalid legs are 422
 3. A client-supplied premium is never honoured (422, or a not-accepted result)
 
+### Device (automated, Appium)
+
+#### UAT-SIM-028 — A one-share buy fills, appears as a holding and takes cash out of the portfolio
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Portfolio > New trade; pick a low-priced ticker that fits the single-name cap; leave quantity 1; SUBMIT TRADE
+2. Read the confirmation; open Portfolio
+
+**Expected**
+1. The ticket confirms "Filled: BUY 1 <ticker> @ $<price>"
+2. Portfolio cash is lower by about the fill price and the holding is listed with "1 sh" (or its quantity rises by one)
+
+#### UAT-SIM-029 — An order that breaks the single-name cap is refused with a visible reason and moves no cash
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Portfolio > New trade; ticker NFLX; quantity 100 (about 70% of the book); SUBMIT TRADE
+
+**Expected**
+1. The ticket shows SAFETY FLOOR - TRADE BLOCKED with the reason (position size exceeds the single-name cap)
+2. Portfolio cash and holdings are unchanged
+3. The refusal is not overridable from the ticket
+
 <a id="portfolio-health"></a>
 ## Portfolio health & sector analytics
 
@@ -1945,6 +2066,35 @@ _API (automated, live Alpha) · plans: floor_pass_
 1. Cross-user routes are 403; the foreign alert id under one's own id is 404; unauthenticated is 401
 2. The owner's alerts are unchanged and the stranger has none
 
+### Device (automated, Appium)
+
+#### UAT-WATCH-013 — Adding a ticker to the watchlist lists it in the Portfolio watchlist and removing it takes it off
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Portfolio > ADD in the WATCHLIST section; type a ticker; confirm
+2. Read the watchlist
+
+**Expected**
+1. The ticker is listed under WATCHLIST
+2. Removing it takes it off the list again
+
+#### UAT-WATCH-014 — A price alert created from a ticker detail appears in its PRICE ALERTS list and can be cancelled
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Preconditions**
+1. A held ticker whose detail screen is reachable (UAT-SIM-028)
+
+**Steps**
+1. Portfolio > holding > PER-LOT DETAIL > ALERT; pick "Price falls below"; price far below the market; Create alert
+2. Cancel the alert
+
+**Expected**
+1. PRICE ALERTS lists "Price falls below $<price>"
+2. After cancelling, the alert is gone
+
 <a id="lessons"></a>
 ## Lessons, quizzes, Agent Academy unlocks & glossary
 
@@ -2065,6 +2215,21 @@ _API (automated, live Alpha) · plans: anon_
 1. Each locale is 200, total_terms equals the entry count, categories are non-empty
 2. Every entry has a unique id and non-empty term, definition and category
 3. A term fetched by id equals its catalogue entry; an unknown term is 404
+
+### Device (automated, Appium)
+
+#### UAT-LESS-010 — Opening a lesson, reading it and passing its quiz records progress
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Lessons > a small track (EVALUATION); READ the first lesson not yet completed
+2. Scroll to the end, answer the quiz and SUBMIT QUIZ (retry on NOT QUITE)
+
+**Expected**
+1. The reader shows the lesson body and a QUIZ
+2. A wrong answer reads NOT QUITE and can be retried; a right one reads PASSED
+3. The Lessons tab progress counter ("N / total lessons") rises by one
 
 <a id="daily-challenge"></a>
 ## Daily challenge & reminder
@@ -2235,6 +2400,22 @@ _API (automated, live Alpha) · plans: floor_pass, trader · **BLOCKED** — Nee
 
 **Expected**
 1. Floor Pass list omits the old entry; trader list includes it
+
+### Device (automated, Appium)
+
+#### UAT-JRNL-008 — A placed trade and a blocked trade both appear in You > Journal
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Preconditions**
+1. A trade placed and a trade refused earlier in the same run (UAT-SIM-028, UAT-SIM-029)
+
+**Steps**
+1. You > JOURNAL; read the entries; filter by TRADE
+
+**Expected**
+1. The filled buy is listed as a TRADE entry naming the ticker and price
+2. The refused order is listed as BLOCKED with its reason
 
 <a id="inbox-notifications"></a>
 ## Inbox, notification centre & push
@@ -2435,6 +2616,22 @@ _API (automated, live Alpha) · plans: anon_
 1. Both are 422 (or another 4xx) naming the bad field, not 500 internal server error
 2. Nothing is stored
 
+### Device (automated, Appium)
+
+#### UAT-SUPP-012 — The bug-report sheet opens from Settings and refuses an empty submission (nothing is sent)
+
+_Device (automated, Appium) · plans: any_
+
+**Steps**
+1. You > SETTINGS > HELP > Report a problem
+2. Tap submit with the title empty
+
+**Expected**
+1. The sheet opens with a category, title and steps field
+2. Submitting with the required fields empty shows a validation message and sends nothing
+
+> Never submits - submissions land in the real triage queue. On iOS blocked by DEF466 (the pane that holds Report a problem is below PROFILE).
+
 <a id="billing"></a>
 ## Billing, plans, credits & ads
 
@@ -2545,6 +2742,21 @@ _API (automated, live Alpha) · plans: floor_pass_
 **Expected**
 1. Balance clamps at 0, never below, on both views
 2. A zero delta is 400
+
+### Device (automated, Appium)
+
+#### UAT-BILL-012 — The upgrade sheet shows the plans, or the documented no-offering fallback with Restore purchases
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. From the Floor Pass ad banner tap "See Trader plans" (no purchase)
+
+**Expected**
+1. The "Upgrade your desk" sheet opens
+2. It shows plan prices, or the fallback card ("Upgrades aren't available yet") together with a Restore purchases button - never an empty sheet
+
+> Entered from the ad banner rather than Settings > Membership because on iOS the Settings pane below PROFILE darkens the accessibility tree (DEF466).
 
 <a id="alpaca"></a>
 ## Alpaca paper account link
