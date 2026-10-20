@@ -26,6 +26,7 @@ import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class PortfolioHealthFindingScreen extends ConsumerWidget {
   const PortfolioHealthFindingScreen({super.key});
@@ -35,7 +36,7 @@ class PortfolioHealthFindingScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final async = ref.watch(healthFindingProvider);
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.portfolioHealthFindingScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(title: Text(l.findingScreenTitle)),
       body: healthFadeIn(
@@ -46,7 +47,7 @@ class PortfolioHealthFindingScreen extends ConsumerWidget {
           data: (finding) => _findingBody(context, ref, finding),
         ),
       ),
-    );
+    ));
   }
 
   Widget _findingBody(

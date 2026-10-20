@@ -28,6 +28,7 @@ import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class YourFirmScreen extends ConsumerWidget {
   const YourFirmScreen({super.key});
@@ -39,7 +40,7 @@ class YourFirmScreen extends ConsumerWidget {
     final unlocked = state.unlockedAgentIds;
     final tradingAgents = kAllAgents.sublist(0, 12);
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.yourFirmScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -81,7 +82,7 @@ class YourFirmScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

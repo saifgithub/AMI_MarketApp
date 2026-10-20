@@ -45,6 +45,7 @@ import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 final _money = NumberFormat('#,##0.00');
 
@@ -64,7 +65,7 @@ class GamesRunScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final detailAsync = ref.watch(gamesRunDetailProvider(runId));
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.gamesRunScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(title: Text(l.gamesRunTitle)),
       body: SafeArea(
@@ -151,7 +152,7 @@ class GamesRunScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

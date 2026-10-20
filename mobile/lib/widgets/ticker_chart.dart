@@ -132,7 +132,7 @@ class _TickerChartState extends ConsumerState<TickerChart> {
                   right: 4,
                   child: Tooltip(
                     message: l.tickerDetailChartExpand,
-                    child: IconButton(
+                    child: IconButton(tooltip: AppLocalizations.of(context).tickerDetailChartExpand, 
                       iconSize: 18,
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),

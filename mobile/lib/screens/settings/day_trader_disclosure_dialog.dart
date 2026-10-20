@@ -14,6 +14,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class DayTraderDisclosureDialog extends StatelessWidget {
   const DayTraderDisclosureDialog({super.key, required this.disclosure});
@@ -33,7 +34,7 @@ class DayTraderDisclosureDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return AlertDialog(
+    return Semantics(identifier: ScreenIds.dayTraderDisclosureDialog, container: true, explicitChildNodes: true, child: AlertDialog(
       backgroundColor: AmiColors.slate800,
       title: Text(l.settingsDayTraderDisclosureTitle, style: AmiTypography.h4),
       content: SingleChildScrollView(
@@ -58,6 +59,6 @@ class DayTraderDisclosureDialog extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ));
   }
 }

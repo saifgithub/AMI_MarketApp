@@ -7,6 +7,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class TourIntroSheet extends StatelessWidget {
   const TourIntroSheet({super.key});
@@ -14,7 +15,7 @@ class TourIntroSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return SafeArea(
+    return Semantics(identifier: ScreenIds.tourIntroSheet, container: true, explicitChildNodes: true, child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AmiSpacing.l, AmiSpacing.l, AmiSpacing.l, AmiSpacing.m,
@@ -71,6 +72,6 @@ class TourIntroSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }

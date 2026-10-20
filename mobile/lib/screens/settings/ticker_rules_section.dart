@@ -243,7 +243,7 @@ class _TickerListState extends State<_TickerList> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : IconButton(
+                : IconButton(tooltip: AppLocalizations.of(context).actionAdd, 
                     key: Key('${widget.fieldKey}_add'),
                     icon: const Icon(Icons.add, color: AmiColors.hexCyan),
                     onPressed: _add,

@@ -15,6 +15,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class JournalTrashScreen extends ConsumerStatefulWidget {
   const JournalTrashScreen({super.key});
@@ -37,7 +38,7 @@ class _JournalTrashScreenState extends ConsumerState<JournalTrashScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(journalTrashNotifierProvider);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.journalTrashScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -47,7 +48,7 @@ class _JournalTrashScreenState extends ConsumerState<JournalTrashScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(BuildContext context, JournalTrashState state) {
@@ -124,7 +125,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),

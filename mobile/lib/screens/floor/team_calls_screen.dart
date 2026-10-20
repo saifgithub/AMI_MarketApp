@@ -17,6 +17,7 @@ import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class TeamCallsScreen extends ConsumerWidget {
   const TeamCallsScreen({super.key});
@@ -26,7 +27,7 @@ class TeamCallsScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final async = ref.watch(teamCallsProvider);
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.teamCallsScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -72,6 +73,6 @@ class TeamCallsScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }

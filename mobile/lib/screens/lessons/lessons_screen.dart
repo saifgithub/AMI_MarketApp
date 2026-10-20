@@ -24,6 +24,7 @@ import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/hex/track_hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 // ─── screen ──────────────────────────────────────────────────────────────────
 
@@ -77,7 +78,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
     });
 
     final state = ref.watch(lessonsNotifierProvider);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.lessonsScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -92,7 +93,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(BuildContext context, LessonsState state) {

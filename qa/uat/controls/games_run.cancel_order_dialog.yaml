@@ -1,0 +1,14 @@
+screen: "ami.screen.games_run.cancel_order_dialog"
+source: "mobile/lib/screens/games/games_run_screen.dart"
+controls:
+  - label: "Keep it"
+    kind: button
+    expect: back
+    state: "Dialog closes; the queued order stays queued"
+    line: 771
+  - label: "Cancel"
+    kind: button
+    expect: destructive
+    state: "Dialog closes; the queued order is cancelled and removed from the run's queued list"
+    line: 775
+    note: "Red text. Cancels a queued game order."

@@ -45,6 +45,7 @@ import 'package:ami_trade/widgets/lessons/term_block.dart';
 import 'package:ami_trade/widgets/lessons/term_registry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class LessonReaderScreen extends ConsumerStatefulWidget {
   const LessonReaderScreen({
@@ -101,7 +102,7 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
     });
     final state = ref.watch(lessonReaderProvider(widget.lessonId));
     final l = AppLocalizations.of(context);
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.lessonReaderScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -122,7 +123,7 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   /// The toggle's only gate.
@@ -266,7 +267,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),

@@ -14,6 +14,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:flutter/material.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class AgentUnlockedScreen extends StatefulWidget {
   const AgentUnlockedScreen({super.key, required this.agent});
@@ -48,7 +49,7 @@ class _AgentUnlockedScreenState extends State<AgentUnlockedScreen>
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final agent = widget.agent;
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.agentUnlockedScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Padding(
@@ -137,6 +138,6 @@ class _AgentUnlockedScreenState extends State<AgentUnlockedScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 }

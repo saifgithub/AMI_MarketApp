@@ -1,0 +1,9 @@
+screen: "ami.screen.no_rules_disclosure.dialog"
+source: "mobile/lib/widgets/games/no_rules_disclosure.dart"
+controls:
+  - label: "<outside the dialog / back>"
+    kind: button
+    expect: back
+    state: "Dialog closes; it shows the full no-rules disclosure panel text, with no buttons of its own"
+    line: 74
+    note: "No in-dialog buttons; dismissal (tap barrier or system back) is the only interaction."

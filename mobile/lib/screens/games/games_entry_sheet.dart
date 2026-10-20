@@ -19,6 +19,7 @@ import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class GamesEntrySheet extends ConsumerStatefulWidget {
   const GamesEntrySheet({super.key, required this.cadence});
@@ -86,7 +87,7 @@ class _GamesEntrySheetState extends ConsumerState<GamesEntrySheet> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Padding(
+    return Semantics(identifier: ScreenIds.gamesEntrySheet, container: true, explicitChildNodes: true, child: Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l,
         AmiSpacing.l,
@@ -138,6 +139,6 @@ class _GamesEntrySheetState extends ConsumerState<GamesEntrySheet> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

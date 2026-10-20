@@ -33,7 +33,7 @@ class NotificationBell extends ConsumerWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          IconButton(
+          IconButton(tooltip: AppLocalizations.of(context).notifCentreTitle, 
             icon: const Icon(Icons.notifications_outlined,
                 color: AmiColors.textLow),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(

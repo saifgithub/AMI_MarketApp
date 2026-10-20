@@ -23,6 +23,7 @@ import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 
 class BriefScreen extends ConsumerStatefulWidget {
   const BriefScreen({super.key, required this.agent});
@@ -114,7 +115,7 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
       },
     );
 
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.briefScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       // DEF342 — bottom chrome clearance is owned by _InputBar, not SafeArea.
       // SafeArea reads MediaQuery.padding, and under Android edge-to-edge that
@@ -165,7 +166,7 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _body(BriefState state) {
@@ -224,7 +225,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -348,7 +349,7 @@ class _RefusalBanner extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
+          IconButton(tooltip: MaterialLocalizations.of(context).closeButtonTooltip, 
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.close, color: AmiColors.textLow, size: 18),
             onPressed: onDismiss,
@@ -569,7 +570,7 @@ class _InputBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AmiSpacing.s),
-              IconButton(
+              IconButton(tooltip: AppLocalizations.of(context).onboardingSendAnswerTooltip, 
                 onPressed: disabled ? null : onSend,
                 icon: Icon(Icons.arrow_upward, color: agentColor),
                 style: IconButton.styleFrom(

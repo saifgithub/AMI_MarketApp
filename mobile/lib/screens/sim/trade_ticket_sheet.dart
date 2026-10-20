@@ -1484,7 +1484,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // not covered by `SafeArea`, so it floats directly under the status bar;
     // Saiful caught this from a TestFlight build (+108): the header rendered
     // under the iOS clock/signal/battery, overlapping the TICKER field.
-    return Scaffold(
+    return Semantics(identifier: ScreenIds.tradeTicketSheet, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       // CR232 — tapping anywhere on the page dismisses the on-screen
       // keyboard. The numeric fields below (quantity/stop/target/limit/
@@ -1553,13 +1553,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                         color: AmiColors.hexBlue,
                                         fontSize: 11)),
                                 const Spacer(),
-                                InkWell(
-                                  onTap: () =>
-                                      setState(() => _advisoryDismissed = true),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(Icons.close,
-                                        color: AmiColors.textLow, size: 16),
+                                Semantics(
+                                  label: MaterialLocalizations.of(context).closeButtonTooltip,
+                                  button: true,
+                                  child: InkWell(
+                                    onTap: () => setState(
+                                        () => _advisoryDismissed = true),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Icon(Icons.close,
+                                          color: AmiColors.textLow, size: 16),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -2155,7 +2159,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           ]),
         ),
       ),
-    );
+    ));
   }
 
   InputDecoration _decoration({required String label, required String hint}) {
