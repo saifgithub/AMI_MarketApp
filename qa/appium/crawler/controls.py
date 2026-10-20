@@ -323,6 +323,7 @@ class Coverage:
         self.controls: dict[str, Control] = {}
         self.screens: dict[str, dict] = {}
         self.expected = sorted(expected_screens or [])
+        self.reasons: dict[str, str] = {}  # unreached screen -> why (CR264 phase C)
 
     def see_screen(self, key: str, *, path: list[str], screenshot: str = "") -> bool:
         if key in self.screens:
@@ -387,6 +388,7 @@ class Coverage:
             "totals": self.totals(),
             "screens": self.screens,
             "unreached_screens": self.unreached_screens(),
+            "unreached_reasons": self.reasons,
             "controls": [c.__dict__ for c in self.controls.values()],
         }
 
@@ -406,7 +408,8 @@ class Coverage:
             lines += ["## Notes", ""] + [f"{i}. {n}" for i, n in enumerate(notes, 1)] + [""]
         if self.unreached_screens():
             lines += ["## Unreached known screens", ""]
-            lines += [f"{i}. `{s}`" for i, s in enumerate(self.unreached_screens(), 1)] + [""]
+            lines += [f"{i}. `{s}`" + (f" - {self.reasons[s]}" if s in self.reasons else "")
+                      for i, s in enumerate(self.unreached_screens(), 1)] + [""]
         if self.unpressed():
             lines += ["## Unpressed controls", ""]
             lines += [f"{i}. `{c.id}` — {c.outcome or 'never reached'}" for i, c in enumerate(self.unpressed(), 1)] + [""]

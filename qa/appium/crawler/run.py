@@ -112,6 +112,10 @@ def main(argv: list[str]) -> int:
                         help="CR264: press every control on every screen; writes control_coverage.json")
     parser.add_argument("--per-screen", type=float, default=90.0, help="exhaustive: seconds per screen")
     parser.add_argument("--cap", type=float, default=5400.0, help="exhaustive: global wall-clock cap, seconds")
+    parser.add_argument("--bfs-depth", type=int, default=1, help="exhaustive: how deep the press-everything pass follows what it opens; deeper screens are reached by catalogue route-driving")
+    parser.add_argument("--no-seed", action="store_true", help="exhaustive: skip admin state seeding")
+    parser.add_argument("--seed-plan", default="trader", help="exhaustive: plan to seed (trader|floor_pass|...)")
+    parser.add_argument("--targets", default="", help="exhaustive: comma list of ami.screen.* ids; skip the full crawl, route to just these")
     parser.add_argument("--platform", choices=["ios", "android"], default="ios")
     parser.add_argument("--serial", default=os.environ.get("AMI_SERIAL", ""), help="android adb serial")
     parser.add_argument("--no-ledger", action="store_true",
@@ -233,7 +237,9 @@ def _main_exhaustive(args, run_dir: Path) -> int:
     else:
         profile = GALAXY_A17.__class__(**{**GALAXY_A17.__dict__, "serial": args.serial or GALAXY_A17.serial})
     out = run_exhaustive(profile, run_dir, per_screen_s=args.per_screen, global_cap_s=args.cap,
-                         depth=args.depth if args.depth > 3 else 6, use_ledger=not args.no_ledger)
+                         depth=args.bfs_depth, use_ledger=not args.no_ledger,
+                         seed=not args.no_seed, seed_plan=args.seed_plan,
+                         targets=[t for t in args.targets.split(",") if t] or None)
     t = out.coverage.totals()
     print(f"\n{json.dumps(t)}\nruntime {out.runtime_s / 60:.1f} min\n{len(out.gate_failures)} gate failure(s)")
     for f in out.gate_failures[:40]:

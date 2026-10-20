@@ -25,7 +25,8 @@ from pathlib import Path
 
 from crawler import controls as C
 from crawler.errorsink import SinkUnavailable
-from crawler.intents import Catalogue, check_expectation
+from crawler import routes as R
+from crawler.intents import Catalogue, _norm, _surface_present, check_expectation, label_pattern
 from helpers.gestures import hide_keyboard_if_shown, scroll_to_top, swipe_up, tap_xy
 from helpers.platform import is_ios
 from helpers.system_alerts import dismiss_system_alert_if_present
@@ -42,30 +43,68 @@ class ReplayFailed(RuntimeError):
     pass
 
 
-def _step(node: C.Node, nav: str | None = None) -> dict:
-    return {"nav": nav} if nav else {"ident": node.ident, "label": node.label, "type": node.type}
+def _step(node: C.Node, nav: str | None = None, *, to: str = "", screen: str = "", intent: str = "") -> dict:
+    if nav:
+        return {"nav": nav}
+    d = {"ident": node.ident, "label": node.label, "type": node.type}
+    if to:
+        d["to"] = to
+    if screen:
+        d["screen"] = screen
+    if intent:
+        d["intent"] = intent
+    return d
 
 
 def _step_name(step: dict) -> str:
-    return step.get("nav") or step.get("ident") or step.get("label") or "?"
+    return step.get("nav") or step.get("ident") or step.get("label") or step.get("pat") or step.get("intent") or "?"
 
 
 def _masked(label: str) -> str:
     return C._id_label(label)
 
 
-def _match(nodes, step: dict):
-    for n in nodes:
-        if not (n.interactive and n.visible):
-            continue
+# One-off prompts that are gone on the second visit: a replay that cannot find
+# them has not failed, the prompt was simply answered already.
+_OPTIONAL_STEPS = {"not now", "later", "maybe later", "skip", "no thanks"}
+
+
+def _match(nodes, step: dict, catalogue: Catalogue | None = None, claimed: set[str] | None = None):
+    """The control a replay step means, or None.
+
+    Order: root id, exact id, masked label, catalogue label pattern (route steps),
+    the catalogue entry the recorded press resolved to (the label drifts, the
+    entry does not), and finally - for a placeholder row such as `<lesson title
+    row>` - the first control the catalogue has no entry for."""
+    live = [n for n in nodes if n.interactive and n.visible]
+    for n in live:
         if step.get("nav") and n.ident == step["nav"]:
             return n
         if step.get("ident") and n.ident == step["ident"]:
             return n
-    for n in nodes:
-        if (n.interactive and n.visible and not step.get("nav") and step.get("label")
-                and _masked(n.label) == _masked(step["label"]) and n.type == step.get("type", n.type)):
+    if step.get("nav"):
+        return None
+    for n in live:
+        if step.get("label") and _masked(n.label) == _masked(step["label"]) and n.type == step.get("type", n.type):
             return n
+    if step.get("pat"):
+        pat = label_pattern(step["pat"])
+        for n in live:
+            if n.label and pat.fullmatch(_norm(n.label)):
+                return n
+    if catalogue is not None and step.get("intent") and step.get("screen"):
+        for n in live:
+            it = catalogue.lookup(step["screen"], n.ident, n.label)
+            if it is not None and it.name == step["intent"]:
+                return n
+    if step.get("row") and catalogue is not None:
+        for n in live:
+            if n.ident.startswith("ami.nav.") or (claimed and n.ident in claimed):
+                continue
+            if n.label.lower() in _BACK_LABELS or n.ident.endswith((".back", ".close")):
+                continue
+            if catalogue.lookup(step.get("screen", ""), n.ident, n.label) is None and n.cy > 120:
+                return n
     return None
 
 
@@ -100,6 +139,10 @@ class ExhaustiveCrawler:
         self._shots = 0
         self.app_id = profile.app_id
         self._last_phase = False
+        self.limits = C.load_spend_limits()
+        self.spend_used: dict[str, int] = {}
+        self.unreach_reason: dict[str, str] = {}
+        self.route_log: list[str] = []
 
     # -- observation ------------------------------------------------------
 
@@ -153,21 +196,38 @@ class ExhaustiveCrawler:
         from helpers.gestures import swipe_down
         swipe_down(self.driver, content_band(self.geom))
 
+    def _m(self, nodes, step: dict):
+        return _match(nodes, step, self.catalogue)
+
+    def _await(self, to: str, timeout: float = 7.0) -> bool:
+        """Wait for a surface root id (`ami.screen.*`) rather than a fingerprint:
+        the id appears when the route has actually finished building."""
+        deadline = time.monotonic() + timeout
+        while True:
+            snap = self._observe()
+            if snap.key == to or to in {n.ident for n in snap.nodes if n.visible}:
+                return True
+            if self.catalogue is not None and _surface_present(to, snap, self.catalogue) and not to.startswith(C.SCREEN_PREFIX):
+                return True
+            if time.monotonic() > deadline:
+                return False
+            time.sleep(0.6)
+
     def _reveal(self, step: dict) -> C.Node | None:
         snap = self._observe()
-        n = _match(snap.nodes, step)
+        n = self._m(snap.nodes, step)
         if n and self._visible_controls(snap).count(n):
             return n
         from pages.base_page import content_band
         band = content_band(self.geom)
-        for _ in range(8):
+        for _ in range(3):
             self._swipe_down_content()
-            n = _match(self._observe().nodes, step)
+            n = self._m(self._observe().nodes, step)
             if n and n in self._visible_controls(self.snap):
                 return n
-        for _ in range(_MAX_SCROLLS):
+        for _ in range(6):
             swipe_up(self.driver, band)
-            n = _match(self._observe().nodes, step)
+            n = self._m(self._observe().nodes, step)
             if n and n in self._visible_controls(self.snap):
                 return n
         return None
@@ -216,6 +276,23 @@ class ExhaustiveCrawler:
             time.sleep(self.settle_s * 3)
         except Exception as exc:
             raise Fatal(f"could not relaunch the app: {exc}") from exc
+        self._await_shell()
+
+    def _await_shell(self, timeout: float = 30.0) -> None:
+        """A cold start takes several seconds before the tab bar is in the tree;
+        relaunching again before then (the old behaviour) restarts the clock
+        forever. Wait for it, answering the one-off 'Not now' soft ask."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            snap = self._observe()
+            if any(n.ident.startswith("ami.nav.") and n.visible for n in snap.nodes):
+                return
+            for n in snap.nodes:
+                if n.interactive and n.visible and n.label.lower() in _OPTIONAL_STEPS:
+                    self._tap(n)
+                    break
+            else:
+                time.sleep(1.0)
 
     def _recover_foreground(self) -> None:
         for _ in range(3):
@@ -246,6 +323,11 @@ class ExhaustiveCrawler:
             want = self.root_key.get(nav)
             if not want or not want.startswith(C.SCREEN_PREFIX) or snap.key == want:
                 return
+            # A tab remembers its last pane (portfolio.orders vs portfolio.positions):
+            # any id in the tab's own family means the tab root is showing.
+            fam = R.NAV_TO_ROOTS.get(nav, ())
+            if any(n.visible and n.ident.startswith(f) for n in snap.nodes for f in fam):
+                return
             if not self._back_once():
                 self._tap_barrier()
         raise ReplayFailed(f"could not reach tab root {nav}")
@@ -263,8 +345,14 @@ class ExhaustiveCrawler:
         for step in path[1:]:
             n = self._reveal(step)
             if n is None:
+                if (step.get("label") or "").lower() in _OPTIONAL_STEPS:
+                    continue
                 raise ReplayFailed(f"step {_step_name(step)!r} not found")
             self._tap(n)
+            to = step.get("to", "")
+            if to.startswith(C.SCREEN_PREFIX):
+                if not self._await(to, 7.0 if step.get("strict") else 4.0) and step.get("strict"):
+                    raise ReplayFailed(f"step {_step_name(step)!r} pressed but {to} did not appear")
         self._observe()
 
     def _return(self, path: list[dict], parent_key: str) -> None:
@@ -366,9 +454,13 @@ class ExhaustiveCrawler:
             return "input"
         return "toggle" if node.is_toggle else "button"
 
-    def _visit(self, path: list[dict], depth: int, parent_key: str | None, queue: deque) -> None:
+    def _visit(self, path: list[dict], depth: int, parent_key: str | None, queue: deque,
+               *, already_there: bool = False) -> None:
         try:
-            self._goto(path)
+            if already_there:
+                self._observe()
+            else:
+                self._goto(path)
         except ReplayFailed as exc:
             self.notes.append(f"abandoned branch {' > '.join(_step_name(s) for s in path)}: {exc}")
             return
@@ -391,6 +483,10 @@ class ExhaustiveCrawler:
                 except Exception:
                     pass
                 self._observe()
+        for n in snap.nodes:  # a pane's host screen (portfolio under portfolio.positions) is on screen too
+            if n.ident.startswith(C.SCREEN_PREFIX) and n.visible and n.ident not in self.cov.screens \
+                    and n.ident in self.cov.expected:
+                self.cov.see_screen(n.ident, path=[_step_name(x) for x in path] + [f"(host of {key})"])
         self.log(f"  screen {key} (depth {depth}, {len(self.cov.screens)} seen, {int(time.monotonic() - self.t0)}s)")
 
         from pages.base_page import content_band
@@ -427,6 +523,8 @@ class ExhaustiveCrawler:
                 if not n.enabled:
                     self.cov.exempt(ctl, "disabled (enabled=false)")
                     continue
+                if cls not in ("destructive", "unlabelled") and self._spend_blocked(key, n, ctl):
+                    continue
                 if cls in ("destructive", "unlabelled"):
                     self.deferred.append((ctl, list(path), _step(n)))
                     ctl.outcome = "deferred (pressed last)"
@@ -452,12 +550,15 @@ class ExhaustiveCrawler:
                 break
 
             ctl, node = todo
+            self._spend_count(key, node)
             started = time.monotonic()
             before = snap
             after = self._press(ctl, node, before, parent_prev)
             if after.key != key or after.sheets != before.sheets:
                 child_key = after.key
-                step = _step(node)
+                it = self.catalogue.lookup(key, node.ident, node.label) if self.catalogue is not None else None
+                step = _step(node, to=child_key if child_key.startswith(C.SCREEN_PREFIX) else "",
+                             screen=key, intent=it.name if it else "")
                 if depth < self.max_depth and child_key not in self.visited and child_key not in (key,):
                     self.visited.add(child_key)
                     queue.append((path + [step], depth + 1, key))
@@ -472,6 +573,25 @@ class ExhaustiveCrawler:
         if budget_hit:
             self.notes.append(f"per-screen/global budget hit on {key}")
 
+    def _spend_group(self, screen: str, node: C.Node) -> str | None:
+        it = self.catalogue.lookup(screen, node.ident, node.label) if self.catalogue is not None else None
+        return C.spend_group(self.limits, screen, node, it.expect if it else None,
+                             it.label if it else "", it.target if it else "")
+
+    def _spend_blocked(self, screen: str, node: C.Node, ctl: C.Control) -> bool:
+        """Once a spend group's per-crawl limit is used, further presses are
+        exempt (the intent is still catalogue-checked on the first one)."""
+        g = self._spend_group(screen, node)
+        if g and self.spend_used.get(g, 0) >= int(self.limits[g].get("limit", 1)):
+            self.cov.exempt(ctl, f"covered by intent, not pressed: {g} budget used ({self.limits[g].get('why', '')})")
+            return True
+        return False
+
+    def _spend_count(self, screen: str, node: C.Node) -> None:
+        g = self._spend_group(screen, node)
+        if g:
+            self.spend_used[g] = self.spend_used.get(g, 0) + 1
+
     def _scroll_down(self, band, key: str) -> bool:
         before = {C.control_id(key, n) for n in self._visible_controls(self.snap)}
         before_sig = self.snap.sig
@@ -483,10 +603,7 @@ class ExhaustiveCrawler:
 
     # -- the whole crawl ---------------------------------------------------
 
-    def run(self) -> None:
-        for f in self._sink_new():
-            self.screen_findings.append({**f, "screen": "(before the crawl: install / onboarding)"})
-        queue: deque = deque(([{"nav": nav}], 0, None) for nav in self.nav_ids.values())
+    def _drain(self, queue: deque) -> None:
         while queue and not self._over_cap():
             path, depth, parent = queue.popleft()
             try:
@@ -499,7 +616,72 @@ class ExhaustiveCrawler:
                     self._recover_foreground()
                 except Fatal:
                     raise
+
+    def run(self, targets: list[str] | None = None) -> None:
+        for f in self._sink_new():
+            self.screen_findings.append({**f, "screen": "(before the crawl: install / onboarding)"})
+        queue: deque = deque(([{"nav": nav}], 0, None) for nav in self.nav_ids.values())
+        if targets:
+            queue.clear()
+        self._drain(queue)
+        self._route_phase(queue, targets)
         self._press_deferred()
+
+    # -- route-driving (catalogue graph) -------------------------------------
+
+    def _route_phase(self, queue: deque, targets: list[str] | None = None) -> None:
+        """Reach every known screen the press-everything pass missed, by
+        replaying the cheapest catalogue path to it (id-awaited at each step)."""
+        if self.catalogue is None or not len(self.catalogue):
+            return
+        graph = R.build_graph(self.catalogue)
+        failed: dict[str, str] = {}
+        tried: set[str] = set()
+        for _round in range(3):
+            todo = [t for t in (targets or self.cov.unreached_screens())
+                    if t not in self.cov.screens and t not in tried]
+            if not todo or self._over_cap():
+                break
+            for target in todo:
+                if self._over_cap():
+                    break
+                tried.add(target)
+                self._route_to(graph, target, failed, queue)
+                self._drain(queue)
+        for t in self.cov.unreached_screens():
+            if t not in self.cov.screens:
+                self.unreach_reason[t] = R.explain_unreachable(graph, t, failed=failed)
+        self.cov.reasons.update(self.unreach_reason)
+
+    def _route_to(self, graph, target: str, failed: dict[str, str], queue: deque) -> bool:
+        banned: set[str] = set()
+        for _attempt in range(3):
+            live_roots = {scr: nav for scr, nav in R.roots().items() if nav in self.nav_set}
+            planned = R.plan(graph, target, banned=frozenset(banned), start_roots=live_roots)
+            if planned is None:
+                return False
+            nav, edges = planned
+            path = R.path_steps(nav, edges)
+            label = " > ".join(_step_name(s) for s in path)
+            try:
+                self._goto(path)
+            except ReplayFailed as exc:
+                bad = next((e for e in edges if e.control in str(exc) or (e.ident and e.ident in str(exc))),
+                           edges[-1] if edges else None)
+                if bad is not None:
+                    banned.add(bad.key)
+                    failed[bad.key] = str(exc)
+                self.route_log.append(f"{target}: {label} FAILED ({str(exc)[:100]})")
+                continue
+            if self.snap.key != target and not _surface_present(target, self.snap, self.catalogue):
+                failed[edges[-1].key] = f"arrived at {self.snap.key}, not {target}"
+                banned.add(edges[-1].key)
+                self.route_log.append(f"{target}: {label} landed on {self.snap.key}")
+                continue
+            self.route_log.append(f"{target}: {label} OK")
+            self._visit(path, len(path), None, queue, already_there=True)
+            return True
+        return False
 
     def _press_deferred(self) -> None:
         if not self.deferred:
@@ -518,6 +700,9 @@ class ExhaustiveCrawler:
                     ctl.outcome = "not found at destructive phase"
                     continue
                 parent = self.snap.key
+                if self._spend_blocked(parent, node, ctl):
+                    continue
+                self._spend_count(parent, node)
                 self._press(ctl, node, self.snap, None)
                 pressed_any = True
                 if self.snap.key != parent or not any(n.ident in self.nav_set for n in self.snap.nodes):
