@@ -1,0 +1,14 @@
+screen: ami.screen.version_gate
+source: mobile/lib/screens/version_gate/version_gate_screen.dart
+# Non-dismissible block screen (PopScope canPop:false). Shown when the build is below the server's min_build.
+controls:
+  - label: "Update Now"
+    kind: button
+    expect: external
+    line: 102
+    note: "Opens the store URL from the release floor in the external store app. If storeUrl is null/empty the handler returns silently (_openStore line 24) - the button then does nothing visible; see report."
+  - label: "I've updated — check again"
+    kind: button
+    expect: state
+    state: "spinner replaces the label while the gate re-checks; if the server now says OK the block screen is replaced by the app, otherwise (or if unreachable) the same block remains"
+    line: 109

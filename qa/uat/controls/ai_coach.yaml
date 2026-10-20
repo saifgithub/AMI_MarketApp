@@ -1,0 +1,21 @@
+screen: ami.screen.ai_coach
+source: mobile/lib/screens/coach/ai_coach_screen.dart
+controls:
+  - label: "back"
+    kind: icon
+    expect: back
+    line: 82
+    note: "Default AppBar back arrow (no Semantics id; not the shared AmiScreenHeader). Returns to Settings."
+  - label: "Ask anything — \"halal filter\", \"mandate\", \"stop loss\""
+    kind: field
+    expect: state
+    state: "typing (>=2 chars, 300 ms debounce) searches the Q&A library and lists up to 8 hit cards; <2 chars shows the empty-state hint; no hits shows 'No matches for ...'"
+    line: 93
+    note: "Autofocused; search-as-you-type, no submit button."
+  - label: "<Q&A hit card>"
+    kind: list_row
+    expect: sheet
+    target: ami.screen.ai_coach.answer_sheet
+    when: "search returned hits"
+    line: 180
+    note: "repeated; category chip + question + 2-line short answer."

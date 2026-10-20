@@ -1,0 +1,22 @@
+screen: ami.screen.ticker_rules_section
+source: mobile/lib/screens/settings/ticker_rules_section.dart
+# Embedded in Settings: TICKER RULES card (blocklist "Never trade these" / allowlist "Only trade these").
+controls:
+  - label: "Add a ticker"
+    kind: field
+    expect: state
+    state: "type a symbol and press return: it is validated against GET /v1/tickers/validate; valid -> chip added to the list and mandate dirty; unknown/offline/duplicate -> red inline error under the field, nothing added"
+    line: 236
+    note: "Two instances (blocklist key blocklist_input, allowlist key allowlist_input). Server suggestion is shown as 'Unknown ticker (XYZ?)' but never auto-substituted."
+  - label: "+"
+    kind: icon
+    expect: state
+    state: "same as submitting the field: validates then adds the ticker chip (spinner while checking)"
+    line: 249
+    note: "Two instances (keys blocklist_add / allowlist_add)."
+  - label: "<ticker chip> x"
+    kind: chip
+    expect: state
+    state: "ticker chip is removed from the list; mandate dirty; removing the last allowlist entry clears the allowlist (no allowlist = no restriction)"
+    line: 213
+    note: "repeated; delete (x) icon, tooltip 'Remove'. Keys <blocklist|allowlist>_chip_<TICKER>."

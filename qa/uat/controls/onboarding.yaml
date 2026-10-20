@@ -1,0 +1,50 @@
+screen: ami.screen.onboarding
+source: mobile/lib/screens/onboarding/onboarding_screen.dart
+controls:
+  - label: "<interview answer chip>"
+    id: ami.onboarding.answer_chip
+    kind: chip
+    expect: state
+    state: "the chip text is sent as the user's answer (appears as a chat bubble) and the Concierge replies with the next question; at the end the READBACK summary appears"
+    line: 151
+    note: "repeated; backend-authored chips of the current turn only. Chip handler is in widgets/chat/chip_row.dart (calls _handleSubmit)."
+  - label: "Type your answer"
+    id: ami.onboarding.composer
+    kind: field
+    expect: state
+    state: "free-text answer; pressing return submits it (cleared from field, shown as bubble, Concierge replies)"
+    line: 175
+    note: "Hint reads 'Sending...' while submitting. Empty/whitespace is ignored."
+  - label: "Send answer"
+    id: ami.onboarding.send
+    kind: icon
+    expect: state
+    state: "submits the typed text exactly as return does; disabled while a send is in flight"
+    line: 215
+  - label: "LOOKS RIGHT — CONTINUE"
+    kind: button
+    expect: state
+    state: "confirms the readback of the inferred mandate; the interview completes and the claim prompt ('Let's save this so your team remembers you.') with SAVE MY TEAM / SKIP FOR NOW appears"
+    when: "readback phase"
+    line: 243
+    note: "Creates/confirms the user's mandate server-side."
+  - label: "SAVE MY TEAM"
+    kind: button
+    expect: navigate
+    target: ami.screen.sign_in
+    when: "interview completed"
+    line: 278
+    note: "Pushes the sign-in screen to claim the anonymous account; when that screen is left (claimed OR backed out), onboarding is marked complete and the app replaces itself with the Floor (/floor -> ami.screen.home_shell)."
+  - label: "SKIP FOR NOW"
+    kind: button
+    expect: navigate
+    target: ami.screen.home_shell
+    when: "interview completed"
+    line: 286
+    note: "Marks onboarding complete and pushReplacementNamed('/floor'); user stays anonymous."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "restarts the interview start call (spinner, then first Concierge question) or shows the error again"
+    when: "error phase (connectivity or rejected request)"
+    line: 104

@@ -1,0 +1,41 @@
+screen: ami.screen.bug_report_sheet
+source: mobile/lib/screens/feedback/bug_report_sheet.dart
+controls:
+  - label: "Close"
+    kind: icon
+    expect: back
+    line: 193
+    note: "X in the sheet header; closes without sending."
+  - label: "UI glitch"
+    kind: chip
+    expect: state
+    state: "category selection moves to the tapped chip (highlighted blue)"
+    line: 217
+    note: "Six chips: UI glitch / Wrong data / App crashed / Slow / freeze / Feature request / Other. One entry for the set; default UI glitch."
+  - label: "Short description"
+    kind: field
+    expect: state
+    state: "title entry (max 200); empty on send -> inline 'Required'"
+    line: 233
+  - label: "Steps to reproduce (optional)"
+    kind: field
+    expect: state
+    state: "optional multi-line detail (max 1000)"
+    line: 252
+  - label: "Attach photo"
+    kind: button
+    expect: sheet
+    target: ami.screen.bug_report_sheet.attach_options
+    line: 329
+    note: "Opens a camera/library chooser; after a pick the row becomes a thumbnail + filename."
+  - label: "Remove"
+    kind: icon
+    expect: state
+    state: "attached photo is removed; row returns to 'Attach photo'"
+    when: "a photo is attached"
+    line: 364
+  - label: "Send report"
+    kind: button
+    expect: destructive
+    line: 286
+    note: "Validates title, then POSTs the bug report (category, title, steps, current route, app version/platform, optional photo) to the backend; on success the sheet closes and a toast 'Report received - ref <id>. Thank you.' appears; on failure inline red 'Failed to send - please try again'. Files a real bug_reports row."

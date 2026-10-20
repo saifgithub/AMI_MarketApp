@@ -1,0 +1,50 @@
+screen: ami.screen.sign_in
+source: mobile/lib/screens/auth/sign_in_screen.dart
+controls:
+  - label: "back"
+    kind: icon
+    expect: back
+    line: 243
+    note: "Default AppBar back arrow (Navigator pops). Returns to Settings -> ACCOUNT, or to the onboarding completion step where it doubles as 'decline claim' (onboarding then proceeds to the Floor)."
+  - label: "Sign in with Apple"
+    kind: button
+    expect: destructive
+    line: 285
+    when: "iOS, anonymous user, not loading"
+    note: "Native Apple sheet (external system UI). On success the anonymous account is claimed/linked, optional merge sheet (ami.screen.merge_sheet) then screen pops. Cancel = silent no-op; errors show snackbar."
+  - label: "Sign in with Google"
+    kind: button
+    expect: destructive
+    line: 289
+    when: "Android, anonymous user, not loading; disabled when GOOGLE_OAUTH_WEB_CLIENT_ID missing"
+    note: "Google account picker (external system UI). Same post-claim flow as Apple."
+  - label: "Use email instead"
+    kind: link
+    expect: state
+    state: "reveals the 'OR CONTINUE WITH EMAIL' card (email field + SEND CODE); the link disappears"
+    when: "anonymous user"
+    line: 312
+  - label: "you@example.com"
+    kind: field
+    expect: state
+    state: "email address entry (no validation until SEND CODE)"
+    when: "email card revealed"
+    line: 456
+  - label: "SEND CODE"
+    kind: button
+    expect: destructive
+    line: 473
+    when: "email card revealed; empty email does nothing; label becomes RESEND CODE after the first send"
+    note: "Sends a 6-digit login code to the email (backend); snackbar 'code sent'; reveals the code field and VERIFY & CLAIM. In dev the code is shown in amber under the button."
+  - label: "6-digit code"
+    kind: field
+    expect: state
+    state: "code entry (numeric keyboard)"
+    when: "code requested"
+    line: 481
+  - label: "VERIFY & CLAIM"
+    kind: button
+    expect: destructive
+    line: 495
+    when: "code requested"
+    note: "Verifies the code and claims the anonymous account to this email; success -> optional merge sheet then pops back; failure -> snackbar."

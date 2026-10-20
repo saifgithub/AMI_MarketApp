@@ -1,0 +1,51 @@
+screen: ami.screen.alpaca_connect
+source: mobile/lib/screens/settings/alpaca_connect_screen.dart
+controls:
+  - label: "back"
+    id: ami.nav.back
+    kind: icon
+    expect: back
+    line: 181
+    note: "AppBar chevron; pops with false (= not linked). Returns to Settings."
+  - label: "API KEY"
+    kind: tab
+    expect: state
+    state: "shows the API-key form (key ID, secret, endpoint, CONNECT)"
+    line: 190
+    note: "Default tab."
+  - label: "OAUTH"
+    kind: tab
+    expect: state
+    state: "shows 'OAuth not available yet. Use the API Key tab' (no ALPACA_CLIENT_ID in current builds); with the define it shows the Alpaca login WebView"
+    line: 191
+  - label: "API KEY ID"
+    kind: field
+    expect: state
+    state: "accepts the paper key ID (whitespace stripped); empty -> 'Required' on CONNECT"
+    line: 391
+  - label: "SECRET KEY"
+    kind: field
+    expect: state
+    state: "accepts the secret, obscured; empty -> 'Required'"
+    line: 403
+  - label: "show/hide secret"
+    kind: icon
+    expect: state
+    state: "secret text toggles between obscured and visible (eye icon flips)"
+    line: 413
+  - label: "API ENDPOINT"
+    kind: field
+    expect: state
+    state: "pre-filled paper endpoint; must be https and an Alpaca paper host else inline validation error on CONNECT"
+    line: 425
+  - label: "CONNECT"
+    kind: button
+    expect: destructive
+    line: 461
+    note: "Validates the form, refuses 'AK...' live keys, verifies the pair against Alpaca's paper /v2/account from the device, stores it in Keychain/Keystore, reports link=true to backend (best-effort), then pops with true -> back on Settings where the row reads 'Connected'. Failure shows an amber inline error. Key never leaves the device. Links a (paper) brokerage account to AMI - treat as state-changing."
+  - label: "<WebView: Alpaca login>"
+    kind: link
+    expect: external
+    when: "build has ALPACA_CLIENT_ID (OAuth tab live)"
+    line: 580
+    note: "In-app WebView restricted to *.alpaca.markets; the amitrade://alpaca/callback redirect is intercepted with a CSRF state check, code exchanged via backend, token verified on paper host, saved, screen pops true. Dormant in current builds."

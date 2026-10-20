@@ -1,0 +1,41 @@
+screen: ami.screen.you
+source: mobile/lib/screens/you/you_screen.dart
+# The YOU tab. Header actions here also apply to the embedded Settings pane (ami.screen.settings).
+controls:
+  - label: "SETTINGS"
+    id: ami.you.settings
+    kind: tab
+    expect: state
+    state: "segment becomes active; Settings pane (MY MANDATE etc.) shown; header shows 'mandate v<N>'"
+    line: 211
+    note: "AmiSegmentBar segment; switching AWAY from SETTINGS with unsaved edits first opens the UNSAVED MANDATE EDITS dialog (ami.screen.you.unsaved_dialog). A small amber hex pip on the segment marks pending edits."
+  - label: "JOURNAL"
+    id: ami.you.journal
+    kind: tab
+    expect: state
+    state: "segment becomes active; Journal pane shown; header shows trash icon"
+    line: 211
+  - label: "INSIGHTS"
+    id: ami.you.insights
+    kind: tab
+    expect: state
+    state: "segment becomes active; Insights pane (decision-pattern cards or empty state) shown"
+    line: 211
+  - label: "SAVE"
+    kind: button
+    expect: destructive
+    line: 179
+    when: "SETTINGS segment active and mandate has unsaved edits (shows SAVING... while in flight)"
+    note: "Requests Settings to save: PATCH /v1/mandate/{user_id} with changed fields, version bump, mandate_edit journal entry, snackbar 'Mandate updated.'. Same effect as the non-embedded Save in settings.yaml."
+  - label: "TRASH"
+    kind: icon
+    expect: navigate
+    target: ami.screen.journal_trash
+    when: "JOURNAL segment active (trash can icon, tooltip 'TRASH')"
+    line: 194
+  - label: "notifications bell"
+    kind: icon
+    expect: navigate
+    target: ami.screen.notification_centre
+    line: 205
+    note: "NotificationBell widget on every segment (semantics label 'Notifications' + unread count). Handler lives in notification_bell.dart:39; shared widget - owner of that file documents it."

@@ -1,0 +1,13 @@
+screen: ami.screen.bug_report_sheet.attach_options
+source: mobile/lib/screens/feedback/bug_report_sheet.dart
+controls:
+  - label: "Take photo"
+    kind: list_row
+    expect: external
+    line: 99
+    note: "Closes the chooser and opens the system camera (permission prompt on first use); a captured photo is attached to the report. Cancel/denied = silently nothing attached."
+  - label: "Choose from library"
+    kind: list_row
+    expect: external
+    line: 105
+    note: "Closes the chooser and opens the system photo picker; the chosen image is attached. Cancel = nothing attached."

@@ -1,0 +1,14 @@
+screen: ami.screen.version_gate.nag_sheet
+source: mobile/lib/screens/version_gate/version_gate_screen.dart
+# Dismissible bottom sheet for min_build <= build < recommended_build; at most once per app session.
+controls:
+  - label: "Update Now"
+    kind: button
+    expect: external
+    line: 180
+    note: "Opens the store listing externally; the sheet stays open. Silent no-op if storeUrl is null/empty."
+  - label: "Later"
+    kind: button
+    expect: back
+    line: 188
+    note: "Marks the nag dismissed for this session and closes the sheet."
