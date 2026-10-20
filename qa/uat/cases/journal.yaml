@@ -104,3 +104,15 @@ cases:
       - Insights and journal render without clipping in light and dark
       - UNDO brings the entry straight back in place; Trash lists the deleted one and restore returns it
       - A 409 "newer entry has taken its place" restore shows the explanatory message, not "not found"
+
+  - id: UAT-JRNL-008
+    title: A placed trade and a blocked trade both appear in You > Journal
+    layer: device
+    plans: [floor_pass]
+    preconditions:
+      - 'A trade placed and a trade refused earlier in the same run (UAT-SIM-028, UAT-SIM-029)'
+    steps:
+      - 'You > JOURNAL; read the entries; filter by TRADE'
+    expected:
+      - 'The filled buy is listed as a TRADE entry naming the ticker and price'
+      - 'The refused order is listed as BLOCKED with its reason'

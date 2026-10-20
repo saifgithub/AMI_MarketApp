@@ -59,6 +59,26 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_collection_modifyitems(config, items):
+    """CR263 — run the first-run onboarding journey right after the smoke gate, then the
+    trading journeys (their fill/refusal are what the Journal and watchlist read).
+
+    It deletes the app's data on purpose (a fresh anonymous account: new Room
+    credits, empty book, no lessons), so it has to precede every journey that
+    reads or spends account state. Sorting is stable: nothing else moves."""
+    def rank(item):
+        name = item.nodeid.split("::")[0]
+        if name.endswith("test_00_smoke_hierarchy.py"):
+            return 0
+        if name.endswith("test_onboarding.py"):
+            return 1
+        if name.endswith("test_trading.py"):
+            return 2  # places the fill + refusal that the Journal and watchlist journeys read
+        return 3
+
+    items.sort(key=rank)
+
+
 def _report_dir() -> Path:
     configured = os.environ.get("AMI_REPORT_DIR")
     if configured:
@@ -156,6 +176,12 @@ def driver(device_profile):
         # permission decision (or prompt) from an earlier module's session
         # can still be sitting on screen when this module's driver attaches.
         dismiss_system_alert_if_present(drv)
+        # CR263 — a keyboard left up by an earlier session (a mis-tap into the
+        # omnibox) hides the bottom nav, which the onboarding probe reads as "not
+        # onboarded" and answers with a 480s exploratory walk.
+        from helpers.journeys import clear_keyboard
+
+        clear_keyboard(drv)
         # A dark accessibility tree outlives the session that darkened it (see
         # helpers/shell.py::tree_is_dark) and would otherwise burn the whole
         # onboarding budget on a screen it cannot see.
@@ -265,6 +291,9 @@ def _shell_precondition(request):
     if dismiss_system_alert_if_present(drv):
         print(f"    [alert] {request.node.name} — dismissed a native system alert")
 
+    from helpers.journeys import clear_keyboard
+
+    clear_keyboard(drv)
     floor_label = LOCALES["en"].tab_labels["Floor"]
     if not shell_is_up(drv, floor_label):
         print(

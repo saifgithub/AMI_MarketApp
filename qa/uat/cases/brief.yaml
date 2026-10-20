@@ -197,3 +197,16 @@ cases:
     expected:
       - start is 201, history is 200, accept returns ok false and reject returns ok false (no 500s)
     notes: Currently fails on Alpha (FINDING) - the shim awaits sync handlers, so these return 500; marked xfail(strict) until fixed. Old +17 builds still call these routes.
+
+  - id: UAT-BRIEF-016
+    title: An unlocked agent's Brief screen opens and its version history shows the edit limit, without starting a turn
+    layer: device
+    plans: [floor_pass]
+    preconditions:
+      - 'At least one agent unlocked (five gateway lessons passed); the test earns the Fundamentals Analyst through Lessons if none is'
+    steps:
+      - 'Floor > YOUR FIRM > tap an unlocked agent > BRIEF'
+      - 'Open the version history'
+    expected:
+      - 'The Brief screen opens for that agent'
+      - 'The history header reads "N edits made - M remaining" (the Floor Pass cap) or unlimited, with no chat turn started'

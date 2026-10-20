@@ -168,3 +168,14 @@ cases:
       - Floor Pass shows the banner and approved placements only
       - Trader, Trial Trader and Floor Manager never show an ad
       - After the upgrade the ad is gone in the same session
+
+  - id: UAT-BILL-012
+    title: The upgrade sheet shows the plans, or the documented no-offering fallback with Restore purchases
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'From the Floor Pass ad banner tap "See Trader plans" (no purchase)'
+    expected:
+      - 'The "Upgrade your desk" sheet opens'
+      - 'It shows plan prices, or the fallback card ("Upgrades aren''t available yet") together with a Restore purchases button - never an empty sheet'
+    notes: Entered from the ad banner rather than Settings > Membership because on iOS the Settings pane below PROFILE darkens the accessibility tree (DEF466).

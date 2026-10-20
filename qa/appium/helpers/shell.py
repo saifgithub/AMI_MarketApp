@@ -95,6 +95,35 @@ def relaunch_if_dark(driver, app_id: str | None, *, why: str) -> bool:
     return True
 
 
+def _ios_dismiss_top(driver) -> None:
+    """`driver.back()` is a silent no-op on iOS for Flutter sheets and routes, so a
+    journey that died holding a trade ticket, a dialog or a pushed page left the
+    bottom nav covered for every test after it. Press the controls that close them:
+    the trade ticket's Cancel, a page's back chevron, a sheet's scrim."""
+    from config.semantics_ids import NAV_BACK, TRADE_TICKET_CANCEL
+    from helpers.locators import _all_by_text, all_by_id
+
+    for ident in (TRADE_TICKET_CANCEL, NAV_BACK):
+        found = all_by_id(driver, ident, retry=False)
+        if found:
+            try:
+                found[0].click()
+                return
+            except Exception:
+                pass
+    for label in ("Scrim", "Dismiss", "CANCEL"):
+        try:
+            found = _all_by_text(driver, label, retry=False)
+        except Exception:
+            found = []
+        if found:
+            try:
+                found[0].click()
+                return
+            except Exception:
+                pass
+
+
 def recover_to_shell(driver, floor_label: str, *, quiet: bool = False) -> bool:
     """Dismiss whatever is covering the shell. True if it worked.
 
@@ -105,6 +134,8 @@ def recover_to_shell(driver, floor_label: str, *, quiet: bool = False) -> bool:
     """
     for attempt in range(MAX_BACK_OUTS):
         driver.back()
+        if is_ios(driver):
+            _ios_dismiss_top(driver)
         time.sleep(1.0)
         if shell_is_up(driver, floor_label):
             if not quiet:

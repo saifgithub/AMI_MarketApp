@@ -213,3 +213,18 @@ cases:
     expected:
       - A wall (not a crash or an empty console) with the credit price and, under Winzip, a live countdown to the next free Room
       - No verdict card appears and nothing is added to the Journal
+
+  - id: UAT-ROOM-016
+    title: Convening the Room on AAPL streams to a CIO verdict card with a decision
+    layer: device
+    llm: true
+    plans: [floor_pass]
+    preconditions:
+      - 'The account has Room credits (the Convene sheet shows the price and the balance)'
+    steps:
+      - 'On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL; tap CONVENE'
+      - 'Wait for the run to finish (up to ten minutes)'
+    expected:
+      - 'The Convene sheet states the Room price and the user''s credits before anything is charged'
+      - 'The Room opens on AAPL and streams desk by desk'
+      - 'The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card'

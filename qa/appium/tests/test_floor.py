@@ -47,3 +47,100 @@ def test_floor_renders_convene_cta(driver, run_dir):
     signals = probe_content(driver, "floor", exact=(caption,), contains=("Daily",))
     assert signals[caption], "Floor should always show the persistent Concierge access point"
     snap(driver, run_dir, "floor", "default")
+
+
+# --------------------------------------------------------------------------
+# CR263 journeys
+# --------------------------------------------------------------------------
+
+import time  # noqa: E402
+
+from helpers.journeys import (  # noqa: E402
+    close_sheet,
+    go_back,
+    scroll_up,
+    scroll_until_text,
+    tap_contains,
+    tap_text,
+    wait_any_text,
+)
+from helpers.locators import (  # noqa: E402
+    _all_by_text,
+    _all_by_text_contains,
+    exists_id,
+    exists_text,
+    exists_text_contains,
+    wait_visible_text_contains,
+)
+from config.semantics_ids import NAV_IDS  # noqa: E402
+
+# the firm wall shows each trading agent under its CR160 title
+_FIRM_TITLES = (
+    "Chief Investment Officer",
+    "Risk Officer — Balanced",
+    "Execution Desk",
+    "Technical Strategist",
+    "Flow & Positioning",
+    "Macro & Events",
+    "Fundamentals Analyst",
+)
+_TILES = ("FUND", "TECH", "MACRO", "FLOW", "BULL", "BEAR", "RES-M", "AGG", "CON", "BAL", "EXEC")
+
+
+from helpers.firm_steps import open_your_firm  # noqa: E402
+
+
+@pytest.mark.uat("UAT-FLOOR-007")
+def test_your_firm_lists_twelve_agents_and_a_locked_one_opens_its_unlock_sheet(driver, run_dir):
+    open_your_firm(driver)
+    snap(driver, run_dir, "your_firm", "wall")
+    wait_visible_text_contains(driver, "seats filled", timeout_s=5)
+    missing = [t for t in _FIRM_TITLES if not exists_text(driver, t)]
+    assert not missing, f"the firm wall is missing agents: {missing}"
+
+    # open locked agents until one shows the unlock sheet (an agent a previous run
+    # unlocked opens the 1-ON-1 / BRIEF chooser instead, which is not what is under test)
+    opened = None
+    for tile in _TILES:
+        if not exists_text(driver, tile, retry=False):
+            continue
+        tap_text(driver, tile)
+        seen = wait_any_text(driver, ["HOW TO UNLOCK", "1-ON-1"], timeout_s=8, contains=True)
+        if seen == "HOW TO UNLOCK":
+            opened = tile
+            break
+        close_sheet(driver)
+        time.sleep(0.5)
+    assert opened, "every agent is unlocked on this account - there is no locked agent to open"
+    snap(driver, run_dir, "your_firm", "locked_sheet")
+    wait_visible_text_contains(driver, "gateway lessons passed", timeout_s=5)
+    wait_visible_text(driver, "GO TO LESSONS", timeout_s=5)
+    assert exists_text_contains(driver, "Pass these", retry=False), "the sheet must list the gateway lessons to pass"
+    close_sheet(driver)
+    wait_visible_text_contains(driver, "unlocked. Tap a locked hex", timeout_s=5)
+    go_back(driver)
+
+
+@pytest.mark.uat("UAT-FLOOR-008")
+def test_inbox_bell_opens_inbox_with_the_bottom_bar_still_visible(driver, run_dir):
+    open_tab(driver, "Floor")
+    wait_visible_text(driver, "CONVENE THE ROOM", timeout_s=15)
+    scroll_up(driver, times=2)
+    bell = None
+    deadline = time.monotonic() + 15
+    while bell is None and time.monotonic() < deadline:
+        found = _all_by_text(driver, "Messages", retry=False) or _all_by_text_contains(
+            driver, "unread message", retry=False
+        )
+        bell = found[0] if found else None
+        if bell is None:
+            time.sleep(0.5)
+    assert bell is not None, "the Floor header has no inbox bell (labelled 'Messages' / 'N unread messages')"
+    bell.click()
+    wait_visible_text(driver, "MESSAGES", timeout_s=15)
+    snap(driver, run_dir, "inbox", "opened")
+    # DEF457: the inbox lives inside the tab navigator, so the bar is still there
+    for tab in ("Floor", "Portfolio", "Lessons", "You"):
+        assert exists_id(driver, NAV_IDS[tab], retry=False), f"bottom-bar tab {tab} is hidden behind the inbox (DEF457)"
+    go_back(driver)
+    wait_visible_text(driver, "CONVENE THE ROOM", timeout_s=10)

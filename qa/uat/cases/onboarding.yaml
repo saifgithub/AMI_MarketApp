@@ -217,3 +217,19 @@ cases:
     expected:
       - 'Cancel changes nothing; confirm runs the interview again'
       - 'After the new readback is confirmed Settings shows the new mandate values and version'
+
+  - id: UAT-ONB-043
+    title: A fresh install walks the Concierge interview to a mandate readback and lands on the Floor
+    layer: device
+    plans: [anon]
+    preconditions:
+      - 'App deleted and reinstalled so the device holds no session'
+    steps:
+      - 'Launch; the Concierge interview opens with answer chips'
+      - 'Answer every question by tapping chips until the mandate readback appears'
+      - 'Confirm the readback ("LOOKS RIGHT"), then skip the claim prompt'
+    expected:
+      - 'The interview shows answer chips (not an empty or error screen)'
+      - 'A readback with a LOOKS RIGHT confirmation is shown before the app hands over'
+      - 'The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU'
+      - 'Settings > MY MANDATE then shows the interview''s mandate, not a blank one'
