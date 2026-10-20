@@ -1,0 +1,23 @@
+screen: "ami.screen.portfolio_health_finding"
+source: "mobile/lib/screens/sim/portfolio_health_finding_screen.dart"
+controls:
+  - label: "Back"
+    kind: icon
+    expect: back
+    state: "Returns to the Portfolio screen (Positions tab); the health card refreshes its gate numbers"
+    line: 40
+    note: "Default AppBar back arrow, no custom handler"
+  - label: "SEE PLANS"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    line: 117
+    when: "server refused with portfolio_health_gate_closed (no trial left, no subscription)"
+    note: "Opens the upgrade paywall; on purchase the Finding request is re-run"
+  - label: "AMI's engine did not respond. Tap to retry."
+    kind: button
+    expect: state
+    state: "Panel is replaced by the loading pulse while the Finding is requested again"
+    line: 144
+    when: "generic error (any detail.code other than gate_closed / daily_cap_reached / unavailable)"
+    note: "Whole panel is the tap target. Re-requesting a Finding may spend one Finding of budget."

@@ -1,0 +1,10 @@
+screen: "ami.screen.short_positions_section"
+source: "mobile/lib/widgets/sim/short_positions_section.dart"
+controls:
+  - label: "COVER"
+    kind: button
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 225
+    when: "user has an open short"
+    note: "repeated per open short. Opens the ticket with the ticker filled, side fixed to BUY and quantity fixed to the whole short; the trade is not placed until SUBMIT TRADE there. Recently-closed short cards have no controls."

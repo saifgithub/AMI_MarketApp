@@ -1,0 +1,10 @@
+screen: "ami.screen.resting_orders_section"
+source: "mobile/lib/widgets/sim/resting_orders_section.dart"
+controls:
+  - label: "CANCEL ORDER"
+    kind: button
+    expect: dialog
+    target: "ami.screen.resting_orders_section.cancel_dialog"
+    line: 280
+    when: "order is still working (limit/stop order waiting; not filled, cancelled or expired)"
+    note: "repeated per resting order on the Portfolio Orders tab. Opens a confirm dialog; nothing is cancelled yet."

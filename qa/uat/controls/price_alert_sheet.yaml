@@ -1,0 +1,35 @@
+screen: "ami.screen.price_alert_sheet"
+source: "mobile/lib/screens/sim/price_alert_sheet.dart"
+controls:
+  - label: "Stop — price falls below (protective)"
+    kind: toggle
+    expect: state
+    state: "Radio selected: alert will fire when price falls below the typed price (stop)"
+    line: 89
+  - label: "Target — price rises above (profit-taking)"
+    kind: toggle
+    expect: state
+    state: "Radio selected: alert will fire when price rises above the typed price (target)"
+    line: 89
+  - label: "Price rises above"
+    kind: toggle
+    expect: state
+    state: "Radio selected: manual alert, fires when price rises above the typed price"
+    line: 89
+  - label: "Price falls below"
+    kind: toggle
+    expect: state
+    state: "Radio selected: manual alert, fires when price falls below the typed price"
+    line: 89
+  - label: "Price"
+    kind: field
+    expect: state
+    state: "Accepts a decimal price (max 2 dp, prefixed $); enables Create alert once the value is greater than zero"
+    line: 106
+  - label: "Create alert"
+    kind: button
+    expect: destructive
+    state: "Sheet closes on success; an error line shows under the field on failure"
+    line: 124
+    when: "price field holds a number greater than zero and no request is in flight (otherwise disabled)"
+    note: "Creates a server-side price alert for the ticker; it then lists on the ticker detail screen. Reversible via that row's X, so low risk, but it is a server write."

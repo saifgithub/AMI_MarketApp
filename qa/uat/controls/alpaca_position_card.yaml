@@ -1,0 +1,16 @@
+screen: "ami.screen.alpaca_position_card"
+source: "mobile/lib/widgets/alpaca/alpaca_position_card.dart"
+controls:
+  - label: "<Alpaca position row>"
+    kind: list_row
+    expect: state
+    state: "Row expands in place to show market value and unrealised P&L"
+    line: 66
+    note: "repeated. Shell is PositionCard (see position_card.yaml)."
+  - label: "PER-LOT DETAIL"
+    kind: button
+    expect: navigate
+    target: "ami.screen.ticker_detail"
+    line: 96
+    when: "Alpaca position row expanded"
+    note: "Pushes the AMI ticker detail screen. That screen's LOTS section reads AMI's own ledger, so an Alpaca-only holding shows no lots (see findings)."

@@ -1,0 +1,164 @@
+screen: "ami.screen.trade_ticket_sheet"
+source: "mobile/lib/screens/sim/trade_ticket_sheet.dart"
+controls:
+  - label: "CANCEL"
+    id: "ami.trade_ticket.cancel"
+    kind: button
+    expect: back
+    state: "Ticket closes with nothing submitted"
+    line: 1509
+  - label: "Close (X) on NO AI VERDICT banner"
+    kind: icon
+    expect: state
+    state: "The no-verdict banner disappears"
+    line: 1557
+    when: "ticket opened without a Room verdict and the banner has not been dismissed"
+  - label: "Convene the Room"
+    kind: button
+    expect: navigate
+    target: "ami.screen.room"
+    line: 1587
+    when: "no-verdict banner visible"
+    note: "Closes the ticket and opens the Room for the typed ticker (after validating the ticker). With an empty ticker it closes the ticket and opens the Convene sheet (ami.screen.convene_sheet) instead. Convening spends credits."
+  - label: "Proceed without"
+    kind: button
+    expect: state
+    state: "No-verdict banner disappears; the ticket stays open and the resulting trade is marked as made without advice"
+    line: 1598
+    when: "no-verdict banner visible"
+  - label: "GOT IT"
+    kind: button
+    expect: back
+    state: "Ticket closes and the trade-confirmation snackbar shows"
+    line: 1653
+    when: "the submitted trade carried a notice (e.g. short borrow-cost advisory); the ticket stays open to show it"
+    note: "The trade has already executed; this only acknowledges the notice. While it is showing, SUBMIT is disabled."
+  - label: "OPEN MY MANDATE"
+    kind: button
+    expect: navigate
+    target: "ami.screen.settings"
+    line: 1760
+    when: "the trade was blocked by the mandate safety floor (red 'blocked' panel)"
+    note: "Supposed to take the user to their mandate. Code pushes the Settings root, one more tap from the mandate (see findings)."
+  - label: "TICKER"
+    kind: field
+    expect: state
+    state: "Typed symbol is upper-cased and validated live; a live price chip (LIVE or MOCK) appears for a valid ticker, an amber not-found panel for an unknown one"
+    line: 1780
+  - label: "Use suggested ticker"
+    kind: button
+    expect: state
+    state: "Ticker field is replaced with the suggested symbol"
+    line: 1893
+    when: "typed ticker not found and a suggestion exists"
+    note: "Button text and implementation live in widgets/ticker_not_found_panel.dart"
+  - label: "BUY"
+    kind: toggle
+    expect: state
+    state: "Side set to BUY (green); bracket stop/target re-anchored for a buy; submit button reads SUBMIT TRADE"
+    line: 1790
+    when: "not a cover ticket"
+  - label: "SELL"
+    kind: toggle
+    expect: state
+    state: "Side set to SELL (red); quantity prefilled with the holding; selling more than held from zero opens a short and the button reads OPEN SHORT"
+    line: 1790
+  - label: "AMI SIM"
+    kind: toggle
+    expect: state
+    state: "Order goes to the AMI simulator only"
+    line: 1806
+    when: "an Alpaca paper account is linked and this is not a sell/cover ticket"
+  - label: "ALPACA PAPER"
+    kind: toggle
+    expect: state
+    state: "Order goes to the linked Alpaca paper account only"
+    line: 1806
+    when: "an Alpaca paper account is linked and this is not a sell/cover ticket"
+  - label: "BOTH"
+    kind: toggle
+    expect: state
+    state: "Order goes to both AMI SIM and Alpaca paper; per-destination results show in the ticket"
+    line: 1806
+    when: "an Alpaca paper account is linked and this is not a sell/cover ticket"
+  - label: "QUANTITY"
+    kind: field
+    expect: state
+    state: "Accepts digits and a decimal point; drives the live order-intent hint and refusal checks"
+    line: 1915
+  - label: "MARKET"
+    kind: toggle
+    expect: state
+    state: "Order type set to market (fills now); trigger/limit/good-for fields hide"
+    line: 1934
+    when: "backend supports resting orders"
+  - label: "LIMIT"
+    kind: toggle
+    expect: state
+    state: "Order type set to limit; LIMIT PRICE and GOOD FOR fields appear"
+    line: 1934
+    when: "backend supports resting orders"
+  - label: "STOP"
+    kind: toggle
+    expect: state
+    state: "Order type set to stop; TRIGGER PRICE and GOOD FOR fields appear"
+    line: 1934
+    when: "backend supports resting orders"
+  - label: "STOP LIMIT"
+    kind: toggle
+    expect: state
+    state: "Order type set to stop limit; TRIGGER PRICE, LIMIT PRICE and GOOD FOR fields appear"
+    line: 1934
+    when: "backend supports resting orders"
+  - label: "TRIGGER PRICE"
+    kind: field
+    expect: state
+    state: "Numeric entry; updates the order-intent hint"
+    line: 1949
+    when: "order type is stop or stop limit"
+  - label: "LIMIT PRICE"
+    kind: field
+    expect: state
+    state: "Numeric entry; updates the order-intent hint"
+    line: 1961
+    when: "order type is limit or stop limit"
+  - label: "TODAY"
+    kind: toggle
+    expect: state
+    state: "Resting order lasts until the end of today"
+    line: 1972
+    when: "order type can rest (not market)"
+  - label: "30 DAYS"
+    kind: toggle
+    expect: state
+    state: "Resting order lasts 30 days"
+    line: 1972
+    when: "order type can rest (not market)"
+  - label: "90 DAYS"
+    kind: toggle
+    expect: state
+    state: "Resting order lasts 90 days"
+    line: 1972
+    when: "order type can rest (not market)"
+  - label: "STOP (bracket)"
+    kind: field
+    expect: state
+    state: "Optional protective stop price attached to the trade"
+    line: 1999
+  - label: "TARGET (bracket)"
+    kind: field
+    expect: state
+    state: "Optional profit target price attached to the trade"
+    line: 2011
+  - label: "HORIZON (DAYS)"
+    kind: field
+    expect: state
+    state: "Optional holding horizon in days attached to the trade"
+    line: 2024
+  - label: "SUBMIT TRADE"
+    kind: button
+    expect: destructive
+    state: "Ticker is validated, then the order is sent; on success the ticket closes and a green confirmation snackbar names the fill (or the resting order); on a mandate refusal the ticket stays open with the blocked panel"
+    line: 2134
+    when: "valid ticker and quantity, not submitting, no local refusal, no pending notice"
+    note: "Places a simulated order (AMI SIM), a paper order at Alpaca (ALPACA PAPER) or both. Label reads OPEN SHORT when the sell would open a short, and SUBMITTING... while in flight."

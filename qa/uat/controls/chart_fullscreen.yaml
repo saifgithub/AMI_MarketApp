@@ -1,0 +1,10 @@
+screen: "ami.screen.chart_fullscreen"
+source: "mobile/lib/screens/sim/chart_fullscreen_screen.dart"
+controls:
+  - label: "Close fullscreen chart"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    state: "Pops the landscape chart page; app re-locks to portrait and the ticker detail screen shows again"
+    line: 83
+    note: "Back chevron (label is its tooltip). Also fires implicitly when the device is rotated back to portrait. Period chips inside TickerChart (widgets/ticker_chart.dart) belong to that widget's owner."

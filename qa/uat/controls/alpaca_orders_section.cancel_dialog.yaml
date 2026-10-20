@@ -1,0 +1,14 @@
+screen: "ami.screen.alpaca_orders_section.cancel_dialog"
+source: "mobile/lib/widgets/sim/alpaca_orders_section.dart"
+controls:
+  - label: "KEEP ORDER"
+    kind: button
+    expect: back
+    state: "Dialog closes; the order stays open"
+    line: 226
+  - label: "CANCEL ORDER"
+    kind: button
+    expect: destructive
+    state: "Dialog closes; the order is cancelled at Alpaca paper; lists refresh; snackbar 'cancelled' (amber snackbar with the reason if Alpaca refused or the order had already filled)"
+    line: 232
+    note: "Sends a cancel to the linked Alpaca PAPER account and logs the outcome to AMI. Paper only; a non-paper credential is refused client-side with an amber snackbar."

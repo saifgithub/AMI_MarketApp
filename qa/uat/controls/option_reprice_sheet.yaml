@@ -1,0 +1,22 @@
+screen: "ami.screen.option_reprice_sheet"
+source: "mobile/lib/widgets/sim/option_reprice_sheet.dart"
+controls:
+  - label: "OPEN AT THIS PRICE"
+    kind: button
+    expect: destructive
+    state: "Sheet closes; the structure is opened in the sim portfolio and the Room button becomes a green 'opened' confirmation"
+    line: 151
+    when: "re-price succeeded and passed compliance"
+    note: "This is the money-moving confirm for an option structure (sim only): opens the multi-leg option position and debits/credits the sim cash."
+  - label: "DON'T OPEN"
+    kind: button
+    expect: back
+    state: "Sheet closes; nothing is opened"
+    line: 158
+    when: "re-price succeeded"
+  - label: "DON'T OPEN (failed state)"
+    kind: button
+    expect: back
+    state: "Sheet closes; nothing is opened"
+    line: 176
+    when: "re-price failed or compliance refused (no confirm button is shown in this state)"

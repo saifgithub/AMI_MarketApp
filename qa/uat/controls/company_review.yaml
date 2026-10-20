@@ -1,0 +1,109 @@
+screen: "ami.screen.company_review"
+source: "mobile/lib/screens/sim/company_review_screen.dart"
+controls:
+  - label: "Back"
+    kind: icon
+    expect: back
+    state: "Returns to the ticker detail screen"
+    line: 93
+    note: "Default AppBar back arrow"
+  - label: "Retry"
+    kind: button
+    expect: state
+    state: "Spinner shows while the company profile reloads, then the tabs or the error again"
+    line: 151
+    when: "whole-screen load failed"
+  - label: "OVERVIEW"
+    kind: tab
+    expect: state
+    state: "Overview tab: business description, classification, most recent filing"
+    line: 192
+  - label: "FINANCIALS"
+    kind: tab
+    expect: state
+    state: "Financials tab shown"
+    line: 193
+  - label: "FILINGS"
+    kind: tab
+    expect: state
+    state: "Filings tab shown with the list of SEC filings"
+    line: 194
+  - label: "OWNERSHIP"
+    kind: tab
+    expect: state
+    state: "Ownership tab shown"
+    line: 195
+  - label: "INSIDER"
+    kind: tab
+    expect: state
+    state: "Insider tab shown (loads Form 4 activity)"
+    line: 196
+  - label: "EVENTS"
+    kind: tab
+    expect: state
+    state: "Events tab shown (earnings date, 8-K filings)"
+    line: 197
+    note: "Tab bar scrolls horizontally; swiping the tab content also switches tabs"
+  - label: "View full detail (Business description)"
+    kind: link
+    expect: sheet
+    target: "ami.screen.company_review.detail_sheet"
+    line: 506
+    when: "Overview tab and a business description exists"
+    note: "Sheet shows the full description text"
+  - label: "Address & contacts"
+    kind: link
+    expect: sheet
+    target: "ami.screen.company_review.detail_sheet"
+    line: 532
+    when: "Overview tab, Classification card"
+    note: "Sheet shows exchange, website, phone and address"
+  - label: "See all <n> on Filings tab"
+    kind: link
+    expect: state
+    state: "Switches to the FILINGS tab"
+    line: 563
+    when: "Overview tab and at least one filing exists"
+  - label: "View full detail / Show less (Financials)"
+    kind: link
+    expect: state
+    state: "Financials card expands to all fields (margins, forward PE, EPS, debt/equity, FCF, dividend yield); label flips to Show less; tapping again collapses"
+    line: 720
+    when: "Financials tab and financials available"
+  - label: "See all reported holders"
+    kind: link
+    expect: sheet
+    target: "ami.screen.company_review.detail_sheet"
+    line: 920
+    when: "Ownership tab and holders exist"
+    note: "Sheet lists every reported major holder"
+  - label: "Full transaction list / Show less (Insider)"
+    kind: link
+    expect: state
+    state: "Recent Form 4s card expands from 5 to the full list; label flips to Show less"
+    line: 1159
+    when: "Insider tab and more than 5 transactions"
+  - label: "View full detail / Show less (8-K filings)"
+    kind: link
+    expect: state
+    state: "8-K list expands from 3 to the full list; label flips to Show less"
+    line: 1441
+    when: "Events tab and more than 3 8-K filings"
+  - label: "Retry (Insider)"
+    kind: button
+    expect: state
+    state: "Insider activity reloads (spinner caption, then data or the same failure)"
+    line: 1078
+    when: "Insider tab load failed"
+  - label: "<filing row>"
+    kind: list_row
+    expect: external
+    line: 805
+    when: "filing has a URL (Overview most-recent filing, Filings tab, Events 8-Ks)"
+    note: "repeated. Opens the SEC document in the external browser; if it cannot open, a snackbar says so."
+  - label: "<Form 4 row>"
+    kind: list_row
+    expect: external
+    line: 1254
+    when: "transaction has a URL"
+    note: "repeated. Opens the Form 4 on SEC EDGAR in the external browser; snackbar if it cannot open."
