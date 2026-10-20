@@ -31,6 +31,10 @@ import 'package:uuid/uuid.dart';
 /// BL1 (AT:R33): device + build context shipped to /v1/auth/anon. All three
 /// values are best-effort — a read failure on any of them yields null,
 /// never blocks the bootstrap call.
+const _qaFlag = String.fromEnvironment('AMI_QA_SEMANTICS');
+const _qaBuild =
+    _qaFlag == '1' || _qaFlag == 'true' || _qaFlag == 'yes' || _qaFlag == 'on';
+
 class DeviceContext {
   const DeviceContext({
     this.deviceModel,
@@ -69,6 +73,11 @@ class DeviceContext {
     } catch (_) {
       // device_info_plus can fail on simulators / unusual configs — fine.
     }
+    // CR264: a QA build (the Simulator harness build) tags its own anonymous
+    // user, so the crawler's destructive presses land on a user the
+    // real-user reports exclude. The Simulator reports the same model as a
+    // real iPhone (iPhone18,1), so nothing else can tell them apart.
+    if (_qaBuild) deviceModel = 'ami-uat-qa ${deviceModel ?? ''}'.trim();
     try {
       final p = await PackageInfo.fromPlatform();
       appVersion = '${p.version}+${p.buildNumber}'; // e.g. "0.1.0+26"
