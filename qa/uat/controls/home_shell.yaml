@@ -1,0 +1,45 @@
+screen: "ami.screen.home_shell"
+source: "mobile/lib/screens/home_shell.dart"
+controls:
+  - label: "FLOOR"
+    id: "ami.nav.floor"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.floor"
+    state: "FLOOR tab becomes active (hex highlight); tapping it again while active pops that tab's stack back to its root"
+    line: 290
+    note: "shared -- bottom nav appears on every screen in the shell (HexBottomNav, see hex_bottom_nav.yaml). Each tab keeps its own history; switching tabs does not reset the other."
+  - label: "PORTFOLIO"
+    id: "ami.nav.portfolio"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.portfolio"
+    line: 290
+    note: "same re-tap-to-root behaviour"
+  - label: "GAME"
+    id: "ami.nav.game"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.games_home"
+    when: "only when the AMI_GAMES compile-time gate is on (kGamesEnabled); absent from store builds"
+    line: 290
+  - label: "LESSONS"
+    id: "ami.nav.lessons"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.lessons"
+    line: 290
+    note: "same re-tap-to-root behaviour"
+  - label: "YOU"
+    id: "ami.nav.you"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.you"
+    line: 290
+    note: "same re-tap-to-root behaviour"
+  - label: "Android system back"
+    kind: icon
+    expect: back
+    state: "Pops the active tab's stack first; at the tab root the OS handles it (Android minimizes the app)"
+    line: 241
+    note: "PopScope, not a visible control; included for the Android rig."

@@ -1,0 +1,14 @@
+screen: "ami.screen.team_calls"
+source: "mobile/lib/screens/floor/team_calls_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 41
+    note: "shared AmiScreenHeader back arrow; see ami_screen_header.yaml"
+  - label: "<team call row: TICKER ACTION delta date>"
+    kind: list_row
+    expect: none
+    line: 68
+    note: "repeated. Rows are read-only by design (no onTap passed); see floor_cards.yaml."

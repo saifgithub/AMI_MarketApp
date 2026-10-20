@@ -1,0 +1,9 @@
+screen: "ami.screen.notification_bell"
+source: "mobile/lib/screens/notifications/notification_bell.dart"
+controls:
+  - label: "Notifications bell (notifications_outlined icon, cyan unread badge)"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.notification_centre"
+    line: 39
+    note: "Semantics label 'Notifications' / 'N unread notifications'. Currently placed only in the YOU screen header (you_screen.dart:205). The Floor header has a visually identical bell that opens the MESSAGES inbox instead -- see findings."

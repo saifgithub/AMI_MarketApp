@@ -1,0 +1,27 @@
+screen: "ami.screen.room_view_mode_toggle"
+source: "mobile/lib/widgets/room/room_view_mode_toggle.dart"
+controls:
+  - label: "BOARD"
+    kind: toggle
+    expect: state
+    state: "Settled Room shows the Board (hero, consensus comb, trade geometry); the choice is remembered"
+    when: "Room settled (finished)"
+    line: 133
+  - label: "TRANSCRIPT"
+    kind: toggle
+    expect: state
+    state: "Settled Room shows each agent's full words as expandable rows plus the verdict card; the choice is remembered"
+    when: "Room settled"
+    line: 141
+  - label: "BRIEFING"
+    kind: toggle
+    expect: state
+    state: "Live Room shows the four-stage briefing (progress bar + expandable stage rows)"
+    when: "Room still running"
+    line: 133
+  - label: "WATCH THE FLOOR"
+    kind: toggle
+    expect: state
+    state: "Live Room shows the live roster of agents with their status"
+    when: "Room still running"
+    line: 141

@@ -1,0 +1,21 @@
+screen: "ami.screen.notification_preferences"
+source: "mobile/lib/screens/notifications/notification_preferences_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 87
+    note: "shared AmiScreenHeader back arrow"
+  - label: "<push type switch: Price alerts / Daily reminders / Game — entries closing / Game — final stretch / Game — results / Game — rank moves / Order filled / Order triggered / Order rejected / Policy updates>"
+    kind: toggle
+    expect: state
+    state: "Switch flips on/off and the preference is saved server-side; whether that push type reaches the lock screen changes. Snackbar with the error and the switch reverts on failure"
+    line: 109
+    note: "repeated (one per type). Pushes only -- the notification centre still receives everything."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Re-loads the preferences"
+    when: "load failed ('Couldn't load your notification settings.')"
+    line: 181

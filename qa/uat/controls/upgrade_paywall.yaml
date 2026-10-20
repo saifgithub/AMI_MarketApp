@@ -1,0 +1,31 @@
+screen: "ami.screen.upgrade_paywall"
+source: "mobile/lib/widgets/paywall/upgrade_paywall.dart"
+controls:
+  - label: "BUY (Trader — Monthly)"
+    kind: button
+    expect: destructive
+    state: "Native store purchase sheet; on success snackbar 'You're upgraded. Welcome to the desk.' and the paywall sheet closes; cancel is silent; pending/failed show a snackbar"
+    when: "store offering configured and loaded; disabled while a purchase is in flight"
+    line: 338
+    note: "repeated per package (Trader monthly/annual, Floor Manager monthly/annual). Real money purchase via RevenueCat/store -- the crawler must not complete it."
+  - label: "BUY (Trader — Annual)"
+    kind: button
+    expect: destructive
+    line: 338
+    note: "As above."
+  - label: "BUY (Floor Manager — Monthly / Annual)"
+    kind: button
+    expect: destructive
+    line: 338
+    note: "As above."
+  - label: "BUY (+<N> credits credit pack)"
+    kind: button
+    expect: destructive
+    line: 338
+    note: "repeated per credit pack; as above. Adds Room credits on purchase."
+  - label: "Restore purchases"
+    kind: button
+    expect: state
+    state: "Asks the store to restore; success -> snackbar 'You're upgraded…' and sheet closes; none found -> snackbar 'No purchases found to restore.'"
+    line: 91
+    note: "Always shown (App Store requirement), disabled while busy. Not destructive: restores prior entitlements."

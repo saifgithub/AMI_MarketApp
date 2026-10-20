@@ -1,0 +1,21 @@
+screen: "ami.screen.house_ad_interstitial"
+source: "mobile/lib/widgets/ads/house_ad_interstitial.dart"
+controls:
+  - label: "See Trader plans / See Floor Manager plans"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "free plan; full-screen house ad shown after a lesson completes"
+    line: 117
+  - label: "Skip in <N>s"
+    kind: button
+    expect: none
+    when: "countdown still running (button disabled; system back is also blocked)"
+    line: 125
+    note: "Disabled by design until the countdown ends."
+  - label: "Skip"
+    kind: button
+    expect: back
+    state: "Interstitial closes and the user returns to the lesson screen they were on"
+    when: "countdown finished"
+    line: 125

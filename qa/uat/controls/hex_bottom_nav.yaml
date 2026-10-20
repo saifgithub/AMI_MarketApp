@@ -1,0 +1,11 @@
+screen: "ami.screen.hex_bottom_nav"
+source: "mobile/lib/widgets/hex/hex_bottom_nav.dart"
+controls:
+  - label: "<nav tab cell: FLOOR / PORTFOLIO / GAME / LESSONS / YOU>"
+    id: "ami.nav.<tab>"
+    kind: tab
+    expect: navigate
+    target: "ami.screen.home_shell"
+    state: "Switches the shell to that tab; the tapped cell shows the filled hex highlight"
+    line: 151
+    note: "shared -- appears on every screen using it. The per-tab destinations, ids and re-tap behaviour are in home_shell.yaml. Hidden while the software keyboard is open."

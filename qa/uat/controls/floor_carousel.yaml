@@ -1,0 +1,16 @@
+screen: "ami.screen.floor_carousel"
+source: "mobile/lib/widgets/floor/floor_carousel.dart"
+controls:
+  - label: "<carousel card> (horizontal swipe)"
+    kind: list_row
+    expect: state
+    state: "Swiping pages to the next/previous Floor answer card; the active dot below turns cyan"
+    line: 87
+    note: "No autoplay by design. Dots are not tappable."
+  - label: "<card shell tap>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.team_calls"
+    when: "card has an onTap (calls card, NOT ACTIONED card); portfolio and sector cards have none"
+    line: 146
+    note: "shared -- forwards FloorCard.onTap; per-card targets are in floor.yaml."

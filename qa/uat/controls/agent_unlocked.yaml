@@ -1,0 +1,19 @@
+screen: "ami.screen.agent_unlocked"
+source: "mobile/lib/screens/agent/agent_unlocked_screen.dart"
+controls:
+  - label: "MEET <AGENT NAME>"
+    kind: button
+    expect: navigate
+    target: "ami.screen.one_on_one"
+    line: 101
+    note: "pushReplacement: the unlock celebration is replaced by that agent's 1-on-1 chat (back goes to where the user was before)."
+  - label: "Later"
+    kind: button
+    expect: back
+    state: "Celebration screen closes"
+    line: 113
+  - label: "Share"
+    kind: button
+    expect: external
+    state: "System share sheet opens with the unlock card image/text"
+    line: 121

@@ -1,0 +1,101 @@
+screen: "ami.screen.room"
+source: "mobile/lib/screens/room/room_screen.dart"
+controls:
+  - label: "back (arrow_back icon)"
+    kind: icon
+    expect: back
+    line: 323
+    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings). No confirm even while the Room is still deliberating."
+  - label: "CONVENE AGAIN"
+    kind: button
+    expect: destructive
+    state: "The Room restarts: roster skeleton, agents speak again, a fresh verdict arrives"
+    when: "Room finished but ended without a verdict"
+    line: 297
+    note: "Re-runs the Room for the same ticker -- spends Room credits again."
+  - label: "CONVENE NOW"
+    kind: button
+    expect: destructive
+    state: "Cooldown card is replaced by the live Room run"
+    when: "Winzip cooldown finished (card says 'Your Room is ready to convene.')"
+    line: 816
+    note: "Starts a Room run -- spends a Room credit."
+  - label: "Review a Training session while you wait"
+    kind: link
+    expect: navigate
+    target: "ami.screen.lessons"
+    when: "Winzip cooldown card or out-of-credits paywall card shown"
+    line: 827
+    note: "Pushes a LessonsScreen onto the Floor tab's navigator (nav bar stays on its current tab) rather than switching to the LESSONS tab. Same label, second site at line 881 (paywall variant)."
+  - label: "<UpgradePaywall inside 'Out of Room credits' card>"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "hard monthly Room credit wall"
+    line: 870
+    note: "Embedded inline (not a sheet): plan BUY buttons and Restore purchases are documented in upgrade_paywall.yaml. A completed purchase auto re-convenes the Room."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: destructive
+    state: "Room run restarts from scratch"
+    when: "server error card ('Couldn't ...') shown"
+    line: 966
+    note: "Re-runs the Room; credit handling is the server's (a failed run should not charge)."
+  - label: "UPGRADE FOR LIVE DATA"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "live-data notice says a feed is withheld because it needs credits"
+    line: 1071
+  - label: "UPGRADE YOUR PLAN"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "live-data notice says an analyst is withheld on account tenure"
+    line: 1095
+  - label: "Share (ios_share icon)"
+    kind: icon
+    expect: external
+    state: "System share sheet with the verdict card"
+    when: "verdict card shown (transcript view)"
+    line: 1278
+  - label: "Include the <analyst> →"
+    kind: button
+    expect: sheet
+    target: "ami.screen.upgrade_paywall"
+    when: "verdict is NO_VERDICT because a paid analyst was withheld"
+    line: 1390
+    note: "Second site in the board footer at line 1676. App chrome, not the CIO's voice."
+  - label: "OPEN TRADE TICKET"
+    kind: button
+    expect: sheet
+    target: "ami.screen.trade_ticket_sheet"
+    when: "verdict is APPROVE, no trade yet placed from this run, and the verdict has no options structure (options structure shows OptionVerdictCta instead)"
+    line: 1458
+    note: "Opens the equity ticket prefilled from the verdict; placing the trade is on that sheet. Second site in the board footer at line 1659."
+  - label: "SEE CHART"
+    kind: button
+    expect: navigate
+    target: "ami.screen.ticker_detail"
+    when: "verdict present"
+    line: 1494
+    note: "Second site in the board footer at line 1695."
+  - label: "ASK THE CIO AGAIN"
+    kind: button
+    expect: state
+    state: "Button shows a spinner and 'Asking the CIO again…'; the CIO's verdict is regenerated from the analysts' saved work"
+    when: "CIO outage PASS (server flag cio_retry_available)"
+    line: 1544
+    note: "Free per its own subtitle ('Free — uses the analysts' existing work')."
+  - label: "Share (board footer)"
+    kind: button
+    expect: external
+    state: "System share sheet with the verdict card"
+    when: "board view, verdict present"
+    line: 1706
+  - label: "CLOSE"
+    kind: button
+    expect: back
+    state: "Room closes; the run is already saved to the Journal"
+    when: "Room finished ('Saved to Journal' footer)"
+    line: 1795

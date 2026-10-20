@@ -1,0 +1,29 @@
+screen: "ami.screen.convene_sheet"
+source: "mobile/lib/screens/room/convene_sheet.dart"
+controls:
+  - label: "e.g. NVDA"
+    kind: field
+    expect: navigate
+    target: "ami.screen.room"
+    state: "Enter submits: ticker is validated first; unknown symbol shows a not-found panel and stays; valid closes the sheet and opens the Room"
+    line: 143
+    note: "Same effect as the CONVENE button. The Room auto-convenes on open and spends a Room credit."
+  - label: "CONVENE"
+    kind: button
+    expect: destructive
+    target: "ami.screen.room"
+    when: "ticker field non-empty and not mid-validation"
+    line: 213
+    note: "Opens the Room which immediately convenes -- spends a Room credit (the credits line in the sheet shows the cost and balance). Sheet closes first. Semantics ids SheetIds.convene / conveneCta are defined but not attached here (see findings)."
+  - label: "<suggested ticker chip: AAPL / MSFT / NVDA / GOOGL / META / TSLA / AMZN>"
+    kind: chip
+    expect: navigate
+    target: "ami.screen.room"
+    line: 189
+    note: "repeated (7 chips). One tap convenes: validates, closes the sheet, opens the Room (spends a Room credit)."
+  - label: "<suggested ticker> (TickerNotFoundPanel)"
+    kind: link
+    expect: state
+    state: "Field text is replaced with the suggestion"
+    when: "typed symbol unknown and a suggestion exists"
+    line: 168

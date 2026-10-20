@@ -1,0 +1,17 @@
+screen: "ami.screen.admob_native_card"
+source: "mobile/lib/widgets/ads/admob_native_card.dart"
+controls:
+  - label: "close (X icon on sponsored AdMob card)"
+    kind: icon
+    expect: state
+    state: "The native ad is disposed and the card disappears from the screen"
+    when: "free plan and AdMob native ad filled the inline slot"
+    line: 64
+    note: "shared -- inline AdSlot placements. The ad body itself is Google's native view: tapping it leaves the app (external) and is not controlled by our code."
+  - label: "<AdMob native ad body>"
+    kind: link
+    expect: external
+    state: "Opens the advertiser's page in the browser / store"
+    when: "AdMob native ad rendered"
+    line: 80
+    note: "SDK-owned touch target (platform view); no handler in our code."

@@ -1,0 +1,30 @@
+screen: "ami.screen.hex_shared_widgets"
+source: "mobile/lib/widgets/hex/hex_button.dart"
+controls:
+  - label: "<HexButton label>"
+    kind: button
+    expect: state
+    state: "Runs the caller's onPressed; dimmed and inert when onPressed is null. Each concrete HexButton is documented in its host screen's file."
+    line: 114
+    note: "shared -- generic primitive, no effect of its own."
+  - label: "<HexAvatar>"
+    kind: icon
+    expect: state
+    state: "Runs the caller's onTap / onLongPress when given (e.g. agent tiles open the agent sheet); inert otherwise. Documented in each host screen."
+    source: "mobile/lib/widgets/hex/hex_avatar.dart"
+    line: 109
+    note: "shared -- generic primitive."
+  - label: "<AccentCard>"
+    kind: list_row
+    expect: state
+    state: "Runs the caller's onTap when given (e.g. daily challenge card opens the challenge); inert otherwise."
+    source: "mobile/lib/widgets/hex/accent_card.dart"
+    line: 66
+    note: "shared -- generic primitive."
+  - label: "<TrackHexButton: track name + progress ring>"
+    kind: button
+    expect: state
+    state: "Runs the caller's onTap (lessons landing opens that track); documented in the lessons screen file."
+    source: "mobile/lib/widgets/hex/track_hex_button.dart"
+    line: 33
+    note: "shared -- generic primitive."

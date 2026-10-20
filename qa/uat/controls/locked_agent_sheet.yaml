@@ -1,0 +1,22 @@
+screen: "ami.screen.locked_agent_sheet"
+source: "mobile/lib/screens/floor/your_firm_screen.dart"
+controls:
+  - label: "<gateway lesson row: CODE + title>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.lesson_reader"
+    line: 164
+    note: "repeated. Closes the sheet, then opens that lesson's reader."
+  - label: "GO TO LESSONS"
+    kind: button
+    expect: navigate
+    target: "ami.screen.lessons"
+    line: 208
+    note: "Closes the sheet and pushes a LessonsScreen onto the Floor tab's navigator rather than switching to the LESSONS tab (nav bar stays on FLOOR) -- see findings."
+  - label: "<N> / <M> gateway lessons passed"
+    kind: button
+    expect: navigate
+    target: "ami.screen.lesson_reader"
+    when: "agent has gateway lessons"
+    line: 239
+    note: "Closes the sheet, opens the next unfinished gateway lesson."

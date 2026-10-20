@@ -1,0 +1,42 @@
+screen: "ami.screen.notification_centre"
+source: "mobile/lib/screens/notifications/notification_centre_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 58
+    note: "shared AmiScreenHeader back arrow"
+  - label: "READ ALL"
+    kind: icon
+    expect: state
+    state: "Every notification loses its unread dot; the bell badge clears; the button itself disappears"
+    when: "at least one unread notification (done_all icon, tooltip READ ALL); snackbar on failure"
+    line: 65
+    note: "Marks all notifications read server-side (reversible only by new notifications)."
+  - label: "PUSH SETTINGS"
+    kind: icon
+    expect: navigate
+    target: "ami.screen.notification_preferences"
+    line: 71
+    note: "tune icon, tooltip PUSH SETTINGS"
+  - label: "PUSH NOTIFICATIONS OFF banner"
+    kind: link
+    expect: external
+    state: "Triggers the OS notification permission prompt, or opens OS Settings if permission was already denied; banner disappears once granted"
+    when: "push is configured but OS permission is not granted; otherwise banner absent"
+    line: 264
+  - label: "<notification card: title, body, 'Nm ago'>"
+    kind: list_row
+    expect: navigate
+    target: "ami.screen.<deep link target of the notification>"
+    state: "Marks the notification read (dot clears, badge decrements) then switches to the owning tab and opens the linked screen (price alert -> ticker, order fill -> orders, game -> game, etc.)"
+    when: "at least one notification"
+    line: 169
+    note: "repeated. Destination depends on row.deepLink via DeepLinkDispatcher."
+  - label: "TRY AGAIN"
+    kind: button
+    expect: state
+    state: "Re-fetches notifications"
+    when: "load failed ('Couldn't load your notifications.')"
+    line: 136

@@ -1,0 +1,10 @@
+screen: "ami.screen.room_briefing"
+source: "mobile/lib/widgets/room/room_briefing.dart"
+controls:
+  - label: "<stage row: ANALYST DESK / RESEARCH DEBATE / RISK REVIEW / CIO VERDICT>"
+    kind: list_row
+    expect: state
+    state: "Row expands to show who is on that desk and what they reported; any other expanded row collapses (one open at a time); tap again collapses"
+    when: "Room live in BRIEFING mode, or settled with Board hidden"
+    line: 143
+    note: "repeated (4 rows)."

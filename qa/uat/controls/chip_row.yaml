@@ -1,0 +1,10 @@
+screen: "ami.screen.chip_row"
+source: "mobile/lib/widgets/chat/chip_row.dart"
+controls:
+  - label: "<answer chip>"
+    id: "ami.onboarding.answer_chip"
+    kind: chip
+    expect: state
+    state: "The chip's text is sent as the user's reply in the conversation; AMI answers and the next question/chips appear"
+    line: 58
+    note: "repeated, shared. Used by the onboarding interview and the Concierge chat."

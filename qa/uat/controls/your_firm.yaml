@@ -1,0 +1,23 @@
+screen: "ami.screen.your_firm"
+source: "mobile/lib/screens/floor/your_firm_screen.dart"
+controls:
+  - label: "back (arrow_back_ios_new)"
+    id: "ami.nav.back"
+    kind: icon
+    expect: back
+    line: 51
+    note: "shared AmiScreenHeader back arrow"
+  - label: "<unlocked agent hex + name>"
+    kind: list_row
+    expect: sheet
+    target: "ami.screen.agent_action_sheet"
+    when: "agent unlocked and not the Concierge (the Concierge opens ami.screen.one_on_one directly)"
+    line: 71
+    note: "repeated (12 tiles). openAgent() at line 94."
+  - label: "<locked agent hex + name (lock icon, dimmed)>"
+    kind: list_row
+    expect: sheet
+    target: "ami.screen.locked_agent_sheet"
+    when: "agent locked"
+    line: 71
+    note: "repeated. Opens the 'HOW TO UNLOCK' sheet (showLockedSheet)."
