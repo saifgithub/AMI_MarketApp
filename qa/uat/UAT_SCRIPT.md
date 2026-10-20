@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**236 cases** — 185 api, 1 device, 50 manual; 10 blocked.
+**236 cases** — 185 api, 1 device, 50 manual; 11 blocked.
 
 ## Areas
 
@@ -2759,7 +2759,7 @@ crawl; real-money purchases are never pressed (crawler/never_press.json).
 
 #### UAT-CTRL-001 — Every screen is reached and every control pressed with the expected effect
 
-_Device (automated, Appium) · plans: floor_pass_
+_Device (automated, Appium) · plans: floor_pass · **BLOCKED** — CR264 Phase C — crawler reaches 13 of 57 screens (needs seeded state + route-driving). Parked by Saiful 2026-10-20: runs nightly and reports, not release-blocking until Phase C reaches every screen._
 
 **Steps**
 1. Run the exhaustive crawl on a throwaway UAT user (qa/appium/tests/test_every_control.py)

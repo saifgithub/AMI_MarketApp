@@ -3,9 +3,10 @@
 #
 #   scripts/uat/run_uat.sh --api                     # live-Alpha API cases
 #   scripts/uat/run_uat.sh --device ios              # iOS Simulator (builds + installs the QA app)
-#   scripts/uat/run_uat.sh --all                     # api + ios — the nightly run
+#   scripts/uat/run_uat.sh --all                     # api + ios + android — the nightly run
 #   scripts/uat/run_uat.sh --api --changed-only      # only cases not passing at their current version
-#   flags: --no-llm (skip LLM-spending cases), --no-build (reuse the installed sim app)
+#   flags: --no-llm (skip LLM-spending cases), --no-build (reuse the installed sim app),
+#          --exhaustive (iOS: run only the CR264 every-control crawl)
 #
 # Each run writes qa/uat/_runs/<ts>/{api,ios}/uat_results.json, folds them into
 # .deliveryos/uat_ledger.json (what scripts/uat/uat_gate.py reads), and renders
@@ -22,25 +23,24 @@ HARNESS="${PROJECT_ROOT}/qa/appium"
 PY="${PROJECT_ROOT}/backend/.venv/bin/python"
 HPY="${HARNESS}/.venv/bin/python"
 
-DO_API=0; DEVICE=""; CHANGED=0; NO_LLM=0; BUILD=1
+DO_API=0; DO_IOS=0; DO_ANDROID=0; CHANGED=0; NO_LLM=0; BUILD=1; EXHAUSTIVE=0
 while (( $# )); do
   case "$1" in
     --api) DO_API=1 ;;
-    --device) shift; DEVICE="${1:-}" ;;
-    --all) DO_API=1; DEVICE="ios" ;;
+    --device) shift
+      case "${1:-}" in ios) DO_IOS=1 ;; android) DO_ANDROID=1 ;; *) echo "--device must be ios or android" >&2; exit 2 ;; esac ;;
+    --all) DO_API=1; DO_IOS=1; DO_ANDROID=1 ;;
     --changed-only) CHANGED=1 ;;
     --no-llm) NO_LLM=1 ;;
     --no-build) BUILD=0 ;;
+    --exhaustive) EXHAUSTIVE=1 ;;
     -h|--help) sed -n '2,/^set -uo/p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
 done
-if (( ! DO_API )) && [[ -z "$DEVICE" ]]; then
+if (( ! DO_API && ! DO_IOS && ! DO_ANDROID )); then
   echo "nothing to run — pass --api, --device ios|android, or --all" >&2; exit 2
-fi
-if [[ -n "$DEVICE" && "$DEVICE" != "ios" && "$DEVICE" != "android" ]]; then
-  echo "--device must be ios or android" >&2; exit 2
 fi
 
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -75,7 +75,7 @@ if (( DO_API )); then
 fi
 SEL=""
 
-if [[ "$DEVICE" == "android" ]]; then
+if (( DO_ANDROID )); then
   echo "── android (melehost rig, Galaxy A17)"
   RARGS=()
   (( BUILD )) || RARGS+=(--no-build)
@@ -95,7 +95,7 @@ if [[ "$DEVICE" == "android" ]]; then
   SEL=""
 fi
 
-if [[ "$DEVICE" == "ios" ]]; then
+if (( DO_IOS )); then
   echo "── ios (Simulator)"
   if [[ ! -x "$HPY" ]]; then
     echo "   harness venv missing: cd qa/appium && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt" >&2
@@ -112,11 +112,11 @@ if [[ "$DEVICE" == "ios" ]]; then
         brc=$?
         if (( brc != 0 )); then
           echo "   QA sim build failed (exit ${brc}) — see ${RUN_DIR}/ios_build.log" >&2
-          OVERALL=1; DEVICE=""
+          OVERALL=1; DO_IOS=0
         fi
       fi
     fi
-    if [[ "$DEVICE" == "ios" && "$SEL" != "SKIP" ]]; then
+    if (( DO_IOS )) && [[ "$SEL" != "SKIP" ]]; then
       APPIUM_PID=""
       if ! nc -z 127.0.0.1 4723 2>/dev/null; then
         appium --address 127.0.0.1 --port 4723 > "${RUN_DIR}/appium.log" 2>&1 &
@@ -131,7 +131,8 @@ if [[ "$DEVICE" == "ios" ]]; then
         echo "   ios smoke gate failed (exit ${rc}) — skipping the rest of the device run" >&2
         OVERALL=1
       else
-        DARGS=(-q -p uat_plugin -m "not smoke")
+        if (( EXHAUSTIVE )); then DARGS=(-q -p uat_plugin -m exhaustive)
+        else DARGS=(-q -p uat_plugin -m "not smoke and not exhaustive"); fi
         [[ -n "$SEL" ]] && DARGS+=("$SEL")
         ( cd "$HARNESS" && UAT_RESULTS_JSON="${RUN_DIR}/ios/uat_results.json" \
             "$HPY" -m pytest "${DARGS[@]}" --junitxml="${RUN_DIR}/ios/junit.xml" )

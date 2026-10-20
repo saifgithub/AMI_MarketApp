@@ -27,5 +27,9 @@ if (( rc == 0 )); then title="AMI UAT nightly: PASS"; else title="AMI UAT nightl
 osascript -e "display notification \"${summary:-no results} — ${latest}report.md\" with title \"${title}\"" 2>/dev/null || true
 echo "${title} — ${summary} — ${latest}report.md"
 
+# CR264 every-control crawl — reported, not counted in the nightly verdict
+# while UAT-CTRL-001 is parked (Saiful, 2026-10-20).
+AMI_CRAWL_CAP=7200 "${PROJECT_ROOT}/scripts/uat/run_uat.sh" --device ios --no-build --exhaustive || true
+
 find "$RUNS" -mindepth 1 -maxdepth 1 -type d -name '20*' -mtime +14 -exec rm -rf {} + 2>/dev/null
 exit "$rc"

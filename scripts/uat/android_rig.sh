@@ -81,11 +81,13 @@ fi
 OUTDIR="${REPORTS_DIR}/${RUN_ID}"
 mkdir -p "$OUTDIR"
 cd "$HARNESS_DIR"
+# Rig-only secrets (Alpaca paper keys, the phone's unlock PIN) — never in git.
+if [[ -f test_data/.env ]]; then set -a; source test_data/.env; set +a; fi
 export AMI_PLATFORM=android AMI_SERIAL="$DEVICE_SERIAL" AMI_REPORT_DIR="$OUTDIR" \
        UAT_LAYER=device UAT_PLATFORM=android UAT_RESULTS_JSON="${OUTDIR}/uat_results.json" \
        PYTHONPATH="$HARNESS_DIR"
 "$PYTHON" -m pytest -m smoke -q -p uat_plugin > "${OUTDIR}/smoke.log" 2>&1 || { tail -3 "${OUTDIR}/smoke.log"; exit 2; }
-ARGS=(-q -p uat_plugin -m "not smoke" --junitxml="${OUTDIR}/junit.xml")
+ARGS=(-q -p uat_plugin -m "not smoke and not exhaustive" --junitxml="${OUTDIR}/junit.xml")
 [[ -n "$REMOTE_IDS" ]] && ARGS+=("--uat-ids=@${REMOTE_IDS}")
 "$PYTHON" -m pytest "${ARGS[@]}" > "${OUTDIR}/pytest.log" 2>&1
 rc=$?
