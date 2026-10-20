@@ -22,7 +22,7 @@ Three checks, in order:
 
    | activity    | targets that must be green          |
    |-------------|-------------------------------------|
-   | testflight  | api + ios                           |
+   | testflight  | api + ios (or android while iOS is paused) |
    | playstore   | api + android                       |
    | alpha       | ios or android (api runs post-deploy, see `alpha-post`) |
    | alpha-post  | api — run by /promote-to-alpha right after the deploy    |
@@ -62,7 +62,10 @@ OVERRIDE_LOG = REPO_ROOT / ".deliveryos" / "uat_overrides.log"
 # rule and are not held against it.
 GATE_EPOCH = "48ba26b8"
 ACTIVITIES = {
-    "testflight": [["api"], ["ios"]],
+    # iOS Simulator paused by Saiful 2026-10-20 ("just test the android"):
+    # until it is back, Android device evidence stands in for iOS here.
+    # Restore to [["api"], ["ios"]] when the iOS layer is re-enabled.
+    "testflight": [["api"], ["ios", "android"]],
     "playstore": [["api"], ["android"]],
     "alpha": [["ios", "android"]],
     "alpha-post": [["api"]],

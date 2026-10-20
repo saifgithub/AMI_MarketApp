@@ -50,7 +50,7 @@ A case with no test behind it is a script line nobody runs, which is the gap thi
    2. Script updated: every changed source file's area must have changed its cases/tests, or the commit carries a `UAT-Impact: none (<reason>)` trailer.
    3. Tests run: every active case for the activity has a passing ledger entry at its current fingerprint. The fingerprint covers the case, its own test functions plus their file's shared code, and the area's covered sources.
 2. Where it is wired:
-   1. `build_testflight.sh` requires api + iOS.
+   1. `build_testflight.sh` requires api + iOS (Android stands in while the iOS Simulator is paused, Saiful 2026-10-20).
    2. `publish_playstore.sh` requires api + Android.
    3. `/promote-to-alpha` step 1 runs `alpha` (device evidence before the deploy). Step 7d runs `alpha-post`: changed API cases against the deployed code.
 3. Escape hatch: `UAT_GATE_OVERRIDE="<reason>"`, logged to `.deliveryos/uat_overrides.log`.

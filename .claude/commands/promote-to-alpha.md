@@ -127,7 +127,7 @@ scripts/promotion/preflight_local_gate.sh || {
 # are demanded in step 7d, right after the deploy. Run bare (DEF405).
 backend/.venv/bin/python scripts/uat/uat_gate.py --for alpha || {
   echo "UAT GATE — the UAT script is not updated / changed cases not run. Aborting."
-  echo "  run: scripts/uat/run_uat.sh --device ios --changed-only"
+  echo "  run: scripts/uat/run_uat.sh --device android --changed-only   # iOS Simulator paused 2026-10-20"
   exit 1
 }
 

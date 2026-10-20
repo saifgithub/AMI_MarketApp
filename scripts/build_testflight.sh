@@ -369,7 +369,7 @@ if ! "${PROJECT_ROOT}/backend/.venv/bin/python" "${PROJECT_ROOT}/scripts/uat/uat
   Update qa/uat/cases/<area>.yaml (or add a "UAT-Impact: none (<reason>)"
   commit trailer), then run what is pending:
       scripts/uat/run_uat.sh --api --changed-only
-      scripts/uat/run_uat.sh --device ios --changed-only
+      scripts/uat/run_uat.sh --device android --changed-only   # iOS Simulator paused 2026-10-20
   No build number has been spent.
 
 UATGATE
