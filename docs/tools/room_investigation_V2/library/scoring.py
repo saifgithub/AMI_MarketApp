@@ -24,9 +24,10 @@ per-convene FAIL-LOUDLY verification that every expected agent call exists,
 every prose turn's OPERATIVE text (the newest of its base + repair-flow rows —
 a successful envelope repair replaced the base turn) carries its STANCE
 envelope, every portfolio_manager draw parses as JSON, and no turn sits at
-the token ceiling. Call-shape totals are flow-aware (CR253): the 16..18 bound
-applies to base flows only and bounded repair/recovery flows
-(room_trader_repair, room_envelope_repair, room_pm_reformat,
+the token ceiling. Call-shape totals are flow-aware (CR253): the legacy
+three-debator shape allows 16..18 base rows; the one-risk-officer shape
+allows 14..16 and requires its JSON options payload. Bounded repair/recovery
+flows (room_trader_repair, room_envelope_repair, room_pm_reformat,
 room_veto_review, room_resurrection_review) are counted separately against
 their own cap. It takes a dependency-injected audit module (anything with
 `list_calls`/`get_field`, optionally `call_metrics`) so this module stays
@@ -69,10 +70,10 @@ _CONVICTION_CHAIN: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 _CONVICTION_FIELDS = ("stance", "conviction")
 
-# The convene's expected call shape (CR247 D26, 2026-09-29): the 11 prose
-# agents exactly once each on the base flow, plus MIN_PM_DRAWS
-# portfolio_manager draws — 16..18 base rows total (a 6th base PM row is the
-# recovery draw, legitimate). Repair/recovery calls (CR249 trader geometry,
+# Two production convene shapes are accepted: the legacy three-debator room
+# (11 prose + 5 PM = 16..18 base rows) and CR201's one-risk-officer room
+# (8 enveloped prose + 1 JSON risk officer + 5 PM = 14..16). A 6th PM row is
+# the legitimate recovery draw. Repair/recovery calls (CR249 trader geometry,
 # CR253 envelope re-ask, the room_pm_reformat precedent, verdict review,
 # resurrection) are audited under their OWN flows and counted separately
 # against MAX_REPAIR_FLOW_CALLS — they never count against the base shape.
@@ -89,9 +90,16 @@ EXPECTED_PROSE_AGENTS: tuple[str, ...] = (
     "conservative_debator",
     "neutral_debator",
 )
+RISK_OFFICER_AGENT = "risk_officer"
+RISK_OFFICER_FLOW = "room_risk_officer"
+RISK_OFFICER_PROSE_AGENTS: tuple[str, ...] = (
+    *EXPECTED_PROSE_AGENTS[:8],
+    RISK_OFFICER_AGENT,
+)
 PM_AGENT = "portfolio_manager"
 MIN_PM_DRAWS = 5
 TOTAL_CALLS_RANGE = (16, 18)
+RISK_OFFICER_TOTAL_CALLS_RANGE = (14, 16)
 
 # Flow buckets (CR253 gate fix): base flows carry the convene's expected
 # shape; repair/recovery flows are bounded extras under their own names.
@@ -544,17 +552,18 @@ def gate_report(
     so a real TypeError inside a helper still surfaces.
 
     FAIL-LOUDLY checks:
-    1. Exactly the 11 EXPECTED_PROSE_AGENTS once each on the base "room"
-       flow, plus >= MIN_PM_DRAWS portfolio_manager draws; a missing agent
-       is MISSING_CALL, a duplicated prose agent is UNEXPECTED_CALL_COUNT.
-       Row-count totals are FLOW-AWARE (CR253): the 16..18 bound applies to
-       BASE-flow rows only ('room'/'room_pm' — 11 prose + the PM draws), and
-       repair/recovery rows (room_trader_repair, room_envelope_repair,
-       room_pm_reformat, room_veto_review, room_resurrection_review) are
-       counted separately against MAX_REPAIR_FLOW_CALLS, with each flow's
-       count in the finding detail when the cap breaks. A trader geometry
-       repair plus envelope repairs therefore cannot fail a healthy convene
-       on arithmetic that predates the repair flows.
+    1. Every expected agent once on its base flow, plus >= MIN_PM_DRAWS
+       portfolio_manager draws; a missing agent is MISSING_CALL, a duplicated
+       prose agent is UNEXPECTED_CALL_COUNT. A room carrying risk_officer is
+       validated as 8 enveloped prose + 1 JSON officer + PM (14..16 rows);
+       otherwise the legacy 11-debator-inclusive shape uses 16..18. Totals
+       are FLOW-AWARE (CR253): repair/recovery rows (room_trader_repair,
+       room_envelope_repair, room_pm_reformat, room_veto_review,
+       room_resurrection_review) are counted separately against
+       MAX_REPAIR_FLOW_CALLS, with each flow's count in the finding detail
+       when the cap breaks. A trader geometry repair plus envelope repairs
+       therefore cannot fail a healthy convene on arithmetic that predates
+       the repair flows.
     2. Each prose agent's operative turn: the NEWEST of its base + repair
        flow rows, because that is the text that entered the transcript — a
        successful envelope repair (CR253) replaced the base turn, so a base
@@ -564,8 +573,9 @@ def gate_report(
        token (a failed repair), older operative rows are tried — the
        transcript then carries the newest turn the room could actually use.
        Empty/None -> EMPTY_RESPONSE; no decision token anywhere ->
-       MISSING_STANCE. The stance summary is "<STANCE>|<CONVICTION>" when
-       both envelope tags parse, else the extracted token verbatim.
+       MISSING_STANCE (RISK_OFFICER_JSON_UNPARSEABLE for the officer). The
+       stance summary is "<STANCE>|<CONVICTION>" when both envelope tags
+       parse, else the extracted token verbatim.
     3. Each PM draw's response_text must carry a parseable JSON object with
        an "action" key (extract_decision with json_key="action") -> else
        PM_JSON_UNPARSEABLE; per-draw actions join into
@@ -615,30 +625,34 @@ def gate_report(
 
     calls = invoke(audit_module.list_calls, user_id)
     counts = Counter(r.agent_id for r in calls)
-    # CR249: a bounded repair/regeneration of a prose turn is audited under
-    # its OWN flow (room_trader_repair — the room_pm_reformat precedent), so
-    # the once-per-agent contract applies to the BASE flow only. Rows without
-    # a flow attribute (duck-typed test fakes) default to "room" and keep the
-    # pre-CR249 behavior.
+    risk_officer_mode = any(r.agent_id == RISK_OFFICER_AGENT for r in calls)
+    expected_prose_agents = (
+        RISK_OFFICER_PROSE_AGENTS if risk_officer_mode else EXPECTED_PROSE_AGENTS
+    )
+    base_flows = _BASE_FLOWS + (
+        (RISK_OFFICER_FLOW,) if risk_officer_mode else ()
+    )
     base_flow_counts = Counter(
-        r.agent_id for r in calls if flow_of(r) == "room"
+        r.agent_id for r in calls
+        if flow_of(r) in ("room", RISK_OFFICER_FLOW)
     )
 
     # Flow-aware totals (CR253): the convene-shape bound applies to base
     # flows only; repair/recovery flows get their own generous cap with
     # per-flow detail, so a legitimate repair era cannot fail the arithmetic.
-    base_total = sum(1 for r in calls if flow_of(r) in _BASE_FLOWS)
+    base_total = sum(1 for r in calls if flow_of(r) in base_flows)
     repair_rows = [r for r in calls if flow_of(r) in _REPAIR_FLOWS]
-    lo, hi = TOTAL_CALLS_RANGE
+    lo, hi = RISK_OFFICER_TOTAL_CALLS_RANGE if risk_officer_mode else TOTAL_CALLS_RANGE
     if not lo <= base_total <= hi:
         findings.append(GateFinding(
             user_id=user_id,
             agent_id="*",
             kind="UNEXPECTED_CALL_COUNT",
             detail=(
-                f"{base_total} base-flow ('room'/'room_pm') llm_audit rows "
-                f"for this user_id; one convene is {lo}..{hi} (11 prose "
-                f"agents + {MIN_PM_DRAWS} PM draws, +1 recovery draw) — this "
+                f"{base_total} base-flow {base_flows} llm_audit rows "
+                f"for this user_id; one convene is {lo}..{hi} "
+                f"({len(expected_prose_agents)} prose agents + "
+                f"{MIN_PM_DRAWS} PM draws, +1 recovery draw) — this "
                 f"user_id may span multiple convenes or the convene died "
                 f"mid-run"
             ),
@@ -679,7 +693,7 @@ def gate_report(
                 ))
             return None
 
-    for agent in EXPECTED_PROSE_AGENTS:
+    for agent in expected_prose_agents:
         n = base_flow_counts.get(agent, 0)
         if n == 0:
             findings.append(GateFinding(
@@ -706,11 +720,15 @@ def gate_report(
         agent_rows = [r for r in calls if r.agent_id == agent]
         operative = [
             i for i, r in enumerate(agent_rows)
-            if flow_of(r) in _BASE_FLOWS + _REPAIR_FLOWS
+            if flow_of(r) in base_flows + _REPAIR_FLOWS
         ]
         texts: list[str | None] = [fetch(agent, i) for i in reversed(operative)]
+        json_key = "options" if agent == RISK_OFFICER_AGENT else None
         text = next(
-            (t for t in texts if t is not None and extract_decision(t) is not None),
+            (
+                t for t in texts
+                if t is not None and extract_decision(t, json_key=json_key) is not None
+            ),
             None,
         )
         if text is None:
@@ -725,13 +743,19 @@ def gate_report(
                     detail="operative response_text is empty (null-content completion)",
                 ))
             else:
+                kind = (
+                    "RISK_OFFICER_JSON_UNPARSEABLE"
+                    if agent == RISK_OFFICER_AGENT else "MISSING_STANCE"
+                )
                 findings.append(GateFinding(
-                    user_id=user_id, agent_id=agent, kind="MISSING_STANCE",
-                    detail="no [STANCE: ... | CONVICTION: ...] envelope and no "
-                           "Side: token parsed from any operative row "
+                    user_id=user_id, agent_id=agent, kind=kind,
+                    detail="no operative decision payload parsed "
                            f"({len(texts)} base/repair turn(s), newest first) "
                            "— and no successful repair replaced the turn",
                 ))
+            continue
+        if agent == RISK_OFFICER_AGENT:
+            stances[agent] = extract_decision(text, json_key="options")
             continue
         stance_m = _STANCE_PATTERN.search(text)
         conviction_m = _CONVICTION_PATTERN.search(text)

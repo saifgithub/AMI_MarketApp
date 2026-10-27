@@ -31,8 +31,6 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
-
 _TOOLS_DIR = (
     Path(__file__).resolve().parents[3] / "docs" / "tools" / "room_investigation_V2"
 )
@@ -220,3 +218,43 @@ class TestOperativeTurnStance:
         report = _gate(rows)
         assert report.ok, report.findings
         assert report.stances["trader"] == "for|high"
+
+
+def _risk_officer_convene() -> list[dict]:
+    rows = [
+        {"agent": a, "flow": "room", "text": _envelope(a), "at": i}
+        for i, a in enumerate(scoring.EXPECTED_PROSE_AGENTS[:8])
+    ]
+    rows.append({
+        "agent": scoring.RISK_OFFICER_AGENT,
+        "flow": scoring.RISK_OFFICER_FLOW,
+        "text": json.dumps({
+            "options": [{"size_pct": 2.0, "case_for": "x", "case_against": "y",
+                         "key_number": 1.0}],
+            "recommended": 2.0,
+            "confidence": "medium",
+            "decisive_number": 1.0,
+        }),
+        "at": 50,
+    })
+    rows += [
+        {"agent": _PM, "flow": "room_pm", "text": _PM_JSON, "at": 100 + i}
+        for i in range(scoring.MIN_PM_DRAWS)
+    ]
+    return rows
+
+
+class TestRiskOfficerConvene:
+    def test_clean_risk_officer_convene_gates_ok(self):
+        report = _gate(_risk_officer_convene())
+        assert report.ok, report.findings
+        assert "size_pct" in report.stances[scoring.RISK_OFFICER_AGENT]
+
+    def test_unparseable_risk_officer_payload_fails_loudly(self):
+        rows = _risk_officer_convene()
+        officer = next(r for r in rows if r["agent"] == scoring.RISK_OFFICER_AGENT)
+        officer["text"] = "risk officer returned prose instead of JSON"
+        report = _gate(rows)
+        kinds = {(f.agent_id, f.kind) for f in report.findings}
+        assert (scoring.RISK_OFFICER_AGENT, "RISK_OFFICER_JSON_UNPARSEABLE") in kinds
+        assert not report.ok
