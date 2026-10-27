@@ -1,0 +1,7 @@
+# Anthropic Sonnet 5.5 smoke: AAPL at risk 2, production prompts, thinking omitted (off).
+name: sonnet55-aapl-r2
+provider: anthropic
+tickers: [AAPL]
+mandate: { risk_score: 2 }
+repeats: 1
+concurrency_by_provider: { anthropic: 1 }

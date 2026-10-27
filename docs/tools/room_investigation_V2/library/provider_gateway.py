@@ -80,6 +80,14 @@ PROVIDERS: dict[str, ProviderSpec] = {
         extra_body=None,
         supports_temperature=True,
     ),
+    "anthropic": ProviderSpec(
+        name="anthropic",
+        base_url="https://api.anthropic.com",
+        default_model="claude-sonnet-5-5",
+        api_key_env="ANTHROPIC_API_KEY",
+        extra_body=None,
+        supports_temperature=False,
+    ),
 }
 
 
@@ -87,11 +95,29 @@ def _resolve(name: str) -> tuple[ProviderSpec, str, str | None]:
     spec = PROVIDERS[name]
     if name == "kimi":
         return spec, spec.base_url, env_bootstrap.require_kimi_open_platform_key()
-    if name == "deepinfra":
+    if name in {"deepinfra", "anthropic"}:
         key = env_bootstrap.require_keys(spec.api_key_env)[spec.api_key_env]
         return spec, spec.base_url, key
     base_url, _ = env_bootstrap.require_vllm()
     return spec, base_url, None
+
+
+class _MaxTokensFloor:
+    """Apply the harness output floor to providers without a native floor."""
+
+    def __init__(self, inner, *, floor: int, model_name: str):
+        self._inner = inner
+        self._floor = floor
+        self._model_name = model_name
+        self.name = inner.name
+
+    def __getattr__(self, item):
+        return getattr(self._inner, item)
+
+    async def stream_chat(self, **kwargs):
+        kwargs["max_tokens"] = max(kwargs.get("max_tokens", 0), self._floor)
+        async for chunk in self._inner.stream_chat(**kwargs):
+            yield chunk
 
 
 class _RetryTransient:
@@ -204,6 +230,7 @@ def force_provider(
 
     env_bootstrap.ensure_backend_path()
     from app.core.config import settings
+    from app.services import llm_gateway as backend_gateway
     from app.services.llm_gateway import LLMGateway, OpenAICompatibleProvider
 
     settings.llm_force_provider = name
@@ -248,6 +275,14 @@ def force_provider(
                 max_tokens_floor=HARNESS_MAX_TOKENS_FLOOR,
             )
         )
+    elif name == "anthropic":
+        for tier in backend_gateway.TIER_TO_MODEL:
+            backend_gateway.TIER_TO_MODEL[tier] = resolved_model
+        gateway._providers["anthropic"] = _MaxTokensFloor(  # noqa: SLF001
+            gateway._providers["anthropic"],  # noqa: SLF001
+            floor=HARNESS_MAX_TOKENS_FLOOR,
+            model_name=resolved_model,
+        )
     if name == "vllm" and (vllm_extra := vllm_extra_body()):
         # Env-driven extra body (e.g. thinking-off for a reasoning-served
         # model). The gateway's own vllm branch takes no extra_body, so the
@@ -276,7 +311,9 @@ def force_provider(
             f"the requested {resolved_model!r} — refusing to run under a "
             "wrong-model label"
         )
-    note = ", thinking disabled" if (spec.extra_body or (name == "vllm" and vllm_extra_body())) else ""
+    note = ", thinking disabled" if (
+        spec.extra_body or name == "anthropic" or (name == "vllm" and vllm_extra_body())
+    ) else ""
     print(f"LLM gateway forced to: {active} ({base_url}, {resolved_model}{note}, "
           f"max_tokens floor {HARNESS_MAX_TOKENS_FLOOR})")
     return gateway
@@ -301,6 +338,10 @@ async def direct_call(
     if provider not in PROVIDERS:
         raise SystemExit(
             f"unknown provider {provider!r} — valid: {', '.join(sorted(PROVIDERS))}"
+        )
+    if provider == "anthropic":
+        raise SystemExit(
+            "direct_call is OpenAI-shaped; use the full-Room path for Anthropic's Messages API"
         )
     spec = PROVIDERS[provider]
     if temperature is not None and not spec.supports_temperature:
