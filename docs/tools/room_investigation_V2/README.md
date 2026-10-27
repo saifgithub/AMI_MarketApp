@@ -119,7 +119,10 @@ backend/.venv/bin/python3 docs/tools/room_investigation_V2/tools/room_freeze_pro
 every arm, preserving news, relative dates and field provenance through the
 existing CIO codec. The snapshot path resolves relative to the benchmark YAML.
 This removes market-data drift from the flip metric; it does not make LLM
-sampling deterministic.
+sampling deterministic. Keep feature flags identical across hosts too: a frozen
+profile preserves fields, but renderer flags still decide which fields appear.
+For cross-host/model acceptance, hash the rendered lane block in `llm_audit`,
+not only the snapshot file.
 
 ## Known constraints (carried forward from v1, still true)
 

@@ -53,3 +53,8 @@ is attributable. Contract, verdict, vote-margin and per-desk stability are
 required before any wider matrix. Saiful then expanded the identical frozen design
 to Ling-3.0-flash-Fin-fp4 (thinking OFF) and Anthropic Sonnet 5.5, giving 60 rooms
 across three models.
+
+**Result:** all 60 valid rooms passed contract gates and shared one rendered
+fact-sheet hash. No isolated change earned global promotion; effects were
+model-local. Full results and per-model next steps:
+`results_frozen_ablation_2026-10-28.md`.
