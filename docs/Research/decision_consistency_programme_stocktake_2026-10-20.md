@@ -51,7 +51,8 @@ teammate wholesale suite, "cap1" = size pinned at 1%.
 | 7 | kolibri-1 (Aleph-Alpha 78B MoE, 3.46B active) | **on** | prod | **0/0/12/17/18** | **10%** | 53.7 | 300 |
 | 8 | kolibri-1 | off | disp | 3/1/9/17/14 | 10/3/33/37/27% | 10.9 | 300 |
 | 9 | kolibri-1 | off | prod | R5 7/60 → **stopped** (too conservative) | — | ~6 | 101 |
-| 10 | ami | **on** | disp | 0/0/1/4/6 (124 rms, in flight) | TBD | 90.4 | 124/300 |
+| 10 | ami | **on** | disp | **0/0/1/10/19** | 30/30/40/50/50% (NO_VERDICT-heavy) | 90.4 | 300 |
+| 13 | Ling-fp4 | off | prod, **T=0** (CR263) | R4 32/60, R5 33/60 | **R4 33%, R5 20%** | — | 120 |
 | 11 | **Ling-3.0-flash-Fin-fp4** (Ant Group, 124B/5.1B active, MXFP4, finance-trained) | off | prod+disp | **4/11/19/29/27** | 13/17/23/40/23% | **9.1** | 300 |
 | 12 | dsv4 (+ GLM-5.3-Flash, Qwen3.8-Flash on DeepInfra) | off | prod | measured, unpromoted | — | — | ~90 |
 
@@ -92,7 +93,9 @@ bounded re-asks, zero transcript leaks).
    **Thinking is the stability lever; it costs ~5× latency.** On ami-llm
    the picture darkens: thinking-on blows the 900s per-turn envelope
    (~1.9 scripted desk fallbacks/room vs 0.17) and drives willingness to
-   near-zero — the lever is model-specific, not universal.
+   near-zero — the lever is model-specific, not universal. Final arm
+   (300/300): 0/0/1/10/19 with 11–17 NO_VERDICT rooms per level at 90.4
+   min/room. Dead end confirmed.
 4. **Model lever.** At identical prompts and data: the finance-trained
    model (Ling) produced the best-calibrated curve — strictly monotone
    R1→R4, closest to target, unanimous-approve cohort exactly the
@@ -108,6 +111,20 @@ bounded re-asks, zero transcript leaks).
    matrices, bounded re-ask telemetry. The audit-watcher outage (Oct 18)
    demonstrated why mechanical gates exist: two lanes shipped red in its
    absence.
+6. **Sampling lever — temperature (CR263).** The gateway historically sent
+   no temperature, so vLLM defaulted to T=1.0 for every desk and every PM
+   ensemble sample. Forcing T=0 across all Ling calls (same prompts, same
+   data): approve rate unchanged within noise (R4 48→53%, R5 45→55%), flips
+   *reduced but not eliminated* (R4 40→33%, R5 23→20%), zero NO_VERDICT.
+   **Temperature is a real but second-order lever.** The residual 20–33%
+   flipping at exact T=0 is structural: vLLM continuous-batching
+   non-determinism, desk-stance cascades (1–2 of 11 desks moving per
+   flip), and the PM aggregating genuinely borderline evidence (DHR/SEDG
+   flip at T=0 too). D3 update: the R4/R5 flip root cause is NOT
+   undecoded sampling — the mechanical verdict gate (CR256) remains the
+   primary stability instrument; per-flow temperature belongs in the
+   gateway anyway (PM ensemble T=0, desks low-T) as calibration hygiene,
+   not as the stability fix.
 
 ## 5. What is in production now (alpha-2026-10-18-2)
 
@@ -127,18 +144,24 @@ bounded re-asks, zero transcript leaks).
 
 ## 6. Open questions (the paper's future-work section)
 
-1. **Arm 15 completion** (ami thinking-on, 124/300): does the near-zero
-   willingness curve hold? Implication: thinking on incumbents is a dead end
-   at production timeouts.
+1. **Arm 15 — CLOSED 2026-10-21** (ami thinking-on × disp, 300/300): curve
+   0/0/1/10/19, flips 30–50% of tickers but NO_VERDICT-dominated (11–17 of
+   60 rooms per level), 90.4 min/room. Thinking on the incumbent is a dead
+   end at production timeouts — confirmed, not just mid-run noise.
+   Production keeps `enable_thinking: false` fleet-wide.
 2. **Ling thinking-on arm**: does finance-calibration + thinking reproduce
    kolibri-on's 10% flips at acceptable latency? Ling's probe reasoning was
    modest (381 tokens vs ami's heavy traces).
 3. **Card-envelope fold-in per model**: layer-2 passed on dsv4 (0.868);
    ami/Ling arms needed; then the deterministic evidence-bar verdict gate
    (CR256's original purpose) can be acceptance-tested.
-4. **R4 flip root-cause** (Ling 40% at R4, concentrated in DHR/SEDG/TMO):
-   is "approve any defensible thesis" inherently straddle-prone, or a
-   prompt-precision fix?
+4. **R4 flip root-cause — temperature hypothesis REJECTED (CR263,
+   2026-10-21)**: at exact T=0, Ling R4 flips 40→33% and R5 23→20% — a
+   modest reduction, not a collapse. What remains: vLLM batching
+   non-determinism, desk-stance cascades, and genuinely borderline evidence
+   (DHR/SEDG flip at T=0 too). Still open: decompose the residual T=0 flips
+   desk-vs-PM, and whether "approve any defensible thesis" is inherently
+   straddle-prone or a prompt-precision fix.
 5. **CR257 (Jev-as-decider)**: the LLM-judge decision arm — agents opine,
    the judge emits the call; competing design against CR256's code-computed
    bar. Drafted, unsent.
@@ -159,3 +182,8 @@ bounded re-asks, zero transcript leaks).
   at 13–40%.
 - Card channel: 0.62 → 0.868 ICC via enforcement, 98.3% filing.
 - Thinking attribution: 10% → 27–37% flips on the same weights, same data.
+- Temperature attribution (Ling, same prompts/data): T=1.0→0.0 cuts flips
+  40→33% (R4) and 23→20% (R5) — second-order; stability is structural,
+  not a sampling accident.
+- ami thinking-on at production timeouts: 10× the latency of Ling (90.4 vs
+  9.1 min/room) for a 0/0/1/10/19 curve with 20% NO_VERDICT contamination.
