@@ -1,0 +1,8 @@
+# CR265 paired control: current production personas, AAPL R4 on ami-llm.
+name: cr265-ami-aapl-baseline-r4
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 1 }

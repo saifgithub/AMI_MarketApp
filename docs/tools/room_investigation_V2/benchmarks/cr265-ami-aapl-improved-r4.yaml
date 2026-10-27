@@ -1,0 +1,8 @@
+# CR265 candidate: harness-only improved personas, AAPL R4 on ami-llm.
+name: cr265-ami-aapl-improved-r4
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: cr265-prompt-improvements
+concurrency_by_provider: { vllm: 1 }
