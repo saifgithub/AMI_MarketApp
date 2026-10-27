@@ -75,6 +75,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 | 13 | **kolibri-1 matrix** | 300 (30×5×2) + gate | production (backend-default) | uncapped | Kolibri-1 (Aleph-Alpha) vLLM `http://100.98.142.64:8002`, model `kolibri-1` — REASONING model, NATIVE mode | **DONE 2026-10-17 (curve 0/0/12/17/18, strictly monotone — program first; 26/30 per-ticker; 10% flips; zero discrimination 3rd family; ~53.7 min/room; box ceiling 4)** | → ~/cr255_kolibri | analysis_r8 |
 | 14 | **kolibri-1 thinking-off matrix** | 300 (30×5×2) | production (backend-default) | uncapped | Kolibri-1 SAME endpoint/model, `VLLM_EXTRA_BODY_JSON={"chat_template_kwargs":{"enable_thinking":false}}`; standard knobs | **STOPPED by Saiful 2026-10-18 ~21:40 UTC — R5 7/60 APPROVE (vs native 18/60), "far too low"; R4 partial 2/34.** Thinking-off retained data: nt-R5 60 rooms (7A: AAPL JPM MA MO TMO V WFC, all singles; LEVI 0/2 vs native 2/2), nt-R4 34 rooms (2A: BAC DHR). Verdict: thinking-off guts willingness (~3× fewer approvals, no doubles) — reasoning channel is load-bearing for the PM's willingness, not just latency. Kolibri ruled out as production candidate in BOTH modes (native too slow @ 53.7min/room; no-think too conservative) | → ~/cr255_kolibri_nt | R5-level diff in analysis_r8 §pending addendum |
 | 17 | **Anthropic Sonnet 5.5 AAPL smoke** | 5 (AAPL × R1–R5) | production (backend-default) | uncapped | `claude-sonnet-5-5`, all tiers pinned to one model, thinking omitted/off | **DONE 2026-10-27 — PASS/PASS/APPROVE/APPROVE/APPROVE; PM votes 0/0/3/2/5 of 5; sizes —/—/1.5/2.5/3.0%; 5.19–5.50 min/room; zero scripted turns, provider errors, truncation; updated gate 5/5 PASS.** Single ticker, one rep: API/prompt smoke, not a stability or monotonicity measurement | out/sonnet55-aapl → ~/sonnet55_aapl_valid | this row |
+| 18 | **CR265 AAPL paired prompt improvement** | 10 (AAPL R4 × 5 reps × 2 arms) | production control vs cr265-prompt-improvements | uncapped | ami-llm, thinking OFF, reviews OFF | **DONE 2026-10-27 — control 4 PASS/1 APPROVE (80% agreement, 2/4 adjacent flips); candidate 3 PASS/2 APPROVE (60%, 3/4); 10/10 contract gates OK. NO-GO for stability; production unchanged** | out/cr265-ami-aapl → ~/cr265_ami_aapl | CR265 results_aapl_ami_llm_2026-10-27 |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
@@ -139,6 +140,12 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 - **Decisions locked:** target curve 5/15/30/45/60 (Saiful); single-metric evidence
   bar DEAD (net-support ties) → C7 composite score; sub-cap = future structural
   computation, never prose.
+18. **CR265 combined prompt improvement:** 70.6% shorter personas preserved all
+   output contracts and the candidate Trader stayed neutral 5/5, but candidate
+   verdict agreement fell to 60% from the control's 80%; fundamentals still
+   spanned three stances. Candidate PM votes rose to 1–2 everywhere and approval
+   size fell to 2.5% from 4.0%. Combined-suite stability NO-GO; isolate components
+   on frozen inputs before any wider run.
 
 ## 4. Handoff for the tm-all lane (CR254)
 

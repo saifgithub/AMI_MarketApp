@@ -34,3 +34,10 @@ change.
 5. Any production fold-in requires isolated ablations and a fresh multi-ticker
    production-parity matrix. This AAPL gate can reject a candidate, not authorise
    adoption by itself.
+
+## Result — 2026-10-27
+
+All acceptance measurements completed: 10/10 rooms and 10/10 contract gates.
+Combined candidate **NO-GO for stability**; production remains unchanged. Full
+analysis and next ablation decision:
+`results_aapl_ami_llm_2026-10-27.md`.
