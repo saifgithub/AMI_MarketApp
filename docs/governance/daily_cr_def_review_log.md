@@ -1143,3 +1143,7 @@ on that instruction (its earlier "After +113" timing brought forward).
 ## 2026-10-03
 
 Review offered at 20:34 Asia/Riyadh (no earlier section today); Saiful deferred the full run — wanted the CR248 next step only. No items asked or ruled. Registers verified clean (no drift) beforehand.
+
+## 2026-10-27
+
+Not run. Session is in auto permission mode, which prohibits `AskUserQuestion`; the review requires live item-by-item decisions. No items asked or ruled. Registers verified clean (no drift) beforehand.
