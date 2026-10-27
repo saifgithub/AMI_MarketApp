@@ -1,0 +1,9 @@
+# CR265 frozen-input Ling isolated four-analyst lane cleanup, thinking OFF.
+name: cr265-frozen-ling-aapl-lane-r4
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: cr265-lane-cleanup
+profile_snapshot: snapshots/aapl-r4-frozen.json
+concurrency_by_provider: { vllm: 1 }

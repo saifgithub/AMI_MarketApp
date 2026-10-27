@@ -1,0 +1,9 @@
+# CR265 frozen-input Sonnet 5.5 isolated Execution Desk policy.
+name: cr265-frozen-sonnet-aapl-trader-r4
+provider: anthropic
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: cr265-trader-only
+profile_snapshot: snapshots/aapl-r4-frozen.json
+concurrency_by_provider: { anthropic: 1 }

@@ -50,4 +50,6 @@ production code unchanged. One captured AAPL profile feeds four five-repetition
 arms: production control, CIO policy only, four-analyst lane cleanup only, and
 Execution Desk thesis/timing only. The combined suite is excluded so each effect
 is attributable. Contract, verdict, vote-margin and per-desk stability are
-required before any wider matrix.
+required before any wider matrix. Saiful then expanded the identical frozen design
+to Ling-3.0-flash-Fin-fp4 (thinking OFF) and Anthropic Sonnet 5.5, giving 60 rooms
+across three models.
