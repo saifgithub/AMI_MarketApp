@@ -1,0 +1,9 @@
+# CR265 isolated CIO decision-policy variant on one shared AAPL profile.
+name: cr265-frozen-aapl-pm-r4
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: cr265-pm-only
+profile_snapshot: snapshots/aapl-r4-frozen.json
+concurrency_by_provider: { vllm: 1 }

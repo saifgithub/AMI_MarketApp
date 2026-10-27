@@ -41,3 +41,13 @@ All acceptance measurements completed: 10/10 rooms and 10/10 contract gates.
 Combined candidate **NO-GO for stability**; production remains unchanged. Full
 analysis and next ablation decision:
 `results_aapl_ami_llm_2026-10-27.md`.
+
+## Frozen-input isolated ablations — 2026-10-28
+
+Saiful approved the recommended next step. V2 gains a hash-validated frozen
+profile path (`freeze_lab.py` + `room_freeze_profile.py`), leaving backend
+production code unchanged. One captured AAPL profile feeds four five-repetition
+arms: production control, CIO policy only, four-analyst lane cleanup only, and
+Execution Desk thesis/timing only. The combined suite is excluded so each effect
+is attributable. Contract, verdict, vote-margin and per-desk stability are
+required before any wider matrix.

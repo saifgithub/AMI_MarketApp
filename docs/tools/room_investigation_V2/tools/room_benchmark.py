@@ -36,7 +36,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from library import audit_db, env_bootstrap, prompt_lab, provider_gateway, runner, scoring  # noqa: E402
+from library import audit_db, env_bootstrap, freeze_lab, prompt_lab, provider_gateway, runner, scoring  # noqa: E402
 
 V2_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARKS_DIR = V2_ROOT / "benchmarks"
@@ -143,14 +143,25 @@ async def main_async(args: argparse.Namespace) -> int:
     out_path = args.out_dir / f"runs_{name}.jsonl"
     print(f"benchmark: {name} ({benchmark_path}) — {len(tickers)} tickers x {repeats} repeats, "
           f"provider={provider}, prompt_variant={prompt_variant}, max_concurrent={max_concurrent}")
-    summary = await runner.run_arms(
-        arms,
-        batch_id=name,
-        out_path=out_path,
-        benchmarks_dir=BENCHMARKS_DIR,
-        gateway=gateway,
-        max_concurrent=max_concurrent,
-    )
+    profile_context = prompt_lab.apply_overrides(None)
+    if bench.get("profile_snapshot"):
+        if len(tickers) != 1:
+            raise SystemExit("profile_snapshot requires a one-ticker benchmark")
+        snapshot_path = Path(bench["profile_snapshot"])
+        if not snapshot_path.is_absolute():
+            snapshot_path = benchmark_path.parent / snapshot_path
+        snapshot = freeze_lab.load_snapshot(snapshot_path, expected_ticker=tickers[0])
+        print(f"frozen profile: {snapshot_path} sha256={snapshot['profile_sha256']}")
+        profile_context = freeze_lab.apply_frozen_profile(snapshot)
+    with profile_context:
+        summary = await runner.run_arms(
+            arms,
+            batch_id=name,
+            out_path=out_path,
+            benchmarks_dir=BENCHMARKS_DIR,
+            gateway=gateway,
+            max_concurrent=max_concurrent,
+        )
 
     records = [
         {

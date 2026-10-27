@@ -1,0 +1,9 @@
+# CR265 frozen-input control: production personas, one shared AAPL profile.
+name: cr265-frozen-aapl-baseline-r4
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 4 }
+repeats: 5
+prompt_variant: backend-default
+profile_snapshot: snapshots/aapl-r4-frozen.json
+concurrency_by_provider: { vllm: 1 }

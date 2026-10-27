@@ -107,6 +107,20 @@ with deterministic keys (`{ticker}-rep{i}`), so an interrupted benchmark
 resumes cleanly on re-run. The diff report flags FLIPPED / DESTABILIZED /
 STABILIZED per ticker, in a paste-ready table for the CR gate review.
 
+For a one-ticker frozen-input comparison, capture the complete production
+profile once and name it as `profile_snapshot` in every paired benchmark:
+
+```bash
+backend/.venv/bin/python3 docs/tools/room_investigation_V2/tools/room_freeze_profile.py \
+    --ticker AAPL --out docs/tools/room_investigation_V2/benchmarks/snapshots/aapl.json
+```
+
+`library/freeze_lab.py` validates the profile hash and injects a deep copy into
+every arm, preserving news, relative dates and field provenance through the
+existing CIO codec. The snapshot path resolves relative to the benchmark YAML.
+This removes market-data drift from the flip metric; it does not make LLM
+sampling deterministic.
+
 ## Known constraints (carried forward from v1, still true)
 
 - **`llm_audit` has no `run_id` or `ticker` column.** Correlation works only
