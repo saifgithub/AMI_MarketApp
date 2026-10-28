@@ -1,0 +1,9 @@
+# CR265 T004 candidate contamination retry: LEVI only, identical frozen profile.
+name: cr265-frozen30-ami-trader-levi-retry-r4
+provider: vllm
+tickers: [LEVI]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-trader-only
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }

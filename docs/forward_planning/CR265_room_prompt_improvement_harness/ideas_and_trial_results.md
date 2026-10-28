@@ -68,7 +68,15 @@ confirmation; `ami-llm` and Ling are the iteration models.
    identical frozen profiles, thinking OFF, reviews OFF.
 3. **Success criterion:** improved verdict and Trader-stance stability without
    increased geometry repairs or incoherent R:R.
-4. **Status:** implementation started; result pending.
+4. **Status:** COMPLETE 2026-10-28. Control 10/30 unstable vs Trader 12/30;
+   approvals fell 24/60→18/60. Candidate LEVI rep2 failed PM JSON; replacement
+   passed but flipped APPROVE→PASS. Fundamentals/Market/News improved, yet Trader
+   and Research Manager worsened and the final verdict regressed. All 22 flip
+   pairs involved split PM votes.
+5. **Decision:** NO-GO. Retire this variant for `ami-llm`; no R1–R5 and no
+   production fold-in. Next work targets the evidence/decision interface and PM
+   vote boundary, not another Trader rewrite.
+6. **Evidence:** `results_t004_ami_trader_30_2026-10-28.md`.
 
 ## Queued ideas
 
@@ -79,7 +87,12 @@ confirmation; `ami-llm` and Ling are the iteration models.
 2. **Design:** replay the PM against the exact recorded transcript/prompt from
    completed rooms, then replay selected upstream desks against their exact
    recorded prompts. No new full-room generation and no Sonnet cost.
-3. **Status:** proposed; use existing T003/T004 artifacts.
+3. **Status:** PARTIAL 2026-10-28. Existing vote audit before any replay:
+   Ling had 5/17 original flip pairs with unanimous PMs in opposite directions;
+   12 involved split votes. The TMO replacement added another split-vote flip.
+   `ami-llm` had 0/22 unanimous-opposite pairs; all 22 involved split votes.
+   PM vote boundaries are therefore a material amplifier, not just upstream text.
+   Exact-prompt replay remains queued.
 
 ### T006 — temperature as calibration hygiene, not a stability claim
 
