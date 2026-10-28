@@ -121,3 +121,18 @@ confirmation; `ami-llm` and Ling are the iteration models.
    already partly present in the Room fact sheet, and rating/target upside are
    separate measures.
 5. **Evidence:** `human_analyst_consensus_2026-10-28.md`.
+
+### T011 — risk-level calibration against the human market view
+
+1. **Hypothesis:** the useful final comparison is not only flip rate, but how
+   approval propensity and stability change across R1–R5 relative to human
+   analyst consensus.
+2. **Design:** after R4 candidate filtering, run the production control and any
+   earning candidate on 30 frozen tickers across R1–R5 on `ami-llm` and Ling.
+   Report per-model/per-risk approval rates, flips, vote margins, per-ticker
+   monotonicity, and agreement/disagreement with the T010 human snapshot.
+3. **Report dimensions:** where AMI is more conservative or permissive than the
+   Street; where it agrees; where Reduce/Sell or low-coverage names receive
+   APPROVE; and whether the change improves calibration without lowering evidence
+   or geometry quality.
+4. **Status:** user-directed final-report requirement, queued behind T003/T004.
