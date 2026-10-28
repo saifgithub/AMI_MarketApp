@@ -110,7 +110,13 @@ async def main_async(args: argparse.Namespace) -> int:
     tickers = [str(t).upper() for t in bench["tickers"]]
     repeats = args.repeats if args.repeats is not None else int(bench.get("repeats", 5))
     prompt_variant = bench.get("prompt_variant", prompt_lab.BACKEND_DEFAULT_VARIANT)
-    mandate = _resolve_mandate(bench.get("mandate") or {}, benchmark_path=benchmark_path)
+    mandate_spec = bench.get("mandate") or {}
+    if bench.get("risk_scores"):
+        if "risk_score" not in mandate_spec:
+            raise SystemExit("risk_scores requires mandate.risk_score as its template")
+        mandates = [runner.base_mandate(risk_score=int(score)) for score in bench["risk_scores"]]
+    else:
+        mandates = [_resolve_mandate(mandate_spec, benchmark_path=benchmark_path)]
 
     concurrency_map = bench.get("concurrency_by_provider")
     if concurrency_map is not None and not isinstance(concurrency_map, dict):
@@ -129,13 +135,14 @@ async def main_async(args: argparse.Namespace) -> int:
 
     arms = [
         runner.Arm(
-            key=f"{ticker}-rep{i}",
+            key=f"{ticker}-r{mandate['risk_score']}-rep{i}" if len(mandates) > 1 else f"{ticker}-rep{i}",
             ticker=ticker,
             mandate=mandate,
             label=name,
             prompt_variant=prompt_variant,
         )
         for ticker in tickers
+        for mandate in mandates
         for i in range(1, repeats + 1)
     ]
 

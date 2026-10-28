@@ -1,0 +1,10 @@
+# CR265 T011 Ling lane-only shard C: 10 frozen tickers × R1–R5 × 2 reps.
+name: cr265-t011-ling-lane-c
+provider: vllm
+tickers: [SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+risk_scores: [1, 2, 3, 4, 5]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-lane-cleanup
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }

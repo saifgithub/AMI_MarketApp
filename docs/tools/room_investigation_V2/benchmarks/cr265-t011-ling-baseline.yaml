@@ -1,0 +1,10 @@
+# CR265 T011 Ling production control: 30 frozen tickers × R1–R5 × 2 reps.
+name: cr265-t011-ling-baseline
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+risk_scores: [1, 2, 3, 4, 5]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 2 }
