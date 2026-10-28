@@ -1,0 +1,9 @@
+# CR265 T003 Ling lane-only shard A: first 15 frozen tickers.
+name: cr265-frozen30-ling-lane-a-r4
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-lane-cleanup
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }

@@ -1,0 +1,109 @@
+# CR265 — ideas and trial-results ledger
+
+Running record of prompt/decision-stability hypotheses. Each idea records its
+mechanism, exact trial, result and next decision. Sonnet is reserved for final
+confirmation; `ami-llm` and Ling are the iteration models.
+
+## Measurement rules
+
+1. Iterate on the established 30 tickers: AAPL APD BA BAC BGS CAG DE DHR FCEL
+   JPM LEVI MA MO NKE PLD PYPL RIOT RIVN SEDG SLB SNAP SO SPCE T TMO V WFC WU
+   XPEV XRX.
+2. Freeze each ticker's complete profile once per trial; verify rendered lane
+   hashes in `llm_audit`. Identical feature flags are part of the input.
+3. Keep a same-model production control. Record contract health, verdicts,
+   votes, adjacent flips, per-desk stances, repairs, duration and invalid rooms.
+4. Treat one-ticker results as screening only. Use 30-ticker × two-repetition
+   matrices for iteration. Sonnet runs only after a candidate earns confirmation.
+5. A stable verdict is not automatically a correct verdict. Geometry repairs,
+   independent evidence labels and holdouts remain separate quality gates.
+
+## Completed trials
+
+### T001 — combined 12-persona simplification, live AAPL inputs
+
+1. **Hypothesis:** shorter, lane-specific, non-contradictory prompts improve
+   stability.
+2. **Trial:** production vs combined candidate; AAPL R4; five reps on `ami-llm`.
+3. **Result:** control 80% agreement; candidate 60%; 10/10 contract gates OK.
+4. **Decision:** NO-GO. Do not promote or rerun the combined suite.
+5. **Evidence:** `results_aapl_ami_llm_2026-10-27.md`.
+
+### T002 — isolated prompts, frozen AAPL, three models
+
+1. **Hypothesis:** the combined result hides useful individual components.
+2. **Trial:** control, CIO-only, lane-only and Trader-only; five reps per arm on
+   `ami-llm`, Ling and Sonnet; identical rendered fact sheet across 60 rooms.
+3. **Result:** CIO 80/20/60% by model; lane 60/100/80%; Trader 80/40/100%.
+   Sonnet Trader needed geometry repair in 5/5 rooms.
+4. **Decision:** no global change. Retire current CIO-only. Advance lane only on
+   Ling and Trader only on `ami-llm`; Sonnet is confirmation-only thereafter.
+5. **Evidence:** `results_frozen_ablation_2026-10-28.md`.
+
+## Active trials
+
+### T003 — Ling lane cleanup, 30 frozen tickers
+
+1. **Hypothesis:** lane cleanup improves Ling beyond AAPL by reducing irrelevant
+   instruction load and lane conflicts.
+2. **Design:** production control and lane-only, 30 tickers × two reps at R4,
+   identical frozen profiles, thinking OFF, reviews OFF.
+3. **Success criterion:** higher verdict agreement and fewer adjacent flips than
+   control without increased repair burden or contract failures. Also require
+   per-desk direction results; verdict unanimity alone is insufficient.
+4. **Status:** implementation started; result pending.
+
+### T004 — `ami-llm` Execution Desk clarification, 30 frozen tickers
+
+1. **Hypothesis:** separating thesis direction from entry timing reduces
+   unnecessary BUY/WAIT and downstream verdict changes.
+2. **Design:** production control and Trader-only, 30 tickers × two reps at R4,
+   identical frozen profiles, thinking OFF, reviews OFF.
+3. **Success criterion:** improved verdict and Trader-stance stability without
+   increased geometry repairs or incoherent R:R.
+4. **Status:** implementation started; result pending.
+
+## Queued ideas
+
+### T005 — decompose desk variance from PM variance using existing rooms
+
+1. **Hypothesis:** most residual flips originate before the PM, so the next
+   intervention should target the evidence channel rather than CIO wording.
+2. **Design:** replay the PM against the exact recorded transcript/prompt from
+   completed rooms, then replay selected upstream desks against their exact
+   recorded prompts. No new full-room generation and no Sonnet cost.
+3. **Status:** proposed; use existing T003/T004 artifacts.
+
+### T006 — temperature as calibration hygiene, not a stability claim
+
+1. **Hypothesis:** low desk temperatures and PM T=0 reduce variance modestly but
+   leave the structural residual.
+2. **Design:** same frozen rooms, default vs explicit temperatures on `ami-llm`
+   and Ling. Compare with T003/T004 without conflating prompt edits.
+3. **Status:** proposed after T003/T004.
+
+### T007 — typed evidence census before narrative debate
+
+1. **Hypothesis:** a fixed, lane-specific evidence record is more stable than
+   allowing each run to select a different natural-language evidence subset.
+2. **Design:** enable and extend CR256 cards per model, compute data presence
+   and objection status in code, and make the PM consume that record. Compare
+   evidence-card agreement before measuring verdicts.
+3. **Status:** structural candidate, not a prose-only prompt arm.
+
+### T008 — separate the educational transcript from the binding decision
+
+1. **Hypothesis:** the 12-agent narrative can remain the product experience while
+   a typed evidence/geometry record produces a steadier verdict.
+2. **Design:** narrative unchanged; decision reads only the typed record. Test
+   against the full transcript control on the same frozen profiles.
+3. **Status:** architectural candidate after T007 evidence is available.
+
+### T009 — explicit contestedness instead of forced confidence
+
+1. **Hypothesis:** some borderline flips are irreducible and should be presented
+   as contested rather than hidden behind a confident binary label.
+2. **Design:** use vote margin, evidence-score distance and repair/outage flags
+   to label marginal rooms; assess calibration and user comprehension alongside
+   flip rate.
+3. **Status:** product-policy candidate, not a substitute for T007/T008.

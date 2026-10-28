@@ -35,7 +35,7 @@ def test_round_trip_restores_original_and_isolates_mutations():
         first["nested"]["value"] = 99
         second = room_runner._profile_for_ticker("AAPL")
         assert second["nested"]["value"] == 1
-        with pytest.raises(ValueError, match="not MSFT"):
+        with pytest.raises(ValueError, match="no frozen profile for MSFT"):
             room_runner._profile_for_ticker("MSFT")
     assert room_runner._profile_for_ticker is original
 
@@ -64,3 +64,15 @@ def test_ratio_baseline_round_trip():
     encoded = encode_profile({"baseline": RatioBaseline(median=0.46, n=9, window_days=90)})
     decoded = decode_profile(encoded)
     assert decoded["baseline"] == RatioBaseline(median=0.46, n=9, window_days=90)
+
+
+def test_multiple_profiles_route_by_ticker_and_restore():
+    snapshots = {"AAPL": _snapshot("AAPL"), "MSFT": _snapshot("MSFT")}
+    original = room_runner._profile_for_ticker
+    with freeze_lab.apply_frozen_profiles(snapshots) as digests:
+        assert set(digests) == {"AAPL", "MSFT"}
+        assert room_runner._profile_for_ticker("MSFT")["ticker"] == "MSFT"
+        assert room_runner._profile_for_ticker("AAPL")["ticker"] == "AAPL"
+        with pytest.raises(ValueError, match="no frozen profile for V"):
+            room_runner._profile_for_ticker("V")
+    assert room_runner._profile_for_ticker is original

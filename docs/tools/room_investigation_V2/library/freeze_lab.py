@@ -64,24 +64,35 @@ def load_snapshot(path: Path, *, expected_ticker: str | None = None) -> dict[str
 
 
 @contextmanager
-def apply_frozen_profile(snapshot: dict[str, Any]):
+def apply_frozen_profiles(snapshots: dict[str, dict[str, Any]]):
     from app.services import room_runner
 
     _ensure_profile_codec_types()
-    ticker = snapshot["ticker"]
-    decoded = room_runner.decode_profile(snapshot["profile"])
+    decoded = {
+        ticker.upper(): room_runner.decode_profile(snapshot["profile"])
+        for ticker, snapshot in snapshots.items()
+    }
     original = room_runner._profile_for_ticker
 
     def frozen(requested_ticker: str, **kwargs: Any) -> dict[str, Any]:
-        if requested_ticker.upper() != ticker:
-            raise ValueError(f"frozen profile is for {ticker}, not {requested_ticker.upper()}")
-        return copy.deepcopy(decoded)
+        ticker = requested_ticker.upper()
+        if ticker not in decoded:
+            raise ValueError(f"no frozen profile for {ticker}; have {sorted(decoded)}")
+        return copy.deepcopy(decoded[ticker])
 
     room_runner._profile_for_ticker = frozen
     try:
-        probe = frozen(ticker)
-        if room_runner.encode_profile(probe) != snapshot["profile"]:
-            raise RuntimeError("frozen profile failed its codec round-trip probe")
-        yield snapshot["profile_sha256"]
+        for ticker, snapshot in snapshots.items():
+            probe = frozen(ticker)
+            if room_runner.encode_profile(probe) != snapshot["profile"]:
+                raise RuntimeError(f"frozen profile failed its codec round-trip probe: {ticker}")
+        yield {ticker: snapshot["profile_sha256"] for ticker, snapshot in snapshots.items()}
     finally:
         room_runner._profile_for_ticker = original
+
+
+@contextmanager
+def apply_frozen_profile(snapshot: dict[str, Any]):
+    ticker = snapshot["ticker"]
+    with apply_frozen_profiles({ticker: snapshot}) as digests:
+        yield digests[ticker]

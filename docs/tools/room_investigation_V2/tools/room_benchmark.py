@@ -143,6 +143,8 @@ async def main_async(args: argparse.Namespace) -> int:
     out_path = args.out_dir / f"runs_{name}.jsonl"
     print(f"benchmark: {name} ({benchmark_path}) — {len(tickers)} tickers x {repeats} repeats, "
           f"provider={provider}, prompt_variant={prompt_variant}, max_concurrent={max_concurrent}")
+    if bench.get("profile_snapshot") and bench.get("profile_snapshot_dir"):
+        raise SystemExit("use only one of profile_snapshot and profile_snapshot_dir")
     profile_context = prompt_lab.apply_overrides(None)
     if bench.get("profile_snapshot"):
         if len(tickers) != 1:
@@ -153,6 +155,16 @@ async def main_async(args: argparse.Namespace) -> int:
         snapshot = freeze_lab.load_snapshot(snapshot_path, expected_ticker=tickers[0])
         print(f"frozen profile: {snapshot_path} sha256={snapshot['profile_sha256']}")
         profile_context = freeze_lab.apply_frozen_profile(snapshot)
+    elif bench.get("profile_snapshot_dir"):
+        snapshot_dir = Path(bench["profile_snapshot_dir"])
+        if not snapshot_dir.is_absolute():
+            snapshot_dir = benchmark_path.parent / snapshot_dir
+        snapshots = {
+            ticker: freeze_lab.load_snapshot(snapshot_dir / f"{ticker}.json", expected_ticker=ticker)
+            for ticker in tickers
+        }
+        print(f"frozen profiles: {len(snapshots)} tickers from {snapshot_dir}")
+        profile_context = freeze_lab.apply_frozen_profiles(snapshots)
     with profile_context:
         summary = await runner.run_arms(
             arms,

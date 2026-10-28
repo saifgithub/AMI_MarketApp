@@ -1,0 +1,9 @@
+# CR265 T004 ami-llm Trader-only shard A: first 15 frozen tickers.
+name: cr265-frozen30-ami-trader-a-r4
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-trader-only
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }

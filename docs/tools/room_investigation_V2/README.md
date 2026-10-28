@@ -122,7 +122,10 @@ This removes market-data drift from the flip metric; it does not make LLM
 sampling deterministic. Keep feature flags identical across hosts too: a frozen
 profile preserves fields, but renderer flags still decide which fields appear.
 For cross-host/model acceptance, hash the rendered lane block in `llm_audit`,
-not only the snapshot file.
+not only the snapshot file. For multi-ticker arms, use
+`profile_snapshot_dir: snapshots/<set>` with one `<TICKER>.json` per ticker;
+`apply_frozen_profiles` routes each arm to its own validated profile and refuses
+any missing or unexpected ticker.
 
 ## Known constraints (carried forward from v1, still true)
 
