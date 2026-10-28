@@ -107,3 +107,17 @@ confirmation; `ami-llm` and Ling are the iteration models.
    to label marginal rooms; assess calibration and user comprehension alongside
    flip rate.
 3. **Status:** product-policy candidate, not a substitute for T007/T008.
+
+### T010 — human analyst consensus as external calibration
+
+1. **Hypothesis:** current human analyst views provide a useful comparison for
+   model verdicts and can identify names needing manual review.
+2. **Design:** capture MarketBeat consensus rating, analyst count, target range,
+   close and bull/bear themes for all 30 tickers. Compare with later Room results.
+3. **Result:** completed 2026-10-28 for all 30. Six Reduce/Sell and eight Hold
+   names balance the Moderate Buy majority. Several Reduce/Sell names still show
+   large target upside, and BGS/XRX/SPCE have only 3/4/7 covering analysts.
+4. **Decision:** use as a review signal only, never ground truth. Consensus is
+   already partly present in the Room fact sheet, and rating/target upside are
+   separate measures.
+5. **Evidence:** `human_analyst_consensus_2026-10-28.md`.
