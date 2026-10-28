@@ -142,4 +142,7 @@ confirmation; `ami-llm` and Ling are the iteration models.
    Street; where it agrees; where Reduce/Sell or low-coverage names receive
    APPROVE; and whether the change improves calibration without lowering evidence
    or geometry quality.
-4. **Status:** user-directed final-report requirement, queued behind T003/T004.
+4. **Status:** Ling production + lane-only R1–R5 matrix running 2026-10-28
+   (task `bash-dyn6gaxn`), enabled by the T003 result. `ami-llm` stage remains
+   queued behind T004. V2 now supports `risk_scores` with collision-safe
+   ticker/risk/repetition arm keys.
