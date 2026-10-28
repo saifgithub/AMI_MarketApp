@@ -156,6 +156,6 @@ confirmation; `ami-llm` and Ling are the iteration models.
    APPROVE; and whether the change improves calibration without lowering evidence
    or geometry quality.
 4. **Status:** Ling production + lane-only R1–R5 matrix running 2026-10-28
-   (task `bash-dyn6gaxn`), enabled by the T003 result. `ami-llm` stage remains
-   queued behind T004. V2 now supports `risk_scores` with collision-safe
-   ticker/risk/repetition arm keys.
+   (task `bash-dyn6gaxn`), enabled by the T003 result. `ami-llm` production-only
+   R1–R5 matrix also running (task `bash-a2k79um3`); no prompt candidate advanced
+   after T004. V2 now supports `risk_scores` with collision-safe arm keys.
