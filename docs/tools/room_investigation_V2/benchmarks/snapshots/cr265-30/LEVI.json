@@ -1,0 +1,741 @@
+{
+  "schema_version": 1,
+  "ticker": "LEVI",
+  "captured_at": "2026-10-28T06:37:46.149228+00:00",
+  "profile_sha256": "e4b68b3407ae9fa77718f9e096d0136c00365796b3014011cfc403b7fcaf8b37",
+  "profile": {
+    "ticker": "LEVI",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "live",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "buyback_ttm": "live",
+      "buyback_yield": "live",
+      "buyback_quarterly": "live",
+      "buyback_quarterly_basis": "live",
+      "buyback_pace": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capital_return_pct_fcf": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "interest_coverage": "live",
+      "interest_coverage_quarter": "live",
+      "interest_expense_quarter_usd_m": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "live",
+      "debt_maturity": "live",
+      "cost_of_debt": "live",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "live",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "unavailable",
+      "recent_filings": "live",
+      "sbc": "live",
+      "roic": "live",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "unavailable",
+      "technicals": "live",
+      "news": "unavailable",
+      "social": "unavailable"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "moderately bullish",
+    "sentiment_score": "elevated intensity (illustrative)",
+    "mention_trend": "elevated versus a typical week (illustrative)",
+    "influencer_take": "broadly constructive, no euphoria",
+    "pattern": "sentiment confirming price, not yet at exhaustion",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 21.78,
+    "pe": "14.3",
+    "rev_growth": 4,
+    "profit_margin": 9,
+    "net_cash": -1551,
+    "low": 17.72,
+    "high": 25.7,
+    "forward_pe": "13.0",
+    "price_to_sales": "1.3",
+    "ev_to_ebitda": "10.6",
+    "fcf_yield": 7.7,
+    "dividend_yield": 2.93,
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Manufacturing",
+    "analyst_target_price": 26.79,
+    "analyst_rating": "buy",
+    "market_cap": 8352,
+    "free_cash_flow": 643,
+    "total_debt": 2331,
+    "long_name": "Levi Strauss & Co.",
+    "exchange_name": "NYSE",
+    "gross_margin": 62,
+    "operating_margin": 10,
+    "trailing_eps": 1.52,
+    "revenue_ttm": 6680,
+    "revenue_per_share": 17.18,
+    "return_on_equity": 26,
+    "return_on_assets": 7,
+    "current_ratio": 1.63,
+    "quick_ratio": 0.77,
+    "debt_to_equity": 0.97,
+    "payout_ratio": 38,
+    "analyst_opinion_count": 14,
+    "analyst_target_high": 35.0,
+    "analyst_target_low": 20.0,
+    "analyst_target_median": 26.0,
+    "analyst_rating_score": 1.6,
+    "held_pct_institutions": 92.7,
+    "held_pct_insiders": 2.3,
+    "shares_outstanding": 100,
+    "float_shares": 92,
+    "gross_margin_trend_bps": 456,
+    "operating_margin_trend_bps": 288,
+    "net_margin_trend_bps": -366,
+    "margin_trend_basis": "2026-08-31 vs 2025-08-31",
+    "buyback_ttm": 201,
+    "buyback_yield": 2.4,
+    "buyback_quarterly": [
+      201,
+      200,
+      200,
+      0
+    ],
+    "buyback_quarterly_basis": [
+      "2026-08-31",
+      "2026-05-31",
+      "2026-02-28",
+      "2025-11-30"
+    ],
+    "buyback_pace": "accelerating",
+    "dividends_paid_ttm": 224,
+    "capital_return_ttm": 425,
+    "capital_return_pct_fcf": 66,
+    "capex_ttm": 209,
+    "operating_cash_flow_ttm": 852,
+    "free_cash_flow_ttm": 643,
+    "cashflow_ttm_basis": "2025-11-30 to 2026-08-31",
+    "fcf_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "fcf_history": [
+      308,
+      671,
+      122,
+      -39
+    ],
+    "capex_history": [
+      221,
+      228,
+      314,
+      267
+    ],
+    "fcf_conversion_pct": [
+      53,
+      319,
+      49,
+      -7
+    ],
+    "roe_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "roe_history_pct": [
+      25.4,
+      10.7,
+      12.2,
+      29.9
+    ],
+    "roe_median_pct": 18.8,
+    "interest_coverage": 17.8,
+    "interest_coverage_quarter": "2026-08-31",
+    "interest_expense_quarter_usd_m": 12.9,
+    "historical_pe_median": 25.2,
+    "historical_pe_years": 4,
+    "historical_pe_window": "2022-2025",
+    "historical_ev_ebitda_median": 16.3,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "2022-2025",
+    "eps_revisions_direction": "down",
+    "eps_revisions_pct": -21.0,
+    "eps_revisions_current": 0.38,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-11-30",
+      "2026-02-28",
+      "2026-05-31",
+      "2026-08-31"
+    ],
+    "surprise_actuals": [
+      0.41,
+      0.42,
+      0.28,
+      0.48
+    ],
+    "surprise_estimates": [
+      0.39167,
+      0.36986,
+      0.24397,
+      0.35833
+    ],
+    "surprise_pcts": [
+      4.7,
+      13.6,
+      14.8,
+      34.0
+    ],
+    "total_cash": 779,
+    "day_change_pct": -0.27,
+    "market_state": "PREPRE",
+    "sma_200": 21.69,
+    "price_vs_sma_200_pct": 0.4,
+    "volume_today": 2343526,
+    "volume_avg_3m": 3221350,
+    "change_52w_pct": 2.4,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": -9.6,
+    "beta": 1.32,
+    "short_pct_float": 8.79,
+    "short_days_to_cover": 3.6,
+    "short_interest_date": "2026-09-30",
+    "wacc_estimate_pct": 10.3,
+    "wacc_beta": 1.32,
+    "debt_maturity_labels": [
+      "Within 1 year",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "debt_maturity_values": [
+      0,
+      0,
+      0,
+      0,
+      551
+    ],
+    "debt_maturity_period_end": "2025-11-30",
+    "debt_maturity_beyond_5y": 488,
+    "debt_maturity_excluded_st": 0,
+    "cost_of_debt_pct": 4.7,
+    "cost_of_debt_basis": "accrued interest expense, fiscal year",
+    "cost_of_debt_interest": 49,
+    "cost_of_debt_gross_debt": 1039,
+    "cost_of_debt_period_end": "2025-11-30",
+    "segment_revenue_labels": [
+      "Americas",
+      "Europe",
+      "Asia",
+      "Other Brands"
+    ],
+    "segment_revenue_values": [
+      3297,
+      1699,
+      1134,
+      151
+    ],
+    "segment_revenue_total": 6282,
+    "segment_revenue_period_end": "2025-11-30",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "geographic_revenue_labels": [
+      "Non-US",
+      "United States"
+    ],
+    "geographic_revenue_values": [
+      3608,
+      2674
+    ],
+    "geographic_revenue_total": 6282,
+    "geographic_revenue_period_end": "2025-11-30",
+    "geographic_revenue_basis": "revenue by region as tagged",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "filed",
+    "executive_change_items": [
+      {
+        "accession_no": "0000094845-26-000041",
+        "form": "8-K",
+        "filed": "2026-08-18",
+        "report_date": "2026-08-14",
+        "age_days": 71,
+        "extract_status": "extracted",
+        "excerpt": "As previously announced, on August 14, 2026, having reached the mandatory retirement age, Robert Eckert, a Class III director, retired from the Board of Directors (the \u201cBoard\u201d) of Levi Strauss & Co. (the \u201cCompany\u201d). The Company\u2019s corporate governance guidelines provide that a director is deemed to have resigned automatically upon the director\u2019s 72nd birthday unless the Nominating, Governance and Corporate Citizenship Committee of the Board (the \u201cNGCC Committee\u201d) or the Board, upon recommendation from the NGCC Committee, waives this requirement. Mr. Eckert has served on the Company\u2019s Board since 2010 and most recently served as the chair of the Board (until April 2026) and of the NGCC Committee, as well as a member of the Compensation and Human Capital Committee. Effective upon Mr. Eckert\u2019s retirement, the Board appointed Joshua Prime to the NGCC Committee and named him the Chair thereof. Mr. Eckert\u2019s retirement is not the result of any disagreement with the Company on any matter relating to the Company\u2019s operations, policies or practices. Concurrent with Mr. Eckert\u2019s departure, the size of the Board was reduced to ten directors.",
+        "truncated": false,
+        "full_len": 1146
+      },
+      {
+        "accession_no": "0001999371-26-012853",
+        "form": "8-K",
+        "filed": "2026-06-15",
+        "report_date": "2026-06-10",
+        "age_days": 135,
+        "extract_status": "extracted",
+        "excerpt": "On June 10, 2026, Elliott Rodgers, a member of the Board of Directors (the \u201cBoard\u201d) of Levi Strauss & Co. (the \u201cCompany\u201d), tendered his resignation as a member of the Board, effective June 15, 2026, in connection with his appointment as an executive officer of Kohl\u2019s Corporation. Mr. Rodgers\u2019 departure is not the result of any disagreement with the Company on any matter relating to its operations, policies or practices. In connection with Mr. Rodgers\u2019 resignation, the Board intends to decrease the size of the Board to 11 directors.",
+        "truncated": false,
+        "full_len": 537
+      }
+    ],
+    "executive_change_total": 2,
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.08
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.12
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.12
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.13
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.14
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.26
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.44
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.48
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.5
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.54
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 15.016331689560314,
+        "raised_years": 3,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": null,
+    "recent_filings_items": [
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-10-15"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-10-07"
+      },
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-10-07"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-09-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-08-18"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-08-07"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-07-31"
+      },
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-07-08"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-07-08"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-06-15"
+      }
+    ],
+    "sbc_ttm": 73,
+    "sbc_period_start": "2025-09-01",
+    "sbc_period_end": "2026-08-30",
+    "roic_operating_income": 678,
+    "roic_tax_rate_pct": 20.8,
+    "roic_nopat": 537,
+    "roic_invested_capital": 2469,
+    "roic_pct": 21.7,
+    "roic_period_end": "2025-11-30",
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): no open-market insider purchases or sales filed between 2026-07-30 and 2026-10-28 (transaction codes P/S only \u2014 option exercises (M), tax withholdings (F) and every other code excluded), AMI-computed from the issuer's SEC Form 4/5 filings.",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): none \u2014 no open-market insider sales filed between 2026-07-30 and 2026-10-28, so the plan tag has nothing to attach to.",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28).",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 5,
+      "buy": 7,
+      "hold": 2,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 5,
+        "buy": 7,
+        "hold": 3,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 5,
+        "buy": 7,
+        "hold": 3,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 5,
+        "buy": 7,
+        "hold": 3,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-15",
+        "firm": "TD Cowen",
+        "to_grade": "Buy",
+        "from_grade": "Buy",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 23.0,
+        "prior_pt": 28.0
+      },
+      {
+        "date": "2026-10-08",
+        "firm": "JP Morgan",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 33.0,
+        "prior_pt": 34.0
+      },
+      {
+        "date": "2026-10-08",
+        "firm": "Raymond James",
+        "to_grade": "Outperform",
+        "from_grade": "Outperform",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 22.0,
+        "prior_pt": 24.0
+      },
+      {
+        "date": "2026-10-08",
+        "firm": "Barclays",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 26.0,
+        "prior_pt": 27.0
+      },
+      {
+        "date": "2026-10-08",
+        "firm": "Wells Fargo",
+        "to_grade": "Equal-Weight",
+        "from_grade": "Equal-Weight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 20.0,
+        "prior_pt": 25.0
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 0.77,
+        "oi_ratio": 10.71,
+        "put_volume": 557,
+        "call_volume": 726,
+        "put_open_interest": 182,
+        "call_open_interest": 17,
+        "contracts": 116,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-11-20"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2027-04-16"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.93,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 1.09,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_unavailable_reason": "insufficient peer coverage \u2014 no candidate universe is maintained for SIC 2300",
+    "rsi": 74,
+    "rsi_tone": "overbought",
+    "trend": "consolidating",
+    "volume_tone": "below 20-day average",
+    "support": 18.21,
+    "breakout": 22.47,
+    "last_close": 21.78,
+    "sma_short": 20.16,
+    "sma_long": 20.29,
+    "volume_ratio": 0.56,
+    "return_period_pct": -13.8,
+    "period_candles": 65,
+    "atr14": 0.62,
+    "bollinger_upper": 21.99,
+    "bollinger_lower": 18.32,
+    "bollinger_width_pct": 18.2,
+    "macd_line": 0.336,
+    "macd_signal": 0.039,
+    "macd_histogram": 0.297,
+    "is_growth": false,
+    "valuation_tone": "trading at a discount to its peers",
+    "bull_thesis": "LEVI's revenue growth (4%) and profit margin (9%) justify a premium multiple",
+    "bear_risk": "multiple compression if growth decelerates \u2014 14x is sensitive",
+    "bear_quant": "a 10-point multiple compression = ~70% downside"
+  }
+}

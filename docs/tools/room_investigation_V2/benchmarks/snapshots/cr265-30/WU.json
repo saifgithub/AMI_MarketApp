@@ -1,0 +1,745 @@
+{
+  "schema_version": 1,
+  "ticker": "WU",
+  "captured_at": "2026-10-28T06:43:37.662925+00:00",
+  "profile_sha256": "0cbbf0d8c7a816a4045b1efd0647b708c87493bee8ac0ec5308ad56052f15e25",
+  "profile": {
+    "ticker": "WU",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "live",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "peg_ratio": "live",
+      "peg_basis": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "buyback_ttm": "live",
+      "buyback_yield": "live",
+      "buyback_quarterly": "live",
+      "buyback_quarterly_basis": "live",
+      "buyback_pace": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capital_return_pct_fcf": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "wc_change_ttm": "live",
+      "wc_payables_ttm": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "interest_coverage": "live",
+      "interest_coverage_quarter": "live",
+      "interest_expense_quarter_usd_m": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "live",
+      "debt_maturity": "unavailable",
+      "cost_of_debt": "live",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "live",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "unavailable",
+      "recent_filings": "live",
+      "sbc": "unavailable",
+      "roic": "unavailable",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "live",
+      "technicals": "live",
+      "next_earnings": "live",
+      "ex_dividend_date": "live",
+      "dividend_rate": "live",
+      "news": "unavailable",
+      "social": "live"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "mixed",
+    "sentiment_score": "+0.05 (live Reddit sentiment, Adanos)",
+    "mention_trend": "1 Reddit mentions over 7d, trend: stable",
+    "influencer_take": "most active in r/wallstreetbets",
+    "pattern": "buzz score 11/100, bullish 0% / bearish 0%",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 5.99,
+    "pe": "4.9",
+    "rev_growth": -1,
+    "profit_margin": 10,
+    "net_cash": -1777,
+    "low": 5.87,
+    "high": 10.35,
+    "forward_pe": "4.0",
+    "price_to_sales": "0.5",
+    "ev_to_ebitda": "4.4",
+    "peg_ratio": "10.41",
+    "peg_basis": "trailing",
+    "fcf_yield": 22.7,
+    "dividend_yield": 15.14,
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "analyst_target_price": 6.63,
+    "analyst_rating": "hold",
+    "market_cap": 1868,
+    "free_cash_flow": 424,
+    "total_debt": 2697,
+    "long_name": "The Western Union Company",
+    "exchange_name": "NYSE",
+    "gross_margin": 35,
+    "operating_margin": 13,
+    "trailing_eps": 1.23,
+    "revenue_ttm": 4037,
+    "revenue_per_share": 12.74,
+    "return_on_equity": 44,
+    "return_on_assets": 5,
+    "current_ratio": 0.28,
+    "quick_ratio": 0.22,
+    "debt_to_equity": 2.95,
+    "payout_ratio": 76,
+    "analyst_opinion_count": 13,
+    "analyst_target_high": 8.5,
+    "analyst_target_low": 6.0,
+    "analyst_target_median": 6.5,
+    "analyst_rating_score": 3.5,
+    "held_pct_institutions": 100.5,
+    "held_pct_insiders": 0.9,
+    "shares_outstanding": 312,
+    "float_shares": 310,
+    "gross_margin_trend_bps": -414,
+    "operating_margin_trend_bps": -574,
+    "net_margin_trend_bps": -433,
+    "margin_trend_basis": "2026-06-30 vs 2025-06-30",
+    "buyback_ttm": 142,
+    "buyback_yield": 7.6,
+    "buyback_quarterly": [
+      11,
+      53,
+      26,
+      52
+    ],
+    "buyback_quarterly_basis": [
+      "2026-06-30",
+      "2026-03-31",
+      "2025-12-31",
+      "2025-09-30"
+    ],
+    "buyback_pace": "steady",
+    "dividends_paid_ttm": 303,
+    "capital_return_ttm": 445,
+    "capital_return_pct_fcf": 105,
+    "capex_ttm": 186,
+    "operating_cash_flow_ttm": 610,
+    "free_cash_flow_ttm": 424,
+    "cashflow_ttm_basis": "2025-09-30 to 2026-06-30",
+    "wc_change_ttm": -104,
+    "wc_payables_ttm": -4,
+    "fcf_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "fcf_history": [
+      393,
+      276,
+      635,
+      373
+    ],
+    "capex_history": [
+      151,
+      131,
+      148,
+      208
+    ],
+    "fcf_conversion_pct": [
+      79,
+      30,
+      101,
+      41
+    ],
+    "roe_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "roe_history_pct": [
+      52.2,
+      96.4,
+      130.7,
+      190.6
+    ],
+    "roe_median_pct": 113.5,
+    "interest_coverage": 3.3,
+    "interest_coverage_quarter": "2026-06-30",
+    "interest_expense_quarter_usd_m": 39.5,
+    "historical_pe_median": 3.1,
+    "historical_pe_years": 4,
+    "historical_pe_window": "2022-2025",
+    "historical_ev_ebitda_median": 3.7,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "2022-2025",
+    "eps_revisions_direction": "down",
+    "eps_revisions_pct": -35.0,
+    "eps_revisions_current": 0.34,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-09-30",
+      "2025-12-31",
+      "2026-03-31",
+      "2026-06-30"
+    ],
+    "surprise_actuals": [
+      0.47,
+      0.45,
+      0.25,
+      0.31
+    ],
+    "surprise_estimates": [
+      0.42926,
+      0.43262,
+      0.39282,
+      0.42074
+    ],
+    "surprise_pcts": [
+      9.5,
+      4.0,
+      -36.4,
+      -26.3
+    ],
+    "total_cash": 920,
+    "day_change_pct": -3.54,
+    "market_state": "PREPRE",
+    "sma_200": 8.12,
+    "price_vs_sma_200_pct": -26.2,
+    "volume_today": 11395253,
+    "volume_avg_3m": 9695735,
+    "change_52w_pct": -36.9,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": -49.0,
+    "beta": 0.55,
+    "short_pct_float": 21.47,
+    "short_days_to_cover": 6.3,
+    "short_interest_date": "2026-09-30",
+    "wacc_estimate_pct": 6.7,
+    "wacc_beta": 0.55,
+    "cost_of_debt_pct": 5.1,
+    "cost_of_debt_basis": "cash interest paid, fiscal year",
+    "cost_of_debt_interest": 148,
+    "cost_of_debt_gross_debt": 2885,
+    "cost_of_debt_period_end": "2025-12-31",
+    "segment_revenue_labels": [
+      "Consumer Money Transfer",
+      "Consumer Services"
+    ],
+    "segment_revenue_values": [
+      3507,
+      543
+    ],
+    "segment_revenue_total": 4051,
+    "segment_revenue_period_end": "2025-12-31",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "geographic_revenue_labels": [
+      "North America Member",
+      "United States",
+      "Latin America and Caribbean",
+      "Middle East Africa and South Asia",
+      "Asia Pacific"
+    ],
+    "geographic_revenue_values": [
+      1445,
+      1403,
+      571,
+      544,
+      196
+    ],
+    "geographic_revenue_total": 4051,
+    "geographic_revenue_period_end": "2025-12-31",
+    "geographic_revenue_basis": "revenue by region as tagged",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "filed",
+    "executive_change_items": [
+      {
+        "accession_no": "0001193125-26-314213",
+        "form": "8-K",
+        "filed": "2026-07-23",
+        "report_date": "2026-07-20",
+        "age_days": 97,
+        "extract_status": "extracted",
+        "excerpt": "(b) On July 20, 2026, Benjamin Adams notified The Western Union Company (the \u201cCompany\u201d) of his intention to elect to participate in the Company\u2019s Voluntary Retirement Program (as defined below) and depart from his position as Executive Vice President, Chief Legal Officer, effective November 2, 2026. During this notice period, Mr. Adams will continue to serve in his current role overseeing the legal, privacy, public policy and enterprise risk functions and assist the Company with the transition of his duties until his successor is appointed. (e) In connection with his retirement, Mr. Adams has elected to participate in, and will be entitled to retirement benefits in accordance with, a Voluntary Retirement Program that was approved by the Compensation and Benefits Committee of the Board of Directors of the Company in 2026, which is applicable to certain eligible U.S.-based employees across the Company (the \u201cVoluntary Retirement Program\u201d).",
+        "truncated": true,
+        "full_len": 1697
+      }
+    ],
+    "executive_change_total": 1,
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.235
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.235
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.235
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.235
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.235
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.94
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.94
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.94
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.94
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.94
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 0.0,
+        "raised_years": 0,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": null,
+    "recent_filings_items": [
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-10-02"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-08-14"
+      },
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-07-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-07-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-07-23"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-06-24"
+      },
+      {
+        "form": "S-8",
+        "label": "Employee stock plan registration",
+        "filed_date": "2026-05-21"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-05-18"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-05-06"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-05-05"
+      },
+      {
+        "form": "424B*/FWP",
+        "label": "1 offering document (prospectus supplements / free writing prospectuses) in the window, not listed one by one; latest",
+        "filed_date": "2026-05-01"
+      }
+    ],
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): no open-market insider purchases or sales filed between 2026-07-30 and 2026-10-28 (transaction codes P/S only \u2014 option exercises (M), tax withholdings (F) and every other code excluded), AMI-computed from the issuer's SEC Form 4/5 filings.",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): none \u2014 no open-market insider sales filed between 2026-07-30 and 2026-10-28, so the plan tag has nothing to attach to.",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28).",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): 1 \u2014 2026-10-02 (4:21 pm ET) \u2014 AMI-computed from the issuer's SEC filings index.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 1,
+      "buy": 0,
+      "hold": 11,
+      "sell": 4,
+      "strong_sell": 2
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 1,
+        "buy": 0,
+        "hold": 10,
+        "sell": 5,
+        "strong_sell": 2,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 0,
+        "buy": 0,
+        "hold": 11,
+        "sell": 5,
+        "strong_sell": 2,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 1,
+        "buy": 0,
+        "hold": 10,
+        "sell": 5,
+        "strong_sell": 2,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-14",
+        "firm": "JP Morgan",
+        "to_grade": "Underweight",
+        "from_grade": "Underweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 7.0,
+        "prior_pt": 8.0
+      },
+      {
+        "date": "2026-09-29",
+        "firm": "Cantor Fitzgerald",
+        "to_grade": "Underweight",
+        "from_grade": "Underweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 6.0,
+        "prior_pt": 7.0
+      },
+      {
+        "date": "2026-08-03",
+        "firm": "Citigroup",
+        "to_grade": "Neutral",
+        "from_grade": "Neutral",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 7.0,
+        "prior_pt": 8.5
+      },
+      {
+        "date": "2026-08-03",
+        "firm": "Cantor Fitzgerald",
+        "to_grade": "Underweight",
+        "from_grade": "Underweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 7.0,
+        "prior_pt": 8.0
+      },
+      {
+        "date": "2026-07-31",
+        "firm": "RBC Capital",
+        "to_grade": "Sector Perform",
+        "from_grade": "Sector Perform",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 8.0,
+        "prior_pt": 9.0
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 0.57,
+        "oi_ratio": 0.77,
+        "put_volume": 1597,
+        "call_volume": 2818,
+        "put_open_interest": 111,
+        "call_open_interest": 145,
+        "contracts": 79,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-11-20"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2027-02-19"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.44,
+        "n": 14,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.23,
+        "n": 14,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_sic": "7389",
+    "peer_comparison_sic_description": "Services-Business Services, NEC",
+    "peer_comparison_basket_size": 3,
+    "peer_comparison_as_of": "2026-10-28",
+    "peer_comparison_median_pe": 38.2,
+    "peer_comparison_median_pe_n": 3,
+    "peer_comparison_median_ev_ebitda": 9.0,
+    "peer_comparison_median_ev_ebitda_n": 3,
+    "peer_comparison_median_net_margin": 2,
+    "peer_comparison_median_net_margin_n": 3,
+    "rsi": 46,
+    "rsi_tone": "neither overbought nor oversold",
+    "trend": "downtrend",
+    "volume_tone": "in-line with 20-day average",
+    "support": 5.87,
+    "breakout": 7.23,
+    "last_close": 5.99,
+    "sma_short": 6.15,
+    "sma_long": 6.46,
+    "volume_ratio": 0.99,
+    "return_period_pct": -24.9,
+    "period_candles": 65,
+    "atr14": 0.19,
+    "bollinger_upper": 6.4,
+    "bollinger_lower": 5.9,
+    "bollinger_width_pct": 8.2,
+    "macd_line": -0.053,
+    "macd_signal": -0.077,
+    "macd_histogram": 0.024,
+    "next_earnings_date": "2026-11-04",
+    "next_earnings_quarter": "Q4",
+    "next_earnings_interval": "in 7 days",
+    "next_earnings_eps_estimate": 0.3384,
+    "ex_dividend_date": "2026-09-16",
+    "dividend_rate": 0.94,
+    "sentiment_split": "0 positive / 0 negative / 1 neutral \u2014 neutral is 100% of the classified sample",
+    "social_engagement": "1 distinct posts, 5 total upvotes",
+    "social_sample_caveat": "SMALL SAMPLE \u2014 1 mentions. The percentages above are ~0 post(s) against ~0; below 200 mentions the bull/bear gap is inside the sampling error, so treat the tone as unresolved rather than weak.",
+    "social_fetched_age": "fetched 2026-10-28 (1m ago)",
+    "subreddit_split": [
+      "r/wallstreetbets: 1 mentions, sentiment +0.05, buzz 12/100"
+    ],
+    "social_baselines": "sentiment score +0.05 vs trailing-90d median +0.17 (14 daily reads on file); mention volume 1 vs trailing-90d median 9 (14 daily reads on file)",
+    "is_growth": false,
+    "valuation_tone": "trading at a discount to its peers",
+    "bull_thesis": "WU's revenue growth (-1%) and profit margin (10%) justify a premium multiple",
+    "bear_risk": "multiple compression if growth decelerates \u2014 5x is sensitive",
+    "bear_quant": "a 10-point multiple compression = ~100% downside"
+  }
+}

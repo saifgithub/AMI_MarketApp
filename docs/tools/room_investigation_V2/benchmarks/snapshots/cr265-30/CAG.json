@@ -1,0 +1,762 @@
+{
+  "schema_version": 1,
+  "ticker": "CAG",
+  "captured_at": "2026-10-28T06:36:18.635475+00:00",
+  "profile_sha256": "33e34194b5e64cfd44b70e168098641f60fb94db07eba3230e20e5e240d7e871",
+  "profile": {
+    "ticker": "CAG",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "unavailable",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "peg_ratio": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "buyback_ttm": "live",
+      "buyback_yield": "live",
+      "buyback_quarterly": "live",
+      "buyback_quarterly_basis": "live",
+      "buyback_pace": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capital_return_pct_fcf": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "wc_change_ttm": "live",
+      "wc_receivables_ttm": "live",
+      "wc_inventory_ttm": "live",
+      "wc_payables_ttm": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "interest_coverage": "live",
+      "interest_coverage_quarter": "live",
+      "interest_expense_quarter_usd_m": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "unavailable",
+      "debt_maturity": "live",
+      "cost_of_debt": "live",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "unavailable",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "unavailable",
+      "recent_filings": "live",
+      "sbc": "live",
+      "roic": "unavailable",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "live",
+      "technicals": "live",
+      "next_earnings": "live",
+      "ex_dividend_date": "live",
+      "dividend_rate": "live",
+      "news": "unavailable",
+      "social": "live"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "mixed",
+    "sentiment_score": "-0.00 (live Reddit sentiment, Adanos)",
+    "mention_trend": "2 Reddit mentions over 7d, trend: stable",
+    "influencer_take": "most active in r/wallstreetbets",
+    "pattern": "buzz score 11/100, bullish 0% / bearish 0%",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 14.24,
+    "rev_growth": -1,
+    "profit_margin": -17,
+    "net_cash": -7388,
+    "low": 12.53,
+    "high": 20.32,
+    "forward_pe": "9.5",
+    "price_to_sales": "0.6",
+    "ev_to_ebitda": "8.6",
+    "peg_ratio": "10.86",
+    "fcf_yield": 12.9,
+    "dividend_yield": 4.92,
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "analyst_target_price": 13.74,
+    "analyst_rating": "hold",
+    "market_cap": 6798,
+    "free_cash_flow": 877,
+    "total_debt": 7760,
+    "long_name": "Conagra Brands, Inc.",
+    "exchange_name": "NYSE",
+    "gross_margin": 24,
+    "operating_margin": 12,
+    "trailing_eps": -3.98,
+    "revenue_ttm": 11245,
+    "revenue_per_share": 23.47,
+    "return_on_equity": -25,
+    "return_on_assets": 4,
+    "current_ratio": 1.1,
+    "quick_ratio": 0.34,
+    "debt_to_equity": 1.21,
+    "payout_ratio": 80,
+    "analyst_opinion_count": 15,
+    "analyst_target_high": 16.0,
+    "analyst_target_low": 11.0,
+    "analyst_target_median": 14.0,
+    "analyst_rating_score": 3.4,
+    "held_pct_institutions": 91.1,
+    "held_pct_insiders": 0.7,
+    "shares_outstanding": 477,
+    "float_shares": 474,
+    "gross_margin_trend_bps": -50,
+    "operating_margin_trend_bps": -125,
+    "net_margin_trend_bps": 47,
+    "margin_trend_basis": "2026-08-31 vs 2025-08-31",
+    "buyback_ttm": 44,
+    "buyback_yield": 0.6,
+    "buyback_quarterly": [
+      44,
+      0,
+      0,
+      0
+    ],
+    "buyback_quarterly_basis": [
+      "2026-08-31",
+      "2026-05-31",
+      "2026-02-28",
+      "2025-11-30"
+    ],
+    "buyback_pace": "accelerating",
+    "dividends_paid_ttm": 670,
+    "capital_return_ttm": 714,
+    "capital_return_pct_fcf": 81,
+    "capex_ttm": 400,
+    "operating_cash_flow_ttm": 1277,
+    "free_cash_flow_ttm": 877,
+    "cashflow_ttm_basis": "2025-11-30 to 2026-08-31",
+    "wc_change_ttm": -136,
+    "wc_receivables_ttm": 83,
+    "wc_inventory_ttm": 104,
+    "wc_payables_ttm": -149,
+    "fcf_history_years": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+    ],
+    "fcf_history": [
+      979,
+      1303,
+      1628,
+      633
+    ],
+    "capex_history": [
+      423,
+      389,
+      388,
+      362
+    ],
+    "fcf_conversion_pct": [
+      null,
+      113,
+      469,
+      93
+    ],
+    "roe_history_years": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+    ],
+    "roe_history_pct": [
+      -30.1,
+      12.9,
+      4.1,
+      7.8
+    ],
+    "roe_median_pct": 5.9,
+    "interest_coverage": 2.9,
+    "interest_coverage_quarter": "2026-08-31",
+    "interest_expense_quarter_usd_m": 93.1,
+    "historical_pe_median": 10.0,
+    "historical_pe_years": 3,
+    "historical_pe_window": "2023-2025",
+    "historical_ev_ebitda_median": 8.4,
+    "historical_ev_ebitda_years": 3,
+    "historical_ev_ebitda_window": "2023-2025",
+    "eps_revisions_direction": "down",
+    "eps_revisions_pct": -15.8,
+    "eps_revisions_current": 0.34,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-11-30",
+      "2026-02-28",
+      "2026-05-31",
+      "2026-08-31"
+    ],
+    "surprise_actuals": [
+      0.45,
+      0.39,
+      0.47,
+      0.41
+    ],
+    "surprise_estimates": [
+      0.43614,
+      0.40044,
+      0.45729,
+      0.28291
+    ],
+    "surprise_pcts": [
+      3.2,
+      -2.6,
+      2.8,
+      44.9
+    ],
+    "total_cash": 372,
+    "day_change_pct": -2.33,
+    "market_state": "PREPRE",
+    "sma_200": 15.33,
+    "price_vs_sma_200_pct": -7.1,
+    "volume_today": 7375468,
+    "volume_avg_3m": 11882363,
+    "change_52w_pct": -21.2,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": -33.3,
+    "beta": 0.0,
+    "short_pct_float": 10.64,
+    "short_days_to_cover": 3.1,
+    "short_interest_date": "2026-09-30",
+    "debt_maturity_labels": [
+      "Within 1 year",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "debt_maturity_values": [
+      779,
+      1026,
+      1699,
+      19,
+      818
+    ],
+    "debt_maturity_period_end": "2026-05-31",
+    "debt_maturity_beyond_5y": 2894,
+    "debt_maturity_excluded_st": 34,
+    "cost_of_debt_pct": 5.1,
+    "cost_of_debt_basis": "cash interest paid, fiscal year",
+    "cost_of_debt_interest": 374,
+    "cost_of_debt_gross_debt": 7268,
+    "cost_of_debt_period_end": "2026-05-31",
+    "segment_revenue_labels": [
+      "Refrigerated and Frozen",
+      "Grocery and Snacks",
+      "Foodservice",
+      "International"
+    ],
+    "segment_revenue_values": [
+      4642,
+      4610,
+      1116,
+      914
+    ],
+    "segment_revenue_total": 11282,
+    "segment_revenue_period_end": "2026-05-31",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "filed",
+    "executive_change_items": [
+      {
+        "accession_no": "0000023217-26-000028",
+        "form": "8-K",
+        "filed": "2026-07-28",
+        "report_date": "2026-07-24",
+        "age_days": 92,
+        "extract_status": "extracted",
+        "excerpt": "The Company today announced that on July 24, 2026, Thomas McGough, Executive Vice President and Chief Operating Officer, notified Conagra Brands, Inc. (the \u201cCompany\u201d) of his decision to retire from the Company no later than September 4, 2026. The Company will eliminate the chief operating officer position upon Mr. McGough's retirement.",
+        "truncated": false,
+        "full_len": 337
+      },
+      {
+        "accession_no": "0000023217-26-000018",
+        "form": "8-K",
+        "filed": "2026-06-23",
+        "report_date": "2026-06-22",
+        "age_days": 127,
+        "extract_status": "extracted",
+        "excerpt": "On June 22, 2026, Emanuel \u201cManny\u201d Chirico informed Conagra Brands, Inc. (the \u201cCompany\u201d) that he has decided not to stand for reelection to the Board of Directors at the Company\u2019s 2026 Annual Meeting of Shareholders to be held in September. He will continue to serve through the remainder of his current term. Mr. Chirico\u2019s decision was not due to any disagreement with the Board of Directors or the Company.",
+        "truncated": false,
+        "full_len": 407
+      }
+    ],
+    "executive_change_total": 2,
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.313
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.33
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.35
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.35
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.35
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                1.1760000000000002
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                1.286
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                1.3599999999999999
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                1.4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                1.4
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 2.8326260785976443,
+        "raised_years": 2,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": null,
+    "recent_filings_items": [
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-09-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-09-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-09-28"
+      },
+      {
+        "form": "DEFA14A",
+        "label": "Proxy statement (additional material)",
+        "filed_date": "2026-09-14"
+      },
+      {
+        "form": "ARS",
+        "label": "Annual report to shareholders",
+        "filed_date": "2026-08-11"
+      },
+      {
+        "form": "DEFA14A",
+        "label": "Proxy statement (additional material)",
+        "filed_date": "2026-08-11"
+      },
+      {
+        "form": "DEF 14A",
+        "label": "Proxy statement",
+        "filed_date": "2026-08-11"
+      },
+      {
+        "form": "SCHEDULE 13G",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive)",
+        "filed_date": "2026-08-07"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-07-31"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-07-31"
+      },
+      {
+        "form": "424B*/FWP",
+        "label": "3 offering documents (prospectus supplements / free writing prospectuses) in the window, not listed one by one; latest",
+        "filed_date": "2026-07-22"
+      }
+    ],
+    "sbc_ttm": 49,
+    "sbc_period_start": "2025-08-25",
+    "sbc_period_end": "2026-08-30",
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): no open-market insider purchases or sales filed between 2026-07-30 and 2026-10-28 (transaction codes P/S only \u2014 option exercises (M), tax withholdings (F) and every other code excluded), AMI-computed from the issuer's SEC Form 4/5 filings.",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): none \u2014 no open-market insider sales filed between 2026-07-30 and 2026-10-28, so the plan tag has nothing to attach to.",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28).",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 1,
+      "buy": 0,
+      "hold": 10,
+      "sell": 3,
+      "strong_sell": 2
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 1,
+        "buy": 1,
+        "hold": 10,
+        "sell": 3,
+        "strong_sell": 2,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 1,
+        "buy": 1,
+        "hold": 10,
+        "sell": 3,
+        "strong_sell": 2,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 1,
+        "buy": 1,
+        "hold": 10,
+        "sell": 3,
+        "strong_sell": 2,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-02",
+        "firm": "Barclays",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 16.0,
+        "prior_pt": 17.0
+      },
+      {
+        "date": "2026-10-01",
+        "firm": "Evercore ISI Group",
+        "to_grade": "In-Line",
+        "from_grade": "In-Line",
+        "action": "main",
+        "pt_action": "Raises",
+        "current_pt": 14.0,
+        "prior_pt": 13.0
+      },
+      {
+        "date": "2026-10-01",
+        "firm": "RBC Capital",
+        "to_grade": "Sector Perform",
+        "from_grade": "Sector Perform",
+        "action": "reit",
+        "pt_action": "Maintains",
+        "current_pt": 14.0,
+        "prior_pt": 14.0
+      },
+      {
+        "date": "2026-09-29",
+        "firm": "Evercore ISI Group",
+        "to_grade": "In-Line",
+        "from_grade": "In-Line",
+        "action": "main",
+        "pt_action": "Raises",
+        "current_pt": 13.0,
+        "prior_pt": 12.5
+      },
+      {
+        "date": "2026-09-18",
+        "firm": "Deutsche Bank",
+        "to_grade": "Hold",
+        "from_grade": "Hold",
+        "action": "main",
+        "pt_action": "Raises",
+        "current_pt": 13.0,
+        "prior_pt": 12.0
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 1.84,
+        "oi_ratio": 0.0,
+        "put_volume": 960,
+        "call_volume": 521,
+        "put_open_interest": 0,
+        "call_open_interest": 2,
+        "contracts": 120,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-10-30"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2026-11-20"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.68,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.53,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_sic": "2000",
+    "peer_comparison_sic_description": "Food and Kindred Products",
+    "peer_comparison_basket_size": 3,
+    "peer_comparison_as_of": "2026-10-28",
+    "peer_comparison_median_pe": 22.9,
+    "peer_comparison_median_pe_n": 3,
+    "peer_comparison_median_ev_ebitda": 8.4,
+    "peer_comparison_median_ev_ebitda_n": 3,
+    "peer_comparison_median_net_margin": 4,
+    "peer_comparison_median_net_margin_n": 3,
+    "rsi": 61,
+    "rsi_tone": "neither overbought nor oversold",
+    "trend": "consolidating",
+    "volume_tone": "below 20-day average",
+    "support": 12.88,
+    "breakout": 16.74,
+    "last_close": 14.24,
+    "sma_short": 13.9,
+    "sma_long": 14.8,
+    "volume_ratio": 0.73,
+    "return_period_pct": -6.7,
+    "period_candles": 65,
+    "atr14": 0.48,
+    "bollinger_upper": 15.01,
+    "bollinger_lower": 12.8,
+    "bollinger_width_pct": 15.9,
+    "macd_line": 0.018,
+    "macd_signal": -0.112,
+    "macd_histogram": 0.13,
+    "next_earnings_date": "2026-12-18",
+    "next_earnings_quarter": "Q4",
+    "next_earnings_interval": "in 51 days",
+    "next_earnings_eps_estimate": 0.34382,
+    "ex_dividend_date": "2026-11-05",
+    "dividend_rate": 0.7,
+    "sentiment_split": "0 positive / 0 negative / 2 neutral \u2014 neutral is 100% of the classified sample",
+    "social_engagement": "1 distinct posts, 2 total upvotes",
+    "social_sample_caveat": "SMALL SAMPLE \u2014 2 mentions. The percentages above are ~0 post(s) against ~0; below 200 mentions the bull/bear gap is inside the sampling error, so treat the tone as unresolved rather than weak.",
+    "social_fetched_age": "fetched 2026-10-28 (1m ago)",
+    "subreddit_split": [
+      "r/wallstreetbets: 2 mentions, sentiment -0.00, buzz 11/100"
+    ],
+    "social_baselines": "sentiment score -0.00 vs trailing-90d median -0.38 (13 daily reads on file); mention volume 2 vs trailing-90d median 3 (13 daily reads on file)",
+    "is_growth": false,
+    "valuation_tone": "not enough live data to assess",
+    "bull_thesis": "live fundamentals for CAG are not available this session",
+    "bear_risk": "live fundamentals are not available to size this risk",
+    "bear_quant": "insufficient live data for a downside estimate"
+  }
+}

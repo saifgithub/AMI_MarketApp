@@ -1,0 +1,741 @@
+{
+  "schema_version": 1,
+  "ticker": "AAPL",
+  "captured_at": "2026-10-28T06:34:31.290631+00:00",
+  "profile_sha256": "a95489f603d9a6b0094b335111f48e328bb96ca832db7bc40d3513897f32dfa3",
+  "profile": {
+    "ticker": "AAPL",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "live",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "peg_ratio": "live",
+      "peg_basis": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "buyback_ttm": "live",
+      "buyback_yield": "live",
+      "buyback_quarterly": "live",
+      "buyback_quarterly_basis": "live",
+      "buyback_pace": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capital_return_pct_fcf": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "wc_change_ttm": "live",
+      "wc_receivables_ttm": "live",
+      "wc_inventory_ttm": "live",
+      "wc_payables_ttm": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "live",
+      "debt_maturity": "live",
+      "cost_of_debt": "unavailable",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "live",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "unavailable",
+      "recent_filings": "live",
+      "sbc": "live",
+      "roic": "live",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "live",
+      "technicals": "live",
+      "next_earnings": "live",
+      "ex_dividend_date": "live",
+      "dividend_rate": "live",
+      "news": "unavailable",
+      "social": "live"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "bullish",
+    "sentiment_score": "+0.05 (live Reddit sentiment, Adanos)",
+    "mention_trend": "1,178 Reddit mentions over 7d, trend: stable",
+    "influencer_take": "most active in r/wallstreetbets, r/ValueInvesting, r/wallstreetbetsGER (3 of 47 subreddits in the sample)",
+    "pattern": "buzz score 77/100, bullish 29% / bearish 19%",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 347.1,
+    "pe": "39.8",
+    "rev_growth": 16,
+    "profit_margin": 28,
+    "net_cash": -21945,
+    "low": 243.42,
+    "high": 351.73,
+    "forward_pe": "36.3",
+    "price_to_sales": "10.9",
+    "ev_to_ebitda": "30.3",
+    "peg_ratio": "2.76",
+    "peg_basis": "trailing",
+    "fcf_yield": 2.7,
+    "dividend_yield": 0.31,
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "analyst_target_price": 330.02,
+    "analyst_rating": "buy",
+    "market_cap": 5065640,
+    "free_cash_flow": 136683,
+    "total_debt": 84344,
+    "long_name": "Apple Inc.",
+    "exchange_name": "NASDAQ",
+    "gross_margin": 49,
+    "operating_margin": 33,
+    "trailing_eps": 8.72,
+    "revenue_ttm": 466823,
+    "revenue_per_share": 31.71,
+    "return_on_equity": 149,
+    "return_on_assets": 27,
+    "current_ratio": 1.0,
+    "quick_ratio": 0.81,
+    "debt_to_equity": 0.78,
+    "payout_ratio": 12,
+    "analyst_opinion_count": 39,
+    "analyst_target_high": 405.0,
+    "analyst_target_low": 240.0,
+    "analyst_target_median": 335.0,
+    "analyst_rating_score": 2.2,
+    "held_pct_institutions": 66.4,
+    "held_pct_insiders": 1.6,
+    "shares_outstanding": 14594,
+    "float_shares": 14569,
+    "gross_margin_trend_bps": 357,
+    "operating_margin_trend_bps": 263,
+    "net_margin_trend_bps": 230,
+    "margin_trend_basis": "2026-06-30 vs 2025-06-30",
+    "buyback_ttm": 82226,
+    "buyback_yield": 1.6,
+    "buyback_quarterly": [
+      25105,
+      12288,
+      24701,
+      20132
+    ],
+    "buyback_quarterly_basis": [
+      "2026-06-30",
+      "2026-03-31",
+      "2025-12-31",
+      "2025-09-30"
+    ],
+    "buyback_pace": "accelerating",
+    "dividends_paid_ttm": 15640,
+    "capital_return_ttm": 97866,
+    "capital_return_pct_fcf": 72,
+    "capex_ttm": 10041,
+    "operating_cash_flow_ttm": 146724,
+    "free_cash_flow_ttm": 136683,
+    "cashflow_ttm_basis": "2025-09-30 to 2026-06-30",
+    "wc_change_ttm": -8634,
+    "wc_receivables_ttm": -12282,
+    "wc_inventory_ttm": -5284,
+    "wc_payables_ttm": 14178,
+    "fcf_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "fcf_history": [
+      98767,
+      108807,
+      99584,
+      111443
+    ],
+    "capex_history": [
+      12715,
+      9447,
+      10959,
+      10708
+    ],
+    "fcf_conversion_pct": [
+      88,
+      116,
+      103,
+      112
+    ],
+    "roe_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "roe_history_pct": [
+      151.9,
+      164.6,
+      156.1,
+      197.0
+    ],
+    "roe_median_pct": 160.3,
+    "historical_pe_median": 56.7,
+    "historical_pe_years": 4,
+    "historical_pe_window": "2022-2025",
+    "historical_ev_ebitda_median": 38.4,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "2022-2025",
+    "eps_revisions_direction": "down",
+    "eps_revisions_pct": -1.6,
+    "eps_revisions_current": 1.98,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-09-30",
+      "2025-12-31",
+      "2026-03-31",
+      "2026-06-30"
+    ],
+    "surprise_actuals": [
+      1.85,
+      2.84,
+      2.01,
+      2.02
+    ],
+    "surprise_estimates": [
+      1.76993,
+      2.6708,
+      1.94275,
+      1.89243
+    ],
+    "surprise_pcts": [
+      4.5,
+      6.3,
+      3.5,
+      6.7
+    ],
+    "total_cash": 62399,
+    "day_change_pct": 0.93,
+    "market_state": "PREPRE",
+    "sma_200": 295.28,
+    "price_vs_sma_200_pct": 17.6,
+    "volume_today": 39051747,
+    "volume_avg_3m": 43824518,
+    "change_52w_pct": 29.0,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": 17.0,
+    "beta": 1.07,
+    "short_pct_float": 0.83,
+    "short_days_to_cover": 2.8,
+    "short_interest_date": "2026-09-30",
+    "wacc_estimate_pct": 9.1,
+    "wacc_beta": 1.07,
+    "debt_maturity_labels": [
+      "Within 1 year",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "debt_maturity_values": [
+      12393,
+      10078,
+      9300,
+      5235,
+      4972
+    ],
+    "debt_maturity_period_end": "2025-09-27",
+    "debt_maturity_beyond_5y": 48743,
+    "debt_maturity_excluded_st": null,
+    "segment_revenue_labels": [
+      "Americas",
+      "Europe",
+      "Greater China",
+      "Rest Of Asia Pacific",
+      "Japan"
+    ],
+    "segment_revenue_values": [
+      178353,
+      111032,
+      64377,
+      33696,
+      28703
+    ],
+    "segment_revenue_total": 416161,
+    "segment_revenue_period_end": "2025-09-27",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "geographic_revenue_labels": [
+      "Other Countries",
+      "United States",
+      "China"
+    ],
+    "geographic_revenue_values": [
+      199994,
+      151790,
+      64377
+    ],
+    "geographic_revenue_total": 416161,
+    "geographic_revenue_period_end": "2025-09-27",
+    "geographic_revenue_basis": "revenue by region as tagged",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "filed",
+    "executive_change_items": [
+      {
+        "accession_no": "0001140361-26-035325",
+        "form": "8-K/A",
+        "filed": "2026-09-01",
+        "report_date": "2026-04-17",
+        "age_days": 57,
+        "extract_status": "extracted",
+        "excerpt": "Apple Inc. (\u201cApple\u201d) previously announced its Chief Executive Officer transition plan in its Current Report on Form 8-K filed on April 20, 2026 (the \u201cOriginal Form 8-K\u201d). This Amendment to the Original Form 8-K (the \u201cForm 8-K/A\u201d) is being filed to disclose John Ternus\u2019 new compensation arrangement in connection with his appointment to the role of CEO, and Tim Cook\u2019s new compensation arrangement in connection with his appointment to the role of Executive Chair of Apple\u2019s Board of Directors (the \u201cBoard\u201d), in each case effective as of September 1, 2026 (the \u201cTransition Date\u201d). Other than as set forth in this Form 8-K/A, all information in the Original Form 8-K remains unchanged. Mr. Ternus\u2019 annual salary was increased to $3 million on the Transition Date. The People and Compensation Committee of the Board also granted a prorated restricted stock unit (\u201cRSU\u201d) award for Mr. Ternus\u2019 period of service as CEO in fiscal 2026 on the Transition Date. The prorated RSU award has a target value of $2.5 million. The People and Compensation Committee also approved an annual equity award for Mr. Ternus with a target value of $55 million to be granted in fiscal 2027.",
+        "truncated": true,
+        "full_len": 2362
+      }
+    ],
+    "executive_change_total": 1,
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.22
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.23
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.24
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.25
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.26
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.865
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.91
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.95
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.99
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                1.03
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 4.264788543842446,
+        "raised_years": 4,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": null,
+    "recent_filings_items": [
+      {
+        "form": "8-K/A",
+        "label": "Current report (amended)",
+        "filed_date": "2026-09-01"
+      },
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-07-31"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-07-30"
+      },
+      {
+        "form": "SD",
+        "label": "Conflict minerals disclosure",
+        "filed_date": "2026-05-28"
+      },
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-05-01"
+      }
+    ],
+    "sbc_ttm": 13706,
+    "sbc_period_start": "2025-06-29",
+    "sbc_period_end": "2026-06-27",
+    "roic_operating_income": 133050,
+    "roic_tax_rate_pct": 15.6,
+    "roic_nopat": 112281,
+    "roic_invested_capital": 128477,
+    "roic_pct": 87.4,
+    "roic_period_end": "2025-09-27",
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): 0 open-market buys vs 31 open-market sales filed between 2026-07-30 and 2026-10-28 (codes P/S only) \u2014 0.00 buys per sale, AMI-computed from the issuer's SEC Form 4/5 filings.",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): of the 31 open-market sales in the window, 31 were pre-scheduled under Rule 10b5-1 plans (flag read from the Form 4's own 10b5-1 checkbox, never inferred), 0 discretionary, 0 unstated \u2014 a scheduled plan sale is not fresh conviction; a non-plan or unstated sale is the stronger signal.",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28).",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 6,
+      "buy": 18,
+      "hold": 14,
+      "sell": 3,
+      "strong_sell": 3
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 6,
+        "buy": 19,
+        "hold": 13,
+        "sell": 3,
+        "strong_sell": 3,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 6,
+        "buy": 19,
+        "hold": 14,
+        "sell": 3,
+        "strong_sell": 2,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 6,
+        "buy": 22,
+        "hold": 14,
+        "sell": 2,
+        "strong_sell": 2,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-20",
+        "firm": "MoffettNathanson",
+        "to_grade": "Neutral",
+        "from_grade": "Neutral",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 283.0,
+        "prior_pt": 304.0
+      },
+      {
+        "date": "2026-10-20",
+        "firm": "Loop Capital",
+        "to_grade": "Hold",
+        "from_grade": "Buy",
+        "action": "down",
+        "pt_action": "Lowers",
+        "current_pt": 330.0,
+        "prior_pt": 370.0
+      },
+      {
+        "date": "2026-10-12",
+        "firm": "JP Morgan",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Raises",
+        "current_pt": 360.0,
+        "prior_pt": 340.0
+      },
+      {
+        "date": "2026-10-01",
+        "firm": "Morgan Stanley",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 355.0,
+        "prior_pt": 360.0
+      },
+      {
+        "date": "2026-10-01",
+        "firm": "Needham",
+        "to_grade": "Hold",
+        "from_grade": "Hold",
+        "action": "reit",
+        "pt_action": "",
+        "current_pt": null,
+        "prior_pt": null
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 0.84,
+        "oi_ratio": 0.0,
+        "put_volume": 332177,
+        "call_volume": 396257,
+        "put_open_interest": 0,
+        "call_open_interest": 2,
+        "contracts": 446,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2026-11-06"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.93,
+        "n": 20,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.8,
+        "n": 20,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_sic": "3571",
+    "peer_comparison_peer_group": [
+      "3571",
+      "3572"
+    ],
+    "peer_comparison_sic_description": "Electronic Computers",
+    "peer_comparison_basket_size": 5,
+    "peer_comparison_as_of": "2026-10-28",
+    "peer_comparison_median_pe": 17.7,
+    "peer_comparison_median_pe_n": 5,
+    "peer_comparison_median_ev_ebitda": 19.3,
+    "peer_comparison_median_ev_ebitda_n": 5,
+    "peer_comparison_median_net_margin": 26,
+    "peer_comparison_median_net_margin_n": 5,
+    "rsi": 64,
+    "rsi_tone": "neither overbought nor oversold",
+    "trend": "uptrend",
+    "volume_tone": "in-line with 20-day average",
+    "support": 305.74,
+    "breakout": 351.73,
+    "last_close": 347.1,
+    "sma_short": 340.07,
+    "sma_long": 331.06,
+    "volume_ratio": 1.05,
+    "return_period_pct": 2.2,
+    "period_candles": 65,
+    "atr14": 6.36,
+    "bollinger_upper": 350.47,
+    "bollinger_lower": 329.67,
+    "bollinger_width_pct": 6.1,
+    "macd_line": 4.208,
+    "macd_signal": 4.12,
+    "macd_histogram": 0.089,
+    "next_earnings_date": "2026-11-02",
+    "next_earnings_quarter": "Q4",
+    "next_earnings_interval": "in 5 days",
+    "next_earnings_eps_estimate": 1.98261,
+    "ex_dividend_date": "2026-08-10",
+    "dividend_rate": 1.08,
+    "sentiment_split": "345 positive / 219 negative / 614 neutral \u2014 neutral is 52% of the classified sample",
+    "social_engagement": "358 distinct posts, 7,265 total upvotes",
+    "social_fetched_age": "fetched 2026-10-23 (5d ago)",
+    "subreddit_split": [
+      "r/wallstreetbets: 518 mentions, sentiment +0.02, buzz 68/100",
+      "r/ValueInvesting: 64 mentions, sentiment +0.14, buzz 48/100",
+      "r/wallstreetbetsGER: 61 mentions, sentiment +0.00, buzz 44/100"
+    ],
+    "social_baselines": "sentiment score +0.05 vs trailing-90d median +0.05 (13 daily reads on file); mention volume 1178 vs trailing-90d median 1065 (13 daily reads on file)",
+    "is_growth": true,
+    "valuation_tone": "fairly priced relative to growth",
+    "bull_thesis": "AAPL's revenue growth (16%) and profit margin (28%) justify a premium multiple",
+    "bear_risk": "multiple compression if growth decelerates \u2014 40x is sensitive",
+    "bear_quant": "a 10-point multiple compression = ~25% downside"
+  }
+}

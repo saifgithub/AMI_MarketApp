@@ -1,0 +1,708 @@
+{
+  "schema_version": 1,
+  "ticker": "APD",
+  "captured_at": "2026-10-28T06:34:45.777335+00:00",
+  "profile_sha256": "91f22c020d2ee813212d1658f9b4d0fbc06f1fb16a34341137d9d2580d938b13",
+  "profile": {
+    "ticker": "APD",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "unavailable",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "peg_ratio": "live",
+      "peg_basis": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "wc_change_ttm": "live",
+      "wc_receivables_ttm": "live",
+      "wc_inventory_ttm": "live",
+      "wc_payables_ttm": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "interest_coverage": "live",
+      "interest_coverage_quarter": "live",
+      "interest_expense_quarter_usd_m": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "live",
+      "debt_maturity": "live",
+      "cost_of_debt": "unavailable",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "live",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "live",
+      "recent_filings": "live",
+      "sbc": "live",
+      "roic": "unavailable",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "unavailable",
+      "technicals": "live",
+      "next_earnings": "live",
+      "ex_dividend_date": "live",
+      "dividend_rate": "live",
+      "news": "unavailable",
+      "social": "unavailable"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "moderately bullish",
+    "sentiment_score": "subdued intensity (illustrative)",
+    "mention_trend": "elevated versus a typical week (illustrative)",
+    "influencer_take": "broadly constructive, no euphoria",
+    "pattern": "sentiment confirming price, not yet at exhaustion",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 307.11,
+    "rev_growth": 5,
+    "profit_margin": 0,
+    "net_cash": -17271,
+    "low": 229.11,
+    "high": 314.87,
+    "forward_pe": "21.3",
+    "price_to_sales": "5.4",
+    "ev_to_ebitda": "19.0",
+    "peg_ratio": "2.20",
+    "peg_basis": "trailing",
+    "fcf_yield": -0.4,
+    "dividend_yield": 2.37,
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "analyst_target_price": 342.55,
+    "analyst_rating": "buy",
+    "market_cap": 68389,
+    "free_cash_flow": -301,
+    "total_debt": 18271,
+    "long_name": "Air Products and Chemicals, Inc.",
+    "exchange_name": "NYSE",
+    "gross_margin": 32,
+    "operating_margin": 26,
+    "trailing_eps": -0.21,
+    "revenue_ttm": 12602,
+    "revenue_per_share": 56.57,
+    "return_on_equity": 0,
+    "return_on_assets": 5,
+    "current_ratio": 1.08,
+    "quick_ratio": 0.75,
+    "debt_to_equity": 1.1,
+    "payout_ratio": 76,
+    "analyst_opinion_count": 20,
+    "analyst_target_high": 373.0,
+    "analyst_target_low": 305.0,
+    "analyst_target_median": 351.5,
+    "analyst_rating_score": 1.9,
+    "held_pct_institutions": 93.0,
+    "held_pct_insiders": 1.9,
+    "shares_outstanding": 223,
+    "float_shares": 222,
+    "gross_margin_trend_bps": 27,
+    "operating_margin_trend_bps": 8,
+    "net_margin_trend_bps": -6920,
+    "margin_trend_basis": "2026-06-30 vs 2025-06-30",
+    "dividends_paid_ttm": 1598,
+    "capital_return_ttm": 1598,
+    "capex_ttm": 4872,
+    "operating_cash_flow_ttm": 4571,
+    "free_cash_flow_ttm": -301,
+    "cashflow_ttm_basis": "2025-09-30 to 2026-06-30",
+    "wc_change_ttm": 7,
+    "wc_receivables_ttm": 80,
+    "wc_inventory_ttm": 20,
+    "wc_payables_ttm": -212,
+    "fcf_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "fcf_history": [
+      -3766,
+      -3150,
+      -1420,
+      304
+    ],
+    "capex_history": [
+      7023,
+      6797,
+      4626,
+      2926
+    ],
+    "fcf_conversion_pct": [
+      null,
+      -82,
+      -62,
+      13
+    ],
+    "roe_history_years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+    ],
+    "roe_history_pct": [
+      -2.6,
+      22.5,
+      16.1,
+      17.2
+    ],
+    "roe_median_pct": 16.6,
+    "interest_coverage": 16.4,
+    "interest_coverage_quarter": "2026-06-30",
+    "interest_expense_quarter_usd_m": 49.4,
+    "historical_pe_median": 29.7,
+    "historical_pe_years": 3,
+    "historical_pe_window": "2022-2024",
+    "historical_ev_ebitda_median": 19.9,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "2022-2025",
+    "eps_revisions_direction": "up",
+    "eps_revisions_pct": 2.7,
+    "eps_revisions_current": 3.61,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-09-30",
+      "2025-12-31",
+      "2026-03-31",
+      "2026-06-30"
+    ],
+    "surprise_actuals": [
+      3.39,
+      3.16,
+      3.2,
+      3.47
+    ],
+    "surprise_estimates": [
+      3.38241,
+      3.04039,
+      3.06113,
+      3.34306
+    ],
+    "surprise_pcts": [
+      0.2,
+      3.9,
+      4.5,
+      3.8
+    ],
+    "total_cash": 1000,
+    "day_change_pct": 0.45,
+    "market_state": "PREPRE",
+    "sma_200": 289.4,
+    "price_vs_sma_200_pct": 6.1,
+    "volume_today": 762577,
+    "volume_avg_3m": 1050870,
+    "change_52w_pct": 20.7,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": 8.6,
+    "beta": 0.76,
+    "short_pct_float": 2.32,
+    "short_days_to_cover": 4.3,
+    "short_interest_date": "2026-09-30",
+    "wacc_estimate_pct": 7.7,
+    "wacc_beta": 0.76,
+    "debt_maturity_labels": [
+      "Within 1 year",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "debt_maturity_values": [
+      717,
+      906,
+      1405,
+      1114,
+      1141
+    ],
+    "debt_maturity_period_end": "2025-09-30",
+    "debt_maturity_beyond_5y": null,
+    "debt_maturity_excluded_st": 35,
+    "segment_revenue_labels": [
+      "Americas",
+      "Asia",
+      "Europe",
+      "Corporate and Other",
+      "Middle East and India"
+    ],
+    "segment_revenue_values": [
+      5126,
+      3271,
+      2984,
+      520,
+      136
+    ],
+    "segment_revenue_total": 12037,
+    "segment_revenue_period_end": "2025-09-30",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "geographic_revenue_labels": [
+      "Other Foreign Operations",
+      "United States",
+      "China"
+    ],
+    "geographic_revenue_values": [
+      5411,
+      4692,
+      1934
+    ],
+    "geographic_revenue_total": 12037,
+    "geographic_revenue_period_end": "2025-09-30",
+    "geographic_revenue_basis": "revenue by region as tagged",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "none_in_window",
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                1.5
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                1.62
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                1.75
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                1.77
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                1.79
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                6.0
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                6.48
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                7.0
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                5.3100000000000005
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                7.140000000000001
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 4.517844116603498,
+        "raised_years": 4,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                3
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": {
+      "__cr237__": "BuybackPrice",
+      "v": {
+        "avg_price": 80.68495513996899,
+        "dollars": 461600000.0,
+        "shares": 5721017.0,
+        "period_start": {
+          "__cr237__": "date",
+          "v": "2012-10-01"
+        },
+        "period_end": {
+          "__cr237__": "date",
+          "v": "2013-09-30"
+        },
+        "quarters": 4
+      }
+    },
+    "recent_filings_items": [
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-07-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-07-30"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-06-30"
+      },
+      {
+        "form": "11-K",
+        "label": "Employee stock plan annual report",
+        "filed_date": "2026-06-23"
+      },
+      {
+        "form": "SD",
+        "label": "Conflict minerals disclosure",
+        "filed_date": "2026-05-29"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-05-14"
+      },
+      {
+        "form": "SCHEDULE 13G/A",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive (amended))",
+        "filed_date": "2026-05-14"
+      }
+    ],
+    "sbc_ttm": 49,
+    "sbc_period_start": "2025-07-01",
+    "sbc_period_end": "2026-06-30",
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): no open-market insider purchases or sales filed between 2026-07-30 and 2026-10-28 (transaction codes P/S only \u2014 option exercises (M), tax withholdings (F) and every other code excluded), AMI-computed from the issuer's SEC Form 4/5 filings.",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): none \u2014 no open-market insider sales filed between 2026-07-30 and 2026-10-28, so the plan tag has nothing to attach to.",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28).",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 4,
+      "buy": 11,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 4,
+        "buy": 11,
+        "hold": 7,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 3,
+        "buy": 11,
+        "hold": 7,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 3,
+        "buy": 11,
+        "hold": 7,
+        "sell": 0,
+        "strong_sell": 0,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-15",
+        "firm": "RBC Capital",
+        "to_grade": "Outperform",
+        "from_grade": "Outperform",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 346.0,
+        "prior_pt": 360.0
+      },
+      {
+        "date": "2026-10-13",
+        "firm": "Barclays",
+        "to_grade": "Overweight",
+        "from_grade": "",
+        "action": "init",
+        "pt_action": "Announces",
+        "current_pt": 353.0,
+        "prior_pt": null
+      },
+      {
+        "date": "2026-10-07",
+        "firm": "Citigroup",
+        "to_grade": "Neutral",
+        "from_grade": "Neutral",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 312.0,
+        "prior_pt": 330.0
+      },
+      {
+        "date": "2026-10-05",
+        "firm": "UBS",
+        "to_grade": "Neutral",
+        "from_grade": "Neutral",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 305.0,
+        "prior_pt": 336.0
+      },
+      {
+        "date": "2026-09-11",
+        "firm": "Keybanc",
+        "to_grade": "Sector Weight",
+        "from_grade": "",
+        "action": "init",
+        "pt_action": "",
+        "current_pt": null,
+        "prior_pt": null
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 0.69,
+        "oi_ratio": 1.89,
+        "put_volume": 374,
+        "call_volume": 540,
+        "put_open_interest": 382,
+        "call_open_interest": 202,
+        "contracts": 190,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-11-20"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2027-03-19"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.66,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.45,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_unavailable_reason": "insufficient peer coverage \u2014 no candidate universe is maintained for SIC 2810",
+    "rsi": 90,
+    "rsi_tone": "overbought",
+    "trend": "consolidating",
+    "volume_tone": "in-line with 20-day average",
+    "support": 267.28,
+    "breakout": 311.89,
+    "last_close": 307.11,
+    "sma_short": 290.96,
+    "sma_long": 292.5,
+    "volume_ratio": 0.92,
+    "return_period_pct": 5.6,
+    "period_candles": 65,
+    "atr14": 4.89,
+    "bollinger_upper": 314.97,
+    "bollinger_lower": 266.95,
+    "bollinger_width_pct": 16.5,
+    "macd_line": 5.513,
+    "macd_signal": 3.109,
+    "macd_histogram": 2.404,
+    "next_earnings_date": "2026-11-05",
+    "next_earnings_quarter": "Q4",
+    "next_earnings_interval": "in 8 days",
+    "next_earnings_eps_estimate": 3.61072,
+    "ex_dividend_date": "2027-01-04",
+    "dividend_rate": 7.24,
+    "is_growth": false,
+    "valuation_tone": "not enough live data to assess",
+    "bull_thesis": "live fundamentals for APD are not available this session",
+    "bear_risk": "live fundamentals are not available to size this risk",
+    "bear_quant": "insufficient live data for a downside estimate"
+  }
+}

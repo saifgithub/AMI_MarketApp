@@ -1,0 +1,744 @@
+{
+  "schema_version": 1,
+  "ticker": "NKE",
+  "captured_at": "2026-10-28T06:38:36.932965+00:00",
+  "profile_sha256": "69841958423436e0c1c56dc6dddd4e23c3b28080fb4a23dff1506f427209d9d8",
+  "profile": {
+    "ticker": "NKE",
+    "field_state": {
+      "run_date": "live",
+      "base_price": "live",
+      "pe": "live",
+      "rev_growth": "live",
+      "profit_margin": "live",
+      "net_cash": "live",
+      "week52": "live",
+      "forward_pe": "live",
+      "price_to_sales": "live",
+      "ev_to_ebitda": "live",
+      "peg_ratio": "live",
+      "peg_basis": "live",
+      "fcf_yield": "live",
+      "dividend_yield": "live",
+      "sector": "live",
+      "industry": "live",
+      "analyst_target_price": "live",
+      "analyst_rating": "live",
+      "market_cap": "live",
+      "free_cash_flow": "live",
+      "total_debt": "live",
+      "long_name": "live",
+      "exchange_name": "live",
+      "gross_margin": "live",
+      "operating_margin": "live",
+      "trailing_eps": "live",
+      "revenue_ttm": "live",
+      "revenue_per_share": "live",
+      "return_on_equity": "live",
+      "return_on_assets": "live",
+      "current_ratio": "live",
+      "quick_ratio": "live",
+      "debt_to_equity": "live",
+      "payout_ratio": "live",
+      "analyst_opinion_count": "live",
+      "analyst_target_high": "live",
+      "analyst_target_low": "live",
+      "analyst_target_median": "live",
+      "analyst_rating_score": "live",
+      "held_pct_institutions": "live",
+      "held_pct_insiders": "live",
+      "shares_outstanding": "live",
+      "float_shares": "live",
+      "gross_margin_trend_bps": "live",
+      "operating_margin_trend_bps": "live",
+      "net_margin_trend_bps": "live",
+      "margin_trend_basis": "live",
+      "buyback_ttm": "live",
+      "buyback_yield": "live",
+      "buyback_quarterly": "live",
+      "buyback_quarterly_basis": "live",
+      "buyback_pace": "live",
+      "dividends_paid_ttm": "live",
+      "capital_return_ttm": "live",
+      "capital_return_pct_fcf": "live",
+      "capex_ttm": "live",
+      "operating_cash_flow_ttm": "live",
+      "free_cash_flow_ttm": "live",
+      "cashflow_ttm_basis": "live",
+      "wc_change_ttm": "live",
+      "wc_receivables_ttm": "live",
+      "wc_inventory_ttm": "live",
+      "wc_payables_ttm": "live",
+      "fcf_history_years": "live",
+      "fcf_history": "live",
+      "capex_history": "live",
+      "fcf_conversion_pct": "live",
+      "roe_history_years": "live",
+      "roe_history_pct": "live",
+      "roe_median_pct": "live",
+      "historical_pe_median": "live",
+      "historical_pe_years": "live",
+      "historical_pe_window": "live",
+      "historical_ev_ebitda_median": "live",
+      "historical_ev_ebitda_years": "live",
+      "historical_ev_ebitda_window": "live",
+      "eps_revisions_direction": "live",
+      "eps_revisions_pct": "live",
+      "eps_revisions_current": "live",
+      "eps_revisions_window_days": "live",
+      "surprise_quarters": "live",
+      "surprise_actuals": "live",
+      "surprise_estimates": "live",
+      "surprise_pcts": "live",
+      "total_cash": "live",
+      "day_change_pct": "live",
+      "market_state": "live",
+      "sma_200": "live",
+      "price_vs_sma_200_pct": "live",
+      "volume_today": "live",
+      "volume_avg_3m": "live",
+      "change_52w_pct": "live",
+      "change_52w_sp500_pct": "live",
+      "relative_strength_52w_pct": "live",
+      "beta": "live",
+      "short_pct_float": "live",
+      "short_days_to_cover": "live",
+      "short_interest_date": "live",
+      "wacc": "live",
+      "debt_maturity": "live",
+      "cost_of_debt": "live",
+      "debt_split": "unavailable",
+      "segment_revenue": "live",
+      "geographic_revenue": "unavailable",
+      "executive_change": "live",
+      "dividend_growth": "live",
+      "buyback_price": "unavailable",
+      "recent_filings": "live",
+      "sbc": "live",
+      "roic": "unavailable",
+      "insider_ratio": "live",
+      "insider_plan_tag": "live",
+      "insider_cluster": "live",
+      "edgar_8k_flags": "live",
+      "analyst_rating_split": "live",
+      "analyst_rating_split_history": "live",
+      "analyst_tape": "live",
+      "put_call": "live",
+      "peer_comparison": "unavailable",
+      "technicals": "live",
+      "next_earnings": "live",
+      "ex_dividend_date": "live",
+      "dividend_rate": "live",
+      "news": "unavailable",
+      "social": "live"
+    },
+    "run_date": "2026-10-28",
+    "catalyst": "Q3 earnings (beat by ~4%)",
+    "forward_catalyst": "FOMC decision in 0 days",
+    "sentiment_tone": "mixed",
+    "sentiment_score": "-0.00 (live Reddit sentiment, Adanos)",
+    "mention_trend": "415 Reddit mentions over 7d, trend: falling",
+    "influencer_take": "most active in r/ValueInvesting, r/wallstreetbets, r/stocks (3 of 22 subreddits in the sample)",
+    "pattern": "buzz score 68/100, bullish 21% / bearish 25%",
+    "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+    "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+    "bull_size": 4,
+    "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+    "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+    "bear_size": 2,
+    "bear_invalidator": "next two quarters both beat AND raise",
+    "upside": 28,
+    "downside": 18,
+    "synth_lean": "constructive bull",
+    "historical_mode": false,
+    "base_price": 37.56,
+    "pe": "18.1",
+    "rev_growth": -4,
+    "profit_margin": 7,
+    "net_cash": -2757,
+    "low": 31.97,
+    "high": 69.14,
+    "forward_pe": "24.2",
+    "price_to_sales": "1.2",
+    "ev_to_ebitda": "12.0",
+    "peg_ratio": "3.20",
+    "peg_basis": "trailing",
+    "fcf_yield": 3.8,
+    "dividend_yield": 4.33,
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "analyst_target_price": 36.5,
+    "analyst_rating": "hold",
+    "market_cap": 55788,
+    "free_cash_flow": 2105,
+    "total_debt": 11125,
+    "long_name": "NIKE, Inc.",
+    "exchange_name": "NYSE",
+    "gross_margin": 43,
+    "operating_margin": 8,
+    "trailing_eps": 2.08,
+    "revenue_ttm": 45891,
+    "revenue_per_share": 30.98,
+    "return_on_equity": 22,
+    "return_on_assets": 7,
+    "current_ratio": 2.08,
+    "quick_ratio": 1.19,
+    "debt_to_equity": 0.73,
+    "payout_ratio": 79,
+    "analyst_opinion_count": 37,
+    "analyst_target_high": 60.0,
+    "analyst_target_low": 19.0,
+    "analyst_target_median": 34.0,
+    "analyst_rating_score": 2.9,
+    "held_pct_institutions": 82.6,
+    "held_pct_insiders": 2.0,
+    "shares_outstanding": 1204,
+    "float_shares": 1178,
+    "gross_margin_trend_bps": 61,
+    "operating_margin_trend_bps": 1,
+    "net_margin_trend_bps": 15,
+    "margin_trend_basis": "2026-08-31 vs 2025-08-31",
+    "buyback_ttm": 20,
+    "buyback_yield": 0.0,
+    "buyback_quarterly": [
+      0,
+      0,
+      0,
+      20
+    ],
+    "buyback_quarterly_basis": [
+      "2026-08-31",
+      "2026-05-31",
+      "2026-02-28",
+      "2025-11-30"
+    ],
+    "buyback_pace": "paused",
+    "dividends_paid_ttm": 2426,
+    "capital_return_ttm": 2446,
+    "capital_return_pct_fcf": 116,
+    "capex_ttm": 676,
+    "operating_cash_flow_ttm": 2781,
+    "free_cash_flow_ttm": 2105,
+    "cashflow_ttm_basis": "2025-11-30 to 2026-08-31",
+    "wc_change_ttm": -1627,
+    "wc_receivables_ttm": -297,
+    "wc_inventory_ttm": 267,
+    "wc_payables_ttm": -2271,
+    "fcf_history_years": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+    ],
+    "fcf_history": [
+      2184,
+      3268,
+      6617,
+      4872
+    ],
+    "capex_history": [
+      684,
+      430,
+      812,
+      969
+    ],
+    "fcf_conversion_pct": [
+      70,
+      102,
+      116,
+      96
+    ],
+    "roe_history_years": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+    ],
+    "roe_history_pct": [
+      20.9,
+      24.4,
+      39.5,
+      36.2
+    ],
+    "roe_median_pct": 30.3,
+    "historical_pe_median": 14.5,
+    "historical_pe_years": 4,
+    "historical_pe_window": "2023-2026",
+    "historical_ev_ebitda_median": 10.6,
+    "historical_ev_ebitda_years": 4,
+    "historical_ev_ebitda_window": "2023-2026",
+    "eps_revisions_direction": "down",
+    "eps_revisions_pct": -30.5,
+    "eps_revisions_current": 0.37,
+    "eps_revisions_window_days": 90,
+    "surprise_quarters": [
+      "2025-11-30",
+      "2026-02-28",
+      "2026-05-31",
+      "2026-08-31"
+    ],
+    "surprise_actuals": [
+      0.53,
+      0.35,
+      0.72,
+      0.48
+    ],
+    "surprise_estimates": [
+      0.37351,
+      0.28165,
+      0.12718,
+      0.43689
+    ],
+    "surprise_pcts": [
+      41.9,
+      24.3,
+      466.1,
+      9.9
+    ],
+    "total_cash": 8368,
+    "day_change_pct": -0.92,
+    "market_state": "PREPRE",
+    "sma_200": 46.47,
+    "price_vs_sma_200_pct": -19.2,
+    "volume_today": 14653611,
+    "volume_avg_3m": 32897581,
+    "change_52w_pct": -44.3,
+    "change_52w_sp500_pct": 12.1,
+    "relative_strength_52w_pct": -56.4,
+    "beta": 1.1,
+    "short_pct_float": 10.38,
+    "short_days_to_cover": 3.0,
+    "short_interest_date": "2026-09-30",
+    "wacc_estimate_pct": 9.3,
+    "wacc_beta": 1.1,
+    "debt_maturity_labels": [
+      "Within 1 year",
+      "Year 2",
+      "Year 3",
+      "Year 4",
+      "Year 5"
+    ],
+    "debt_maturity_values": [
+      2000,
+      0,
+      0,
+      1500,
+      0
+    ],
+    "debt_maturity_period_end": "2026-05-31",
+    "debt_maturity_beyond_5y": 4442,
+    "debt_maturity_excluded_st": null,
+    "cost_of_debt_pct": 4.1,
+    "cost_of_debt_basis": "cash interest paid, fiscal year",
+    "cost_of_debt_interest": 323,
+    "cost_of_debt_gross_debt": 7942,
+    "cost_of_debt_period_end": "2026-05-31",
+    "segment_revenue_labels": [
+      "NIKE Brand",
+      "Converse"
+    ],
+    "segment_revenue_values": [
+      45222,
+      1174
+    ],
+    "segment_revenue_total": 46398,
+    "segment_revenue_period_end": "2026-05-31",
+    "segment_revenue_basis": "segment sales including intersegment",
+    "executive_change_verified_from": "2026-05-01",
+    "executive_change_verified_through": "2026-09-25",
+    "executive_change_unverified_days": 33,
+    "executive_change_state": "filed",
+    "executive_change_items": [
+      {
+        "accession_no": "0000320187-26-000170",
+        "form": "8-K",
+        "filed": "2026-09-16",
+        "report_date": "2026-09-15",
+        "age_days": 42,
+        "extract_status": "extracted",
+        "excerpt": "On September 15, 2026, the Board of Directors (the \u201cBoard\u201d) of NIKE, Inc. (the \u201cCompany\u201d) increased the size of the Board to twelve directors and appointed Alexandre Arnault as a director of the Company, effective immediately, for an initial term expiring at the Company\u2019s 2027 annual meeting of shareholders. Committee assignments for Mr. Arnault have not yet been determined. Alexandre Arnault, 34, has been the Deputy Chief Executive Officer of Mo\u00ebt Hennessy, the wines and spirits division of LVMH Mo\u00ebt Hennessy Louis Vuitton SE (\u201cLVMH\u201d), since February 2025, and has served on the board of directors of LVMH since April 2024. Mr. Arnault previously served as the Executive Vice President of Products and Communications at Tiffany & Co. from January 2021 until February 2025, where he developed and implemented the company\u2019s communications and products strategy. He also served as Chief Executive Officer of RIMOWA from October 2016 to December 2020.",
+        "truncated": true,
+        "full_len": 2282
+      },
+      {
+        "accession_no": "0000320187-26-000143",
+        "form": "8-K",
+        "filed": "2026-09-10",
+        "report_date": "2026-09-08",
+        "age_days": 48,
+        "extract_status": "extracted",
+        "excerpt": "\u2013 Departure of Directors or Certain Officers; Election of Directors; Appointment of Certain Officers; Compensatory Arrangements of Certain Officers. On July 15, 2026, the Board of Directors of NIKE, Inc. (the \u201cCompany\u201d) adopted an amendment and restatement of the NIKE, Inc. Employee Stock Purchase Plan (as amended and restated, the \u201cPlan\u201d), subject to shareholder approval at the Company\u2019s annual meeting of shareholders (the \u201cAnnual Meeting\u201d). At the Annual Meeting, held on September 8, 2026, the Company\u2019s shareholders approved the Plan to, among other changes, increase the number of shares of the Company\u2019s Class B Common Stock authorized for issuance under the Plan by 16,000,000 shares. A description of the Plan was set forth in the Company\u2019s definitive proxy statement on Form 14A filed with the U.S. Securities and Exchange Commission on July 15, 2026 (the \u201cProxy Statement\u201d) in the section titled \u201cSummary of the Employee Stock Purchase Plan.\u201d The descriptions of the Plan contained herein and in the Proxy Statement are qualified in their entirety by reference to the Plan, a copy of which is attached hereto as Exhibit 10.1 and incorporated herein by reference.",
+        "truncated": false,
+        "full_len": 1176
+      }
+    ],
+    "executive_change_total": 5,
+    "dividend_growth": {
+      "__cr237__": "DividendGrowth",
+      "v": {
+        "first_year": 2021,
+        "last_year": 2025,
+        "rate_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                0.305
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                0.34
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                0.37
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                0.4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                0.41
+              ]
+            }
+          ]
+        },
+        "total_by_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                1.1300000000000001
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                1.255
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                1.3900000000000001
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                1.51
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                1.61
+              ]
+            }
+          ]
+        },
+        "cagr_pct": 7.676518316568504,
+        "raised_years": 4,
+        "comparisons": 4,
+        "payments_per_year": {
+          "__cr237__": "tuple",
+          "v": [
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2021,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2022,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2023,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2024,
+                4
+              ]
+            },
+            {
+              "__cr237__": "tuple",
+              "v": [
+                2025,
+                4
+              ]
+            }
+          ]
+        },
+        "specials": {
+          "__cr237__": "tuple",
+          "v": []
+        },
+        "partial_year": 2026,
+        "truncated_by_gap": false
+      }
+    },
+    "buyback_price": null,
+    "recent_filings_items": [
+      {
+        "form": "10-Q",
+        "label": "Quarterly report",
+        "filed_date": "2026-10-02"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-10-01"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-09-16"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-09-10"
+      },
+      {
+        "form": "SCHEDULE 13G",
+        "label": "Filed by a >=5% holder reporting a stake in this issuer (13G, passive)",
+        "filed_date": "2026-08-12"
+      },
+      {
+        "form": "8-K",
+        "label": "Current report",
+        "filed_date": "2026-08-10"
+      },
+      {
+        "form": "ARS",
+        "label": "Annual report to shareholders",
+        "filed_date": "2026-07-22"
+      },
+      {
+        "form": "DEFA14A",
+        "label": "Proxy statement (additional material)",
+        "filed_date": "2026-07-15"
+      },
+      {
+        "form": "DEF 14A",
+        "label": "Proxy statement",
+        "filed_date": "2026-07-15"
+      },
+      {
+        "form": "10-K",
+        "label": "Annual report",
+        "filed_date": "2026-07-15"
+      }
+    ],
+    "sbc_ttm": 688,
+    "sbc_period_start": "2025-09-01",
+    "sbc_period_end": "2026-08-31",
+    "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): 0 open-market buys vs 3 open-market sales filed between 2026-07-30 and 2026-10-28 (codes P/S only) \u2014 0.00 buys per sale, AMI-computed from the issuer's SEC Form 4/5 filings. (incomplete feed: Showing the 25 most recent filings in the window)",
+    "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): of the 3 open-market sales in the window, 3 were pre-scheduled under Rule 10b5-1 plans (flag read from the Form 4's own 10b5-1 checkbox, never inferred), 0 discretionary, 0 unstated \u2014 a scheduled plan sale is not fresh conviction; a non-plan or unstated sale is the stronger signal. (incomplete feed: Showing the 25 most recent filings in the window)",
+    "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-07-30 and 2026-10-28). (incomplete feed: Showing the 25 most recent filings in the window)",
+    "edgar_8k_flag_lines": [
+      "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-01 and 2026-10-28.",
+      "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-01 and 2026-10-28."
+    ],
+    "edgar_8k_item_402_block": null,
+    "analyst_rating_split": {
+      "strong_buy": 2,
+      "buy": 8,
+      "hold": 25,
+      "sell": 5,
+      "strong_sell": 3
+    },
+    "analyst_rating_split_history": [
+      {
+        "strong_buy": 1,
+        "buy": 9,
+        "hold": 26,
+        "sell": 3,
+        "strong_sell": 3,
+        "period": "-1m"
+      },
+      {
+        "strong_buy": 1,
+        "buy": 10,
+        "hold": 25,
+        "sell": 1,
+        "strong_sell": 2,
+        "period": "-2m"
+      },
+      {
+        "strong_buy": 1,
+        "buy": 11,
+        "hold": 25,
+        "sell": 1,
+        "strong_sell": 1,
+        "period": "-3m"
+      }
+    ],
+    "analyst_tape": [
+      {
+        "date": "2026-10-22",
+        "firm": "Guggenheim",
+        "to_grade": "Buy",
+        "from_grade": "Buy",
+        "action": "reit",
+        "pt_action": "Maintains",
+        "current_pt": 50.0,
+        "prior_pt": 50.0
+      },
+      {
+        "date": "2026-10-22",
+        "firm": "Wolfe Research",
+        "to_grade": "Underperform",
+        "from_grade": "",
+        "action": "init",
+        "pt_action": "Announces",
+        "current_pt": 28.0,
+        "prior_pt": null
+      },
+      {
+        "date": "2026-10-22",
+        "firm": "Barclays",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Raises",
+        "current_pt": 45.0,
+        "prior_pt": 37.0
+      },
+      {
+        "date": "2026-10-22",
+        "firm": "BTIG",
+        "to_grade": "Buy",
+        "from_grade": "Buy",
+        "action": "reit",
+        "pt_action": "Maintains",
+        "current_pt": 50.0,
+        "prior_pt": 50.0
+      },
+      {
+        "date": "2026-10-05",
+        "firm": "Barclays",
+        "to_grade": "Overweight",
+        "from_grade": "Overweight",
+        "action": "main",
+        "pt_action": "Lowers",
+        "current_pt": 37.0,
+        "prior_pt": 48.0
+      }
+    ],
+    "put_call_ratio": {
+      "__cr237__": "PutCallRatio",
+      "v": {
+        "volume_ratio": 1.2,
+        "oi_ratio": 2.14,
+        "put_volume": 17496,
+        "call_volume": 14567,
+        "put_open_interest": 15,
+        "call_open_interest": 7,
+        "contracts": 266,
+        "expiries": 4,
+        "expiry_first": {
+          "__cr237__": "date",
+          "v": "2026-10-30"
+        },
+        "expiry_last": {
+          "__cr237__": "date",
+          "v": "2026-11-20"
+        },
+        "chain_date": {
+          "__cr237__": "date",
+          "v": "2026-10-28"
+        }
+      }
+    },
+    "put_call_volume_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.58,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "put_call_oi_baseline": {
+      "__cr237__": "RatioBaseline",
+      "v": {
+        "median": 0.56,
+        "n": 13,
+        "window_days": 90
+      }
+    },
+    "peer_comparison_unavailable_reason": "insufficient peer coverage \u2014 no candidate universe is maintained for SIC 3021",
+    "rsi": 73,
+    "rsi_tone": "overbought",
+    "trend": "consolidating",
+    "volume_tone": "below 20-day average",
+    "support": 31.97,
+    "breakout": 40.91,
+    "last_close": 37.56,
+    "sma_short": 36.04,
+    "sma_long": 37.0,
+    "volume_ratio": 0.54,
+    "return_period_pct": -11.8,
+    "period_candles": 65,
+    "atr14": 1.04,
+    "bollinger_upper": 38.94,
+    "bollinger_lower": 33.14,
+    "bollinger_width_pct": 16.1,
+    "macd_line": 0.32,
+    "macd_signal": -0.018,
+    "macd_histogram": 0.338,
+    "next_earnings_date": "2026-12-17",
+    "next_earnings_quarter": "Q4",
+    "next_earnings_interval": "in 50 days",
+    "next_earnings_eps_estimate": 0.3897,
+    "ex_dividend_date": "2026-09-01",
+    "dividend_rate": 1.64,
+    "sentiment_split": "89 positive / 102 negative / 224 neutral \u2014 neutral is 54% of the classified sample",
+    "social_engagement": "103 distinct posts, 1,662 total upvotes",
+    "social_fetched_age": "fetched 2026-10-28 (1m ago)",
+    "subreddit_split": [
+      "r/ValueInvesting: 169 mentions, sentiment -0.02, buzz 52/100",
+      "r/wallstreetbets: 72 mentions, sentiment -0.02, buzz 45/100",
+      "r/stocks: 69 mentions, sentiment -0.02, buzz 45/100"
+    ],
+    "social_baselines": "sentiment score -0.00 vs trailing-90d median -0.04 (13 daily reads on file); mention volume 415 vs trailing-90d median 3994 (13 daily reads on file)",
+    "is_growth": false,
+    "valuation_tone": "trading at a discount to its peers",
+    "bull_thesis": "NKE's revenue growth (-4%) and profit margin (7%) justify a premium multiple",
+    "bear_risk": "multiple compression if growth decelerates \u2014 18x is sensitive",
+    "bear_quant": "a 10-point multiple compression = ~55% downside"
+  }
+}
