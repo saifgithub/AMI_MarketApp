@@ -77,6 +77,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 | 17 | **Anthropic Sonnet 5.5 AAPL smoke** | 5 (AAPL × R1–R5) | production (backend-default) | uncapped | `claude-sonnet-5-5`, all tiers pinned to one model, thinking omitted/off | **DONE 2026-10-27 — PASS/PASS/APPROVE/APPROVE/APPROVE; PM votes 0/0/3/2/5 of 5; sizes —/—/1.5/2.5/3.0%; 5.19–5.50 min/room; zero scripted turns, provider errors, truncation; updated gate 5/5 PASS.** Single ticker, one rep: API/prompt smoke, not a stability or monotonicity measurement | out/sonnet55-aapl → ~/sonnet55_aapl_valid | this row |
 | 18 | **CR265 AAPL paired prompt improvement** | 10 (AAPL R4 × 5 reps × 2 arms) | production control vs cr265-prompt-improvements | uncapped | ami-llm, thinking OFF, reviews OFF | **DONE 2026-10-27 — control 4 PASS/1 APPROVE (80% agreement, 2/4 adjacent flips); candidate 3 PASS/2 APPROVE (60%, 3/4); 10/10 contract gates OK. NO-GO for stability; production unchanged** | out/cr265-ami-aapl → ~/cr265_ami_aapl | CR265 results_aapl_ami_llm_2026-10-27 |
 | 19 | **CR265 frozen AAPL isolated ablations** | 60 valid (3 models × 4 arms × 5 reps) + 20 excluded Sonnet config-pilot | production control / CIO only / four-analyst lane only / Trader only on one frozen profile | uncapped | ami-llm + Ling thinking OFF + Sonnet 5.5; reviews OFF | **DONE 2026-10-28 — all 60 contract gates OK; one rendered fact-sheet hash across all valid rooms. CIO no improvement anywhere; lane only helps Ling (80→100%, ami 100→60%, Sonnet 100→80%); Trader 80/40/100% by model. No global promotion** | out/cr265-frozen → ~/cr265_frozen + ~/cr265_frozen_ling | CR265 results_frozen_ablation_2026-10-28 |
+| 20 | **CR265 T003 Ling lane 30** | 120 + 2 control retry | production control vs four-analyst lane cleanup, 30 frozen tickers × 2 reps | uncapped | Ling thinking OFF, reviews OFF | **DONE 2026-10-28 — approvals tied 33/60; unstable 13/30→5/30; candidate 60/60 gates OK; TMO replacement 2/2 OK but flips. RM instability worsened 10→15/30. GO to R1–R5 validation, not production** | out/cr265-frozen30/ling → ~/cr265_30_ling | CR265 results_t003_ling_lane_30_2026-10-28 |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
@@ -153,6 +154,10 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
    Lane-only is model-local (80% control→100% on Ling, 100→60% on ami, 100→80%
    on Sonnet). Trader-only reaches 100% on Sonnet but needs 5/5 geometry repairs.
    Prompt acceptance must be per model; no component earns global promotion.
+20. **CR265 T003 Ling lane 30:** lane cleanup cuts unstable tickers 13/30→5/30
+   with approvals tied 33/60 and repairs tied at seven. Fundamentals 7→5 and
+   Trader 18→13 improve, but Research Manager worsens 10→15. Verdict stability
+   improved without full-pipeline stability. Next is R1–R5 validation, not deploy.
 
 ## 4. Handoff for the tm-all lane (CR254)
 

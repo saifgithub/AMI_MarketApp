@@ -51,7 +51,14 @@ confirmation; `ami-llm` and Ling are the iteration models.
 3. **Success criterion:** higher verdict agreement and fewer adjacent flips than
    control without increased repair burden or contract failures. Also require
    per-desk direction results; verdict unanimity alone is insufficient.
-4. **Status:** implementation started; result pending.
+4. **Status:** COMPLETE 2026-10-28. Control 13/30 unstable vs lane 5/30;
+   approvals tied 33/60. Candidate 60/60 gates OK; control TMO rep2 was replaced
+   by a clean pair which itself flipped PASS→APPROVE. Geometry repairs tied at
+   seven per arm. Research Manager instability worsened 10→15/30, so the final
+   verdict improved without full-pipeline stabilisation.
+5. **Decision:** GO to T011 R1–R5 validation on Ling and later Sonnet
+   confirmation; no production fold-in yet and no transfer claim to `ami-llm`.
+6. **Evidence:** `results_t003_ling_lane_30_2026-10-28.md`.
 
 ### T004 — `ami-llm` Execution Desk clarification, 30 frozen tickers
 
