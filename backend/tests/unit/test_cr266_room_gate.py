@@ -855,3 +855,21 @@ def test_the_scripted_path_never_carries_a_record(gate_on):
     verdict = asyncio.run(_drain())
     assert verdict.decision_record is None
     assert ctx.evidence_gate is None
+
+
+def test_a_missing_registry_fails_closed_before_the_pm_call(gate_on):
+    # Complete supportive cards but no fact-sheet registry: data presence is
+    # registry-backed, so the evidence is uncomputable and the convene fails
+    # closed BEFORE the CIO is asked — never an ordinary neutral room.
+    ctx, mandate, profile = _ctx(cards_by_desk=_strong_room_cards())
+    profile = dict(profile)
+    profile.pop("field_state")
+    gateway = _GateGateway([_PM_APPROVE])  # never consumed
+    captured = _drain_cio(gateway, ctx, mandate, profile)
+
+    assert _pm_calls(gateway) == []
+    verdict = captured["verdict"]
+    assert verdict.action == "PASS"
+    assert verdict.overridden_from_llm is True
+    assert "registry:field_state" in verdict.reason
+    assert verdict.decision_record is None  # never fabricated

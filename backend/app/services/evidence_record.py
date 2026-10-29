@@ -5,7 +5,8 @@ module converts those parsed cards into one deterministic, typed record:
 exactly one card per desk per item (four desks x five items = 20 — a missing
 cell or a duplicate fails the evidence closed), per-item data presence read
 off the fact sheet's own `field_state` registry (never the LLM's self-reported
-`data=` flag), net support as SUM(direction x grade)/20 so complete evidenced
+`data=` flag — and a MISSING registry fails closed rather than reading as a
+neutral room), net support as SUM(direction x grade)/20 so complete evidenced
 support is exactly 1.0, and unresolved objections at adequate severity (each
 costing 0.1). The record feeds the PM gate: per provider+MODEL calibrated
 thresholds (`vllm:ami-llm`, not the shared `vllm` provider) keyed by the
@@ -113,11 +114,13 @@ class EvidenceObjection:
 class EvidenceRecord:
     """The typed record the gate scores. `evidence_available` is False unless
     the contract holds exactly — every required desk filing exactly one card
-    on every item (twenty cards, no holes, no duplicates). A desk with
-    nothing parseable, a desk-item hole, an item nobody filed, or a second
-    card from one desk on one item all fail closed instead of scoring. The
+    on every item (twenty cards, no holes, no duplicates) AND the fact-sheet
+    registry present to back data presence. A desk with nothing parseable, a
+    desk-item hole, an item nobody filed, a second card from one desk on one
+    item, or a missing registry all fail closed instead of scoring. The
     `missing` tuple names every hole (`cards:<desk>`, `missing:<desk>:<item>`,
-    `item:<item>`, `duplicate:<desk>:<item>`) for the fail-closed reason."""
+    `item:<item>`, `duplicate:<desk>:<item>`, `registry:field_state`) for the
+    fail-closed reason."""
 
     items: tuple[EvidenceItem, ...]
     objections: tuple[EvidenceObjection, ...]
@@ -178,13 +181,22 @@ def build_evidence_record(
     sum so they can never inflate it. `net_support` is the summed
     direction x grade contribution divided by `REQUIRED_CARD_COUNT`, so
     complete evidenced support from all twenty cells is exactly 1.0.
+
+    A MISSING registry (`field_state` None or empty) is not a neutral room:
+    data presence is registry-backed, so with no registry there is no honest
+    way to weigh any card — the evidence is uncomputable, marked
+    `registry:field_state` and unavailable. A NONEMPTY registry with
+    individual registered fields absent/unavailable is the ordinary case and
+    stays neutral/unsupported, never bearish.
     """
+    missing: list[str] = []
+    if not field_state:
+        missing.append("registry:field_state")
     state = field_state or {}
     data_present = {item: _live(state, ITEM_FIELD_REGISTRY[item]) for item in ITEM_IDS}
 
     items: list[EvidenceItem] = []
     objections: list[EvidenceObjection] = []
-    missing: list[str] = []
     cards_per_item: dict[str, list[EvidenceItem]] = {item: [] for item in ITEM_IDS}
 
     for desk in REQUIRED_DESKS:

@@ -614,3 +614,42 @@ def test_unresolved_objections_carry_their_text_and_ids():
     entry = record.unresolved_objections[0]
     assert entry.objection == "the accruals disagree"
     assert entry.target == "eq" and entry.severity == "high"
+
+
+# ── the registry itself is required ─────────────────────────────────────────
+
+
+def test_a_missing_registry_fails_closed_with_an_explicit_marker():
+    # A complete, strongly supportive card set is NOT evidence when the
+    # fact-sheet registry that backs data presence is gone: uncomputable
+    # evidence fails closed instead of reading as an ordinary neutral room.
+    desks = {
+        desk: _desk_cards(_all_strong_block())
+        for desk in ("fundamentals_analyst", "bull_researcher",
+                     "bear_researcher", "research_manager")
+    }
+    for state in (None, {}):
+        record = build_evidence_record(desks, state)
+        assert record.evidence_available is False
+        assert "registry:field_state" in record.missing
+        assert record.net_support == 0.0  # no registry -> nothing is evidenced
+        gate = _gate(cards_by_desk=desks, field_state=state)
+        assert gate.fail_closed_reason is not None
+        assert "registry:field_state" in gate.fail_closed_reason
+        assert gate.allowed_actions == ("PASS",)
+
+
+def test_a_nonempty_registry_with_unavailable_fields_stays_neutral():
+    # The contrast case: the registry EXISTS but every registered field is
+    # unavailable — the ordinary outage shape, which stays computable and
+    # neutral/unsupported, never bearish, and never fail-closed.
+    desks = {
+        desk: _desk_cards(_all_strong_block())
+        for desk in ("fundamentals_analyst", "bull_researcher",
+                     "bear_researcher", "research_manager")
+    }
+    record = build_evidence_record(desks, _field_state(live=False))
+    assert record.evidence_available is True
+    assert "registry:field_state" not in record.missing
+    assert record.net_support == 0.0
+    assert record.score == 0.0
