@@ -198,6 +198,13 @@ class ScoreContractTests(unittest.TestCase):
         self.assertIsNone(out["score"])
         self.assertIn("cards:research_manager", out["missing"])
 
+    def test_empty_registry_makes_room_unscorable(self) -> None:
+        out = self._scored(_full_room_cards(), {})
+        self.assertFalse(out["evidence_available"])
+        self.assertIsNone(out["score"])
+        self.assertIn("registry:field_state", out["missing"])
+        self.assertEqual(out["field_state_source"], "sheet_state")
+
     def test_data_absent_branch_uses_self_report_and_is_labelled(self) -> None:
         out = self._scored(_full_room_cards(), None)
         self.assertEqual(out["field_state_source"], "card_self_report")
@@ -583,6 +590,31 @@ class CliTests(unittest.TestCase):
         self.assertEqual(
             report["tally"]["field_state_source:card_self_report"],
             len(records))
+
+    def test_cli_refuses_production_json_on_incomplete_evidence(self) -> None:
+        tmp = Path(tempfile.mkdtemp())
+        records = [self._record(f"T{i:02d}", lvl, rep, n_well=(i % 5) * 5)
+                   for lvl in range(1, 6) for i in range(16)
+                   for rep in ("1", "2")]
+        records += [self._holdout_record(lvl) for lvl in range(1, 6)]
+        records[0]["sheet_state"] = {}
+        turns = self._write_turns(tmp, records)
+        out_dir = tmp / "out"
+        argv = sys.argv
+        try:
+            sys.argv = ["evidence_gate_fit", "--provider", "partial-model",
+                        "--turns-file", str(turns), "--out-dir", str(out_dir)]
+            with self.assertRaises(SystemExit) as ctx:
+                fit.main()
+            self.assertEqual(ctx.exception.code, 1)
+        finally:
+            sys.argv = argv
+        self.assertFalse((out_dir / "thresholds_partial-model.json").exists())
+        report = json.loads(
+            (out_dir / "fit_report_partial-model.json").read_text())
+        self.assertTrue(any("partial production ladder" in e
+                            for e in report["gate_validation_errors"]))
+        self.assertEqual(report["tally"]["rooms_evidence_unavailable"], 1)
 
     def test_cli_refuses_without_provider(self) -> None:
         argv = sys.argv

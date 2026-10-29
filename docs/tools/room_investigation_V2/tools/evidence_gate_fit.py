@@ -262,6 +262,8 @@ def score_room(
         card_present = lambda c: data_present[c["item"]] and c["data"] == "yes"
 
     missing: list[str] = []
+    if field_state is not None and not field_state:
+        missing.append("registry:field_state")
     items_out: list[dict] = []
     cards_per_item: dict[str, list[dict]] = {i: [] for i in ITEMS}
     seen_desk_item: set[tuple[str, str]] = set()
@@ -615,6 +617,12 @@ def main() -> None:
         errors.append(
             f"holdout {ticker} at/above the fitted bar at {levels} — "
             "holdouts must stay out at every level (falsifier)"
+        )
+    unscorable = [r for r in rooms if not r.evidence_available]
+    if unscorable:
+        errors.append(
+            f"{len(unscorable)}/{len(rooms)} rooms lack complete computable "
+            "registry-backed evidence — refusing a partial production ladder"
         )
     if any(r.field_state_source == "card_self_report" for r in rooms):
         errors.append(
