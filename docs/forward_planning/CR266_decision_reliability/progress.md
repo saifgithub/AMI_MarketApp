@@ -184,3 +184,7 @@
    import `/harness/backend/app` with `_cards_channel_complete`. The fresh AAPL
    smoke passed its contract gate with 20/20 cards and registry state; the
    corrected 60-room matrix is now running as `bash-uf7qb557`.
+10. Control decision diagnostics on the 43 scorable rooms: APPROVE mean score
+    0.258 vs PASS −0.076, discrimination **+0.334**. Verdict flips are 10/30
+    (33.3%). The evidence direction separates decisions, but coverage and
+    test/retest reliability are not yet good enough for a gate.
