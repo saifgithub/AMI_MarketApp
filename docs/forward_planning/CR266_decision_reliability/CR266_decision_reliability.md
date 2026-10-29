@@ -20,14 +20,24 @@ acceptance; a failed gate remains OFF.
 ## Shared contract
 
 `DecisionRecord` carries evidence score, threshold, allowed actions, computed
-size, unresolved objections, evidence availability/source, contested flag and
-reasons. The PM vote bar remains 4/4/3/2/2; the deterministic safety floor
-remains the final veto. Uncalibrated providers and uncomputable evidence fail
-closed with an explicit reason, never a silent bypass.
+size, unresolved objection text and IDs, evidence availability/source,
+contested flag and `contested_reasons`. The PM vote bar remains 4/4/3/2/2; the
+deterministic safety floor remains the final veto. Uncalibrated model identities
+and uncomputable evidence fail closed with an explicit reason, never a silent
+bypass.
+
+`net_support` is the sum of direction × grade contributions divided by the 20
+required cards (four desks × five items); `score = net_support - 0.1 ×
+unresolved_objections`. Thus complete support scores 1.0 and each unresolved
+objection retains a material 0.1 penalty. Every desk must file exactly one card
+per item: missing or duplicate cards fail closed rather than inflating the
+score.
 
 Sizing is continuous and monotone from 25% of mandate cap at the evidence
-threshold to 100% at score 1.0. Thresholds are per model, monotone descending
-from R1 to R5, and fitted by the calibration tool rather than hand-selected.
+threshold to 100% at score 1.0. Thresholds are keyed by provider **and model**
+(for example `vllm:ami-llm`, not the shared `vllm` provider), monotone
+descending from R1 to R5, and fitted by the calibration tool rather than
+hand-selected.
 
 ## Acceptance
 

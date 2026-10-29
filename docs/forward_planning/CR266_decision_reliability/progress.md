@@ -48,3 +48,21 @@
    tickers 16→12; approvals 89/300→94/300. Flip CI 16.1–29.3% still fails <10%.
 2. Lane earns only a CR266 structural comparison on Ling, not a global rollout.
    Full report committed as `04c6c311`.
+
+## 2026-10-29 — outcome reporting and integration review
+
+1. Calibration/outcome implementation committed as `f4c81519`; focused backend
+   verification is 42 passed and the fit helper has 15 tests. No real thresholds
+   have been fitted or enabled.
+2. The real Alpha outcome report is saved as
+   `room_outcome_report_2026-10-29.json`: 6,743 banked rows, 6,172 pending,
+   571 unscorable and **zero scored**. It therefore provides no outcome or
+   human-consensus alignment measurement. The daily scorer was not run and no
+   cron was installed because production changes remain unauthorised.
+3. Integration found and is correcting three contract issues before pilots:
+   raw summed scores did not fit the sizing range; backend/mobile contested
+   field names differed; and provider-only keys would share thresholds between
+   `ami-llm` and Ling on vLLM. The normalized score is mean card support minus
+   0.1 per unresolved objection, and threshold identity is provider plus model.
+4. Required cards will be exactly one per desk/item. Duplicate cards fail
+   closed rather than inflating the evidence score.

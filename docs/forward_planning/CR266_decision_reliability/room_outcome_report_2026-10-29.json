@@ -1,0 +1,71 @@
+{
+  "by_action": {},
+  "consensus_alignment": {
+    "categories": {
+      "buy": {
+        "APPROVE": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        },
+        "PASS": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        }
+      },
+      "hold": {
+        "APPROVE": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        },
+        "PASS": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        }
+      },
+      "sell": {
+        "APPROVE": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        },
+        "PASS": {
+          "hit_rate": null,
+          "mean_forward_return": null,
+          "n": 0,
+          "small_sample": true
+        }
+      }
+    },
+    "label": "CALIBRATION CONTEXT ONLY \u2014 human-analyst consensus ratings are NOT independent outcome truth. They are lagging, herding, conflicted human opinions captured at an unknown time relative to the Room's reference price; agreement with them is one more sanity lens on the Room's decision process, never a verdict on whether a call was right. Read beside the coverage block: thin scored denominators make every number here a shape, not a measurement.",
+    "unmapped_count": 0,
+    "unmapped_tickers": []
+  },
+  "conviction": {},
+  "coverage": {
+    "banked": 6743,
+    "exclusion_reasons": {
+      "excluded_user": 234,
+      "no_reference_price": 337
+    },
+    "pending": 6172,
+    "scored": 0,
+    "scored_share_of_banked": 0.0,
+    "unscorable": 571
+  },
+  "interpretation": "Internal calibration floor only. This is NOT a performance claim, an alpha claim, or a track record \u2014 AMI Trade is a simulation-only education product. The report answers two floor questions: are APPROVEs systematically worse than PASSes, and does the graded conviction signal separate at all. Read the coverage block first: a small scored denominator means neither question is answerable yet. No significance tests are reported by design \u2014 the floor needs distribution shapes, not inference theater.",
+  "limitations": [
+    "No scored rows \u2014 the ledger has nothing to calibrate against yet; every distribution below is empty, not evidence of anything.",
+    "No graded conviction buckets: self-consistency voting is off or no scored APPROVE carried a vote fraction \u2014 'high conviction means something' is unmeasured, not disproven.",
+    "Horizons overlap across rows (21\u2013252 calendar days) and tickers recur, so rows are not independent draws; no standard errors or significance tests are reported because this floor is read on distribution shape, not on inference.",
+    "The reference price is the one the Room saw at run time; forward returns are real stored closes only \u2014 unscorable rows (mock bars, missing reference) are excluded, never scored against a random walk."
+  ]
+}
