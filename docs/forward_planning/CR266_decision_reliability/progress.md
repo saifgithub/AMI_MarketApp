@@ -156,5 +156,7 @@
    failures + 15 errors because forcing mock invalidates provider fixtures;
    root-cwd also loads the production `.env`. The correct isolated invocation
    is `cd backend && USE_REAL_MARKET_DATA=false .venv/bin/pytest tests/unit/ -q`
-   with no provider override. Three representative pricing/provider/telemetry
-   tests pass in 4s, and the full suite is rerunning that way.
+   with no provider override. That complete run finished in 23m34s:
+   **7,786 passed, 7 skipped, 1 failed**. The sole failure is the unrelated
+   pre-existing `DEF465.row` citation of missing `debug_unpack_ios`; every
+   CR266 backend test passed. The other track's defect remains untouched.
