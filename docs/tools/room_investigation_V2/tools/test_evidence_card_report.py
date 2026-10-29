@@ -260,6 +260,8 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(r["icc_A1"], 1.0)
         self.assertTrue(r["icc_pass"])
         self.assertTrue(r["coverage_pass"])
+        self.assertTrue(r["registry_state_pass"])
+        self.assertTrue(r["corpus_pass"])
         self.assertTrue(r["gate_pass"])
         self.assertEqual(r["icc_required"], 0.85)
         self.assertNotIn("thresholds", json.dumps(r))
@@ -349,6 +351,87 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(r["counts"]["arms_not_completed"], 3)
         self.assertEqual(r["field_state_source"],
                          {"sheet_state": 4, "card_self_report": 2})
+        self.assertTrue(r["icc_pass"])       # survivors still agree
+        self.assertTrue(r["coverage_pass"])
+        self.assertFalse(r["registry_state_pass"])
+        self.assertFalse(r["corpus_pass"])
+        self.assertFalse(r["gate_pass"])
+
+    def test_registry_state_required_for_gate(self) -> None:
+        # non-vacuity: ICC and coverage perfect, anomalies zero — a single
+        # card_self_report room must still fail the gate on its own.
+        rooms = []
+        for i, t in enumerate(("A", "B", "C", "D")):
+            v = 0.5 + i * 0.1
+            for rep in ("1", "2"):
+                rooms.append(_room(t, 4, rep, score=v))
+        tally = {"field_state_source:sheet_state": 7,
+                 "field_state_source:card_self_report": 1}
+        r = ecr.assemble_report("m", rooms, tally)
+        self.assertTrue(r["icc_pass"])
+        self.assertTrue(r["coverage_pass"])
+        self.assertTrue(r["corpus_pass"])
+        self.assertFalse(r["registry_state_pass"])
+        self.assertFalse(r["gate_pass"])
+        self.assertEqual(r["corpus"]["card_self_report_rooms"], 1)
+
+    def test_duplicate_keys_fail_corpus_pass(self) -> None:
+        # non-vacuity: same (ticker, risk, rep) scored twice — the duplicate
+        # is skipped for ICC (first wins), so numbers look clean; corpus_pass
+        # must catch the skipped row.
+        rooms = []
+        for i, t in enumerate(("A", "B", "C")):
+            v = 0.5 + i * 0.1
+            rooms.append(_room(t, 4, "1", v))
+            rooms.append(_room(t, 4, "2", v))
+        rooms.append(_room("A", 4, "1", score=0.9))  # re-run of A rep 1
+        r = self._report(rooms)
+        self.assertTrue(r["icc_pass"])
+        self.assertTrue(r["coverage_pass"])
+        self.assertTrue(r["registry_state_pass"])
+        self.assertFalse(r["corpus_pass"])
+        self.assertFalse(r["gate_pass"])
+        self.assertEqual(r["counts"]["rooms_duplicate_key"], 1)
+        self.assertEqual(r["corpus"]["duplicate_keys"], 1)
+
+    def test_loader_anomalies_fail_corpus_pass(self) -> None:
+        # non-vacuity: each loader anomaly class independently fails the
+        # gate even when every loaded room is complete and agrees.
+        rooms = []
+        for i, t in enumerate(("A", "B", "C")):
+            v = 0.5 + i * 0.1
+            rooms.append(_room(t, 4, "1", v))
+            rooms.append(_room(t, 4, "2", v))
+        for anomaly in ({"arms_not_completed": 1},
+                        {"arms_bad_key": 1},
+                        {"rooms_empty_turns": 1}):
+            with self.subTest(anomaly=anomaly):
+                r = ecr.assemble_report("m", rooms, {}, anomaly)
+                self.assertTrue(r["icc_pass"])
+                self.assertTrue(r["coverage_pass"])
+                self.assertTrue(r["registry_state_pass"])
+                self.assertFalse(r["corpus_pass"])
+                self.assertFalse(r["gate_pass"])
+                self.assertEqual(r["corpus"]["loader_anomalies"], anomaly)
+
+    def test_bad_level_rooms_fail_corpus_pass(self) -> None:
+        # non-vacuity: a room dropped by score_corpus for a non R1..R5 level
+        # is an excluded corpus row — the gate must not pass over it.
+        rooms = [_room(t, 4, rep, 0.5 + i * 0.1)
+                 for i, t in enumerate(("A", "B", "C"))
+                 for rep in ("1", "2")]
+        r = ecr.assemble_report("m", rooms, {"rooms_bad_level": 1})
+        self.assertTrue(r["icc_pass"])
+        self.assertTrue(r["coverage_pass"])
+        self.assertFalse(r["corpus_pass"])
+        self.assertFalse(r["gate_pass"])
+        self.assertEqual(r["corpus"]["rooms_bad_level"], 1)
+
+    def test_empty_corpus_is_not_a_pass(self) -> None:
+        r = self._report([])
+        self.assertFalse(r["icc_pass"])
+        self.assertFalse(r["coverage_pass"])
+        self.assertFalse(r["gate_pass"])
 
 
 class LoaderTests(unittest.TestCase):
@@ -419,6 +502,9 @@ class LoaderTests(unittest.TestCase):
 
 class PipelineTests(unittest.TestCase):
     def test_sheet_state_forwarded_to_field_state_source(self) -> None:
+        # forwarding proof: sheet_state lands as sheet_state, absence lands
+        # as labelled card_self_report — and under the hardened gate a mixed
+        # corpus can no longer pass on the survivors' ICC.
         records = []
         for rep in ("1", "2"):
             records.append({"ticker": "AAPL", "rep": rep, "risk_score": 4,
@@ -435,12 +521,29 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(r["field_state_source"],
                          {"sheet_state": 2, "card_self_report": 4})
         self.assertEqual(r["icc_A1"], 1.0)
-        self.assertTrue(r["gate_pass"])
+        self.assertFalse(r["registry_state_pass"])
+        self.assertFalse(r["gate_pass"])
         # deterministic per-ticker scale: 10/20, 12/20, 14/20
         self.assertEqual(r["per_ticker"]["AAPL"]["scores"],
                          {"1": 0.5, "2": 0.5})
         self.assertEqual(r["per_ticker"]["NVDA"]["scores"],
                          {"1": 0.7, "2": 0.7})
+
+    def test_all_registry_corpus_passes(self) -> None:
+        records = []
+        for i, t in enumerate(("AAPL", "MSFT", "NVDA")):
+            for rep in ("1", "2"):
+                records.append({"ticker": t, "rep": rep, "risk_score": 4,
+                                "turns": _complete_turns(10 + 2 * i),
+                                "sheet_state": ALL_LIVE,
+                                "verdict_action": "x"})
+        rooms, tally = fit.score_corpus(records)
+        r = ecr.assemble_report("m", rooms, tally)
+        self.assertEqual(r["field_state_source"],
+                         {"sheet_state": 6, "card_self_report": 0})
+        self.assertTrue(r["registry_state_pass"])
+        self.assertTrue(r["corpus_pass"])
+        self.assertTrue(r["gate_pass"])
 
 
 class CliTests(unittest.TestCase):
@@ -449,7 +552,8 @@ class CliTests(unittest.TestCase):
         p.write_text("".join(json.dumps(r) + "\n" for r in records))
         return p
 
-    def _pilot_records(self, broken: bool = False) -> list[dict]:
+    def _pilot_records(self, broken: bool = False,
+                       one_self_report: bool = False) -> list[dict]:
         records = []
         for i, t in enumerate(("AAPL", "MSFT", "NVDA", "TSLA", "AMD")):
             for rep in ("1", "2"):
@@ -458,7 +562,9 @@ class CliTests(unittest.TestCase):
                     turns = turns[:3]  # research_manager missing
                 rec = {"ticker": t, "rep": rep, "risk_score": 4,
                        "verdict": "APPROVE", "turns": turns}
-                if t == "AAPL":
+                # the passing fixture runs entirely on registry sheet_state;
+                # one_self_report exercises the registry_state_pass failure
+                if not (one_self_report and t == "MSFT" and rep == "1"):
                     rec["sheet_state"] = ALL_LIVE
                 records.append(rec)
         return records
@@ -487,9 +593,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(report["icc_required"], 0.85)
         self.assertEqual(report["counts"]["rooms"], 10)
         self.assertEqual(report["counts"]["rooms_unscorable"], 0)
-        self.assertEqual(report["field_state_source"]["sheet_state"], 2)
-        self.assertEqual(
-            report["field_state_source"]["card_self_report"], 8)
+        self.assertEqual(report["field_state_source"],
+                         {"sheet_state": 10, "card_self_report": 0})
+        self.assertTrue(report["registry_state_pass"])
+        self.assertTrue(report["corpus_pass"])
         self.assertTrue(report["limitations"])
         self.assertNotIn("NaN", json.dumps(report))  # null, not NaN
 
@@ -506,6 +613,25 @@ class CliTests(unittest.TestCase):
         self.assertFalse(report["gate_pass"])
         self.assertFalse(report["coverage_pass"])
         self.assertEqual(report["counts"]["rooms_unscorable"], 1)
+
+    def test_cli_registry_state_fail_writes_report_then_exits_1(self) -> None:
+        # one room scored under the card_self_report approximation: ICC and
+        # coverage are perfect, registry_state_pass alone must fail the gate.
+        tmp = Path(tempfile.mkdtemp())
+        turns = self._write_turns(
+            tmp, self._pilot_records(one_self_report=True))
+        out_dir = tmp / "out"
+        with self.assertRaises(SystemExit) as cm:
+            self._run_main(["evidence_card_report", "--provider", "m",
+                            "--turns-file", str(turns),
+                            "--out-dir", str(out_dir)])
+        self.assertEqual(cm.exception.code, 1)
+        report = json.loads((out_dir / "card_report_m.json").read_text())
+        self.assertTrue(report["icc_pass"])
+        self.assertTrue(report["coverage_pass"])
+        self.assertFalse(report["registry_state_pass"])
+        self.assertFalse(report["gate_pass"])
+        self.assertEqual(report["corpus"]["card_self_report_rooms"], 1)
 
     def test_cli_requires_runs_or_turns_file(self) -> None:
         with self.assertRaises(SystemExit):

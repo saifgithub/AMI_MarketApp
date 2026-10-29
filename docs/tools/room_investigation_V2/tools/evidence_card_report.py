@@ -9,8 +9,13 @@ normalized over the full four-desk x five-item census; score = net_support -
 duplicate marks the room unavailable). The score is never re-derived here.
 Reports ICC(A,1) across reps per ticker (cards_run.icc_2_1) against the
 locked >= 0.85 bar AND complete machine-channel coverage as SEPARATE
-requirements — a high ICC on incomplete rooms is not a pass. No threshold
-fitting, no performance claims.
+requirements — a high ICC on incomplete rooms is not a pass. gate_pass
+additionally requires registry sheet_state on EVERY room (zero
+card_self_report — the approximation branch can never carry an acceptance)
+and a clean corpus (zero duplicate (ticker, risk, rep) keys, zero loader
+anomalies, zero bad-level rooms) — skipped or approximated rows can hide an
+incomplete corpus behind high ICC. No threshold fitting, no performance
+claims.
 
 Audit detail: the runner may repair a desk under flow room_envelope_repair
 and then room_cards_repair; base cards_run.fetch_turns reads flow='room'
@@ -73,8 +78,8 @@ LIMITATIONS = (
     "created_at, ctid — ctid is the physical insert-order tiebreak); "
     "superseded repair attempts are not separately scored.",
     "field_state_source card_self_report is the cards' own data=yes/no "
-    "approximation, not registry liveness; those rooms are labelled, never "
-    "upgraded.",
+    "approximation, not registry liveness; any such room fails "
+    "registry_state_pass — acceptance requires sheet_state on every room.",
     "This report measures score stability and machine-channel completeness "
     "only — no threshold fitting and no performance claim.",
 )
@@ -177,7 +182,7 @@ def load_run_records(
     never guessed. `fetcher` is injectable for offline tests."""
     fetcher = fetcher or fetch_turns_repair_aware
     try:
-        lines = open(runs_path).read().splitlines()
+        lines = runs_path.read_text().splitlines()
     except OSError as exc:
         raise SystemExit(f"cannot read runs file {runs_path}: {exc}") from exc
     arms = []
@@ -221,7 +226,7 @@ def load_turns_file(path: Path) -> list[dict]:
     offline mode, no DB. Same record shape load_run_records emits."""
     records = []
     try:
-        lines = open(path).read().splitlines()
+        lines = path.read_text().splitlines()
     except OSError as exc:
         raise SystemExit(f"cannot read turns file {path}: {exc}") from exc
     for lineno, line in enumerate(lines, 1):
@@ -255,8 +260,16 @@ def assemble_report(
     anomalies: dict | None = None,
 ) -> dict:
     """The report: ICC(A,1) per risk level across reps per ticker, coverage
-    per risk x rep, counts, limitations. gate_pass = icc_pass AND
-    coverage_pass — neither substitutes for the other."""
+    per risk x rep, counts, limitations.
+
+    gate_pass = icc_pass AND coverage_pass AND registry_state_pass AND
+    corpus_pass — no criterion substitutes for another:
+      * registry_state_pass: zero card_self_report rooms; data presence was
+        decided by the registry sheet_state, never the approximation branch.
+      * corpus_pass: zero duplicate (ticker, risk, rep) keys, zero loader
+        anomalies (skipped non-completed/bad-key/empty-turn arms), zero
+        bad-level rooms — a corpus that dropped rows is incomplete no matter
+        how stable the survivors look."""
     anomalies = anomalies or {}
     levels = sorted({r.level for r in rooms})
     single_level = len(levels) == 1
@@ -299,9 +312,17 @@ def assemble_report(
         cell["rooms"] += 1
         cell["complete"] += int(r.evidence_available)
 
-    icc_pass = all(icc_pass_levels)
-    coverage_pass = all(r.evidence_available for r in rooms)
-    gate_pass = icc_pass and coverage_pass
+    icc_pass = bool(rooms) and all(icc_pass_levels)
+    coverage_pass = bool(rooms) and all(
+        r.evidence_available for r in rooms)
+    card_self_report_n = tally.get("field_state_source:card_self_report", 0)
+    registry_state_pass = card_self_report_n == 0
+    bad_level_n = tally.get("rooms_bad_level", 0)
+    loader_anomaly_n = sum(anomalies.values())
+    corpus_pass = (dup_keys == 0 and loader_anomaly_n == 0
+                   and bad_level_n == 0)
+    gate_pass = (icc_pass and coverage_pass and registry_state_pass
+                 and corpus_pass)
 
     limitations = list(LIMITATIONS)
     if not single_level:
@@ -313,11 +334,22 @@ def assemble_report(
         "tool": "evidence_card_report",
         "provider": provider,
         "gate": f"icc(A,1) >= {ICC_REQUIRED} AND complete machine channels "
-                "(4 desks x 5 items, no duplicate cards)",
+                "(4 desks x 5 items, no duplicate cards) AND registry "
+                "sheet_state on every room AND clean corpus (no duplicate "
+                "keys, no excluded/anomalous arms, no bad-level rooms)",
         "icc_required": ICC_REQUIRED,
         "gate_pass": bool(gate_pass),
         "icc_pass": bool(icc_pass),
         "coverage_pass": bool(coverage_pass),
+        "registry_state_pass": bool(registry_state_pass),
+        "corpus_pass": bool(corpus_pass),
+        "corpus": {
+            "card_self_report_rooms": card_self_report_n,
+            "duplicate_keys": dup_keys,
+            "loader_anomalies": dict(anomalies),
+            "loader_anomaly_arms": loader_anomaly_n,
+            "rooms_bad_level": bad_level_n,
+        },
         "icc_A1": icc_by_risk[f"R{levels[0]}"] if single_level else None,
         "icc_by_risk": icc_by_risk,
         "counts": {
@@ -403,11 +435,16 @@ def main() -> None:
                    for v in lvl.values())
     print(f"coverage: {complete}/{c['rooms']} rooms complete → "
           f"coverage_pass={report['coverage_pass']}")
+    print(f"registry_state_pass={report['registry_state_pass']} "
+          f"corpus_pass={report['corpus_pass']}")
     print(f"field_state_source: {report['field_state_source']}")
     print(f"written: {report_path}")
     if not report["gate_pass"]:
-        print("GATE FAIL — see icc_pass / coverage_pass and "
-              "unscorable_rooms in the report", file=sys.stderr)
+        failed = [k for k in ("icc_pass", "coverage_pass",
+                              "registry_state_pass", "corpus_pass")
+                  if not report[k]]
+        print(f"GATE FAIL — failed: {', '.join(failed)}; see counts, corpus "
+              "and unscorable_rooms in the report", file=sys.stderr)
         raise SystemExit(1)
 
 
