@@ -185,15 +185,14 @@ confirmation; `ami-llm` and Ling are the iteration models.
 3. **Acceptance:** target curve 5/15/30/45/46 per 60 within tolerance, flips
    <10% with 95% CI, positive discrimination, zero holdout approvals and no
    unlabelled fallbacks. Review/re-run paths must enforce the same gate.
-4. **Status:** `ami-llm` frozen AAPL smoke passed its contract gate with 20/20
-   cards and 125 persisted registry states. At 19 pilot rooms, only 14 were
-   complete and early ICC was 0.545; APD rep1 also failed PM JSON. The current
-   pilot continues unchanged as a control, while a completeness-repair
-   candidate addresses partial blocks for the next trial. Ling's first smoke
-   was quarantined because the model was unavailable. No threshold fit or
-   acceptance result exists, and production remains unchanged. The legacy
-   dsv4 diagnostic (ICC 0.728, 69/90 complete) also fails and is not
-   transferable evidence.
+4. **Status:** canonical control: 60/60 contract gates and registry state pass,
+   but only 43/60 rooms have complete evidence and ICC is 0.839; both pilot
+   criteria fail. Evidence discrimination is +0.334, while verdict flips are
+   10/30. A corrected 60-room completeness matrix is running after its AAPL
+   smoke passed with 20/20 cards. The earlier candidate was invalidated for a
+   shadowed backend mount and is not evidence. Ling's first smoke was
+   quarantined because the model was unavailable. No threshold fit or
+   acceptance result exists, and production remains unchanged.
 5. **Evidence:** `../CR266_decision_reliability/progress.md`,
    `../../tools/room_investigation_V2/out/cr266-legacy-card-report/`, and
    `../../tools/room_investigation_V2/benchmarks/cr266-ami-cards-r4.yaml` /
