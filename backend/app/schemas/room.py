@@ -119,6 +119,32 @@ class VerdictReviewRecord(BaseModel):
     rerun_parse_failed: bool = False
 
 
+class DecisionRecord(BaseModel):
+    """CR266 — the evidence gate's persisted decision record, riding the
+    verdict JSONB like `verdict_review` below (no migration, same scope-item-1
+    precedent).
+
+    Written ONLY by a gated run whose evidence was actually computable — a
+    flag-off, non-live, legacy or fail-closed run keeps `None` (absence,
+    never a fabricated stand-in, the same T-BACKFILL rule the fields above
+    are read under). `contested` marks decisions the record itself flags as
+    arguable: split self-consistency vote, score within
+    `ROOM_EVIDENCE_CONTESTED_MARGIN` of the threshold, an approval the vote
+    bar or safety floor blocked, or any scripted desk in the run.
+    """
+
+    score: float
+    threshold: float
+    allowed_actions: list[str]
+    computed_size_pct: float | None
+    unresolved_objection_count: int
+    unresolved_objection_ids: list[str]
+    evidence_available: bool
+    evidence_source: str
+    contested: bool
+    reasons: list[str]
+
+
 class RatingSplit(BaseModel):
     """CR260 — the strong-buy→strong-sell count distribution behind the
     consensus word. Sums to the analyst count; the individual buckets are
@@ -351,6 +377,12 @@ class Verdict(BaseModel):
     # under). See `VerdictReviewRecord` for the field meanings and the two
     # degrade shapes (routed-but-skipped, parse-failed).
     verdict_review: VerdictReviewRecord | None = None
+
+    # CR266 — the evidence gate's decision record; see `DecisionRecord`. None
+    # on every run that predates the field, ran with the gate off, took the
+    # non-live scripted path, or failed closed before any evidence could be
+    # scored — absence by omission, never a stand-in (T-BACKFILL).
+    decision_record: DecisionRecord | None = None
 
 
 class RoomRun(BaseModel):

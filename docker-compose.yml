@@ -532,6 +532,18 @@ services:
       # (pilot-measured: voluntary filing is salience noise, self-filed cards
       # ICC 0.93). Default off; ships on a measured GO only.
       ROOM_CARDS_ENVELOPE_ENABLED: ${ROOM_CARDS_ENVELOPE_ENABLED:-false}
+      # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
+      # deterministic allowed-action set + computed size with a persisted
+      # decision record. Default off; per-provider acceptance-gated (a provider
+      # without calibrated thresholds in THRESHOLDS_JSON fails CLOSED, never
+      # free-passes). Compose keeps the JSON default literally {} — the Settings
+      # validator checks monotone R1>=...>=R5 at boot. Requires
+      # ROOM_CARDS_ENVELOPE_ENABLED (without the card channel there is no typed
+      # evidence; that combination fails closed too). See
+      # Settings.room_evidence_gate_*.
+      ROOM_EVIDENCE_GATE_ENABLED: ${ROOM_EVIDENCE_GATE_ENABLED:-false}
+      ROOM_EVIDENCE_GATE_THRESHOLDS_JSON: ${ROOM_EVIDENCE_GATE_THRESHOLDS_JSON:-{}}
+      ROOM_EVIDENCE_CONTESTED_MARGIN: ${ROOM_EVIDENCE_CONTESTED_MARGIN:-0.1}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

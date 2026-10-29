@@ -281,6 +281,25 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "(analyst_targets.fetch_analyst_detail), stamped at the same "
         "_stamp_next_convene_basis site as reference_price/next_convene_delta",
     ),
+    # CR266 (this CR) — found by check 1's exhaustiveness walk firing for real,
+    # the same way the R60/CR260 rows above were. decision_record's numerics
+    # (score, threshold, computed_size_pct) are computed entirely in code:
+    # score by evidence_record.build_evidence_record from the desks' parsed
+    # CLAIMS cards and the fact-sheet field_state registry (never the cards'
+    # own data= self-report), threshold read from the calibrated per-provider
+    # config, computed_size_pct from the monotone 25%-at-threshold→cap-at-1.0
+    # interpolation. The PM never states any of them; the one place the LLM's
+    # number meets the record is computed_size_pct OVERRIDING the PM's
+    # size_pct, and size_pct keeps its own CODE_CHECKED row above — the
+    # record's copy is provenance, not a second numeric surface. One row for
+    # the whole nested object, same structure.*/analyst_view precedent.
+    ("verdict", "decision_record"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.evidence_record.build_gate_decision + "
+        "app.services.room_runner._build_decision_record — typed cards x "
+        "fact-sheet registry arithmetic and calibrated-config threshold; "
+        "attached to the verdict only on gated runs with computable evidence",
+    ),
     (
         "verdict", "structure",
     ): ProvenanceRow(

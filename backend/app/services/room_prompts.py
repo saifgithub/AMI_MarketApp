@@ -1990,6 +1990,12 @@ def build_room_messages(
     # contract when (and only when) in-turn enforcement is on. False leaves
     # every prompt byte-identical to pre-CR256.
     cards_envelope: bool = False,
+    # CR266 — the runner's already-built `EvidenceGateDecision`, PM turn only.
+    # Renders the binding decision block (allowed actions, computed size,
+    # unresolved objections) as instruction text; None leaves the PM prompt
+    # byte-identical to pre-CR266. A fail-closed gate never reaches here —
+    # the runner does not call the CIO on that path at all.
+    evidence_gate: Any = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -2051,6 +2057,8 @@ def build_room_messages(
     option_candidate_block = ""
     if agent_id == AgentId.PORTFOLIO_MANAGER:
         format_instruction = _PM_VERDICT_FORMAT
+        if evidence_gate is not None:
+            format_instruction += _evidence_gate_block(evidence_gate)
         if option_candidates:
             option_candidate_block = _render_option_candidates(
                 option_candidates, option_spot
@@ -4587,3 +4595,45 @@ def _room_delta_line(delta: NextConveneDelta | None) -> str:
         + "\n".join(lines)
         + "\n"
     )
+
+
+# CR266 — the evidence gate's decision block on the PM's VERDICT turn. This
+# is an INSTRUCTION surface, not a data injection: the JSON grammar the reply
+# is parsed against is untouched (the block names allowed actions and the
+# computed size; it never adds a key to the verdict object). `gate` is the
+# ALREADY-BUILT `EvidenceGateDecision` `room_runner` computed before the PM
+# call — this file renders text only, same split `_room_delta_line` keeps.
+# The caller never reaches this function for a fail-closed gate (the CIO is
+# not called at all then) or a flag-off run (gate is None), so the PM prompt
+# stays byte-identical on every non-gated convene.
+def _evidence_gate_block(gate: Any) -> str:
+    record = gate.record
+    lines = [
+        "\n─── EVIDENCE GATE — computed by AMI from the desks' typed CLAIMS/"
+        "OBJECTIONS before your verdict; binding on what this run may do ───",
+        f"- Typed evidence score: {record.score:.2f} (net evidenced support "
+        "minus 0.1 per unresolved objection).",
+        f"- Approval threshold for this mandate's risk level on this model: "
+        f"{gate.threshold:.2f}.",
+        "- Allowed actions this run: "
+        + ("APPROVE and PASS." if "APPROVE" in gate.allowed_actions else "PASS only."),
+    ]
+    if gate.computed_size_pct is not None:
+        lines.append(
+            f"- Computed position size: {gate.computed_size_pct:.2f}% of "
+            "portfolio. If you APPROVE, THIS size replaces any size you "
+            "state — an APPROVE at any other size is overridden."
+        )
+    if record.unresolved_objections:
+        lines.append(
+            "- Unresolved objections (the desks' challenges no evidenced card "
+            "answered): "
+            + ", ".join(record.unresolved_objections)
+            + "."
+        )
+    lines.append(
+        "- The self-consistency vote bar and the safety floor still apply "
+        "after you reply and remain the final veto; a split vote or a blocked "
+        "approval is recorded as contested."
+    )
+    return "\n".join(lines) + "\n"

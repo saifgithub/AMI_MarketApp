@@ -1133,6 +1133,50 @@ class Settings(BaseSettings):
     # a measured GO (D32), not a deploy.
     room_cards_envelope_enabled: bool = False
 
+    # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
+    # deterministic allowed-action set and computed size on the PM's verdict,
+    # with a persisted DecisionRecord. OFF by default and per-provider
+    # acceptance-gated: a provider without calibrated thresholds fails CLOSED
+    # (explicit no-trade PASS, loud log), never free-passes. With the card
+    # channel off there is no typed evidence either, which fails closed the
+    # same way — so gate-on without cards-on convenes PASS loudly instead of
+    # approving anything.
+    room_evidence_gate_enabled: bool = False
+
+    # CR266 — calibrated approval thresholds, per LLM provider:
+    # {"<provider>": {"R1": t1, ..., "R5": t5}} — one monotone-descending run
+    # of thresholds per calibrated model, fitted by the CR266 workstream-3
+    # calibration tool, NOT hand-selected. R1 (most conservative mandate)
+    # clears the most evidence, R5 the least. Validated loudly at boot by
+    # `evidence_record.parse_gate_thresholds` (exactly R1..R5, [0, 1],
+    # R1>=R2>=R3>=R4>=R5); an uncalibrated or typo'd provider simply has no
+    # entry here, which is what the gate's fail-closed path reads.
+    room_evidence_gate_thresholds_json: str = "{}"
+
+    # CR266 — |score - threshold| inside this margin marks the decision
+    # CONTESTED on the persisted record (a call that close to the bar is
+    # arguable by construction, whatever the prose says).
+    room_evidence_contested_margin: float = Field(default=0.10, ge=0.0, le=1.0)
+
+    @field_validator("room_evidence_gate_thresholds_json")
+    @classmethod
+    def _evidence_gate_thresholds_wellformed(cls, v: str) -> str:
+        # CR040 degrade-loudly: a miscalibrated gate must fail at boot, never
+        # clamp or free-pass. Local import — config is imported by everything,
+        # so the leaf module stays stdlib-only to avoid any cycle risk.
+        from app.services.evidence_record import (
+            ThresholdConfigError,
+            parse_gate_thresholds,
+        )
+
+        try:
+            parse_gate_thresholds(v)
+        except ThresholdConfigError as exc:
+            raise ValueError(
+                f"room_evidence_gate_thresholds_json is miscalibrated: {exc}"
+            ) from exc
+        return v
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

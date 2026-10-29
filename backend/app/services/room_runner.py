@@ -64,6 +64,7 @@ from app.schemas.options import costed_structure
 from app.schemas.room import (
     AnalystTapeItem,
     AnalystView,
+    DecisionRecord,
     NextConveneDelta,
     RatingSplit,
     RoomRun,
@@ -96,6 +97,12 @@ from app.services import (
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
+from app.services.evidence_record import (
+    EvidenceGateDecision,
+    build_gate_decision,
+    gate_contested,
+    parse_gate_thresholds,
+)
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
@@ -468,6 +475,17 @@ class _RoomContext:
     # that case, same absence `sector_weights`'s empty-dict default degrades
     # to "no line" rather than a fabricated one.
     next_convene_delta: NextConveneDelta | None = None
+    # CR266 — the typed claim cards each evidence desk actually filed this
+    # run (AgentId -> parsed `_ClaimCards`), captured at parse time in
+    # `_compute_agent_text` — the stripped prose that reaches the transcript
+    # no longer carries them, so the evidence gate could never re-derive them.
+    # Empty on every run whose card channel never ran (flag off, scripted
+    # desks, non-live path); the gate reads absence as absence.
+    claim_cards: dict = field(default_factory=dict)
+    # CR266 — the evidence gate built ONCE before the PM call (`_run_cio_step`
+    # stores it here so the PM prompt render and the post-vote application
+    # read the SAME decision); None whenever the gate flag is off.
+    evidence_gate: EvidenceGateDecision | None = None
 
 
 # CR104 — the numeric fundamentals fields tracked per-field in
@@ -5122,6 +5140,12 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
 # tree with no JSON codec, nested under `CandidateSet`) into JSONB. A retry
 # therefore prices a fresh menu against the current chain, same "judge now"
 # principle as the sector/risk context.
+#
+# CR266 — also held out: `claim_cards`/`evidence_gate`. The typed cards are
+# desk products, but a CIO-outage retry is offered exactly when the room was
+# too thin to trust, and re-running the desks is what reconvening is for —
+# so the retry rebuilds the gate from NO cards and fails closed with an
+# explicit reason rather than scoring a half-empty evidence record.
 _CIO_SNAPSHOT_SCALAR_FIELDS = (
     "trader_entry", "trader_stop", "trader_target", "trader_horizon_weeks",
     "trader_size_pct", "aggressive_size_pct", "conservative_size_pct",
@@ -5272,6 +5296,101 @@ def _build_pm_formatter(
     return formatter
 
 
+# ── CR266 — the PM evidence gate ───────────────────────────────────────────
+#
+# Typed CLAIMS/OBJECTIONS cards (CR256) become a deterministic allowed-action
+# set and a continuous computed size; the persisted DecisionRecord carries
+# the score, threshold, unresolved objections and contestedness. All the
+# arithmetic lives in `evidence_record.py` (pure, unit-tested); this file
+# owns the wiring only: build once before the PM call, fail closed before a
+# decision is possible, apply after the vote, attach before reviews.
+
+
+def _active_llm_provider(gateway: LLMGateway) -> str | None:
+    """The provider a PM call will actually hit — thresholds are calibrated
+    per provider. None when the gateway cannot say (e.g. a test double with
+    no `status()`): read as uncalibrated, i.e. the gate fails closed."""
+    status = getattr(gateway, "status", None)
+    if not callable(status):
+        return None
+    try:
+        provider = status().get("active_provider")
+    except Exception:  # noqa: BLE001 — an unreadable status is not a reason to free-pass
+        return None
+    return str(provider) if provider else None
+
+
+def _build_evidence_gate(
+    *, ctx: "_RoomContext", profile: dict[str, Any], gateway: LLMGateway,
+) -> EvidenceGateDecision | None:
+    """Build the gate ONCE before the PM call. None when the flag is off —
+    every non-gated run then keeps its exact current behaviour, including a
+    null `decision_record`."""
+    if not settings.room_evidence_gate_enabled:
+        return None
+    return build_gate_decision(
+        cards_by_desk={
+            desk.value: cards for desk, cards in ctx.claim_cards.items()
+        },
+        field_state=profile.get("field_state") if isinstance(profile, dict) else None,
+        thresholds=parse_gate_thresholds(settings.room_evidence_gate_thresholds_json),
+        provider=_active_llm_provider(gateway),
+        risk_score=ctx.mandate.risk_score,
+        cap_pct=_risk_tier_size_ceiling(ctx.mandate),
+    )
+
+
+def _build_decision_record(
+    gate: EvidenceGateDecision,
+    *,
+    verdict: Verdict,
+    parsed: Verdict | None,
+    split_vote: bool,
+    scripted_turns: int,
+) -> DecisionRecord:
+    """The persisted record for a gated run whose evidence computed. Reads
+    only what the gate scored plus facts the tail established: whether an
+    approval the reads wanted was blocked downstream (the gate itself or the
+    safety floor), whether the self-consistency vote split, and how many
+    desks ran scripted."""
+    record = gate.record
+    bar_blocked = (
+        parsed is not None
+        and parsed.action == VerdictAction.APPROVE
+        and verdict.action != VerdictAction.APPROVE
+    )
+    contested = gate_contested(
+        split_vote=split_vote,
+        score=record.score,
+        threshold=gate.threshold if gate.threshold is not None else 0.0,
+        margin=settings.room_evidence_contested_margin,
+        bar_blocked=bar_blocked,
+        scripted_turns=scripted_turns,
+    )
+    reasons = list(gate.reasons)
+    if split_vote:
+        reasons.append("the self-consistency vote was split")
+    if bar_blocked:
+        reasons.append(
+            "an approval the reads wanted was blocked by the evidence gate "
+            "or the safety floor"
+        )
+    if scripted_turns:
+        reasons.append(f"{scripted_turns} desk(s) ran scripted this convene")
+    return DecisionRecord(
+        score=record.score,
+        threshold=gate.threshold if gate.threshold is not None else 0.0,
+        allowed_actions=list(gate.allowed_actions),
+        computed_size_pct=gate.computed_size_pct,
+        unresolved_objection_count=record.unresolved_objection_count,
+        unresolved_objection_ids=list(record.unresolved_objections),
+        evidence_available=record.evidence_available,
+        evidence_source="claim_cards",
+        contested=contested,
+        reasons=reasons,
+    )
+
+
 async def _run_cio_step(
     *,
     run_id: UUID,
@@ -5318,9 +5437,46 @@ async def _run_cio_step(
     (CR219 R51). `run()` passes True; the retry route leaves it False (it
     never refunds, so it has nothing to wait for).
     """
+    # CR266 — build the evidence gate ONCE, before the PM call. None when the
+    # flag is off, so every non-gated run keeps its exact current shape. The
+    # live branches below read it off `ctx.evidence_gate` — the PM prompt
+    # render and the post-vote application must score the SAME decision.
+    _gate = (
+        _build_evidence_gate(ctx=ctx, profile=profile, gateway=gateway)
+        if live
+        else None
+    )
+    ctx.evidence_gate = _gate
+
     if AgentId.MARKET_ANALYST in ctx.withheld:
         verdict = _assemble_no_verdict(ctx)
         pm_text = verdict.reason
+        async for ev in _typewriter(
+            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+            char_delay_min, char_delay_max,
+        ):
+            yield ev
+    # CR266 — fail closed BEFORE the PM call: an uncalibrated provider or
+    # incomplete typed evidence can never produce an APPROVE, so the CIO is
+    # not asked (and not charged a premium call) to decide what the gate
+    # already refused. The reason is explicit — never a silent skip (CR040).
+    elif live and _gate is not None and _gate.fail_closed_reason is not None:
+        logger.warning(
+            "room_evidence_gate_fail_closed",
+            run_id=str(run_id),
+            ticker=ctx.ticker,
+            provider=_gate.provider,
+            reason=_gate.fail_closed_reason,
+        )
+        pm_text = (
+            "AMI's evidence gate stopped this convene before the CIO "
+            f"decided: {_gate.fail_closed_reason}. No trade was opened."
+        )
+        verdict = Verdict(
+            action=VerdictAction.PASS,
+            reason=pm_text,
+            overridden_from_llm=True,
+        )
         async for ev in _typewriter(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -5338,6 +5494,10 @@ async def _run_cio_step(
         # another premium-tier call on the run's costliest agent.
         _pm_samples = max(1, int(settings.pm_self_consistency_samples))
         _voted: tuple[str, Verdict, str] | None = None
+        # CR266 — a non-unanimous self-consistency vote feeds the decision
+        # record's contested flag (same split signal the reason-text note a
+        # few lines below already computes).
+        _split_vote = False
         # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-1): with
         # samples>1, if every draw AND every replacement is
         # unparseable, `_cands` is `[]` and the tail below used
@@ -5434,6 +5594,7 @@ async def _run_cio_step(
                 # marginal this call is, and hiding it behind
                 # confident prose is the failure mode the whole CR
                 # is about. Said in the verdict the user reads.
+                _split_vote = True
                 parsed = parsed.model_copy(update={
                     "reason": (
                         f"{parsed.reason} (Your team was split on "
@@ -5549,13 +5710,90 @@ async def _run_cio_step(
                 logger.warning("room_pm_verdict_parse_failed", run_id=str(run_id))
                 if not pm_text:
                     pm_text = verdict.reason
+            elif (
+                ctx.evidence_gate is not None
+                and "APPROVE" not in ctx.evidence_gate.allowed_actions
+            ):
+                # CR266 — the gate bars APPROVE this run (evidence score below
+                # the calibrated threshold): the CIO's APPROVE is overridden
+                # to an explicit PASS that names the bar — no APPROVE numbers,
+                # no APPROVE narration. The vote bar and safety floor are not
+                # consulted on this path; the gate decided first.
+                _g = ctx.evidence_gate
+                _gate_reason = (
+                    "AMI's evidence gate overrode this verdict: the typed "
+                    f"evidence scored {_g.record.score:.2f}, below the "
+                    f"approval threshold {_g.threshold:.2f} for this "
+                    "mandate's risk level on this model. No position was "
+                    "opened."
+                )
+                logger.warning(
+                    "room_evidence_gate_approve_blocked",
+                    run_id=str(run_id),
+                    ticker=ctx.ticker,
+                    score=_g.record.score,
+                    threshold=_g.threshold,
+                )
+                verdict = Verdict(
+                    action=VerdictAction.PASS,
+                    reason=_gate_reason,
+                    overridden_from_llm=True,
+                    kill_criterion=parsed.kill_criterion,
+                )
+                pm_text = _gate_reason
             elif parsed.action == VerdictAction.APPROVE:
+                if (
+                    ctx.evidence_gate is not None
+                    and ctx.evidence_gate.computed_size_pct is not None
+                    and parsed.size_pct is not None
+                    and parsed.size_pct != ctx.evidence_gate.computed_size_pct
+                ):
+                    # CR266 — the computed evidence size replaces the CIO's
+                    # stated size; the substitution is disclosed in the reason
+                    # the user reads (CR040), and the floor below judges THIS
+                    # size, not the one the PM asked for.
+                    _computed = ctx.evidence_gate.computed_size_pct
+                    _llm_size = parsed.size_pct
+                    parsed = parsed.model_copy(update={
+                        "size_pct": _computed,
+                        "overridden_from_llm": True,
+                        "reason": (
+                            f"{parsed.reason} (Position size set by AMI's "
+                            f"evidence gate at {_computed:.2f}% of portfolio — "
+                            "the computed evidence size, replacing the "
+                            f"CIO's stated {_llm_size:.2f}%.)"
+                        ),
+                    })
+                    logger.info(
+                        "room_evidence_gate_size_override",
+                        run_id=str(run_id),
+                        ticker=ctx.ticker,
+                        llm_size=_llm_size,
+                        computed_size=_computed,
+                    )
                 pm_text, verdict = _floor_pm_approve(
                     parsed, pm_text, run_id=run_id, ctx=ctx,
                     mandate=mandate, profile=profile,
                 )
             else:
                 verdict = parsed  # PASS — nothing to check compliance on
+        # CR266 — attach the persisted decision record BEFORE the second-pass
+        # review, so the review's `original` snapshot carries it (T-BACKFILL:
+        # only a gated run with computable evidence ever gets one — fail-closed
+        # and non-gated runs keep None, never a fabricated stand-in).
+        if (
+            ctx.evidence_gate is not None
+            and ctx.evidence_gate.fail_closed_reason is None
+        ):
+            verdict = verdict.model_copy(update={
+                "decision_record": _build_decision_record(
+                    ctx.evidence_gate,
+                    verdict=verdict,
+                    parsed=parsed,
+                    split_vote=_split_vote,
+                    scripted_turns=len(ctx.scripted_turns),
+                ),
+            })
         # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review.
         # Deterministic routing + combination live in `_apply_verdict_review`
         # (code routes, LLMs judge — D13); only the audit itself is an LLM
@@ -9264,6 +9502,11 @@ async def _compute_agent_text(
                     )
                     if _repaired_cards is not None:
                         text, envelope, claim_cards = _repaired_cards
+                # CR266 — capture the typed record on ctx; the stripped prose
+                # that reaches the transcript no longer carries the cards, so
+                # the evidence gate could never re-derive them later.
+                if claim_cards is not None and claim_cards.cards:
+                    ctx.claim_cards[agent_id] = claim_cards
             # CR219 R53 — the four analysts only, same set `_GAPS_FORMAT` was
             # appended to (room_prompts.py). Parsed off the STANCE-stripped
             # text so a leaked machine channel never appears inside a gap
@@ -9864,6 +10107,11 @@ async def _stream_pm_response(
         # times per run) reads the SAME delta, which is correct — the prior
         # convene did not change mid-run.
         prior_convene=ctx.next_convene_delta,
+        # CR266 — the evidence gate built once before the PM call; None leaves
+        # the prompt byte-identical to pre-CR266. The resurrection re-run rides
+        # the same ctx, so a gated convene's re-run sees the same block — the
+        # gate does not change mid-run either.
+        evidence_gate=ctx.evidence_gate,
     )
     if extra_user_note:
         messages = [
