@@ -4732,6 +4732,28 @@ def _cards_channel_absent(cards: _ClaimCards | None) -> bool:
     return cards is None or not cards.cards
 
 
+def _cards_channel_complete(cards: _ClaimCards | None) -> bool:
+    """CR266 — the card channel's acceptance bar: exactly one parseable card
+    for each of the five registry items, no duplicates, nothing extra.
+    Measured on the ami pilot, only 14/19 early rooms filed complete
+    evidence: partial blocks and partial retry results used to be accepted
+    as-is, leaving missing desk/item cells the evidence gate then failed on.
+    Completeness — not mere presence — is the enforcement bar for BOTH the
+    initial repair trigger and the retry's adoption, so a partial or
+    duplicated channel earns the same single bounded re-ask an absent one
+    does, and a still-incomplete retry is rejected, leaving the original
+    state in place. (`_cards_channel_absent` stays for the zero-card legacy
+    semantics; the enforcement path requires completeness.)"""
+    if cards is None or not cards.cards:
+        return False
+    seen: set[str] = set()
+    for card in cards.cards:
+        if card.item in seen:
+            return False
+        seen.add(card.item)
+    return seen == set(_CARD_ITEM_IDS)
+
+
 def parse_claim_cards(text: str) -> tuple[str, _ClaimCards | None]:
     """Split a card desk's turn into (prose, claim cards).
 
@@ -9297,13 +9319,15 @@ async def _attempt_cards_repair(
     timeout_s: float,
     profile: dict[str, Any],
 ) -> tuple[str, _StanceEnvelope, _ClaimCards] | None:
-    """CR256 — regenerate a live card-desk turn ONCE when it produced no
-    parseable CLAIMS block, same provider/tier/constraint as the original
-    call (the CR253 envelope-repair precedent it sits beside). The card
-    pilot measured why voluntary filing cannot be trusted: salience noise
-    across six prompt variants, raw ICC 0.62 at n=30 — so the channel is
-    enforced the same way the stance envelope is: one bounded re-ask naming
-    the omission, adopted only when the retry carries a parseable block.
+    """CR256 — regenerate a live card-desk turn ONCE when its CLAIMS channel
+    is not complete, same provider/tier/constraint as the original call (the
+    CR253 envelope-repair precedent it sits beside). The card pilot measured
+    why voluntary filing cannot be trusted: salience noise across six prompt
+    variants, raw ICC 0.62 at n=30 — so the channel is enforced the same way
+    the stance envelope is: one bounded re-ask naming the omission, adopted
+    only when the retry carries a COMPLETE block (CR266: exactly one card
+    per item, no duplicates — a partial or duplicated retry is rejected and
+    the original state stands).
 
     The repair note pastes the card template LITERALLY, per the pilot's
     repair-corpus lesson: an ask that names "the shape your instructions
@@ -9318,8 +9342,9 @@ async def _attempt_cards_repair(
     """
     repair_note = (
         "[AMI fact-check] Your response did not carry a parseable CLAIMS "
-        "block, so none of your evidence claims could be recorded in the "
-        "machine channel. Re-issue the SAME analysis with everything "
+        "block, or the block it carried was incomplete — either way your "
+        "evidence claims could not be recorded in the machine channel. "
+        "Re-issue the SAME analysis with everything "
         "unchanged except that it includes the CLAIMS block in exactly this "
         "shape:\n"
         "[CLAIMS]\n"
@@ -9331,8 +9356,9 @@ async def _attempt_cards_repair(
         "item=bs   dir=... grade=... data=... claim=... nums=...\n"
         "item=moat dir=... grade=... data=... claim=... nums=...\n"
         "[/CLAIMS]\n"
-        "File all five items, one per line. Change nothing else about the "
-        "analysis."
+        "File all five items, one per line — exactly one card per item, "
+        "every item once, no duplicates. A partial or duplicated block is "
+        "treated as missing. Change nothing else about the analysis."
     )
     meta: dict[str, Any] = {}
     try:
@@ -9371,13 +9397,16 @@ async def _attempt_cards_repair(
         return None
     stripped, env = parse_stance_envelope(repaired)
     stripped, cards = parse_claim_cards(stripped)
-    if _cards_channel_absent(cards):
+    if not _cards_channel_complete(cards):
+        # CR266 — a retry that is still partial (missing items) or carries a
+        # duplicated item is rejected exactly like a still-absent one: the
+        # original turn stands, the incomplete retry is never adopted.
         logger.warning(
             "room_cards_repair_failed", agent_id=agent_id.value,
-            reason="still_no_cards",
+            reason="still_incomplete",
         )
         return None
-    # `_cards_channel_absent` is a bool, not a TypeGuard — pin the narrow.
+    # `_cards_channel_complete` is a bool, not a TypeGuard — pin the narrow.
     assert cards is not None
     # The retry's HEADLINE gets the same sheet-figure check the original
     # envelope and the CR253 retry both get (CR219 R59-F3).
@@ -9629,11 +9658,12 @@ async def _compute_agent_text(
             # Stripped here, off the stance-stripped text, so the
             # fundamentals desk's slot-2 block comes off before the GAPS tail
             # parse below (GAPS stays the turn's last line — the two machine
-            # channels never overlap). An absent channel earns ONE bounded
-            # re-ask (`_attempt_cards_repair`); a retry that still carries no
-            # parseable block leaves the original turn in place — the same
-            # failure discipline as the CR253 envelope repair above, and the
-            # same agent-set gate (scripted turns are never re-asked).
+            # channels never overlap). An INCOMPLETE channel — absent, or
+            # CR266: partial (missing items) or carrying a duplicate item —
+            # earns ONE bounded re-ask (`_attempt_cards_repair`); a retry
+            # that is still incomplete leaves the original turn in place —
+            # the same failure discipline as the CR253 envelope repair above,
+            # and the same agent-set gate (scripted turns are never re-asked).
             claim_cards: _ClaimCards | None = None
             if settings.room_cards_envelope_enabled and agent_id in _CARD_DESKS:
                 text, claim_cards = parse_claim_cards(text)
@@ -9647,7 +9677,7 @@ async def _compute_agent_text(
                         malformed_cards=claim_cards.malformed_cards,
                         malformed_objections=claim_cards.malformed_objections,
                     )
-                if _cards_channel_absent(claim_cards) and (
+                if not _cards_channel_complete(claim_cards) and (
                     agent_id not in ctx.scripted_turns
                 ):
                     _repaired_cards = await _attempt_cards_repair(
