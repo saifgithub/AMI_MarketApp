@@ -217,12 +217,14 @@ def score_room(
     at gate time; here it is allowed for fitting legacy corpora but LABELLED
     in the returned `field_state_source` and the fit report.
 
-    The contract allows exactly ONE card per desk per item: a duplicate makes
-    the room's evidence unavailable with an explicit
-    `duplicate:<desk>:<item>` marker, exactly like a missing card, so
-    re-rolls can never inflate the score. net_support is normalized by the
-    full 20-cell census (complete support = 1.0); the raw sum is kept only as
-    a diagnostic.
+    The contract is exactly the 20 desk/item cells (4 desks x 5 items), one
+    card each: a duplicate makes the room's evidence unavailable with an
+    explicit `duplicate:<desk>:<item>` marker, and a gap makes it unavailable
+    with `missing:<desk>:<item>` — a desk that files only eq is NOT complete
+    just because other desks cover the other items. A wholly absent desk
+    keeps the established `cards:<desk>` marker (its five cells implicitly).
+    net_support is normalized by the full 20-cell census (complete support =
+    1.0); the raw sum is kept only as a diagnostic.
     """
     cards = parsed["cards"]
     objections = parsed["objections"]
@@ -270,9 +272,15 @@ def score_room(
             out = dict(c, data_present=present, contribution=contribution)
             items_out.append(out)
             cards_per_item[c["item"]].append(out)
-    for item in ITEMS:
-        if not cards_per_item[item]:
-            missing.append(f"item:{item}")
+    # Exact-20-cell contract: a desk that filed anything must file exactly
+    # one card on EVERY item — a single gap marks the room unavailable,
+    # explicitly, per cell.
+    for desk in REQUIRED_DESKS:
+        if not by_desk[desk]:
+            continue  # wholly absent desk already marked cards:<desk>
+        for item in ITEMS:
+            if (desk, item) not in seen_desk_item:
+                missing.append(f"missing:{desk}:{item}")
 
     raw_net_support = round(sum(c["contribution"] for c in items_out), 6)
     net_support = round(raw_net_support / NET_SUPPORT_NORMALIZER, 6)
@@ -431,13 +439,48 @@ def gate_json(provider: str, ladder: dict[str, float]) -> dict[str, dict[str, fl
 
 # ── IO ──────────────────────────────────────────────────────────────────────
 
+def _room_identity(row: dict) -> tuple[str, str]:
+    """(ticker, rep) from the row's AUTHORITATIVE fields.
+
+    Ticker NEVER comes from arm_key: current arm keys are shaped
+    `RIOT-r4-rep1`, so an arm_key split yields `RIOT-r4` — which silently
+    breaks holdout exclusion and per-ticker grouping. Rep uses the row's rep
+    field when present, else the `-rep<i>` arm_key suffix; a row with neither
+    is a loud error, never a guessed grouping.
+    """
+    ticker = str(row["ticker"]).upper().strip()
+    rep = row.get("rep")
+    if rep is None:
+        arm_key = str(row.get("arm_key") or "")
+        if "-rep" not in arm_key:
+            raise FitError(
+                f"row for {ticker}: no rep field and arm_key {arm_key!r} "
+                "has no '-rep' suffix — cannot group reps"
+            )
+        rep = arm_key.rsplit("-rep", 1)[1]
+    return ticker, str(rep)
+
+
+def _room_record_from_arm(arm: dict, turns: list[dict]) -> dict:
+    verdict = arm.get("verdict") or {}
+    ticker, rep = _room_identity(arm)
+    return {
+        "ticker": ticker, "rep": rep,
+        "risk_score": int(arm["risk_score"]),
+        "turns": turns,
+        "sheet_state": verdict.get("sheet_state"),
+        "verdict_action": verdict.get("action"),
+    }
+
+
 def _load_turns_file(path: Path) -> list[dict]:
     """cards_repair.py output: one record per room with its desk turns."""
     out = []
     for line in open(path):
         rec = json.loads(line)
+        ticker, rep = _room_identity(rec)
         out.append({
-            "ticker": rec["ticker"], "rep": str(rec["rep"]),
+            "ticker": ticker, "rep": rep,
             "risk_score": int(rec["risk_score"]),
             "turns": rec["turns"],
             "sheet_state": rec.get("sheet_state"),
@@ -455,16 +498,7 @@ def _load_runs_with_dsn(runs_path: Path, dsn: str) -> list[dict]:
     for arm in arms:
         if arm.get("status") != "completed":
             continue
-        turns = fetch_turns(dsn, arm)
-        verdict = arm.get("verdict") or {}
-        ticker, rep = arm["arm_key"].rsplit("-rep", 1)
-        out.append({
-            "ticker": ticker, "rep": rep,
-            "risk_score": int(arm["risk_score"]),
-            "turns": turns,
-            "sheet_state": verdict.get("sheet_state"),
-            "verdict_action": verdict.get("action"),
-        })
+        out.append(_room_record_from_arm(arm, fetch_turns(dsn, arm)))
     return out
 
 

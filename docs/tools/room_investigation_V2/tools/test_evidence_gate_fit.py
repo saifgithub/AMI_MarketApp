@@ -10,10 +10,8 @@ Pins the three things that make the fitted ladder trustworthy:
      the NORMALIZED contract (net_support = raw sum / 20, score = net_support
      - 0.1 x unresolved). It skips when the backend cannot be imported (e.g.
      running outside the backend venv) — the hand-computed expectations below
-     still pin the semantics. KNOWN TEMPORARY STATE: until the backend lands
-     the identical normalization + duplicate rule, this test FAILS against
-     the real backend module on purpose — that failure is the alarm bell for
-     contract drift, not a bug to silence. Do not weaken or skip it.
+     still pin the semantics. This test is the alarm bell for contract drift:
+     any future change to either side's scoring must keep it green.
   2. FIT HONESTY: holdouts excluded from the approval set before ranking,
      empty scores fail loudly (never a guessed ladder), the enforced ladder
      is monotone, out-of-range levels are reported and omitted from the gate
@@ -143,8 +141,9 @@ class ScoreContractTests(unittest.TestCase):
                 ["item=eq dir=oppose grade=well data=yes claim=x"],
                 ["target=eq severity=high objection=y"]),
             "research_manager": _claims(
-                [f"item={i} dir=support grade=well data=yes claim=x"
-                 for i in ("vc", "vh", "bs", "moat")]),
+                ["item=eq dir=support grade=unsupported data=yes claim=x"]
+                + [f"item={i} dir=support grade=well data=yes claim=x"
+                   for i in ("vc", "vh", "bs", "moat")]),
         }
         out3 = self._scored(cards3, state)
         self.assertTrue(out3["evidence_available"])
@@ -175,6 +174,21 @@ class ScoreContractTests(unittest.TestCase):
                      for f in fields})
         self.assertTrue(out2["evidence_available"])
         self.assertEqual(out2["missing"], ())
+
+    def test_missing_single_cell_makes_room_unavailable(self) -> None:
+        # exact-20-cell contract: one dropped card in an otherwise complete
+        # room marks THAT cell missing — no partial-coverage rooms.
+        cards = _full_room_cards()
+        cards["bull_researcher"] = cards["bull_researcher"].replace(
+            "item=moat dir=support grade=well data=yes claim=x nums=1\n", "")
+        out = self._scored(
+            cards, {f: "live" for fields in fit.ITEM_FIELD_REGISTRY.values()
+                    for f in fields})
+        self.assertFalse(out["evidence_available"])
+        self.assertIsNone(out["score"])
+        self.assertIn("missing:bull_researcher:moat", out["missing"])
+        self.assertNotIn("cards:bull_researcher", out["missing"])
+        self.assertFalse(any(m.startswith("duplicate:") for m in out["missing"]))
 
     def test_missing_desk_makes_room_unscorable(self) -> None:
         cards = _full_room_cards()
@@ -459,6 +473,64 @@ class CliTests(unittest.TestCase):
                 fit.main()
         finally:
             sys.argv = argv
+
+
+class LoaderIdentityTests(unittest.TestCase):
+    """Regression: identity comes from the row's authoritative ticker field,
+    never from arm_key. Current arm keys are 'RIOT-r4-rep1'; an arm_key split
+    yields 'RIOT-r4', which silently drops RIOT from the holdout set."""
+
+    def _arm(self, arm_key="RIOT-r4-rep1", ticker="RIOT", risk=4, **kw):
+        return {
+            "arm_key": arm_key, "ticker": ticker, "risk_score": risk,
+            "status": "completed",
+            "verdict": {"action": "APPROVE", "sheet_state": None},
+            **kw,
+        }
+
+    def _turns(self):
+        return [_turn(d, t) for d, t in _full_room_cards().items()]
+
+    def test_runs_row_uses_authoritative_ticker_and_rep_suffix(self) -> None:
+        rec = fit._room_record_from_arm(self._arm(), self._turns())
+        self.assertEqual(rec["ticker"], "RIOT")
+        self.assertEqual(rec["rep"], "1")
+        self.assertNotEqual(rec["ticker"], "RIOT-r4")  # the old rsplit bug
+        rooms, _ = fit.score_corpus([rec])
+        self.assertTrue(rooms[0].holdout)   # RIOT stays a holdout
+        self.assertEqual(rooms[0].level, 4)
+        self.assertEqual(rooms[0].score, 1.0)
+
+    def test_runs_row_prefers_authoritative_rep_field(self) -> None:
+        rec = fit._room_record_from_arm(self._arm(rep="2"), self._turns())
+        self.assertEqual(rec["rep"], "2")
+
+    def test_turns_file_uses_authoritative_ticker(self) -> None:
+        tmp = Path(tempfile.mkdtemp())
+        p = tmp / "turns.jsonl"
+        with open(p, "w") as fh:
+            fh.write(json.dumps({
+                "arm_key": "RIOT-r4-rep1", "ticker": "RIOT", "rep": "1",
+                "risk_score": 4, "verdict": "APPROVE",
+                "turns": self._turns(),
+            }) + "\n")
+            fh.write(json.dumps({
+                "arm_key": "AAPL-r2-rep2", "ticker": "AAPL",
+                "risk_score": 2, "verdict": "PASS",
+                "turns": self._turns(),
+            }) + "\n")
+        records = fit._load_turns_file(p)
+        self.assertEqual(records[0]["ticker"], "RIOT")
+        self.assertEqual(records[0]["rep"], "1")
+        self.assertEqual(records[1]["ticker"], "AAPL")
+        self.assertEqual(records[1]["rep"], "2")  # rep fell back to suffix
+        rooms, _ = fit.score_corpus(records)
+        self.assertTrue(rooms[0].holdout)
+        self.assertFalse(rooms[1].holdout)
+
+    def test_identity_without_rep_anywhere_is_loud(self) -> None:
+        with self.assertRaises(fit.FitError):
+            fit._room_identity({"ticker": "AAPL", "arm_key": "AAPL-r2"})
 
 
 if __name__ == "__main__":
