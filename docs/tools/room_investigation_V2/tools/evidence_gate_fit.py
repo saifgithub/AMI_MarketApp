@@ -16,7 +16,7 @@ Honesty constraints, load-bearing:
 
   * In-sample quantile fitting reproduces ANY curve trivially (review M5 in
     evidence_bar.py) — the headline number is the SPLIT read: thresholds fit
-    on `--fit-rep` rooms, achieved approvals reported on the OTHER reps.
+    on `--fit-rep` rooms, gate-eligible counts reported on the OTHER reps.
     Curve-matching is NOT evidence the gate is correct; it only sets the bar.
   * Thresholds are fit per model and keyed by the single `--provider` given.
     NEVER reuse one model's ladder for another — discrimination differs by
@@ -48,6 +48,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,15 +101,24 @@ RISK_LEVELS = ("R1", "R2", "R3", "R4", "R5")
 
 CAVEATS = (
     "In-sample quantile fit reproduces any curve trivially — read the "
-    "split-fit line (thresholds from --fit-rep, approvals on the other reps), "
+    "split-fit line (thresholds from --fit-rep, counts on the other reps), "
     "not the in-sample one. Curve-matching is NOT evidence the gate is "
     "correct.",
     "Thresholds are provider-specific. Never reuse this ladder for another "
     "model.",
     "Fit on the calibration corpus only; do not fit against acceptance/test "
     "rooms. Acceptance is a separate fresh-run evaluation.",
-    "Targets are the locked policy curve (5/15/30/45/46 per 60 rooms), not a "
-    "market-derived optimum.",
+    "Targets are the locked policy curve (5/15/30/45/46 per 60 ROOMS), "
+    "scaled to the actual fit pool per level — never a market-derived "
+    "optimum.",
+    "achieved_gate_eligible_by_rep counts rooms whose SCORE clears the bar "
+    "(gate-ELIGIBLE), not final APPROVEs. The PM vote bar and the safety "
+    "floor decide those on a real run; fresh-run acceptance measures final "
+    "approvals separately. This fit never predicts them.",
+    "A corpus without verdict.sheet_state scores under the card_self_report "
+    "APPROXIMATION. The diagnostic fit report is still written, but NO "
+    "production threshold JSON is emitted from an approximation — a legacy "
+    "fallback must never become a production ladder.",
 )
 
 
@@ -339,13 +349,29 @@ def fit_ladder(
     """One monotone R1 ≥ … ≥ R5 ladder over the corpus.
 
     SPLIT-FIT (review M5 — in-sample quantile fitting reproduces any curve
-    trivially): thresholds rank ONLY `fit_rep` rooms; achieved approvals are
-    reported per rep so the non-fit reps are the honest out-of-sample read.
-    Per level the threshold is the score at rank `target` among eligible
-    (scored, non-holdout) fit rooms — holdouts are excluded from the approval
-    set BEFORE ranking. Raw per-level quantiles are then walked R4→R1 to force
-    the single monotone ladder the backend config requires; achieved approvals
-    are recomputed on the enforced ladder, never reported against the raw one.
+    trivially): thresholds rank ONLY `fit_rep` rooms (`fit_rep="all"` pools
+    every rep — in-sample only, no out-of-sample read left); gate-eligible
+    counts are reported per rep so the non-fit reps are the honest
+    out-of-sample read.
+
+    Per level the target approval count is SCALED to the actual fit pool:
+    `fit_total` is ALL fit-rep rooms at that level — holdouts and unscorable
+    rooms included, because the locked 5/15/30/45/46 curve is defined per 60
+    ROOMS, not per 60 scorable non-holdout names. `scaled_target = TARGET[lvl]
+    x fit_total / 60`; `k = floor(scaled_target)` (floor, never round — the
+    bar must not exceed the target approval share), clamped to
+    [1, eligible_n]. One 30-room rep therefore fits at 2/7/15/22/23; a full
+    two-rep pool (60) retains 5/15/30/45/46. The threshold is the score at
+    rank k among eligible (scored, non-holdout) fit rooms — holdouts are
+    excluded from the approval set BEFORE ranking. Raw per-level quantiles
+    are then walked R4→R1 to force the single monotone ladder the backend
+    config requires; gate-eligible counts are recomputed on the enforced
+    ladder, never against the raw one.
+
+    `achieved_gate_eligible_by_rep` counts rooms whose SCORE clears the bar —
+    gate-ELIGIBLE rooms, not final APPROVEs. The PM vote bar and the safety
+    floor decide those on a real run; fresh-run acceptance measures them
+    separately. This fit never predicts them.
     """
     targets = targets or TARGET
     if not any(r.score is not None for r in rooms):
@@ -354,10 +380,15 @@ def fit_ladder(
     raw: dict[int, float] = {}
     eligible_n: dict[int, int] = {}
     unscorable_n: dict[int, int] = {}
+    fit_total: dict[int, int] = {}
+    scaled_targets: dict[int, float] = {}
+    k_used: dict[int, int] = {}
     for lvl in range(1, 6):
-        eligible = sorted((r.score for r in rooms
-                           if r.level == lvl and r.rep == fit_rep
-                           and not r.holdout and r.score is not None),
+        pool = [r for r in rooms
+                if r.level == lvl and (fit_rep == "all" or r.rep == fit_rep)]
+        fit_total[lvl] = len(pool)
+        eligible = sorted((r.score for r in pool
+                           if not r.holdout and r.score is not None),
                           reverse=True)
         eligible_n[lvl] = len(eligible)
         unscorable_n[lvl] = sum(1 for r in rooms
@@ -367,7 +398,10 @@ def fit_ladder(
                 f"R{lvl}: no eligible scored rooms on fit rep {fit_rep!r} — "
                 "cannot fit a threshold from an empty score list (never guessed)"
             )
-        k = max(1, min(targets[lvl], len(eligible)))
+        scaled = targets[lvl] * fit_total[lvl] / 60.0
+        scaled_targets[lvl] = scaled
+        k = max(1, min(math.floor(scaled), len(eligible)))
+        k_used[lvl] = k
         raw[lvl] = eligible[k - 1]
 
     enforced = dict(raw)
@@ -400,9 +434,13 @@ def fit_ladder(
     return {
         "raw_thresholds": {f"R{l}": round(raw[l], 6) for l in range(1, 6)},
         "thresholds": ladder,
+        "fit_total": {f"R{l}": fit_total[l] for l in range(1, 6)},
+        "scaled_targets": {f"R{l}": round(scaled_targets[l], 4)
+                           for l in range(1, 6)},
+        "k_used": {f"R{l}": k_used[l] for l in range(1, 6)},
         "eligible_fit_rooms": {f"R{l}": eligible_n[l] for l in range(1, 6)},
         "unscorable_rooms": {f"R{l}": unscorable_n[l] for l in range(1, 6)},
-        "achieved_approvals_by_rep": achieved,
+        "achieved_gate_eligible_by_rep": achieved,
         "holdout_at_or_above_bar": holdout_above,
         "raw_non_monotone": raw != enforced,
     }
@@ -552,7 +590,8 @@ def main() -> None:
     ap.add_argument("--dsn", default=None, help="DATABASE_URL fallback for DB mode")
     ap.add_argument("--fit-rep", default="1",
                     help="rep whose rooms fit the thresholds; other reps give "
-                         "the honest out-of-sample read")
+                         "the honest out-of-sample read. 'all' pools every rep "
+                         "(in-sample only — no out-of-sample read left)")
     ap.add_argument("--out-dir", default=str(OUT / "evidence_gate_fit"))
     args = ap.parse_args()
 
@@ -580,6 +619,13 @@ def main() -> None:
             f"holdout {ticker} at/above the fitted bar at {levels} — "
             "holdouts must stay out at every level (falsifier)"
         )
+    if any(r.field_state_source == "card_self_report" for r in rooms):
+        errors.append(
+            f"{sum(1 for r in rooms if r.field_state_source == 'card_self_report')}"
+            f"/{len(rooms)} rooms scored under the card_self_report "
+            "approximation (no verdict.sheet_state) — a legacy approximation "
+            "must never become a production ladder; refit with sheet_state"
+        )
 
     od = Path(args.out_dir)
     od.mkdir(parents=True, exist_ok=True)
@@ -606,9 +652,11 @@ def main() -> None:
     gate_path = od / f"thresholds_{args.provider}.json"
     gate_path.write_text(json.dumps(gate_json(args.provider, fit["thresholds"]),
                                     indent=2))
-    achieved = report["achieved_approvals_by_rep"]
+    achieved = report["achieved_gate_eligible_by_rep"]
     print(f"thresholds {args.provider}: {fit['thresholds']}")
-    print(f"achieved approvals by rep: {achieved}")
+    print(f"gate-eligible rooms by rep (score >= bar, NOT final APPROVEs): "
+          f"{achieved}")
+    print(f"scaled targets (per fit_total): {fit['scaled_targets']}")
     print(f"holdout at/above bar: {leaks or 'none'}")
     print(f"written: {gate_path} + fit_report_{args.provider}.json")
 

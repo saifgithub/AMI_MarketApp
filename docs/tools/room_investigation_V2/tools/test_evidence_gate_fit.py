@@ -282,8 +282,8 @@ class FitTests(unittest.TestCase):
     def _corpus(self, per_level: int = 16, reps=("1", "2")):
         """Tickers x reps x 5 levels with deterministic descending scores per
         level, one shared scale across levels (tiny per-level drift keeps the
-        raw quantiles naturally monotone), so each level's quantile lands
-        exactly on target where the target does not exceed the room count."""
+        raw quantiles naturally monotone). Targets are SCALED to the fit pool
+        (fit_total per level), so assertions below pin the scaled counts."""
         rooms = []
         for lvl in range(1, 6):
             for i in range(per_level):
@@ -298,23 +298,85 @@ class FitTests(unittest.TestCase):
                     ))
         return rooms
 
-    def test_hits_target_curve_in_sample_on_fit_rep(self) -> None:
+    def test_hits_scaled_targets_in_sample_on_fit_rep(self) -> None:
         rooms = self._corpus()
         out = fit.fit_ladder(rooms, fit_rep="1")
-        # 16 fit rooms per level: R1 k=5, R2 k=15 land exactly; R3..R5 targets
-        # (30/45/46) exceed 16 rooms, so k = 16 → the whole level approves.
-        self.assertEqual(out["achieved_approvals_by_rep"]["1"]["R1"], 5)
-        self.assertEqual(out["achieved_approvals_by_rep"]["1"]["R2"], 15)
-        self.assertEqual(out["achieved_approvals_by_rep"]["1"]["R3"], 16)
+        # 16 fit rooms per level: scaled = TARGET x 16/60 =
+        # {1.333, 4, 8, 12, 12.267} -> floor -> k = {1, 4, 8, 12, 12}.
+        self.assertEqual(out["fit_total"], {f"R{l}": 16 for l in range(1, 6)})
+        self.assertEqual(out["scaled_targets"], {
+            "R1": 1.3333, "R2": 4.0, "R3": 8.0,
+            "R4": 12.0, "R5": 12.2667,
+        })
+        self.assertEqual(out["k_used"],
+                         {f"R{l}": k for l, k in zip(range(1, 6), (1, 4, 8, 12, 12))})
+        achieved = out["achieved_gate_eligible_by_rep"]
+        self.assertEqual(achieved["1"],
+                         {"R1": 1, "R2": 4, "R3": 8, "R4": 12, "R5": 12})
+        # the other rep is the out-of-sample read on the same enforced ladder
+        self.assertEqual(achieved["2"],
+                         {"R1": 1, "R2": 4, "R3": 8, "R4": 12, "R5": 12})
         vals = [out["thresholds"][k] for k in fit.RISK_LEVELS]
         self.assertTrue(all(a >= b for a, b in zip(vals, vals[1:])))
         self.assertFalse(out["raw_non_monotone"])
 
+    def test_real_one_rep_shape_30_rooms_23_eligible(self) -> None:
+        # the actual calibration shape: one fit rep = 30 rooms at the level,
+        # 7 of them holdouts -> 23 eligible. Targets scale to
+        # {2.5, 7.5, 15, 22.5, 23} -> floor -> {2, 7, 15, 22, 23}.
+        rooms = []
+        for lvl in range(1, 6):
+            for i in range(23):
+                rooms.append(fit.RoomScore(
+                    ticker=f"T{lvl}{i:02d}", level=lvl, rep="1",
+                    score=1.0 - i / 100.0, net_support=None, unresolved=None,
+                    evidence_available=True, missing=(),
+                    holdout=False, field_state_source="sheet_state"))
+            for h in fit.HOLDOUTS:
+                rooms.append(fit.RoomScore(
+                    ticker=h, level=lvl, rep="1", score=0.5,
+                    net_support=None, unresolved=None,
+                    evidence_available=True, missing=(),
+                    holdout=True, field_state_source="sheet_state"))
+            # a second rep exists for the out-of-sample read
+            for i in range(23):
+                rooms.append(fit.RoomScore(
+                    ticker=f"T{lvl}{i:02d}", level=lvl, rep="2",
+                    score=1.0 - i / 100.0 - 0.001, net_support=None,
+                    unresolved=None, evidence_available=True, missing=(),
+                    holdout=False, field_state_source="sheet_state"))
+        out = fit.fit_ladder(rooms, fit_rep="1")
+        self.assertEqual(out["fit_total"], {f"R{l}": 30 for l in range(1, 6)})
+        self.assertEqual(out["eligible_fit_rooms"],
+                         {f"R{l}": 23 for l in range(1, 6)})
+        self.assertEqual(out["scaled_targets"], {
+            "R1": 2.5, "R2": 7.5, "R3": 15.0, "R4": 22.5, "R5": 23.0,
+        })
+        self.assertEqual(out["k_used"],
+                         {f"R{l}": k for l, k in zip(range(1, 6), (2, 7, 15, 22, 23))})
+        achieved = out["achieved_gate_eligible_by_rep"]
+        self.assertEqual(achieved["1"],
+                         {"R1": 2, "R2": 7, "R3": 15, "R4": 22, "R5": 23})
+        # holdouts excluded from the eligible counts even at score 0.5 below
+        # the bar's population — none leak here
+        self.assertEqual(fit.holdout_leaks(out), {})
+
+    def test_full_two_rep_pool_retains_locked_targets(self) -> None:
+        rooms = self._corpus(per_level=30)
+        out = fit.fit_ladder(rooms, fit_rep="all")
+        # 60 fit rooms per level: scaled == TARGET exactly
+        self.assertEqual(out["fit_total"], {f"R{l}": 60 for l in range(1, 6)})
+        self.assertEqual(out["scaled_targets"], {
+            "R1": 5.0, "R2": 15.0, "R3": 30.0, "R4": 45.0, "R5": 46.0,
+        })
+        self.assertEqual(out["k_used"],
+                         {f"R{l}": k for l, k in zip(range(1, 6), (5, 15, 30, 45, 46))})
+
     def test_holdouts_excluded_from_ranking_and_leaks_surfaced(self) -> None:
         rooms = self._corpus()
         # a holdout with the TOP score at every level: excluded from the
-        # approval set, and the leak is surfaced by the falsifier, never
-        # hidden.
+        # eligible ranking, and the leak is surfaced by the falsifier, never
+        # hidden. RIOT joins the fit pool, so fit_total grows by one.
         for lvl in range(1, 6):
             for rep in ("1", "2"):
                 rooms.append(fit.RoomScore(
@@ -324,11 +386,13 @@ class FitTests(unittest.TestCase):
                     holdout=True, field_state_source="sheet_state",
                 ))
         out = fit.fit_ladder(rooms, fit_rep="1")
+        self.assertEqual(out["fit_total"], {f"R{l}": 17 for l in range(1, 6)})
         self.assertEqual(fit.holdout_leaks(out),
                          {"RIOT": [f"R{l}" for l in range(1, 6)]})
-        for rep in out["achieved_approvals_by_rep"]:
-            # RIOT adds zero approvals at every level
-            self.assertEqual(out["achieved_approvals_by_rep"][rep]["R1"], 5)
+        achieved = out["achieved_gate_eligible_by_rep"]
+        for rep in achieved:
+            # RIOT adds zero eligible rooms at every level (scaled k = 1 at R1)
+            self.assertEqual(achieved[rep]["R1"], 1)
         # below the bar → no leak
         rooms2 = self._corpus()
         for lvl in range(1, 6):
@@ -338,7 +402,9 @@ class FitTests(unittest.TestCase):
                 evidence_available=True, missing=(),
                 holdout=True, field_state_source="sheet_state",
             ))
-        self.assertEqual(fit.holdout_leaks(fit.fit_ladder(rooms2, fit_rep="1")), {})
+        out2 = fit.fit_ladder(rooms2, fit_rep="1")
+        self.assertEqual(fit.holdout_leaks(out2), {})
+        self.assertEqual(out2["fit_total"], {f"R{l}": 17 for l in range(1, 6)})
 
     def test_empty_scores_fail_loudly(self) -> None:
         rooms = [fit.RoomScore(
@@ -396,7 +462,17 @@ class CliTests(unittest.TestCase):
                 fh.write(json.dumps(r) + "\n")
         return p
 
-    def _record(self, ticker="AAPL", level=1, rep="1", n_well=0):
+    _LIVE_STATE = None
+
+    def _live_state(self) -> dict:
+        if CliTests._LIVE_STATE is None:
+            CliTests._LIVE_STATE = {
+                f: "live" for fields in fit.ITEM_FIELD_REGISTRY.values()
+                for f in fields}
+        return CliTests._LIVE_STATE
+
+    def _record(self, ticker="AAPL", level=1, rep="1", n_well=0,
+                with_sheet_state=True):
         # Normalized scale: n_well of the 20 desk/item cells filed
         # support/well, the rest unsupported → net_support = n_well/20 ∈
         # {0, .25, .5, .75, 1.0} for n_well ∈ {0, 5, 10, 15, 20}. Well cells
@@ -411,11 +487,14 @@ class CliTests(unittest.TestCase):
             return "[CLAIMS]\n" + "\n".join(lines) + "\n[/CLAIMS]"
 
         turns = [_turn(d, block(k)) for k, d in enumerate(fit.REQUIRED_DESKS)]
-        return {
+        rec = {
             "ticker": ticker, "rep": rep, "risk_score": level,
             "verdict": "APPROVE",
             "turns": turns,
         }
+        if with_sheet_state:
+            rec["sheet_state"] = self._live_state()
+        return rec
 
     def _holdout_record(self, level: int) -> dict:
         # RIOT with one oppose/well card: net -1/20 = -0.05 — strictly below
@@ -430,7 +509,8 @@ class CliTests(unittest.TestCase):
                               for i in fit.ITEM_FIELD_REGISTRY]))
             for d in list(fit.REQUIRED_DESKS)[1:]]
         return {"ticker": "RIOT", "rep": "1", "risk_score": level,
-                "verdict": "APPROVE", "turns": turns}
+                "verdict": "APPROVE", "turns": turns,
+                "sheet_state": self._live_state()}
 
     def test_end_to_end_turns_file(self) -> None:
         tmp = Path(tempfile.mkdtemp())
@@ -460,10 +540,49 @@ class CliTests(unittest.TestCase):
         self.assertIn("In-sample quantile fit", report["caveats"][0])
         self.assertEqual(report["tally"]["rooms_evidence_unavailable"], 0)
         self.assertEqual(report["tally"]["rooms_duplicate_cards"], 0)
+        self.assertEqual(report["tally"]["field_state_source:sheet_state"],
+                         len(records))
         self.assertEqual(report["gate_validation_errors"], [])
+        # scaled-target bookkeeping ships in the report: 16 corpus rooms + the
+        # RIOT holdout on the fit rep = 17 fit_total per level
+        self.assertEqual(report["fit_total"], {f"R{l}": 17 for l in range(1, 6)})
+        self.assertEqual(report["scaled_targets"]["R1"],
+                         round(5 * 17 / 60, 4))
+        # eligible counts, NOT approvals — the old key must be gone
+        self.assertIn("achieved_gate_eligible_by_rep", report)
+        self.assertNotIn("achieved_approvals_by_rep", report)
         # never-reuse-across-models caveat ships in the report
         self.assertTrue(any("provider-specific" in c
                             for c in report["caveats"]))
+
+    def test_cli_refuses_production_json_on_card_self_report(self) -> None:
+        # a corpus without verdict.sheet_state scores under the documented
+        # approximation: the fit report is written, but NO production
+        # threshold JSON may be emitted from it.
+        tmp = Path(tempfile.mkdtemp())
+        records = [self._record(f"T{i:02d}", lvl, rep, n_well=(i % 5) * 5,
+                                with_sheet_state=False)
+                   for lvl in range(1, 6) for i in range(16)
+                   for rep in ("1", "2")]
+        turns = self._write_turns(tmp, records)
+        out_dir = tmp / "out"
+        argv = sys.argv
+        try:
+            sys.argv = ["evidence_gate_fit", "--provider", "legacy-model",
+                        "--turns-file", str(turns), "--out-dir", str(out_dir)]
+            with self.assertRaises(SystemExit) as ctx:
+                fit.main()
+            self.assertEqual(ctx.exception.code, 1)
+        finally:
+            sys.argv = argv
+        self.assertFalse((out_dir / "thresholds_legacy-model.json").exists())
+        report = json.loads(
+            (out_dir / "fit_report_legacy-model.json").read_text())
+        self.assertTrue(any("card_self_report" in e
+                            for e in report["gate_validation_errors"]))
+        self.assertEqual(
+            report["tally"]["field_state_source:card_self_report"],
+            len(records))
 
     def test_cli_refuses_without_provider(self) -> None:
         argv = sys.argv
