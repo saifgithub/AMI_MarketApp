@@ -105,3 +105,8 @@
    loader and rejects anomalous partial fits.
 4. Combined fit/report verification: **54 tests passed**. No real-provider
    threshold has been emitted and no gate acceptance has been claimed.
+5. Real-tool diagnostic on the legacy 90-room dsv4 card corpus: only 69/90
+   rooms met the exact 20-cell census; normalized evidence ICC(A,1) was
+   **0.728**, below 0.85. All 90 lack registry `sheet_state`. This is a tool
+   smoke and a negative historical diagnostic, not an `ami-llm`/Ling pilot or
+   a production result. Report: `out/cr266-legacy-card-report/`.
