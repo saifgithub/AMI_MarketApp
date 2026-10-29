@@ -133,3 +133,21 @@
    attempted while the `ami-llm` matrix is running.
 5. Separate 300-room cards calibration and fresh gate acceptance definitions
    for both models are committed as `e161fca2`. They are not running yet.
+
+## 2026-10-29 — valid ami smoke and R4 pilot started
+
+1. The `ami-llm` frozen AAPL smoke completed with zero scripted desks and a
+   split 2/5 PM APPROVE. Its Mac-side contract gate is clean, all 20 cards are
+   present and the persisted verdict carries all 125 registry states. One-room
+   ICC is correctly unmeasured, not a pass or fail claim.
+2. The streamed harness verdict predated `_stamp_next_convene_basis` and had
+   `sheet_state=null`. `a898688a` makes V2 record the completed stored verdict;
+   two persistence tests bring the combined harness total to **66 passed**.
+   The original smoke artifact is preserved; a derived persisted artifact was
+   used to verify the registry without another LLM run.
+3. Legacy arm keys without an explicit risk segment are supported by
+   `5a1ac411`; the older AAPL smoke is no longer rejected for its identity
+   shape. Fit/report verification after that addition: **64 passed**.
+4. The 30-ticker × two-rep `ami-llm` R4 pilot is running as `bash-rob3u077`
+   with cards ON, gate OFF and the fixed persistence harness. Ling remains
+   paused on model availability. Production remains unchanged.
