@@ -177,3 +177,9 @@
    complete evidence** and normalized ICC(A,1) is **0.839**. The control FAILS
    both pilot criteria. The pre-replacement 0.870 is superseded and must not be
    quoted as final. Seventeen rooms have missing cells (54 malformed lines).
+9. The first completeness-candidate run was invalidated: its mount put new code
+   under `/app`, but V2 imports `app` from `/harness/backend`, so it was actually
+   control-era code. It was stopped and its artifacts preserved; its 23/32 early
+   coverage is NOT a candidate measurement. The corrected mount is verified to
+   import `/harness/backend/app` with `_cards_channel_complete`, and a fresh
+   AAPL smoke is running before any full retry.
