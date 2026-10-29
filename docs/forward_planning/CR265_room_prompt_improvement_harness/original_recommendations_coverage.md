@@ -24,27 +24,29 @@ a same-model production control.
 
 | # | Recommendation | Evidence so far | Status |
 |---:|---|---|---|
-| 1 | Structured evidence and computed constraints | CR256 channel ICC 0.868 on dsv4. No per-model production verdict gate yet. | **Main unfinished structural item.** |
-| 2 | Separate educational transcript from binding decision | Natural-language transcript still drives the PM. | **Untested architecturally.** |
-| 3 | Freeze and hash inputs | `freeze_lab` now works for 30 profiles; all valid earlier rooms shared the expected rendered hash. | **Implemented and working.** |
+| 1 | Structured evidence and computed constraints | CR266 implements the normalized 20-card record, computed action/size and fail-closed controls. Gate remains OFF pending real-model acceptance. | **Implemented; integration and V2 acceptance in progress.** |
+| 2 | Separate educational transcript from binding decision | Typed evidence now binds action and size while the PM narrates the decision. Review/re-run paths must enforce the same constraints. | **Implemented; bypass regression tests in progress.** |
+| 3 | Freeze and hash inputs | `freeze_lab` works for 30 profiles; all valid earlier rooms shared the expected rendered hash. | **Implemented and working.** |
 | 4 | True production controls and feature-flag parity | Earlier Sonnet flag mismatch was caught and rerun. T003/T004/T011 use reviews OFF and identical profiles. | **Working, but must remain an acceptance check.** |
-| 5 | Quarantine incomplete rooms | TMO and LEVI replacements run and preserved with original artifacts. | **Working as experiment hygiene.** |
-| 6 | Show uncertainty and what changed | PM votes and flips are analysed, but no user-facing product change. | **Not implemented.** |
-| 7 | Independent quality labels | MarketBeat human consensus captured for all 30 and joined preliminarily by rating. | **Partial; not broker-independent or outcome truth.** |
-| 8 | T=0 as hygiene | Ling T=0 previously reduced but did not eliminate flips; no new T=0 arm in this 900-room run. | **Not a stability fix; optional later ablation.** |
-| 9 | Reduce decision-relevant generative stages | Not tested; current full Room remains. | **Untested.** |
-| 10 | Canonical experiment registry | Ledger, hashes, run IDs and contamination replacements now documented; older duplicate/canonical-R3 issues remain historical. | **Improved, ongoing discipline.** |
+| 5 | Quarantine incomplete rooms | TMO and LEVI replacements ran and original artifacts remain preserved. | **Working as experiment hygiene.** |
+| 6 | Show uncertainty and what changed | CR266 mobile models, contested card and next-convene card are implemented; old verdicts fabricate no state. | **Implemented; final backend/mobile contract verification in progress.** |
+| 7 | Independent quality labels | MarketBeat consensus is captured for all 30. The real outcome report covers 6,743 banked rows but has zero scored outcomes. | **Partial; no outcome-quality or consensus-alignment claim is possible yet.** |
+| 8 | T=0 as hygiene | Ling T=0 previously reduced but did not eliminate flips; no new T=0 arm in the 900-room run. | **Not a stability fix; optional later ablation.** |
+| 9 | Reduce decision-relevant generative stages | CR266 removes generative control over final action and size; it does not remove the educational desk stages or PM narration. | **Partially implemented; full-stage reduction was not assumed necessary without new evidence.** |
+| 10 | Canonical experiment registry | Ledger, hashes, run IDs and contamination replacements are documented; CR266 adds per-model pilot and acceptance records. | **Implemented as ongoing experiment discipline.** |
 
 ## Corrected experiment sequence
 
-1. Complete T011 and preserve its negative findings; do not call the lane arm a
-   general success merely because its curve is more monotone.
-2. Run the clean CFA-only R4 ablation: original prompts versus deletion of only
-   the CFA block, no other edits.
-3. Run isolated Bull-only, Bear-only, RM-only and Risk-trio arms, each with a
-   same-model control and no bundled changes.
-4. Test cards-first versus stance-first, then the lane-specific typed census as
-   the PM's binding evidence input.
-5. Address the PM vote boundary and test typed decision records separately from
-   the educational transcript.
-6. Only then consider Sonnet confirmation or any production fold-in.
+1. Complete CR266 integration and close any path that can bypass typed action
+   or size constraints. Preserve T011's negative findings; lane-only is not a
+   general prompt rollout.
+2. Run the 30-ticker, two-repetition R4 cards-ON/gate-OFF pilot on `ami-llm` and
+   Ling. Require normalized evidence ICC ≥0.85 and complete machine channels.
+3. Fit provider-plus-model thresholds from real registry-backed card evidence,
+   then run fresh 30×5 acceptance with final verdict, flip, discrimination and
+   holdout gates. No fit or pilot result is a production claim by itself.
+4. Keep failed configurations OFF. Use Sonnet only to confirm a configuration
+   that has earned it through the preceding steps.
+5. Only if structural work still leaves a measured prompt problem, run the clean
+   CFA-only, Bull-only, Bear-only, RM-only, Risk-trio and cards-first ablations
+   separately. Those prompt ideas are not falsely marked as covered by CR266.
