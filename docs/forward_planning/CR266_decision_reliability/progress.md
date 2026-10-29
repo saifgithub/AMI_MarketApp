@@ -169,5 +169,6 @@
    APD rep1 also needs a PM-JSON replacement. Root cause: CR256 repaired absent
    blocks but accepted partial blocks/retries. `8a424283` now requires exactly
    five unique cards before and after the single repair; **98 focused tests
-   pass**. It remains local until the current control finishes and is not a
-   measured improvement yet.
+   pass**. The independent 60-room candidate is running as `bash-8x2ggogr`
+   with separate code, output and user identities; the control is unchanged.
+   No improvement is claimed until both are measured.
