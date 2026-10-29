@@ -6802,6 +6802,54 @@ abstract class AppLocalizations {
   /// **'The CIO made no call, so there is nothing to dissent from.'**
   String get roomConsensusNoCall;
 
+  /// CR266. Heading on the Verdict Board card shown when the decision record flags this verdict as contested — the computed evidence or the desk vote disagreed with the action the PM took. Amber mono uppercase, the same caution channel as the mandate-override card. Rendered only on an explicit contested=true; an old verdict with no record shows nothing. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONTESTED DECISION'**
+  String get roomContestedHeading;
+
+  /// CR266. Sub-label inside the contested card, above the objections the record says were never answered. Mono uppercase. Omitted entirely when the record carries no unresolved objections. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OBJECTIONS NOT RESOLVED'**
+  String get roomContestedObjectionsLabel;
+
+  /// CR266. Names the desks whose objections were left unresolved, resolved from their AgentId values to display names and pre-joined with ' · '. {names} arrives ready-formatted (e.g. 'Bear Researcher · Risk Manager'). Omitted when the record carries no objection ids. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Raised by {names}'**
+  String roomContestedRaisedBy(String names);
+
+  /// CR266 (CR219 R60). Heading on the Verdict Board card comparing this run to the user's previous convene on the same name. The prior convene's date rides the same row, right-aligned. The whole card renders only when the server sent a next-convene delta — a first convene shows nothing rather than a 'no changes' line. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SINCE YOUR LAST CONVENE'**
+  String get roomDeltaHeading;
+
+  /// CR266. Label for the prior convene's verdict action (APPROVE / PASS / REJECT …), shown as the wire token itself — the same vocabulary the Journal titles use. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PRIOR CALL'**
+  String get roomDeltaPriorCall;
+
+  /// CR266. Label for the percentage move in the name's reference price between the prior convene and this one. The value arrives signed ('+2.4%' / '-1.1%') and is locked LTR so the sign can never invert under RTL. Row omitted entirely when the server recorded no move. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PRICE MOVE'**
+  String get roomDeltaPriceMove;
+
+  /// CR266. Label for the kill criterion the PRIOR convene set — what would have changed that call — quoted verbatim under the label. A sentence, not a number, so it renders as body caption under a mono label, not in the metric row style. Omitted when the prior verdict stated none. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'KILL CRITERION THEN'**
+  String get roomDeltaKillCriterion;
+
+  /// CR266. Sub-label inside the next-convene card, above the fact-sheet fields whose live-data state changed between the two convenes (each row renders the field key and its states verbatim, e.g. 'margin_trend: LIVE → UNAVAILABLE'). Omitted when the list is empty — an old-shape prior run means 'not recorded then', never 'nothing changed'. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHANGED FIELDS'**
+  String get roomDeltaChangedFields;
+
   /// CR173 §5.12. Heading on a one-time card asking the user's reaction to the Floor. Deliberately does NOT say 'the new Floor' — a user who installed today never saw the old one. Mono uppercase. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

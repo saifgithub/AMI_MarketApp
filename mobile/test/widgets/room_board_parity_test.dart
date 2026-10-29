@@ -35,6 +35,10 @@ Map<String, dynamic> _verdictJson({
     'target': 'pm',
   },
   List<String> withheld = const ['social_media_analyst'],
+  // Object?, not Map?, so a test can inject the garbage shapes the wire can
+  // carry (a string where the record belongs) without a cast.
+  Object? decisionRecord,
+  Object? nextConveneDelta,
 }) =>
     {
       'action': action,
@@ -48,6 +52,8 @@ Map<String, dynamic> _verdictJson({
       'overridden_from_llm': false,
       'opinions_not_included': withheld,
       if (provenance != null) 'level_provenance': provenance,
+      if (decisionRecord != null) 'decision_record': decisionRecord,
+      if (nextConveneDelta != null) 'next_convene_delta': nextConveneDelta,
     };
 
 /// One transcript row as `build_journal_entry_for_run` writes it.
@@ -160,6 +166,36 @@ Map<String, Object?> _fingerprint(RoomBoardData d) => {
       'notStated': [for (final v in d.voicesNotStated) v.agentId],
       'withheldAnalystIds': d.withheldAnalystIds,
       'headlines': [for (final v in d.voices) v.headline],
+      // CR266 — the decision record and the next-convene delta ride both
+      // surfaces; flattened so a mapper that drops or renames one field
+      // fails here, not in a screen someone has to eyeball.
+      'decisionRecord': d.decisionRecord == null
+          ? null
+          : {
+              'score': d.decisionRecord!.score,
+              'threshold': d.decisionRecord!.threshold,
+              'allowedActions': d.decisionRecord!.allowedActions,
+              'computedSizePct': d.decisionRecord!.computedSizePct,
+              'unresolvedObjections': d.decisionRecord!.unresolvedObjections,
+              'unresolvedObjectionIds':
+                  d.decisionRecord!.unresolvedObjectionIds,
+              'evidenceAvailable': d.decisionRecord!.evidenceAvailable,
+              'evidenceSource': d.decisionRecord!.evidenceSource,
+              'contested': d.decisionRecord!.contested,
+              'contestedReasons': d.decisionRecord!.contestedReasons,
+            },
+      'nextConveneDelta': d.nextConveneDelta == null
+          ? null
+          : {
+              'priorDate': d.nextConveneDelta!.priorDate?.toIso8601String(),
+              'priorAction': d.nextConveneDelta!.priorAction,
+              'priceMovePct': d.nextConveneDelta!.priceMovePct,
+              'changedFields': [
+                for (final t in d.nextConveneDelta!.changedFields)
+                  '${t.field}|${t.fromState}|${t.toState}',
+              ],
+              'priorKillCriterion': d.nextConveneDelta!.priorKillCriterion,
+            },
     };
 
 void main() {
@@ -291,6 +327,78 @@ void main() {
         _journalEntry(transcript: _fullTranscript(includeStanceKeys: false)),
       )!;
       expect(unrecorded.stancesRecorded, isFalse);
+    });
+  });
+
+  group('CR266 — the decision record and the next-convene delta', () {
+    test('both surfaces map the full record identically (T-TWICE)', () {
+      final v = _verdictJson(
+        decisionRecord: {
+          'score': 0.71,
+          'threshold': 0.55,
+          'allowed_actions': ['APPROVE', 'PASS'],
+          'computed_size_pct': 3.4,
+          'unresolved_objections': ['The bear thesis was not answered.'],
+          'unresolved_objection_ids': ['bear_researcher'],
+          'evidence_available': true,
+          'evidence_source': 'claims_v3',
+          'contested': true,
+          'contested_reasons': ['split_vote'],
+        },
+        nextConveneDelta: {
+          'prior_date': '2026-10-20T14:30:00Z',
+          'prior_action': 'PASS',
+          'price_move_pct': 2.43,
+          'changed_fields': [
+            {
+              'field': 'margin_trend',
+              'from_state': 'LIVE',
+              'to_state': 'UNAVAILABLE',
+            },
+          ],
+          'prior_kill_criterion': 'Gross margin below 38%.',
+        },
+      );
+      final room =
+          boardFromRoomState(state: _roomState(verdict: v), ticker: 'AAPL');
+      final journal = boardFromJournalEntry(_journalEntry(verdict: v))!;
+
+      // Non-vacuity: the fields arrived, parsed, and are not the defaults.
+      expect(journal.decisionRecord?.contested, isTrue);
+      expect(journal.decisionRecord?.score, 0.71);
+      expect(
+        journal.nextConveneDelta?.changedFields.single.toState,
+        'UNAVAILABLE',
+      );
+      expect(_fingerprint(journal), _fingerprint(room));
+    });
+
+    test('a recorded contested=false survives both mappers', () {
+      final v = _verdictJson(decisionRecord: {'contested': false});
+      final room =
+          boardFromRoomState(state: _roomState(verdict: v), ticker: 'AAPL');
+      final journal = boardFromJournalEntry(_journalEntry(verdict: v))!;
+      for (final board in [room, journal]) {
+        expect(board.decisionRecord?.contested, isFalse,
+            reason: 'recorded false is a fact; null is the only absent state');
+      }
+      expect(_fingerprint(journal), _fingerprint(room));
+    });
+
+    test('an old-shape verdict has neither on both surfaces — never '
+        'backfilled', () {
+      final v = _verdictJson(
+        decisionRecord: 'garbage',
+        nextConveneDelta: 7,
+      );
+      final room =
+          boardFromRoomState(state: _roomState(verdict: v), ticker: 'AAPL');
+      final journal = boardFromJournalEntry(_journalEntry(verdict: v))!;
+      for (final board in [room, journal]) {
+        expect(board.decisionRecord, isNull);
+        expect(board.nextConveneDelta, isNull);
+      }
+      expect(_fingerprint(journal), _fingerprint(room));
     });
   });
 

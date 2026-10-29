@@ -124,6 +124,8 @@ class RoomBoardData {
     this.overriddenFromLlm = false,
     this.opinionsNotIncluded = const [],
     this.levelProvenance,
+    this.decisionRecord,
+    this.nextConveneDelta,
     this.isRecord = false,
     this.recordedAt,
     this.runId,
@@ -149,6 +151,17 @@ class RoomBoardData {
   final bool overriddenFromLlm;
   final List<String> opinionsNotIncluded;
   final Map<String, LevelSource>? levelProvenance;
+
+  /// CR266 — the typed decision record, `null` on runs that predate the field
+  /// or ran with the gate off. Both surfaces carry it through verbatim so the
+  /// live Room and the Journal cannot disagree about what was recorded.
+  final DecisionRecord? decisionRecord;
+
+  /// CR219 R60 — "what changed since your last convene", or `null` when there
+  /// is no prior to compare against. Absence renders no card; an empty
+  /// [NextConveneDelta.changedFields] inside a present record means the prior
+  /// run predated `sheet_state`, never "nothing changed".
+  final NextConveneDelta? nextConveneDelta;
 
   /// True on the Journal. A journal entry is a **record, not a setup**: a June
   /// entry's `$118.20` is not a live price, so there is no trade ticket

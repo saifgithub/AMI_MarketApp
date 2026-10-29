@@ -4152,6 +4152,32 @@ class AppLocalizationsMs extends AppLocalizations {
       'The PM made no call, so there is nothing to dissent from.';
 
   @override
+  String get roomContestedHeading => 'CONTESTED DECISION';
+
+  @override
+  String get roomContestedObjectionsLabel => 'OBJECTIONS NOT RESOLVED';
+
+  @override
+  String roomContestedRaisedBy(String names) {
+    return 'Raised by $names';
+  }
+
+  @override
+  String get roomDeltaHeading => 'SINCE YOUR LAST CONVENE';
+
+  @override
+  String get roomDeltaPriorCall => 'PRIOR CALL';
+
+  @override
+  String get roomDeltaPriceMove => 'PRICE MOVE';
+
+  @override
+  String get roomDeltaKillCriterion => 'KILL CRITERION THEN';
+
+  @override
+  String get roomDeltaChangedFields => 'CHANGED FIELDS';
+
+  @override
   String get floorReactionPrompt => 'HOW DOES THE FLOOR FEEL?';
 
   @override

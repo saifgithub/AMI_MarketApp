@@ -145,6 +145,15 @@ class RoomBoard extends StatelessWidget {
           const SizedBox(height: AmiSpacing.m),
           _MandateOverride(data: data),
         ],
+        // CR266 — a contested call is surfaced before any geometry: the
+        // record says the evidence or the vote disagreed with the PM, and
+        // that has to be read before the numbers it produced. Only an
+        // explicit `true` renders — an old verdict with no record never
+        // surfaces as "not contested".
+        if (data.decisionRecord?.contested == true) ...[
+          const SizedBox(height: AmiSpacing.m),
+          _ContestedCard(data: data),
+        ],
         if (data.isApprove) ...[
           const SizedBox(height: AmiSpacing.m),
           _TradeGeometry(data: data),
@@ -162,6 +171,14 @@ class RoomBoard extends StatelessWidget {
         ],
         const SizedBox(height: AmiSpacing.m),
         _ReasonBlock(data: data),
+        // CR266 — "what changed since your last convene on this name". The
+        // card exists only when the server sent a delta; a first convene
+        // renders nothing rather than a "no changes" line (absence is not
+        // information).
+        if (data.nextConveneDelta != null) ...[
+          const SizedBox(height: AmiSpacing.m),
+          _ConveneDeltaCard(delta: data.nextConveneDelta!),
+        ],
         if (footer != null) ...[
           const SizedBox(height: AmiSpacing.m),
           footer!,
@@ -427,6 +444,207 @@ class _MandateOverride extends StatelessWidget {
     );
   }
 }
+
+// ── contested decision ────────────────────────────────────────────────────
+
+/// CR266 — the record says this call was contested: the computed evidence or
+/// the desk vote disagreed with the action the PM took. Amber, the same
+/// caution channel `_MandateOverride` uses, because this is the same class of
+/// news — "the decision you are looking at overruled something" — and family
+/// colour stays reserved for identity.
+class _ContestedCard extends StatelessWidget {
+  const _ContestedCard({required this.data});
+  final RoomBoardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final record = data.decisionRecord!;
+    final objections = record.unresolvedObjections ?? const [];
+    final objectorIds = record.unresolvedObjectionIds ?? const [];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.roomContestedHeading,
+            style: AmiTypography.labelMono
+                .copyWith(fontSize: 10, color: AmiColors.hexAmber),
+          ),
+          // The reasons ride the wire as plain strings — a split vote, weak
+          // evidence, a repaired input — and render verbatim. This build
+          // cannot verify which is which, so it assigns no icons, colours or
+          // severities of its own.
+          for (final reason in record.contestedReasons ?? const []) ...[
+            const SizedBox(height: 4),
+            Text('• $reason', style: AmiTypography.caption),
+          ],
+          if (objections.isNotEmpty) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.roomContestedObjectionsLabel,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 9, color: AmiColors.textLow),
+            ),
+            for (final o in objections) ...[
+              const SizedBox(height: 4),
+              Text('• $o', style: AmiTypography.caption),
+            ],
+          ],
+          if (objectorIds.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              l.roomContestedRaisedBy(
+                objectorIds.map(analystDisplayName).join(' · '),
+              ),
+              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── what changed since the last convene ───────────────────────────────────
+
+/// CR219 R60 / CR266 — one card answering "what changed since your last
+/// convene on this name": the prior call, the price move since, the kill
+/// criterion the prior run set, and which fact-sheet fields changed state.
+/// Neutral slate — this is context, not a warning. Rows the server did not
+/// populate are omitted entirely, never rendered as placeholder zeros or an
+/// "unchanged" line.
+class _ConveneDeltaCard extends StatelessWidget {
+  const _ConveneDeltaCard({required this.delta});
+  final NextConveneDelta delta;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final priorDate = delta.priorDate;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.roomDeltaHeading,
+                  style: AmiTypography.labelMono
+                      .copyWith(fontSize: 10, color: AmiColors.textLow),
+                ),
+              ),
+              if (priorDate != null)
+                Text(
+                  DateFormat('dd MMM yyyy')
+                      .format(priorDate.toLocal())
+                      .toUpperCase(),
+                  style: AmiTypography.labelMono
+                      .copyWith(fontSize: 10, color: AmiColors.textLow),
+                ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.xs),
+          BoardMetricRow(
+            label: l.roomDeltaPriorCall,
+            value: delta.priorAction,
+            accent: AmiColors.textHigh,
+          ),
+          if (delta.priceMovePct != null)
+            // Not BoardMetricRow: the value is SIGNED, and a magnitude run
+            // inverts under RTL (T-BIDI) — the lock keeps the sign with the
+            // number. Same rule as the ribbon's ratio.
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 72,
+                    child: Text(
+                      l.roomDeltaPriceMove,
+                      style: AmiTypography.labelMono
+                          .copyWith(fontSize: 11, color: AmiColors.textLow),
+                    ),
+                  ),
+                  Text(
+                    _signedPct(delta.priceMovePct!),
+                    style: AmiTypography.statSmall
+                        .copyWith(color: AmiColors.textHigh),
+                    textDirection: TextDirection.ltr,
+                  ),
+                ],
+              ),
+            ),
+          if (delta.priorKillCriterion != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l.roomDeltaKillCriterion,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 9, color: AmiColors.textLow),
+            ),
+            const SizedBox(height: 2),
+            Text(delta.priorKillCriterion!, style: AmiTypography.caption),
+          ],
+          if (delta.changedFields.isNotEmpty) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.roomDeltaChangedFields,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 9, color: AmiColors.textLow),
+            ),
+            for (final t in delta.changedFields)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        t.field,
+                        style: AmiTypography.labelMono
+                            .copyWith(fontSize: 11, color: AmiColors.textLow),
+                      ),
+                    ),
+                    // Field keys and state tokens are the wire's own
+                    // vocabulary, rendered verbatim. The arrow is composed in
+                    // code rather than the ARB, which CR133's nav-path guard
+                    // scans. Locked LTR with the price move: it is a code
+                    // row, and the state tokens must not reorder under RTL.
+                    Text(
+                      '${t.fromState} → ${t.toState}',
+                      style: AmiTypography.statSmall
+                          .copyWith(color: AmiColors.textHigh),
+                      textDirection: TextDirection.ltr,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Signed, one-decimal. The widget tree locks the run LTR (T-BIDI): a
+/// magnitude under RTL inverts, and a flipped sign is a wrong number.
+String _signedPct(double pct) =>
+    '${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%';
 
 // ── trade geometry: the ribbon, or the plain list ─────────────────────────
 

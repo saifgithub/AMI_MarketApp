@@ -40,6 +40,8 @@ class RoomVerdict {
     this.opinionsNotIncluded = const [],
     this.levelProvenance,
     this.structure,
+    this.decisionRecord,
+    this.nextConveneDelta,
   });
 
   /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
@@ -83,6 +85,20 @@ class RoomVerdict {
   /// with no legs"; the server does not emit one.
   final OptionProposal? structure;
 
+  /// CR266 — the typed decision record behind this verdict (evidence score
+  /// and threshold, the computed action set and size, unresolved objections,
+  /// evidence availability, and the contested flag with its reasons).
+  ///
+  /// `null` means the run predates the field or ran with the gate off — never
+  /// "a clean decision": `contested` inside stays `bool?` for the same reason
+  /// `levelProvenance` stays null instead of defaulting to "all PM".
+  final DecisionRecord? decisionRecord;
+
+  /// CR219 R60 / CR266 — "what changed since your last convene on this name".
+  /// `null` on a first convene, when the only prior was an outage abstain, or
+  /// on a run that predates the field; absence, never a "nothing changed".
+  final NextConveneDelta? nextConveneDelta;
+
   bool get isApprove => action == 'APPROVE';
 
   /// Whether this verdict is asking the user to consent to an option
@@ -120,6 +136,14 @@ class RoomVerdict {
           ? OptionProposal.fromJson(
               (j['structure'] as Map).cast<String, dynamic>())
           : null,
+      decisionRecord: j['decision_record'] is Map
+          ? DecisionRecord.fromJson(
+              (j['decision_record'] as Map).cast<String, dynamic>())
+          : null,
+      nextConveneDelta: j['next_convene_delta'] is Map
+          ? NextConveneDelta.fromJson(
+              (j['next_convene_delta'] as Map).cast<String, dynamic>())
+          : null,
     );
   }
 }
@@ -135,6 +159,141 @@ Map<String, LevelSource>? parseLevelProvenance(Object? raw) {
     if (v != null) out[key] = _levelSourceFrom(v);
   }
   return out.isEmpty ? null : out;
+}
+
+/// A recorded list of strings, or null when the field was absent. A list that
+/// IS present stays a list even when empty or partly unreadable — "recorded
+/// nothing" and "not recorded" are different facts (T-BACKFILL), and one bad
+/// element must not throw inside build() (`whereType`, not `cast`).
+List<String>? parseStringListOrNull(Object? raw) {
+  if (raw is! List) return null;
+  return raw.whereType<String>().toList();
+}
+
+/// CR266 — the typed record behind one verdict, as computed by the backend
+/// evidence gate (never client-derived).
+///
+/// Every field is nullable because the whole record is absent on runs that
+/// predate it or ran with the gate off, and individually nullable because the
+/// backend fails closed per field (an uncomputable evidence score is null
+/// with an explicit reason elsewhere, not a silent 0). Read these the way
+/// `levelProvenance` is read: absence is absence, never a default. In
+/// particular [contested] must stay `bool?` — the board renders the contested
+/// card only on an explicit `true`, and an old verdict must never surface as
+/// "not contested".
+class DecisionRecord {
+  const DecisionRecord({
+    this.score,
+    this.threshold,
+    this.allowedActions,
+    this.computedSizePct,
+    this.unresolvedObjections,
+    this.unresolvedObjectionIds,
+    this.evidenceAvailable,
+    this.evidenceSource,
+    this.contested,
+    this.contestedReasons,
+  });
+
+  factory DecisionRecord.fromJson(Map<String, dynamic> j) {
+    final rawEvidenceAvailable = j['evidence_available'];
+    final rawContested = j['contested'];
+    return DecisionRecord(
+      score: (j['score'] as num?)?.toDouble(),
+      threshold: (j['threshold'] as num?)?.toDouble(),
+      allowedActions: parseStringListOrNull(j['allowed_actions']),
+      computedSizePct: (j['computed_size_pct'] as num?)?.toDouble(),
+      unresolvedObjections: parseStringListOrNull(j['unresolved_objections']),
+      unresolvedObjectionIds:
+          parseStringListOrNull(j['unresolved_objection_ids']),
+      evidenceAvailable: rawEvidenceAvailable is bool
+          ? rawEvidenceAvailable
+          : null,
+      evidenceSource: j['evidence_source'] as String?,
+      contested: rawContested is bool ? rawContested : null,
+      contestedReasons: parseStringListOrNull(j['contested_reasons']),
+    );
+  }
+
+  final double? score;
+  final double? threshold;
+  final List<String>? allowedActions;
+
+  /// The size the evidence curve computed, before any mandate cap — distinct
+  /// from `RoomVerdict.sizePct`, which is what the PM actually set.
+  final double? computedSizePct;
+  final List<String>? unresolvedObjections;
+  final List<String>? unresolvedObjectionIds;
+  final bool? evidenceAvailable;
+  final String? evidenceSource;
+  final bool? contested;
+  final List<String>? contestedReasons;
+}
+
+/// CR219 R60 — one fact-sheet field whose liveness changed between the prior
+/// convene and this one, both states read straight off the two runs' recorded
+/// `sheet_state` maps. `fromState`/`toState` are wire tokens such as `LIVE`,
+/// `UNAVAILABLE`, `WITHHELD_PAID` — rendered as-is, never re-derived.
+class SheetFieldTransition {
+  const SheetFieldTransition({
+    required this.field,
+    required this.fromState,
+    required this.toState,
+  });
+
+  factory SheetFieldTransition.fromJson(Map<String, dynamic> j) =>
+      SheetFieldTransition(
+        field: j['field'] as String? ?? '',
+        fromState: j['from_state'] as String? ?? '',
+        toState: j['to_state'] as String? ?? '',
+      );
+
+  final String field;
+  final String fromState;
+  final String toState;
+}
+
+/// CR219 R60 — "what changed since your last convene", built server-side from
+/// the prior run's persisted verdict and this run's fact sheet. Absent on a
+/// first convene or when the only prior was an outage abstain — the board
+/// renders no card at all in that case rather than a "no changes" line.
+///
+/// [changedFields] degrades per entry: a prior run that predates `sheet_state`
+/// leaves it empty while the action/date lines stay usable, so empty means
+/// "not recorded then", not "nothing changed".
+class NextConveneDelta {
+  const NextConveneDelta({
+    required this.priorDate,
+    required this.priorAction,
+    this.priceMovePct,
+    this.changedFields = const [],
+    this.priorKillCriterion,
+  });
+
+  factory NextConveneDelta.fromJson(Map<String, dynamic> j) {
+    final rawChanged = j['changed_fields'];
+    final rawPriorDate = j['prior_date'];
+    return NextConveneDelta(
+      priorDate:
+          DateTime.tryParse(rawPriorDate is String ? rawPriorDate : ''),
+      priorAction: j['prior_action'] as String? ?? '',
+      priceMovePct: (j['price_move_pct'] as num?)?.toDouble(),
+      changedFields: rawChanged is List
+          ? [
+              for (final m in rawChanged)
+                if (m is Map)
+                  SheetFieldTransition.fromJson(m.cast<String, dynamic>()),
+            ]
+          : const [],
+      priorKillCriterion: j['prior_kill_criterion'] as String?,
+    );
+  }
+
+  final DateTime? priorDate;
+  final String priorAction;
+  final double? priceMovePct;
+  final List<SheetFieldTransition> changedFields;
+  final String? priorKillCriterion;
 }
 
 class RoomTranscriptLine {

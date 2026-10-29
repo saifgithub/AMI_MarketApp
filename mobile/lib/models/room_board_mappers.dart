@@ -58,6 +58,8 @@ RoomBoardData boardFromRoomState({
     overriddenFromLlm: verdict?.overriddenFromLlm ?? false,
     opinionsNotIncluded: verdict?.opinionsNotIncluded ?? const [],
     levelProvenance: verdict?.levelProvenance,
+    decisionRecord: verdict?.decisionRecord,
+    nextConveneDelta: verdict?.nextConveneDelta,
     runId: state.runId,
     voices: [
       for (final agent in kCombVoices)
@@ -145,6 +147,17 @@ RoomBoardData? boardFromJournalEntry(JournalEntry entry) {
             .whereType<String>()
             .toList(),
     levelProvenance: parseLevelProvenance(rawVerdict?['level_provenance']),
+    // CR266 — the journal payload is the same verdict JSONB the live run
+    // served, so the record parses through the SAME constructors (T-TWICE).
+    // An entry written before the field existed has no key, and stays null.
+    decisionRecord: switch (rawVerdict?['decision_record']) {
+      final Map m => DecisionRecord.fromJson(m.cast<String, dynamic>()),
+      _ => null,
+    },
+    nextConveneDelta: switch (rawVerdict?['next_convene_delta']) {
+      final Map m => NextConveneDelta.fromJson(m.cast<String, dynamic>()),
+      _ => null,
+    },
     isRecord: true,
     recordedAt: entry.createdAt,
     voices: [
