@@ -25,3 +25,12 @@
    still failed PM JSON and needs a fresh replacement. It is not being counted
    as clean evidence.
 3. `ami-llm` has reached 253/300 rooms.
+
+## 2026-10-29 — mobile complete, outcomes started
+
+1. Mobile implementation committed as `83aeb029`: decision record/delta models,
+   contested and change cards, localization and parity tests. Full Flutter suite
+   **1927 passed, 0 failed**. Old verdicts render no new placeholder state.
+2. Calibration/outcome agent is now running (`agent-4`).
+3. Backend evidence-gate agent remains in progress; its schema, prompt, runner
+   and config changes are visible but not yet treated as complete or validated.
