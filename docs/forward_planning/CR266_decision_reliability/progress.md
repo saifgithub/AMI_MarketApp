@@ -34,3 +34,9 @@
 2. Calibration/outcome agent is now running (`agent-4`).
 3. Backend evidence-gate agent remains in progress; its schema, prompt, runner
    and config changes are visible but not yet treated as complete or validated.
+
+## 2026-10-29 — lane replacements clean
+
+1. All 18 lane replacement rooms passed their contract gates. The only
+   remaining invalid Ling room is DHR-r1-rep1; a second replacement pair is
+   running with fresh benchmark ID `cr265-t011-ling-retry-dhr-r1-v2`.
