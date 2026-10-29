@@ -1,0 +1,10 @@
+# CR266 ami-llm complete-channel candidate: 30 frozen tickers × R4 × two reps.
+# Cards ON, evidence gate OFF; requires the complete-card repair implementation.
+name: cr266-ami-cards-r4-complete
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }
