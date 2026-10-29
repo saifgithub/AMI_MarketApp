@@ -40,3 +40,11 @@
 1. All 18 lane replacement rooms passed their contract gates. The only
    remaining invalid Ling room is DHR-r1-rep1; a second replacement pair is
    running with fresh benchmark ID `cr265-t011-ling-retry-dhr-r1-v2`.
+
+## 2026-10-29 — Ling calibration complete
+
+1. All 600 main rooms and 32 replacements validated. Lane curve is monotone:
+   5/10/20/31/28 approvals vs control 10/10/17/26/26; flips 45→33; nonmonotone
+   tickers 16→12; approvals 89/300→94/300. Flip CI 16.1–29.3% still fails <10%.
+2. Lane earns only a CR266 structural comparison on Ling, not a global rollout.
+   Full report committed as `04c6c311`.
