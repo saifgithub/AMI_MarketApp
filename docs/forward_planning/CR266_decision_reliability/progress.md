@@ -16,3 +16,12 @@
 3. Ling's 600-room matrix is complete; 16 contract-failure replacements are
    running. `ami-llm` is at 237/300 rooms.
 4. CR266 initiation committed as `abdb0d74`.
+
+## 2026-10-29 — parallel implementation and gate hygiene
+
+1. Mobile contested-card agent is now running (`agent-3`). Calibration/outcome
+   remains queued.
+2. Six Ling control replacements completed: 11/12 rooms passed; DHR-r1-rep1
+   still failed PM JSON and needs a fresh replacement. It is not being counted
+   as clean evidence.
+3. `ami-llm` has reached 253/300 rooms.
