@@ -235,6 +235,10 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(ecr.parse_arm_identity(
             _arm(ticker="X", key="X-r5-rep12", risk=5)), ("X", "12"))
 
+    def test_legacy_key_without_risk_segment_uses_authoritative_risk(self) -> None:
+        self.assertEqual(ecr.parse_arm_identity(
+            _arm(ticker="AAPL", key="AAPL-rep1", risk=4)), ("AAPL", "1"))
+
     def test_bad_key_and_risk_mismatch_raise(self) -> None:
         with self.assertRaises(ecr.ArmKeyError):
             ecr.parse_arm_identity(_arm(key="RIOT-r4"))       # no -rep

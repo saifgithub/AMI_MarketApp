@@ -60,9 +60,9 @@ ICC_REQUIRED = 0.85
 # path consumed live in these three flows.
 REPAIR_FLOWS = ("room", "room_envelope_repair", "room_cards_repair")
 
-# <ticker>-r<risk>-rep<i>; the row's `ticker` field is authoritative for the
-# ticker (rsplitting the key yields e.g. RIOT-r4 and breaks holdouts), the
-# key only carries the rep (strict shape, risk cross-checked vs risk_score).
+# <ticker>-r<risk>-rep<i>, with legacy <ticker>-rep<i> accepted; the row's
+# `ticker` field is authoritative (rsplitting the key yields e.g. RIOT-r4 and
+# breaks holdouts). The key carries the rep; a present risk is cross-checked.
 _ARM_KEY_RE = re.compile(r"^.+-r(?P<risk>\d+)-rep(?P<rep>\d+)$")
 
 LIMITATIONS = (
@@ -102,10 +102,11 @@ def parse_arm_identity(arm: dict) -> tuple[str, str]:
     """
     ticker = str(arm.get("ticker") or "").strip()
     key = str(arm.get("arm_key") or "")
-    m = _ARM_KEY_RE.match(key)
+    m = _ARM_KEY_RE.match(key) or re.match(r"^.+-rep(?P<rep>\d+)$", key)
     if not ticker or not m:
         raise ArmKeyError(f"ticker={ticker!r} arm_key={key!r}")
-    if int(m.group("risk")) != int(arm["risk_score"]):
+    risk = m.groupdict().get("risk")
+    if risk is not None and int(risk) != int(arm["risk_score"]):
         raise ArmKeyError(
             f"arm_key {key!r} risk != risk_score {arm['risk_score']!r}")
     return ticker, m.group("rep")
