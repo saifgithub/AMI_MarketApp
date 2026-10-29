@@ -1,0 +1,10 @@
+# CR265 T011 ami-llm BA R1 replacement pair: Bull stance was unrecoverable.
+name: cr265-t011-ami-retry-ba-r1
+provider: vllm
+tickers: [BA]
+risk_scores: [1]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }

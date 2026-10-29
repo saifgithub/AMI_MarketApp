@@ -1,0 +1,10 @@
+# CR265 T011 ami-llm BGS R2 replacement pair: Risk Officer JSON was unparseable.
+name: cr265-t011-ami-retry-bgs-r2
+provider: vllm
+tickers: [BGS]
+risk_scores: [2]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }
