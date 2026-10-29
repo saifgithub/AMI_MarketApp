@@ -164,16 +164,19 @@ async def _convene_arm(
 
     The verdict event shape is v1's (room_kimi_gateway.run_one_ticker):
     RoomEvent(kind="verdict", verdict=<Verdict>) — model_dump()'d when
-    pydantic. No verdict event -> "no_verdict"; any exception ->
-    "script_error" with repr clipped to 300 chars, and the batch continues.
+    pydantic. The completed stored Room supersedes that pre-persistence event
+    so registry sheet_state and other stamped fields match production. No
+    verdict event -> "no_verdict"; any exception -> "script_error" with repr
+    clipped to 300 chars, and the batch continues.
     """
     started = time.monotonic()
     verdict = None
     status = "completed"
     error_message = None
     try:
+        run_id = uuid4()
         async for ev in runner.run(
-            run_id=uuid4(), user_id=user_id, ticker=arm.ticker,
+            run_id=run_id, user_id=user_id, ticker=arm.ticker,
             mandate=mandate, agent_timeout_s=agent_timeout_s,
         ):
             if ev.kind == "verdict" and ev.verdict is not None:
@@ -182,6 +185,14 @@ async def _convene_arm(
                     if hasattr(ev.verdict, "model_dump")
                     else ev.verdict
                 )
+        get_run = getattr(runner, "get_run", None)
+        stored = get_run(run_id) if callable(get_run) else None
+        if stored is not None and stored.verdict is not None:
+            verdict = (
+                stored.verdict.model_dump()
+                if hasattr(stored.verdict, "model_dump")
+                else stored.verdict
+            )
         if verdict is None:
             status = "no_verdict"
     except Exception as exc:  # noqa: BLE001 — record and continue the batch
