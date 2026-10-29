@@ -502,7 +502,9 @@ class _ContestedCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               l.roomContestedRaisedBy(
-                objectorIds.map(analystDisplayName).join(' · '),
+                objectorIds
+                    .map((id) => analystDisplayName(id.split(':').first))
+                    .join(' · '),
               ),
               style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
             ),

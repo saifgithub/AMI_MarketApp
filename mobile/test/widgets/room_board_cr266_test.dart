@@ -106,7 +106,7 @@ void main() {
             unresolvedObjections: [
               'Bear thesis on gross-margin compression was not answered.',
             ],
-            unresolvedObjectionIds: ['bear_researcher'],
+            unresolvedObjectionIds: ['bear_researcher:eq:0'],
           ),
         ),
       );

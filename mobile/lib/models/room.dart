@@ -219,8 +219,8 @@ class DecisionRecord {
   final double? threshold;
   final List<String>? allowedActions;
 
-  /// The size the evidence curve computed, before any mandate cap — distinct
-  /// from `RoomVerdict.sizePct`, which is what the PM actually set.
+  /// The size the evidence curve computed within the mandate cap — distinct
+  /// from `RoomVerdict.sizePct`, which is what the final verdict carried.
   final double? computedSizePct;
   final List<String>? unresolvedObjections;
   final List<String>? unresolvedObjectionIds;
