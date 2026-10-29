@@ -96,14 +96,14 @@
 
 1. Full mobile suite after the objector fix: **1,927 passed, 0 failed**.
 2. Card reporter committed as `719025c1`: repair-aware turn selection,
-   normalized-score ICC(A,1), coverage and per-risk/rep diagnostics. Its pass
-   criteria are being hardened so registry absence, duplicate run keys or
-   skipped anomalous arms cannot pass silently.
+   normalized-score ICC(A,1), coverage and per-risk/rep diagnostics. `9b1e69d0`
+   completed the pass criteria: registry absence, duplicate run keys, bad risk
+   levels and skipped anomalous arms all fail loudly.
 3. Threshold fit committed as `20b83981`: fit-pool-scaled targets, explicit
    gate-eligible (not final-approval) metrics and refusal to emit production
    ladders from card self-report. `1bded1ba` reuses the repair-aware corpus
    loader and rejects anomalous partial fits.
-4. Combined fit/report verification: **54 tests passed**. No real-provider
+4. Combined fit/report verification: **61 tests passed**. No real-provider
    threshold has been emitted and no gate acceptance has been claimed.
 5. Real-tool diagnostic on the legacy 90-room dsv4 card corpus: only 69/90
    rooms met the exact 20-cell census; normalized evidence ICC(A,1) was
