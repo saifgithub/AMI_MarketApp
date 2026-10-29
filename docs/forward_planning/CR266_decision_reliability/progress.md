@@ -172,3 +172,8 @@
    pass**. The independent 60-room candidate is running as `bash-8x2ggogr`
    with separate code, output and user identities; the control is unchanged.
    No improvement is claimed until both are measured.
+8. Final control: all 60 registry/corpus states valid, normalized evidence
+   ICC(A,1) **0.870 passes**, but only **43/60 rooms complete**, so the card
+   pilot FAILS coverage. Contract gates are 59/60; the APD replacement pair is
+   running as `bash-6b0budog`. Seventeen rooms have missing cells (54 malformed
+   card lines). This proves why ICC cannot substitute for complete channels.
