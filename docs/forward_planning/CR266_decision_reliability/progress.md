@@ -151,9 +151,10 @@
 4. The 30-ticker × two-rep `ami-llm` R4 pilot is running as `bash-rob3u077`
    with cards ON, gate OFF and the fixed persistence harness. Ling remains
    paused on model availability. Production remains unchanged.
-5. The first full-suite attempt timed out after 40 minutes with live-feed
-   failures. Its first failure was environmental: real-market mode correctly
-   rejected mock-walk pricing in a unit fixture, and the same test passed with
-   `LLM_FORCE_PROVIDER=mock USE_REAL_MARKET_DATA=false`. The complete suite is
-   rerunning with those explicit unit settings; no failure is being hidden or
-   counted as a CR266 regression without reproduction.
+5. Full-suite environment diagnosis: the first attempt timed out on live-feed
+   fixtures. A second attempt with `LLM_FORCE_PROVIDER=mock` produced 35
+   failures + 15 errors because forcing mock invalidates provider fixtures;
+   root-cwd also loads the production `.env`. The correct isolated invocation
+   is `cd backend && USE_REAL_MARKET_DATA=false .venv/bin/pytest tests/unit/ -q`
+   with no provider override. Three representative pricing/provider/telemetry
+   tests pass in 4s, and the full suite is rerunning that way.
