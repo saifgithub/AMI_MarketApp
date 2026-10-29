@@ -6,10 +6,14 @@ Pins the three things that make the fitted ladder trustworthy:
   1. SCORE PARITY with the backend contract (`app.services.evidence_record`):
      the fit score is the quantity the production gate will compute. A parity
      test runs the real backend `build_evidence_record` on duck-typed card
-     channels and asserts byte-equal net_support / unresolved / score. It
-     skips when the backend cannot be imported (e.g. running outside the
-     backend venv) — the hand-computed expectations below still pin the
-     semantics.
+     channels and asserts byte-equal net_support / unresolved / score under
+     the NORMALIZED contract (net_support = raw sum / 20, score = net_support
+     - 0.1 x unresolved). It skips when the backend cannot be imported (e.g.
+     running outside the backend venv) — the hand-computed expectations below
+     still pin the semantics. KNOWN TEMPORARY STATE: until the backend lands
+     the identical normalization + duplicate rule, this test FAILS against
+     the real backend module on purpose — that failure is the alarm bell for
+     contract drift, not a bug to silence. Do not weaken or skip it.
   2. FIT HONESTY: holdouts excluded from the approval set before ranking,
      empty scores fail loudly (never a guessed ladder), the enforced ladder
      is monotone, out-of-range levels are reported and omitted from the gate
@@ -48,8 +52,7 @@ def _claims(cards: list[str], objections: list[str] | None = None) -> str:
 
 def _full_room_cards() -> dict:
     """One card per desk per item, all well/support, data=yes — a complete,
-    fully-evidenced room (net support = 4 desks x 5 items = 20.0 with all
-    data present)."""
+    fully-evidenced room (net support = 20/20 = 1.0 with all data present)."""
     lines = [f"item={i} dir=support grade=well data=yes claim=x nums=1"
              for i in fit.ITEM_FIELD_REGISTRY]
     return {d: _claims(lines) for d in fit.REQUIRED_DESKS}
@@ -66,9 +69,10 @@ class ScoreContractTests(unittest.TestCase):
                  for f in fields}
         out = self._scored(_full_room_cards(), state)
         self.assertTrue(out["evidence_available"])
-        self.assertEqual(out["net_support"], 20.0)
+        self.assertEqual(out["net_support"], 1.0)   # 20/20, normalized
+        self.assertEqual(out["raw_net_support"], 20.0)
         self.assertEqual(out["unresolved"], 0)
-        self.assertEqual(out["score"], 20.0)
+        self.assertEqual(out["score"], 1.0)
         self.assertEqual(out["field_state_source"], "sheet_state")
 
     def test_absent_data_zeroes_contribution_both_directions(self) -> None:
@@ -84,10 +88,10 @@ class ScoreContractTests(unittest.TestCase):
         cards["bear_researcher"] = cards["bear_researcher"].replace(
             "item=bs dir=support", "item=bs dir=oppose")
         out = self._scored(cards, state)
-        # all four desks' bs cards contribute 0 (4 x 1.0 absent), and the
-        # bearish one is 0 rather than -1.0: absence is neutral in BOTH
-        # directions, never silently bearish (backend contract).
-        self.assertEqual(out["net_support"], 16.0)
+        # all four desks' bs cards contribute 0 (4 of 20 cells absent), and
+        # the bearish one is 0 rather than -1.0: absence is neutral in BOTH
+        # directions, never silently bearish (backend contract). Net = 16/20.
+        self.assertEqual(out["net_support"], 0.8)
         # the bs card is still parsed; it just cannot carry weight
         bs = [c for c in out["items"] if c["item"] == "bs"
               and c["desk"] == "bear_researcher"]
@@ -145,7 +149,32 @@ class ScoreContractTests(unittest.TestCase):
         out3 = self._scored(cards3, state)
         self.assertTrue(out3["evidence_available"])
         self.assertEqual(out3["unresolved"], 1)
-        self.assertEqual(out3["score"], round(out3["net_support"] - 0.1, 6))
+        # raw 15/20 = 0.75 net; one material 0.1 objection → 0.65
+        self.assertEqual(out3["net_support"], 0.75)
+        self.assertEqual(out3["score"], 0.65)
+
+    def test_duplicate_desk_item_card_makes_room_unavailable(self) -> None:
+        # the contract allows exactly one card per desk per item: a second
+        # card from the same desk on the same item marks the room unavailable
+        # with an explicit duplicate marker, so re-rolls cannot inflate.
+        cards = _full_room_cards()
+        cards["bull_researcher"] = cards["bull_researcher"].replace(
+            "[/CLAIMS]",
+            "item=eq dir=support grade=well data=yes claim=again\n[/CLAIMS]")
+        out = self._scored(
+            cards, {f: "live" for fields in fit.ITEM_FIELD_REGISTRY.values()
+                    for f in fields})
+        self.assertFalse(out["evidence_available"])
+        self.assertIsNone(out["score"])
+        self.assertIn("duplicate:bull_researcher:eq", out["missing"])
+        # ... while one card per desk per item (same desk, two items) stays
+        # available — only the desk/item PAIR duplicates.
+        cards2 = _full_room_cards()
+        out2 = self._scored(
+            cards2, {f: "live" for fields in fit.ITEM_FIELD_REGISTRY.values()
+                     for f in fields})
+        self.assertTrue(out2["evidence_available"])
+        self.assertEqual(out2["missing"], ())
 
     def test_missing_desk_makes_room_unscorable(self) -> None:
         cards = _full_room_cards()
@@ -158,14 +187,14 @@ class ScoreContractTests(unittest.TestCase):
     def test_data_absent_branch_uses_self_report_and_is_labelled(self) -> None:
         out = self._scored(_full_room_cards(), None)
         self.assertEqual(out["field_state_source"], "card_self_report")
-        self.assertEqual(out["net_support"], 20.0)
+        self.assertEqual(out["net_support"], 1.0)
         # self-report data=no zeroes the contribution under the approximation
         cards = _full_room_cards()
         cards["bull_researcher"] = cards["bull_researcher"].replace(
             "item=eq dir=support grade=well data=yes",
             "item=eq dir=support grade=well data=no")
         out2 = self._scored(cards, None)
-        self.assertEqual(out2["net_support"], 19.0)
+        self.assertEqual(out2["net_support"], 0.95)   # 19/20
 
     def test_bad_data_flag_drops_card_counted(self) -> None:
         cards = _full_room_cards()
@@ -353,40 +382,48 @@ class CliTests(unittest.TestCase):
                 fh.write(json.dumps(r) + "\n")
         return p
 
-    def _record(self, ticker="AAPL", level=1, rep="1", variant=0):
-        # Nets kept inside [0, 1] so the fitted ladder passes the backend's
-        # range validation: one well/partial card apiece on eq, everything
-        # else unsupported, no objections. variant cycles net over
-        # {0.0, 0.5, 1.0}.
-        grades = {0: ("unsupported", "unsupported"),
-                  1: ("partial", "unsupported"),
-                  2: ("well", "unsupported")}
-        g0, g1 = grades[variant % 3]
-        lines0 = [f"item=eq dir=support grade={g0} data=yes claim=x"] + [
-            f"item={i} dir=support grade=unsupported data=yes claim=x"
-            for i in ("vc", "vh", "bs", "moat")]
-        lines1 = [f"item=eq dir=support grade={g1} data=yes claim=x"] + [
-            f"item={i} dir=support grade=unsupported data=yes claim=x"
-            for i in ("vc", "vh", "bs", "moat")]
-        plain = [f"item={i} dir=support grade=unsupported data=yes claim=x"
-                 for i in fit.ITEM_FIELD_REGISTRY]
-        turns = [
-            _turn("fundamentals_analyst", _claims(lines0)),
-            _turn("bull_researcher", _claims(lines1)),
-            _turn("bear_researcher", _claims(plain)),
-            _turn("research_manager", _claims(plain)),
-        ]
+    def _record(self, ticker="AAPL", level=1, rep="1", n_well=0):
+        # Normalized scale: n_well of the 20 desk/item cells filed
+        # support/well, the rest unsupported → net_support = n_well/20 ∈
+        # {0, .25, .5, .75, 1.0} for n_well ∈ {0, 5, 10, 15, 20}. Well cells
+        # fill desk-major so every desk still files all five items.
+        def block(desk_idx: int) -> str:
+            lines = []
+            for item_idx, item in enumerate(fit.ITEM_FIELD_REGISTRY):
+                cell = desk_idx * 5 + item_idx
+                grade = "well" if cell < n_well else "unsupported"
+                lines.append(f"item={item} dir=support grade={grade} "
+                             f"data=yes claim=x")
+            return "[CLAIMS]\n" + "\n".join(lines) + "\n[/CLAIMS]"
+
+        turns = [_turn(d, block(k)) for k, d in enumerate(fit.REQUIRED_DESKS)]
         return {
             "ticker": ticker, "rep": rep, "risk_score": level,
             "verdict": "APPROVE",
             "turns": turns,
         }
 
+    def _holdout_record(self, level: int) -> dict:
+        # RIOT with one oppose/well card: net -1/20 = -0.05 — strictly below
+        # any bar a corpus whose floor is 0 can fit, so the falsifier stays
+        # exercisable without a leak.
+        lines = ["item=eq dir=oppose grade=well data=yes claim=x"] + [
+            f"item={i} dir=support grade=unsupported data=yes claim=x"
+            for i in list(fit.ITEM_FIELD_REGISTRY)[1:]]
+        turns = [_turn("fundamentals_analyst", _claims(lines))] + [
+            _turn(d, _claims([f"item={i} dir=support grade=unsupported "
+                              f"data=yes claim=x"
+                              for i in fit.ITEM_FIELD_REGISTRY]))
+            for d in list(fit.REQUIRED_DESKS)[1:]]
+        return {"ticker": "RIOT", "rep": "1", "risk_score": level,
+                "verdict": "APPROVE", "turns": turns}
+
     def test_end_to_end_turns_file(self) -> None:
         tmp = Path(tempfile.mkdtemp())
-        records = [self._record(f"T{i:02d}", lvl, rep, variant=i)
-                   for lvl in range(1, 6) for i in range(12)
+        records = [self._record(f"T{i:02d}", lvl, rep, n_well=(i % 5) * 5)
+                   for lvl in range(1, 6) for i in range(16)
                    for rep in ("1", "2")]
+        records += [self._holdout_record(lvl) for lvl in range(1, 6)]
         turns = self._write_turns(tmp, records)
         out_dir = tmp / "out"
         argv = sys.argv
@@ -408,6 +445,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(report["provider"], "test-model")
         self.assertIn("In-sample quantile fit", report["caveats"][0])
         self.assertEqual(report["tally"]["rooms_evidence_unavailable"], 0)
+        self.assertEqual(report["tally"]["rooms_duplicate_cards"], 0)
         self.assertEqual(report["gate_validation_errors"], [])
         # never-reuse-across-models caveat ships in the report
         self.assertTrue(any("provider-specific" in c

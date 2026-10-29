@@ -3,8 +3,10 @@
 
 Reads run JSONL + llm_audit CLAIMS/OBJECTIONS, computes THE SAME evidence
 score as the backend contract (`backend/app/services/evidence_record.py`:
-net support = Σ direction×grade over data-present cards, score = net_support
-− 0.1 × unresolved adequate objections), and fits ONE monotone
+net_support = SUM(direction×grade contributions over data-present cards) / 20
+(four desks × five required items — complete support scores exactly 1.0),
+score = net_support − 0.1 × unresolved adequate objections — each objection
+costs a MATERIAL 0.1, not 0.005), and fits ONE monotone
 R1 ≥ R2 ≥ R3 ≥ R4 ≥ R5 threshold ladder per model targeting the locked CR256
 approval curve 5/15/30/45/46 per 60 rooms (R5 re-anchored 60 → 46,
 investable universe, 2026-10-13). Emits provider-specific threshold JSON in
@@ -84,6 +86,12 @@ _DIRECTION_WEIGHT = {"support": 1.0, "oppose": -1.0, "neutral": 0.0}
 _GRADE_WEIGHT = {"well": 1.0, "partial": 0.5, "unsupported": 0.0}
 ADEQUATE_SEVERITIES = frozenset({"high", "medium"})
 UNRESOLVED_PENALTY = 0.1
+
+# Normalized net support divides by the full census size (four required desks
+# x five required items = 20), never by the cards actually filed: a thin or
+# partial filing can never reach 1.0 by inflation, and complete support is
+# exactly 1.0.
+NET_SUPPORT_NORMALIZER = len(REQUIRED_DESKS) * len(ITEM_FIELD_REGISTRY)  # 20
 
 # CR256 locked curve (R5 amended 60 -> 46, 2026-10-13): approvals per 60 rooms.
 TARGET = {1: 5, 2: 15, 3: 30, 4: 45, 5: 46}
@@ -208,6 +216,13 @@ def score_room(
     self-reporting `data=yes`. That is the approximation the backend refuses
     at gate time; here it is allowed for fitting legacy corpora but LABELLED
     in the returned `field_state_source` and the fit report.
+
+    The contract allows exactly ONE card per desk per item: a duplicate makes
+    the room's evidence unavailable with an explicit
+    `duplicate:<desk>:<item>` marker, exactly like a missing card, so
+    re-rolls can never inflate the score. net_support is normalized by the
+    full 20-cell census (complete support = 1.0); the raw sum is kept only as
+    a diagnostic.
     """
     cards = parsed["cards"]
     objections = parsed["objections"]
@@ -237,12 +252,18 @@ def score_room(
     missing: list[str] = []
     items_out: list[dict] = []
     cards_per_item: dict[str, list[dict]] = {i: [] for i in ITEMS}
+    seen_desk_item: set[tuple[str, str]] = set()
     for desk in REQUIRED_DESKS:
         desk_cards = by_desk[desk]
         if not desk_cards:
             missing.append(f"cards:{desk}")
             continue
         for c in desk_cards:
+            key = (c["desk"], c["item"])
+            if key in seen_desk_item:
+                missing.append(f"duplicate:{c['desk']}:{c['item']}")
+                continue
+            seen_desk_item.add(key)
             present = card_present(c)
             contribution = (_DIRECTION_WEIGHT[c["direction"]]
                             * _GRADE_WEIGHT[c["grade"]] if present else 0.0)
@@ -253,7 +274,8 @@ def score_room(
         if not cards_per_item[item]:
             missing.append(f"item:{item}")
 
-    net_support = round(sum(c["contribution"] for c in items_out), 6)
+    raw_net_support = round(sum(c["contribution"] for c in items_out), 6)
+    net_support = round(raw_net_support / NET_SUPPORT_NORMALIZER, 6)
 
     by_desk_dir = {(c["desk"], c["item"]): c["direction"]
                    for c in items_out if c["data_present"]}
@@ -289,6 +311,7 @@ def score_room(
              if evidence_available else None)
     return {
         "score": score, "net_support": net_support if evidence_available else None,
+        "raw_net_support": raw_net_support,
         "unresolved": len(unresolved) if evidence_available else None,
         "unresolved_ids": tuple(unresolved),
         "evidence_available": evidence_available,
@@ -450,7 +473,7 @@ def score_corpus(records: list[dict]) -> tuple[list[RoomScore], dict]:
     tally: collections.Counter = collections.Counter({
         "rooms_bad_level": 0, "malformed_cards": 0,
         "malformed_objections": 0, "data_flag_unrecognised": 0,
-        "rooms_evidence_unavailable": 0,
+        "rooms_evidence_unavailable": 0, "rooms_duplicate_cards": 0,
         "field_state_source:sheet_state": 0,
         "field_state_source:card_self_report": 0,
     })
@@ -467,6 +490,8 @@ def score_corpus(records: list[dict]) -> tuple[list[RoomScore], dict]:
         tally[f"field_state_source:{scored['field_state_source']}"] += 1
         if not scored["evidence_available"]:
             tally["rooms_evidence_unavailable"] += 1
+        tally["rooms_duplicate_cards"] += sum(
+            1 for m in scored["missing"] if m.startswith("duplicate:"))
         rooms.append(RoomScore(
             ticker=rec["ticker"].upper(),
             level=level,
