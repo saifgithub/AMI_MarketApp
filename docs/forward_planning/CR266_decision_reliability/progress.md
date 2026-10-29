@@ -115,12 +115,13 @@
 
 1. `ecd1ae7a` implements normalized scoring, exact cards, provider+model
    identities, the mobile wire contract, unresolved-objection contestedness
-   and review-safe action/size enforcement. Focused backend/CR247/config/
-   provenance verification: **110 passed**. Fit/report verification is now
-   **63 passed** after `8122fd70` refused partial production ladders.
+   and review-safe action/size enforcement. `454aa3d3` adds the registry
+   fail-closed rule. Focused backend/CR247/config/provenance verification:
+   **113 passed**. Fit/report verification: **63 passed**.
 2. A gate-forced PASS no longer routes to resurrection. An allowed rerun must
    apply the same computed size before the safety floor, and review changes
    rebuild the final record instead of leaving stale pre-review state.
-3. Final pre-smoke edge case: missing/empty fact-sheet registry must fail
-   closed rather than masquerade as an all-neutral complete room. That fix is
-   in progress. Full backend verification is running; no real smoke has begun.
+3. Missing/empty fact-sheet registry now fails closed instead of masquerading
+   as an all-neutral complete room. Frozen AAPL cards-ON/gate-OFF smoke runs
+   have started on `ami-llm` and Ling in isolated containers with the new app
+   code mounted read-only; the Alpha service and gate remain unchanged.
