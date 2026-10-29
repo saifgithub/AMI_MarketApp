@@ -167,6 +167,7 @@
 7. Early CR266 pilot check at 19 rooms: registry and corpus state are valid,
    but only 14/19 rooms have complete 20-cell evidence and early ICC is 0.545.
    APD rep1 also needs a PM-JSON replacement. Root cause: CR256 repaired absent
-   blocks but accepted partial blocks/retries. A local completeness-repair
-   candidate is being implemented for the next pilot; the current run remains
-   unchanged as the measured control and is not being called a pass.
+   blocks but accepted partial blocks/retries. `8a424283` now requires exactly
+   five unique cards before and after the single repair; **98 focused tests
+   pass**. It remains local until the current control finishes and is not a
+   measured improvement yet.
