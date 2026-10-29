@@ -127,22 +127,29 @@ class DecisionRecord(BaseModel):
     Written ONLY by a gated run whose evidence was actually computable — a
     flag-off, non-live, legacy or fail-closed run keeps `None` (absence,
     never a fabricated stand-in, the same T-BACKFILL rule the fields above
-    are read under). `contested` marks decisions the record itself flags as
-    arguable: split self-consistency vote, score within
+    are read under).
+
+    The wire keys below are the committed mobile contract
+    (`mobile/lib/models/room.dart`'s DecisionRecord.fromJson) — they must not
+    be renamed or dropped: `unresolved_objections` carries the objection
+    TEXTS (what the user reads), `unresolved_objection_ids` the deterministic
+    ids, and `contested_reasons` the explicit reasons the decision is
+    contested (split self-consistency vote, score within
     `ROOM_EVIDENCE_CONTESTED_MARGIN` of the threshold, an approval the vote
-    bar or safety floor blocked, or any scripted desk in the run.
+    bar or safety floor blocked, any scripted desk, or an unanswered
+    objection — plus any second-pass review change).
     """
 
     score: float
     threshold: float
     allowed_actions: list[str]
     computed_size_pct: float | None
-    unresolved_objection_count: int
+    unresolved_objections: list[str]
     unresolved_objection_ids: list[str]
     evidence_available: bool
     evidence_source: str
     contested: bool
-    reasons: list[str]
+    contested_reasons: list[str]
 
 
 class RatingSplit(BaseModel):

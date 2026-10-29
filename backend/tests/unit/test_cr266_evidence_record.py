@@ -139,7 +139,23 @@ def test_oppose_is_negative_when_the_registry_has_the_data():
         _field_state(),
     )
     assert {ev.item: ev for ev in record.items}["bs"].contribution == -1.0
-    assert record.net_support == -1.0
+    assert record.net_support == -0.05  # -1.0 / 20
+
+
+def test_complete_evidenced_support_scores_exactly_one():
+    desks = {
+        desk: _desk_cards(_cards_block(
+            eq=("support", "well"), vc=("support", "well"),
+            vh=("support", "well"), bs=("support", "well"),
+            moat=("support", "well"),
+        ))
+        for desk in ("fundamentals_analyst", "bull_researcher",
+                     "bear_researcher", "research_manager")
+    }
+    record = build_evidence_record(desks, _field_state())
+    assert record.evidence_available is True
+    assert len(record.items) == 20
+    assert record.net_support == 1.0  # 20 x 1.0 / 20
 
 
 def test_data_present_comes_from_the_registry_not_the_self_report():
@@ -199,7 +215,7 @@ def test_net_support_sums_across_desks():
         "research_manager": _desk_cards(_cards_block(eq=("neutral", "well"))),
     }
     record = build_evidence_record(desks, _field_state())
-    assert record.net_support == pytest.approx(1.0 + 0.5 - 1.0 + 0.0)
+    assert record.net_support == pytest.approx((1.0 + 0.5 - 1.0 + 0.0) / 20)
 
 
 # ── objections ──────────────────────────────────────────────────────────────
@@ -217,7 +233,7 @@ def test_an_objection_without_an_opposite_evidenced_card_is_unresolved():
     ))
     record = build_evidence_record(desks, _field_state())
     assert record.unresolved_objection_count == 1
-    assert record.unresolved_objections == ("bear_researcher:eq:0",)
+    assert record.unresolved_objection_ids == ("bear_researcher:eq:0",)
     assert record.score == pytest.approx(record.net_support - UNRESOLVED_PENALTY)
 
 
@@ -251,7 +267,7 @@ def test_a_desks_own_card_does_not_resolve_its_own_objection():
         )),
     }
     record = build_evidence_record(desks, _field_state())
-    assert record.unresolved_objections == ("bear_researcher:eq:0",)
+    assert record.unresolved_objection_ids == ("bear_researcher:eq:0",)
 
 
 def test_an_objection_with_no_own_card_resolves_on_any_evidenced_card():
@@ -305,18 +321,18 @@ def test_an_unevidenced_opposite_card_does_not_resolve():
         state[field] = "unavailable"
     record = build_evidence_record(desks, state)
     assert record.data_present["eq"] is False
-    assert record.unresolved_objections == ("bear_researcher:eq:0",)
+    assert record.unresolved_objection_ids == ("bear_researcher:eq:0",)
 
 
 # ── threshold config ────────────────────────────────────────────────────────
 
 
-_GOOD = '{"vllm": {"R1": 0.6, "R2": 0.55, "R3": 0.5, "R4": 0.45, "R5": 0.4}}'
+_GOOD = '{"vllm:ami-llm": {"R1": 0.30, "R2": 0.25, "R3": 0.20, "R4": 0.15, "R5": 0.10}}'
 
 
 def test_threshold_config_parses_per_provider():
     parsed = parse_gate_thresholds(_GOOD)
-    assert parsed["vllm"]["R3"] == 0.5
+    assert parsed["vllm:ami-llm"]["R3"] == 0.2
     assert parse_gate_thresholds("") == {}
     assert parse_gate_thresholds("{}") == {}
 
@@ -341,9 +357,9 @@ def test_threshold_config_equality_is_allowed():
     # Flat runs are monotone (R1>=...>=R5 holds at equality) — one threshold
     # for every risk level is a legal calibration.
     parsed = parse_gate_thresholds(
-        '{"mock": {"R1": 0.5, "R2": 0.5, "R3": 0.5, "R4": 0.5, "R5": 0.5}}'
+        '{"mock:test": {"R1": 0.5, "R2": 0.5, "R3": 0.5, "R4": 0.5, "R5": 0.5}}'
     )
-    assert parsed["mock"]["R5"] == 0.5
+    assert parsed["mock:test"]["R5"] == 0.5
 
 
 def test_settings_fails_boot_on_miscalibrated_thresholds():
@@ -355,9 +371,9 @@ def test_settings_fails_boot_on_miscalibrated_thresholds():
 
 def test_threshold_selection_is_per_provider_and_clamps_risk():
     thresholds = parse_gate_thresholds(_GOOD)
-    assert threshold_for_risk(thresholds, "vllm", 3) == 0.5
-    assert threshold_for_risk(thresholds, "vllm", 1) == 0.6
-    assert threshold_for_risk(thresholds, "vllm", 5) == 0.4
+    assert threshold_for_risk(thresholds, "vllm:ami-llm", 3) == 0.2
+    assert threshold_for_risk(thresholds, "vllm:ami-llm", 1) == 0.3
+    assert threshold_for_risk(thresholds, "vllm:ami-llm", 5) == 0.1
     assert threshold_for_risk(thresholds, "kimi", 3) is None
     assert threshold_for_risk(thresholds, None, 3) is None
 
@@ -392,17 +408,22 @@ def test_size_interpolates_linearly_and_is_monotone():
 
 
 def test_contestedness_signals():
-    base = {"score": 0.8, "threshold": 0.5, "margin": 0.10}
+    base = {"score": 0.8, "threshold": 0.5, "margin": 0.10, "unresolved_objections": 0}
     assert gate_contested(split_vote=False, bar_blocked=False, scripted_turns=0, **base) is False
     assert gate_contested(split_vote=True, bar_blocked=False, scripted_turns=0, **base) is True
     assert gate_contested(split_vote=False, bar_blocked=True, scripted_turns=0, **base) is True
     assert gate_contested(split_vote=False, bar_blocked=False, scripted_turns=1, **base) is True
+    # an unanswered adequate objection is contested by definition
+    assert gate_contested(split_vote=False, bar_blocked=False, scripted_turns=0,
+                          **{**base, "unresolved_objections": 1}) is True
     # score inside the margin of the threshold is contested
     assert gate_contested(split_vote=False, bar_blocked=False, scripted_turns=0,
-                          score=0.55, threshold=0.5, margin=0.10) is True
+                          score=0.55, threshold=0.5, margin=0.10,
+                          unresolved_objections=0) is True
     # 0.6-0.5 lands inside the margin at float precision too — go clear of it
     assert gate_contested(split_vote=False, bar_blocked=False, scripted_turns=0,
-                          score=0.65, threshold=0.5, margin=0.10) is False
+                          score=0.65, threshold=0.5, margin=0.10,
+                          unresolved_objections=0) is False
 
 
 # ── availability + the gate decision shapes ─────────────────────────────────
@@ -440,7 +461,7 @@ def _gate(**overrides) -> EvidenceGateDecision:
         },
         "field_state": _field_state(),
         "thresholds": parse_gate_thresholds(_GOOD),
-        "provider": "vllm",
+        "provider": "vllm:ami-llm",
         "risk_score": 3,
         "cap_pct": 3.0,
     }
@@ -451,16 +472,18 @@ def _gate(**overrides) -> EvidenceGateDecision:
 def test_gate_decision_happy_path():
     gate = _gate()
     assert gate.fail_closed_reason is None
-    assert gate.threshold == 0.5
+    assert gate.threshold == 0.2
     assert gate.allowed_actions == ("APPROVE", "PASS")
-    assert gate.computed_size_pct == 3.0  # score 20 (4 desks x 5) clamps to cap
+    # score 4/20 = 0.2 = the R3 threshold: exactly 25% of the cap at the bar.
+    assert gate.record.score == 0.2
+    assert gate.computed_size_pct == 0.75
     assert gate.record.evidence_available is True
 
 
-def test_gate_fails_closed_on_uncalibrated_provider_with_reason():
-    gate = _gate(provider="kimi")
+def test_gate_fails_closed_on_uncalibrated_model_identity_with_reason():
+    gate = _gate(provider="vllm:ling")
     assert gate.fail_closed_reason is not None
-    assert "kimi" in gate.fail_closed_reason
+    assert "vllm:ling" in gate.fail_closed_reason
     assert gate.allowed_actions == ("PASS",)
     assert gate.computed_size_pct is None
 
@@ -474,24 +497,120 @@ def test_gate_fails_closed_on_missing_cards_with_reason():
 
 def test_gate_pass_only_below_threshold():
     neutral = _cards_block(eq=("neutral", "unsupported"))
+    # One evidenced partial support: 0.5/20 = 0.025 — below the 0.20 bar.
     gate = _gate(cards_by_desk={
         "fundamentals_analyst": _desk_cards(_cards_block(eq=("support", "partial"))),
         "bull_researcher": _desk_cards(neutral),
         "bear_researcher": _desk_cards(neutral),
         "research_manager": _desk_cards(neutral),
     })
-    assert gate.record.score == 0.5  # one evidenced partial support
-    assert gate.allowed_actions == ("APPROVE", "PASS")  # 0.5 >= 0.5
-    assert gate.computed_size_pct == pytest.approx(0.75)  # 25% of cap at bar
+    assert gate.record.score == 0.025
+    assert gate.allowed_actions == ("PASS",)
+    assert gate.computed_size_pct is None
 
-    gate_below = _gate(cards_by_desk={
-        "fundamentals_analyst": _desk_cards(
-            "[CLAIMS]\nitem=eq dir=neutral grade=unsupported data=no claim=c\n[/CLAIMS]"
-        ),
-        "bull_researcher": _desk_cards(neutral),
-        "bear_researcher": _desk_cards(neutral),
-        "research_manager": _desk_cards(neutral),
+    # Every desk supports/well on eq: 4/20 = 0.2 = the bar -> APPROVE, 25% cap.
+    strong_eq = _cards_block(eq=("support", "well"))
+    gate_at = _gate(cards_by_desk={
+        "fundamentals_analyst": _desk_cards(strong_eq),
+        "bull_researcher": _desk_cards(strong_eq),
+        "bear_researcher": _desk_cards(strong_eq),
+        "research_manager": _desk_cards(strong_eq),
     })
-    assert gate_below.record.score == 0.0
-    assert gate_below.allowed_actions == ("PASS",)
-    assert gate_below.computed_size_pct is None
+    assert gate_at.record.score == 0.2
+    assert gate_at.allowed_actions == ("APPROVE", "PASS")
+    assert gate_at.computed_size_pct == pytest.approx(0.75)  # 25% of cap at bar
+
+
+# ── the exactly-20 contract ─────────────────────────────────────────────────
+
+
+def _all_strong_block() -> str:
+    return (
+        "[CLAIMS]\n"
+        + "\n".join(
+            f"item={i} dir=support grade=well data=yes claim=c nums=1"
+            for i in ("eq", "vc", "vh", "bs", "moat")
+        )
+        + "\n[/CLAIMS]"
+    )
+
+
+def test_one_missing_cell_fails_closed_with_an_explicit_marker():
+    # Nineteen of twenty cells present: the bull never files its bs card.
+    # The other three desks DO cover bs — the hole is the bull's alone, and
+    # the exactly-20 contract fails closed on it anyway.
+    no_bs = (
+        "[CLAIMS]\n"
+        "item=eq dir=support grade=well data=yes claim=c nums=1\n"
+        "item=vc dir=support grade=well data=yes claim=c nums=1\n"
+        "item=vh dir=support grade=well data=yes claim=c nums=1\n"
+        "item=moat dir=support grade=well data=yes claim=c nums=1\n"
+        "[/CLAIMS]"
+    )
+    desks = {
+        "fundamentals_analyst": _desk_cards(_all_strong_block()),
+        "bear_researcher": _desk_cards(_all_strong_block()),
+        "research_manager": _desk_cards(_all_strong_block()),
+        "bull_researcher": _desk_cards(no_bs),
+    }
+    record = build_evidence_record(desks, _field_state())
+    assert len(record.items) == 19
+    assert record.evidence_available is False
+    assert "missing:bull_researcher:bs" in record.missing
+    gate = _gate(cards_by_desk=desks)
+    assert gate.fail_closed_reason is not None
+    assert "missing:bull_researcher:bs" in gate.fail_closed_reason
+
+
+def test_a_duplicate_card_fails_closed_and_cannot_inflate_the_score():
+    # The bull files eq TWICE (both support/well): the evidence must be
+    # unavailable with a duplicate marker, and the duplicated card must not
+    # count toward net support — otherwise double-filing a favourite item
+    # would be a score exploit.
+    dup_eq = (
+        "[CLAIMS]\n"
+        "item=eq dir=support grade=well data=yes claim=c nums=1\n"
+        "item=eq dir=support grade=well data=yes claim=c nums=1\n"
+        "item=vc dir=support grade=well data=yes claim=c nums=1\n"
+        "item=vh dir=support grade=well data=yes claim=c nums=1\n"
+        "item=bs dir=support grade=well data=yes claim=c nums=1\n"
+        "item=moat dir=support grade=well data=yes claim=c nums=1\n"
+        "[/CLAIMS]"
+    )
+    desks = {
+        "fundamentals_analyst": _desk_cards(_all_strong_block()),
+        "bear_researcher": _desk_cards(_all_strong_block()),
+        "research_manager": _desk_cards(_all_strong_block()),
+        "bull_researcher": _desk_cards(dup_eq),
+    }
+    record = build_evidence_record(desks, _field_state())
+    assert record.evidence_available is False
+    assert "duplicate:bull_researcher:eq" in record.missing
+    # The duplicate is excluded: 20 scored cells -> 1.0, NOT 21/20 = 1.05.
+    assert len(record.items) == 20
+    assert record.net_support == 1.0
+    gate = _gate(cards_by_desk=desks)
+    assert gate.fail_closed_reason is not None
+    assert "duplicate:bull_researcher:eq" in gate.fail_closed_reason
+
+
+# ── objection text rides the typed record ───────────────────────────────────
+
+
+def test_unresolved_objections_carry_their_text_and_ids():
+    desks = {
+        desk: _desk_cards(_cards_block(eq=("support", "well")))
+        for desk in ("fundamentals_analyst", "bull_researcher",
+                     "research_manager")
+    }
+    desks["bear_researcher"] = _desk_cards(_cards_block(
+        eq=("support", "well"),
+        objections="target=eq severity=high objection=the accruals disagree",
+    ))
+    record = build_evidence_record(desks, _field_state())
+    assert record.unresolved_objection_count == 1
+    assert record.unresolved_objection_ids == ("bear_researcher:eq:0",)
+    assert record.unresolved_objection_texts == ("the accruals disagree",)
+    entry = record.unresolved_objections[0]
+    assert entry.objection == "the accruals disagree"
+    assert entry.target == "eq" and entry.severity == "high"

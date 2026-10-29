@@ -5306,18 +5306,37 @@ def _build_pm_formatter(
 # decision is possible, apply after the vote, attach before reviews.
 
 
-def _active_llm_provider(gateway: LLMGateway) -> str | None:
-    """The provider a PM call will actually hit — thresholds are calibrated
-    per provider. None when the gateway cannot say (e.g. a test double with
-    no `status()`): read as uncalibrated, i.e. the gate fails closed."""
+def _evidence_model_identity(gateway: LLMGateway) -> str | None:
+    """The provider+MODEL identity thresholds are calibrated for, from the
+    gateway's own status snapshot: `active_provider` plus the single unique
+    value in `tier_to_model` — e.g. `vllm:ami-llm`, never the shared `vllm`
+    provider (two models on one provider must not silently share a ladder).
+
+    A gateway with no status (or an unreadable one) yields None — read as
+    uncalibrated, i.e. the gate fails closed. A status with no `tier_to_model`
+    at all (the existing mock test doubles) keeps its bare test identity
+    (`mock`). A status advertising SEVERAL distinct models yields None too:
+    the identity of the model a PM call will actually hit cannot be guessed
+    from that snapshot, and a real provider must never collapse to a bare
+    provider key."""
     status = getattr(gateway, "status", None)
     if not callable(status):
         return None
     try:
-        provider = status().get("active_provider")
+        snapshot = status()
     except Exception:  # noqa: BLE001 — an unreadable status is not a reason to free-pass
         return None
-    return str(provider) if provider else None
+    provider = snapshot.get("active_provider")
+    if not provider:
+        return None
+    models = {
+        str(m) for m in (snapshot.get("tier_to_model") or {}).values() if m
+    }
+    if len(models) == 1:
+        return f"{provider}:{models.pop()}"
+    if not models:
+        return str(provider)
+    return None
 
 
 def _build_evidence_gate(
@@ -5334,10 +5353,58 @@ def _build_evidence_gate(
         },
         field_state=profile.get("field_state") if isinstance(profile, dict) else None,
         thresholds=parse_gate_thresholds(settings.room_evidence_gate_thresholds_json),
-        provider=_active_llm_provider(gateway),
+        provider=_evidence_model_identity(gateway),
         risk_score=ctx.mandate.risk_score,
         cap_pct=_risk_tier_size_ceiling(ctx.mandate),
     )
+
+
+def _gate_blocked_verdict(
+    gate: EvidenceGateDecision, parsed: Verdict,
+) -> Verdict | None:
+    """The explicit PASS that replaces a disallowed APPROVE — no APPROVE
+    numbers, no APPROVE narration — or None when the gate allows APPROVE.
+    Shared by the main decision tail and the resurrection re-run so the
+    evidence action rule binds every path."""
+    if "APPROVE" in gate.allowed_actions:
+        return None
+    return Verdict(
+        action=VerdictAction.PASS,
+        reason=(
+            "AMI's evidence gate overrode this verdict: the typed "
+            f"evidence scored {gate.record.score:.2f}, below the "
+            f"approval threshold {gate.threshold:.2f} for this "
+            "mandate's risk level on this model. No position was "
+            "opened."
+        ),
+        overridden_from_llm=True,
+        kill_criterion=parsed.kill_criterion,
+    )
+
+
+def _gate_size_override(
+    gate: EvidenceGateDecision, parsed: Verdict,
+) -> Verdict:
+    """Replace the CIO's stated size with the computed evidence size when they
+    differ — the substitution is disclosed in the reason (CR040). Returns
+    `parsed` unchanged when the sizes agree or no computed size exists."""
+    if (
+        gate.computed_size_pct is None
+        or parsed.size_pct is None
+        or parsed.size_pct == gate.computed_size_pct
+    ):
+        return parsed
+    computed = gate.computed_size_pct
+    return parsed.model_copy(update={
+        "size_pct": computed,
+        "overridden_from_llm": True,
+        "reason": (
+            f"{parsed.reason} (Position size set by AMI's "
+            f"evidence gate at {computed:.2f}% of portfolio — "
+            "the computed evidence size, replacing the "
+            f"CIO's stated {parsed.size_pct:.2f}%.)"
+        ),
+    })
 
 
 def _build_decision_record(
@@ -5347,12 +5414,15 @@ def _build_decision_record(
     parsed: Verdict | None,
     split_vote: bool,
     scripted_turns: int,
+    review_change: str | None = None,
 ) -> DecisionRecord:
     """The persisted record for a gated run whose evidence computed. Reads
     only what the gate scored plus facts the tail established: whether an
     approval the reads wanted was blocked downstream (the gate itself or the
-    safety floor), whether the self-consistency vote split, and how many
-    desks ran scripted."""
+    safety floor), whether the self-consistency vote split, how many desks
+    ran scripted, and whether a second-pass review changed the decision after
+    the record was first attached (`review_change` names the flip — the
+    rebuilt record then describes the FINAL verdict)."""
     record = gate.record
     bar_blocked = (
         parsed is not None
@@ -5366,28 +5436,36 @@ def _build_decision_record(
         margin=settings.room_evidence_contested_margin,
         bar_blocked=bar_blocked,
         scripted_turns=scripted_turns,
+        unresolved_objections=record.unresolved_objection_count,
     )
-    reasons = list(gate.reasons)
+    contested_reasons = list(gate.reasons)
     if split_vote:
-        reasons.append("the self-consistency vote was split")
+        contested_reasons.append("the self-consistency vote was split")
     if bar_blocked:
-        reasons.append(
+        contested_reasons.append(
             "an approval the reads wanted was blocked by the evidence gate "
             "or the safety floor"
         )
     if scripted_turns:
-        reasons.append(f"{scripted_turns} desk(s) ran scripted this convene")
+        contested_reasons.append(f"{scripted_turns} desk(s) ran scripted this convene")
+    if record.unresolved_objection_count:
+        contested_reasons.append(
+            f"{record.unresolved_objection_count} adequate objection(s) went "
+            "unanswered: " + "; ".join(record.unresolved_objection_texts)
+        )
+    if review_change:
+        contested_reasons.append(review_change)
     return DecisionRecord(
         score=record.score,
         threshold=gate.threshold if gate.threshold is not None else 0.0,
         allowed_actions=list(gate.allowed_actions),
         computed_size_pct=gate.computed_size_pct,
-        unresolved_objection_count=record.unresolved_objection_count,
-        unresolved_objection_ids=list(record.unresolved_objections),
+        unresolved_objections=list(record.unresolved_objection_texts),
+        unresolved_objection_ids=list(record.unresolved_objection_ids),
         evidence_available=record.evidence_available,
         evidence_source="claim_cards",
         contested=contested,
-        reasons=reasons,
+        contested_reasons=contested_reasons,
     )
 
 
@@ -5498,6 +5576,9 @@ async def _run_cio_step(
         # record's contested flag (same split signal the reason-text note a
         # few lines below already computes).
         _split_vote = False
+        # CR266 round 2 — set when the evidence gate forced an APPROVE into a
+        # PASS; such a PASS must not be routed to the resurrection review.
+        _evidence_blocked_approve = False
         # RETRO-PM-FLOOR round 1 (auditor U68, MINOR-1): with
         # samples>1, if every draw AND every replacement is
         # unparseable, `_cands` is `[]` and the tail below used
@@ -5711,7 +5792,8 @@ async def _run_cio_step(
                 if not pm_text:
                     pm_text = verdict.reason
             elif (
-                ctx.evidence_gate is not None
+                parsed.action == VerdictAction.APPROVE
+                and ctx.evidence_gate is not None
                 and "APPROVE" not in ctx.evidence_gate.allowed_actions
             ):
                 # CR266 — the gate bars APPROVE this run (evidence score below
@@ -5720,13 +5802,6 @@ async def _run_cio_step(
                 # no APPROVE narration. The vote bar and safety floor are not
                 # consulted on this path; the gate decided first.
                 _g = ctx.evidence_gate
-                _gate_reason = (
-                    "AMI's evidence gate overrode this verdict: the typed "
-                    f"evidence scored {_g.record.score:.2f}, below the "
-                    f"approval threshold {_g.threshold:.2f} for this "
-                    "mandate's risk level on this model. No position was "
-                    "opened."
-                )
                 logger.warning(
                     "room_evidence_gate_approve_blocked",
                     run_id=str(run_id),
@@ -5734,43 +5809,28 @@ async def _run_cio_step(
                     score=_g.record.score,
                     threshold=_g.threshold,
                 )
-                verdict = Verdict(
-                    action=VerdictAction.PASS,
-                    reason=_gate_reason,
-                    overridden_from_llm=True,
-                    kill_criterion=parsed.kill_criterion,
-                )
-                pm_text = _gate_reason
+                verdict = _gate_blocked_verdict(_g, parsed)
+                pm_text = verdict.reason
+                # The PASS was forced SOLELY by the evidence bar — it must not
+                # enter the resurrection review (a re-run could re-approve
+                # with LLM numbers the gate already refused).
+                _evidence_blocked_approve = True
             elif parsed.action == VerdictAction.APPROVE:
-                if (
-                    ctx.evidence_gate is not None
-                    and ctx.evidence_gate.computed_size_pct is not None
-                    and parsed.size_pct is not None
-                    and parsed.size_pct != ctx.evidence_gate.computed_size_pct
-                ):
+                if ctx.evidence_gate is not None:
                     # CR266 — the computed evidence size replaces the CIO's
                     # stated size; the substitution is disclosed in the reason
                     # the user reads (CR040), and the floor below judges THIS
                     # size, not the one the PM asked for.
-                    _computed = ctx.evidence_gate.computed_size_pct
-                    _llm_size = parsed.size_pct
-                    parsed = parsed.model_copy(update={
-                        "size_pct": _computed,
-                        "overridden_from_llm": True,
-                        "reason": (
-                            f"{parsed.reason} (Position size set by AMI's "
-                            f"evidence gate at {_computed:.2f}% of portfolio — "
-                            "the computed evidence size, replacing the "
-                            f"CIO's stated {_llm_size:.2f}%.)"
-                        ),
-                    })
-                    logger.info(
-                        "room_evidence_gate_size_override",
-                        run_id=str(run_id),
-                        ticker=ctx.ticker,
-                        llm_size=_llm_size,
-                        computed_size=_computed,
-                    )
+                    _overridden = _gate_size_override(ctx.evidence_gate, parsed)
+                    if _overridden is not parsed:
+                        logger.info(
+                            "room_evidence_gate_size_override",
+                            run_id=str(run_id),
+                            ticker=ctx.ticker,
+                            llm_size=parsed.size_pct,
+                            computed_size=ctx.evidence_gate.computed_size_pct,
+                        )
+                        parsed = _overridden
                 pm_text, verdict = _floor_pm_approve(
                     parsed, pm_text, run_id=run_id, ctx=ctx,
                     mandate=mandate, profile=profile,
@@ -5803,12 +5863,66 @@ async def _run_cio_step(
         # user watches are the post-review ones on every path — including a
         # veto flip or a resurrection re-run. The router is a pure function
         # of the verdict shape, so outage/fail-safe verdicts cost nothing.
+        #
+        # CR266 round 2 — a PASS the evidence gate forced out of an APPROVE
+        # is NOT routed to resurrection: the re-run would re-ask a model the
+        # gate already refused, and could re-approve on LLM numbers. Organic
+        # PASSes keep their existing CR247 routing untouched.
+        _pre_review_action = verdict.action
+        _pre_review_size = verdict.size_pct
+        # The review's combination paths (a veto flip, a resurrection re-run)
+        # build FRESH Verdict objects — the pre-review decision record does
+        # not ride them. Capture it so the final verdict is never left
+        # without one, and so a review-induced change can be rebuilt against
+        # the FINAL verdict.
+        _pre_review_record = verdict.decision_record
         verdict, _review_pm_text = await _apply_verdict_review(
             verdict=verdict, pm_outage=_pm_outage, parsed=parsed, live=live,
             run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
             mandate=mandate, run=run, gateway=gateway,
             agent_timeout_s=agent_timeout_s,
+            evidence_blocked_approve=_evidence_blocked_approve,
         )
+        # CR266 round 2 — if the review CHANGED the decision (a veto flip, a
+        # resurrection re-run landing elsewhere), the pre-review record now
+        # describes a verdict that no longer exists. Rebuild it against the
+        # final verdict with the change named as a contested reason — stale
+        # pre-review state is a fabricated clean decision. If the review
+        # changed nothing, the pre-review record still describes the final
+        # verdict: reattach it when the review's fresh Verdict dropped it.
+        if _pre_review_record is not None:
+            if (
+                verdict.action != _pre_review_action
+                or verdict.size_pct != _pre_review_size
+            ):
+                # model_copy(update={"action": ...}) stores raw enum members
+                # without revalidation — normalize before printing.
+                _change_bits = [
+                    f"{_pre_review_action} -> {verdict.action}".replace(
+                        "VerdictAction.", ""
+                    )
+                ]
+                if verdict.size_pct != _pre_review_size:
+                    _change_bits.append(
+                        f"size {_pre_review_size} -> {verdict.size_pct}"
+                    )
+                verdict = verdict.model_copy(update={
+                    "decision_record": _build_decision_record(
+                        ctx.evidence_gate,
+                        verdict=verdict,
+                        parsed=parsed,
+                        split_vote=_split_vote,
+                        scripted_turns=len(ctx.scripted_turns),
+                        review_change=(
+                            "the second-pass verdict review changed the "
+                            f"decision ({', '.join(_change_bits)})"
+                        ),
+                    ),
+                })
+            elif verdict.decision_record is None:
+                verdict = verdict.model_copy(update={
+                    "decision_record": _pre_review_record,
+                })
         if _review_pm_text is not None:
             pm_text = _review_pm_text
         async for ev in _restream_for_ui(
@@ -6028,6 +6142,7 @@ def _verdict_review_route(
     pm_outage: bool,
     parsed: Verdict | None,
     live: bool,
+    evidence_blocked_approve: bool = False,
 ) -> Literal["veto", "resurrection"] | None:
     """CR247 Phase 4 (D13) — the deterministic router. LLMs never decide
     whether a verdict gets double-checked; code does.
@@ -6038,12 +6153,18 @@ def _verdict_review_route(
     not decisions), and the matching flag. The veto additionally needs real
     dissent to audit — the Bear/Conservative scripted check happens in
     `_apply_verdict_review`, where the transcript is in scope.
+
+    CR266 — a PASS the evidence gate forced out of an APPROVE is not routed
+    to resurrection: the gate already decided APPROVE is inadmissible this
+    run, and a re-run could re-approve on LLM numbers the gate refused.
     """
     if not live or pm_outage or parsed is None:
         return None
     if verdict.action == VerdictAction.APPROVE:
         return "veto" if settings.room_veto_review_enabled else None
     if verdict.action == VerdictAction.PASS:
+        if evidence_blocked_approve:
+            return None
         return "resurrection" if settings.room_resurrection_review_enabled else None
     return None
 
@@ -6086,6 +6207,7 @@ async def _apply_verdict_review(
     run: RoomRun,
     gateway: LLMGateway,
     agent_timeout_s: float,
+    evidence_blocked_approve: bool = False,
 ) -> tuple[Verdict, str | None]:
     """Route → audit → combine. Returns (final_verdict, pm_text_override).
 
@@ -6101,6 +6223,7 @@ async def _apply_verdict_review(
     """
     kind = _verdict_review_route(
         verdict=verdict, pm_outage=pm_outage, parsed=parsed, live=live,
+        evidence_blocked_approve=evidence_blocked_approve,
     )
     if kind is None:
         return verdict, None
@@ -6383,6 +6506,12 @@ async def _resurrection_rerun(
     loop back. A repeated PASS is the answer. The vote fields clear: a single
     re-decision is not a vote — the original vote is preserved on
     `record.original`.
+
+    CR266 round 2 — the evidence gate binds the re-run exactly like the main
+    draw: an APPROVE the gate bars becomes the same explicit PASS (the review
+    cannot resurrect a decision the evidence already refused), and an allowed
+    APPROVE ships the computed evidence size, not the re-run's stated size —
+    both BEFORE the safety floor, which stays the final veto either way.
     """
     record.rerun = True
     note = build_resurrection_audit_note(mandate, reasons)
@@ -6429,10 +6558,44 @@ async def _resurrection_rerun(
         )
         return verdict, None
     if rerun_parsed.action == VerdictAction.APPROVE:
-        _, rerun_verdict = _floor_pm_approve(
-            rerun_parsed, rerun_pm_text or "", run_id=run_id, ctx=ctx,
-            mandate=mandate, profile=profile,
+        # CR266 round 2 — the evidence gate binds the re-run exactly like the
+        # main draw: an APPROVE the gate bars becomes the same explicit PASS
+        # (never re-approved on LLM numbers), and an allowed APPROVE ships the
+        # computed evidence size, not the re-run's stated size — THEN the
+        # safety floor judges the result.
+        _gate = ctx.evidence_gate
+        _blocked = (
+            _gate_blocked_verdict(_gate, rerun_parsed)
+            if _gate is not None
+            else None
         )
+        if _blocked is not None:
+            logger.warning(
+                "room_evidence_gate_approve_blocked",
+                run_id=str(run_id),
+                ticker=ctx.ticker,
+                score=_gate.record.score,
+                threshold=_gate.threshold,
+                path="resurrection_rerun",
+            )
+            rerun_verdict = _blocked
+        else:
+            if _gate is not None:
+                _overridden = _gate_size_override(_gate, rerun_parsed)
+                if _overridden is not rerun_parsed:
+                    logger.info(
+                        "room_evidence_gate_size_override",
+                        run_id=str(run_id),
+                        ticker=ctx.ticker,
+                        llm_size=rerun_parsed.size_pct,
+                        computed_size=_gate.computed_size_pct,
+                        path="resurrection_rerun",
+                    )
+                    rerun_parsed = _overridden
+            _, rerun_verdict = _floor_pm_approve(
+                rerun_parsed, rerun_pm_text or "", run_id=run_id, ctx=ctx,
+                mandate=mandate, profile=profile,
+            )
     else:
         rerun_verdict = rerun_parsed
     record.rerun_action = rerun_verdict.action

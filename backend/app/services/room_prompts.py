@@ -4611,8 +4611,9 @@ def _evidence_gate_block(gate: Any) -> str:
     lines = [
         "\n─── EVIDENCE GATE — computed by AMI from the desks' typed CLAIMS/"
         "OBJECTIONS before your verdict; binding on what this run may do ───",
-        f"- Typed evidence score: {record.score:.2f} (net evidenced support "
-        "minus 0.1 per unresolved objection).",
+        f"- Typed evidence score: {record.score:.2f} (direction x grade over "
+        "the 20 required cards, minus 0.1 per unresolved objection; complete "
+        "evidenced support is 1.0).",
         f"- Approval threshold for this mandate's risk level on this model: "
         f"{gate.threshold:.2f}.",
         "- Allowed actions this run: "
@@ -4627,8 +4628,10 @@ def _evidence_gate_block(gate: Any) -> str:
     if record.unresolved_objections:
         lines.append(
             "- Unresolved objections (the desks' challenges no evidenced card "
-            "answered): "
-            + ", ".join(record.unresolved_objections)
+            "answered — each costs 0.1 and marks this decision contested): "
+            + "; ".join(
+                f"{o.objection} [{o.id}]" for o in record.unresolved_objections
+            )
             + "."
         )
     lines.append(

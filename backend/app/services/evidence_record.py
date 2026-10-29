@@ -2,12 +2,15 @@
 
 The four evidence desks file CLAIMS/OBJECTIONS cards in-turn (CR256). This
 module converts those parsed cards into one deterministic, typed record:
-per-item data presence read off the fact-sheet's own `field_state` registry
-(never the LLM's self-reported `data=` flag), net support from
-direction x grade, and unresolved objections at adequate severity. The record
-feeds the PM gate: a per-provider, per-risk-level calibrated threshold picks
-the allowed action set and a continuous size from 25% of the mandate cap at
-the threshold to 100% at score 1.0.
+exactly one card per desk per item (four desks x five items = 20 — a missing
+cell or a duplicate fails the evidence closed), per-item data presence read
+off the fact sheet's own `field_state` registry (never the LLM's self-reported
+`data=` flag), net support as SUM(direction x grade)/20 so complete evidenced
+support is exactly 1.0, and unresolved objections at adequate severity (each
+costing 0.1). The record feeds the PM gate: per provider+MODEL calibrated
+thresholds (`vllm:ami-llm`, not the shared `vllm` provider) keyed by the
+mandate's risk level pick the allowed action set and a continuous size from
+25% of the mandate cap at the threshold to 100% at score 1.0.
 
 Pure functions only — no I/O, no settings, no runner imports — so both
 `room_runner` and `core.config` can depend on it without a cycle, and the
@@ -33,6 +36,11 @@ REQUIRED_DESKS: tuple[str, ...] = (
     "bear_researcher",
     "research_manager",
 )
+
+# The contract is exactly one card per desk per item — four desks x five
+# items = 20. The score normalizes by this count, so complete support from
+# every desk on every item is exactly 1.0.
+REQUIRED_CARD_COUNT = len(REQUIRED_DESKS) * len(ITEM_IDS)
 
 # Card item -> fact-sheet fields whose liveness means the desk actually had
 # payload to grade. `data_present` is decided ONLY by this registry against
@@ -88,30 +96,45 @@ class EvidenceItem:
 
 @dataclass(frozen=True)
 class EvidenceObjection:
-    """One desk's objection, resolved or not by OTHER desks' evidenced cards."""
+    """One desk's objection, resolved or not by OTHER desks' evidenced cards.
+    Carries the objection TEXT itself — the persisted DecisionRecord emits it
+    verbatim (mobile renders it), never just an id or a count."""
 
     id: str
     desk: str
     target: str
     severity: str
+    objection: str
     adequate: bool
     resolved: bool
 
 
 @dataclass(frozen=True)
 class EvidenceRecord:
-    """The typed record the gate scores. `evidence_available` is False when a
-    required desk filed nothing parseable or an item has no card at all — the
-    gate fails closed on that, never scores a half-empty room."""
+    """The typed record the gate scores. `evidence_available` is False unless
+    the contract holds exactly — every required desk filing exactly one card
+    on every item (twenty cards, no holes, no duplicates). A desk with
+    nothing parseable, a desk-item hole, an item nobody filed, or a second
+    card from one desk on one item all fail closed instead of scoring. The
+    `missing` tuple names every hole (`cards:<desk>`, `missing:<desk>:<item>`,
+    `item:<item>`, `duplicate:<desk>:<item>`) for the fail-closed reason."""
 
     items: tuple[EvidenceItem, ...]
     objections: tuple[EvidenceObjection, ...]
+    unresolved_objections: tuple[EvidenceObjection, ...]  # adequate, unresolved, filing order
     data_present: dict[str, bool]
-    net_support: float
-    unresolved_objections: tuple[str, ...]  # ids, in filing order
+    net_support: float  # SUM(direction x grade) / REQUIRED_CARD_COUNT
     score: float
     evidence_available: bool
     missing: tuple[str, ...] = ()
+
+    @property
+    def unresolved_objection_ids(self) -> tuple[str, ...]:
+        return tuple(o.id for o in self.unresolved_objections)
+
+    @property
+    def unresolved_objection_texts(self) -> tuple[str, ...]:
+        return tuple(o.objection for o in self.unresolved_objections)
 
     @property
     def unresolved_objection_count(self) -> int:
@@ -146,9 +169,15 @@ def build_evidence_record(
 
     `cards_by_desk` maps desk (AgentId value) to a parsed card channel object
     (duck-typed: `.cards` / `.objections` tuples of frozen dataclasses, exactly
-    what `room_runner.parse_claim_cards` returns). Missing desks or a missing
-    `field_state` simply yield absent evidence — availability is reported, the
-    caller decides.
+    what `room_runner.parse_claim_cards` returns).
+
+    The contract is EXACTLY one card per required desk per item (20 total):
+    a desk with no parseable cards, an item no desk filed, or a second card
+    from the same desk on the same item all make the evidence unavailable —
+    each named in `missing` — and duplicates are excluded from the scoring
+    sum so they can never inflate it. `net_support` is the summed
+    direction x grade contribution divided by `REQUIRED_CARD_COUNT`, so
+    complete evidenced support from all twenty cells is exactly 1.0.
     """
     state = field_state or {}
     data_present = {item: _live(state, ITEM_FIELD_REGISTRY[item]) for item in ITEM_IDS}
@@ -164,10 +193,19 @@ def build_evidence_record(
         if not cards:
             missing.append(f"cards:{desk}")
             continue
+        seen_items: set[str] = set()
         for card in cards:
             item = str(getattr(card, "item", "")).lower()
             if item not in cards_per_item:
                 continue
+            if item in seen_items:
+                # A second card from the same desk on the same item breaks
+                # the exactly-20 contract: name it, and keep it OUT of the
+                # scoring sum so a duplicated "support/well" can never
+                # inflate the score.
+                missing.append(f"duplicate:{desk}:{item}")
+                continue
+            seen_items.add(item)
             direction = str(getattr(card, "direction", "")).lower()
             grade = str(getattr(card, "grade", "")).lower()
             present = data_present[item]
@@ -185,11 +223,19 @@ def build_evidence_record(
             )
             items.append(ev)
             cards_per_item[item].append(ev)
+        # Exactly one card per item PER DESK: a desk that filed some but not
+        # all five leaves explicit holes (a covered item elsewhere does not
+        # excuse it — the contract is twenty cards, not nineteen plus cover).
+        for item in ITEM_IDS:
+            if item not in seen_items:
+                missing.append(f"missing:{desk}:{item}")
     for item in ITEM_IDS:
         if not cards_per_item[item]:
             missing.append(f"item:{item}")
 
-    net_support = round(sum(ev.contribution for ev in items), 6)
+    net_support = round(
+        sum(ev.contribution for ev in items) / REQUIRED_CARD_COUNT, 6
+    )
 
     # An adequate objection is resolved only by ANOTHER desk's evidenced card
     # on the same item pointing the other way — a desk's own card cannot
@@ -197,7 +243,7 @@ def build_evidence_record(
     by_desk_dir = {
         (ev.desk, ev.item): ev.direction for ev in items if ev.data_present
     }
-    unresolved: list[str] = []
+    unresolved: list[EvidenceObjection] = []
     seen: dict[tuple[str, str], int] = {}
     for desk in REQUIRED_DESKS:
         channel = cards_by_desk.get(desk)
@@ -206,6 +252,7 @@ def build_evidence_record(
             if target not in cards_per_item:
                 continue
             severity = str(getattr(obj, "severity", "")).lower()
+            text = str(getattr(obj, "objection", "")).strip()[:400]
             seen[(desk, target)] = seen.get((desk, target), 0) + 1
             oid = f"{desk}:{target}:{seen[(desk, target)] - 1}"
             adequate = severity in ADEQUATE_SEVERITIES
@@ -220,20 +267,21 @@ def build_evidence_record(
                     if own_dir is None or ev.direction != own_dir:
                         resolved = True
                         break
-            if adequate and not resolved:
-                unresolved.append(oid)
-            objections.append(EvidenceObjection(
+            entry = EvidenceObjection(
                 id=oid, desk=desk, target=target, severity=severity,
-                adequate=adequate, resolved=resolved,
-            ))
+                objection=text, adequate=adequate, resolved=resolved,
+            )
+            objections.append(entry)
+            if adequate and not resolved:
+                unresolved.append(entry)
 
     score = round(net_support - UNRESOLVED_PENALTY * len(unresolved), 6)
     return EvidenceRecord(
         items=tuple(items),
         objections=tuple(objections),
+        unresolved_objections=tuple(unresolved),
         data_present=data_present,
         net_support=net_support,
-        unresolved_objections=tuple(unresolved),
         score=score,
         evidence_available=not missing,
         missing=tuple(missing),
@@ -243,11 +291,13 @@ def build_evidence_record(
 def parse_gate_thresholds(raw: str) -> dict[str, dict[str, float]]:
     """Parse and loudly validate `ROOM_EVIDENCE_GATE_THRESHOLDS_JSON`.
 
-    Shape: {"<provider>": {"R1": t1, ..., "R5": t5}} with every level in
-    [0, 1] and t1 >= t2 >= t3 >= t4 >= t5 (a conservative mandate clears more
-    evidence than an aggressive one). Anything else — bad JSON, a missing or
-    extra level, a non-number, an out-of-range or non-monotone run — raises
-    ThresholdConfigError: a miscalibrated gate must fail at boot, not guess.
+    Shape: {"<provider:model>": {"R1": t1, ..., "R5": t5}} — one ladder per
+    provider+MODEL identity (`vllm:ami-llm`, not the shared `vllm`), each
+    level in [0, 1] and t1 >= t2 >= t3 >= t4 >= t5 (a conservative mandate
+    clears more evidence than an aggressive one). Anything else — bad JSON, a
+    missing or extra level, a non-number, an out-of-range or non-monotone run
+    — raises ThresholdConfigError: a miscalibrated gate must fail at boot,
+    not guess.
     """
     try:
         parsed = json.loads(raw or "{}")
@@ -291,8 +341,9 @@ def threshold_for_risk(
     provider: str | None,
     risk_score: int,
 ) -> float | None:
-    """The calibrated threshold for this provider and mandate risk level.
-    None means uncalibrated — the gate fails closed, never free-passes."""
+    """The calibrated threshold for this provider+model identity (e.g.
+    `vllm:ami-llm`) and mandate risk level. None means uncalibrated — the
+    gate fails closed, never free-passes."""
     if not provider:
         return None
     levels = thresholds.get(provider)
@@ -330,15 +381,19 @@ def gate_contested(
     margin: float,
     bar_blocked: bool,
     scripted_turns: int,
+    unresolved_objections: int,
 ) -> bool:
     """A gated decision is contested when the team split, the score sits within
     `margin` of the threshold, the bar or floor blocked an approval the reads
-    wanted, or any desk ran scripted (the evidence is thinner than it looks)."""
+    wanted, any desk ran scripted (the evidence is thinner than it looks), or
+    an adequate objection went unanswered — an unchallenged challenge is a
+    live disagreement, never a clean decision."""
     return (
         split_vote
         or abs(score - threshold) < margin
         or bar_blocked
         or scripted_turns > 0
+        or unresolved_objections > 0
     )
 
 
@@ -352,7 +407,9 @@ def build_gate_decision(
     cap_pct: float,
 ) -> EvidenceGateDecision:
     """Build the gate once, before the PM call. Fails closed — with the reason
-    named — when the provider is uncalibrated or the evidence is incomplete."""
+    named — when the model identity is uncalibrated or the evidence is
+    incomplete. `provider` is the provider+model identity (e.g. `vllm:ami-llm`)
+    the caller resolved from the gateway."""
     record = build_evidence_record(cards_by_desk, field_state)
     reasons: list[str] = []
 
@@ -369,7 +426,9 @@ def build_gate_decision(
 
     threshold = threshold_for_risk(thresholds, provider, risk_score)
     if threshold is None:
-        reason = f"no calibrated evidence thresholds for provider '{provider}'"
+        reason = (
+            f"no calibrated evidence thresholds for model identity '{provider}'"
+        )
         return EvidenceGateDecision(
             record=record, provider=provider, threshold=None,
             allowed_actions=("PASS",), computed_size_pct=None,
@@ -382,7 +441,7 @@ def build_gate_decision(
     if record.unresolved_objection_count:
         reasons.append(
             f"{record.unresolved_objection_count} unresolved objection(s): "
-            + ", ".join(record.unresolved_objections)
+            + "; ".join(record.unresolved_objection_texts)
         )
     if "APPROVE" in actions and size is not None:
         reasons.append(f"computed size {size:.2f}% of the {cap_pct:.2f}% cap")

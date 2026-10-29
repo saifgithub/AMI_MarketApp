@@ -1143,14 +1143,19 @@ class Settings(BaseSettings):
     # approving anything.
     room_evidence_gate_enabled: bool = False
 
-    # CR266 — calibrated approval thresholds, per LLM provider:
-    # {"<provider>": {"R1": t1, ..., "R5": t5}} — one monotone-descending run
-    # of thresholds per calibrated model, fitted by the CR266 workstream-3
-    # calibration tool, NOT hand-selected. R1 (most conservative mandate)
-    # clears the most evidence, R5 the least. Validated loudly at boot by
+    # CR266 — calibrated approval thresholds, per provider+MODEL identity:
+    # {"<provider:model>": {"R1": t1, ..., "R5": t5}} — e.g. "vllm:ami-llm",
+    # NEVER the shared "vllm" provider (two models on one provider must not
+    # silently share a ladder). One monotone-descending run of thresholds per
+    # calibrated model, fitted by the CR266 workstream-3 calibration tool,
+    # NOT hand-selected. R1 (most conservative mandate) clears the most
+    # evidence, R5 the least. Validated loudly at boot by
     # `evidence_record.parse_gate_thresholds` (exactly R1..R5, [0, 1],
-    # R1>=R2>=R3>=R4>=R5); an uncalibrated or typo'd provider simply has no
-    # entry here, which is what the gate's fail-closed path reads.
+    # R1>=R2>=R3>=R4>=R5); an uncalibrated or typo'd model identity simply has
+    # no entry here, which is what the gate's fail-closed path reads. The
+    # identity is resolved from the gateway's status snapshot (active_provider
+    # + the single unique tier_to_model value); a provider advertising several
+    # distinct models fails closed rather than collapsing to the bare provider.
     room_evidence_gate_thresholds_json: str = "{}"
 
     # CR266 — |score - threshold| inside this margin marks the decision
