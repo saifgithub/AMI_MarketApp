@@ -647,6 +647,37 @@ class LoaderIdentityTests(unittest.TestCase):
         self.assertTrue(rooms[0].holdout)
         self.assertFalse(rooms[1].holdout)
 
+    def test_db_loader_uses_repair_aware_corpus(self) -> None:
+        import evidence_card_report as reporter
+
+        expected = [{"ticker": "RIOT", "rep": "1", "risk_score": 4,
+                     "turns": self._turns(), "sheet_state": {}}]
+        calls = []
+        original = reporter.load_run_records
+
+        def fake_loader(path, dsn):
+            calls.append((path, dsn))
+            return expected, {}
+
+        reporter.load_run_records = fake_loader
+        try:
+            path = Path("runs.jsonl")
+            self.assertEqual(fit._load_runs_with_dsn(path, "dsn"), expected)
+        finally:
+            reporter.load_run_records = original
+        self.assertEqual(calls, [(path, "dsn")])
+
+    def test_db_loader_refuses_an_anomalous_partial_corpus(self) -> None:
+        import evidence_card_report as reporter
+
+        original = reporter.load_run_records
+        reporter.load_run_records = lambda path, dsn: ([], {"arms_bad_key": 1})
+        try:
+            with self.assertRaisesRegex(fit.FitError, "arms_bad_key"):
+                fit._load_runs_with_dsn(Path("runs.jsonl"), "dsn")
+        finally:
+            reporter.load_run_records = original
+
     def test_identity_without_rep_anywhere_is_loud(self) -> None:
         with self.assertRaises(fit.FitError):
             fit._room_identity({"ticker": "AAPL", "arm_key": "AAPL-r2"})

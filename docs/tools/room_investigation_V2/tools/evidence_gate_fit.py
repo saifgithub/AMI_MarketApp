@@ -514,7 +514,7 @@ def _room_record_from_arm(arm: dict, turns: list[dict]) -> dict:
 def _load_turns_file(path: Path) -> list[dict]:
     """cards_repair.py output: one record per room with its desk turns."""
     out = []
-    for line in open(path):
+    for line in path.read_text().splitlines():
         rec = json.loads(line)
         ticker, rep = _room_identity(rec)
         out.append({
@@ -528,16 +528,13 @@ def _load_turns_file(path: Path) -> list[dict]:
 
 
 def _load_runs_with_dsn(runs_path: Path, dsn: str) -> list[dict]:
-    """Run rows joined with llm_audit turns, mirroring cards_run.fetch_turns."""
-    from cards_run import fetch_turns
+    """Run rows joined with the exact base-or-repaired cards the runner used."""
+    from evidence_card_report import load_run_records
 
-    arms = [json.loads(l) for l in open(runs_path)]
-    out = []
-    for arm in arms:
-        if arm.get("status") != "completed":
-            continue
-        out.append(_room_record_from_arm(arm, fetch_turns(dsn, arm)))
-    return out
+    records, anomalies = load_run_records(runs_path, dsn)
+    if anomalies:
+        raise FitError(f"run corpus has anomalies; refusing a partial fit: {anomalies}")
+    return records
 
 
 def score_corpus(records: list[dict]) -> tuple[list[RoomScore], dict]:
