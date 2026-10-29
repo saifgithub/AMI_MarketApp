@@ -163,5 +163,10 @@
 6. CR265 `ami-llm` production calibration is complete: canonical 300/300 gates
    pass after 14 replacements. Curve 0/1/11/19/34, 27/150 flips (18.0%,
    CI 12.7–24.9%), five nonmonotone tickers, all flips split-vote. Final report:
-   `results_t011_ami_risk_calibration_2026-10-29.md`. The CR266 R4 pilot is at
-   18/60 rooms.
+   `results_t011_ami_risk_calibration_2026-10-29.md`.
+7. Early CR266 pilot check at 19 rooms: registry and corpus state are valid,
+   but only 14/19 rooms have complete 20-cell evidence and early ICC is 0.545.
+   APD rep1 also needs a PM-JSON replacement. Root cause: CR256 repaired absent
+   blocks but accepted partial blocks/retries. A local completeness-repair
+   candidate is being implemented for the next pilot; the current run remains
+   unchanged as the measured control and is not being called a pass.
