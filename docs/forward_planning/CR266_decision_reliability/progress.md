@@ -160,3 +160,8 @@
    **7,786 passed, 7 skipped, 1 failed**. The sole failure is the unrelated
    pre-existing `DEF465.row` citation of missing `debug_unpack_ios`; every
    CR266 backend test passed. The other track's defect remains untouched.
+6. CR265 `ami-llm` production calibration is complete: canonical 300/300 gates
+   pass after 14 replacements. Curve 0/1/11/19/34, 27/150 flips (18.0%,
+   CI 12.7–24.9%), five nonmonotone tickers, all flips split-vote. Final report:
+   `results_t011_ami_risk_calibration_2026-10-29.md`. The CR266 R4 pilot is at
+   18/60 rooms.

@@ -168,6 +168,13 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
    and nonmonotone tickers 16→12, with approvals 89/300→94/300 and repairs 46→35.
    Moderate Buy approvals rise 38.7%→46.0%. Flip CI 16.1–29.3% still fails <10%.
    Candidate for CR266 structural comparison on Ling only, not global rollout.
+23. **CR265 T011 ami production risk calibration:** canonical 300/300 gates pass
+   after 14 validated replacements. Curve 0/1/11/19/34 is monotone but below
+   target at every level; 27/150 flips (18.0%, CI 12.7–24.9%) all involve split
+   PM votes, with five nonmonotone tickers. Street approval falls 40.0% Buy→
+   28.7% Moderate Buy→17.5% Hold→8.0% Reduce→0% Sell; low-coverage names get
+   zero approvals. Eight holdout approvals remain at R4/R5. Use as CR266's
+   production control, not a stability success or correctness claim.
 
 ## 4. Handoff for the tm-all lane (CR254)
 

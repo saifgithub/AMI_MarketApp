@@ -161,14 +161,18 @@ confirmation; `ami-llm` and Ling are the iteration models.
    Street; where it agrees; where Reduce/Sell or low-coverage names receive
    APPROVE; and whether the change improves calibration without lowering evidence
    or geometry quality.
-4. **Status:** LING COMPLETE 2026-10-29. Control curve 10/10/17/26/26 approvals
-   and 45 flips vs lane 5/10/20/31/28 and 33 flips. Lane is monotone; nonmonotone
-   tickers fell 16→12. Approval count 89/300→94/300. Flip CI: control 23.2–37.8%,
-   lane 16.1–29.3%; <10% not achieved. All 600 rooms and 32 replacements validated.
-   `ami-llm` production-only matrix remains running (`bash-a2k79um3`).
-5. **Decision:** lane earns a CR266 structural comparison on Ling, not a
-   production prompt rollout. Per-model routing only; no transfer to `ami-llm`.
-6. **Evidence:** `results_t011_ling_risk_calibration_2026-10-29.md`.
+4. **Status:** COMPLETE 2026-10-29 on both models. Ling control curve
+   10/10/17/26/26 and 45 flips vs lane 5/10/20/31/28 and 33 flips; nonmonotone
+   tickers 16→12 and approvals 89/300→94/300. All 600 rooms + 32 replacements
+   validated. `ami-llm` production curve is 0/1/11/19/34 with 27/150 flips
+   (18.0%, CI 12.7–24.9%), five nonmonotone tickers and all flips involving
+   split PM votes. Its canonical 300 rooms + 14 replacements all pass gates.
+5. **Decision:** Ling lane earns a CR266 structural comparison on Ling, not a
+   production prompt rollout. `ami-llm` remains the CR266 production control;
+   it is more conservative than target at every level and fails the flip goal.
+   Per-model routing only; no metric transfers between models.
+6. **Evidence:** `results_t011_ling_risk_calibration_2026-10-29.md` and
+   `results_t011_ami_risk_calibration_2026-10-29.md`.
 
 ### T012 — typed evidence gate and computed action/size
 
