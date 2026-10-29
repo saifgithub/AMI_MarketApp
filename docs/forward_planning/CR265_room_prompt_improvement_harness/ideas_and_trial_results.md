@@ -181,12 +181,13 @@ confirmation; `ami-llm` and Ling are the iteration models.
 3. **Acceptance:** target curve 5/15/30/45/46 per 60 within tolerance, flips
    <10% with 95% CI, positive discrimination, zero holdout approvals and no
    unlabelled fallbacks. Review/re-run paths must enforce the same gate.
-4. **Status:** implementation and integration hardening in progress; pilot
-   definitions committed. No target-model card pilot, threshold fit or
-   acceptance result exists, and both gate and production prompt state remain
-   unchanged. A diagnostic on the legacy 90-room dsv4 corpus gave ICC 0.728
-   and only 69/90 complete rooms, with no registry state; it fails the pilot
-   gate and says nothing transferable about either target model.
+4. **Status:** `ami-llm` frozen AAPL smoke passed its contract gate with 20/20
+   cards and 125 persisted registry states; the 60-room R4 pilot is running.
+   Ling's first smoke was quarantined because the model was unavailable, not
+   because of a model-quality result. No threshold fit or acceptance result
+   exists, and production remains unchanged. A diagnostic on the legacy
+   90-room dsv4 corpus gave ICC 0.728 and only 69/90 complete rooms, with no
+   registry state; it fails the pilot gate and is not transferable evidence.
 5. **Evidence:** `../CR266_decision_reliability/progress.md`,
    `../../tools/room_investigation_V2/out/cr266-legacy-card-report/`, and
    `../../tools/room_investigation_V2/benchmarks/cr266-ami-cards-r4.yaml` /
