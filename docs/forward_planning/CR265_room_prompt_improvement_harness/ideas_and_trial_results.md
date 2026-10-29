@@ -109,7 +109,9 @@ confirmation; `ami-llm` and Ling are the iteration models.
 2. **Design:** enable and extend CR256 cards per model, compute data presence
    and objection status in code, and make the PM consume that record. Compare
    evidence-card agreement before measuring verdicts.
-3. **Status:** structural candidate, not a prose-only prompt arm.
+3. **Status:** CR266 implementation in integration. The normalized record has
+   exactly 20 unique desk/item cells; missing and duplicate cards fail closed.
+   Real `ami-llm` and Ling ICC/coverage pilots have not run yet.
 
 ### T008 — separate the educational transcript from the binding decision
 
@@ -117,7 +119,9 @@ confirmation; `ami-llm` and Ling are the iteration models.
    a typed evidence/geometry record produces a steadier verdict.
 2. **Design:** narrative unchanged; decision reads only the typed record. Test
    against the full transcript control on the same frozen profiles.
-3. **Status:** architectural candidate after T007 evidence is available.
+3. **Status:** action and continuous size are code-computed in CR266; the PM
+   still narrates. Integration is closing second-pass review bypasses before
+   the structured-versus-control comparison. No acceptance result yet.
 
 ### T009 — explicit contestedness instead of forced confidence
 
@@ -126,7 +130,9 @@ confirmation; `ami-llm` and Ling are the iteration models.
 2. **Design:** use vote margin, evidence-score distance and repair/outage flags
    to label marginal rooms; assess calibration and user comprehension alongside
    flip rate.
-3. **Status:** product-policy candidate, not a substitute for T007/T008.
+3. **Status:** mobile contested and next-convene cards are implemented, with
+   absent state preserved on old verdicts. User-comprehension and calibration
+   evaluation remain outstanding; this is not claimed to reduce flips itself.
 
 ### T010 — human analyst consensus as external calibration
 
@@ -163,3 +169,21 @@ confirmation; `ami-llm` and Ling are the iteration models.
 5. **Decision:** lane earns a CR266 structural comparison on Ling, not a
    production prompt rollout. Per-model routing only; no transfer to `ami-llm`.
 6. **Evidence:** `results_t011_ling_risk_calibration_2026-10-29.md`.
+
+### T012 — typed evidence gate and computed action/size
+
+1. **Hypothesis:** deterministic constraints over a complete typed census will
+   reduce PM vote-boundary flips without hiding contested decisions.
+2. **Design:** CR266 cards-ON/gate-OFF R4 pilots first, 30 tickers × two reps on
+   `ami-llm` and Ling. Require normalized evidence ICC ≥0.85 and complete
+   channels. Fit provider-plus-model thresholds only from registry-backed real
+   cards, then run fresh 30×5 gate-ON acceptance against the T011 controls.
+3. **Acceptance:** target curve 5/15/30/45/46 per 60 within tolerance, flips
+   <10% with 95% CI, positive discrimination, zero holdout approvals and no
+   unlabelled fallbacks. Review/re-run paths must enforce the same gate.
+4. **Status:** implementation and integration hardening in progress; pilot
+   definitions committed. No real card pilot, threshold fit or acceptance
+   result exists, and both gate and production prompt state remain unchanged.
+5. **Evidence:** `../CR266_decision_reliability/progress.md` and
+   `../../tools/room_investigation_V2/benchmarks/cr266-ami-cards-r4.yaml` /
+   `cr266-ling-cards-r4.yaml`.
