@@ -181,5 +181,6 @@
    under `/app`, but V2 imports `app` from `/harness/backend`, so it was actually
    control-era code. It was stopped and its artifacts preserved; its 23/32 early
    coverage is NOT a candidate measurement. The corrected mount is verified to
-   import `/harness/backend/app` with `_cards_channel_complete`, and a fresh
-   AAPL smoke is running before any full retry.
+   import `/harness/backend/app` with `_cards_channel_complete`. The fresh AAPL
+   smoke passed its contract gate with 20/20 cards and registry state; the
+   corrected 60-room matrix is now running as `bash-uf7qb557`.
