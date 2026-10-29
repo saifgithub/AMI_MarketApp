@@ -66,3 +66,28 @@
    0.1 per unresolved objection, and threshold identity is provider plus model.
 4. Required cards will be exactly one per desk/item. Duplicate cards fail
    closed rather than inflating the evidence score.
+
+## 2026-10-29 — integration hardening and pilot preparation
+
+1. Initial backend implementation committed as `8887ecf8`; its focused suites
+   pass. Full-suite verification reported 7,768 passed, 7 skipped and two
+   failures: the new provenance omission was fixed, while the remaining P30
+   failure is the unrelated pre-existing `DEF465.row` citation of missing
+   `debug_unpack_ios`. That other track's defect was not edited.
+2. Review found a resurrection-review path that could overturn a gate-blocked
+   PASS without reapplying evidence action/size rules. Backend integration is
+   closing that bypass and making the final record describe the reviewed
+   verdict before any pilot starts.
+3. Mobile objector IDs now resolve `desk:item:index` correctly and the sizing
+   comment matches the final capped value (`6b0c28e8`). Focused mobile result:
+   48 tests passed; analyzer has only 11 pre-existing infos.
+4. Two 60-room R4 cards-ON/gate-OFF pilot benchmarks are committed as
+   `b87922f1`. A dedicated reporter is being added because the legacy card
+   reporter uses a different score and misses `room_cards_repair` turns.
+5. Calibration fitting must scale the 60-room target curve to the fit
+   repetition; using unscaled counts would make R3–R5 too permissive. Real
+   registry `sheet_state` is required before production thresholds can be
+   emitted. No real fit or acceptance result exists yet.
+6. The original general-improvement coverage register now distinguishes
+   implemented, partial and outstanding items (`88e5bf06`). Register parity is
+   clean.
