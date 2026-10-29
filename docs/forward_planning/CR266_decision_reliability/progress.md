@@ -123,5 +123,13 @@
    rebuild the final record instead of leaving stale pre-review state.
 3. Missing/empty fact-sheet registry now fails closed instead of masquerading
    as an all-neutral complete room. Frozen AAPL cards-ON/gate-OFF smoke runs
-   have started on `ami-llm` and Ling in isolated containers with the new app
-   code mounted read-only; the Alpha service and gate remain unchanged.
+   started on `ami-llm` and Ling in isolated containers with the new app code
+   mounted read-only; the Alpha service and gate remain unchanged.
+4. The first Ling smoke is INVALID: vLLM currently exposes only `ami-llm`;
+   every Ling call returned model-not-found 404 and the room ended NO_VERDICT
+   with eight scripted desks. The artifact is preserved at
+   `~/cr266_smoke/ling/` and is not evidence. Ling will use a fresh retry only
+   when that model is actually available; no server restart or model swap was
+   attempted while the `ami-llm` matrix is running.
+5. Separate 300-room cards calibration and fresh gate acceptance definitions
+   for both models are committed as `e161fca2`. They are not running yet.
