@@ -41,7 +41,12 @@ hand-selected.
 
 ## Acceptance
 
-1. Backend and mobile standard suites green; register parity clean.
+The immediate objective is **`ami-llm` Alpha readiness**. Ling is a separate
+per-model evaluation and neither blocks nor inherits an `ami-llm` decision; no
+Ling configuration is enabled without Ling evidence.
+
+1. Backend and mobile standard suites green; register parity clean. Any
+   unrelated pre-existing failure is documented rather than misattributed.
 2. R4 card pilot per model reaches ICC ≥0.85 with complete machine channels.
 3. Full 30×5 per-model calibration reaches target curve within tolerance,
    flips <10% with 95% CI, positive discrimination, zero holdout approvals and
