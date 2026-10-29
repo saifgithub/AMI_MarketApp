@@ -1,0 +1,11 @@
+# CR266 Ling fresh gate acceptance: 30 frozen tickers × R1–R5 × two reps.
+# Requires cards ON, evidence gate ON and fitted vllm:Ling-3.0-flash-Fin-fp4 thresholds.
+name: cr266-ling-gate-r1-r5
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+risk_scores: [1, 2, 3, 4, 5]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-lane-cleanup
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }
