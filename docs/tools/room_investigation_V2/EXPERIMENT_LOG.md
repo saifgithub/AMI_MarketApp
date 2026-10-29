@@ -79,6 +79,7 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
 | 19 | **CR265 frozen AAPL isolated ablations** | 60 valid (3 models × 4 arms × 5 reps) + 20 excluded Sonnet config-pilot | production control / CIO only / four-analyst lane only / Trader only on one frozen profile | uncapped | ami-llm + Ling thinking OFF + Sonnet 5.5; reviews OFF | **DONE 2026-10-28 — all 60 contract gates OK; one rendered fact-sheet hash across all valid rooms. CIO no improvement anywhere; lane only helps Ling (80→100%, ami 100→60%, Sonnet 100→80%); Trader 80/40/100% by model. No global promotion** | out/cr265-frozen → ~/cr265_frozen + ~/cr265_frozen_ling | CR265 results_frozen_ablation_2026-10-28 |
 | 20 | **CR265 T003 Ling lane 30** | 120 + 2 control retry | production control vs four-analyst lane cleanup, 30 frozen tickers × 2 reps | uncapped | Ling thinking OFF, reviews OFF | **DONE 2026-10-28 — approvals tied 33/60; unstable 13/30→5/30; candidate 60/60 gates OK; TMO replacement 2/2 OK but flips. RM instability worsened 10→15/30. GO to R1–R5 validation, not production** | out/cr265-frozen30/ling → ~/cr265_30_ling | CR265 results_t003_ling_lane_30_2026-10-28 |
 | 21 | **CR265 T004 ami Trader 30** | 120 + 2 candidate retry | production control vs Execution Desk thesis/timing, 30 frozen tickers × 2 reps | uncapped | ami-llm thinking OFF, reviews OFF | **DONE 2026-10-28 — approvals 24/60→18/60; unstable 10/30→12/30; LEVI replacement 2/2 OK but flips. Upstream desks improve, final verdict worsens. NO-GO, no R1–R5** | out/cr265-frozen30/ami → ~/cr265_30_ami | CR265 results_t004_ami_trader_30_2026-10-28 |
+| 22 | **CR265 T011 Ling risk calibration** | 600 + 32 replacements | production control vs lane-only, 30 frozen tickers × R1–R5 × 2 reps | uncapped | Ling thinking OFF, reviews OFF | **DONE 2026-10-29 — lane curve 5/10/20/31/28 vs control 10/10/17/26/26; flips 45→33; nonmonotone tickers 16→12; approvals 89/300→94/300. <10% not met. GO to CR266 structural comparison, not rollout** | out/cr265-t011/ling → ~/cr265_t011_ling | CR265 results_t011_ling_risk_calibration_2026-10-29 |
 
 ## 2. Methodology (load-bearing — replicate exactly)
 
@@ -163,6 +164,10 @@ table), `benchmarks/cr253-subcap/prompts/` (adds sub-cap conditional — measure
    rise 10/30→12/30. Fundamentals/Market/News improve but Trader and RM worsen;
    all 22 flip pairs involve split PM votes. Retire the variant; target the
    evidence/decision interface and PM boundary rather than more Trader prose.
+22. **CR265 T011 Ling risk calibration:** lane is monotone and cuts flips 45→33
+   and nonmonotone tickers 16→12, with approvals 89/300→94/300 and repairs 46→35.
+   Moderate Buy approvals rise 38.7%→46.0%. Flip CI 16.1–29.3% still fails <10%.
+   Candidate for CR266 structural comparison on Ling only, not global rollout.
 
 ## 4. Handoff for the tm-all lane (CR254)
 

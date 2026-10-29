@@ -155,7 +155,11 @@ confirmation; `ami-llm` and Ling are the iteration models.
    Street; where it agrees; where Reduce/Sell or low-coverage names receive
    APPROVE; and whether the change improves calibration without lowering evidence
    or geometry quality.
-4. **Status:** Ling production + lane-only R1–R5 matrix running 2026-10-28
-   (task `bash-dyn6gaxn`), enabled by the T003 result. `ami-llm` production-only
-   R1–R5 matrix also running (task `bash-a2k79um3`); no prompt candidate advanced
-   after T004. V2 now supports `risk_scores` with collision-safe arm keys.
+4. **Status:** LING COMPLETE 2026-10-29. Control curve 10/10/17/26/26 approvals
+   and 45 flips vs lane 5/10/20/31/28 and 33 flips. Lane is monotone; nonmonotone
+   tickers fell 16→12. Approval count 89/300→94/300. Flip CI: control 23.2–37.8%,
+   lane 16.1–29.3%; <10% not achieved. All 600 rooms and 32 replacements validated.
+   `ami-llm` production-only matrix remains running (`bash-a2k79um3`).
+5. **Decision:** lane earns a CR266 structural comparison on Ling, not a
+   production prompt rollout. Per-model routing only; no transfer to `ami-llm`.
+6. **Evidence:** `results_t011_ling_risk_calibration_2026-10-29.md`.

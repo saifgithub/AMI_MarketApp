@@ -1,0 +1,9 @@
+name: cr265-t011-ling-retry-ba-r5
+provider: vllm
+tickers: [BA]
+risk_scores: [5]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: cr265-lane-cleanup
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }
