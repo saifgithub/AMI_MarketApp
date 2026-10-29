@@ -110,3 +110,17 @@
    **0.728**, below 0.85. All 90 lack registry `sheet_state`. This is a tool
    smoke and a negative historical diagnostic, not an `ami-llm`/Ling pilot or
    a production result. Report: `out/cr266-legacy-card-report/`.
+
+## 2026-10-29 — backend integration candidate
+
+1. `ecd1ae7a` implements normalized scoring, exact cards, provider+model
+   identities, the mobile wire contract, unresolved-objection contestedness
+   and review-safe action/size enforcement. Focused backend/CR247/config/
+   provenance verification: **110 passed**. Fit/report verification is now
+   **63 passed** after `8122fd70` refused partial production ladders.
+2. A gate-forced PASS no longer routes to resurrection. An allowed rerun must
+   apply the same computed size before the safety floor, and review changes
+   rebuild the final record instead of leaving stale pre-review state.
+3. Final pre-smoke edge case: missing/empty fact-sheet registry must fail
+   closed rather than masquerade as an all-neutral complete room. That fix is
+   in progress. Full backend verification is running; no real smoke has begun.
