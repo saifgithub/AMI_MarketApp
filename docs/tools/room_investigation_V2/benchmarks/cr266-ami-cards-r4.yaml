@@ -1,0 +1,10 @@
+# CR266 ami-llm typed-card R4 pilot: 30 frozen tickers × two reps.
+# Run with ROOM_CARDS_ENVELOPE_ENABLED=true and ROOM_EVIDENCE_GATE_ENABLED=false.
+name: cr266-ami-cards-r4
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 4 }
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: snapshots/cr265-30
+concurrency_by_provider: { vllm: 1 }
