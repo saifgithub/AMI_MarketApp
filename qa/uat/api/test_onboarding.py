@@ -236,11 +236,6 @@ def test_confirm_validates_inputs(api):
 
 
 @pytest.mark.uat("UAT-ONB-013")
-@pytest.mark.xfail(strict=True, reason=(
-    "DEF459 —  POST /v1/onboarding/readback/confirm on a session with no drawdown answer returns "
-    "409 but has already saved completed=True / current_step=complete (api/onboarding.py saves the "
-    "session before session_to_mandate_dict raises), so the session can no longer be answered "
-    "(every /answer is then 409 'session is on complete'). Live 2026-10-19."))
 def test_failed_confirm_does_not_strand_the_session(api):
     sid = _start(api)
     r = _confirm(api, sid)
@@ -253,6 +248,9 @@ def test_failed_confirm_does_not_strand_the_session(api):
 
 
 @pytest.mark.uat("UAT-ONB-044")
+@pytest.mark.xfail(strict=True, reason=(
+    "ONBOARDING_AGE_GATE_ENFORCED=false on Alpha until the CR273 app build reaches testers "
+    "(CR267 WP-31) — remove this marker when it is switched on"))
 def test_no_answer_or_completion_without_the_18_plus_confirmation(api):
     # A session started without the confirmation stores no timestamp ...
     r = api.post("/v1/onboarding/start", json={"locale": "en", "timezone": "Asia/Riyadh"})
@@ -267,6 +265,10 @@ def test_no_answer_or_completion_without_the_18_plus_confirmation(api):
     assert c.status_code == 403
     assert c.json()["detail"]["code"] == "age_confirmation_required"
     assert api.get(f"/v1/onboarding/{sid}").json()["completed"] is False
+
+
+@pytest.mark.uat("UAT-ONB-044")
+def test_confirmed_session_carries_a_server_timestamp_and_no_birth_field(api):
     # A confirmed session carries a server-set timestamp, and no birth date exists.
     ok = _start(api)
     j = api.get(f"/v1/onboarding/{ok}").json()
