@@ -216,11 +216,6 @@ def force_provider(
                 "use the replay path (direct_call / room_replay) on a provider "
                 "that does (vllm, deepinfra)"
             )
-        raise SystemExit(
-            "temperature is not plumbed through LLMGateway/RoomRunner anywhere "
-            "in this codebase (RES009 01-06) — use direct_call() for a "
-            "single-agent, pinned-temperature test instead"
-        )
     spec, base_url, api_key = _resolve(name)
     resolved_model = model or (
         os.environ.get("VLLM_MODEL", spec.default_model)
@@ -234,6 +229,12 @@ def force_provider(
     from app.services.llm_gateway import LLMGateway, OpenAICompatibleProvider
 
     settings.llm_force_provider = name
+    # CR269 — the gateway reads `settings.llm_desk_temperature` on every
+    # request, so a harness run measures the production knob: it inherits
+    # LLM_DESK_TEMPERATURE from the process env/.env, and an explicit
+    # `temperature` argument overrides it for this process only.
+    if temperature is not None:
+        settings.llm_desk_temperature = temperature
     settings.vllm_max_tokens_floor = max(
         settings.vllm_max_tokens_floor or 0, HARNESS_MAX_TOKENS_FLOOR
     )
@@ -315,7 +316,8 @@ def force_provider(
         spec.extra_body or name == "anthropic" or (name == "vllm" and vllm_extra_body())
     ) else ""
     print(f"LLM gateway forced to: {active} ({base_url}, {resolved_model}{note}, "
-          f"max_tokens floor {HARNESS_MAX_TOKENS_FLOOR})")
+          f"max_tokens floor {HARNESS_MAX_TOKENS_FLOOR}, "
+          f"temperature {settings.llm_desk_temperature if settings.llm_desk_temperature is not None else 'unset'})")
     return gateway
 
 

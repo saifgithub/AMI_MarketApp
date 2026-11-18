@@ -309,6 +309,30 @@ class Settings(BaseSettings):
     # never be able to 500 a live flow.
     llm_force_provider: str = ""
 
+    # CR269 — sampling temperature for every desk-side call (Room desks, CIO/PM,
+    # 1-on-1, Brief). None = send no `temperature` at all, so the request body is
+    # byte-identical to before this setting existed and the server's own default
+    # decides; only an operator setting turns it on. Empty env (compose forwards
+    # `${LLM_DESK_TEMPERATURE:-}`) is read as None, not as a parse error.
+    llm_desk_temperature: float | None = None
+    # Reserved for the later judge (CR267 WP-22). Declared now with no caller so
+    # the judge ships against an already-forwarded, already-validated knob.
+    llm_judge_temperature: float = 0.0
+
+    @field_validator("llm_desk_temperature", mode="before")
+    @classmethod
+    def _blank_desk_temperature_is_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @field_validator("llm_desk_temperature", "llm_judge_temperature")
+    @classmethod
+    def _temperature_in_range(cls, v: float | None) -> float | None:
+        if v is not None and not 0.0 <= v <= 2.0:
+            raise ValueError("LLM temperature must be within [0.0, 2.0]")
+        return v
+
     # Email / SMS / push
     resend_api_key: str = ""
     twilio_account_sid: str = ""
