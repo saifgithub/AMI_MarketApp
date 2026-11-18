@@ -199,6 +199,68 @@ def test_earnings_surfaces_dividend_fields_when_present(
     assert body["dividend_rate"] == pytest.approx(0.96)
 
 
+# ── DEF461: Alpha Vantage fallback when the Yahoo-backed stack is dark ────
+
+
+class _FakeAlphaVantage:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, int]] = []
+
+    def fetch(self, ticker: str, limit: int):
+        from app.services.news_context import LiveHeadline
+
+        self.calls.append((ticker, limit))
+        return [
+            LiveHeadline(
+                title="AAPL beats estimates", link="https://example.com/av",
+                publisher="Benzinga", published_at=1748020000,
+                sentiment="Bullish", source="alpha_vantage", summary="s",
+            )
+        ]
+
+
+def test_def461_news_falls_back_to_alpha_vantage_when_yahoo_is_dark(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import settings
+    from app.services import news_context
+
+    monkeypatch.setattr(_md, "_provider", FakeProvider(news_items=None))
+    monkeypatch.setattr(settings, "alpha_vantage_api_key", "k")
+    av = _FakeAlphaVantage()
+    news_context.set_alpha_vantage_source(av)
+    try:
+        r = client.get("/v1/sim/news/AAPL?limit=3")
+    finally:
+        news_context.set_alpha_vantage_source(None)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "alpha_vantage"
+    assert [a["title"] for a in body["articles"]] == ["AAPL beats estimates"]
+    assert set(body["articles"][0].keys()) == {
+        "title", "link", "publisher", "published_at",
+    }
+    assert av.calls == [("AAPL", 3)]
+
+
+def test_def461_no_alpha_vantage_key_stays_unavailable_without_a_call(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import settings
+    from app.services import news_context
+
+    monkeypatch.setattr(_md, "_provider", FakeProvider(news_items=None))
+    monkeypatch.setattr(settings, "alpha_vantage_api_key", "")
+    av = _FakeAlphaVantage()
+    news_context.set_alpha_vantage_source(av)
+    try:
+        r = client.get("/v1/sim/news/AAPL")
+    finally:
+        news_context.set_alpha_vantage_source(None)
+    assert r.json() == {"ticker": "AAPL", "source": "unavailable", "articles": []}
+    assert av.calls == []
+
+
 def test_earnings_ticker_normalized(client: TestClient) -> None:
     r = client.get("/v1/sim/earnings/aapl")
     assert r.status_code == 200
