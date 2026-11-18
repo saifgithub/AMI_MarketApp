@@ -106,13 +106,35 @@ AMI Trade is built around a self-hosted AI infrastructure model: the large major
 
 > _Inspired by: novel — this is a real differentiator we want to surface, corrected in v2.0 (AT:legal CR068 / DEF085, 2026-07-23) to stop overstating infrastructure isolation as absolute. v1.0 claimed prompts were "not sent to any third-party AI vendor," which conflicted with `disclaimers_and_privacy.md`'s own sub-processor list and `stack.md`'s documented Anthropic fallback. This version is deliberately generic — it does not name a specific third-party provider, since the identity of any fallback vendor is an infrastructure detail that can change without being a material change to what's disclosed here (self-hosted primary, contracted fallback, no training/resale in either case)._
 
+## 8A. Where your data is stored, and transfers outside Malaysia — `[LAWYER REVIEW REQUIRED]`
+
+> **BETA DRAFT (CR276, not yet reviewed by counsel).**
+
+For the Beta, AMI's servers and database are hosted in **Singapore** (planned: a Singapore virtual server; the host is not yet provisioned, so confirm before publishing). AMI is a Malaysian company. Storing and processing your personal data in Singapore, and passing it to the processors in clause 7 (Apple, Google, RevenueCat, Sentry, OneSignal and any contracted AI infrastructure provider), is a **transfer of personal data outside Malaysia** under Malaysia's **Personal Data Protection Act 2010 (PDPA)**. We make these transfers only where the recipient is bound by contract to protect your data to a standard equivalent to ours, and only for the purposes in clause 6.
+
+By using AMI Trade you consent to these transfers. `[LAWYER REVIEW REQUIRED]` Counsel to confirm the lawful basis for each transfer under the current PDPA transfer provisions (including the 2024 amendments), whether explicit consent is needed in the sign-up flow, the list of processors and their locations, and the equivalent text for users in the EU and UK.
+
 ## 9. How long we keep your agent conversations
 
 Prompts you send to AMI agents, and the responses returned, are kept in our LLM audit log for safety and quality review. This applies to chat messages, Convene-the-Room sessions, and Brief Your Agent feedback. The analysis from each Room you convene is also kept in your account, so you can review it in your Decision Journal. The record of orders you send to a linked Alpaca paper account (clause 3) is kept for as long as your account exists.
 
 ## 10. How long we keep your account data
 
-Account-level data (your sign-in identifier, journal entries, simulated portfolios, lesson progress) is retained while your account is active and for a reasonable period after closure, or as required by law.
+> **BETA DRAFT (CR276, not yet reviewed by counsel; matches what the Beta code does and is not the published text).**
+
+Account-level data (your sign-in identifier, mandate, journal entries, simulated portfolios and trades, Room history, lesson progress, settings) is kept while your account is active.
+
+**When you delete your account** (Settings → Delete account) we sign you out everywhere at once and your account stops working. For **30 days** you can restore it by signing in again; if you do nothing, on day 30 we permanently delete it:
+
+- **Deleted:** your account row (email, name, Apple/Google identifier, handle, device identifiers), mandate, journal, simulated portfolios, positions and trades, Room runs and verdicts, lesson and challenge progress, badges and reputation, watchlist and price alerts, notifications and inbox messages, conversations with analysts, bug reports and their screenshots, and your request and device logs. We also ask our push-notification provider (OneSignal) and our subscription provider (RevenueCat) to delete the records they hold under your account ID.
+- **Kept, with no way to tell who you are:** a billing record of plan changes (account ID, plan, date; free-text notes removed) for up to **seven years** for accounting `[LAWYER REVIEW REQUIRED: confirm period]`; model-usage figures (token counts, cost, model name) with the prompt, reply and your ID removed; and an internal deletion record (an anonymous ID, the time and which tables were emptied, with no email). Once your account row is gone these cannot be linked back to you.
+- **Another person's records:** head-to-head game records that name you are removed, which also removes them from your opponent's history.
+
+If your account is a guest account with no sign-in attached, there is nothing to restore it with, so it cannot be brought back inside the 30 days either; it is deleted at the same point.
+
+Automatic clean-up also removes request and model logs older than 90 days.
+
+`[LAWYER REVIEW REQUIRED]` The app also supports a third post-deletion mode (archive: sign-in blocked, data kept). It is **off** and cannot be switched on without recording counsel's approval. This policy does not provide for it.
 
 > _Inspired by: [StockTrak Privacy Policy](https://www.stocktrak.com/privacy-policy/)._
 
@@ -129,7 +151,9 @@ You may request to:
 - **Export** your data in a portable, machine-readable format
 - **Delete** your account and the personal data tied to it
 
-The fastest way to request account or data deletion is our [account deletion page](https://agenticmarketintel.ai/ami-trade/sad-to-see-you-go) (see [`data_deletion_policy.md`](data_deletion_policy.md) for the canonical source), which also explains exactly what is deleted and what we retain. To exercise any of these rights you may also email **privacy@agenticmarketintel.ai**. We aim to respond within 30 days.
+> **BETA DRAFT (CR276):** you can also do both inside the app. **Settings → Export my data** downloads your trades, Room verdicts, mandate, journal, lesson progress and settings as a JSON file straight away (this is the access and export right). **Settings → Delete account** starts deletion (clause 10). Both need you to be signed in to the account concerned; the web form below remains for anyone who cannot open the app.
+
+The fastest way to request account or data deletion without opening the app is our [account deletion page](https://agenticmarketintel.ai/ami-trade/sad-to-see-you-go) (see [`data_deletion_policy.md`](data_deletion_policy.md) for the canonical source), which also explains exactly what is deleted and what we retain. To exercise any of these rights you may also email **privacy@agenticmarketintel.ai**. We aim to respond within 30 days.
 
 - Residents of the European Union and the United Kingdom have rights under the **GDPR** and the UK GDPR
 - Residents of California have rights under **CCPA / CPRA**, including the right not to be discriminated against for exercising those rights
@@ -167,6 +191,7 @@ We may update this Privacy Policy from time to time. For **material changes** �
 
 ## § Version history
 
+- **v2.2 (BETA DRAFT, unpublished)** — clause 10 rewritten (30-day restore window, then permanent deletion, what is deleted and what is kept and for how long); new clause 8A (Singapore hosting and the cross-border transfer under Malaysia's PDPA); clause 12 notes in-app export and deletion. Matches the code built under [CR276](../../docs/forward_planning/CR276_account_deletion_export/CR276_account_deletion_export.md). Not published and not counsel-reviewed; `website/privacy/` is untouched. Material change, so the 14-day notice rule (clause 16) applies when it is published.
 - **v2.1** — effective 25 September 2026. Clause 3 now describes the account summary sent when you link an Alpaca paper-trading account; a linked live account is never sent. This corrects the policy to match what the app did from CR202 (about 2026-09-22) and narrows it to paper accounts at the same time. Users who had already linked are told once in the app, and the link screen discloses it before linking. Clauses 3 and 9 also describe the permanent record kept of orders sent to a linked Alpaca paper account. Clauses 3, 9 and 11 now state what is kept, matching what the service does (DEF440, DEF441). Saiful's rulings (2026-09-25): "Publish + link-screen notice", "Paper only". Filed as [DEF430](../../docs/defect/_registry/DEF430.row.md). Prior version archived at [`../history/privacy_policy/v2.0_2026-07-23.md`](../history/privacy_policy/v2.0_2026-07-23.md).
 - **v2.0** — effective 23 July 2026. Corrected clauses 7 and 8: v1.0 stated prompts "are not sent to any third-party AI vendor," an absolute claim that conflicted with internal sub-processor records (Anthropic fallback, per `stack.md` and `disclaimers_and_privacy.md`). v2.0 accurately describes self-hosted-primary / contracted-third-party-fallback routing, without naming a specific vendor. Added a direct link to the new [Data Deletion Policy](data_deletion_policy.md) in clause 12. Filed as [DEF085](../../docs/defect/DEF085_privacy_ai_vendor_claim/DEF085_privacy_ai_vendor_claim.md) (the inaccuracy) under [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md) (the broader legal-docs pass).
 - **v1.0** — effective 18 May 2026. Initial alpha-stage policy published with AMI Trade closed alpha. Earlier versions: none. Archived at [`../history/privacy_policy/v1.0_2026-05-18.md`](../history/privacy_policy/v1.0_2026-05-18.md).

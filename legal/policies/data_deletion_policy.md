@@ -17,6 +17,18 @@ public, web-accessible way to request account and data deletion — reachable wi
 the app — for both Android and iOS users. This page, and this document, are that mechanism. It
 is cross-referenced from the [Privacy Policy](privacy_policy.md), clause 12.
 
+## 0. Delete in the app (BETA DRAFT, CR276 — not yet reviewed by counsel)
+
+The quickest route is **inside the app: Settings → Delete account**. No email or form.
+
+1. **Immediately:** you are signed out on every device and the account stops working.
+2. **For 30 days:** you can restore it by signing in again with the same Apple, Google or email sign-in and choosing Restore. A guest account with no sign-in attached cannot be restored.
+3. **On day 30:** the account and its personal data are permanently deleted (section 2). This cannot be undone.
+
+Before you delete, **Settings → Export my data** downloads your trades, Room verdicts, mandate, journal, lesson progress and settings as a JSON file.
+
+The web form and email routes below remain for people who cannot open the app. A request made that way is verified against the email on file and deleted on the same terms.
+
 ## 1. How to request deletion
 
 1. **Fill in the form** on the deletion page with the email address on your AMI Trade account,
@@ -43,6 +55,30 @@ we retain is:
 Everything else is erased. Retained email and system logs are held only as long as needed for
 those purposes and are never used to rebuild your account.
 
+> **BETA DRAFT (CR276) — replaces the list above once counsel approves and it is published.**
+> What the Beta code does at the end of the 30 days (default mode `delete`):
+>
+> - **Deleted:** your account row (email, name, Apple/Google identifier, handle, device
+>   identifiers), mandate, journal, simulated portfolios, positions and trades, Room runs and
+>   verdicts, lesson and challenge progress, badges and reputation, watchlist and price alerts,
+>   notifications and inbox messages, conversations with analysts, bug reports and their
+>   screenshots, and request/device logs. We also ask OneSignal (push) and RevenueCat
+>   (subscriptions) to delete the records they hold under your account ID.
+> - **Kept, with no way to tell who you are:** a billing record of plan changes for up to seven
+>   years for accounting `[LAWYER REVIEW REQUIRED: confirm period]`; model-usage figures with the
+>   prompt, reply and your ID removed; an internal deletion record (an anonymous ID, the time and
+>   which tables were emptied). **Your email address is not kept**; the line above about keeping
+>   it describes the older manual process and no longer applies.
+> - **Head-to-head game records** that name you are removed, which also removes them from your
+>   opponent's history.
+>
+> Server logs older than 90 days are removed automatically.
+>
+> `[LAWYER REVIEW REQUIRED]` The system can alternatively be set to *anonymise* (keep a scrubbed
+> account shell and de-identified simulated activity) or *archive* (block sign-in, keep the data).
+> Anonymise is available if counsel prefers it. Archive is **off** and cannot be turned on
+> without recording counsel's approval; this policy does not provide for it.
+
 ## 3. Request form
 
 The live request form (email, request type, optional details, Cloudflare Turnstile bot check)
@@ -68,6 +104,7 @@ how we handle personal information generally, see the [Privacy Policy](privacy_p
 
 ## § Version history
 
+- **v1.1 (BETA DRAFT, unpublished)** — adds section 0 (in-app deletion, 30-day restore window, export) and the Beta retention list under section 2, matching [CR276](../../docs/forward_planning/CR276_account_deletion_export/CR276_account_deletion_export.md). Drops the retained-email line for in-app deletions. Not published and not counsel-reviewed; `website/ami-trade/sad-to-see-you-go/` is untouched.
 - **v1.0** — effective 23 July 2026. First formal version. Formalizes content that was already
   live on the HTML page (no prior version existed — the page had no version metadata before
   this pass). Filed as [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md).
