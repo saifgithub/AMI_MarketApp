@@ -109,6 +109,17 @@ controls:
     when: "signed-in (non-anonymous) user"
     line: 1213
     note: "Ends the session (authNotifier.signOut) then pushes SignInScreen with 'You've been signed out.' banner. Opens a confirm dialog first (DEF479: SIGN OUT? - CANCEL / SIGN OUT). Label is hardcoded English (not l10n) until DEF478."
+  - label: "Export my data"
+    kind: button
+    expect: external
+    line: 1346
+    note: "CR276. GET /v1/account/export, writes ami-data-export-<date>.json to the temp dir and opens the OS share sheet. Failure shows a snackbar. Shown to guests and signed-in users alike."
+  - label: "Delete account"
+    kind: button
+    expect: destructive
+    line: 1362
+    when: "server policy wording is 'delete' (Beta default; the label is 'Close account' only if the server runs archive mode with counsel approval)"
+    note: "CR276. Opens the confirm dialog first (DEF479 pattern: DELETE ACCOUNT? - CANCEL / DELETE ACCOUNT) stating what is deleted, what is kept and for how long, and the 30-day restore window. On confirm: POST /v1/account/close revokes every session at once, the app signs out to a fresh guest and shows when the account can be restored. NEVER press in a crawl on a shared account."
   - label: "System"
     kind: list_row
     expect: state

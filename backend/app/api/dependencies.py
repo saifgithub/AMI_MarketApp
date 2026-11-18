@@ -32,6 +32,10 @@ def _extract_token(authorization: str | None) -> str | None:
     return None
 
 
+def _is_closed(row: User) -> bool:
+    return row.closure_requested_at is not None or row.erased_at is not None
+
+
 def _version_matches(parsed: ParsedToken, row: User) -> bool:
     # None only on the local-only legacy unsigned format, which carries no
     # version field at all — trust it exactly as far as it was already
@@ -79,6 +83,15 @@ def get_current_user(
             )
         if row.suspended_at is not None:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "account_suspended")
+        if _is_closed(row):
+            # CR276: closure bumps token_version in the same write, so a token
+            # normally dies at the version check above. This is the second lock
+            # for a token minted in the instant between the two.
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         return row
 
 
@@ -167,7 +180,7 @@ def get_rebootstrap_identity_optional(
         return None
     with get_session() as s:
         row = s.execute(select(User).where(User.id == parsed.user_id)).scalar_one_or_none()
-        if row is None or row.suspended_at is not None:
+        if row is None or row.suspended_at is not None or _is_closed(row):
             return None
         if not _version_matches(parsed, row):
             return None
@@ -189,7 +202,7 @@ def get_current_user_optional(
         return None
     with get_session() as s:
         row = s.execute(select(User).where(User.id == parsed.user_id)).scalar_one_or_none()
-        if row is None or row.suspended_at is not None:
+        if row is None or row.suspended_at is not None or _is_closed(row):
             return None
         if not _version_matches(parsed, row):
             return None

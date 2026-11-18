@@ -34,6 +34,7 @@
 library;
 
 import 'package:ami_trade/services/api/api_exceptions.dart';
+import 'package:ami_trade/services/api/trace_ids.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
@@ -89,10 +90,7 @@ const String _slowConnection =
 /// session greps for the prefix and gets one match in practice, or falls
 /// back to the couple of surrounding minutes if not.
 String? _requestIdFrom(Object error) {
-  if (error is DioException) {
-    final id = error.response?.headers.value('x-request-id');
-    if (id != null && id.isNotEmpty) return id;
-  }
+  if (error is DioException) return traceIdFromResponse(error.response);
   return null;
 }
 
@@ -103,8 +101,7 @@ String? _requestIdFrom(Object error) {
 String? traceReference(Object error) {
   final id = _requestIdFrom(error);
   if (id == null) return null;
-  final short = id.length > 8 ? id.substring(0, 8) : id;
-  return 'Error ref: $short';
+  return 'Ref: ${shortTraceId(id)}';
 }
 
 /// CR239 scope item 5 — Room already has its own trace id
@@ -120,8 +117,7 @@ String? traceReference(Object error) {
 /// ever named a run), where there is nothing yet to reference.
 String withRoomRunReference(String message, String? runId) {
   if (runId == null || runId.isEmpty) return message;
-  final short = runId.length > 8 ? runId.substring(0, 8) : runId;
-  return '$message Run ref: $short.';
+  return '$message Run ref: ${shortTraceId(runId)}.';
 }
 
 /// Turns [error] into a sentence a user can act on.

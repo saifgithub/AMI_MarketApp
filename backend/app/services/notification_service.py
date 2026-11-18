@@ -145,6 +145,15 @@ def notify(
             push_detail=None,
         )
 
+    if _account_is_closed(user_id):
+        # CR276: a closed account receives no push while it waits out its
+        # grace window; the row above is erased with the rest of the account.
+        _record_push_outcome(notification_id, "skipped", "account_closed")
+        return NotifyResult(
+            notification_id=notification_id, push_status="skipped",
+            push_detail="account_closed",
+        )
+
     if not attempt_push:
         _record_push_outcome(notification_id, "skipped", None)
         return NotifyResult(
@@ -174,6 +183,19 @@ def notify(
     return NotifyResult(
         notification_id=notification_id, push_status=push_status, push_detail=push_detail,
     )
+
+
+def _account_is_closed(user_id: UUID) -> bool:
+    from app.db.models import User
+
+    try:
+        with get_session() as s:
+            return s.execute(
+                select(User.closure_requested_at).where(User.id == user_id)
+            ).scalar_one_or_none() is not None
+    except Exception:
+        logger.exception("notification_closed_account_check_failed")
+        return False
 
 
 def _record_push_outcome(

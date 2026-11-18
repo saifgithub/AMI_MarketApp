@@ -23,6 +23,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/company_profile.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
@@ -140,7 +141,7 @@ class _WholeScreenError extends StatelessWidget {
             Text(l.companyReviewLoadFailedTitle,
                 style: AmiTypography.h4, textAlign: TextAlign.center),
             const SizedBox(height: AmiSpacing.xs),
-            Text(message,
+            AmiErrorMessage(message,
                 textAlign: TextAlign.center,
                 style: AmiTypography.body.copyWith(color: AmiColors.textLow)),
             const SizedBox(height: AmiSpacing.m),

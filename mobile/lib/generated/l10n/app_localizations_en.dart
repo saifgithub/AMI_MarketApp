@@ -5512,4 +5512,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomLeaveConfirm => 'LEAVE';
+
+  @override
+  String get settingsAccountExport => 'Export my data';
+
+  @override
+  String get settingsAccountExportHint =>
+      'Download your trades, Room verdicts, mandate, journal and progress as a JSON file.';
+
+  @override
+  String get settingsAccountExportFailed =>
+      'Couldn\'t export your data. Try again in a moment.';
+
+  @override
+  String get settingsAccountDelete => 'Delete account';
+
+  @override
+  String get settingsAccountClose => 'Close account';
+
+  @override
+  String get settingsConfirmDeleteTitle => 'DELETE ACCOUNT?';
+
+  @override
+  String settingsConfirmDeleteBody(int days) {
+    return 'This deletes your AMI account: your mandate, journal, trades, Room history, progress and settings. You are signed out on every device now.\n\nFor $days days you can restore it by signing in again with the same Apple, Google or email sign-in. After that it is permanently deleted.\n\nKept: a billing record of plan changes (no name or email) for up to 7 years for accounting, and usage figures with your text and ID removed.';
+  }
+
+  @override
+  String get settingsConfirmDeleteGuestNote =>
+      'This is a guest account with no sign-in attached, so it cannot be restored later. Sign in first if you want that option.';
+
+  @override
+  String get settingsConfirmDeleteConfirm => 'DELETE ACCOUNT';
+
+  @override
+  String get settingsConfirmCloseTitle => 'CLOSE ACCOUNT?';
+
+  @override
+  String settingsConfirmCloseBody(int days) {
+    return 'This closes your AMI account and signs you out on every device now.\n\nFor $days days you can restore it by signing in again. After that the account stays closed: you can no longer sign in, and your data is kept in a closed archive. Email support to ask for it to be deleted.';
+  }
+
+  @override
+  String get settingsConfirmCloseConfirm => 'CLOSE ACCOUNT';
+
+  @override
+  String get settingsAccountDeleteFailed =>
+      'Couldn\'t delete your account. Check your connection and try again.';
+
+  @override
+  String settingsAccountDeleteScheduled(String date) {
+    return 'Your account is scheduled for deletion. You can restore it until $date by signing in again.';
+  }
+
+  @override
+  String get signInRestoreTitle => 'RESTORE YOUR ACCOUNT?';
+
+  @override
+  String signInRestoreBody(String date) {
+    return 'This account is scheduled for deletion on $date. Restore it to keep your data and continue.';
+  }
+
+  @override
+  String get signInRestoreConfirm => 'RESTORE';
+
+  @override
+  String traceRefLabel(String id) {
+    return 'Ref: $id';
+  }
+
+  @override
+  String get traceRefCopied => 'Reference copied';
+
+  @override
+  String get traceRefCopyTooltip => 'Copy reference';
 }

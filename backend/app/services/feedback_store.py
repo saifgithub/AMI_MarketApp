@@ -48,6 +48,7 @@ class FeedbackStore:
             status="open",
             attachment_path=req.attachment_path,
             attachment_mime=req.attachment_mime,
+            trace_ids=",".join(req.trace_ids) if req.trace_ids else None,
             created_at=now,
         )
         with get_session() as s:

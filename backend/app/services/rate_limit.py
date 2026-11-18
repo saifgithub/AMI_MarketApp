@@ -315,6 +315,11 @@ portfolio_health_finding_rate_limit = RateLimiter(
     name="portfolio_health_finding", per_minute=5,
 )
 
+# CR276: the data export reads a dozen tables per call. Per-user, hourly.
+account_export_rate_limit = RateLimiter(
+    name="account_export", per_minute=5, window_seconds=3600,
+)
+
 # DEF186 (security review H6): 1-on-1 and Brief turns spent zero credits
 # and had no rate limiter at all — one free anon token bought unlimited
 # LLM turns. Per-user (bearer-keyed, not IP — an anon user can rotate

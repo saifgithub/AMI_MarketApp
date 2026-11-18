@@ -1,6 +1,6 @@
 """UAT area: bug reports, AMI help library & telemetry (CR263, cases/support.yaml).
 
-Two real bug reports are filed per run (SUPP-001, SUPP-002), both prefixed
+Three real bug reports are filed per run (SUPP-001, SUPP-002, SUPP-014), all prefixed
 "[CR263 UAT - ignore]" because they land in the triage queue a monitor reads.
 Every other bug-report call is invalid on purpose so it stores nothing. The
 per-IP limiter (5/hour) keys on the real socket peer (DEF464 - forwarded headers
@@ -191,3 +191,28 @@ def test_help_library_is_static_and_well_formed(api):
     assert api.get("/v1/ai_coach/by_id/qa_does_not_exist").status_code == 404
     none = api.get("/v1/ai_coach/search", params={"q": "zzqxjwv"})
     assert none.status_code == 200 and none.json()["hits"] == []
+
+
+@pytest.mark.uat("UAT-SUPP-014")
+def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
+    u = seed.user(plan="floor_pass")
+    ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+    r = u.post("/v1/feedback/bug", files=_form(**GOOD, trace_ids=",".join(ids)),
+               headers=_fake_ip())
+    assert r.status_code == 201, r.text
+    report_id = r.json()["id"]
+    try:
+        detail = seed.admin.get(f"/v1/admin/bugs/{report_id}")
+        assert detail.status_code == 200, detail.text
+        assert detail.json()["trace_ids"] == ",".join(ids)
+    finally:
+        _close_out(seed.admin, report_id)
+
+    ip = _fake_ip()
+    for bad in ("not-a-uuid", ",".join(str(uuid.uuid4()) for _ in range(6))):
+        # Title left empty as well: even if trace_ids validation regressed,
+        # nothing could enter the triage queue.
+        resp = u.post("/v1/feedback/bug",
+                      files=_form(**{**GOOD, "title": "", "trace_ids": bad}), headers=ip)
+        assert resp.status_code == 422, resp.text
+        assert any("trace_ids" in str(e.get("loc")) for e in resp.json()["detail"]), resp.text

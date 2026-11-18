@@ -14,6 +14,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/state/notification_centre_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -178,6 +179,7 @@ class _ErrorPanel extends StatelessWidget {
               style: AmiTypography.body,
               textAlign: TextAlign.center,
             ),
+            const TraceRefLine.recent(),
             const SizedBox(height: AmiSpacing.l),
             HexButton(label: l.notifRetry, onPressed: onRetry),
           ],

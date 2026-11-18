@@ -41,6 +41,8 @@ BugStatus = Literal[
 
 _VALID_PLATFORMS = {"ios", "android_gms", "android_hms"}
 
+MAX_TRACE_IDS = 5
+
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -59,6 +61,29 @@ class BugReportRequest(BaseModel):
     # supply these directly.
     attachment_path: str | None = None
     attachment_mime: str | None = None
+    # CR239 / WP-38: the app's most recent request trace ids (comma-separated
+    # on the wire, normalised to a list here). Format-validated, never
+    # looked up: a report with a bogus id is rejected, not stored.
+    trace_ids: list[str] | None = None
+
+    @field_validator("trace_ids", mode="before")
+    @classmethod
+    def validate_trace_ids(cls, v: object) -> list[str] | None:
+        if v is None:
+            return None
+        parts = v.split(",") if isinstance(v, str) else list(v)  # type: ignore[call-overload]
+        out: list[str] = []
+        for raw in parts:
+            raw = str(raw).strip()
+            if not raw:
+                continue
+            try:
+                out.append(str(UUID(raw)))
+            except ValueError as exc:
+                raise ValueError("trace_ids must be comma-separated UUIDs") from exc
+        if len(out) > MAX_TRACE_IDS:
+            raise ValueError(f"at most {MAX_TRACE_IDS} trace_ids")
+        return out or None
 
     @field_validator("platform")
     @classmethod

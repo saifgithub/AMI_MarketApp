@@ -98,6 +98,11 @@ class MagicLinkVerifyRequest(BaseModel):
     # silently skips. Server-side use: cohort analysis (claim rate per
     # Concierge variant) + GDPR deletion + onboarding replay.
     onboarding_session_id: UUID | None = None
+    # CR276: set true only after the app has shown "this account is scheduled
+    # for deletion" and the user chose to restore it. Without it, a sign-in that
+    # matches a closed account inside its grace window is refused with
+    # `account_pending_deletion` and nothing changes.
+    restore_account: bool = False
 
 
 class AppleSignInRequest(BaseModel):
@@ -123,6 +128,11 @@ class AppleSignInRequest(BaseModel):
     full_name: str | None = None
     # BL13 (AT:R32): see MagicLinkVerifyRequest.onboarding_session_id.
     onboarding_session_id: UUID | None = None
+    # CR276: set true only after the app has shown "this account is scheduled
+    # for deletion" and the user chose to restore it. Without it, a sign-in that
+    # matches a closed account inside its grace window is refused with
+    # `account_pending_deletion` and nothing changes.
+    restore_account: bool = False
 
 
 class GoogleSignInRequest(BaseModel):
@@ -141,6 +151,11 @@ class GoogleSignInRequest(BaseModel):
 
     identity_token: str
     onboarding_session_id: UUID | None = None
+    # CR276: set true only after the app has shown "this account is scheduled
+    # for deletion" and the user chose to restore it. Without it, a sign-in that
+    # matches a closed account inside its grace window is refused with
+    # `account_pending_deletion` and nothing changes.
+    restore_account: bool = False
 
 
 class AuthVerifyResponse(BaseModel):

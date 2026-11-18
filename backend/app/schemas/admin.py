@@ -208,6 +208,7 @@ class AdminBugDetail(AdminBugSummary):
     steps: Optional[str]
     route: Optional[str]
     attachment_mime: Optional[str]
+    trace_ids: Optional[str] = None
     resolution_note: Optional[str]
     acknowledged_at: Optional[datetime]
 

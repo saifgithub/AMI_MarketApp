@@ -11,9 +11,11 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
+import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
@@ -43,6 +45,7 @@ import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/api/friendly_error.dart' show kAmiWaitsOnModel;
+import 'package:ami_trade/services/api/trace_ids.dart';
 import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
@@ -112,6 +115,32 @@ class _ServerErrorInterceptor extends Interceptor {
         error: ServerUnavailableException(code),
       ));
       return;
+    }
+    handler.next(err);
+  }
+}
+
+/// WP-38 / CR239 - records the trace id of every failed response in
+/// [TraceIdStore] (and stamps it on `requestOptions.extra[kTraceIdExtraKey]`), so an
+/// error state can show "Ref: ..." and the bug-report sheet can attach the
+/// last few. A request that got no response is recorded as a gap, so an older
+/// id is never offered as the cause of it. Cancellations are not failures.
+/// Purely observational: the error is passed on untouched.
+class _TraceIdInterceptor extends Interceptor {
+  _TraceIdInterceptor(this._store);
+  final TraceIdStore _store;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (err.type != DioExceptionType.cancel) {
+      final id = traceIdFromResponse(err.response);
+      if (id != null) {
+        err.requestOptions.extra[kTraceIdExtraKey] = id;
+        _store.record(id,
+            path: err.requestOptions.path, status: err.response?.statusCode);
+      } else {
+        _store.recordNoResponse(path: err.requestOptions.path);
+      }
     }
     handler.next(err);
   }
@@ -418,6 +447,7 @@ class ApiClient {
     _dio.interceptors.add(_AuthInterceptor(this));
     _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
     _dio.interceptors.add(_VersionGateInterceptor(this)); // CR121
+    _dio.interceptors.add(_TraceIdInterceptor(TraceIdStore.instance)); // WP-38
   }
 
   final Dio _dio;
@@ -494,6 +524,16 @@ class ApiClient {
   /// user out of an account that is working fine.
   void _notifyIfUnauthorized(int statusCode) {
     if (statusCode == 401) onUnauthorized?.call();
+  }
+
+  /// WP-38: the SSE routes bypass Dio, so a refused stream (4xx/5xx before the
+  /// first event) is recorded here rather than by [_TraceIdInterceptor].
+  void _recordStreamFailure(http.StreamedResponse response) {
+    final id = response.headers['x-request-id'];
+    if (id != null && id.isNotEmpty) {
+      TraceIdStore.instance.record(id,
+          path: response.request?.url.path, status: response.statusCode);
+    }
   }
 
   http.Request _sseRequest(Uri uri, String body) {
@@ -649,6 +689,7 @@ class ApiClient {
       'history': history.map((m) => m.toJson()).toList(),
     });
     final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode != 200) _recordStreamFailure(response);
     if (response.statusCode != 200) {
       _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from brief stream');
@@ -767,6 +808,7 @@ class ApiClient {
     });
 
     final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode != 200) _recordStreamFailure(response);
     if (response.statusCode != 200) {
       _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
@@ -1020,6 +1062,7 @@ class ApiClient {
       if (alpaca != null) 'alpaca': alpaca,
     });
     final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode != 200) _recordStreamFailure(response);
     if (response.statusCode == 402) {
       // CR047: the credit wall. Read the structured body and surface it as a
       // typed exception so the Room screen can render a paywall / Winzip
@@ -1091,6 +1134,7 @@ class ApiClient {
   Stream<Map<String, dynamic>> retryCioStep(String runId) async* {
     final uri = Uri.parse('$baseUrl/v1/room/runs/$runId/cio-retry');
     final response = await _httpClient.send(_sseRequest(uri, '{}'));
+    if (response.statusCode != 200) _recordStreamFailure(response);
     if (response.statusCode == 403 || response.statusCode == 404) {
       throw Exception('HTTP ${response.statusCode} from cio-retry');
     }
@@ -1596,6 +1640,7 @@ class ApiClient {
     required String email,
     required String code,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/magic_link/verify',
@@ -1604,6 +1649,7 @@ class ApiClient {
         'code': code,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1614,6 +1660,7 @@ class ApiClient {
     String? userId,
     String? fullName,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     // Phase 3 (AT:R29): backend verifies the identity_token against
     // Apple's JWKS. 400 on bad signature / wrong iss/aud / expired.
@@ -1625,6 +1672,7 @@ class ApiClient {
         if (fullName != null) 'full_name': fullName,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1634,6 +1682,7 @@ class ApiClient {
     required String identityToken,
     String? userId,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     // D-057 (AT:R36): Android-only at alpha. Backend verifies the
     // ID token against Google's JWKS (signature + iss + aud + exp +
@@ -1647,6 +1696,7 @@ class ApiClient {
         if (userId != null) 'user_id': userId,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1659,6 +1709,33 @@ class ApiClient {
       // Fire-and-forget — client clears its token regardless of server response.
     }
     _bearerToken = null;
+  }
+
+  // ── Account closure + data export (CR276, CR267 WP-30) ─────────────────
+
+  /// What the server does after the restore window, for the confirm dialog.
+  Future<AccountPolicy> accountPolicy() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/account/policy');
+    return AccountPolicy.fromJson(r.data!);
+  }
+
+  /// Deactivate the account and revoke every session now. The caller must
+  /// follow with a local sign-out: this bearer is dead the moment it succeeds.
+  Future<AccountClosure> closeAccount() async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/account/close',
+      data: {'confirm': true},
+    );
+    return AccountClosure.fromJson(r.data!);
+  }
+
+  /// The signed-in user's own data as the raw JSON file the server produced.
+  Future<Uint8List> exportAccountData() async {
+    final r = await _dio.get<List<int>>(
+      '/v1/account/export',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(r.data!);
   }
 
   // ── BL16 account merge (AT:R38) ────────────────────────────────────────
@@ -1765,12 +1842,15 @@ class ApiClient {
     String? attachmentPath,
     String? attachmentMime,
     String? token,
+    List<String> traceIds = const [],
   }) async {
     final form = FormData.fromMap({
       'category': category,
       'title': title,
       if (steps != null) 'steps': steps,
       if (route != null) 'route': route,
+      // WP-38: the app's most recent failed-request trace ids, comma-separated.
+      if (traceIds.isNotEmpty) 'trace_ids': traceIds.join(','),
       'app_version': appVersion,
       'platform': platform,
       if (attachmentPath != null)

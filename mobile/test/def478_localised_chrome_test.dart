@@ -279,6 +279,11 @@ void main() {
     expect(find.text('AI Coach — Q&A library'), findsNothing);
     expect(find.text(l.settingsAlpacaDisconnect), findsOneWidget);
     expect(find.text(l.settingsAlpacaConnected), findsOneWidget);
+    // CR276 added Export / Delete rows under Account, which moves where the
+    // downward scroll above stops; the Help row is scrolled to on its own
+    // rather than assumed to share a viewport with the Alpaca row.
+    await t.scrollUntilVisible(find.text(l.settingsHelpQaLibrary), -300,
+        scrollable: scrollable);
     expect(find.text(l.settingsHelpQaLibrary), findsOneWidget);
     expect(find.textContaining(RegExp(r'\bAI\b')), findsNothing);
   });

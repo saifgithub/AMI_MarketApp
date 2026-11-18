@@ -82,10 +82,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final email = _emailCtrl.text.trim();
     final code = _codeCtrl.text.trim();
     if (email.isEmpty || code.isEmpty) return;
-    final outcome = await ref
-        .read(authNotifierProvider.notifier)
-        .verifyMagicLink(email: email, code: code);
+    final notifier = ref.read(authNotifierProvider.notifier);
+    var outcome = await notifier.verifyMagicLink(email: email, code: code);
     if (!mounted) return;
+    if (outcome.restorableUntil != null) {
+      if (!await _offerRestore(outcome.restorableUntil!)) return;
+      outcome = await notifier.verifyMagicLink(
+          email: email, code: code, restoreAccount: true);
+      if (!mounted) return;
+    }
     if (outcome.success) {
       await _afterClaim(outcome.adoptedFromUserId);
     } else {
@@ -93,6 +98,35 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         SnackBar(content: Text(AppLocalizations.of(context).signInCodeFailed)),
       );
     }
+  }
+
+  /// CR276: the sign-in matched an account scheduled for deletion. Nothing has
+  /// been changed yet; restoring is the user's explicit choice here.
+  Future<bool> _offerRestore(DateTime deletionDate) async {
+    final l = AppLocalizations.of(context);
+    final date =
+        MaterialLocalizations.of(context).formatMediumDate(deletionDate.toLocal());
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AmiColors.slate800,
+        title: Text(l.signInRestoreTitle,
+            style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
+        content: Text(l.signInRestoreBody(date), style: AmiTypography.body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.actionCancel, style: AmiTypography.body),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.signInRestoreConfirm,
+                style: AmiTypography.body.copyWith(color: AmiColors.hexBlue)),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
   }
 
   /// BL16 (AT:R38): post-claim hook. When the backend signals an
@@ -157,11 +191,21 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         .join(' ')
         .trim();
 
-    final outcome = await ref.read(authNotifierProvider.notifier).signInWithApple(
-          identityToken,
-          fullName: fullName.isEmpty ? null : fullName,
-        );
+    final notifier = ref.read(authNotifierProvider.notifier);
+    var outcome = await notifier.signInWithApple(
+      identityToken,
+      fullName: fullName.isEmpty ? null : fullName,
+    );
     if (!mounted) return;
+    if (outcome.restorableUntil != null) {
+      if (!await _offerRestore(outcome.restorableUntil!)) return;
+      outcome = await notifier.signInWithApple(
+        identityToken,
+        fullName: fullName.isEmpty ? null : fullName,
+        restoreAccount: true,
+      );
+      if (!mounted) return;
+    }
     if (outcome.success) {
       await _afterClaim(outcome.adoptedFromUserId);
     } else {
@@ -218,9 +262,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       return;
     }
 
-    final outcome =
-        await ref.read(authNotifierProvider.notifier).signInWithGoogle(idToken);
+    final notifier = ref.read(authNotifierProvider.notifier);
+    var outcome = await notifier.signInWithGoogle(idToken);
     if (!mounted) return;
+    if (outcome.restorableUntil != null) {
+      if (!await _offerRestore(outcome.restorableUntil!)) return;
+      outcome = await notifier.signInWithGoogle(idToken, restoreAccount: true);
+      if (!mounted) return;
+    }
     if (outcome.success) {
       await _afterClaim(outcome.adoptedFromUserId);
     } else {

@@ -1292,6 +1292,38 @@ class Settings(BaseSettings):
     # send the confirmation; every skipped check is then logged, never silent.
     onboarding_age_gate_enforced: bool = True
 
+    # CR276 (CR267 WP-30) — account deletion. `account_erasure_mode` is what the
+    # post-grace job does to a closed account (`app/services/account_erasure.py`
+    # has the per-table rules): `delete` removes the user row and every row of
+    # personal data; `anonymise` keeps a scrubbed tombstone plus de-identified
+    # simulated activity; `archive` keeps everything and only blocks sign-in.
+    # A Literal on purpose (the `gtm_funnel` idiom): a typo'd mode must fail
+    # boot, never fall through to a retention behaviour nobody chose.
+    # Beta ships `delete`. `archive` is a legal question (CR267 gate S6): it is
+    # refused at boot and again at run time unless counsel's approval is
+    # recorded in `account_archive_counsel_approved`.
+    account_erasure_mode: Literal["archive", "anonymise", "delete"] = "delete"
+    account_archive_counsel_approved: bool = False
+    # Days a closed account stays restorable before the job erases it.
+    account_closure_grace_days: int = Field(default=30, ge=1, le=365)
+    # How often the erasure job looks for accounts whose grace has ended.
+    account_erasure_tick_interval_seconds: int = Field(default=3600, ge=60)
+
+    @model_validator(mode="after")
+    def _archive_needs_counsel_approval(self) -> "Settings":
+        # CR276 — CR040 degrade-loudly. Archive retains personal data after a
+        # user pressed "Delete account"; without counsel's ruling that is a
+        # promise the product breaks. Refuse boot rather than run the job in a
+        # mode whose every tick would only log a refusal.
+        if self.account_erasure_mode == "archive" and not self.account_archive_counsel_approved:
+            raise ValueError(
+                "account_erasure_mode=archive requires "
+                "account_archive_counsel_approved=true (CR267 gate S6): archive keeps "
+                "personal data after a deletion request and is off until counsel "
+                "approves. Use delete or anonymise."
+            )
+        return self
+
     # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
     # deterministic allowed-action set and computed size on the PM's verdict,
     # with a persisted DecisionRecord. OFF by default and per-provider

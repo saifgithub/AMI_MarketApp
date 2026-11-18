@@ -5513,4 +5513,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomLeaveConfirm => 'غادر';
+
+  @override
+  String get settingsAccountExport => 'تصدير بياناتي';
+
+  @override
+  String get settingsAccountExportHint =>
+      'نزّل صفقاتك وأحكام الغرفة وتفويضك ويومياتك وتقدّمك كملف JSON.';
+
+  @override
+  String get settingsAccountExportFailed =>
+      'تعذّر تصدير بياناتك. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get settingsAccountDelete => 'حذف الحساب';
+
+  @override
+  String get settingsAccountClose => 'إغلاق الحساب';
+
+  @override
+  String get settingsConfirmDeleteTitle => 'حذف الحساب؟';
+
+  @override
+  String settingsConfirmDeleteBody(int days) {
+    return 'سيحذف هذا حساب AMI الخاص بك: تفويضك ويومياتك وصفقاتك وسجل الغرفة وتقدّمك وإعداداتك. سيتم تسجيل خروجك من كل الأجهزة الآن.\n\nلمدة $days يومًا يمكنك استعادته بتسجيل الدخول مجددًا بنفس حساب Apple أو Google أو البريد الإلكتروني. بعد ذلك يُحذف نهائيًا.\n\nما يُحفظ: سجل فوترة لتغييرات الخطة (دون اسم أو بريد إلكتروني) لمدة تصل إلى 7 سنوات لأغراض المحاسبة، وأرقام استخدام بعد إزالة نصوصك ومعرّفك.';
+  }
+
+  @override
+  String get settingsConfirmDeleteGuestNote =>
+      'هذا حساب ضيف دون تسجيل دخول مرتبط، لذلك لا يمكن استعادته لاحقًا. سجّل الدخول أولًا إذا أردت هذا الخيار.';
+
+  @override
+  String get settingsConfirmDeleteConfirm => 'حذف الحساب';
+
+  @override
+  String get settingsConfirmCloseTitle => 'إغلاق الحساب؟';
+
+  @override
+  String settingsConfirmCloseBody(int days) {
+    return 'سيغلق هذا حساب AMI الخاص بك ويسجّل خروجك من كل الأجهزة الآن.\n\nلمدة $days يومًا يمكنك استعادته بتسجيل الدخول مجددًا. بعد ذلك يبقى الحساب مغلقًا: لا يمكنك تسجيل الدخول، وتُحفظ بياناتك في أرشيف مغلق. راسل الدعم لطلب حذفها.';
+  }
+
+  @override
+  String get settingsConfirmCloseConfirm => 'إغلاق الحساب';
+
+  @override
+  String get settingsAccountDeleteFailed =>
+      'تعذّر حذف حسابك. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String settingsAccountDeleteScheduled(String date) {
+    return 'تمت جدولة حذف حسابك. يمكنك استعادته حتى $date بتسجيل الدخول مجددًا.';
+  }
+
+  @override
+  String get signInRestoreTitle => 'استعادة حسابك؟';
+
+  @override
+  String signInRestoreBody(String date) {
+    return 'هذا الحساب مجدول للحذف في $date. استعده للاحتفاظ ببياناتك والمتابعة.';
+  }
+
+  @override
+  String get signInRestoreConfirm => 'استعادة';
+
+  @override
+  String traceRefLabel(String id) {
+    return 'Ref: $id';
+  }
+
+  @override
+  String get traceRefCopied => 'Reference copied';
+
+  @override
+  String get traceRefCopyTooltip => 'Copy reference';
 }

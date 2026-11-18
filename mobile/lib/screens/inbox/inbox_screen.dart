@@ -10,6 +10,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/inbox_message.dart';
 import 'package:ami_trade/screens/inbox/message_detail_screen.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
@@ -112,6 +113,7 @@ class _ErrorPanel extends StatelessWidget {
               style: AmiTypography.body,
               textAlign: TextAlign.center,
             ),
+            const TraceRefLine.recent(),
             const SizedBox(height: AmiSpacing.l),
             HexButton(label: l.inboxRetry, onPressed: onRetry),
           ],

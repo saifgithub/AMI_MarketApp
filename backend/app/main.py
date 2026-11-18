@@ -23,6 +23,7 @@ from app.api.admin_push import router as admin_push_router
 from app.api.admin_room import router as admin_room_router
 from app.api.admin_ticker_interest import router as admin_ticker_interest_router
 from app.api.admin_verdict_outcomes import router as admin_verdict_outcomes_router
+from app.api.account import router as account_router
 from app.api.alpaca import router as alpaca_router
 from app.api.backtest_admin import router as backtest_admin_router
 from app.api.ai_coach import router as ai_coach_router
@@ -457,6 +458,27 @@ async def _daily_reminder_tick() -> None:
         await asyncio.sleep(settings.daily_reminder_tick_interval_seconds)
 
 
+async def _account_erasure_tick() -> None:
+    """Background task: erase closed accounts whose grace window has ended
+    (CR276). Idempotent like the other ticks — a run that finds nothing due does
+    nothing, and a failed account is retried on the next pass, so a restart
+    cannot lose one. The DB work and the processor calls are blocking, hence
+    `to_thread`. In `archive` mode without counsel's approval every pass logs a
+    refusal at error level rather than quietly doing nothing."""
+    from app.services.account_erasure import run_erasure_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_erasure_tick)
+            if stats["refused"]:
+                logger.error("account_erasure_tick_refused", **stats)
+            else:
+                logger.info("account_erasure_tick_complete", **stats)
+        except Exception:
+            logger.exception("account_erasure_tick_failed")
+        await asyncio.sleep(settings.account_erasure_tick_interval_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -531,6 +553,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_scoring_pass_tick()),
         asyncio.create_task(_game_desk_fill_tick()),
         asyncio.create_task(_game_push_tick()),
+        asyncio.create_task(_account_erasure_tick()),
     ]
     try:
         yield
@@ -604,8 +627,8 @@ app.add_middleware(
 # because FastAPI dispatches `HTTPException` (the vast majority of this app's
 # error responses — 31 route files raise it directly) and any other uncaught
 # exception through separate hooks; both paths get `request.state.request_id`
-# from `HTTPAuditMiddleware`, which always runs first (registered first, so it
-# is outermost — Starlette middleware wraps in registration order).
+# from `HTTPAuditMiddleware` (innermost app middleware: registered first, so
+# VersionGate and CORS wrap it; a 426 from VersionGate mints its own id).
 @app.exception_handler(StarletteHTTPException)
 async def _http_exception_with_request_id(
     request: Request, exc: StarletteHTTPException
@@ -637,20 +660,33 @@ def _json_safe(value):
 # body shape as the default handler — `{"detail": [...]}` — with non-finite
 # floats rendered as strings. No `request_id` key, to stay byte-compatible
 # with the 422 bodies the mobile client already parses.
+# WP-38: `request_id` is now added to that body (and `X-Request-Id` to the
+# response) as a purely additive sibling of `detail` — `detail` is untouched and
+# the client reads `detail` by key, so the 422 shape it parses is unchanged.
 @app.exception_handler(RequestValidationError)
 async def _validation_error_json_safe(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    return JSONResponse(
-        status_code=422,
-        content={"detail": _json_safe(jsonable_encoder(exc.errors()))},
-    )
+    request_id = getattr(request.state, "request_id", None)
+    body: dict = {"detail": _json_safe(jsonable_encoder(exc.errors()))}
+    if request_id is not None:
+        body["request_id"] = str(request_id)
+    response = JSONResponse(status_code=422, content=body)
+    if request_id is not None:
+        response.headers["X-Request-Id"] = str(request_id)
+    return response
 
 
 @app.exception_handler(Exception)
 async def _unhandled_exception_with_request_id(request: Request, exc: Exception) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None)
-    logger.exception("unhandled_exception", path=request.url.path)
+    # Explicit, not contextvars: this handler runs in ServerErrorMiddleware,
+    # outside HTTPAuditMiddleware, whose `finally` has already unbound the id.
+    logger.exception(
+        "unhandled_exception",
+        path=request.url.path,
+        request_id=str(request_id) if request_id is not None else None,
+    )
     body: dict = {"detail": "internal server error"}
     if request_id is not None:
         body["request_id"] = str(request_id)
@@ -671,6 +707,7 @@ app.include_router(admin_ticker_interest_router)  # CR200-R001 — ticker intere
 app.include_router(admin_room_router)  # CR200-R002 — room LLM call viewer + prompt replay
 app.include_router(admin_verdict_outcomes_router)  # CR219 R55 — calibration ledger
 app.include_router(backtest_admin_router)  # CR164 — admin-only as-of Room runs
+app.include_router(account_router)  # CR276 — close account + data export
 app.include_router(alpaca_router)
 app.include_router(ai_coach_router)
 app.include_router(auth_router)

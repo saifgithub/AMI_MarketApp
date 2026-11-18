@@ -63,7 +63,7 @@ from app.services.rate_limit import (
     magic_link_verify_global_rate_limit,
     magic_link_verify_ip_rate_limit,
 )
-from app.services import age_confirmation
+from app.services import account_erasure, age_confirmation
 from app.services.session_store import get_session_store
 
 
@@ -131,6 +131,24 @@ async def _bind_onboarding_session_or_409(session_id: UUID | None, user_id: UUID
         await _bind_onboarding_session(session_id, user_id)
     except MissingMandateAnswerError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+
+def _closed_account_http(exc: account_erasure.AccountClosedError) -> HTTPException:
+    """CR276: a sign-in matched a closed account. 409 + the restore date inside
+    the grace window (the app offers Restore); 403 once it can no longer come back."""
+    if exc.code == "account_pending_deletion" and exc.restorable_until is not None:
+        return HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "code": exc.code,
+                "restorable_until": exc.restorable_until.isoformat(),
+                "message": "This account is scheduled for deletion. You can restore it until the date shown.",
+            },
+        )
+    return HTTPException(
+        status.HTTP_403_FORBIDDEN,
+        detail={"code": "account_closed", "message": "This account has been closed."},
+    )
 
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -227,10 +245,14 @@ async def magic_link_verify(
     # OTHER user started (e.g. the real owner's own claim-my-email flow).
     # Binding to the caller's own user_id means a caller can only ever
     # guess against challenges they themselves created.
-    result = auth.verify_magic_link(
-        email=req.email, code=req.code, user_id=current_user.id,
-        challenge_owner_id=current_user.id,
-    )
+    try:
+        result = auth.verify_magic_link(
+            email=req.email, code=req.code, user_id=current_user.id,
+            challenge_owner_id=current_user.id,
+            restore_account=req.restore_account,
+        )
+    except account_erasure.AccountClosedError as e:
+        raise _closed_account_http(e) from e
     if result is None:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
@@ -268,7 +290,10 @@ async def sign_in_with_apple(
             identity_token=req.identity_token,
             user_id=current_user.id,
             full_name=req.full_name,
+            restore_account=req.restore_account,
         )
+    except account_erasure.AccountClosedError as e:
+        raise _closed_account_http(e) from e
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
     await _bind_onboarding_session_or_409(req.onboarding_session_id, user.id)
@@ -295,7 +320,10 @@ async def sign_in_with_google(
             auth.sign_in_with_google,
             identity_token=req.identity_token,
             user_id=current_user.id,
+            restore_account=req.restore_account,
         )
+    except account_erasure.AccountClosedError as e:
+        raise _closed_account_http(e) from e
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
     await _bind_onboarding_session_or_409(req.onboarding_session_id, user.id)

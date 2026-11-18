@@ -8,6 +8,7 @@ library;
 import 'dart:io' show Platform;
 
 import 'package:ami_trade/services/api/friendly_error.dart';
+import 'package:ami_trade/services/api/trace_ids.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -78,6 +79,7 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
     String? route,
     String? attachmentPath,
     String? attachmentMime,
+    List<String>? traceIds,
   }) async {
     state = state.copyWith(submitting: true, clearError: true);
     try {
@@ -94,6 +96,9 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
         attachmentPath: attachmentPath,
         attachmentMime: attachmentMime,
         token: token,
+        // WP-38 / CR239: the trace ids of the app's most recent failed
+        // requests, so the report joins straight to the server logs.
+        traceIds: traceIds ?? TraceIdStore.instance.recentIds(),
       );
       state = state.copyWith(
         submitting: false,

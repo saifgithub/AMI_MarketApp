@@ -29,6 +29,7 @@ a 5xx on every request in the app.
 from __future__ import annotations
 
 from typing import Awaitable, Callable
+from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -71,15 +72,23 @@ class VersionGateMiddleware(BaseHTTPMiddleware):
                         # how many clients it just cut off (CR040). Logged at
                         # warning because a block is an operator-visible event,
                         # not routine traffic.
+                        # WP-38: this 426 never reaches HTTPAuditMiddleware, so
+                        # it mints its own trace id — on the log line, the
+                        # header and the body — so a blocked client's screen
+                        # still carries a reference a support session can grep.
+                        request_id = str(uuid4())
                         logger.warning(
                             "version_gate_blocked_request",
+                            request_id=request_id,
                             path=request.url.path,
                             client_build=build,
                             min_build=floor.min_build,
                         )
                         return JSONResponse(
                             status_code=426,
+                            headers={"X-Request-Id": request_id},
                             content={
+                                "request_id": request_id,
                                 "detail": {
                                     "min_build": floor.min_build,
                                     "recommended_build": floor.recommended_build,

@@ -110,7 +110,17 @@ You may use AMI Trade with an **anonymous account** (the default on first launch
 
 We may suspend or terminate your access to AMI Trade if you violate these Terms, if your use of the service creates a security or legal risk to us or to other users, or if we are required to do so by law. Where the circumstances allow, we will give notice before suspension or termination.
 
-You may delete your account at any time from the in-app settings. Deletion removes your account-level data subject to the retention rules in the [Privacy Policy](privacy_policy.md).
+> **BETA DRAFT (CR276, not yet reviewed by counsel; the paragraphs below match what the Beta code does and are not the published text).**
+
+**Deleting your account.** You may delete your account at any time from **Settings → Delete account**; no email or form is needed. Deletion starts immediately: we sign you out on every device and your account stops working. For **30 days** you can change your mind and restore it by signing in again with the same Apple, Google or email sign-in and choosing Restore. A guest account with no sign-in attached cannot be restored. When the 30 days end we permanently delete your account and the personal data tied to it, as set out in the [Privacy Policy](privacy_policy.md) (clause 10) and the [Data Deletion Policy](data_deletion_policy.md). Deletion cannot be undone after that. Simulated trades, balances and progress are deleted with the account, and we cannot recover them.
+
+**Taking a copy first.** Before you delete, you can use **Settings → Export my data** to download your trades, Room verdicts, mandate, journal, lesson progress and settings as a file.
+
+**What we keep.** After deletion we keep only what the law or sound accounting requires: a billing record of plan changes with no name or email attached, kept for up to seven years `[LAWYER REVIEW REQUIRED: confirm period]`, and usage figures with your text and ID removed. Anything else is in the Privacy Policy.
+
+**Our right to end access** (first paragraph above) is separate: if we terminate for a breach, the same deletion rules apply to your data once any legal hold ends.
+
+`[LAWYER REVIEW REQUIRED]` Whether AMI may instead keep a closed account's data in an archive (rather than delete it) is a question for counsel. The app is built to support that, but it is **off** and these Terms do not provide for it until counsel approves.
 
 > _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/) and [Character.AI Privacy Policy](https://character.ai/privacy)._
 
@@ -175,6 +185,7 @@ This clause states the substantive law that applies to your agreement with AMI. 
 
 ## § Version history
 
+- **v4.3 (BETA DRAFT, unpublished)** — §10 rewritten to match the in-app account deletion built under [CR276](../../docs/forward_planning/CR276_account_deletion_export/CR276_account_deletion_export.md): Settings → Delete account, 30-day restore window, permanent deletion after it, data export, what is kept. Not published and not counsel-reviewed; the published copy under `website/terms/` is untouched. Material change, so the 14-day notice rule (§13) applies when it is published.
 - **v4.2** — effective 25 September 2026. §1 now describes optional Alpaca paper-trading order links; a linked live (real-money) Alpaca account is read-only and its data is never sent to AMI. Saiful's rulings (2026-09-25): "Publish + link-screen notice", "Paper only". Non-material under §13 (no new restriction, pricing change or narrowed right). Filed as [DEF430](../../docs/defect/_registry/DEF430.row.md).
 - **v4.1** — effective 25 September 2026. Agent titles updated to the CR160 names (Execution Desk, Chief Investment Officer) in §2 and §3; no change to terms. Saiful: "Publish v4.1, label-only". Prior version archived at [`../history/terms_of_service/v4.0_2026-07-23.md`](../history/terms_of_service/v4.0_2026-07-23.md).
 - **v4.0** — effective 23 July 2026 (same day as v3.0). Added §16, naming **Malaysia as governing law** — Saiful's direction (2026-07-23): *"use malaysia as governing law."* Deliberately a **bare choice-of-law clause**: no paired jurisdiction/venue clause and no arbitration clause, preserving the "no courts" half of the v2.0 direction (D-063) while resolving the "no governing law at all" half. Filed as [CR076](../../docs/forward_planning/CR076_governing_law_malaysia/CR076_governing_law_malaysia.md). Prior version archived at [`../history/terms_of_service/v3.0_2026-07-23.md`](../history/terms_of_service/v3.0_2026-07-23.md).

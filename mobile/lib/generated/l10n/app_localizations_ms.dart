@@ -5517,4 +5517,78 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get roomLeaveConfirm => 'TINGGAL';
+
+  @override
+  String get settingsAccountExport => 'Eksport data saya';
+
+  @override
+  String get settingsAccountExportHint =>
+      'Muat turun dagangan, keputusan Room, mandat, jurnal dan kemajuan anda sebagai fail JSON.';
+
+  @override
+  String get settingsAccountExportFailed =>
+      'Tidak dapat mengeksport data anda. Cuba lagi sebentar nanti.';
+
+  @override
+  String get settingsAccountDelete => 'Padam akaun';
+
+  @override
+  String get settingsAccountClose => 'Tutup akaun';
+
+  @override
+  String get settingsConfirmDeleteTitle => 'PADAM AKAUN?';
+
+  @override
+  String settingsConfirmDeleteBody(int days) {
+    return 'Ini memadam akaun AMI anda: mandat, jurnal, dagangan, sejarah Room, kemajuan dan tetapan anda. Anda dilog keluar daripada semua peranti sekarang.\n\nSelama $days hari anda boleh memulihkannya dengan log masuk semula menggunakan Apple, Google atau e-mel yang sama. Selepas itu ia dipadam secara kekal.\n\nYang disimpan: rekod bil perubahan pelan (tanpa nama atau e-mel) sehingga 7 tahun untuk perakaunan, dan angka penggunaan tanpa teks dan ID anda.';
+  }
+
+  @override
+  String get settingsConfirmDeleteGuestNote =>
+      'Ini akaun tetamu tanpa log masuk, jadi ia tidak boleh dipulihkan kemudian. Log masuk dahulu jika anda mahu pilihan itu.';
+
+  @override
+  String get settingsConfirmDeleteConfirm => 'PADAM AKAUN';
+
+  @override
+  String get settingsConfirmCloseTitle => 'TUTUP AKAUN?';
+
+  @override
+  String settingsConfirmCloseBody(int days) {
+    return 'Ini menutup akaun AMI anda dan melog keluar anda daripada semua peranti sekarang.\n\nSelama $days hari anda boleh memulihkannya dengan log masuk semula. Selepas itu akaun kekal ditutup: anda tidak boleh log masuk lagi, dan data anda disimpan dalam arkib tertutup. E-mel sokongan untuk meminta ia dipadam.';
+  }
+
+  @override
+  String get settingsConfirmCloseConfirm => 'TUTUP AKAUN';
+
+  @override
+  String get settingsAccountDeleteFailed =>
+      'Tidak dapat memadam akaun anda. Semak sambungan anda dan cuba lagi.';
+
+  @override
+  String settingsAccountDeleteScheduled(String date) {
+    return 'Akaun anda dijadualkan untuk dipadam. Anda boleh memulihkannya sehingga $date dengan log masuk semula.';
+  }
+
+  @override
+  String get signInRestoreTitle => 'PULIHKAN AKAUN ANDA?';
+
+  @override
+  String signInRestoreBody(String date) {
+    return 'Akaun ini dijadualkan untuk dipadam pada $date. Pulihkannya untuk mengekalkan data anda dan teruskan.';
+  }
+
+  @override
+  String get signInRestoreConfirm => 'PULIHKAN';
+
+  @override
+  String traceRefLabel(String id) {
+    return 'Ref: $id';
+  }
+
+  @override
+  String get traceRefCopied => 'Reference copied';
+
+  @override
+  String get traceRefCopyTooltip => 'Copy reference';
 }

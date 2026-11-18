@@ -70,6 +70,7 @@ def _detail(r: BugReportRow) -> AdminBugDetail:
         steps=r.steps,
         route=r.route,
         attachment_mime=r.attachment_mime,
+        trace_ids=r.trace_ids,
         resolution_note=r.resolution_note,
         acknowledged_at=r.acknowledged_at,
     )
