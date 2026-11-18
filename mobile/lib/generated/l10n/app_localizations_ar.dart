@@ -5267,4 +5267,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomCheckAgain => 'تحقق مجددًا';
+
+  @override
+  String get roomLeaveTitle => 'مغادرة الغرفة؟';
+
+  @override
+  String get roomLeaveBody =>
+      'تواصل الغرفة مداولاتها دونك. سيُحفظ الحكم في يومياتك عند صدوره.';
+
+  @override
+  String get roomLeaveStay => 'ابقَ';
+
+  @override
+  String get roomLeaveConfirm => 'غادر';
 }

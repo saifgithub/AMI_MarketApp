@@ -106,7 +106,19 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     final mode = _sessionMode ?? storedMode;
     final showBoard = settled && !mode.showsTranscript;
 
-    return Semantics(identifier: ScreenIds.roomScreen, container: true, explicitChildNodes: true, child: Scaffold(
+    // DEF471 — backing out of a run that is still deliberating used to be a
+    // bare pop with the credits already spent and no word on what happens to
+    // the run. The run is a detached server task (a client leaving never
+    // cancels it) and its Journal entry is written on completion, so the
+    // honest prompt is: it keeps going, the verdict lands in the Journal.
+    final runActive = (state.streaming || state.reconnecting) && !state.done;
+
+    return PopScope(
+      canPop: !runActive,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmLeave();
+      },
+      child: Semantics(identifier: ScreenIds.roomScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -236,7 +248,30 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
           ],
         ),
       ),
-    ));
+    )));
+  }
+
+  Future<void> _confirmLeave() async {
+    final l = AppLocalizations.of(context);
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AmiColors.slate800,
+        title: Text(l.roomLeaveTitle, style: AmiTypography.h2),
+        content: Text(l.roomLeaveBody, style: AmiTypography.body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.roomLeaveStay),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.roomLeaveConfirm),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) Navigator.of(context).pop();
   }
 
   /// The one place `setMode` is called from, shared by the live and the settled
@@ -323,7 +358,9 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-            onPressed: () => Navigator.of(context).pop(),
+            // maybePop, not pop: the screen's PopScope owns the mid-run
+            // "leave?" prompt (DEF471) and a bare pop would bypass it.
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
           Expanded(
             child: Column(

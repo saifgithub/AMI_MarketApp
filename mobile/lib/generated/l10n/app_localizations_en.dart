@@ -5266,4 +5266,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomCheckAgain => 'CHECK AGAIN';
+
+  @override
+  String get roomLeaveTitle => 'Leave the Room?';
+
+  @override
+  String get roomLeaveBody =>
+      'The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.';
+
+  @override
+  String get roomLeaveStay => 'STAY';
+
+  @override
+  String get roomLeaveConfirm => 'LEAVE';
 }

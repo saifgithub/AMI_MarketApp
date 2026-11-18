@@ -5270,4 +5270,17 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get roomCheckAgain => 'SEMAK SEMULA';
+
+  @override
+  String get roomLeaveTitle => 'Tinggalkan Bilik?';
+
+  @override
+  String get roomLeaveBody =>
+      'Bilik terus berbincang tanpa anda. Keputusan akan disimpan dalam Jurnal anda apabila siap.';
+
+  @override
+  String get roomLeaveStay => 'KEKAL';
+
+  @override
+  String get roomLeaveConfirm => 'TINGGAL';
 }

@@ -3482,5 +3482,9 @@
     "askAboutTickerMessage": "ما رأيك في {ticker}؟",
     "roomReconnectingBanner": "انقطع الاتصال. لا تزال الغرفة تعمل — بانتظار صدور الحكم.",
     "roomWaitGaveUp": "لا يمكن لـ AMI تأكيد انتهاء هذه الغرفة. كل ما تنتجه يُحفظ في يومياتك، ويمكنك فتحه من هناك لاحقًا أو التحقق مجددًا الآن.",
-    "roomCheckAgain": "تحقق مجددًا"
+    "roomCheckAgain": "تحقق مجددًا",
+    "roomLeaveTitle": "مغادرة الغرفة؟",
+    "roomLeaveBody": "تواصل الغرفة مداولاتها دونك. سيُحفظ الحكم في يومياتك عند صدوره.",
+    "roomLeaveStay": "ابقَ",
+    "roomLeaveConfirm": "غادر"
 }

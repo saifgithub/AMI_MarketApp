@@ -8701,6 +8701,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CHECK AGAIN'**
   String get roomCheckAgain;
+
+  /// DEF471 — title of the confirm shown when the user backs out of a Room that is still deliberating. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the Room?'**
+  String get roomLeaveTitle;
+
+  /// DEF471 — body of the leave-mid-run confirm. The run is a detached server task; the Journal entry is written on completion. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.'**
+  String get roomLeaveBody;
+
+  /// DEF471 — dismiss button of the leave-mid-run confirm (keeps the user in the Room). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'STAY'**
+  String get roomLeaveStay;
+
+  /// DEF471 — confirm button of the leave-mid-run confirm (leaves; the run continues server-side). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LEAVE'**
+  String get roomLeaveConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -6554,5 +6554,21 @@
   "roomCheckAgain": "CHECK AGAIN",
   "@roomCheckAgain": {
     "description": "DEF484 — button that resumes waiting on a Room run after the honest give-up card. NEW key. retranslate:[ar,ms]"
+  },
+  "roomLeaveTitle": "Leave the Room?",
+  "@roomLeaveTitle": {
+    "description": "DEF471 — title of the confirm shown when the user backs out of a Room that is still deliberating. NEW key, needs ar/ms review. retranslate:[ar,ms]"
+  },
+  "roomLeaveBody": "The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.",
+  "@roomLeaveBody": {
+    "description": "DEF471 — body of the leave-mid-run confirm. The run is a detached server task; the Journal entry is written on completion. NEW key, needs ar/ms review. retranslate:[ar,ms]"
+  },
+  "roomLeaveStay": "STAY",
+  "@roomLeaveStay": {
+    "description": "DEF471 — dismiss button of the leave-mid-run confirm (keeps the user in the Room). NEW key. retranslate:[ar,ms]"
+  },
+  "roomLeaveConfirm": "LEAVE",
+  "@roomLeaveConfirm": {
+    "description": "DEF471 — confirm button of the leave-mid-run confirm (leaves; the run continues server-side). NEW key. retranslate:[ar,ms]"
   }
 }

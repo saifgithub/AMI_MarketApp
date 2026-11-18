@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**254 cases** — 185 api, 15 device, 54 manual; 11 blocked.
+**255 cases** — 185 api, 15 device, 55 manual; 11 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 18 cases
+6. [Convene the Room](#room) — 19 cases
 7. [1-on-1 agent chat](#one-on-one) — 8 cases
 8. [Brief Your Agent](#brief) — 16 cases
 9. [Sim trading & market data](#sim-trading) — 30 cases
@@ -3329,6 +3329,23 @@ _Manual (iPhone checklist) · plans: any_
 1. After the short drop the screen shows the 'Connection lost... still running' banner, then the transcript catches up and the run lands on its verdict - it never ends on 'Reconnect timed out'
 2. After the long outage the screen shows an explicit card saying AMI cannot confirm the Room has finished, that the result is saved to the Journal, and a CHECK AGAIN button - not a silent stop
 3. CHECK AGAIN resumes the wait and the verdict appears once the run has finished
+
+#### UAT-ROOM-019 — Backing out of a Room that is still deliberating warns and keeps the run going
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A funded account
+
+**Steps**
+1. Convene the Room on AAPL and, while desks are still speaking, tap the back arrow (and separately use the system back gesture)
+2. Tap STAY; then back again and tap LEAVE
+3. Open the Journal after a few minutes
+
+**Expected**
+1. A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
+2. STAY keeps the live Room on screen; LEAVE returns to the previous screen
+3. The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

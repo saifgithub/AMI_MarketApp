@@ -255,3 +255,18 @@ cases:
       - After the short drop the screen shows the 'Connection lost... still running' banner, then the transcript catches up and the run lands on its verdict - it never ends on 'Reconnect timed out'
       - After the long outage the screen shows an explicit card saying AMI cannot confirm the Room has finished, that the result is saved to the Journal, and a CHECK AGAIN button - not a silent stop
       - CHECK AGAIN resumes the wait and the verdict appears once the run has finished
+
+  - id: UAT-ROOM-019
+    title: Backing out of a Room that is still deliberating warns and keeps the run going
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A funded account
+    steps:
+      - Convene the Room on AAPL and, while desks are still speaking, tap the back arrow (and separately use the system back gesture)
+      - Tap STAY; then back again and tap LEAVE
+      - Open the Journal after a few minutes
+    expected:
+      - A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
+      - STAY keeps the live Room on screen; LEAVE returns to the previous screen
+      - The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
