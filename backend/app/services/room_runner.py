@@ -33,13 +33,14 @@ Spec: docs/initial_specs/02_agents/convene_the_room.md
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import random
 import re
 import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
-from dataclasses import dataclass, field, replace as _dataclass_replace
+from dataclasses import dataclass, field, fields as dataclass_fields, replace as _dataclass_replace
 from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -134,10 +135,13 @@ from app.services.social_context import (
     resolve_social_feed,
 )
 from app.services.llm_gateway import (
+    FALLBACK_PROVIDER_NAME,
     ChatMessage,
     LLMGateway,
     ModelTier,
     OutputConstraint,
+    RoomFailoverState,
+    arm_room_failover,
     get_llm_gateway,
 )
 from app.services.llm_json import ConflictingDecision, extract_json_object
@@ -243,6 +247,82 @@ PHASES: tuple[_Phase, ...] = (
     )),
     _Phase("VERDICT", (AgentId.PORTFOLIO_MANAGER,)),
 )
+
+
+# ── CR272 (CR267 WP-14) — restart the whole Room on the backup LLM slot ────
+#
+# Design (the S11 ruling: "restart the whole Room on the backup, so one Room
+# never mixes two models"). When a backup slot is registered, `run()` arms a
+# `RoomFailoverState` on the context; the gateway reports a provider failure
+# on it (a transport error, or a non-200 after its own retries, before the
+# first chunk) instead of re-issuing the call. At the next phase boundary
+# (or between two sequential desks) `run()` sees the trip, discards the
+# attempt's transcript and per-run context, pins every later call to the
+# backup, streams the notice below, and re-enters the SAME phase loop from
+# phase 0. A loop reset rather than a wrapper around the run body keeps the
+# charge, the run row, the refund bookkeeping and the COMPLETED path single
+# instances: the user is charged once (`start_run`, outside `run()`), and a
+# backup that also fails ends in the existing DEF059/R51 outage states and the
+# existing refund call — no parallel path to keep in sync.
+ROOM_BACKUP_SWITCH_NOTICE = (
+    "AMI switched to its backup model and restarted the discussion."
+)
+
+
+def _backup_used_stamp() -> dict[str, Any]:
+    """The verdict fields recording that this Room ran on the backup slot."""
+    return {
+        "llm_backup_used": True,
+        "llm_backup_model": settings.vllm_fallback_model or None,
+    }
+
+
+class _RestartablePhases:
+    """`PHASES` as an iterator the run loop can rewind to phase 0."""
+
+    def __init__(self, phases: tuple[_Phase, ...]) -> None:
+        self._phases = phases
+        self._i = 0
+
+    def __iter__(self) -> "_RestartablePhases":
+        return self
+
+    def __next__(self) -> _Phase:
+        if self._i >= len(self._phases):
+            raise StopIteration
+        phase = self._phases[self._i]
+        self._i += 1
+        return phase
+
+    def restart(self) -> None:
+        self._i = 0
+
+
+def _snapshot_room_attempt_state(
+    ctx: "_RoomContext", profile: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """What a restart must be able to put back: every `_RoomContext` field
+    (shallow-copied, so a list/dict a desk appends to is not the saved one) and
+    a deep copy of the fact sheet. `profile` is excluded from the field map —
+    it is restored in place so `ctx.profile is profile` keeps holding."""
+    fields = {
+        f.name: copy.copy(getattr(ctx, f.name))
+        for f in dataclass_fields(ctx)
+        if f.name != "profile"
+    }
+    return fields, copy.deepcopy(profile)
+
+
+def _restore_room_attempt_state(
+    ctx: "_RoomContext",
+    profile: dict[str, Any],
+    snapshot: tuple[dict[str, Any], dict[str, Any]],
+) -> None:
+    fields, saved_profile = snapshot
+    for name, value in fields.items():
+        setattr(ctx, name, copy.copy(value))
+    profile.clear()
+    profile.update(copy.deepcopy(saved_profile))
 
 
 # ── CR219 R58 — seeded RESEARCHERS debate order ────────────────────────────
@@ -6694,7 +6774,9 @@ class RoomEvent:
     # shipped Flutter parser tolerates unknown SSE event kinds (both switch
     # layers have no `default`), so emitting it does not break clients that
     # predate CR090-MOBILE — they simply ignore it.
-    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'agent_withheld' | 'verdict' | 'error'
+    # 'provider_switch' (CR272) carries the backup-restart notice in `text`; the
+    # discussion streamed before it is void and restarts from the first phase.
+    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'agent_withheld' | 'provider_switch' | 'verdict' | 'error'
     phase: str | None = None
     agent_id: AgentId | None = None
     text: str | None = None
@@ -8265,8 +8347,36 @@ class RoomRunner:
         # `defer_outage_verdict_event`).
         _deferred_verdict: Verdict | None = None
 
+        # CR272 — armed only when a REAL gateway reports a registered backup
+        # slot. A test double (or a MagicMock, whose every attribute is truthy)
+        # never arms it, and with no backup nothing below this block runs.
+        _failover: RoomFailoverState | None = None
+        _attempt_snapshot: tuple[dict[str, Any], dict[str, Any]] | None = None
+        _backup_restarted = False
+        if (
+            live
+            and isinstance(gateway, LLMGateway)
+            and gateway.has_backup_provider() is True
+        ):
+            try:
+                _attempt_snapshot = _snapshot_room_attempt_state(ctx, profile)
+                _failover = RoomFailoverState()
+                arm_room_failover(_failover)
+            except Exception:
+                logger.exception(
+                    "room_failover_disabled",
+                    run_id=str(run_id),
+                    detail=(
+                        "the run's context could not be snapshotted, so a restart "
+                        "on the backup slot is impossible; this Room runs without "
+                        "failover"
+                    ),
+                )
+                _failover = None
+        _phases = _RestartablePhases(PHASES)
+
         try:
-            for phase in PHASES:
+            for phase in _phases:
                 yield RoomEvent(kind="phase", phase=phase.label, run_id=run_id)
                 # CR098 — analysts on the tenure pull-back roster never run.
                 # Filtering by ctx.withheld is safe for every phase: withheld
@@ -8342,6 +8452,9 @@ class RoomRunner:
                             )
                             for agent_id in phase_agents
                         ])
+                        if _failover is not None and _failover.tripped_reason:
+                            # CR272 — the attempt is void; do not stream it.
+                            results = []
                         # Emit in fixed order. After all four are committed to
                         # run.transcript, RESEARCHERS onward see every analyst —
                         # only the analysts are blind to each other.
@@ -8401,6 +8514,8 @@ class RoomRunner:
                                 portfolio_snapshot=ctx.portfolio_snapshot,
                             ):
                                 yield ev
+                            if _failover is not None and _failover.tripped_reason:
+                                break  # CR272 — restart below, don't run more desks
                 else:
                     # CR237 — the CIO's own turn, extracted into
                     # `_run_cio_step` so a "Ask the CIO again" retry can
@@ -8427,6 +8542,52 @@ class RoomRunner:
                     ):
                         _deferred_verdict = run.verdict
                 await asyncio.sleep(_PHASE_GAP_S)
+                if (
+                    _failover is not None
+                    and _failover.tripped_reason
+                    and not _backup_restarted
+                ):
+                    if (
+                        phase.label == "VERDICT"
+                        and run.verdict is not None
+                        and not is_outage_shaped_verdict(run.verdict.model_dump())
+                    ):
+                        # A real, readable verdict was already delivered; a stray
+                        # failed auxiliary call must not void it.
+                        logger.warning(
+                            "room_failover_trip_ignored",
+                            run_id=str(run_id),
+                            reason=_failover.tripped_reason,
+                            detail="a non-outage verdict had already been issued",
+                        )
+                        _failover.tripped_reason = None
+                    else:
+                        logger.warning(
+                            "llm_failover",
+                            surface="room",
+                            from_provider=_failover.tripped_provider,
+                            to=FALLBACK_PROVIDER_NAME,
+                            reason=_failover.tripped_reason,
+                            run_id=str(run_id),
+                            phase=phase.label,
+                            discarded_turns=len(run.transcript),
+                        )
+                        _failover.pinned_provider = FALLBACK_PROVIDER_NAME
+                        _failover.tripped_reason = None
+                        _backup_restarted = True
+                        run.transcript = []
+                        run.verdict = None
+                        _deferred_verdict = None
+                        assert _attempt_snapshot is not None
+                        _restore_room_attempt_state(ctx, profile, _attempt_snapshot)
+                        _persist_run(run)
+                        yield RoomEvent(
+                            kind="provider_switch",
+                            run_id=run_id,
+                            text=ROOM_BACKUP_SWITCH_NOTICE,
+                        )
+                        _phases.restart()
+                        continue
 
             run.status = RoomStatus.COMPLETED
             run.finished_at = datetime.now(timezone.utc)
@@ -8473,6 +8634,8 @@ class RoomRunner:
                 run.verdict = _stamp_next_convene_basis(
                     run.verdict, profile, ctx.next_convene_delta,
                 )
+                if _backup_restarted:
+                    run.verdict = run.verdict.model_copy(update=_backup_used_stamp())
             _persist_run(run)
             # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
             # COMPLETED but whose verdict is the CR219 R51 outage NO_VERDICT
@@ -8616,6 +8779,7 @@ class RoomRunner:
                     kind="verdict", run_id=run_id,
                     verdict=_deferred_verdict.model_copy(update={
                         "reason": run.verdict.reason if run.verdict else _deferred_verdict.reason,
+                        **(_backup_used_stamp() if _backup_restarted else {}),
                     }),
                 )
             # CR219 R55 — bank this verdict in the calibration ledger.
@@ -8789,6 +8953,9 @@ class RoomRunner:
                     _persist_run(run)
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
+        finally:
+            if _failover is not None:
+                arm_room_failover(None)
 
     def is_retrying(self, run_id: UUID) -> bool:
         """CR237 — True while a retry for `run_id` is in flight. Read by the
@@ -9039,6 +9206,12 @@ class RoomRunner:
             run.verdict = _stamp_next_convene_basis(
                 run.verdict, profile, ctx.next_convene_delta,
             )
+            if original_verdict is not None and original_verdict.llm_backup_used:
+                # CR272 — the desks this retry's CIO read were the backup's.
+                run.verdict = run.verdict.model_copy(update={
+                    "llm_backup_used": True,
+                    "llm_backup_model": original_verdict.llm_backup_model,
+                })
             # CR237 (coordinator follow-up) — `cio_retried` is the client's
             # cue for its OWN third cost-line sentence ("the CIO's retry was
             # free, and the original Room was refunded"): a retried run

@@ -34,6 +34,8 @@ See docs/initial_specs/08_tech/llm_routing.md for the routing strategy.
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import contextvars
 import random
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -509,6 +511,7 @@ class AnthropicProvider(LLMProvider):
                 # shape too, with no second code path to keep in sync.
                 if meta is not None:
                     meta["stream_error"] = f"HTTP {resp.status_code}: {detail}"
+                    meta["stream_error_status"] = resp.status_code
                 yield (
                     f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider. "
                     "Falling back. Check backend logs.]"
@@ -639,6 +642,15 @@ def _default_transport_timeout_s() -> float:
     return settings.room_agent_timeout_s + _TRANSPORT_TIMEOUT_MARGIN_S
 
 
+class _TransientProviderError(Exception):
+    """CR272 — a 429/5xx answered before any chunk existed; the retry loop in
+    `OpenAICompatibleProvider.stream_chat` catches it. Never escapes that method."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
 class OpenAICompatibleProvider(LLMProvider):
     """Streams completions from any OpenAI `/v1/chat/completions`-shaped API.
 
@@ -669,6 +681,8 @@ class OpenAICompatibleProvider(LLMProvider):
         extra_body: dict[str, Any] | None = None,
         max_tokens_floor: int | None = None,
         supported_constraints: frozenset[str] | None = None,
+        max_retries: int = 0,
+        retry_backoff_s: float = 1.0,
     ) -> None:
         # DEF392 — `None` is "derive it from the guard", not "use a default
         # number". Explicit callers are unchanged; what changes is that an
@@ -685,6 +699,9 @@ class OpenAICompatibleProvider(LLMProvider):
             self.supported_constraints = supported_constraints
         self._model_name = model_name
         self._extra_body = extra_body or {}
+        # CR272 — transient-failure retries, 0 (none) unless a slot opts in.
+        self._max_retries = max(0, max_retries)
+        self._retry_backoff_s = max(0.0, retry_backoff_s)
         # CR130: reasoning-style providers (Kimi) spend `max_tokens` on
         # invisible chain-of-thought before any visible content, so the
         # Room's per-agent budgets (tuned for vLLM, a non-reasoning model)
@@ -744,6 +761,53 @@ class OpenAICompatibleProvider(LLMProvider):
         if constraint is not None:
             body.update(_constraint_request_fields(constraint))
 
+        # CR272 — retry TRANSIENT failures, and only before the first chunk
+        # has been handed to the caller: once a chunk is out the reply is
+        # partly delivered and a re-issue would duplicate or contradict it.
+        # With `_max_retries == 0` (every slot that has not opted in) the first
+        # attempt is also the last, so a transport error propagates exactly as
+        # it always did and a non-200 reaches the sentinel path untouched.
+        attempt = 0
+        while True:
+            yielded = False
+            reason: str
+            try:
+                async with contextlib.aclosing(
+                    self._stream_once(
+                        body, meta, raise_transient=attempt < self._max_retries
+                    )
+                ) as inner:
+                    async for chunk in inner:
+                        yielded = True
+                        yield chunk
+                return
+            except _TransientProviderError as exc:
+                reason = exc.reason
+            except httpx.TransportError as exc:
+                if yielded or attempt >= self._max_retries:
+                    raise
+                reason = f"{type(exc).__name__}: {str(exc) or 'no detail'}"[:200]
+            attempt += 1
+            delay = self._retry_backoff_s * (2 ** (attempt - 1))
+            logger.warning(
+                f"{self.name}_transient_retry",
+                attempt=attempt,
+                max_retries=self._max_retries,
+                reason=reason,
+                delay_s=delay,
+            )
+            await asyncio.sleep(delay)
+
+    async def _stream_once(
+        self,
+        body: dict[str, Any],
+        meta: dict[str, Any] | None,
+        *,
+        raise_transient: bool,
+    ) -> AsyncIterator[str]:
+        """One attempt at the request. `raise_transient` turns a 429/5xx into
+        `_TransientProviderError` (before any chunk exists) so the retry loop in
+        `stream_chat` can decide; False keeps the sentinel path below."""
         async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
             if resp.status_code != 200:
                 err_body = await resp.aread()
@@ -753,6 +817,10 @@ class OpenAICompatibleProvider(LLMProvider):
                     status=resp.status_code,
                     body=detail,
                 )
+                if raise_transient and (
+                    resp.status_code == 429 or resp.status_code >= 500
+                ):
+                    raise _TransientProviderError(f"HTTP {resp.status_code}")
                 # RETRO-SECURITY MAJOR-2 (round 2) — the auditor's exact
                 # probe: this is the branch that fires on a real vLLM/OpenAI-
                 # compatible outage (DEF413's shape), and it used to yield
@@ -763,6 +831,11 @@ class OpenAICompatibleProvider(LLMProvider):
                 # covers both shapes.
                 if meta is not None:
                     meta["stream_error"] = f"HTTP {resp.status_code}: {detail}"
+                    # CR272 — the structural marker the gateway's failover and
+                    # the Room's restart key on: the exchange failed at the
+                    # provider (non-200), as opposed to DEF376's in-band frame
+                    # (a refused request), which a second provider would not fix.
+                    meta["stream_error_status"] = resp.status_code
                 yield (
                     f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider "
                     f"({self.name}). Check backend logs.]"
@@ -892,13 +965,41 @@ class VLLMProvider(OpenAICompatibleProvider):
         max_tokens_floor: int | None = None,
         enable_thinking: bool = False,
         thinking_max_tokens: int | None = None,
+        kind: Literal["vllm", "openai"] = "vllm",
+        name: str = "vllm",
+        max_retries: int = 0,
+        retry_backoff_s: float = 1.0,
     ) -> None:
+        self.kind = kind
+        if kind == "openai":
+            # CR272 — a hosted OpenAI-compatible endpoint (DeepInfra). No
+            # vLLM-only body field is sent: `chat_template_kwargs` is a vLLM
+            # chat-template hook a hosted API may reject or ignore, and the
+            # thinking floor exists only to budget for that hook. The grammar
+            # claim shrinks to JSON-schema `response_format`, the one spelling
+            # the OpenAI API itself defines; the regex `structured_outputs`
+            # field is vLLM's and is therefore NOT advertised, so the gateway
+            # records such a call `unsupported` instead of sending a field the
+            # server may accept and drop (CR210).
+            super().__init__(
+                name=name,
+                base_url=base_url,
+                model_name=model_name,
+                api_key=api_key,
+                timeout_seconds=timeout_seconds,
+                max_tokens_floor=max_tokens_floor,
+                extra_body={},
+                supported_constraints=frozenset({"json_schema"}),
+                max_retries=max_retries,
+                retry_backoff_s=retry_backoff_s,
+            )
+            return
         # CR259 — when thinking is on, the thinking floor dominates any
         # caller-requested floor (both are "raise max_tokens to at least X";
         # the larger of the two is the binding one).
         floor = max(max_tokens_floor or 0, thinking_max_tokens or 0) or None
         super().__init__(
-            name="vllm",
+            name=name,
             base_url=base_url,
             model_name=model_name,
             api_key=api_key,
@@ -929,6 +1030,8 @@ class VLLMProvider(OpenAICompatibleProvider):
             # re-verified — see `_constraint_request_fields` for why an
             # unverified claim here is worse than no claim.
             supported_constraints=frozenset({"json_schema", "regex"}),
+            max_retries=max_retries,
+            retry_backoff_s=retry_backoff_s,
         )
 
     async def log_prefix_cache_status(self) -> None:
@@ -997,6 +1100,57 @@ def _sum_prometheus_metric(text: str, metric_name: str) -> float:
 # ── Gateway: picks the right provider based on what's available ──────────
 
 
+# ── CR272: backup slot + Room failover signalling ─────────────────────────
+
+FALLBACK_PROVIDER_NAME = "vllm_fallback"
+
+
+@dataclass
+class RoomFailoverState:
+    """CR272 — the one object a Room run shares with the gateway.
+
+    The Room runner arms it (via `arm_room_failover`) only when a backup slot is
+    registered. While armed, the gateway does NOT re-issue a failed call on the
+    backup — one Room must never mix two models' arguments — it reports the
+    failure here with `trip`. The runner reads `tripped_reason` between desks,
+    abandons the attempt and restarts the whole Room with `pinned_provider` set,
+    after which every call in the run resolves to that provider.
+
+    A ContextVar (not a parameter) carries it because eight Room call sites and
+    several helpers reach the gateway, and a pin that one of them could forget
+    would silently put two models in one Room. Tasks spawned under the run
+    (the ANALYSTS `gather`, `wait_for`) copy the context and so share this same
+    mutable object.
+    """
+
+    pinned_provider: str | None = None
+    tripped_reason: str | None = None
+    tripped_provider: str | None = None
+
+    def trip(self, reason: str, *, provider: str, agent_id: str | None) -> None:
+        if self.tripped_reason is not None:
+            return
+        self.tripped_reason = reason
+        self.tripped_provider = provider
+        logger.warning(
+            "llm_failover_requested",
+            provider=provider,
+            reason=reason,
+            agent_id=agent_id,
+            detail="the Room will restart on the backup slot",
+        )
+
+
+_ROOM_FAILOVER: contextvars.ContextVar[RoomFailoverState | None] = (
+    contextvars.ContextVar("ami_room_failover", default=None)
+)
+
+
+def arm_room_failover(state: RoomFailoverState | None) -> None:
+    """Install (or, with None, remove) the Room failover state for this context."""
+    _ROOM_FAILOVER.set(state)
+
+
 class LLMGateway:
     """Single entry point for LLM calls. Picks provider based on config + tier."""
 
@@ -1036,6 +1190,17 @@ class LLMGateway:
                 timeout_seconds=settings.vllm_request_timeout_s,
                 enable_thinking=settings.vllm_enable_thinking,
                 thinking_max_tokens=settings.vllm_thinking_max_tokens or None,
+                kind=settings.vllm_kind,
+                # CR272 — a "vllm"-kind primary is retried only when there is a
+                # backup to fall over to; with none, an on-prem outage would
+                # just gain retry delay, and "no backup configured" must change
+                # nothing. A hosted ("openai") primary always retries.
+                max_retries=(
+                    settings.llm_transient_retries
+                    if settings.vllm_kind == "openai" or settings.vllm_fallback_base_url
+                    else 0
+                ),
+                retry_backoff_s=settings.llm_retry_backoff_s,
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1055,6 +1220,7 @@ class LLMGateway:
                 # was in force has to be recoverable from the boot log, since
                 # exceeding it is silent at the call site.
                 request_timeout_s=settings.vllm_request_timeout_s,
+                kind=settings.vllm_kind,
             )
         else:
             logger.info(
@@ -1062,6 +1228,47 @@ class LLMGateway:
                 provider="vllm",
                 reason="no VLLM_BASE_URL in env",
             )
+
+        # CR272 — the backup slot. Never in `_PREFERENCE`: it is reached only by
+        # failover (a single call re-issued, or a Room restarted pinned to it).
+        # Its own floor/thinking knobs are not borrowed from the primary for a
+        # hosted ("openai") backup — those are tuned to the primary's model.
+        if settings.vllm_fallback_base_url:
+            _fb_vllm_kind = settings.vllm_fallback_kind == "vllm"
+            self._providers[FALLBACK_PROVIDER_NAME] = VLLMProvider(
+                base_url=settings.vllm_fallback_base_url,
+                model_name=settings.vllm_fallback_model,
+                api_key=settings.vllm_fallback_api_key or None,
+                max_tokens_floor=(
+                    (settings.vllm_max_tokens_floor or None) if _fb_vllm_kind else None
+                ),
+                timeout_seconds=settings.vllm_request_timeout_s,
+                enable_thinking=settings.vllm_enable_thinking if _fb_vllm_kind else False,
+                thinking_max_tokens=(
+                    (settings.vllm_thinking_max_tokens or None) if _fb_vllm_kind else None
+                ),
+                kind=settings.vllm_fallback_kind,
+                name=FALLBACK_PROVIDER_NAME,
+                max_retries=settings.llm_transient_retries,
+                retry_backoff_s=settings.llm_retry_backoff_s,
+            )
+            logger.info(
+                "llm_gateway_provider_registered",
+                provider=FALLBACK_PROVIDER_NAME,
+                base_url=settings.vllm_fallback_base_url,
+                model=settings.vllm_fallback_model,
+                kind=settings.vllm_fallback_kind,
+                role="failover only — not in the preference order",
+            )
+            if "vllm" not in self._providers:
+                logger.warning(
+                    "llm_gateway_backup_without_primary",
+                    detail=(
+                        "VLLM_FALLBACK_BASE_URL is set but VLLM_BASE_URL is not: "
+                        "the backup is never chosen by preference order, so it "
+                        "serves nothing unless another primary is configured"
+                    ),
+                )
 
         if settings.anthropic_api_key:
             self._providers["anthropic"] = AnthropicProvider(settings.anthropic_api_key)
@@ -1236,8 +1443,13 @@ class LLMGateway:
     async def check_prefix_cache_at_startup(self) -> None:
         """CR077 Phase 0 second guard — no-op when vLLM isn't registered."""
         provider = self._providers.get("vllm")
-        if isinstance(provider, VLLMProvider):
+        # CR272 — a hosted ("openai") slot has no `/metrics` to scrape.
+        if isinstance(provider, VLLMProvider) and provider.kind == "vllm":
             await provider.log_prefix_cache_status()
+
+    def has_backup_provider(self) -> bool:
+        """CR272 — is the failover slot registered. Config fact, not liveness."""
+        return FALLBACK_PROVIDER_NAME in self._providers
 
     def _active_provider_name(self) -> str:
         """Which provider a call will actually hit right now.
@@ -1295,9 +1507,15 @@ class LLMGateway:
             tier_to_model: dict[str, str] = {t: single_model for t in TIER_TO_MODEL}
         else:
             tier_to_model = dict(TIER_TO_MODEL)
+        backup_status: dict[str, object] = (
+            {"backup_provider": FALLBACK_PROVIDER_NAME}
+            if self.has_backup_provider()
+            else {}
+        )
         return {
             "providers_registered": sorted(self._providers.keys()),
             "active_provider": active,
+            **backup_status,
             "has_real_provider": self.has_real_provider(),
             # DEF413 — the second, separate fact. `has_real_provider` says a
             # provider is CONFIGURED; this says whether the last call to the
@@ -1370,19 +1588,30 @@ class LLMGateway:
         the very model it was meant to be independent of — silently, which is
         the failure the pin exists to prevent. None keeps today's behaviour
         exactly (`_pick_provider` decides).
-        """
-        import time
-        from app.services.audit import record_llm_call
-        # CR158 — local, like the import above: prompt_version imports the
-        # prompt builders, which import this module's GROUNDING_DIRECTIVE.
-        from app.services.prompt_version import prompt_version_for
 
+        CR272 — failover. Only when a backup slot (`vllm_fallback`) is
+        registered, and never for a call pinned by [provider_name]:
+
+        - OUTSIDE a Room (1-on-1, Brief, Concierge, ...): a call whose provider
+          fails before yielding a chunk (a transport error, or a non-200 after
+          the provider's own retries) is re-issued ONCE on the backup. Logged
+          `llm_failover`; `meta["failover"]` names from/to/reason, and the
+          backup's own `llm_audit` row carries `provider="vllm_fallback"`.
+        - INSIDE a Room (a `RoomFailoverState` is armed on the context): the
+          call is NOT re-issued — one Room must never mix two models. The
+          failure is reported to the state, the Room runner restarts the whole
+          discussion pinned to the backup, and every call after that resolves
+          to the backup here.
+        """
+        state = _ROOM_FAILOVER.get()
         if provider_name is not None:
             if provider_name not in self._providers:
                 raise ValueError(
                     f"stream_chat: provider {provider_name!r} is not registered"
                 )
             provider = self._providers[provider_name]
+        elif state is not None and state.pinned_provider in self._providers:
+            provider = self._providers[state.pinned_provider]  # type: ignore[index]
         else:
             provider = self._pick_provider(
                 locale, model_tier, plan=plan, agent_id=agent_id
@@ -1392,6 +1621,133 @@ class LLMGateway:
         # is what makes a silent truncation visible on EVERY flow (room,
         # one-on-one, brief, Concierge), not only the ones that opted in.
         call_meta: dict[str, Any] = meta if meta is not None else {}
+        call_kwargs: dict[str, Any] = dict(
+            system_prompt=system_prompt,
+            messages=messages,
+            model_tier=model_tier,
+            locale=locale,
+            max_tokens=max_tokens,
+            audit_user_id=audit_user_id,
+            audit_agent_id=audit_agent_id,
+            audit_flow=audit_flow,
+            call_meta=call_meta,
+            constraint=constraint,
+        )
+
+        backup = self._providers.get(FALLBACK_PROVIDER_NAME)
+        room_armed = (
+            state is not None
+            and provider_name is None
+            and state.pinned_provider is None
+        )
+        can_failover = (
+            state is None
+            and provider_name is None
+            and backup is not None
+            and provider is not backup
+            and provider.name != "mock"
+        )
+        if not room_armed and not can_failover:
+            async with contextlib.aclosing(
+                self._stream_chat_on(provider, **call_kwargs)
+            ) as only:
+                async for chunk in only:
+                    yield chunk
+            return
+
+        yielded = False
+        failure: str | None = None
+        try:
+            async with contextlib.aclosing(
+                self._stream_chat_on(provider, **call_kwargs)
+            ) as first:
+                async for chunk in first:
+                    status = call_meta.get("stream_error_status")
+                    if not yielded and status is not None:
+                        failure = f"HTTP {status}"
+                        if room_armed:
+                            assert state is not None
+                            state.trip(
+                                failure, provider=provider.name, agent_id=audit_agent_id
+                            )
+                        else:
+                            # Drop the provider's `[AMI error: ...]` sentinel: it
+                            # is the failed attempt's text, not the caller's reply.
+                            break
+                    yielded = True
+                    yield chunk
+        except asyncio.CancelledError:
+            # The Room's per-desk guard (`wait_for`) cancelling a call that has
+            # produced nothing is a provider that hung. Reported, not retried.
+            if room_armed and not yielded:
+                assert state is not None
+                state.trip(
+                    "no first chunk before the desk guard fired",
+                    provider=provider.name,
+                    agent_id=audit_agent_id,
+                )
+            raise
+        except (httpx.HTTPError, OSError) as exc:
+            if yielded:
+                raise
+            failure = f"{type(exc).__name__}: {str(exc) or 'no detail'}"[:200]
+            if room_armed:
+                assert state is not None
+                state.trip(failure, provider=provider.name, agent_id=audit_agent_id)
+                raise
+
+        if failure is None or room_armed:
+            return
+
+        assert backup is not None
+        logger.warning(
+            "llm_failover",
+            surface=audit_flow or "unknown",
+            from_provider=provider.name,
+            to=backup.name,
+            reason=failure,
+            agent_id=audit_agent_id,
+        )
+        call_meta.pop("stream_error", None)
+        call_meta.pop("stream_error_status", None)
+        call_meta["failover"] = {
+            "from": provider.name,
+            "to": backup.name,
+            "reason": failure,
+        }
+        async with contextlib.aclosing(
+            self._stream_chat_on(backup, **call_kwargs)
+        ) as second:
+            async for chunk in second:
+                yield chunk
+
+    async def _stream_chat_on(
+        self,
+        provider: LLMProvider,
+        *,
+        system_prompt: str,
+        messages: list[ChatMessage],
+        model_tier: ModelTier,
+        locale: str,
+        max_tokens: int,
+        audit_user_id: object,
+        audit_agent_id: str | None,
+        audit_flow: str | None,
+        call_meta: dict[str, Any],
+        constraint: OutputConstraint | None,
+    ) -> AsyncIterator[str]:
+        """One call on one provider: capability gate, stream, audit row.
+
+        This is the body `stream_chat` always had; CR272 split it out so the
+        failover wrapper can run it twice (once per provider) and each attempt
+        still writes its own `llm_audit` row.
+        """
+        import time
+        from app.services.audit import record_llm_call
+        # CR158 — local, like the import above: prompt_version imports the
+        # prompt builders, which import this module's GROUNDING_DIRECTIVE.
+        from app.services.prompt_version import prompt_version_for
+
 
         # CR210 — the capability gate. A decoding grammar is either put on the
         # wire by a provider that enforces it, or it is DROPPED and said so out

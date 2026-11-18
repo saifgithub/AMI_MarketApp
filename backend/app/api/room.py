@@ -360,6 +360,13 @@ async def stream_room(
                         "next_step_days": ev.next_step_days,
                     })
                     yield sse_json("agent_withheld", payload)
+                elif ev.kind == "provider_switch":
+                    # CR272 — the primary model failed and the Room restarted
+                    # from the first phase on the backup model. Structural
+                    # notice (the model is out of the loop); everything
+                    # streamed before it is void. A client that predates this
+                    # event ignores the unknown kind.
+                    yield sse_json("provider_switch", json.dumps({"text": ev.text or ""}))
                 elif ev.kind == "verdict":
                     if ev.verdict is not None:
                         yield sse_json("verdict", ev.verdict.model_dump_json())

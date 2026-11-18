@@ -84,6 +84,35 @@ class Settings(BaseSettings):
     vllm_model: str = "ami-llm"
     vllm_api_key: str = ""  # optional bearer auth — leave empty for unauth LAN servers
 
+    # CR272 (CR267 WP-14) — what KIND of server sits behind `vllm_base_url`.
+    # "vllm" (default) is byte-identical to before this setting existed: every
+    # call carries `chat_template_kwargs.enable_thinking` and the slot
+    # advertises the regex `structured_outputs` grammar. "openai" is a hosted
+    # OpenAI-compatible endpoint (DeepInfra, base URL WITHOUT `/v1`): it is sent
+    # NO vLLM-only body field and advertises JSON-schema `response_format` only,
+    # so a hosted model can be the primary through configuration alone.
+    vllm_kind: Literal["vllm", "openai"] = "vllm"
+
+    # CR272 — the backup slot. Registered as its own provider `vllm_fallback`,
+    # never chosen by the preference order; used only by failover (a single
+    # 1-on-1/Brief call re-issued on it, or a whole Room restarted on it). Empty
+    # base URL = no backup = no failover = today's behaviour exactly. The model
+    # is required once a URL is set (validated below): a backup that boots with
+    # the wrong model name is an outage discovered during the outage.
+    vllm_fallback_base_url: str = ""
+    vllm_fallback_model: str = ""
+    vllm_fallback_api_key: str = ""
+    vllm_fallback_kind: Literal["vllm", "openai"] = "openai"
+
+    # CR272 — transient-failure retry for the vLLM-family slots. Up to this
+    # many RETRIES (so 1 + N attempts) on a connect error, a timeout before the
+    # first byte, HTTP 429 or 5xx, and only before the first streamed chunk.
+    # Applied to a "vllm"-kind primary only when a backup slot is registered
+    # (otherwise an on-prem outage would gain retry delay with nothing to fail
+    # over to); always applied to "openai"-kind slots and to the backup.
+    llm_transient_retries: int = Field(default=3, ge=0, le=6)
+    llm_retry_backoff_s: float = Field(default=1.0, ge=0.0, le=30.0)
+
     # CR211 — decode-budget floor for the on-prem vLLM server, the same knob
     # `kimi_max_tokens_floor` is for Kimi and for the same reason: a REASONING
     # model spends the budget on invisible chain-of-thought before it writes a
@@ -195,6 +224,17 @@ class Settings(BaseSettings):
                 "empty-string transport errors feeding a fail-safe PASS verdict "
                 "(DEF389/DEF392). Raise VLLM_REQUEST_TIMEOUT_S or lower "
                 "ROOM_AGENT_TIMEOUT_S."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _fallback_slot_is_complete(self) -> "Settings":
+        # CR272 — CR040 degrade-loudly. A backup URL with no model boots a slot
+        # that sends `"model": ""` and is rejected on the first real failover.
+        if self.vllm_fallback_base_url and not self.vllm_fallback_model:
+            raise ValueError(
+                "vllm_fallback_base_url is set but vllm_fallback_model is empty: "
+                "set VLLM_FALLBACK_MODEL, or clear VLLM_FALLBACK_BASE_URL."
             )
         return self
 
