@@ -4,14 +4,14 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**260 cases** — 185 api, 15 device, 60 manual; 11 blocked.
+**261 cases** — 185 api, 15 device, 61 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 5 cases
 2. [Authentication, sessions & account identity](#auth) — 23 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 28 cases
 5. [Floor tab & home shell](#floor) — 8 cases
 6. [Convene the Room](#room) — 21 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
@@ -3209,6 +3209,18 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button
 2. Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button
+
+#### UAT-MAND-036 — Discarding unsaved Settings edits really discards them
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Settings > PROFILE: change the display name; the SAVE button and the amber pip appear
+2. Tap JOURNAL, choose "discard changes", then tap SETTINGS again
+
+**Expected**
+1. The display name shows the stored value, the SAVE button and the pip are gone
+2. Nothing is sent to the server until a new edit is made (DEF470)
 
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 

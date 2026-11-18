@@ -86,6 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // the server's returned mandate (acceptance 2's round-trip contract).
   final Map<String, dynamic> _pendingRiskLimits = {};
   bool _riskLimitsExpanded = false;
+  int _discardGeneration = 0;
 
   void _initFrom(UserMandate m) {
     _localRiskScore ??= m.riskScore;
@@ -263,6 +264,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool get _hasUnsavedEdits => _dirty || _pendingRiskLimits.isNotEmpty;
 
+  /// DEF470 — the YOU "discard changes" choice. Drops every pending edit and
+  /// re-keys the list so text fields rebuild from the stored mandate (their
+  /// controllers are seeded once and would otherwise keep the typed text).
+  void _discardEdits() {
+    setState(() {
+      _localRiskScore = null;
+      _localMaxDD = null;
+      _localCompliance = null;
+      _localPrimaryGoal = null;
+      _localHorizon = null;
+      _localPath = null;
+      _localLearningStyle = null;
+      _localDisplayName = null;
+      _localTimezone = null;
+      _localRiskQuotes = null;
+      _dirty = false;
+      _pendingRiskLimits.clear();
+      _discardGeneration++;
+    });
+  }
+
   /// Publish what `YOU`'s header renders on this screen's behalf (CR133 §4.2).
   ///
   /// Derived in `build` and pushed after the frame rather than written at each
@@ -302,6 +324,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.listen<int>(settingsSaveRequestProvider, (_, __) {
         if (!state.saving) _save();
       });
+      ref.listen<int>(settingsDiscardRequestProvider, (_, __) {
+        _discardEdits();
+      });
     }
     final l = AppLocalizations.of(context);
     final body = Column(
@@ -325,6 +350,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             Expanded(
               child: ListView(
+                key: ValueKey(_discardGeneration),
                 padding: const EdgeInsets.all(AmiSpacing.m),
                 children: [
                   _Section(title: l.settingsSectionMandate, children: [

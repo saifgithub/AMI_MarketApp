@@ -126,6 +126,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         ref.read(settingsHeaderProvider).dirty) {
       final leave = await _confirmDiscard(context);
       if (leave != true) return;
+      ref.read(settingsDiscardRequestProvider.notifier).state++;
     }
     ref.read(youSegmentProvider.notifier).state = next;
   }
