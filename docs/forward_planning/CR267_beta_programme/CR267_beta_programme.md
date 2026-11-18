@@ -76,7 +76,7 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 | S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete, plus the Singapore cross-border transfer under Malaysia's PDPA. Only this narrow question; the full legal review stays in §7. Off the launch path: Beta ships in `delete`/`anonymise` mode (§3a.2), and S6 is needed only to switch to `archive`. |
 | S7 | WP-49 | Confirms company Apple/Google accounts are enrolled and usable, and whether the Play account is an organisation account. |
 | S8 | WP-35 | Rotates the Adanos key at the vendor (closes DEF178). |
-| S9 | WP-53 | Confirms the Room satisfaction bar (proposed: 70% positive over 100 rated runs). |
+| S9 | WP-53 | Confirms the Room satisfaction bar. **Ruled 2026-11-18:** no fixed number; report the rate. Where a bar is required, it is 60% thumbs-up over 100 rated runs. |
 | S10 | Room Lite | Gives go on Room Lite. Not on the Beta launch path. |
 | S11 | WP-15, WP-10…WP-14 | Discusses and approves the implementation plan for the hosted-LLM work before any change (Saiful, 2026-11-18: "before you start making changes for JEV and the LLM, please pause so we can discuss implementation plans"). |
 | S12 | WP-22, WP-23 | The same, for the Jev / grader / coded-rule work. |

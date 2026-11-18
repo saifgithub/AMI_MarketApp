@@ -6,6 +6,10 @@ covers:
   - backend/app/main.py
   - backend/app/api/dependencies.py
   - backend/app/services/client_release_floor.py
+  - backend/app/middleware/http_audit.py
+  - backend/app/middleware/version_gate.py
+  - mobile/lib/services/api/trace_ids.dart
+  - mobile/lib/widgets/trace_ref_line.dart
   - mobile/lib/screens/version_gate/**
 summary: |
   The backend is up, ready, and tells old builds to update. Also proves the UAT
@@ -79,3 +83,34 @@ cases:
       - 'On the "Update required" screen, tap UPDATE NOW'
     expected:
       - 'A message tells the user AMI could not open the store and where to update from; the button is never a silent no-op (DEF473)'
+
+  - id: UAT-PLAT-007
+    title: Every error response carries a trace id in its header and body
+    layer: api
+    plans: [anon]
+    steps:
+      - GET a path that does not exist (404)
+      - GET /v1/feedback/updates with no token (401)
+      - POST /v1/feedback/bug with required fields missing, from a synthetic client IP (422)
+      - Repeat the 401 with a client-supplied X-Request-Id of a freshly generated UUID
+    expected:
+      - 'Each error carries an X-Request-Id header that is a UUID, and the JSON body carries the same value as request_id; detail keeps its existing shape (a string for 404/401, a list for 422)'
+      - 'Two errors never share an id'
+      - 'The client-supplied X-Request-Id is ignored: the response carries a different, server-minted id (the id is the http_audit primary key and must never be client-chosen)'
+    notes: CR239 / WP-38. The live "grep the id in docker logs ami_api_alpha and find the http_audit row" half is run by Saiful on the rig.
+
+  - id: UAT-PLAT-008
+    title: An error state on the phone shows a small copyable "Ref:" trace reference
+    layer: device
+    status: blocked
+    blocked_on: 'No way to force a server-side 4xx/5xx from the device UI, and a request that never reaches the server (offline / wrong host) correctly shows no Ref. Needs a rig-side fault hook (e.g. block one route at melehost) before this can be driven by Appium; until then Saiful runs it by hand on the rig (WP-38).'
+    plans: [any]
+    steps:
+      - 'Cause a screen that loads from the server (Inbox, Notifications or Games) to hit a server error, then open it'
+      - 'Read the error state; tap the "Ref: xxxxxxxx" line'
+      - 'Open You > SETTINGS > HELP > Report a problem and send a report'
+    expected:
+      - 'The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception'
+      - 'Tapping it shows "Reference copied" and puts the full id on the clipboard'
+      - 'The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)'
+      - 'An error from a request that never reached the server shows no Ref line'

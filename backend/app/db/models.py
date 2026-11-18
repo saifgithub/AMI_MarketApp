@@ -938,6 +938,9 @@ class BugReportRow(Base):
     # path is the common case.
     attachment_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     attachment_mime: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # CR239 / WP-38 - comma-separated request trace ids (<= 5 UUIDs) the app
+    # attached: its most recent failed calls, joinable to `http_audit.id`.
+    trace_ids: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

@@ -1,26 +1,21 @@
 """UAT area: bug reports, AMI help library & telemetry (CR263, cases/support.yaml).
 
-Two real bug reports are filed per run (SUPP-001, SUPP-002), both prefixed
+Three real bug reports are filed per run (SUPP-001, SUPP-002, SUPP-014), all prefixed
 "[CR263 UAT - ignore]" because they land in the triage queue a monitor reads.
 Every other bug-report call is invalid on purpose so it stores nothing. The
-rate limiter keys on the first X-Forwarded-For hop, so each test claims its own
-synthetic client IP and never spends the Mac's real hourly budget.
+per-IP limiter (5/hour) keys on the real socket peer (DEF464 - forwarded headers
+are ignored), so the cases that are not about the limit send the admin-secret
+exemption header (DEF490) and SUPP-004 reads the Mac's bucket as it finds it.
 """
 
-import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from client import new_client
+from client import exempt_headers
 
 UAT_TITLE = "[CR263 UAT - ignore] automated API check"
-
-
-def _fake_ip() -> dict:
-    n = random.SystemRandom().randrange(1, 2**16)
-    return {"X-Forwarded-For": f"100.64.{n >> 8}.{n & 255}"}
 
 
 def _form(**fields) -> dict:
@@ -42,7 +37,7 @@ def _close_out(admin, report_id: str) -> None:
 def test_signed_in_bug_report(seed):
     u = seed.user(plan="floor_pass")
     r = u.post("/v1/feedback/bug", files=_form(**GOOD, steps="CR263 UAT run, safe to ignore"),
-               headers=_fake_ip())
+               headers=exempt_headers())
     assert r.status_code == 201, r.text
     body = r.json()
     assert uuid.UUID(body["id"]) and body["status"] == "open" and body["created_at"]
@@ -54,7 +49,7 @@ def test_signed_in_bug_report(seed):
 @pytest.mark.uat("UAT-SUPP-002")
 def test_anonymous_bug_report(api, admin):
     r = api.post("/v1/feedback/bug", files=_form(**{**GOOD, "platform": "android_gms"}),
-                 headers=_fake_ip())
+                 headers=exempt_headers())
     assert r.status_code == 201, r.text
     assert uuid.UUID(r.json()["id"]) and r.json()["status"] == "open"
     _close_out(admin, r.json()["id"])
@@ -62,7 +57,7 @@ def test_anonymous_bug_report(api, admin):
 
 @pytest.mark.uat("UAT-SUPP-003")
 def test_missing_fields_and_bad_attachment_refused(api):
-    ip = _fake_ip()
+    ip = exempt_headers()
     assert api.post("/v1/feedback/bug", files=_form(title="x"), headers=ip).status_code == 422
     assert api.post("/v1/feedback/bug", files=_form(**{**GOOD, "title": ""}), headers=ip).status_code == 422
     r = api.post("/v1/feedback/bug", files={**_form(**GOOD), "file": ("a.txt", b"hello", "text/plain")},
@@ -71,29 +66,33 @@ def test_missing_fields_and_bad_attachment_refused(api):
 
 
 @pytest.mark.uat("UAT-SUPP-011")
-@pytest.mark.xfail(strict=True, reason=(
-    "DEF458 —  POST /v1/feedback/bug with an unknown category or platform returns "
-    "500 internal server error - BugReportRequest(...) raises a pydantic "
-    "ValidationError inside the handler instead of a 422."))
 def test_unknown_category_or_platform_is_a_client_error(api):
-    ip = _fake_ip()
+    ip = exempt_headers()
     bad_category = api.post("/v1/feedback/bug", files=_form(**{**GOOD, "category": "nonsense"}), headers=ip)
     bad_platform = api.post("/v1/feedback/bug", files=_form(**{**GOOD, "platform": "palm"}), headers=ip)
-    assert 400 <= bad_category.status_code < 500, bad_category.status_code
-    assert 400 <= bad_platform.status_code < 500, bad_platform.status_code
+    assert bad_category.status_code == 422, (bad_category.status_code, bad_category.text)
+    assert bad_platform.status_code == 422, (bad_platform.status_code, bad_platform.text)
 
 
 @pytest.mark.uat("UAT-SUPP-004")
 def test_bug_report_rate_limit_is_per_ip(api):
-    ip = _fake_ip()
-    statuses = [api.post("/v1/feedback/bug", files=_form(title="x"), headers=ip).status_code
-                for _ in range(6)]
-    assert statuses[:5] == [422] * 5, statuses
-    assert statuses[5] == 429, statuses
-    again = api.post("/v1/feedback/bug", files=_form(title="x"), headers=ip)
-    assert again.status_code == 429 and "rate_limit_exceeded" in again.text
-    other = api.post("/v1/feedback/bug", files=_form(title="x"), headers=_fake_ip())
-    assert other.status_code == 422
+    """Reads the Mac's own bucket in whatever state earlier runs left it: POST
+    invalid reports (no exemption header) until the first 429. Per-IP key
+    separation is covered by the DEF464 unit tests; here we prove the live
+    route enforces the budget and that a spoofed forwarded header is no way out."""
+    statuses = []
+    for _ in range(6):
+        r = api.post("/v1/feedback/bug", files=_form(title="x"))
+        statuses.append(r.status_code)
+        if r.status_code == 429:
+            break
+    assert statuses[-1] == 429, statuses
+    assert statuses[:-1] == [422] * (len(statuses) - 1), statuses
+    assert "rate_limit_exceeded" in r.text, r.text
+
+    spoof = {"X-Forwarded-For": "100.64.7.7", "cf-connecting-ip": "100.64.7.7"}
+    again = api.post("/v1/feedback/bug", files=_form(title="x"), headers=spoof)
+    assert again.status_code == 429 and "rate_limit_exceeded" in again.text, (again.status_code, again.text)
 
 
 @pytest.mark.uat("UAT-SUPP-005")
@@ -192,3 +191,28 @@ def test_help_library_is_static_and_well_formed(api):
     assert api.get("/v1/ai_coach/by_id/qa_does_not_exist").status_code == 404
     none = api.get("/v1/ai_coach/search", params={"q": "zzqxjwv"})
     assert none.status_code == 200 and none.json()["hits"] == []
+
+
+@pytest.mark.uat("UAT-SUPP-014")
+def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
+    u = seed.user(plan="floor_pass")
+    ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+    r = u.post("/v1/feedback/bug", files=_form(**GOOD, trace_ids=",".join(ids)),
+               headers=_fake_ip())
+    assert r.status_code == 201, r.text
+    report_id = r.json()["id"]
+    try:
+        detail = seed.admin.get(f"/v1/admin/bugs/{report_id}")
+        assert detail.status_code == 200, detail.text
+        assert detail.json()["trace_ids"] == ",".join(ids)
+    finally:
+        _close_out(seed.admin, report_id)
+
+    ip = _fake_ip()
+    for bad in ("not-a-uuid", ",".join(str(uuid.uuid4()) for _ in range(6))):
+        # Title left empty as well: even if trace_ids validation regressed,
+        # nothing could enter the triage queue.
+        resp = u.post("/v1/feedback/bug",
+                      files=_form(**{**GOOD, "title": "", "trace_ids": bad}), headers=ip)
+        assert resp.status_code == 422, resp.text
+        assert any("trace_ids" in str(e.get("loc")) for e in resp.json()["detail"]), resp.text

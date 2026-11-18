@@ -382,8 +382,23 @@ _JOURNAL_PLUMBING_REASONS: dict[str, str] = {
     "so rendering it would make prompts nondeterministic.",
 }
 
+# CR275 (CR267 WP-21a): the Room decides blind. The fetcher still produces the
+# Street's view (post-verdict code reads it); the Room's renderer withholds it by
+# design. The 1-on-1 surface is not the Room and still renders it.
+_ROOM_DECIDES_BLIND = (
+    "withheld from every Room agent by street_view_blind.blind_profile — the "
+    "Room is scored against the Street, so it must not see it (CR275)."
+)
+
 INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
     # ── fundamentals ──
+    ("fundamentals", "room", "analyst_target_price"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_rating"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_opinion_count"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_target_high"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_target_low"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_target_median"): _ROOM_DECIDES_BLIND,
+    ("fundamentals", "room", "analyst_rating_score"): _ROOM_DECIDES_BLIND,
     ("fundamentals", "room", "support"): (
         "placeholder ±10% support; compute_technicals overwrites it with the real "
         "50-day low before render — the technicals source owns support/breakout."

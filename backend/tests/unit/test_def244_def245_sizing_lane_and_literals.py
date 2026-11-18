@@ -228,8 +228,16 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # names no size, sizing, allocation or percentage, and the "not a position
     # size" Output-style bullet is untouched. bull 6a9a1cecc224 → dcf57da48d1e,
     # bear bdb23e30ddd9 → dea413259494.
+    #
+    # CR275 review (2026-11-18, WP-21a): bull_researcher.md loses the two
+    # sentences that referred to the Street's consensus target (the Room decides
+    # blind, so no target is on the sheet). The guard's question, answered by
+    # reading the diff: does any bullet ask a RESEARCHERS-phase agent to output
+    # a position size? **No** — two sentences about a removed data field were
+    # deleted and one bullet re-wrapped; the "not a position size" bullet is
+    # untouched. bear unchanged. bull dcf57da48d1e -> 7c199bcea372.
     expected = {
-        "bull_researcher.md": "dcf57da48d1e",
+        "bull_researcher.md": "7c199bcea372",
         "bear_researcher.md": "dea413259494",
     }
     actual = {

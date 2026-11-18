@@ -14,6 +14,7 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
@@ -978,7 +979,7 @@ class _ErrorBanner extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, color: AmiColors.hexRed, size: 18),
           const SizedBox(width: AmiSpacing.s),
-          Expanded(child: Text(message, style: AmiTypography.body)),
+          Expanded(child: AmiErrorMessage(message)),
         ],
       ),
     );
@@ -1022,6 +1023,7 @@ class _ServerErrorCard extends ConsumerWidget {
           ),
           const SizedBox(height: AmiSpacing.s),
           Text(l.roomServerErrorBody, style: AmiTypography.body),
+          const TraceRefLine.recent(),
           const SizedBox(height: AmiSpacing.m),
           SizedBox(
             width: double.infinity,

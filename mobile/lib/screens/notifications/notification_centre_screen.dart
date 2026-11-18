@@ -14,6 +14,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/screens/inbox/inbox_screen.dart' show inboxRelativeTime;
 import 'package:ami_trade/screens/notifications/notification_preferences_screen.dart';
@@ -133,6 +134,7 @@ class _ErrorPanel extends StatelessWidget {
               style: AmiTypography.body,
               textAlign: TextAlign.center,
             ),
+            const TraceRefLine.recent(),
             const SizedBox(height: AmiSpacing.l),
             HexButton(label: l.notifRetry, onPressed: onRetry),
           ],

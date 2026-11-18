@@ -31,6 +31,7 @@ gets re-throttled within seconds of the next request.
 
 from __future__ import annotations
 
+import hmac
 import ipaddress
 import time
 from collections import OrderedDict, deque
@@ -44,6 +45,13 @@ from app.core.logging import logger
 
 
 WINDOW_SECONDS = 60
+
+# DEF490: operator/UAT traffic proves itself with the admin secret and is not
+# counted. Same secret and same hmac.compare_digest as the admin bearer
+# (cf_access.py), so it is exactly as forgeable as admin access itself — i.e.
+# not. A spoofable header (x-forwarded-for, cf-connecting-ip from an untrusted
+# peer) can never open a bucket or exempt anything; DEF464 stays intact.
+EXEMPT_HEADER = "x-ami-ratelimit-exempt"
 
 # DEF184 (security review N4): the key space used to be an unbounded
 # `defaultdict` — an attacker sending a unique spoofed `cf-connecting-ip`
@@ -84,6 +92,14 @@ def _valid_ip(value: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _carries_admin_exemption(request: Request) -> bool:
+    secret = settings.admin_secret
+    if not secret:
+        return False
+    presented = request.headers.get(EXEMPT_HEADER) or ""
+    return hmac.compare_digest(presented.encode(), secret.encode())
 
 
 # Fail at import, not on the first request, if the CIDR list is malformed.
@@ -175,6 +191,9 @@ class RateLimiter:
 
     async def __call__(self, request: Request) -> None:
         key = self._key_fn(request)
+        if _carries_admin_exemption(request):
+            logger.info("rate_limit_exempt", limiter=self.name, key=key, reason="admin_secret")
+            return
         self.check(key)
 
 

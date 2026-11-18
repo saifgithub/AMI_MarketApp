@@ -41,3 +41,34 @@ def test_seeding_round_trip(seed):
     me = u.get("/v1/auth/me")
     assert me.status_code == 200
     assert str(me.json()["id"]) == u.id
+
+
+@pytest.mark.uat("UAT-PLAT-007")
+def test_every_error_carries_a_trace_id_in_header_and_body(api):
+    import random
+    import uuid
+
+    n = random.SystemRandom().randrange(1, 2**16)
+    fake_ip = {"X-Forwarded-For": f"100.64.{n >> 8}.{n & 255}"}
+    forged = str(uuid.uuid4())
+
+    responses = [
+        (404, api.get("/v1/_uat_no_such_route")),
+        (401, api.get("/v1/feedback/updates")),
+        (422, api.post("/v1/feedback/bug", files={"title": (None, "x")}, headers=fake_ip)),
+        (401, api.get("/v1/feedback/updates", headers={"X-Request-Id": forged})),
+    ]
+    seen = set()
+    for status, r in responses:
+        assert r.status_code == status, r.text
+        header_id = r.headers.get("x-request-id")
+        assert header_id, f"{status} response has no X-Request-Id header"
+        uuid.UUID(header_id)
+        body = r.json()
+        assert body["request_id"] == header_id, f"{status}: body request_id != header"
+        assert "detail" in body
+        seen.add(header_id)
+    assert len(seen) == len(responses), "two errors shared a trace id"
+    assert isinstance(responses[2][1].json()["detail"], list)
+    assert responses[3][1].headers["x-request-id"] != forged
+    assert forged not in responses[3][1].text

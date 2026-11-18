@@ -164,10 +164,6 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   assumption as an assumption, and never quote one as if the sheet supplied it
 - **M&A history is not available** — nothing fetches it. Never claim a number, a
   count, or a deal for it
-- Analyst consensus — the rating, the mean recommendation score (1 = strong buy …
-  5 = sell), how many analysts, and the target as mean / median / low–high range. Quote
-  the **range**, not just the mean: "buy, target $322" hides that the same desk spans
-  $215 to $400. This is the Street's view, never the company's own guidance
 - Consensus EPS estimate for the next reporting date — real, tied to the actual
   upcoming earnings date
 - **Not available: the full financial statements themselves** (the income statement,

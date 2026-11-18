@@ -4,11 +4,11 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**286 cases** — 190 api, 16 device, 80 manual; 11 blocked.
+**289 cases** — 192 api, 17 device, 80 manual; 12 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 6 cases
+1. [Platform, version gate & UAT seeding](#platform) — 8 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
@@ -23,7 +23,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 10 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 13 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 14 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
@@ -78,6 +78,23 @@ _API (automated, live Alpha) · plans: floor_pass, trader_
 2. Plan reads trader and credits rose by 5
 3. The user's own bearer token authenticates GET /v1/auth/me
 
+#### UAT-PLAT-007 — Every error response carries a trace id in its header and body
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET a path that does not exist (404)
+2. GET /v1/feedback/updates with no token (401)
+3. POST /v1/feedback/bug with required fields missing, from a synthetic client IP (422)
+4. Repeat the 401 with a client-supplied X-Request-Id of a freshly generated UUID
+
+**Expected**
+1. Each error carries an X-Request-Id header that is a UUID, and the JSON body carries the same value as request_id; detail keeps its existing shape (a string for 404/401, a list for 422)
+2. Two errors never share an id
+3. The client-supplied X-Request-Id is ignored: the response carries a different, server-minted id (the id is the http_audit primary key and must never be client-chosen)
+
+> CR239 / WP-38. The live "grep the id in docker logs ami_api_alpha and find the http_audit row" half is run by Saiful on the rig.
+
 ### Device (automated, Appium)
 
 #### UAT-PLAT-005 — A current build launches past the version gate to the Floor
@@ -90,6 +107,21 @@ _Device (automated, Appium) · plans: any_
 **Expected**
 1. No forced-update screen appears
 2. The Floor and its bottom bar are on screen
+
+#### UAT-PLAT-008 — An error state on the phone shows a small copyable "Ref:" trace reference
+
+_Device (automated, Appium) · plans: any · **BLOCKED** — No way to force a server-side 4xx/5xx from the device UI, and a request that never reaches the server (offline / wrong host) correctly shows no Ref. Needs a rig-side fault hook (e.g. block one route at melehost) before this can be driven by Appium; until then Saiful runs it by hand on the rig (WP-38)._
+
+**Steps**
+1. Cause a screen that loads from the server (Inbox, Notifications or Games) to hit a server error, then open it
+2. Read the error state; tap the "Ref: xxxxxxxx" line
+3. Open You > SETTINGS > HELP > Report a problem and send a report
+
+**Expected**
+1. The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception
+2. Tapping it shows "Reference copied" and puts the full id on the clipboard
+3. The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)
+4. An error from a request that never reached the server shows no Ref line
 
 <a id="auth"></a>
 ## Authentication, sessions & account identity
@@ -2593,7 +2625,7 @@ IP-rate-limited and refuses bad input. The resolution feed is private.
 Telemetry ingest is per-user and idempotent while the segment read is
 admin-only. The help library (ai_coach) serves static, well-formed Q&A with
 no LLM call. Bug reports filed by this suite land in the real triage queue and
-are prefixed "[CR263 UAT - ignore]"; at most two are filed per run.
+are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
 
 ### API (automated, live Alpha)
 
@@ -2634,11 +2666,12 @@ _API (automated, live Alpha) · plans: anon_
 _API (automated, live Alpha) · plans: anon_
 
 **Steps**
-1. From one client IP, POST 6 requests in a row (invalid, so nothing enters the triage queue)
+1. POST invalid bug reports (nothing enters the triage queue) from this client, without the operator exemption header, until the first 429 (at most 6 - the bucket may already be partly spent)
+2. POST one more with a spoofed X-Forwarded-For and cf-connecting-ip
 
 **Expected**
-1. The first five are answered normally (422); the sixth is 429 rate_limit_exceeded (DEF186, 5 per hour)
-2. A different client IP is not limited by the first one's budget
+1. Every response before the first 429 is 422, and a 429 arrives within 6 requests with rate_limit_exceeded (DEF186, 5 per hour)
+2. The spoofed-header request is still 429 - forwarded headers from an untrusted peer open no new bucket (DEF464); per-IP key separation itself is covered by the DEF464 unit tests
 
 #### UAT-SUPP-005 — Resolution updates and acknowledgements are private to the reporter
 
@@ -2706,6 +2739,21 @@ _API (automated, live Alpha) · plans: anon_
 **Expected**
 1. Both are 422 (or another 4xx) naming the bad field, not 500 internal server error
 2. Nothing is stored
+
+#### UAT-SUPP-014 — A bug report stores the trace ids it carries and refuses malformed ones
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/feedback/bug with two fresh UUIDs in trace_ids (comma-separated) and a "[CR263 UAT - ignore]" title
+2. Admin GET the report
+3. POST with a trace_ids value that is not a UUID list, and with six UUIDs, from a synthetic client IP
+
+**Expected**
+1. 201; the admin detail shows trace_ids as the two UUIDs, comma-separated
+2. Both malformed submissions are 422 and store nothing
+
+> CR239 / WP-38. Files one extra triage-queue report per run, closed out at once like SUPP-001/002.
 
 ### Device (automated, Appium)
 

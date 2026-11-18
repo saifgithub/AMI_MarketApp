@@ -6935,5 +6935,22 @@
   "signInRestoreConfirm": "RESTORE",
   "@signInRestoreConfirm": {
     "description": "CR276 - confirm button of the restore dialog. retranslate:[ar,ms]"
+  },
+  "traceRefLabel": "Ref: {id}",
+  "@traceRefLabel": {
+    "description": "WP-38 / CR239 - small copyable trace reference shown under an error message so a support session can find the failed request. {id} is a short hex code - never translate or transliterate it. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "traceRefCopied": "Reference copied",
+  "@traceRefCopied": {
+    "description": "WP-38 / CR239 - toast after tapping the trace reference to copy it. NEW key. retranslate:[ar,ms]"
+  },
+  "traceRefCopyTooltip": "Copy reference",
+  "@traceRefCopyTooltip": {
+    "description": "WP-38 / CR239 - tooltip / accessibility label of the tap-to-copy trace reference. NEW key. retranslate:[ar,ms]"
   }
 }

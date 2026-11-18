@@ -23,6 +23,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_entry_sheet.dart';
 import 'package:ami_trade/screens/games/games_lobby_screen.dart';
@@ -121,6 +122,7 @@ class _ErrorState extends StatelessWidget {
               style: AmiTypography.body,
               textAlign: TextAlign.center,
             ),
+            const TraceRefLine.recent(),
             const SizedBox(height: AmiSpacing.m),
             HexButton(label: l.gamesRetry.toUpperCase(), onPressed: onRetry),
           ],

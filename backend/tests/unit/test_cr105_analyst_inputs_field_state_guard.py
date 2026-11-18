@@ -135,18 +135,11 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "**Earnings revisions**", "eps_revisions_direction"),
     ("fundamentals_analyst", "**Surprise history**", "surprise_quarters"),
     # CR166 Tier B — the dividend claim grew the half that makes a yield mean
-    # something (cover + ex-date), and the consensus claim grew its dispersion.
+    # something (cover + ex-date). (The Analyst-consensus claim was removed with CR275.)
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_yield"),
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "payout_ratio"),
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_rate"),
     ("fundamentals_analyst", "**Dividend** — yield (trailing)", "ex_dividend_date"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_rating"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_price"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_opinion_count"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_rating_score"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_high"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_low"),
-    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_median"),
     ("fundamentals_analyst", "Consensus EPS estimate for the next reporting date", "next_earnings"),
     # CR247 Phase 5 (2026-09-30): the bullet now names the exact rendered
     # labels (the Room sheet renders "RSI:", "20-day SMA: …, 50-day SMA: …"

@@ -225,7 +225,7 @@ void main() {
     test('traceReference reads X-Request-Id off the response and shortens it',
         () {
       final err = dioWithRequestId(409);
-      expect(traceReference(err), 'Error ref: a1b2c3d4');
+      expect(traceReference(err), 'Ref: a1b2c3d4');
     });
 
     test('traceReference is null when the response carries no header', () {
@@ -243,13 +243,13 @@ void main() {
           friendlyError(dioWithRequestId(409), action: 'send your answer');
       expect(message,
           "Couldn't send your answer — that request wasn't accepted. Check "
-          'the details before trying again. Error ref: a1b2c3d4.');
+          'the details before trying again. Ref: a1b2c3d4.');
     });
 
     test('friendlyError omits the footnote entirely when there is no ref', () {
       final message = friendlyError(dioWithRequestId(409, requestId: null),
           action: 'send your answer');
-      expect(message, isNot(contains('Error ref')));
+      expect(message, isNot(contains('Ref:')));
     });
 
     test('a genuine connectivity failure (no response at all) has no ref', () {
@@ -262,7 +262,7 @@ void main() {
       );
       expect(traceReference(err), isNull);
       expect(friendlyError(err, action: 'send your answer'),
-          isNot(contains('Error ref')));
+          isNot(contains('Ref:')));
     });
   });
 
