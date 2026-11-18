@@ -1,0 +1,37 @@
+---
+id: "manual_lessons"
+title: "Take a lesson and pass its quiz"
+section: "lessons"
+topic: "lessons"
+tags: ["lessons", "quiz", "track", "progress", "book", "interactive", "reader"]
+questions:
+  - "how do I take a lesson"
+  - "where are the lessons"
+  - "how do I pass a quiz"
+  - "how do I see my lesson progress"
+  - "what are the tracks"
+  - "what is the difference between book and interactive"
+short_answer: "Open the LESSONS tab, tap a track, tap a lesson, read it, and tap SUBMIT QUIZ. You must answer every question correctly to pass."
+screens:
+  - "screens/lessons/lessons_screen.dart"
+  - "screens/lessons/track_lessons_screen.dart"
+  - "screens/lessons/lesson_reader_screen.dart"
+  - "screens/lessons/lesson_beat_deck.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["lessonsTabUpper", "lessonsYourProgress", "lessonsAgents", "lessonsTierInProgress", "lessonsTierNotStarted", "lessonsTierCompleted", "lessonModeBook", "lessonModeInteractive", "lessonReaderSubmitQuiz", "lessonDeckCheckHeading", "lessonReaderPrerequisites", "lessonReaderChatWith"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Take a lesson and pass its quiz
+
+1. Open the **LESSONS** tab. The top shows **YOUR PROGRESS** (lessons done) and **AGENTS** (how many of the twelve you have unlocked).
+2. Tap a hex to open a track. Lessons are grouped under **IN PROGRESS**, **NOT STARTED** and **COMPLETED**.
+3. Tap a lesson. Read it in **BOOK** mode or step through it card by card in **INTERACTIVE** mode.
+4. Answer the quiz questions and tap **SUBMIT QUIZ**. In the card view, **CHECK YOUR ANSWERS** comes first.
+5. A wrong answer shows its explanation. Passing means every question correct.
+
+Some lessons list **PREREQUISITES**. Lessons that involve an agent show a CHAT WITH button to ask that agent about the topic. Passing the gateway lessons for an agent unlocks that agent.

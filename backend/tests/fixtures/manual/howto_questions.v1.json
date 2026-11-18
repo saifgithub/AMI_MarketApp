@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "CR022 / CR267 WP-39 acceptance set: ten how-do-I questions a Beta tester would ask the Concierge, each with the single manual entry that must be retrieved. Versioned: change the questions or expected ids only by bumping the version and re-running the live rig check.",
+  "questions": [
+    {"n": 1, "question": "How do I convene a Room?", "expected_entry": "manual_convene_room"},
+    {"n": 2, "question": "How do I brief my agent?", "expected_entry": "manual_brief_agent"},
+    {"n": 3, "question": "Where is my journal?", "expected_entry": "manual_journal"},
+    {"n": 4, "question": "How do I reset my sim portfolio?", "expected_entry": "manual_reset_portfolio"},
+    {"n": 5, "question": "I want to buy 10 shares, how do I place a paper trade?", "expected_entry": "manual_place_trade"},
+    {"n": 6, "question": "Can I follow a ticker so I can keep an eye on it?", "expected_entry": "manual_watchlist"},
+    {"n": 7, "question": "Which lessons do I need to pass to get the locked agents?", "expected_entry": "manual_unlock_agents"},
+    {"n": 8, "question": "Where do I change my maximum drawdown limit?", "expected_entry": "manual_mandate"},
+    {"n": 9, "question": "How do I log in with my Apple account?", "expected_entry": "manual_sign_in"},
+    {"n": 10, "question": "How do I get notified when a stock falls below a price?", "expected_entry": "manual_price_alerts"}
+  ],
+  "no_match": [
+    "what is a P/E ratio",
+    "hi",
+    "explain moving averages",
+    "how do I make the app faster",
+    "should I buy Tesla"
+  ]
+}

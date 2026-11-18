@@ -1,0 +1,37 @@
+---
+id: "manual_risk_limits"
+title: "Risk limits and ticker rules"
+section: "settings"
+topic: "mandate"
+tags: ["risk limits", "sector cap", "position cap", "cooldown", "max open positions", "ticker rules", "blocklist", "allowlist", "never trade"]
+questions:
+  - "how do I set a position size limit"
+  - "how do I cap my sector exposure"
+  - "how do I block a ticker from being traded"
+  - "how do I only allow certain tickers"
+  - "how do I limit the number of trades per day"
+  - "how do I set my own risk limits"
+short_answer: "In YOU > SETTINGS, expand RISK LIMITS with Set my own limits, or use TICKER RULES to list tickers to never trade or to trade only. Then tap SAVE."
+screens:
+  - "screens/settings/settings_screen.dart"
+  - "screens/settings/risk_limits_section.dart"
+  - "screens/settings/ticker_rules_section.dart"
+  - "screens/home_shell.dart"
+  - "screens/you/you_screen.dart"
+arb_keys: ["settingsSectionRiskLimits", "settingsRiskLimitsExpand", "settingsRiskLimitsSectorCapLabel", "settingsRiskLimitsSingleNameCapLabel", "settingsRiskLimitsCooldownLabel", "settingsRiskLimitsMaxOpenPositionsLabel", "settingsRiskLimitsMaxTradesPerDayLabel", "settingsRiskLimitsMaxTradesPerWeekLabel", "settingsRiskLimitsMaxOpenRiskLabel", "settingsSectionTickerRules", "settingsTickerBlocklist", "settingsTickerAllowlist", "settingsTickerAdd", "actionAdd", "settingsSave", "settingsRiskLimitsRetroTitle", "youTabUpper", "settingsTabUpper", "settingsSectionMandate"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Risk limits and ticker rules
+
+Both live in **YOU** > **SETTINGS**, below **MY MANDATE**.
+
+**RISK LIMITS**: by default your limits follow your risk score. Tap **Set my own limits** to set them yourself: **Sector concentration cap**, **Single-name position cap**, **Post-loss cooldown**, **Max open positions**, **Max trades per day**, **Max trades per week** and **Total open-risk cap**. A limit set by you overrides your risk profile. Each one explains what it blocks. Tap **SAVE** to apply.
+
+If a tighter limit puts holdings over it, **Some holdings now breach this limit** flags them. New buys that add to the breach are blocked; nothing is sold automatically.
+
+**TICKER RULES**: add tickers under **Never trade these** to block them, or under **Only trade these** to restrict your analysts to that list. While the allowlist has any entry, every other ticker is refused. Type the symbol into the field that says "Add a ticker" and tap the add (**ADD**) button, then tap **SAVE**.

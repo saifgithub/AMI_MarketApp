@@ -1,0 +1,38 @@
+---
+id: "manual_your_firm"
+title: "Your Firm: your twelve agents and 1-on-1 chat"
+section: "agents"
+topic: "agents"
+tags: ["agents", "your firm", "1-on-1", "analysts", "cio", "risk officer", "execution desk", "chat"]
+questions:
+  - "how do I talk to an analyst"
+  - "how do I chat with an agent one on one"
+  - "where are my twelve agents"
+  - "who are the agents on my team"
+  - "how do I chat with the Technical Strategist"
+  - "where is the agent list"
+short_answer: "Tap YOUR FIRM on the Floor, tap an unlocked agent, then choose 1-ON-1 to chat or BRIEF to coach them."
+screens:
+  - "screens/floor/floor_screen.dart"
+  - "screens/floor/your_firm_screen.dart"
+  - "widgets/agent_action_sheet.dart"
+  - "screens/agent/one_on_one_screen.dart"
+  - "models/agent.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["floorFirmHeading", "floorFirmSeats", "floorUnlockedSummary", "oneOnOneAskAnything", "oneOnOneHint", "oneOnOneBriefTooltip", "floorTabUpper"]
+literals: ["1-ON-1", "BRIEF"]
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Your Firm: your twelve agents and 1-on-1 chat
+
+Your team has twelve agents: the Fundamentals Analyst, Technical Strategist, Macro & Events, Flow & Positioning, Bull Researcher, Bear Researcher, Research Manager, three Risk Officers (Aggressive, Conservative, Balanced), the Execution Desk and the Chief Investment Officer (CIO).
+
+1. Open the **FLOOR** tab and tap **YOUR FIRM** (it shows how many seats are filled).
+2. Tap an agent whose hex is lit. A sheet opens with **1-ON-1** ("Talk to the agent") and **BRIEF** ("Tell the agent how to think").
+3. Tap **1-ON-1**. The agent says "Ask me anything in my domain." Type under "Ask anything…".
+
+A dimmed hex is a locked agent. Tapping it shows how to unlock it. Inside a 1-on-1 chat, the tune icon ("Brief this agent") jumps to briefing.

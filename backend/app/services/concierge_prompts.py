@@ -37,8 +37,14 @@ from app.schemas import (
 )
 from app.schemas.journal import JournalEntry
 from app.schemas.lessons import LessonMeta
+from app.schemas.manual import ManualRetrieval
 from app.services.agent_prompts import build_agent_prompt
 from app.services.llm_gateway import ChatMessage
+from app.services.manual_service import (
+    get_manual_service,
+    manual_citation,
+    retrieve_manual,
+)
 
 
 # ── CR021 concierge context router ───────────────────────────────────────
@@ -74,6 +80,7 @@ def build_concierge_messages(
     available_lessons: list[LessonMeta],
     unlock_requirements: list[Any] | None = None,
     context_mode: str | None = None,
+    manual: ManualRetrieval | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [chat_history + user_message]) for the Concierge.
 
@@ -94,10 +101,23 @@ def build_concierge_messages(
     `context_mode` (CR021) selects how the lesson catalogue is presented.
     When None it resolves from `settings.concierge_context_mode`
     (default `full_context`), so the live runner needs no change.
+
+    `manual` (CR022) is the app-manual retrieval for `user_message`. The runner
+    passes the one it also uses for the source line; when omitted it is
+    computed here. The manual INDEX joins the static head (identical for every
+    user); the RETRIEVED entries depend on the question, so they ride the tail.
     """
+    if manual is None:
+        manual = retrieve_manual(user_message)
     mode_in = context_mode if context_mode is not None else settings.concierge_context_mode
     lesson_block, resolved_mode = _lesson_context_block(available_lessons, mode_in)
     est_tokens = len(lesson_block) // 4
+    logger.info(
+        "concierge_manual",
+        available=manual.available,
+        entries=[h.entry.id for h in manual.hits],
+        scores=[h.score for h in manual.hits],
+    )
     logger.info(
         "concierge_context",
         mode=resolved_mode,
@@ -116,6 +136,12 @@ def build_concierge_messages(
         "─── FLOOR CONCIERGE — LESSON CATALOGUE (static; identical for every user) ───\n"
         "Available lessons you can recommend by code, ID + title:\n"
         f"{lesson_block}\n"
+        "\n"
+        "─── AMI APP MANUAL — INDEX (static; identical for every user) ───\n"
+        "Entries in the AMI app manual, which says how each screen of the app "
+        "works. The full text of the entries that match the user's question "
+        "is supplied further down.\n"
+        f"{_manual_index()}\n"
     )
 
     base = build_agent_prompt(AgentId.CONCIERGE, mandate, user_id=user_id)
@@ -133,16 +159,24 @@ def build_concierge_messages(
         f"exhaustive and authoritative:\n"
         f"{_format_unlock_paths(unlock_requirements)}\n"
         f"\n"
+        f"{_manual_block(manual)}\n"
+        f"\n"
         "Speak in 1–4 short sentences. Be specific — name the lesson by its "
         "code (\"TECH 12\", \"N&M 22\"), "
         "name the agent, name the journal entry by title or ticker. If the "
         "user wants trading advice on a ticker, do NOT speculate; route them "
         "to the right Analyst or to Convene the Room. If the user wants to "
-        "edit a mandate field, walk them to Settings → Mandate. Never "
+        "edit a mandate field, walk them to YOU → SETTINGS → MY MANDATE. Never "
         "invent a lesson, agent, or journal entry that isn't listed above. "
         "When asked how to unlock an agent, name ONLY the lessons in that "
         "agent's list above — the unlock rule is exactly those lessons, not "
-        "every lesson that mentions the agent."
+        "every lesson that mentions the agent. "
+        "For any question about how to do something in the app, answer ONLY from "
+        "the retrieved manual entries above, using their exact tab and button "
+        "names, in up to five short numbered steps; if no entry covers it, say "
+        "you have no manual entry for that and do not guess a screen. Never "
+        "describe payments, subscriptions or plans. AMI appends the manual "
+        "source line itself, so do not write one."
     )
 
     system_prompt = static_head + "\n\n" + base + per_user_tail
@@ -170,6 +204,16 @@ def scripted_reply(
     context. Falls through to a soft default if nothing matches.
     """
     msg = user_message.lower().strip()
+
+    # CR022 — an app-manual match answers, with its source line. A message that
+    # is plainly a how-to ("how do I convene a Room") is answered first, ahead
+    # of the keyword routes: it also trips _ROOM_KEYWORDS, whose canned line
+    # names no tab or button. Anything else ("what's my mandate?", "can I talk
+    # to the market analyst?") keeps its state-aware route and only reaches the
+    # manual as the last stop before the generic fallbacks.
+    manual = retrieve_manual(user_message)
+    if manual.hits and _matches(msg, _HOWTO_CUES):
+        return manual.hits[0].entry.short_answer + manual_citation(manual.hits[:1])
 
     if _matches(msg, _LESSON_KEYWORDS):
         return _scripted_lesson_reply(available_lessons)
@@ -203,6 +247,9 @@ def scripted_reply(
             "from the Floor, or convene the Room if you want all 12 weighing "
             "in. AMI is in fallback mode for analysis right now."
         )
+
+    if manual.hits:
+        return manual.hits[0].entry.short_answer + manual_citation(manual.hits[:1])
 
     # Last-resort retrieval over the AI Coach Q&A library. A confident
     # match (>=2 overlapping tokens with the question/tags) surfaces the
@@ -284,6 +331,40 @@ def _format_unlock_paths(requirements: list[Any] | None) -> str:
     if not lines:
         return "(All 12 agents already unlocked.)"
     return "\n".join(lines)
+
+
+def _manual_index() -> str:
+    """One line per manual entry (`id · title`), for the static head."""
+    try:
+        entries = get_manual_service().all_entries()
+    except Exception:  # noqa: BLE001 — logged by retrieve_manual on the same turn
+        return "(App manual unavailable.)"
+    return "\n".join(f"- {e.id} · {e.title}" for e in entries)
+
+
+def _manual_block(manual: ManualRetrieval) -> str:
+    """The per-question manual section of the tail.
+
+    Three distinct states, never collapsed (CR040): corpus unavailable, loaded
+    but nothing matched, and matched — so AMI cannot mistake "I could not look"
+    for "the manual says nothing".
+    """
+    header = "─── AMI APP MANUAL — ENTRIES FOR THIS QUESTION ───\n"
+    if not manual.available:
+        return header + (
+            "(The app manual could not be loaded right now. Do not describe app "
+            "screens or steps from memory — tell the user you cannot check the "
+            "manual at the moment.)"
+        )
+    if not manual.hits:
+        return header + (
+            "(No manual entry matches this message. If it asks how to do "
+            "something in the app, say you have no manual entry for it.)"
+        )
+    parts = [header]
+    for hit in manual.hits:
+        parts.append(f"[{hit.entry.id}] {hit.entry.title}\n{hit.entry.body}\n")
+    return "\n".join(parts).rstrip("\n")
 
 
 def _resolve_context_mode(mode: str | None) -> str:
@@ -391,6 +472,10 @@ _ROOM_KEYWORDS = (
     "convene", "the room", "convene the room", "12 agents", "all agents",
     "full team",
 )
+_HOWTO_CUES = (
+    "how do i", "how can i", "how to", "how would i", "where do i", "where is",
+    "where are", "where can i", "where's", "walk me through", "steps to",
+)
 _TRADING_KEYWORDS = (
     "buy", "sell", "should i", "good time", "outlook", "price target",
     "go long", "go short", "is it a buy", "bullish on", "bearish on",
@@ -469,7 +554,7 @@ def _scripted_mandate_reply(m: Mandate) -> str:
     snapshot = ", ".join(bits)
     return (
         f"Your mandate right now: {snapshot}. To edit any of it, head to "
-        "Settings → Mandate — every change versions the mandate and is "
+        "YOU → SETTINGS → MY MANDATE — every change versions the mandate and is "
         "logged in your Journal."
     )
 

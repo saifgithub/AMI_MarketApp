@@ -1,0 +1,41 @@
+---
+id: "manual_watchlist"
+title: "Use your Watchlist"
+section: "trading"
+topic: "watchlist"
+tags: ["watchlist", "watch", "add ticker", "remove", "follow", "star"]
+questions:
+  - "how do I add a stock to my watchlist"
+  - "where is my watchlist"
+  - "how do I follow a ticker"
+  - "how do I remove a ticker from the watchlist"
+  - "how do I watch a company"
+  - "how do I keep an eye on a stock"
+  - "how do I track a ticker"
+short_answer: "Open PORTFOLIO, tap the HISTORY segment, and tap ADD under WATCHLIST. You can also tap WATCH on any ticker's detail screen."
+screens:
+  - "screens/sim/portfolio_screen.dart"
+  - "screens/sim/ticker_detail_screen.dart"
+  - "widgets/watchlist_sheet.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["portfolioTabHistory", "watchlistHeading", "watchlistAdd", "portfolioAddDialogTitle", "portfolioAddDialogHint", "actionAdd", "watchlistRemoved", "watchlistUndo", "tickerDetailActionWatch", "watchlistRemove", "portfolioTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Use your Watchlist
+
+Your **WATCHLIST** lives in the **HISTORY** segment on the **PORTFOLIO** tab.
+
+To add a ticker:
+
+1. Open **PORTFOLIO** and tap **HISTORY**.
+2. Find **WATCHLIST** and tap **ADD**.
+3. In **ADD TO WATCHLIST**, enter a ticker (for example NVDA) and tap **ADD**.
+
+Or open any ticker's detail screen and tap **WATCH**; tap it again to unwatch.
+
+Tap a watchlist row to open the ticker's detail screen. To remove a row, swipe it to the left; tap **UNDO** if you did not mean to. The ticker tape's quick-action sheet also has **REMOVE FROM WATCHLIST**.

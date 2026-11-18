@@ -46,6 +46,7 @@ from app.services.concierge_prompts import (
     scripted_reply as concierge_scripted_reply,
 )
 from app.services.fundamentals import build_live_data_block, extract_tickers
+from app.services.manual_service import manual_citation, retrieve_manual
 from app.services.journal_context import build_journal_context_block
 from app.services.news_context import build_news_context_block
 from app.services.sharia_universe import default_halal_universe_async
@@ -370,6 +371,7 @@ class AgentRunner:
             yield text
             return
 
+        manual = retrieve_manual(user_message)
         system_prompt, messages = build_concierge_messages(
             mandate=mandate,
             user_id=user_id,
@@ -379,6 +381,7 @@ class AgentRunner:
             unlocked_agents=unlocked,
             available_lessons=lessons,
             unlock_requirements=unlock_reqs,
+            manual=manual,
         )
         tier = pick_tier(plan, AgentId.CONCIERGE)
 
@@ -484,6 +487,14 @@ class AgentRunner:
 
         if not "".join(buf).strip():
             yield _scripted_fallback()
+            return
+
+        # CR022 — the source line is appended here, not requested from the
+        # model: "cite your source" in a prompt is advice (CR038), a footer
+        # computed from the entries actually supplied is a control. Skipped
+        # when the stream errored (the reply is then not the model's answer).
+        if manual.hits and not (meta and meta.get("stream_error")):
+            yield manual_citation(manual.hits)
 
 
 _runner: AgentRunner | None = None

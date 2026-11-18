@@ -1,0 +1,37 @@
+---
+id: "manual_ask_ami"
+title: "Ask AMI (the Concierge)"
+section: "concierge"
+topic: "concierge"
+tags: ["concierge", "ask ami", "chat", "question", "help", "assistant"]
+questions:
+  - "how do I talk to AMI"
+  - "how do I ask the Concierge a question"
+  - "where is the Concierge"
+  - "how do I ask how the app works"
+  - "who is the Concierge and what can it do"
+short_answer: "On the Floor, type a question (anything that is not a ticker) into the box and tap ASK AMI. The Concierge answers questions about the app, your lessons and your journal, and routes analysis to your team."
+screens:
+  - "screens/floor/floor_screen.dart"
+  - "widgets/floor/floor_omnibox.dart"
+  - "screens/agent/one_on_one_screen.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["floorOmniboxHint", "floorAskAmi", "floorOmniboxCaption", "oneOnOneAskAnything", "oneOnOneHint", "floorTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Ask AMI (the Concierge)
+
+The AMI Concierge is your personal assistant. It helps with how the app works, points you to lessons, and routes you to the right analyst. It does not give trading advice or speculate on tickers; for analysis it sends you to your team or to the Room.
+
+To ask a question:
+
+1. Open the **FLOOR** tab.
+2. In the box that says "Type a ticker — or ask AMI anything…", type your question. Anything that is not a ticker counts as a question.
+3. Tap **ASK AMI**. The chat opens with your question already sent. Keep typing in the field that says "Ask anything…".
+
+AMI answers how-to questions from the AMI app manual and shows which manual entry it used at the end of the reply.

@@ -1,0 +1,39 @@
+---
+id: "manual_sign_in"
+title: "Sign in to keep your data"
+section: "account"
+topic: "account"
+tags: ["sign in", "account", "claim", "apple", "google", "email", "guest", "sign out", "merge"]
+questions:
+  - "how do I sign in"
+  - "how do I keep my data across devices"
+  - "how do I claim my account"
+  - "how do I sign out"
+  - "what happens to my data if I sign in"
+  - "how do I log in with email"
+short_answer: "Open YOU > SETTINGS > ACCOUNT and tap SIGN IN. Use Apple (iOS), Google (Android) or an email code. Until you sign in, your mandate, journal and portfolio stay on this device."
+screens:
+  - "screens/settings/settings_screen.dart"
+  - "screens/auth/sign_in_screen.dart"
+  - "screens/auth/merge_sheet.dart"
+  - "screens/home_shell.dart"
+  - "screens/you/you_screen.dart"
+arb_keys: ["settingsSectionAccount", "settingsAccountGuest", "settingsAccountGuestNote", "settingsSignIn", "settingsManageAccount", "signInIntro", "signInWithApple", "signInWithGoogle", "signInUseEmailInstead", "signInSendCode", "signInVerify", "mergeSheetTitle", "mergeSheetConfirm", "mergeSheetKeepSeparate", "youTabUpper", "settingsTabUpper"]
+literals: ["Sign out"]
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Sign in to keep your data
+
+You start as a guest: your mandate, journal and portfolio stay on this device until you sign in.
+
+1. Open **YOU** > **SETTINGS** and scroll to **ACCOUNT**. The status reads "Guest (anonymous)".
+2. Tap **SIGN IN**.
+3. Choose **Sign in with Apple** (iPhone) or **Sign in with Google** (Android), or tap **Use email instead**, enter your email, tap **SEND CODE**, type the 6-digit code and tap **VERIFY & CLAIM**.
+
+If AMI finds data from your earlier session on this device, **WELCOME BACK** offers **MERGE EVERYTHING** or **KEEP SEPARATE**.
+
+Once signed in, the same section shows **MANAGE ACCOUNT** and **Sign out**.

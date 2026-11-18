@@ -1,0 +1,45 @@
+---
+id: "manual_place_trade"
+title: "Place a simulated trade"
+section: "trading"
+topic: "trading"
+tags: ["trade", "trade ticket", "buy", "sell", "order", "stop", "target", "safety floor", "shares", "paper trade", "place"]
+questions:
+  - "how do I place a trade"
+  - "how do I buy a stock"
+  - "how do I buy shares"
+  - "how do I place a paper trade"
+  - "how do I sell a position"
+  - "how do I open the trade ticket"
+  - "how do I set a stop and target on a trade"
+  - "why was my trade blocked"
+short_answer: "On PORTFOLIO tap the plus icon (New trade), enter ticker, side and quantity, then SUBMIT TRADE. All trades are simulated, and the CIO safety floor runs on every submit."
+screens:
+  - "screens/sim/portfolio_screen.dart"
+  - "screens/sim/trade_ticket_sheet.dart"
+  - "screens/sim/ticker_detail_screen.dart"
+  - "screens/room/room_screen.dart"
+  - "widgets/watchlist_sheet.dart"
+arb_keys: ["portfolioHeading", "portfolioNewTradeTooltip", "portfolioNewTrade", "tradeTicketHeading", "tradeTicketLabelTicker", "tradeTicketSideBuy", "tradeTicketSideSell", "tradeTicketLabelQuantity", "tradeTicketLabelOrderType", "tradeTicketOrderMarket", "tradeTicketOrderLimit", "tradeTicketOrderStop", "tradeTicketOrderStopLimit", "tradeTicketLabelTif", "tradeTicketTifDay", "tradeTicketTif30", "tradeTicketTif90", "tradeTicketLabelStop", "tradeTicketLabelTarget", "tradeTicketLabelHorizon", "tradeTicketSubmit", "tradeTicketFooterNote", "tradeTicketSafetyFloorBlocked", "tradeTicketOpenMandate", "roomOpenTradeTicket", "watchlistOpenTradeTicket", "tickerDetailActionTrade", "tickerDetailActionTradeMore", "tickerDetailActionSell", "positionSell"]
+literals: ["Convene the Room", "Proceed without"]
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Place a simulated trade
+
+Every trade in AMI Trade is simulated. No real order is ever sent.
+
+1. Open the **PORTFOLIO** tab and tap the plus icon at the top right ("New trade"). On an empty portfolio you can also tap **NEW TRADE**.
+2. In the **NEW TRADE** ticket, enter the **TICKER**, choose **BUY** or **SELL**, and enter the **QUANTITY**.
+3. Pick an **ORDER TYPE**: **MARKET** fills now; **LIMIT**, **STOP** and **STOP LIMIT** wait for a price. Waiting orders also ask **GOOD FOR** (**TODAY**, **30 DAYS** or **90 DAYS**).
+4. Optionally set a **STOP**, a **TARGET** and a **HORIZON (DAYS)**.
+5. Tap **SUBMIT TRADE**.
+
+The ticket can also open pre-filled: **OPEN TRADE TICKET** on a Room verdict or in a ticker's quick-action sheet, **TRADE** (or **TRADE MORE**) on a ticker's detail screen, **SELL** on a holding.
+
+If you have no Room verdict for that ticker, a notice offers **Convene the Room** first or **Proceed without**; a trade made without one is marked "without advice".
+
+The CIO safety floor runs on submit (compliance flags, drawdown and single-name cap). If it blocks the trade you see **SAFETY FLOOR — TRADE BLOCKED**; tap **OPEN MY MANDATE** to see what is enforced.
