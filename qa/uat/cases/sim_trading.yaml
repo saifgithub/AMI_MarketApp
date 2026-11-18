@@ -391,3 +391,16 @@ cases:
     expected:
       - The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
       - AMI answers about AAPL, not a generic greeting
+
+  - id: UAT-SIM-031
+    title: A brand-new user can see and add to the watchlist from Portfolio
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A fresh account with no trades'
+    steps:
+      - 'Portfolio > HISTORY (shows 0 trades)'
+      - 'Scroll to WATCHLIST and tap ADD; enter a valid ticker'
+    expected:
+      - 'The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)'
+      - 'The added ticker appears as a watchlist row'

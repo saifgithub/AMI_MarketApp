@@ -1086,4 +1086,40 @@ void main() {
       });
     }
   });
+
+  group('DEF472 — a user with no trades still gets the watchlist', () {
+    SimState emptySim() => SimState(
+          portfolio: _portfolio(holdings: const []),
+          trades: const [],
+        );
+
+    testWidgets('empty History shows the watchlist heading and ADD',
+        (tester) async {
+      await _pump(tester,
+          sim: emptySim(), watchlist: const WatchlistState(items: []));
+      await tester.tap(find.textContaining('HISTORY 0'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _scrollUntil(
+          tester, 'portfolioHistoryScroll', find.text('WATCHLIST'));
+
+      expect(find.text('WATCHLIST'), findsOneWidget);
+      expect(find.text('ADD'), findsWidgets);
+      expect(find.text('No tickers yet'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('empty History lists already-watched tickers', (tester) async {
+      await _pump(tester,
+          sim: emptySim(),
+          watchlist: WatchlistState(items: [_watchlistEntry(1)]));
+      await tester.tap(find.textContaining('HISTORY 0'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _scrollUntil(
+          tester, 'portfolioHistoryScroll', find.text('W001'));
+
+      expect(find.text('W001'), findsOneWidget);
+    });
+  });
 }

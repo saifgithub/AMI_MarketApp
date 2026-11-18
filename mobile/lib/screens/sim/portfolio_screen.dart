@@ -1740,6 +1740,10 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
             padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
             sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
           ),
+          // DEF472 — a brand-new user has no trades yet but still needs to
+          // see and add to the watchlist; only the non-empty path had it.
+          ..._watchlistSlivers(context, ref, widget.watchlist),
+          const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.xxl)),
         ],
       );
     }

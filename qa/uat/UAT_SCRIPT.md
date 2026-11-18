@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**261 cases** — 185 api, 15 device, 61 manual; 11 blocked.
+**262 cases** — 185 api, 15 device, 62 manual; 11 blocked.
 
 ## Areas
 
@@ -16,7 +16,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 6. [Convene the Room](#room) — 21 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
-9. [Sim trading & market data](#sim-trading) — 30 cases
+9. [Sim trading & market data](#sim-trading) — 31 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
@@ -3545,6 +3545,21 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
 2. AMI answers about AAPL, not a generic greeting
+
+#### UAT-SIM-031 — A brand-new user can see and add to the watchlist from Portfolio
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A fresh account with no trades
+
+**Steps**
+1. Portfolio > HISTORY (shows 0 trades)
+2. Scroll to WATCHLIST and tap ADD; enter a valid ticker
+
+**Expected**
+1. The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)
+2. The added ticker appears as a watchlist row
 
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
