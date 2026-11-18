@@ -4,6 +4,11 @@
 
 Filed 2026-11-18. Status: `proposed` until Saiful says go. Decisions marked "(Saiful, 2026-11-18)" are settled; do not reopen them.
 
+**Rev 2 (2026-11-18):** this revision takes in the executor's pre-execution questions
+([`questions_for_plan_author_2026-11-18.md`](questions_for_plan_author_2026-11-18.md)) and the
+author's answers ([`answers_from_plan_author_2026-11-18.md`](answers_from_plan_author_2026-11-18.md)).
+Items still waiting for Saiful are marked **⟨Saiful pending⟩**; the answers file lists them.
+
 ---
 
 ## 1. How to execute this plan
@@ -53,10 +58,11 @@ Filed 2026-11-18. Status: `proposed` until Saiful says go. Decisions marked "(Sa
 | S3 | WP-23 | Picks the grader from the WP-22 bake-off scorecard; if Jev, obtains vendor terms. |
 | S4 | WP-42 | Confirms the Beta host choice, opens the account, creates the server, gives go for SSH work. |
 | S5 | WP-40 result | Picks the accelerator / credit programmes and applies. |
-| S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete. |
-| S7 | WP-50 | Confirms company Apple/Google accounts are enrolled and usable. |
+| S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete, plus the Singapore cross-border transfer under Malaysia's PDPA. Only this narrow question; the full legal review stays in §7. ⟨Saiful pending: if Beta ships in `delete`/`anonymise` mode, S6 is off the launch path.⟩ |
+| S7 | WP-49 | Confirms company Apple/Google accounts are enrolled and usable, and whether the Play account is an organisation account. |
 | S8 | WP-35 | Rotates the Adanos key at the vendor (closes DEF178). |
 | S9 | WP-53 | Confirms the Room satisfaction bar (proposed: 70% positive over 100 rated runs). |
+| S10 | Room Lite | Gives go on Room Lite. Not on the Beta launch path. |
 
 ## 5. Work packages
 
@@ -72,13 +78,14 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-12 | LLM budget cap and per-user concurrent-run cap | WP-00 | — | Sonnet |
 | WP-13 | Output text guard on agent text | WP-00 | — | Opus |
 | WP-14 | Cut Alpha over to the hosted model | WP-10, WP-11, WP-12 | S2 | Sonnet |
-| WP-20 | Room baseline on the chosen model | WP-14 | — | Sonnet |
-| WP-21 | Room decides blind; Street comparison after verdict | WP-14 | — | Opus |
+| WP-20 | Room baseline on the chosen model | WP-14, WP-21a | — | Sonnet |
+| WP-21a | Room decides blind: consensus removed at source | WP-00 | — | Opus |
+| WP-21b | Street comparison after the verdict | WP-21a, WP-14 | — | Sonnet |
 | WP-22 | Narrow-question judge and three-grader bake-off (offline) | WP-20 | — | Opus |
 | WP-23 | Coded decision rule, CONTESTED, CIO narrates | WP-22 | S3 | Opus |
 | WP-24 | Same inputs return the same room | WP-20 | — | Opus |
 | WP-25 | Flip explainer | WP-23, WP-24 | — | Sonnet |
-| WP-26 | Room acceptance run | WP-21, WP-23, WP-24, WP-25 | — | Opus |
+| WP-26 | Room acceptance run | WP-21b, WP-23, WP-24, WP-25 | — | Opus |
 | WP-27 | Room reliability defects | WP-00 | — | Sonnet |
 | WP-28 | Turn on outcome scoring | WP-14 | — | Sonnet |
 | WP-29 | Copy: stop leading with "12 analysts" | WP-00 | — | Sonnet |
@@ -95,15 +102,18 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-42 | Provision and harden the Beta host | WP-41 | S4 | Opus |
 | WP-43 | Real `/promote-to-beta` and `/rollback-beta` | WP-42 | — | Opus |
 | WP-44 | Beta backups, monitoring, alerts | WP-42 | — | Sonnet |
-| WP-45 | Beta URL in the mobile build scripts | WP-41 | — | Sonnet |
+| WP-45 | Beta URL in the mobile build scripts | WP-41, WP-49 | — | Sonnet |
 | WP-46 | Load test and drills | WP-43, WP-44 | — | Sonnet |
-| WP-50 | Store records, listing, review notes | WP-36 | S7 | Sonnet |
+| WP-49 | Company-account migration (CR258) | WP-00 | S7 | Opus |
+| WP-50 | Store records, listing, review notes | WP-29, WP-36, WP-49 | — | Sonnet |
 | WP-51 | Website waitlist | WP-00 | — | Sonnet |
 | WP-52 | Tester onboarding note and support inbox | WP-00 | — | Sonnet |
 | WP-53 | Exit-criteria report | WP-36, WP-46 | S9 | Sonnet |
-| WP-54 | Beta go-live | WP-26, WP-30…37, WP-46, WP-50, WP-52, WP-53 | — | Architect |
+| WP-54 | Beta go-live | WP-12, WP-13 (enforcing), WP-26, WP-30…37, WP-45, WP-46, WP-50, WP-52, WP-53 | — | Architect |
 
-Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-40, WP-51 and WP-52 are independent of the Room work and of each other. WP-10…13 run together. The Room chain WP-20 → 22 → 23 → 25 → 26 is the critical path.
+Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-21a, WP-40, WP-49, WP-51 and WP-52 are independent of the Room work and of each other. WP-10…13 run together. The Room chain WP-21a → 20 → 22 → 23 → 25 → 26 is the critical path. WP-28 and WP-51 are deliberately off the launch path: the first wave is the personal network and needs no waitlist.
+
+Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/daily-cr-def-review` once, logged as WP-01/S1 → the rest of WP-00. This keeps Saiful from being asked about rows that are merely stale. `/bug-monitor` runs at session start as normal. Commit tag for the executing session: ⟨Saiful pending: own track letter⟩.
 
 ## 6. Work-package detail
 
@@ -113,21 +123,37 @@ Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-40
 
 1. Goal: the registers and roadmap tell the truth again.
 2. Steps:
-   1. Find out whether the corrected CR266 60-room run finished on melehost (`ssh melehost`, look under the harness output folder named in `docs/forward_planning/CR266_decision_reliability/progress.md`). Record the result, or "never completed", in that file.
-   2. Fix stale row statuses: CR252, CR253, CR255, CR256, CR257, CR259 (executed, still `proposed`). Source: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.md`. Mark CR251, CR254, CR265, CR266 as superseded by this programme where their goal was the approval curve.
-   3. Append decisions to `docs/initial_specs/11_decisions/decision_log.md`, one per item in section 3 (next free D-numbers). Note that D-066/D-067 are reopened and D-068 is closed by decision 3.
+   1. Find out whether the corrected CR266 60-room run finished on melehost. No file names its output folder; `progress.md` names only dead Claude task IDs. Search melehost in this order:
+      1. the harness `out/` directory in melehost's copy of `docs/tools/room_investigation_V2/` (progress.md line 112 cites `out/cr266-legacy-card-report/`);
+      2. `~/cr266_smoke/`;
+      3. directories under home modified on or after 2026-10-29;
+      4. any surviving tmux session or process.
+
+      Record the result in `CR266_decision_reliability/progress.md`. If no complete 60-room set turns up, record "never completed"; that blocks nothing.
+   2. Fix stale rows. The stocktake (`docs/Research/decision_consistency_programme_stocktake_2026-10-20.md`) is the authority, not this list. There is no `superseded` status: write `dropped` with "superseded by CR267" plus what was kept in the row text, and don't edit `gen_registers.py`.
+      1. CR256 → `done` (a measurement that delivered its result, ICC 0.868 on a hosted model). `room_evidence_gate_thresholds_json` belongs to CR266, not CR256.
+      2. CR251, CR265 → `dropped`, superseded (their goal was the approval curve).
+      3. CR266 → after step 1, `dropped`: "superseded by CR267; card channel, DecisionRecord and threshold-policy code retained and reused by WP-22/WP-23". The code stays.
+      4. CR252, CR253, CR255, CR257, CR259 → `done` or `dropped` per the stocktake, with a reason.
+      5. Do not touch CR254 (WP-01 decides it), CR258 (WP-49) or CR260 (WP-21b).
+      6. Read `CR253_data_lane_completeness/` (it has no row). If it is a sub-workstream of CR253, add a line to the CR253 row naming both folders. If it is a separate item, ask the Architect to mint an ID. Don't rename the folder.
+   3. Append decisions to `docs/initial_specs/11_decisions/decision_log.md`, one per item in section 3, starting at D-076. Note that D-066/D-067 are reopened and D-068 is closed by decision 3. Mark **D-072 amended for its hosting clause only** ("on the current melehost Alpha stack" is replaced by decision 1); its payments-parked part stands. D-073 is unchanged.
    4. Rewrite the status block and Beta section of `docs/initial_specs/10_delivery/project_plan.md` to point at this plan.
-   5. Resolve the dirty tree left from October: the deleted `CR253_tm_all_salvage_conversion.md` and the untracked checkpoint memos and harness files. Commit what is real, restore what was deleted by accident; do not discard another track's work without reading it.
-3. Acceptance: `python3 scripts/registers/gen_registers.py gen all` leaves no diff after commit; `git status --short` is empty; the six stale rows read `done` or `dropped` with a reason.
+   5. Resolve the dirty tree left from October:
+      1. Deleted `CR253_tm_all_salvage_conversion.md`: confirm `CR254_tm_all_salvage_conversion/` holds the same content, then commit the deletion by pathspec.
+      2. Untracked checkpoint memos (track K) and the three harness/docs files (`jev_verdict_relation.py`, `cr251-cap1-smoke.yaml`, `CR252…/production_section.md`): **`origin` is public.** Read each file whole; a pattern scan is not enough. If a file holds a credential, a personal detail or anything doubtful, leave it untracked and list it in `progress.md` for Saiful. Otherwise commit it, using K's tag for K's files.
+      3. Do not discard another track's work without reading it. Whether track K is closed: ⟨Saiful pending⟩.
+3. Acceptance: `python3 scripts/registers/gen_registers.py gen all` leaves no diff after commit; no path WP-00 owns is dirty (anything else dirty is listed in `progress.md`, since other tracks share the checkout); every row changed in step 2 reads `done` or `dropped` with a reason.
 
 **WP-01 Register decision review (gate S1)**
 
-1. Run `/daily-cr-def-review` with Saiful present. Bring a close / keep / defer / drop recommendation for each `proposed` CR and `open` defect, judged against the freeze.
-2. Acceptance: a dated section in `docs/governance/daily_cr_def_review_log.md`; every open item has a decision.
+1. Run `/daily-cr-def-review` with Saiful present. Bring a close / keep / defer / drop recommendation for each `proposed` CR and `open` defect, judged against the freeze. Run it once only; CLAUDE.md's session-start review counts as this WP.
+2. Recommendations already agreed: move DEF469 (a real tester report) into WP-33, and decide CR254. Also ask Saiful what is actually done on the company accounts (CR258), which feeds WP-49.
+3. Acceptance: a dated section in `docs/governance/daily_cr_def_review_log.md`; every open item has a decision.
 
 **WP-02 Bring Alpha level with HEAD**
 
-1. Alpha runs `alpha-2026-10-19-1`; a handful of `backend/app` files changed since. Run `/promote-to-alpha`.
+1. Alpha runs `alpha-2026-10-19-1`. Since then, 6 `backend/app` files have changed (+1,149 lines, including `room_runner.py` +547 and a new `evidence_record.py`): this is CR266's code. Before promoting, read the `room_runner.py` diff and confirm every new path is behind `room_cards_envelope_enabled` or `room_evidence_gate_enabled` (both default `False`, config.py:1134/1144), and that neither flag is set in `infra/alpha.env`. Then run `/promote-to-alpha`. Promoting the code doesn't decide CR266's fate; the flags do.
 2. Acceptance: `curl -s https://api-alpha.agenticmarketintel.ai/v1/health` shows the new tag and HEAD's SHA; postflight green.
 
 ### Phase 1 — Hosted LLM
@@ -135,34 +161,43 @@ Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-40
 **WP-10 Shortlist and scorecard**
 
 1. Goal: evidence for Saiful to pick one hosted model.
-2. Context: `docs/forward_planning/CR240_llm_provider_evaluation/CR240.md`; harness `docs/tools/room_investigation_V2/` (read its `README.md` and `EXPERIMENT_LOG.md`); gateway `backend/app/services/llm_gateway.py`. The vLLM provider slot is OpenAI-compatible: `VLLM_BASE_URL`, `VLLM_MODEL`, `VLLM_API_KEY` point it at DeepInfra with no code change. Confirm that with one call before anything else.
-3. Steps:
-   1. Read DeepInfra's live model catalogue. Shortlist three non-abliterated open-weight models: the current Qwen flash-class model, DeepSeek-V4-Flash, and one other fast model. Record each licence's position on commercial use.
-   2. For each, run the harness on the 30-ticker universe at risk 2 and risk 4, two reps, with veto and resurrection reviews ON (production setting), temperature pinned.
+2. Context: `docs/forward_planning/CR240_llm_provider_evaluation/CR240.md`; harness `docs/tools/room_investigation_V2/` (read its `README.md` and `EXPERIMENT_LOG.md`); gateway `backend/app/services/llm_gateway.py`. The vLLM provider slot is OpenAI-compatible: `VLLM_BASE_URL`, `VLLM_MODEL`, `VLLM_API_KEY` point it at DeepInfra with no code change. Confirm that with one call before anything else, through both the gateway and the V2 harness. If the harness drops the key, fixing it is a tools change and doesn't break decision 3, which covers the product gateway.
+3. Key and spend:
+   1. Find the DeepInfra key's variable *name* in melehost's `.env` and the harness env; never print values. The CR257 runs used a provider key there in October. If it isn't there, Saiful places it.
+   2. Account spend limit for the measurement runs: ⟨Saiful pending; recommended $100⟩.
+   3. Check DeepInfra's rate limits against 10 concurrent Rooms (WP-46).
+4. Steps:
+   1. Read DeepInfra's live model catalogue. Shortlist three non-abliterated open-weight models: the current Qwen flash-class model, DeepSeek-V4-Flash, and one other fast model. Record each licence's position on commercial use, and whether the model returns token probabilities (WP-22).
+   2. For each, run the harness on the 30-ticker universe at risk 2 and risk 4, two reps, with veto and resurrection reviews ON (production setting), and temperature pinned at the desk value (the model card's recommended sampling for reasoning mode if the provider publishes one, otherwise 0.3; record the choice in `progress.md`). Add a 10-ticker side arm at 0 and at the server default, scored on contract gates and grounding only. Avoid 0 on desks unless the side arm shows no looping or truncation.
    3. Score: contract gates (`tools/room_contract_gates.py`), grounding of cited figures (`tools/jev_score_runs.py`, `figures_consistent`), minutes per Room, cost per Room from the provider's usage figures, error rate over the run.
-3. Out of scope: the approval curve. The desk writer no longer owns the verdict.
-4. Acceptance: `docs/forward_planning/CR240_llm_provider_evaluation/scorecard_<date>.md` with one row per model and a recommendation against the bars (zero gate failures, under 2 minutes, at most 5 cents, licence clear). If no model reaches 2 minutes, say where the time goes per phase.
+5. Out of scope: the approval curve. The desk writer no longer owns the verdict.
+6. Acceptance: `docs/forward_planning/CR240_llm_provider_evaluation/scorecard_<date>.md` with one row per model and a recommendation against the bars (zero gate failures, under 2 minutes, at most 5 cents, licence clear). If no model reaches 2 minutes, say where the time goes per phase.
 
 **WP-11 Pin temperature and sampling**
 
-1. Production runs at the server default (1.0). Add explicit settings in `backend/app/core/config.py`, apply them in the gateway for every desk call, forward in `docker-compose.yml`.
+1. Production runs at the server default (1.0). Add explicit settings in `backend/app/core/config.py`, apply them in the gateway for every desk call, forward in `docker-compose.yml`. Desk value: the one chosen in WP-10. Judge: 0. With WP-24 banking, product consistency no longer depends on temperature, so choose the desk value on desk quality.
 2. Acceptance: unit test proving the request body carries the configured temperature; compose-parity test green.
 
 **WP-12 Budget cap and concurrent-run cap**
 
-1. A daily spend ceiling on the hosted provider (count tokens from responses; on breach, Rooms return an honest "temporarily unavailable" state and an alert fires) and a per-user limit of one Room in flight (left over from DEF186).
-2. Acceptance: unit tests for both; breach state is visible in the stream, not a fake verdict.
+1. A daily spend ceiling on the hosted provider, as a setting. Count tokens from responses; on breach, Rooms return an honest "temporarily unavailable" state and an alert fires. Ceiling: ⟨Saiful pending; recommended $10/day Beta, $5/day Alpha, an estimate from 200 Rooms a day at 5¢⟩.
+2. A per-user limit of one Room in flight: the only part left over from DEF186. If the DEF186 fix already enforces it, prove that with a test and drop this half.
+3. Acceptance: unit tests for both; breach state is visible in the stream, not a fake verdict.
 
 **WP-13 Output text guard**
 
-1. A deterministic check on user-visible agent text before it is streamed or stored: personalised-advice phrasing ("you should buy"), content unrelated to markets, unsafe content. On a hit, replace the turn with a labelled sentinel and log it. Start in log-only mode behind a setting; measure the hit rate on a week of Alpha traffic; then enforce.
-2. Acceptance: unit tests with positive and negative examples; hit-rate note in `progress.md` before enforcement is switched on.
+1. A deterministic check on user-visible agent text before it is streamed or stored: personalised-advice phrasing ("you should buy"), content unrelated to markets, unsafe content. On a hit, replace the turn with a labelled sentinel and log it. Start in log-only mode behind a setting. Measure the hit rate by replaying stored agent text from `llm_audit`, not by waiting for calendar time (Alpha has had almost no live traffic since 2026-10-30). Then enforce.
+2. Acceptance: unit tests with positive and negative examples; hit-rate note in `progress.md`; enforcement switched on before WP-54.
 
 **WP-14 Cut Alpha over (gate S2)**
 
-1. Set the three vLLM variables in `infra/alpha.env` to the chosen model; register on-prem as the fallback provider; promote.
-2. Update the runtime table in `CLAUDE.md` (model, where it runs, what the alias resolves to).
-3. Acceptance: one live Room on Alpha completes; `llm_audit` rows show the hosted model; a forced provider failure produces the labelled fallback, not a silent one.
+1. Set the three vLLM variables in `infra/alpha.env` to the chosen model; promote.
+2. Fallback ⟨Saiful pending; author's recommendation below, which keeps decision 3 literally "configuration only"⟩:
+   1. No second provider slot and no automatic failover. Fallback is an operation: swap the three `VLLM_*` values back and re-promote.
+   2. The on-prem (abliterated) build is a manual fallback for Alpha only and never serves external testers. Beta's fallback is a second DeepInfra model, also by env swap.
+   3. A hosted outage ends the Room in a visible "temporarily unavailable" state, the same as the grader in WP-23.
+3. Update the runtime table in `CLAUDE.md` (model, where it runs, what the alias resolves to).
+4. Acceptance: one live Room on Alpha completes; `llm_audit` rows show the hosted model; a forced provider failure produces the visible unavailable state, not a verdict.
 
 ### Phase 2 — The Room
 
@@ -170,22 +205,31 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 
 **WP-20 Baseline on the chosen model**
 
-1. Run the 30-ticker × 5-risk matrix, two reps, production settings. Freeze the result as `docs/forward_planning/CR267_beta_programme/room_baseline_<model>.md` in the format of `docs/forward_planning/CR251_risk_monotonicity_matrix/BASELINE.md`. Keep the raw runs; WP-22 reuses them.
-2. Acceptance: the baseline file states approvals per risk level, flip count across reps, minutes and cost per Room, and the gate report.
+1. Runs after WP-21a, so no desk sees consensus. Run the 30-ticker × 5-risk matrix, two reps, production settings (cards OFF). Freeze the result as `docs/forward_planning/CR267_beta_programme/room_baseline_<model>.md` in the format of `docs/forward_planning/CR251_risk_monotonicity_matrix/BASELINE.md`. Keep the raw runs; WP-22 reuses them.
+2. A second arm of the same matrix with cards ON, for WP-22's code grader. It is about 300 more rooms; the cost is unmeasured. It is evidence only and does not change production.
+3. If the 30 tickers include no Street Sell or Underperform name, add up to five of the lowest-consensus names from `docs/forward_planning/CR035_room_benchmark/tickers_150.txt` as a side set, and say so in the baseline file.
+4. Acceptance: the baseline file states approvals per risk level, flip count across reps, minutes and cost per Room, n per cell, card completeness for the cards-on arm, and the gate report.
 
-**WP-21 Room decides blind; Street comparison after the verdict**
+**WP-21a Room decides blind (consensus removed at the source)**
 
-1. Remove analyst consensus ratings and price targets from the Room's fact sheet at the source (the pattern CR038 used for synthetic macro fields), so no desk and no judge can see them.
-2. After the verdict, attach a computed comparison to the result: Street rating, the Room's action, and the reasons from the narrow answers when they differ. CR260 (analyst price targets) is re-scoped to this display.
-3. Mobile: show it on the verdict card.
-4. Acceptance: a unit test that fails if any consensus field appears in a desk prompt; a Room on Alpha shows the comparison after the verdict; consensus data is labelled internal-evaluation-only until a licensed source exists.
+1. Remove analyst consensus ratings and price targets from the Room's fact sheet at the source (the pattern CR038 used for synthetic macro fields), so no desk and no judge can see them. First check whether the fact sheet carries consensus fields today. If it doesn't, this WP is only the guard test.
+2. Acceptance: a unit test that fails if any consensus field appears in a desk prompt.
+
+**WP-21b Street comparison after the verdict**
+
+1. After the verdict, attach a computed comparison to the result: Street rating, the Room's action, and the reasons from the narrow answers when they differ. CR260 (analyst price targets) is re-scoped to this display.
+2. Mobile: show it on the verdict card, behind a setting, with a source label. ⟨Saiful pending: shown to Beta testers or not. Recommended: shown, setting-gated. Saiful said earlier "Show after the verdict". Public release needs a licensed source (CR007).⟩
+3. Acceptance: a Room on Alpha shows the comparison after the verdict; the comparison is setting-gated and carries a source label.
 
 **WP-22 Narrow-question judge and bake-off (offline, no production change)**
 
 1. Write the question set: five or six typed questions unbundled from the CR257 rubric, each checkable by a person reading the room. Starting set: is the bear's strongest objection answered with numbers; is there a named catalyst inside the mandate horizon; is there an unresolved terminal vulnerability; does event risk argue for waiting; is thesis support material and directional; did the desk propose a trade. Version the file.
-2. Build one grader interface with three implementations: Jev (`tools/jev_v1_pilot.py` shows the call shape; pin the version, never `latest`); the WP-14 hosted model at temperature 0 with constrained answers and token probabilities; and plain code over CR266 typed cards for any question that can be computed.
+2. Build one grader interface with three implementations:
+   1. Jev: `tools/jev_v1_pilot.py` shows the call shape. Pin the version, never `latest`.
+   2. The WP-14 hosted model at temperature 0, with constrained answers and token probabilities. If the model returns no probabilities, ask the close questions as a 1–5 score and build the Contested band from the scores. Record the missing probabilities as a minus under "control".
+   3. Plain code over CR266 typed cards (the WP-20 cards-on arm). A missing cell makes that question "not computable" for that room; never impute. Report completeness as its own column. A code grader that can't answer for a material share of rooms can't be the sole grader. It can still own questions computable from structured fields without cards (e.g. "did the desk propose a trade").
 3. Run all three over the WP-20 rooms. Score each:
-   1. Consensus scores (via `backend/scripts/room_benchmark.py` and `room_benchmark_report.py`, `tickers_150.txt`): approvals of Street Sell/Underperform names; share of approvals that are Street Buy per risk level; rank correlation of the decision score with the consensus score. Report the CIO's numbers on the same rooms beside them.
+   1. Consensus scores (reuse `backend/scripts/room_benchmark.py` and `room_benchmark_report.py`, on the WP-20 30-ticker universe plus any side set; not the 150-ticker list): approvals of Street Sell/Underperform names; share of approvals that are Street Buy per risk level; rank correlation of the decision score with the consensus score. Report n per cell, and the CIO's numbers on the same rooms beside them.
    2. Wording test: each question in five phrasings; share of answers that change.
    3. Input tests with known answers: planted fatal flaw must give pass; removing the bear's evidence must not make the answer more cautious; strengthening the bear's numbers must lower the score; reordering turns and renaming the ticker must change nothing.
    4. Fresh-room stability: disagreement across the two reps of the same ticker and risk level.
@@ -195,7 +239,13 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 **WP-23 Coded decision rule (gate S3)**
 
 1. In `backend/app/services/room_runner.py`, behind a new setting (default off): after the debate, call the chosen grader, combine the answers with a written rule per risk level, and emit Approve / Pass / Contested. Contested covers the band where answers are close and lists which questions were close.
-2. Fit rule weights and bands on the WP-20 rooms; store them as versioned policy (reuse the shape of `room_evidence_gate_thresholds_json` in `config.py` rather than inventing a new one).
+2. The rule is written in advance from the questions, not fitted:
+   1. an unresolved terminal vulnerability gives Pass;
+   2. no trade proposed gives Pass;
+   3. an unanswered bear objection gives Pass at the conservative risk levels;
+   4. strictness is monotone in risk level.
+
+   Only the Contested band and any numeric cut-offs are fitted on the WP-20 rooms. Their targets are (a) agreement across the two reps of the same ticker and risk level, (b) the input tests with known answers, and (c) the CR257 holdouts. **Consensus is never a fitting target**; it is held out for evaluation in WP-22/WP-26. Store the result as versioned policy (reuse the shape of `room_evidence_gate_thresholds_json` in `config.py` rather than inventing a new one). The policy version includes the grader and its version.
 3. The CIO becomes a single narration call that explains the computed decision; it cannot change it. The deterministic mandate compliance check still runs last and stays as it is.
 4. Grader down or erroring: the Room ends in a visible "decision unavailable" state. Never a default verdict.
 5. Full backend suite before merge (shared hot path).
@@ -203,21 +253,29 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 
 **WP-24 Same inputs return the same room**
 
-1. Freeze the fact sheet per ticker per trading day. Key a room on (ticker, mandate snapshot, fact-sheet hash, policy version). A convene with an existing key returns the banked room; state plainly in the UI that inputs are unchanged since the last run.
+1. Freeze the fact sheet per ticker per trading day. Key a room on (user_id, ticker, mandate snapshot, fact-sheet hash, policy version, model `root` from `/v1/models`). The key is per user: sharing rooms across users is a later cost optimisation. A new trading day is a changed input, so it gets a new room; there is no materiality threshold in this programme. A convene with an existing key returns the banked room; state plainly in the UI that inputs are unchanged since the last run.
 2. Decide and document what happens to credits on a banked return (recommended: no charge).
 3. Acceptance: two convenes with identical inputs return the identical room ID in 100% of a 50-pair test; changing any keyed input produces a new room.
 
 **WP-25 Flip explainer**
 
-1. When a user's verdict on a ticker differs from their previous one, compute and store a diff: which inputs changed (price, news, filings, mandate), which desk claims changed, which narrow answer changed. Built from stored fields in code; no agent writes it.
+1. When a user's verdict on a ticker differs from their previous one, compute and store a diff: which inputs changed (price, news, filings, mandate) and which narrow answer changed. Both are required. Add which desk claims changed only when cards are on; the explainer must work without cards. Built from stored fields in code; no agent writes it.
 2. Mobile: show it on the verdict card and in the Journal.
 3. Acceptance: a forced input change yields a flip whose explainer names at least one changed input and one changed answer; a unit test rejects a flip stored without an explainer.
 
 **WP-26 Room acceptance run**
 
-1. Fresh 30-ticker × 5-risk run, two reps, all of WP-21/23/24/25 on.
-2. Gates, judged by the letter: identical inputs return the identical room (100%); every verdict change carries a non-empty explainer; consensus scores at or above the CIO baseline from WP-22; wording and input tests still pass; zero holdout approvals (the RIOT / APD / BA shapes from CR257); zero contract-gate failures. Report the fresh-run flip rate as a diagnostic only.
-3. Pass: turn the setting on for Alpha and Beta. Fail: leave it off, label the Room "experimental" in the app, stop tuning, and record which gate failed. Then raise the Room Lite option below with Saiful.
+1. Fresh 30-ticker × 5-risk run, two reps, all of WP-21a/21b/23/24/25 on.
+2. Gates, judged by the letter:
+   1. identical inputs return the identical room (100%);
+   2. every verdict change carries a non-empty explainer;
+   3. consensus scores at or above the CIO baseline from WP-22;
+   4. wording and input tests still pass;
+   5. zero holdout approvals: zero approvals when the banked CR257 holdout transcripts (spec §4.1, lines 74–76: RIOT-shaped, and APD/BA-shaped with a grounded bear case and negative SBC-adjusted FCF) are replayed through the chosen grader and rule;
+   6. zero contract-gate failures.
+
+   Diagnostics only: the fresh-run flip rate, and fresh RIOT/APD/BA rooms (their facts move).
+3. Pass: turn the setting on for Alpha and Beta. Fail: leave it off, label the Room "experimental" in the app, stop tuning, and record which gate failed. **Beta still goes live on a FAIL**, with the Room labelled experimental. Then raise the Room Lite option below with Saiful (gate S10). Cards go on in production only if the WP-20 cards-on arm passes the contract gates; WP-26 doesn't require cards.
 4. Acceptance: `docs/forward_planning/CR267_beta_programme/room_acceptance_<date>.md` with each gate's measured value and a single PASS or FAIL.
 
 **WP-27 Room reliability defects**
@@ -235,7 +293,7 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 1. Store listing draft (`marketing/users/assets/store_listing_copy.md`) and `website/`: lead with the learning outcome; the Room is the practice arena, described as a simulated desk. No claim about picking stocks or performance.
 2. Acceptance: no "12 AI analysts" headline remains; website deployed with a cache-bust.
 
-**Room Lite (only if WP-26 fails or WP-10 cannot reach 2 minutes; needs Saiful's go)**
+**Room Lite (only if WP-26 fails or WP-10 cannot reach 2 minutes; gate S10; not on the launch path)**
 
 Keep all twelve voices on screen and cut the calls: one structured Research call renders the Bull, Bear and Research Manager voices, as CR201 did for the risk debators. Gate it against the WP-20 baseline with the same harness before it replaces anything.
 
@@ -243,14 +301,15 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 
 **WP-30 Account closure and data export (release gated by S6)**
 
-1. Backend: routes to close an account (deactivate and revoke sessions at once; restorable for 30 days; then a scheduled job moves the full record to an access-locked archive) and to export the user's data as a downloadable file. Make the post-grace step a setting with three modes (archive, anonymise, delete) so counsel's answer is a configuration change.
+1. Backend: routes to close an account (deactivate and revoke sessions at once; restorable for 30 days; then a scheduled job runs the post-grace step) and to export the user's data as a downloadable file. Make the post-grace step a setting with three modes (archive, anonymise, delete) so counsel's answer is a configuration change.
+   - ⟨Saiful pending: the Beta mode.⟩ The author recommends shipping Beta in `delete` or `anonymise` mode, with the button reading "Delete account", and switching to `archive` only if counsel approves. That takes S6 off the launch path and removes the Apple 5.1.1(v) / Play deletion review risk in WP-50. If archive is kept for Beta, S6 stays a launch blocker and WP-50 can still be rejected. The wording in step 3 follows whichever mode is chosen.
 2. Mobile: Settings → Close account, and Settings → Export my data.
-3. Wording everywhere says "close account" and states what is kept and for how long. Update `legal/policies/terms_of_service.md` §10 and the privacy and data-deletion policies to match; they are still DRAFT.
+3. Wording everywhere says "close account" (or "delete account" under the recommended Beta mode) and states what is kept and for how long. Update `legal/policies/terms_of_service.md` §10 and the privacy and data-deletion policies to match; they are still DRAFT. The privacy policy also notes Singapore hosting as a cross-border transfer under Malaysia's PDPA.
 4. Acceptance: closed account cannot sign in after the grace period; restore works inside it; export contains the user's trades, rooms, mandate and progress; device run on the rig. Do not ship to external testers before S6.
 
 **WP-31 18+ confirmation**
 
-1. One step in onboarding (`mobile/lib/screens/onboarding`); store a timestamped boolean, no birth date.
+1. One step in onboarding (`mobile/lib/screens/onboarding`); store a timestamped boolean, no birth date. Existing Alpha users are not retrofitted; Beta starts with an empty database.
 2. Acceptance: onboarding cannot complete without it; widget test.
 
 **WP-32 iOS privacy manifest**
@@ -260,7 +319,7 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 
 **WP-33 Mobile defect batch**
 
-1. DEF473 (update button dead when `storeUrl` is empty), DEF478 (hardcoded English), DEF483 (stray backslash), DEF472, DEF477, DEF479, DEF474, DEF475, DEF476, DEF466, DEF486.
+1. DEF473 (update button dead when `storeUrl` is empty), DEF478 (hardcoded English), DEF483 (stray backslash), DEF472, DEF477, DEF479, DEF474, DEF475, DEF476, DEF466, DEF486, and DEF469 (a tester report; confirm at WP-01). Other open defects not named in any batch (e.g. DEF470, DEF481, DEF482, DEF485) are decided at WP-01.
 2. Acceptance: rows `fixed` with tests; `flutter analyze` and `flutter test` green.
 
 **WP-34 Backend defect batch**
@@ -276,7 +335,7 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 
 **WP-36 Beta build settings**
 
-1. English-only locale for Beta builds; credits free; paywall remains the information card.
+1. English-only locale for Beta builds; credits free; paywall remains the information card. Treat both as new settings: a quick grep found neither. The free-credits switch is a backend setting under the compose-parity test. The locale lock is a build-time define in the mobile build scripts.
 2. "Report this response" on agent output, feeding the existing bug-report path.
 3. After each Room: "Did the verdict and its reasons make sense?" thumbs up or down, stored with the room ID.
 4. Acceptance: Beta build shows no AR/MS switch; a report and a thumbs rating both arrive in the database from the rig.
@@ -320,17 +379,23 @@ Recommendation: one Singapore VPS (2 vCPU / 4 GB) running the same Docker Compos
 
 **WP-45 Beta URL in the mobile build scripts**
 
-1. `scripts/build_testflight.sh` and `scripts/build_playstore.sh` bake only the Alpha URL today. Add the Beta URL and a flag selecting the Beta channel; backend-switching stays off in Beta builds.
-2. Acceptance: a Beta build talks to the Beta hostname and cannot be switched to Alpha.
+1. `scripts/build_testflight.sh` and `scripts/build_playstore.sh` bake only the Alpha URL today. Add the Beta URL and a flag selecting the Beta channel; backend-switching stays off in Beta builds. Use the final company bundle IDs from WP-49.
+2. `SENTRY_DSN`: `build_playstore.sh` treats it as optional and leaves it empty if unset (lines 42, 91, 461); check `build_testflight.sh`. A Beta build must fail when the DSN is empty, because WP-53's crash-free figure comes from Sentry release health.
+3. Acceptance: a Beta build talks to the Beta hostname and cannot be switched to Alpha; a Beta build with an empty DSN fails.
 
 **WP-46 Load test and drills**
 
-1. Run the k6 script in `infra/loadtest/` at the invited-cohort size, including concurrent Rooms. Resize the server if needed. One rollback drill.
+1. Run the k6 script in `infra/loadtest/` at 200 testers with 10 concurrent Rooms (check DeepInfra's rate limits first). Resize the server if needed. One rollback drill.
 2. Acceptance: results file in this folder; drill recorded.
 
 ### Phase 5 — Launch
 
-**WP-50 Store records, listing, review notes (gate S7)**
+**WP-49 Company-account migration (CR258, gate S7)**
+
+1. Move the apps to the company Apple and Google accounts: bundle IDs, signing, Sign in with Apple keys, Google OAuth audiences, OneSignal. RevenueCat stays parked with payments. Plan and identity register: `docs/forward_planning/CR258_company_account_migration/`. Find out at WP-01 how much is already done (D-073's 2026-10-13 update says "executing now").
+2. Acceptance: a release build signed under the company accounts installs on the rig, signs in, and receives a push.
+
+**WP-50 Store records, listing, review notes**
 
 1. App records under the company accounts (CR258), English listing, screenshots from the rig, Apple privacy labels, Play Data Safety form. Review notes that explain: simulation only, no real orders, Alpaca is paper-only, the Sharia screen makes no certification claim, how to reach account closure.
 2. Acceptance: TestFlight external build accepted by Beta App Review; Play closed track live.
@@ -348,18 +413,19 @@ Recommendation: one Singapore VPS (2 vCPU / 4 GB) running the same Docker Compos
 **WP-53 Exit-criteria report (gate S9)**
 
 1. A script producing the weekly Beta report from real data:
-   1. Crash-free sessions ≥ 99%.
+   1. Crash-free sessions ≥ 99% (Sentry release health).
    2. Room completes with a shown verdict in ≥ 95% of runs.
-   3. WP-26 gates still hold on the weekly harness run.
+   3. WP-26 gates hold on the weekly harness run, or WP-26 recorded FAIL and the Room carries the experimental label.
    4. Room satisfaction ≥ the bar from S9 over at least 100 rated runs.
    5. Zero open defects in security, data loss or money categories.
-   6. At least 20 testers active over 14 days; day-7 retention reported.
+   6. At least 20 testers active over 14 days; day-7 retention reported (computed from backend session/activity rows; no analytics SDK in Beta).
    7. One rollback drill and one restore drill on record.
+   8. Diagnostic, not a bar: the day-over-day verdict flip rate. If it is high, a materiality threshold becomes a post-Beta item.
 2. Acceptance: the report runs unattended and every line is computed, none typed by hand.
 
 **WP-54 Beta go-live**
 
-1. Invite the personal-network wave first so Play's 12-testers-for-14-days clock starts; open the other channels as they are ready. Arm `/loop 6h /bug-monitor`. One Beta build a week.
+1. Invite the personal-network wave first; open the other channels as they are ready. Play's 12-testers-for-14-days clock applies to personal developer accounts. If S7 confirms the company Play account is an organisation account, it is a soft target only. Arm `/loop 6h /bug-monitor`. One Beta build a week.
 2. Beta runs 6 to 12 weeks and ends once every WP-53 line has held for 14 days in a row. At week 12, any red line goes to Saiful for an explicit decision.
 
 ## 7. Not in this plan (public-release backlog, do not start)
@@ -374,3 +440,6 @@ Counsel review of the legal documents; a licensed market-data source to replace 
 4. Jev's price, uptime and data-retention terms.
 5. Counsel's view on archiving closed accounts.
 6. Vendor prices and limits in the hosting comparison that came from third-party pages.
+7. Whether the V2 harness passes `VLLM_API_KEY`, and whether the chosen model returns token probabilities (WP-10 answers both).
+8. Whether the 30-ticker universe contains any Street Sell/Underperform name, and whether RIOT/APD/BA are in it (WP-20 answers it).
+9. The cost of the WP-20 cards-on arm (unmeasured).
