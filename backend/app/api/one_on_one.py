@@ -32,7 +32,7 @@ from app.services.mandate_store import resolve_mandate
 from app.services.room_runner import _risk_tier_size_ceiling, _verify_and_annotate_geometry
 from app.services.technicals import compute_technicals
 from app.api.dependencies import get_current_user
-from app.api.sse import sse_json, sse_text
+from app.api.sse import sse_json, sse_text, with_keepalive
 from app.db.models import User
 from app.services.rate_limit import (
     agent_stream_concurrency_limit,
@@ -315,7 +315,9 @@ async def send_message(
                 pass
             yield sse_json("done", json.dumps({"chars": total_chars}))
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        with_keepalive(event_stream()), media_type="text/event-stream"
+    )
 
 
 @router.get("/one_on_one/{session_id}", response_model=OneOnOneSession)

@@ -393,9 +393,16 @@ void main() {
             'agent_id': 'news_analyst',
             'text': 'Headlines are mixed.',
           },
+          // A real stream always ends on a terminal event; a clean end without
+          // one is a truncated stream and resumes the wait (DEF484).
+          {'kind': 'done', 'run_id': 'run-1'},
         ], const [], breakStream: false);
         final container = ProviderContainer(
-          overrides: [apiClientProvider.overrideWithValue(fake)],
+          overrides: [
+            apiClientProvider.overrideWithValue(fake),
+            journalNotifierProvider.overrideWith((ref) => _NoopJournal(ref)),
+            lessonsNotifierProvider.overrideWith((ref) => _NoopLessons(ref)),
+          ],
         );
         addTearDown(container.dispose);
         final sub = container.listen(

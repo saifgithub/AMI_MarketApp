@@ -5250,4 +5250,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get companyReviewShowLess => 'Show less';
+
+  @override
+  String askAboutTickerMessage(String ticker) {
+    return 'What\'s your read on $ticker?';
+  }
+
+  @override
+  String get roomReconnectingBanner =>
+      'Connection lost. The Room is still running — waiting for the verdict to land.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'AMI can\'t confirm this Room has finished. Whatever it produces is saved to your Journal, so you can open it there later, or check again now.';
+
+  @override
+  String get roomCheckAgain => 'CHECK AGAIN';
+
+  @override
+  String get roomLeaveTitle => 'Leave the Room?';
+
+  @override
+  String get roomLeaveBody =>
+      'The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.';
+
+  @override
+  String get roomLeaveStay => 'STAY';
+
+  @override
+  String get roomLeaveConfirm => 'LEAVE';
 }

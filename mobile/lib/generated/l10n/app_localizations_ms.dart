@@ -5254,4 +5254,33 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get companyReviewShowLess => 'Show less';
+
+  @override
+  String askAboutTickerMessage(String ticker) {
+    return 'Apakah pandangan anda tentang $ticker?';
+  }
+
+  @override
+  String get roomReconnectingBanner =>
+      'Sambungan terputus. Bilik masih berjalan — menunggu keputusan.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'AMI tidak dapat mengesahkan Bilik ini telah selesai. Apa sahaja hasilnya disimpan dalam Jurnal anda, jadi anda boleh membukanya di sana kemudian, atau semak semula sekarang.';
+
+  @override
+  String get roomCheckAgain => 'SEMAK SEMULA';
+
+  @override
+  String get roomLeaveTitle => 'Tinggalkan Bilik?';
+
+  @override
+  String get roomLeaveBody =>
+      'Bilik terus berbincang tanpa anda. Keputusan akan disimpan dalam Jurnal anda apabila siap.';
+
+  @override
+  String get roomLeaveStay => 'KEKAL';
+
+  @override
+  String get roomLeaveConfirm => 'TINGGAL';
 }

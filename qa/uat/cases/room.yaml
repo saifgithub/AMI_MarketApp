@@ -228,3 +228,69 @@ cases:
       - 'The Convene sheet states the Room price and the user''s credits before anything is charged'
       - 'The Room opens on AAPL and streams desk by desk'
       - 'The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card'
+
+  - id: UAT-ROOM-017
+    title: The Convene picker opens pre-filled when launched for a ticker
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A watchlist containing GOOGL
+    steps:
+      - From the GOOGL watchlist action sheet tap CONVENE THE ROOM
+    expected:
+      - The picker shows GOOGL in the field with the Room price and balance line above it
+      - Nothing is charged until CONVENE is tapped; opening the picker from the Floor still starts with an empty field
+
+  - id: UAT-ROOM-018
+    title: A slow Room run is waited out to its verdict, and a lost connection never silently gives up
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A Room that takes several minutes (slow model day), or a device you can put in airplane mode briefly
+    steps:
+      - Convene the Room; once desks are speaking, switch to airplane mode for about 20 seconds, then back online
+      - Repeat, this time staying offline for over two minutes before reconnecting
+      - Tap CHECK AGAIN
+    expected:
+      - After the short drop the screen shows the 'Connection lost... still running' banner, then the transcript catches up and the run lands on its verdict - it never ends on 'Reconnect timed out'
+      - After the long outage the screen shows an explicit card saying AMI cannot confirm the Room has finished, that the result is saved to the Journal, and a CHECK AGAIN button - not a silent stop
+      - CHECK AGAIN resumes the wait and the verdict appears once the run has finished
+
+  - id: UAT-ROOM-019
+    title: Backing out of a Room that is still deliberating warns and keeps the run going
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A funded account
+    steps:
+      - Convene the Room on AAPL and, while desks are still speaking, tap the back arrow (and separately use the system back gesture)
+      - Tap STAY; then back again and tap LEAVE
+      - Open the Journal after a few minutes
+    expected:
+      - A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
+      - STAY keeps the live Room on screen; LEAVE returns to the previous screen
+      - The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
+
+  - id: UAT-ROOM-020
+    title: When the main model fails mid-Room, the app clears the discussion and says AMI switched to the backup
+    layer: manual
+    plans: [any]
+    preconditions:
+      - An Alpha backend whose primary LLM can be made to fail mid-run (operator action) with the backup slot configured
+    steps:
+      - Convene the Room and wait until a few desks have spoken
+      - Have the operator take the primary LLM down so the run restarts on the backup
+    expected:
+      - The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
+      - The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen
+
+  - id: UAT-ROOM-021
+    title: A Room stream stays open through a long silent model turn
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A moment when the LLM is slow, or an operator-throttled LLM
+    steps:
+      - Convene the Room and keep it open while one desk takes over 100 seconds to start speaking
+    expected:
+      - The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner

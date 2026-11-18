@@ -6533,5 +6533,42 @@
   "companyReviewOpenLinkFailed": "Couldn't open that link.",
   "@companyReviewOpenLinkFailed": { "description": "CR244 audit fix L6 — snackbar shown when launchUrl fails to open a filing/Form-4/holder document link. NEW key, needs ar/ms translation." },
   "companyReviewShowLess": "Show less",
-  "@companyReviewShowLess": { "description": "CR244 audit fix M5 — collapse label on an expanded 'view full detail' section (Financials, Insider summary, Events), mirrored against companyReviewViewFullDetail. NEW key, needs ar/ms translation." }
+  "@companyReviewShowLess": { "description": "CR244 audit fix M5 — collapse label on an expanded 'view full detail' section (Financials, Insider summary, Events), mirrored against companyReviewViewFullDetail. NEW key, needs ar/ms translation." },
+  "askAboutTickerMessage": "What's your read on {ticker}?",
+  "@askAboutTickerMessage": {
+    "description": "DEF480 — first message auto-sent to the Technical Strategist when the user taps ASK on a ticker (ticker detail, watchlist sheet), so the ticker they were looking at is not dropped. NEW key, needs ar/ms review. retranslate:[ar,ms]",
+    "placeholders": {
+      "ticker": {
+        "type": "String"
+      }
+    }
+  },
+  "roomReconnectingBanner": "Connection lost. The Room is still running — waiting for the verdict to land.",
+  "@roomReconnectingBanner": {
+    "description": "DEF484 — banner while the client lost the live stream and is polling the run until it reaches a terminal state (previously hard-coded English). retranslate:[ar,ms]"
+  },
+  "roomWaitGaveUp": "AMI can't confirm this Room has finished. Whatever it produces is saved to your Journal, so you can open it there later, or check again now.",
+  "@roomWaitGaveUp": {
+    "description": "DEF484 — shown only when the client could not reach the server for a long stretch, or the run stayed active past the server's own stuck-run window. Honest give-up: the run is not lost, it lands in the Journal. NEW key, needs ar/ms review. retranslate:[ar,ms]"
+  },
+  "roomCheckAgain": "CHECK AGAIN",
+  "@roomCheckAgain": {
+    "description": "DEF484 — button that resumes waiting on a Room run after the honest give-up card. NEW key. retranslate:[ar,ms]"
+  },
+  "roomLeaveTitle": "Leave the Room?",
+  "@roomLeaveTitle": {
+    "description": "DEF471 — title of the confirm shown when the user backs out of a Room that is still deliberating. NEW key, needs ar/ms review. retranslate:[ar,ms]"
+  },
+  "roomLeaveBody": "The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.",
+  "@roomLeaveBody": {
+    "description": "DEF471 — body of the leave-mid-run confirm. The run is a detached server task; the Journal entry is written on completion. NEW key, needs ar/ms review. retranslate:[ar,ms]"
+  },
+  "roomLeaveStay": "STAY",
+  "@roomLeaveStay": {
+    "description": "DEF471 — dismiss button of the leave-mid-run confirm (keeps the user in the Room). NEW key. retranslate:[ar,ms]"
+  },
+  "roomLeaveConfirm": "LEAVE",
+  "@roomLeaveConfirm": {
+    "description": "DEF471 — confirm button of the leave-mid-run confirm (leaves; the run continues server-side). NEW key. retranslate:[ar,ms]"
+  }
 }

@@ -3494,5 +3494,13 @@
     "roomDeltaPriorCall": "PRIOR CALL",
     "roomDeltaPriceMove": "PRICE MOVE",
     "roomDeltaKillCriterion": "KILL CRITERION THEN",
-    "roomDeltaChangedFields": "CHANGED FIELDS"
+    "roomDeltaChangedFields": "CHANGED FIELDS",
+    "askAboutTickerMessage": "Apakah pandangan anda tentang {ticker}?",
+    "roomReconnectingBanner": "Sambungan terputus. Bilik masih berjalan — menunggu keputusan.",
+    "roomWaitGaveUp": "AMI tidak dapat mengesahkan Bilik ini telah selesai. Apa sahaja hasilnya disimpan dalam Jurnal anda, jadi anda boleh membukanya di sana kemudian, atau semak semula sekarang.",
+    "roomCheckAgain": "SEMAK SEMULA",
+    "roomLeaveTitle": "Tinggalkan Bilik?",
+    "roomLeaveBody": "Bilik terus berbincang tanpa anda. Keputusan akan disimpan dalam Jurnal anda apabila siap.",
+    "roomLeaveStay": "KEKAL",
+    "roomLeaveConfirm": "TINGGAL"
 }

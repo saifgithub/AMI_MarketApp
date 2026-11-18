@@ -210,3 +210,14 @@ cases:
     expected:
       - 'The Brief screen opens for that agent'
       - 'The history header reads "N edits made - M remaining" (the Floor Pass cap) or unlimited, with no chat turn started'
+
+  - id: UAT-BRIEF-017
+    title: A slow Brief reply keeps the connection alive instead of freezing
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A moment when the LLM is slow, or an operator-throttled LLM
+    steps:
+      - Send a Brief Your Agent message and wait while the agent thinks for over a minute
+    expected:
+      - The reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent) and the chat never shows a dead frozen state

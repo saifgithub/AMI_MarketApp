@@ -5251,4 +5251,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get companyReviewShowLess => 'Show less';
+
+  @override
+  String askAboutTickerMessage(String ticker) {
+    return 'ما رأيك في $ticker؟';
+  }
+
+  @override
+  String get roomReconnectingBanner =>
+      'انقطع الاتصال. لا تزال الغرفة تعمل — بانتظار صدور الحكم.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'لا يمكن لـ AMI تأكيد انتهاء هذه الغرفة. كل ما تنتجه يُحفظ في يومياتك، ويمكنك فتحه من هناك لاحقًا أو التحقق مجددًا الآن.';
+
+  @override
+  String get roomCheckAgain => 'تحقق مجددًا';
+
+  @override
+  String get roomLeaveTitle => 'مغادرة الغرفة؟';
+
+  @override
+  String get roomLeaveBody =>
+      'تواصل الغرفة مداولاتها دونك. سيُحفظ الحكم في يومياتك عند صدوره.';
+
+  @override
+  String get roomLeaveStay => 'ابقَ';
+
+  @override
+  String get roomLeaveConfirm => 'غادر';
 }

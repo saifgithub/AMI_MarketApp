@@ -28,12 +28,17 @@ const _suggestedTickers = [
 ];
 
 class ConveneSheet extends ConsumerStatefulWidget {
-  const ConveneSheet({super.key});
+  const ConveneSheet({super.key, this.initialTicker});
+
+  /// DEF480 — the ticker the user was looking at when they tapped CONVENE
+  /// (watchlist row, ticker tape). Pre-fills the field; the user still taps
+  /// CONVENE, so the credit line stays in view before anything is spent.
+  final String? initialTicker;
 
   @override
   ConsumerState<ConveneSheet> createState() => _ConveneSheetState();
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {String? initialTicker}) {
     return showModalBottomSheet<void>(
       context: context,
       useRootNavigator: false,
@@ -42,7 +47,7 @@ class ConveneSheet extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const ConveneSheet(),
+      builder: (_) => ConveneSheet(initialTicker: initialTicker),
     );
   }
 }
@@ -61,6 +66,8 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
       },
     );
     _ctrl.addListener(_onTickerChanged);
+    final seed = widget.initialTicker?.trim().toUpperCase();
+    if (seed != null && seed.isNotEmpty) _ctrl.text = seed;
   }
 
   @override

@@ -348,6 +348,35 @@ class TestNegativeMatch:
         assert mismatches[0].claimed_value == 29.9  # the bound (near) one, not 21.5
 
 
+class TestDef445FcfYield:
+    """DEF445 — a correctly-quoted precomputed FCF-yield percent must not be
+    checked against the raw-dollar FCF field."""
+
+    PROFILE = {"fcf_yield": 6.2, "free_cash_flow": 13144}
+
+    def test_fact_sheet_phrasing_is_untouched(self):
+        text = "IBM offers a 6.2% FCF yield ($13,144M TTM) on this price"
+        assert find_sheet_mismatches(text, self.PROFILE) == []
+        assert annotate_sheet_mismatches(text, self.PROFILE) == text
+
+    def test_hyphenated_and_spelled_out_forms_are_untouched(self):
+        for text in (
+            "a 6.2% FCF-yield on the sheet",
+            "free cash flow yield of 6.2%",
+            "FCF yield of 6.2% ($13,144M TTM)",
+        ):
+            assert find_sheet_mismatches(text, self.PROFILE) == [], text
+
+    def test_a_wrong_fcf_yield_is_still_flagged_against_the_yield(self):
+        mismatches = find_sheet_mismatches("a 9.9% FCF yield here", self.PROFILE)
+        assert [m.field_name for m in mismatches] == ["fcf_yield"]
+        assert mismatches[0].sheet_value == 6.2
+
+    def test_bare_fcf_dollar_field_still_checked(self):
+        mismatches = find_sheet_mismatches("FCF of $5,000M TTM", self.PROFILE)
+        assert [m.field_name for m in mismatches] == ["free_cash_flow"]
+
+
 # ── 4. F3 — the stance-envelope HEADLINE is nulled, never annotated in place ─
 
 

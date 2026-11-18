@@ -400,15 +400,15 @@ def _run_flag_on(monkeypatch) -> tuple[_OfficerProbeGateway, list]:
     gw = _OfficerProbeGateway()
     monkeypatch.setattr(rr_mod.settings, "room_risk_officer_enabled", True)
     # Commits observed at the one place every turn passes through on its way
-    # into the transcript (`_stream_agent_text` → `_checkpoint_run`).
-    real_checkpoint = rr_mod._checkpoint_run
+    # into the transcript (`_stream_agent_text` → `_checkpoint_run_async`).
+    real_checkpoint = rr_mod._checkpoint_run_async
 
-    def _recording_checkpoint(run):
+    async def _recording_checkpoint(run):
         if run.transcript:
             gw.sequence.append(f"commit:{run.transcript[-1].agent_id.value}")
-        return real_checkpoint(run)
+        return await real_checkpoint(run)
 
-    monkeypatch.setattr(rr_mod, "_checkpoint_run", _recording_checkpoint)
+    monkeypatch.setattr(rr_mod, "_checkpoint_run_async", _recording_checkpoint)
     runner = RoomRunner(llm=gw)  # type: ignore[arg-type]
     mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
     events = _run(

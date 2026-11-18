@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**250 cases** — 185 api, 15 device, 50 manual; 11 blocked.
+**259 cases** — 185 api, 15 device, 59 manual; 11 blocked.
 
 ## Areas
 
@@ -13,12 +13,12 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 16 cases
-7. [1-on-1 agent chat](#one-on-one) — 8 cases
-8. [Brief Your Agent](#brief) — 16 cases
-9. [Sim trading & market data](#sim-trading) — 29 cases
+6. [Convene the Room](#room) — 21 cases
+7. [1-on-1 agent chat](#one-on-one) — 9 cases
+8. [Brief Your Agent](#brief) — 17 cases
+9. [Sim trading & market data](#sim-trading) — 30 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 14 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 8 cases
@@ -3299,6 +3299,82 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. A wall (not a crash or an empty console) with the credit price and, under Winzip, a live countdown to the next free Room
 2. No verdict card appears and nothing is added to the Journal
 
+#### UAT-ROOM-017 — The Convene picker opens pre-filled when launched for a ticker
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A watchlist containing GOOGL
+
+**Steps**
+1. From the GOOGL watchlist action sheet tap CONVENE THE ROOM
+
+**Expected**
+1. The picker shows GOOGL in the field with the Room price and balance line above it
+2. Nothing is charged until CONVENE is tapped; opening the picker from the Floor still starts with an empty field
+
+#### UAT-ROOM-018 — A slow Room run is waited out to its verdict, and a lost connection never silently gives up
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A Room that takes several minutes (slow model day), or a device you can put in airplane mode briefly
+
+**Steps**
+1. Convene the Room; once desks are speaking, switch to airplane mode for about 20 seconds, then back online
+2. Repeat, this time staying offline for over two minutes before reconnecting
+3. Tap CHECK AGAIN
+
+**Expected**
+1. After the short drop the screen shows the 'Connection lost... still running' banner, then the transcript catches up and the run lands on its verdict - it never ends on 'Reconnect timed out'
+2. After the long outage the screen shows an explicit card saying AMI cannot confirm the Room has finished, that the result is saved to the Journal, and a CHECK AGAIN button - not a silent stop
+3. CHECK AGAIN resumes the wait and the verdict appears once the run has finished
+
+#### UAT-ROOM-019 — Backing out of a Room that is still deliberating warns and keeps the run going
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A funded account
+
+**Steps**
+1. Convene the Room on AAPL and, while desks are still speaking, tap the back arrow (and separately use the system back gesture)
+2. Tap STAY; then back again and tap LEAVE
+3. Open the Journal after a few minutes
+
+**Expected**
+1. A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
+2. STAY keeps the live Room on screen; LEAVE returns to the previous screen
+3. The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
+
+#### UAT-ROOM-020 — When the main model fails mid-Room, the app clears the discussion and says AMI switched to the backup
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. An Alpha backend whose primary LLM can be made to fail mid-run (operator action) with the backup slot configured
+
+**Steps**
+1. Convene the Room and wait until a few desks have spoken
+2. Have the operator take the primary LLM down so the run restarts on the backup
+
+**Expected**
+1. The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
+2. The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen
+
+#### UAT-ROOM-021 — A Room stream stays open through a long silent model turn
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow, or an operator-throttled LLM
+
+**Steps**
+1. Convene the Room and keep it open while one desk takes over 100 seconds to start speaking
+
+**Expected**
+1. The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner
+
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3316,6 +3392,19 @@ _Manual (iPhone checklist) · plans: floor_pass_
 2. Passing the lesson shows the agent-unlocked screen and the agent becomes chat-able
 3. The reply streams into a readable bubble with the agent's display name (Chief Investment Officer, Risk Officer, Execution Desk, Technical Strategist, Flow & Positioning, Macro & Events), and the credit pill drops by 1
 
+#### UAT-ONE-009 — A slow 1-on-1 reply keeps the connection alive instead of freezing
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow (several concurrent runs), or an operator-throttled LLM
+
+**Steps**
+1. Send a 1-on-1 message and wait while the agent thinks for over a minute
+
+**Expected**
+1. The chat shows the agent as working and the reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent)
+
 #### UAT-BRIEF-014 — Briefing flow, refusal card, history and rollback on a real iPhone
 
 _Manual (iPhone checklist) · plans: trader_
@@ -3332,6 +3421,19 @@ _Manual (iPhone checklist) · plans: trader_
 1. The proposal card shows a plain-English summary and the overlay diff; accept creates a new version in history
 2. The history screen marks the active version and rollback switches it without using an edit
 3. The unsafe CIO brief shows a refusal card explaining the safety floor with a suggestion to edit the Mandate instead; nothing is saved
+
+#### UAT-BRIEF-017 — A slow Brief reply keeps the connection alive instead of freezing
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow, or an operator-throttled LLM
+
+**Steps**
+1. Send a Brief Your Agent message and wait while the agent thinks for over a minute
+
+**Expected**
+1. The reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent) and the chat never shows a dead frozen state
 
 #### UAT-SIM-022 — Trade ticket previews, blocks and confirms an order
 
@@ -3420,6 +3522,18 @@ _Manual (iPhone checklist) · plans: trader_
 1. Cash returns to the starting capital; holdings, orders and trades are cleared
 2. The second attempt is refused with a clear cooldown message
 
+#### UAT-SIM-030 — ASK from ticker detail carries the ticker into the 1-on-1
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Open AAPL's ticker detail; tap ASK
+2. Watch the chat that opens
+
+**Expected**
+1. The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
+2. AMI answers about AAPL, not a generic greeting
+
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
 _Manual (iPhone checklist) · plans: floor_pass, trader_
@@ -3471,6 +3585,21 @@ _Manual (iPhone checklist) · plans: trader_
 **Expected**
 1. The sheet refuses an empty or zero price; the alert appears as active
 2. When crossed the alert becomes fired with a timestamp (and commentary if enabled) and a push arrives that opens the right ticker
+
+#### UAT-WATCH-015 — ASK and CONVENE from a watchlist row carry the ticker
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A watchlist containing GOOGL
+
+**Steps**
+1. Tap the GOOGL watchlist row to open its action sheet; tap ASK THE TECHNICAL STRATEGIST
+2. Go back; reopen the row; tap CONVENE THE ROOM
+
+**Expected**
+1. ASK opens the 1-on-1 with a first message that already names GOOGL
+2. CONVENE opens the picker with GOOGL already typed in the field, and the Room price line still visible; nothing is charged until CONVENE is tapped
 
 #### UAT-LESS-009 — Lessons tab, track browsing, reader and quiz feel right on iPhone
 

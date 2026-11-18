@@ -316,6 +316,14 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
           'next_step_agent': j['next_step_agent'],
           'next_step_days': j['next_step_days'],
         };
+      case 'provider_switch':
+        // CR272 — the main model failed and the Room restarted on the backup.
+        // `text` is AMI's own notice, rendered as sent. A non-string text is a
+        // malformed event, dropped like any other.
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        final text = j['text'];
+        if (text is! String || text.isEmpty) return null;
+        return {'kind': 'provider_switch', 'text': text};
       case 'verdict':
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};

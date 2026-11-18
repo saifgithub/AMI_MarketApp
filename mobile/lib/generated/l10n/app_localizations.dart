@@ -8677,6 +8677,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get companyReviewShowLess;
+
+  /// DEF480 — first message auto-sent to the Technical Strategist when the user taps ASK on a ticker (ticker detail, watchlist sheet), so the ticker they were looking at is not dropped. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your read on {ticker}?'**
+  String askAboutTickerMessage(String ticker);
+
+  /// DEF484 — banner while the client lost the live stream and is polling the run until it reaches a terminal state (previously hard-coded English). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost. The Room is still running — waiting for the verdict to land.'**
+  String get roomReconnectingBanner;
+
+  /// DEF484 — shown only when the client could not reach the server for a long stretch, or the run stayed active past the server's own stuck-run window. Honest give-up: the run is not lost, it lands in the Journal. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI can\'t confirm this Room has finished. Whatever it produces is saved to your Journal, so you can open it there later, or check again now.'**
+  String get roomWaitGaveUp;
+
+  /// DEF484 — button that resumes waiting on a Room run after the honest give-up card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHECK AGAIN'**
+  String get roomCheckAgain;
+
+  /// DEF471 — title of the confirm shown when the user backs out of a Room that is still deliberating. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the Room?'**
+  String get roomLeaveTitle;
+
+  /// DEF471 — body of the leave-mid-run confirm. The run is a detached server task; the Journal entry is written on completion. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room keeps deliberating without you. The verdict will be saved to your Journal when it lands.'**
+  String get roomLeaveBody;
+
+  /// DEF471 — dismiss button of the leave-mid-run confirm (keeps the user in the Room). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'STAY'**
+  String get roomLeaveStay;
+
+  /// DEF471 — confirm button of the leave-mid-run confirm (leaves; the run continues server-side). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LEAVE'**
+  String get roomLeaveConfirm;
 }
 
 class _AppLocalizationsDelegate

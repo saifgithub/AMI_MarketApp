@@ -91,8 +91,10 @@ void showWatchlistSheet(
                 Navigator.of(sheetCtx).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) =>
-                        OneOnOneScreen(agent: agentById('market_analyst')),
+                    builder: (_) => OneOnOneScreen(
+                      agent: agentById('market_analyst'),
+                      initialMessage: l.askAboutTickerMessage(ticker),
+                    ),
                   ),
                 );
               },
@@ -103,7 +105,7 @@ void showWatchlistSheet(
               color: AmiColors.hexPurple,
               onTap: () {
                 Navigator.of(sheetCtx).pop();
-                ConveneSheet.show(context);
+                ConveneSheet.show(context, initialTicker: ticker);
               },
             ),
             if (showRemove)

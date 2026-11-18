@@ -106,7 +106,19 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     final mode = _sessionMode ?? storedMode;
     final showBoard = settled && !mode.showsTranscript;
 
-    return Semantics(identifier: ScreenIds.roomScreen, container: true, explicitChildNodes: true, child: Scaffold(
+    // DEF471 — backing out of a run that is still deliberating used to be a
+    // bare pop with the credits already spent and no word on what happens to
+    // the run. The run is a detached server task (a client leaving never
+    // cancels it) and its Journal entry is written on completion, so the
+    // honest prompt is: it keeps going, the verdict lands in the Journal.
+    final runActive = (state.streaming || state.reconnecting) && !state.done;
+
+    return PopScope(
+      canPop: !runActive,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmLeave();
+      },
+      child: Semantics(identifier: ScreenIds.roomScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
@@ -141,9 +153,13 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       _ServerErrorCard(ticker: widget.ticker),
                     if (state.liveDataNotice != null)
                       _LiveDataNoticeCard(notice: state.liveDataNotice!),
+                    if (state.providerSwitchNotice != null)
+                      _ProviderSwitchNotice(message: state.providerSwitchNotice!),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
+                    if (state.waitGaveUp)
+                      _WaitGaveUpCard(ticker: widget.ticker),
                     if (showBoard)
                       RoomBoard(
                         data: boardFromRoomState(
@@ -234,7 +250,30 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
           ],
         ),
       ),
-    ));
+    )));
+  }
+
+  Future<void> _confirmLeave() async {
+    final l = AppLocalizations.of(context);
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AmiColors.slate800,
+        title: Text(l.roomLeaveTitle, style: AmiTypography.h2),
+        content: Text(l.roomLeaveBody, style: AmiTypography.body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.roomLeaveStay),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.roomLeaveConfirm),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) Navigator.of(context).pop();
   }
 
   /// The one place `setMode` is called from, shared by the live and the settled
@@ -321,7 +360,9 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-            onPressed: () => Navigator.of(context).pop(),
+            // maybePop, not pop: the screen's PopScope owns the mid-run
+            // "leave?" prompt (DEF471) and a bare pop would bypass it.
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
           Expanded(
             child: Column(
@@ -890,6 +931,35 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
   }
 }
 
+/// CR272 — AMI's own notice that the main model failed and the discussion
+/// restarted from the top on the backup. The text is the server's, rendered as
+/// sent; everything shown before it was cleared by the notifier.
+class _ProviderSwitchNotice extends StatelessWidget {
+  const _ProviderSwitchNotice({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.swap_horiz, color: AmiColors.hexAmber, size: 18),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(child: Text(message, style: AmiTypography.body)),
+        ],
+      ),
+    );
+  }
+}
+
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
   final String message;
@@ -1148,8 +1218,47 @@ class _ReconnectingBanner extends StatelessWidget {
           const SizedBox(width: AmiSpacing.s),
           Expanded(
             child: Text(
-              'Connection lost. The room is still running — waiting for the verdict to land.',
+              AppLocalizations.of(context).roomReconnectingBanner,
               style: AmiTypography.body,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// DEF484 — the honest give-up. Shown only after the client has been unable to
+/// reach the server for minutes, or the run stayed active past the server's own
+/// stuck-run window. It never claims the run failed: it says AMI cannot confirm
+/// the outcome, where the result will be, and offers to keep waiting.
+class _WaitGaveUpCard extends ConsumerWidget {
+  const _WaitGaveUpCard({required this.ticker});
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.roomWaitGaveUp, style: AmiTypography.body),
+          const SizedBox(height: AmiSpacing.s),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              onPressed: () =>
+                  ref.read(roomNotifierProvider(ticker).notifier).resumeWaiting(),
+              child: Text(l.roomCheckAgain),
             ),
           ),
         ],
