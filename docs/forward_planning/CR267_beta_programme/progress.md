@@ -25,3 +25,9 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    3. `CR253_data_lane_completeness/` was a separate, shipped item that collided on the CR253 ID.
       The Architect minted **CR268** for it; its row is `done`. Child CRs for later WPs start at
       **CR269**.
+5. **WP-01 done (gate S1).** Ledger `afee9f99` on `main`; outcome in plan §6 WP-01 item 3. Rows
+   dropped on the branch: CR245, CR247, CR250, CR254. New WPs: WP-15 (CR252, behind S11), WP-38
+   (CR239), WP-39 (CR022). Still to close: DEF386, DEF434. ⚠️ Company Apple/Google accounts are
+   **not enrolled**; the Play account will be an Organisation account.
+6. **Gates S11/S12 added** (Saiful): pause for an implementation-plan discussion before any LLM
+   change (WP-15, WP-10–14) and before any Jev/grader change (WP-22, WP-23).

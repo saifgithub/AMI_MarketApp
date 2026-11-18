@@ -78,7 +78,7 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 | S8 | WP-35 | Rotates the Adanos key at the vendor (closes DEF178). |
 | S9 | WP-53 | Confirms the Room satisfaction bar (proposed: 70% positive over 100 rated runs). |
 | S10 | Room Lite | Gives go on Room Lite. Not on the Beta launch path. |
-| S11 | WP-10…WP-14 | Discusses and approves the implementation plan for the hosted-LLM work before any change (Saiful, 2026-11-18: "before you start making changes for JEV and the LLM, please pause so we can discuss implementation plans"). |
+| S11 | WP-15, WP-10…WP-14 | Discusses and approves the implementation plan for the hosted-LLM work before any change (Saiful, 2026-11-18: "before you start making changes for JEV and the LLM, please pause so we can discuss implementation plans"). |
 | S12 | WP-22, WP-23 | The same, for the Jev / grader / coded-rule work. |
 
 ## 5. Work packages
@@ -90,7 +90,8 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-00 | Re-entry: registers, CR266 result, plan and decision log | — | S0 | Sonnet |
 | WP-01 | Register decision review | WP-00 | S1 | interactive |
 | WP-02 | Bring Alpha level with HEAD | WP-00 | — | Sonnet |
-| WP-10 | Hosted-model shortlist and scorecard | WP-00 | — | Opus |
+| WP-15 | CR252 institutional-heuristics fold-in (setting-gated) | WP-00 | S11 | Sonnet |
+| WP-10 | Hosted-model shortlist and scorecard | WP-00, WP-15 | — | Opus |
 | WP-11 | Pin temperature and sampling in config | WP-00 | — | Sonnet |
 | WP-12 | LLM budget cap and per-user concurrent-run cap | WP-00 | — | Sonnet |
 | WP-13 | Output text guard on agent text | WP-00 | — | Opus |
@@ -114,6 +115,8 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-35 | Security leftovers | WP-00 | S8 for DEF178 | Opus |
 | WP-36 | Beta build settings, report button, Room thumbs | WP-23 | — | Sonnet |
 | WP-37 | Close the CR231 gate items | WP-00 | — | Sonnet |
+| WP-38 | Trace ID on every error, shown to the user (CR239) | WP-00 | — | Sonnet |
+| WP-39 | App manual corpus for the Concierge (CR022) | WP-00 | — | Sonnet |
 | WP-40 | Accelerator and credit-programme research | WP-00 | — | Sonnet |
 | WP-41 | Beta environment configuration | WP-14 | — | Sonnet |
 | WP-42 | Provision and harden the Beta host | WP-41 | S4 | Opus |
@@ -126,7 +129,7 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-51 | Website waitlist | WP-00 | — | Sonnet |
 | WP-52 | Tester onboarding note and support inbox | WP-00 | — | Sonnet |
 | WP-53 | Exit-criteria report | WP-36, WP-46 | S9 | Sonnet |
-| WP-54 | Beta go-live | WP-12, WP-13 (enforcing), WP-26, WP-30…37, WP-45, WP-46, WP-50, WP-52, WP-53 | — | Architect |
+| WP-54 | Beta go-live | WP-12, WP-13 (enforcing), WP-26, WP-30…39, WP-45, WP-46, WP-50, WP-52, WP-53 | — | Architect |
 
 Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-21a, WP-40, WP-49, WP-51 and WP-52 are independent of the Room work and of each other. WP-10…13 run together. The Room chain WP-21a → 20 → 22 → 23 → 25 → 26 is the critical path. WP-28 and WP-51 are deliberately off the launch path: the first wave is the personal network and needs no waitlist.
 
@@ -166,6 +169,13 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
 
 1. Run `/daily-cr-def-review` with Saiful present. Bring a close / keep / defer / drop recommendation for each `proposed` CR and `open` defect, judged against the freeze. Run it once only; CLAUDE.md's session-start review counts as this WP.
 2. Recommendations already agreed: move DEF469 (a real tester report) into WP-33, and decide CR254. Also ask Saiful what is actually done on the company accounts (CR258), which feeds WP-49.
+3. **Outcome (2026-11-18, ledger `afee9f99` on main):**
+   1. Added to Beta: CR252 (WP-15), CR239 (WP-38), CR022 (WP-39), DEF445 (WP-27), DEF469/470/482/485 (WP-33), DEF104 (WP-35, overriding the DEF204 hold).
+   2. Absorbed: CR240 → WP-10; CR246 → WP-46. DEF200 → the WP-46 load test decides.
+   3. Dropped: CR245, CR247, CR250, CR254.
+   4. To close: DEF386 (retract CR164 Phase A findings), DEF434 (verify no `--delete` in the harness sync, then close).
+   5. Company accounts are **not enrolled yet**; the Play account will be an Organisation account. Apple organisation enrollment needs a D-U-N-S number and can take weeks, and WP-49 is on the launch path: start enrollment now.
+   6. Everything else is deferred or parked as recommended.
 3. Acceptance: a dated section in `docs/governance/daily_cr_def_review_log.md`; every open item has a decision.
 
 **WP-02 Bring Alpha level with HEAD**
@@ -174,6 +184,13 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
 2. Acceptance: `curl -s https://api-alpha.agenticmarketintel.ai/v1/health` shows the new tag and HEAD's SHA; postflight green.
 
 ### Phase 1 — Hosted LLM
+
+**WP-15 CR252 institutional-heuristics fold-in (gate S11)**
+
+1. Saiful at WP-01 (2026-11-18): fold in before WP-10, so the model scorecard and the WP-20 baseline both measure the final desk prompts. The draft is `docs/forward_planning/CR252_institutional_heuristics_injection/production_section.md` (34 lines, in the main checkout as an untracked file; WP-00 step 5 commits it). Its data dependencies (SBC, ROIC, WACC) shipped as CR268.
+2. Behind a setting (forwarded in compose), ON for WP-10 and WP-20. Its design is part of the S11 discussion.
+3. Note: the "measured GO" rests on 8 rooms (AAPL+V, R3, 2 reps) on the abliterated ami-llm. WP-10's side-by-side is its first real measurement.
+4. Acceptance: unit test that the section reaches every desk prompt when ON and none when OFF; compose-parity green.
 
 **WP-10 Shortlist and scorecard**
 
@@ -299,7 +316,7 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 
 **WP-27 Room reliability defects**
 
-1. DEF484 (verdict never shown after "Reconnect timed out"), DEF467 (streams stall with no keepalive: add heartbeats to Room, 1-on-1 and Brief streams), DEF471 (credits spent with no confirmation), DEF480 (ticker dropped on convene), DEF444 (checkpoint write blocks the event loop).
+1. DEF484 (verdict never shown after "Reconnect timed out"), DEF467 (streams stall with no keepalive: add heartbeats to Room, 1-on-1 and Brief streams), DEF471 (credits spent with no confirmation), DEF480 (ticker dropped on convene), DEF444 (checkpoint write blocks the event loop), DEF445 (false `fcf_yield` self-check flag; added at WP-01).
 2. Acceptance: each defect's row moved to `fixed` with its test; a device run on the Android rig shows a verdict after a forced reconnect.
 
 **WP-28 Outcome scoring**
@@ -338,7 +355,7 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 
 **WP-33 Mobile defect batch**
 
-1. DEF473 (update button dead when `storeUrl` is empty), DEF478 (hardcoded English), DEF483 (stray backslash), DEF472, DEF477, DEF479, DEF474, DEF475, DEF476, DEF466, DEF486, and DEF469 (a tester report; confirm at WP-01). Other open defects not named in any batch (e.g. DEF470, DEF481, DEF482, DEF485) are decided at WP-01.
+1. DEF473 (update button dead when `storeUrl` is empty), DEF478 (hardcoded English), DEF483 (stray backslash), DEF472, DEF477, DEF479, DEF474, DEF475, DEF476, DEF466, DEF486, and, added at WP-01: DEF469 (tester report), DEF470 ("discard changes" doesn't discard), DEF482 (RenderFlex overflows), DEF485 (price alert creation fails client-side). DEF481 is deferred post-Beta.
 2. Acceptance: rows `fixed` with tests; `flutter analyze` and `flutter test` green.
 
 **WP-34 Backend defect batch**
@@ -363,6 +380,16 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 
 1. Close CR221, CR222, CR228 per `docs/forward_planning/CR245_beta_infra_1000_user_sizing/` §12. Run the E5 device matrix (`docs/forward_planning/CR004_release_readiness/e5_device_matrix_runbook.md`) on the Android rig; list the iPhone steps for Saiful.
 2. Acceptance: rows closed; matrix results recorded.
+
+**WP-38 Trace ID on every error (CR239; added at WP-01)**
+
+1. Per CR239's two legs: every backend error response carries a trace ID that is logged with the request, and the app shows it on error states and attaches it to the WP-36 "Report" path, so a tester's report maps to one log line.
+2. Acceptance: unit test that error responses carry the ID and the log line carries the same one; widget test that the error state shows it; one forced error on the rig traced end to end.
+
+**WP-39 App manual corpus for the Concierge (CR022; added at WP-01)**
+
+1. Per `docs/forward_planning/CR022_app_manual_corpus/`: app-usage knowledge, authored and indexed like lessons, so testers can ask the Concierge how the app works. English only for Beta. Content describes the Beta build as shipped (WP-36 settings, account deletion, report button).
+2. Acceptance: the Concierge answers a fixed set of 10 how-do-I questions from the corpus on the rig; every answer cites a corpus entry; no answer describes a hidden or parked feature (payments).
 
 ### Phase 4 — Beta infrastructure
 
