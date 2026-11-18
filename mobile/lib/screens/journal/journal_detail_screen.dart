@@ -206,8 +206,11 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          Text(AppLocalizations.of(context).journalDetailHeading,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
+          Expanded(
+            child: Text(AppLocalizations.of(context).journalDetailHeading,
+                overflow: TextOverflow.ellipsis,
+                style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
+          ),
         ],
       ),
     );
@@ -638,28 +641,30 @@ class _NoteEditor extends StatelessWidget {
           ),
           if (showOutcome) ...[
             const SizedBox(height: AmiSpacing.m),
-            Row(
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(l.journalNoteOutcome,
-                    style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-                const SizedBox(width: AmiSpacing.m),
+                Padding(
+                  padding: const EdgeInsets.only(right: AmiSpacing.s),
+                  child: Text(l.journalNoteOutcome,
+                      style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                ),
                 for (final v in outcomeOptions)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(v.$2),
-                      labelStyle: AmiTypography.labelMono.copyWith(
-                        fontSize: 10,
-                        color: outcome == v.$1 ? v.$3 : AmiColors.textMed,
-                      ),
-                      selected: outcome == v.$1,
-                      onSelected: (_) =>
-                          onOutcomeChange(outcome == v.$1 ? null : v.$1),
-                      selectedColor: v.$3.withValues(alpha: 0.2),
-                      backgroundColor: AmiColors.slate900,
-                      side: BorderSide(
-                        color: outcome == v.$1 ? v.$3 : AmiColors.slate700,
-                      ),
+                  ChoiceChip(
+                    label: Text(v.$2),
+                    labelStyle: AmiTypography.labelMono.copyWith(
+                      fontSize: 10,
+                      color: outcome == v.$1 ? v.$3 : AmiColors.textMed,
+                    ),
+                    selected: outcome == v.$1,
+                    onSelected: (_) =>
+                        onOutcomeChange(outcome == v.$1 ? null : v.$1),
+                    selectedColor: v.$3.withValues(alpha: 0.2),
+                    backgroundColor: AmiColors.slate900,
+                    side: BorderSide(
+                      color: outcome == v.$1 ? v.$3 : AmiColors.slate700,
                     ),
                   ),
               ],

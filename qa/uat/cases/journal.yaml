@@ -116,3 +116,16 @@ cases:
     expected:
       - 'The filled buy is listed as a TRADE entry naming the ticker and price'
       - 'The refused order is listed as BLOCKED with its reason'
+
+  - id: UAT-JRNL-009
+    title: Entry detail outcome chips stay on-screen on a narrow phone with large text
+    layer: manual
+    plans: [floor_pass]
+    platforms: [android]
+    preconditions:
+      - 'A phone about 360dp wide (or Android display size set to Large) with system font size at the largest setting; at least one TRADE journal entry'
+    steps:
+      - 'You > JOURNAL; open a TRADE entry; scroll to the note card'
+    expected:
+      - 'The OUTCOME label and the WIN, LOSS and PENDING chips are all fully visible inside the note card; chips that do not fit wrap onto a second line (DEF469)'
+      - 'The detail header shows no overflow stripes or clipped title'

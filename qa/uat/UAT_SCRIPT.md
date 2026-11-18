@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**259 cases** — 185 api, 15 device, 59 manual; 11 blocked.
+**260 cases** — 185 api, 15 device, 60 manual; 11 blocked.
 
 ## Areas
 
@@ -21,7 +21,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 8 cases
+14. [Decision journal, trash & the You tab](#journal) — 9 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 12 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
@@ -3650,6 +3650,20 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. Insights and journal render without clipping in light and dark
 2. UNDO brings the entry straight back in place; Trash lists the deleted one and restore returns it
 3. A 409 "newer entry has taken its place" restore shows the explanatory message, not "not found"
+
+#### UAT-JRNL-009 — Entry detail outcome chips stay on-screen on a narrow phone with large text
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: android_
+
+**Preconditions**
+1. A phone about 360dp wide (or Android display size set to Large) with system font size at the largest setting; at least one TRADE journal entry
+
+**Steps**
+1. You > JOURNAL; open a TRADE entry; scroll to the note card
+
+**Expected**
+1. The OUTCOME label and the WIN, LOSS and PENDING chips are all fully visible inside the note card; chips that do not fit wrap onto a second line (DEF469)
+2. The detail header shows no overflow stripes or clipped title
 
 #### UAT-INBOX-006 — Broadcast arrives as a push and in the inbox; reply reaches the admin feed
 
