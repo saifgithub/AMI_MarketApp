@@ -91,6 +91,26 @@ def test_list_versions_decorates_with_journal_change_summary(
     assert "risk score" in v1["change_summary"]
 
 
+def test_def460_each_version_carries_its_own_created_at(
+    client: TestClient,
+) -> None:
+    """DEF460: upsert copied the first row's created_at onto every new version
+    row, so the history could not say when an edit happened."""
+    user_id, _, hdr = _new_user()
+    for risk in (3, 4, 5):
+        r = client.patch(
+            f"/v1/mandate/{user_id}", json={"risk_score": risk}, headers=hdr,
+        )
+        assert r.status_code == 200
+
+    versions = client.get(
+        f"/v1/mandate/{user_id}/versions", headers=hdr,
+    ).json()["versions"]
+    stamps = [v["created_at"] for v in versions]
+    assert len(set(stamps)) == 3, stamps
+    assert stamps == sorted(stamps, reverse=True)
+
+
 # ── get_version ────────────────────────────────────────────────────────
 
 
