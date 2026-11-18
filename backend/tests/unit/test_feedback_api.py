@@ -91,3 +91,20 @@ def test_submit_rejects_missing_required_form_field(client: TestClient):
     del form["title"]
     r = client.post("/v1/feedback/bug", data=form)
     assert r.status_code == 422
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("category", "nonsense"), ("platform", "palm")],
+)
+def test_def458_unknown_category_or_platform_is_422_naming_the_field(
+    client: TestClient, tmp_path: Path, field: str, value: str,
+):
+    """DEF458: bad category/platform was an unhandled pydantic error -> 500.
+    Now a 422 that names the field, and no attachment is written to disk."""
+    form = {**_BASE_FORM, field: value}
+    files = {"file": ("screenshot.png", b"\x89PNG\r\n\x1a\n" + b"x" * 100, "image/png")}
+    r = client.post("/v1/feedback/bug", data=form, files=files)
+    assert r.status_code == 422, r.text
+    assert field in {loc for e in r.json()["detail"] for loc in e["loc"]}
+    assert list(tmp_path.glob("*.png")) == []

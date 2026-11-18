@@ -21,6 +21,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
+from pydantic import ValidationError
 
 from app.core.logging import logger
 from app.schemas.feedback import (
@@ -73,6 +74,29 @@ async def submit_bug_report(
     # 5/hour (the review's own suggested figure).
     user_id = _resolve_user_id(authorization)
 
+    # DEF458: validate the form fields BEFORE touching the disk, so a bad
+    # category/platform is a 422 naming the field (not an unhandled 500) and
+    # never leaves an orphaned attachment behind.
+    try:
+        req = BugReportRequest(
+            category=category,  # type: ignore[arg-type]
+            title=title,
+            steps=steps,
+            route=route,
+            app_version=app_version,
+            platform=platform,
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=[
+                {**e, "loc": ["body", *e["loc"]]}
+                for e in exc.errors(
+                    include_url=False, include_context=False, include_input=False,
+                )
+            ],
+        ) from exc
+
     attachment_path: str | None = None
     attachment_mime: str | None = None
     if file is not None and file.filename:
@@ -115,15 +139,11 @@ async def submit_bug_report(
             attachment_path = None
             attachment_mime = None
 
-    req = BugReportRequest(
-        category=category,  # type: ignore[arg-type]
-        title=title,
-        steps=steps,
-        route=route,
-        app_version=app_version,
-        platform=platform,
-        attachment_path=attachment_path,
-        attachment_mime=attachment_mime,
+    req = req.model_copy(
+        update={
+            "attachment_path": attachment_path,
+            "attachment_mime": attachment_mime,
+        },
     )
     return get_feedback_store().submit_bug(req, user_id)
 
