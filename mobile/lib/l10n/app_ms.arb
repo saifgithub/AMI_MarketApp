@@ -3582,5 +3582,8 @@
     "onboardingAgeDecline": "I AM UNDER 18",
     "onboardingAgeDeclinedTitle": "AMI Trade isn't available yet",
     "onboardingAgeDeclinedBody": "AMI Trade is for people aged 18 or older, so setup stops here. Nothing was saved. You are welcome back once you turn 18.",
-    "onboardingAgeDeclinedBack": "GO BACK"
+    "onboardingAgeDeclinedBack": "GO BACK",
+    "traceRefLabel": "Ref: {id}",
+    "traceRefCopied": "Reference copied",
+    "traceRefCopyTooltip": "Copy reference"
 }

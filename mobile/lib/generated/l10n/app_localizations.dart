@@ -9157,6 +9157,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LEAVE'**
   String get roomLeaveConfirm;
+
+  /// WP-38 / CR239 - small copyable trace reference shown under an error message so a support session can find the failed request. {id} is a short hex code - never translate or transliterate it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ref: {id}'**
+  String traceRefLabel(String id);
+
+  /// WP-38 / CR239 - toast after tapping the trace reference to copy it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Reference copied'**
+  String get traceRefCopied;
+
+  /// WP-38 / CR239 - tooltip / accessibility label of the tap-to-copy trace reference. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Copy reference'**
+  String get traceRefCopyTooltip;
 }
 
 class _AppLocalizationsDelegate

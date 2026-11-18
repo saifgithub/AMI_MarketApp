@@ -5517,4 +5517,15 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get roomLeaveConfirm => 'TINGGAL';
+
+  @override
+  String traceRefLabel(String id) {
+    return 'Ref: $id';
+  }
+
+  @override
+  String get traceRefCopied => 'Reference copied';
+
+  @override
+  String get traceRefCopyTooltip => 'Copy reference';
 }

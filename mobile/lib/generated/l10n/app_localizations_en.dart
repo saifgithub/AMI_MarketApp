@@ -5512,4 +5512,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomLeaveConfirm => 'LEAVE';
+
+  @override
+  String traceRefLabel(String id) {
+    return 'Ref: $id';
+  }
+
+  @override
+  String get traceRefCopied => 'Reference copied';
+
+  @override
+  String get traceRefCopyTooltip => 'Copy reference';
 }

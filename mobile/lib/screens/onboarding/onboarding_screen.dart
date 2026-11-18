@@ -8,6 +8,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -377,7 +378,7 @@ class _ErrorView extends StatelessWidget {
           Text(title,
               style: AmiTypography.labelMono, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.s),
-          Text(message, style: AmiTypography.body, textAlign: TextAlign.center),
+          AmiErrorMessage(message, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.l),
           HexButton(label: l.onboardingTryAgain, onPressed: onRetry),
         ],
