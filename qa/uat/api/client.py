@@ -58,6 +58,14 @@ def admin_secret() -> str | None:
     return env("UAT_ADMIN_SECRET") or _read_env_file(_secrets_root() / "infra" / "alpha.env", "ADMIN_SECRET")
 
 
+def exempt_headers() -> dict:
+    """DEF490: proves to the backend's per-IP limiters that this is operator
+    traffic (the admin secret, compared in constant time), so it is not counted.
+    A spoofed X-Forwarded-For cannot do this - DEF464 made the limiters ignore it."""
+    secret = admin_secret()
+    return {"x-ami-ratelimit-exempt": secret} if secret else {}
+
+
 def new_client(token: str | None = None, timeout: float = 30.0) -> httpx.Client:
     headers = {"User-Agent": USER_AGENT}
     if token:
