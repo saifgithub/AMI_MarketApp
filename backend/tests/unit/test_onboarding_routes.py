@@ -156,3 +156,28 @@ async def test_a_fresh_session_can_answer_the_very_first_question(
     assert resp.json()["next_step"] != first_step, (
         "a successful first answer must advance the session past Q1"
     )
+
+
+@pytest.mark.asyncio
+async def test_def459_refused_readback_confirm_leaves_the_session_retryable(
+    client: TestClient,
+) -> None:
+    """DEF459: a confirm refused with 409 (no Q6 drawdown answer) used to have
+    already persisted completed=True/step=complete, so every later /answer
+    409ed and the user could not retry. The refusal must not touch state."""
+    session = OnboardingSession(
+        current_step=ConversationStep.READBACK,
+        answers={"goal": "growth"},
+    )
+    await get_session_store().create(session)
+
+    resp = client.post(
+        "/v1/onboarding/readback/confirm",
+        json={"session_id": str(session.id), "confirm": "confirm"},
+    )
+
+    assert resp.status_code == 409, resp.text
+    stored = await get_session_store().get(session.id)
+    assert stored is not None
+    assert stored.completed is False
+    assert stored.current_step == ConversationStep.READBACK
