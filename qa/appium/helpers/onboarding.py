@@ -40,7 +40,11 @@ from selenium.common.exceptions import (
 )
 
 from config.locales import LOCALES
-from config.semantics_ids import ONBOARDING_ANSWER_CHIP
+from config.semantics_ids import (
+    ONBOARDING_AGE_CHECKBOX,
+    ONBOARDING_AGE_CONTINUE,
+    ONBOARDING_ANSWER_CHIP,
+)
 from helpers.gestures import hide_keyboard_if_shown, tap_element
 from helpers.locators import (
     all_by_id,
@@ -54,7 +58,7 @@ from helpers.platform import is_ios
 from helpers.shell import recover_to_shell, shell_is_up, wait_for_shell
 
 #: What the last `ensure_onboarded` walk actually passed through, in order:
-#: "chips" (answer chips were on screen), "readback" (the LOOKS RIGHT confirmation was
+#: "age" (the CR273 18+ confirmation was ticked and continued), "chips" (answer chips were on screen), "readback" (the LOOKS RIGHT confirmation was
 #: shown), "claim" (the claim-your-team screen was shown), "floor". CR263's
 #: onboarding journey asserts on it; an empty list means the app was already
 #: onboarded and nothing was walked.
@@ -388,6 +392,7 @@ def ensure_onboarded(
     escapes = 0
     blind = 0
     turn = 0
+    age_ticked = False
     app_id = _app_id(driver)
 
     # DEF436 — the walk had no output at all between "shell not up" and either
@@ -521,6 +526,29 @@ def ensure_onboarded(
         # interview is backend-authored and may offer a control neither branch
         # knows). It runs only when no chip resolves, so it can no longer be
         # the reason a chip question wedges.
+        # CR273 — onboarding opens on the 18+ confirmation: an unticked checkbox
+        # and a CONTINUE that stays disabled until it is ticked. Tick, then
+        # continue; the interview (and its chips) only exists after this.
+        age_boxes = all_by_id(driver, ONBOARDING_AGE_CHECKBOX, retry=False)
+        if age_boxes:
+            _mark("age")
+            try:
+                # Tick once only: a second tap would untick it again.
+                if not age_ticked:
+                    tap_element(driver, age_boxes[0])
+                    age_ticked = True
+                    time.sleep(0.5)
+                age_continue = all_by_id(driver, ONBOARDING_AGE_CONTINUE, retry=False)
+                if age_continue:
+                    tap_element(driver, age_continue[0])
+                    turn += 1
+                    last_progress_at = time.monotonic()
+                    print(f"    [onboarding] turn {turn} — confirmed 18+")
+            except StaleElementReferenceException:
+                print("    [onboarding] the age gate went stale before the tap — re-observing")
+            time.sleep(1.5)
+            continue
+
         chips = all_by_id(driver, ONBOARDING_ANSWER_CHIP, retry=False)
         if chips:
             _mark("chips")

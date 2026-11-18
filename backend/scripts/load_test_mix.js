@@ -313,7 +313,7 @@ function onboarding(me) {
   };
   const start = http.post(
     `${BASE_URL}/v1/onboarding/start`,
-    JSON.stringify({ locale: "en", timezone: "UTC" }),
+    JSON.stringify({ locale: "en", timezone: "UTC", age_confirmed: true }),
     bare
   );
   if (measure(start, me, "onboarding start", [201]) !== "ok") {

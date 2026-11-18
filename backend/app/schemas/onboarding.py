@@ -75,6 +75,11 @@ class OnboardingSession(BaseModel):
     completed: bool = False
     claimed_user_id: UUID | None = None
 
+    # CR273 (D-084): when the user confirmed they are 18 or older. A timestamp
+    # only — never a birth date. `/answer` and `/readback/confirm` refuse a
+    # session where this is None.
+    age_confirmed_at: datetime | None = None
+
 
 # ── API request/response models ─────────────────────────────────────────────
 
@@ -82,6 +87,9 @@ class OnboardingSession(BaseModel):
 class StartOnboardingRequest(BaseModel):
     locale: str = "en"
     timezone: str = "UTC"
+    # CR273: True only when the user ticked and confirmed "I am 18 or older".
+    # The server stamps `age_confirmed_at` itself; the client never sends a time.
+    age_confirmed: bool = False
 
 
 class StartOnboardingResponse(BaseModel):

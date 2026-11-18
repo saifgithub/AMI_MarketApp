@@ -24,7 +24,8 @@ DEFAULT_ANSWERS = {
 
 
 def _start(api, **body):
-    r = api.post("/v1/onboarding/start", json=body or {"locale": "en", "timezone": "Asia/Riyadh"})
+    payload = {"locale": "en", "timezone": "Asia/Riyadh", "age_confirmed": True, **body}
+    r = api.post("/v1/onboarding/start", json=payload)
     assert r.status_code == 201, r.text
     return r.json()["session_id"]
 
@@ -249,3 +250,26 @@ def test_failed_confirm_does_not_strand_the_session(api):
     assert s["completed"] is False
     assert s["current_step"] == "q1_goal"
     assert _answer(api, sid, "q1_goal", "retirement").status_code == 200
+
+
+@pytest.mark.uat("UAT-ONB-044")
+def test_no_answer_or_completion_without_the_18_plus_confirmation(api):
+    # A session started without the confirmation stores no timestamp ...
+    r = api.post("/v1/onboarding/start", json={"locale": "en", "timezone": "Asia/Riyadh"})
+    assert r.status_code == 201
+    sid = r.json()["session_id"]
+    assert api.get(f"/v1/onboarding/{sid}").json()["age_confirmed_at"] is None
+    # ... and is refused with a typed 403 on both gated routes.
+    a = _answer(api, sid, "q1_goal", DEFAULT_ANSWERS["q1_goal"])
+    assert a.status_code == 403
+    assert a.json()["detail"]["code"] == "age_confirmation_required"
+    c = _confirm(api, sid)
+    assert c.status_code == 403
+    assert c.json()["detail"]["code"] == "age_confirmation_required"
+    assert api.get(f"/v1/onboarding/{sid}").json()["completed"] is False
+    # A confirmed session carries a server-set timestamp, and no birth date exists.
+    ok = _start(api)
+    j = api.get(f"/v1/onboarding/{ok}").json()
+    assert j["age_confirmed_at"]
+    assert not any("birth" in k or k == "dob" for k in j)
+    assert _answer(api, ok, "q1_goal", DEFAULT_ANSWERS["q1_goal"]).status_code == 200

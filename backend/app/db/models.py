@@ -184,6 +184,12 @@ class User(Base):
     claimed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    # CR273 (D-084): when the user confirmed "I am 18 or older" in onboarding.
+    # A timestamp only — no birth date or age is stored anywhere. NULL = never
+    # confirmed (pre-CR273 rows are not retrofitted). Migration: cr273a0b0c0d1.
+    age_confirmed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
     # Device-stable identifier (UUID from shared_preferences). When the user
     # claims with Apple/email we keep their original id but mark claimed_at.
     device_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True, index=True)

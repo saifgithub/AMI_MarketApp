@@ -126,6 +126,12 @@ class OnboardingIds {
   /// with chips and never types.
   static const String composer = 'ami.onboarding.composer';
   static const String send = 'ami.onboarding.send';
+
+  /// CR273 — the 18+ confirmation that opens onboarding: the checkbox, the
+  /// continue button it enables, and the "I am under 18" exit.
+  static const String ageCheckbox = 'ami.onboarding.age_checkbox';
+  static const String ageContinue = 'ami.onboarding.age_continue';
+  static const String ageDecline = 'ami.onboarding.age_decline';
 }
 
 /// DEF375 — the first-run coach-mark tours.

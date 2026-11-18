@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.onboarding import router
+from app.core.time import now_utc
 from app.schemas.onboarding import ConversationStep, OnboardingSession
 from app.services.session_store import get_session_store
 
@@ -31,6 +32,7 @@ def client(app: FastAPI) -> TestClient:
 @pytest.mark.asyncio
 async def test_readback_edit_returns_501_without_mutating_session(client: TestClient) -> None:
     session = OnboardingSession(
+        age_confirmed_at=now_utc(),
         current_step=ConversationStep.READBACK,
         answers={"goal": "growth"},
     )
@@ -70,7 +72,9 @@ async def test_submit_answer_rejects_a_step_ahead_of_the_sessions_current_step(
 ) -> None:
     """A client stuck on Q6 posting Q7's step must get a clear 4xx, not have
     the session silently advanced with no drawdown answer recorded."""
-    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+    session = OnboardingSession(
+        current_step=ConversationStep.Q6_MAX_DRAWDOWN, age_confirmed_at=now_utc()
+    )
     await get_session_store().create(session)
 
     resp = client.post(
@@ -97,7 +101,9 @@ async def test_submit_answer_accepts_the_sessions_own_current_step(
 ) -> None:
     """The matching-step case (the only one the shipped client ever sends)
     must keep working exactly as before this guard."""
-    session = OnboardingSession(current_step=ConversationStep.Q6_MAX_DRAWDOWN)
+    session = OnboardingSession(
+        current_step=ConversationStep.Q6_MAX_DRAWDOWN, age_confirmed_at=now_utc()
+    )
     await get_session_store().create(session)
 
     resp = client.post(
@@ -135,7 +141,7 @@ async def test_a_fresh_session_can_answer_the_very_first_question(
     client: TestClient,
 ) -> None:
     started = client.post(
-        "/v1/onboarding/start", json={"locale": "en", "timezone": "UTC"}
+        "/v1/onboarding/start", json={"locale": "en", "timezone": "UTC", "age_confirmed": True}
     )
     assert started.status_code == 201, started.text
     body = started.json()

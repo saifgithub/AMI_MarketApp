@@ -63,6 +63,7 @@ from app.services.rate_limit import (
     magic_link_verify_global_rate_limit,
     magic_link_verify_ip_rate_limit,
 )
+from app.services import age_confirmation
 from app.services.session_store import get_session_store
 
 
@@ -106,6 +107,8 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
         return
     if session.claimed_user_id == user_id:
         return
+
+    age_confirmation.stamp_user(user_id, session.age_confirmed_at)
 
     if session.completed and get_mandate_store().get(user_id) is None:
         mandate_dict = session_to_mandate_dict(session, user_id=user_id)
