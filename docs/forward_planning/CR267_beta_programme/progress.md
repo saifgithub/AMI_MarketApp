@@ -96,3 +96,18 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    2. Android is waiting on the Suite's stakeholder to grant the install, run and remove permissions.
    3. The iPhone already has TestFlight with AMI Trade on auto-update (Saiful), so the tester only checks the build number.
 5. **Running:** WP-10, WP-30 (CR276 minted), WP-38. The deploy #4 suite gate is running on `4c0a27db`.
+
+## 2026-11-19 — deploy #4 live; DEF491–493; WP-10 done; S2 ruled; WP-30/WP-38 merged
+
+1. **Deploy #4** `alpha-2026-11-19-2` (`4c0a27db`): postflight 8/8. API UAT: 109 of 110. The one failure was DEF460's stale strict xfail (XPASS).
+2. **DEF491 (security, fixed `b2f1ee3b`):** httpx logged full request URLs at INFO, which put the Alpha Vantage `apikey` in Alpha's container log. The request-URL loggers are now held at WARNING. **Saiful to rotate the AV key.**
+3. **DEF492 (open):** sim news is still dark on Alpha after DEF461. Yahoo refuses melehost, and AV returns 200 with no usable feed (likely the free-tier quota). The UAT news xfails now cite it. The DEF460, DEF462 and DEF463 strict xfails were dropped after each XPASSed live (`245044dc`).
+4. **WP-30 + WP-38 merged** (`0b31a855`).
+   - Both added a migration on `cr273a0b0c0d1`. My first fix re-parented `cr276`, and the DEF278 immutability guard caught it. The lane was rebuilt with a no-op merge revision `m276a0cr239x276` instead (backup branch `backup/WP30-combined-pre-rebuild`).
+   - My review fix `2f03b1b8`: an account inside grace never reaches OneSignal or RevenueCat erasure (its test fails before the fix).
+5. **WP-10 done**, with **a financial limit hit:** DeepInfra suspended on balance at 18:37Z (its $25 credit limit; −$4.37). Alpha's DeepInfra backup is dead until Saiful tops up. Saiful: "I'll top it up".
+6. **S2 ruled: DeepSeek-V4-Flash.** Alpha's `VLLM_FALLBACK_MODEL` was switched to it (gitignored env, with the price added).
+7. **CR277 minted** (Room typewriter pacing adds ~2 min; Saiful: speed it up) and **DEF493 minted** (verdict review silently skipped on a hosted-only config). Both are with Sonnet workers.
+8. Deploy #5 gates on `0b31a855`: suite PASS, 8,190 passed.
+9. **Deploy #5** `alpha-2026-11-19-3` (`0b31a855`): migrations `cr276a0b0c0d1`, `cr239a0b0c0d1` and the merge `m276a0cr239x276` applied; postflight 8/8; error responses carry `x-request-id`; no `HTTP Request:` lines in the log (DEF491 effective).
+   - **Saiful: "do not use deepinfra. Use ami-llm".** Alpha's `VLLM_FALLBACK_*` lines are commented out in `infra/alpha.env`. Live `/v1/llm/status` shows only `vllm` (ami-llm) active, with no fallback slot. Alpha has **no backup model** until he says otherwise.
