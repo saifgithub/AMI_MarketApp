@@ -25,7 +25,13 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 1. **Feature freeze.** Only work in this plan ships until Beta is live. New ideas go to the register as `proposed`.
 2. **The Mac runs nothing.** Backend unit tests only (`pytest backend/tests/unit/ -q`). Everything else goes through `/promote-to-alpha`.
 3. **Gates run bare.** Run `scripts/promotion/preflight_suite.sh` un-piped and read `.deliveryos/suite_verdict.json`. Never wrap a gate in a pipe.
-4. **Shared checkout.** Commit with an explicit pathspec, message before `--`. Touch only your WP's files. Push `main` after every commit (`git push origin main`, bare). Never force-push.
+4. **Branch, not `main` (Saiful, 2026-11-18).**
+   1. All CR267 work happens on branch `beta/cr267`, in the worktree `.claude/worktrees/cr267-beta`. Never in the shared `main` checkout.
+   2. Commit with an explicit pathspec, message before `--`. Touch only your WP's files. Push the branch after every commit (`git push origin beta/cr267`, bare). Never force-push.
+   3. Merge `main` into the branch before minting a CR/DEF ID (the registry must be current) and before every promotion.
+   4. While CR267 runs, Alpha is promoted only from the branch. Anything that lands on `main` reaches Alpha by being merged into the branch first.
+   5. The branch merges to `main` at two points, each on Saiful's go: after WP-26 (Room acceptance) and at WP-54 (go-live).
+   6. Rollback point: tag `pre-cr267` on `main`.
 5. **Degrade loudly.** Every new env-driven setting is forwarded in `docker-compose.yml` (`backend/tests/unit/test_config_compose_parity.py` enforces it). No silent fallbacks: if a grader, model or feed is down, the user sees an honest state.
 6. **Prompts are not controls.** Anything that must hold is done in code or by removing data at the source.
 7. **User-visible text says AMI**, never "the AI". Use the CR160 titles (CIO, Risk Officer, Execution Desk…) in copy and messages.
