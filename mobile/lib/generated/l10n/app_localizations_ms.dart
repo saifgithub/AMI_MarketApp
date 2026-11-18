@@ -4396,6 +4396,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get positionPerLotDetail => 'PER-LOT DETAIL';
 
   @override
+  String get alpacaPositionOpenTicker => 'BUTIRAN TIKER';
+
+  @override
   String get positionUnprotected => 'no stop set';
 
   @override

@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**264 cases** — 185 api, 15 device, 64 manual; 11 blocked.
+**265 cases** — 185 api, 15 device, 65 manual; 11 blocked.
 
 ## Areas
 
@@ -25,7 +25,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 12 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
-18. [Alpaca paper account link](#alpaca) — 7 cases
+18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
 20. [Games (dark-launched) & dev preview](#games) — 6 cases
 21. [Every screen reached, every control pressed](#controls) — 1 cases
@@ -3893,6 +3893,19 @@ _Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
 **Expected**
 1. The ticket success banner shows and the order appears in the paper account, never a live one
 2. The mandate safety floor applies to this order exactly as to an AMI sim order
+
+#### UAT-ALPACA-008 — An Alpaca position's detail link does not promise lots it cannot show
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. UAT-ALPACA-004 completed with at least one Alpaca paper position that AMI never traded
+
+**Steps**
+1. Portfolio > POSITIONS; expand that Alpaca position
+
+**Expected**
+1. The link reads TICKER DETAIL (not PER-LOT DETAIL) and opens the ticker detail screen (DEF475)
 
 #### UAT-ADMIN-006 — Admin console works in the browser behind Cloudflare Access
 

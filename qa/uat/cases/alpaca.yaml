@@ -116,3 +116,15 @@ cases:
     expected:
       - The ticket success banner shows and the order appears in the paper account, never a live one
       - The mandate safety floor applies to this order exactly as to an AMI sim order
+
+  - id: UAT-ALPACA-008
+    title: An Alpaca position's detail link does not promise lots it cannot show
+    layer: manual
+    plans: [floor_pass]
+    platforms: [ios]
+    preconditions:
+      - UAT-ALPACA-004 completed with at least one Alpaca paper position that AMI never traded
+    steps:
+      - 'Portfolio > POSITIONS; expand that Alpaca position'
+    expected:
+      - 'The link reads TICKER DETAIL (not PER-LOT DETAIL) and opens the ticker detail screen (DEF475)'

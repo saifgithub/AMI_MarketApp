@@ -7189,6 +7189,12 @@ abstract class AppLocalizations {
   /// **'PER-LOT DETAIL'**
   String get positionPerLotDetail;
 
+  /// DEF475 - link on an expanded Alpaca-linked position card that opens the ticker detail screen. Replaces PER-LOT DETAIL on Alpaca cards: that screen's lot list reads AMI's own sim ledger, which is empty for an Alpaca-only holding, so the old label promised data that never appeared. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TICKER DETAIL'**
+  String get alpacaPositionOpenTicker;
+
   /// CR189 — shown on an expanded position tile that has no stop. Neutral statement of fact, never a warning or advice.
   ///
   /// In en, this message translates to:

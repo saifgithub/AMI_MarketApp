@@ -96,7 +96,7 @@ class AlpacaPositionCard extends ConsumerWidget {
           onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => TickerDetailScreen(ticker: position.symbol),
           )),
-          child: Text(l.positionPerLotDetail,
+          child: Text(l.alpacaPositionOpenTicker,
               style: AmiTypography.labelMono
                   .copyWith(color: AmiColors.hexCyan, fontSize: 11)),
         ),
