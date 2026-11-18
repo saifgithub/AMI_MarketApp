@@ -48,7 +48,10 @@ from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.room import RoomRun, Verdict
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
+from app.services.llm_spend import LLMBudgetExhausted, budget_http_exception
 from app.services.room_runner import (
+    ROOM_IN_SESSION_MESSAGE,
+    RoomAlreadyInSession,
     RoomRunner,
     build_journal_entry_for_run,
     cio_retry_eligible,
@@ -232,6 +235,23 @@ async def stream_room(
             on_complete=_finalise_to_journal,
             alpaca_snapshot=render_snapshot(req.alpaca),
         )
+    except RoomAlreadyInSession as e:
+        # CR270 — 409: the request is well-formed but conflicts with the user's
+        # own running Room. Nothing was charged. The client may attach to
+        # `active_run_id` instead.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "code": "room_in_session",
+                "message": ROOM_IN_SESSION_MESSAGE,
+                "active_run_id": str(e.active_run_id),
+                "active_ticker": e.active_ticker,
+            },
+        ) from e
+    except LLMBudgetExhausted as e:
+        # CR270 — 503, AMI-voiced; nothing was charged (start_run checks
+        # before the spend).
+        raise budget_http_exception(e) from e
     except InsufficientCredits as e:
         detail = {
             "code": "insufficient_credits",

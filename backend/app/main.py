@@ -476,6 +476,16 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("prefix_cache_startup_check_failed")
 
+    # CR270 — read each OpenAI-compatible slot's served model (`/v1/models`
+    # root) in the BACKGROUND: metadata for `llm_audit.model`, so a slow or
+    # absent host must neither delay nor fail boot. Failures log a warning.
+    try:
+        from app.services.llm_gateway import get_llm_gateway as _gw_for_models
+
+        _gw_for_models().start_served_model_discovery()
+    except Exception:
+        logger.exception("served_model_discovery_start_failed")
+
     # CR158 — compute each agent's prompt version now, off the request path. The
     # lazy fallback would pay ~200 ms of assembly inside `stream_chat`, which runs
     # on the event loop; DEF136 is the measurement of what blocking the loop costs

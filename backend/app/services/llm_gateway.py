@@ -234,6 +234,31 @@ class LLMProvider:
     # capabilities, so isinstance would force a class per endpoint.
     supported_constraints: frozenset[str] = frozenset()
 
+    def static_model_identity(self) -> str | None:
+        """CR270 — the most specific model id known WITHOUT a call, or None."""
+        return None
+
+    def resolve_model(self, meta: dict[str, Any]) -> str | None:
+        """CR270 — the model that served one call, for `llm_audit.model`.
+
+        `meta` is the call's DEF125 channel: the provider writes
+        `configured_model` before the request and `reported_model` when the
+        response names one. Most specific wins; None only when neither exists.
+        """
+        return meta.get("reported_model") or meta.get("configured_model")
+
+    def price_keys(self, meta: dict[str, Any]) -> list[str]:
+        """CR270 — the ids a price may be filed under, most specific first."""
+        keys: list[str] = []
+        for k in (
+            self.resolve_model(meta),
+            meta.get("reported_model"),
+            meta.get("configured_model"),
+        ):
+            if k and k not in keys:
+                keys.append(k)
+        return keys
+
     async def stream_chat(
         self,
         *,
@@ -274,6 +299,12 @@ class MockProvider(LLMProvider):
     """
 
     name = "mock"
+
+    def static_model_identity(self) -> str | None:
+        return "mock"
+
+    def resolve_model(self, meta: dict[str, Any]) -> str | None:
+        return "mock"
 
     _CANNED = {
         "fundamentals_analyst": (
@@ -479,6 +510,9 @@ class AnthropicProvider(LLMProvider):
         # exactly one place, and a second gate here would mean two places can
         # disagree about what "unsupported" means.
         model = TIER_TO_MODEL[model_tier]
+        if meta is not None:
+            meta.pop("reported_model", None)
+            meta["configured_model"] = model
         # Anthropic separates `system` from `messages`; user/assistant only in messages
         body = {
             "model": model,
@@ -563,6 +597,10 @@ class AnthropicProvider(LLMProvider):
                         # CR141: input tokens + both cache fields arrive once,
                         # here — see the helper's docstring.
                         _capture_anthropic_message_start_usage(obj, meta)
+                        # CR270 — the dated snapshot the API actually served.
+                        reported = (obj.get("message") or {}).get("model")
+                        if reported:
+                            meta["reported_model"] = str(reported)
                     elif obj_type == "message_delta" and meta is not None:
                         # DEF125: Anthropic reports the terminal stop on
                         # `message_delta.delta.stop_reason`. Normalise its
@@ -698,6 +736,13 @@ class OpenAICompatibleProvider(LLMProvider):
         if supported_constraints is not None:
             self.supported_constraints = supported_constraints
         self._model_name = model_name
+        # CR270 — what `GET /v1/models` said about the model behind this slot,
+        # filled once at startup by `discover_served_model` (never required).
+        # `served_root` is the vLLM `root` field (the real served path — the
+        # alias the slot is configured with is reused across swaps and names
+        # nothing); `served_id` is the entry's `id`.
+        self.served_root: str | None = None
+        self.served_id: str | None = None
         self._extra_body = extra_body or {}
         # CR272 — transient-failure retries, 0 (none) unless a slot opts in.
         self._max_retries = max(0, max_retries)
@@ -718,6 +763,73 @@ class OpenAICompatibleProvider(LLMProvider):
             timeout=timeout_seconds,
         )
 
+    def static_model_identity(self) -> str | None:
+        return self.served_root or self.served_id or self._model_name or None
+
+    def resolve_model(self, meta: dict[str, Any]) -> str | None:
+        """CR270 — most specific first: the `root` `/v1/models` reported for the
+        slot (vLLM: the real served path), then what the response itself named,
+        then the entry's `id`, then the configured id."""
+        return (
+            self.served_root
+            or meta.get("reported_model")
+            or self.served_id
+            or meta.get("configured_model")
+        )
+
+    def price_keys(self, meta: dict[str, Any]) -> list[str]:
+        keys: list[str] = []
+        for k in (
+            self.resolve_model(meta),
+            meta.get("reported_model"),
+            self.served_id,
+            meta.get("configured_model"),
+        ):
+            if k and k not in keys:
+                keys.append(k)
+        return keys
+
+    async def discover_served_model(self, timeout_s: float = 5.0) -> None:
+        """CR270 — best-effort `GET /v1/models`; records `root`/`id` for the
+        entry matching this slot's configured model (or the only entry).
+
+        Never raises: this is metadata, and a slow or absent endpoint must not
+        touch boot or a request. A failure is logged at WARNING and the slot
+        keeps resolving to the response-reported / configured id.
+        """
+        try:
+            resp = await self._client.get("/v1/models", timeout=timeout_s)
+            resp.raise_for_status()
+            entries = [e for e in (resp.json().get("data") or []) if isinstance(e, dict)]
+            match = next((e for e in entries if e.get("id") == self._model_name), None)
+            if match is None and len(entries) == 1:
+                match = entries[0]
+            if match is None:
+                logger.warning(
+                    "llm_served_model_discovery_no_match",
+                    provider=self.name,
+                    configured_model=self._model_name,
+                    listed=len(entries),
+                )
+                return
+            root = match.get("root")
+            self.served_root = str(root) if root else None
+            self.served_id = str(match["id"]) if match.get("id") else None
+            logger.info(
+                "llm_served_model",
+                provider=self.name,
+                configured_model=self._model_name,
+                served_root=self.served_root,
+                served_id=self.served_id,
+            )
+        except Exception as exc:
+            logger.warning(
+                "llm_served_model_discovery_failed",
+                provider=self.name,
+                error=f"{type(exc).__name__}: {str(exc)[:200]}",
+                detail="llm_audit.model falls back to the response-reported / configured id",
+            )
+
     async def stream_chat(
         self,
         *,
@@ -728,6 +840,9 @@ class OpenAICompatibleProvider(LLMProvider):
         meta: dict[str, Any] | None = None,
         constraint: OutputConstraint | None = None,
     ) -> AsyncIterator[str]:
+        if meta is not None:
+            meta.pop("reported_model", None)
+            meta["configured_model"] = self._model_name
         # OpenAI-style puts the system message as the first entry of `messages`.
         openai_messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt}
@@ -902,6 +1017,12 @@ class OpenAICompatibleProvider(LLMProvider):
                         f"refused this request mid-stream. Check backend logs.]"
                     )
                     return
+
+                # CR270 — the model the server says answered (first frame wins).
+                if meta is not None and "reported_model" not in meta:
+                    reported = obj.get("model")
+                    if isinstance(reported, str) and reported:
+                        meta["reported_model"] = reported
 
                 # CR141: the terminal usage frame's `choices` is EMPTY — this
                 # must run before the `if not choices: continue` guard below,
@@ -1180,6 +1301,7 @@ class LLMGateway:
         # different claim from "unreachable" and must not be able to
         # masquerade as one by outliving the process that measured it.
         self._transport: dict[str, dict[str, Any]] = {}
+        self._discovery_task: asyncio.Task[None] | None = None
 
         if settings.vllm_base_url:
             self._providers["vllm"] = VLLMProvider(
@@ -1450,6 +1572,40 @@ class LLMGateway:
     def has_backup_provider(self) -> bool:
         """CR272 — is the failover slot registered. Config fact, not liveness."""
         return FALLBACK_PROVIDER_NAME in self._providers
+
+    async def discover_served_models(self, timeout_s: float = 5.0) -> None:
+        """CR270 — one best-effort `GET /v1/models` per OpenAI-compatible slot.
+
+        Each probe swallows its own failure (`discover_served_model`); the outer
+        guard exists so that nothing here can ever surface to a caller.
+        """
+        probes = [
+            p.discover_served_model(timeout_s)
+            for p in self._providers.values()
+            if isinstance(p, OpenAICompatibleProvider)
+        ]
+        if not probes:
+            return
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*probes, return_exceptions=True),
+                timeout=timeout_s + 3.0,
+            )
+        except Exception as exc:  # wait_for timeout, cancellation of a probe
+            logger.warning("llm_served_model_discovery_failed", error=repr(exc)[:200])
+
+    def start_served_model_discovery(self) -> None:
+        """CR270 — kick the probe off as a background task so it can never delay
+        or fail boot. Needs a running loop (called from the lifespan)."""
+        self._discovery_task = asyncio.create_task(self.discover_served_models())
+
+    def served_model(self, provider_name: str | None = None) -> str | None:
+        """CR270 — the most specific model id for [provider_name] (default: the
+        provider a call would hit now): the `/v1/models` root if it was read,
+        else its id, else the configured model. Keyed on by WP-24's Room key."""
+        name = provider_name or self._active_provider_name()
+        provider = self._providers.get(name)
+        return provider.static_model_identity() if provider is not None else None
 
     def _active_provider_name(self) -> str:
         """Which provider a call will actually hit right now.
@@ -1902,6 +2058,21 @@ class LLMGateway:
             # provider that reported some fields but not others records NULL
             # only for the ones it omitted (CR141 acceptance 2 + 3).
             usage = call_meta.get("usage") or {}
+            # CR270 — who served it, and what it cost. Neither may break the
+            # audit write: a failure here records NULL for both, loudly.
+            served = None
+            cost_usd = None
+            try:
+                from app.services.llm_spend import compute_cost_usd
+
+                served = provider.resolve_model(call_meta)
+                cost_usd = compute_cost_usd(
+                    provider.price_keys(call_meta),
+                    usage.get("input_tokens"),
+                    usage.get("output_tokens"),
+                )
+            except Exception:
+                logger.exception("llm_cost_compute_failed", provider=provider.name)
             # CR158: stamp which prompt generation this call used, so a later
             # measurement can partition by it instead of reconstructing epoch
             # boundaries from git SHAs by hand — the manual step that put a
@@ -1925,6 +2096,8 @@ class LLMGateway:
                 cache_read_tokens=usage.get("cache_read_tokens"),
                 cache_write_tokens=usage.get("cache_write_tokens"),
                 constraint_status=constraint_status,
+                model=served,
+                cost_usd=cost_usd,
             )
 
 
@@ -1936,3 +2109,11 @@ def get_llm_gateway() -> LLMGateway:
     if _gateway is None:
         _gateway = LLMGateway()
     return _gateway
+
+
+def served_model(provider_name: str | None = None) -> str | None:
+    """CR270 — the model id behind [provider_name] (default: the active one).
+
+    Most specific identity known without a call; see `LLMGateway.served_model`.
+    """
+    return get_llm_gateway().served_model(provider_name)

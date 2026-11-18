@@ -1033,6 +1033,17 @@ class LLMAuditRow(Base):
     # before any caller has parsed anything, and a row that is UPDATEd after the
     # fact is a row whose meaning depends on when you read it.
     constraint_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR270 (CR267 WP-12) — the model that SERVED the call, as specifically as the
+    # gateway could learn it: for a vLLM slot the `root` path from `/v1/models`
+    # (the configured alias, e.g. `ami-llm`, is reused across swaps and names
+    # nothing), else the model id the response reported, else the configured id.
+    # NULL on every pre-CR270 row and means "not recorded", never a default.
+    model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR270 — USD cost of this call from `settings.llm_prices_json` x the token
+    # counts above. NULL means UNKNOWN (no price for `model`, or tokens not
+    # reported) and is never read as free: the daily spend ceiling fails closed
+    # on a row that has tokens but no cost.
+    cost_usd: Mapped[Optional[float]] = mapped_column(Numeric(14, 8), nullable=True)
 
 
 class HTTPAuditRow(Base):

@@ -298,6 +298,11 @@ services:
       # CR269 — empty desk value = send no temperature (today's behaviour).
       LLM_DESK_TEMPERATURE: ${LLM_DESK_TEMPERATURE:-}
       LLM_JUDGE_TEMPERATURE: ${LLM_JUDGE_TEMPERATURE:-0.0}
+      # CR270 — price table (JSON: model id -> {"in","out"} USD per 1M tokens)
+      # and the daily spend ceiling. Empty ceiling = no ceiling (today's
+      # behaviour).
+      LLM_PRICES_JSON: ${LLM_PRICES_JSON:-}
+      LLM_DAILY_SPEND_CEILING_USD: ${LLM_DAILY_SPEND_CEILING_USD:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}

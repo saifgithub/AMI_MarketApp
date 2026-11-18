@@ -242,6 +242,11 @@ _INLINE_DEFAULT_EXEMPT: dict[str, str] = {
     # Compose cannot spell None; an empty value is how "send no temperature" is
     # forwarded, and Settings reads blank as None (test_cr269_llm_temperature).
     "LLM_DESK_TEMPERATURE": "empty is None — compose's only spelling of 'unset' for an optional float",
+    # CR270 — no ceiling is the shipped state; and compose cannot carry a `{}`
+    # default (its interpolation closes on the first `}`), so an empty price
+    # table is forwarded as empty and `parse_llm_prices` reads blank as `{}`.
+    "LLM_DAILY_SPEND_CEILING_USD": "empty is None — compose's only spelling of 'unset' for an optional float",
+    "LLM_PRICES_JSON": "empty is the empty table {} — compose cannot spell a '{}' default",
 }
 # `PORTFOLIO_HEALTH_TRIAL_FINDINGS` was exempted here and should not have been
 # (DEF266, R68-BATCH9 audit MAJOR-3). The reasoning at the time — "another lane

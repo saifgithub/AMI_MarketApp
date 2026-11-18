@@ -1,6 +1,7 @@
 """Runtime config — all secrets via env vars, all environments via Pydantic Settings."""
 
 import json
+import math
 from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
@@ -11,6 +12,44 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 # JSON at the source layer — without it a plain `GOOGLE_AUDIENCES=<client_id>`
 # crashes boot (DEF038 — how Alpha ran with empty audiences unnoticed).
 CsvList = Annotated[list[str], NoDecode]
+
+
+def parse_llm_prices(raw: str) -> dict[str, tuple[float, float]]:
+    """CR270 — `LLM_PRICES_JSON` → {model id: (USD per 1M input, USD per 1M output)}.
+
+    Raises ValueError on anything malformed or negative, so a bad price table
+    fails BOOT (a price table that quietly parses to "no prices" would read as
+    free spend). A price of exactly 0 is legal — it is how an operator states
+    that a model (on-prem) is free — whereas an ABSENT model is "unknown".
+    """
+    text = (raw or "").strip()
+    if not text:
+        return {}
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"LLM_PRICES_JSON is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError('LLM_PRICES_JSON must be a JSON object: {"<model>": {"in": n, "out": n}}')
+    prices: dict[str, tuple[float, float]] = {}
+    for model, entry in data.items():
+        if not isinstance(entry, dict) or set(entry) != {"in", "out"}:
+            raise ValueError(
+                f'LLM_PRICES_JSON[{model!r}] must be exactly {{"in": n, "out": n}} '
+                "(USD per 1M input / output tokens)"
+            )
+        pair: list[float] = []
+        for leg in ("in", "out"):
+            val = entry[leg]
+            if isinstance(val, bool) or not isinstance(val, (int, float)):
+                raise ValueError(f"LLM_PRICES_JSON[{model!r}][{leg!r}] must be a number, got {val!r}")
+            if not math.isfinite(val) or val < 0:
+                raise ValueError(
+                    f"LLM_PRICES_JSON[{model!r}][{leg!r}] must be a finite number >= 0, got {val!r}"
+                )
+            pair.append(float(val))
+        prices[str(model)] = (pair[0], pair[1])
+    return prices
 
 
 class Settings(BaseSettings):
@@ -358,6 +397,38 @@ class Settings(BaseSettings):
     # Reserved for the later judge (CR267 WP-22). Declared now with no caller so
     # the judge ships against an already-forwarded, already-validated knob.
     llm_judge_temperature: float = 0.0
+
+    # CR270 (CR267 WP-12) — what a model costs, and the daily spend ceiling.
+    # `llm_prices_json`: {"<served model id>": {"in": USD/1M input tokens, "out":
+    # USD/1M output tokens}}, copied from the vendor page. Validated at boot
+    # (`parse_llm_prices`). A model missing from it records cost NULL — never
+    # zero — and, with a ceiling set, makes the ceiling fail CLOSED. An on-prem
+    # model that really is free must be listed with {"in": 0, "out": 0}.
+    llm_prices_json: str = "{}"
+    # None = no ceiling (today's behaviour). Otherwise USD per UTC day, summed
+    # over every provider in `llm_audit` (primary + backup). Empty env
+    # (compose forwards `${LLM_DAILY_SPEND_CEILING_USD:-}`) is read as None.
+    llm_daily_spend_ceiling_usd: float | None = None
+
+    @field_validator("llm_prices_json")
+    @classmethod
+    def _prices_parse(cls, v: str) -> str:
+        parse_llm_prices(v)
+        return v
+
+    @field_validator("llm_daily_spend_ceiling_usd", mode="before")
+    @classmethod
+    def _blank_ceiling_is_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @field_validator("llm_daily_spend_ceiling_usd")
+    @classmethod
+    def _ceiling_positive(cls, v: float | None) -> float | None:
+        if v is not None and not (math.isfinite(v) and v > 0):
+            raise ValueError("LLM_DAILY_SPEND_CEILING_USD must be a finite number > 0 (or empty for no ceiling)")
+        return v
 
     @field_validator("llm_desk_temperature", mode="before")
     @classmethod
