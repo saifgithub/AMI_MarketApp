@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 ThresholdType = Literal["stop", "target", "manual_above", "manual_below"]
 AlertStatus = Literal["active", "fired", "cancelled"]
@@ -20,7 +20,9 @@ AlertStatus = Literal["active", "fired", "cancelled"]
 class PriceAlertCreate(BaseModel):
     ticker: str
     threshold_type: ThresholdType
-    threshold_price: float
+    # DEF462: the column stores 4 decimals, so 0.0001 is the smallest positive
+    # level that survives a round-trip; zero / negative / NaN levels are 422.
+    threshold_price: float = Field(..., ge=0.0001)
     trade_ref: UUID | None = None
 
 
