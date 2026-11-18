@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from conftest import snap
-from config.semantics_ids import NAV_IDS, ONBOARDING_ANSWER_CHIP
+from config.semantics_ids import NAV_IDS, ONBOARDING_AGE_CHECKBOX, ONBOARDING_ANSWER_CHIP
 from helpers import device as device_helpers
 from helpers import onboarding
 from helpers.journeys import settle
@@ -54,14 +54,17 @@ def test_fresh_install_walks_the_interview_to_a_readback_and_lands_on_the_floor(
     _fresh_install(driver, device_profile)
     time.sleep(5.0)
 
-    # the interview must open with answer chips - not an error, not a blank screen
-    wait_visible_id(driver, ONBOARDING_ANSWER_CHIP, timeout_s=120)
-    snap(driver, run_dir, "onboarding", "first_question")
+    # CR273: a fresh install opens on the 18+ confirmation, before any question
+    wait_visible_id(driver, ONBOARDING_AGE_CHECKBOX, timeout_s=120)
+    snap(driver, run_dir, "onboarding", "age_gate")
+    assert not exists_id(driver, ONBOARDING_ANSWER_CHIP, retry=False), "a question was shown before the 18+ confirmation"
     assert not exists_id(driver, NAV_IDS["Floor"], retry=False), "the shell was already up on a fresh install"
 
+    # the walk ticks the box and continues; the interview must then open with
+    # answer chips - not an error, not a blank screen
     onboarding.ensure_onboarded(driver)
     print(f"    [onboarding] milestones: {onboarding.walk_milestones}")
-    for milestone in ("chips", "readback", "floor"):
+    for milestone in ("age", "chips", "readback", "floor"):
         assert milestone in onboarding.walk_milestones, (
             f"the walk never passed through {milestone!r}: {onboarding.walk_milestones}"
         )

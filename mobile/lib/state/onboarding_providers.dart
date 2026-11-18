@@ -63,6 +63,7 @@ class OnboardingState {
     this.mandatePreview,
     this.submitting = false,
     this.isRestart = false,
+    this.ageConfirmed = false,
   });
 
   final OnboardingPhase phase;
@@ -89,6 +90,11 @@ class OnboardingState {
   /// `false` and existing behaviour is unchanged.
   final bool isRestart;
 
+  /// CR273 (D-084): the user ticked and confirmed "I am 18 or older" on the
+  /// age gate that opens onboarding. In-memory only here; the server stamps and
+  /// stores the timestamp, and refuses every later step without it.
+  final bool ageConfirmed;
+
   /// Available chip suggestions for the most recent Concierge message
   /// (only when waiting on user input).
   List<String> get currentChips {
@@ -109,6 +115,7 @@ class OnboardingState {
     Map<String, dynamic>? mandatePreview,
     bool? submitting,
     bool? isRestart,
+    bool? ageConfirmed,
   }) {
     return OnboardingState(
       phase: phase ?? this.phase,
@@ -120,6 +127,7 @@ class OnboardingState {
       readbackSummary: readbackSummary ?? this.readbackSummary,
       mandatePreview: mandatePreview ?? this.mandatePreview,
       isRestart: isRestart ?? this.isRestart,
+      ageConfirmed: ageConfirmed ?? this.ageConfirmed,
       submitting: submitting ?? this.submitting,
     );
   }
@@ -159,14 +167,29 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = OnboardingState(isRestart: isRestart);
   }
 
+  /// CR273: the age gate's "continue" — records the confirmation, then starts
+  /// the interview. Nothing is sent to the server before this is called.
+  Future<void> confirmAgeAndStart({
+    required String locale,
+    required String timezone,
+  }) async {
+    state = state.copyWith(ageConfirmed: true);
+    await start(locale: locale, timezone: timezone);
+  }
+
   Future<void> start({required String locale, required String timezone}) async {
+    if (!state.ageConfirmed) return; // CR273: no session without the 18+ gate
     if (state.phase != OnboardingPhase.notStarted &&
         state.phase != OnboardingPhase.error) {
       return; // already in progress
     }
     state = state.copyWith(phase: OnboardingPhase.starting, errorMessage: null);
     try {
-      final resp = await _api.startOnboarding(locale: locale, timezone: timezone);
+      final resp = await _api.startOnboarding(
+        locale: locale,
+        timezone: timezone,
+        ageConfirmed: true,
+      );
       // BL13: persist session_id so the eventual claim call (magic-link verify,
       // Apple, or Google) can pass it to the backend and stamp claimed_user_id
       // on this OnboardingSession row.

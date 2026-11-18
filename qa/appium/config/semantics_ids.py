@@ -70,6 +70,10 @@ SHEET_MERGE_CTA = "ami.sheet.merge.cta"
 ONBOARDING_ANSWER_CHIP = "ami.onboarding.answer_chip"
 ONBOARDING_COMPOSER = "ami.onboarding.composer"
 ONBOARDING_SEND = "ami.onboarding.send"
+# CR273 — the 18+ confirmation that opens onboarding.
+ONBOARDING_AGE_CHECKBOX = "ami.onboarding.age_checkbox"
+ONBOARDING_AGE_CONTINUE = "ami.onboarding.age_continue"
+ONBOARDING_AGE_DECLINE = "ami.onboarding.age_decline"
 
 # DEF375 — the shared coach-mark card's controls, on all five tours.
 #

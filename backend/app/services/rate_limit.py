@@ -13,9 +13,13 @@ Usage:
     @router.post("/anon", dependencies=[Depends(limiter)])
     def anon_session(...): ...
 
-Keying: Cloudflare `cf-connecting-ip` → `x-forwarded-for` first hop →
-`request.client.host` fallback. CF Tunnel always populates the first;
-the chain handles dev + tests where neither header is set.
+Keying (DEF464): `cf-connecting-ip` is honoured ONLY when the direct TCP
+peer (`request.client.host`) sits inside `settings.rate_limit_trusted_proxy_cidrs`
+— i.e. the cloudflared container on the compose network. Any other peer
+(a LAN-direct caller on melehost:8000, a test client) is keyed on its own
+socket address and its forwarded headers are ignored. `x-forwarded-for` is
+never used: its first hop is client-controlled even behind Cloudflare, which
+appends to whatever the caller sent.
 
 Threshold breach raises HTTP 429 with a `Retry-After` header containing
 the seconds until the oldest timestamp in the window expires.
@@ -27,8 +31,10 @@ gets re-throttled within seconds of the next request.
 
 from __future__ import annotations
 
+import ipaddress
 import time
 from collections import OrderedDict, deque
+from functools import lru_cache
 from threading import RLock
 
 from fastapi import HTTPException, Request, status
@@ -47,6 +53,41 @@ WINDOW_SECONDS = 60
 # more distinct keys than this, so total memory is O(MAX_TRACKED_KEYS)
 # regardless of how many distinct keys/IPs are thrown at it.
 MAX_TRACKED_KEYS = 50_000
+
+
+@lru_cache(maxsize=8)
+def _parse_trusted_networks(raw: str) -> tuple:
+    """Parse the comma-separated CIDR setting. A malformed entry raises
+    ValueError (the app refuses to serve rather than silently trusting or
+    distrusting a proxy range — CR040 degrade-loudly)."""
+    return tuple(
+        ipaddress.ip_network(part.strip(), strict=False)
+        for part in raw.split(",")
+        if part.strip()
+    )
+
+
+def _peer_is_trusted_proxy(peer: str) -> bool:
+    try:
+        addr = ipaddress.ip_address(peer)
+    except ValueError:
+        return False
+    return any(
+        addr.version == net.version and addr in net
+        for net in _parse_trusted_networks(settings.rate_limit_trusted_proxy_cidrs)
+    )
+
+
+def _valid_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    return True
+
+
+# Fail at import, not on the first request, if the CIDR list is malformed.
+_parse_trusted_networks(settings.rate_limit_trusted_proxy_cidrs)
 
 
 class RateLimiter:
@@ -82,16 +123,13 @@ class RateLimiter:
             self._hits.clear()
 
     def resolve_ip_key(self, request: Request) -> str:
-        # Prefer Cloudflare's authenticated header, then the standard XFF
-        # first-hop, then the socket peer (only useful in tests).
-        cf_ip = request.headers.get("cf-connecting-ip")
-        if cf_ip:
-            return f"ip:{cf_ip.strip()}"
-        xff = request.headers.get("x-forwarded-for")
-        if xff:
-            return f"ip:{xff.split(',', 1)[0].strip()}"
-        if request.client and request.client.host:
-            return f"ip:{request.client.host}"
+        peer = request.client.host if request.client and request.client.host else None
+        if peer and _peer_is_trusted_proxy(peer):
+            cf_ip = (request.headers.get("cf-connecting-ip") or "").strip()
+            if cf_ip and _valid_ip(cf_ip):
+                return f"ip:{cf_ip}"
+        if peer:
+            return f"ip:{peer}"
         return "ip:unknown"
 
     def check(self, key: str) -> None:

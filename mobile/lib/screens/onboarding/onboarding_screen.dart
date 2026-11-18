@@ -29,16 +29,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _scrollCtrl = ScrollController();
   final _textCtrl = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    // Auto-start onboarding on screen mount
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(onboardingNotifierProvider.notifier).start(
-            locale: Localizations.localeOf(context).languageCode,
-            timezone: DateTime.now().timeZoneName,
-          );
-    });
+  /// CR273: the user said they are under 18 on the age gate. Local to the
+  /// screen on purpose — nothing is sent or stored for a decline.
+  bool _declinedAge = false;
+
+  /// CR273: onboarding no longer auto-starts on mount. The first thing the
+  /// user sees is the 18+ gate; the session starts only from its CONTINUE.
+  void _confirmAgeAndStart() {
+    ref.read(onboardingNotifierProvider.notifier).confirmAgeAndStart(
+          locale: Localizations.localeOf(context).languageCode,
+          timezone: DateTime.now().timeZoneName,
+        );
   }
 
   @override
@@ -96,6 +97,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _body(OnboardingState state) {
+    if (state.phase == OnboardingPhase.notStarted && !state.ageConfirmed) {
+      if (_declinedAge) {
+        return _AgeDeclinedView(
+          onBack: () => setState(() => _declinedAge = false),
+        );
+      }
+      return _AgeGate(
+        onContinue: _confirmAgeAndStart,
+        onDecline: () => setState(() => _declinedAge = true),
+      );
+    }
     if (state.phase == OnboardingPhase.error) {
       return _ErrorView(
         message: state.errorMessage ??
@@ -368,6 +380,133 @@ class _ErrorView extends StatelessWidget {
           Text(message, style: AmiTypography.body, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.l),
           HexButton(label: l.onboardingTryAgain, onPressed: onRetry),
+        ],
+      ),
+    );
+  }
+}
+
+/// CR273 (D-084) — the single 18+ confirmation that opens onboarding.
+///
+/// Placed before the Concierge session exists, so nothing about the user is
+/// collected (and no server session created) until they have confirmed. The
+/// checkbox starts unticked and CONTINUE stays disabled until it is ticked: the
+/// confirmation has to be a deliberate act, never a default. No birth date is
+/// asked for — only this one tick, which the server timestamps.
+class _AgeGate extends StatefulWidget {
+  const _AgeGate({required this.onContinue, required this.onDecline});
+
+  final VoidCallback onContinue;
+  final VoidCallback onDecline;
+
+  @override
+  State<_AgeGate> createState() => _AgeGateState();
+}
+
+class _AgeGateState extends State<_AgeGate> {
+  bool _checked = false;
+
+  void _toggle() => setState(() => _checked = !_checked);
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(AmiSpacing.l),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Icon(Icons.verified_user_outlined,
+              size: 56, color: AmiColors.hexBlue),
+          const SizedBox(height: AmiSpacing.m),
+          Text(l.onboardingAgeTitle,
+              style: AmiTypography.labelMono, textAlign: TextAlign.center),
+          const SizedBox(height: AmiSpacing.s),
+          Text(l.onboardingAgeBody,
+              style: AmiTypography.body, textAlign: TextAlign.center),
+          const SizedBox(height: AmiSpacing.l),
+          Semantics(
+            identifier: OnboardingIds.ageCheckbox,
+            label: l.onboardingAgeCheckbox,
+            checked: _checked,
+            onTap: _toggle,
+            excludeSemantics: true,
+            child: InkWell(
+              onTap: _toggle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _checked,
+                      onChanged: (_) => _toggle(),
+                      activeColor: AmiColors.hexBlue,
+                      side: const BorderSide(color: AmiColors.textMed),
+                    ),
+                    Expanded(
+                      child: Text(
+                        l.onboardingAgeCheckbox,
+                        style: AmiTypography.body
+                            .copyWith(color: AmiColors.textHigh),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AmiSpacing.m),
+          Semantics(
+            identifier: OnboardingIds.ageContinue,
+            child: HexButton(
+              label: l.onboardingAgeContinue,
+              color: AmiColors.hexBlue,
+              onPressed: _checked ? widget.onContinue : null,
+            ),
+          ),
+          Semantics(
+            identifier: OnboardingIds.ageDecline,
+            child: TextButton(
+              onPressed: widget.onDecline,
+              child: Text(
+                l.onboardingAgeDecline,
+                style:
+                    AmiTypography.labelMono.copyWith(color: AmiColors.textLow),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// CR273 — the respectful dead end for a user who says they are under 18.
+/// Nothing was sent or saved. GO BACK returns to the gate, for a mis-tap.
+class _AgeDeclinedView extends StatelessWidget {
+  const _AgeDeclinedView({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(AmiSpacing.l),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Icon(Icons.lock_outline, size: 56, color: AmiColors.hexAmber),
+          const SizedBox(height: AmiSpacing.m),
+          Text(l.onboardingAgeDeclinedTitle,
+              style: AmiTypography.labelMono, textAlign: TextAlign.center),
+          const SizedBox(height: AmiSpacing.s),
+          Text(l.onboardingAgeDeclinedBody,
+              style: AmiTypography.body, textAlign: TextAlign.center),
+          const SizedBox(height: AmiSpacing.l),
+          HexButton(label: l.onboardingAgeDeclinedBack, onPressed: onBack),
         ],
       ),
     );

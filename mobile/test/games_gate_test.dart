@@ -30,6 +30,7 @@ class _FakeApiClient extends ApiClient {
   Future<StartOnboardingResponse> startOnboarding({
     required String locale,
     required String timezone,
+    required bool ageConfirmed,
   }) async {
     return StartOnboardingResponse(
       sessionId: 'fake-session',

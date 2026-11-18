@@ -520,10 +520,15 @@ class ApiClient {
   Future<StartOnboardingResponse> startOnboarding({
     required String locale,
     required String timezone,
+    required bool ageConfirmed,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/onboarding/start',
-      data: {'locale': locale, 'timezone': timezone},
+      data: {
+        'locale': locale,
+        'timezone': timezone,
+        'age_confirmed': ageConfirmed,
+      },
     );
     return StartOnboardingResponse.fromJson(r.data!);
   }

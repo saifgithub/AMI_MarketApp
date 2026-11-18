@@ -425,6 +425,10 @@ services:
       # Concurrent SSE streams one user may hold open across 1-on-1 + Brief
       # combined (DEF201 — the H6 rate limit bounds pace, not concurrency).
       AGENT_STREAM_MAX_CONCURRENT_PER_USER: ${AGENT_STREAM_MAX_CONCURRENT_PER_USER:-2}
+      # DEF464 — peers allowed to supply `cf-connecting-ip` (the cloudflared
+      # container on ami_internal). Docker's default bridge pool; melehost's
+      # ami_internal is 172.19.0.0/16. LAN-direct callers (192.168.x) fall outside.
+      RATE_LIMIT_TRUSTED_PROXY_CIDRS: ${RATE_LIMIT_TRUSTED_PROXY_CIDRS:-172.16.0.0/12}
       # CR197 — independent CIO samples per verdict; 1 = today's single call.
       # Raising it costs that multiple of the run's most expensive call, and buys
       # back the 19.7% of verdicts measured to be non-unanimous on identical prompts.
@@ -555,6 +559,9 @@ services:
       # CR271 — deterministic output text guard (off | log | enforce). Default
       # log: hits are logged, no text changes. See Settings.output_guard_mode.
       OUTPUT_GUARD_MODE: ${OUTPUT_GUARD_MODE:-log}
+      # CR273 — refuse onboarding without the 18+ confirmation. Default true;
+      # false only while testers run builds older than the age gate.
+      ONBOARDING_AGE_GATE_ENFORCED: ${ONBOARDING_AGE_GATE_ENFORCED:-true}
       # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
       # deterministic allowed-action set + computed size with a persisted
       # decision record. Default off; per-MODEL acceptance-gated — thresholds

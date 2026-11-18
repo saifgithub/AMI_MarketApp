@@ -2006,6 +2006,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingTryAgain => 'إعادة المحاولة';
 
   @override
+  String get onboardingAgeTitle => 'AMI Trade is for adults';
+
+  @override
+  String get onboardingAgeBody =>
+      'AMI Trade is a trading-education simulator for adults. Confirm you are 18 or older to continue.';
+
+  @override
+  String get onboardingAgeCheckbox => 'I am 18 or older';
+
+  @override
+  String get onboardingAgeContinue => 'CONTINUE';
+
+  @override
+  String get onboardingAgeDecline => 'I AM UNDER 18';
+
+  @override
+  String get onboardingAgeDeclinedTitle => 'AMI Trade isn\'t available yet';
+
+  @override
+  String get onboardingAgeDeclinedBody =>
+      'AMI Trade is for people aged 18 or older, so setup stops here. Nothing was saved. You are welcome back once you turn 18.';
+
+  @override
+  String get onboardingAgeDeclinedBack => 'GO BACK';
+
+  @override
   String get signInHeading => 'تسجيل الدخول';
 
   @override
