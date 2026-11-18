@@ -128,6 +128,152 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get settingsSignOut => 'Sign out';
+
+  @override
+  String get settingsSectionAppearance => 'APPEARANCE';
+
+  @override
+  String get settingsSectionHelp => 'HELP';
+
+  @override
+  String get settingsHelpQaLibrary => 'Ask AMI — Q&A library';
+
+  @override
+  String get settingsSectionConnectedAccounts => 'CONNECTED ACCOUNTS';
+
+  @override
+  String get settingsAlpacaConnected => 'Connected';
+
+  @override
+  String get settingsAlpacaNotConnected => 'Not connected';
+
+  @override
+  String get settingsAlpacaRelinkNeeded =>
+      'AMI now links Alpaca paper accounts only — relink';
+
+  @override
+  String get settingsAlpacaConnect => 'Connect';
+
+  @override
+  String get settingsAlpacaDisconnect => 'Disconnect';
+
+  @override
+  String get settingsAlpacaRelink => 'Relink';
+
+  @override
+  String get tradeTicketNoVerdictTitle => 'NO AMI VERDICT';
+
+  @override
+  String get tradeTicketNoVerdictBody =>
+      'Convene the Room first to get analysis from your 12 agents. Or proceed — this trade will be marked \"without advice\".';
+
+  @override
+  String get tradeTicketConveneRoom => 'Convene the Room';
+
+  @override
+  String get tradeTicketProceedWithout => 'Proceed without';
+
+  @override
+  String get tradeTicketDestinationLabel => 'DESTINATION';
+
+  @override
+  String get tradeTicketDestAmiSim => 'AMI SIM';
+
+  @override
+  String get tradeTicketDestBoth => 'BOTH';
+
+  @override
+  String get tradeTicketUnreachableCheck =>
+      'Could not reach AMI to check this trade.';
+
+  @override
+  String get tradeTicketUnreachablePlace =>
+      'Could not reach AMI to place this trade.';
+
+  @override
+  String get tradeTicketBlockedByMandate => 'Blocked by your mandate.';
+
+  @override
+  String get portfolioAlpacaRelinkPrompt =>
+      'AMI now links Alpaca paper accounts only. Relink your account from the Connected Accounts section of Settings.';
+
+  @override
+  String get termSeeAlso => 'SEE ALSO';
+
+  @override
+  String get termRelatedLessons => 'RELATED LESSONS';
+
+  @override
+  String get aiCoachTitle => 'Ask AMI';
+
+  @override
+  String get aiCoachSearchHint =>
+      'Ask anything — \"halal filter\", \"mandate\", \"stop loss\"';
+
+  @override
+  String aiCoachNoMatches(String query) {
+    return 'No matches for \"$query\". Try a different phrasing.';
+  }
+
+  @override
+  String get aiCoachRelatedAgents => 'RELATED AGENTS';
+
+  @override
+  String get journalKvAmiAdvice => 'AMI advice';
+
+  @override
+  String get journalKvWithoutManual => 'Without — manual trade';
+
+  @override
+  String get bugSheetTitle => 'Report a bug';
+
+  @override
+  String get bugSheetCatUiGlitch => 'UI glitch';
+
+  @override
+  String get bugSheetCatWrongData => 'Wrong data';
+
+  @override
+  String get bugSheetCatCrash => 'App crashed';
+
+  @override
+  String get bugSheetCatPerformance => 'Slow / freeze';
+
+  @override
+  String get bugSheetCatFeatureRequest => 'Feature request';
+
+  @override
+  String get bugSheetCatOther => 'Other';
+
+  @override
+  String get bugSheetTakePhoto => 'Take photo';
+
+  @override
+  String get bugSheetChooseLibrary => 'Choose from library';
+
+  @override
+  String get bugSheetShortDescription => 'Short description';
+
+  @override
+  String get bugSheetRequired => 'Required';
+
+  @override
+  String get bugSheetSteps => 'Steps to reproduce (optional)';
+
+  @override
+  String get bugSheetSendFailed => 'Failed to send — please try again';
+
+  @override
+  String get bugSheetSend => 'Send report';
+
+  @override
+  String get bugSheetAttachPhoto => 'Attach photo';
+
+  @override
+  String get bugSheetRemoveTooltip => 'Remove';
+
+  @override
   String get youSegmentInsights => 'INSIGHTS';
 
   @override

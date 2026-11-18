@@ -43,6 +43,7 @@ import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/screens/settings/legal_screen.dart';
+import 'package:ami_trade/widgets/alpaca/alpaca_badge.dart' show kAlpacaPaperLabel;
 import 'package:ami_trade/qa/semantics_ids.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -1303,7 +1304,7 @@ class _AccountSection extends ConsumerWidget {
                 foregroundColor: AmiColors.hexRed,
                 side: const BorderSide(color: AmiColors.hexRed),
               ),
-              child: const Text('Sign out'),
+              child: Text(l.settingsSignOut),
             ),
           ),
         ],
@@ -1428,7 +1429,7 @@ class _ThemeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return _Section(
-      title: 'APPEARANCE',
+      title: l.settingsSectionAppearance,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1643,8 +1644,9 @@ class _HelpSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return _Section(
-      title: 'HELP',
+      title: l.settingsSectionHelp,
       children: [
         InkWell(
           onTap: () => Navigator.of(context).push(
@@ -1657,7 +1659,7 @@ class _HelpSection extends ConsumerWidget {
                 const Icon(Icons.help_outline, color: AmiColors.hexBlue, size: 18),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
-                  child: Text('AI Coach — Q&A library',
+                  child: Text(l.settingsHelpQaLibrary,
                       style: AmiTypography.body),
                 ),
                 const Icon(Icons.chevron_right, color: AmiColors.textLow),
@@ -1766,9 +1768,10 @@ class _AlpacaSection extends ConsumerWidget {
     if (!claimed) return const SizedBox.shrink();
 
     final linkedAsync = ref.watch(alpacaLinkedProvider);
+    final l = AppLocalizations.of(context);
 
     return _Section(
-      title: 'CONNECTED ACCOUNTS',
+      title: l.settingsSectionConnectedAccounts,
       children: [
         linkedAsync.when(
           loading: () => const SizedBox(
@@ -1810,6 +1813,7 @@ class _AlpacaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
         Container(
@@ -1828,7 +1832,7 @@ class _AlpacaRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ALPACA PAPER',
+                kAlpacaPaperLabel,
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
               ),
               Text(
@@ -1836,10 +1840,10 @@ class _AlpacaRow extends StatelessWidget {
                 // "Not connected" alone would read as "never linked", which
                 // is false and drops the reason a relink is needed.
                 linked
-                    ? 'Connected'
+                    ? l.settingsAlpacaConnected
                     : (storedNonPaper
-                        ? 'AMI now links Alpaca paper accounts only — relink'
-                        : 'Not connected'),
+                        ? l.settingsAlpacaRelinkNeeded
+                        : l.settingsAlpacaNotConnected),
                 style: AmiTypography.caption.copyWith(
                   color: linked
                       ? AmiColors.hexGreen
@@ -1854,7 +1858,11 @@ class _AlpacaRow extends StatelessWidget {
         TextButton(
           onPressed: () => _onPressed(context),
           child: Text(
-            linked ? 'Disconnect' : (storedNonPaper ? 'Relink' : 'Connect'),
+            linked
+                ? l.settingsAlpacaDisconnect
+                : (storedNonPaper
+                    ? l.settingsAlpacaRelink
+                    : l.settingsAlpacaConnect),
             style: AmiTypography.labelMono.copyWith(
               color: linked ? AmiColors.hexRed : AmiColors.hexBlue,
             ),

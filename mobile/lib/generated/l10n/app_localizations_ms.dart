@@ -128,6 +128,152 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get settingsSignOut => 'Log keluar';
+
+  @override
+  String get settingsSectionAppearance => 'PENAMPILAN';
+
+  @override
+  String get settingsSectionHelp => 'BANTUAN';
+
+  @override
+  String get settingsHelpQaLibrary => 'Tanya AMI — pustaka S&J';
+
+  @override
+  String get settingsSectionConnectedAccounts => 'AKAUN BERSAMBUNG';
+
+  @override
+  String get settingsAlpacaConnected => 'Bersambung';
+
+  @override
+  String get settingsAlpacaNotConnected => 'Tidak bersambung';
+
+  @override
+  String get settingsAlpacaRelinkNeeded =>
+      'AMI kini hanya memautkan akaun Alpaca paper — paut semula';
+
+  @override
+  String get settingsAlpacaConnect => 'Sambung';
+
+  @override
+  String get settingsAlpacaDisconnect => 'Putuskan';
+
+  @override
+  String get settingsAlpacaRelink => 'Paut semula';
+
+  @override
+  String get tradeTicketNoVerdictTitle => 'TIADA KEPUTUSAN AMI';
+
+  @override
+  String get tradeTicketNoVerdictBody =>
+      'Adakan Bilik terlebih dahulu untuk mendapatkan analisis daripada 12 ejen anda. Atau teruskan — dagangan ini akan ditandakan \"tanpa nasihat\".';
+
+  @override
+  String get tradeTicketConveneRoom => 'Adakan Bilik';
+
+  @override
+  String get tradeTicketProceedWithout => 'Teruskan tanpa';
+
+  @override
+  String get tradeTicketDestinationLabel => 'DESTINASI';
+
+  @override
+  String get tradeTicketDestAmiSim => 'SIM AMI';
+
+  @override
+  String get tradeTicketDestBoth => 'KEDUA-DUANYA';
+
+  @override
+  String get tradeTicketUnreachableCheck =>
+      'Tidak dapat menghubungi AMI untuk menyemak dagangan ini.';
+
+  @override
+  String get tradeTicketUnreachablePlace =>
+      'Tidak dapat menghubungi AMI untuk membuat dagangan ini.';
+
+  @override
+  String get tradeTicketBlockedByMandate => 'Disekat oleh mandat anda.';
+
+  @override
+  String get portfolioAlpacaRelinkPrompt =>
+      'AMI kini hanya memautkan akaun Alpaca paper. Paut semula akaun anda daripada bahagian Akaun Bersambung dalam Tetapan.';
+
+  @override
+  String get termSeeAlso => 'LIHAT JUGA';
+
+  @override
+  String get termRelatedLessons => 'PELAJARAN BERKAITAN';
+
+  @override
+  String get aiCoachTitle => 'Tanya AMI';
+
+  @override
+  String get aiCoachSearchHint =>
+      'Tanya apa sahaja — \"penapis halal\", \"mandat\", \"henti rugi\"';
+
+  @override
+  String aiCoachNoMatches(String query) {
+    return 'Tiada padanan untuk \"$query\". Cuba frasa lain.';
+  }
+
+  @override
+  String get aiCoachRelatedAgents => 'EJEN BERKAITAN';
+
+  @override
+  String get journalKvAmiAdvice => 'Nasihat AMI';
+
+  @override
+  String get journalKvWithoutManual => 'Tanpa — dagangan manual';
+
+  @override
+  String get bugSheetTitle => 'Laporkan pepijat';
+
+  @override
+  String get bugSheetCatUiGlitch => 'Gangguan UI';
+
+  @override
+  String get bugSheetCatWrongData => 'Data salah';
+
+  @override
+  String get bugSheetCatCrash => 'Aplikasi ranap';
+
+  @override
+  String get bugSheetCatPerformance => 'Perlahan / beku';
+
+  @override
+  String get bugSheetCatFeatureRequest => 'Permintaan ciri';
+
+  @override
+  String get bugSheetCatOther => 'Lain-lain';
+
+  @override
+  String get bugSheetTakePhoto => 'Ambil gambar';
+
+  @override
+  String get bugSheetChooseLibrary => 'Pilih daripada pustaka';
+
+  @override
+  String get bugSheetShortDescription => 'Penerangan ringkas';
+
+  @override
+  String get bugSheetRequired => 'Diperlukan';
+
+  @override
+  String get bugSheetSteps => 'Langkah untuk menghasilkan semula (pilihan)';
+
+  @override
+  String get bugSheetSendFailed => 'Gagal dihantar — sila cuba lagi';
+
+  @override
+  String get bugSheetSend => 'Hantar laporan';
+
+  @override
+  String get bugSheetAttachPhoto => 'Lampirkan gambar';
+
+  @override
+  String get bugSheetRemoveTooltip => 'Buang';
+
+  @override
   String get youSegmentInsights => 'INSIGHTS';
 
   @override

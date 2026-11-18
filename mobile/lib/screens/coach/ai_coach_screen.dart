@@ -82,7 +82,8 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.slate900,
-        title: Text('AI Coach', style: AmiTypography.labelMono),
+        title: Text(AppLocalizations.of(context).aiCoachTitle,
+            style: AmiTypography.labelMono),
       ),
       body: SafeArea(
         child: Column(
@@ -95,7 +96,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
                 style: AmiTypography.body,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Ask anything — "halal filter", "mandate", "stop loss"',
+                  hintText: AppLocalizations.of(context).aiCoachSearchHint,
                   hintStyle:
                       AmiTypography.body.copyWith(color: AmiColors.slate500),
                   prefixIcon:
@@ -134,7 +135,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
       return Padding(
         padding: const EdgeInsets.all(AmiSpacing.l),
         child: Text(
-          'No matches for "$_lastQuery". Try a different phrasing.',
+          AppLocalizations.of(context).aiCoachNoMatches(_lastQuery),
           style: AmiTypography.body.copyWith(color: AmiColors.textLow),
         ),
       );
@@ -272,7 +273,7 @@ class _AnswerSheet extends StatelessWidget {
                 Text(qa.longAnswer, style: AmiTypography.body),
                 if (qa.relatedLessons.isNotEmpty) ...[
                   const SizedBox(height: AmiSpacing.l),
-                  Text('RELATED LESSONS',
+                  Text(AppLocalizations.of(context).termRelatedLessons,
                       style: AmiTypography.labelMono
                           .copyWith(color: AmiColors.textLow)),
                   const SizedBox(height: AmiSpacing.xs),
@@ -286,7 +287,7 @@ class _AnswerSheet extends StatelessWidget {
                 ],
                 if (qa.relatedAgents.isNotEmpty) ...[
                   const SizedBox(height: AmiSpacing.l),
-                  Text('RELATED AGENTS',
+                  Text(AppLocalizations.of(context).aiCoachRelatedAgents,
                       style: AmiTypography.labelMono
                           .copyWith(color: AmiColors.textLow)),
                   const SizedBox(height: AmiSpacing.xs),

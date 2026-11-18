@@ -133,7 +133,7 @@ controls:
     target: ami.screen.confirm_restart_onboarding
     line: 1530
     note: "Handler at 1552. Opens confirm dialog (RESTART ONBOARDING? / CANCEL / RESTART). On confirm: onboarding state reset(isRestart:true) and pushReplacementNamed('/onboarding') -> ami.screen.onboarding. Destructive effect is documented on the dialog's RESTART button."
-  - label: "AI Coach — Q&A library"
+  - label: "Ask AMI — Q&A library"
     kind: list_row
     expect: navigate
     target: ami.screen.ai_coach

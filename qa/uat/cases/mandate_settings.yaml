@@ -365,3 +365,14 @@ cases:
       - 'Each tap opens a dialog naming the action and its consequence; nothing happens until the red confirm button is pressed (DEF479)'
       - 'CANCEL leaves the handle, the session, the Alpaca link and the stored credential exactly as they were'
       - 'Confirming carries the action out (new handle once; signed out; Alpaca keys forgotten; connect screen opens)'
+
+  - id: UAT-MAND-038
+    title: Settings chrome, the Alpaca row and the Q&A library entry are localised and say AMI
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'Settings > Language: switch to Arabic, then Bahasa Melayu'
+      - 'Scroll to APPEARANCE, HELP and CONNECTED ACCOUNTS; read the Alpaca row (Connected / Not connected, Connect / Disconnect / Relink) and the sign-out button'
+    expected:
+      - 'Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)'
+      - 'The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"'

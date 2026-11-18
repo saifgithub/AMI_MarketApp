@@ -2111,8 +2111,7 @@ class _AlpacaRelinkPrompt extends StatelessWidget {
             const SizedBox(width: AmiSpacing.s),
             Expanded(
               child: Text(
-                'AMI now links Alpaca paper accounts only. Relink your '
-                'account from Settings → Connected Accounts.',
+                AppLocalizations.of(context).portfolioAlpacaRelinkPrompt,
                 style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
               ),
             ),

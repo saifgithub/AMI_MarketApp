@@ -20,14 +20,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 
-const _kCategories = [
-  ('ui_glitch', 'UI glitch'),
-  ('wrong_data', 'Wrong data'),
-  ('crash', 'App crashed'),
-  ('performance', 'Slow / freeze'),
-  ('feature_request', 'Feature request'),
-  ('other', 'Other'),
+/// Category ids are the wire values sent to the server; labels are localised.
+const _kCategoryIds = [
+  'ui_glitch',
+  'wrong_data',
+  'crash',
+  'performance',
+  'feature_request',
+  'other',
 ];
+
+String _categoryLabel(AppLocalizations l, String id) => switch (id) {
+      'ui_glitch' => l.bugSheetCatUiGlitch,
+      'wrong_data' => l.bugSheetCatWrongData,
+      'crash' => l.bugSheetCatCrash,
+      'performance' => l.bugSheetCatPerformance,
+      'feature_request' => l.bugSheetCatFeatureRequest,
+      _ => l.bugSheetCatOther,
+    };
 
 /// Convenience helper — call from any widget.
 Future<void> showBugReportSheet(BuildContext context, WidgetRef ref) {
@@ -96,13 +106,15 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined,
                   color: AmiColors.textHigh),
-              title: Text('Take photo', style: AmiTypography.body),
+              title: Text(AppLocalizations.of(sheetCtx).bugSheetTakePhoto,
+                  style: AmiTypography.body),
               onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined,
                   color: AmiColors.textHigh),
-              title: Text('Choose from library', style: AmiTypography.body),
+              title: Text(AppLocalizations.of(sheetCtx).bugSheetChooseLibrary,
+                  style: AmiTypography.body),
               onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
             ),
           ],
@@ -183,14 +195,15 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
             const SizedBox(height: AmiSpacing.s),
             Row(
               children: [
-                Expanded(child: Text('Report a bug', style: AmiTypography.h4)),
+                Expanded(child: Text(AppLocalizations.of(context).bugSheetTitle,
+                    style: AmiTypography.h4)),
                 // 44pt tap target (Apple HIG minimum) — earlier GestureDetector
                 // wrapped a 20px icon, giving a 20×20 hit area that testers
                 // couldn't reliably trigger (bugs 6fd4144d + a19871c3).
                 IconButton(
                   icon: const Icon(Icons.close, size: 24,
                       color: AmiColors.textMed),
-                  tooltip: 'Close',
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   onPressed: () => Navigator.of(context).pop(),
                   constraints: const BoxConstraints(
                     minWidth: 44, minHeight: 44,
@@ -211,9 +224,10 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               spacing: AmiSpacing.xs,
               runSpacing: AmiSpacing.xs,
               children: [
-                for (final (value, label) in _kCategories)
+                for (final value in _kCategoryIds)
                   ChoiceChip(
-                    label: Text(label),
+                    label: Text(
+                        _categoryLabel(AppLocalizations.of(context), value)),
                     selected: _category == value,
                     onSelected: (_) => setState(() => _category = value),
                     selectedColor: AmiColors.hexBlue,
@@ -236,7 +250,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               style: AmiTypography.body,
               maxLength: 200,
               decoration: InputDecoration(
-                hintText: 'Short description',
+                hintText: AppLocalizations.of(context).bugSheetShortDescription,
                 hintStyle: AmiTypography.body.copyWith(color: AmiColors.slate500),
                 filled: true,
                 fillColor: AmiColors.slate700,
@@ -247,7 +261,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
                 counterStyle: AmiTypography.caption.copyWith(color: AmiColors.slate500),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  (v == null || v.trim().isEmpty) ? AppLocalizations.of(context).bugSheetRequired : null,
             ),
             const SizedBox(height: AmiSpacing.s),
             TextFormField(
@@ -256,7 +270,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               maxLength: 1000,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Steps to reproduce (optional)',
+                hintText: AppLocalizations.of(context).bugSheetSteps,
                 hintStyle: AmiTypography.body.copyWith(color: AmiColors.slate500),
                 filled: true,
                 fillColor: AmiColors.slate700,
@@ -276,7 +290,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
             if (state.error != null) ...[
               const SizedBox(height: AmiSpacing.xs),
               Text(
-                'Failed to send — please try again',
+                AppLocalizations.of(context).bugSheetSendFailed,
                 style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
               ),
             ],
@@ -298,7 +312,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
                         height: 20, width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Send report'),
+                    : Text(AppLocalizations.of(context).bugSheetSend),
               ),
             ),
           ],
@@ -329,7 +343,7 @@ class _AttachmentRow extends StatelessWidget {
       return OutlinedButton.icon(
         onPressed: onPick,
         icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
-        label: const Text('Attach photo'),
+        label: Text(AppLocalizations.of(context).bugSheetAttachPhoto),
         style: OutlinedButton.styleFrom(
           foregroundColor: AmiColors.textMed,
           side: const BorderSide(color: AmiColors.slate700),
@@ -361,7 +375,7 @@ class _AttachmentRow extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.close, size: 18, color: AmiColors.textLow),
-          tooltip: 'Remove',
+          tooltip: AppLocalizations.of(context).bugSheetRemoveTooltip,
           onPressed: onClear,
         ),
       ],

@@ -128,6 +128,152 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get settingsSignOut => 'تسجيل الخروج';
+
+  @override
+  String get settingsSectionAppearance => 'المظهر';
+
+  @override
+  String get settingsSectionHelp => 'المساعدة';
+
+  @override
+  String get settingsHelpQaLibrary => 'اسأل AMI — مكتبة الأسئلة والأجوبة';
+
+  @override
+  String get settingsSectionConnectedAccounts => 'الحسابات المرتبطة';
+
+  @override
+  String get settingsAlpacaConnected => 'متصل';
+
+  @override
+  String get settingsAlpacaNotConnected => 'غير متصل';
+
+  @override
+  String get settingsAlpacaRelinkNeeded =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط — أعد الربط';
+
+  @override
+  String get settingsAlpacaConnect => 'اتصال';
+
+  @override
+  String get settingsAlpacaDisconnect => 'فصل';
+
+  @override
+  String get settingsAlpacaRelink => 'إعادة الربط';
+
+  @override
+  String get tradeTicketNoVerdictTitle => 'لا يوجد حكم من AMI';
+
+  @override
+  String get tradeTicketNoVerdictBody =>
+      'اعقد الغرفة أولاً للحصول على تحليل من وكلائك الاثني عشر. أو تابع — سيُوسَم هذا التداول بأنه «بدون مشورة».';
+
+  @override
+  String get tradeTicketConveneRoom => 'اعقد الغرفة';
+
+  @override
+  String get tradeTicketProceedWithout => 'المتابعة بدون';
+
+  @override
+  String get tradeTicketDestinationLabel => 'الوجهة';
+
+  @override
+  String get tradeTicketDestAmiSim => 'محاكي AMI';
+
+  @override
+  String get tradeTicketDestBoth => 'كلاهما';
+
+  @override
+  String get tradeTicketUnreachableCheck =>
+      'تعذّر الوصول إلى AMI للتحقق من هذا التداول.';
+
+  @override
+  String get tradeTicketUnreachablePlace =>
+      'تعذّر الوصول إلى AMI لتنفيذ هذا التداول.';
+
+  @override
+  String get tradeTicketBlockedByMandate => 'محظور بموجب تفويضك.';
+
+  @override
+  String get portfolioAlpacaRelinkPrompt =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط. أعد ربط حسابك من قسم الحسابات المرتبطة في الإعدادات.';
+
+  @override
+  String get termSeeAlso => 'انظر أيضاً';
+
+  @override
+  String get termRelatedLessons => 'دروس ذات صلة';
+
+  @override
+  String get aiCoachTitle => 'اسأل AMI';
+
+  @override
+  String get aiCoachSearchHint =>
+      'اسأل أي شيء — «فلتر الحلال»، «التفويض»، «وقف الخسارة»';
+
+  @override
+  String aiCoachNoMatches(String query) {
+    return 'لا توجد نتائج لـ «$query». جرّب صياغة مختلفة.';
+  }
+
+  @override
+  String get aiCoachRelatedAgents => 'وكلاء ذوو صلة';
+
+  @override
+  String get journalKvAmiAdvice => 'مشورة AMI';
+
+  @override
+  String get journalKvWithoutManual => 'بدون — تداول يدوي';
+
+  @override
+  String get bugSheetTitle => 'الإبلاغ عن خطأ';
+
+  @override
+  String get bugSheetCatUiGlitch => 'خلل في الواجهة';
+
+  @override
+  String get bugSheetCatWrongData => 'بيانات خاطئة';
+
+  @override
+  String get bugSheetCatCrash => 'تعطّل التطبيق';
+
+  @override
+  String get bugSheetCatPerformance => 'بطء / تجمّد';
+
+  @override
+  String get bugSheetCatFeatureRequest => 'طلب ميزة';
+
+  @override
+  String get bugSheetCatOther => 'أخرى';
+
+  @override
+  String get bugSheetTakePhoto => 'التقاط صورة';
+
+  @override
+  String get bugSheetChooseLibrary => 'اختيار من المكتبة';
+
+  @override
+  String get bugSheetShortDescription => 'وصف مختصر';
+
+  @override
+  String get bugSheetRequired => 'مطلوب';
+
+  @override
+  String get bugSheetSteps => 'خطوات إعادة الإنتاج (اختياري)';
+
+  @override
+  String get bugSheetSendFailed => 'فشل الإرسال — يرجى المحاولة مرة أخرى';
+
+  @override
+  String get bugSheetSend => 'إرسال البلاغ';
+
+  @override
+  String get bugSheetAttachPhoto => 'إرفاق صورة';
+
+  @override
+  String get bugSheetRemoveTooltip => 'إزالة';
+
+  @override
   String get youSegmentInsights => 'INSIGHTS';
 
   @override

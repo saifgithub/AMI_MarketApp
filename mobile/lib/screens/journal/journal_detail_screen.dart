@@ -314,7 +314,8 @@ class _PayloadBlock extends StatelessWidget {
           // Bug d5717660: trades placed without a Convene the Room verdict
           // are surfaced so the user (or future self) can distinguish
           // AI-backed decisions from gut trades.
-          rows.add(_KV('AI advice', 'Without — manual trade'));
+          final l = AppLocalizations.of(context);
+          rows.add(_KV(l.journalKvAmiAdvice, l.journalKvWithoutManual));
         }
         if (rows.isNotEmpty) children.add(_KVBox(rows: rows));
       }

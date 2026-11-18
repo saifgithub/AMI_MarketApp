@@ -4,26 +4,26 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**272 cases** — 185 api, 15 device, 72 manual; 11 blocked.
+**276 cases** — 185 api, 15 device, 76 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 6 cases
 2. [Authentication, sessions & account identity](#auth) — 24 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 29 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
 5. [Floor tab & home shell](#floor) — 10 cases
 6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
-9. [Sim trading & market data](#sim-trading) — 32 cases
+9. [Sim trading & market data](#sim-trading) — 33 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 9 cases
+14. [Decision journal, trash & the You tab](#journal) — 10 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 12 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 13 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
@@ -3269,6 +3269,18 @@ _Manual (iPhone checklist) · plans: floor_pass_
 2. CANCEL leaves the handle, the session, the Alpaca link and the stored credential exactly as they were
 3. Confirming carries the action out (new handle once; signed out; Alpaca keys forgotten; connect screen opens)
 
+#### UAT-MAND-038 — Settings chrome, the Alpaca row and the Q&A library entry are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Settings > Language: switch to Arabic, then Bahasa Melayu
+2. Scroll to APPEARANCE, HELP and CONNECTED ACCOUNTS; read the Alpaca row (Connected / Not connected, Connect / Disconnect / Relink) and the sign-out button
+
+**Expected**
+1. Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)
+2. The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"
+
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3659,6 +3671,22 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. The bar dismisses itself after about 10 seconds with a screen reader on (4 seconds without), and UNDO restores the row while it is up (DEF486)
 2. Opening the action sheet removes the bar, so it never sits over the sheet's primary button
 
+#### UAT-SIM-033 — The trade ticket's advisory, destination picker and refusals are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. App language set to Arabic (repeat in Bahasa Melayu); an Alpaca paper account linked
+
+**Steps**
+1. Open a new trade ticket from Portfolio without running the Room first
+2. Read the advisory above the form and the DESTINATION picker; with the network off, submit once
+
+**Expected**
+1. The advisory title reads "NO AMI VERDICT" in English (never "NO AI VERDICT") and is translated in Arabic and Bahasa Melayu, with its Convene the Room and Proceed without buttons (DEF478)
+2. The destination picker, the "could not reach AMI" line and the "blocked by your mandate" fallback are translated
+3. With a non-paper Alpaca credential stored, the Portfolio relink prompt is translated
+
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
 _Manual (iPhone checklist) · plans: floor_pass, trader_
@@ -3801,6 +3829,16 @@ _Manual (iPhone checklist) · plans: floor_pass · platforms: android_
 1. The OUTCOME label and the WIN, LOSS and PENDING chips are all fully visible inside the note card; chips that do not fit wrap onto a second line (DEF469)
 2. The detail header shows no overflow stripes or clipped title
 
+#### UAT-JRNL-010 — A trade placed without a Room verdict says "AMI advice", not "AI advice"
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Place a trade without convening the Room; open its journal entry
+
+**Expected**
+1. The detail shows "AMI advice: Without - manual trade", translated in Arabic and Bahasa Melayu (DEF478)
+
 #### UAT-INBOX-006 — Broadcast arrives as a push and in the inbox; reply reaches the admin feed
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3860,6 +3898,21 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
 2. No screen says "the AI" - the assistant is named AMI
+
+#### UAT-SUPP-013 — The bug-report sheet and the Q&A library are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. App language set to Arabic (repeat in Bahasa Melayu)
+
+**Steps**
+1. Settings > HELP > Report a problem; read the categories, fields, photo options and send button
+2. Settings > HELP > Ask AMI; search for something with no match
+
+**Expected**
+1. Every label in the sheet is translated; the category ids the server receives are unchanged (DEF478)
+2. The library is titled "Ask AMI" (never "AI Coach"); its hint, empty result and RELATED LESSONS / RELATED AGENTS headings are translated
 
 #### UAT-BILL-008 — Real purchase of Trader and Floor Manager works end to end on an iPhone
 

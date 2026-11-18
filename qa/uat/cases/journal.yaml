@@ -129,3 +129,12 @@ cases:
     expected:
       - 'The OUTCOME label and the WIN, LOSS and PENDING chips are all fully visible inside the note card; chips that do not fit wrap onto a second line (DEF469)'
       - 'The detail header shows no overflow stripes or clipped title'
+
+  - id: UAT-JRNL-010
+    title: A trade placed without a Room verdict says "AMI advice", not "AI advice"
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'Place a trade without convening the Room; open its journal entry'
+    expected:
+      - 'The detail shows "AMI advice: Without - manual trade", translated in Arabic and Bahasa Melayu (DEF478)'

@@ -134,6 +134,195 @@
   "@settingsReportProblem": {
     "description": "CR133 §6 — the labelled bug-report entry. Until CR133 the only door was a long-press on an unlabelled grey version string after 13 sections of Settings, while bug_report_sheet.dart documents 'call this from anywhere' and had exactly one caller. retranslate:[ar,ms]"
   },
+  "settingsSignOut": "Sign out",
+  "@settingsSignOut": {
+    "description": "DEF478 - Settings > ACCOUNT sign-out button (opens a confirm dialog first). retranslate:[ar,ms]"
+  },
+  "settingsSectionAppearance": "APPEARANCE",
+  "@settingsSectionAppearance": {
+    "description": "DEF478 - Settings section heading for the theme/appearance controls. retranslate:[ar,ms]"
+  },
+  "settingsSectionHelp": "HELP",
+  "@settingsSectionHelp": {
+    "description": "DEF478 - Settings section heading holding the Q&A library and report-a-problem rows. retranslate:[ar,ms]"
+  },
+  "settingsHelpQaLibrary": "Ask AMI — Q&A library",
+  "@settingsHelpQaLibrary": {
+    "description": "DEF478 - Settings > HELP row opening the searchable Q&A library. Was 'AI Coach'; user copy says AMI, never 'the AI'. retranslate:[ar,ms]"
+  },
+  "settingsSectionConnectedAccounts": "CONNECTED ACCOUNTS",
+  "@settingsSectionConnectedAccounts": {
+    "description": "DEF478 - Settings section heading for linked brokerage accounts. retranslate:[ar,ms]"
+  },
+  "settingsAlpacaConnected": "Connected",
+  "@settingsAlpacaConnected": {
+    "description": "DEF478 - status line of the Alpaca paper row when linked. retranslate:[ar,ms]"
+  },
+  "settingsAlpacaNotConnected": "Not connected",
+  "@settingsAlpacaNotConnected": {
+    "description": "DEF478 - status line of the Alpaca paper row when nothing is stored. retranslate:[ar,ms]"
+  },
+  "settingsAlpacaRelinkNeeded": "AMI now links Alpaca paper accounts only — relink",
+  "@settingsAlpacaRelinkNeeded": {
+    "description": "DEF478 - status line when a stored credential is not a paper one (DEF439). retranslate:[ar,ms]"
+  },
+  "settingsAlpacaConnect": "Connect",
+  "@settingsAlpacaConnect": {
+    "description": "DEF478 - Alpaca row action when unlinked. retranslate:[ar,ms]"
+  },
+  "settingsAlpacaDisconnect": "Disconnect",
+  "@settingsAlpacaDisconnect": {
+    "description": "DEF478 - Alpaca row action when linked (opens a confirm dialog first, DEF479). retranslate:[ar,ms]"
+  },
+  "settingsAlpacaRelink": "Relink",
+  "@settingsAlpacaRelink": {
+    "description": "DEF478 - Alpaca row action when a non-paper credential is stored (DEF439; confirm dialog first, DEF479). retranslate:[ar,ms]"
+  },
+  "tradeTicketNoVerdictTitle": "NO AMI VERDICT",
+  "@tradeTicketNoVerdictTitle": {
+    "description": "DEF478 - trade-ticket advisory title when the order has no Room verdict. Was 'NO AI VERDICT'. retranslate:[ar,ms]"
+  },
+  "tradeTicketNoVerdictBody": "Convene the Room first to get analysis from your 12 agents. Or proceed — this trade will be marked \"without advice\".",
+  "@tradeTicketNoVerdictBody": {
+    "description": "DEF478 - body of the no-verdict advisory on the trade ticket. retranslate:[ar,ms]"
+  },
+  "tradeTicketConveneRoom": "Convene the Room",
+  "@tradeTicketConveneRoom": {
+    "description": "DEF478 - button on the no-verdict advisory that opens the Room for this ticker. retranslate:[ar,ms]"
+  },
+  "tradeTicketProceedWithout": "Proceed without",
+  "@tradeTicketProceedWithout": {
+    "description": "DEF478 - button that dismisses the no-verdict advisory and keeps the ticket. retranslate:[ar,ms]"
+  },
+  "tradeTicketDestinationLabel": "DESTINATION",
+  "@tradeTicketDestinationLabel": {
+    "description": "DEF478 - label of the AMI Sim / Alpaca Paper / Both picker on the trade ticket. retranslate:[ar,ms]"
+  },
+  "tradeTicketDestAmiSim": "AMI SIM",
+  "@tradeTicketDestAmiSim": {
+    "description": "DEF478 - destination option and per-destination outcome label for AMI's own simulator. retranslate:[ar,ms]"
+  },
+  "tradeTicketDestBoth": "BOTH",
+  "@tradeTicketDestBoth": {
+    "description": "DEF478 - destination option that sends the order to AMI Sim and Alpaca Paper. retranslate:[ar,ms]"
+  },
+  "tradeTicketUnreachableCheck": "Could not reach AMI to check this trade.",
+  "@tradeTicketUnreachableCheck": {
+    "description": "DEF478 - per-destination outcome when the compliance preview request failed. retranslate:[ar,ms]"
+  },
+  "tradeTicketUnreachablePlace": "Could not reach AMI to place this trade.",
+  "@tradeTicketUnreachablePlace": {
+    "description": "DEF478 - per-destination outcome when the AMI Sim order request failed. retranslate:[ar,ms]"
+  },
+  "tradeTicketBlockedByMandate": "Blocked by your mandate.",
+  "@tradeTicketBlockedByMandate": {
+    "description": "DEF478 - fallback reason when a refusal carries no named rule. retranslate:[ar,ms]"
+  },
+  "portfolioAlpacaRelinkPrompt": "AMI now links Alpaca paper accounts only. Relink your account from the Connected Accounts section of Settings.",
+  "@portfolioAlpacaRelinkPrompt": {
+    "description": "DEF478 - Portfolio prompt shown in place of the Alpaca account card when a non-paper credential is stored. retranslate:[ar,ms]"
+  },
+  "termSeeAlso": "SEE ALSO",
+  "@termSeeAlso": {
+    "description": "DEF478 - heading of the related-terms chips in a glossary term sheet. retranslate:[ar,ms]"
+  },
+  "termRelatedLessons": "RELATED LESSONS",
+  "@termRelatedLessons": {
+    "description": "DEF478 - heading of the related-lessons chips (glossary term sheet and Q&A answer sheet). retranslate:[ar,ms]"
+  },
+  "aiCoachTitle": "Ask AMI",
+  "@aiCoachTitle": {
+    "description": "DEF478 - title of the Q&A library screen. Was 'AI Coach'; user copy says AMI. retranslate:[ar,ms]"
+  },
+  "aiCoachSearchHint": "Ask anything — \"halal filter\", \"mandate\", \"stop loss\"",
+  "@aiCoachSearchHint": {
+    "description": "DEF478 - search field hint in the Q&A library. retranslate:[ar,ms]"
+  },
+  "aiCoachNoMatches": "No matches for \"{query}\". Try a different phrasing.",
+  "@aiCoachNoMatches": {
+    "description": "DEF478 - empty-result line in the Q&A library. {query} is what the user typed. retranslate:[ar,ms]",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "aiCoachRelatedAgents": "RELATED AGENTS",
+  "@aiCoachRelatedAgents": {
+    "description": "DEF478 - heading of the related-agents chips on a Q&A answer. retranslate:[ar,ms]"
+  },
+  "journalKvAmiAdvice": "AMI advice",
+  "@journalKvAmiAdvice": {
+    "description": "DEF478 - label of the journal-detail row saying whether a trade followed a Room verdict. Was 'AI advice'. retranslate:[ar,ms]"
+  },
+  "journalKvWithoutManual": "Without — manual trade",
+  "@journalKvWithoutManual": {
+    "description": "DEF478 - value of that row for a trade placed without a Room verdict. retranslate:[ar,ms]"
+  },
+  "bugSheetTitle": "Report a bug",
+  "@bugSheetTitle": {
+    "description": "DEF478 - heading of the bug-report sheet. retranslate:[ar,ms]"
+  },
+  "bugSheetCatUiGlitch": "UI glitch",
+  "@bugSheetCatUiGlitch": {
+    "description": "DEF478 - bug category chip (sent to the server as ui_glitch). retranslate:[ar,ms]"
+  },
+  "bugSheetCatWrongData": "Wrong data",
+  "@bugSheetCatWrongData": {
+    "description": "DEF478 - bug category chip (wrong_data). retranslate:[ar,ms]"
+  },
+  "bugSheetCatCrash": "App crashed",
+  "@bugSheetCatCrash": {
+    "description": "DEF478 - bug category chip (crash). retranslate:[ar,ms]"
+  },
+  "bugSheetCatPerformance": "Slow / freeze",
+  "@bugSheetCatPerformance": {
+    "description": "DEF478 - bug category chip (performance). retranslate:[ar,ms]"
+  },
+  "bugSheetCatFeatureRequest": "Feature request",
+  "@bugSheetCatFeatureRequest": {
+    "description": "DEF478 - bug category chip (feature_request). retranslate:[ar,ms]"
+  },
+  "bugSheetCatOther": "Other",
+  "@bugSheetCatOther": {
+    "description": "DEF478 - bug category chip (other). retranslate:[ar,ms]"
+  },
+  "bugSheetTakePhoto": "Take photo",
+  "@bugSheetTakePhoto": {
+    "description": "DEF478 - attach-photo option opening the camera. retranslate:[ar,ms]"
+  },
+  "bugSheetChooseLibrary": "Choose from library",
+  "@bugSheetChooseLibrary": {
+    "description": "DEF478 - attach-photo option opening the photo library. retranslate:[ar,ms]"
+  },
+  "bugSheetShortDescription": "Short description",
+  "@bugSheetShortDescription": {
+    "description": "DEF478 - hint of the required title field in the bug-report sheet. retranslate:[ar,ms]"
+  },
+  "bugSheetRequired": "Required",
+  "@bugSheetRequired": {
+    "description": "DEF478 - validation message for the empty title field. retranslate:[ar,ms]"
+  },
+  "bugSheetSteps": "Steps to reproduce (optional)",
+  "@bugSheetSteps": {
+    "description": "DEF478 - hint of the steps field in the bug-report sheet. retranslate:[ar,ms]"
+  },
+  "bugSheetSendFailed": "Failed to send — please try again",
+  "@bugSheetSendFailed": {
+    "description": "DEF478 - error line under the bug-report form when the submit failed. retranslate:[ar,ms]"
+  },
+  "bugSheetSend": "Send report",
+  "@bugSheetSend": {
+    "description": "DEF478 - submit button of the bug-report sheet. retranslate:[ar,ms]"
+  },
+  "bugSheetAttachPhoto": "Attach photo",
+  "@bugSheetAttachPhoto": {
+    "description": "DEF478 - button to attach a screenshot/photo to the bug report. retranslate:[ar,ms]"
+  },
+  "bugSheetRemoveTooltip": "Remove",
+  "@bugSheetRemoveTooltip": {
+    "description": "DEF478 - tooltip on the control that removes the attached photo. retranslate:[ar,ms]"
+  },
   "youSegmentInsights": "INSIGHTS",
   "@youSegmentInsights": {
     "description": "CR178 — third segment of YOU. retranslate:[ar,ms]"

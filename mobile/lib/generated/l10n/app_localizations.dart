@@ -322,6 +322,282 @@ abstract class AppLocalizations {
   /// **'Report a problem'**
   String get settingsReportProblem;
 
+  /// DEF478 - Settings > ACCOUNT sign-out button (opens a confirm dialog first). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get settingsSignOut;
+
+  /// DEF478 - Settings section heading for the theme/appearance controls. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'APPEARANCE'**
+  String get settingsSectionAppearance;
+
+  /// DEF478 - Settings section heading holding the Q&A library and report-a-problem rows. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HELP'**
+  String get settingsSectionHelp;
+
+  /// DEF478 - Settings > HELP row opening the searchable Q&A library. Was 'AI Coach'; user copy says AMI, never 'the AI'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AMI — Q&A library'**
+  String get settingsHelpQaLibrary;
+
+  /// DEF478 - Settings section heading for linked brokerage accounts. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTED ACCOUNTS'**
+  String get settingsSectionConnectedAccounts;
+
+  /// DEF478 - status line of the Alpaca paper row when linked. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get settingsAlpacaConnected;
+
+  /// DEF478 - status line of the Alpaca paper row when nothing is stored. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get settingsAlpacaNotConnected;
+
+  /// DEF478 - status line when a stored credential is not a paper one (DEF439). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI now links Alpaca paper accounts only — relink'**
+  String get settingsAlpacaRelinkNeeded;
+
+  /// DEF478 - Alpaca row action when unlinked. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get settingsAlpacaConnect;
+
+  /// DEF478 - Alpaca row action when linked (opens a confirm dialog first, DEF479). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get settingsAlpacaDisconnect;
+
+  /// DEF478 - Alpaca row action when a non-paper credential is stored (DEF439; confirm dialog first, DEF479). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Relink'**
+  String get settingsAlpacaRelink;
+
+  /// DEF478 - trade-ticket advisory title when the order has no Room verdict. Was 'NO AI VERDICT'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO AMI VERDICT'**
+  String get tradeTicketNoVerdictTitle;
+
+  /// DEF478 - body of the no-verdict advisory on the trade ticket. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Convene the Room first to get analysis from your 12 agents. Or proceed — this trade will be marked \"without advice\".'**
+  String get tradeTicketNoVerdictBody;
+
+  /// DEF478 - button on the no-verdict advisory that opens the Room for this ticker. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Convene the Room'**
+  String get tradeTicketConveneRoom;
+
+  /// DEF478 - button that dismisses the no-verdict advisory and keeps the ticket. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed without'**
+  String get tradeTicketProceedWithout;
+
+  /// DEF478 - label of the AMI Sim / Alpaca Paper / Both picker on the trade ticket. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DESTINATION'**
+  String get tradeTicketDestinationLabel;
+
+  /// DEF478 - destination option and per-destination outcome label for AMI's own simulator. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI SIM'**
+  String get tradeTicketDestAmiSim;
+
+  /// DEF478 - destination option that sends the order to AMI Sim and Alpaca Paper. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BOTH'**
+  String get tradeTicketDestBoth;
+
+  /// DEF478 - per-destination outcome when the compliance preview request failed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach AMI to check this trade.'**
+  String get tradeTicketUnreachableCheck;
+
+  /// DEF478 - per-destination outcome when the AMI Sim order request failed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach AMI to place this trade.'**
+  String get tradeTicketUnreachablePlace;
+
+  /// DEF478 - fallback reason when a refusal carries no named rule. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by your mandate.'**
+  String get tradeTicketBlockedByMandate;
+
+  /// DEF478 - Portfolio prompt shown in place of the Alpaca account card when a non-paper credential is stored. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI now links Alpaca paper accounts only. Relink your account from the Connected Accounts section of Settings.'**
+  String get portfolioAlpacaRelinkPrompt;
+
+  /// DEF478 - heading of the related-terms chips in a glossary term sheet. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SEE ALSO'**
+  String get termSeeAlso;
+
+  /// DEF478 - heading of the related-lessons chips (glossary term sheet and Q&A answer sheet). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RELATED LESSONS'**
+  String get termRelatedLessons;
+
+  /// DEF478 - title of the Q&A library screen. Was 'AI Coach'; user copy says AMI. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AMI'**
+  String get aiCoachTitle;
+
+  /// DEF478 - search field hint in the Q&A library. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything — \"halal filter\", \"mandate\", \"stop loss\"'**
+  String get aiCoachSearchHint;
+
+  /// DEF478 - empty-result line in the Q&A library. {query} is what the user typed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No matches for \"{query}\". Try a different phrasing.'**
+  String aiCoachNoMatches(String query);
+
+  /// DEF478 - heading of the related-agents chips on a Q&A answer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RELATED AGENTS'**
+  String get aiCoachRelatedAgents;
+
+  /// DEF478 - label of the journal-detail row saying whether a trade followed a Room verdict. Was 'AI advice'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI advice'**
+  String get journalKvAmiAdvice;
+
+  /// DEF478 - value of that row for a trade placed without a Room verdict. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Without — manual trade'**
+  String get journalKvWithoutManual;
+
+  /// DEF478 - heading of the bug-report sheet. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Report a bug'**
+  String get bugSheetTitle;
+
+  /// DEF478 - bug category chip (sent to the server as ui_glitch). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'UI glitch'**
+  String get bugSheetCatUiGlitch;
+
+  /// DEF478 - bug category chip (wrong_data). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong data'**
+  String get bugSheetCatWrongData;
+
+  /// DEF478 - bug category chip (crash). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'App crashed'**
+  String get bugSheetCatCrash;
+
+  /// DEF478 - bug category chip (performance). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Slow / freeze'**
+  String get bugSheetCatPerformance;
+
+  /// DEF478 - bug category chip (feature_request). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Feature request'**
+  String get bugSheetCatFeatureRequest;
+
+  /// DEF478 - bug category chip (other). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get bugSheetCatOther;
+
+  /// DEF478 - attach-photo option opening the camera. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get bugSheetTakePhoto;
+
+  /// DEF478 - attach-photo option opening the photo library. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from library'**
+  String get bugSheetChooseLibrary;
+
+  /// DEF478 - hint of the required title field in the bug-report sheet. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Short description'**
+  String get bugSheetShortDescription;
+
+  /// DEF478 - validation message for the empty title field. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get bugSheetRequired;
+
+  /// DEF478 - hint of the steps field in the bug-report sheet. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Steps to reproduce (optional)'**
+  String get bugSheetSteps;
+
+  /// DEF478 - error line under the bug-report form when the submit failed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send — please try again'**
+  String get bugSheetSendFailed;
+
+  /// DEF478 - submit button of the bug-report sheet. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get bugSheetSend;
+
+  /// DEF478 - button to attach a screenshot/photo to the bug report. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Attach photo'**
+  String get bugSheetAttachPhoto;
+
+  /// DEF478 - tooltip on the control that removes the attached photo. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get bugSheetRemoveTooltip;
+
   /// CR178 — third segment of YOU. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -7,6 +7,7 @@
 /// reference never crashes the reader.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/glossary.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/lessons/term_registry.dart';
@@ -163,7 +164,7 @@ class _TermSheet extends StatelessWidget {
                 if (entry.seeAlso.isNotEmpty) ...[
                   const SizedBox(height: AmiSpacing.l),
                   Text(
-                    'SEE ALSO',
+                    AppLocalizations.of(context).termSeeAlso,
                     style: AmiTypography.labelMono.copyWith(
                       color: AmiColors.textMed,
                     ),
@@ -192,7 +193,7 @@ class _TermSheet extends StatelessWidget {
                 if (entry.relatedLessons.isNotEmpty) ...[
                   const SizedBox(height: AmiSpacing.l),
                   Text(
-                    'RELATED LESSONS',
+                    AppLocalizations.of(context).termRelatedLessons,
                     style: AmiTypography.labelMono.copyWith(
                       color: AmiColors.textMed,
                     ),
