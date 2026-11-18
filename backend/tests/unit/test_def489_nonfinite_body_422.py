@@ -51,14 +51,14 @@ def test_negative_infinity_is_stringified_too(client: TestClient):
 
 
 def test_ordinary_validation_error_body_is_unchanged(client: TestClient):
-    """Byte-compatible with FastAPI's default handler: only `detail`, and each
-    entry exactly what pydantic produced."""
+    """Byte-compatible with FastAPI's default handler apart from the additive
+    WP-38 `request_id`: `detail` entries are exactly what pydantic produced."""
     user_id, headers = _user_and_headers()
     raw = json.dumps({"ticker": "AAPL", "threshold_type": "stop"}).encode()
     r = client.post(f"/v1/price_alerts/{user_id}", content=raw, headers=headers)
     assert r.status_code == 422, r.text
     body = r.json()
-    assert list(body) == ["detail"]
+    assert list(body) == ["detail", "request_id"]  # WP-38: request_id is additive
     assert body["detail"] == [
         {
             "type": "missing",
