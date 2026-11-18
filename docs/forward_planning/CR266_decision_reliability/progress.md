@@ -188,3 +188,18 @@
     0.258 vs PASS −0.076, discrimination **+0.334**. Verdict flips are 10/30
     (33.3%). The evidence direction separates decisions, but coverage and
     test/retest reliability are not yet good enough for a gate.
+
+## 2026-11-18 — final corrected-candidate result (recorded by CR267 WP-00)
+
+1. The corrected 60-room completeness candidate (`bash-uf7qb557`) **completed**:
+   `~/cr266_ami_cards_complete_v2/` on melehost, 60/60 rooms, 0 failed,
+   finished 2026-10-30 07:31 UTC. Model `qwen38-flash-next-abliterated-nvfp4`
+   (`ami-llm`), R4, cards ON, gate OFF.
+2. Card report (`evidence_card_report.py`, run read-only against Alpha's DB on
+   2026-11-18; saved as `report/card_report_ami-llm.json` next to the run):
+   coverage **57/60** complete (control 43/60), normalized ICC(A,1) **0.810**
+   (control 0.839; bar 0.85). Registry and corpus checks pass.
+   **GATE FAIL** on `icc_pass` and `coverage_pass`.
+3. Verdicts: 23 APPROVE / 37 PASS; 13 of 30 tickers flipped between the two reps.
+4. The completeness fix raised coverage but did not raise reliability. CR266
+   closes as `dropped`, superseded by CR267; its code stays flag-gated, OFF.
