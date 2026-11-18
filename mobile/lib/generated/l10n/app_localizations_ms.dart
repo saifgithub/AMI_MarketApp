@@ -2003,6 +2003,20 @@ class AppLocalizationsMs extends AppLocalizations {
       'Mandate (milik anda kekal — kami akan buang yang lebih lama)';
 
   @override
+  String get mergePreviewFailedTitle =>
+      'TIDAK DAPAT MENYEMAK DATA TERDAHULU ANDA';
+
+  @override
+  String get mergePreviewFailedBody =>
+      'AMI tidak dapat menyemak sama ada sesi terdahulu anda mempunyai data portfolio atau jurnal untuk digabungkan ke akaun ini. Cuba lagi sekarang, atau langkau - data itu kekal tidak digabungkan.';
+
+  @override
+  String get mergePreviewRetry => 'CUBA LAGI';
+
+  @override
+  String get mergePreviewSkip => 'LANGKAU';
+
+  @override
   String get mergeSheetMandateMove =>
       'Mandate dari sesi sebelumnya (tiada konflik)';
 
@@ -2020,7 +2034,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get mergeSheetFailed =>
-      'Penggabungan gagal. Cuba lagi dari Settings nanti.';
+      'Penggabungan gagal. Tekan butang gabung untuk cuba lagi.';
 
   @override
   String get oneOnOneAskAnything =>

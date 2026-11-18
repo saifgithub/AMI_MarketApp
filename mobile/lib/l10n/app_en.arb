@@ -2230,12 +2230,28 @@
     }
   },
   "mergeSheetMandate": "Mandate (yours stays — we'll drop the older one)",
+  "mergePreviewFailedTitle": "COULDN'T CHECK YOUR EARLIER DATA",
+  "@mergePreviewFailedTitle": {
+    "description": "DEF477 - title of the dialog shown after sign-in when the merge preview request fails (network blip). Replaces a silent skip. retranslate:[ar,ms]"
+  },
+  "mergePreviewFailedBody": "AMI couldn't check whether your earlier session has portfolio or journal data to merge into this account. Retry now, or skip - that data stays unmerged.",
+  "@mergePreviewFailedBody": {
+    "description": "DEF477 - body of the merge-preview-failed dialog. Honest about the consequence of skipping; does not promise a later Settings entry (none exists). retranslate:[ar,ms]"
+  },
+  "mergePreviewRetry": "RETRY",
+  "@mergePreviewRetry": {
+    "description": "DEF477 - primary action of the merge-preview-failed dialog; re-requests the merge preview. retranslate:[ar,ms]"
+  },
+  "mergePreviewSkip": "SKIP",
+  "@mergePreviewSkip": {
+    "description": "DEF477 - secondary action of the merge-preview-failed dialog; continues without merging. retranslate:[ar,ms]"
+  },
   "mergeSheetMandateMove": "Mandate from your previous session (no conflict)",
   "mergeSheetConfirm": "MERGE EVERYTHING",
   "mergeSheetKeepSeparate": "KEEP SEPARATE",
   "mergeSheetClose": "GOT IT",
   "mergeSheetSuccess": "Merged into your account.",
-  "mergeSheetFailed": "Merge failed. Try again from Settings later.",
+  "mergeSheetFailed": "Merge failed. Tap the merge button to try again.",
   "oneOnOneAskAnything": "Ask me anything in my domain.\nType below to start.",
   "oneOnOneStreaming": "Streaming…",
   "oneOnOneHint": "Ask anything…",

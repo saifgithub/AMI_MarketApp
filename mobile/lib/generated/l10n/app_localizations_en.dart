@@ -2000,6 +2000,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mandate (yours stays — we\'ll drop the older one)';
 
   @override
+  String get mergePreviewFailedTitle => 'COULDN\'T CHECK YOUR EARLIER DATA';
+
+  @override
+  String get mergePreviewFailedBody =>
+      'AMI couldn\'t check whether your earlier session has portfolio or journal data to merge into this account. Retry now, or skip - that data stays unmerged.';
+
+  @override
+  String get mergePreviewRetry => 'RETRY';
+
+  @override
+  String get mergePreviewSkip => 'SKIP';
+
+  @override
   String get mergeSheetMandateMove =>
       'Mandate from your previous session (no conflict)';
 
@@ -2016,7 +2029,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mergeSheetSuccess => 'Merged into your account.';
 
   @override
-  String get mergeSheetFailed => 'Merge failed. Try again from Settings later.';
+  String get mergeSheetFailed =>
+      'Merge failed. Tap the merge button to try again.';
 
   @override
   String get oneOnOneAskAnything =>

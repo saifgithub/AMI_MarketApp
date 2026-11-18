@@ -4,12 +4,12 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**267 cases** — 185 api, 15 device, 67 manual; 11 blocked.
+**268 cases** — 185 api, 15 device, 68 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 6 cases
-2. [Authentication, sessions & account identity](#auth) — 23 cases
+2. [Authentication, sessions & account identity](#auth) — 24 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 28 cases
 5. [Floor tab & home shell](#floor) — 9 cases
@@ -3089,6 +3089,22 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. The sign-in screen opens with the "You've been signed out." banner
 2. The app does not silently log back in to the previous account; the next session is a fresh guest
+
+#### UAT-AUTH-035 — A failed merge preview after sign-in is announced and can be retried
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. An anonymous session with some data, then sign in with a code so the account adopts it; the merge-preview request fails (airplane mode at that moment, or the preview endpoint blocked)
+
+**Steps**
+1. Complete the sign-in code step
+2. On the "couldn't check your earlier data" dialog tap RETRY with the network restored, then repeat and tap SKIP
+
+**Expected**
+1. A dialog says AMI could not check the earlier data; it is never silently skipped (DEF477)
+2. RETRY opens the merge sheet once the preview loads; SKIP continues signed in with the data unmerged
+3. No message anywhere points to a Settings entry for merging (there is none)
 
 #### UAT-ONB-040 — First-run interview on iPhone
 

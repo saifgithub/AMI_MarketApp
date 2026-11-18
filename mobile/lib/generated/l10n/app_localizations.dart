@@ -3378,6 +3378,30 @@ abstract class AppLocalizations {
   /// **'Mandate (yours stays — we\'ll drop the older one)'**
   String get mergeSheetMandate;
 
+  /// DEF477 - title of the dialog shown after sign-in when the merge preview request fails (network blip). Replaces a silent skip. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COULDN\'T CHECK YOUR EARLIER DATA'**
+  String get mergePreviewFailedTitle;
+
+  /// DEF477 - body of the merge-preview-failed dialog. Honest about the consequence of skipping; does not promise a later Settings entry (none exists). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI couldn\'t check whether your earlier session has portfolio or journal data to merge into this account. Retry now, or skip - that data stays unmerged.'**
+  String get mergePreviewFailedBody;
+
+  /// DEF477 - primary action of the merge-preview-failed dialog; re-requests the merge preview. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RETRY'**
+  String get mergePreviewRetry;
+
+  /// DEF477 - secondary action of the merge-preview-failed dialog; continues without merging. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SKIP'**
+  String get mergePreviewSkip;
+
   /// No description provided for @mergeSheetMandateMove.
   ///
   /// In en, this message translates to:
@@ -3411,7 +3435,7 @@ abstract class AppLocalizations {
   /// No description provided for @mergeSheetFailed.
   ///
   /// In en, this message translates to:
-  /// **'Merge failed. Try again from Settings later.'**
+  /// **'Merge failed. Tap the merge button to try again.'**
   String get mergeSheetFailed;
 
   /// No description provided for @oneOnOneAskAnything.

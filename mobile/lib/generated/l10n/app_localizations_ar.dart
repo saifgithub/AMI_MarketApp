@@ -2000,6 +2000,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mergeSheetMandate => 'الولاية (تبقى الخاصة بك — سنحذف الأقدم)';
 
   @override
+  String get mergePreviewFailedTitle => 'تعذّر التحقق من بياناتك السابقة';
+
+  @override
+  String get mergePreviewFailedBody =>
+      'تعذّر على AMI التحقق مما إذا كانت جلستك السابقة تحتوي على بيانات محفظة أو سجل لدمجها في هذا الحساب. أعد المحاولة الآن، أو تخطَّ - وستبقى تلك البيانات غير مدمجة.';
+
+  @override
+  String get mergePreviewRetry => 'إعادة المحاولة';
+
+  @override
+  String get mergePreviewSkip => 'تخطّي';
+
+  @override
   String get mergeSheetMandateMove => 'الولاية من جلستك السابقة (لا تعارض)';
 
   @override
@@ -2016,7 +2029,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mergeSheetFailed =>
-      'فشل الدمج. حاول مرة أخرى من الإعدادات لاحقاً.';
+      'فشل الدمج. اضغط على زر الدمج للمحاولة مرة أخرى.';
 
   @override
   String get oneOnOneAskAnything =>
