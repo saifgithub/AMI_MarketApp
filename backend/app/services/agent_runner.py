@@ -26,6 +26,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from app.core.logging import logger
+from app.services import output_guard
 from app.core.time import now_utc
 from app.schemas import AgentId, Mandate
 from app.schemas.mandate import (
@@ -309,13 +310,34 @@ class AgentRunner:
                     buf.append(notice)
                     yield notice
 
+        # CR271 — the output text guard, at the point the reply is stored (the
+        # reply only exists in full here). Whether withholding is real depends
+        # on the consumer: `one_on_one.py` buffers the whole reply and says so
+        # via `meta`, so it can swap in the sentinel; a consumer that forwards
+        # chunks live has already shown the text, which is logged
+        # (`already_streamed=true`) and never pretended away.
+        reply = "".join(buf)
+        if buf:
+            guard = output_guard.inspect(
+                reply,
+                surface="concierge" if agent_id == AgentId.CONCIERGE else "one_on_one",
+                agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
+                already_streamed=not (
+                    meta is not None and meta.get(output_guard.META_CONSUMER_BUFFERS)
+                ),
+            )
+            if guard.withhold:
+                reply = output_guard.withheld_notice(guard, "reply")
+                if meta is not None:
+                    meta[output_guard.META_SENTINEL] = reply
+
         if session.user_id is not None and buf:
             record_one_on_one_message(
                 session_id=session.id,
                 user_id=session.user_id,
                 agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
                 role="assistant",
-                content="".join(buf),
+                content=reply,
             )
 
     async def _stream_concierge(

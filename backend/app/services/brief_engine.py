@@ -49,6 +49,7 @@ from app.schemas.mandate import (
     RiskComponents,
 )
 from app.schemas.one_on_one import ChatMsg
+from app.services import output_guard
 from app.services.agent_prompts import load_base_prompt
 from app.services.llm_gateway import (
     ChatMessage,
@@ -336,6 +337,19 @@ class BriefEngine:
                     "\n\n— AMI lost the connection mid-reply; this turn "
                     "wasn't charged."
                 )
+
+        # CR271 — the output text guard. Brief streams live tokens, so the
+        # reply is already on the user's screen: it cannot be withheld here,
+        # only logged (`already_streamed=true`) and, in enforce mode, retracted
+        # by a trailing AMI line. Restructuring Brief to buffer is not this CR.
+        guard = output_guard.inspect(
+            "".join(buf),
+            surface="brief",
+            agent_id=agent_id_str,
+            already_streamed=True,
+        )
+        if guard.withhold:
+            yield output_guard.retraction_notice(guard)
 
     # ── propose: turn conversation into structured proposal ────────────
 

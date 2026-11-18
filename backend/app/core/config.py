@@ -1133,6 +1133,14 @@ class Settings(BaseSettings):
     # a measured GO (D32), not a deploy.
     room_cards_envelope_enabled: bool = False
 
+    # CR271 (CR267 WP-13) — the deterministic output text guard on user-visible
+    # agent text (`app/services/output_guard.py`). `off` runs nothing; `log`
+    # (the default) records an `output_guard_hit` event per hit and changes no
+    # text; `enforce` also withholds text that read as personal investment
+    # advice or abusive language. A Literal on purpose (the `gtm_funnel`
+    # idiom): a typo'd mode must fail boot, never fall through to "off".
+    output_guard_mode: Literal["off", "log", "enforce"] = "log"
+
     # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
     # deterministic allowed-action set and computed size on the PM's verdict,
     # with a persisted DecisionRecord. OFF by default and per-provider
