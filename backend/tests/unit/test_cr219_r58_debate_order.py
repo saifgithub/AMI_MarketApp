@@ -213,9 +213,14 @@ def test_flag_off_researchers_always_bull_then_bear_regardless_of_run_id():
 
     # Try several ids, including at least one that seeds Bear-first, to prove
     # the flag — not the id — is what's gating the behaviour.
+    # DEF487: six bare uuid4()s miss a Bear-first id ~1 run in 64, failing the
+    # sample-width assert below by chance. Always include one Bear-first id.
+    bear_first = next(
+        u for u in (uuid4() for _ in range(1000))
+        if _researchers_order(u)[0] is AgentId.BEAR_RESEARCHER
+    )
     tried_a_bear_first_id = False
-    for _ in range(6):
-        run_id = uuid4()
+    for run_id in [uuid4() for _ in range(5)] + [bear_first]:
         if _researchers_order(run_id)[0] is AgentId.BEAR_RESEARCHER:
             tried_a_bear_first_id = True
 
