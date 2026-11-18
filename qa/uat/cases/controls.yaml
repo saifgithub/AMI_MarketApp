@@ -25,3 +25,4 @@ cases:
       - Every discovered control is pressed, or exempt with a stated reason
       - No press crashes the app, adds an error-sink entry, overflows, or does nothing
       - Every control has a catalogue entry and its observed effect matches it
+    notes: "WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived."

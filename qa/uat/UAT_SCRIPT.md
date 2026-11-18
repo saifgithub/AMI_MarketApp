@@ -4,30 +4,30 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**261 cases** — 186 api, 15 device, 60 manual; 11 blocked.
+**278 cases** — 186 api, 15 device, 77 manual; 11 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 5 cases
-2. [Authentication, sessions & account identity](#auth) — 23 cases
+1. [Platform, version gate & UAT seeding](#platform) — 6 cases
+2. [Authentication, sessions & account identity](#auth) — 24 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
-5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 21 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
+5. [Floor tab & home shell](#floor) — 10 cases
+6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
-9. [Sim trading & market data](#sim-trading) — 30 cases
+9. [Sim trading & market data](#sim-trading) — 33 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 8 cases
+14. [Decision journal, trash & the You tab](#journal) — 10 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 12 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 13 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
-18. [Alpaca paper account link](#alpaca) — 7 cases
+18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
-20. [Games (dark-launched) & dev preview](#games) — 5 cases
+20. [Games (dark-launched) & dev preview](#games) — 6 cases
 21. [Every screen reached, every control pressed](#controls) — 1 cases
 
 <a id="platform"></a>
@@ -2998,6 +2998,8 @@ _Device (automated, Appium) · plans: floor_pass · **BLOCKED** — CR264 Phase 
 3. No press crashes the app, adds an error-sink entry, overflows, or does nothing
 4. Every control has a catalogue entry and its observed effect matches it
 
+> WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived.
+
 ## Manual — iPhone checklist
 
 #### UAT-PLAT-004 — Old build sees the forced-update screen
@@ -3012,6 +3014,19 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. A blocking "Update required" screen with a working store button; no other screen is reachable
+
+#### UAT-PLAT-006 — The forced-update button never fails silently
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A build below the floor, with the release-floor response served without a store_url (or a store link the phone cannot open)
+
+**Steps**
+1. On the "Update required" screen, tap UPDATE NOW
+
+**Expected**
+1. A message tells the user AMI could not open the store and where to update from; the button is never a silent no-op (DEF473)
 
 #### UAT-AUTH-030 — Sign in with Apple on iPhone
 
@@ -3092,6 +3107,22 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. The sign-in screen opens with the "You've been signed out." banner
 2. The app does not silently log back in to the previous account; the next session is a fresh guest
+
+#### UAT-AUTH-035 — A failed merge preview after sign-in is announced and can be retried
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. An anonymous session with some data, then sign in with a code so the account adopts it; the merge-preview request fails (airplane mode at that moment, or the preview endpoint blocked)
+
+**Steps**
+1. Complete the sign-in code step
+2. On the "couldn't check your earlier data" dialog tap RETRY with the network restored, then repeat and tap SKIP
+
+**Expected**
+1. A dialog says AMI could not check the earlier data; it is never silently skipped (DEF477)
+2. RETRY opens the merge sheet once the preview loads; SKIP continues signed in with the data unmerged
+3. No message anywhere points to a Settings entry for merging (there is none)
 
 #### UAT-ONB-040 — First-run interview on iPhone
 
@@ -3243,6 +3274,48 @@ _Manual (iPhone checklist) · plans: any_
 1. Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button
 2. Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button
 
+#### UAT-MAND-036 — Discarding unsaved Settings edits really discards them
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Settings > PROFILE: change the display name; the SAVE button and the amber pip appear
+2. Tap JOURNAL, choose "discard changes", then tap SETTINGS again
+
+**Expected**
+1. The display name shows the stored value, the SAVE button and the pip are gone
+2. Nothing is sent to the server until a new edit is made (DEF470)
+
+#### UAT-MAND-037 — Irreversible Settings actions ask before they act
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A signed-in account with a pseudonymous handle and an Alpaca paper link (and, separately, a stored non-paper Alpaca credential for the Relink step)
+
+**Steps**
+1. Settings > IDENTITY: tap REGENERATE HANDLE; CANCEL; tap again and confirm
+2. Settings > ACCOUNT: tap Sign out; CANCEL; tap again and confirm
+3. Settings > CONNECTED ACCOUNTS: tap Disconnect; CANCEL; tap again and confirm
+4. With a stale non-paper credential stored: tap Relink; CANCEL; tap again and confirm
+
+**Expected**
+1. Each tap opens a dialog naming the action and its consequence; nothing happens until the red confirm button is pressed (DEF479)
+2. CANCEL leaves the handle, the session, the Alpaca link and the stored credential exactly as they were
+3. Confirming carries the action out (new handle once; signed out; Alpaca keys forgotten; connect screen opens)
+
+#### UAT-MAND-038 — Settings chrome, the Alpaca row and the Q&A library entry are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Settings > Language: switch to Arabic, then Bahasa Melayu
+2. Scroll to APPEARANCE, HELP and CONNECTED ACCOUNTS; read the Alpaca row (Connected / Not connected, Connect / Disconnect / Relink) and the sign-out button
+
+**Expected**
+1. Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)
+2. The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"
+
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3299,6 +3372,32 @@ _Manual (iPhone checklist) · plans: floor_pass_
 
 **Expected**
 1. The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
+
+#### UAT-FLOOR-009 — A locked agent's GO TO LESSONS switches to the LESSONS tab
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. On the Floor, tap a locked agent; in its sheet tap GO TO LESSONS
+
+**Expected**
+1. The LESSONS tab opens and the bottom bar highlights LESSONS; no second Lessons screen is stacked on the Floor (DEF476)
+2. Tapping FLOOR returns to the Floor as it was left
+
+#### UAT-FLOOR-010 — The Floor's persistent chrome raises no layout errors
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A QA build (error sink on) on a small phone, system text at its largest, Floor Pass plan so the house-ad strip shows
+
+**Steps**
+1. Open the Floor, dismiss the "Not now" prompt, watch the ticker tape scroll for 30 seconds
+2. Read the QA error sink
+
+**Expected**
+1. The bottom ticker tape scrolls and the house-ad strip fits its row (its call to action shortens with an ellipsis rather than overflowing)
+2. No RenderFlex overflow is recorded for either (DEF482)
 
 #### UAT-ROOM-014 — Convene sheet, live console, verdict card and cost line on a real iPhone
 
@@ -3407,6 +3506,16 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner
+
+#### UAT-ROOM-022 — Review a Training session from the Room switches to the LESSONS tab
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Open a Room that is waiting on its next session or is out of credits; tap Review a Training session
+
+**Expected**
+1. The LESSONS tab opens with LESSONS highlighted in the bottom bar, not a second Lessons screen over the Floor (DEF476)
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
@@ -3567,6 +3676,52 @@ _Manual (iPhone checklist) · plans: any_
 1. The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
 2. AMI answers about AAPL, not a generic greeting
 
+#### UAT-SIM-031 — A brand-new user can see and add to the watchlist from Portfolio
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A fresh account with no trades
+
+**Steps**
+1. Portfolio > HISTORY (shows 0 trades)
+2. Scroll to WATCHLIST and tap ADD; enter a valid ticker
+
+**Expected**
+1. The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)
+2. The added ticker appears as a watchlist row
+
+#### UAT-SIM-032 — The watchlist UNDO bar goes away and never covers the next sheet
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A phone with a screen reader (VoiceOver or TalkBack) switched on, and a ticker on the watchlist
+
+**Steps**
+1. Portfolio > HISTORY: swipe a watchlist row away; leave the "Removed from watchlist - UNDO" bar alone
+2. Open any watchlist ticker action sheet (tap a ticker on the bottom tape)
+
+**Expected**
+1. The bar dismisses itself after about 10 seconds with a screen reader on (4 seconds without), and UNDO restores the row while it is up (DEF486)
+2. Opening the action sheet removes the bar, so it never sits over the sheet's primary button
+
+#### UAT-SIM-033 — The trade ticket's advisory, destination picker and refusals are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. App language set to Arabic (repeat in Bahasa Melayu); an Alpaca paper account linked
+
+**Steps**
+1. Open a new trade ticket from Portfolio without running the Room first
+2. Read the advisory above the form and the DESTINATION picker; with the network off, submit once
+
+**Expected**
+1. The advisory title reads "NO AMI VERDICT" in English (never "NO AI VERDICT") and is translated in Arabic and Bahasa Melayu, with its Convene the Room and Proceed without buttons (DEF478)
+2. The destination picker, the "could not reach AMI" line and the "blocked by your mandate" fallback are translated
+3. With a non-paper Alpaca credential stored, the Portfolio relink prompt is translated
+
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
 _Manual (iPhone checklist) · plans: floor_pass, trader_
@@ -3634,6 +3789,17 @@ _Manual (iPhone checklist) · plans: any_
 1. ASK opens the 1-on-1 with a first message that already names GOOGL
 2. CONVENE opens the picker with GOOGL already typed in the field, and the Room price line still visible; nothing is charged until CONVENE is tapped
 
+#### UAT-WATCH-016 — Creating a price alert survives one dropped connection attempt
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. On a phone with a weak or just-resumed connection (toggle airplane mode off a second before), open a ticker and create a price alert
+
+**Expected**
+1. The alert is created; the app quietly retries once when the first connection attempt times out, and never shows "the connection is too slow" for a single dropped attempt (DEF485)
+2. No duplicate alert is created
+
 #### UAT-LESS-009 — Lessons tab, track browsing, reader and quiz feel right on iPhone
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3683,6 +3849,30 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. Insights and journal render without clipping in light and dark
 2. UNDO brings the entry straight back in place; Trash lists the deleted one and restore returns it
 3. A 409 "newer entry has taken its place" restore shows the explanatory message, not "not found"
+
+#### UAT-JRNL-009 — Entry detail outcome chips stay on-screen on a narrow phone with large text
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: android_
+
+**Preconditions**
+1. A phone about 360dp wide (or Android display size set to Large) with system font size at the largest setting; at least one TRADE journal entry
+
+**Steps**
+1. You > JOURNAL; open a TRADE entry; scroll to the note card
+
+**Expected**
+1. The OUTCOME label and the WIN, LOSS and PENDING chips are all fully visible inside the note card; chips that do not fit wrap onto a second line (DEF469)
+2. The detail header shows no overflow stripes or clipped title
+
+#### UAT-JRNL-010 — A trade placed without a Room verdict says "AMI advice", not "AI advice"
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Place a trade without convening the Room; open its journal entry
+
+**Expected**
+1. The detail shows "AMI advice: Without - manual trade", translated in Arabic and Bahasa Melayu (DEF478)
 
 #### UAT-INBOX-006 — Broadcast arrives as a push and in the inbox; reply reaches the admin feed
 
@@ -3743,6 +3933,21 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
 2. No screen says "the AI" - the assistant is named AMI
+
+#### UAT-SUPP-013 — The bug-report sheet and the Q&A library are localised and say AMI
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. App language set to Arabic (repeat in Bahasa Melayu)
+
+**Steps**
+1. Settings > HELP > Report a problem; read the categories, fields, photo options and send button
+2. Settings > HELP > Ask AMI; search for something with no match
+
+**Expected**
+1. Every label in the sheet is translated; the category ids the server receives are unchanged (DEF478)
+2. The library is titled "Ask AMI" (never "AI Coach"); its hint, empty result and RELATED LESSONS / RELATED AGENTS headings are translated
 
 #### UAT-BILL-008 — Real purchase of Trader and Floor Manager works end to end on an iPhone
 
@@ -3873,6 +4078,19 @@ _Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
 1. The ticket success banner shows and the order appears in the paper account, never a live one
 2. The mandate safety floor applies to this order exactly as to an AMI sim order
 
+#### UAT-ALPACA-008 — An Alpaca position's detail link does not promise lots it cannot show
+
+_Manual (iPhone checklist) · plans: floor_pass · platforms: ios_
+
+**Preconditions**
+1. UAT-ALPACA-004 completed with at least one Alpaca paper position that AMI never traded
+
+**Steps**
+1. Portfolio > POSITIONS; expand that Alpaca position
+
+**Expected**
+1. The link reads TICKER DETAIL (not PER-LOT DETAIL) and opens the ticker detail screen (DEF475)
+
 #### UAT-ADMIN-006 — Admin console works in the browser behind Cloudflare Access
 
 _Manual (iPhone checklist) · plans: any_
@@ -3900,3 +4118,18 @@ _Manual (iPhone checklist) · plans: any · platforms: ios_
 **Expected**
 1. Neither is reachable by any tap path
 2. A debug build with AMI_GAMES on shows the lobby, a weekly run, the trade ticket and the record screen without layout errors
+
+#### UAT-GAME-006 — The no-cash ticket's SEE POSITIONS / SEE QUEUED ORDERS lands where the list is
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A build with AMI_GAMES on and a run whose cash is fully committed (all in positions or queued orders)
+
+**Steps**
+1. From Games Home tap TRADE on the run; on the no-cash panel tap SEE POSITIONS (or SEE QUEUED ORDERS)
+2. Repeat starting from the run screen: open the run, tap its trade button, then the same panel button
+
+**Expected**
+1. From Home the run screen opens, showing the holdings and queued orders (DEF474)
+2. From the run screen the ticket closes back to that same run screen

@@ -2376,3 +2376,32 @@ traceback; flip a still-`running` row to `failed`; refund once, gated on
 **Enforcing check:** `backend/tests/unit/test_def455_pre_try_crash_not_stranded.py`
 — a setup-phase raise must leave the row `failed`, the balance whole, a
 `room_run_crashed` event, a fresh run on re-convene, and no second refund.
+
+---
+
+## P40 — a tab-level destination reached by pushing a second copy of its screen
+
+**Class:** the shell owns a set of tabs (`HomeShell`, nav bar below the page).
+A button deep inside one tab means "take me to another tab's screen" and
+implements it as `Navigator.push(OtherScreen())` on its own tab's navigator.
+The nav bar keeps highlighting the old tab, tapping the new one shows a
+*different* stack, and the user ends with two copies of the destination.
+
+**Instances.** DEF190 (2026-08-06): Portfolio History's "Review in Journal"
+pushed an orphaned `JournalScreen`; fixed by writing `activeTabProvider`.
+DEF476 (2026-10-20, CR264 control catalogue): the locked-agent sheet's
+`GO TO LESSONS` and the Room's `Review a Training session` (two sites) pushed
+a duplicate `LessonsScreen` onto the Floor tab. Same cause, same fix, found by
+a catalogue sweep rather than by anyone remembering DEF190.
+
+**Why the first fix did not generalise.** DEF190 fixed the one call site it was
+filed against. Nothing stated the rule ("a tab's screen is reached by switching
+the tab"), so the next author, standing in a different screen, reached for the
+same `push` that every other destination uses.
+
+**Enforcing check:** `mobile/test/lessons_tab_navigation_structural_test.dart` —
+walks `lib/` and fails on any `push(MaterialPageRoute(... LessonsScreen(` (the
+allowlist is empty and meant to stay so), and drives the locked-agent sheet's
+GO TO LESSONS to prove it sets `activeTabProvider` rather than pushing.
+Covers LessonsScreen only; the next tab-level screen to be mis-pushed gets its
+own line in the same test, not a new pattern.

@@ -391,3 +391,43 @@ cases:
     expected:
       - The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
       - AMI answers about AAPL, not a generic greeting
+
+  - id: UAT-SIM-031
+    title: A brand-new user can see and add to the watchlist from Portfolio
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A fresh account with no trades'
+    steps:
+      - 'Portfolio > HISTORY (shows 0 trades)'
+      - 'Scroll to WATCHLIST and tap ADD; enter a valid ticker'
+    expected:
+      - 'The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)'
+      - 'The added ticker appears as a watchlist row'
+
+  - id: UAT-SIM-032
+    title: The watchlist UNDO bar goes away and never covers the next sheet
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A phone with a screen reader (VoiceOver or TalkBack) switched on, and a ticker on the watchlist'
+    steps:
+      - 'Portfolio > HISTORY: swipe a watchlist row away; leave the "Removed from watchlist - UNDO" bar alone'
+      - 'Open any watchlist ticker action sheet (tap a ticker on the bottom tape)'
+    expected:
+      - 'The bar dismisses itself after about 10 seconds with a screen reader on (4 seconds without), and UNDO restores the row while it is up (DEF486)'
+      - 'Opening the action sheet removes the bar, so it never sits over the sheet''s primary button'
+
+  - id: UAT-SIM-033
+    title: The trade ticket's advisory, destination picker and refusals are localised and say AMI
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'App language set to Arabic (repeat in Bahasa Melayu); an Alpaca paper account linked'
+    steps:
+      - 'Open a new trade ticket from Portfolio without running the Room first'
+      - 'Read the advisory above the form and the DESTINATION picker; with the network off, submit once'
+    expected:
+      - 'The advisory title reads "NO AMI VERDICT" in English (never "NO AI VERDICT") and is translated in Arabic and Bahasa Melayu, with its Convene the Room and Proceed without buttons (DEF478)'
+      - 'The destination picker, the "could not reach AMI" line and the "blocked by your mandate" fallback are translated'
+      - 'With a non-paper Alpaca credential stored, the Portfolio relink prompt is translated'

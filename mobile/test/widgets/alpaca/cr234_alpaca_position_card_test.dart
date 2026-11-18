@@ -125,4 +125,27 @@ void main() {
       expect(find.textContaining('STOP'), findsNothing);
     });
   });
+
+  group('DEF475 — the detail link does not promise lots it cannot show', () {
+    testWidgets('expanded Alpaca card links to TICKER DETAIL, not PER-LOT DETAIL',
+        (tester) async {
+      await _pump(
+        tester,
+        position: const AlpacaPosition(
+          symbol: 'ASML',
+          qty: 10,
+          marketValue: 18500,
+          unrealizedPl: 500,
+          avgEntryPrice: 1800,
+        ),
+      );
+      await tester.tap(find.text('ASML'));
+      await tester.pump();
+
+      expect(find.text('TICKER DETAIL'), findsOneWidget);
+      expect(find.text('PER-LOT DETAIL'), findsNothing,
+          reason: 'the destination reads the AMI ledger, empty for an '
+              'Alpaca-only holding');
+    });
+  });
 }

@@ -20,6 +20,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
+import 'package:ami_trade/screens/games/games_run_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -46,9 +47,17 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
     this.heldQuantity,
     this.coverTicker,
     this.coverQuantity,
+    this.openedFromRun = true,
   });
 
   final String runId;
+
+  /// DEF474 — true when the run screen is the route underneath (the ticket was
+  /// pushed from it). The no-cash panel's SEE QUEUED ORDERS / SEE POSITIONS
+  /// pops back to that screen; when the ticket was opened straight from Games
+  /// Home there is nothing underneath that shows either list, so it opens the
+  /// run screen in its place instead.
+  final bool openedFromRun;
 
   /// Non-null opens the ticket straight into SELL mode on that position:
   /// ticker pre-picked, size chips meaning "percent of the position", and no
@@ -77,6 +86,7 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
     double? heldQuantity,
     String? coverTicker,
     double? coverQuantity,
+    bool openedFromRun = true,
   }) {
     return Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => GamesTradeTicketScreen(
@@ -85,6 +95,7 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
         heldQuantity: heldQuantity,
         coverTicker: coverTicker,
         coverQuantity: coverQuantity,
+        openedFromRun: openedFromRun,
       ),
     ));
   }
@@ -400,7 +411,11 @@ class _GamesTradeTicketScreenState
                         !_isCover &&
                         runDetail != null &&
                         runDetail.cashAvailable <= 0)
-                      _NoCashPanel(detail: runDetail)
+                      _NoCashPanel(
+                        detail: runDetail,
+                        runId: widget.runId,
+                        openedFromRun: widget.openedFromRun,
+                      )
                     else if (_isCover)
                       const SizedBox.shrink()
                     else if (ticket.ticker != null) ...[
@@ -944,7 +959,14 @@ class _ResultBanner extends StatelessWidget {
 /// arrived" from "cash is zero", so it waited for a number that had already
 /// come. A zero balance is not a thing to wait for.
 class _NoCashPanel extends StatelessWidget {
-  const _NoCashPanel({required this.detail});
+  const _NoCashPanel({
+    required this.detail,
+    required this.runId,
+    required this.openedFromRun,
+  });
+
+  final String runId;
+  final bool openedFromRun;
 
   final GameRunDetail detail;
 
@@ -994,7 +1016,11 @@ class _NoCashPanel extends StatelessWidget {
               // Both routes are the same gesture: the run screen underneath
               // carries the queued-order list AND the holdings, each with its
               // own close action. Closing IS the navigation.
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => openedFromRun
+                  ? Navigator.of(context).pop()
+                  : Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
+                      builder: (_) => GamesRunScreen(runId: runId),
+                    )),
             ),
           ),
         ],

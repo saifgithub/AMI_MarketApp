@@ -8,7 +8,8 @@
 ///
 /// This is the MVP scope (AT:R38). Followup work: per-bucket toggles
 /// (journal yes, sim no), mandate-conflict resolution UI, and a
-/// "Merged accounts" history section in Settings.
+/// "Merged accounts" history section in Settings (not built - nothing in the
+/// app may promise it until it exists, DEF477).
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -29,13 +30,43 @@ Future<void> showMergeSheet(
 }) async {
   final api = ref.read(apiClientProvider);
   MergePreview preview;
-  try {
-    preview = await api.previewMerge(fromUserId: adoptedFromUserId);
-  } catch (_) {
-    // Preview failed (network blip, 403/404 race) — silently swallow.
-    // The user's sign-in still succeeded; we just couldn't surface the
-    // merge offer. They can find it again later via Settings.
-    return;
+  // DEF477 — a failed preview used to be swallowed (CR040): the user's
+  // earlier data was silently left unmerged, and the code pointed at a
+  // Settings entry that does not exist. Say so, and let them retry.
+  while (true) {
+    try {
+      preview = await api.previewMerge(fromUserId: adoptedFromUserId);
+      break;
+    } catch (_) {
+      if (!context.mounted) return;
+      final retry = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) {
+          final l = AppLocalizations.of(ctx);
+          return AlertDialog(
+            backgroundColor: AmiColors.slate800,
+            title: Text(l.mergePreviewFailedTitle,
+                style:
+                    AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
+            content: Text(l.mergePreviewFailedBody, style: AmiTypography.body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(l.mergePreviewSkip, style: AmiTypography.body),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(l.mergePreviewRetry,
+                    style: AmiTypography.body
+                        .copyWith(color: AmiColors.hexCyan)),
+              ),
+            ],
+          );
+        },
+      );
+      if (retry != true) return;
+    }
   }
   if (!context.mounted) return;
   await showModalBottomSheet<void>(

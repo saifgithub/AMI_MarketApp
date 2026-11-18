@@ -19,7 +19,8 @@ import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/models/room_board_mappers.dart';
 import 'package:ami_trade/models/room_stage.dart';
-import 'package:ami_trade/screens/lessons/lessons_screen.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/widgets/sim/option_verdict_cta.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
@@ -866,9 +867,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
               style: TextButton.styleFrom(foregroundColor: accent),
               icon: const Icon(Icons.school_outlined, size: 18),
               label: Text(l.roomWinzipReviewTraining),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const LessonsScreen()),
-              ),
+              onPressed: () => ref.read(activeTabProvider.notifier).state =
+                  AmiTab.lessons,
             ),
           ),
         ],
@@ -920,9 +920,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
               style: TextButton.styleFrom(foregroundColor: accent),
               icon: const Icon(Icons.school_outlined, size: 18),
               label: Text(l.roomWinzipReviewTraining),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const LessonsScreen()),
-              ),
+              onPressed: () => ref.read(activeTabProvider.notifier).state =
+                  AmiTab.lessons,
             ),
           ),
         ],

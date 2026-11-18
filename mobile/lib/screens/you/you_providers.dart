@@ -84,3 +84,10 @@ final settingsHeaderProvider =
 /// the bump is simply ignored, which is the correct behaviour for a Save button
 /// whose editor is not on screen.
 final settingsSaveRequestProvider = StateProvider<int>((ref) => 0);
+
+/// Bumped by `YOU` when the user chooses "discard changes" so the mounted
+/// settings pane drops its pending mandate edits (DEF470). The pane lives in an
+/// `IndexedStack`, so leaving the segment does not dispose it: without this,
+/// the "discarded" edits survived and a later SAVE PATCHed them. A counter for
+/// the same lifetime reason as [settingsSaveRequestProvider].
+final settingsDiscardRequestProvider = StateProvider<int>((ref) => 0);

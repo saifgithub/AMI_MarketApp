@@ -906,10 +906,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               label: kAlpacaPaperLabel,
               ok: false,
               message: preview == null
-                  ? 'Could not reach AMI to check this trade.'
+                  ? AppLocalizations.of(context).tradeTicketUnreachableCheck
                   : (preview.violations.isNotEmpty
                       ? preview.violations.join('; ')
-                      : (preview.blockedBy ?? 'Blocked by your mandate.')),
+                      : (preview.blockedBy ?? AppLocalizations.of(context).tradeTicketBlockedByMandate)),
             ),
           ]);
       return;
@@ -982,7 +982,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // helper whose own caller does the mounted check.
     final l = AppLocalizations.of(context);
     final results = await Future.wait([
-      _legAmi(typed, qty),
+      _legAmi(typed, qty, l),
       _legAlpaca(typed, qty, l),
     ]);
     if (!mounted) return;
@@ -1006,7 +1006,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// the gating step it used to be. Runs the ordinary `submit()` — the AMI
   /// ledger write happens or it doesn't, entirely on its own account's
   /// mandate check.
-  Future<_DestinationOutcome> _legAmi(String typed, double qty) async {
+  Future<_DestinationOutcome> _legAmi(
+      String typed, double qty, AppLocalizations l) async {
     final result = await ref.read(simNotifierProvider.notifier).submit(
           ticker: typed,
           side: _side,
@@ -1025,23 +1026,23 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           verdictRef: widget.verdictRef,
         );
     if (result == null) {
-      return const _DestinationOutcome(
-        label: 'AMI SIM',
+      return _DestinationOutcome(
+        label: l.tradeTicketDestAmiSim,
         ok: false,
-        message: 'Could not reach AMI to place this trade.',
+        message: l.tradeTicketUnreachablePlace,
       );
     }
     if (!result.ok) {
       return _DestinationOutcome(
-        label: 'AMI SIM',
+        label: l.tradeTicketDestAmiSim,
         ok: false,
         message: result.violations.isNotEmpty
             ? result.violations.join('; ')
-            : (result.blockedBy ?? 'Blocked by your mandate.'),
+            : (result.blockedBy ?? l.tradeTicketBlockedByMandate),
       );
     }
     return _DestinationOutcome(
-      label: 'AMI SIM',
+      label: l.tradeTicketDestAmiSim,
       ok: true,
       message: _simOutcomeMessage(result, typed),
     );
@@ -1094,10 +1095,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         label: kAlpacaPaperLabel,
         ok: false,
         message: preview == null
-            ? 'Could not reach AMI to check this trade.'
+            ? l.tradeTicketUnreachableCheck
             : (preview.violations.isNotEmpty
                 ? preview.violations.join('; ')
-                : (preview.blockedBy ?? 'Blocked by your mandate.')),
+                : (preview.blockedBy ?? l.tradeTicketBlockedByMandate)),
       );
     }
     return _placeAlpacaOrder(
@@ -1548,7 +1549,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                 const Icon(Icons.lightbulb_outline,
                                     color: AmiColors.hexBlue, size: 16),
                                 const SizedBox(width: 4),
-                                Text('NO AI VERDICT',
+                                Text(l.tradeTicketNoVerdictTitle,
                                     style: AmiTypography.labelMono.copyWith(
                                         color: AmiColors.hexBlue,
                                         fontSize: 11)),
@@ -1570,8 +1571,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Convene the Room first to get analysis from your 12 agents. '
-                              'Or proceed — this trade will be marked "without advice".',
+                              l.tradeTicketNoVerdictBody,
                               style: AmiTypography.body,
                             ),
                             const SizedBox(height: AmiSpacing.s),
@@ -1587,7 +1587,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                           vertical: 8),
                                     ),
                                     icon: const Icon(Icons.bolt, size: 16),
-                                    label: const Text('Convene the Room'),
+                                    label: Text(l.tradeTicketConveneRoom),
                                     onPressed: _convene,
                                   ),
                                 ),
@@ -1601,7 +1601,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                     ),
                                     onPressed: () => setState(
                                         () => _advisoryDismissed = true),
-                                    child: const Text('Proceed without'),
+                                    child: Text(l.tradeTicketProceedWithout),
                                   ),
                                 ),
                               ],
@@ -1808,13 +1808,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     if (alpacaLinked && !_destinationLocked) ...[
                       const SizedBox(height: AmiSpacing.m),
                       _PillToggle<TradeDestination>(
-                        label: 'DESTINATION',
+                        label: l.tradeTicketDestinationLabel,
                         value: _destination,
                         accent: AmiColors.hexBlue,
-                        options: const [
-                          (TradeDestination.amiSim, 'AMI SIM'),
+                        options: [
+                          (TradeDestination.amiSim, l.tradeTicketDestAmiSim),
                           (TradeDestination.alpacaPaper, kAlpacaPaperLabel),
-                          (TradeDestination.both, 'BOTH'),
+                          (TradeDestination.both, l.tradeTicketDestBoth),
                         ],
                         onChange: (v) => setState(() => _destination = v),
                       ),

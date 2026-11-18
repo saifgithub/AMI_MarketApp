@@ -128,6 +128,152 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get settingsSignOut => 'Sign out';
+
+  @override
+  String get settingsSectionAppearance => 'APPEARANCE';
+
+  @override
+  String get settingsSectionHelp => 'HELP';
+
+  @override
+  String get settingsHelpQaLibrary => 'Ask AMI — Q&A library';
+
+  @override
+  String get settingsSectionConnectedAccounts => 'CONNECTED ACCOUNTS';
+
+  @override
+  String get settingsAlpacaConnected => 'Connected';
+
+  @override
+  String get settingsAlpacaNotConnected => 'Not connected';
+
+  @override
+  String get settingsAlpacaRelinkNeeded =>
+      'AMI now links Alpaca paper accounts only — relink';
+
+  @override
+  String get settingsAlpacaConnect => 'Connect';
+
+  @override
+  String get settingsAlpacaDisconnect => 'Disconnect';
+
+  @override
+  String get settingsAlpacaRelink => 'Relink';
+
+  @override
+  String get tradeTicketNoVerdictTitle => 'NO AMI VERDICT';
+
+  @override
+  String get tradeTicketNoVerdictBody =>
+      'Convene the Room first to get analysis from your 12 agents. Or proceed — this trade will be marked \"without advice\".';
+
+  @override
+  String get tradeTicketConveneRoom => 'Convene the Room';
+
+  @override
+  String get tradeTicketProceedWithout => 'Proceed without';
+
+  @override
+  String get tradeTicketDestinationLabel => 'DESTINATION';
+
+  @override
+  String get tradeTicketDestAmiSim => 'AMI SIM';
+
+  @override
+  String get tradeTicketDestBoth => 'BOTH';
+
+  @override
+  String get tradeTicketUnreachableCheck =>
+      'Could not reach AMI to check this trade.';
+
+  @override
+  String get tradeTicketUnreachablePlace =>
+      'Could not reach AMI to place this trade.';
+
+  @override
+  String get tradeTicketBlockedByMandate => 'Blocked by your mandate.';
+
+  @override
+  String get portfolioAlpacaRelinkPrompt =>
+      'AMI now links Alpaca paper accounts only. Relink your account from the Connected Accounts section of Settings.';
+
+  @override
+  String get termSeeAlso => 'SEE ALSO';
+
+  @override
+  String get termRelatedLessons => 'RELATED LESSONS';
+
+  @override
+  String get aiCoachTitle => 'Ask AMI';
+
+  @override
+  String get aiCoachSearchHint =>
+      'Ask anything — \"halal filter\", \"mandate\", \"stop loss\"';
+
+  @override
+  String aiCoachNoMatches(String query) {
+    return 'No matches for \"$query\". Try a different phrasing.';
+  }
+
+  @override
+  String get aiCoachRelatedAgents => 'RELATED AGENTS';
+
+  @override
+  String get journalKvAmiAdvice => 'AMI advice';
+
+  @override
+  String get journalKvWithoutManual => 'Without — manual trade';
+
+  @override
+  String get bugSheetTitle => 'Report a bug';
+
+  @override
+  String get bugSheetCatUiGlitch => 'UI glitch';
+
+  @override
+  String get bugSheetCatWrongData => 'Wrong data';
+
+  @override
+  String get bugSheetCatCrash => 'App crashed';
+
+  @override
+  String get bugSheetCatPerformance => 'Slow / freeze';
+
+  @override
+  String get bugSheetCatFeatureRequest => 'Feature request';
+
+  @override
+  String get bugSheetCatOther => 'Other';
+
+  @override
+  String get bugSheetTakePhoto => 'Take photo';
+
+  @override
+  String get bugSheetChooseLibrary => 'Choose from library';
+
+  @override
+  String get bugSheetShortDescription => 'Short description';
+
+  @override
+  String get bugSheetRequired => 'Required';
+
+  @override
+  String get bugSheetSteps => 'Steps to reproduce (optional)';
+
+  @override
+  String get bugSheetSendFailed => 'Failed to send — please try again';
+
+  @override
+  String get bugSheetSend => 'Send report';
+
+  @override
+  String get bugSheetAttachPhoto => 'Attach photo';
+
+  @override
+  String get bugSheetRemoveTooltip => 'Remove';
+
+  @override
   String get youSegmentInsights => 'INSIGHTS';
 
   @override
@@ -2026,6 +2172,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mandate (yours stays — we\'ll drop the older one)';
 
   @override
+  String get mergePreviewFailedTitle => 'COULDN\'T CHECK YOUR EARLIER DATA';
+
+  @override
+  String get mergePreviewFailedBody =>
+      'AMI couldn\'t check whether your earlier session has portfolio or journal data to merge into this account. Retry now, or skip - that data stays unmerged.';
+
+  @override
+  String get mergePreviewRetry => 'RETRY';
+
+  @override
+  String get mergePreviewSkip => 'SKIP';
+
+  @override
   String get mergeSheetMandateMove =>
       'Mandate from your previous session (no conflict)';
 
@@ -2042,7 +2201,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mergeSheetSuccess => 'Merged into your account.';
 
   @override
-  String get mergeSheetFailed => 'Merge failed. Try again from Settings later.';
+  String get mergeSheetFailed =>
+      'Merge failed. Tap the merge button to try again.';
 
   @override
   String get oneOnOneAskAnything =>
@@ -2538,7 +2698,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tradeTicketFilled(
       String side, String qty, String ticker, String price) {
-    return 'Filled: $side $qty $ticker @ \\\$$price';
+    return 'Filled: $side $qty $ticker @ \$$price';
   }
 
   @override
@@ -3031,6 +3191,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leagueRegenerate => 'REGENERATE HANDLE';
+
+  @override
+  String get settingsConfirmRegenTitle => 'REGENERATE HANDLE?';
+
+  @override
+  String get settingsConfirmRegenBody =>
+      'You can only do this once. Your current handle is replaced and can\'t be restored.';
+
+  @override
+  String get settingsConfirmRegenConfirm => 'REGENERATE';
+
+  @override
+  String get settingsConfirmSignOutTitle => 'SIGN OUT?';
+
+  @override
+  String get settingsConfirmSignOutBody =>
+      'You will be signed out on this device. Sign in again with your email to continue with this account.';
+
+  @override
+  String get settingsConfirmSignOutConfirm => 'SIGN OUT';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectTitle => 'DISCONNECT ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectBody =>
+      'AMI forgets your Alpaca paper keys on this device straight away. To link again you\'ll need to enter them again.';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectConfirm => 'DISCONNECT';
+
+  @override
+  String get settingsConfirmAlpacaRelinkTitle => 'RELINK ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaRelinkBody =>
+      'AMI now links Alpaca paper accounts only. Your stored key is removed first, so if you back out you stay unlinked until you connect a paper account.';
+
+  @override
+  String get settingsConfirmAlpacaRelinkConfirm => 'RELINK';
 
   @override
   String get leagueRegenerateFailed =>
@@ -3529,6 +3729,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get versionGateOfflineRetryHint =>
       'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
+
+  @override
+  String get versionGateStoreUnavailable =>
+      'AMI couldn\'t open the store. Open the App Store or Google Play, search for AMI Trade and update from there.';
 
   @override
   String get gamesBoardTitle => 'Standings';
@@ -4412,6 +4616,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get positionPerLotDetail => 'PER-LOT DETAIL';
+
+  @override
+  String get alpacaPositionOpenTicker => 'TICKER DETAIL';
 
   @override
   String get positionUnprotected => 'no stop set';

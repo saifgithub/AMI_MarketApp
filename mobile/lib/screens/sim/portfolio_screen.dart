@@ -1656,17 +1656,35 @@ class _WatchlistRow extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     notifier.remove(entry.ticker);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(l.watchlistRemoved),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: l.watchlistUndo,
-          onPressed: () => notifier.add(entry.ticker, notes: entry.notes),
-        ),
-      ),
-    );
+    messenger.showSnackBar(buildWatchlistUndoSnackBar(
+      context,
+      message: l.watchlistRemoved,
+      undoLabel: l.watchlistUndo,
+      onUndo: () => notifier.add(entry.ticker, notes: entry.notes),
+    ));
   }
+}
+
+/// DEF486 — Flutter keeps a snackbar that has an action on screen until it is
+/// dismissed, and with a screen reader running (`accessibleNavigation`) it never
+/// auto-dismisses, so the UNDO bar sat over whatever was underneath (the next
+/// sheet's primary button) with no way past it. `persist: false` makes the
+/// timeout real again; the timeout is longer under a screen reader so UNDO is
+/// still reachable.
+@visibleForTesting
+SnackBar buildWatchlistUndoSnackBar(
+  BuildContext context, {
+  required String message,
+  required String undoLabel,
+  required VoidCallback onUndo,
+}) {
+  final accessible = MediaQuery.accessibleNavigationOf(context);
+  return SnackBar(
+    content: Text(message),
+    duration: Duration(seconds: accessible ? 10 : 4),
+    persist: false,
+    action: SnackBarAction(label: undoLabel, onPressed: onUndo),
+  );
 }
 
 class _WatchlistDeleteBackground extends StatelessWidget {
@@ -1740,6 +1758,10 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
             padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
             sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
           ),
+          // DEF472 — a brand-new user has no trades yet but still needs to
+          // see and add to the watchlist; only the non-empty path had it.
+          ..._watchlistSlivers(context, ref, widget.watchlist),
+          const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.xxl)),
         ],
       );
     }
@@ -2089,8 +2111,7 @@ class _AlpacaRelinkPrompt extends StatelessWidget {
             const SizedBox(width: AmiSpacing.s),
             Expanded(
               child: Text(
-                'AMI now links Alpaca paper accounts only. Relink your '
-                'account from Settings → Connected Accounts.',
+                AppLocalizations.of(context).portfolioAlpacaRelinkPrompt,
                 style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
               ),
             ),

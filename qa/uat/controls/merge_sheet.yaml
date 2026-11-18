@@ -20,3 +20,16 @@ controls:
     line: 172
     when: "preview is empty (nothing to merge)"
     note: "Closes the sheet."
+  - label: "RETRY"
+    kind: button
+    expect: sheet
+    target: ami.screen.merge_sheet
+    line: 54
+    when: "the merge preview request failed after sign-in (DEF477 dialog)"
+    note: "On the preview-failed dialog; re-requests the preview and opens this sheet when it loads."
+  - label: "SKIP"
+    kind: button
+    expect: back
+    line: 48
+    when: "the merge preview request failed after sign-in (DEF477 dialog)"
+    note: "On the preview-failed dialog; closes it and continues without merging (data stays unmerged)."

@@ -43,6 +43,7 @@ import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/screens/settings/legal_screen.dart';
+import 'package:ami_trade/widgets/alpaca/alpaca_badge.dart' show kAlpacaPaperLabel;
 import 'package:ami_trade/qa/semantics_ids.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // the server's returned mandate (acceptance 2's round-trip contract).
   final Map<String, dynamic> _pendingRiskLimits = {};
   bool _riskLimitsExpanded = false;
+  int _discardGeneration = 0;
 
   void _initFrom(UserMandate m) {
     _localRiskScore ??= m.riskScore;
@@ -263,6 +265,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool get _hasUnsavedEdits => _dirty || _pendingRiskLimits.isNotEmpty;
 
+  /// DEF470 — the YOU "discard changes" choice. Drops every pending edit and
+  /// re-keys the list so text fields rebuild from the stored mandate (their
+  /// controllers are seeded once and would otherwise keep the typed text).
+  void _discardEdits() {
+    setState(() {
+      _localRiskScore = null;
+      _localMaxDD = null;
+      _localCompliance = null;
+      _localPrimaryGoal = null;
+      _localHorizon = null;
+      _localPath = null;
+      _localLearningStyle = null;
+      _localDisplayName = null;
+      _localTimezone = null;
+      _localRiskQuotes = null;
+      _dirty = false;
+      _pendingRiskLimits.clear();
+      _discardGeneration++;
+    });
+  }
+
   /// Publish what `YOU`'s header renders on this screen's behalf (CR133 §4.2).
   ///
   /// Derived in `build` and pushed after the frame rather than written at each
@@ -302,6 +325,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.listen<int>(settingsSaveRequestProvider, (_, __) {
         if (!state.saving) _save();
       });
+      ref.listen<int>(settingsDiscardRequestProvider, (_, __) {
+        _discardEdits();
+      });
     }
     final l = AppLocalizations.of(context);
     final body = Column(
@@ -325,6 +351,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             Expanded(
               child: ListView(
+                key: ValueKey(_discardGeneration),
                 padding: const EdgeInsets.all(AmiSpacing.m),
                 children: [
                   _Section(title: l.settingsSectionMandate, children: [
@@ -1123,6 +1150,40 @@ class _MembershipSection extends ConsumerWidget {
 }
 
 
+/// DEF479 — one confirm for every irreversible Settings action (regenerate
+/// handle, sign out, Alpaca disconnect, Alpaca relink). Cancel comes first so
+/// the destructive choice is not the one under the thumb; dismissing the
+/// dialog any other way counts as cancel.
+Future<bool> _confirmDestructive(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String confirmLabel,
+}) async {
+  final l = AppLocalizations.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AmiColors.slate800,
+      title: Text(title,
+          style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
+      content: Text(body, style: AmiTypography.body),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(l.actionCancel, style: AmiTypography.body),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: Text(confirmLabel,
+              style: AmiTypography.body.copyWith(color: AmiColors.hexRed)),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}
+
 /// CR011 (C3), narrowed by CR109 slice 7 — the pseudonymous handle and its
 /// one-shot regenerate. The reputation total that sat beside it is gone with
 /// the league Amendment A retired; the handle stayed, because it is the name
@@ -1144,7 +1205,16 @@ class _HandleSection extends ConsumerWidget {
           height: 40,
           child: OutlinedButton.icon(
             icon: const Icon(Icons.refresh, size: 16),
-            onPressed: () => _regenerate(context, ref, l),
+            onPressed: () async {
+              final ok = await _confirmDestructive(
+                context,
+                title: l.settingsConfirmRegenTitle,
+                body: l.settingsConfirmRegenBody,
+                confirmLabel: l.settingsConfirmRegenConfirm,
+              );
+              if (!ok || !context.mounted) return;
+              await _regenerate(context, ref, l);
+            },
             label: Text(l.leagueRegenerate),
           ),
         ),
@@ -1214,6 +1284,13 @@ class _AccountSection extends ConsumerWidget {
               onPressed: ref.read(authNotifierProvider).loading
                   ? null
                   : () async {
+                      final ok = await _confirmDestructive(
+                        context,
+                        title: l.settingsConfirmSignOutTitle,
+                        body: l.settingsConfirmSignOutBody,
+                        confirmLabel: l.settingsConfirmSignOutConfirm,
+                      );
+                      if (!ok || !context.mounted) return;
                       await ref
                           .read(authNotifierProvider.notifier)
                           .signOut();
@@ -1227,7 +1304,7 @@ class _AccountSection extends ConsumerWidget {
                 foregroundColor: AmiColors.hexRed,
                 side: const BorderSide(color: AmiColors.hexRed),
               ),
-              child: const Text('Sign out'),
+              child: Text(l.settingsSignOut),
             ),
           ),
         ],
@@ -1352,7 +1429,7 @@ class _ThemeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return _Section(
-      title: 'APPEARANCE',
+      title: l.settingsSectionAppearance,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1567,8 +1644,9 @@ class _HelpSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return _Section(
-      title: 'HELP',
+      title: l.settingsSectionHelp,
       children: [
         InkWell(
           onTap: () => Navigator.of(context).push(
@@ -1581,7 +1659,7 @@ class _HelpSection extends ConsumerWidget {
                 const Icon(Icons.help_outline, color: AmiColors.hexBlue, size: 18),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
-                  child: Text('AI Coach — Q&A library',
+                  child: Text(l.settingsHelpQaLibrary,
                       style: AmiTypography.body),
                 ),
                 const Icon(Icons.chevron_right, color: AmiColors.textLow),
@@ -1690,9 +1768,10 @@ class _AlpacaSection extends ConsumerWidget {
     if (!claimed) return const SizedBox.shrink();
 
     final linkedAsync = ref.watch(alpacaLinkedProvider);
+    final l = AppLocalizations.of(context);
 
     return _Section(
-      title: 'CONNECTED ACCOUNTS',
+      title: l.settingsSectionConnectedAccounts,
       children: [
         linkedAsync.when(
           loading: () => const SizedBox(
@@ -1734,6 +1813,7 @@ class _AlpacaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
         Container(
@@ -1752,7 +1832,7 @@ class _AlpacaRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ALPACA PAPER',
+                kAlpacaPaperLabel,
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
               ),
               Text(
@@ -1760,10 +1840,10 @@ class _AlpacaRow extends StatelessWidget {
                 // "Not connected" alone would read as "never linked", which
                 // is false and drops the reason a relink is needed.
                 linked
-                    ? 'Connected'
+                    ? l.settingsAlpacaConnected
                     : (storedNonPaper
-                        ? 'AMI now links Alpaca paper accounts only — relink'
-                        : 'Not connected'),
+                        ? l.settingsAlpacaRelinkNeeded
+                        : l.settingsAlpacaNotConnected),
                 style: AmiTypography.caption.copyWith(
                   color: linked
                       ? AmiColors.hexGreen
@@ -1776,10 +1856,13 @@ class _AlpacaRow extends StatelessWidget {
           ),
         ),
         TextButton(
-          onPressed: () =>
-              linked ? _disconnect(context) : _connect(context, storedNonPaper),
+          onPressed: () => _onPressed(context),
           child: Text(
-            linked ? 'Disconnect' : (storedNonPaper ? 'Relink' : 'Connect'),
+            linked
+                ? l.settingsAlpacaDisconnect
+                : (storedNonPaper
+                    ? l.settingsAlpacaRelink
+                    : l.settingsAlpacaConnect),
             style: AmiTypography.labelMono.copyWith(
               color: linked ? AmiColors.hexRed : AmiColors.hexBlue,
             ),
@@ -1787,6 +1870,36 @@ class _AlpacaRow extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// DEF479 — Disconnect wipes the credential at once, and Relink wipes the
+  /// stale one before the connect screen opens (so backing out leaves the user
+  /// unlinked). Both are irreversible, so both ask first; a plain Connect
+  /// (nothing stored) does not.
+  Future<void> _onPressed(BuildContext context) async {
+    if (!linked && !storedNonPaper) {
+      await _connect(context, false);
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final ok = await _confirmDestructive(
+      context,
+      title: linked
+          ? l.settingsConfirmAlpacaDisconnectTitle
+          : l.settingsConfirmAlpacaRelinkTitle,
+      body: linked
+          ? l.settingsConfirmAlpacaDisconnectBody
+          : l.settingsConfirmAlpacaRelinkBody,
+      confirmLabel: linked
+          ? l.settingsConfirmAlpacaDisconnectConfirm
+          : l.settingsConfirmAlpacaRelinkConfirm,
+    );
+    if (!ok || !context.mounted) return;
+    if (linked) {
+      await _disconnect(context);
+    } else {
+      await _connect(context, true);
+    }
   }
 
   Future<void> _connect(BuildContext context, bool storedNonPaper) async {

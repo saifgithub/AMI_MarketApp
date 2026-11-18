@@ -7,7 +7,7 @@ controls:
     expect: back
     state: "Ticket closes with nothing submitted"
     line: 1509
-  - label: "Close (X) on NO AI VERDICT banner"
+  - label: "Close (X) on NO AMI VERDICT banner"
     kind: icon
     expect: state
     state: "The no-verdict banner disappears"

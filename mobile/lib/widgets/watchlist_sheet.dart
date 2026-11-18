@@ -26,6 +26,9 @@ void showWatchlistSheet(
   bool showRemove = false,
 }) {
   final l = AppLocalizations.of(context);
+  // DEF486 — a lingering "Removed — UNDO" bar must not sit over this sheet's
+  // actions; opening the sheet is the user moving on.
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: false,

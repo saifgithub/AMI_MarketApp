@@ -11,4 +11,4 @@ controls:
     kind: button
     expect: destructive
     line: 147
-    note: "Dialog closes and the segment switches. NOTE: the pane is kept alive by IndexedStack, so the pending edits are NOT actually reverted - they remain staged in Settings (SAVE and the pip persist). Label says 'discard' but nothing is discarded; see report."
+    note: "Dialog closes, the segment switches and the pending Settings edits are dropped (SAVE and the pip clear; the field shows the stored value). Was a no-op before DEF470 - the IndexedStack kept the edits staged."

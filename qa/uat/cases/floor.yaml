@@ -107,3 +107,26 @@ cases:
     expected:
       - 'The MESSAGES inbox opens and the bottom bar (FLOOR / PORTFOLIO / LESSONS / YOU) is still on screen (DEF457)'
       - 'Back returns to the Floor'
+
+  - id: UAT-FLOOR-009
+    title: A locked agent's GO TO LESSONS switches to the LESSONS tab
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'On the Floor, tap a locked agent; in its sheet tap GO TO LESSONS'
+    expected:
+      - 'The LESSONS tab opens and the bottom bar highlights LESSONS; no second Lessons screen is stacked on the Floor (DEF476)'
+      - 'Tapping FLOOR returns to the Floor as it was left'
+
+  - id: UAT-FLOOR-010
+    title: The Floor's persistent chrome raises no layout errors
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A QA build (error sink on) on a small phone, system text at its largest, Floor Pass plan so the house-ad strip shows'
+    steps:
+      - 'Open the Floor, dismiss the "Not now" prompt, watch the ticker tape scroll for 30 seconds'
+      - 'Read the QA error sink'
+    expected:
+      - 'The bottom ticker tape scrolls and the house-ad strip fits its row (its call to action shortens with an ellipsis rather than overflowing)'
+      - 'No RenderFlex overflow is recorded for either (DEF482)'

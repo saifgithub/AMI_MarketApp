@@ -128,6 +128,152 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get settingsSignOut => 'تسجيل الخروج';
+
+  @override
+  String get settingsSectionAppearance => 'المظهر';
+
+  @override
+  String get settingsSectionHelp => 'المساعدة';
+
+  @override
+  String get settingsHelpQaLibrary => 'اسأل AMI — مكتبة الأسئلة والأجوبة';
+
+  @override
+  String get settingsSectionConnectedAccounts => 'الحسابات المرتبطة';
+
+  @override
+  String get settingsAlpacaConnected => 'متصل';
+
+  @override
+  String get settingsAlpacaNotConnected => 'غير متصل';
+
+  @override
+  String get settingsAlpacaRelinkNeeded =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط — أعد الربط';
+
+  @override
+  String get settingsAlpacaConnect => 'اتصال';
+
+  @override
+  String get settingsAlpacaDisconnect => 'فصل';
+
+  @override
+  String get settingsAlpacaRelink => 'إعادة الربط';
+
+  @override
+  String get tradeTicketNoVerdictTitle => 'لا يوجد حكم من AMI';
+
+  @override
+  String get tradeTicketNoVerdictBody =>
+      'اعقد الغرفة أولاً للحصول على تحليل من وكلائك الاثني عشر. أو تابع — سيُوسَم هذا التداول بأنه «بدون مشورة».';
+
+  @override
+  String get tradeTicketConveneRoom => 'اعقد الغرفة';
+
+  @override
+  String get tradeTicketProceedWithout => 'المتابعة بدون';
+
+  @override
+  String get tradeTicketDestinationLabel => 'الوجهة';
+
+  @override
+  String get tradeTicketDestAmiSim => 'محاكي AMI';
+
+  @override
+  String get tradeTicketDestBoth => 'كلاهما';
+
+  @override
+  String get tradeTicketUnreachableCheck =>
+      'تعذّر الوصول إلى AMI للتحقق من هذا التداول.';
+
+  @override
+  String get tradeTicketUnreachablePlace =>
+      'تعذّر الوصول إلى AMI لتنفيذ هذا التداول.';
+
+  @override
+  String get tradeTicketBlockedByMandate => 'محظور بموجب تفويضك.';
+
+  @override
+  String get portfolioAlpacaRelinkPrompt =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط. أعد ربط حسابك من قسم الحسابات المرتبطة في الإعدادات.';
+
+  @override
+  String get termSeeAlso => 'انظر أيضاً';
+
+  @override
+  String get termRelatedLessons => 'دروس ذات صلة';
+
+  @override
+  String get aiCoachTitle => 'اسأل AMI';
+
+  @override
+  String get aiCoachSearchHint =>
+      'اسأل أي شيء — «فلتر الحلال»، «التفويض»، «وقف الخسارة»';
+
+  @override
+  String aiCoachNoMatches(String query) {
+    return 'لا توجد نتائج لـ «$query». جرّب صياغة مختلفة.';
+  }
+
+  @override
+  String get aiCoachRelatedAgents => 'وكلاء ذوو صلة';
+
+  @override
+  String get journalKvAmiAdvice => 'مشورة AMI';
+
+  @override
+  String get journalKvWithoutManual => 'بدون — تداول يدوي';
+
+  @override
+  String get bugSheetTitle => 'الإبلاغ عن خطأ';
+
+  @override
+  String get bugSheetCatUiGlitch => 'خلل في الواجهة';
+
+  @override
+  String get bugSheetCatWrongData => 'بيانات خاطئة';
+
+  @override
+  String get bugSheetCatCrash => 'تعطّل التطبيق';
+
+  @override
+  String get bugSheetCatPerformance => 'بطء / تجمّد';
+
+  @override
+  String get bugSheetCatFeatureRequest => 'طلب ميزة';
+
+  @override
+  String get bugSheetCatOther => 'أخرى';
+
+  @override
+  String get bugSheetTakePhoto => 'التقاط صورة';
+
+  @override
+  String get bugSheetChooseLibrary => 'اختيار من المكتبة';
+
+  @override
+  String get bugSheetShortDescription => 'وصف مختصر';
+
+  @override
+  String get bugSheetRequired => 'مطلوب';
+
+  @override
+  String get bugSheetSteps => 'خطوات إعادة الإنتاج (اختياري)';
+
+  @override
+  String get bugSheetSendFailed => 'فشل الإرسال — يرجى المحاولة مرة أخرى';
+
+  @override
+  String get bugSheetSend => 'إرسال البلاغ';
+
+  @override
+  String get bugSheetAttachPhoto => 'إرفاق صورة';
+
+  @override
+  String get bugSheetRemoveTooltip => 'إزالة';
+
+  @override
   String get youSegmentInsights => 'INSIGHTS';
 
   @override
@@ -2026,6 +2172,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mergeSheetMandate => 'الولاية (تبقى الخاصة بك — سنحذف الأقدم)';
 
   @override
+  String get mergePreviewFailedTitle => 'تعذّر التحقق من بياناتك السابقة';
+
+  @override
+  String get mergePreviewFailedBody =>
+      'تعذّر على AMI التحقق مما إذا كانت جلستك السابقة تحتوي على بيانات محفظة أو سجل لدمجها في هذا الحساب. أعد المحاولة الآن، أو تخطَّ - وستبقى تلك البيانات غير مدمجة.';
+
+  @override
+  String get mergePreviewRetry => 'إعادة المحاولة';
+
+  @override
+  String get mergePreviewSkip => 'تخطّي';
+
+  @override
   String get mergeSheetMandateMove => 'الولاية من جلستك السابقة (لا تعارض)';
 
   @override
@@ -2042,7 +2201,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mergeSheetFailed =>
-      'فشل الدمج. حاول مرة أخرى من الإعدادات لاحقاً.';
+      'فشل الدمج. اضغط على زر الدمج للمحاولة مرة أخرى.';
 
   @override
   String get oneOnOneAskAnything =>
@@ -3035,6 +3194,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leagueRegenerate => 'إعادة إنشاء HANDLE';
 
   @override
+  String get settingsConfirmRegenTitle => 'إعادة إنشاء HANDLE؟';
+
+  @override
+  String get settingsConfirmRegenBody =>
+      'يمكنك فعل ذلك مرة واحدة فقط. سيتم استبدال HANDLE الحالي ولا يمكن استعادته.';
+
+  @override
+  String get settingsConfirmRegenConfirm => 'إعادة الإنشاء';
+
+  @override
+  String get settingsConfirmSignOutTitle => 'تسجيل الخروج؟';
+
+  @override
+  String get settingsConfirmSignOutBody =>
+      'سيتم تسجيل خروجك على هذا الجهاز. سجّل الدخول مرة أخرى باستخدام بريدك الإلكتروني لمتابعة استخدام هذا الحساب.';
+
+  @override
+  String get settingsConfirmSignOutConfirm => 'تسجيل الخروج';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectTitle =>
+      'فصل حساب ALPACA التجريبي؟';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectBody =>
+      'ينسى AMI مفاتيح Alpaca التجريبية الخاصة بك على هذا الجهاز فوراً. للربط مرة أخرى ستحتاج إلى إدخالها من جديد.';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectConfirm => 'فصل';
+
+  @override
+  String get settingsConfirmAlpacaRelinkTitle => 'إعادة ربط ALPACA التجريبي؟';
+
+  @override
+  String get settingsConfirmAlpacaRelinkBody =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط. تتم إزالة مفتاحك المخزّن أولاً، لذلك إذا تراجعت فسيبقى حسابك غير مرتبط إلى أن تربط حساباً تجريبياً.';
+
+  @override
+  String get settingsConfirmAlpacaRelinkConfirm => 'إعادة الربط';
+
+  @override
   String get leagueRegenerateFailed =>
       'تعذر تغيير الـ HANDLE — لديك تغيير واحد فقط.';
 
@@ -3530,6 +3730,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get versionGateOfflineRetryHint =>
       'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
+
+  @override
+  String get versionGateStoreUnavailable =>
+      'تعذّر على AMI فتح المتجر. افتح App Store أو Google Play وابحث عن AMI Trade ثم حدّث التطبيق من هناك.';
 
   @override
   String get gamesBoardTitle => 'Standings';
@@ -4413,6 +4617,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get positionPerLotDetail => 'PER-LOT DETAIL';
+
+  @override
+  String get alpacaPositionOpenTicker => 'تفاصيل السهم';
 
   @override
   String get positionUnprotected => 'no stop set';
