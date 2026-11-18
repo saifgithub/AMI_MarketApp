@@ -391,6 +391,16 @@ class Verdict(BaseModel):
     # scored — absence by omission, never a stand-in (T-BACKFILL).
     decision_record: DecisionRecord | None = None
 
+    # CR272 (CR267 WP-14) — True when this Room was restarted on the backup LLM
+    # slot after the primary failed (`room_runner.run()`), so the stored run
+    # says which model's arguments it carries. `llm_backup_model` is that
+    # slot's model id. Riding the verdict JSONB like the fields above (no
+    # migration). Absent/False on every run that never failed over — the
+    # default, and the only value on a deployment with no backup slot
+    # (T-BACKFILL: never inferred for a run that predates the field).
+    llm_backup_used: bool = False
+    llm_backup_model: str | None = None
+
 
 class RoomRun(BaseModel):
     """A single Convene the Room session."""

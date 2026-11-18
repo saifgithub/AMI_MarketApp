@@ -198,6 +198,18 @@ services:
       # budget above, or the guard that names the failure never fires.
       ROOM_AGENT_TIMEOUT_S: ${ROOM_AGENT_TIMEOUT_S:-180.0}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
+      # CR272 (CR267 WP-14) — slot kind: "vllm" (on-prem, default) or "openai"
+      # (hosted OpenAI-compatible endpoint, e.g. DeepInfra). "openai" sends no
+      # vLLM-only body field.
+      VLLM_KIND: ${VLLM_KIND:-vllm}
+      # CR272 — backup slot used only by failover. Empty URL = no backup.
+      VLLM_FALLBACK_BASE_URL: ${VLLM_FALLBACK_BASE_URL:-}
+      VLLM_FALLBACK_MODEL: ${VLLM_FALLBACK_MODEL:-}
+      VLLM_FALLBACK_API_KEY: ${VLLM_FALLBACK_API_KEY:-}
+      VLLM_FALLBACK_KIND: ${VLLM_FALLBACK_KIND:-openai}
+      # CR272 — transient-failure retry (429/5xx/connect, before first chunk).
+      LLM_TRANSIENT_RETRIES: ${LLM_TRANSIENT_RETRIES:-3}
+      LLM_RETRY_BACKOFF_S: ${LLM_RETRY_BACKOFF_S:-1.0}
       # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
       # .env to flip on real prices (with a mock-walk fallback). The
       # Yahoo provider works from melehost and the dev Mac.
