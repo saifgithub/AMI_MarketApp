@@ -14,7 +14,7 @@ summary: |
   Telemetry ingest is per-user and idempotent while the segment read is
   admin-only. The help library (ai_coach) serves static, well-formed Q&A with
   no LLM call. Bug reports filed by this suite land in the real triage queue and
-  are prefixed "[CR263 UAT - ignore]"; at most two are filed per run.
+  are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
 cases:
   - id: UAT-SUPP-001
     title: A signed-in user can submit a bug report
@@ -165,3 +165,16 @@ cases:
     expected:
       - 'Every label in the sheet is translated; the category ids the server receives are unchanged (DEF478)'
       - 'The library is titled "Ask AMI" (never "AI Coach"); its hint, empty result and RELATED LESSONS / RELATED AGENTS headings are translated'
+
+  - id: UAT-SUPP-014
+    title: A bug report stores the trace ids it carries and refuses malformed ones
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/feedback/bug with two fresh UUIDs in trace_ids (comma-separated) and a "[CR263 UAT - ignore]" title
+      - Admin GET the report
+      - POST with a trace_ids value that is not a UUID list, and with six UUIDs, from a synthetic client IP
+    expected:
+      - 201; the admin detail shows trace_ids as the two UUIDs, comma-separated
+      - Both malformed submissions are 422 and store nothing
+    notes: CR239 / WP-38. Files one extra triage-queue report per run, closed out at once like SUPP-001/002.
