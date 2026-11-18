@@ -17,6 +17,7 @@
    - Contested is stored as PASS plus a flag;
    - the card shows only the answers that differ from the Street, or that changed on a flip;
    - keep the six questions as drafted.
+5. **No Anthropic models in the app (Saiful, 2026-11-19).** The reference labeller is Ling-3.0-flash-Fin on our own host, not Claude Sonnet (§4.2, §4.5). No grader, judge or reviewer may be an Anthropic model.
 
 ---
 
@@ -137,7 +138,7 @@ If Jev (or the judge model) is down, we do **not** auto-switch. A different grad
 ### 4.2 Ground truth
 
 1. **What "correct" means for the six questions:** a person reading the cited turns gets the same answer. I write a one-page rubric per question with two worked examples from the October rooms.
-2. **Reference labels:** a model from a different family than the candidates labels all 300 cards-on rooms against the rubric. I propose Claude Sonnet 5.5 (`claude-sonnet-5-5`, $2 input / $10 output per million tokens, from the claude-api skill's price table cached 2026-11-03; re-check at run time).
+2. **Reference labels:** a model from a different family than the candidates labels all 300 cards-on rooms against the rubric. **Ling-3.0-flash-Fin on our own host** (`ling-3.0-flash-fin-fp4`, inclusionAI; measured in WP-10, $0 per call). It is a different family from the DeepSeek desk and judge, and from GLM. **No Anthropic model may be used (Saiful, 2026-11-19: no Anthropic models in the app).**
 3. **Ruling (Saiful, 2026-11-18): no human labelling.** The reference for whether the **verdict** is right is **analyst consensus** (CR267 §1 item 6), scored as in §4.3.6. Approving a Street Sell or Underperform name is the error; a reasoned Pass on a Street-Buy name is acceptable.
 4. **Checks on the per-question answers, with no human in the loop:**
    1. Agreement with the reference labeller.
@@ -182,9 +183,9 @@ Inputs: 15K tokens per judged room (Jev v2 measured 14.7K); DeepInfra judge pric
 | **subtotal** | | **$10.9** | **$1.0** |
 
 3. Second hosted model: same volume, assumed same price: **+$10.9**.
-4. Reference labeller (Sonnet 5.5): 300 rooms × 15K = 4.5M input × $2/M = $9.0; 300 × ~1,000 output tokens = 0.3M × $10/M = $3.0; **$12.0**. The output size is a guess.
-5. **Total estimate: 10.9 + 10.9 + 1.0 + 12.0 ≈ $35.** With 50% contingency for prompt iteration and retries ≈ $52.
-6. Where it sits in the $100 DeepInfra measurement cap (§3a.4): WP-10 about $24 (estimate, S11 WP-10.3), WP-20 up to $30 (600 rooms at the 5¢ bar; if a room costs what GLM measured in September, $0.0095, it is about $6), WP-22's DeepInfra share about $22 (+50% = $33). Worst case ≈ $87 of $100. Tight but inside. The labeller is billed by Anthropic, not DeepInfra, and counts against the bake-off cap but not the DeepInfra cap.
+4. Reference labeller (Ling-3.0-flash-Fin, own host): **$0** in cash. Its cost is time: at the WP-10 measured speed the host is slow under load (8 min per full Room at 4 concurrent), but labelling one room is a single short call, not a Room. The run is serialised and given a time budget rather than a cash one.
+5. **Total estimate: 10.9 + 10.9 + 1.0 + 0 ≈ $23** (was $35 with an Anthropic labeller). With 50% contingency for prompt iteration and retries ≈ $34.
+6. Where it sits in the $100 DeepInfra measurement cap (§3a.4): WP-10 about $24 (estimate, S11 WP-10.3), WP-20 up to $30 (600 rooms at the 5¢ bar; if a room costs what GLM measured in September, $0.0095, it is about $6), WP-22's DeepInfra share about $22 (+50% = $33). Worst case ≈ $87 of $100. Tight but inside. The labeller runs on our own host at no cash cost.
 7. Not in the estimate: Jev fees after the trial; the cost of authoring the 200 perturbed transcripts (a few dollars of LLM edits, my guess).
 
 ## 5. Jev specifics
@@ -288,5 +289,5 @@ New setting `room_decision_mode` = `cio` (default) | `shadow` | `rule`, plus `ro
 2. ~~Any question to add or drop~~: keep the six (§0).
 3. ~~A labelling window~~: not needed; consensus is the reference (§0).
 4. A request to TypeSafe for written terms covering §5.2, in parallel (question 3). I can draft the email.
-5. The Anthropic API key available to the harness for the reference labeller (it is configured as a gateway fallback on Alpha; whether the harness can use it is unverified).
+5. ~~The Anthropic API key for the reference labeller~~: not used (no Anthropic in the app, 2026-11-19). The labeller is Ling-3.0-flash-Fin on our own host.
 6. Gate dependencies, not for you: WP-20 (needs WP-14, WP-21a and the S2 model pick) must finish before the evaluation run. I can start the questions file, rubric, interface and scoring code, and develop on the October rooms, before that.
