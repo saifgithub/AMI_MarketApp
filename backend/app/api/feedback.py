@@ -65,6 +65,7 @@ async def submit_bug_report(
     platform: str = Form(...),
     steps: str | None = Form(default=None),
     route: str | None = Form(default=None),
+    trace_ids: str | None = Form(default=None),
     file: UploadFile | None = File(default=None),
     authorization: str | None = Header(default=None),
 ) -> BugReportResponse:
@@ -83,6 +84,7 @@ async def submit_bug_report(
             title=title,
             steps=steps,
             route=route,
+            trace_ids=trace_ids,  # type: ignore[arg-type]
             app_version=app_version,
             platform=platform,
         )

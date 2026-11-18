@@ -34,6 +34,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 
+import structlog
+
 
 class SseFramingError(ValueError):
     """A payload that would break out of its own `data:` field.
@@ -64,8 +66,31 @@ def escape_sse_text(text: str) -> str:
     return text.replace("\\", "\\\\").replace("\n", "\\n")
 
 
+def _error_trace_suffix() -> str:
+    """WP-38 / CR239: the short trace reference for the request this stream
+    belongs to, as the same ` Ref: xxxxxxxx.` footnote the REST error copy
+    carries (mobile `splitTraceRef` renders both identically).
+
+    The id comes from the structlog contextvar `HTTPAuditMiddleware` bound
+    before the route task started, so the stream — which keeps running long
+    after the 200 headers went out — still knows it. Empty when no request
+    context is bound (unit tests, background callers): never invented.
+    """
+    request_id = structlog.contextvars.get_contextvars().get("request_id")
+    if not request_id:
+        return ""
+    return f" Ref: {str(request_id)[:8]}."
+
+
 def sse_text(event: str, text: str) -> str:
-    """Frame one SSE event whose payload is bare (non-JSON) text."""
+    """Frame one SSE event whose payload is bare (non-JSON) text.
+
+    An `error` event gets the request's short trace reference appended — the
+    in-stream failure is the one error that arrives on a 200 response, so it
+    has no status/body of its own to carry the id the REST handlers attach.
+    """
+    if event == "error":
+        text = text + _error_trace_suffix()
     if "\r" in text:
         raise SseFramingError(
             f"SSE text payload for event {event!r} contains a raw carriage "

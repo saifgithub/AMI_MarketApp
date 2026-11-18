@@ -604,8 +604,8 @@ app.add_middleware(
 # because FastAPI dispatches `HTTPException` (the vast majority of this app's
 # error responses — 31 route files raise it directly) and any other uncaught
 # exception through separate hooks; both paths get `request.state.request_id`
-# from `HTTPAuditMiddleware`, which always runs first (registered first, so it
-# is outermost — Starlette middleware wraps in registration order).
+# from `HTTPAuditMiddleware` (innermost app middleware: registered first, so
+# VersionGate and CORS wrap it; a 426 from VersionGate mints its own id).
 @app.exception_handler(StarletteHTTPException)
 async def _http_exception_with_request_id(
     request: Request, exc: StarletteHTTPException
@@ -637,20 +637,33 @@ def _json_safe(value):
 # body shape as the default handler — `{"detail": [...]}` — with non-finite
 # floats rendered as strings. No `request_id` key, to stay byte-compatible
 # with the 422 bodies the mobile client already parses.
+# WP-38: `request_id` is now added to that body (and `X-Request-Id` to the
+# response) as a purely additive sibling of `detail` — `detail` is untouched and
+# the client reads `detail` by key, so the 422 shape it parses is unchanged.
 @app.exception_handler(RequestValidationError)
 async def _validation_error_json_safe(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    return JSONResponse(
-        status_code=422,
-        content={"detail": _json_safe(jsonable_encoder(exc.errors()))},
-    )
+    request_id = getattr(request.state, "request_id", None)
+    body: dict = {"detail": _json_safe(jsonable_encoder(exc.errors()))}
+    if request_id is not None:
+        body["request_id"] = str(request_id)
+    response = JSONResponse(status_code=422, content=body)
+    if request_id is not None:
+        response.headers["X-Request-Id"] = str(request_id)
+    return response
 
 
 @app.exception_handler(Exception)
 async def _unhandled_exception_with_request_id(request: Request, exc: Exception) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None)
-    logger.exception("unhandled_exception", path=request.url.path)
+    # Explicit, not contextvars: this handler runs in ServerErrorMiddleware,
+    # outside HTTPAuditMiddleware, whose `finally` has already unbound the id.
+    logger.exception(
+        "unhandled_exception",
+        path=request.url.path,
+        request_id=str(request_id) if request_id is not None else None,
+    )
     body: dict = {"detail": "internal server error"}
     if request_id is not None:
         body["request_id"] = str(request_id)

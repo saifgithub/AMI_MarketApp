@@ -22,6 +22,15 @@ Room) and to echo on the response even when the handler raises. Every
 response, success or error, carries it as `X-Request-Id`;
 `app.main`'s exception handlers put the same value in the JSON body under
 `request_id` so a client that only inspects the parsed body still gets it.
+
+WP-38 (CR267): an inbound `X-Request-Id` / `X-Trace-Id` header is IGNORED, never
+adopted. The minted id is `http_audit.id` — a primary key — so adopting a
+client value would let any caller choose another request's audit-row key
+(collision / row-poisoning) and forge the correlation id support greps for,
+and it would put attacker-controlled text on every log line. The benefit of
+adopting it (stitching a client retry to its first attempt) is not worth that:
+the app records the server-minted id it is given instead. Every response —
+including the health-check skip path and the oversized-body 413 — carries it.
 """
 
 from __future__ import annotations
@@ -210,18 +219,26 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         path = request.url.path
-        if path in SKIP_PATHS:
-            return await call_next(request)
-
-        started = time.perf_counter()
 
         # CR239 Leg A: mint once, bind for every log line this request emits,
         # and stash on request.state so a route handler that wants to embed
         # it explicitly (e.g. Room's own error payload) doesn't have to
-        # re-derive it from the response header it hasn't seen yet.
+        # re-derive it from the response header it hasn't seen yet. Minted
+        # BEFORE the SKIP_PATHS check: a skipped path is not audited, but an
+        # error on it still has to be traceable.
         request_id = uuid4()
         request.state.request_id = request_id
         structlog.contextvars.bind_contextvars(request_id=str(request_id))
+
+        if path in SKIP_PATHS:
+            try:
+                response = await call_next(request)
+            finally:
+                structlog.contextvars.unbind_contextvars("request_id")
+            response.headers["X-Request-Id"] = str(request_id)
+            return response
+
+        started = time.perf_counter()
 
         # DEF184: reject an oversized declared body BEFORE any buffering.
         content_length = request.headers.get("content-length")
@@ -231,9 +248,14 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
             except ValueError:
                 declared_len = None
             if declared_len is not None and declared_len > MAX_REQUEST_BODY_BYTES:
+                structlog.contextvars.unbind_contextvars("request_id")
                 return JSONResponse(
                     status_code=413,
-                    content={"detail": "request body too large"},
+                    content={
+                        "detail": "request body too large",
+                        "request_id": str(request_id),
+                    },
+                    headers={"X-Request-Id": str(request_id)},
                 )
 
         # Capture request body — Starlette body() caches so downstream handlers
