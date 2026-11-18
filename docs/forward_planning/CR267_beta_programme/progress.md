@@ -60,3 +60,18 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
 2. **S11 approved** (rulings in `S11_llm_implementation_plan.md` §3a). Alpha stays on on-prem until Beta; Ling joins WP-10.
 3. **WP-15 done, no code.** CR252 had been folded into all 12 personas since `0f41f14e` (2026-10-08). The WP-00 note saying it was "never folded in" was wrong (I didn't check the persona files). CR252 row → done (`519112f8`).
 4. **WP-11 merged** (`e9e730ab`). **WP-13 merged** (`ca164879`) in log mode; enforcement waits on a replay of stored replies.
+
+## 2026-11-18 (late) — waves 2–3 merged; deploys #2 and #3
+
+1. **Deploy #2** `alpha-2026-11-18-2` (`74c15825`): CR270 migration, DeepInfra backup registered.
+   - **DEF488 outage:** the $5 daily ceiling refused every request, because pre-migration rows had tokens but no cost, and the Anthropic review model was unpriced. Mitigated by commenting out the ceiling; fixed in `1dce0c03`.
+   - **Budget stays OFF on Alpha.** WP-10 harness rows land in Alpha's `llm_audit`, and 4 on-prem rows carry output tokens only, so they can't be priced. It goes ON for Beta, which has its own DB. Sonnet 4.6 priced at $3/$15 per M tokens.
+2. **Merged:** WP-34 (`95f3b2b4`, plus DEF489 filed), WP-27 (`636267ae`), WP-31 (`6e3e1d25`, plus the enforcement switch in `06a69250`), WP-35 (`1d51dc50`), WP-32 (`e807a598`). DEF487 flake fixed (`2b1e504b`).
+3. **Deploy #3** `alpha-2026-11-19-1` (`1d51dc50`):
+   - Gates: suite PASS (8,041/0), flutter analyze 0, local gate PASS.
+   - The UAT gate failed on the same deferred mobile debt; Saiful: deploy now. CI not run on the commit.
+   - Migration `cr273a0b0c0d1` applied. Postflight 8/8. `ONBOARDING_AGE_GATE_ENFORCED=false` on Alpha.
+4. **WP-33 part 1:** 14 of 15 mobile defects fixed on `lane/WP33-mobile-defects`. Beta was merged into the lane (`453ced12`); flutter test exit 0, 2,062 passed. DEF466 left open.
+   - Calls for Saiful: "Ask AMI" (was AI Coach); "NO AMI VERDICT".
+5. **WP-29:** `lane/WP29-copy` (`cc3379c4`). Doubts for Saiful: subtitle choice, "AMI tutor", Applied AI branding, and the stale Sharia line on the website.
+6. **Running:** WP-10 (spend ≈$2.56 of $80), WP-21a (CR275 minted), WP-39 (CR022).
