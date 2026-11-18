@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**270 cases** — 185 api, 15 device, 70 manual; 11 blocked.
+**271 cases** — 185 api, 15 device, 71 manual; 11 blocked.
 
 ## Areas
 
@@ -18,7 +18,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 31 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 9 cases
@@ -3710,6 +3710,17 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. ASK opens the 1-on-1 with a first message that already names GOOGL
 2. CONVENE opens the picker with GOOGL already typed in the field, and the Room price line still visible; nothing is charged until CONVENE is tapped
+
+#### UAT-WATCH-016 — Creating a price alert survives one dropped connection attempt
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. On a phone with a weak or just-resumed connection (toggle airplane mode off a second before), open a ticker and create a price alert
+
+**Expected**
+1. The alert is created; the app quietly retries once when the first connection attempt times out, and never shows "the connection is too slow" for a single dropped attempt (DEF485)
+2. No duplicate alert is created
 
 #### UAT-LESS-009 — Lessons tab, track browsing, reader and quiz feel right on iPhone
 

@@ -117,6 +117,39 @@ class _ServerErrorInterceptor extends Interceptor {
   }
 }
 
+/// DEF485 — a connect timeout means no connection was ever established, so the
+/// request provably did not reach the server and re-sending it cannot create a
+/// duplicate (this is why it is safe on POST creates like a price alert). Tester
+/// devices hit it intermittently — "the connection is too slow" with no matching
+/// request in the server log — on a cold or stale connection; the same create
+/// succeeded on a second try. So retry exactly once, on exactly this failure.
+///
+/// Deliberately NOT retried: send/receive timeouts and connection errors, which
+/// can occur after the request was written and so could duplicate a create.
+class _ConnectTimeoutRetryInterceptor extends Interceptor {
+  _ConnectTimeoutRetryInterceptor(this._dio);
+  final Dio _dio;
+
+  static const _retriedKey = 'ami_connect_retried';
+
+  @override
+  Future<void> onError(
+      DioException err, ErrorInterceptorHandler handler) async {
+    final opts = err.requestOptions;
+    if (err.type != DioExceptionType.connectionTimeout ||
+        opts.extra[_retriedKey] == true) {
+      handler.next(err);
+      return;
+    }
+    opts.extra[_retriedKey] = true;
+    try {
+      handler.resolve(await _dio.fetch<dynamic>(opts));
+    } on DioException catch (retryErr) {
+      handler.next(retryErr);
+    }
+  }
+}
+
 /// Extract a [ServerUnavailableException] from a thrown REST error, if the 5xx
 /// interceptor annotated it. Returns null for any other error (DEF073).
 ServerUnavailableException? serverUnavailableFrom(Object error) {
@@ -369,14 +402,19 @@ class ApiClient {
   /// through, in place of each building its own `http.Client()` inline —
   /// that made "does `done` terminate the stream?" untestable. Defaults to
   /// a real `http.Client()`; tests inject a fake to control the response.
-  ApiClient({String? baseUrl, http.Client? httpClient})
-      : _dio = Dio(BaseOptions(
+  ApiClient({
+    String? baseUrl,
+    http.Client? httpClient,
+    @visibleForTesting HttpClientAdapter? dioAdapter,
+  })  : _dio = Dio(BaseOptions(
           baseUrl: baseUrl ?? _resolveBaseUrl(),
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         )),
         _httpClient = httpClient ?? http.Client() {
+    if (dioAdapter != null) _dio.httpClientAdapter = dioAdapter;
+    _dio.interceptors.add(_ConnectTimeoutRetryInterceptor(_dio)); // DEF485
     _dio.interceptors.add(_AuthInterceptor(this));
     _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
     _dio.interceptors.add(_VersionGateInterceptor(this)); // CR121
