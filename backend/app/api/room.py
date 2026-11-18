@@ -59,7 +59,7 @@ from app.services.room_runner import (
     run_was_refunded,
 )
 from app.api.dependencies import get_current_user
-from app.api.sse import escape_sse_text, sse_json, sse_text
+from app.api.sse import escape_sse_text, sse_json, sse_text, with_keepalive
 from app.db import get_session
 from app.db.models import RoomRunRow, User
 from app.schemas.alpaca import AlpacaSnapshotIn
@@ -440,7 +440,7 @@ async def stream_room(
         # if it wants to differentiate a dedup hit from a fresh run.
         headers["X-Room-Cached"] = "true"
     return StreamingResponse(
-        event_stream(),
+        with_keepalive(event_stream()),
         media_type="text/event-stream",
         headers=headers,
     )
@@ -565,7 +565,9 @@ def cio_retry(
             ),
         }))
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        with_keepalive(event_stream()), media_type="text/event-stream"
+    )
 
 
 @router.get("/user/{user_id}", response_model=list[RoomRun])

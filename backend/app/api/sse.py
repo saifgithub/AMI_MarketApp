@@ -31,6 +31,9 @@ Two framers, because the two payload kinds need opposite treatment:
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import AsyncIterator
+
 
 class SseFramingError(ValueError):
     """A payload that would break out of its own `data:` field.
@@ -86,3 +89,47 @@ def sse_json(event: str, payload: str) -> str:
             f"terminate the data field early and reframe the stream"
         )
     return f"event: {event}\ndata: {payload}\n\n"
+
+
+# DEF467 — a reasoning model can think for minutes without producing a byte, and a
+# silent stream is indistinguishable from a dead one: the user sees a frozen chat
+# and an idle-timeout proxy (Cloudflare's 100 s read timeout fronts Alpha) cuts it.
+# An SSE comment line (leading colon) is ignored by every conforming parser, ours
+# included, so it keeps the connection warm without being an event.
+SSE_KEEPALIVE_FRAME = ": keepalive\n\n"
+SSE_KEEPALIVE_INTERVAL_S = 15.0
+
+
+async def with_keepalive(
+    frames: AsyncIterator[str],
+    interval: float = SSE_KEEPALIVE_INTERVAL_S,
+) -> AsyncIterator[str]:
+    """Pass `frames` through, emitting `SSE_KEEPALIVE_FRAME` whenever `interval`
+    seconds pass without one. Closing this closes `frames` (its `finally` blocks
+    still run), so wrapping a stream never changes its cleanup."""
+    it = frames.__aiter__()
+    pending: asyncio.Future[str] | None = None
+    try:
+        while True:
+            if pending is None:
+                pending = asyncio.ensure_future(it.__anext__())
+            done, _ = await asyncio.wait({pending}, timeout=interval)
+            if not done:
+                yield SSE_KEEPALIVE_FRAME
+                continue
+            finished, pending = pending, None
+            try:
+                frame = finished.result()
+            except StopAsyncIteration:
+                return
+            yield frame
+    finally:
+        if pending is not None:
+            pending.cancel()
+            try:
+                await pending
+            except BaseException:  # noqa: BLE001 — drain the cancelled read, then close
+                pass
+        aclose = getattr(it, "aclose", None)
+        if aclose is not None:
+            await aclose()

@@ -55,7 +55,7 @@ from app.services.overlay_store import (
     get_overlay_store,
 )
 from app.api.dependencies import get_current_user
-from app.api.sse import sse_json, sse_text
+from app.api.sse import sse_json, sse_text, with_keepalive
 from app.db.models import User
 from app.services.credit_service import InsufficientCredits, brief_cost, refund, spend
 from app.services.rate_limit import agent_stream_concurrency_limit, brief_message_rate_limit
@@ -237,7 +237,9 @@ async def brief_message(
             yield sse_json("done", json.dumps({"chars": total}))
 
     try:
-        return StreamingResponse(event_stream(), media_type="text/event-stream")
+        return StreamingResponse(
+            with_keepalive(event_stream()), media_type="text/event-stream"
+        )
     except BaseException:
         # DEF201 round 2 (audit M2, symmetry). The auditor scoped M2 to
         # one_on_one.py, where `spend()` gives the acquire→generator window a
