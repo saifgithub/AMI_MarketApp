@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**269 cases** — 185 api, 15 device, 69 manual; 11 blocked.
+**270 cases** — 185 api, 15 device, 70 manual; 11 blocked.
 
 ## Areas
 
@@ -12,7 +12,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 2. [Authentication, sessions & account identity](#auth) — 24 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 29 cases
-5. [Floor tab & home shell](#floor) — 9 cases
+5. [Floor tab & home shell](#floor) — 10 cases
 6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
@@ -3336,6 +3336,21 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. The LESSONS tab opens and the bottom bar highlights LESSONS; no second Lessons screen is stacked on the Floor (DEF476)
 2. Tapping FLOOR returns to the Floor as it was left
+
+#### UAT-FLOOR-010 — The Floor's persistent chrome raises no layout errors
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A QA build (error sink on) on a small phone, system text at its largest, Floor Pass plan so the house-ad strip shows
+
+**Steps**
+1. Open the Floor, dismiss the "Not now" prompt, watch the ticker tape scroll for 30 seconds
+2. Read the QA error sink
+
+**Expected**
+1. The bottom ticker tape scrolls and the house-ad strip fits its row (its call to action shortens with an ellipsis rather than overflowing)
+2. No RenderFlex overflow is recorded for either (DEF482)
 
 #### UAT-ROOM-014 — Convene sheet, live console, verdict card and cost line on a real iPhone
 

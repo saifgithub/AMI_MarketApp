@@ -192,16 +192,25 @@ class _ScrollingTapeState extends ConsumerState<_ScrollingTape>
               child: child,
             );
           },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: _doubled
-                .map(
-                  (q) => _TapeItem(
-                    quote: q,
-                    onTap: () => _onItemTap(q),
-                  ),
-                )
-                .toList(),
+          // DEF482 — the doubled row is far wider than the screen by design.
+          // Under the screen's width constraint it reported a RenderFlex
+          // overflow (2798px) on every layout; OverflowBox lets it be as wide
+          // as it is, and the ClipRect above still clips what is off-screen.
+          child: OverflowBox(
+            alignment: AlignmentDirectional.centerStart,
+            minWidth: 0,
+            maxWidth: double.infinity,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: _doubled
+                  .map(
+                    (q) => _TapeItem(
+                      quote: q,
+                      onTap: () => _onItemTap(q),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
         ),
       ),
@@ -240,34 +249,40 @@ class _TapeItem extends StatelessWidget {
           height: _kTapeHeight,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  quote.symbol,
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.textMed, fontSize: 10),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  priceFmt.format(quote.price),
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.textHigh, fontSize: 10),
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  '$arrow${pctFmt.format(quote.changePercent.abs())}%',
-                  style: AmiTypography.labelMono
-                      .copyWith(color: arrowColor, fontSize: 10),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '·',
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.textLow, fontSize: 10),
-                ),
-              ],
+            // DEF482 — a long symbol or a wide price must shrink to fit its
+            // fixed-width slot, never overflow it. A no-op when it already fits.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    quote.symbol,
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.textMed, fontSize: 10),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    priceFmt.format(quote.price),
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.textHigh, fontSize: 10),
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '$arrow${pctFmt.format(quote.changePercent.abs())}%',
+                    style: AmiTypography.labelMono
+                        .copyWith(color: arrowColor, fontSize: 10),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '·',
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.textLow, fontSize: 10),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

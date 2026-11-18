@@ -47,6 +47,7 @@ class HouseAdBannerStrip extends ConsumerWidget {
             const AdBadge(),
             const SizedBox(width: AmiSpacing.s),
             Expanded(
+              flex: 3,
               child: Text(
                 copy.headline,
                 maxLines: 1,
@@ -55,10 +56,18 @@ class HouseAdBannerStrip extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: AmiSpacing.s),
-            Text(
-              cta,
-              style: AmiTypography.labelMono
-                  .copyWith(fontSize: 10, color: AmiColors.hexAmber),
+            // DEF482 — the CTA used to be a bare Text, so on a narrow screen or
+            // with enlarged text the row overflowed (Flutter throws on every
+            // frame it lays out). Flexible + ellipsis lets it give way.
+            Flexible(
+              flex: 2,
+              child: Text(
+                cta,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 10, color: AmiColors.hexAmber),
+              ),
             ),
           ],
         ),
