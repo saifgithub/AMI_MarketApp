@@ -68,7 +68,7 @@ _DOMAIN_FINGERPRINTS = {
     # omits a field cannot police it (DEF262).
     "fundamentals": ["P/E", "TTM revenue growth", "Valuation (LIVE)",
                      "Sector/industry (LIVE)", "Dividend (LIVE)",
-                     "Analyst consensus (LIVE",
+                     # "Analyst consensus (LIVE" removed with CR275: the Room decides blind.
                      "Margin structure (LIVE)", "Earnings power (LIVE)",
                      "Returns (LIVE)", "Balance sheet (LIVE)",
                      "Ownership (LIVE)"],
@@ -329,11 +329,12 @@ def test_an_out_of_lane_domain_is_not_disclosed_as_unavailable(profile):
 
 
 def test_the_asymmetry_line_renders_for_full_sheet_agents(profile):
+    """CR275: only the downside half survives; the Street-target half is blind."""
     text = _format_profile(profile, AgentId.RESEARCH_MANAGER)
     assert "Asymmetry from the last close $268.4" in text
-    assert "+19.4%" in text          # (320.50 - 268.40) / 268.40
     assert "-10.5%" in text          # (240.11 - 268.40) / 268.40
-    assert "the Street's target is not a trade target" in text
+    assert "+19.4%" not in text
+    assert "the Street's target" not in text
 
 
 @pytest.mark.parametrize("agent", _FIREWALLED_AGENTS)
@@ -346,15 +347,15 @@ def test_the_asymmetry_line_is_not_a_way_back_across_the_firewall(agent, profile
 
 def test_the_asymmetry_line_names_its_own_anchor(profile):
     """DEF228 happened because two rendered prices were joined as if they were
-    one. The line must say which price it measured from."""
+    one. The line must say which price it measured from. (CR275: with the
+    Street target blind, no technicals means no half left, so no line.)"""
     text = _format_profile(profile, AgentId.BULL_RESEARCHER)
     assert "Asymmetry from the last close" in text
 
     no_technicals = dict(profile)
     no_technicals["field_state"] = dict(profile["field_state"], technicals="unavailable")
     fallback = _format_profile(no_technicals, AgentId.BULL_RESEARCHER)
-    assert "Asymmetry from the reference price $271.83" in fallback
-    assert "50-day range low" not in fallback  # its half is gated off with technicals
+    assert "Asymmetry from" not in fallback
 
 
 def test_each_half_of_the_asymmetry_is_gated_independently(profile):

@@ -156,6 +156,7 @@ from app.services.llm_json import ConflictingDecision, extract_json_object
 # vocabulary, why never a veto).
 from app.services.numeric_quotation import annotate_sheet_mismatches, find_sheet_mismatches
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
+from app.services.street_view_blind import is_street_view_key
 from app.services.room_prompts import (
     GAPS_ITEM_MAX_CHARS,
     PM_KILL_CRITERION_MAX_CHARS,
@@ -7098,12 +7099,15 @@ def _build_next_convene_delta(
     prior_sheet = prior.get("sheet_state")
     this_sheet = this_profile.get("field_state") or {}
     if prior_sheet:
+        # CR275: the PM prompt renders these transitions; a Street-view field
+        # flipping state would tell the Room the Street's view exists.
         changed_fields = [
             SheetFieldTransition(
                 field=f, from_state=prior_sheet[f], to_state=this_sheet[f],
             )
             for f in sorted(prior_sheet)
             if f in this_sheet and this_sheet[f] != prior_sheet[f]
+            and not is_street_view_key(f)
         ]
 
     return NextConveneDelta(
