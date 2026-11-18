@@ -411,9 +411,26 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         name="free_cash_flow",
         profile_keys=("free_cash_flow",),
         label_pattern=_label_re(r"\bFCF\b", r"\bfree\s+cash\s+flow\b"),
+        # DEF445 — "FCF yield" is the precomputed percentage field below,
+        # not the raw-dollar FCF; same local-radius disambiguation as pe.
+        exclude_pattern=re.compile(
+            r"\b(?:FCF|free\s+cash\s+flow)[\s-]*yield\b", re.IGNORECASE
+        ),
         renderer_label="FCF",
         renderer_citation="room_prompts.py::_company_size_line",
         sheet_scale=1_000_000.0,
+        window_chars=32,
+    ),
+    # `room_prompts.py::_format_profile` — "FCF yield {fcf_yield}%". A
+    # precomputed percent (`trading_math/valuation.py::fcf_yield_pct`).
+    _FieldSpec(
+        name="fcf_yield",
+        profile_keys=("fcf_yield",),
+        label_pattern=_label_re(
+            r"\bFCF[\s-]*yield\b", r"\bfree[\s-]*cash[\s-]*flow[\s-]*yield\b"
+        ),
+        renderer_label="FCF yield",
+        renderer_citation="room_prompts.py::_format_profile",
         window_chars=32,
     ),
     # `fundamentals.py::_company_size_line` — "gross debt ${..}M". Millions.
