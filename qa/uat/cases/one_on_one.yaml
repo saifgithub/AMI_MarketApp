@@ -112,3 +112,14 @@ cases:
       - The locked sheet names the lessons needed and offers the upgrade; nothing opens the chat early
       - Passing the lesson shows the agent-unlocked screen and the agent becomes chat-able
       - The reply streams into a readable bubble with the agent's display name (Chief Investment Officer, Risk Officer, Execution Desk, Technical Strategist, Flow & Positioning, Macro & Events), and the credit pill drops by 1
+
+  - id: UAT-ONE-009
+    title: A slow 1-on-1 reply keeps the connection alive instead of freezing
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A moment when the LLM is slow (several concurrent runs), or an operator-throttled LLM
+    steps:
+      - Send a 1-on-1 message and wait while the agent thinks for over a minute
+    expected:
+      - The chat shows the agent as working and the reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent)

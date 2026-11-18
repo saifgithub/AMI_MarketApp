@@ -283,3 +283,14 @@ cases:
     expected:
       - The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
       - The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen
+
+  - id: UAT-ROOM-021
+    title: A Room stream stays open through a long silent model turn
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A moment when the LLM is slow, or an operator-throttled LLM
+    steps:
+      - Convene the Room and keep it open while one desk takes over 100 seconds to start speaking
+    expected:
+      - The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner

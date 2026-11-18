@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**256 cases** — 185 api, 15 device, 56 manual; 11 blocked.
+**259 cases** — 185 api, 15 device, 59 manual; 11 blocked.
 
 ## Areas
 
@@ -13,9 +13,9 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 20 cases
-7. [1-on-1 agent chat](#one-on-one) — 8 cases
-8. [Brief Your Agent](#brief) — 16 cases
+6. [Convene the Room](#room) — 21 cases
+7. [1-on-1 agent chat](#one-on-one) — 9 cases
+8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 30 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
@@ -3362,6 +3362,19 @@ _Manual (iPhone checklist) · plans: any_
 1. The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
 2. The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen
 
+#### UAT-ROOM-021 — A Room stream stays open through a long silent model turn
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow, or an operator-throttled LLM
+
+**Steps**
+1. Convene the Room and keep it open while one desk takes over 100 seconds to start speaking
+
+**Expected**
+1. The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner
+
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3379,6 +3392,19 @@ _Manual (iPhone checklist) · plans: floor_pass_
 2. Passing the lesson shows the agent-unlocked screen and the agent becomes chat-able
 3. The reply streams into a readable bubble with the agent's display name (Chief Investment Officer, Risk Officer, Execution Desk, Technical Strategist, Flow & Positioning, Macro & Events), and the credit pill drops by 1
 
+#### UAT-ONE-009 — A slow 1-on-1 reply keeps the connection alive instead of freezing
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow (several concurrent runs), or an operator-throttled LLM
+
+**Steps**
+1. Send a 1-on-1 message and wait while the agent thinks for over a minute
+
+**Expected**
+1. The chat shows the agent as working and the reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent)
+
 #### UAT-BRIEF-014 — Briefing flow, refusal card, history and rollback on a real iPhone
 
 _Manual (iPhone checklist) · plans: trader_
@@ -3395,6 +3421,19 @@ _Manual (iPhone checklist) · plans: trader_
 1. The proposal card shows a plain-English summary and the overlay diff; accept creates a new version in history
 2. The history screen marks the active version and rollback switches it without using an edit
 3. The unsafe CIO brief shows a refusal card explaining the safety floor with a suggestion to edit the Mandate instead; nothing is saved
+
+#### UAT-BRIEF-017 — A slow Brief reply keeps the connection alive instead of freezing
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A moment when the LLM is slow, or an operator-throttled LLM
+
+**Steps**
+1. Send a Brief Your Agent message and wait while the agent thinks for over a minute
+
+**Expected**
+1. The reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent) and the chat never shows a dead frozen state
 
 #### UAT-SIM-022 — Trade ticket previews, blocks and confirms an order
 
