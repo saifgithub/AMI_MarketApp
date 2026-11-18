@@ -11,9 +11,11 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
+import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
@@ -1596,6 +1598,7 @@ class ApiClient {
     required String email,
     required String code,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/magic_link/verify',
@@ -1604,6 +1607,7 @@ class ApiClient {
         'code': code,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1614,6 +1618,7 @@ class ApiClient {
     String? userId,
     String? fullName,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     // Phase 3 (AT:R29): backend verifies the identity_token against
     // Apple's JWKS. 400 on bad signature / wrong iss/aud / expired.
@@ -1625,6 +1630,7 @@ class ApiClient {
         if (fullName != null) 'full_name': fullName,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1634,6 +1640,7 @@ class ApiClient {
     required String identityToken,
     String? userId,
     String? onboardingSessionId,
+    bool restoreAccount = false,
   }) async {
     // D-057 (AT:R36): Android-only at alpha. Backend verifies the
     // ID token against Google's JWKS (signature + iss + aud + exp +
@@ -1647,6 +1654,7 @@ class ApiClient {
         if (userId != null) 'user_id': userId,
         if (onboardingSessionId != null)
           'onboarding_session_id': onboardingSessionId,
+        if (restoreAccount) 'restore_account': true,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -1659,6 +1667,33 @@ class ApiClient {
       // Fire-and-forget — client clears its token regardless of server response.
     }
     _bearerToken = null;
+  }
+
+  // ── Account closure + data export (CR276, CR267 WP-30) ─────────────────
+
+  /// What the server does after the restore window, for the confirm dialog.
+  Future<AccountPolicy> accountPolicy() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/account/policy');
+    return AccountPolicy.fromJson(r.data!);
+  }
+
+  /// Deactivate the account and revoke every session now. The caller must
+  /// follow with a local sign-out: this bearer is dead the moment it succeeds.
+  Future<AccountClosure> closeAccount() async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/account/close',
+      data: {'confirm': true},
+    );
+    return AccountClosure.fromJson(r.data!);
+  }
+
+  /// The signed-in user's own data as the raw JSON file the server produced.
+  Future<Uint8List> exportAccountData() async {
+    final r = await _dio.get<List<int>>(
+      '/v1/account/export',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(r.data!);
   }
 
   // ── BL16 account merge (AT:R38) ────────────────────────────────────────

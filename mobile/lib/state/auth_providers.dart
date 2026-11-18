@@ -14,11 +14,13 @@
 /// the new credential to the existing user row without minting a new id.
 library;
 
+import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:dio/dio.dart' show DioException;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -81,8 +83,17 @@ class AuthState {
 /// caller's anon.
 @immutable
 class ClaimOutcome {
-  const ClaimOutcome({required this.success, this.adoptedFromUserId});
+  const ClaimOutcome({
+    required this.success,
+    this.adoptedFromUserId,
+    this.restorableUntil,
+  });
   final bool success;
+
+  /// CR276: non-null when the sign-in matched an account scheduled for deletion
+  /// that can still be restored. Nothing was changed; the screen asks the user
+  /// and calls the same method again with `restoreAccount: true`.
+  final DateTime? restorableUntil;
 
   /// Non-null when the backend silently adopted an existing email/sub row
   /// — i.e. the pre-claim anon's user_id, ready to feed into
@@ -227,7 +238,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<ClaimOutcome> verifyMagicLink({required String email, required String code}) async {
+  Future<ClaimOutcome> verifyMagicLink({
+    required String email,
+    required String code,
+    bool restoreAccount = false,
+  }) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -238,6 +253,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: email,
         code: code,
         onboardingSessionId: onboardingSid,
+        restoreAccount: restoreAccount,
       );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
@@ -248,11 +264,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
+      final pending = _pendingRestore(e);
+      if (pending != null) {
+        state = state.copyWith(loading: false, clearError: true);
+        return ClaimOutcome(
+            success: false, restorableUntil: pending.restorableUntil);
+      }
       state = state.copyWith(
           loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);
     }
   }
+
+  AccountPendingDeletion? _pendingRestore(Object e) => e is DioException
+      ? AccountPendingDeletion.fromResponse(
+          e.response?.statusCode, e.response?.data)
+      : null;
 
   Future<void> signOut() async {
     final api = _ref.read(apiClientProvider);
@@ -266,7 +293,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await bootstrap();
   }
 
-  Future<ClaimOutcome> signInWithApple(String identityToken, {String? fullName}) async {
+  Future<ClaimOutcome> signInWithApple(
+    String identityToken, {
+    String? fullName,
+    bool restoreAccount = false,
+  }) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -277,6 +308,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         userId: userId,
         fullName: fullName,
         onboardingSessionId: onboardingSid,
+        restoreAccount: restoreAccount,
       );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
@@ -285,13 +317,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
+      final pending = _pendingRestore(e);
+      if (pending != null) {
+        state = state.copyWith(loading: false, clearError: true);
+        return ClaimOutcome(
+            success: false, restorableUntil: pending.restorableUntil);
+      }
       state = state.copyWith(
           loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);
     }
   }
 
-  Future<ClaimOutcome> signInWithGoogle(String identityToken) async {
+  Future<ClaimOutcome> signInWithGoogle(
+    String identityToken, {
+    bool restoreAccount = false,
+  }) async {
     // D-057 (AT:R36): Android-only at alpha. No `fullName` parameter —
     // Google ships `name` in the ID token and the backend reads it
     // directly from verified claims.
@@ -304,6 +345,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         identityToken: identityToken,
         userId: userId,
         onboardingSessionId: onboardingSid,
+        restoreAccount: restoreAccount,
       );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
@@ -312,6 +354,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
+      final pending = _pendingRestore(e);
+      if (pending != null) {
+        state = state.copyWith(loading: false, clearError: true);
+        return ClaimOutcome(
+            success: false, restorableUntil: pending.restorableUntil);
+      }
       state = state.copyWith(
           loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);

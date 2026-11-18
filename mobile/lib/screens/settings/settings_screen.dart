@@ -11,6 +11,7 @@ import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
+import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/settings/profile_fields_section.dart';
 import 'package:ami_trade/screens/settings/ticker_rules_section.dart';
@@ -22,6 +23,7 @@ import 'package:ami_trade/services/ads/admob_config.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/ads_providers.dart';
 import 'package:ami_trade/services/api/backend_modes.dart';
+import 'package:ami_trade/state/account_providers.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
@@ -1308,8 +1310,113 @@ class _AccountSection extends ConsumerWidget {
             ),
           ),
         ],
+        const SizedBox(height: AmiSpacing.s),
+        _AccountDataActions(guest: !claimed),
       ],
     );
+  }
+}
+
+/// CR276 (CR267 WP-30) — "Export my data" and "Delete account".
+///
+/// Apple 5.1.1(v) and Play both require deletion to be reachable in-app, for
+/// guests as much as for signed-in users (a guest account is an account). The
+/// wording follows the server's policy: "Delete account" in Beta, "Close
+/// account" only if the server runs archive mode with counsel's approval. The
+/// dialog states what is deleted, what is kept and for how long, and the
+/// restore window; it goes through [_confirmDestructive] like every other
+/// irreversible Settings action (DEF479).
+class _AccountDataActions extends ConsumerWidget {
+  const _AccountDataActions({required this.guest});
+
+  final bool guest;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final policy =
+        ref.watch(accountPolicyProvider).valueOrNull ?? AccountPolicy.fallback;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 40,
+          child: OutlinedButton(
+            onPressed: () => _export(context, ref, l),
+            child: Text(l.settingsAccountExport),
+          ),
+        ),
+        const SizedBox(height: AmiSpacing.xs),
+        Text(l.settingsAccountExportHint, style: AmiTypography.caption),
+        const SizedBox(height: AmiSpacing.s),
+        SizedBox(
+          height: 40,
+          child: OutlinedButton(
+            onPressed: () => _delete(context, ref, l, policy),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AmiColors.hexRed,
+              side: const BorderSide(color: AmiColors.hexRed),
+            ),
+            child: Text(policy.isClose
+                ? l.settingsAccountClose
+                : l.settingsAccountDelete),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _export(
+      BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final bytes = await ref.read(apiClientProvider).exportAccountData();
+      final d = DateTime.now().toUtc();
+      final stamp =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      await ref.read(accountExportSinkProvider)(
+          bytes, 'ami-data-export-$stamp.json');
+    } catch (_) {
+      messenger
+          .showSnackBar(SnackBar(content: Text(l.settingsAccountExportFailed)));
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, AppLocalizations l,
+      AccountPolicy policy) async {
+    final close = policy.isClose;
+    final body = close
+        ? l.settingsConfirmCloseBody(policy.graceDays)
+        : l.settingsConfirmDeleteBody(policy.graceDays);
+    final ok = await _confirmDestructive(
+      context,
+      title: close
+          ? l.settingsConfirmCloseTitle
+          : l.settingsConfirmDeleteTitle,
+      body: guest ? '$body\n\n${l.settingsConfirmDeleteGuestNote}' : body,
+      confirmLabel: close
+          ? l.settingsConfirmCloseConfirm
+          : l.settingsConfirmDeleteConfirm,
+    );
+    if (!ok || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    final date = MaterialLocalizations.of(context);
+    final AccountClosure closure;
+    try {
+      closure = await ref.read(apiClientProvider).closeAccount();
+    } catch (_) {
+      messenger
+          .showSnackBar(SnackBar(content: Text(l.settingsAccountDeleteFailed)));
+      return;
+    }
+    // The bearer died with the close; clear the device and mint a fresh guest.
+    await ref.read(authNotifierProvider.notifier).signOut();
+    nav.popUntil((r) => r.isFirst);
+    messenger.showSnackBar(SnackBar(
+      content: Text(l.settingsAccountDeleteScheduled(
+          date.formatMediumDate(closure.restorableUntil.toLocal()))),
+    ));
   }
 }
 

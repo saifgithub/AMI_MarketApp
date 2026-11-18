@@ -9157,6 +9157,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LEAVE'**
   String get roomLeaveConfirm;
+
+  /// CR276 - Settings > Account button that downloads the user's own data as a JSON file. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Export my data'**
+  String get settingsAccountExport;
+
+  /// CR276 - caption under the Export my data button. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Download your trades, Room verdicts, mandate, journal and progress as a JSON file.'**
+  String get settingsAccountExportHint;
+
+  /// CR276 - snackbar when the data export call or the share step fails. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export your data. Try again in a moment.'**
+  String get settingsAccountExportFailed;
+
+  /// CR276 - Settings > Account button that starts account deletion. Beta wording: delete. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get settingsAccountDelete;
+
+  /// CR276 - same button, used ONLY when the server runs archive mode with counsel approval. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Close account'**
+  String get settingsAccountClose;
+
+  /// CR276 - title of the confirm dialog before account deletion (DEF479 pattern). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE ACCOUNT?'**
+  String get settingsConfirmDeleteTitle;
+
+  /// CR276 - body of the delete-account confirm. States what is deleted, what is kept and for how long, and the restore window. {days} is the grace period. The 7 years is the draft accounting-record retention, counsel to confirm. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes your AMI account: your mandate, journal, trades, Room history, progress and settings. You are signed out on every device now.\n\nFor {days} days you can restore it by signing in again with the same Apple, Google or email sign-in. After that it is permanently deleted.\n\nKept: a billing record of plan changes (no name or email) for up to 7 years for accounting, and usage figures with your text and ID removed.'**
+  String settingsConfirmDeleteBody(int days);
+
+  /// CR276 - extra paragraph in the delete confirm for guest (unclaimed) accounts, which have no credential to restore with. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This is a guest account with no sign-in attached, so it cannot be restored later. Sign in first if you want that option.'**
+  String get settingsConfirmDeleteGuestNote;
+
+  /// CR276 - confirm button of the delete-account dialog. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE ACCOUNT'**
+  String get settingsConfirmDeleteConfirm;
+
+  /// CR276 - title of the confirm dialog when the server runs archive mode (counsel-approved only). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE ACCOUNT?'**
+  String get settingsConfirmCloseTitle;
+
+  /// CR276 - body of the close-account confirm, ARCHIVE MODE ONLY (off until counsel approves, gate S6). {days} is the grace period. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This closes your AMI account and signs you out on every device now.\n\nFor {days} days you can restore it by signing in again. After that the account stays closed: you can no longer sign in, and your data is kept in a closed archive. Email support to ask for it to be deleted.'**
+  String settingsConfirmCloseBody(int days);
+
+  /// CR276 - confirm button of the close-account dialog (archive mode only). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE ACCOUNT'**
+  String get settingsConfirmCloseConfirm;
+
+  /// CR276 - snackbar when the close-account call fails; nothing was changed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your account. Check your connection and try again.'**
+  String get settingsAccountDeleteFailed;
+
+  /// CR276 - snackbar after a successful close. {date} is the last day the account can be restored, already formatted for the locale. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is scheduled for deletion. You can restore it until {date} by signing in again.'**
+  String settingsAccountDeleteScheduled(String date);
+
+  /// CR276 - title of the dialog shown when a sign-in matches an account scheduled for deletion. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESTORE YOUR ACCOUNT?'**
+  String get signInRestoreTitle;
+
+  /// CR276 - body of the restore dialog. {date} is when the account will be permanently deleted. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This account is scheduled for deletion on {date}. Restore it to keep your data and continue.'**
+  String signInRestoreBody(String date);
+
+  /// CR276 - confirm button of the restore dialog. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESTORE'**
+  String get signInRestoreConfirm;
 }
 
 class _AppLocalizationsDelegate

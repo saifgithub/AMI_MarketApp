@@ -3582,5 +3582,22 @@
     "onboardingAgeDecline": "I AM UNDER 18",
     "onboardingAgeDeclinedTitle": "AMI Trade isn't available yet",
     "onboardingAgeDeclinedBody": "AMI Trade is for people aged 18 or older, so setup stops here. Nothing was saved. You are welcome back once you turn 18.",
-    "onboardingAgeDeclinedBack": "GO BACK"
+    "onboardingAgeDeclinedBack": "GO BACK",
+    "settingsAccountExport": "Eksport data saya",
+    "settingsAccountExportHint": "Muat turun dagangan, keputusan Room, mandat, jurnal dan kemajuan anda sebagai fail JSON.",
+    "settingsAccountExportFailed": "Tidak dapat mengeksport data anda. Cuba lagi sebentar nanti.",
+    "settingsAccountDelete": "Padam akaun",
+    "settingsAccountClose": "Tutup akaun",
+    "settingsConfirmDeleteTitle": "PADAM AKAUN?",
+    "settingsConfirmDeleteBody": "Ini memadam akaun AMI anda: mandat, jurnal, dagangan, sejarah Room, kemajuan dan tetapan anda. Anda dilog keluar daripada semua peranti sekarang.\n\nSelama {days} hari anda boleh memulihkannya dengan log masuk semula menggunakan Apple, Google atau e-mel yang sama. Selepas itu ia dipadam secara kekal.\n\nYang disimpan: rekod bil perubahan pelan (tanpa nama atau e-mel) sehingga 7 tahun untuk perakaunan, dan angka penggunaan tanpa teks dan ID anda.",
+    "settingsConfirmDeleteGuestNote": "Ini akaun tetamu tanpa log masuk, jadi ia tidak boleh dipulihkan kemudian. Log masuk dahulu jika anda mahu pilihan itu.",
+    "settingsConfirmDeleteConfirm": "PADAM AKAUN",
+    "settingsConfirmCloseTitle": "TUTUP AKAUN?",
+    "settingsConfirmCloseBody": "Ini menutup akaun AMI anda dan melog keluar anda daripada semua peranti sekarang.\n\nSelama {days} hari anda boleh memulihkannya dengan log masuk semula. Selepas itu akaun kekal ditutup: anda tidak boleh log masuk lagi, dan data anda disimpan dalam arkib tertutup. E-mel sokongan untuk meminta ia dipadam.",
+    "settingsConfirmCloseConfirm": "TUTUP AKAUN",
+    "settingsAccountDeleteFailed": "Tidak dapat memadam akaun anda. Semak sambungan anda dan cuba lagi.",
+    "settingsAccountDeleteScheduled": "Akaun anda dijadualkan untuk dipadam. Anda boleh memulihkannya sehingga {date} dengan log masuk semula.",
+    "signInRestoreTitle": "PULIHKAN AKAUN ANDA?",
+    "signInRestoreBody": "Akaun ini dijadualkan untuk dipadam pada {date}. Pulihkannya untuk mengekalkan data anda dan teruskan.",
+    "signInRestoreConfirm": "PULIHKAN"
 }
