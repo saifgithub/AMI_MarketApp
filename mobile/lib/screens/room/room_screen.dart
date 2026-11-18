@@ -153,6 +153,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       _ServerErrorCard(ticker: widget.ticker),
                     if (state.liveDataNotice != null)
                       _LiveDataNoticeCard(notice: state.liveDataNotice!),
+                    if (state.providerSwitchNotice != null)
+                      _ProviderSwitchNotice(message: state.providerSwitchNotice!),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
@@ -923,6 +925,35 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// CR272 — AMI's own notice that the main model failed and the discussion
+/// restarted from the top on the backup. The text is the server's, rendered as
+/// sent; everything shown before it was cleared by the notifier.
+class _ProviderSwitchNotice extends StatelessWidget {
+  const _ProviderSwitchNotice({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.swap_horiz, color: AmiColors.hexAmber, size: 18),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(child: Text(message, style: AmiTypography.body)),
         ],
       ),
     );

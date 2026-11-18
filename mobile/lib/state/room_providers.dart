@@ -111,6 +111,7 @@ class RoomState {
     this.cioRetried = false,
     this.retryingCio = false,
     this.waitGaveUp = false,
+    this.providerSwitchNotice,
   });
 
   final String? phase;
@@ -196,6 +197,11 @@ class RoomState {
   /// (which resumes the wait) and the Journal (where the verdict lands).
   final bool waitGaveUp;
 
+  /// CR272 — AMI's own notice that the main model failed and the discussion
+  /// restarted on the backup. Set from the `provider_switch` event, which also
+  /// voids everything streamed before it; the screen renders this text as sent.
+  final String? providerSwitchNotice;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -221,6 +227,7 @@ class RoomState {
     bool? cioRetried,
     bool? retryingCio,
     bool? waitGaveUp,
+    String? providerSwitchNotice,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -245,6 +252,7 @@ class RoomState {
       cioRetried: cioRetried ?? this.cioRetried,
       retryingCio: retryingCio ?? this.retryingCio,
       waitGaveUp: waitGaveUp ?? this.waitGaveUp,
+      providerSwitchNotice: providerSwitchNotice ?? this.providerSwitchNotice,
     );
   }
 }
@@ -402,6 +410,23 @@ class RoomNotifier extends StateNotifier<RoomState> {
             state = state.copyWith(
               withheldAgents: withheldNext,
               order: orderWithChair,
+            );
+            break;
+          case 'provider_switch':
+            // CR272 — the Room restarted from the first phase on the backup
+            // model; every turn shown so far is void. Rebuild the state with
+            // only what survives a restart (run id, live-data disclosure,
+            // withheld chairs — all emitted before the restart point) and the
+            // notice, so no stale turn stays on screen.
+            final switchText = ev['text'];
+            if (switchText is! String || switchText.isEmpty) break;
+            state = RoomState(
+              streaming: true,
+              runId: state.runId,
+              liveDataNotice: state.liveDataNotice,
+              withheldAgents: state.withheldAgents,
+              order: state.withheldAgents.keys.toList(),
+              providerSwitchNotice: switchText,
             );
             break;
           case 'verdict':

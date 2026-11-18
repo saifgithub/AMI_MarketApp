@@ -270,3 +270,16 @@ cases:
       - A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
       - STAY keeps the live Room on screen; LEAVE returns to the previous screen
       - The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
+
+  - id: UAT-ROOM-020
+    title: When the main model fails mid-Room, the app clears the discussion and says AMI switched to the backup
+    layer: manual
+    plans: [any]
+    preconditions:
+      - An Alpha backend whose primary LLM can be made to fail mid-run (operator action) with the backup slot configured
+    steps:
+      - Convene the Room and wait until a few desks have spoken
+      - Have the operator take the primary LLM down so the run restarts on the backup
+    expected:
+      - The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
+      - The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen

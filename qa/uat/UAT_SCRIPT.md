@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**255 cases** — 185 api, 15 device, 55 manual; 11 blocked.
+**256 cases** — 185 api, 15 device, 56 manual; 11 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 19 cases
+6. [Convene the Room](#room) — 20 cases
 7. [1-on-1 agent chat](#one-on-one) — 8 cases
 8. [Brief Your Agent](#brief) — 16 cases
 9. [Sim trading & market data](#sim-trading) — 30 cases
@@ -3346,6 +3346,21 @@ _Manual (iPhone checklist) · plans: any_
 1. A 'Leave the Room?' prompt says the Room keeps deliberating without you and the verdict will be saved to your Journal; nothing is dismissed silently
 2. STAY keeps the live Room on screen; LEAVE returns to the previous screen
 3. The AAPL verdict appears in the Journal once the run finishes; a finished Room leaves with no prompt
+
+#### UAT-ROOM-020 — When the main model fails mid-Room, the app clears the discussion and says AMI switched to the backup
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. An Alpha backend whose primary LLM can be made to fail mid-run (operator action) with the backup slot configured
+
+**Steps**
+1. Convene the Room and wait until a few desks have spoken
+2. Have the operator take the primary LLM down so the run restarts on the backup
+
+**Expected**
+1. The desks shown so far disappear and a notice reading 'AMI switched to its backup model and restarted the discussion.' is shown
+2. The discussion then runs again from the first desk to a verdict; no turn from before the switch remains on screen
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
