@@ -4,9 +4,8 @@ Coverage:
   - `fetch_analyst_detail` shape/gating/cache/error swallowing (yfinance stub
     via sys.modules, the same seam test_fundamentals uses).
   - The line builders (split with history, tape with raise/reiterate).
-  - Lane discipline in `_format_profile`: split in the fundamentals lane,
-    tape in the news lane, both for full-sheet agents, neither when
-    UNAVAILABLE.
+  - `_format_profile` renders neither surface for any agent (CR275: the Room
+    decides blind; test_cr275_room_decides_blind.py is the full guard).
   - `_analyst_view_from_profile` — the user-facing verdict payload block.
 """
 
@@ -224,22 +223,21 @@ def _live_profile() -> dict:
     }
 
 
-def test_split_renders_fundamentals_lane_only():
+def test_split_is_withheld_from_the_fundamentals_lane():
+    """CR275: the Room decides blind, so the split CR260 fetched is not rendered."""
     sheet_fa = _format_profile(_live_profile(), AgentId.FUNDAMENTALS_ANALYST)
-    assert "Analyst rating split (LIVE, Street view)" in sheet_fa
-    assert "Recent analyst actions" not in sheet_fa
+    assert "Analyst rating split" not in sheet_fa
 
 
-def test_tape_renders_news_lane_only():
+def test_tape_is_withheld_from_the_news_lane():
     sheet_na = _format_profile(_live_profile(), AgentId.NEWS_ANALYST)
-    assert "Recent analyst actions (LIVE, real, dated)" in sheet_na
-    assert "Analyst rating split" not in sheet_na
+    assert "Recent analyst actions" not in sheet_na
 
 
-def test_both_render_for_full_sheet_agents():
+def test_neither_renders_for_full_sheet_agents():
     sheet = _format_profile(_live_profile(), None)  # agent_id=None → all domains
-    assert "Analyst rating split" in sheet
-    assert "Recent analyst actions" in sheet
+    assert "Analyst rating split" not in sheet
+    assert "Recent analyst actions" not in sheet
 
 
 def test_unavailable_fields_render_nothing_and_claim_nothing():

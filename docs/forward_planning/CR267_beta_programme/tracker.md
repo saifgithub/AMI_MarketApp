@@ -21,7 +21,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-13 | Output text guard | WP-00 · S11 ✅ | in progress | 2026-11-18 | | `ca164879` | CR271. Log mode on Alpha. Enforce after a replay of stored replies measures the hit rate. |
 | WP-14 | Alpha cut-over + automatic failover | WP-10/11/12 · S2, S11 ✅ | in progress | 2026-11-18 | | `c3924bf9` | CR272. Alpha stays on on-prem (S11 ruling); DeepInfra Qwen3.8-Flash registered as backup. Forced-failover acceptance test still to run. |
 | WP-20 | Room baseline | WP-14, WP-21a | not started | | | | |
-| WP-21a | Room decides blind | WP-00 | in progress | 2026-11-18 | | | CR275. Split from WP-21 in rev 2. Sonnet worker. |
+| WP-21a | Room decides blind | WP-00 | done | 2026-11-18 | 2026-11-18 | `4c0a27db` | CR275. The sheet DID carry rating, targets, split and tape to every agent by default; now withheld at `_format_profile` (prefix `analyst_`), data kept for WP-21b. Left in, for Saiful: news headlines that mention upgrades; consensus EPS estimates. |
 | WP-21b | Street comparison after verdict | WP-21a, WP-14 | not started | | | | |
 | WP-22 | Narrow-question judge + bake-off | WP-20 · **S12** | blocked (gate) | | | | S12 added 2026-11-18. |
 | WP-23 | Coded decision rule | WP-22 · S3, **S12** | blocked (gate) | | | | |
@@ -30,17 +30,17 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-26 | Room acceptance run | WP-21b/23/24/25 | not started | | | | |
 | WP-27 | Room reliability defects | WP-00 | done | 2026-11-18 | 2026-11-18 | `636267ae` | DEF444/445/467/471/480/484 + CR272 backup notice. DEF471: the Room auto-starting is intended (10-20 ruling), so only a leave warning was added. |
 | WP-28 | Outcome scoring | WP-14 | not started | | | | |
-| WP-29 | Copy | WP-00 | in progress | 2026-11-18 | | lane `cc3379c4` | Store listing + website re-led on the learning outcome. Merge + website deploy pending. Sharia line on the website is stale vs claim register N1. |
-| WP-30 | Account deletion + export | WP-00 | not started | | | | Beta mode delete/anonymise (§3a.2). |
+| WP-29 | Copy | WP-00 | in progress | 2026-11-18 | | `6fa280ac` `7f0590b6` | Merged. The website deploy was blocked by the permission check and awaits Saiful's go. The stale Sharia line was fixed per claim register N1. |
+| WP-30 | Account deletion + export | WP-00 | in progress | 2026-11-18 | | | CR276. Sonnet worker. Beta mode delete/anonymise (§3a.2). |
 | WP-31 | 18+ confirmation | WP-00 | done | 2026-11-18 | 2026-11-18 | `6e3e1d25` `06a69250` | CR273. Enforcement switch OFF on Alpha until the new build reaches testers. |
 | WP-32 | iOS privacy manifest | WP-00 | done | 2026-11-18 | 2026-11-18 | `e807a598` | CR274. Declares no tracking; must change if personalised ads ever ship (flagged for WP-50). |
-| WP-33 | Mobile defect batch | WP-00 | in progress | 2026-11-18 | | lane `453ced12` | 14 of 15 fixed; DEF466 stays open (iOS test-tool behaviour; simulator paused). Flutter suite 2,062 pass on the merge. Part 2: Android device run of the changed cases. |
+| WP-33 | Mobile defect batch | WP-00 | in progress | 2026-11-18 | | `3c0780d9` | Part 1 merged: 14 of 15 (DEF466 open). Part 2 = device run on the Suite's phones per `device_lab_protocol.md`. |
 | WP-34 | Backend defect batch | WP-00 | done | 2026-11-18 | 2026-11-18 | `95f3b2b4` `3c5b66ba` | DEF458–463, DEF468. Filed DEF489 (fixed in WP-35). |
 | WP-35 | Security leftovers | WP-00 · S8 | blocked (gate) | 2026-11-18 | | `1d51dc50` | DEF464, DEF489, DEF104 merged. DEF178 waits on S8 (Adanos key rotation). |
 | WP-36 | Beta build settings, report, thumbs | WP-23 | not started | | | | |
 | WP-37 | CR231 gate items | WP-00 | not started | | | | |
-| WP-38 | Trace ID on errors (CR239) | WP-00 | not started | | | | Added at WP-01. |
-| WP-39 | App manual corpus (CR022) | WP-00 | in progress | 2026-11-18 | | | Added at WP-01. Sonnet worker. |
+| WP-38 | Trace ID on errors (CR239) | WP-00 | in progress | 2026-11-18 | | | Sonnet worker. |
+| WP-39 | App manual corpus (CR022) | WP-00 | in progress | 2026-11-18 | | `852e8908` `1ce548f4` | Merged: 28 entries, a cited source line on every answer, 10 how-to questions pass offline. Left: a rig check after deploy #4. |
 | WP-40 | Credits / accelerator research | WP-00 | not started | | | | |
 | WP-41 | Beta env config | WP-14 | not started | | | | |
 | WP-42 | Provision Beta host | WP-41 · S4 | not started | | | | |
@@ -61,6 +61,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 |---|---|---|---|
 | S0 | ✅ given | 2026-11-18 | "go, start WP-00" |
 | S1 | ✅ done | 2026-11-18 | 66 items ruled (53 asked, 13 accepted on recommendation) |
-| S2–S10 | open | | S8 (Adanos key) blocks DEF178. |
+| S2–S8, S10 | open | | S8 (Adanos key) blocks DEF178. S4 and S7 are Saiful's actions and can be released now. |
+| S9 | ✅ ruled | 2026-11-18 | Saiful: "Lets not set a number, but if we need to set it to 60%". WP-53 reports the satisfaction rate without a pass/fail bar; where a bar is required, it is 60% thumbs-up over 100 rated runs. |
 | S11 | ✅ approved | 2026-11-18 | Plan: `S11_llm_implementation_plan.md` (rulings §3a). Alpha stays on-prem until Beta; Ling joins WP-10. |
-| S12 | open | | Implementation-plan discussion before any Jev/grader change (WP-22, WP-23). Added 2026-11-18. |
+| S12 | open | | Implementation-plan discussion before any Jev/grader change (WP-22, WP-23). Added 2026-11-18. Saiful 2026-11-18: draft the plan now (`S12_jev_grader_implementation_plan.md`). |

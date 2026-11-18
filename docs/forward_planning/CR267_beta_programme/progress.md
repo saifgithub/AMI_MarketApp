@@ -75,3 +75,24 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    - Calls for Saiful: "Ask AMI" (was AI Coach); "NO AMI VERDICT".
 5. **WP-29:** `lane/WP29-copy` (`cc3379c4`). Doubts for Saiful: subtitle choice, "AMI tutor", Applied AI branding, and the stale Sharia line on the website.
 6. **Running:** WP-10 (spend ≈$2.56 of $80), WP-21a (CR275 minted), WP-39 (CR022).
+
+## 2026-11-18 (night) — WP-21a, WP-29, WP-33, WP-39, DEF490 merged; device lab agreed
+
+1. **API UAT after deploy #3:** 4 failures, none a product regression.
+   1. DEF458 and DEF459 were strict-xfail XPASSes: the bugs are fixed.
+   2. ONB-044 expected the 18+ refusal, but it is switched off on Alpha on purpose.
+   3. SUPP-004: the harness spoofed X-Forwarded-For, which DEF464 now correctly ignores, so the bug-report cases (7+ calls) exceed the 5/hour per-IP budget.
+   4. Live users are fine: the tunnel peer is in the trusted CIDR.
+   5. **DEF490** was filed and fixed (`535def50`): an admin-secret header exempts operator and UAT traffic (constant-time compare, logged, never exempts with an unset secret), the stale xfails were dropped, ONB-044's refusal half is a strict xfail until the gate is switched on, and SUPP-004 was rewritten to be bucket-state independent.
+2. **Merged:**
+   1. WP-33 (`3c0780d9`).
+   2. WP-29 (`6fa280ac`, with the Sharia line fixed per N1 in `7f0590b6`). The live count is 215/503 as of 2026-11-17, so no number is printed.
+   3. WP-39 (`852e8908`; `1ce548f4` fixed 3 entries that its truth test caught after the WP-33 ARB moves).
+   4. DEF490.
+   5. WP-21a / CR275 (`4c0a27db`).
+3. **Website deploy blocked** by the permission check. The checksum dry run shows only `index.html` and `og-image.png` change, with no deletions. Waiting on Saiful's go.
+4. **Device lab:** protocol v1.0 + am.1 agreed with the AMI AI Suite (MC, NXT; their ruling R-1495). See `device_lab_protocol.md`.
+   1. Booking goes through NXT; the Suite's M4 testers operate, and inside a slot we work with the tester directly.
+   2. Android is waiting on the Suite's stakeholder to grant the install, run and remove permissions.
+   3. The iPhone already has TestFlight with AMI Trade on auto-update (Saiful), so the tester only checks the build number.
+5. **Running:** WP-10, WP-30 (CR276 minted), WP-38. The deploy #4 suite gate is running on `4c0a27db`.

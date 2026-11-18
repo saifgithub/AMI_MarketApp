@@ -2591,11 +2591,12 @@ _API (automated, live Alpha) · plans: anon_
 _API (automated, live Alpha) · plans: anon_
 
 **Steps**
-1. From one client IP, POST 6 requests in a row (invalid, so nothing enters the triage queue)
+1. POST invalid bug reports (nothing enters the triage queue) from this client, without the operator exemption header, until the first 429 (at most 6 - the bucket may already be partly spent)
+2. POST one more with a spoofed X-Forwarded-For and cf-connecting-ip
 
 **Expected**
-1. The first five are answered normally (422); the sixth is 429 rate_limit_exceeded (DEF186, 5 per hour)
-2. A different client IP is not limited by the first one's budget
+1. Every response before the first 429 is 422, and a 429 arrives within 6 requests with rate_limit_exceeded (DEF186, 5 per hour)
+2. The spoofed-header request is still 429 - forwarded headers from an untrusted peer open no new bucket (DEF464); per-IP key separation itself is covered by the DEF464 unit tests
 
 #### UAT-SUPP-005 — Resolution updates and acknowledgements are private to the reporter
 

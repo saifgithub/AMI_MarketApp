@@ -1115,16 +1115,17 @@ def test_format_profile_omits_dividend_line_for_a_non_payer_with_a_zero_payout()
     assert "Dividend" not in block
 
 
-def test_format_profile_includes_analyst_line_labeled_not_guidance():
+def test_format_profile_withholds_the_analyst_line():
+    """CR275: the Street's rating and target never reach the Room's fact sheet."""
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
         "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
         "field_state": {"analyst_rating": "live", "analyst_target_price": "live"},
     })
-    assert "strong buy" in block
-    assert "$315.57" in block
-    assert "NOT company guidance" in block
+    assert "strong buy" not in block
+    assert "315.57" not in block
+    assert "Analyst consensus" not in block
 
 
 def test_format_profile_omits_analyst_line_when_present_but_not_live():
