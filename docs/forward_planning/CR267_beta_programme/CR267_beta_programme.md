@@ -16,7 +16,7 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 1. Read `CLAUDE.md` first. Its rules override anything here that conflicts.
 2. Work packages (WPs) are listed in section 5 and detailed in section 6. Take the lowest-numbered WP whose dependencies are `done` and which is not behind an open Saiful gate (section 4).
 3. Before starting a WP, mint its child CR (next free number in `docs/forward_planning/_registry/`, check at mint time), write its row file, regenerate with `python3 scripts/registers/gen_registers.py gen cr`, and pathspec-commit. A WP that only fixes listed `DEF###` items uses those IDs instead of a new CR.
-4. Record progress in `docs/forward_planning/CR267_beta_programme/progress.md` (create on first use): one dated entry per WP state change, with the commit hash and the acceptance evidence. That file is the hand-over between sessions.
+4. Record progress in `docs/forward_planning/CR267_beta_programme/progress.md` (create on first use): one dated entry per WP state change, with the commit hash and the acceptance evidence. That file is the hand-over between sessions. Update `tracker.md` (plan vs actual, one row per WP, deviations listed) at the same time.
 5. A WP is `done` only when every acceptance line is shown with real output. If an acceptance line fails, record the failure and stop that WP; do not soften the criterion.
 6. Stop and ask Saiful only at the gates in section 4. Everything else: decide, record the decision in `progress.md`, continue.
 
@@ -78,6 +78,8 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 | S8 | WP-35 | Rotates the Adanos key at the vendor (closes DEF178). |
 | S9 | WP-53 | Confirms the Room satisfaction bar (proposed: 70% positive over 100 rated runs). |
 | S10 | Room Lite | Gives go on Room Lite. Not on the Beta launch path. |
+| S11 | WP-10…WP-14 | Discusses and approves the implementation plan for the hosted-LLM work before any change (Saiful, 2026-11-18: "before you start making changes for JEV and the LLM, please pause so we can discuss implementation plans"). |
+| S12 | WP-22, WP-23 | The same, for the Jev / grader / coded-rule work. |
 
 ## 5. Work packages
 
