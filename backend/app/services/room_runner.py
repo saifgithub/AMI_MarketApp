@@ -39,6 +39,7 @@ import json
 import random
 import re
 import threading
+import time
 import weakref
 import zlib
 from collections import Counter
@@ -6754,8 +6755,14 @@ async def _resurrection_rerun(
 
 # Per-character delay range (mock streaming — gives the Matrix Console
 # typewriter feel without burning real LLM cost).
-_CHAR_DELAY_MIN = 0.004
-_CHAR_DELAY_MAX = 0.012
+# CR277 — configurable (ROOM_CHAR_DELAY_MIN_MS / _MAX_MS), 4-12 ms before.
+_CHAR_DELAY_MIN = settings.room_char_delay_min_ms / 1000.0
+_CHAR_DELAY_MAX = settings.room_char_delay_max_ms / 1000.0
+# CR277 — hard ceilings on the typewriter's total pacing: one turn, and one Room.
+_TURN_PACE_CAP_S = settings.room_turn_pace_cap_s
+_ROOM_PACE_CAP_S = settings.room_pace_cap_s
+# Pacing seconds already scheduled per live run_id; popped when the run ends.
+_PACE_SPENT_S: dict[UUID, float] = {}
 _PHASE_GAP_S = 0.25
 # Maximum seconds to wait for a single agent's LLM response. If the
 # upstream model hangs (network stall, vLLM queue backup), the agent
@@ -9069,6 +9076,7 @@ class RoomRunner:
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
         finally:
+            _PACE_SPENT_S.pop(run_id, None)
             if _failover is not None:
                 arm_room_failover(None)
 
@@ -9382,6 +9390,7 @@ class RoomRunner:
             yield RoomEvent(kind="verdict", run_id=run_id, verdict=run.verdict)
         finally:
             self._retrying_runs.discard(run_id)
+            _PACE_SPENT_S.pop(run_id, None)
 
     def clear(self) -> None:
         from sqlalchemy import delete as _delete
@@ -9750,16 +9759,45 @@ async def _typewriter(
     text: str,
     delay_min: float,
     delay_max: float,
+    *,
+    turn_cap_s: float | None = None,
+    room_cap_s: float | None = None,
+    sleep: Callable[[float], Awaitable[None]] | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> AsyncIterator[RoomEvent]:
-    """Yield character-by-character agent_token events."""
-    for ch in text:
+    """Yield character-by-character agent_token events (CR277 paced).
+
+    Each character draws a delay in [delay_min, delay_max]. The turn's planned
+    total is clamped to `turn_cap_s` and to what is left of the Room's
+    `room_cap_s` (scaled proportionally, so a long turn is shown faster, never
+    cut). Characters go out on a fixed schedule from the turn's start, so
+    event-loop sleep overshoot does not stretch the turn past its plan.
+    """
+    sleep = sleep or asyncio.sleep
+    turn_cap = _TURN_PACE_CAP_S if turn_cap_s is None else turn_cap_s
+    room_cap = _ROOM_PACE_CAP_S if room_cap_s is None else room_cap_s
+    delays = [random.uniform(delay_min, delay_max) for _ in text]
+    planned = sum(delays)
+    budget = turn_cap
+    if run_id is not None:
+        budget = min(budget, max(0.0, room_cap - _PACE_SPENT_S.get(run_id, 0.0)))
+    if planned > budget:
+        scale = budget / planned if planned else 0.0
+        delays = [d * scale for d in delays]
+        planned = budget
+    if run_id is not None:
+        _PACE_SPENT_S[run_id] = _PACE_SPENT_S.get(run_id, 0.0) + planned
+    start = clock()
+    due = 0.0
+    for ch, d in zip(text, delays):
         yield RoomEvent(
             kind="agent_token",
             run_id=run_id,
             agent_id=agent_id,
             text=ch,
         )
-        await asyncio.sleep(random.uniform(delay_min, delay_max))
+        due += d
+        await sleep(max(0.0, start + due - clock()))
 
 
 async def _compute_agent_text(

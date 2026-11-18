@@ -241,6 +241,28 @@ class Settings(BaseSettings):
     # the inverted ordering costs. `test_def389_transport_timeout.py` pins it.
     room_agent_timeout_s: float = Field(default=180.0, ge=15.0, le=900.0)
 
+    # CR277 — the Room's typewriter pacing. Every finished turn is replayed to the
+    # app character by character; before CR277 that was 4-12 ms/char (mean 8 ms),
+    # worth about 1.7-2.0 min per Room (WP-10 scorecard, CR240) and the reason no
+    # hosted model met the 2-minute Room target. Defaults here: 1.5-3.5 ms/char
+    # (mean 2.5 ms) with a hard cap per turn and per Room, so pacing adds roughly
+    # 30-35 s to a typical Room and can never exceed `room_pace_cap_s` however long
+    # the transcript runs. A cap of 0 means no pacing (tests, backtests).
+    room_char_delay_min_ms: float = Field(default=1.5, ge=0.0, le=100.0)
+    room_char_delay_max_ms: float = Field(default=3.5, ge=0.0, le=100.0)
+    room_turn_pace_cap_s: float = Field(default=4.0, ge=0.0, le=60.0)
+    room_pace_cap_s: float = Field(default=40.0, ge=0.0, le=600.0)
+
+    @model_validator(mode="after")
+    def _room_char_delay_ordered(self) -> "Settings":
+        if self.room_char_delay_min_ms > self.room_char_delay_max_ms:
+            raise ValueError(
+                f"room_char_delay_min_ms ({self.room_char_delay_min_ms}) must be "
+                f"<= room_char_delay_max_ms ({self.room_char_delay_max_ms}) "
+                "(CR277)"
+            )
+        return self
+
     @model_validator(mode="after")
     def _transport_budget_outside_the_guard(self) -> "Settings":
         # DEF392 — CR040 degrade-loudly. The per-field bounds above are each

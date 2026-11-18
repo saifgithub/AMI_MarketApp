@@ -197,6 +197,12 @@ services:
       # DEF390 — the Room's per-agent budget. Must stay BELOW the transport
       # budget above, or the guard that names the failure never fires.
       ROOM_AGENT_TIMEOUT_S: ${ROOM_AGENT_TIMEOUT_S:-180.0}
+      # CR277 — Room typewriter pacing: per-char delay range (ms) and the
+      # per-turn / per-Room caps (s). Defaults add ~30-35 s to a typical Room.
+      ROOM_CHAR_DELAY_MIN_MS: ${ROOM_CHAR_DELAY_MIN_MS:-1.5}
+      ROOM_CHAR_DELAY_MAX_MS: ${ROOM_CHAR_DELAY_MAX_MS:-3.5}
+      ROOM_TURN_PACE_CAP_S: ${ROOM_TURN_PACE_CAP_S:-4.0}
+      ROOM_PACE_CAP_S: ${ROOM_PACE_CAP_S:-40.0}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
       # CR272 (CR267 WP-14) — slot kind: "vllm" (on-prem, default) or "openai"
       # (hosted OpenAI-compatible endpoint, e.g. DeepInfra). "openai" sends no
