@@ -1147,3 +1147,82 @@ Review offered at 20:34 Asia/Riyadh (no earlier section today); Saiful deferred 
 ## 2026-10-27
 
 Not run. Session is in auto permission mode, which prohibits `AskUserQuestion`; the review requires live item-by-item decisions. No items asked or ruled. Registers verified clean (no drift) beforehand.
+
+## 2026-11-18
+
+Run as CR267 WP-01 (gate S1), judged against the CR267 feature freeze. Item list from the `beta/cr267` row files (5cf24439), which already carry the WP-00 closures. CR267 itself is not asked: S0 was given today.
+
+- **CR254** (in_progress since 10-08) — asked: "tm-all salvage: drop, since it is prompt work outside the freeze?" → Saiful: "Drop (Recommended)"
+- **CR258** (proposed since 10-13) — asked: "what is done on the company Apple/Google developer accounts?" → Saiful: "Not enrolled yet". WP-49 (S7) starts from enrollment.
+- **Play account type** (CR267 WP-54) — asked: "is the company Play account an Organisation account?" → Saiful: "Organisation". The 12-testers/14-days clock is a soft target.
+- **CR252** (proposed since 10-07) — asked: "defer post-Beta?" → Saiful: "why defer and not fold into WP-20?" Re-asked with the corrected trade-off (folding in before WP-20 doesn't invalidate the baseline; the GO rests on 8 ami-llm rooms) → Saiful: "Fold in before WP-10 (Recommended)". Setting-gated, ON for the WP-10 scorecard and the WP-20 baseline; design discussed at S11.
+- **CR240** (proposed since 09-26) — asked: "absorb into CR267 WP-10?" → Saiful: "Absorb into WP-10 (Recommended)"
+- **CR245** (proposed since 09-27) — asked: "drop, superseded by CR267?" → Saiful: "Drop, superseded (Recommended)"
+- **CR246** (proposed since 09-28) — asked: "absorb into WP-46 load test?" → Saiful: "Absorb into WP-46 (Recommended)"
+- **CR247** (proposed since 09-28) — asked: "drop, superseded (prompt lever measured-dead)?" → Saiful: "Drop, superseded (Recommended)"
+- **CR250** (proposed since 10-06) — asked: "drop, superseded by WP-10/WP-23?" → Saiful: "Drop, superseded (Recommended)"
+- **CR239** (proposed since 09-26) — asked: "trace ID on every error: defer under the freeze?" → Saiful: "Add to Beta plan". Becomes a WP alongside WP-36.
+- **CR241** (proposed since 09-26) — asked: "users.locale write-once: defer to AR/MS?" → Saiful: "Defer to AR/MS (Recommended)"
+- **CR242** (proposed since 09-27) — asked: "Arabic Room prompt reliability: defer to AR/MS?" → Saiful: "Defer to AR/MS (Recommended)"
+- **CR243** (proposed since 09-27) — asked: "Malay Room prompt reliability: defer to AR/MS?" → Saiful: "Defer to AR/MS (Recommended)"
+- **CR244** (proposed since 09-27) — asked: "company/EDGAR data: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR022** (proposed since 07-12; deferred-to-pre-release 07-31) — asked: "app manual corpus: keep deferred?" → Saiful: "Add to Beta plan". Becomes a Beta WP so testers can self-serve through the Concierge.
+- **CR159** (proposed since 08-09) — asked: "'Your Firm' Floor desk structure: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR161** (proposed since 08-09) — asked: "white-label B2B2C: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR191** (proposed since 08-17) — asked: "11 check-then-INSERT sites: defer to prod scale?" → Saiful: "Defer to prod scale (Recommended)"
+- **CR198** (proposed since 08-20) — asked: "referral (payments parked): keep parked?" → Saiful: "Keep parked (Recommended)"
+- **CR200-R005** (proposed since 10-18) — asked: "data admin module: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR213** (proposed since 08-31) — asked: "backtest distance-normalised reporting: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR229** (proposed since 09-22) — asked: "BLS/Census sourcing: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR238** (proposed since 09-25) — asked: "CR221 data batches 6–9: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **CR248** (proposed since 09-30) — asked: "Hermes ops personas: defer post-Beta?" → Saiful: "not your issue". Out of CR267's scope; not tracked here.
+- **CR261** (proposed since 10-18) — asked: "billing manual-ops catalogue: keep parked?" → Saiful: "Keep parked (Recommended)"
+- **CR262** (proposed since 10-18) — asked: "billing watchdog: keep parked?" → Saiful: "Keep parked (Recommended)"
+- **DEF100** (open since 07-24) — asked: "store billing config: keep parked?" → Saiful: "Keep parked (Recommended)"
+- **DEF344** (open since 08-20) — asked: "mobile billing bug: keep parked?" → Saiful: "Keep parked (Recommended)"
+- **DEF104** (open since 07-24; blocked by the DEF204 "leave it" ruling 09-01) — asked: "plaintext mailbox credential: fix in CR267 WP-35?" → Saiful: "Fix in WP-35 (Recommended)". Supersedes the DEF204 hold.
+- **DEF178** (open since 07-30) — asked: "Adanos key: keep in WP-35 / gate S8?" → Saiful: "Keep in WP-35 / S8 (Recommended)"
+- **DEF421** (open since 09-25) — asked: "RLS on app.user_id: keep open as a production blocker, not a Beta blocker?" → Saiful: "Keep open, prod blocker (Recommended)"
+- **DEF200** (open since 07-30) — asked: "sync I/O on the event loop: let the WP-46 load test decide?" → Saiful: "WP-46 decides (Recommended)"
+- **DEF144** (open since 07-28) — asked: "translation code-switching: defer to AR/MS?" → Saiful: "Defer to AR/MS (Recommended)"
+- **DEF367** (open since 08-25) — asked: "47% wire surfaces untested: defer post-Beta?" → Saiful: "Defer post-Beta (Recommended)"
+- **DEF385** (open since 08-31) — asked: "backtest look-ahead guard stale number: defer?" → Saiful: "Defer post-Beta (Recommended)"
+- **DEF386** (open since 08-31) — asked: "CR164 Phase A findings invalid: retract and close?" → Saiful: "Retract + close (Recommended)"
+- **DEF434** (open since 09-25) — asked: "harness sync deleted Hermes rig files: verify no --delete, then close?" → Saiful: "Verify + close (Recommended)"
+- **DEF438** (open since 09-25) — asked: "iOS sim WDA tree empty: defer until the iOS sim is restored?" → Saiful: "Defer (Recommended)"
+- **DEF445** (open since 09-25) — asked: "fcf_yield false self-check flag: add to WP-27?" → Saiful: "Add to WP-27 (Recommended)"
+- **DEF447** (open since 09-27) — asked: "8-K 5.02 feed never re-scanned: defer?" → Saiful: "Defer post-Beta (Recommended)"
+- **DEF484** (open since 10-20) — asked: "Room 'Reconnect timed out', verdict never shown: keep in WP-27?" → Saiful: "Keep in WP-27 (Recommended)"
+- **DEF467** (open since 10-19) — asked: "no stream keepalive: keep in WP-27?" → Saiful: "Keep in WP-27 (Recommended)"
+- **DEF471** (open since 10-20) — asked: "credits spent with no confirmation: keep in WP-27?" → Saiful: "Keep in WP-27 (Recommended)"
+- **DEF480** (open since 10-20) — asked: "ASK/CONVENE drops the ticker: keep in WP-27?" → Saiful: "Keep in WP-27 (Recommended)"
+- **DEF444** (open since 09-25) — asked: "sync checkpoint write on the event loop: keep in WP-27?" → Saiful: "Keep in WP-27 (Recommended)"
+- **DEF458** (open since 10-19) — asked: "bug report 500 on bad input: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF459** (open since 10-19) — asked: "onboarding stranded at complete: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF460** (open since 10-19) — asked: "mandate versions share created_at: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF461** (open since 10-19) — asked: "sim news dark on Alpha: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF462** (open since 10-19) — asked: "alerts accept zero/negative thresholds: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF463** (open since 10-19) — asked: "absurd alert threshold 500: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF468** (open since 10-20) — asked: "null OHLC candles: keep in WP-34?" → Saiful: "Keep in WP-34 (Recommended)"
+- **DEF464** (open since 10-19) — asked: "spoofable rate-limiter IP: keep in WP-35?" → Saiful: "Keep in WP-35 (Recommended)"
+- **DEF466** (open since 10-19) — asked: "iOS a11y tree dark at PROFILE: keep in WP-33?" → Saiful: "Keep in WP-33 (Recommended)"
+- **DEF469** (open since 10-20) — asked: "Journal OUTCOME chips off-screen: add to WP-33?" → Saiful: "Add to WP-33 (Recommended)"
+- **DEF470** (open since 10-20) — asked: "'discard changes' doesn't discard: add to WP-33?" → Saiful: "Add to WP-33 (Recommended)"
+
+Remaining items, not asked one by one. Saiful: "i can accept the rest as recommended". Each item gets the recommendation it would have carried:
+
+- **DEF472** (open since 10-20) — no watchlist / no ADD for users with no trades → keep in WP-33.
+- **DEF473** (open since 10-20) — version-gate UPDATE dead when storeUrl is missing → keep in WP-33.
+- **DEF474** (open since 10-20) — Games no-cash links pop to Games Home → keep in WP-33.
+- **DEF475** (open since 10-20) — Alpaca PER-LOT DETAIL empty for Alpaca-only holdings → keep in WP-33.
+- **DEF476** (open since 10-20) — duplicate LessonsScreen pushed → keep in WP-33.
+- **DEF477** (open since 10-20) — failed merge preview swallowed; the Settings entry is missing → keep in WP-33.
+- **DEF478** (open since 10-20) — hardcoded English; "NO AI VERDICT" breaks AMI naming → keep in WP-33.
+- **DEF479** (open since 10-20) — irreversible Settings actions with no confirm → keep in WP-33.
+- **DEF481** (open since 10-20) — low-severity control-intent batch → defer post-Beta.
+- **DEF482** (open since 10-20) — Floor RenderFlex overflows after "Not now" → add to WP-33.
+- **DEF483** (open since 10-20) — stray backslash in the fill toast → keep in WP-33.
+- **DEF485** (open since 10-20) — price alert creation fails client-side intermittently → add to WP-33.
+- **DEF486** (open since 10-20) — UNDO snackbar covers the primary button → keep in WP-33.
+
+Summary: 66 items: 53 asked, 13 accepted on recommendation, plus 2 fact questions (CR258 enrollment state, Play account type). New Beta scope: CR239 (trace IDs), CR022 (app manual corpus), CR252 (fold in before WP-10), DEF445 (WP-27), DEF469/470/482/485 (WP-33), DEF104 (WP-35). Drops: CR245, CR247, CR250, CR254. Closures to execute: DEF386 (retract CR164 Phase A findings), DEF434 (verify no --delete, then close).
