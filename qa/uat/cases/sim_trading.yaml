@@ -404,3 +404,16 @@ cases:
     expected:
       - 'The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)'
       - 'The added ticker appears as a watchlist row'
+
+  - id: UAT-SIM-032
+    title: The watchlist UNDO bar goes away and never covers the next sheet
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A phone with a screen reader (VoiceOver or TalkBack) switched on, and a ticker on the watchlist'
+    steps:
+      - 'Portfolio > HISTORY: swipe a watchlist row away; leave the "Removed from watchlist - UNDO" bar alone'
+      - 'Open any watchlist ticker action sheet (tap a ticker on the bottom tape)'
+    expected:
+      - 'The bar dismisses itself after about 10 seconds with a screen reader on (4 seconds without), and UNDO restores the row while it is up (DEF486)'
+      - 'Opening the action sheet removes the bar, so it never sits over the sheet''s primary button'

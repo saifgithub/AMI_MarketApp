@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**271 cases** — 185 api, 15 device, 71 manual; 11 blocked.
+**272 cases** — 185 api, 15 device, 72 manual; 11 blocked.
 
 ## Areas
 
@@ -16,7 +16,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
-9. [Sim trading & market data](#sim-trading) — 31 cases
+9. [Sim trading & market data](#sim-trading) — 32 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
@@ -3643,6 +3643,21 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. The empty History still shows the WATCHLIST heading, its ADD button and the "No tickers yet" panel (DEF472)
 2. The added ticker appears as a watchlist row
+
+#### UAT-SIM-032 — The watchlist UNDO bar goes away and never covers the next sheet
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A phone with a screen reader (VoiceOver or TalkBack) switched on, and a ticker on the watchlist
+
+**Steps**
+1. Portfolio > HISTORY: swipe a watchlist row away; leave the "Removed from watchlist - UNDO" bar alone
+2. Open any watchlist ticker action sheet (tap a ticker on the bottom tape)
+
+**Expected**
+1. The bar dismisses itself after about 10 seconds with a screen reader on (4 seconds without), and UNDO restores the row while it is up (DEF486)
+2. Opening the action sheet removes the bar, so it never sits over the sheet's primary button
 
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
