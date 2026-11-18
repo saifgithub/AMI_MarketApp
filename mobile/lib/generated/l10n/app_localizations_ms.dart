@@ -5259,4 +5259,15 @@ class AppLocalizationsMs extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'Apakah pandangan anda tentang $ticker?';
   }
+
+  @override
+  String get roomReconnectingBanner =>
+      'Sambungan terputus. Bilik masih berjalan — menunggu keputusan.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'AMI tidak dapat mengesahkan Bilik ini telah selesai. Apa sahaja hasilnya disimpan dalam Jurnal anda, jadi anda boleh membukanya di sana kemudian, atau semak semula sekarang.';
+
+  @override
+  String get roomCheckAgain => 'SEMAK SEMULA';
 }

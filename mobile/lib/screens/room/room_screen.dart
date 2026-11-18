@@ -144,6 +144,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
+                    if (state.waitGaveUp)
+                      _WaitGaveUpCard(ticker: widget.ticker),
                     if (showBoard)
                       RoomBoard(
                         data: boardFromRoomState(
@@ -1148,8 +1150,47 @@ class _ReconnectingBanner extends StatelessWidget {
           const SizedBox(width: AmiSpacing.s),
           Expanded(
             child: Text(
-              'Connection lost. The room is still running — waiting for the verdict to land.',
+              AppLocalizations.of(context).roomReconnectingBanner,
               style: AmiTypography.body,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// DEF484 — the honest give-up. Shown only after the client has been unable to
+/// reach the server for minutes, or the run stayed active past the server's own
+/// stuck-run window. It never claims the run failed: it says AMI cannot confirm
+/// the outcome, where the result will be, and offers to keep waiting.
+class _WaitGaveUpCard extends ConsumerWidget {
+  const _WaitGaveUpCard({required this.ticker});
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.roomWaitGaveUp, style: AmiTypography.body),
+          const SizedBox(height: AmiSpacing.s),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              onPressed: () =>
+                  ref.read(roomNotifierProvider(ticker).notifier).resumeWaiting(),
+              child: Text(l.roomCheckAgain),
             ),
           ),
         ],

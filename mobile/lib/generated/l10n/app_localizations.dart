@@ -8683,6 +8683,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What\'s your read on {ticker}?'**
   String askAboutTickerMessage(String ticker);
+
+  /// DEF484 — banner while the client lost the live stream and is polling the run until it reaches a terminal state (previously hard-coded English). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost. The Room is still running — waiting for the verdict to land.'**
+  String get roomReconnectingBanner;
+
+  /// DEF484 — shown only when the client could not reach the server for a long stretch, or the run stayed active past the server's own stuck-run window. Honest give-up: the run is not lost, it lands in the Journal. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI can\'t confirm this Room has finished. Whatever it produces is saved to your Journal, so you can open it there later, or check again now.'**
+  String get roomWaitGaveUp;
+
+  /// DEF484 — button that resumes waiting on a Room run after the honest give-up card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHECK AGAIN'**
+  String get roomCheckAgain;
 }
 
 class _AppLocalizationsDelegate

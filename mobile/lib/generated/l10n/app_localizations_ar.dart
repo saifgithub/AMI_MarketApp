@@ -5256,4 +5256,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'ما رأيك في $ticker؟';
   }
+
+  @override
+  String get roomReconnectingBanner =>
+      'انقطع الاتصال. لا تزال الغرفة تعمل — بانتظار صدور الحكم.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'لا يمكن لـ AMI تأكيد انتهاء هذه الغرفة. كل ما تنتجه يُحفظ في يومياتك، ويمكنك فتحه من هناك لاحقًا أو التحقق مجددًا الآن.';
+
+  @override
+  String get roomCheckAgain => 'تحقق مجددًا';
 }

@@ -5255,4 +5255,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'What\'s your read on $ticker?';
   }
+
+  @override
+  String get roomReconnectingBanner =>
+      'Connection lost. The Room is still running — waiting for the verdict to land.';
+
+  @override
+  String get roomWaitGaveUp =>
+      'AMI can\'t confirm this Room has finished. Whatever it produces is saved to your Journal, so you can open it there later, or check again now.';
+
+  @override
+  String get roomCheckAgain => 'CHECK AGAIN';
 }

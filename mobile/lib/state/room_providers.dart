@@ -22,6 +22,7 @@ import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -109,6 +110,7 @@ class RoomState {
     this.cioRetryAvailable = false,
     this.cioRetried = false,
     this.retryingCio = false,
+    this.waitGaveUp = false,
   });
 
   final String? phase;
@@ -188,6 +190,12 @@ class RoomState {
   /// the button's own disabled/spinner look on this device.
   final bool retryingCio;
 
+  /// DEF484 — true only when the client could not reach the server for a long
+  /// stretch, or the run stayed active past the server's own stuck-run window.
+  /// The run is NOT failed: the screen says so honestly and offers CHECK AGAIN
+  /// (which resumes the wait) and the Journal (where the verdict lands).
+  final bool waitGaveUp;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -212,6 +220,7 @@ class RoomState {
     bool? cioRetryAvailable,
     bool? cioRetried,
     bool? retryingCio,
+    bool? waitGaveUp,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -235,9 +244,31 @@ class RoomState {
       cioRetryAvailable: cioRetryAvailable ?? this.cioRetryAvailable,
       cioRetried: cioRetried ?? this.cioRetried,
       retryingCio: retryingCio ?? this.retryingCio,
+      waitGaveUp: waitGaveUp ?? this.waitGaveUp,
     );
   }
 }
+
+/// DEF484 — how long the client keeps waiting on a run it lost the stream for.
+/// A Room can legitimately run 10+ minutes on a slow model, so the wait ends
+/// only when the run reaches a terminal state, the server has been unreachable
+/// for [maxUnreachable], or the run has been active past [maxWait] (just over
+/// the server's 30-minute stuck-run window, after which it is swept anyway).
+@immutable
+class RoomRecoveryConfig {
+  const RoomRecoveryConfig({
+    this.pollInterval = const Duration(seconds: 3),
+    this.maxWait = const Duration(minutes: 35),
+    this.maxUnreachable = const Duration(minutes: 2),
+  });
+
+  final Duration pollInterval;
+  final Duration maxWait;
+  final Duration maxUnreachable;
+}
+
+final roomRecoveryConfigProvider =
+    Provider<RoomRecoveryConfig>((ref) => const RoomRecoveryConfig());
 
 class RoomNotifier extends StateNotifier<RoomState> {
   RoomNotifier(this._ref, this._ticker) : super(const RoomState());
@@ -425,6 +456,23 @@ class RoomNotifier extends StateNotifier<RoomState> {
             break;
         }
       }
+      // DEF484 — the stream can end CLEANLY without `done`/`error` (a proxy
+      // idle-closing the connection, a tunnel restart). The run is still going
+      // server-side, so keep waiting on it instead of leaving a dead spinner.
+      if (mounted && state.streaming && !state.done) {
+        final runId = state.runId;
+        if (runId != null) {
+          await _recoverViaPolling(runId);
+        } else {
+          state = state.copyWith(
+            streaming: false,
+            error: friendlyError(
+              Exception('stream ended before the run started'),
+              action: 'run the Room',
+            ),
+          );
+        }
+      }
     } on InsufficientCreditsException catch (e) {
       // CR047: the credit wall. This lands before any `started` event (no
       // run_id yet), so surface it as a paywall — for Winzip, a live cooldown
@@ -584,58 +632,51 @@ class RoomNotifier extends StateNotifier<RoomState> {
     }
   }
 
-  /// Poll GET /v1/room/{run_id} until the backend reports a non-RUNNING
-  /// status, then apply the final transcript + verdict to state. Caps
-  /// total wait at ~90s to avoid hanging forever if something went wrong
-  /// server-side.
+  /// DEF484 — "CHECK AGAIN" on the give-up card: resume waiting on the same run.
+  Future<void> resumeWaiting() async {
+    final runId = state.runId;
+    if (runId == null || state.reconnecting) return;
+    await _recoverViaPolling(runId);
+  }
+
+  /// Poll GET /v1/room/{run_id} until the run reaches a terminal state, then
+  /// apply the final transcript + verdict to state. The backend keeps the run
+  /// alive in a detached task, and a slow model can keep it going for 10+
+  /// minutes, so the wait is bounded by [RoomRecoveryConfig] — never by a
+  /// fixed short budget (DEF484: a 90 s cap bounced users out of runs that
+  /// then completed). While the run is still active, agents the server has
+  /// already checkpointed are shown as they land. Giving up is never silent:
+  /// it sets [RoomState.waitGaveUp], which the screen words honestly.
   Future<void> _recoverViaPolling(String runId) async {
-    state = state.copyWith(streaming: false, reconnecting: true, clearError: true);
+    state = state.copyWith(
+      streaming: false,
+      reconnecting: true,
+      waitGaveUp: false,
+      clearError: true,
+    );
     final api = _ref.read(apiClientProvider);
-    final stopAt = DateTime.now().add(const Duration(seconds: 90));
+    final cfg = _ref.read(roomRecoveryConfigProvider);
+    final stopAt = DateTime.now().add(cfg.maxWait);
+    DateTime? unreachableSince;
     while (DateTime.now().isBefore(stopAt)) {
+      if (!mounted) return;
       try {
         final snap = await api.getRoom(runId);
-        if (snap.status.toLowerCase() != 'running') {
+        if (!mounted) return;
+        unreachableSince = null;
+        final status = snap.status.toLowerCase();
+        if (status != 'running' && status != 'queued') {
           // Final state available — overlay it on top of whatever we
           // streamed before the disconnect.
-          final transcript = <String, String>{};
-          final order = <String>[];
-          // CR106 B2: rebuild the stances too. `order` and `transcript` are
-          // rebuilt from the snapshot, and without this the comb would come
-          // back empty after a dropped socket — the same shape as the locked
-          // chairs being dropped below.
-          final stances = <String, AgentStance>{};
-          for (final line in snap.transcript) {
-            transcript[line.agentId] = line.content;
-            if (!order.contains(line.agentId)) order.add(line.agentId);
-            stances[line.agentId] = AgentStance(
-              stance: line.stance,
-              conviction: line.conviction,
-              headline: line.headline,
-              recorded: line.stanceRecorded,
-            );
-          }
-          // Re-seat the locked chairs. `order` is rebuilt from the transcript
-          // alone, and a withheld analyst is deliberately never in the
-          // transcript — so without this the console, which renders by
-          // iterating `order`, silently drops every locked chair on the most
-          // ordinary mobile failure there is. `withheldAgents` still holds
-          // them; nothing would look. Front of the queue, in arrival order,
-          // matching where the stream seats them (all arrive before any
-          // analyst speaks). CR090's notice on this screen survives recovery
-          // because it renders from its own field rather than through `order`.
-          final chairs = state.withheldAgents.keys
-              .where((id) => !order.contains(id))
-              .toList();
-          order.insertAll(0, chairs);
+          final rebuilt = _rebuildFromSnapshot(snap);
           state = state.copyWith(
             reconnecting: false,
             done: true,
-            transcript: transcript,
-            order: order,
+            transcript: rebuilt.transcript,
+            order: rebuilt.order,
             verdict: snap.verdict,
             activeAgent: null,
-            agentStances: stances,
+            agentStances: rebuilt.stances,
             // CR237 round 2 (auditor MAJOR-3) — the `done` event never
             // arrived on this path, so its flags come from the GET payload.
             creditCost: snap.creditCost,
@@ -647,15 +688,78 @@ class RoomNotifier extends StateNotifier<RoomState> {
           await _ref.read(lessonsNotifierProvider.notifier).refresh();
           return;
         }
+        // Still running: show what the server has checkpointed so far, but
+        // only ever grow the picture (a stale snapshot must not erase tokens
+        // already on screen).
+        if (snap.transcript.length > state.transcript.length) {
+          final rebuilt = _rebuildFromSnapshot(snap);
+          state = state.copyWith(
+            transcript: rebuilt.transcript,
+            order: rebuilt.order,
+            agentStances: rebuilt.stances,
+            activeAgent: null,
+          );
+        }
+      } on DioException catch (e) {
+        final code = e.response?.statusCode;
+        if (code == 403 || code == 404) {
+          // The run is not there for us — waiting longer cannot change that.
+          if (!mounted) return;
+          state = state.copyWith(
+            reconnecting: false,
+            error: friendlyError(e, action: 'load this Room'),
+          );
+          return;
+        }
+        unreachableSince ??= DateTime.now();
       } catch (_) {
-        // Transient failure — keep polling.
+        unreachableSince ??= DateTime.now();
       }
-      await Future.delayed(const Duration(seconds: 3));
+      if (unreachableSince != null &&
+          DateTime.now().difference(unreachableSince) > cfg.maxUnreachable) {
+        break;
+      }
+      await Future<void>.delayed(cfg.pollInterval);
     }
-    state = state.copyWith(
-      reconnecting: false,
-      error: 'Reconnect timed out. The run is still saved — check Journal.',
-    );
+    if (!mounted) return;
+    state = state.copyWith(reconnecting: false, waitGaveUp: true);
+  }
+
+  ({
+    Map<String, String> transcript,
+    List<String> order,
+    Map<String, AgentStance> stances,
+  }) _rebuildFromSnapshot(RoomRunSnapshot snap) {
+    final transcript = <String, String>{};
+    final order = <String>[];
+    // CR106 B2: rebuild the stances too. `order` and `transcript` are rebuilt
+    // from the snapshot, and without this the comb would come back empty after
+    // a dropped socket — the same shape as the locked chairs being dropped
+    // below.
+    final stances = <String, AgentStance>{};
+    for (final line in snap.transcript) {
+      transcript[line.agentId] = line.content;
+      if (!order.contains(line.agentId)) order.add(line.agentId);
+      stances[line.agentId] = AgentStance(
+        stance: line.stance,
+        conviction: line.conviction,
+        headline: line.headline,
+        recorded: line.stanceRecorded,
+      );
+    }
+    // Re-seat the locked chairs. `order` is rebuilt from the transcript alone,
+    // and a withheld analyst is deliberately never in the transcript — so
+    // without this the console, which renders by iterating `order`, silently
+    // drops every locked chair on the most ordinary mobile failure there is.
+    // `withheldAgents` still holds them; nothing would look. Front of the
+    // queue, in arrival order, matching where the stream seats them (all
+    // arrive before any analyst speaks). CR090's notice on this screen
+    // survives recovery because it renders from its own field rather than
+    // through `order`.
+    final chairs =
+        state.withheldAgents.keys.where((id) => !order.contains(id)).toList();
+    order.insertAll(0, chairs);
+    return (transcript: transcript, order: order, stances: stances);
   }
 }
 

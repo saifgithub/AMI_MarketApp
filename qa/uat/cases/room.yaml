@@ -240,3 +240,18 @@ cases:
     expected:
       - The picker shows GOOGL in the field with the Room price and balance line above it
       - Nothing is charged until CONVENE is tapped; opening the picker from the Floor still starts with an empty field
+
+  - id: UAT-ROOM-018
+    title: A slow Room run is waited out to its verdict, and a lost connection never silently gives up
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A Room that takes several minutes (slow model day), or a device you can put in airplane mode briefly
+    steps:
+      - Convene the Room; once desks are speaking, switch to airplane mode for about 20 seconds, then back online
+      - Repeat, this time staying offline for over two minutes before reconnecting
+      - Tap CHECK AGAIN
+    expected:
+      - After the short drop the screen shows the 'Connection lost... still running' banner, then the transcript catches up and the run lands on its verdict - it never ends on 'Reconnect timed out'
+      - After the long outage the screen shows an explicit card saying AMI cannot confirm the Room has finished, that the result is saved to the Journal, and a CHECK AGAIN button - not a silent stop
+      - CHECK AGAIN resumes the wait and the verdict appears once the run has finished
