@@ -886,6 +886,16 @@ class Settings(BaseSettings):
     # across both surfaces (same underlying LLM compute budget).
     agent_stream_max_concurrent_per_user: int = 2
 
+    # DEF464: the per-IP rate limiters honour `cf-connecting-ip` only when the
+    # direct TCP peer is inside one of these comma-separated CIDRs. Production
+    # traffic arrives solely via the cloudflared container on the `ami_internal`
+    # compose bridge (melehost: 172.19.0.0/16); Docker allocates user-defined
+    # bridges out of 172.16.0.0/12 by default, so that is the default. A LAN
+    # caller (192.168.x) is outside it, so cannot rotate its own key. Empty
+    # string = trust no proxy (always key on the socket peer). A malformed CIDR
+    # fails the app at import.
+    rate_limit_trusted_proxy_cidrs: str = "172.16.0.0/12"
+
     # CR197 — how many independent CIO samples to draw before issuing a verdict.
     #
     # 1 keeps today's behaviour exactly (one call, one answer) and is the default,
