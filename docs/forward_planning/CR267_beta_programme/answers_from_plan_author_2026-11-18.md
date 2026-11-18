@@ -9,7 +9,17 @@ the changes.
 Dispositions: **A** = author's answer, folded into rev 2 · **S** = Saiful decides (the author's
 recommendation is given) · **D** = the executor's default from the questions file stands.
 
-## Saiful decides (open until he answers)
+## Saiful's rulings (2026-11-18, same session)
+
+1. Q17: **automatic failover** (against the author's recommendation). Alpha fails over to on-prem; Beta fails over to a second DeepInfra model, because the Beta host can't reach the LAN. External testers never get the abliterated build. This amends decision 3; see plan §3a.1.
+2. Q32/33: delete/anonymise for Beta (as recommended).
+3. Q27: show the Street rating, labelled and setting-gated (as recommended).
+4. Q14/Q19: $100 for the runs; $10/$5 daily (as recommended).
+5. Q4: track **B**.
+6. Q6: track K is **closed**.
+7. Q38, Q40: still open; asked at WP-01 and S7.
+
+## Saiful decides (as raised by the author)
 
 | Q | Topic | Author's recommendation |
 |---|---|---|

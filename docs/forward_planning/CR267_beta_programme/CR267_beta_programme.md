@@ -7,7 +7,7 @@ Filed 2026-11-18. Status: `proposed` until Saiful says go. Decisions marked "(Sa
 **Rev 2 (2026-11-18):** this revision takes in the executor's pre-execution questions
 ([`questions_for_plan_author_2026-11-18.md`](questions_for_plan_author_2026-11-18.md)) and the
 author's answers ([`answers_from_plan_author_2026-11-18.md`](answers_from_plan_author_2026-11-18.md)).
-Items still waiting for Saiful are marked **⟨Saiful pending⟩**; the answers file lists them.
+Saiful answered the open items the same day (§3a). Two facts remain to confirm: what is done on the company accounts (WP-01, WP-49) and the Play account type (S7).
 
 ---
 
@@ -48,6 +48,15 @@ Items still waiting for Saiful are marked **⟨Saiful pending⟩**; the answers 
 11. **DEF178:** closed by Saiful rotating the key at the vendor. No history rewrite.
 12. **Beta cohort:** 20–200 testers from personal network, website waitlist, investing communities, YouTube audience. Length 6–12 weeks. Exit criteria in WP-53.
 
+## 3a. Decisions from the rev 2 questions (Saiful, 2026-11-18)
+
+1. **Automatic LLM failover, amending decision 3.** The hosted model is primary. A provider failure fails over automatically, in code: on Alpha to the on-prem vLLM, on Beta to a second DeepInfra model. External testers never get the abliterated on-prem build. A fallback verdict is labelled as such in the stream and in the stored record. If both providers are down, the Room shows "temporarily unavailable". Switching the primary model stays configuration only.
+2. **Account closure:** Beta ships in `delete` or `anonymise` post-grace mode, with the button reading "Delete account". Switch to `archive` only if counsel approves (S6). S6 is off the launch path.
+3. **Street rating:** shown to Beta testers after the verdict, with a source label, behind a setting.
+4. **LLM spend:** $100 account cap for the measurement runs. Daily ceiling as a setting: $10/day Beta, $5/day Alpha.
+5. **Track:** the executing session commits as track B, `(AT:B<N> CR###)`, numbered per session.
+6. **Track K (Kimi) is closed.** WP-00 reads its leftovers, commits the clean ones under K's tag, and supersedes CR266.
+
 ## 4. Saiful gates (stop here and ask)
 
 | Gate | Needed before | What Saiful does |
@@ -58,7 +67,7 @@ Items still waiting for Saiful are marked **⟨Saiful pending⟩**; the answers 
 | S3 | WP-23 | Picks the grader from the WP-22 bake-off scorecard; if Jev, obtains vendor terms. |
 | S4 | WP-42 | Confirms the Beta host choice, opens the account, creates the server, gives go for SSH work. |
 | S5 | WP-40 result | Picks the accelerator / credit programmes and applies. |
-| S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete, plus the Singapore cross-border transfer under Malaysia's PDPA. Only this narrow question; the full legal review stays in §7. ⟨Saiful pending: if Beta ships in `delete`/`anonymise` mode, S6 is off the launch path.⟩ |
+| S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete, plus the Singapore cross-border transfer under Malaysia's PDPA. Only this narrow question; the full legal review stays in §7. Off the launch path: Beta ships in `delete`/`anonymise` mode (§3a.2), and S6 is needed only to switch to `archive`. |
 | S7 | WP-49 | Confirms company Apple/Google accounts are enrolled and usable, and whether the Play account is an organisation account. |
 | S8 | WP-35 | Rotates the Adanos key at the vendor (closes DEF178). |
 | S9 | WP-53 | Confirms the Room satisfaction bar (proposed: 70% positive over 100 rated runs). |
@@ -77,7 +86,7 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-11 | Pin temperature and sampling in config | WP-00 | — | Sonnet |
 | WP-12 | LLM budget cap and per-user concurrent-run cap | WP-00 | — | Sonnet |
 | WP-13 | Output text guard on agent text | WP-00 | — | Opus |
-| WP-14 | Cut Alpha over to the hosted model | WP-10, WP-11, WP-12 | S2 | Sonnet |
+| WP-14 | Cut Alpha over to the hosted model, with automatic failover | WP-10, WP-11, WP-12 | S2 | Opus |
 | WP-20 | Room baseline on the chosen model | WP-14, WP-21a | — | Sonnet |
 | WP-21a | Room decides blind: consensus removed at source | WP-00 | — | Opus |
 | WP-21b | Street comparison after the verdict | WP-21a, WP-14 | — | Sonnet |
@@ -89,7 +98,7 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-27 | Room reliability defects | WP-00 | — | Sonnet |
 | WP-28 | Turn on outcome scoring | WP-14 | — | Sonnet |
 | WP-29 | Copy: stop leading with "12 analysts" | WP-00 | — | Sonnet |
-| WP-30 | Account closure and data export | WP-00 | S6 to release | Opus |
+| WP-30 | Account closure and data export | WP-00 | S6 only for `archive` | Opus |
 | WP-31 | 18+ confirmation | WP-00 | — | Sonnet |
 | WP-32 | iOS privacy manifest | WP-00 | — | Sonnet |
 | WP-33 | Mobile defect batch | WP-00 | — | Sonnet |
@@ -113,7 +122,7 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 
 Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-21a, WP-40, WP-49, WP-51 and WP-52 are independent of the Room work and of each other. WP-10…13 run together. The Room chain WP-21a → 20 → 22 → 23 → 25 → 26 is the critical path. WP-28 and WP-51 are deliberately off the launch path: the first wave is the personal network and needs no waitlist.
 
-Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/daily-cr-def-review` once, logged as WP-01/S1 → the rest of WP-00. This keeps Saiful from being asked about rows that are merely stale. `/bug-monitor` runs at session start as normal. Commit tag for the executing session: ⟨Saiful pending: own track letter⟩.
+Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/daily-cr-def-review` once, logged as WP-01/S1 → the rest of WP-00. This keeps Saiful from being asked about rows that are merely stale. `/bug-monitor` runs at session start as normal. Commit tag for the executing session: `(AT:B<N> CR###)`, numbered per session.
 
 ## 6. Work-package detail
 
@@ -137,12 +146,12 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
       4. CR252, CR253, CR255, CR257, CR259 → `done` or `dropped` per the stocktake, with a reason.
       5. Do not touch CR254 (WP-01 decides it), CR258 (WP-49) or CR260 (WP-21b).
       6. Read `CR253_data_lane_completeness/` (it has no row). If it is a sub-workstream of CR253, add a line to the CR253 row naming both folders. If it is a separate item, ask the Architect to mint an ID. Don't rename the folder.
-   3. Append decisions to `docs/initial_specs/11_decisions/decision_log.md`, one per item in section 3, starting at D-076. Note that D-066/D-067 are reopened and D-068 is closed by decision 3. Mark **D-072 amended for its hosting clause only** ("on the current melehost Alpha stack" is replaced by decision 1); its payments-parked part stands. D-073 is unchanged.
+   3. Append decisions to `docs/initial_specs/11_decisions/decision_log.md`, one per item in section 3, starting at D-076. Also one per item in §3a.1–4 (decision 3 as amended by §3a.1). Note that D-066/D-067 are reopened and D-068 is closed by decision 3. Mark **D-072 amended for its hosting clause only** ("on the current melehost Alpha stack" is replaced by decision 1); its payments-parked part stands. D-073 is unchanged.
    4. Rewrite the status block and Beta section of `docs/initial_specs/10_delivery/project_plan.md` to point at this plan.
    5. Resolve the dirty tree left from October:
       1. Deleted `CR253_tm_all_salvage_conversion.md`: confirm `CR254_tm_all_salvage_conversion/` holds the same content, then commit the deletion by pathspec.
       2. Untracked checkpoint memos (track K) and the three harness/docs files (`jev_verdict_relation.py`, `cr251-cap1-smoke.yaml`, `CR252…/production_section.md`): **`origin` is public.** Read each file whole; a pattern scan is not enough. If a file holds a credential, a personal detail or anything doubtful, leave it untracked and list it in `progress.md` for Saiful. Otherwise commit it, using K's tag for K's files.
-      3. Do not discard another track's work without reading it. Whether track K is closed: ⟨Saiful pending⟩.
+      3. Do not discard another track's work without reading it. Track K is closed (§3a.6).
 3. Acceptance: `python3 scripts/registers/gen_registers.py gen all` leaves no diff after commit; no path WP-00 owns is dirty (anything else dirty is listed in `progress.md`, since other tracks share the checkout); every row changed in step 2 reads `done` or `dropped` with a reason.
 
 **WP-01 Register decision review (gate S1)**
@@ -164,7 +173,7 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
 2. Context: `docs/forward_planning/CR240_llm_provider_evaluation/CR240.md`; harness `docs/tools/room_investigation_V2/` (read its `README.md` and `EXPERIMENT_LOG.md`); gateway `backend/app/services/llm_gateway.py`. The vLLM provider slot is OpenAI-compatible: `VLLM_BASE_URL`, `VLLM_MODEL`, `VLLM_API_KEY` point it at DeepInfra with no code change. Confirm that with one call before anything else, through both the gateway and the V2 harness. If the harness drops the key, fixing it is a tools change and doesn't break decision 3, which covers the product gateway.
 3. Key and spend:
    1. Find the DeepInfra key's variable *name* in melehost's `.env` and the harness env; never print values. The CR257 runs used a provider key there in October. If it isn't there, Saiful places it.
-   2. Account spend limit for the measurement runs: ⟨Saiful pending; recommended $100⟩.
+   2. Account spend limit for the measurement runs: $100 (§3a.4). Saiful sets it at the vendor if the account allows.
    3. Check DeepInfra's rate limits against 10 concurrent Rooms (WP-46).
 4. Steps:
    1. Read DeepInfra's live model catalogue. Shortlist three non-abliterated open-weight models: the current Qwen flash-class model, DeepSeek-V4-Flash, and one other fast model. Record each licence's position on commercial use, and whether the model returns token probabilities (WP-22).
@@ -180,7 +189,7 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
 
 **WP-12 Budget cap and concurrent-run cap**
 
-1. A daily spend ceiling on the hosted provider, as a setting. Count tokens from responses; on breach, Rooms return an honest "temporarily unavailable" state and an alert fires. Ceiling: ⟨Saiful pending; recommended $10/day Beta, $5/day Alpha, an estimate from 200 Rooms a day at 5¢⟩.
+1. A daily spend ceiling on the hosted provider, as a setting. Count tokens from responses; on breach, Rooms return an honest "temporarily unavailable" state and an alert fires. Ceiling: $10/day Beta, $5/day Alpha (§3a.4). The ceiling counts primary and fallback spend together.
 2. A per-user limit of one Room in flight: the only part left over from DEF186. If the DEF186 fix already enforces it, prove that with a test and drop this half.
 3. Acceptance: unit tests for both; breach state is visible in the stream, not a fake verdict.
 
@@ -192,12 +201,14 @@ Order at the start (rev 2): S0 → WP-00 step 2 (mechanical row fixes) → `/dai
 **WP-14 Cut Alpha over (gate S2)**
 
 1. Set the three vLLM variables in `infra/alpha.env` to the chosen model; promote.
-2. Fallback ⟨Saiful pending; author's recommendation below, which keeps decision 3 literally "configuration only"⟩:
-   1. No second provider slot and no automatic failover. Fallback is an operation: swap the three `VLLM_*` values back and re-promote.
-   2. The on-prem (abliterated) build is a manual fallback for Alpha only and never serves external testers. Beta's fallback is a second DeepInfra model, also by env swap.
-   3. A hosted outage ends the Room in a visible "temporarily unavailable" state, the same as the grader in WP-23.
-3. Update the runtime table in `CLAUDE.md` (model, where it runs, what the alias resolves to).
-4. Acceptance: one live Room on Alpha completes; `llm_audit` rows show the hosted model; a forced provider failure produces the visible unavailable state, not a verdict.
+2. Automatic failover (§3a.1). This is a code change in `llm_gateway.py`, a shared hot path, so the full backend suite runs before merge.
+   1. Add a second OpenAI-compatible provider slot (`VLLM_FALLBACK_BASE_URL`, `VLLM_FALLBACK_MODEL`, `VLLM_FALLBACK_API_KEY`), forwarded in `docker-compose.yml`. On Alpha it points at on-prem vLLM; on Beta at a second DeepInfra model.
+   2. A desk call that fails on the primary retries on the fallback. Which errors trigger failover, and whether a Room may mix providers mid-run or must restart wholly on the fallback, are decided in the WP's CR doc. The default is to restart the whole Room on the fallback, so one Room never mixes models.
+   3. A fallback Room is labelled in the stream and in the stored record, and carries the fallback model's `root` (so WP-24 banks it under its own key). It is never presented as the primary model.
+   4. Both providers down: the visible "temporarily unavailable" state, never a verdict.
+   5. The Beta env must not point the fallback at on-prem. WP-41 adds a startup check that refuses a LAN or abliterated fallback when `ENV=beta`.
+3. Update the runtime table in `CLAUDE.md` (primary model, fallback model, where each runs, what the alias resolves to).
+4. Acceptance: one live Room on Alpha completes on the hosted model (`llm_audit` shows it); a forced primary failure produces a completed Room labelled as the fallback, with the fallback model in `llm_audit`; forcing both down produces the unavailable state, not a verdict.
 
 ### Phase 2 — The Room
 
@@ -218,7 +229,7 @@ Read first: `docs/Research/decision_consistency_programme_stocktake_2026-10-20.m
 **WP-21b Street comparison after the verdict**
 
 1. After the verdict, attach a computed comparison to the result: Street rating, the Room's action, and the reasons from the narrow answers when they differ. CR260 (analyst price targets) is re-scoped to this display.
-2. Mobile: show it on the verdict card, behind a setting, with a source label. ⟨Saiful pending: shown to Beta testers or not. Recommended: shown, setting-gated. Saiful said earlier "Show after the verdict". Public release needs a licensed source (CR007).⟩
+2. Mobile: show it on the verdict card, behind a setting, with a source label (§3a.3). Public release needs a licensed source (CR007).
 3. Acceptance: a Room on Alpha shows the comparison after the verdict; the comparison is setting-gated and carries a source label.
 
 **WP-22 Narrow-question judge and bake-off (offline, no production change)**
@@ -302,10 +313,10 @@ Keep all twelve voices on screen and cut the calls: one structured Research call
 **WP-30 Account closure and data export (release gated by S6)**
 
 1. Backend: routes to close an account (deactivate and revoke sessions at once; restorable for 30 days; then a scheduled job runs the post-grace step) and to export the user's data as a downloadable file. Make the post-grace step a setting with three modes (archive, anonymise, delete) so counsel's answer is a configuration change.
-   - ⟨Saiful pending: the Beta mode.⟩ The author recommends shipping Beta in `delete` or `anonymise` mode, with the button reading "Delete account", and switching to `archive` only if counsel approves. That takes S6 off the launch path and removes the Apple 5.1.1(v) / Play deletion review risk in WP-50. If archive is kept for Beta, S6 stays a launch blocker and WP-50 can still be rejected. The wording in step 3 follows whichever mode is chosen.
+   - Beta mode (§3a.2): `delete` or `anonymise`, with the button reading "Delete account". The WP's CR doc records which of the two and why; it must remove the user's personal data, to meet Apple 5.1.1(v) and Play's deletion requirement. `archive` is switched on only after counsel approves (S6).
 2. Mobile: Settings → Close account, and Settings → Export my data.
-3. Wording everywhere says "close account" (or "delete account" under the recommended Beta mode) and states what is kept and for how long. Update `legal/policies/terms_of_service.md` §10 and the privacy and data-deletion policies to match; they are still DRAFT. The privacy policy also notes Singapore hosting as a cross-border transfer under Malaysia's PDPA.
-4. Acceptance: closed account cannot sign in after the grace period; restore works inside it; export contains the user's trades, rooms, mandate and progress; device run on the rig. Do not ship to external testers before S6.
+3. Wording everywhere says "delete account" in Beta (it changes to "close account" only if `archive` is enabled) and states what is kept and for how long. Update `legal/policies/terms_of_service.md` §10 and the privacy and data-deletion policies to match; they are still DRAFT. The privacy policy also notes Singapore hosting as a cross-border transfer under Malaysia's PDPA.
+4. Acceptance: a deleted account cannot sign in after the grace period and its personal data is gone (or anonymised); restore works inside the grace period; export contains the user's trades, rooms, mandate and progress; device run on the rig. `archive` mode is not enabled before S6.
 
 **WP-31 18+ confirmation**
 
@@ -358,7 +369,7 @@ Recommendation: one Singapore VPS (2 vCPU / 4 GB) running the same Docker Compos
 
 **WP-41 Beta environment configuration**
 
-1. Add `beta` to the allowed `ENV` values in `backend/app/core/config.py`. Create `infra/beta.env.example` (no secrets) listing every key Beta needs: fresh `SECRET_KEY`, hosted-LLM keys, no on-prem address. Check that nothing in the code assumes `staging` or `prod` only.
+1. Add `beta` to the allowed `ENV` values in `backend/app/core/config.py`. Create `infra/beta.env.example` (no secrets) listing every key Beta needs: fresh `SECRET_KEY`, hosted-LLM keys for primary and fallback, no on-prem address. Add a startup check that refuses to boot with `ENV=beta` if either LLM base URL is a LAN or private address (§3a.1). Check that nothing in the code assumes `staging` or `prod` only.
 2. Beta starts with an empty database built the same way Alpha's was. DEF421 is not a Beta blocker on this path; it stays open as a blocker for any managed Postgres (production).
 3. Acceptance: unit tests green with `ENV=beta`; compose config renders with the example env.
 
