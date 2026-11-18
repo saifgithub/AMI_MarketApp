@@ -11,7 +11,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 
 | WP | Title | Plan deps / gate | Status | Started | Done | Commits | Deviations from plan |
 |---|---|---|---|---|---|---|---|
-| WP-00 | Re-entry | S0 ✅ 2026-11-18 | in progress | 2026-11-18 | | `5cf24439` | (1) CR252 and CR257 were never executed: CR257 dropped (WP-22 absorbs it); CR252 left for WP-01. (2) CR253 ID collision: CR268 minted for the data-lane folder. (3) CR266's run *did* complete; result recorded (gate FAIL). |
+| WP-00 | Re-entry | S0 ✅ 2026-11-18 | done | 2026-11-18 | 2026-11-18 | `5cf24439` `17fbacc5` `6ee0921c` `769f599b` | (1) CR252 and CR257 were never executed: CR257 dropped (WP-22 absorbs it); CR252 went to WP-01 (now WP-15). (2) CR253 ID collision: CR268 minted. (3) CR266's run *did* complete; result recorded (gate FAIL). (4) One K memo held back (third-party personal data); Saiful decides. |
 | WP-01 | Register decision review | S1 ✅ | done | 2026-11-18 | 2026-11-18 | `afee9f99` (main), branch rows | Ledger committed to `main` so other sessions don't re-trigger today's review. 13 items accepted on recommendation in one go (Saiful). New scope: WP-15, WP-38, WP-39; batch additions to WP-27/33/35. DEF386 and DEF434 closed (verified). |
 | WP-02 | Bring Alpha level with HEAD | WP-00 | not started | | | | |
 | WP-15 | CR252 heuristics fold-in | WP-00 · **S11** | blocked (gate) | | | | Added at WP-01. |

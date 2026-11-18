@@ -31,3 +31,20 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    **not enrolled**; the Play account will be an Organisation account.
 6. **Gates S11/S12 added** (Saiful): pause for an implementation-plan discussion before any LLM
    change (WP-15, WP-10–14) and before any Jev/grader change (WP-22, WP-23).
+7. **WP-00 steps 3–5 and WP-01 closures.**
+   1. Decisions D-076–D-089 appended; D-066/D-067 marked reopened, D-068 closed, D-072's hosting
+      clause amended (`17fbacc5`).
+   2. `project_plan.md` status block and Phase 2 point at CR267 (`17fbacc5`).
+   3. The CR253 duplicate deletion is committed on main (`6ee0921c`); CR254 holds the same content.
+   4. Ten October leftovers were read in full (836 lines, Sonnet reader, with the flag confirmed by me).
+      Nine were clean and are committed on main under K's tag (`769f599b`).
+   5. **Held back for Saiful:** `.deliveryos/checkpoint_history/20261017T222812Z_855f74dc…md`
+      contains third parties' phone numbers and client-confidential deal details (non-AMI work).
+      It is left untracked. Saiful decides whether to delete it, move it out of the repo, or redact
+      and commit it.
+   6. `20261118T111900Z_f2ac2318…md` is today's memo from the Fable session; not ours, left alone.
+   7. DEF386 and DEF434 closed with evidence (`26bf7fb5`).
+8. **WP-00 done.** Acceptance:
+   1. `gen_registers.py gen all` after merging main leaves no diff.
+   2. No WP-00-owned path is dirty. The two untracked memos above are listed here.
+   3. Every row changed by WP-00/WP-01 reads `done` or `dropped` with a dated reason (13 rows).
