@@ -13,7 +13,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 |---|---|---|---|---|---|---|---|
 | WP-00 | Re-entry | S0 ✅ 2026-11-18 | done | 2026-11-18 | 2026-11-18 | `5cf24439` `17fbacc5` `6ee0921c` `769f599b` | (1) CR252 and CR257 were never executed: CR257 dropped (WP-22 absorbs it); CR252 went to WP-01 (now WP-15). (2) CR253 ID collision: CR268 minted. (3) CR266's run *did* complete; result recorded (gate FAIL). (4) One K memo held back (third-party personal data); Saiful decides. |
 | WP-01 | Register decision review | S1 ✅ | done | 2026-11-18 | 2026-11-18 | `afee9f99` (main), branch rows | Ledger committed to `main` so other sessions don't re-trigger today's review. 13 items accepted on recommendation in one go (Saiful). New scope: WP-15, WP-38, WP-39; batch additions to WP-27/33/35. DEF386 and DEF434 closed (verified). |
-| WP-02 | Bring Alpha level with HEAD | WP-00 | done | 2026-11-18 | 2026-11-18 | `440b82dd`; deploys `alpha-2026-11-18-1` `alpha-2026-11-18-2` `alpha-2026-11-19-1` | UAT gate failed on inherited mobile debt; Saiful: promote now, clear it in WP-33 (backend-only). Repeated for deploys #2 and #3. |
+| WP-02 | Bring Alpha level with HEAD | WP-00 | done | 2026-11-18 | 2026-11-18 | `440b82dd`; deploys `alpha-2026-11-18-1` `-18-2` `-19-1` `-19-2` | UAT gate failed on inherited mobile debt; Saiful: promote now, clear it in WP-33 (backend-only). Repeated for deploys #2–#4. Deploy #3's API UAT found **DEF490** (the harness spoofed IPs, which DEF464 now ignores); fixed in `535def50`. |
 | WP-15 | CR252 heuristics fold-in | WP-00 · S11 ✅ | done | 2026-11-18 | 2026-11-18 | `519112f8` | No code: already folded into all 12 personas since `0f41f14e`. My WP-00 note was wrong. |
 | WP-10 | Hosted-model shortlist + scorecard | WP-00, WP-15 · S11 ✅ | in progress | 2026-11-18 | | | Sonnet worker running on melehost. Ling-3.0-flash included. Spend ≈$2.56 of the $80 cap. |
 | WP-11 | Pin temperature | WP-00 · S11 ✅ | done | 2026-11-18 | 2026-11-18 | `e9e730ab` | CR269. |
@@ -23,8 +23,8 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-20 | Room baseline | WP-14, WP-21a | not started | | | | |
 | WP-21a | Room decides blind | WP-00 | done | 2026-11-18 | 2026-11-18 | `4c0a27db` | CR275. The sheet DID carry rating, targets, split and tape to every agent by default; now withheld at `_format_profile` (prefix `analyst_`), data kept for WP-21b. Left in, for Saiful: news headlines that mention upgrades; consensus EPS estimates. |
 | WP-21b | Street comparison after verdict | WP-21a, WP-14 | not started | | | | |
-| WP-22 | Narrow-question judge + bake-off | WP-20 · **S12** | blocked (gate) | | | | S12 added 2026-11-18. |
-| WP-23 | Coded decision rule | WP-22 · S3, **S12** | blocked (gate) | | | | |
+| WP-22 | Narrow-question judge + bake-off | WP-20 · **S12** | not started | | | | S12 approved 2026-11-18; waits on WP-20. |
+| WP-23 | Coded decision rule | WP-22 · S3, **S12** | not started | | | | |
 | WP-24 | Same inputs → same room | WP-20 | not started | | | | |
 | WP-25 | Flip explainer | WP-23, WP-24 | not started | | | | |
 | WP-26 | Room acceptance run | WP-21b/23/24/25 | not started | | | | |
@@ -64,4 +64,4 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | S2–S8, S10 | open | | S8 (Adanos key) blocks DEF178. S4 and S7 are Saiful's actions and can be released now. |
 | S9 | ✅ ruled | 2026-11-18 | Saiful: "Lets not set a number, but if we need to set it to 60%". WP-53 reports the satisfaction rate without a pass/fail bar; where a bar is required, it is 60% thumbs-up over 100 rated runs. |
 | S11 | ✅ approved | 2026-11-18 | Plan: `S11_llm_implementation_plan.md` (rulings §3a). Alpha stays on-prem until Beta; Ling joins WP-10. |
-| S12 | open | | Implementation-plan discussion before any Jev/grader change (WP-22, WP-23). Added 2026-11-18. Saiful 2026-11-18: draft the plan now (`S12_jev_grader_implementation_plan.md`). |
+| S12 | ✅ approved | 2026-11-18 | Plan `S12_jev_grader_implementation_plan.md` §0. The rule decides (shadow first on Alpha). **Analyst consensus is the reference, with no human labelling** (Saiful: "didn't we agree to use the current market analysis of the ticker?"). Jev in the test only; ask TypeSafe for terms now. Other 7 recommendations accepted ($50 cap, etc.). |
