@@ -34,9 +34,12 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import itertools
 import json
 import random
 import re
+import threading
+import weakref
 import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
@@ -6857,66 +6860,104 @@ def _row_to_room_run(row: RoomRunRow) -> RoomRun:
     )
 
 
+# DEF444 — every write of a run row is a SNAPSHOT taken on the loop thread, stamped
+# with a monotonically increasing sequence, and written under a per-run lock. A
+# checkpoint can therefore run off the loop (`asyncio.to_thread`) without ever
+# landing after a later write: a snapshot whose sequence is below the last one
+# written for that run is dropped, so a slow checkpoint cannot flip a row that a
+# cancel / fail / complete write already moved on (the DEF425 cancel write).
+_persist_seq = itertools.count(1)
+_persist_written: dict[UUID, int] = {}
+_persist_locks: "weakref.WeakValueDictionary[UUID, threading.Lock]" = (
+    weakref.WeakValueDictionary()
+)
+_persist_registry_lock = threading.Lock()
+_PERSIST_WRITTEN_CAP = 5000
+
+
+def _snapshot_run(run: RoomRun) -> tuple[int, dict[str, Any]]:
+    """Plain-value copy of everything `_persist_run` writes, plus its sequence."""
+    seq = next(_persist_seq)
+    return seq, {
+        "id": run.id,
+        "user_id": run.user_id,
+        "triggered_at": run.triggered_at,
+        "ticker": run.ticker,
+        "started_at": run.started_at,
+        "finished_at": run.finished_at,
+        "mandate_version": run.mandate_version,
+        "model_tier": run.model_tier,
+        "rounds": run.rounds,
+        "transcript": [m.model_dump(mode="json") for m in run.transcript],
+        "verdict": run.verdict.model_dump(mode="json") if run.verdict else None,
+        "credit_cost": run.credit_cost,
+        "status": run.status if isinstance(run.status, str) else run.status.value,
+        "error_message": run.error_message,
+        "duration_ms": run.duration_ms,
+        "refund_recorded": run.refund_recorded,
+        "cio_context_snapshot": copy.deepcopy(run.cio_context_snapshot),
+        "cio_retried": run.cio_retried,
+    }
+
+
+def _write_run_snapshot(seq: int, snap: dict[str, Any]) -> None:
+    run_id = snap["id"]
+    with _persist_registry_lock:
+        lock = _persist_locks.get(run_id)
+        if lock is None:
+            lock = threading.Lock()
+            _persist_locks[run_id] = lock
+    with lock:
+        if seq < _persist_written.get(run_id, 0):
+            return
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow).where(RoomRunRow.id == run_id)
+            ).scalar_one_or_none()
+            if row is None:
+                s.add(RoomRunRow(**snap))
+            else:
+                for key, value in snap.items():
+                    if key not in ("id", "user_id", "triggered_at"):
+                        setattr(row, key, value)
+        _persist_written.pop(run_id, None)
+        _persist_written[run_id] = seq
+        while len(_persist_written) > _PERSIST_WRITTEN_CAP:
+            _persist_written.pop(next(iter(_persist_written)), None)
+
+
 def _persist_run(run: RoomRun) -> None:
-    """Upsert a RoomRun into the DB. Last-write-wins on (id)."""
-    with get_session() as s:
-        row = s.execute(
-            select(RoomRunRow).where(RoomRunRow.id == run.id)
-        ).scalar_one_or_none()
-        transcript_json = [m.model_dump(mode="json") for m in run.transcript]
-        verdict_json = run.verdict.model_dump(mode="json") if run.verdict else None
-        if row is None:
-            s.add(RoomRunRow(
-                id=run.id,
-                user_id=run.user_id,
-                ticker=run.ticker,
-                triggered_at=run.triggered_at,
-                started_at=run.started_at,
-                finished_at=run.finished_at,
-                mandate_version=run.mandate_version,
-                model_tier=run.model_tier,
-                rounds=run.rounds,
-                transcript=transcript_json,
-                verdict=verdict_json,
-                credit_cost=run.credit_cost,
-                status=run.status if isinstance(run.status, str) else run.status.value,
-                error_message=run.error_message,
-                duration_ms=run.duration_ms,
-                refund_recorded=run.refund_recorded,
-                cio_context_snapshot=run.cio_context_snapshot,
-                cio_retried=run.cio_retried,
-            ))
-        else:
-            row.ticker = run.ticker
-            row.started_at = run.started_at
-            row.finished_at = run.finished_at
-            row.mandate_version = run.mandate_version
-            row.model_tier = run.model_tier
-            row.rounds = run.rounds
-            row.transcript = transcript_json
-            row.verdict = verdict_json
-            row.credit_cost = run.credit_cost
-            row.status = run.status if isinstance(run.status, str) else run.status.value
-            row.error_message = run.error_message
-            row.duration_ms = run.duration_ms
-            row.refund_recorded = run.refund_recorded
-            row.cio_context_snapshot = run.cio_context_snapshot
-            row.cio_retried = run.cio_retried
+    """Upsert a RoomRun into the DB. Last-write-wins on (id), ordered by snapshot sequence."""
+    seq, snap = _snapshot_run(run)
+    _write_run_snapshot(seq, snap)
 
 
-def _checkpoint_run(run: RoomRun) -> None:
-    """Incremental transcript snapshot after each agent completes.
+async def _checkpoint_run_async(run: RoomRun) -> None:
+    """Incremental transcript snapshot after each agent completes (DEF444: off the
+    event loop). The snapshot is taken here, on the loop, so the worker thread never
+    reads a `run` the generator is still mutating; the awaited write finishes before
+    the caller yields the next event (durability and ordering unchanged).
 
-    Wrapped in try/except so a transient DB hiccup does not kill the run —
-    the final _persist_run() call at completion is still authoritative.
-    Narrows the data-loss window from "entire run" to "last one agent".
+    A failed write only logs: the final `_persist_run()` at completion is still
+    authoritative. Narrows the data-loss window from "entire run" to "last one agent".
     """
     try:
-        _persist_run(run)
+        seq, snap = _snapshot_run(run)
+    except Exception as exc:
+        logger.warning(
+            "room_checkpoint_failed", run_id=str(run.id), error=str(exc)[:200]
+        )
+        return
+    await asyncio.to_thread(_checkpoint_snapshot, seq, snap)
+
+
+def _checkpoint_snapshot(seq: int, snap: dict[str, Any]) -> None:
+    try:
+        _write_run_snapshot(seq, snap)
     except Exception as exc:
         logger.warning(
             "room_checkpoint_failed",
-            run_id=str(run.id),
+            run_id=str(snap["id"]),
             error=str(exc)[:200],
         )
 
@@ -10168,7 +10209,7 @@ async def _stream_agent_text(
         data_gaps=data_gaps,
         envelope_parsed=envelope_parsed,
     ))
-    _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
+    await _checkpoint_run_async(run)  # incremental snapshot, off-loop (DEF444) — narrows data-loss window to ≤1 agent
     yield RoomEvent(
         kind="agent_done",
         run_id=run_id,
