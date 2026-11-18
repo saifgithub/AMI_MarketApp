@@ -71,15 +71,6 @@ def test_oversized_order_is_refused_with_a_reason_and_moves_nothing(driver, run_
 
 
 @pytest.mark.uat("UAT-SIM-028")
-@pytest.mark.xfail(
-    strict=False,
-    raises=AssertionError,
-    reason=(
-        "DEF483 — the fill confirmation renders a stray backslash — "
-        "'Filled: BUY 1 NFLX @ \\$69.85' — because tradeTicketFilled in app_en.arb "
-        "is written '\\\\${price}'. Shown to every user on every fill."
-    ),
-)
 def test_fill_confirmation_reads_cleanly(driver, run_dir):
     if "bought" not in sim_steps.STATE:
         sim_steps.place_buy_one(driver, run_dir)

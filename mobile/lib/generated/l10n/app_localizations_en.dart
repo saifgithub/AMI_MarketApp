@@ -2512,7 +2512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tradeTicketFilled(
       String side, String qty, String ticker, String price) {
-    return 'Filled: $side $qty $ticker @ \\\$$price';
+    return 'Filled: $side $qty $ticker @ \$$price';
   }
 
   @override

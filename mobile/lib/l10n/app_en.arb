@@ -2770,7 +2770,7 @@
   },
   "tradeTicketSideBuy": "BUY",
   "tradeTicketSideSell": "SELL",
-  "tradeTicketFilled": "Filled: {side} {qty} {ticker} @ \\${price}",
+  "tradeTicketFilled": "Filled: {side} {qty} {ticker} @ ${price}",
   "tradeTicketResting": "Resting: {side} {ticker} at ${price}",
   "tradeTicketRefuseCrossZero": "You hold {held} {ticker}. Selling {qty} would close that position and open a short in one action — sell {held} to close, or place the short separately.",
   "@tradeTicketRefuseCrossZero": {

@@ -4227,7 +4227,7 @@ abstract class AppLocalizations {
   /// Snackbar after a trade fills. {side}=BUY/SELL, {qty}=quantity, {ticker}=symbol, {price}=entry price formatted to 2dp.
   ///
   /// In en, this message translates to:
-  /// **'Filled: {side} {qty} {ticker} @ \\\${price}'**
+  /// **'Filled: {side} {qty} {ticker} @ \${price}'**
   String tradeTicketFilled(
       String side, String qty, String ticker, String price);
 
