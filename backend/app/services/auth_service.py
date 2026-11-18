@@ -45,6 +45,7 @@ from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import AuthChallengeRow, SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
+from app.services import account_erasure
 from app.services.email_service import send_magic_link as _send_magic_link_email
 from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier, build_google_verifier
 
@@ -509,6 +510,7 @@ class AuthService:
         code: str,
         user_id: UUID | None,
         challenge_owner_id: UUID | None = None,
+        restore_account: bool = False,
     ) -> tuple[AuthUser, str, UUID | None] | None:
         """Returns (user, token, adopted_from_user_id) on success.
         `adopted_from_user_id` is set when account-linking Phase 1 silently
@@ -563,6 +565,7 @@ class AuthService:
             pre_claim_uid = user_id or active.user_id
             user = self._claim_or_create(
                 s, user_id=pre_claim_uid, email=target,
+                restore_account=restore_account,
             )
             adopted_from = (
                 pre_claim_uid
@@ -583,6 +586,7 @@ class AuthService:
         identity_token: str,
         user_id: UUID | None,
         full_name: str | None = None,
+        restore_account: bool = False,
     ) -> tuple[AuthUser, str, UUID | None]:
         # Full verification: signature against Apple's JWKS, iss, aud,
         # exp. Raises OIDCVerificationError (subclass of ValueError) on
@@ -628,6 +632,8 @@ class AuthService:
             row = s.execute(
                 select(User).where(User.apple_id == apple_sub)
             ).scalar_one_or_none()
+            if row is not None:
+                account_erasure.gate_sign_in(row, restore=restore_account)
             # Email fallback (AT:R32, account-linking Phase 1): if no
             # apple_id match but Apple ships the email claim and an existing
             # user owns that email, attach apple_sub to that row instead of
@@ -638,6 +644,7 @@ class AuthService:
                     select(User).where(User.email == apple_email)
                 ).scalar_one_or_none()
                 if row is not None:
+                    account_erasure.gate_sign_in(row, restore=restore_account)
                     row.apple_id = apple_sub
             # BL2 (AT:R33): when adoption fires (existing apple_id OR
             # existing-email row), move the pre-claim anon's devices to the
@@ -732,6 +739,7 @@ class AuthService:
         *,
         identity_token: str,
         user_id: UUID | None,
+        restore_account: bool = False,
     ) -> tuple[AuthUser, str, UUID | None]:
         """Google Sign-In claim (Android only at alpha; D-057).
 
@@ -782,6 +790,8 @@ class AuthService:
             row = s.execute(
                 select(User).where(User.google_id == google_sub)
             ).scalar_one_or_none()
+            if row is not None:
+                account_erasure.gate_sign_in(row, restore=restore_account)
             # Email fallback (account-linking Phase 1): existing user owns
             # this email (via magic-link or Apple-with-same-email) — attach
             # google_sub to that row instead of forking.
@@ -790,6 +800,7 @@ class AuthService:
                     select(User).where(User.email == google_email)
                 ).scalar_one_or_none()
                 if row is not None:
+                    account_erasure.gate_sign_in(row, restore=restore_account)
                     row.google_id = google_sub
             # BL2 device re-keying on adoption (mirrors Apple flow).
             adopted_from: UUID | None = None
@@ -868,6 +879,7 @@ class AuthService:
         *,
         user_id: UUID | None,
         email: str,
+        restore_account: bool = False,
     ) -> User:
         # Identity-first lookup (AT:R32, account-linking Phase 1). An existing
         # row matching the verified email always wins, so the same human
@@ -877,6 +889,9 @@ class AuthService:
         row: User | None = None
         if email:
             row = s.execute(select(User).where(User.email == email)).scalar_one_or_none()
+            if row is not None:
+                # CR276: a closed account is never adopted silently.
+                account_erasure.gate_sign_in(row, restore=restore_account)
         # BL2 (AT:R33): if email-lookup succeeded and the pre-claim anon row
         # is being orphaned, move its devices to the adopted user so the
         # new phone shows up in the existing user's device list.

@@ -562,6 +562,13 @@ services:
       # CR273 — refuse onboarding without the 18+ confirmation. Default true;
       # false only while testers run builds older than the age gate.
       ONBOARDING_AGE_GATE_ENFORCED: ${ONBOARDING_AGE_GATE_ENFORCED:-true}
+      # CR276 — in-app account deletion. Post-grace job mode (delete | anonymise |
+      # archive). Beta = delete. archive is refused at boot unless counsel's
+      # approval flag is also true (CR267 gate S6).
+      ACCOUNT_ERASURE_MODE: ${ACCOUNT_ERASURE_MODE:-delete}
+      ACCOUNT_ARCHIVE_COUNSEL_APPROVED: ${ACCOUNT_ARCHIVE_COUNSEL_APPROVED:-false}
+      ACCOUNT_CLOSURE_GRACE_DAYS: ${ACCOUNT_CLOSURE_GRACE_DAYS:-30}
+      ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS: ${ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS:-3600}
       # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
       # deterministic allowed-action set + computed size with a persisted
       # decision record. Default off; per-MODEL acceptance-gated — thresholds

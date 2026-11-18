@@ -180,6 +180,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _rl.anon_rate_limit.reset()
     _rl.magic_link_start_rate_limit.reset()
     _rl.room_stream_rate_limit.reset()
+    _rl.account_export_rate_limit.reset()
     # CR027: notify()'s per-user push limiters — flush between tests so a
     # limit tripped in one test doesn't bleed into the next.
     from app.services import notification_service as _notif

@@ -23,6 +23,7 @@ from app.api.admin_push import router as admin_push_router
 from app.api.admin_room import router as admin_room_router
 from app.api.admin_ticker_interest import router as admin_ticker_interest_router
 from app.api.admin_verdict_outcomes import router as admin_verdict_outcomes_router
+from app.api.account import router as account_router
 from app.api.alpaca import router as alpaca_router
 from app.api.backtest_admin import router as backtest_admin_router
 from app.api.ai_coach import router as ai_coach_router
@@ -457,6 +458,27 @@ async def _daily_reminder_tick() -> None:
         await asyncio.sleep(settings.daily_reminder_tick_interval_seconds)
 
 
+async def _account_erasure_tick() -> None:
+    """Background task: erase closed accounts whose grace window has ended
+    (CR276). Idempotent like the other ticks — a run that finds nothing due does
+    nothing, and a failed account is retried on the next pass, so a restart
+    cannot lose one. The DB work and the processor calls are blocking, hence
+    `to_thread`. In `archive` mode without counsel's approval every pass logs a
+    refusal at error level rather than quietly doing nothing."""
+    from app.services.account_erasure import run_erasure_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_erasure_tick)
+            if stats["refused"]:
+                logger.error("account_erasure_tick_refused", **stats)
+            else:
+                logger.info("account_erasure_tick_complete", **stats)
+        except Exception:
+            logger.exception("account_erasure_tick_failed")
+        await asyncio.sleep(settings.account_erasure_tick_interval_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -531,6 +553,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_scoring_pass_tick()),
         asyncio.create_task(_game_desk_fill_tick()),
         asyncio.create_task(_game_push_tick()),
+        asyncio.create_task(_account_erasure_tick()),
     ]
     try:
         yield
@@ -671,6 +694,7 @@ app.include_router(admin_ticker_interest_router)  # CR200-R001 — ticker intere
 app.include_router(admin_room_router)  # CR200-R002 — room LLM call viewer + prompt replay
 app.include_router(admin_verdict_outcomes_router)  # CR219 R55 — calibration ledger
 app.include_router(backtest_admin_router)  # CR164 — admin-only as-of Room runs
+app.include_router(account_router)  # CR276 — close account + data export
 app.include_router(alpaca_router)
 app.include_router(ai_coach_router)
 app.include_router(auth_router)

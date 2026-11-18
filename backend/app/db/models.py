@@ -214,6 +214,22 @@ class User(Base):
         DateTime(timezone=True), nullable=True,
     )
 
+    # CR276 (CR267 WP-30) — account closure. `closure_requested_at` is when the
+    # user asked to delete the account: sessions were revoked in the same write
+    # and every identity-bearing sign-in is held for the grace window
+    # (`account_closure_grace_days`), inside which an explicit restore clears
+    # it. `erased_at` / `erased_mode` are written once the post-grace step has
+    # run (`app/services/account_erasure.py`); a `delete`-mode erasure removes
+    # the row altogether, so they only ever survive on `anonymise` tombstones
+    # and `archive` rows. Migration: cr276a0b0c0d1.
+    closure_requested_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True,
+    )
+    erased_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    erased_mode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
     # CR125 — revocation counter for scaffold Bearer tokens. Embedded in every
     # token issued (`scaffold:<hex>:<exp>:<ver>:<sig>`); `get_current_user`
     # 401s when a token's version doesn't match this. `DELETE /v1/auth/session`
