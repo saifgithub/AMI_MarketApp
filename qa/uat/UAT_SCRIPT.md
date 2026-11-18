@@ -4,14 +4,14 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**268 cases** — 185 api, 15 device, 68 manual; 11 blocked.
+**269 cases** — 185 api, 15 device, 69 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 6 cases
 2. [Authentication, sessions & account identity](#auth) — 24 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 28 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 29 cases
 5. [Floor tab & home shell](#floor) — 9 cases
 6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
@@ -3250,6 +3250,24 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. The display name shows the stored value, the SAVE button and the pip are gone
 2. Nothing is sent to the server until a new edit is made (DEF470)
+
+#### UAT-MAND-037 — Irreversible Settings actions ask before they act
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A signed-in account with a pseudonymous handle and an Alpaca paper link (and, separately, a stored non-paper Alpaca credential for the Relink step)
+
+**Steps**
+1. Settings > IDENTITY: tap REGENERATE HANDLE; CANCEL; tap again and confirm
+2. Settings > ACCOUNT: tap Sign out; CANCEL; tap again and confirm
+3. Settings > CONNECTED ACCOUNTS: tap Disconnect; CANCEL; tap again and confirm
+4. With a stale non-paper credential stored: tap Relink; CANCEL; tap again and confirm
+
+**Expected**
+1. Each tap opens a dialog naming the action and its consequence; nothing happens until the red confirm button is pressed (DEF479)
+2. CANCEL leaves the handle, the session, the Alpaca link and the stored credential exactly as they were
+3. Confirming carries the action out (new handle once; signed out; Alpaca keys forgotten; connect screen opens)
 
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 

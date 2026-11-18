@@ -182,6 +182,11 @@ void main() {
       for (var i = 0; i < 4; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
+      // DEF479 — Relink wipes the stored credential, so it confirms first.
+      await tester.tap(find.text('RELINK'));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
 
       expect(await AlpacaCredentialStore.isLinked(), isFalse,
           reason: 'the stale live credential must be cleared, not carried '

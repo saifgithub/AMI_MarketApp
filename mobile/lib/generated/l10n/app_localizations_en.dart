@@ -3021,6 +3021,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leagueRegenerate => 'REGENERATE HANDLE';
 
   @override
+  String get settingsConfirmRegenTitle => 'REGENERATE HANDLE?';
+
+  @override
+  String get settingsConfirmRegenBody =>
+      'You can only do this once. Your current handle is replaced and can\'t be restored.';
+
+  @override
+  String get settingsConfirmRegenConfirm => 'REGENERATE';
+
+  @override
+  String get settingsConfirmSignOutTitle => 'SIGN OUT?';
+
+  @override
+  String get settingsConfirmSignOutBody =>
+      'You will be signed out on this device. Sign in again with your email to continue with this account.';
+
+  @override
+  String get settingsConfirmSignOutConfirm => 'SIGN OUT';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectTitle => 'DISCONNECT ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectBody =>
+      'AMI forgets your Alpaca paper keys on this device straight away. To link again you\'ll need to enter them again.';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectConfirm => 'DISCONNECT';
+
+  @override
+  String get settingsConfirmAlpacaRelinkTitle => 'RELINK ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaRelinkBody =>
+      'AMI now links Alpaca paper accounts only. Your stored key is removed first, so if you back out you stay unlinked until you connect a paper account.';
+
+  @override
+  String get settingsConfirmAlpacaRelinkConfirm => 'RELINK';
+
+  @override
   String get leagueRegenerateFailed =>
       'Couldn\'t change your handle — you get only one change.';
 

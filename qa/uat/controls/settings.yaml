@@ -88,7 +88,7 @@ controls:
     expect: destructive
     line: 1146
     when: "pseudonymous handle exists (IDENTITY section only renders then)"
-    note: "Server regenerates the games-board handle; ONE-SHOT - backend allows a single regeneration (409 afterwards). Snackbar 'HANDLE: <new>' on success, 'Couldn't change your handle - you get only one change.' on failure. No confirmation dialog before the irreversible one-time change."
+    note: "Server regenerates the games-board handle; ONE-SHOT - backend allows a single regeneration (409 afterwards). Snackbar 'HANDLE: <new>' on success, 'Couldn't change your handle - you get only one change.' on failure. Opens a confirm dialog first (DEF479: REGENERATE HANDLE? - CANCEL / REGENERATE); nothing is sent until confirmed."
   - label: "SIGN IN"
     kind: button
     expect: navigate
@@ -108,7 +108,7 @@ controls:
     target: ami.screen.sign_in
     when: "signed-in (non-anonymous) user"
     line: 1213
-    note: "Ends the session (authNotifier.signOut) then pushes SignInScreen with 'You've been signed out.' banner. No confirmation dialog. Label is hardcoded English (not l10n)."
+    note: "Ends the session (authNotifier.signOut) then pushes SignInScreen with 'You've been signed out.' banner. Opens a confirm dialog first (DEF479: SIGN OUT? - CANCEL / SIGN OUT). Label is hardcoded English (not l10n) until DEF478."
   - label: "System"
     kind: list_row
     expect: state
@@ -173,13 +173,13 @@ controls:
     target: ami.screen.alpaca_connect
     when: "signed-in (non-anonymous) user; Alpaca paper not linked (label 'Relink' when a stale non-paper credential is stored)"
     line: 1778
-    note: "CONNECTED ACCOUNTS section. 'Relink' first wipes the stale stored credential (1795) then opens the connect screen - backing out afterwards leaves it unlinked."
+    note: "CONNECTED ACCOUNTS section. 'Relink' first wipes the stale stored credential (1795) then opens the connect screen - backing out of the connect screen afterwards leaves it unlinked. DEF479: a confirm dialog (RELINK ALPACA PAPER?) precedes the wipe."
   - label: "Disconnect"
     kind: button
     expect: destructive
     when: "signed-in user with Alpaca paper linked"
     line: 1778
-    note: "Handler _disconnect at 1818. Clears the on-device Alpaca credential immediately, tells backend link=false (best-effort), invalidates portfolio/positions caches; row flips to 'Not connected'. No confirmation dialog."
+    note: "Handler _disconnect at 1818. Clears the on-device Alpaca credential immediately, tells backend link=false (best-effort), invalidates portfolio/positions caches; row flips to 'Not connected'. Opens a confirm dialog first (DEF479: DISCONNECT ALPACA PAPER? - CANCEL / DISCONNECT)."
   - label: "<app version / build identity>"
     kind: link
     expect: sheet

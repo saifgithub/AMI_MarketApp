@@ -3026,6 +3026,47 @@ class AppLocalizationsMs extends AppLocalizations {
   String get leagueRegenerate => 'JANA SEMULA HANDLE';
 
   @override
+  String get settingsConfirmRegenTitle => 'JANA SEMULA HANDLE?';
+
+  @override
+  String get settingsConfirmRegenBody =>
+      'Anda hanya boleh berbuat demikian sekali. HANDLE semasa anda akan diganti dan tidak boleh dipulihkan.';
+
+  @override
+  String get settingsConfirmRegenConfirm => 'JANA SEMULA';
+
+  @override
+  String get settingsConfirmSignOutTitle => 'LOG KELUAR?';
+
+  @override
+  String get settingsConfirmSignOutBody =>
+      'Anda akan dilog keluar pada peranti ini. Log masuk semula dengan e-mel anda untuk meneruskan dengan akaun ini.';
+
+  @override
+  String get settingsConfirmSignOutConfirm => 'LOG KELUAR';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectTitle =>
+      'PUTUSKAN SAMBUNGAN ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectBody =>
+      'AMI terus melupakan kunci Alpaca paper anda pada peranti ini. Untuk memautkan semula, anda perlu memasukkannya sekali lagi.';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectConfirm => 'PUTUSKAN';
+
+  @override
+  String get settingsConfirmAlpacaRelinkTitle => 'PAUT SEMULA ALPACA PAPER?';
+
+  @override
+  String get settingsConfirmAlpacaRelinkBody =>
+      'AMI kini hanya memautkan akaun Alpaca paper. Kunci tersimpan anda dibuang dahulu, jadi jika anda berundur anda kekal tidak dipautkan sehingga anda menyambung akaun paper.';
+
+  @override
+  String get settingsConfirmAlpacaRelinkConfirm => 'PAUT SEMULA';
+
+  @override
   String get leagueRegenerateFailed =>
       'Gagal menukar handle anda — anda hanya diberi satu peluang.';
 

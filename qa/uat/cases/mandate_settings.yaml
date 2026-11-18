@@ -349,3 +349,19 @@ cases:
     expected:
       - 'The display name shows the stored value, the SAVE button and the pip are gone'
       - 'Nothing is sent to the server until a new edit is made (DEF470)'
+
+  - id: UAT-MAND-037
+    title: Irreversible Settings actions ask before they act
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A signed-in account with a pseudonymous handle and an Alpaca paper link (and, separately, a stored non-paper Alpaca credential for the Relink step)'
+    steps:
+      - 'Settings > IDENTITY: tap REGENERATE HANDLE; CANCEL; tap again and confirm'
+      - 'Settings > ACCOUNT: tap Sign out; CANCEL; tap again and confirm'
+      - 'Settings > CONNECTED ACCOUNTS: tap Disconnect; CANCEL; tap again and confirm'
+      - 'With a stale non-paper credential stored: tap Relink; CANCEL; tap again and confirm'
+    expected:
+      - 'Each tap opens a dialog naming the action and its consequence; nothing happens until the red confirm button is pressed (DEF479)'
+      - 'CANCEL leaves the handle, the session, the Alpaca link and the stored credential exactly as they were'
+      - 'Confirming carries the action out (new handle once; signed out; Alpaca keys forgotten; connect screen opens)'

@@ -3520,6 +3520,54 @@
   "@leagueRegenerate": {
     "description": "Button to regenerate the pseudonymous handle (allowed once)."
   },
+  "settingsConfirmRegenTitle": "REGENERATE HANDLE?",
+  "@settingsConfirmRegenTitle": {
+    "description": "DEF479 - title of the confirm dialog before the one-shot handle regeneration in Settings. retranslate:[ar,ms]"
+  },
+  "settingsConfirmRegenBody": "You can only do this once. Your current handle is replaced and can't be restored.",
+  "@settingsConfirmRegenBody": {
+    "description": "DEF479 - body of the regenerate-handle confirm dialog. The backend allows exactly one regeneration (409 already_regenerated after). retranslate:[ar,ms]"
+  },
+  "settingsConfirmRegenConfirm": "REGENERATE",
+  "@settingsConfirmRegenConfirm": {
+    "description": "DEF479 - confirm button of the regenerate-handle dialog. retranslate:[ar,ms]"
+  },
+  "settingsConfirmSignOutTitle": "SIGN OUT?",
+  "@settingsConfirmSignOutTitle": {
+    "description": "DEF479 - title of the confirm dialog before Sign out in Settings > Account. retranslate:[ar,ms]"
+  },
+  "settingsConfirmSignOutBody": "You will be signed out on this device. Sign in again with your email to continue with this account.",
+  "@settingsConfirmSignOutBody": {
+    "description": "DEF479 - body of the sign-out confirm dialog. retranslate:[ar,ms]"
+  },
+  "settingsConfirmSignOutConfirm": "SIGN OUT",
+  "@settingsConfirmSignOutConfirm": {
+    "description": "DEF479 - confirm button of the sign-out dialog. retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaDisconnectTitle": "DISCONNECT ALPACA PAPER?",
+  "@settingsConfirmAlpacaDisconnectTitle": {
+    "description": "DEF479 - title of the confirm dialog before disconnecting the Alpaca paper link. retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaDisconnectBody": "AMI forgets your Alpaca paper keys on this device straight away. To link again you'll need to enter them again.",
+  "@settingsConfirmAlpacaDisconnectBody": {
+    "description": "DEF479 - body of the Alpaca disconnect confirm dialog. The credential lives only on the device and is wiped immediately. retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaDisconnectConfirm": "DISCONNECT",
+  "@settingsConfirmAlpacaDisconnectConfirm": {
+    "description": "DEF479 - confirm button of the Alpaca disconnect dialog. retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaRelinkTitle": "RELINK ALPACA PAPER?",
+  "@settingsConfirmAlpacaRelinkTitle": {
+    "description": "DEF479 - title of the confirm dialog before the Alpaca relink (which wipes the stored non-paper credential first). retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaRelinkBody": "AMI now links Alpaca paper accounts only. Your stored key is removed first, so if you back out you stay unlinked until you connect a paper account.",
+  "@settingsConfirmAlpacaRelinkBody": {
+    "description": "DEF479 - body of the Alpaca relink confirm dialog; states the consequence of backing out (DEF439 wipes first). retranslate:[ar,ms]"
+  },
+  "settingsConfirmAlpacaRelinkConfirm": "RELINK",
+  "@settingsConfirmAlpacaRelinkConfirm": {
+    "description": "DEF479 - confirm button of the Alpaca relink dialog. retranslate:[ar,ms]"
+  },
   "leagueRegenerateFailed": "Couldn't change your handle — you get only one change.",
   "@leagueRegenerateFailed": {
     "description": "Snackbar shown when handle regeneration fails or was already used."

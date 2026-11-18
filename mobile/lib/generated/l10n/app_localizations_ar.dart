@@ -3022,6 +3022,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leagueRegenerate => 'إعادة إنشاء HANDLE';
 
   @override
+  String get settingsConfirmRegenTitle => 'إعادة إنشاء HANDLE؟';
+
+  @override
+  String get settingsConfirmRegenBody =>
+      'يمكنك فعل ذلك مرة واحدة فقط. سيتم استبدال HANDLE الحالي ولا يمكن استعادته.';
+
+  @override
+  String get settingsConfirmRegenConfirm => 'إعادة الإنشاء';
+
+  @override
+  String get settingsConfirmSignOutTitle => 'تسجيل الخروج؟';
+
+  @override
+  String get settingsConfirmSignOutBody =>
+      'سيتم تسجيل خروجك على هذا الجهاز. سجّل الدخول مرة أخرى باستخدام بريدك الإلكتروني لمتابعة استخدام هذا الحساب.';
+
+  @override
+  String get settingsConfirmSignOutConfirm => 'تسجيل الخروج';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectTitle =>
+      'فصل حساب ALPACA التجريبي؟';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectBody =>
+      'ينسى AMI مفاتيح Alpaca التجريبية الخاصة بك على هذا الجهاز فوراً. للربط مرة أخرى ستحتاج إلى إدخالها من جديد.';
+
+  @override
+  String get settingsConfirmAlpacaDisconnectConfirm => 'فصل';
+
+  @override
+  String get settingsConfirmAlpacaRelinkTitle => 'إعادة ربط ALPACA التجريبي؟';
+
+  @override
+  String get settingsConfirmAlpacaRelinkBody =>
+      'يربط AMI الآن حسابات Alpaca التجريبية فقط. تتم إزالة مفتاحك المخزّن أولاً، لذلك إذا تراجعت فسيبقى حسابك غير مرتبط إلى أن تربط حساباً تجريبياً.';
+
+  @override
+  String get settingsConfirmAlpacaRelinkConfirm => 'إعادة الربط';
+
+  @override
   String get leagueRegenerateFailed =>
       'تعذر تغيير الـ HANDLE — لديك تغيير واحد فقط.';
 
