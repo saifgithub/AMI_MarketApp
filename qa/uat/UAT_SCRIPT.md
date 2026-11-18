@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**263 cases** — 185 api, 15 device, 63 manual; 11 blocked.
+**264 cases** — 185 api, 15 device, 64 manual; 11 blocked.
 
 ## Areas
 
@@ -27,7 +27,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 7 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
-20. [Games (dark-launched) & dev preview](#games) — 5 cases
+20. [Games (dark-launched) & dev preview](#games) — 6 cases
 21. [Every screen reached, every control pressed](#controls) — 1 cases
 
 <a id="platform"></a>
@@ -3921,3 +3921,18 @@ _Manual (iPhone checklist) · plans: any · platforms: ios_
 **Expected**
 1. Neither is reachable by any tap path
 2. A debug build with AMI_GAMES on shows the lobby, a weekly run, the trade ticket and the record screen without layout errors
+
+#### UAT-GAME-006 — The no-cash ticket's SEE POSITIONS / SEE QUEUED ORDERS lands where the list is
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A build with AMI_GAMES on and a run whose cash is fully committed (all in positions or queued orders)
+
+**Steps**
+1. From Games Home tap TRADE on the run; on the no-cash panel tap SEE POSITIONS (or SEE QUEUED ORDERS)
+2. Repeat starting from the run screen: open the run, tap its trade button, then the same panel button
+
+**Expected**
+1. From Home the run screen opens, showing the holdings and queued orders (DEF474)
+2. From the run screen the ticket closes back to that same run screen

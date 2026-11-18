@@ -75,3 +75,16 @@ cases:
     expected:
       - Neither is reachable by any tap path
       - A debug build with AMI_GAMES on shows the lobby, a weekly run, the trade ticket and the record screen without layout errors
+
+  - id: UAT-GAME-006
+    title: The no-cash ticket's SEE POSITIONS / SEE QUEUED ORDERS lands where the list is
+    layer: manual
+    plans: [any]
+    preconditions:
+      - 'A build with AMI_GAMES on and a run whose cash is fully committed (all in positions or queued orders)'
+    steps:
+      - 'From Games Home tap TRADE on the run; on the no-cash panel tap SEE POSITIONS (or SEE QUEUED ORDERS)'
+      - 'Repeat starting from the run screen: open the run, tap its trade button, then the same panel button'
+    expected:
+      - 'From Home the run screen opens, showing the holdings and queued orders (DEF474)'
+      - 'From the run screen the ticket closes back to that same run screen'

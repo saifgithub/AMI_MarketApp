@@ -238,6 +238,7 @@ class _StateBLiveRun extends StatelessWidget {
                         onPressed: () => GamesTradeTicketScreen.show(
                           context,
                           runId: run.runId,
+                          openedFromRun: false,
                         ),
                       ),
                     ),
