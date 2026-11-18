@@ -117,8 +117,14 @@ def record_llm_call(
     cache_write_tokens: Optional[int] = None,
     prompt_version: Optional[str] = None,
     constraint_status: Optional[str] = None,
+    model: Optional[str] = None,
+    cost_usd: Optional[float] = None,
 ) -> None:
     """Persist one LLM gateway call. Safe to call from any code path.
+
+    CR270: `model` (the served model id) and `cost_usd` follow the same
+    contract — passed through verbatim, NULL when unknown, never a default and
+    never 0 for "no price": a NULL cost is read downstream as UNKNOWN spend.
 
     CR141: the four `*_tokens` kwargs default to None and are passed through
     verbatim — NEVER coerced to 0 — so a caller that didn't capture usage (or
@@ -159,6 +165,8 @@ def record_llm_call(
                 # CR210: None is a real value here — "no grammar was asked for" is
                 # not "a grammar was asked for and dropped".
                 constraint_status=constraint_status,
+                model=model,
+                cost_usd=cost_usd,
             )
             session.add(row)
             session.commit()

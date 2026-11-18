@@ -47,6 +47,7 @@ from app.services.brief_engine import (
     hydrate_brief_mandate,
 )
 from app.services.journal_store import get_journal_store
+from app.services.llm_spend import enforce_budget
 from app.services.mandate_store import resolve_mandate
 from app.services.overlay_store import (
     LIFETIME_EDIT_CAP_BY_PLAN,
@@ -119,6 +120,10 @@ async def brief_message(
     brief_message_rate_limit.check(f"user:{current_user.id}")
     session = engine.get_session(req.session_id)
     _own_session(current_user, session)
+
+    # CR270: daily model-spend ceiling — before the concurrency slot and the
+    # charge, so a refused turn holds nothing and costs nothing.
+    await enforce_budget("brief")
 
     # DEF201: shared cap with one_on_one.py's send_message — same LLM
     # compute budget regardless of which surface it's spent through.
@@ -253,6 +258,7 @@ async def brief_propose(
 ) -> BriefProposal:
     session = engine.get_session(req.session_id)
     _own_session(current_user, session)
+    await enforce_budget("brief_propose")
     return await engine.propose(session=session, history=req.history)
 
 

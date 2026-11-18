@@ -7074,6 +7074,22 @@ def _build_next_convene_delta(
     )
 
 
+ROOM_IN_SESSION_MESSAGE = "You already have a Room in session. It will finish first."
+
+
+class RoomAlreadyInSession(Exception):
+    """CR270 — the user already has a Room running on a DIFFERENT ticker.
+
+    Raised by `RoomRunner.start_run` after both dedup tiers (same ticker still
+    attaches) and before the credit charge, so a refusal costs nothing.
+    """
+
+    def __init__(self, active_run_id: UUID, active_ticker: str) -> None:
+        super().__init__(ROOM_IN_SESSION_MESSAGE)
+        self.active_run_id = active_run_id
+        self.active_ticker = active_ticker
+
+
 class RoomRunner:
     """Orchestrates a Convene the Room session, streams events, persists runs."""
 
@@ -7609,6 +7625,39 @@ class RoomRunner:
             ).scalar_one_or_none()
             return row.id if row else None
 
+    def _find_other_active_run(
+        self, user_id: UUID, ticker: str
+    ) -> tuple[UUID, str] | None:
+        """CR270 — (run_id, ticker) of an in-flight run by this user on a
+        DIFFERENT ticker, or None. One Room in flight per user across tickers.
+
+        Same conditions as `_find_active_run` (status running, not marked
+        interrupted, started inside `room_dedup_running_minutes`) so an
+        interrupted or stale row cannot lock a user out. The in-memory registry
+        is consulted first: it covers the window between `create_task` and the
+        run's first INSERT, and it survives nothing a restart did not already
+        clear — the DB check is what survives the restart.
+        """
+        want = ticker.upper()
+        for (uid, tk), rid in self._active_by_key.items():
+            if uid == user_id and tk != want:
+                return rid, tk
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            minutes=settings.room_dedup_running_minutes
+        )
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow)
+                .where(RoomRunRow.user_id == user_id)
+                .where(RoomRunRow.ticker != want)
+                .where(RoomRunRow.status == "running")
+                .where(RoomRunRow.interrupted_at.is_(None))
+                .where(RoomRunRow.started_at >= cutoff)
+                .order_by(RoomRunRow.triggered_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return (row.id, row.ticker) if row else None
+
     def _find_recent_completed_run(self, user_id: UUID, ticker: str) -> UUID | None:
         """Return run_id of a recently COMPLETED run for this user+ticker.
 
@@ -7939,6 +7988,27 @@ class RoomRunner:
                 window_hours=settings.room_dedup_completed_hours,
             )
             return completed
+
+        # CR270 — one Room in flight per user, across tickers. Past both dedup
+        # tiers (the same ticker has already attached above) and before the
+        # charge, so the refusal is free. Raises RoomAlreadyInSession → 409.
+        other = await asyncio.to_thread(self._find_other_active_run, user_id, ticker)
+        if other is not None:
+            logger.info(
+                "room_refused_already_in_session",
+                user_id=str(user_id),
+                ticker=ticker,
+                active_run_id=str(other[0]),
+                active_ticker=other[1],
+            )
+            raise RoomAlreadyInSession(*other)
+
+        # CR270 — daily model-spend ceiling. A NEW Room only (attaches above
+        # cost nothing, and a Room already running is never interrupted). Also
+        # before the charge. Raises LLMBudgetExhausted → 503.
+        from app.services.llm_spend import check_budget
+
+        await asyncio.to_thread(check_budget, "room")
 
         # CR039 (AT:R60): charge here — past both dedup tiers, before any work
         # is committed to. This is the only point where we've decided to run a

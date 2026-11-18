@@ -26,6 +26,7 @@ from app.services.credit_service import InsufficientCredits, one_on_one_cost, re
 from app.services.entitlements import effective_plan_for_user
 from app.services.fundamentals import extract_tickers
 from app.services.journal_store import get_journal_store
+from app.services.llm_spend import enforce_budget
 from app.services.lessons_service import get_lessons_service
 from app.services.mandate_store import resolve_mandate
 from app.services.room_runner import _risk_tier_size_ceiling, _verify_and_annotate_geometry
@@ -162,6 +163,11 @@ async def send_message(
     one_on_one_message_rate_limit.check(f"user:{current_user.id}")
     session = runner.get_session(req.session_id)
     _own_session(current_user, session)
+
+    # CR270: daily model-spend ceiling. Before the concurrency slot and the
+    # charge, so a refused turn holds nothing and costs nothing. Covers the
+    # Concierge (it is a 1-on-1 session with agent_id=concierge).
+    await enforce_budget("one_on_one")
 
     # DEF201: claim a concurrency slot before spending — a request bounced
     # for holding too many streams already open must never be charged.
