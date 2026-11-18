@@ -1,0 +1,38 @@
+---
+id: "manual_portfolio_health"
+title: "Portfolio Health"
+section: "trading"
+topic: "portfolio health"
+tags: ["portfolio health", "volatility", "beta", "effective bets", "drawdown", "risk", "concentration"]
+questions:
+  - "what is portfolio health"
+  - "where is the portfolio health card"
+  - "why does portfolio health say not enough history"
+  - "what do volatility and beta mean in my portfolio"
+  - "how is my portfolio risk measured"
+short_answer: "PORTFOLIO HEALTH is a card on PORTFOLIO > POSITIONS that measures your holdings' risk from real price history: VOLATILITY, BETA, EFFECTIVE BETS and MAX DRAWDOWN. It is a measurement, not a forecast."
+screens:
+  - "widgets/portfolio_health/health_card.dart"
+  - "screens/sim/portfolio_screen.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["portfolioHealthTitle", "portfolioHealthTileVolatility", "portfolioHealthTileBeta", "portfolioHealthTileBets", "portfolioHealthTileMdd", "portfolioHealthEmptyTitle", "portfolioHealthInsufficientTitle", "portfolioHealthBarsCaption", "portfolioTabPositions", "portfolioTabUpper", "portfolioHealthPartialChip"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Portfolio Health
+
+**PORTFOLIO HEALTH** sits on the **POSITIONS** segment of the **PORTFOLIO** tab. It measures the risk of the holdings you have now, over about 66 trading days of real price history.
+
+Tiles: **VOLATILITY** (annualised, shown against the S&P 500), **BETA** (how much your book moves with the S&P 500), **EFFECTIVE BETS** (how many independent bets your holdings really are) and **MAX DRAWDOWN**.
+
+States you may see:
+
+1. **NO HOLDINGS TO MEASURE**: you hold nothing yet.
+2. **NOT ENOUGH HISTORY YET**: the price history is too short or has gaps.
+3. A **PARTIAL** chip: some holdings were left out, and the card says which.
+
+The card says it plainly: it is "not a forecast and not a return". If it shows an error, tap it to retry.

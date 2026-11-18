@@ -158,7 +158,7 @@ def test_concierge_uses_scripted_fallback_when_no_real_provider(base_mandate):
     assert fake.calls == []
     # Scripted mandate reply mentions the snapshot
     assert f"risk score {base_mandate.risk_score}/5" in out
-    assert "Settings → Mandate" in out
+    assert "YOU → SETTINGS → MY MANDATE" in out
 
 
 def test_scripted_reply_routes_lesson_intent(base_mandate):

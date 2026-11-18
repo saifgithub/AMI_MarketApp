@@ -1,0 +1,37 @@
+---
+id: "manual_notifications"
+title: "Messages, notifications and push settings"
+section: "settings"
+topic: "notifications"
+tags: ["notifications", "messages", "inbox", "bell", "push", "alerts", "order fills"]
+questions:
+  - "where are my notifications"
+  - "how do I turn off push notifications"
+  - "where are my messages"
+  - "how do I change which pushes I get"
+  - "why am I not getting notifications"
+short_answer: "The Floor bell opens MESSAGES. The bell in the YOU tab opens NOTIFICATIONS, where PUSH SETTINGS controls which pushes reach your lock screen."
+screens:
+  - "screens/floor/floor_screen.dart"
+  - "screens/inbox/inbox_screen.dart"
+  - "screens/notifications/notification_centre_screen.dart"
+  - "screens/notifications/notification_preferences_screen.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["inboxTitle", "notifCentreTitle", "notifMarkAllRead", "notifPrefsTitle", "notifPrefsIntro", "notifTypePriceAlert", "notifTypeDailyReminder", "notifTypeRestingOrderFilled", "notifTypeRestingOrderTriggered", "notifTypeRestingOrderRejected", "notifTypePolicyUpdate", "notifOffBannerTitle", "notifOffBannerBody", "floorTabUpper", "youTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Messages, notifications and push settings
+
+There are two bells.
+
+1. **MESSAGES**: the bell at the top right of the **FLOOR** tab. A badge shows unread messages.
+2. **NOTIFICATIONS**: the bell in the header of the **YOU** tab. Price alerts and order fills land here. Tap **READ ALL** to mark them read.
+
+To choose which pushes reach your lock screen, open **NOTIFICATIONS** and tap **PUSH SETTINGS**. You can switch each type on or off: Price alerts, Daily reminders, Order filled, Order triggered, Order rejected and Policy updates. Everything still lands in the notification centre either way.
+
+If your phone blocks AMI's pushes, a **PUSH NOTIFICATIONS OFF** banner appears; tap it to fix it in system settings.

@@ -1,0 +1,43 @@
+---
+id: "manual_room_verdict"
+title: "Watching a Room run and reading the verdict"
+section: "room"
+topic: "room"
+tags: ["room", "verdict", "cio", "stages", "transcript", "safety floor", "trade ticket"]
+questions:
+  - "what happens when I convene the Room"
+  - "how do I read the verdict"
+  - "what do the stages in the Room mean"
+  - "how do I see the full debate"
+  - "what is the safety floor pill on a verdict"
+  - "can I leave the Room while it is running"
+  - "how do I trade on the verdict"
+short_answer: "A Room run moves through four stages (analyst desk, research debate, risk review, CIO verdict). The verdict card shows the action, size, entry, stop, target and horizon, with OPEN TRADE TICKET to act on it."
+screens:
+  - "screens/room/room_screen.dart"
+  - "widgets/room/room_briefing.dart"
+  - "widgets/room/room_view_mode_toggle.dart"
+arb_keys: ["roomStageAnalystDesk", "roomStageResearchDebate", "roomStageRiskReview", "roomStagePmVerdict", "roomLiveModeBriefing", "roomLiveModeFloor", "roomViewModeBoard", "roomViewModeTranscript", "roomVerdictHeading", "roomSafetyFloorPill", "roomMetricTicker", "roomMetricSize", "roomMetricEntry", "roomMetricStop", "roomMetricTarget", "roomMetricHorizon", "roomOpenTradeTicket", "roomVerdictSeeChart", "shareTooltip", "roomHeroConveneAgain", "roomLeaveTitle", "roomLeaveBody", "roomLeaveStay", "roomLeaveConfirm", "roomVerdictAskCioAgain", "roomVerdictOpinionsHeading"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Watching a Room run and reading the verdict
+
+A live run shows four stages in order:
+
+1. **ANALYST DESK**: four independent reads on the same company (fundamentals, the chart, the news, the crowd).
+2. **RESEARCH DEBATE**: Bull and Bear argue it out and the Research Manager adjudicates.
+3. **RISK REVIEW**: the Execution Desk drafts a ticket and the three Risk Officers (Aggressive, Conservative, Balanced) stress it.
+4. **CIO VERDICT**: one call, checked against your mandate.
+
+Tap a desk to see who is on it. While the run is going, switch between **BRIEFING** and **WATCH THE FLOOR** (all twelve seats). Once it settles, the switch is between **BOARD** and **TRANSCRIPT**; in the transcript, tap a row to read a contribution in full.
+
+When the run lands, the verdict card shows the action plus **TICKER**, **SIZE**, **ENTRY**, **STOP**, **TARGET** and **HORIZON**. A **SAFETY FLOOR** pill means the safety floor overrode the original call.
+
+From the verdict you can tap **OPEN TRADE TICKET** to act on it (the CIO safety floor runs again when you submit), **SEE CHART**, **Share**, or **CONVENE AGAIN**.
+
+You can leave while a run is in progress: **Leave the Room?** explains that the Room keeps deliberating and the verdict is saved to your Journal when it lands.

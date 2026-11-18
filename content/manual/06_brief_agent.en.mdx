@@ -1,0 +1,42 @@
+---
+id: "manual_brief_agent"
+title: "Brief your agent"
+section: "agents"
+topic: "agents"
+tags: ["brief", "overlay", "coach", "agent", "propose change", "version history", "safety floor"]
+questions:
+  - "how do I brief my agent"
+  - "how do I coach an agent"
+  - "how do I change how an agent thinks"
+  - "how do I tell an agent to behave differently"
+  - "how do I undo a brief or roll back"
+  - "why was my brief refused"
+short_answer: "Open YOUR FIRM, tap an unlocked agent, tap BRIEF, tell them what to change, then PROPOSE CHANGE and ACCEPT. The safety floor and your mandate cannot be briefed away."
+screens:
+  - "screens/floor/your_firm_screen.dart"
+  - "widgets/agent_action_sheet.dart"
+  - "screens/agent/brief_screen.dart"
+  - "screens/agent/brief_history_screen.dart"
+  - "screens/home_shell.dart"
+  - "screens/you/you_screen.dart"
+arb_keys: ["floorFirmHeading", "briefHeading", "briefInputHint", "briefProposeChange", "briefDrafting", "briefAccept", "briefRefine", "briefReject", "briefDismiss", "briefVersionHistoryTooltip", "briefHistoryRollback", "briefProtectedSafetyFloor", "briefProtectedMandate", "briefRefused", "briefNoOverlayYet", "floorTabUpper", "youTabUpper", "settingsTabUpper"]
+literals: ["BRIEF"]
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Brief your agent
+
+Briefing lets you tell one of your analysts how to think, in plain words. Your change becomes an overlay on top of the agent's defaults.
+
+1. Open the **FLOOR** tab, tap **YOUR FIRM**, and tap an unlocked agent (or tap the tune icon inside a 1-on-1 chat).
+2. Tap **BRIEF**.
+3. Under "Tell me what to change…", describe what you want. The agent talks it through with you.
+4. Tap **PROPOSE CHANGE**. The agent drafts a proposal and shows it in plain English.
+5. Tap **ACCEPT** to save it as a new overlay version, **REFINE** to keep talking, or **REJECT** to drop it.
+
+The history icon ("Version history") lists your overlay versions. Open one and tap **ROLLBACK** to go back to it; newer versions stay in the history.
+
+Some things cannot be briefed. A refusal banner headed **PROTECTED — safety floor** or **PROTECTED — mandate rule** means the change touches a rule that always holds. To change a mandate rule, edit your mandate in **YOU** > **SETTINGS** instead. The Concierge cannot be briefed.

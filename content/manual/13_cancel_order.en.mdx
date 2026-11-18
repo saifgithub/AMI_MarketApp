@@ -1,0 +1,33 @@
+---
+id: "manual_cancel_order"
+title: "Cancel a waiting order"
+section: "trading"
+topic: "orders"
+tags: ["orders", "cancel", "limit", "stop", "waiting orders", "resting"]
+questions:
+  - "how do I cancel an order"
+  - "how do I cancel a limit order"
+  - "where are my pending orders"
+  - "why has my order not filled"
+short_answer: "Open PORTFOLIO, tap the ORDERS segment, find the order under WAITING ORDERS and tap CANCEL ORDER."
+screens:
+  - "screens/sim/portfolio_screen.dart"
+  - "widgets/sim/resting_orders_section.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["portfolioTabOrders", "restingOrdersHeading", "restingOrderCancelTitle", "restingOrderKeep", "restingOrderCancelConfirm", "restingOrderCancelled", "restingOrdersRecentHeading", "portfolioTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Cancel a waiting order
+
+A limit, stop or stop-limit order that cannot fill yet waits until the price reaches your level. Each waiting order shows its state ("waiting", "triggered", "filling") and when it expires.
+
+1. Open the **PORTFOLIO** tab and tap **ORDERS**.
+2. Under **WAITING ORDERS**, find the order and tap **CANCEL ORDER**.
+3. The dialog "Cancel this order?" asks you to confirm. Tap **CANCEL ORDER** to stop it, or **KEEP WAITING** to leave it.
+
+Orders that filled, cancelled, expired or were refused move to **RECENTLY CLOSED ORDERS**. If the order filled just before you confirmed, AMI tells you it was too late.

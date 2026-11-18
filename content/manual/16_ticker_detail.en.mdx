@@ -1,0 +1,43 @@
+---
+id: "manual_ticker_detail"
+title: "The ticker detail screen"
+section: "trading"
+topic: "ticker"
+tags: ["ticker", "detail", "chart", "news", "lots", "ask", "convene", "review", "watch", "alert", "trade"]
+questions:
+  - "how do I open a stock's page"
+  - "how do I see a chart for a ticker"
+  - "what can I do from a ticker's detail screen"
+  - "where do I see news for a stock"
+  - "how do I see my cost basis lots"
+short_answer: "Tap a holding, a watchlist row or a ticker on the tape. The detail screen has the chart, your position, news and action chips: ASK, CONVENE, REVIEW, WATCH and ALERT."
+screens:
+  - "screens/sim/ticker_detail_screen.dart"
+  - "widgets/ticker_tape.dart"
+  - "widgets/watchlist_sheet.dart"
+  - "screens/journal/journal_detail_screen.dart"
+  - "screens/sim/portfolio_screen.dart"
+arb_keys: ["tickerDetailActionTrade", "tickerDetailActionTradeMore", "tickerDetailActionAsk", "tickerDetailActionConvene", "tickerDetailActionReview", "tickerDetailActionWatch", "tickerDetailActionSetAlert", "tickerDetailActionSell", "tickerDetailQty", "tickerDetailAvgCost", "tickerDetailMark", "tickerDetailValue", "tickerDetailLotsHeading", "priceAlertsSectionHeading", "tickerDetailNewsHeading", "roomVerdictSeeChart", "watchlistOpenTradeTicket", "watchlistAskMarketAnalyst", "watchlistConveneRoom", "portfolioTabPositions", "watchlistHeading", "watchlistRemove"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# The ticker detail screen
+
+Open it by tapping a holding on **POSITIONS**, a row in your **WATCHLIST**, or **SEE CHART** on a Room verdict or Journal entry.
+
+It shows the chart and, if you hold the ticker, **QTY**, **AVG COST**, **MARK** and **VALUE**, plus **COST BASIS LOTS**, **PRICE ALERTS** and **NEWS**.
+
+Action chips:
+
+1. **ASK**: opens a 1-on-1 with the Technical Strategist about this ticker.
+2. **CONVENE**: runs the Room on it.
+3. **REVIEW**: opens Company Review.
+4. **WATCH**: adds or removes it from your watchlist.
+5. **ALERT**: sets a price alert.
+6. **TRADE** (or **TRADE MORE** if you hold it) opens the trade ticket; **SELL** appears if you hold it.
+
+Tapping a ticker on the tape at the bottom opens a quick-action sheet instead: **OPEN TRADE TICKET**, **ASK THE TECHNICAL STRATEGIST**, **CONVENE THE ROOM** and **REMOVE FROM WATCHLIST**.

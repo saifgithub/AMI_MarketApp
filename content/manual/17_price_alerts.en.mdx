@@ -1,0 +1,33 @@
+---
+id: "manual_price_alerts"
+title: "Set a price alert"
+section: "trading"
+topic: "alerts"
+tags: ["price alert", "alert", "notify", "stop", "target", "notification"]
+questions:
+  - "how do I set a price alert"
+  - "how do I get notified when a stock hits a price"
+  - "how do I cancel a price alert"
+  - "where do my alerts show up"
+short_answer: "Open the ticker's detail screen, tap ALERT, pick the alert type, enter a price and tap Create alert."
+screens:
+  - "screens/sim/ticker_detail_screen.dart"
+  - "screens/sim/price_alert_sheet.dart"
+  - "screens/notifications/notification_centre_screen.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["tickerDetailActionSetAlert", "priceAlertSheetThresholdLabel", "priceAlertTypeStop", "priceAlertTypeTarget", "priceAlertTypeManualAbove", "priceAlertTypeManualBelow", "priceAlertSheetPriceLabel", "priceAlertSheetCreate", "priceAlertsSectionHeading", "priceAlertRowCancelTooltip", "notifCentreTitle", "youTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Set a price alert
+
+1. Open the ticker's detail screen (tap a holding, a watchlist row, or a ticker on the tape).
+2. Tap **ALERT**.
+3. Under "Alert type", choose one: "Stop — price falls below (protective)", "Target — price rises above (profit-taking)", "Price rises above" or "Price falls below".
+4. Enter the "Price" and tap **Create alert**.
+
+Active alerts are listed under **PRICE ALERTS** on that screen; tap the cancel icon ("Cancel this alert") to remove one. When an alert fires it lands in **NOTIFICATIONS** (the bell in the **YOU** tab), and as a push if you have pushes on.

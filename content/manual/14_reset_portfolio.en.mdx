@@ -1,0 +1,39 @@
+---
+id: "manual_reset_portfolio"
+title: "Starting over: there is no portfolio reset"
+section: "trading"
+topic: "portfolio"
+tags: ["reset", "start over", "restart", "wipe", "portfolio", "fresh start", "sim portfolio"]
+questions:
+  - "how do I reset my sim portfolio"
+  - "how do I start over with my simulated account"
+  - "how do I wipe my trades"
+  - "can I reset my portfolio to the starting cash"
+  - "how do I delete my portfolio"
+short_answer: "This build has no reset button for the sim portfolio. You can close positions with SELL and cancel waiting orders, but your history stays in HISTORY and the Journal."
+screens:
+  - "screens/sim/portfolio_screen.dart"
+  - "screens/settings/settings_screen.dart"
+  - "widgets/confirm_restart_onboarding.dart"
+  - "widgets/sim/resting_orders_section.dart"
+  - "screens/you/you_screen.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["portfolioTabPositions", "portfolioTabOrders", "portfolioTabHistory", "positionSell", "restingOrderCancelConfirm", "floorRestartOnboarding", "floorRestartOnboardingConfirmBody", "journalTabUpper", "portfolioTabUpper", "youTabUpper", "settingsTabUpper"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Starting over: there is no portfolio reset
+
+There is no control in the app that resets the simulated portfolio to its starting cash or wipes your trades. AMI cannot do it from chat either.
+
+What you can do instead:
+
+1. Close positions: on **PORTFOLIO** > **POSITIONS**, tap **SELL** on a holding.
+2. Cancel waiting orders: on the **ORDERS** segment, tap **CANCEL ORDER** on each one.
+3. Past trades stay visible under **HISTORY** and in your Journal. Nothing is deleted.
+
+Restarting onboarding (**YOU** > **SETTINGS** > WALKTHROUGH) does not reset anything: it only re-runs the welcome interview, and it leaves your portfolio and trades untouched.

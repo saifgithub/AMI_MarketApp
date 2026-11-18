@@ -1,0 +1,44 @@
+---
+id: "manual_convene_room"
+title: "Convene the Room"
+section: "room"
+topic: "room"
+tags: ["room", "convene", "verdict", "ticker", "twelve agents"]
+questions:
+  - "how do I convene a Room"
+  - "how do I start a Room on a stock"
+  - "how do I run the Room on a ticker"
+  - "how do I get a verdict from my team"
+  - "how do I get all twelve agents to look at a ticker"
+  - "where is the convene button"
+short_answer: "On the Floor, type a ticker in the box and tap CONVENE THE ROOM. Your full team debates it and the CIO returns one verdict checked against your mandate."
+screens:
+  - "screens/floor/floor_screen.dart"
+  - "widgets/floor/floor_omnibox.dart"
+  - "screens/room/convene_sheet.dart"
+  - "screens/sim/ticker_detail_screen.dart"
+  - "widgets/watchlist_sheet.dart"
+  - "screens/home_shell.dart"
+arb_keys: ["floorOmniboxHint", "floorConveneCta", "floorConveneOn", "floorOmniboxCaption", "floorReviewCta", "conveneHeading", "convenePickTicker", "conveneTickerHint", "conveneOrPickOne", "conveneCta", "tickerDetailActionConvene", "watchlistConveneRoom", "floorTabUpper", "floorAskAmi"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-18"
+updated_at: "2026-11-18"
+---
+
+# Convene the Room
+
+Convening the Room sends one ticker to your whole team. They debate it and the Chief Investment Officer (CIO) gives one verdict, checked against your mandate.
+
+From the Floor:
+
+1. Open the **FLOOR** tab.
+2. Type a ticker (1 to 5 letters, for example NVDA) into the box that says "Type a ticker — or ask AMI anything…". The button changes to show what will happen, for example "CONVENE THE ROOM · NVDA". AMI checks that the ticker exists before it lets you convene.
+3. Tap the button. The Room screen opens and the run starts.
+
+Or, with the box empty, tap **CONVENE THE ROOM** to open a picker. Enter a ticker under "e.g. NVDA", or tap one of the suggested tickers under **OR PICK ONE**, then tap **CONVENE**.
+
+Other ways in: tap **CONVENE** on a ticker's detail screen, or **CONVENE THE ROOM** in the quick-action sheet that opens when you tap a ticker on the tape.
+
+If you type a sentence instead of a ticker, the button becomes **ASK AMI** and the text goes to AMI in chat instead of starting a Room.
