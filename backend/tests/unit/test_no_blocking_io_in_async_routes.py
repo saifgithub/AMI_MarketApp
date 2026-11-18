@@ -508,6 +508,11 @@ _KNOWN_SYNC_HTTPX_COUNTS = {
     # RevenueCat: reached only from a sync `def` route, which FastAPI runs in a
     # threadpool, so it never parks the event loop — the CR049 distinction.
     "app/services/revenuecat_client.py": 1,
+    # CR276: the OneSignal and RevenueCat erase calls. Reached only from
+    # `run_erasure_tick`, which `main._account_erasure_tick` runs through
+    # `asyncio.to_thread`, so the event loop never waits on them. No route
+    # calls them.
+    "app/services/account_erasure.py": 2,
     # room_runner's `log_prefix_cache_status()` httpx.get IS on the event loop —
     # `main.py:132` awaits `resume_pending_retries()` inside `async def lifespan`,
     # not through a threadpooled Depends. It is safe for a DIFFERENT reason:
