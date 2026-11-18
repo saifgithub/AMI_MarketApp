@@ -48,3 +48,15 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    1. `gen_registers.py gen all` after merging main leaves no diff.
    2. No WP-00-owned path is dirty. The two untracked memos above are listed here.
    3. Every row changed by WP-00/WP-01 reads `done` or `dropped` with a dated reason (13 rows).
+
+## 2026-11-18 — WP-02 done; S11 approved; wave 1 merged
+
+1. **WP-02 done.** Alpha runs `alpha-2026-11-18-1` (`ca164879`, from `beta/cr267`).
+   1. Gates: hold, audit, tree, suite (PASS 7,900/0, on the third attempt), flutter analyze, local gate (PASS).
+   2. Earlier suite failures: the first was the DEF465 row citing a Flutter target (reworded, `bb9759fd`); the second was the DEF136 timing test flaking under the load of three parallel worker suites (passes when the Mac is quiet).
+   3. **UAT gate FAILED on inherited mobile debt.** Six areas changed by CR264 (10-20) have no case updates, and 14 device cases have not run since. Saiful: "Promote now; clear debt in WP-33" (backend-only promotion; the rsync excludes `mobile/`). The debt must be cleared before any TestFlight/Play build, which uses the same gate.
+   4. Postflight PASSED 8/8. API UAT changed-only: 7/7 green. The alpha-post gate fails on the same deferred mobile debt.
+   5. Alpha's LLM is unchanged: on-prem vLLM.
+2. **S11 approved** (rulings in `S11_llm_implementation_plan.md` §3a). Alpha stays on on-prem until Beta; Ling joins WP-10.
+3. **WP-15 done, no code.** CR252 had been folded into all 12 personas since `0f41f14e` (2026-10-08). The WP-00 note saying it was "never folded in" was wrong (I didn't check the persona files). CR252 row → done (`519112f8`).
+4. **WP-11 merged** (`e9e730ab`). **WP-13 merged** (`ca164879`) in log mode; enforcement waits on a replay of stored replies.
