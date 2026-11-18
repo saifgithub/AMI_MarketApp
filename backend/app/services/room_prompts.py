@@ -72,6 +72,7 @@ from app.services.fundamentals import (
 from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.analyst_targets import analyst_split_line, analyst_tape_line
+from app.services.street_view_blind import blind_profile
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
 from app.services.edgar_forensics import (
     CLUSTER_BUY_LABEL,
@@ -2722,7 +2723,12 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     and the sector-earnings half of forward catalyst had no real source at
     all and were removed at source (CR038) — only the real FOMC-date half of
     forward catalyst remains.
+
+    CR275 (WP-21a) — the Room decides blind: the Street's rating, price
+    targets, rating split and action tape are stripped from the profile before
+    anything below reads it. See `street_view_blind`.
     """
+    profile = blind_profile(profile)
     field_state: dict[str, Any] = profile.get("field_state") or {}
     lane = _lane_for(agent_id)
 
@@ -4204,10 +4210,14 @@ def _asymmetry_line(profile: dict[str, Any]) -> str | None:
         )
     if not clauses:
         return None
+    caveat = (
+        "the Street's target is not a trade target and the range low is not a stop."
+        if target and target > 0
+        else "the range low is not a stop."
+    )
     return (
         f"Asymmetry from {anchor_name} ${anchor}: " + ", ".join(clauses) + ". "
-        "AMI's arithmetic on the two lines above — the Street's target is not a "
-        "trade target and the range low is not a stop."
+        f"AMI's arithmetic on the two lines above — {caveat}"
     )
 
 
