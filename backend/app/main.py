@@ -2,11 +2,14 @@
 
 import asyncio
 import hmac
+import math
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Header, Query, Request, Response
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -615,6 +618,33 @@ async def _http_exception_with_request_id(
     if request_id is not None:
         response.headers["X-Request-Id"] = str(request_id)
     return response
+
+
+def _json_safe(value):
+    """Replace non-finite floats with their string form ("inf", "-inf", "nan")."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+# DEF489: FastAPI's default 422 handler echoes each error's `input`. A body
+# like `1e999` parses to float('inf'), which `JSONResponse` cannot serialise
+# (allow_nan=False), so the validation error itself surfaced as a 500. Same
+# body shape as the default handler — `{"detail": [...]}` — with non-finite
+# floats rendered as strings. No `request_id` key, to stay byte-compatible
+# with the 422 bodies the mobile client already parses.
+@app.exception_handler(RequestValidationError)
+async def _validation_error_json_safe(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"detail": _json_safe(jsonable_encoder(exc.errors()))},
+    )
 
 
 @app.exception_handler(Exception)
