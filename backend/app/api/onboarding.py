@@ -170,35 +170,40 @@ async def confirm_readback(
             "edit flow lands W2 day 3 — for now, restart the session",
         )
 
-    # confirm path
-    session.completed = True
-    session.current_step = ConversationStep.COMPLETE
-    await store.save(session)
-
     # DEF428 round 2: `session_to_mandate_dict` now refuses to fabricate a
     # missing `max_drawdown_pct` (MissingMandateAnswerError) instead of
     # silently defaulting to 30 — see MissingMandateAnswerError's docstring.
     # The step-mismatch guard on `submit_answer` should make this
     # unreachable via the normal flow, but a session that reaches readback
     # with no Q6 answer some other way must fail loudly (CR040), not 500.
+    # DEF459: build the mandate dict BEFORE marking the session complete — a
+    # refused confirm used to persist completed=True/step=complete first,
+    # stranding the session where every /answer 409s and the user can't retry.
+    restart_authed = bool(req.restart and current_user is not None)
     try:
-        if req.restart and current_user is not None:
-            # Explicit + authenticated: replace the caller's current mandate
-            # outright. upsert() bumps the version and keeps prior rows for
-            # history/journal replay.
-            mandate_dict = session_to_mandate_dict(session, user_id=current_user.id)
-            applied = get_mandate_store().upsert(
-                current_user.id, Mandate.model_validate(mandate_dict)
-            )
-            mandate_preview = applied.model_dump(mode="json")
-        else:
-            # In a real flow this is where account claim is offered; in V0 we
-            # just produce a mandate preview for the next screen.
-            mandate_preview = session_to_mandate_dict(
-                session, user_id="anonymous-pending-claim"
-            )
+        mandate_dict = session_to_mandate_dict(
+            session,
+            user_id=current_user.id if restart_authed else "anonymous-pending-claim",
+        )
     except MissingMandateAnswerError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    session.completed = True
+    session.current_step = ConversationStep.COMPLETE
+    await store.save(session)
+
+    if restart_authed:
+        # Explicit + authenticated: replace the caller's current mandate
+        # outright. upsert() bumps the version and keeps prior rows for
+        # history/journal replay.
+        applied = get_mandate_store().upsert(
+            current_user.id, Mandate.model_validate(mandate_dict)
+        )
+        mandate_preview = applied.model_dump(mode="json")
+    else:
+        # In a real flow this is where account claim is offered; in V0 we
+        # just produce a mandate preview for the next screen.
+        mandate_preview = mandate_dict
 
     follow_up = Message(
         author=Author.CONCIERGE,

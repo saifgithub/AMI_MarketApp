@@ -49,6 +49,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import delete, func, select
 
 from app.agents.safety_floor import check_mandate_compliance
+from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import (
@@ -918,6 +919,19 @@ class SimEngine:
         if items:
             q = self._provider.quote(ticker)
             return items, q.source if q is not None else "yfinance"
+        # DEF461: the Yahoo-backed stack is dark on Alpha; fall back to the
+        # same Alpha Vantage source the Room already uses so ticker detail and
+        # Sector Watch resolve headlines when the key is configured.
+        from app.services.news_context import fetch_alpha_vantage_news_items
+
+        av_items = fetch_alpha_vantage_news_items(ticker, limit)
+        if av_items:
+            return av_items, "alpha_vantage"
+        logger.warn(
+            "sim_news_unavailable",
+            ticker=ticker,
+            alpha_vantage_configured=bool(settings.alpha_vantage_api_key),
+        )
         return [], "unavailable"
 
     def current_earnings(self, ticker: str) -> tuple[EarningsInfo | None, str]:

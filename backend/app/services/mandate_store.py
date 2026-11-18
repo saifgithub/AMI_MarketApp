@@ -150,7 +150,7 @@ class MandateStore:
                             version=new_version,
                             is_current=True,
                             snapshot=updated.model_dump(mode="json"),
-                            created_at=created_at,
+                            created_at=now,
                             updated_at=now,
                         ))
                         s.flush()

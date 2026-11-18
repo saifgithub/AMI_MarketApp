@@ -932,6 +932,7 @@ class YfinanceProvider:
         if df is None or df.empty:
             return None
         bars: list[Candle] = []
+        dropped_nonfinite = 0
         for ts, row in df.iterrows():
             # Index is a pandas Timestamp (tz-aware UTC for intraday, naive for daily/weekly/monthly).
             try:
@@ -946,7 +947,22 @@ class YfinanceProvider:
                 v = float(row.get("Volume", 0) or 0)
             except (KeyError, TypeError, ValueError):
                 continue
+            # DEF468: pandas NaN survives float(); it then serialised to JSON
+            # null and the chart got a hole. A bar with any non-finite price is
+            # dropped (never repaired — that would invent a price); a missing
+            # volume alone does not invalidate a measured price bar.
+            if not all(math.isfinite(x) for x in (o, h, low, c)):
+                dropped_nonfinite += 1
+                continue
+            if not math.isfinite(v):
+                v = 0.0
             bars.append(Candle(t=epoch, o=o, h=h, low=low, c=c, v=v))
+        if dropped_nonfinite:
+            logger.warn(
+                "yfinance_history_dropped_nonfinite_bars",
+                ticker=t, period=period,
+                dropped=dropped_nonfinite, served=len(bars),
+            )
         return bars or None
 
     def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:

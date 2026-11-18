@@ -124,3 +124,45 @@ def test_cannot_access_another_users_price_alerts(client: TestClient) -> None:
     )
     r = client.get(f"/v1/price_alerts/{owner_id}", headers=_auth(other_token))
     assert r.status_code == 403
+
+
+@pytest.mark.parametrize("bad_price", [0, -5, -0.01, 0.00001])
+def test_def462_zero_or_negative_threshold_is_422_and_uses_no_slot(
+    client: TestClient, bad_price: float,
+) -> None:
+    """DEF462: the API accepted zero / negative levels (201), and the dead
+    alert consumed one of the user's 10 active slots."""
+    user_id, token = _make_user_and_token()
+    r = client.post(
+        f"/v1/price_alerts/{user_id}",
+        json={"ticker": "AAPL", "threshold_type": "stop", "threshold_price": bad_price},
+        headers=_auth(token),
+    )
+    assert r.status_code == 422, r.text
+    listed = client.get(f"/v1/price_alerts/{user_id}", headers=_auth(token)).json()
+    assert listed["total"] == 0
+
+
+@pytest.mark.parametrize("bad_price", [1e12, 10_000_000.01])
+def test_def463_absurd_threshold_is_422_not_500(
+    client: TestClient, bad_price: float,
+) -> None:
+    """DEF463: a threshold past the Numeric(12,4) column overflowed on insert
+    and returned 500. The schema now bounds it, so it is a 422."""
+    user_id, token = _make_user_and_token()
+    r = client.post(
+        f"/v1/price_alerts/{user_id}",
+        json={"ticker": "AAPL", "threshold_type": "target", "threshold_price": bad_price},
+        headers=_auth(token),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_def463_largest_allowed_threshold_still_creates(client: TestClient) -> None:
+    user_id, token = _make_user_and_token()
+    r = client.post(
+        f"/v1/price_alerts/{user_id}",
+        json={"ticker": "AAPL", "threshold_type": "target", "threshold_price": 10_000_000},
+        headers=_auth(token),
+    )
+    assert r.status_code == 201, r.text

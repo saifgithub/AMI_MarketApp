@@ -43,7 +43,7 @@ import httpx
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.prompt_safety import sanitize_for_prompt
-from app.services.market_data import get_market_data_provider
+from app.services.market_data import NewsItem, get_market_data_provider
 
 # CR147 B.2 / CR179 Leg 3 — 3 → 5. Three headlines was the News Analyst's
 # ENTIRE payload, and its assembled sheet measured 1,342 chars against ~4,000
@@ -292,6 +292,34 @@ def _within_recency_floor(item: LiveHeadline, *, now: float) -> bool:
     if not item.published_at:
         return False
     return (now - item.published_at) <= _NEWS_RECENCY_FLOOR_DAYS * 86400
+
+
+def fetch_alpha_vantage_news_items(ticker: str, limit: int) -> list[NewsItem] | None:
+    """DEF461 — Alpha Vantage headlines shaped as the mobile `NewsItem`, for the
+    ticker-detail feed (`GET /v1/sim/news`) and Sector Watch.
+
+    Those two surfaces read only the Yahoo-backed provider stack, so when Yahoo
+    returned nothing on Alpha they were dark even though the Room's
+    NEWS_SENTIMENT calls (this same source) were returning 200. No recency
+    floor here — that floor is an agent-prompt honesty rule; a ticker-detail
+    list shows what the source has, dated. None when no key is configured, on
+    any failure, or when the source has nothing. Never raises.
+    """
+    if not settings.alpha_vantage_api_key:
+        return None
+    try:
+        headlines = get_alpha_vantage_source().fetch(ticker, limit) or []
+    except Exception as exc:
+        logger.warn("sim_news_alpha_vantage_error", ticker=ticker, error=str(exc)[:200])
+        return None
+    items = [
+        NewsItem(
+            title=h.title, link=h.link, publisher=h.publisher,
+            published_at=h.published_at, summary=h.summary,
+        )
+        for h in headlines
+    ]
+    return items or None
 
 
 def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[LiveHeadline] | None:

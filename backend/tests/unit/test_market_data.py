@@ -426,3 +426,76 @@ def test_dividend_fields_non_finite_and_garbage_treated_as_absent() -> None:
 def test_dividend_rate_rounds_to_two_dp() -> None:
     _, rate = _dividend_fields_from_info({"dividendRate": 0.9649})
     assert rate == pytest.approx(0.96)
+
+
+# ── DEF468: non-finite OHLC bars never leave YfinanceProvider.history ─────
+
+
+class _HistoryTicker:
+    def __init__(self, df) -> None:  # noqa: ANN001
+        self._df = df
+
+    def history(self, period: str, interval: str):  # noqa: ANN201
+        return self._df
+
+
+class _HistoryYf:
+    def __init__(self, df) -> None:  # noqa: ANN001
+        self._df = df
+
+    def Ticker(self, t: str) -> _HistoryTicker:  # noqa: N802
+        return _HistoryTicker(self._df)
+
+
+def test_def468_history_drops_bars_with_nan_prices_and_logs_the_count(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import math
+
+    import pandas as pd
+
+    from app.services import market_data as md
+
+    idx = pd.to_datetime(
+        ["2026-10-20 13:30", "2026-10-20 13:35", "2026-10-20 13:40", "2026-10-20 13:45"],
+        utc=True,
+    )
+    nan = float("nan")
+    df = pd.DataFrame(
+        {
+            "Open": [100.0, nan, 102.0, 103.0],
+            "High": [101.0, nan, 103.0, 104.0],
+            "Low": [99.0, nan, 101.0, 102.0],
+            "Close": [100.5, nan, 102.5, 103.5],
+            "Volume": [10.0, nan, nan, 30.0],
+        },
+        index=idx,
+    )
+    warned: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        md.logger, "warn", lambda event, **kw: warned.append((event, kw)),
+    )
+
+    bars = _make_yfinance_provider(_HistoryYf(df)).history("AAPL", "1d")
+
+    assert bars is not None and len(bars) == 3
+    for b in bars:
+        assert all(math.isfinite(x) for x in (b.o, b.h, b.low, b.c, b.v))
+    assert [b.c for b in bars] == [100.5, 102.5, 103.5]
+    assert bars[1].v == 0.0  # finite price bar kept, missing volume not NaN
+    assert (
+        "yfinance_history_dropped_nonfinite_bars",
+        {"ticker": "AAPL", "period": "1d", "dropped": 1, "served": 3},
+    ) in warned
+
+
+def test_def468_history_all_nan_is_none_not_a_series_of_holes() -> None:
+    import pandas as pd
+
+    idx = pd.to_datetime(["2026-10-20 13:30"], utc=True)
+    nan = float("nan")
+    df = pd.DataFrame(
+        {"Open": [nan], "High": [nan], "Low": [nan], "Close": [nan], "Volume": [nan]},
+        index=idx,
+    )
+    assert _make_yfinance_provider(_HistoryYf(df)).history("AAPL", "1d") is None
