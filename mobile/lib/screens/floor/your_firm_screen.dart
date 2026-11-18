@@ -20,7 +20,8 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
-import 'package:ami_trade/screens/lessons/lessons_screen.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
@@ -208,9 +209,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    Navigator.of(context).push(MaterialPageRoute<void>(
-                      builder: (_) => const LessonsScreen(),
-                    ));
+                    ref.read(activeTabProvider.notifier).state = AmiTab.lessons;
                   },
                   child: Text(l.floorLockedGoToLessons),
                 ),

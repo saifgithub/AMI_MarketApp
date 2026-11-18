@@ -107,3 +107,13 @@ cases:
     expected:
       - 'The MESSAGES inbox opens and the bottom bar (FLOOR / PORTFOLIO / LESSONS / YOU) is still on screen (DEF457)'
       - 'Back returns to the Floor'
+
+  - id: UAT-FLOOR-009
+    title: A locked agent's GO TO LESSONS switches to the LESSONS tab
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'On the Floor, tap a locked agent; in its sheet tap GO TO LESSONS'
+    expected:
+      - 'The LESSONS tab opens and the bottom bar highlights LESSONS; no second Lessons screen is stacked on the Floor (DEF476)'
+      - 'Tapping FLOOR returns to the Floor as it was left'

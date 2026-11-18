@@ -294,3 +294,12 @@ cases:
       - Convene the Room and keep it open while one desk takes over 100 seconds to start speaking
     expected:
       - The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner
+
+  - id: UAT-ROOM-022
+    title: Review a Training session from the Room switches to the LESSONS tab
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'Open a Room that is waiting on its next session or is out of credits; tap Review a Training session'
+    expected:
+      - 'The LESSONS tab opens with LESSONS highlighted in the bottom bar, not a second Lessons screen over the Floor (DEF476)'

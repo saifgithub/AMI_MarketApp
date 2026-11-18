@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**265 cases** — 185 api, 15 device, 65 manual; 11 blocked.
+**267 cases** — 185 api, 15 device, 67 manual; 11 blocked.
 
 ## Areas
 
@@ -12,8 +12,8 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 2. [Authentication, sessions & account identity](#auth) — 23 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 28 cases
-5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 21 cases
+5. [Floor tab & home shell](#floor) — 9 cases
+6. [Convene the Room](#room) — 22 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 31 cases
@@ -3292,6 +3292,17 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
 
+#### UAT-FLOOR-009 — A locked agent's GO TO LESSONS switches to the LESSONS tab
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. On the Floor, tap a locked agent; in its sheet tap GO TO LESSONS
+
+**Expected**
+1. The LESSONS tab opens and the bottom bar highlights LESSONS; no second Lessons screen is stacked on the Floor (DEF476)
+2. Tapping FLOOR returns to the Floor as it was left
+
 #### UAT-ROOM-014 — Convene sheet, live console, verdict card and cost line on a real iPhone
 
 _Manual (iPhone checklist) · plans: trader_
@@ -3399,6 +3410,16 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. The live connection is not dropped by the proxy's idle timeout (keepalive comments every 15 s); the Room continues to its verdict without showing the connection-lost banner
+
+#### UAT-ROOM-022 — Review a Training session from the Room switches to the LESSONS tab
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Open a Room that is waiting on its next session or is out of credits; tap Review a Training session
+
+**Expected**
+1. The LESSONS tab opens with LESSONS highlighted in the bottom bar, not a second Lessons screen over the Floor (DEF476)
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
