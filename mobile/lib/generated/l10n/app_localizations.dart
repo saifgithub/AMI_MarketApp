@@ -3210,6 +3210,54 @@ abstract class AppLocalizations {
   /// **'TRY AGAIN'**
   String get onboardingTryAgain;
 
+  /// Headline of the 18+ confirmation that opens onboarding. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI Trade is for adults'**
+  String get onboardingAgeTitle;
+
+  /// Body of the 18+ confirmation. One explicit confirmation; no birth date is asked for or stored. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI Trade is a trading-education simulator for adults. Confirm you are 18 or older to continue.'**
+  String get onboardingAgeBody;
+
+  /// Label of the unticked checkbox the user must tick on the 18+ confirmation. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'I am 18 or older'**
+  String get onboardingAgeCheckbox;
+
+  /// Button on the 18+ confirmation; disabled until the checkbox is ticked. Rendered as-is, already upper-case. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get onboardingAgeContinue;
+
+  /// Secondary action on the 18+ confirmation for a user who is under 18. Rendered as-is, already upper-case. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'I AM UNDER 18'**
+  String get onboardingAgeDecline;
+
+  /// Headline of the dead-end screen shown to a user who says they are under 18. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI Trade isn\'t available yet'**
+  String get onboardingAgeDeclinedTitle;
+
+  /// Body of the under-18 dead-end screen. Respectful and final: nothing was stored, no account was created. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI Trade is for people aged 18 or older, so setup stops here. Nothing was saved. You are welcome back once you turn 18.'**
+  String get onboardingAgeDeclinedBody;
+
+  /// Button on the under-18 dead-end screen that returns to the 18+ confirmation, for a mis-tap. Rendered as-is, already upper-case. NEW key, CR273. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GO BACK'**
+  String get onboardingAgeDeclinedBack;
+
   /// No description provided for @signInHeading.
   ///
   /// In en, this message translates to:

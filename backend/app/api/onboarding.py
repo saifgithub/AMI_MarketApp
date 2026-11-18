@@ -8,6 +8,7 @@ from app.api.dependencies import get_current_user_optional
 from app.core.time import now_utc
 from app.db.models import User
 from app.schemas import Mandate
+from app.services import age_confirmation
 from app.schemas.onboarding import (
     AnswerRequest,
     AnswerResponse,
@@ -58,6 +59,8 @@ async def start_onboarding(
         timezone=req.timezone,
         current_step=first_q.step,
     )
+    if req.age_confirmed:
+        age_confirmation.stamp_session(session)
     session.messages.append(welcome)
     await store.create(session)
 
@@ -99,6 +102,8 @@ async def submit_answer(
     session = await store.get(req.session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found or expired")
+
+    age_confirmation.require_age_confirmed(session)
 
     if req.step != session.current_step:
         # `OnboardingSession` has `use_enum_values=True`, so
@@ -159,6 +164,8 @@ async def confirm_readback(
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found or expired")
 
+    age_confirmation.require_age_confirmed(session)
+
     if req.confirm == "edit":
         # Not implemented yet (no mobile UI calls this path — the readback
         # screen only offers confirm). Fail before touching session state:
@@ -199,6 +206,9 @@ async def confirm_readback(
             )
     except MissingMandateAnswerError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    if current_user is not None:
+        age_confirmation.stamp_user(current_user.id, session.age_confirmed_at)
 
     follow_up = Message(
         author=Author.CONCIERGE,

@@ -26,6 +26,7 @@ from fastapi.testclient import TestClient
 from app.api.auth import router as auth_router
 from app.api.onboarding import router as onboarding_router
 from app.core.config import settings
+from app.core.time import now_utc
 from app.schemas.onboarding import ConversationStep, OnboardingSession
 from app.services.auth_service import AuthService
 from app.services.mandate_store import get_mandate_store
@@ -54,6 +55,7 @@ def _new_user() -> tuple[UUID, str]:
 def _completed_session(**overrides) -> OnboardingSession:
     defaults = dict(
         locale="en",
+        age_confirmed_at=now_utc(),
         timezone="America/New_York",
         current_step=ConversationStep.READBACK,
         answers={

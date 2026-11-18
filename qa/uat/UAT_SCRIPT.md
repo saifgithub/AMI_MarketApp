@@ -4,13 +4,13 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**250 cases** — 185 api, 15 device, 50 manual; 11 blocked.
+**252 cases** — 186 api, 15 device, 51 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 5 cases
 2. [Authentication, sessions & account identity](#auth) — 23 cases
-3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
+3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
 6. [Convene the Room](#room) — 16 cases
@@ -407,7 +407,7 @@ _API (automated, live Alpha) · plans: anon_
 _API (automated, live Alpha) · plans: anon_
 
 **Steps**
-1. Start a session and answer q1_goal "I want to learn to trade", q2_horizon "5 to 10 years", the three scenario questions, q6_max_drawdown "20%", q7_constraints "halal only, long only"
+1. Start a session (with "age_confirmed": true) and answer q1_goal "I want to learn to trade", q2_horizon "5 to 10 years", the three scenario questions, q6_max_drawdown "20%", q7_constraints "halal only, long only"
 2. Note next_step after each answer
 
 **Expected**
@@ -555,6 +555,20 @@ _API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox 
 1. The claimed user's mandate equals the interview's answers (not the generic default), and the session is bound to the user
 2. Replaying the same session id on a later sign-in does not overwrite a mandate edited since
 
+#### UAT-ONB-044 — Answers and completion are refused without the 18+ confirmation
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. POST /v1/onboarding/start {"locale": "en", "timezone": "Asia/Riyadh"} with no age_confirmed
+2. GET the session; then POST /v1/onboarding/answer and POST /v1/onboarding/readback/confirm for it
+3. Start a second session with "age_confirmed": true, GET it, and answer q1_goal
+
+**Expected**
+1. The unconfirmed session has age_confirmed_at null
+2. Both gated routes answer 403 with detail.code "age_confirmation_required" and the session stays incomplete
+3. The confirmed session has a server-set age_confirmed_at timestamp, the answer returns 200, and no birth-date or age field exists on the session
+
 ### Device (automated, Appium)
 
 #### UAT-ONB-043 — A fresh install walks the Concierge interview to a mandate readback and lands on the Floor
@@ -565,15 +579,17 @@ _Device (automated, Appium) · plans: anon_
 1. App deleted and reinstalled so the device holds no session
 
 **Steps**
-1. Launch; the Concierge interview opens with answer chips
-2. Answer every question by tapping chips until the mandate readback appears
-3. Confirm the readback ("LOOKS RIGHT"), then skip the claim prompt
+1. Launch; the 18+ confirmation opens first with its checkbox unticked; tick "I am 18 or older" and tap CONTINUE
+2. The Concierge interview opens with answer chips
+3. Answer every question by tapping chips until the mandate readback appears
+4. Confirm the readback ("LOOKS RIGHT"), then skip the claim prompt
 
 **Expected**
-1. The interview shows answer chips (not an empty or error screen)
-2. A readback with a LOOKS RIGHT confirmation is shown before the app hands over
-3. The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU
-4. Settings > MY MANDATE then shows the interview's mandate, not a blank one
+1. The 18+ confirmation is shown before any question, and CONTINUE is disabled until the box is ticked
+2. The interview shows answer chips (not an empty or error screen)
+3. A readback with a LOOKS RIGHT confirmation is shown before the app hands over
+4. The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU
+5. Settings > MY MANDATE then shows the interview's mandate, not a blank one
 
 <a id="mandate-settings"></a>
 ## Mandate, risk limits, compliance & Settings
@@ -3123,6 +3139,23 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. Cancel changes nothing; confirm runs the interview again
 2. After the new readback is confirmed Settings shows the new mandate values and version
+
+#### UAT-ONB-045 — Saying you are under 18 is a clear dead end, and the confirmation is never pre-ticked
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. App deleted and reinstalled so the device holds no session
+
+**Steps**
+1. Launch; read the 18+ confirmation; try tapping CONTINUE without ticking the box
+2. Tap "I AM UNDER 18"
+3. Tap GO BACK
+
+**Expected**
+1. The checkbox is unticked on arrival and CONTINUE does nothing until it is ticked
+2. A respectful message says AMI Trade is for people aged 18 or older and that nothing was saved; there is no way forward from it except GO BACK
+3. GO BACK shows the confirmation again with the checkbox unticked
 
 #### UAT-MAND-030 — Settings screen shows the mandate sections and saves edits
 

@@ -106,14 +106,17 @@ def test_migration_upgrades_and_downgrades_on_sqlite(tmp_path):
         assert "model" not in cols and "cost_usd" not in cols
 
 
-def test_exactly_one_alembic_head_and_it_is_this_migration():
+def test_single_alembic_head_and_this_migration_is_in_its_chain():
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config(str(_BACKEND / "alembic.ini"))
     cfg.set_main_option("script_location", str(_BACKEND / "alembic"))
-    heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert heads == ["cr270a0b0c0d1"]
+    script = ScriptDirectory.from_config(cfg)
+    heads = script.get_heads()
+    assert len(heads) == 1, heads
+    chain = {r.revision for r in script.walk_revisions(base="base", head=heads[0])}
+    assert "cr270a0b0c0d1" in chain
 
 
 # ── 2. model identity ────────────────────────────────────────────────────────
