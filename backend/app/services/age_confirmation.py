@@ -14,12 +14,16 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+import structlog
 from fastapi import HTTPException, status
 
+from app.core.config import settings
 from app.core.time import now_utc
 from app.db import get_session
 from app.db.models import User
 from app.schemas.onboarding import OnboardingSession
+
+logger = structlog.get_logger(__name__)
 
 AGE_CONFIRMATION_REQUIRED = "age_confirmation_required"
 
@@ -27,6 +31,13 @@ AGE_CONFIRMATION_REQUIRED = "age_confirmation_required"
 def require_age_confirmed(session: OnboardingSession) -> None:
     """403 with a typed `age_confirmation_required` code if the session has no confirmation."""
     if session.age_confirmed_at is None:
+        if not settings.onboarding_age_gate_enforced:
+            logger.warning(
+                "onboarding_age_gate_not_enforced",
+                session_id=str(session.id),
+                detail="session has no 18+ confirmation; ONBOARDING_AGE_GATE_ENFORCED=false",
+            )
+            return
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail={

@@ -233,3 +233,26 @@ def test_single_alembic_head_and_this_migration_is_in_its_chain():
     assert len(heads) == 1, heads
     chain = {r.revision for r in script.walk_revisions(base="base", head=heads[0])}
     assert "cr273a0b0c0d1" in chain
+
+
+def test_switch_off_logs_and_lets_an_unconfirmed_session_through(client, monkeypatch):
+    """Old app builds never send the confirmation. With the switch off (only
+    while such builds are still in testers' hands) the session proceeds and
+    every skipped check is logged; with it on (the default) it is refused."""
+    from app.core.config import settings
+    from app.services import age_confirmation
+
+    seen = []
+    monkeypatch.setattr(age_confirmation.logger, "warning", lambda e, **kw: seen.append(e))
+    monkeypatch.setattr(settings, "onboarding_age_gate_enforced", False)
+    body = _start(client)
+    r = client.post(
+        "/v1/onboarding/answer",
+        json={
+            "session_id": body["session_id"],
+            "step": body["first_question"]["step"],
+            "answer": "grow my savings",
+        },
+    )
+    assert r.status_code == 200, r.text
+    assert "onboarding_age_gate_not_enforced" in seen

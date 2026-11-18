@@ -1276,6 +1276,12 @@ class Settings(BaseSettings):
     # idiom): a typo'd mode must fail boot, never fall through to "off".
     output_guard_mode: Literal["off", "log", "enforce"] = "log"
 
+    # CR273 — whether the server REFUSES onboarding without the 18+
+    # confirmation. On by default (Beta ships builds that send it). Off only
+    # while testers still run app builds older than the age gate, which never
+    # send the confirmation; every skipped check is then logged, never silent.
+    onboarding_age_gate_enforced: bool = True
+
     # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
     # deterministic allowed-action set and computed size on the PM's verdict,
     # with a persisted DecisionRecord. OFF by default and per-provider

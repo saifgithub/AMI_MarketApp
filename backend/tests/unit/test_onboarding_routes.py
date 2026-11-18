@@ -174,6 +174,7 @@ async def test_def459_refused_readback_confirm_leaves_the_session_retryable(
     session = OnboardingSession(
         current_step=ConversationStep.READBACK,
         answers={"goal": "growth"},
+        age_confirmed_at=now_utc(),
     )
     await get_session_store().create(session)
 
