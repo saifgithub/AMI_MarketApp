@@ -2,6 +2,8 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
+> 🧭 **Status 2026-11-18 — the live work order is [CR267, the Beta programme](../../forward_planning/CR267_beta_programme/CR267_beta_programme.md).** The repo was idle from 2026-10-30 because the Room's agents were not working well. On 2026-11-18 Saiful set the direction (decisions [D-076–D-089](../11_decisions/decision_log.md#beta-programme-decisions-cr267-2026-11-18)) and gave go on CR267. Its work packages run from re-entry (WP-00) to an external TestFlight + Play closed Beta (WP-54) on a newly allocated host, with a hosted LLM and a redesigned Room verdict. Plan-vs-actual: [`tracker.md`](../../forward_planning/CR267_beta_programme/tracker.md). Work runs on branch `beta/cr267`. A feature freeze holds: only CR267 work ships until Beta is live. The Alpha sections below are history; **Phase 2 below is superseded by CR267.**
+
 > ⚡ **D-059 (2026-07-07, AT:R51): an Engagement phase now sits between Alpha close-out and Beta** — playability + reputation/league competition + attractiveness work, shipped to alpha testers on on-prem infra. Plans + build specs: [`docs/forward_planning/CR004_release_readiness/`](../../forward_planning/CR004_release_readiness/CR004_release_readiness.md) (~19–23 sessions to public launch). This file's phase tables get restructured when the workstreams start; until then, CR004 is the live work order and the Beta/MVP lists below stand unchanged.
 
 Where we are right now (as of 2026-07-12, end of AT:R54 — **470 commits, 590 backend tests, zero open bugs, latest Alpha tag `alpha-2026-07-11-3`** carrying migration 0015 + reputation/league backend; device build `0.1.0+38` on TestFlight + APK with the new app icon; bullets below are the older AT:R46 snapshot):
@@ -139,7 +141,9 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 ## Phase 2 — Beta (cloud migration, infra only)
 
-**Exit criterion:** Backend runs on Cloud Run. Postgres + Auth on Supabase. LLM served from a cloud provider (Vertex AI Gemini, Anthropic, or both). On-prem hardware no longer in the request path. Same feature surface as Alpha — *nothing new ships*. Same testers, same app build (just pointed at the new backend hostname).
+> ✖ **Superseded 2026-11-18 by [CR267](../../forward_planning/CR267_beta_programme/CR267_beta_programme.md).** Beta is no longer a GCP/Supabase cloud cutover with "nothing new". It is an external TestFlight + Play closed Beta on a cheap VPS running the same Compose stack as Alpha, with a hosted open-weight LLM (DeepInfra) and a redesigned Room verdict (D-076–D-089). The GCP/Supabase path (D-066/D-067) is reopened, to be chosen for production after a cloud-credits programme (CR267 WP-40). B7 (LLM) is decided by D-078. B12 (load test) becomes CR267 WP-46. The table below is kept as history; do not execute it.
+
+**Exit criterion (historical):** Backend runs on Cloud Run. Postgres + Auth on Supabase. LLM served from a cloud provider (Vertex AI Gemini, Anthropic, or both). On-prem hardware no longer in the request path. Same feature surface as Alpha — *nothing new ships*. Same testers, same app build (just pointed at the new backend hostname).
 
 **Why this phase exists:** Saiful's LAN box is a single point of failure. The moment we need 24/7 uptime, hardware redundancy, or to scale beyond ~50 concurrent streams, the on-prem stack stops being good enough. Beta is the boring-but-essential infra cutover. Nothing user-visible changes.
 

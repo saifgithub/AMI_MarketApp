@@ -273,16 +273,19 @@ deprecated.
 - **Rationale**: Type-safe, testable, low boilerplate.
 
 ### D-066 — Beta compute/DB path confirmed: GCP Cloud Run + Supabase
+> **Update 2026-11-18:** reopened by [D-077](#d-077--beta-on-the-cheapest-sensible-host-production-cloud-chosen-after-a-credits-programme) (CR267).
 - **Decided**: Keep GCP Cloud Run + Supabase as Beta's compute + DB path (re-affirms D-041/D-042). Neon + Vercel evaluated and rejected.
 - **Source**: CR006 research (2026-07-09) + Saiful, 2026-07-30 (AT:Infrastructure)
 - **Rationale**: Vercel's mandatory $20/seat Pro tier (Hobby is banned for commercial use by Vercel's own ToS) makes Neon+Vercel ~$45–75/mo vs. Cloud Run + Supabase's realistic $0–30/mo at Beta's 100–500-user scale. Execution fit is also weaker — no guaranteed WebSocket pinning, 300s default/800s max duration cap vs. Cloud Run's 60-minute ceiling (a Room session already needs a 300s timeout). See [CR006](../../forward_planning/CR006_beta_infra_cost_research/CR006_beta_infra_cost_research.md), [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
 
 ### D-067 — Beta ships as one Cloud Run service, scale-to-zero, no separate staging environment
+> **Update 2026-11-18:** reopened by [D-077](#d-077--beta-on-the-cheapest-sensible-host-production-cloud-chosen-after-a-credits-programme) (CR267).
 - **Decided**: Beta launches as a single `ami-trade-api` Cloud Run service (the existing FastAPI monolith, already Dockerized) with `min_instances=0`, rather than `hosting.md`'s original 3-service (`api`/`agents`/`workers`) always-warm (`min_instances=1` each) sample. Staging uses Cloud Run revision tags + traffic-splitting (deploy at 0% traffic, smoke-test, then shift) instead of a second full GCP+Supabase environment.
 - **Source**: Saiful, 2026-07-30 — "optimize toward the cheap end" (AT:Infrastructure)
 - **Rationale**: `hosting.md`'s 3-service/always-warm sample was sized for MVP/Growth traffic ($100–200/mo Cloud Run baseline); running that shape at Beta's low, unproven traffic pays for always-warm capacity nothing uses yet. A duplicate staging environment adds 30–50% overhead for no proven need at this scale. Both the 3-way split and a real staging project remain additive Terraform changes, not a redesign, once Growth-phase scale or independent-deploy-cadence needs materialize. See [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
 
 ### D-068 — B7 (cloud LLM provider) deliberately deferred; Anthropic direct is the interim default
+> **Update 2026-11-18:** closed by [D-078](#d-078--hosted-open-weight-llm-via-deepinfra-with-automatic-failover) (CR267): the hosted LLM is an open-weight model via DeepInfra.
 - **Decided**: The Beta/MVP cloud-LLM provider pick (Sonnet-5-everywhere vs. Sonnet+GLM-5.2-hybrid vs. other) stays open — not locked by this decision. Anthropic Claude direct (already the coded fallback in the gateway's `vllm > anthropic > mock` preference order) is the interim default the moment Beta needs a live cloud LLM path, since Cloud Run cannot reach the on-prem vLLM box (`192.168.20.74`, LAN-only, never exposed publicly).
 - **Source**: Saiful, 2026-07-30 — explicit "defer the LLM pick" instruction (AT:Infrastructure)
 - **Rationale**: CR006's frontier-LLM cost comparison is already 3 weeks stale and Claude Sonnet 5 has a confirmed Sep 1, 2026 price change on file — locking in now risks deciding on numbers that won't hold. GLM-5.2 remains the leading cost-conscious alternative pending Saiful's explicit sign-off on Zhipu's Jan-2025 US Commerce Entity List flag. Secret Manager reserves a placeholder slot for a second provider key so this stays a config change, not a re-architecture, whenever it's decided. See [CR006](../../forward_planning/CR006_beta_infra_cost_research/CR006_beta_infra_cost_research.md), [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
@@ -554,6 +557,8 @@ Keep this log honest. The "why" matters more than the "what."
 
 ### D-072 — Stabilise before external beta (2026-09-24)
 
+> **Update 2026-11-18:** the hosting clause ("on the current melehost Alpha stack") is amended by [D-076](#d-076--what-beta-means) (CR267): Beta runs on a newly allocated host. The payments-parked part stands.
+
 - **Decided** (2026-09-24): the go-to-market target is an external TestFlight and
   Play closed-testing beta, launched on the **current melehost Alpha stack** — not
   the GCP/Supabase Beta environment, which comes later on its own timeline.
@@ -744,3 +749,66 @@ Keep this log honest. The "why" matters more than the "what."
   row is updated: "a live/production account stays strictly read-only" is narrowed to "a
   live/production account can no longer be linked at all." Filed as DEF439 (no CR — a
   Defect fix under the existing CR227/CR233/CR234 Alpaca-paper feature line).
+
+---
+
+## Beta programme decisions (CR267, 2026-11-18)
+
+All are from Saiful on 2026-11-18, made while planning [CR267](../../forward_planning/CR267_beta_programme/CR267_beta_programme.md) (plan §3 and §3a). Plan and reasoning: the CR267 folder, including `answers_from_plan_author_2026-11-18.md`.
+
+### D-076 — What "Beta" means
+- **Decided**: external TestFlight + Play closed testing, published from the company store accounts, on a newly allocated Beta host, with a hosted LLM; payments parked, English only, credits free.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.1).
+- **Supersedes (partial)**: [D-072](#d-072--stabilise-before-external-beta-2026-09-24)'s hosting clause ("launched on the current melehost Alpha stack"). D-072's payments-parked part stands. [D-073](#d-073--build-on-the-personal-developer-accounts-migrate-to-the-company-account-at-the-end) is unchanged; the migration is CR267 WP-49.
+
+### D-077 — Beta on the cheapest sensible host; production cloud chosen after a credits programme
+- **Decided**: the company is Malaysia-based. Beta runs on the cheapest sensible host first (recommended: one Singapore VPS running the existing Compose stack behind Cloudflare Tunnel; Saiful confirms at gate S4). An accelerator or affiliate programme is joined to unlock cloud credits before the production cloud is chosen.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.2).
+- **Reopens**: [D-066](#d-066--beta-computedb-path-confirmed-gcp-cloud-run--supabase) and [D-067](#d-067--beta-ships-as-one-cloud-run-service-scale-to-zero-no-separate-staging-environment). GCP Cloud Run + Supabase is no longer assumed.
+
+### D-078 — Hosted open-weight LLM via DeepInfra, with automatic failover
+- **Decided**: an open-weight model through the existing DeepInfra account, one model for every desk, at most 5 US cents and under 2 minutes per Room. Switching the primary model is configuration only. **Amended the same day (§3a.1):** a provider failure fails over automatically, in code — on Alpha to the on-prem vLLM, on Beta to a second DeepInfra model. External testers never get the abliterated on-prem build. A fallback verdict is labelled; if both providers are down, the Room shows "temporarily unavailable".
+- **Source**: Saiful, 2026-11-18 (CR267 §3.3, §3a.1). The model is picked at gate S2 from the WP-10 scorecard.
+- **Closes**: [D-068](#d-068--b7-cloud-llm-provider-deliberately-deferred-anthropic-direct-is-the-interim-default).
+
+### D-079 — The Room keeps its desks; the verdict comes from a judge plus a coded rule
+- **Decided**: keep the desks. Replace the CIO's 5-sample vote with a judge that answers narrow typed questions, plus a coded rule that decides. First action set: Approve / Pass / Contested. The CIO narrates the computed decision and cannot change it; the deterministic mandate compliance check still runs last.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.4). The grader is picked at gate S3 from the WP-22 bake-off.
+
+### D-080 — What "consistent" means
+- **Decided**: a verdict changes only when its inputs change, and every change comes with a computed explanation. A new trading day counts as a changed input.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.5).
+
+### D-081 — Analyst consensus is the reference; the Room decides blind
+- **Decided**: consensus is removed from the Room's inputs. The Street comparison is computed after the verdict and **shown to Beta testers** with a source label, behind a setting (§3a.3). A reasoned pass on a Street-Buy name is acceptable; approving a Street Sell/Underperform name is the error. Public release needs a licensed data source (CR007).
+- **Source**: Saiful, 2026-11-18 (CR267 §3.6, §3a.3).
+
+### D-082 — Jev is a candidate judge only
+- **Decided**: Jev (TypeSafe System One, third-party API; trial access) must win the WP-22 bake-off and have written vendor terms before it carries production decisions.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.7).
+
+### D-083 — Account deletion in Beta; archive only after counsel
+- **Decided**: on deletion, the account is deactivated at once and restorable for 30 days. **For Beta, the post-grace step deletes or anonymises the data** (§3a.2), with the button reading "Delete account". Saiful's original choice, a full access-locked archive, is switched on only if counsel approves (gate S6). Reason: Apple guideline 5.1.1(v) and Play require in-app account deletion.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.8, §3a.2).
+
+### D-084 — Age gate: one 18+ confirmation, no birth date stored
+- **Source**: Saiful, 2026-11-18 (CR267 §3.9).
+
+### D-085 — No features hidden in Beta
+- **Decided**: Alpaca paper, the Sharia screen and the options simulator stay visible.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.10).
+
+### D-086 — DEF178 closes by key rotation, with no history rewrite
+- **Source**: Saiful, 2026-11-18 (CR267 §3.11). Saiful rotates the key at gate S8.
+
+### D-087 — Beta cohort and length
+- **Decided**: 20–200 testers from the personal network, the website waitlist, investing communities and the YouTube audience; 6–12 weeks; exit criteria per CR267 WP-53. The company Play account is an Organisation account, so the 12-testers/14-days rule is a soft target.
+- **Source**: Saiful, 2026-11-18 (CR267 §3.12; WP-01 review).
+
+### D-088 — LLM spend caps
+- **Decided**: $100 account cap for the CR267 measurement runs; a daily ceiling as a setting at $10/day on Beta and $5/day on Alpha, covering primary and fallback spend. On breach, Rooms show "temporarily unavailable" and an alert fires.
+- **Source**: Saiful, 2026-11-18 (CR267 §3a.4).
+
+### D-089 — CR267 runs on a branch, with discussion gates before LLM and Jev changes
+- **Decided**: all CR267 work runs on branch `beta/cr267` (worktree `.claude/worktrees/cr267-beta`; rollback tag `pre-cr267`). It merges to `main` only after WP-26 and at go-live, each on Saiful's go; while CR267 runs, Alpha is promoted only from the branch. Two discussion gates were added: implementation plans are discussed before any LLM change (S11: WP-15, WP-10–14) and before any Jev/grader change (S12: WP-22, WP-23).
+- **Source**: Saiful, 2026-11-18: *"these are seriously significant changes. we should create a new branch"*; *"before you start making changes for JEV and the LLM, please pause so we can discuss implementation plans"*.
