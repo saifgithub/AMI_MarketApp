@@ -535,6 +535,9 @@ services:
       # (pilot-measured: voluntary filing is salience noise, self-filed cards
       # ICC 0.93). Default off; ships on a measured GO only.
       ROOM_CARDS_ENVELOPE_ENABLED: ${ROOM_CARDS_ENVELOPE_ENABLED:-false}
+      # CR271 — deterministic output text guard (off | log | enforce). Default
+      # log: hits are logged, no text changes. See Settings.output_guard_mode.
+      OUTPUT_GUARD_MODE: ${OUTPUT_GUARD_MODE:-log}
       # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
       # deterministic allowed-action set + computed size with a persisted
       # decision record. Default off; per-MODEL acceptance-gated — thresholds

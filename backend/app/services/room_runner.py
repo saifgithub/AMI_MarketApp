@@ -53,6 +53,7 @@ from app.agents.safety_floor import (
 )
 from app.core.config import settings
 from app.core.logging import logger
+from app.services import output_guard
 from app.core.time import now_utc, relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.models import BacktestRunIndexRow, RoomRunRow
@@ -3162,6 +3163,32 @@ def _resolve_pm_structure(
     return candidate, None
 
 
+def _guard_pm_text(
+    pm_text: str, verdict: Verdict, *, run_id: UUID
+) -> tuple[str, Verdict]:
+    """CR271 — run the output text guard on the CIO's narration and on the
+    verdict's `reason` (the two places the same rationale reaches the user).
+    `log` mode records hits and returns both unchanged; `enforce` replaces a
+    flagged one with the labelled AMI sentinel. Never touches the action.
+    """
+    common = {"agent_id": AgentId.PORTFOLIO_MANAGER.value, "run_id": run_id}
+    text_result = output_guard.inspect(pm_text, surface="room_verdict", **common)
+    if text_result.withhold:
+        pm_text = output_guard.withheld_notice(text_result, "explanation")
+    reason = verdict.reason
+    if reason:
+        # Same rationale usually, plus appended disclosures; its own surface
+        # label keeps the narration hit-rate from double counting.
+        reason_result = output_guard.inspect(
+            reason, surface="room_verdict_reason", **common
+        )
+        if reason_result.withhold:
+            verdict = verdict.model_copy(update={
+                "reason": output_guard.withheld_notice(reason_result, "explanation")
+            })
+    return pm_text, verdict
+
+
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
     LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
@@ -5947,6 +5974,12 @@ async def _run_cio_step(
                 })
         if _review_pm_text is not None:
             pm_text = _review_pm_text
+        # CR271 — the output text guard on the CIO's user-visible rationale,
+        # after the second-pass review so it judges the text the user would
+        # actually read. The PM text is buffered (`_stream_pm_response`) and
+        # only restreamed below, so withholding it is real. The verdict ACTION
+        # and every number are untouched; only the explanation is replaced.
+        pm_text, verdict = _guard_pm_text(pm_text, verdict, run_id=run_id)
         async for ev in _restream_for_ui(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -8305,6 +8338,7 @@ class RoomRunner:
                                 agent_timeout_s=agent_timeout_s,
                                 portfolio_snapshot=ctx.portfolio_snapshot,
                                 parallel_phase=True,
+                                run_id=run_id,
                             )
                             for agent_id in phase_agents
                         ])
@@ -9452,6 +9486,7 @@ async def _compute_agent_text(
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
     portfolio_snapshot: str | None = None,
     parallel_phase: bool = False,
+    run_id: UUID | None = None,
 ) -> tuple[str, dict[str, Any] | None, "_StanceEnvelope", bool | None, list[str] | None]:
     """Produce one agent's final contribution text (LLM when live, scripted
     otherwise) plus its DEF095 geometry-verification signal — WITHOUT streaming
@@ -9518,6 +9553,20 @@ async def _compute_agent_text(
                 scripted_so_far=len(ctx.scripted_turns),
             )
         return _scripted_for(agent_id, formatter)
+
+    def _output_guard_withholds(candidate: str) -> bool:
+        """CR271 — the deterministic output text guard on one finished LLM
+        text. True only in `enforce` mode on an advice/abuse hit; `log` mode
+        records the hit and returns False, `off` does nothing. The text is
+        buffered here and streamed later by `_stream_agent_text`, so a True
+        result genuinely keeps it from the stream, the transcript and the verdict.
+        """
+        return output_guard.inspect(
+            candidate,
+            surface="room_turn",
+            agent_id=agent_id.value,
+            run_id=run_id,
+        ).withhold
 
     if live:
         # Pass ctx.user_id so build_agent_prompt picks up the user's
@@ -9601,6 +9650,13 @@ async def _compute_agent_text(
             # on sniffing the text for its own sentinel.
             if stream_meta.get("stream_error"):
                 text = _fall_back_to_script("stream_error")
+            # CR271 — the output text guard. Same destination as the two
+            # branches above: a withheld turn is labelled and counted as
+            # scripted, so the advice/abuse text never reaches the stream, the
+            # transcript or the verdict. Skipped once the turn is already
+            # scripted (the template is ours, and a sentinel is not LLM text).
+            elif agent_id not in ctx.scripted_turns and _output_guard_withholds(text):
+                text = _fall_back_to_script("output_guard")
             # CR106 B2: strip the stance envelope FIRST. It must come off before
             # the `[AMI …]` marks below — which would otherwise sit between the
             # prose and a trailing envelope and break its end-anchor — and before
@@ -9651,6 +9707,12 @@ async def _compute_agent_text(
                     timeout_s=agent_timeout_s,
                     profile=profile,
                 )
+                # CR271 — a repair is a second LLM text; the guard binds it too.
+                # Discarding it leaves the original turn, which already passed.
+                if _repaired_env is not None and _output_guard_withholds(
+                    _repaired_env[0]
+                ):
+                    _repaired_env = None
                 if _repaired_env is not None:
                     text, envelope = _repaired_env
                     envelope_parsed = True
@@ -9693,6 +9755,10 @@ async def _compute_agent_text(
                         timeout_s=agent_timeout_s,
                         profile=profile,
                     )
+                    if _repaired_cards is not None and _output_guard_withholds(
+                        _repaired_cards[0]
+                    ):
+                        _repaired_cards = None
                     if _repaired_cards is not None:
                         text, envelope, claim_cards = _repaired_cards
                 # CR266 — capture the typed record on ctx; the stripped prose
@@ -9784,6 +9850,8 @@ async def _compute_agent_text(
                 reference_close=_ref_close,
                 size_pct=ctx.trader_size_pct,
             )
+            if _repaired is not None and _output_guard_withholds(_repaired[0]):
+                _repaired = None
             if _repaired is not None:
                 text, geom_sig, _env = _repaired
                 if _env.stance:
@@ -9903,6 +9971,7 @@ async def _speak_one_agent(
         agent_timeout_s=agent_timeout_s,
         portfolio_snapshot=portfolio_snapshot,
         parallel_phase=False,
+        run_id=run_id,
     )
     async for ev in _stream_agent_text(
         agent_id=agent_id,

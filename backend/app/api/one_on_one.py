@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from app.core.config import settings
+from app.services import output_guard
 from app.schemas import AgentId, Mandate, agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.mandate import Plan
@@ -219,7 +220,10 @@ async def send_message(
         # that — `stream_error` is set on both failure shapes — so `failed`
         # below is derived from the key, never from matching the sentinel's
         # own prose.
-        stream_meta: dict[str, Any] = {}
+        # CR271 — this handler holds the whole reply before sending a byte, so
+        # the output text guard (run by the generator where the reply is
+        # stored) can really withhold it; it says so here.
+        stream_meta: dict[str, Any] = {output_guard.META_CONSUMER_BUFFERS: True}
         try:
             # CR219 R59-F5: the raw text is buffered to completion — not
             # streamed chunk-by-chunk as it used to be — because
@@ -252,6 +256,11 @@ async def send_message(
                 size_pct=_risk_tier_size_ceiling(mandate),
                 reference_close=reference_close,
             )
+            # CR271 — enforce mode withheld this reply: the labelled AMI
+            # sentence goes out and into the Journal in its place.
+            withheld = stream_meta.get(output_guard.META_SENTINEL)
+            if withheld:
+                annotated = withheld
             # The buffer now holds exactly what was presented to the user —
             # the single source both the SSE frame below and the Journal
             # write in `finally` read from, so the two can never disagree.
