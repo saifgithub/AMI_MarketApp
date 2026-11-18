@@ -5890,6 +5890,12 @@ abstract class AppLocalizations {
   /// **'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.'**
   String get versionGateOfflineRetryHint;
 
+  /// DEF473 - snackbar on the version-gate UPDATE button (block screen and nag sheet) when the server sent no store link or the store could not be opened. The block screen has no back button, so a silent no-op strands the user. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI couldn\'t open the store. Open the App Store or Google Play, search for AMI Trade and update from there.'**
+  String get versionGateStoreUnavailable;
+
   /// CR109 slice 3c/4. App-bar title of the field board — where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

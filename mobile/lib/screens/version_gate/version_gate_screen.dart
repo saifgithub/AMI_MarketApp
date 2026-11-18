@@ -21,11 +21,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 
-Future<void> _openStore(String? url) async {
-  if (url == null || url.isEmpty) return;
-  final uri = Uri.tryParse(url);
-  if (uri == null) return;
-  await launchUrl(uri, mode: LaunchMode.externalApplication);
+/// DEF473 — the UPDATE button must never be a silent no-op: on the block
+/// screen there is no back button, so a missing or unlaunchable store link
+/// would strand the user with a dead control. Says so instead (CR040).
+@visibleForTesting
+Future<void> openStoreOrExplain(BuildContext context, String? url) async {
+  final message = AppLocalizations.of(context).versionGateStoreUnavailable;
+  final messenger = ScaffoldMessenger.of(context);
+  final uri = (url == null || url.isEmpty) ? null : Uri.tryParse(url);
+  var opened = false;
+  if (uri != null) {
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
+  }
+  if (!opened) {
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
 }
 
 class VersionGateBlockScreen extends ConsumerStatefulWidget {
@@ -100,7 +114,7 @@ class _VersionGateBlockScreenState
                       padding:
                           const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                     ),
-                    onPressed: () => _openStore(floor.storeUrl),
+                    onPressed: () => openStoreOrExplain(context, floor.storeUrl),
                     child: Text(l.versionGateUpdateCta,
                         style: AmiTypography.labelMono
                             .copyWith(color: AmiColors.slate900)),
@@ -178,7 +192,7 @@ Future<void> showVersionGateNagSheet(
                 backgroundColor: AmiColors.hexCyan,
                 foregroundColor: AmiColors.slate900,
               ),
-              onPressed: () => _openStore(floor.storeUrl),
+              onPressed: () => openStoreOrExplain(sheetContext, floor.storeUrl),
               child: Text(l.versionGateUpdateCta,
                   style:
                       AmiTypography.labelMono.copyWith(color: AmiColors.slate900)),

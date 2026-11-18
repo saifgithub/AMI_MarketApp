@@ -4,11 +4,11 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**262 cases** — 185 api, 15 device, 62 manual; 11 blocked.
+**263 cases** — 185 api, 15 device, 63 manual; 11 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 5 cases
+1. [Platform, version gate & UAT seeding](#platform) — 6 cases
 2. [Authentication, sessions & account identity](#auth) — 23 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 28 cases
@@ -2996,6 +2996,19 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. A blocking "Update required" screen with a working store button; no other screen is reachable
+
+#### UAT-PLAT-006 — The forced-update button never fails silently
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A build below the floor, with the release-floor response served without a store_url (or a store link the phone cannot open)
+
+**Steps**
+1. On the "Update required" screen, tap UPDATE NOW
+
+**Expected**
+1. A message tells the user AMI could not open the store and where to update from; the button is never a silent no-op (DEF473)
 
 #### UAT-AUTH-030 — Sign in with Apple on iPhone
 

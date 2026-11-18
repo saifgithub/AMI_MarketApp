@@ -3506,6 +3506,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
 
   @override
+  String get versionGateStoreUnavailable =>
+      'تعذّر على AMI فتح المتجر. افتح App Store أو Google Play وابحث عن AMI Trade ثم حدّث التطبيق من هناك.';
+
+  @override
   String get gamesBoardTitle => 'Standings';
 
   @override

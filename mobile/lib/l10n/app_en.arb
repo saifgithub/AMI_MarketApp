@@ -4238,6 +4238,10 @@
   "@versionGateOfflineRetryHint": {
     "description": "CR121 — small caption under the recheck button on the block screen, covering both 'you're still below the floor' and 'the recheck call itself failed' (the fail-open path never removes the block screen, so this explains why nothing happened after tapping retry). NEW key, needs ar/ms translation. retranslate:[ar,ms]"
   },
+  "versionGateStoreUnavailable": "AMI couldn't open the store. Open the App Store or Google Play, search for AMI Trade and update from there.",
+  "@versionGateStoreUnavailable": {
+    "description": "DEF473 - snackbar on the version-gate UPDATE button (block screen and nag sheet) when the server sent no store link or the store could not be opened. The block screen has no back button, so a silent no-op strands the user. retranslate:[ar,ms]"
+  },
   "gamesBoardTitle": "Standings",
   "@gamesBoardTitle": {
     "description": "CR109 slice 3c/4. App-bar title of the field board — where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]"

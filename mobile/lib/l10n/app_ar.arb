@@ -929,6 +929,7 @@
     "versionGateNagDismissCta": "Later",
     "versionGateRetryCta": "I've updated — check again",
     "versionGateOfflineRetryHint": "Still on the old version, or AMI couldn't be reached. Try again in a moment.",
+    "versionGateStoreUnavailable": "تعذّر على AMI فتح المتجر. افتح App Store أو Google Play وابحث عن AMI Trade ثم حدّث التطبيق من هناك.",
     "gamesBoardTitle": "Standings",
     "@gamesBoardTitle": {
         "description": "CR109 slice 3c/4. App-bar title of the field board — where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]"

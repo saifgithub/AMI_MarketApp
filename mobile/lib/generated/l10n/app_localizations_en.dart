@@ -3505,6 +3505,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
 
   @override
+  String get versionGateStoreUnavailable =>
+      'AMI couldn\'t open the store. Open the App Store or Google Play, search for AMI Trade and update from there.';
+
+  @override
   String get gamesBoardTitle => 'Standings';
 
   @override

@@ -68,3 +68,14 @@ cases:
     expected:
       - 'No forced-update screen appears'
       - 'The Floor and its bottom bar are on screen'
+
+  - id: UAT-PLAT-006
+    title: The forced-update button never fails silently
+    layer: manual
+    plans: [any]
+    preconditions:
+      - 'A build below the floor, with the release-floor response served without a store_url (or a store link the phone cannot open)'
+    steps:
+      - 'On the "Update required" screen, tap UPDATE NOW'
+    expected:
+      - 'A message tells the user AMI could not open the store and where to update from; the button is never a silent no-op (DEF473)'
