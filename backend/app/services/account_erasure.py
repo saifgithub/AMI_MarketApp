@@ -531,6 +531,11 @@ def erase_account(user_id: UUID, mode: str | None = None) -> ErasureReport:
             return report
         if row.closure_requested_at is None:
             raise ValueError("refusing to erase an account that was never closed")
+        if is_restorable(row):
+            # Checked before the processors too: an account restored (or still
+            # inside grace) must not have its OneSignal/RevenueCat records wiped.
+            report.outcome = "not_due"
+            return report
         email = row.email
 
     if mode != "archive":

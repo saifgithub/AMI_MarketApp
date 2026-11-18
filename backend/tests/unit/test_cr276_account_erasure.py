@@ -451,6 +451,18 @@ def test_an_account_restored_or_re_closed_after_queueing_is_not_erased(client):
     assert _count(User, id=uid) == 1 and _count(JournalEntryRow, user_id=uid) == 1
 
 
+def test_an_account_inside_grace_never_reaches_the_processors(client, monkeypatch):
+    """A restored or still-in-grace account must not have its OneSignal or
+    RevenueCat records wiped, even if erase_account is called on it directly."""
+    uid, h = _claimed_user(client)
+    client.post("/v1/account/close", headers=h, json={"confirm": True})
+    called = []
+    monkeypatch.setattr(ae, "erase_external", lambda u: called.append(u) or {"onesignal": "ok", "revenuecat": "ok"})
+    assert ae.erase_account(uid).outcome == "not_due"
+    assert called == []
+    assert _count(User, id=uid) == 1
+
+
 def test_never_closed_accounts_are_never_erased(client):
     uid, _h = _claimed_user(client)
     with pytest.raises(ValueError):
