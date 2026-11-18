@@ -62,5 +62,5 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | S0 | ✅ given | 2026-11-18 | "go, start WP-00" |
 | S1 | ✅ done | 2026-11-18 | 66 items ruled (53 asked, 13 accepted on recommendation) |
 | S2–S10 | open | | |
-| S11 | open | | Implementation-plan discussion before any LLM change (WP-10–WP-14). Added 2026-11-18. |
+| S11 | ✅ approved | 2026-11-18 | Plan: `S11_llm_implementation_plan.md` (rulings §3a). Alpha stays on-prem until Beta; Ling joins WP-10. |
 | S12 | open | | Implementation-plan discussion before any Jev/grader change (WP-22, WP-23). Added 2026-11-18. |
