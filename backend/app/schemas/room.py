@@ -97,6 +97,11 @@ class VerdictReviewRecord(BaseModel):
     # Which fallback provider ran the call; None when routed but skipped before
     # any call (`skipped_reason` says why).
     provider: str | None = None
+    # DEF493 — the audit ran on the SAME model as the CIO (only one model is
+    # configured, e.g. on-prem Alpha, or a hosted Beta without a backup slot).
+    # It is a second pass, not an independent opinion, and must not be shown as
+    # one. False for a different-model review and for a skipped one.
+    same_model_review: bool = False
     # The audit's own output — "uphold"/"veto" (veto review) or
     # "reconsider"/"uphold" (resurrection review). None when the call never ran
     # or its reply could not be parsed.

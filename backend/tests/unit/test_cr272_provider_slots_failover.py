@@ -41,6 +41,10 @@ from app.services.llm_gateway import (
     OutputConstraint,
     VLLMProvider,
 )
+from app.services.room_prompts import (
+    RESURRECTION_REVIEW_SYSTEM,
+    VETO_REVIEW_SYSTEM,
+)
 from app.services.room_runner import (
     ROOM_BACKUP_SWITCH_NOTICE,
     RoomRunner,
@@ -292,6 +296,14 @@ class _FakeProvider(LLMProvider):
         if self.mode == "chunk_then_boom":
             yield "partial"
             raise httpx.ReadError("boom")
+        if (
+            VETO_REVIEW_SYSTEM[:80] in system_prompt
+            or RESURRECTION_REVIEW_SYSTEM[:80] in system_prompt
+        ):
+            # DEF493 — a Room on the backup now reviews its APPROVE on the
+            # backup (the tripped primary is not asked); answer as an audit.
+            yield '{"decision": "uphold", "reasons": ["engages each objection"]}'
+            return
         if "speak as the chief investment officer" in system_prompt.lower():
             yield PM_JSON
             return
@@ -555,6 +567,9 @@ def test_room_primary_failure_restarts_whole_room_on_backup(mode, logs):
     verdicts = [e for e in events if e.kind == "verdict"]
     assert len(verdicts) == 1
     assert verdicts[0].verdict.action == VerdictAction.APPROVE.value
+    review = run.verdict.verdict_review
+    assert review is not None and review.decision == "uphold"
+    assert review.provider == FALLBACK_PROVIDER_NAME and review.same_model_review is True
     assert run.verdict.llm_backup_used is True
     assert run.verdict.llm_backup_model == cfg.settings.vllm_fallback_model or (
         run.verdict.llm_backup_model is None
