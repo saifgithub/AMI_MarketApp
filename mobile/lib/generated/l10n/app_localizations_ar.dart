@@ -5251,4 +5251,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get companyReviewShowLess => 'Show less';
+
+  @override
+  String askAboutTickerMessage(String ticker) {
+    return 'ما رأيك في $ticker؟';
+  }
 }

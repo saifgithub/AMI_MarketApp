@@ -8677,6 +8677,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get companyReviewShowLess;
+
+  /// DEF480 — first message auto-sent to the Technical Strategist when the user taps ASK on a ticker (ticker detail, watchlist sheet), so the ticker they were looking at is not dropped. NEW key, needs ar/ms review. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your read on {ticker}?'**
+  String askAboutTickerMessage(String ticker);
 }
 
 class _AppLocalizationsDelegate

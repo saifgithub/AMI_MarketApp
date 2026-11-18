@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**250 cases** — 185 api, 15 device, 50 manual; 11 blocked.
+**253 cases** — 185 api, 15 device, 53 manual; 11 blocked.
 
 ## Areas
 
@@ -13,12 +13,12 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 18 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 27 cases
 5. [Floor tab & home shell](#floor) — 8 cases
-6. [Convene the Room](#room) — 16 cases
+6. [Convene the Room](#room) — 17 cases
 7. [1-on-1 agent chat](#one-on-one) — 8 cases
 8. [Brief Your Agent](#brief) — 16 cases
-9. [Sim trading & market data](#sim-trading) — 29 cases
+9. [Sim trading & market data](#sim-trading) — 30 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 14 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 15 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 8 cases
@@ -3299,6 +3299,20 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. A wall (not a crash or an empty console) with the credit price and, under Winzip, a live countdown to the next free Room
 2. No verdict card appears and nothing is added to the Journal
 
+#### UAT-ROOM-017 — The Convene picker opens pre-filled when launched for a ticker
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A watchlist containing GOOGL
+
+**Steps**
+1. From the GOOGL watchlist action sheet tap CONVENE THE ROOM
+
+**Expected**
+1. The picker shows GOOGL in the field with the Room price and balance line above it
+2. Nothing is charged until CONVENE is tapped; opening the picker from the Floor still starts with an empty field
+
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
 _Manual (iPhone checklist) · plans: floor_pass_
@@ -3420,6 +3434,18 @@ _Manual (iPhone checklist) · plans: trader_
 1. Cash returns to the starting capital; holdings, orders and trades are cleared
 2. The second attempt is refused with a clear cooldown message
 
+#### UAT-SIM-030 — ASK from ticker detail carries the ticker into the 1-on-1
+
+_Manual (iPhone checklist) · plans: any_
+
+**Steps**
+1. Open AAPL's ticker detail; tap ASK
+2. Watch the chat that opens
+
+**Expected**
+1. The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
+2. AMI answers about AAPL, not a generic greeting
+
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 
 _Manual (iPhone checklist) · plans: floor_pass, trader_
@@ -3471,6 +3497,21 @@ _Manual (iPhone checklist) · plans: trader_
 **Expected**
 1. The sheet refuses an empty or zero price; the alert appears as active
 2. When crossed the alert becomes fired with a timestamp (and commentary if enabled) and a push arrives that opens the right ticker
+
+#### UAT-WATCH-015 — ASK and CONVENE from a watchlist row carry the ticker
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A watchlist containing GOOGL
+
+**Steps**
+1. Tap the GOOGL watchlist row to open its action sheet; tap ASK THE TECHNICAL STRATEGIST
+2. Go back; reopen the row; tap CONVENE THE ROOM
+
+**Expected**
+1. ASK opens the 1-on-1 with a first message that already names GOOGL
+2. CONVENE opens the picker with GOOGL already typed in the field, and the Room price line still visible; nothing is charged until CONVENE is tapped
 
 #### UAT-LESS-009 — Lessons tab, track browsing, reader and quiz feel right on iPhone
 

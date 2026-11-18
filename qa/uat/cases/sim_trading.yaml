@@ -380,3 +380,14 @@ cases:
       - 'The ticket shows SAFETY FLOOR - TRADE BLOCKED with the reason (position size exceeds the single-name cap)'
       - 'Portfolio cash and holdings are unchanged'
       - 'The refusal is not overridable from the ticket'
+
+  - id: UAT-SIM-030
+    title: ASK from ticker detail carries the ticker into the 1-on-1
+    layer: manual
+    plans: [any]
+    steps:
+      - Open AAPL's ticker detail; tap ASK
+      - Watch the chat that opens
+    expected:
+      - The chat opens with the Technical Strategist and the first message already names AAPL ("What's your read on AAPL?") - the ticker is never retyped
+      - AMI answers about AAPL, not a generic greeting

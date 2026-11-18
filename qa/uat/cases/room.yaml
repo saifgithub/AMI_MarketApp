@@ -228,3 +228,15 @@ cases:
       - 'The Convene sheet states the Room price and the user''s credits before anything is charged'
       - 'The Room opens on AAPL and streams desk by desk'
       - 'The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card'
+
+  - id: UAT-ROOM-017
+    title: The Convene picker opens pre-filled when launched for a ticker
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A watchlist containing GOOGL
+    steps:
+      - From the GOOGL watchlist action sheet tap CONVENE THE ROOM
+    expected:
+      - The picker shows GOOGL in the field with the Room price and balance line above it
+      - Nothing is charged until CONVENE is tapped; opening the picker from the Floor still starts with an empty field

@@ -169,3 +169,16 @@ cases:
     expected:
       - 'PRICE ALERTS lists "Price falls below $<price>"'
       - 'After cancelling, the alert is gone'
+
+  - id: UAT-WATCH-015
+    title: ASK and CONVENE from a watchlist row carry the ticker
+    layer: manual
+    plans: [any]
+    preconditions:
+      - A watchlist containing GOOGL
+    steps:
+      - Tap the GOOGL watchlist row to open its action sheet; tap ASK THE TECHNICAL STRATEGIST
+      - Go back; reopen the row; tap CONVENE THE ROOM
+    expected:
+      - ASK opens the 1-on-1 with a first message that already names GOOGL
+      - CONVENE opens the picker with GOOGL already typed in the field, and the Room price line still visible; nothing is charged until CONVENE is tapped

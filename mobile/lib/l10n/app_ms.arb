@@ -3494,5 +3494,6 @@
     "roomDeltaPriorCall": "PRIOR CALL",
     "roomDeltaPriceMove": "PRICE MOVE",
     "roomDeltaKillCriterion": "KILL CRITERION THEN",
-    "roomDeltaChangedFields": "CHANGED FIELDS"
+    "roomDeltaChangedFields": "CHANGED FIELDS",
+    "askAboutTickerMessage": "Apakah pandangan anda tentang {ticker}?"
 }

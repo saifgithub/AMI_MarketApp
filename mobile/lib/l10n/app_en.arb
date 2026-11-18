@@ -6533,5 +6533,14 @@
   "companyReviewOpenLinkFailed": "Couldn't open that link.",
   "@companyReviewOpenLinkFailed": { "description": "CR244 audit fix L6 — snackbar shown when launchUrl fails to open a filing/Form-4/holder document link. NEW key, needs ar/ms translation." },
   "companyReviewShowLess": "Show less",
-  "@companyReviewShowLess": { "description": "CR244 audit fix M5 — collapse label on an expanded 'view full detail' section (Financials, Insider summary, Events), mirrored against companyReviewViewFullDetail. NEW key, needs ar/ms translation." }
+  "@companyReviewShowLess": { "description": "CR244 audit fix M5 — collapse label on an expanded 'view full detail' section (Financials, Insider summary, Events), mirrored against companyReviewViewFullDetail. NEW key, needs ar/ms translation." },
+  "askAboutTickerMessage": "What's your read on {ticker}?",
+  "@askAboutTickerMessage": {
+    "description": "DEF480 — first message auto-sent to the Technical Strategist when the user taps ASK on a ticker (ticker detail, watchlist sheet), so the ticker they were looking at is not dropped. NEW key, needs ar/ms review. retranslate:[ar,ms]",
+    "placeholders": {
+      "ticker": {
+        "type": "String"
+      }
+    }
+  }
 }

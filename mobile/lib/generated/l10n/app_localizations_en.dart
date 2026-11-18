@@ -5250,4 +5250,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get companyReviewShowLess => 'Show less';
+
+  @override
+  String askAboutTickerMessage(String ticker) {
+    return 'What\'s your read on $ticker?';
+  }
 }

@@ -461,7 +461,11 @@ class _SecondaryActions extends ConsumerWidget {
   final double? heldQuantity;
   void _ask(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => OneOnOneScreen(agent: agentById('market_analyst')),
+      builder: (_) => OneOnOneScreen(
+        agent: agentById('market_analyst'),
+        initialMessage:
+            AppLocalizations.of(context).askAboutTickerMessage(ticker),
+      ),
     ));
   }
 
