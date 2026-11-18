@@ -239,6 +239,9 @@ _INLINE_DEFAULT_EXEMPT: dict[str, str] = {
     # check as empty and fails loudly, instead of silently booting on the
     # in-code dev placeholder (app/main.py's AMI_ENV=staging assertion).
     "SECRET_KEY": "empty on purpose — an unset key must fail the boot check, not inherit the dev default",
+    # Compose cannot spell None; an empty value is how "send no temperature" is
+    # forwarded, and Settings reads blank as None (test_cr269_llm_temperature).
+    "LLM_DESK_TEMPERATURE": "empty is None — compose's only spelling of 'unset' for an optional float",
 }
 # `PORTFOLIO_HEALTH_TRIAL_FINDINGS` was exempted here and should not have been
 # (DEF266, R68-BATCH9 audit MAJOR-3). The reasoning at the time — "another lane

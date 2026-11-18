@@ -196,6 +196,31 @@ def prepend_grounding_directive(system_prompt: str) -> str:
 # ── Provider interface ───────────────────────────────────────────────────
 
 
+_ANTHROPIC_MAX_TEMPERATURE = 1.0
+
+
+def _desk_temperature_fields(*, ceiling: float | None = None) -> dict[str, float]:
+    """CR269 — the one place the desk sampling temperature enters a request body.
+
+    Empty when `llm_desk_temperature` is unset, so nothing changes on the wire
+    until an operator sets it. `ceiling` is for a provider whose API rejects the
+    full [0, 2] range (Anthropic: 1.0); exceeding it is clamped LOUDLY, because a
+    400 from the first-fallback provider would turn an outage into a hard stop.
+    """
+    value = settings.llm_desk_temperature
+    if value is None:
+        return {}
+    if ceiling is not None and value > ceiling:
+        logger.warning(
+            "llm_temperature_clamped",
+            requested=value,
+            sent=ceiling,
+            detail="provider's maximum temperature is below LLM_DESK_TEMPERATURE",
+        )
+        value = ceiling
+    return {"temperature": value}
+
+
 class LLMProvider:
     name: str = "base"
     # CR210 — which decoding grammars this provider can actually ENFORCE.
@@ -459,6 +484,7 @@ class AnthropicProvider(LLMProvider):
             "stream": True,
             "system": system_prompt,
             "messages": [{"role": m.role, "content": m.content} for m in messages],
+            **_desk_temperature_fields(ceiling=_ANTHROPIC_MAX_TEMPERATURE),
         }
 
         async with self._client.stream("POST", "/v1/messages", json=body) as resp:
@@ -704,6 +730,7 @@ class OpenAICompatibleProvider(LLMProvider):
             # CR141: the terminal SSE frame otherwise carries no `usage` block
             # at all on this family of APIs — this is what turns it on.
             "stream_options": {"include_usage": True},
+            **_desk_temperature_fields(),
             **self._extra_body,
         }
         # CR210 — applied AFTER the `**self._extra_body` spread, deliberately.

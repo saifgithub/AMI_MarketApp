@@ -283,6 +283,9 @@ services:
       GLM_API_KEY: ${GLM_API_KEY:-}
       GLM_MAX_TOKENS_FLOOR: ${GLM_MAX_TOKENS_FLOOR:-12000}
       LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
+      # CR269 — empty desk value = send no temperature (today's behaviour).
+      LLM_DESK_TEMPERATURE: ${LLM_DESK_TEMPERATURE:-}
+      LLM_JUDGE_TEMPERATURE: ${LLM_JUDGE_TEMPERATURE:-0.0}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
