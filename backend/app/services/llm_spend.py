@@ -116,7 +116,12 @@ def _read_spend(day_start: datetime) -> tuple[float, int]:
     has_tokens = or_(
         LLMAuditRow.input_tokens.isnot(None), LLMAuditRow.output_tokens.isnot(None)
     )
-    unknown = case((and_(LLMAuditRow.cost_usd.is_(None), has_tokens), 1), else_=0)
+    # DEF488: a row written before CR270 has no `model` and could never have
+    # been priced; counting it closed the gate for the rest of the deploy day.
+    unknown = case(
+        (and_(LLMAuditRow.cost_usd.is_(None), has_tokens, LLMAuditRow.model.isnot(None)), 1),
+        else_=0,
+    )
     with get_session() as s:
         total, unknown_rows = s.execute(
             select(

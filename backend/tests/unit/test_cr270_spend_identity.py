@@ -383,13 +383,26 @@ def _ceiling(monkeypatch, value: float | None) -> None:
     monkeypatch.setattr(llm_spend.settings, "llm_daily_spend_ceiling_usd", value)
 
 
-def _audit(cost: float | None, *, at: datetime = NOON, tokens: bool = True, provider="vllm") -> None:
+def _audit(
+    cost: float | None, *, at: datetime = NOON, tokens: bool = True, provider="vllm",
+    model: str | None = "served-model",
+) -> None:
     with get_session() as s:
         s.add(LLMAuditRow(
             created_at=at, tier="cheap", provider=provider, system_prompt="s",
             messages=[], input_tokens=10 if tokens else None,
-            output_tokens=10 if tokens else None, cost_usd=cost,
+            output_tokens=10 if tokens else None, cost_usd=cost, model=model,
         ))
+
+
+def test_a_pre_cr270_row_without_a_model_does_not_close_the_gate(monkeypatch, clock):
+    """DEF488: rows written before the migration have tokens, no model and no
+    cost. On deploy day they closed the gate for every request until 00:00 UTC."""
+    _ceiling(monkeypatch, 5.0)
+    _audit(None, tokens=True, model=None)
+    _audit(0.5)
+    llm_spend.check_budget("t")
+    assert llm_spend.todays_spend().unknown_cost_rows == 0
 
 
 def test_no_ceiling_never_refuses_and_never_reads_the_db(monkeypatch, clock):
