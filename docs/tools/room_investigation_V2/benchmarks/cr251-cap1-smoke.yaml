@@ -1,0 +1,8 @@
+# one-room smoke for the cap1 arm — AAPL R5, 1% single-name cap.
+name: cr251-cap1-smoke
+provider: vllm
+tickers: [AAPL]
+mandate: { file: mandates/cap1-r5.json }
+repeats: 1
+prompt_variant: backend-default
+concurrency_by_provider: { vllm: 1 }
