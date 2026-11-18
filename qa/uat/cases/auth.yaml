@@ -5,6 +5,7 @@ order: 2
 covers:
   - backend/app/api/auth.py
   - backend/app/api/me.py
+  - backend/app/api/account.py
   - mobile/lib/screens/auth/**
 summary: |
   Anonymous-first sign-in: the device bootstraps an anonymous user, can claim it
@@ -335,3 +336,112 @@ cases:
       - 'A dialog says AMI could not check the earlier data; it is never silently skipped (DEF477)'
       - 'RETRY opens the merge sheet once the preview loads; SKIP continues signed in with the data unmerged'
       - 'No message anywhere points to a Settings entry for merging (there is none)'
+
+  - id: UAT-AUTH-040
+    title: The account policy states delete wording and the restore window
+    layer: api
+    plans: [anon]
+    steps:
+      - 'GET /v1/account/policy with no Authorization header'
+    expected:
+      - '200 with mode "delete" or "anonymise", wording "delete", grace_days 30 and export_available true'
+      - 'wording is "close" only if mode is "archive" (which stays off until counsel approves, CR267 gate S6)'
+
+  - id: UAT-AUTH-041
+    title: Closing an account needs confirmation and kills every session at once
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous user with a second session minted for the same user id (POST /v1/auth/anon with the user''s own id and bearer)'
+    steps:
+      - 'POST /v1/account/close with an empty body'
+      - 'POST /v1/account/close with {"confirm": true}'
+      - 'GET /v1/auth/me and GET /v1/account/export with each of the two tokens'
+    expected:
+      - 'The empty-body call is 400 confirm_required and both tokens still work afterwards'
+      - 'The confirmed call is 200 with closed true, grace_days 30 and a restorable_until 30 days after closure_requested_at'
+      - 'Both tokens are then 401 on the very next call (no grace for the old sessions)'
+
+  - id: UAT-AUTH-042
+    title: Export returns only the caller's own data, as a download, with no secrets
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'Two anonymous users, A and B; A has a watchlist entry, B has a different one'
+    steps:
+      - 'GET /v1/account/export as A'
+      - 'GET /v1/account/export with no token'
+    expected:
+      - '200, Content-Disposition attachment named ami-data-export-<date>.json, Cache-Control no-store'
+      - 'The document has schema_version 1, A''s profile id, and the sections mandates, journal, lesson_progress, settings, sim_trades and rooms; B''s id and B''s watchlist ticker appear nowhere in it'
+      - 'No field named like a secret (token, api_key, secret, password, code_hash) appears; Room transcripts are not included'
+      - 'Without a token the call is 401'
+
+  - id: UAT-AUTH-043
+    title: A closed anonymous device starts over as a brand-new user
+    layer: api
+    plans: [anon]
+    preconditions:
+      - 'An anonymous user that has just been closed (UAT-AUTH-041); its old bearer is dead'
+    steps:
+      - 'POST /v1/auth/anon with the closed user''s id as device_user_id and its dead bearer'
+    expected:
+      - '200 with is_new true and a user id different from the closed one; the old id is never reused'
+      - 'The new token authenticates GET /v1/auth/me; the closed user''s token still does not'
+
+  - id: UAT-AUTH-044
+    title: Settings offers Export my data and Delete account; Delete asks first
+    layer: device
+    plans: [anon]
+    steps:
+      - 'Open You > Settings and scroll to the Account section'
+      - 'Tap Delete account'
+      - 'Read the dialog, then tap CANCEL'
+    expected:
+      - 'Account shows "Export my data" with its caption and "Delete account" (the wording is "Close account" only if the server reports archive mode)'
+      - 'The DELETE ACCOUNT? dialog says what is deleted, what is kept for how long, and that it can be restored for 30 days; it has CANCEL first and DELETE ACCOUNT'
+      - 'CANCEL closes the dialog; the user is still signed in and nothing was sent (the test never taps DELETE ACCOUNT)'
+
+  - id: UAT-AUTH-045
+    title: A deleted account can be restored inside the 30 days
+    layer: manual
+    preconditions:
+      - 'A signed-in account (Apple on iPhone, Google on Android) with a mandate, a journal entry and a simulated trade'
+    steps:
+      - 'Settings > Account > Delete account, read the dialog, tap DELETE ACCOUNT'
+      - 'Confirm the app returns to a fresh guest with the "scheduled for deletion" message and the restore date'
+      - 'Sign in again with the same Apple / Google account'
+      - 'In the RESTORE YOUR ACCOUNT? dialog tap CANCEL once, then repeat the sign-in and tap RESTORE'
+    expected:
+      - 'Right after deleting, no old session on any device works (it returns to sign-in)'
+      - 'The first sign-in shows the dialog with the deletion date; CANCEL changes nothing and the account stays pending'
+      - 'RESTORE signs back in to the SAME account: mandate, journal entry and trade are all present'
+
+  - id: UAT-AUTH-046
+    title: After the grace period the account and its personal data are gone
+    layer: manual
+    preconditions:
+      - 'A throwaway signed-in account that has been deleted from the app (UAT-AUTH-045 step 1) and not restored'
+      - 'melehost shell access; ACCOUNT_ERASURE_MODE=delete (Beta default)'
+    steps:
+      - 'On melehost run psql: UPDATE users SET closure_requested_at = now() - interval ''31 days'' WHERE id = ''<user id>'';'
+      - 'Wait for the next erasure tick (ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS, default 3600) or restart ami_api_alpha to force it, then read docker logs ami_api_alpha for account_erased'
+      - 'Count rows for the user id in users, mandates, journal_entries, sim_trades, room_runs, user_devices, bug_reports'
+      - 'Sign in on the device with the same Apple / Google account'
+    expected:
+      - 'The log shows account_erased with mode delete and per-table counts; no account_erasure_failed or account_erasure_deferred line'
+      - 'Every count is 0; admin_audit has one account_erased_delete row for the id; llm_audit rows for the id are gone or have user_id NULL and empty prompts'
+      - 'The sign-in creates a NEW account (a different id, empty journal) and the restore dialog does not appear'
+
+  - id: UAT-AUTH-047
+    title: Export my data hands over a readable file
+    layer: manual
+    preconditions:
+      - 'A signed-in account with a mandate, a journal entry, a lesson in progress and a simulated trade'
+    steps:
+      - 'Settings > Account > Export my data'
+      - 'In the share sheet save the file to Files / Drive (or mail it to yourself) and open it'
+    expected:
+      - 'The share sheet opens with ami-data-export-<date>.json'
+      - 'The file is readable JSON holding the trade, the Room verdicts, the mandate, the journal entry, the lesson progress and the settings'
+      - 'It holds nothing about any other user and no Alpaca key, token or secret'

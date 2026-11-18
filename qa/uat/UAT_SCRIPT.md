@@ -4,12 +4,12 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**278 cases** — 186 api, 15 device, 77 manual; 11 blocked.
+**286 cases** — 190 api, 16 device, 80 manual; 11 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 6 cases
-2. [Authentication, sessions & account identity](#auth) — 24 cases
+2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
 5. [Floor tab & home shell](#floor) — 10 cases
@@ -363,6 +363,81 @@ _API (automated, live Alpha) · plans: anon · **BLOCKED** — test email inbox 
 1. Verify returns adopted_from_user_id = B and a token for A
 2. Preview counts match what B held; merge moves them all to A in one transaction
 3. A's mandate is kept when both had one, and B no longer exists (a repeat merge is 404)
+
+#### UAT-AUTH-040 — The account policy states delete wording and the restore window
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/account/policy with no Authorization header
+
+**Expected**
+1. 200 with mode "delete" or "anonymise", wording "delete", grace_days 30 and export_available true
+2. wording is "close" only if mode is "archive" (which stays off until counsel approves, CR267 gate S6)
+
+#### UAT-AUTH-041 — Closing an account needs confirmation and kills every session at once
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous user with a second session minted for the same user id (POST /v1/auth/anon with the user's own id and bearer)
+
+**Steps**
+1. POST /v1/account/close with an empty body
+2. POST /v1/account/close with {"confirm": true}
+3. GET /v1/auth/me and GET /v1/account/export with each of the two tokens
+
+**Expected**
+1. The empty-body call is 400 confirm_required and both tokens still work afterwards
+2. The confirmed call is 200 with closed true, grace_days 30 and a restorable_until 30 days after closure_requested_at
+3. Both tokens are then 401 on the very next call (no grace for the old sessions)
+
+#### UAT-AUTH-042 — Export returns only the caller's own data, as a download, with no secrets
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. Two anonymous users, A and B; A has a watchlist entry, B has a different one
+
+**Steps**
+1. GET /v1/account/export as A
+2. GET /v1/account/export with no token
+
+**Expected**
+1. 200, Content-Disposition attachment named ami-data-export-<date>.json, Cache-Control no-store
+2. The document has schema_version 1, A's profile id, and the sections mandates, journal, lesson_progress, settings, sim_trades and rooms; B's id and B's watchlist ticker appear nowhere in it
+3. No field named like a secret (token, api_key, secret, password, code_hash) appears; Room transcripts are not included
+4. Without a token the call is 401
+
+#### UAT-AUTH-043 — A closed anonymous device starts over as a brand-new user
+
+_API (automated, live Alpha) · plans: anon_
+
+**Preconditions**
+1. An anonymous user that has just been closed (UAT-AUTH-041); its old bearer is dead
+
+**Steps**
+1. POST /v1/auth/anon with the closed user's id as device_user_id and its dead bearer
+
+**Expected**
+1. 200 with is_new true and a user id different from the closed one; the old id is never reused
+2. The new token authenticates GET /v1/auth/me; the closed user's token still does not
+
+### Device (automated, Appium)
+
+#### UAT-AUTH-044 — Settings offers Export my data and Delete account; Delete asks first
+
+_Device (automated, Appium) · plans: anon_
+
+**Steps**
+1. Open You > Settings and scroll to the Account section
+2. Tap Delete account
+3. Read the dialog, then tap CANCEL
+
+**Expected**
+1. Account shows "Export my data" with its caption and "Delete account" (the wording is "Close account" only if the server reports archive mode)
+2. The DELETE ACCOUNT? dialog says what is deleted, what is kept for how long, and that it can be restored for 30 days; it has CANCEL first and DELETE ACCOUNT
+3. CANCEL closes the dialog; the user is still signed in and nothing was sent (the test never taps DELETE ACCOUNT)
 
 <a id="onboarding"></a>
 ## Onboarding interview (Concierge) & mandate creation
@@ -3123,6 +3198,59 @@ _Manual (iPhone checklist) · plans: any_
 1. A dialog says AMI could not check the earlier data; it is never silently skipped (DEF477)
 2. RETRY opens the merge sheet once the preview loads; SKIP continues signed in with the data unmerged
 3. No message anywhere points to a Settings entry for merging (there is none)
+
+#### UAT-AUTH-045 — A deleted account can be restored inside the 30 days
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A signed-in account (Apple on iPhone, Google on Android) with a mandate, a journal entry and a simulated trade
+
+**Steps**
+1. Settings > Account > Delete account, read the dialog, tap DELETE ACCOUNT
+2. Confirm the app returns to a fresh guest with the "scheduled for deletion" message and the restore date
+3. Sign in again with the same Apple / Google account
+4. In the RESTORE YOUR ACCOUNT? dialog tap CANCEL once, then repeat the sign-in and tap RESTORE
+
+**Expected**
+1. Right after deleting, no old session on any device works (it returns to sign-in)
+2. The first sign-in shows the dialog with the deletion date; CANCEL changes nothing and the account stays pending
+3. RESTORE signs back in to the SAME account: mandate, journal entry and trade are all present
+
+#### UAT-AUTH-046 — After the grace period the account and its personal data are gone
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A throwaway signed-in account that has been deleted from the app (UAT-AUTH-045 step 1) and not restored
+2. melehost shell access; ACCOUNT_ERASURE_MODE=delete (Beta default)
+
+**Steps**
+1. On melehost run psql: UPDATE users SET closure_requested_at = now() - interval '31 days' WHERE id = '<user id>';
+2. Wait for the next erasure tick (ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS, default 3600) or restart ami_api_alpha to force it, then read docker logs ami_api_alpha for account_erased
+3. Count rows for the user id in users, mandates, journal_entries, sim_trades, room_runs, user_devices, bug_reports
+4. Sign in on the device with the same Apple / Google account
+
+**Expected**
+1. The log shows account_erased with mode delete and per-table counts; no account_erasure_failed or account_erasure_deferred line
+2. Every count is 0; admin_audit has one account_erased_delete row for the id; llm_audit rows for the id are gone or have user_id NULL and empty prompts
+3. The sign-in creates a NEW account (a different id, empty journal) and the restore dialog does not appear
+
+#### UAT-AUTH-047 — Export my data hands over a readable file
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A signed-in account with a mandate, a journal entry, a lesson in progress and a simulated trade
+
+**Steps**
+1. Settings > Account > Export my data
+2. In the share sheet save the file to Files / Drive (or mail it to yourself) and open it
+
+**Expected**
+1. The share sheet opens with ami-data-export-<date>.json
+2. The file is readable JSON holding the trade, the Room verdicts, the mandate, the journal entry, the lesson progress and the settings
+3. It holds nothing about any other user and no Alpaca key, token or secret
 
 #### UAT-ONB-040 — First-run interview on iPhone
 
