@@ -171,6 +171,12 @@ implementation plans, since it is very significant change."* Code facts come fro
 8. **Still open:** decision 8.1, tuning the Room on the Beta model through the harness. It follows
    from "Alpha stays on-prem" and is treated as accepted unless Saiful objects.
 
+## 3b. Saiful's rulings (2026-11-19)
+
+1. **Alpha:** on-prem only. Primary `ami-llm` (192.168.20.74:8000); backup **Ling-3.0-flash-Fin** on our own host (`100.98.142.64:8004`, model `ling-3.0-flash-fin-fp4`, kind `vllm`, no key, thinking off). Live from deploy #8 (`alpha-2026-11-19-6`). No DeepInfra, Anthropic, Kimi or Gemini on Alpha.
+2. **Beta:** primary `deepseek-ai/DeepSeek-V4-Flash`; backup **`inclusionAI/Ling-3.0-flash`** on DeepInfra (chosen over GLM-5.3-Flash after the re-score on the current image: 0/20 gate failures, 0.70¢ vs 1.06¢ per Room, 0.72 vs 1.23 min model time; scorecard §10). Ling needs `chat_template_kwargs.enable_thinking=false` in the request body: CR281's per-slot extra-body setting. Licence: MIT declared in the model card only, no LICENSE file; flagged for counsel.
+3. **Model swaps are configuration only** (CR281): base URL, model, kind, optional API key (sent only when set), per-slot extra body; providers enforced by `LLM_PROVIDER_ALLOWLIST`, never by commenting keys out.
+
 ## 4. Order of work after S11
 
 1. **In parallel (Sonnet workers, each verified by me):**
