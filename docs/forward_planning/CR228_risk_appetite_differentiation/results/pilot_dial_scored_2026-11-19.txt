@@ -1,0 +1,18 @@
+# score_dial.py on the melehost 5-arm production pilot (batches cr228-r{1..5}-20260926, results/melehost_pilot_20260926/), run 2026-11-19 (AT:B1 CR267 WP-37).
+# Criterion fixed in score_dial.py's docstring by 556d0292 before the run; verdict read by its letter.
+R1: records=30 judged=30 excluded(failsafe/incomplete)=0
+R2: records=30 judged=30 excluded(failsafe/incomplete)=0
+R3: records=30 judged=28 excluded(failsafe/incomplete)=2
+R4: records=30 judged=29 excluded(failsafe/incomplete)=1
+R5: records=30 judged=29 excluded(failsafe/incomplete)=1
+
+paired tickers judged in all five arms: n=27
+  R1: mean approve_votes=0.19  approve rate=0/27 (0.0%)
+  R2: mean approve_votes=0.41  approve rate=0/27 (0.0%)
+  R3: mean approve_votes=0.56  approve rate=3/27 (11.1%)
+  R4: mean approve_votes=1.52  approve rate=9/27 (33.3%)
+  R5: mean approve_votes=1.78  approve rate=13/27 (48.1%)
+
+Page's L=1322.0  one-sided p=0.0000  (criterion 1: p < 0.05)
+means non-decreasing R1->R5: True  (criterion 2)
+VERDICT: PASS

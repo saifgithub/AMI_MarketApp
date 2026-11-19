@@ -1,6 +1,6 @@
 # CR228 — Risk appetite produces no behavioural differentiation
 
-**Filed:** 2026-09-22 · **Status:** in progress (Step 1 pilot running)
+**Filed:** 2026-09-22 · **Status:** done (2026-11-19) — Steps 1-4 built and audited COMPLETE; the monotonic R1→R5 target scored PASS by `score_dial.py` (see "Closure" at the end)
 
 ## Why
 
@@ -357,3 +357,12 @@ p < 0.05, **and** mean `approve_votes` never falling from one arm to the next. T
 verdict is read by that letter. Honest caveat recorded up front: at n≈30 with CR214's
 12–20% verdict noise, criterion 2 can fail on a single noisy adjacent step even when the
 trend is real — if that happens it is a FAIL, reported as such, with the step named.
+
+## Closure (2026-11-19, CR267 WP-37)
+
+The 2026-09-25 target (monotonic R1→R5 spread, scored by the pre-registered `score_dial.py`, criterion committed in `556d0292` before the run) was scored on melehost's real 5-arm production pilot (`4257d855`, `results/melehost_pilot_20260926/`). Output: `results/pilot_dial_scored_2026-11-19.txt`.
+
+1. n=27 tickers judged in all five arms. Mean `approve_votes` R1→R5: 0.19, 0.41, 0.56, 1.52, 1.78. Approve rate 0%, 0%, 11%, 33%, 48%.
+2. Criterion 1: Page's L=1322.0, one-sided p<0.0001 (needs <0.05). Criterion 2: means non-decreasing, True. **VERDICT: PASS**, by the letter.
+3. Audit: CR228 COMPLETE round 6 (`de1b8467`). The DeepInfra dial/rerun data in `results/` is exploratory and did not decide.
+4. Caveat kept: the pilot ran with Steps 2-4 combined; it does not separate the prompt branch (Step 3) from the structural threshold (Step 4). Not a closure condition.
