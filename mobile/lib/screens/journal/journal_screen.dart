@@ -68,6 +68,56 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   final _searchKey = GlobalKey();
   final _listKey = GlobalKey();
 
+  Timer? _undoTimer;
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _undoSnack;
+
+  /// DEF503 — the "Entry removed / UNDO" bar closes itself. Flutter keeps a
+  /// SnackBar that carries an action open indefinitely whenever accessible
+  /// navigation is on (TalkBack, or the UI-automation service a device lab
+  /// drives the phone with), and the root messenger lets it follow the user
+  /// to other screens. So: an explicit timer (longer under accessible
+  /// navigation, where a switch/voice user needs more time to reach UNDO),
+  /// and it is closed when the Journal stops being the visible screen.
+  void _showUndoSnackBar({
+    required ScaffoldMessengerState messenger,
+    required String message,
+    required String undoLabel,
+    required VoidCallback onUndo,
+    required bool accessible,
+  }) {
+    _undoTimer?.cancel();
+    messenger.hideCurrentSnackBar();
+    final shown = Duration(seconds: accessible ? 8 : 4);
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: shown,
+        action: SnackBarAction(label: undoLabel, onPressed: onUndo),
+      ),
+    );
+    _undoSnack = controller;
+    _undoTimer = Timer(shown, _closeUndoSnackBar);
+    controller.closed.whenComplete(() {
+      if (identical(_undoSnack, controller)) {
+        _undoTimer?.cancel();
+        _undoSnack = null;
+      }
+    });
+  }
+
+  void _closeUndoSnackBar() {
+    _undoTimer?.cancel();
+    final controller = _undoSnack;
+    _undoSnack = null;
+    controller?.close();
+  }
+
+  @override
+  void dispose() {
+    _closeUndoSnackBar();
+    super.dispose();
+  }
+
   void _runTour() {
     final l = AppLocalizations.of(context);
     // DEF382 — the old `beforeFocus` + `Scrollable.ensureVisible` lives in
@@ -100,7 +150,10 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     // actually the thing on screen: `YouScreen` keeps its panes alive in an
     // `IndexedStack`, so this `build` runs whether or not the segment shows.
     ref.listen<bool>(journalVisibleProvider, (prev, next) async {
-      if (!next) return;
+      if (!next) {
+        _closeUndoSnackBar();
+        return;
+      }
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.journal)) return;
       await service.markSeen(TourSection.journal);
@@ -212,17 +265,14 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
               // is backgrounded.
               final messenger = ScaffoldMessenger.of(context);
               final l = AppLocalizations.of(context);
+              final accessible = MediaQuery.of(context).accessibleNavigation;
               notifier.deleteEntry(e.id);
-              messenger.hideCurrentSnackBar();
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(l.journalEntryDeleted),
-                  duration: const Duration(seconds: 4),
-                  action: SnackBarAction(
-                    label: l.journalUndo,
-                    onPressed: () => notifier.restoreEntry(e.id),
-                  ),
-                ),
+              _showUndoSnackBar(
+                messenger: messenger,
+                message: l.journalEntryDeleted,
+                undoLabel: l.journalUndo,
+                onUndo: () => notifier.restoreEntry(e.id),
+                accessible: accessible,
               );
             },
             child: _EntryCard(
