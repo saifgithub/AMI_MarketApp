@@ -23,6 +23,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 UserMandate _mandate({
@@ -177,6 +178,98 @@ void main() {
     expect(find.text(l.settingsRiskLimitsFollowingResolved('40%')), findsOneWidget);
     expect(find.text(l.settingsRiskLimitsFollowingResolved('3%')), findsOneWidget);
     expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(5));
+  });
+
+  testWidgets(
+      'DEF502: a limit following the risk profile shows its resolved value in '
+      'the input as well as on the chip, and no input is left as a bare dash',
+      (tester) async {
+    const resolved = ResolvedCaps(
+      sectorCapPct: 40.0,
+      singleNameCapPct: 3.0,
+      maxOpenPositions: 35,
+      postLossCooldownHours: 1.0,
+      maxTradesPerDay: 4,
+      maxTradesPerWeek: 12,
+      maxOpenRiskPct: 10.5,
+    );
+    await _pumpSection(tester, mandate: _mandate(resolved: resolved));
+
+    String? hint(String key) => tester
+        .widget<TextField>(find.byKey(Key('riskLimitField_$key')))
+        .decoration!
+        .hintText;
+    expect(hint('single_name_cap_pct'), '3');
+    expect(hint('sector_cap_pct'), '40');
+    expect(hint('max_open_positions'), '35');
+    expect(hint('post_loss_cooldown_hours'), '1');
+    expect(hint('max_trades_per_day'), '4');
+    expect(hint('max_trades_per_week'), '12');
+    expect(hint('max_open_risk_pct'), '10.5');
+  });
+
+  testWidgets(
+      'DEF502: with no resolved value from the server the input keeps the '
+      'dash and the chip says so without a number', (tester) async {
+    await _pumpSection(tester, mandate: _mandate());
+    final hint = tester
+        .widget<TextField>(find.byKey(const Key('riskLimitField_single_name_cap_pct')))
+        .decoration!
+        .hintText;
+    expect(hint, '—');
+  });
+
+  testWidgets(
+      'DEF502: at a large font scale on a narrow phone the chip wraps and the '
+      'resolved number is not clipped off its end', (tester) async {
+    tester.view.physicalSize = const Size(320, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    const resolved = ResolvedCaps(singleNameCapPct: 3.0);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 4000),
+            textScaler: TextScaler.linear(1.8),
+          ),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: RiskLimitsSection(
+                mandate: _mandate(resolved: resolved),
+                pending: const {},
+                onFieldChanged: (_, __) {},
+                expanded: true,
+                onToggleExpanded: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    final l = AppLocalizations.of(tester.element(find.byType(RiskLimitsSection)));
+    final label = find.text(l.settingsRiskLimitsFollowingResolved('3%'));
+    expect(label, findsOneWidget);
+    final chip = find.byKey(const Key('riskLimitOff_single_name_cap_pct'));
+    // The text box is laid out inside the chip, i.e. wrapped, not overflowing.
+    expect(tester.getRect(label).right,
+        lessThanOrEqualTo(tester.getRect(chip).right));
+    final para = tester.renderObject<RenderParagraph>(label);
+    final lineTops = para
+        .getBoxesForSelection(
+          TextSelection(baseOffset: 0, extentOffset: para.text.toPlainText().length),
+        )
+        .map((b) => b.top.round())
+        .toSet();
+    expect(
+      lineTops.length,
+      greaterThan(1),
+      reason: 'wraps to a second line instead of fading the number away',
+    );
   });
 
   testWidgets(

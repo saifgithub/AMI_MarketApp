@@ -478,7 +478,9 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
             children: [
               ChoiceChip(
                 key: Key('riskLimitOff_${widget.config.key}'),
-                label: Text(offLabel),
+                // DEF502 — wrap instead of fading the resolved number off the
+                // end of the chip (Chip defaults to one line, softWrap off).
+                label: Text(offLabel, softWrap: true, maxLines: 2),
                 labelStyle: AmiTypography.labelMono.copyWith(
                   fontSize: 11,
                   color: isOff ? AmiColors.hexAmber : AmiColors.textMed,
@@ -501,7 +503,17 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
                   decoration: InputDecoration(
                     isDense: true,
                     suffixText: _unitSuffix(),
-                    hintText: '—',
+                    // DEF502 — a limit that follows the risk profile shows
+                    // the number it enforces right in the box, so the value
+                    // stays readable even where the chip label above is
+                    // clipped (large font scale / narrow phone).
+                    hintText: showResolvedNumber
+                        ? _formatForEdit(widget.resolvedValue)
+                        : '—',
+                    hintStyle: showResolvedNumber
+                        ? AmiTypography.labelMono
+                            .copyWith(color: AmiColors.textMed)
+                        : null,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
