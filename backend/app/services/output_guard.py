@@ -90,7 +90,13 @@ _ACT = (
     r"|invest\s+in\s+(?:this|it|that|the\s+(?:stock|shares?|company)|stocks?|shares?|\$[A-Z]{1,5})"
     r"|go\s+(?:long|short)|load\s+up|pile\s+into|bail\s+(?:out|on)"
     r"|take\s+(?:the\s+)?profits?|cut\s+(?:your\s+)?losses|double\s+down"
-    r"|put\s+(?:your\s+)?money)"
+    r"|put\s+(?:your\s+)?money"
+    # WP-13b: "You should hold." / "hold this stock". Narrow: a bare "hold" only at
+    # the end of a clause, otherwise it needs a holding as the object, so
+    # "hold the line" / "hold your nerve" / "hold above the 200-day" pass.
+    r"|hold(?:ing)?(?=\s*(?:[.,;:!?)\u2014\u2013]|$))"
+    r"|hold(?:ing)?\s+(?:on\s+to\s+|onto\s+)?(?:this|it|that|the\s+(?:stock|shares?|position|name)"
+    r"|your\s+(?:stock|shares?|position)|\$[A-Z]{1,5}))"
 )
 _NO_PRECEDING = r"(?<!\bno\s)(?<!\bnot\s)(?<!\bnever\s)(?<!\bwithout\s)(?<!\bnon-)"
 
@@ -115,9 +121,12 @@ _ADVICE_PATTERNS = [
     # regulated-utility term of art is exempted in `check` (_REGULATED_CONTEXT).
     rf"{_NO_PRECEDING}(?<!\bonce\s)(?<!\bformerly\s)(?<!\bpreviously\s)"
     r"\bguaranteed?\s+(?:returns?|profits?|gains?)\b",
+    # WP-13b: "which stock can't lose" is the user's question quoted back, and
+    # "a stock can't lose" is a generic claim; neither promises anything.
     # CR271 replay: "the line the uptrend cannot lose" is a price level, not a
     # promise. A promise has a subject that is the user or the trade itself and
     # ends the clause ("you can't lose.") or names money ("can't lose money").
+    r"(?<!\bwhich\s)(?<!\ba\s)(?<!\bany\s)(?<!\bno\s)"
     r"\b(?:you|it|this|that|trade|bet|position|investment|stock|setup|play|name)\s+"
     r"(?:simply\s+|literally\s+|just\s+|possibly\s+)*(?:can['’]?t|cannot|can\s+not)\s+"
     r"(?:possibly\s+)?lose\b"
@@ -128,6 +137,20 @@ _ADVICE_PATTERNS = [
     r"(?:definitely\s+|certainly\s+|surely\s+|easily\s+|absolutely\s+)?"
     r"(?:make\s+(?:money|a\s+profit|profits|gains|a\s+killing)|profit\b|get\s+rich"
     r"|be\s+rich|double\s+your|triple\s+your)",
+]
+
+# WP-13b: on the surfaces where the user asks the agent a question directly, the
+# agents sometimes ANSWER it with a bare verdict that has no second person at
+# all ("Hold.", "Yes, buy.", "YES." over a trade ticket). Not scanned on the Room
+# surfaces: a bare imperative is the debate voice there (Saiful, 2026-11-19).
+DIRECT_ANSWER_SURFACES = frozenset({"one_on_one", "concierge", "brief"})
+_DIRECT_ANSWER_PATTERNS = [
+    # The whole reply is one trade verb: "Hold."
+    r"\A\W*(?:buy|sell|hold|short)\W*\Z",
+    # "Yes, buy." / "Yes - sell now" (not buyers / buy-side)
+    r"\byes\W{1,3}(?:buy|sell|go\s+long|go\s+short)(?![-\w])",
+    # A reply that opens "YES." and goes straight to a BUY/SELL ticket
+    r"\A\W*yes\b[^\n]{0,20}\n[\s\S]{0,120}?\bside\s*:\s*(?:buy|sell)\b",
 ]
 
 # Rate-regulated utilities have a "guaranteed return on rate base": a term of
@@ -169,6 +192,10 @@ _COMPILED: dict[str, list[re.Pattern[str]]] = {
     RULE_ADVICE: [re.compile(p, _FLAGS) for p in _ADVICE_PATTERNS],
     RULE_ABUSE: [re.compile(p, _FLAGS) for p in _ABUSE_PATTERNS],
 }
+_COMPILED_DIRECT = [re.compile(p, _FLAGS) for p in _DIRECT_ANSWER_PATTERNS]
+
+_OPEN_QUOTES = "\"\u201c\u2018'\u00ab"
+_CLOSE_QUOTES = "\"\u201d\u2019'\u00bb"
 
 
 @dataclass(frozen=True)
@@ -215,6 +242,19 @@ class GuardResult:
         return tuple(seen)
 
 
+def _is_quoted_mention(text: str, m: re.Match[str]) -> bool:
+    """True when the match is a phrase being TALKED ABOUT: a quote opens right
+    before it and closes right after it (`a "you should buy" style call`). A
+    quoted sentence that goes on ("You should buy NVDA now.") is advice written
+    out, not a mention, and still hits."""
+    return (
+        m.start() > 0
+        and text[m.start() - 1] in _OPEN_QUOTES
+        and m.end() < len(text)
+        and text[m.end()] in _CLOSE_QUOTES
+    )
+
+
 def _is_regulated_term(text: str, m: re.Match[str]) -> bool:
     """True when a `guaranteed ...` hit sits in the same sentence as rate-base
     vocabulary. Same sentence only: a promise one sentence later still hits."""
@@ -234,11 +274,14 @@ def check(text: str | None, *, surface: str, mode: str | None = None) -> GuardRe
         return GuardResult(mode=mode, surface=surface)
     hits: list[Hit] = []
     for rule, patterns in _COMPILED.items():
+        if rule == RULE_ADVICE and surface in DIRECT_ANSWER_SURFACES:
+            patterns = patterns + _COMPILED_DIRECT
         for pat in patterns:
             m = next(
                 (
                     c for c in pat.finditer(text)
                     if not _is_regulated_term(text, c)
+                    and not (rule == RULE_ADVICE and _is_quoted_mention(text, c))
                 ),
                 None,
             )

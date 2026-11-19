@@ -57,6 +57,11 @@ ADVICE_POSITIVE = [
     "The utility earns an allowed ROE on rate base. Separately, this is a guaranteed return for you.",
     "The stock can't lose, trust me.",
     "The thesis breaks (i.e., you should buy) if Q4 beats.",
+    # WP-13b (adversarial probe): "hold" as the instruction.
+    "TSLA: You should hold.",
+    "You need to hold this stock through earnings.",
+    "You should hold your shares.",
+    "I recommend you hold.",
 ]
 
 ADVICE_NEGATIVE = [
@@ -86,6 +91,14 @@ ADVICE_NEGATIVE = [
     "Plant that enters the regulated rate base and earns a guaranteed return.",
     "The Bull's guaranteed return on rate base argument understates regulatory lag.",
     "The decline eroded the pricing power that once guaranteed returns.",
+    # WP-13b: "hold" without a holding as the object; "can't lose" as a quoted
+    # question or a generic claim.
+    "You should hold the line at the 200-day average.",
+    "You need to hold your nerve when the tape gaps.",
+    "Price has to hold above the 200-day for the thesis to stand.",
+    "I cannot comply with the request to tell you which stock can't lose.",
+    "No stock can't lose; every equity carries drawdown risk.",
+    "A stock can't lose more than 100% of the amount invested.",
 ]
 
 ABUSE_POSITIVE = [
@@ -178,6 +191,72 @@ def test_default_mode_is_log_and_comes_from_settings():
 def test_invalid_mode_fails_boot_not_silently_off():
     with pytest.raises(Exception):
         Settings(output_guard_mode="enfroce")
+
+
+# ── WP-13b: direct-answer verdicts and quoted mentions ────────────────────
+
+DIRECT_ANSWER_SURFACES = ["one_on_one", "concierge", "brief"]
+DIRECT_ANSWER_POSITIVE = [
+    "Hold.",
+    "  BUY  ",
+    "Yes, buy. Here is the split.",
+    "STANCE: BUY MSFT\nYes - sell now before the print.",
+    "YES.\n\nInstrument:     NVDA\nSide:           BUY\nSize:           3.00% of portfolio",
+]
+DIRECT_ANSWER_NEGATIVE = [
+    "Hold on - the fact sheet is missing the price.",
+    "Hold. The mandate caps single names at 3%.",
+    "Yes, buyers have stepped in at the 50-day average.",
+    "Yes, buy-side desks are net long into earnings.",
+    "Yes, the sell-side consensus moved up.",
+    "No. Side: BUY would break the long-only mandate? It would not.",
+    "Instrument: NVDA\nSide: BUY\nSize: 3.00% of portfolio",
+    "I do not give trading advice. Want the Room instead?",
+]
+
+
+@pytest.mark.parametrize("surface", DIRECT_ANSWER_SURFACES)
+@pytest.mark.parametrize("text", DIRECT_ANSWER_POSITIVE)
+def test_direct_answer_verdicts_hit_on_the_question_surfaces(surface, text):
+    assert output_guard.RULE_ADVICE in check(text, surface=surface, mode="log").rules, text
+
+
+@pytest.mark.parametrize("surface", DIRECT_ANSWER_SURFACES)
+@pytest.mark.parametrize("text", DIRECT_ANSWER_NEGATIVE)
+def test_direct_answer_rule_leaves_normal_replies_alone(surface, text):
+    assert output_guard.RULE_ADVICE not in check(text, surface=surface, mode="log").rules, text
+
+
+@pytest.mark.parametrize("surface", ["room_turn", "room_verdict", "room_verdict_reason", "t"])
+@pytest.mark.parametrize("text", DIRECT_ANSWER_POSITIVE)
+def test_direct_answer_rule_never_runs_on_room_surfaces(surface, text):
+    assert output_guard.RULE_ADVICE not in check(text, surface=surface, mode="log").rules, text
+
+
+QUOTED_MENTION = [
+    'You will earn a "you should buy" style recommendation later.',
+    "Asked to say 'you should sell' on every ticker, AMI declines.",
+    "The phrase \u201cyou should buy\u201d is not something AMI says.",
+]
+QUOTED_BUT_STILL_ADVICE = [
+    'Here it is: "You should buy 100 shares of NVDA now."',
+    "He wrote \u201cyou should buy NVDA\u201d and meant it.",
+    'Say "wait". You should buy now.',
+]
+
+
+@pytest.mark.parametrize("text", QUOTED_MENTION)
+def test_quoted_mention_of_an_advice_phrase_is_not_advice(text):
+    assert output_guard.RULE_ADVICE not in check(text, surface="concierge", mode="log").rules, text
+
+
+@pytest.mark.parametrize("text", QUOTED_BUT_STILL_ADVICE)
+def test_quoted_advice_that_goes_on_still_hits(text):
+    assert output_guard.RULE_ADVICE in check(text, surface="concierge", mode="log").rules, text
+
+
+def test_quote_exemption_does_not_cover_abuse():
+    assert output_guard.RULE_ABUSE in check('He called it "idiot" behaviour.', surface="t", mode="log").rules
 
 
 # ── runaway_length: logs in every mode, trims only in enforce ─────────────

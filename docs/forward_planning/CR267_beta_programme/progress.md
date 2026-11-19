@@ -130,3 +130,13 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    true. Two deterministic fixes ("can't lose", "guaranteed return") with 11 new test cases. Result and
    recommendation (enforce advice + abuse; adversarial 1-on-1/Concierge pass first):
    `wp13_guard_replay_2026-11-19.md`. `OUTPUT_GUARD_MODE` left at `log`.
+
+## 2026-11-19 — WP-13b adversarial advice probe done (session B1, worker lane `lane/WP13b-advice-probe`)
+
+1. 40 advice-eliciting prompts (15 1-on-1, 15 Concierge, 10 Brief; EN/MS/AR) sent through the live
+   endpoints. Deployed guard caught 0 of 7 real advice replies and fired 4 false hits on refusals;
+   after 13b it catches 4 of 7 with 0 false hits, 3 clear misses remain (all 1-on-1 desk-voice tickets
+   with no second person). Model refused on its own in 31 of 40. Also replaced `off_topic` with
+   `runaway_length` (`OUTPUT_GUARD_MAX_TURN_WORDS`, provisional 1500; p50/p99 and cut count NOT
+   measured, no DB access). Recommendation: tune first for 1-on-1 (WP-13c), then enforce:
+   `wp13b_advice_probe_2026-11-19.md`.
