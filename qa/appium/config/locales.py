@@ -76,10 +76,10 @@ LOCALES: dict[str, LocaleProfile] = {
             "Floor": "القاعة",
             "Portfolio": "المحفظة",
             "Lessons": "الدروس",
-            # youTabUpper is not translated yet — retranslate:[ar,ms] is flagged
-            # on the ARB key. This table asserts what the app RENDERS, so it
-            # must carry the English until the i18n lane lands the translation.
-            "You": "YOU",
+            # youTabUpper: DEF494 draft translation, awaiting translator review
+            # (docs/defect/DEF494_translation_review.txt). This table asserts
+            # what the app RENDERS.
+            "You": "أنت",
         },
         strings={
             "floor_omnibox_caption": "A ticker convenes your team, or open Company Review first. Anything else, AMI answers.",
@@ -95,9 +95,9 @@ LOCALES: dict[str, LocaleProfile] = {
             "settings_mandate": "التفويض الخاص بي",
             "you_segment_settings": "الإعدادات",
             "you_segment_journal": "السجل",
-            # youSegmentInsights is untranslated in AR and MS —
-            # retranslate:[ar,ms]. This table asserts what the app RENDERS.
-            "you_segment_insights": "INSIGHTS",
+            # youSegmentInsights: DEF494 draft translation, awaiting translator
+            # review. This table asserts what the app RENDERS.
+            "you_segment_insights": "الرؤى",
         },
     ),
     "ms": LocaleProfile(
@@ -108,7 +108,7 @@ LOCALES: dict[str, LocaleProfile] = {
             "Floor": "LANTAI",
             "Portfolio": "PORTFOLIO",
             "Lessons": "PELAJARAN",
-            "You": "YOU",  # see the AR note above
+            "You": "ANDA",  # see the AR note above
         },
         strings={
             "floor_omnibox_caption": "A ticker convenes your team, or open Company Review first. Anything else, AMI answers.",
@@ -124,7 +124,7 @@ LOCALES: dict[str, LocaleProfile] = {
             "settings_mandate": "MANDAT SAYA",
             "you_segment_settings": "TETAPAN",
             "you_segment_journal": "JURNAL",
-            "you_segment_insights": "INSIGHTS",  # see the AR note above
+            "you_segment_insights": "WAWASAN",  # see the AR note above
         },
     ),
 }
