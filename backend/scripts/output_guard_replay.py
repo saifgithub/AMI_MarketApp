@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from collections import Counter, defaultdict
@@ -51,6 +52,7 @@ def summarize(
     samples: dict[str, list[dict[str, str]]] = defaultdict(list)
     withheld_rows = 0
     total = 0
+    word_counts: dict[str, list[int]] = defaultdict(list)
     for r in rows:
         flow = r.get("flow")
         surface = FLOW_TO_SURFACE.get(flow)
@@ -58,6 +60,7 @@ def summarize(
             continue
         total += 1
         scanned[flow] += 1
+        word_counts[flow].append(len((r.get("response_text") or "").split()))
         res = check(r.get("response_text"), surface=surface, mode="enforce")
         if not res.hits:
             continue
@@ -79,9 +82,21 @@ def summarize(
         "scanned_per_flow": dict(scanned),
         "rows_with_any_hit_per_flow": dict(rows_with_hit),
         "hits_per_rule": dict(by_rule),
+        "words_per_flow": {f: _length_stats(v) for f, v in word_counts.items()},
         "hits_per_surface_and_rule": {k: dict(v) for k, v in by_surface_rule.items()},
         "samples": dict(samples),
     }
+
+
+def _length_stats(counts: list[int]) -> dict[str, int]:
+    """Turn-length distribution (words) used to choose OUTPUT_GUARD_MAX_TURN_WORDS:
+    the cap should sit well above p99 of normal traffic (nearest-rank percentiles)."""
+    s = sorted(counts)
+
+    def pct(q: float) -> int:
+        return s[min(len(s) - 1, max(0, math.ceil(q * len(s)) - 1))]
+
+    return {"n": len(s), "p50": pct(0.50), "p90": pct(0.90), "p99": pct(0.99), "max": s[-1]}
 
 
 def require_postgres(url: str) -> None:
@@ -136,6 +151,7 @@ def main() -> None:
     print("scanned per flow:", out["scanned_per_flow"])
     print("rows with any hit per flow:", out["rows_with_any_hit_per_flow"])
     print("hits per rule:", out["hits_per_rule"])
+    print("words per flow:", out["words_per_flow"])
     for surface, rules in sorted(out["hits_per_surface_and_rule"].items()):
         print(f"  {surface}: {rules}")
     for rule, items in sorted(out["samples"].items()):

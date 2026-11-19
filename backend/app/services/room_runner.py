@@ -3261,6 +3261,8 @@ def _guard_pm_text(
     text_result = output_guard.inspect(pm_text, surface="room_verdict", **common)
     if text_result.withhold:
         pm_text = output_guard.withheld_notice(text_result, "explanation")
+    elif text_result.trim:
+        pm_text = output_guard.trim_to_cap(pm_text)
     reason = verdict.reason
     if reason:
         # Same rationale usually, plus appended disclosures; its own surface
@@ -3271,6 +3273,10 @@ def _guard_pm_text(
         if reason_result.withhold:
             verdict = verdict.model_copy(update={
                 "reason": output_guard.withheld_notice(reason_result, "explanation")
+            })
+        elif reason_result.trim:
+            verdict = verdict.model_copy(update={
+                "reason": output_guard.trim_to_cap(reason)
             })
     return pm_text, verdict
 
@@ -10000,6 +10006,8 @@ async def _compute_agent_text(
             # scripted (the template is ours, and a sentinel is not LLM text).
             elif agent_id not in ctx.scripted_turns and _output_guard_withholds(text):
                 text = _fall_back_to_script("output_guard")
+            elif agent_id not in ctx.scripted_turns:
+                text = output_guard.trim_if_runaway(text)
             # CR106 B2: strip the stance envelope FIRST. It must come off before
             # the `[AMI …]` marks below — which would otherwise sit between the
             # prose and a trailing envelope and break its end-anchor — and before
