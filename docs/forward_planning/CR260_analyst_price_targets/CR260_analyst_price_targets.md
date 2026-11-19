@@ -110,3 +110,62 @@ correctness gate, not just a prompt one.
    service (measured sweep already passed directly against yfinance).
 4. Room prompt copy review — the numbers must be quotable without the model
    inventing analyst names (the payload carries real firm names from the tape).
+
+---
+
+## 7. WP-21b re-scope: the Street comparison after the verdict (AT:B1, 2026-11-19)
+
+CR267 WP-21b re-scopes this CR to the display. CR275 (WP-21a) made the Room decide
+blind: every `analyst_*` field is stripped from every agent input
+(`street_view_blind.blind_profile`), while the profile keeps them for post-verdict
+code. Sections 1–6 above describe the source and the fetch; this section is what
+the user sees and how it is kept out of the Room.
+
+**What the verdict payload carried before.** `Verdict.analyst_view`
+(`schemas/room.py` `AnalystView`, built by `room_runner._analyst_view_from_profile`
+at `_stamp_next_convene_basis`): rating, mean/median/high/low target, opinion count,
+rating split, newest tape rows. No comparison with the Room's call, no source label,
+no as-of. Mobile did not render it. It is unchanged.
+
+**What WP-21b adds.** `Verdict.street_comparison` (`StreetComparison`), built by
+`services/street_comparison.build_street_comparison` at the same single bank site,
+after the verdict exists:
+
+1. Street rating (the feed's word and a buy/hold/sell bucket), analyst count, mean
+   target, as-of (the fact-sheet date), the Room's action and stance.
+2. `agreement`: `agree` / `differ` / `not_comparable` (NO_VERDICT).
+   Street Buy: APPROVE agrees, PASS/REJECT differs. Street Hold or Sell:
+   PASS/REJECT agrees, APPROVE differs.
+3. `approved_against_street_sell`: the Room approved a Sell/Underperform name. This
+   is the one pairing counted as an error. A reasoned PASS on a Street-Buy name
+   differs but is not flagged.
+4. `source_label`: "Yahoo Finance via yfinance: sell-side analyst consensus"
+   (`STREET_SOURCE_LABEL`; a source swap changes this one constant). Always present,
+   including when unavailable. Public release needs a licensed source (CR007).
+5. Missing data: `status="unavailable"` with a reason (`no_rating`,
+   `unrecognised_rating`, `no_analysts`, `comparison_error`); every Street field is
+   null. Never an empty or zero rating. A zero target is dropped.
+6. `reasons_from_narrow_answers`: empty list. It is filled by WP-22's
+   narrow-question judge, which does not exist yet. Nothing invents reasons.
+
+**Kept out of the Room.** Computed only from the finished verdict plus the profile,
+which it does not mutate. `tests/unit/test_cr260_street_comparison.py` builds every
+agent prompt after the stamp and asserts none carries the comparison, and a static
+fence fails if any module other than the schema, the builder, the provenance table
+and the runner's import and stamp line names it.
+
+**Mobile.** `RoomStreetCard` under the verdict ("How the Street rates it"), shown
+when the server sent a comparison and the Settings switch is on; also on Journal
+replays. The setting (`streetComparisonEnabledProvider`, key
+`ami_street_comparison_enabled`) defaults ON: Beta plan §3a.3 says the rating is
+"shown to Beta testers after the verdict, with a source label, behind a setting",
+so testers see it unless they turn it off. Source label always visible; missing
+data reads "No Street rating available for this run."
+
+**Tests.** Backend `test_cr260_street_comparison.py`; widget
+`mobile/test/widgets/room_street_comparison_test.dart`; UAT-ROOM-023 (API) and
+UAT-ROOM-024 (device checklist, taps only).
+
+**Open.** Not promoted to Alpha. WP-21b acceptance ("a Room on Alpha shows the
+comparison after the verdict") needs the promotion and a live Room. AR/MS strings
+are seeded English marked `retranslate:[ar,ms]`.
