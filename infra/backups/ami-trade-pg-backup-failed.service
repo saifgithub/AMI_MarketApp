@@ -1,0 +1,13 @@
+# CR267 WP-44 — fires when ami-trade-pg-backup.service ends in failure and the
+# script's own EXIT-trap alert could not (timeout, SIGKILL, OOM, missing script).
+# Posts the same JSON {"text","content"} as the script. If the webhook is unset
+# this unit itself FAILS, so `systemctl --failed` still shows the problem.
+
+[Unit]
+Description=Alert: AMI Trade Postgres backup failed
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/ami-trade-backup.env
+ExecStart=/bin/bash -c 'test -n "$BACKUP_ALERT_WEBHOOK_URL" || { echo "BACKUP_ALERT_WEBHOOK_URL unset - backup failure NOT alerted" >&2; exit 1; }; curl -fsS --max-time 10 -H "Content-Type: application/json" -d "{\\"text\\":\\"AMI backup unit FAILED on $(hostname) - see journalctl -u ami-trade-pg-backup\\",\\"content\\":\\"AMI backup unit FAILED on $(hostname)\\"}" "$BACKUP_ALERT_WEBHOOK_URL"'
+SyslogIdentifier=ami-trade-pg-backup-failed

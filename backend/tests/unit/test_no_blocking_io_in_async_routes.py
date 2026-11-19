@@ -532,6 +532,11 @@ _KNOWN_SYNC_HTTPX_COUNTS = {
     # CR109/BL11/Room-verdict) calling notify() straight from an async
     # route MUST wrap it the same way — that isn't enforced here.
     "app/services/notification_service.py": 1,
+    # CR267 WP-44: ops_alerts.send_webhook. Reached only from
+    # `run_ops_alert_pass`, which `main._ops_alert_tick` runs through
+    # `asyncio.to_thread`, and from the `python -m app.services.ops_alerts test`
+    # CLI (no event loop). No route calls it.
+    "app/services/ops_alerts.py": 1,
 }
 
 

@@ -1,11 +1,16 @@
 # A9 — Postgres backup oneshot. Triggered by ami-trade-pg-backup.timer.
 
 [Unit]
-Description=AMI Trade Postgres backup (pg_dump → /var/backups/ami-trade)
+Description=AMI Trade Postgres backup (pg_dump → encrypted → /var/backups/ami-trade → R2)
 After=network-online.target docker.service
+Wants=network-online.target
+# CR267 WP-44: covers timeouts/kills the script's own EXIT-trap alert cannot report.
+OnFailure=ami-trade-pg-backup-failed.service
 
 [Service]
 Type=oneshot
+TimeoutStartSec=1h
+Nice=10
 User=ami
 Group=ami
 EnvironmentFile=-/etc/ami-trade-backup.env
