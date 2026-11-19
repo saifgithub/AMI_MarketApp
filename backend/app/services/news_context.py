@@ -67,7 +67,14 @@ from app.services.market_data import NewsItem, get_market_data_provider
 # turned on, this constant is one of the two knobs that decides its bill.
 DEFAULT_HEADLINE_LIMIT = 5
 _ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
-_ALPHA_VANTAGE_CACHE_TTL = 1800.0  # 30 min — billed API, news doesn't stale that fast
+# DEF492 — one AV call per ticker serves every caller (Room, 1-on-1, sim news
+# route, Sector Watch): the cache is keyed by ticker alone and each caller
+# slices its own `limit` off the front. It was keyed `ticker:limit`, so callers
+# asking for different limits each paid a separate metered call. TTLs are
+# settings (`alpha_vantage_news_cache_ttl_seconds`,
+# `alpha_vantage_news_negative_ttl_seconds`), read at call time.
+_ALPHA_VANTAGE_FETCH_LIMIT = 10
+_ALPHA_VANTAGE_REASON_MAX = 300
 
 
 class LiveDataState(Enum):
@@ -174,49 +181,89 @@ class _YfinanceSource:
 
 
 class _AlphaVantageSource:
-    """Paid, additive — NEWS_SENTIMENT. TTL-cached (30 min) since this is a
-    metered API, unlike Yahoo's already-cached free path.
+    """NEWS_SENTIMENT. TTL-cached per ticker, shared by every caller.
+
+    DEF492 — Alpha Vantage answers HTTP 200 with a JSON body that has no `feed`
+    when it refuses a call: `{"Information": "..."}` for a daily-quota hit, a
+    premium-only endpoint or an invalid key; `{"Note": "..."}` on the older
+    per-minute throttle. That text is the only thing that says WHY, so it is
+    kept (never the key) and surfaced in the warn log and via `last_failure`.
+    A refusal is cached for `alpha_vantage_news_negative_ttl_seconds` so a dark
+    feed is not re-asked on every Room / page view.
     """
 
     def __init__(self, timeout_seconds: float = 4.0) -> None:
         self._client = httpx.Client(timeout=timeout_seconds)
         self._cache: dict[str, tuple[list[LiveHeadline], float]] = {}
+        self._negative: dict[str, tuple[str, float]] = {}
+        self._last_failure: dict[str, str] = {}
         self._lock = RLock()
+
+    def last_failure(self, ticker: str) -> str | None:
+        """Why the most recent fetch for `ticker` produced nothing (None after a success)."""
+        with self._lock:
+            return self._last_failure.get(ticker.upper().strip())
+
+    def _refused(self, sym: str, reason: str, *, cache: bool) -> None:
+        reason = reason[:_ALPHA_VANTAGE_REASON_MAX]
+        if settings.alpha_vantage_api_key:
+            reason = reason.replace(settings.alpha_vantage_api_key, "<redacted>")
+        with self._lock:
+            self._last_failure[sym] = reason
+            if cache:
+                self._negative[sym] = (
+                    reason, time.time() + settings.alpha_vantage_news_negative_ttl_seconds,
+                )
 
     def fetch(self, ticker: str, limit: int) -> list[LiveHeadline] | None:
         sym = ticker.upper().strip()
-        key = f"{sym}:{limit}"
         now = time.time()
         with self._lock:
-            hit = self._cache.get(key)
+            hit = self._cache.get(sym)
             if hit is not None and hit[1] > now:
-                return hit[0]
+                return hit[0][:limit]
+            neg = self._negative.get(sym)
+            if neg is not None and neg[1] > now:
+                return None
 
         try:
             resp = self._client.get(_ALPHA_VANTAGE_URL, params={
                 "function": "NEWS_SENTIMENT",
                 "tickers": sym,
-                "limit": str(limit),
+                "limit": str(max(limit, _ALPHA_VANTAGE_FETCH_LIMIT)),
                 "apikey": settings.alpha_vantage_api_key,
             })
         except httpx.HTTPError as exc:
+            self._refused(sym, f"network_error: {str(exc)[:150]}", cache=False)
             logger.warn("news_context_alpha_vantage_network_error", ticker=sym, error=str(exc)[:200])
             return None
         if resp.status_code != 200:
+            self._refused(sym, f"http_{resp.status_code}", cache=False)
             logger.warn("news_context_alpha_vantage_bad_status", ticker=sym, status=resp.status_code)
             return None
         try:
-            feed = resp.json().get("feed") or []
-        except (ValueError, KeyError, TypeError) as exc:
+            body = resp.json()
+            feed = body.get("feed") or []
+        except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            self._refused(sym, f"unparseable_body: {str(exc)[:150]}", cache=False)
             logger.warn("news_context_alpha_vantage_parse_error", ticker=sym, error=str(exc)[:200])
             return None
 
-        items = [h for h in (self._to_headline(a, sym) for a in feed[:limit]) if h is not None]
+        items = [h for h in (self._to_headline(a, sym) for a in feed) if h is not None]
         if not items:
+            self._refused(sym, _alpha_vantage_refusal_text(body), cache=True)
+            logger.warn(
+                "news_context_alpha_vantage_no_feed",
+                ticker=sym,
+                reason=self.last_failure(sym),
+                negative_ttl_s=settings.alpha_vantage_news_negative_ttl_seconds,
+            )
             return None
         with self._lock:
-            self._cache[key] = (items, now + _ALPHA_VANTAGE_CACHE_TTL)
-        return items
+            self._cache[sym] = (items, now + settings.alpha_vantage_news_cache_ttl_seconds)
+            self._negative.pop(sym, None)
+            self._last_failure.pop(sym, None)
+        return items[:limit]
 
     @staticmethod
     def _to_headline(article: dict, ticker: str) -> LiveHeadline | None:
@@ -237,6 +284,28 @@ class _AlphaVantageSource:
             source="alpha_vantage",
             summary=str(article.get("summary", "") or "").strip(),
         )
+
+
+def _alpha_vantage_refusal_text(body: object) -> str:
+    """The provider's own words for an HTTP-200 body that carried no articles.
+
+    `Information` / `Note` / `Error Message` are Alpha Vantage's quota, premium
+    and bad-key channels. A body with none of them and an empty feed is a
+    genuine "no articles for this ticker", named as such rather than guessed at.
+    """
+    if isinstance(body, dict):
+        for field in ("Information", "Note", "Error Message"):
+            text = body.get(field)
+            if text:
+                return f"{field}: {str(text)}"
+        return f"empty_feed (no Information/Note; body keys: {sorted(body.keys())[:8]})"
+    return f"non_object_body ({type(body).__name__})"
+
+
+def alpha_vantage_failure_reason(ticker: str) -> str | None:
+    """Why Alpha Vantage last gave nothing for `ticker`, for callers' own loud logs."""
+    reason = getattr(get_alpha_vantage_source(), "last_failure", None)
+    return reason(ticker) if callable(reason) else None
 
 
 def _parse_alpha_vantage_time(raw: str | None) -> int:

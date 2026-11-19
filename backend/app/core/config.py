@@ -621,6 +621,13 @@ class Settings(BaseSettings):
     # "presence of the key turns the feature on" convention as
     # resend_api_key / google_audiences elsewhere in this file.
     alpha_vantage_api_key: str = ""
+    # DEF492 — shared per-ticker NEWS_SENTIMENT cache (Room + 1-on-1 + sim news
+    # route + Sector Watch all read one entry). Positive TTL: 30 min, news does
+    # not stale faster than that and the free tier is 25 calls/day. Negative
+    # TTL: how long a refusal (Information/Note body, empty feed) is remembered
+    # so a dark feed is not re-asked on every Room or page view.
+    alpha_vantage_news_cache_ttl_seconds: float = 1800.0
+    alpha_vantage_news_negative_ttl_seconds: float = 900.0
 
     # Social sentiment provider for the agent pipeline (Room + 1-on-1), see
     # app/services/social_context.py. Adanos (Reddit-only stock sentiment

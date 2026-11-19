@@ -922,7 +922,10 @@ class SimEngine:
         # DEF461: the Yahoo-backed stack is dark on Alpha; fall back to the
         # same Alpha Vantage source the Room already uses so ticker detail and
         # Sector Watch resolve headlines when the key is configured.
-        from app.services.news_context import fetch_alpha_vantage_news_items
+        from app.services.news_context import (
+            alpha_vantage_failure_reason,
+            fetch_alpha_vantage_news_items,
+        )
 
         av_items = fetch_alpha_vantage_news_items(ticker, limit)
         if av_items:
@@ -931,6 +934,10 @@ class SimEngine:
             "sim_news_unavailable",
             ticker=ticker,
             alpha_vantage_configured=bool(settings.alpha_vantage_api_key),
+            alpha_vantage_reason=(
+                alpha_vantage_failure_reason(ticker)
+                if settings.alpha_vantage_api_key else None
+            ),
         )
         return [], "unavailable"
 

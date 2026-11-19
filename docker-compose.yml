@@ -363,6 +363,9 @@ services:
       # tiers gated on "key present = feature on", so an EMPTY value is the
       # off switch — see DEF063 before populating them in infra/alpha.env.
       ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-}
+      # DEF492: shared per-ticker NEWS_SENTIMENT cache TTLs (success / refusal).
+      ALPHA_VANTAGE_NEWS_CACHE_TTL_SECONDS: ${ALPHA_VANTAGE_NEWS_CACHE_TTL_SECONDS:-1800.0}
+      ALPHA_VANTAGE_NEWS_NEGATIVE_TTL_SECONDS: ${ALPHA_VANTAGE_NEWS_NEGATIVE_TTL_SECONDS:-900.0}
       ADANOS_API_KEY: ${ADANOS_API_KEY:-}
       # DEF063, second instance: a live secondary key sat in infra/alpha.env with
       # no Settings field and no line here, so nothing could read it and the
