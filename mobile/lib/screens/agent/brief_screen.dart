@@ -14,11 +14,13 @@ import 'dart:math' as math;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
+import 'package:ami_trade/models/response_report.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/screens/agent/brief_history_screen.dart';
 import 'package:ami_trade/state/brief_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
+import 'package:ami_trade/widgets/report_response_sheet.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:flutter/material.dart';
@@ -198,6 +200,16 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
           agentLabel: widget.agent.abbreviation,
           agentColor: widget.agent.color,
           streaming: m.isStreaming,
+          onLongPress: () => showReportResponseActions(
+            context,
+            ref,
+            ResponseReportTarget(
+              surface: ResponseSurface.oneOnOne,
+              agentId: widget.agent.id,
+              agentLabel: widget.agent.abbreviation,
+              turn: i,
+            ),
+          ),
         );
       },
     );

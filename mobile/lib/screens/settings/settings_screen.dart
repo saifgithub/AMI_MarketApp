@@ -6,6 +6,7 @@
 /// agent prompt is composed (1-on-1, Coach, Room, Sim).
 library;
 
+import 'package:ami_trade/features/beta/beta_build.dart';
 import 'package:ami_trade/features/build_identity.dart';
 import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
@@ -528,8 +529,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: AmiSpacing.l),
                   const _HandleSection(),
                   const SizedBox(height: AmiSpacing.l),
-                  const _LanguageSection(),
-                  const SizedBox(height: AmiSpacing.l),
+                  // CR278 (WP-36): the Beta build is English only - no switch.
+                  if (!ref.watch(betaEnglishOnlyProvider)) ...const [
+                    _LanguageSection(),
+                    SizedBox(height: AmiSpacing.l),
+                  ],
                   const _ThemeSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _HelpSection(),

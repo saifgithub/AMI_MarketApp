@@ -3,6 +3,7 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
+import 'package:ami_trade/models/response_report.dart';
 import 'package:ami_trade/screens/agent/brief_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
@@ -10,6 +11,7 @@ import 'package:ami_trade/state/one_on_one_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
+import 'package:ami_trade/widgets/report_response_sheet.dart';
 import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
@@ -152,6 +154,16 @@ class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
           agentLabel: widget.agent.abbreviation,
           agentColor: widget.agent.color,
           streaming: m.isStreaming,
+          onLongPress: () => showReportResponseActions(
+            context,
+            ref,
+            ResponseReportTarget(
+              surface: ResponseSurface.oneOnOne,
+              agentId: widget.agent.id,
+              agentLabel: widget.agent.abbreviation,
+              turn: i,
+            ),
+          ),
         );
       },
     );

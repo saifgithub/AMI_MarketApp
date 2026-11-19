@@ -1830,6 +1830,17 @@ class ApiClient {
     return r.data!['handle'] as String;
   }
 
+  // ── Beta Room thumbs (CR278 / WP-36) ──────────────────────────────────
+
+  /// "Did the verdict and its reasons make sense?" for Room [runId]. One
+  /// answer per Room, changeable; the server accepts only the Room's owner.
+  Future<void> rateRoom({required String runId, required bool helpful}) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/v1/room/$runId/rating',
+      data: {'helpful': helpful},
+    );
+  }
+
   // ── Feedback ─────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>> submitBugReport({

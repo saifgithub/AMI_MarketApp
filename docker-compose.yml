@@ -351,6 +351,8 @@ services:
       # before a 402 is reachable.
       ONE_ON_ONE_CREDIT_COST: ${ONE_ON_ONE_CREDIT_COST:-1}
       BRIEF_CREDIT_COST: ${BRIEF_CREDIT_COST:-1}
+      # CR278 (WP-36) — Beta free credits: spend() debits nothing, logged at boot.
+      BETA_FREE_CREDITS: ${BETA_FREE_CREDITS:-false}
       # CR035 ablation toggle — hides the Street consensus line from the
       # agents' fundamentals context. Benchmark windows only; keep false.
       SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}

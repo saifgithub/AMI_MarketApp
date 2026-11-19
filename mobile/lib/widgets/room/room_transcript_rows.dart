@@ -113,9 +113,14 @@ class RoomTranscriptRows extends StatefulWidget {
     this.expandedAgentId,
     this.highlightAgentId,
     this.withheldDetail = const {},
+    this.onReportVoice,
   });
 
   final List<RoomVoice> voices;
+
+  /// CR278 (WP-36): long-press on a row opens "Report this response" for that
+  /// agent. Null (the Journal replay) leaves the rows as they were.
+  final void Function(RoomVoice voice)? onReportVoice;
 
   /// agentId → a richer replacement for that agent's collapsed row.
   ///
@@ -188,6 +193,11 @@ class _RoomTranscriptRowsState extends State<RoomTranscriptRows> {
                     voice: v,
                     expanded: _expanded.contains(v.agentId),
                     highlighted: widget.highlightAgentId == v.agentId,
+                    onLongPress: widget.onReportVoice == null ||
+                            v.withheld ||
+                            v.content.isEmpty
+                        ? null
+                        : () => widget.onReportVoice!(v),
                     onToggle: v.withheld || v.content.isEmpty
                         ? null
                         : () => setState(() {
@@ -226,12 +236,14 @@ class TranscriptRow extends StatelessWidget {
     required this.expanded,
     this.highlighted = false,
     this.onToggle,
+    this.onLongPress,
   });
 
   final RoomVoice voice;
   final bool expanded;
   final bool highlighted;
   final VoidCallback? onToggle;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +270,7 @@ class TranscriptRow extends StatelessWidget {
         children: [
           InkWell(
             onTap: onToggle,
+            onLongPress: onLongPress,
             borderRadius: BorderRadius.circular(AmiRadii.card),
             child: Row(
               children: [
@@ -365,6 +378,7 @@ Future<void> showAgentPeekSheet(
   BuildContext context, {
   required RoomVoice voice,
   VoidCallback? onReadFullDebate,
+  VoidCallback? onReport,
 }) {
   final l = AppLocalizations.of(context);
   final agent = agentById(voice.agentId);
@@ -471,6 +485,24 @@ Future<void> showAgentPeekSheet(
                     },
                     child: Text('${l.roomSheetReadFullDebate} →'),
                   ),
+                ),
+              ],
+              // CR278 (WP-36): the same "Report this response" the long-press
+              // reaches, here as a visible action for an agent's turn.
+              if (!voice.withheld &&
+                  voice.content.isNotEmpty &&
+                  onReport != null) ...[
+                const SizedBox(height: AmiSpacing.xs),
+                TextButton.icon(
+                  key: const Key('peekReportResponse'),
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    onReport();
+                  },
+                  icon: const Icon(Icons.flag_outlined, size: 16),
+                  label: Text(l.reportResponseAction),
+                  style: TextButton.styleFrom(
+                      foregroundColor: AmiColors.textMed),
                 ),
               ],
             ],

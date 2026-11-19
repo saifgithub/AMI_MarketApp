@@ -179,3 +179,32 @@ cases:
       - 201; the admin detail shows trace_ids as the two UUIDs, comma-separated
       - Both malformed submissions are 422 and store nothing
     notes: CR239 / WP-38. Files one extra triage-queue report per run, closed out at once like SUPP-001/002.
+
+  - id: UAT-SUPP-015
+    title: A "Report this response" report rides the ordinary bug endpoint and names the Room and the desk
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - POST /v1/feedback/bug with category wrong_data, a "[CR263 UAT - ignore]" title, route response:room:<uuid>:risk_officer and one trace id
+      - Admin GET the report
+    expected:
+      - 201; the admin detail shows the same route and the trace id, so a report maps to one Room, one desk and the request log lines
+      - There is no second reporting endpoint; the report is closed out at once like SUPP-001
+    notes: CR278 / WP-36. The route shape is response:<surface>:<run id or ->:<agent id>[:t<turn>]. Files one extra triage-queue report per run.
+
+  - id: UAT-SUPP-016
+    title: Long-pressing a Concierge reply offers "Report this response" and opens the sheet filled in
+    layer: device
+    status: blocked
+    blocked_on: The Appium script for this case is not written yet (CR278 shipped the cases and the app controls)
+    plans: [any]
+    steps:
+      - Open the Concierge interview (a fresh install, or Settings > restart onboarding)
+      - Long-press one of AMI's replies, then tap "Report this response"
+      - Read the sheet, then close it without sending
+      - Long-press one of your own messages
+    expected:
+      - A one-row sheet offers "Report this response"; tapping it opens the report sheet titled "Problem with a response from AMI" with the category set to Wrong data
+      - Closing the sheet sends nothing
+      - Long-pressing your own message offers nothing
+    notes: CR278 / WP-36. The same gesture works on 1-on-1 and Brief replies and on Room desk rows.

@@ -740,6 +740,14 @@ class Settings(BaseSettings):
     # next divergence require a code change instead of an env change.
     brief_credit_cost: int = 1
 
+    # CR278 (WP-36, D-076) — Beta "credits free". When true, `credit_service.spend`
+    # debits nothing and reports a cost of 0, so a Room (or 1-on-1 / Brief turn)
+    # still runs and records `credit_cost=0`, and the 402 wall is unreachable.
+    # Default false = exactly today's metering. Logged once at boot when on, so a
+    # free-credits flag left set on a paid environment shows up in the logs
+    # (CR040: a silent switch that stops charging is the failure to avoid).
+    beta_free_credits: bool = False
+
     @field_validator("one_on_one_credit_cost", "brief_credit_cost")
     @classmethod
     def _one_on_one_cost_non_negative(cls, v: int) -> int:

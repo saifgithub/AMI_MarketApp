@@ -8,6 +8,8 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/models/response_report.dart';
+import 'package:ami_trade/widgets/report_response_sheet.dart';
 import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -142,6 +144,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             content: line.content,
             author: line.author,
             streaming: line.streaming,
+            onLongPress: line.author == ChatAuthor.concierge
+                ? () => showReportResponseActions(
+                      context,
+                      ref,
+                      ResponseReportTarget(
+                        surface: ResponseSurface.concierge,
+                        agentId: 'concierge',
+                        agentLabel: 'AMI',
+                        turn: i,
+                      ),
+                    )
+                : null,
           ),
         );
       },
