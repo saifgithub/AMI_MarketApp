@@ -37,7 +37,9 @@ def test_qwen_registers_when_dashscope_key_present(monkeypatch):
     assert isinstance(p, OpenAICompatibleProvider)
     assert p.name == "qwen"
     assert p._model_name == "qwen-flash"
-    assert str(p._client.base_url) == "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/"
+    # CR281: the trailing /v1 is normalised away (the provider appends
+    # /v1/chat/completions itself; the old base produced /v1/v1/...).
+    assert str(p._client.base_url) == "https://dashscope-intl.aliyuncs.com/compatible-mode/"
     # CR017 §3 quirk: forces the fast/non-thinking response mode.
     assert p._extra_body == {"enable_thinking": False}
 

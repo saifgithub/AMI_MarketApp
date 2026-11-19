@@ -45,6 +45,8 @@ from typing import Any, Literal
 import httpx
 
 from app.core.config import settings
+from app.core.llm_allowlist import blocked_slots, configured_slots
+from app.core.llm_extra_body import PROTECTED_BODY_FIELDS, parse_extra_body
 from app.core.logging import logger
 from app.schemas import AGENT_DISPLAY_NAMES, AgentId
 from app.schemas.mandate import Plan
@@ -689,6 +691,38 @@ class _TransientProviderError(Exception):
         self.reason = reason
 
 
+def normalise_base_url(url: str) -> str:
+    """CR281 — one spelling of an OpenAI-compatible base URL.
+
+    The provider appends `/v1/chat/completions` (and `/v1/models`) itself, so a
+    base configured WITH a trailing `/v1` used to become `/v1/v1/...` and 404.
+    Strip whitespace, trailing slashes and one trailing `/v1`, so both spellings
+    of the same endpoint work and a model/provider swap is an env change only.
+    """
+    text = (url or "").strip().rstrip("/")
+    # `/v1/openai` is DeepInfra's documented spelling of the same endpoint the
+    # bare host serves at `/v1/chat/completions` (verified live, CR281).
+    for suffix in ("/v1/openai", "/v1"):
+        if text.endswith(suffix):
+            return text[: -len(suffix)].rstrip("/")
+    return text
+
+
+def openai_compatible_headers(api_key: str | None) -> dict[str, str]:
+    """CR281 — request headers for an OpenAI-compatible slot, either kind.
+
+    A configured key is sent as `Authorization: Bearer <key>`. An empty or
+    whitespace-only key sends NO auth header at all: never `Bearer ` with
+    nothing after it and never a placeholder, which a keyless server (on-prem
+    vLLM) may treat as a malformed credential and a hosted one rejects.
+    """
+    headers = {"Content-Type": "application/json"}
+    key = (api_key or "").strip()
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    return headers
+
+
 class OpenAICompatibleProvider(LLMProvider):
     """Streams completions from any OpenAI `/v1/chat/completions`-shaped API.
 
@@ -743,7 +777,10 @@ class OpenAICompatibleProvider(LLMProvider):
         # nothing); `served_id` is the entry's `id`.
         self.served_root: str | None = None
         self.served_id: str | None = None
-        self._extra_body = extra_body or {}
+        # CR281 — fields the gateway owns can never arrive via extra_body.
+        self._extra_body = {
+            k: v for k, v in (extra_body or {}).items() if k not in PROTECTED_BODY_FIELDS
+        }
         # CR272 — transient-failure retries, 0 (none) unless a slot opts in.
         self._max_retries = max(0, max_retries)
         self._retry_backoff_s = max(0.0, retry_backoff_s)
@@ -754,12 +791,9 @@ class OpenAICompatibleProvider(LLMProvider):
         # to at least this value for THIS provider instance only — every
         # other provider is unaffected.
         self._max_tokens_floor = max_tokens_floor
-        headers = {"Content-Type": "application/json"}
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
         self._client = httpx.AsyncClient(
-            base_url=base_url.rstrip("/"),
-            headers=headers,
+            base_url=normalise_base_url(base_url),
+            headers=openai_compatible_headers(api_key),
             timeout=timeout_seconds,
         )
 
@@ -1090,8 +1124,10 @@ class VLLMProvider(OpenAICompatibleProvider):
         name: str = "vllm",
         max_retries: int = 0,
         retry_backoff_s: float = 1.0,
+        extra_body_override: dict[str, Any] | None = None,
     ) -> None:
         self.kind = kind
+        override = extra_body_override or {}
         if kind == "openai":
             # CR272 — a hosted OpenAI-compatible endpoint (DeepInfra). No
             # vLLM-only body field is sent: `chat_template_kwargs` is a vLLM
@@ -1109,7 +1145,7 @@ class VLLMProvider(OpenAICompatibleProvider):
                 api_key=api_key,
                 timeout_seconds=timeout_seconds,
                 max_tokens_floor=max_tokens_floor,
-                extra_body={},
+                extra_body={**override},
                 supported_constraints=frozenset({"json_schema"}),
                 max_retries=max_retries,
                 retry_backoff_s=retry_backoff_s,
@@ -1140,7 +1176,8 @@ class VLLMProvider(OpenAICompatibleProvider):
             # "server default" — right on one server, silently wrong on the
             # other.
             extra_body={
-                "chat_template_kwargs": {"enable_thinking": enable_thinking}
+                "chat_template_kwargs": {"enable_thinking": enable_thinking},
+                **override,
             },
             # CR210 — both verified live against `ami-llm` on vLLM
             # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
@@ -1291,6 +1328,13 @@ class LLMGateway:
         # to it, or status() would advertise Anthropic's tier aliases for a
         # provider that has never heard of them.
         "glm": "glm_model",
+        # CR281 — every registered single-model slot resolves its tiers to ITS
+        # configured model; without these, status() advertised Anthropic's tier
+        # aliases for a slot that has never heard of them.
+        "vllm_fallback": "vllm_fallback_model",
+        "deepseek": "deepseek_model",
+        "qwen": "qwen_model",
+        "gemini": "gemini_model",
     }
 
     def __init__(self) -> None:
@@ -1303,7 +1347,15 @@ class LLMGateway:
         self._transport: dict[str, dict[str, Any]] = {}
         self._discovery_task: asyncio.Task[None] | None = None
 
-        if settings.vllm_base_url:
+        # CR281 — slots configured (key/URL present) but outside
+        # LLM_PROVIDER_ALLOWLIST. They are not registered below, so no routing,
+        # tier, fallback, force-provider or review path can reach them. Names
+        # only are ever logged or reported — never a key or URL.
+        self._allowlist: tuple[str, ...] = tuple(settings.llm_provider_allowlist)
+        self._blocked: tuple[str, ...] = tuple(blocked_slots(settings))
+        self._log_allowlist_posture()
+
+        if settings.vllm_base_url and "vllm" not in self._blocked:
             self._providers["vllm"] = VLLMProvider(
                 base_url=settings.vllm_base_url,
                 model_name=settings.vllm_model,
@@ -1319,10 +1371,17 @@ class LLMGateway:
                 # nothing. A hosted ("openai") primary always retries.
                 max_retries=(
                     settings.llm_transient_retries
-                    if settings.vllm_kind == "openai" or settings.vllm_fallback_base_url
+                    if settings.vllm_kind == "openai"
+                    or (
+                        settings.vllm_fallback_base_url
+                        and FALLBACK_PROVIDER_NAME not in self._blocked
+                    )
                     else 0
                 ),
                 retry_backoff_s=settings.llm_retry_backoff_s,
+                extra_body_override=parse_extra_body(
+                    "VLLM_EXTRA_BODY_JSON", settings.vllm_extra_body_json
+                ),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1348,14 +1407,14 @@ class LLMGateway:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="vllm",
-                reason="no VLLM_BASE_URL in env",
+                reason=self._skip_reason("vllm", "no VLLM_BASE_URL in env"),
             )
 
         # CR272 — the backup slot. Never in `_PREFERENCE`: it is reached only by
         # failover (a single call re-issued, or a Room restarted pinned to it).
         # Its own floor/thinking knobs are not borrowed from the primary for a
         # hosted ("openai") backup — those are tuned to the primary's model.
-        if settings.vllm_fallback_base_url:
+        if settings.vllm_fallback_base_url and FALLBACK_PROVIDER_NAME not in self._blocked:
             _fb_vllm_kind = settings.vllm_fallback_kind == "vllm"
             self._providers[FALLBACK_PROVIDER_NAME] = VLLMProvider(
                 base_url=settings.vllm_fallback_base_url,
@@ -1373,6 +1432,9 @@ class LLMGateway:
                 name=FALLBACK_PROVIDER_NAME,
                 max_retries=settings.llm_transient_retries,
                 retry_backoff_s=settings.llm_retry_backoff_s,
+                extra_body_override=parse_extra_body(
+                    "VLLM_FALLBACK_EXTRA_BODY_JSON", settings.vllm_fallback_extra_body_json
+                ),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1392,23 +1454,24 @@ class LLMGateway:
                     ),
                 )
 
-        if settings.anthropic_api_key:
+        if settings.anthropic_api_key and "anthropic" not in self._blocked:
             self._providers["anthropic"] = AnthropicProvider(settings.anthropic_api_key)
             logger.info("llm_gateway_provider_registered", provider="anthropic")
         else:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="anthropic",
-                reason="no ANTHROPIC_API_KEY in env",
+                reason=self._skip_reason("anthropic", "no ANTHROPIC_API_KEY in env"),
             )
 
-        if settings.kimi_api_key:
+        if settings.kimi_api_key and "kimi" not in self._blocked:
             self._providers["kimi"] = OpenAICompatibleProvider(
                 name="kimi",
                 base_url=settings.kimi_base_url,
                 model_name=settings.kimi_model,
                 api_key=settings.kimi_api_key,
                 max_tokens_floor=settings.kimi_max_tokens_floor,
+                extra_body=parse_extra_body("KIMI_EXTRA_BODY_JSON", settings.kimi_extra_body_json),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1421,7 +1484,7 @@ class LLMGateway:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="kimi",
-                reason="no KIMI_API_KEY in env",
+                reason=self._skip_reason("kimi", "no KIMI_API_KEY in env"),
             )
 
         # CR141 (build half of CR017 §3/§5 step 2): DeepSeek/Qwen/Gemini, all
@@ -1430,36 +1493,42 @@ class LLMGateway:
         # about which provider wins today; they only get selected via
         # `provider_policy.pick_provider` (not consumed by any live call site
         # yet) or a manual `LLM_FORCE_PROVIDER` override.
-        if settings.deepseek_api_key:
+        if settings.deepseek_api_key and "deepseek" not in self._blocked:
             self._providers["deepseek"] = OpenAICompatibleProvider(
                 name="deepseek",
-                base_url="https://api.deepseek.com",
-                model_name="deepseek-chat",
+                base_url=settings.deepseek_base_url,
+                model_name=settings.deepseek_model,
                 api_key=settings.deepseek_api_key,
+                extra_body=parse_extra_body(
+                    "DEEPSEEK_EXTRA_BODY_JSON", settings.deepseek_extra_body_json
+                ),
             )
             logger.info("llm_gateway_provider_registered", provider="deepseek")
         else:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="deepseek",
-                reason="no DEEPSEEK_API_KEY in env",
+                reason=self._skip_reason("deepseek", "no DEEPSEEK_API_KEY in env"),
             )
 
-        if settings.dashscope_api_key:
+        if settings.dashscope_api_key and "qwen" not in self._blocked:
             self._providers["qwen"] = OpenAICompatibleProvider(
                 name="qwen",
-                base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-                model_name="qwen-flash",
+                base_url=settings.qwen_base_url,
+                model_name=settings.qwen_model,
                 api_key=settings.dashscope_api_key,
                 # CR017 §3: forces the fast/non-thinking response mode.
-                extra_body={"enable_thinking": False},
+                extra_body={
+                    "enable_thinking": False,
+                    **parse_extra_body("QWEN_EXTRA_BODY_JSON", settings.qwen_extra_body_json),
+                },
             )
             logger.info("llm_gateway_provider_registered", provider="qwen")
         else:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="qwen",
-                reason="no DASHSCOPE_API_KEY in env",
+                reason=self._skip_reason("qwen", "no DASHSCOPE_API_KEY in env"),
             )
 
         # CR217 — GLM-5.3-Flash-NVFP4, candidate Room model under head-to-head
@@ -1468,13 +1537,14 @@ class LLMGateway:
         # live traffic. It is reached only via `LLM_FORCE_PROVIDER=glm` (the
         # mechanism `_active_provider_name` documents for exactly this) or
         # `provider_policy.pick_provider`.
-        if settings.glm_base_url:
+        if settings.glm_base_url and "glm" not in self._blocked:
             self._providers["glm"] = OpenAICompatibleProvider(
                 name="glm",
                 base_url=settings.glm_base_url,
                 model_name=settings.glm_model,
                 api_key=settings.glm_api_key or None,
                 max_tokens_floor=settings.glm_max_tokens_floor or None,
+                extra_body=parse_extra_body("GLM_EXTRA_BODY_JSON", settings.glm_extra_body_json),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1487,22 +1557,54 @@ class LLMGateway:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="glm",
-                reason="no GLM_BASE_URL in env",
+                reason=self._skip_reason("glm", "no GLM_BASE_URL in env"),
             )
 
-        if settings.google_ai_api_key:
+        if settings.google_ai_api_key and "gemini" not in self._blocked:
             self._providers["gemini"] = OpenAICompatibleProvider(
                 name="gemini",
-                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                model_name="gemini-2.5-flash",
+                base_url=settings.gemini_base_url,
+                model_name=settings.gemini_model,
                 api_key=settings.google_ai_api_key,
+                extra_body=parse_extra_body(
+                    "GEMINI_EXTRA_BODY_JSON", settings.gemini_extra_body_json
+                ),
             )
             logger.info("llm_gateway_provider_registered", provider="gemini")
         else:
             logger.info(
                 "llm_gateway_provider_skipped",
                 provider="gemini",
-                reason="no GOOGLE_AI_API_KEY in env",
+                reason=self._skip_reason("gemini", "no GOOGLE_AI_API_KEY in env"),
+            )
+
+    def _skip_reason(self, slot: str, default: str) -> str:
+        return "blocked by LLM_PROVIDER_ALLOWLIST" if slot in self._blocked else default
+
+    def _log_allowlist_posture(self) -> None:
+        """CR281 — degrade loudly. One error-level event naming every provider
+        that is configured but not allowed (names only), so a re-enabled or
+        forgotten vendor key is visible in the boot log instead of silent."""
+        if self._blocked:
+            logger.error(
+                "llm_provider_blocked_by_allowlist",
+                blocked=list(self._blocked),
+                allowlist=list(self._allowlist),
+                detail=(
+                    "these providers have a key/URL configured but are NOT in "
+                    "LLM_PROVIDER_ALLOWLIST; the gateway will not register or use them"
+                ),
+            )
+        if self._allowlist and not any(
+            s in self._allowlist and s != "mock" for s in configured_slots(settings)
+        ):
+            logger.error(
+                "llm_allowlist_no_real_provider",
+                allowlist=list(self._allowlist),
+                detail=(
+                    "LLM_PROVIDER_ALLOWLIST is set but none of its slots is "
+                    "configured: the gateway has only the mock provider"
+                ),
             )
 
     def has_real_provider(self) -> bool:
@@ -1722,6 +1824,10 @@ class LLMGateway:
         )
         return {
             "providers_registered": sorted(self._providers.keys()),
+            # CR281 — the allow-list in force ([] = unrestricted) and the slots
+            # that are configured but kept out of the gateway by it.
+            "allowlist": list(self._allowlist),
+            "configured_but_blocked": list(self._blocked),
             "active_provider": active,
             **backup_status,
             "has_real_provider": self.has_real_provider(),

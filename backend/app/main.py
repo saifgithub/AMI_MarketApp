@@ -57,6 +57,7 @@ from app.api.watchlist import router as watchlist_router
 from app.api.sector_watch import router as sector_watch_router
 from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
+from app.core.llm_allowlist import slot_allowed
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
 from app.core.logging import logger
@@ -230,7 +231,7 @@ async def _vllm_cache_sample_tick() -> None:
     from app.services.vllm_metrics import run_vllm_cache_sample_tick
 
     interval = settings.vllm_metrics_sample_interval_seconds
-    if interval <= 0 or not settings.vllm_base_url:
+    if interval <= 0 or not settings.vllm_base_url or not slot_allowed(settings, "vllm"):
         logger.info(
             "vllm_cache_sample_tick_disabled",
             interval=interval,

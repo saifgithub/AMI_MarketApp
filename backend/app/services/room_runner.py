@@ -57,6 +57,7 @@ from app.agents.safety_floor import (
     enforce_safety_floor,
 )
 from app.core.config import settings
+from app.core.llm_allowlist import slot_allowed
 from app.core.logging import logger
 from app.services import output_guard
 from app.core.time import now_utc, relative_day_phrase
@@ -10994,7 +10995,7 @@ def log_prefix_cache_status() -> None:
     if _PREFIX_CACHE_STATUS_LOGGED:
         return
     base = settings.vllm_base_url
-    if not base:
+    if not base or not slot_allowed(settings, "vllm"):
         return  # no real LLM host (mock/anthropic) — nothing to probe
     _PREFIX_CACHE_STATUS_LOGGED = True
     try:

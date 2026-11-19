@@ -24,6 +24,8 @@ import ipaddress
 from typing import Any
 from urllib.parse import urlparse
 
+from app.core.llm_allowlist import BETA_FORBIDDEN_SLOTS
+
 # Mirrors app/main.py::check_secret_key_boot, which runs for every non-local env.
 _SECRET_KEY_DEV_DEFAULT = "dev-secret-change-in-prod"
 _SECRET_KEY_MIN_LEN = 32
@@ -96,6 +98,23 @@ def beta_boot_problems(s: Any) -> list[str]:
             problems.append(
                 f"{name.upper()} is set: Beta runs with no Anthropic, Kimi or Gemini keys "
                 "(Saiful, 2026-11-19). Unset it."
+            )
+
+    # CR281 — the keys above are a second line of defence; the allow-list is the
+    # control (an uncommented key or a copied-over env would otherwise silently
+    # re-enable a vendor).
+    allow = list(getattr(s, "llm_provider_allowlist", None) or [])
+    if not allow:
+        problems.append(
+            "LLM_PROVIDER_ALLOWLIST is empty: Beta must name the providers it may use "
+            "(vllm,vllm_fallback) so a stray vendor key cannot re-enable one (CR281)."
+        )
+    else:
+        banned = [n for n in BETA_FORBIDDEN_SLOTS if n in allow]
+        if banned:
+            problems.append(
+                f"LLM_PROVIDER_ALLOWLIST includes {banned}: Beta runs with no Anthropic, "
+                "Kimi or Gemini provider (Saiful, 2026-11-19, CR281)."
             )
 
     ceiling = s.llm_daily_spend_ceiling_usd

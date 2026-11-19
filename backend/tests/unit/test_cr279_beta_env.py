@@ -12,6 +12,7 @@ Three things are guarded:
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -129,7 +130,9 @@ def test_example_pins_the_beta_rulings():
     v = {k: _unquote(x["value"]) for k, x in e.items()}
     assert v["AMI_ENV"] == "beta"
     assert v["VLLM_KIND"] == "openai" and v["VLLM_MODEL"] == "deepseek-ai/DeepSeek-V4-Flash"
-    assert v["VLLM_FALLBACK_MODEL"] == "zai-org/GLM-5.3-Flash"
+    assert v["VLLM_FALLBACK_MODEL"] == "inclusionAI/Ling-3.0-flash"
+    # CR281 — Ling on DeepInfra needs thinking turned off in the request body.
+    assert json.loads(v["VLLM_FALLBACK_EXTRA_BODY_JSON"]) == {"chat_template_kwargs": {"enable_thinking": False}}
     assert v["LLM_DAILY_SPEND_CEILING_USD"] == "10"
     assert v["ONBOARDING_AGE_GATE_ENFORCED"] == "true" and v["ACCOUNT_ERASURE_MODE"] == "delete"
     for banned in ("ANTHROPIC_API_KEY", "KIMI_API_KEY", "GOOGLE_AI_API_KEY", "GLM_BASE_URL"):
@@ -168,6 +171,12 @@ def test_the_unfilled_example_refuses_to_boot_on_its_empty_secret():
         ({"anthropic_api_key": "sk-ant-x"}, "ANTHROPIC_API_KEY"),
         ({"kimi_api_key": "k"}, "KIMI_API_KEY"),
         ({"google_ai_api_key": "g"}, "GOOGLE_AI_API_KEY"),
+        # CR281 — the allow-list is required on Beta and cannot admit a vendor
+        # Saiful excluded, whatever the keys say.
+        ({"llm_provider_allowlist": ""}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,vllm_fallback,anthropic"}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,kimi"}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,gemini"}, "LLM_PROVIDER_ALLOWLIST"),
         ({"llm_daily_spend_ceiling_usd": None}, "LLM_DAILY_SPEND_CEILING_USD"),
         ({"onboarding_age_gate_enforced": False}, "ONBOARDING_AGE_GATE_ENFORCED"),
         ({"secret_key": "dev-secret-change-in-prod"}, "SECRET_KEY"),
