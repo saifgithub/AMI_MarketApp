@@ -331,6 +331,10 @@ class AgentRunner:
                 reply = output_guard.withheld_notice(guard, "reply")
                 if meta is not None:
                     meta[output_guard.META_SENTINEL] = reply
+            elif guard.trim:
+                reply = output_guard.trim_to_cap(reply)
+                if meta is not None and meta.get(output_guard.META_CONSUMER_BUFFERS):
+                    meta[output_guard.META_SENTINEL] = reply
 
         if session.user_id is not None and buf:
             record_one_on_one_message(

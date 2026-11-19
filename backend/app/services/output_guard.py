@@ -18,14 +18,20 @@ Three rules:
   abuse      ENFORCING. A short, conservative list of slurs, direct insults of
              the user and self-harm encouragement. Deliberately short: it
              exists to catch the unambiguous, not to police tone.
-  off_topic  LOG ONLY, in every mode. "Is this text about markets?" is a
-             heuristic (market/finance-term density over a minimum length), so
-             a false positive withholding a good answer would cost more than the
-             rule buys. It only ever produces an `output_guard_hit` line.
+  runaway_length
+             NOT a withhold. A single user-visible agent turn over
+             `Settings.output_guard_max_turn_words` words is a runaway or looping
+             generation (WP-13 replay: every one of the old `off_topic` hits was
+             one, 1,155 to 15,556 words). In `enforce` mode the caller cuts it at
+             a sentence boundary near the cap and appends a visible note; in
+             `log` mode it is only logged, with the original word count. It
+             replaced the `off_topic` density heuristic, which never caught
+             real off-topic text.
 
 Mode (`Settings.output_guard_mode`): `off` runs nothing; `log` (the default)
 emits one structured `output_guard_hit` event per hit and changes no text;
-`enforce` additionally sets `GuardResult.withhold` when an ENFORCING rule hit.
+`enforce` additionally sets `GuardResult.withhold` when an ENFORCING rule hit and
+`GuardResult.trim` when `runaway_length` hit.
 The CALLER decides what withholding means on its surface (the Room desk turn
 takes the scripted-fallback path, the verdict narrative and 1-on-1 reply become
 a labelled AMI sentinel); this module only decides and logs.
@@ -47,13 +53,22 @@ GuardMode = Literal["off", "log", "enforce"]
 
 RULE_ADVICE = "advice"
 RULE_ABUSE = "abuse"
-RULE_OFF_TOPIC = "off_topic"
+RULE_RUNAWAY = "runaway_length"
 
-# Rules that withhold in `enforce` mode. `off_topic` is deliberately absent and
-# nothing may add it without a new decision: it is a density heuristic.
+# Rules that withhold in `enforce` mode. `runaway_length` is deliberately absent:
+# it trims, it never withholds.
 ENFORCING_RULES = frozenset({RULE_ADVICE, RULE_ABUSE})
 
 SPAN_LOG_CHARS = 80
+
+# Appended to a trimmed turn so the cut is never silent.
+TRIM_NOTE = "[AMI trimmed an overlong note]"
+# A sentence boundary is only used when it lies in the last 30% of the allowed
+# words; earlier than that and cutting there would lose too much, so the cut is
+# at the word boundary instead.
+_TRIM_BOUNDARY_FLOOR = 0.7
+_WORD_RE = re.compile(r"\S+")
+_SENTENCE_END_RE = re.compile(r"[.!?][\"')\]]*(?=\s|$)")
 
 # The `meta` dict a streaming surface already threads through the gateway
 # (DEF125 / RETRO-SECURITY MAJOR-2) doubles as the channel between the
@@ -75,7 +90,13 @@ _ACT = (
     r"|invest\s+in\s+(?:this|it|that|the\s+(?:stock|shares?|company)|stocks?|shares?|\$[A-Z]{1,5})"
     r"|go\s+(?:long|short)|load\s+up|pile\s+into|bail\s+(?:out|on)"
     r"|take\s+(?:the\s+)?profits?|cut\s+(?:your\s+)?losses|double\s+down"
-    r"|put\s+(?:your\s+)?money)"
+    r"|put\s+(?:your\s+)?money"
+    # WP-13b: "You should hold." / "hold this stock". Narrow: a bare "hold" only at
+    # the end of a clause, otherwise it needs a holding as the object, so
+    # "hold the line" / "hold your nerve" / "hold above the 200-day" pass.
+    r"|hold(?:ing)?(?=\s*(?:[.,;:!?)\u2014\u2013]|$))"
+    r"|hold(?:ing)?\s+(?:on\s+to\s+|onto\s+)?(?:this|it|that|the\s+(?:stock|shares?|position|name)"
+    r"|your\s+(?:stock|shares?|position)|\$[A-Z]{1,5}))"
 )
 _NO_PRECEDING = r"(?<!\bno\s)(?<!\bnot\s)(?<!\bnever\s)(?<!\bwithout\s)(?<!\bnon-)"
 
@@ -100,9 +121,12 @@ _ADVICE_PATTERNS = [
     # regulated-utility term of art is exempted in `check` (_REGULATED_CONTEXT).
     rf"{_NO_PRECEDING}(?<!\bonce\s)(?<!\bformerly\s)(?<!\bpreviously\s)"
     r"\bguaranteed?\s+(?:returns?|profits?|gains?)\b",
+    # WP-13b: "which stock can't lose" is the user's question quoted back, and
+    # "a stock can't lose" is a generic claim; neither promises anything.
     # CR271 replay: "the line the uptrend cannot lose" is a price level, not a
     # promise. A promise has a subject that is the user or the trade itself and
     # ends the clause ("you can't lose.") or names money ("can't lose money").
+    r"(?<!\bwhich\s)(?<!\ba\s)(?<!\bany\s)(?<!\bno\s)"
     r"\b(?:you|it|this|that|trade|bet|position|investment|stock|setup|play|name)\s+"
     r"(?:simply\s+|literally\s+|just\s+|possibly\s+)*(?:can['’]?t|cannot|can\s+not)\s+"
     r"(?:possibly\s+)?lose\b"
@@ -113,6 +137,20 @@ _ADVICE_PATTERNS = [
     r"(?:definitely\s+|certainly\s+|surely\s+|easily\s+|absolutely\s+)?"
     r"(?:make\s+(?:money|a\s+profit|profits|gains|a\s+killing)|profit\b|get\s+rich"
     r"|be\s+rich|double\s+your|triple\s+your)",
+]
+
+# WP-13b: on the surfaces where the user asks the agent a question directly, the
+# agents sometimes ANSWER it with a bare verdict that has no second person at
+# all ("Hold.", "Yes, buy.", "YES." over a trade ticket). Not scanned on the Room
+# surfaces: a bare imperative is the debate voice there (Saiful, 2026-11-19).
+DIRECT_ANSWER_SURFACES = frozenset({"one_on_one", "concierge", "brief"})
+_DIRECT_ANSWER_PATTERNS = [
+    # The whole reply is one trade verb: "Hold."
+    r"\A\W*(?:buy|sell|hold|short)\W*\Z",
+    # "Yes, buy." / "Yes - sell now" (not buyers / buy-side)
+    r"\byes\W{1,3}(?:buy|sell|go\s+long|go\s+short)(?![-\w])",
+    # A reply that opens "YES." and goes straight to a BUY/SELL ticket
+    r"\A\W*yes\b[^\n]{0,20}\n[\s\S]{0,120}?\bside\s*:\s*(?:buy|sell)\b",
 ]
 
 # Rate-regulated utilities have a "guaranteed return on rate base": a term of
@@ -147,40 +185,6 @@ _ABUSE_PATTERNS = [
     r"\bkys\b",
 ]
 
-# ── off_topic (log only) ──────────────────────────────────────────────────
-
-# Below MARKET_MIN_WORDS there is not enough text for a density to mean
-# anything; a short reply is never flagged.
-MARKET_MIN_WORDS = 40
-# Share of word tokens that are market/finance terms (or carry a % / $) below
-# which the text is flagged. Real analyst prose measures several times this; a
-# recipe or a poem measures near zero. Starting value, tuned from the replay
-# tool (scripts/output_guard_replay.py) on real traffic before anyone relies on it.
-MARKET_MIN_DENSITY = 0.03
-
-_MARKET_TERMS = frozenset("""
-stock stocks share shares equity equities etf etfs index indices market markets
-price prices pricing trade trades trader trading buy sell hold short long bull
-bullish bear bearish rally selloff sell-off breakout breakdown trend trends
-support resistance volume volatility vol implied momentum rsi macd sma ema
-atr bollinger candle chart technical technicals fundamental fundamentals
-earnings revenue revenues profit profits margin margins eps guidance forecast
-valuation multiple multiples p/e pe peg dividend dividends yield yields buyback
-cash debt leverage liquidity balance sheet cashflow cap capital portfolio
-position positions size sizing allocation exposure concentration drawdown risk
-risks hedge stop stoploss target entry exit reward ratio sector sectors
-industry fed fomc rates rate inflation cpi gdp macro economy economic
-recession treasury bond bonds credit spread analyst analysts upgrade downgrade
-rating ratings headline headlines news filing filings sentiment options call
-calls put puts strike expiry premium delta gamma theta vega mandate verdict
-approve pass cio desk conviction thesis catalyst catalysts benchmark return
-returns alpha beta sharpe correlation float ipo split guidance outlook
-quarter quarterly annual fiscal ticker tickers nasdaq nyse s&p dow
-""".split())
-
-_TOKEN_RE = re.compile(r"[a-z][a-z'&/\-]*|\$\w+|\d[\d,.]*%?")
-
-
 # ── compiled rules ────────────────────────────────────────────────────────
 
 _FLAGS = re.IGNORECASE
@@ -188,6 +192,10 @@ _COMPILED: dict[str, list[re.Pattern[str]]] = {
     RULE_ADVICE: [re.compile(p, _FLAGS) for p in _ADVICE_PATTERNS],
     RULE_ABUSE: [re.compile(p, _FLAGS) for p in _ABUSE_PATTERNS],
 }
+_COMPILED_DIRECT = [re.compile(p, _FLAGS) for p in _DIRECT_ANSWER_PATTERNS]
+
+_OPEN_QUOTES = "\"\u201c\u2018'\u00ab"
+_CLOSE_QUOTES = "\"\u201d\u2019'\u00bb"
 
 
 @dataclass(frozen=True)
@@ -199,6 +207,7 @@ class Hit:
     start: int
     end: int
     enforcing: bool
+    words: int = 0
 
 
 @dataclass(frozen=True)
@@ -220,6 +229,11 @@ class GuardResult:
         return self.mode == "enforce" and bool(self.enforcing_hits)
 
     @property
+    def trim(self) -> bool:
+        """True in `enforce` mode when the text ran past the word cap."""
+        return self.mode == "enforce" and any(h.rule == RULE_RUNAWAY for h in self.hits)
+
+    @property
     def rules(self) -> tuple[str, ...]:
         seen: list[str] = []
         for h in self.hits:
@@ -228,17 +242,17 @@ class GuardResult:
         return tuple(seen)
 
 
-def _market_density(text: str) -> tuple[int, float]:
-    """(word count, share of words that are market terms)."""
-    tokens = _TOKEN_RE.findall(text.lower())
-    words = [t for t in tokens if t[0].isalpha() or t[0] == "$"]
-    if not words:
-        return 0, 0.0
-    hits = sum(
-        1 for t in tokens
-        if t in _MARKET_TERMS or t.startswith("$") or t.endswith("%")
+def _is_quoted_mention(text: str, m: re.Match[str]) -> bool:
+    """True when the match is a phrase being TALKED ABOUT: a quote opens right
+    before it and closes right after it (`a "you should buy" style call`). A
+    quoted sentence that goes on ("You should buy NVDA now.") is advice written
+    out, not a mention, and still hits."""
+    return (
+        m.start() > 0
+        and text[m.start() - 1] in _OPEN_QUOTES
+        and m.end() < len(text)
+        and text[m.end()] in _CLOSE_QUOTES
     )
-    return len(words), hits / len(words)
 
 
 def _is_regulated_term(text: str, m: re.Match[str]) -> bool:
@@ -260,20 +274,27 @@ def check(text: str | None, *, surface: str, mode: str | None = None) -> GuardRe
         return GuardResult(mode=mode, surface=surface)
     hits: list[Hit] = []
     for rule, patterns in _COMPILED.items():
+        if rule == RULE_ADVICE and surface in DIRECT_ANSWER_SURFACES:
+            patterns = patterns + _COMPILED_DIRECT
         for pat in patterns:
             m = next(
                 (
                     c for c in pat.finditer(text)
                     if not _is_regulated_term(text, c)
+                    and not (rule == RULE_ADVICE and _is_quoted_mention(text, c))
                 ),
                 None,
             )
             if m:
                 hits.append(Hit(rule, m.group(0), m.start(), m.end(), True))
                 break
-    words, density = _market_density(text)
-    if words >= MARKET_MIN_WORDS and density < MARKET_MIN_DENSITY:
-        hits.append(Hit(RULE_OFF_TOPIC, text.strip()[:SPAN_LOG_CHARS], 0, 0, False))
+    cap = settings.output_guard_max_turn_words
+    if cap > 0:
+        n_words = len(text.split())
+        if n_words > cap:
+            hits.append(
+                Hit(RULE_RUNAWAY, text.strip()[:SPAN_LOG_CHARS], 0, 0, False, words=n_words)
+            )
     return GuardResult(mode=mode, surface=surface, hits=tuple(hits))
 
 
@@ -299,6 +320,8 @@ def log_hits(
             run_id=str(run_id) if run_id is not None else None,
             already_streamed=already_streamed,
             span=h.span[:SPAN_LOG_CHARS],
+            words=h.words or None,
+            max_words=settings.output_guard_max_turn_words if h.words else None,
         )
 
 
@@ -316,6 +339,33 @@ def inspect(
         result, agent_id=agent_id, run_id=run_id, already_streamed=already_streamed
     )
     return result
+
+
+def trim_to_cap(text: str, cap: int | None = None) -> str:
+    """Cut `text` to at most `cap` words (default the setting) at a sentence
+    boundary near the cap, and append `TRIM_NOTE`. Text at or under the cap is
+    returned unchanged. Pure."""
+    cap = settings.output_guard_max_turn_words if cap is None else cap
+    if cap <= 0:
+        return text
+    words = list(_WORD_RE.finditer(text))
+    if len(words) <= cap:
+        return text
+    limit = words[cap - 1].end()
+    floor = words[int(cap * _TRIM_BOUNDARY_FLOOR) - 1].end() if cap > 1 else 0
+    cut = limit
+    for m in _SENTENCE_END_RE.finditer(text, floor, limit):
+        cut = m.end()
+    return f"{text[:cut].rstrip()}\n\n{TRIM_NOTE}"
+
+
+def trim_if_runaway(text: str) -> str:
+    """The seam helper: in `enforce` mode only, trim an over-cap turn. `log` and
+    `off` return the text untouched. No logging here: `inspect` already logged
+    the hit, with the original length."""
+    if settings.output_guard_mode != "enforce":
+        return text
+    return trim_to_cap(text)
 
 
 def withheld_notice(result: GuardResult, noun: str) -> str:

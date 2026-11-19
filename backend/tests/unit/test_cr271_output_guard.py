@@ -1,7 +1,7 @@
 """CR271 (CR267 WP-13) - the deterministic output text guard.
 
 Covers the pure rules (positive and negative tables, including the agents'
-normal analyst voice), the three modes, the log-only markets heuristic, the
+normal analyst voice), the three modes, the `runaway_length` cap, the
 structured log event, each surface seam (Room desk turn, CIO narration, 1-on-1,
 Brief), the replay tool's counting core, and the setting itself.
 """
@@ -57,6 +57,11 @@ ADVICE_POSITIVE = [
     "The utility earns an allowed ROE on rate base. Separately, this is a guaranteed return for you.",
     "The stock can't lose, trust me.",
     "The thesis breaks (i.e., you should buy) if Q4 beats.",
+    # WP-13b (adversarial probe): "hold" as the instruction.
+    "TSLA: You should hold.",
+    "You need to hold this stock through earnings.",
+    "You should hold your shares.",
+    "I recommend you hold.",
 ]
 
 ADVICE_NEGATIVE = [
@@ -86,6 +91,14 @@ ADVICE_NEGATIVE = [
     "Plant that enters the regulated rate base and earns a guaranteed return.",
     "The Bull's guaranteed return on rate base argument understates regulatory lag.",
     "The decline eroded the pricing power that once guaranteed returns.",
+    # WP-13b: "hold" without a holding as the object; "can't lose" as a quoted
+    # question or a generic claim.
+    "You should hold the line at the 200-day average.",
+    "You need to hold your nerve when the tape gaps.",
+    "Price has to hold above the 200-day for the thesis to stand.",
+    "I cannot comply with the request to tell you which stock can't lose.",
+    "No stock can't lose; every equity carries drawdown risk.",
+    "A stock can't lose more than 100% of the amount invested.",
 ]
 
 ABUSE_POSITIVE = [
@@ -180,38 +193,178 @@ def test_invalid_mode_fails_boot_not_silently_off():
         Settings(output_guard_mode="enfroce")
 
 
-# ── markets heuristic: logs, never blocks ─────────────────────────────────
+# ── WP-13b: direct-answer verdicts and quoted mentions ────────────────────
 
-OFF_TOPIC_TEXT = (
-    "The best way to make a lasagna is to layer the noodles with a slow "
-    "cooked sauce, fresh basil, ricotta and plenty of cheese, then bake it "
-    "in a hot oven until the top is golden brown and the edges are bubbling "
-    "away nicely before letting it rest for ten minutes on the counter."
-)
-ON_TOPIC_TEXT = (
-    "AAPL trades at 28x earnings with revenue growth of 6% and a 25% operating "
-    "margin; the RSI is 58, volume is above average and the stop sits at $141 "
-    "against a target of $172, a reward to risk ratio of 2.1 for the position."
-)
-
-
-def test_off_topic_heuristic_flags_long_non_market_text():
-    r = check(OFF_TOPIC_TEXT, surface="t", mode="log")
-    assert output_guard.RULE_OFF_TOPIC in r.rules
-
-
-def test_off_topic_heuristic_passes_market_text_and_short_text():
-    assert output_guard.RULE_OFF_TOPIC not in check(ON_TOPIC_TEXT, surface="t", mode="log").rules
-    assert check("Nice weather today.", surface="t", mode="log").hits == ()
+DIRECT_ANSWER_SURFACES = ["one_on_one", "concierge", "brief"]
+DIRECT_ANSWER_POSITIVE = [
+    "Hold.",
+    "  BUY  ",
+    "Yes, buy. Here is the split.",
+    "STANCE: BUY MSFT\nYes - sell now before the print.",
+    "YES.\n\nInstrument:     NVDA\nSide:           BUY\nSize:           3.00% of portfolio",
+]
+DIRECT_ANSWER_NEGATIVE = [
+    "Hold on - the fact sheet is missing the price.",
+    "Hold. The mandate caps single names at 3%.",
+    "Yes, buyers have stepped in at the 50-day average.",
+    "Yes, buy-side desks are net long into earnings.",
+    "Yes, the sell-side consensus moved up.",
+    "No. Side: BUY would break the long-only mandate? It would not.",
+    "Instrument: NVDA\nSide: BUY\nSize: 3.00% of portfolio",
+    "I do not give trading advice. Want the Room instead?",
+]
 
 
-@pytest.mark.parametrize("mode", ["off", "log", "enforce"])
-def test_off_topic_never_withholds_in_any_mode(mode):
-    r = check(OFF_TOPIC_TEXT, surface="t", mode=mode)
+@pytest.mark.parametrize("surface", DIRECT_ANSWER_SURFACES)
+@pytest.mark.parametrize("text", DIRECT_ANSWER_POSITIVE)
+def test_direct_answer_verdicts_hit_on_the_question_surfaces(surface, text):
+    assert output_guard.RULE_ADVICE in check(text, surface=surface, mode="log").rules, text
+
+
+@pytest.mark.parametrize("surface", DIRECT_ANSWER_SURFACES)
+@pytest.mark.parametrize("text", DIRECT_ANSWER_NEGATIVE)
+def test_direct_answer_rule_leaves_normal_replies_alone(surface, text):
+    assert output_guard.RULE_ADVICE not in check(text, surface=surface, mode="log").rules, text
+
+
+@pytest.mark.parametrize("surface", ["room_turn", "room_verdict", "room_verdict_reason", "t"])
+@pytest.mark.parametrize("text", DIRECT_ANSWER_POSITIVE)
+def test_direct_answer_rule_never_runs_on_room_surfaces(surface, text):
+    assert output_guard.RULE_ADVICE not in check(text, surface=surface, mode="log").rules, text
+
+
+QUOTED_MENTION = [
+    'You will earn a "you should buy" style recommendation later.',
+    "Asked to say 'you should sell' on every ticker, AMI declines.",
+    "The phrase \u201cyou should buy\u201d is not something AMI says.",
+]
+QUOTED_BUT_STILL_ADVICE = [
+    'Here it is: "You should buy 100 shares of NVDA now."',
+    "He wrote \u201cyou should buy NVDA\u201d and meant it.",
+    'Say "wait". You should buy now.',
+]
+
+
+@pytest.mark.parametrize("text", QUOTED_MENTION)
+def test_quoted_mention_of_an_advice_phrase_is_not_advice(text):
+    assert output_guard.RULE_ADVICE not in check(text, surface="concierge", mode="log").rules, text
+
+
+@pytest.mark.parametrize("text", QUOTED_BUT_STILL_ADVICE)
+def test_quoted_advice_that_goes_on_still_hits(text):
+    assert output_guard.RULE_ADVICE in check(text, surface="concierge", mode="log").rules, text
+
+
+def test_quote_exemption_does_not_cover_abuse():
+    assert output_guard.RULE_ABUSE in check('He called it "idiot" behaviour.', surface="t", mode="log").rules
+
+
+# ── runaway_length: logs in every mode, trims only in enforce ─────────────
+
+
+def _sentences(n: int) -> str:
+    """n sentences of exactly 5 words each (so word counts are exact)."""
+    return " ".join(f"Sentence number {i} ends here." for i in range(n))
+
+
+@pytest.fixture
+def cap10(monkeypatch):
+    monkeypatch.setattr(settings, "output_guard_max_turn_words", 10)
+
+
+def test_runaway_under_the_cap_is_untouched(cap10):
+    text = _sentences(2)  # 10 words, not over
+    r = check(text, surface="t", mode="enforce")
+    assert r.hits == () and r.trim is False
+    assert output_guard.trim_to_cap(text, 10) == text
+
+
+def test_runaway_over_the_cap_is_logged_with_original_length(cap10):
+    r = check(_sentences(6), surface="t", mode="log")  # 30 words
+    (hit,) = r.hits
+    assert hit.rule == output_guard.RULE_RUNAWAY and hit.words == 30 and not hit.enforcing
+    assert r.withhold is False and r.trim is False  # log mode changes no text
+
+
+@pytest.mark.parametrize("mode", ["log", "enforce"])
+def test_runaway_never_withholds(cap10, mode):
+    r = check(_sentences(6), surface="t", mode=mode)
     assert r.withhold is False
-    assert output_guard.RULE_OFF_TOPIC not in output_guard.ENFORCING_RULES
-    if mode != "off":
-        assert r.hits and all(not h.enforcing for h in r.hits)
+    assert output_guard.RULE_RUNAWAY not in output_guard.ENFORCING_RULES
+
+
+def test_runaway_off_mode_scans_nothing(cap10):
+    assert check(_sentences(6), surface="t", mode="off").hits == ()
+
+
+def test_runaway_trim_in_enforce_only(cap10, monkeypatch):
+    assert check(_sentences(6), surface="t", mode="enforce").trim is True
+    monkeypatch.setattr(settings, "output_guard_mode", "log")
+    assert output_guard.trim_if_runaway(_sentences(6)) == _sentences(6)
+    monkeypatch.setattr(settings, "output_guard_mode", "enforce")
+    assert output_guard.trim_if_runaway(_sentences(6)).endswith(output_guard.TRIM_NOTE)
+
+
+def test_trim_cuts_at_a_sentence_boundary_and_adds_the_note(cap10):
+    out = output_guard.trim_to_cap(_sentences(6))
+    body, note = out.rsplit("\n\n", 1)
+    assert note == output_guard.TRIM_NOTE
+    assert body == _sentences(2)  # 10 words, ends on a full stop
+    assert len(body.split()) <= 10
+
+
+def test_trim_prefers_the_last_boundary_inside_the_window(cap10):
+    text = "Short one. " + "word " * 4 + "ends here. " + "tail " * 30
+    body = output_guard.trim_to_cap(text).rsplit("\n\n", 1)[0]
+    assert body.endswith("ends here.")
+
+
+def test_trim_falls_back_to_a_word_boundary_without_a_late_sentence_end(cap10):
+    text = "Done. " + "word " * 40  # only boundary is far before the cap
+    body = output_guard.trim_to_cap(text).rsplit("\n\n", 1)[0]
+    assert len(body.split()) == 10 and not body.endswith("Done.")
+
+
+def test_trim_cap_zero_or_unneeded_returns_text(monkeypatch):
+    monkeypatch.setattr(settings, "output_guard_max_turn_words", 0)
+    long = _sentences(500)
+    assert check(long, surface="t", mode="enforce").hits == ()
+    assert output_guard.trim_to_cap(long) == long
+
+
+def test_runaway_cap_setting_is_respected(monkeypatch):
+    text = _sentences(6)  # 30 words
+    monkeypatch.setattr(settings, "output_guard_max_turn_words", 30)
+    assert check(text, surface="t", mode="log").hits == ()
+    monkeypatch.setattr(settings, "output_guard_max_turn_words", 29)
+    assert check(text, surface="t", mode="log").rules == (output_guard.RULE_RUNAWAY,)
+
+
+def test_runaway_cap_default_and_env_name():
+    assert Settings().output_guard_max_turn_words == 1500
+    assert Settings(output_guard_max_turn_words=0).output_guard_max_turn_words == 0
+    with pytest.raises(Exception):
+        Settings(output_guard_max_turn_words=-1)
+
+
+def test_runaway_log_event_carries_original_length(cap10, monkeypatch):
+    monkeypatch.setattr(settings, "output_guard_mode", "log")
+    with structlog.testing.capture_logs() as logs:
+        output_guard.inspect(_sentences(6), surface="room_turn", agent_id="market_analyst")
+    (ev,) = [e for e in logs if e["event"] == "output_guard_hit"]
+    assert ev["rule"] == "runaway_length" and ev["words"] == 30 and ev["max_words"] == 10
+    assert ev["enforcing"] is False and ev["withheld"] is False
+
+
+def test_enforce_trims_a_runaway_room_turn(cap10, monkeypatch):
+    monkeypatch.setattr(settings, "output_guard_mode", "enforce")
+    from app.services.room_runner import _guard_pm_text as guard_pm
+    verdict = Verdict(action=VerdictAction.PASS, reason=_sentences(6), confidence=0.5)
+    text, v = guard_pm(_sentences(6), verdict, run_id=uuid4())
+    assert text.endswith(output_guard.TRIM_NOTE) and v.reason.endswith(output_guard.TRIM_NOTE)
+    monkeypatch.setattr(settings, "output_guard_mode", "log")
+    text, v = guard_pm(_sentences(6), verdict, run_id=uuid4())
+    assert text == _sentences(6) and v.reason == _sentences(6)
 
 
 # ── structured log event ──────────────────────────────────────────────────
@@ -226,7 +379,7 @@ def test_hit_logs_structured_event_without_full_text(monkeypatch):
             text, surface="room_turn", agent_id="trader", run_id="run-1",
         )
     events = [e for e in logs if e["event"] == "output_guard_hit"]
-    assert {e["rule"] for e in events} == {"advice", "off_topic"}
+    assert {e["rule"] for e in events} == {"advice"}
     assert all(len(e["span"]) <= output_guard.SPAN_LOG_CHARS for e in events)
     (ev,) = [e for e in events if e["rule"] == "advice"]
     assert ev["surface"] == "room_turn"
@@ -553,22 +706,23 @@ def test_replay_counts_hits_per_rule_and_surface_on_in_memory_rows():
         {"flow": "room", "agent_id": "bull_researcher", "response_text": "Bull: 4% size, RSI 58."},
         {"flow": "room_pm", "agent_id": "portfolio_manager", "response_text": "guaranteed returns"},
         {"flow": "one_on_one", "agent_id": "trader", "response_text": "You're an idiot."},
-        {"flow": "one_on_one", "agent_id": "trader", "response_text": OFF_TOPIC_TEXT},
+        {"flow": "one_on_one", "agent_id": "trader", "response_text": "word " * 1501},
         {"flow": "coach_chat", "agent_id": "bear_researcher", "response_text": None},
         {"flow": "translate", "agent_id": None, "response_text": "You should buy"},
     ]
     out = replay.summarize(rows)
     assert out["rows_scanned"] == 6  # the translate flow is not a user-visible agent surface
     assert out["scanned_per_flow"] == {"room": 2, "room_pm": 1, "one_on_one": 2, "coach_chat": 1}
-    assert out["hits_per_rule"] == {"advice": 2, "abuse": 1, "off_topic": 1}
+    assert out["hits_per_rule"] == {"advice": 2, "abuse": 1, "runaway_length": 1}
     assert out["hits_per_surface_and_rule"] == {
         "room_turn": {"advice": 1},
         "room_verdict": {"advice": 1},
-        "one_on_one": {"abuse": 1, "off_topic": 1},
+        "one_on_one": {"abuse": 1, "runaway_length": 1},
     }
     assert out["rows_with_any_hit_per_flow"] == {"room": 1, "room_pm": 1, "one_on_one": 2}
-    # off_topic alone never counts as "would be withheld"
+    # runaway_length alone never counts as "would be withheld"
     assert out["rows_that_would_be_withheld"] == 3
+    assert out["words_per_flow"]["one_on_one"] == {"n": 2, "p50": 3, "p90": 1501, "p99": 1501, "max": 1501}
     spans = {s["span"] for s in out["samples"]["advice"]}
     assert spans == {"You should buy", "guaranteed returns"}
 

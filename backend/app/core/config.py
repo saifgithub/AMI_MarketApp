@@ -1314,6 +1314,12 @@ class Settings(BaseSettings):
     # advice or abusive language. A Literal on purpose (the `gtm_funnel`
     # idiom): a typo'd mode must fail boot, never fall through to "off".
     output_guard_mode: Literal["off", "log", "enforce"] = "log"
+    # CR271 — `runaway_length`: a single user-visible agent turn over this many
+    # words is a runaway generation. Logged with its original length in every
+    # mode; in `enforce` mode also cut at a sentence boundary near the cap with a
+    # visible AMI note. 0 disables the rule. Provisional default: see the WP-13b
+    # report for how it was chosen and what is still unmeasured.
+    output_guard_max_turn_words: int = Field(default=1500, ge=0)
 
     # CR273 — whether the server REFUSES onboarding without the 18+
     # confirmation. On by default (Beta ships builds that send it). Off only
