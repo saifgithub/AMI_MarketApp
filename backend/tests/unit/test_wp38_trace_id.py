@@ -345,3 +345,14 @@ def test_bug_endpoint_accepts_trace_ids_and_422s_a_bad_one(tmp_path, monkeypatch
     assert bad.status_code == 422
     assert bad.json()["request_id"] == bad.headers["x-request-id"]
     bug_upload_rate_limit.reset()
+
+
+def test_the_real_app_registers_the_handler_for_starlettes_base_exception():
+    """Live Alpha, 2026-11-19: an unmatched route's 404 came back as
+    `{"detail":"Not Found"}` with no `request_id`. `main.py` registered the
+    handler for FastAPI's HTTPException *subclass*, but Starlette's router raises
+    the base class for an unmatched route, so the default handler ran. The test
+    app above registers the right class itself, so it could not see this."""
+    from app.main import app, _http_exception_with_request_id
+
+    assert app.exception_handlers.get(StarletteHTTPException) is _http_exception_with_request_id

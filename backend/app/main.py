@@ -8,7 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Header, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import HTTPException as StarletteHTTPException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
