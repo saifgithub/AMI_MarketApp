@@ -210,9 +210,12 @@ def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
 
     ip = exempt_headers()
     for bad in ("not-a-uuid", ",".join(str(uuid.uuid4()) for _ in range(6))):
-        # Title left empty as well: even if trace_ids validation regressed,
-        # nothing could enter the triage queue.
+        # A valid title, so the 422 can only be about trace_ids (an empty title
+        # is rejected first and masks it). If validation ever regressed and the
+        # report were stored, it is closed out at once so /bug-monitor never sees it.
         resp = u.post("/v1/feedback/bug",
-                      files=_form(**{**GOOD, "title": "", "trace_ids": bad}), headers=ip)
+                      files=_form(**{**GOOD, "trace_ids": bad}), headers=ip)
+        if resp.status_code == 201:
+            _close_out(seed.admin, resp.json()["id"])
         assert resp.status_code == 422, resp.text
         assert any("trace_ids" in str(e.get("loc")) for e in resp.json()["detail"]), resp.text
