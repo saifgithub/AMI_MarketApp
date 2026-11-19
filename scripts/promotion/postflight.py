@@ -97,6 +97,10 @@ TARGETS: dict[str, dict[str, str]] = {
 }
 DEFAULT_TARGET = "alpha"
 
+# The tree the tree and migration checks read. `main()` repoints it at the
+# temporary worktree a Beta promotion shipped from (`--root`); Alpha never moves it.
+_active_root: Path = _REPO_ROOT
+
 
 def resolve_target(name: str) -> dict[str, str]:
     """The target's settings, or ValueError — never a silent fall-back to Alpha.
@@ -525,9 +529,7 @@ _DOWN_REVISION_LINE = re.compile(r"^down_revision\s*(?::[^=]+)?=(.*)$", re.MULTI
 _QUOTED_ID = re.compile(r"['\"]([^'\"]+)['\"]")
 
 
-def check_migration_heads(
-        versions_dir: Path = _REPO_ROOT / "backend" / "alembic" / "versions",
-) -> list[str]:
+def check_migration_heads(versions_dir: Path | None = None) -> list[str]:
     """DEF406 — the merged tree has exactly ONE alembic head.
 
     Two lanes each verified "single head" on their own pre-merge branches, both
@@ -543,6 +545,8 @@ def check_migration_heads(
     down_revision line may carry several ids (an alembic merge revision) — all
     quoted ids on the line count as parents.
     """
+    if versions_dir is None:
+        versions_dir = _active_root / "backend" / "alembic" / "versions"
     revisions: set[str] = set()
     parents: set[str] = set()
     try:
@@ -780,7 +784,9 @@ def main() -> int:
     base = args.base or tgt["base"]
     host = args.host or tgt["host"]
     remote = args.remote or tgt["remote"]
+    global _active_root
     root = Path(args.root) if args.root else _REPO_ROOT
+    _active_root = root
     env_label = tgt["env_file"]
     env_path = Path(args.env_file) if args.env_file else _REPO_ROOT / env_label
     rec_dir = Path(args.record_dir) if args.record_dir else record_dir()
@@ -808,30 +814,17 @@ def main() -> int:
         print(f"CANNOT RUN — {exc}", file=sys.stderr)
         return 2
 
-    if args.target == "alpha":
-        gates = [
-            # First, and local: it answers "should this promotion have happened",
-            # which the four live checks cannot.
-            ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
-            # CR235 — same question, for the tests that moved out of CI: Flutter test +
-            # the harness offline self-tests.
-            ("local_gate", lambda: check_local_gate_verdict(
-                Path(args.local_gate_verdict), args.expect_sha)),
-        ]
-    else:
-        gates = [
-            # CR267 WP-43 — Beta ships a tag Alpha already gated; the suite and
-            # local-gate records describe some other HEAD and are hours old by
-            # design. The surviving question is "did this tag pass Alpha's
-            # postflight, on this commit".
-            ("alpha_record", lambda: check_alpha_record(
-                rec_dir, args.source_alpha_tag, args.expect_sha)),
-        ]
-    checks = gates + [
+    checks = [
+        # First, and local: it answers "should this promotion have happened",
+        # which the four live checks cannot.
+        ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
+        # CR235 — same question, for the tests that moved out of CI: Flutter test +
+        # the harness offline self-tests.
+        ("local_gate", lambda: check_local_gate_verdict(
+            Path(args.local_gate_verdict), args.expect_sha)),
         # Also local, also "should this have happened": a migration fork only
         # exists in the merged tree, so no lane's own gate can see it (DEF406).
-        ("migrations", lambda: check_migration_heads(
-            root / "backend" / "alembic" / "versions")),
+        ("migrations", lambda: check_migration_heads()),
         ("identity", lambda: check_identity(
             base, secret, args.expect_sha, args.expect_tag, args.timeout,
             tgt["promote_cmd"])),
@@ -841,6 +834,15 @@ def main() -> int:
             base, secret, env_path, args.timeout, env_label)),
         ("market", lambda: check_market_data(base, args.timeout)),
     ]
+    if args.target == "beta":
+        # CR267 WP-43 — Beta ships a tag Alpha already gated; the suite and
+        # local-gate records describe some other HEAD and are hours old by
+        # design. The surviving question is "did this tag pass Alpha's
+        # postflight, on this commit". Built from a dict so the Alpha list
+        # above stays the single literal DEF405/DEF406's tests pin.
+        beta_gate = {"alpha_record": lambda: check_alpha_record(
+            rec_dir, args.source_alpha_tag, args.expect_sha)}
+        checks[:2] = list(beta_gate.items())
 
     failed = False
     unable = False

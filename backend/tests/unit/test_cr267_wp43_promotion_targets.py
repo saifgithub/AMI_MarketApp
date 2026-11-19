@@ -130,7 +130,7 @@ def test_beta_uses_beta_values_and_swaps_the_local_gates_for_the_record(
     assert pf.main() == 0
     assert seen["tree"][:2] == ("ami-beta", "~/ami_trade/")
     assert seen["tree"][3] == wt, "the tree check must compare the shipped temp worktree"
-    assert seen["mig"][0] == wt / "backend" / "alembic" / "versions"
+    assert pf._active_root == wt, "the migration-head check must read the shipped tree"
     assert seen["ready"][0] == "https://api-beta.agenticmarketintel.ai"
     assert seen["config"][4] == "infra/beta.env"
     assert seen["identity"][5] == "/promote-to-beta"
