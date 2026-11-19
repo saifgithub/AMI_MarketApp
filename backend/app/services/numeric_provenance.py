@@ -281,6 +281,18 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "(analyst_targets.fetch_analyst_detail), stamped at the same "
         "_stamp_next_convene_basis site as reference_price/next_convene_delta",
     ),
+    # CR260 / CR267 WP-21b — street_comparison's only numerics (analyst_count,
+    # target_mean) are provider data read off the run's own fact sheet by
+    # street_comparison.build_street_comparison after the verdict; the rest is
+    # a code-computed enum comparison of the verdict action against the
+    # consensus rating word. Zero LLM involvement, and no agent ever reads it.
+    ("verdict", "street_comparison"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.street_comparison.build_street_comparison — LIVE-gated "
+        "fact-sheet fields (analyst_rating / analyst_opinion_count / "
+        "analyst_target_price) compared to the finished verdict's action, "
+        "stamped at the same _stamp_next_convene_basis site as analyst_view",
+    ),
     # CR266 (this CR) — found by check 1's exhaustiveness walk firing for real,
     # the same way the R60/CR260 rows above were. decision_record's numerics
     # (score, threshold, computed_size_pct) are computed entirely in code:
