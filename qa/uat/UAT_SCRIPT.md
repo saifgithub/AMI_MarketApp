@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**299 cases** — 197 api, 20 device, 82 manual; 16 blocked.
+**300 cases** — 197 api, 20 device, 83 manual; 16 blocked.
 
 ## Areas
 
@@ -16,7 +16,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 6. [Convene the Room](#room) — 27 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
-9. [Sim trading & market data](#sim-trading) — 33 cases
+9. [Sim trading & market data](#sim-trading) — 34 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
@@ -4069,6 +4069,22 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. The advisory title reads "NO AMI VERDICT" in English (never "NO AI VERDICT") and is translated in Arabic and Bahasa Melayu, with its Convene the Room and Proceed without buttons (DEF478)
 2. The destination picker, the "could not reach AMI" line and the "blocked by your mandate" fallback are translated
 3. With a non-paper Alpaca credential stored, the Portfolio relink prompt is translated
+
+#### UAT-SIM-034 — A limit order re-bases the default STOP and TARGET on the limit price
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A ticker whose market price is well above $5 (for example SCHD at about $34)
+
+**Steps**
+1. Open a new trade ticket, enter the ticker and wait for the price chip; note the STOP and TARGET that fill in
+2. Tap LIMIT and enter a limit price of 5.00; do not touch STOP or TARGET
+3. Type your own STOP, then change the limit price again
+
+**Expected**
+1. STOP and TARGET move to about 6% below and 13% above the limit price (4.70 and 5.65), SUBMIT stays enabled and no stop-above-entry refusal appears (DEF504)
+2. Your own STOP is left exactly as typed while the untouched TARGET keeps following the limit price
 
 #### UAT-HLTH-011 — Portfolio Health card and Finding screen render all states
 

@@ -227,6 +227,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   late final TextEditingController _limit;
   late final TextEditingController _trigger;
   SimOrderType _orderType = SimOrderType.market;
+  // DEF504 — a STOP/TARGET field is the user's the moment they type in it (or a
+  // verdict pre-fills it); until then the sheet owns it and re-bases it when the
+  // entry price it is measured from moves.
+  bool _stopByHand = false;
+  bool _targetByHand = false;
   SimOrderTif _tif = SimOrderTif.day;
   String _side = 'buy';
   // CR227 — always AMI Sim on the cover/sell-from-holding entry paths (see
@@ -304,10 +309,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     for (final c in [_ticker, _qty, _stop, _target, _limit, _trigger]) {
       c.addListener(_rebuildOnInput);
     }
+    _limit.addListener(_rebaseBracket);
+    _trigger.addListener(_rebaseBracket);
     final v = widget.prefill;
     if (v != null && v.isApprove) {
-      if (v.stop != null) _stop.text = v.stop!.toStringAsFixed(2);
-      if (v.target != null) _target.text = v.target!.toStringAsFixed(2);
+      if (v.stop != null) {
+        _stop.text = v.stop!.toStringAsFixed(2);
+        _stopByHand = true;
+      }
+      if (v.target != null) {
+        _target.text = v.target!.toStringAsFixed(2);
+        _targetByHand = true;
+      }
       if (v.timeHorizonDays != null) _horizon.text = '${v.timeHorizonDays}';
       // Suggested qty: use the verdict's size%, $10k starting capital,
       // ~$entry price → quantity = size * 100 / entry. Conservative round.
@@ -343,6 +356,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   void dispose() {
     _validator.dispose();
     _ticker.removeListener(_onTickerChanged);
+    _limit.removeListener(_rebaseBracket);
+    _trigger.removeListener(_rebaseBracket);
     for (final c in [_ticker, _qty, _stop, _target, _limit, _trigger]) {
       c.removeListener(_rebuildOnInput);
       c.dispose();
@@ -389,7 +404,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // do nothing, on the one screen where a number that does nothing reads
       // as a control.
       if (_isCover) return;
-      _anchorBracket(q.price);
+      _rebaseBracket();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -580,12 +595,40 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final state = ref.read(simNotifierProvider);
     if (_side == 'sell' && !_opensShort(state)) return;
     final short = _side == 'sell';
-    if (_stop.text.trim().isEmpty) {
+    if (!_stopByHand) {
       _stop.text = (price * (short ? 1.06 : 0.94)).toStringAsFixed(2);
     }
-    if (_target.text.trim().isEmpty) {
+    if (!_targetByHand) {
       _target.text = (price * (short ? 0.87 : 1.13)).toStringAsFixed(2);
     }
+  }
+
+  /// DEF504 — the price the default bracket is measured from: what the user
+  /// named on a resting order (limit / trigger), otherwise the live quote.
+  ///
+  /// A limit BUY at $5.00 against a $34 market kept a stop at 32.43 — above the
+  /// $5.00 entry — so the wrong-side check refused the ticket over two numbers
+  /// the sheet had written itself (the DEF314 shape, on the price axis instead
+  /// of the side axis). The same basis feeds `_localRefusal`, so the default can
+  /// never disagree with the check that judges it.
+  double? _bracketBasis() {
+    final named = namedPriceFor(_orderType,
+        triggerPrice: double.tryParse(_trigger.text.trim()),
+        limitPrice: double.tryParse(_limit.text.trim()));
+    if (named != null && named > 0) return named;
+    return _quote?.price;
+  }
+
+  /// Re-base the sheet-owned STOP/TARGET after the order type or the named
+  /// price changed. A field the user typed in is never touched.
+  void _rebaseBracket() {
+    // No quote, no default: the bracket was only ever suggested once the ticker
+    // was verified and priced, and a limit typed against an unverified ticker
+    // must not conjure one.
+    if (_isCover || _quote == null || (_stopByHand && _targetByHand)) return;
+    final basis = _bracketBasis();
+    if (basis == null || basis <= 0) return;
+    _anchorBracket(basis);
   }
 
   /// DEF314 — the bracket follows the side.
@@ -595,19 +638,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// alternative — leaving our own long bracket in place after a flip to SELL —
   /// is the dead end itself.
   void _rebracketForSide() {
-    final q = _quote;
-    if (q == null) return;
-    for (final (c, longMul, shortMul) in [
-      (_stop, 0.94, 1.06),
-      (_target, 1.13, 0.87),
-    ]) {
-      final ours = {
-        (q.price * longMul).toStringAsFixed(2),
-        (q.price * shortMul).toStringAsFixed(2),
-      };
-      if (c.text.trim().isEmpty || ours.contains(c.text.trim())) c.text = '';
-    }
-    _anchorBracket(q.price);
+    final basis = _bracketBasis();
+    if (_quote == null || basis == null) return;
+    if (!_stopByHand) _stop.text = '';
+    if (!_targetByHand) _target.text = '';
+    _anchorBracket(basis);
   }
 
   /// CR188 — flipping to SELL fills the quantity with what you actually hold.
@@ -1953,7 +1988,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                           (SimOrderType.stop, l.tradeTicketOrderStop),
                           (SimOrderType.stopLimit, l.tradeTicketOrderStopLimit),
                         ],
-                        onChange: (v) => setState(() => _orderType = v),
+                        onChange: (v) => setState(() {
+                          _orderType = v;
+                          _rebaseBracket();
+                        }),
                       ),
                       if (_orderType.needsTriggerPrice) ...[
                         const SizedBox(height: AmiSpacing.m),
@@ -2009,6 +2047,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                         Expanded(
                           child: TextField(
                             controller: _stop,
+                            onChanged: (v) =>
+                                _stopByHand = v.trim().isNotEmpty,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             style: AmiTypography.body,
@@ -2021,6 +2061,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                         Expanded(
                           child: TextField(
                             controller: _target,
+                            onChanged: (v) =>
+                                _targetByHand = v.trim().isNotEmpty,
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             style: AmiTypography.body,
