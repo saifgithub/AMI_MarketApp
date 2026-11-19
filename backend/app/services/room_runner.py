@@ -5628,7 +5628,7 @@ async def _run_cio_step(
     char_delay_min: float,
     char_delay_max: float,
     agent_timeout_s: float,
-    defer_outage_verdict_event: bool = False,
+    defer_verdict_event: bool = False,
 ) -> AsyncIterator["RoomEvent"]:
     """CR237 — the CIO's own turn: build the PM prompt (or the CR098
     Amendment 2 no-parse NO_VERDICT), sample/vote, parse, run the
@@ -5652,14 +5652,16 @@ async def _run_cio_step(
     anything from the outaged run — the floor must judge the user's position
     NOW, not at the original run's stale snapshot (CR237 ruling #2).
 
-    `defer_outage_verdict_event` (CR237 round 2): when True and the verdict
-    is outage-shaped (`is_outage_shaped_verdict`), `run.verdict` is set but
-    the `verdict` event is NOT yielded here — the caller yields it exactly
-    once, after its refund attempt, so the one event a live listener sees
-    carries "This Room wasn't charged." only if the refund actually
-    succeeded (DEF432 MINOR-1) while the Room still emits ONE verdict event
-    (CR219 R51). `run()` passes True; the retry route leaves it False (it
-    never refunds, so it has nothing to wait for).
+    `defer_verdict_event` (CR237 round 2, widened by DEF498): when True,
+    `run.verdict` is set but the `verdict` event is NOT yielded here — the
+    caller yields it exactly once, after it has stamped the verdict
+    (`_stamp_next_convene_basis`) and, for an outage-shaped one, attempted the
+    refund, so the one event a live listener sees is the verdict that gets
+    persisted: with the Street comparison and the delta (DEF498), and carrying
+    "This Room wasn't charged." only if the refund actually succeeded
+    (DEF432 MINOR-1) while the Room still emits ONE verdict event (CR219
+    R51). `run()` passes True; the retry route leaves it False (it drops this
+    step's verdict event and streams the one it persisted).
     """
     # CR266 — build the evidence gate ONCE, before the PM call. None when the
     # flag is off, so every non-gated run keeps its exact current shape. The
@@ -6195,7 +6197,7 @@ async def _run_cio_step(
         )
         verdict = verdict.model_copy(update={"reason": _reason})
     run.verdict = verdict
-    if defer_outage_verdict_event and is_outage_shaped_verdict(verdict.model_dump()):
+    if defer_verdict_event:
         return
     yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
 
@@ -8491,9 +8493,9 @@ class RoomRunner:
 
         gateway = self._llm or get_llm_gateway()
         live = gateway.has_real_provider()
-        # CR237 round 2 — an outage-shaped verdict's single `verdict` event is
-        # held until after the refund attempt below (see `_run_cio_step`'s
-        # `defer_outage_verdict_event`).
+        # CR237 round 2 / DEF498 — the verdict's single `verdict` event is
+        # held until it is stamped and any outage refund attempted below (see
+        # `_run_cio_step`'s `defer_verdict_event`).
         _deferred_verdict: Verdict | None = None
 
         # CR272 — armed only when a REAL gateway reports a registered backup
@@ -8683,13 +8685,10 @@ class RoomRunner:
                         char_delay_min=char_delay_min,
                         char_delay_max=char_delay_max,
                         agent_timeout_s=agent_timeout_s,
-                        defer_outage_verdict_event=True,
+                        defer_verdict_event=True,
                     ):
                         yield ev
-                    if run.verdict is not None and is_outage_shaped_verdict(
-                        run.verdict.model_dump()
-                    ):
-                        _deferred_verdict = run.verdict
+                    _deferred_verdict = run.verdict
                 await asyncio.sleep(_PHASE_GAP_S)
                 if (
                     _failover is not None
@@ -8914,23 +8913,16 @@ class RoomRunner:
                                 "reconcile against subscription_events"
                             ),
                         )
-            # CR237 round 2 — the outage-shaped verdict's ONE `verdict` event
-            # (CR219 R51: a Room emits exactly one), held back by
-            # `_run_cio_step` so it streams only now, after the refund
-            # attempt: its reason carries "This Room wasn't charged." iff the
-            # refund above succeeded (DEF432 MINOR-1), never before `refund()`
-            # has returned. Built from the verdict the CIO step produced (not
-            # the R60-enriched `run.verdict`), so the event's shape is what
-            # `run()` has always streamed; only the reason is taken from the
-            # post-refund record.
-            if _deferred_verdict is not None:
-                yield RoomEvent(
-                    kind="verdict", run_id=run_id,
-                    verdict=_deferred_verdict.model_copy(update={
-                        "reason": run.verdict.reason if run.verdict else _deferred_verdict.reason,
-                        **(_backup_used_stamp() if _backup_restarted else {}),
-                    }),
-                )
+            # CR237 round 2 / DEF498 — the verdict's ONE `verdict` event (CR219
+            # R51: a Room emits exactly one), held back by `_run_cio_step` so
+            # it streams only now: after the single stamping site above (the
+            # Street comparison, analyst view and delta the card renders) and
+            # after the outage refund attempt (its reason carries "This Room
+            # wasn't charged." iff the refund succeeded, DEF432 MINOR-1).
+            # `run.verdict` is exactly what `_persist_run` wrote, so the
+            # stream and `GET /v1/room/{id}` can never disagree.
+            if _deferred_verdict is not None and run.verdict is not None:
+                yield RoomEvent(kind="verdict", run_id=run_id, verdict=run.verdict)
             # CR219 R55 — bank this verdict in the calibration ledger.
             #
             # `_reference_close(profile)` is the price the Room was actually
