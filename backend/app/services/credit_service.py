@@ -84,6 +84,17 @@ def one_on_one_cost() -> int:
     return settings.one_on_one_credit_cost
 
 
+def credits_are_free() -> bool:
+    """CR278 (WP-36, D-076) — the single Beta "credits free" switch.
+
+    `spend()` is the charge point and consults this; the two places that
+    PREDICT a charge (the live-data entitlement probe in `room_runner`, and the
+    `room_cost` the mandate read advertises) ask it too, so what the client is
+    told, what the runner decides and what is debited can never disagree.
+    """
+    return settings.beta_free_credits
+
+
 # DEF205 — Brief Your Agent's price. Until 2026-08-24 a Brief turn spent
 # nothing at all: `spend()` was reachable only from `room_runner`, so both
 # conversational surfaces burned real vLLM compute for free, bounded only by
@@ -369,6 +380,11 @@ def spend(user_id: UUID, amount: int | None, *, reason: str) -> tuple[int, int]:
         if user is None:
             raise LookupError(f"user {user_id} not found")
         eff = _ensure_period(s, user)
+        if credits_are_free():
+            # CR278 — Beta free credits: the one switch at the charge point.
+            # Nothing is debited and no ledger row is written; the caller sees
+            # a charge of 0, which is what the Room records as `credit_cost`.
+            return user.credit_balance or 0, 0
         cost = room_cost_for_plan(eff) if amount is None else amount
         old_balance = user.credit_balance or 0
         now = _utcnow()

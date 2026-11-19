@@ -180,6 +180,7 @@ from app.services.room_prompts import (
 from app.schemas.room import VerdictReviewRecord
 from app.services.credit_service import (
     balance_for,
+    credits_are_free,
     live_data_surcharge,
     refund,
     room_cost_for_plan,
@@ -7857,7 +7858,10 @@ class RoomRunner:
         # is then a no-op), so the two agree on the plan/period. n_available == 0
         # short-circuits, so a no-live-data run never reads the balance early and
         # never leaves the byte-for-byte CR039 spend(None) path (winzip intact).
-        entitled = n_available > 0 and balance_for(user_id)[0] >= base + surcharge
+        # CR278: with Beta free credits on nobody is short of the bundle.
+        entitled = n_available > 0 and (
+            credits_are_free() or balance_for(user_id)[0] >= base + surcharge
+        )
 
         if entitled:
             # Explicit amount folds the surcharge into the one atomic spend (D1).

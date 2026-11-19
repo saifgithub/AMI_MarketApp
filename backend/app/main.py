@@ -49,6 +49,8 @@ from app.api.options import router as sim_options_router  # CR172 §10
 from app.api.portfolio import router as portfolio_router  # CR026 sector allocation
 from app.api.price_alerts import router as price_alerts_router
 from app.api.room import router as room_router
+from app.api.room_rating import admin_router as admin_room_ratings_router
+from app.api.room_rating import router as room_rating_router
 from app.api.sim import router as sim_router
 from app.api.tickers import router as tickers_router
 from app.api.watchlist import router as watchlist_router
@@ -481,6 +483,14 @@ async def _account_erasure_tick() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # CR278 (WP-36) — Beta free credits: say so once at boot, loudly (CR040), so
+    # a flag left on in a paid environment is visible in the first log lines.
+    if settings.beta_free_credits:
+        logger.warning(
+            "beta_free_credits_on",
+            detail="BETA_FREE_CREDITS=true: Rooms, 1-on-1 and Brief are not debited",
+        )
+
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
     # in status=running. The sweep itself ran in get_room_runner()'s
     # __init__ (claiming rows + bumping retry_count); this drains the
@@ -705,6 +715,7 @@ app.include_router(admin_push_router)  # CR200 — console push sends
 app.include_router(admin_analytics_router)  # CR200 — console live KPIs
 app.include_router(admin_ticker_interest_router)  # CR200-R001 — ticker interest analytics
 app.include_router(admin_room_router)  # CR200-R002 — room LLM call viewer + prompt replay
+app.include_router(admin_room_ratings_router)  # CR278 — Beta Room thumbs read
 app.include_router(admin_verdict_outcomes_router)  # CR219 R55 — calibration ledger
 app.include_router(backtest_admin_router)  # CR164 — admin-only as-of Room runs
 app.include_router(account_router)  # CR276 — close account + data export
@@ -731,6 +742,7 @@ app.include_router(telemetry_router)
 app.include_router(portfolio_router)
 app.include_router(price_alerts_router)
 app.include_router(room_router)
+app.include_router(room_rating_router)  # CR278 — Beta Room thumbs
 app.include_router(sim_router)
 app.include_router(sim_options_router)  # CR172 §10 — propose / open
 app.include_router(tickers_router)
