@@ -107,3 +107,17 @@ cases:
     expected:
       - Tapping deep-links to the right screen (e.g. the ticker), marks it read and the bell count drops
       - Mark all read clears the count; a disabled type still appears in the centre but sends no push
+
+  - id: UAT-INBOX-008
+    title: Inbox and notification screens show a copyable reference on a server error (CR239)
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - A server error on the inbox or notification calls (e.g. Alpha briefly unreachable during a deploy); cannot be forced from the UI
+    steps:
+      - Open the inbox, the notification centre and notification preferences while the server is returning errors
+      - Tap the small "Ref:" line under the error message
+    expected:
+      - Each error state shows "Ref:" followed by 8 characters; tapping it copies the full reference and shows "Reference copied"
+      - With no recent server error (e.g. offline before any request), no Ref line is shown rather than a stale one
+    notes: The screens also gained CR264 root test ids (no visible change). Same mechanism as UAT-PLAT-008.

@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**289 cases** — 192 api, 17 device, 80 manual; 12 blocked.
+**290 cases** — 192 api, 17 device, 81 manual; 12 blocked.
 
 ## Areas
 
@@ -22,7 +22,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 10 cases
-15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
+15. [Inbox, notification centre & push](#inbox-notifications) — 8 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 14 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
@@ -4082,6 +4082,23 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. Tapping deep-links to the right screen (e.g. the ticker), marks it read and the bell count drops
 2. Mark all read clears the count; a disabled type still appears in the centre but sends no push
+
+#### UAT-INBOX-008 — Inbox and notification screens show a copyable reference on a server error (CR239)
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A server error on the inbox or notification calls (e.g. Alpha briefly unreachable during a deploy); cannot be forced from the UI
+
+**Steps**
+1. Open the inbox, the notification centre and notification preferences while the server is returning errors
+2. Tap the small "Ref:" line under the error message
+
+**Expected**
+1. Each error state shows "Ref:" followed by 8 characters; tapping it copies the full reference and shows "Reference copied"
+2. With no recent server error (e.g. offline before any request), no Ref line is shown rather than a stale one
+
+> The screens also gained CR264 root test ids (no visible change). Same mechanism as UAT-PLAT-008.
 
 #### UAT-SUPP-009 — In-app bug reporter and resolution toast work on iPhone
 
