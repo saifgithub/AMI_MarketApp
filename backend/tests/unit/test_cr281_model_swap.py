@@ -180,6 +180,8 @@ def test_vllm_kind_keeps_a_configured_key():
         "http://h.example.com:8000/v1",
         "http://h.example.com:8000/v1/",
         "  http://h.example.com:8000/v1  ",
+        "http://h.example.com:8000/v1/openai",
+        "http://h.example.com:8000/v1/openai/",
     ],
 )
 def test_normalise_base_url_collapses_every_spelling(raw):

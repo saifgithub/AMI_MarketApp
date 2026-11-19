@@ -699,8 +699,11 @@ def normalise_base_url(url: str) -> str:
     of the same endpoint work and a model/provider swap is an env change only.
     """
     text = (url or "").strip().rstrip("/")
-    if text.endswith("/v1"):
-        text = text[: -len("/v1")].rstrip("/")
+    # `/v1/openai` is DeepInfra's documented spelling of the same endpoint the
+    # bare host serves at `/v1/chat/completions` (verified live, CR281).
+    for suffix in ("/v1/openai", "/v1"):
+        if text.endswith(suffix):
+            return text[: -len(suffix)].rstrip("/")
     return text
 
 

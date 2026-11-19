@@ -38,7 +38,7 @@ All paths resolve through `LLMGateway._providers`; a blocked slot is never put t
 Audit result:
 
 1. **Hard-coded model ids and URLs.** `deepseek`, `qwen`, `gemini` had their base URL and model literals in the gateway. They are now `DEEPSEEK_BASE_URL/MODEL`, `QWEN_BASE_URL/MODEL`, `GEMINI_BASE_URL/MODEL` (defaults = the old literals, forwarded in compose, listed in `beta.env.example`). `status()` also advertised Anthropic tier aliases for these slots and for `vllm_fallback`; they now resolve to the slot's configured model. What remains by design: `TIER_TO_MODEL` (Anthropic's own aliases, the one provider that is not a single-model OpenAI-compatible slot). No quirk, price lookup, tier route or thinking/sampling branch is keyed on a model string: prices come from `LLM_PRICES_JSON`, quirks from `kind`/settings. Model-keyed calibration (`evidence_record`, keyed on `provider:model` identity) reads "uncalibrated" after a swap by design (loud, not silent).
-2. **URL shape.** The provider appends `/v1/chat/completions`, so a base with a trailing `/v1` became `/v1/v1/...` (the `qwen` default was exactly that, i.e. never worked). `normalise_base_url` now strips whitespace, trailing slashes and one trailing `/v1`; both spellings reach the same endpoint. Known limit: an endpoint whose chat path is not `<base>/v1/chat/completions` (Gemini's `.../v1beta/openai/chat/completions`) is still not reachable; Gemini is unused and blocked on Alpha and Beta.
+2. **URL shape.** The provider appends `/v1/chat/completions`, so a base with a trailing `/v1` became `/v1/v1/...` (the `qwen` default was exactly that, i.e. never worked). `normalise_base_url` now strips whitespace, trailing slashes and one trailing `/v1` or `/v1/openai` (DeepInfra's documented spelling); every spelling reaches the same `/v1/chat/completions`. Known limit: an endpoint whose chat path is not `<base>/v1/chat/completions` (Gemini's `.../v1beta/openai/chat/completions`) is still not reachable; Gemini is unused and blocked on Alpha and Beta.
 3. **Served-model discovery.** `GET /v1/models` is issued per OpenAI-compatible slot with the same client; it works on any host (hosted ones return `id` without `root`, handled). Not host-specific. The vLLM `/metrics` prefix-cache check stays tied to `kind=vllm` on the primary, by design (informational).
 4. **API key per slot.** `openai_compatible_headers`: a configured key is sent as `Authorization: Bearer <key>` for both kinds (the `vllm` kind already passed it through; now tested). Empty or whitespace-only sends NO auth header: never `Bearer `, never a placeholder.
 
@@ -64,11 +64,11 @@ Beta (`infra/beta.env`; matches `beta.env.example`):
 
 ```
 LLM_PROVIDER_ALLOWLIST=vllm,vllm_fallback
-VLLM_BASE_URL=https://api.deepinfra.com
+VLLM_BASE_URL=https://api.deepinfra.com/v1/openai
 VLLM_MODEL=deepseek-ai/DeepSeek-V4-Flash
 VLLM_KIND=openai
 VLLM_API_KEY=<the Beta DeepInfra key>
-VLLM_FALLBACK_BASE_URL=https://api.deepinfra.com
+VLLM_FALLBACK_BASE_URL=https://api.deepinfra.com/v1/openai
 VLLM_FALLBACK_MODEL=zai-org/GLM-5.3-Flash
 VLLM_FALLBACK_KIND=openai
 VLLM_FALLBACK_API_KEY=<the Beta DeepInfra key>
@@ -90,9 +90,9 @@ Through the real `LLMGateway` code path, `vllm_fallback` slot, env only, `max_to
 3. Key unset: no `Authorization` header on the client; call failed loudly as HTTP 401 (`stream_error_status=401`, sentinel text "[AMI error: HTTP 401 ...]"), no failover (pinned call).
 4. Keyless on-prem Ling (`http://100.98.142.64:8004`, `ling-3.0-flash-fin-fp4`, kind `vllm`): reachable from the Mac; answered; reported model `ling-3.0-flash-fin-fp4`; 130 / 3 tokens; no auth header.
 
-Totals: 8 completion calls over the two runs (4 each) plus 2 catalogue GETs; every call 3 output tokens. The gateway logged no cost: neither DeepInfra model nor Ling is in `LLM_PRICES_JSON` here, so it logged `llm_price_missing` (cost NULL). At DeepInfra's list rates the whole run is a fraction of a cent.
+Runs 1 and 2 used the bare host `https://api.deepinfra.com`. After the base was set to Beta's `https://api.deepinfra.com/v1/openai` (normalised to the same endpoint), one more call on DeepSeek-V4-Flash was made through the gateway and answered (104 / 3 tokens). Totals: 9 completion calls plus 2 catalogue GETs; every call 3 output tokens. The gateway logged no cost: neither DeepInfra model nor Ling is in `LLM_PRICES_JSON` here, so it logged `llm_price_missing` (cost NULL). At DeepInfra's list rates the whole run is a fraction of a cent.
 
 ## Doubts
 
-1. The bare host `https://api.deepinfra.com` works with the appended `/v1/chat/completions` (proved live); the `/v1/openai` form would not, and is not needed.
+1. `/v1/openai` was NOT usable as a base before this CR (it became `/v1/openai/v1/chat/completions`); the normaliser now maps it to the bare host, which serves `/v1/chat/completions` (proved live for both spellings).
 2. `ling-3.0-flash-fin-fp4` has no `LLM_PRICES_JSON` entry (see above).

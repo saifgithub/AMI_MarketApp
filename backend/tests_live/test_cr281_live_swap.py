@@ -33,7 +33,7 @@ from app.services.llm_gateway import ChatMessage, LLMGateway
 _KEY = os.environ.get("DEEPINFRA_API_KEY", "")
 pytestmark = pytest.mark.skipif(not _KEY, reason="DEEPINFRA_API_KEY not set")
 
-_BASE = "https://api.deepinfra.com"
+_BASE = "https://api.deepinfra.com/v1/openai"
 _MODEL_A = "deepseek-ai/DeepSeek-V4-Flash"
 _MODEL_B = "zai-org/GLM-5.3-Flash"
 _LING_URL = "http://100.98.142.64:8004"
@@ -108,7 +108,7 @@ async def test_swap_model_by_env_then_drop_the_key(monkeypatch):
 
     # catalogue check for the second model (GET, no completion, no spend)
     async with httpx.AsyncClient(timeout=20) as c:
-        r = await c.get(f"{_BASE}/v1/openai/models", headers={"Authorization": f"Bearer {_KEY}"})
+        r = await c.get("https://api.deepinfra.com/v1/openai/models", headers={"Authorization": f"Bearer {_KEY}"})
     assert r.status_code == 200
     assert _MODEL_B in {m.get("id") for m in r.json().get("data", [])}, "model B not in catalogue"
 
