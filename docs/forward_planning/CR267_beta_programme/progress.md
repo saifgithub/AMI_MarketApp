@@ -153,3 +153,15 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
 8. **Waiting on Saiful:** the WP-29 and WP-51 website changes share one deploy go (WEBSITE_ADMIN_SECRET, api-website restart, cPanel rsync). WP-52 has open items (Singapore claim, privacy link version, 'experimental' label).
 
 Found: two users have duplicate training portfolios created 40 ms apart on 2026-09-28 (ISS001 insert race); portfolio snapshot ticks fail for them.
+
+## 2026-11-19 (late) to 2026-11-20 — deploy #8, build 118, AMI-DL-2/3/4, Ling backup, CR281
+
+1. **Deploy #8** `alpha-2026-11-19-6` = `7a205ebd`, postflight PASS. Verified live: DEF498 (UAT-ROOM-023), DEF492 news (SIM-004, HLTH-006; DEF492 closed `8e3cf4fc`), options SIM-020 after market open.
+2. **Models (Saiful, S11 §3b `fe182185`):** Alpha's backup is Ling-3.0-flash-Fin on our own host, live since deploy #8. Beta: DeepSeek-V4-Flash primary, Ling-3.0-flash backup (thinking off via extra body). Ling re-score `61683185`: 0/20 gate failures, 0.70¢/Room vs DSV4 1.06¢, spend $0.46.
+3. **CR281** (`b8eb01be`): Saiful rejected disabling vendors by commenting out keys ("isn't it better to check if the configuration exist"). `LLM_PROVIDER_ALLOWLIST` now gates providers; boot logs configured-but-blocked; postflight fails on a mismatch. Model swaps are config only; the key is sent only when set.
+4. **Build 118** on TestFlight + Play internal (DEF494–497, WP-36 app half). UAT gate override logged with Saiful's ok.
+5. **Device runs:** AMI-DL-2 (iPhone, 117), AMI-DL-3 (Android E5, 118) → DEF500–503 merged (`14b56da6`), AMI-DL-4 (iPhone E5, 118) → DEF504. Full suite on `14b56da6`: backend 8761 passed, flutter 2167 passed.
+6. **AMI-DL-4 Room finding:** run `cc493ece` (MSFT) was not stuck. It completed at 14:30:19Z with a verdict and a journal entry; the 14:36Z "second run" was the 24 h dedup reattaching to it (`room_dedup_attached_completed`). One charge of 29 credits, no refund owed. The app showed nothing on reopen, which is DEF500.
+7. **WP-43** (`e2ca401d`) and **WP-44** (`13ead8d2`) merged; acceptance still needs the Beta host (S4).
+8. **Hold:** Saiful paused new work on 2026-11-19 and lifted it on 2026-11-20. Deploy #9 (CR281, DEF500–503, allow-list in alpha.env) and build 119 are next.
+9. **Saiful 2026-11-20:** on reopen with a Room still running, keep the Floor + reconnect banner (DEF500 as built); no auto-jump into the Room.
