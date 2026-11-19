@@ -1,7 +1,10 @@
 """CR219 R55 — score the verdict-outcome ledger's due rows. Idempotent batch.
 
-**Intended cadence: DAILY.** No cron is installed by this script — melehost ops
-is the dispatcher's job, not this lane's. The intended invocation, in the
+**Scheduled automatically (CR267 WP-28).** `app/main.py` runs
+`app.services.outcome_scoring_job.run_outcome_job` daily at 22:30 UTC inside
+`ami_api_alpha` (gate: `OUTCOME_SCORING_ENABLED`), which also refreshes missing
+horizon bars from Yahoo. This script is the manual, store-only twin — it never
+fetches prices — kept for ad-hoc runs. The intended invocation, in the
 `ami_api_alpha` container where `PYTHONPATH=/app` already resolves `app.*`:
 
     docker exec ami_api_alpha python scripts/score_verdict_outcomes.py
@@ -59,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument(
         "--limit", type=int, default=1000,
-        help="max pending rows to consider in this batch (default 1000)",
+        help="max DUE pending rows to handle in this batch (default 1000)",
     )
     ap.add_argument(
         "--json", action="store_true",
@@ -75,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "verdict-outcome ledger: "
             f"scored={counts['scored']} not_due={counts['not_due']} "
+            f"deferred={counts['deferred']} "
             f"unscorable_mock={counts['unscorable_mock']} "
             f"unscorable_no_bar={counts['unscorable_no_bar']} "
             f"unscorable_no_reference={counts['unscorable_no_reference']} "

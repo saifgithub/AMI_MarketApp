@@ -1355,6 +1355,28 @@ class Settings(BaseSettings):
     # How often the erasure job looks for accounts whose grace has ended.
     account_erasure_tick_interval_seconds: int = Field(default=3600, ge=60)
 
+    # CR267 WP-28 — scheduled scoring of the CR219 verdict-outcome ledger and
+    # the weekly calibration report (`app/services/outcome_scoring_job.py`).
+    # Internal calibration floor only; nothing here is user-facing. On by
+    # default so a forgotten flag cannot leave the ledger unscored (the state
+    # WP-28 exists to end); `false` is the kill switch and is logged at boot.
+    outcome_scoring_enabled: bool = True
+    # Daily run time, UTC. 22:30 is after the US close (21:00/20:00 UTC) with
+    # room for Yahoo to publish the adjusted close.
+    outcome_scoring_hour_utc: int = Field(default=22, ge=0, le=23)
+    outcome_scoring_minute_utc: int = Field(default=30, ge=0, le=59)
+    # Due rows handled per run; the rest stay pending for the next day.
+    outcome_scoring_batch_limit: int = Field(default=500, ge=1, le=5000)
+    # Most distinct tickers one run may refresh from Yahoo.
+    outcome_scoring_max_ticker_fetches: int = Field(default=150, ge=1, le=1000)
+    # A horizon bar older than this many calendar days before the horizon date
+    # counts as no bar (covers a weekend plus a holiday).
+    outcome_scoring_max_bar_gap_days: int = Field(default=5, ge=1, le=30)
+    # Weekly `room_outcome_report` output. Default is the writable host-mounted
+    # directory the other batch jobs already use.
+    outcome_report_dir: str = "/backtest_results/outcome_reports"
+    outcome_report_interval_days: int = Field(default=7, ge=1, le=60)
+
     @model_validator(mode="after")
     def _archive_needs_counsel_approval(self) -> "Settings":
         # CR276 — CR040 degrade-loudly. Archive retains personal data after a

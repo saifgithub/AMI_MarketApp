@@ -481,6 +481,37 @@ async def _account_erasure_tick() -> None:
         await asyncio.sleep(settings.account_erasure_tick_interval_seconds)
 
 
+async def _verdict_outcome_scoring_tick() -> None:
+    """Background task: score the verdict-outcome ledger daily after the US
+    close and write the weekly calibration report (CR267 WP-28).
+
+    Sleeps until the configured UTC time rather than polling, runs the blocking
+    DB/Yahoo work in a thread, and never dies: a failed run logs at error level
+    and the next day tries again. Idempotent by construction (only `pending`
+    rows are scored), so a restart or a second container cannot double-score;
+    it can only run the same day's batch twice. When disabled it says so at
+    warning level once at boot instead of going quiet."""
+    from datetime import datetime, timezone
+
+    from app.services.outcome_scoring_job import run_outcome_job, seconds_until_next_run
+
+    if not settings.outcome_scoring_enabled:
+        logger.warning("outcome_scoring_disabled")
+        return
+    while True:
+        await asyncio.sleep(
+            seconds_until_next_run(
+                datetime.now(timezone.utc),
+                settings.outcome_scoring_hour_utc,
+                settings.outcome_scoring_minute_utc,
+            )
+        )
+        try:
+            await asyncio.to_thread(run_outcome_job)
+        except Exception:
+            logger.exception("outcome_scoring_tick_failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # CR278 (WP-36) — Beta free credits: say so once at boot, loudly (CR040), so
@@ -564,6 +595,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_desk_fill_tick()),
         asyncio.create_task(_game_push_tick()),
         asyncio.create_task(_account_erasure_tick()),
+        asyncio.create_task(_verdict_outcome_scoring_tick()),
     ]
     try:
         yield

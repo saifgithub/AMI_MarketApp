@@ -582,6 +582,17 @@ services:
       ACCOUNT_ARCHIVE_COUNSEL_APPROVED: ${ACCOUNT_ARCHIVE_COUNSEL_APPROVED:-false}
       ACCOUNT_CLOSURE_GRACE_DAYS: ${ACCOUNT_CLOSURE_GRACE_DAYS:-30}
       ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS: ${ACCOUNT_ERASURE_TICK_INTERVAL_SECONDS:-3600}
+      # CR267 WP-28 — daily scoring of the verdict-outcome ledger + weekly
+      # calibration report. Defaults mirror Settings; OUTCOME_SCORING_ENABLED=false
+      # is the kill switch. Report lands in the ./backtest_results host mount.
+      OUTCOME_SCORING_ENABLED: ${OUTCOME_SCORING_ENABLED:-true}
+      OUTCOME_SCORING_HOUR_UTC: ${OUTCOME_SCORING_HOUR_UTC:-22}
+      OUTCOME_SCORING_MINUTE_UTC: ${OUTCOME_SCORING_MINUTE_UTC:-30}
+      OUTCOME_SCORING_BATCH_LIMIT: ${OUTCOME_SCORING_BATCH_LIMIT:-500}
+      OUTCOME_SCORING_MAX_TICKER_FETCHES: ${OUTCOME_SCORING_MAX_TICKER_FETCHES:-150}
+      OUTCOME_SCORING_MAX_BAR_GAP_DAYS: ${OUTCOME_SCORING_MAX_BAR_GAP_DAYS:-5}
+      OUTCOME_REPORT_DIR: ${OUTCOME_REPORT_DIR:-/backtest_results/outcome_reports}
+      OUTCOME_REPORT_INTERVAL_DAYS: ${OUTCOME_REPORT_INTERVAL_DAYS:-7}
       # CR266 — the PM evidence gate: typed CLAIMS/OBJECTIONS become a
       # deterministic allowed-action set + computed size with a persisted
       # decision record. Default off; per-MODEL acceptance-gated — thresholds
