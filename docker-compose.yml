@@ -311,6 +311,14 @@ services:
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       # CR281 — comma-separated gateway slots this env may use; empty = unrestricted.
       LLM_PROVIDER_ALLOWLIST: ${LLM_PROVIDER_ALLOWLIST:-}
+      # CR281 — per-slot JSON merged into every request body; empty = nothing.
+      VLLM_EXTRA_BODY_JSON: ${VLLM_EXTRA_BODY_JSON:-}
+      VLLM_FALLBACK_EXTRA_BODY_JSON: ${VLLM_FALLBACK_EXTRA_BODY_JSON:-}
+      GLM_EXTRA_BODY_JSON: ${GLM_EXTRA_BODY_JSON:-}
+      KIMI_EXTRA_BODY_JSON: ${KIMI_EXTRA_BODY_JSON:-}
+      DEEPSEEK_EXTRA_BODY_JSON: ${DEEPSEEK_EXTRA_BODY_JSON:-}
+      QWEN_EXTRA_BODY_JSON: ${QWEN_EXTRA_BODY_JSON:-}
+      GEMINI_EXTRA_BODY_JSON: ${GEMINI_EXTRA_BODY_JSON:-}
       # CR269 — empty desk value = send no temperature (today's behaviour).
       LLM_DESK_TEMPERATURE: ${LLM_DESK_TEMPERATURE:-}
       LLM_JUDGE_TEMPERATURE: ${LLM_JUDGE_TEMPERATURE:-0.0}

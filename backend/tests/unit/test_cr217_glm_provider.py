@@ -57,18 +57,15 @@ def gateway(monkeypatch):
     return _build
 
 
-def test_a_v1_suffixed_base_url_doubles_the_path():
-    """Characterizes the trap, because the endpoint is published WITH the /v1.
+def test_a_v1_suffixed_base_url_no_longer_doubles_the_path():
+    """The trap this test used to characterize is closed (CR281).
 
-    `OpenAICompatibleProvider` appends `/v1/chat/completions` itself and only
-    strips a trailing slash, so the published form
-    `http://100.94.223.38:8008/v1/` becomes `/v1/v1/chat/completions` and 404s.
-    A 404 for every call mid-sweep is a DEF059 fail-safe PASS, i.e. it reads as
-    the model declining every single trade rather than as a misconfiguration —
-    which is precisely the shape a benchmark cannot afford to misread.
-
-    This asserts the doubling HAPPENS. It is not the desired behaviour; it is
-    the reason `glm_base_url` must be stored without the `/v1`.
+    The endpoint is published WITH the /v1, and `OpenAICompatibleProvider`
+    appends `/v1/chat/completions` itself, so `http://100.94.223.38:8008/v1/`
+    used to become `/v1/v1/chat/completions` and 404 — for every call mid-sweep,
+    which is a DEF059 fail-safe PASS that reads as the model declining every
+    trade. `normalise_base_url` now strips a trailing `/v1`, so both spellings
+    reach the same endpoint.
     """
     def final_url(base: str) -> str:
         p = OpenAICompatibleProvider(
@@ -76,7 +73,7 @@ def test_a_v1_suffixed_base_url_doubles_the_path():
         )
         return str(p._client.build_request("POST", "/v1/chat/completions").url)
 
-    assert final_url("http://host:8008/v1/") == "http://host:8008/v1/v1/chat/completions"
+    assert final_url("http://host:8008/v1/") == "http://host:8008/v1/chat/completions"
     assert final_url("http://host:8008") == "http://host:8008/v1/chat/completions"
 
 

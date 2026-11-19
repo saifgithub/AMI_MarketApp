@@ -303,6 +303,21 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _llm_extra_bodies_are_wellformed(self) -> "Settings":
+        from app.core.llm_extra_body import parse_extra_body
+
+        problems: list[str] = []
+        for slot in ("vllm", "vllm_fallback", "glm", "kimi", "deepseek", "qwen", "gemini"):
+            name = f"{slot}_extra_body_json"
+            try:
+                parse_extra_body(name.upper(), getattr(self, name))
+            except ValueError as exc:
+                problems.append(str(exc))
+        if problems:
+            raise ValueError(" | ".join(problems))
+        return self
+
+    @model_validator(mode="after")
     def _llm_allowlist_is_wellformed(self) -> "Settings":
         # CR281 — a typo must not silently allow nothing (or, after a lenient
         # parse, everything): every name has to be a real gateway slot.
@@ -446,6 +461,18 @@ class Settings(BaseSettings):
     # such slot by name, and an unknown name refuses boot. See
     # app/core/llm_allowlist.py.
     llm_provider_allowlist: CsvList = Field(default_factory=list)
+
+    # CR281 — per-slot JSON object merged into every request body sent to that
+    # slot (e.g. Ling on DeepInfra: {"chat_template_kwargs":{"enable_thinking":false}}).
+    # Empty = nothing merged; invalid JSON or a protected field fails boot.
+    # Precedence and the protected set: app/core/llm_extra_body.py.
+    vllm_extra_body_json: str = ""
+    vllm_fallback_extra_body_json: str = ""
+    glm_extra_body_json: str = ""
+    kimi_extra_body_json: str = ""
+    deepseek_extra_body_json: str = ""
+    qwen_extra_body_json: str = ""
+    gemini_extra_body_json: str = ""
 
     # CR269 — sampling temperature for every desk-side call (Room desks, CIO/PM,
     # 1-on-1, Brief). None = send no `temperature` at all, so the request body is

@@ -46,6 +46,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.llm_allowlist import blocked_slots, configured_slots
+from app.core.llm_extra_body import PROTECTED_BODY_FIELDS, parse_extra_body
 from app.core.logging import logger
 from app.schemas import AGENT_DISPLAY_NAMES, AgentId
 from app.schemas.mandate import Plan
@@ -776,7 +777,10 @@ class OpenAICompatibleProvider(LLMProvider):
         # nothing); `served_id` is the entry's `id`.
         self.served_root: str | None = None
         self.served_id: str | None = None
-        self._extra_body = extra_body or {}
+        # CR281 — fields the gateway owns can never arrive via extra_body.
+        self._extra_body = {
+            k: v for k, v in (extra_body or {}).items() if k not in PROTECTED_BODY_FIELDS
+        }
         # CR272 — transient-failure retries, 0 (none) unless a slot opts in.
         self._max_retries = max(0, max_retries)
         self._retry_backoff_s = max(0.0, retry_backoff_s)
@@ -1120,8 +1124,10 @@ class VLLMProvider(OpenAICompatibleProvider):
         name: str = "vllm",
         max_retries: int = 0,
         retry_backoff_s: float = 1.0,
+        extra_body_override: dict[str, Any] | None = None,
     ) -> None:
         self.kind = kind
+        override = extra_body_override or {}
         if kind == "openai":
             # CR272 — a hosted OpenAI-compatible endpoint (DeepInfra). No
             # vLLM-only body field is sent: `chat_template_kwargs` is a vLLM
@@ -1139,7 +1145,7 @@ class VLLMProvider(OpenAICompatibleProvider):
                 api_key=api_key,
                 timeout_seconds=timeout_seconds,
                 max_tokens_floor=max_tokens_floor,
-                extra_body={},
+                extra_body={**override},
                 supported_constraints=frozenset({"json_schema"}),
                 max_retries=max_retries,
                 retry_backoff_s=retry_backoff_s,
@@ -1170,7 +1176,8 @@ class VLLMProvider(OpenAICompatibleProvider):
             # "server default" — right on one server, silently wrong on the
             # other.
             extra_body={
-                "chat_template_kwargs": {"enable_thinking": enable_thinking}
+                "chat_template_kwargs": {"enable_thinking": enable_thinking},
+                **override,
             },
             # CR210 — both verified live against `ami-llm` on vLLM
             # 0.23.1.dev0+g0fc695fc6 on 2026-08-25, under `stream: true`:
@@ -1372,6 +1379,9 @@ class LLMGateway:
                     else 0
                 ),
                 retry_backoff_s=settings.llm_retry_backoff_s,
+                extra_body_override=parse_extra_body(
+                    "VLLM_EXTRA_BODY_JSON", settings.vllm_extra_body_json
+                ),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1422,6 +1432,9 @@ class LLMGateway:
                 name=FALLBACK_PROVIDER_NAME,
                 max_retries=settings.llm_transient_retries,
                 retry_backoff_s=settings.llm_retry_backoff_s,
+                extra_body_override=parse_extra_body(
+                    "VLLM_FALLBACK_EXTRA_BODY_JSON", settings.vllm_fallback_extra_body_json
+                ),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1458,6 +1471,7 @@ class LLMGateway:
                 model_name=settings.kimi_model,
                 api_key=settings.kimi_api_key,
                 max_tokens_floor=settings.kimi_max_tokens_floor,
+                extra_body=parse_extra_body("KIMI_EXTRA_BODY_JSON", settings.kimi_extra_body_json),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1485,6 +1499,9 @@ class LLMGateway:
                 base_url=settings.deepseek_base_url,
                 model_name=settings.deepseek_model,
                 api_key=settings.deepseek_api_key,
+                extra_body=parse_extra_body(
+                    "DEEPSEEK_EXTRA_BODY_JSON", settings.deepseek_extra_body_json
+                ),
             )
             logger.info("llm_gateway_provider_registered", provider="deepseek")
         else:
@@ -1501,7 +1518,10 @@ class LLMGateway:
                 model_name=settings.qwen_model,
                 api_key=settings.dashscope_api_key,
                 # CR017 §3: forces the fast/non-thinking response mode.
-                extra_body={"enable_thinking": False},
+                extra_body={
+                    "enable_thinking": False,
+                    **parse_extra_body("QWEN_EXTRA_BODY_JSON", settings.qwen_extra_body_json),
+                },
             )
             logger.info("llm_gateway_provider_registered", provider="qwen")
         else:
@@ -1524,6 +1544,7 @@ class LLMGateway:
                 model_name=settings.glm_model,
                 api_key=settings.glm_api_key or None,
                 max_tokens_floor=settings.glm_max_tokens_floor or None,
+                extra_body=parse_extra_body("GLM_EXTRA_BODY_JSON", settings.glm_extra_body_json),
             )
             logger.info(
                 "llm_gateway_provider_registered",
@@ -1545,6 +1566,9 @@ class LLMGateway:
                 base_url=settings.gemini_base_url,
                 model_name=settings.gemini_model,
                 api_key=settings.google_ai_api_key,
+                extra_body=parse_extra_body(
+                    "GEMINI_EXTRA_BODY_JSON", settings.gemini_extra_body_json
+                ),
             )
             logger.info("llm_gateway_provider_registered", provider="gemini")
         else:

@@ -247,3 +247,87 @@ def test_no_hardcoded_openai_compatible_endpoint_in_the_gateway():
     urls = [s for s in _string_constants(_APP / "services/llm_gateway.py")
             if s.startswith(("http://", "https://")) and "anthropic.com" not in s]
     assert not urls, f"endpoint literal(s) in the gateway: {urls}"
+
+
+# ── 5. per-slot extra request body (thinking-off for Ling on DeepInfra) ───────
+
+_LING_OFF = '{"chat_template_kwargs":{"enable_thinking":false}}'
+_EB_ENV = {
+    "vllm": "VLLM_EXTRA_BODY_JSON",
+    "vllm_fallback": "VLLM_FALLBACK_EXTRA_BODY_JSON",
+    "glm": "GLM_EXTRA_BODY_JSON",
+    "kimi": "KIMI_EXTRA_BODY_JSON",
+    "deepseek": "DEEPSEEK_EXTRA_BODY_JSON",
+    "qwen": "QWEN_EXTRA_BODY_JSON",
+    "gemini": "GEMINI_EXTRA_BODY_JSON",
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("slot", sorted(_EB_ENV))
+async def test_extra_body_json_is_merged_into_every_request_for_that_slot(monkeypatch, slot):
+    for name in _EB_ENV.values():
+        monkeypatch.delenv(name, raising=False)
+    env = _env_for(slot, "https://api.deepinfra.com/v1/openai", "vendor/ling-model")
+    env[_EB_ENV[slot]] = _LING_OFF
+    g, seen = _gateway(monkeypatch, env)
+    await _call(g, slot)
+    body = json.loads(seen[0].content)
+    assert body["chat_template_kwargs"] == {"enable_thinking": False}
+    # the gateway's own fields are untouched
+    assert body["model"] == "vendor/ling-model"
+    assert body["stream"] is True and body["max_tokens"] >= 5
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("slot", ["vllm_fallback", "glm"])
+async def test_no_extra_body_means_nothing_is_merged(monkeypatch, slot):
+    for name in _EB_ENV.values():
+        monkeypatch.delenv(name, raising=False)
+    env = _env_for(slot, "https://api.deepinfra.com/v1/openai", "m")
+    env["VLLM_FALLBACK_KIND"] = "openai"
+    g, seen = _gateway(monkeypatch, env)
+    await _call(g, slot)
+    assert "chat_template_kwargs" not in json.loads(seen[0].content)
+
+
+@pytest.mark.asyncio
+async def test_extra_body_beats_the_kind_default_for_the_same_key(monkeypatch):
+    env = _env_for("vllm", "http://h.example.com:8000", "m")
+    env["VLLM_KIND"] = "vllm"
+    env["VLLM_EXTRA_BODY_JSON"] = _LING_OFF
+    env["VLLM_ENABLE_THINKING"] = "true"
+    g, seen = _gateway(monkeypatch, env)
+    await _call(g, "vllm")
+    assert json.loads(seen[0].content)["chat_template_kwargs"] == {"enable_thinking": False}
+
+
+def test_provider_drops_protected_fields_even_if_handed_them():
+    p = OpenAICompatibleProvider(
+        name="x", base_url="http://h", model_name="m",
+        extra_body={"max_tokens": 1, "response_format": {"type": "text"}, "keep": 1},
+    )
+    assert p._extra_body == {"keep": 1}
+
+
+@pytest.mark.parametrize(
+    "raw, fragment",
+    [
+        ("{not json", "VLLM_FALLBACK_EXTRA_BODY_JSON is not valid JSON"),
+        ("[1, 2]", "must be a JSON object"),
+        ('{"max_tokens": 5}', "protected request field"),
+        ('{"response_format": {"type": "text"}}', "protected request field"),
+        ('{"model": "other"}', "protected request field"),
+    ],
+)
+def test_bad_extra_body_json_fails_boot(raw, fragment):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as exc:
+        Settings(_env_file=None, vllm_fallback_extra_body_json=raw)
+    assert fragment in str(exc.value)
+
+
+def test_blank_extra_body_is_accepted():
+    s = Settings(_env_file=None, vllm_extra_body_json="  ", glm_extra_body_json="")
+    assert s.vllm_extra_body_json.strip() == ""
