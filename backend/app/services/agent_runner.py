@@ -326,6 +326,7 @@ class AgentRunner:
                 already_streamed=not (
                     meta is not None and meta.get(output_guard.META_CONSUMER_BUFFERS)
                 ),
+                user_message=user_message,
             )
             if guard.withhold:
                 reply = output_guard.withheld_notice(guard, "reply")

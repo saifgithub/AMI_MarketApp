@@ -132,3 +132,37 @@ Rule changes, all in `backend/app/services/output_guard.py`, 66 new test cases (
    needs the user message passed into the seam; that is a design choice for Saiful, not a regex tweak.
 4. On Brief, `enforce` can only append a retraction line to text already shown; do not count it as
    prevention.
+
+## 7. WP-13c: `personal_advice`, the user's message paired with the reply
+
+Saiful approved the §6.3 suggestion. New rule `personal_advice` in
+`backend/app/services/output_guard.py`; tests in `tests/unit/test_cr271_personal_advice.py`.
+
+1. **Seam.** `check()` / `inspect()` take an optional `user_message`; old calls are unchanged. Passed
+   from `agent_runner.stream_one_on_one_message` (one guard call covers 1-on-1 and Concierge) and
+   `brief_engine.stream_chat`. Room surfaces never run the rule. The deterministic onboarding
+   Concierge (no LLM) is not guarded at all, as before.
+2. **Fires only when both hold.** (a) The user message asks for advice about their own situation:
+   "should I / do I + buy|sell|hold|put|invest|move...", "what exactly should she put it in", "which
+   stock should I buy", "tell me exactly what to buy", "good/best/buy ... for me", "for me personally",
+   "if you were me", "what would you do with my", "in my position", or a real-money cue plus an action
+   word ("my retirement ... which stocks"); Malay (`patutkah saya beli`...) and Arabic (`هل يجب أن أشتري`,
+   `ماذا أشتري`...) equivalents. (b) The reply carries a ticket or directive: a CAPS stance word
+   (APPROVE/BUY/SELL/HOLD, not in an options list like "BUY / SELL / HOLD"), a labelled verdict, a share
+   count, a percent-of-funds or `$`/`RM` allocation, "to hold / buy / sell <instrument or ticker>", "I'd
+   buy", plus Malay/Arabic ticket shapes.
+3. **Sim vs real.** The app is simulation-only, so sim framing switches the rule off: sim words
+   (sim, paper, game, practice, virtual, demo, hypothetical) and the app's own objects ("my portfolio",
+   "holdings", "positions", "watchlist", "the room", "my desk"). A strong real-money cue overrides it
+   (savings, bonus, salary, retirement, pension, 401k, rent, loan, "real money", "not a simulator", "no
+   simulation"), so a jailbreak that names the simulator to switch it off still counts. A bare currency
+   amount is not strong: "I have $100,000 in the game" stays a sim question.
+4. **Refusals.** Non-caps reply cues are skipped inside a sentence that disclaims ("I can't tell you to
+   buy stocks"). Caps stance words and labelled verdicts are tickets regardless.
+5. **Behaviour.** Enforcing rule. `log` logs `output_guard_hit` with `rule`, `surface` (the flow),
+   `user_cue` and `span` (the reply cue), each at most 80 chars, never the text. `enforce` swaps the
+   1-on-1/Concierge reply for the existing "AMI withheld this reply because it read as personal advice"
+   sentence and appends the existing retraction line on Brief.
+6. **Not measured.** No Alpha replies or 80k-row replay were available (the replay has no user message
+   per row), so the false-positive rate on real traffic is unknown. Keep `log` until the Alpha
+   `output_guard_hit` lines for `personal_advice` have been read.
