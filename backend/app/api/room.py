@@ -333,6 +333,14 @@ async def stream_room(
                 if ev.kind == "started":
                     payload = json.dumps({"run_id": str(ev.run_id)})
                     yield sse_json("started", payload)
+                elif ev.kind == "reattached":
+                    # DEF500 — this stream joined a run another connection
+                    # already started (the app was killed and reopened, or the
+                    # socket dropped). The events that follow replay the run
+                    # from its first desk, then continue live; the client
+                    # shows a "back in your Room" notice instead of a fresh
+                    # convene. A client that predates it ignores the kind.
+                    yield sse_json("reattached", json.dumps({"run_id": str(ev.run_id)}))
                 elif ev.kind == "live_data_notice":
                     # CR090 (D3): the structural live-data disclosure — the model
                     # is out of the loop; the client renders `live_data` (each

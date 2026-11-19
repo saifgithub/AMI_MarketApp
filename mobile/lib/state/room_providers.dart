@@ -112,6 +112,7 @@ class RoomState {
     this.retryingCio = false,
     this.waitGaveUp = false,
     this.providerSwitchNotice,
+    this.reattached = false,
   });
 
   final String? phase;
@@ -128,6 +129,10 @@ class RoomState {
   // GET /v1/room/{run_id} for the final state. Backend keeps the run
   // alive in the background; we just wait for it to land.
   final bool reconnecting;
+  // DEF500 — the server said this stream joined a run already in flight (app
+  // reopened, socket dropped). The replay of every desk so far follows, so the
+  // screen says so rather than looking like a fresh convene.
+  final bool reattached;
   final String? error;
   // CR047: set when a convene was refused for credits (HTTP 402). Drives the
   // paywall / Winzip countdown card instead of the generic error banner.
@@ -228,6 +233,7 @@ class RoomState {
     bool? retryingCio,
     bool? waitGaveUp,
     String? providerSwitchNotice,
+    bool? reattached,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -239,6 +245,7 @@ class RoomState {
       done: done ?? this.done,
       streaming: streaming ?? this.streaming,
       reconnecting: reconnecting ?? this.reconnecting,
+      reattached: reattached ?? this.reattached,
       error: clearError ? null : (error ?? this.error),
       paywall: clearPaywall ? null : (paywall ?? this.paywall),
       serverError: serverError ?? this.serverError,
@@ -412,6 +419,13 @@ class RoomNotifier extends StateNotifier<RoomState> {
               order: orderWithChair,
             );
             break;
+          case 'reattached':
+            // DEF500 — joined a run already in flight; the server replays every
+            // desk from the first one right after this, so the transcript
+            // rebuilds in full rather than from wherever the dead connection
+            // left off.
+            state = state.copyWith(reattached: true);
+            break;
           case 'provider_switch':
             // CR272 — the Room restarted from the first phase on the backup
             // model; every turn shown so far is void. Rebuild the state with
@@ -422,6 +436,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
             if (switchText is! String || switchText.isEmpty) break;
             state = RoomState(
               streaming: true,
+              reattached: state.reattached,
               runId: state.runId,
               liveDataNotice: state.liveDataNotice,
               withheldAgents: state.withheldAgents,

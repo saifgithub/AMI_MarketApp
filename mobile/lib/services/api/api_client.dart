@@ -378,6 +378,10 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
           'next_step_agent': j['next_step_agent'],
           'next_step_days': j['next_step_days'],
         };
+      case 'reattached':
+        // DEF500 — this stream joined a run already in flight (app reopened,
+        // socket dropped). Every desk so far is replayed right after it.
+        return {'kind': 'reattached'};
       case 'provider_switch':
         // CR272 — the main model failed and the Room restarted on the backup.
         // `text` is AMI's own notice, rendered as sent. A non-string text is a

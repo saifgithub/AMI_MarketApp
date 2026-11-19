@@ -2104,6 +2104,18 @@ abstract class AppLocalizations {
   /// **'NEWS'**
   String get tickerDetailNewsHeading;
 
+  /// DEF501 - earnings pill on Ticker Detail when the calendar was read and no report is announced inside the 90-day window. Shown instead of hiding the pill. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No earnings scheduled in the next 90 days'**
+  String get tickerDetailEarningsNone;
+
+  /// DEF501 - earnings pill on Ticker Detail when the earnings feed could not be read (outage / no calendar). Never rendered as 'none scheduled'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings date unavailable right now'**
+  String get tickerDetailEarningsUnavailable;
+
   /// EPS estimate shown on the earnings pill on Ticker Detail. {eps} is already formatted with $ sign and 2 decimal places.
   ///
   /// In en, this message translates to:
@@ -9115,6 +9127,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What\'s your read on {ticker}?'**
   String askAboutTickerMessage(String ticker);
+
+  /// DEF500 - banner shown when the app reattaches to a Room that is still running (app was closed or the connection dropped). The stream replays every desk from the start, then continues live. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back. You rejoined your Room in progress; replaying what the desks have said so far.'**
+  String get roomReattachedBanner;
 
   /// DEF484 — banner while the client lost the live stream and is polling the run until it reaches a terminal state (previously hard-coded English). retranslate:[ar,ms]
   ///

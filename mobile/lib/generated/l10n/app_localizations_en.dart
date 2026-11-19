@@ -1209,6 +1209,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tickerDetailNewsHeading => 'NEWS';
 
   @override
+  String get tickerDetailEarningsNone =>
+      'No earnings scheduled in the next 90 days';
+
+  @override
+  String get tickerDetailEarningsUnavailable =>
+      'Earnings date unavailable right now';
+
+  @override
   String tickerDetailNewsEpsEstimate(String eps) {
     return 'est. EPS $eps';
   }
@@ -5488,6 +5496,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'What\'s your read on $ticker?';
   }
+
+  @override
+  String get roomReattachedBanner =>
+      'Welcome back. You rejoined your Room in progress; replaying what the desks have said so far.';
 
   @override
   String get roomReconnectingBanner =>

@@ -1212,6 +1212,14 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tickerDetailNewsHeading => 'BERITA';
 
   @override
+  String get tickerDetailEarningsNone =>
+      'Tiada keputusan kewangan dijadualkan dalam 90 hari akan datang';
+
+  @override
+  String get tickerDetailEarningsUnavailable =>
+      'Tarikh keputusan kewangan tidak tersedia buat masa ini';
+
+  @override
   String tickerDetailNewsEpsEstimate(String eps) {
     return 'anggaran EPS $eps';
   }
@@ -5499,6 +5507,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'Apakah pandangan anda tentang $ticker?';
   }
+
+  @override
+  String get roomReattachedBanner =>
+      'Selamat kembali. Anda menyertai semula Bilik yang sedang berjalan; mengulang semula apa yang telah dikatakan setiap meja setakat ini.';
 
   @override
   String get roomReconnectingBanner =>

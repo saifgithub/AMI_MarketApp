@@ -1489,6 +1489,14 @@
   "@tickerDetailNewsHeading": {
     "description": "Section heading above recent news articles on Ticker Detail (Bundle 4, AT:R42)."
   },
+  "tickerDetailEarningsNone": "No earnings scheduled in the next 90 days",
+  "@tickerDetailEarningsNone": {
+    "description": "DEF501 - earnings pill on Ticker Detail when the calendar was read and no report is announced inside the 90-day window. Shown instead of hiding the pill. retranslate:[ar,ms]"
+  },
+  "tickerDetailEarningsUnavailable": "Earnings date unavailable right now",
+  "@tickerDetailEarningsUnavailable": {
+    "description": "DEF501 - earnings pill on Ticker Detail when the earnings feed could not be read (outage / no calendar). Never rendered as 'none scheduled'. retranslate:[ar,ms]"
+  },
   "tickerDetailNewsEpsEstimate": "est. EPS {eps}",
   "@tickerDetailNewsEpsEstimate": {
     "description": "EPS estimate shown on the earnings pill on Ticker Detail. {eps} is already formatted with $ sign and 2 decimal places.",
@@ -6819,6 +6827,10 @@
         "type": "String"
       }
     }
+  },
+  "roomReattachedBanner": "Welcome back. You rejoined your Room in progress; replaying what the desks have said so far.",
+  "@roomReattachedBanner": {
+    "description": "DEF500 - banner shown when the app reattaches to a Room that is still running (app was closed or the connection dropped). The stream replays every desk from the start, then continues live. retranslate:[ar,ms]"
   },
   "roomReconnectingBanner": "Connection lost. The Room is still running — waiting for the verdict to land.",
   "@roomReconnectingBanner": {

@@ -1211,6 +1211,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tickerDetailNewsHeading => 'الأخبار';
 
   @override
+  String get tickerDetailEarningsNone =>
+      'لا توجد أرباح مجدولة خلال الـ 90 يومًا القادمة';
+
+  @override
+  String get tickerDetailEarningsUnavailable => 'تاريخ الأرباح غير متاح حاليًا';
+
+  @override
   String tickerDetailNewsEpsEstimate(String eps) {
     return 'تقدير ربحية السهم $eps';
   }
@@ -5490,6 +5497,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String askAboutTickerMessage(String ticker) {
     return 'ما رأيك في $ticker؟';
   }
+
+  @override
+  String get roomReattachedBanner =>
+      'مرحبًا بعودتك. عدت إلى غرفتك الجارية؛ نعيد عرض ما قالته المكاتب حتى الآن.';
 
   @override
   String get roomReconnectingBanner =>
