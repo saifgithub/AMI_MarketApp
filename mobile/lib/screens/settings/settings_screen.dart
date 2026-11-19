@@ -521,12 +521,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  // CR260 / CR267 WP-21b — show or hide the Street-rating card
-                  // under a Room verdict.
-                  _Section(title: l.settingsSectionStreetRating, children: const [
-                    StreetComparisonSetting(),
-                  ]),
-                  const SizedBox(height: AmiSpacing.l),
                   _MembershipSection(mandate: m),
                   // CR122 — Wallet & Plan is an approved, upsell-only ad
                   // placement (ads.md:44). Self-gating slot.
@@ -551,6 +545,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const _WalkthroughSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AlpacaSection(),
+                  const SizedBox(height: AmiSpacing.l),
+                  // CR260 / CR267 WP-21b — show or hide the Street-rating card
+                  // under a Room verdict.
+                  _Section(title: l.settingsSectionStreetRating, children: const [
+                    StreetComparisonSetting(),
+                  ]),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
                   if (kAllowBackendSwitch) ...[
