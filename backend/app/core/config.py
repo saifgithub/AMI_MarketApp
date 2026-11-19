@@ -492,6 +492,17 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     posthog_api_key: str = ""
 
+    # CR267 WP-44 — operator alerts (5xx rate, LLM spend vs ceiling, Room
+    # failure rate). OFF by default (Alpha). ON with an empty webhook URL is a
+    # loud misconfiguration (an error log each tick + Sentry only), never a
+    # silent skip. The webhook receives JSON {"text","content"} (Slack-,
+    # Mattermost- and Discord-compatible).
+    ops_alerts_enabled: bool = False
+    ops_alert_webhook_url: str = ""
+    ops_alert_5xx_rate: float = 0.05
+    ops_alert_spend_fraction: float = 0.8
+    ops_alert_room_failure_rate: float = 0.25
+
     # Market data
     # When true, SimEngine quotes real Yahoo prices with mock-walk fallback.
     # When false (default), the legacy deterministic random walk runs.

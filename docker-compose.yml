@@ -311,6 +311,12 @@ services:
       LLM_DAILY_SPEND_CEILING_USD: ${LLM_DAILY_SPEND_CEILING_USD:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      # CR267 WP-44 — operator alerts. Off unless OPS_ALERTS_ENABLED=true.
+      OPS_ALERTS_ENABLED: ${OPS_ALERTS_ENABLED:-false}
+      OPS_ALERT_WEBHOOK_URL: ${OPS_ALERT_WEBHOOK_URL:-}
+      OPS_ALERT_5XX_RATE: ${OPS_ALERT_5XX_RATE:-0.05}
+      OPS_ALERT_SPEND_FRACTION: ${OPS_ALERT_SPEND_FRACTION:-0.8}
+      OPS_ALERT_ROOM_FAILURE_RATE: ${OPS_ALERT_ROOM_FAILURE_RATE:-0.25}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
       # OneSignal push (CR027). App ID is client-side too (SDK init); REST
       # key is backend-only, used to call OneSignal's send API. notify()

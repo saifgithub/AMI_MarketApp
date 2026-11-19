@@ -436,6 +436,25 @@ async def _price_alert_evaluation_tick() -> None:
         await asyncio.sleep(_PRICE_ALERT_EVAL_INTERVAL_SECONDS)
 
 
+_OPS_ALERT_TICK_SECONDS = 5 * 60  # CR267 WP-44
+
+
+async def _ops_alert_tick() -> None:
+    """Background task: operator alerts on 5xx rate, LLM spend and Room failures
+    (CR267 WP-44). A no-op pass unless `OPS_ALERTS_ENABLED`; every failure inside
+    is logged by `run_ops_alert_pass`, so this loop only guards the unexpected."""
+    from app.services.ops_alerts import run_ops_alert_pass
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_ops_alert_pass)
+            if stats["crossed"] or stats["failed"]:
+                logger.info("ops_alert_pass_complete", **stats)
+        except Exception:
+            logger.exception("ops_alert_pass_failed")
+        await asyncio.sleep(_OPS_ALERT_TICK_SECONDS)
+
+
 async def _daily_reminder_tick() -> None:
     """Background task: daily-challenge reminder sweep (CR095). Work-first-
     then-sleep like `_price_alert_evaluation_tick` — a restart shouldn't push
@@ -596,6 +615,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_push_tick()),
         asyncio.create_task(_account_erasure_tick()),
         asyncio.create_task(_verdict_outcome_scoring_tick()),
+        asyncio.create_task(_ops_alert_tick()),
     ]
     try:
         yield
