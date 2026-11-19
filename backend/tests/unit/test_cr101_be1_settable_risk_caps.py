@@ -570,6 +570,7 @@ _NON_LIMIT_NUMERIC_FIELDS: dict[str, str] = {
                       "CLIENT_UNWRITABLE_MANDATE_FIELDS",
     "credit_allowance": "entitlement state stamped server-side; client-unwritable",
     "room_cost": "pricing, stamped server-side; client-unwritable",
+    "room_live_data_surcharge_max": "pricing ceiling, stamped server-side; client-unwritable",
 }
 
 # Files where an enforced limit's business logic actually reads

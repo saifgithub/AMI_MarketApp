@@ -131,6 +131,19 @@ def live_data_surcharge(n_live_analysts: int) -> int:
     return n_live_analysts * LIVE_DATA_SURCHARGE
 
 
+def max_live_data_surcharge() -> int:
+    """DEF495 — the most a Room could add on top of its flat price, knowable
+    BEFORE the run: 2 credits per live feed that is configured to fire (News
+    whenever real market data is on; Social only with an Adanos key). The real
+    surcharge (`live_data_surcharge`) depends on what the feeds return at run
+    time, so this is a ceiling the Convene sheet shows as "up to", never a
+    promise. 0 when credits are free (Beta) — nothing is charged at all."""
+    if credits_are_free() or not settings.use_real_market_data:
+        return 0
+    feeds = 1 + (1 if settings.adanos_api_key else 0)
+    return feeds * LIVE_DATA_SURCHARGE
+
+
 class InsufficientCredits(Exception):
     """Raised by `spend` when the balance won't cover the operation.
 

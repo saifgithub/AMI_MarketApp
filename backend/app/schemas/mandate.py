@@ -342,6 +342,9 @@ class Mandate(BaseModel):
     credit_allowance: int = 0
     credits_reset_at: datetime | None = None
     room_cost: int = 0
+    # DEF495: ceiling on the extra credits a Room can add when its live News /
+    # Social feeds fire (CR090). The Convene sheet shows it before the charge.
+    room_live_data_surcharge_max: int = 0
     # CR047 "The Winzip": when set and in the future, the next Room convene is
     # in cooldown — the client shows the countdown card instead of firing a
     # doomed request. NULL / past = no cooldown pending.
