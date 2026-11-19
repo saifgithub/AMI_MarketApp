@@ -16,8 +16,8 @@ app", and each is checked structurally rather than by reading the prose:
      model to cite is advice, a footer computed in code is a control).
 
 Plus a scope guard: hidden, parked or not-yet-built features (payments, the
-developer section, Silent Scout, account deletion/export, the in-app Report
-button) and the retired agent titles must never appear in the corpus.
+developer section, Silent Scout, the per-response Report button and Room thumbs)
+and the retired agent titles must never appear in the corpus.
 """
 
 from __future__ import annotations
@@ -176,7 +176,7 @@ _FORBIDDEN = {
     "payments / plans": r"\b(subscription|subscribe|credit pack|top[- ]?up|purchase|billing|upgrade|membership|revenuecat|in-app purchase)\b",
     "dev-only / hidden": r"\b(developer section|silent scout|dev mode|backend switch|AMI_GAMES)\b",
     "the game tab": r"\bGAME tab\b|\bThe Game\b|\bleaderboard\b",
-    "not built yet (WP-30 / WP-36)": r"(delete (my |your )?account|account deletion|export (my |your )?data|data export|report a problem|report button|bug report)",
+    "not built yet (WP-36, lane/WP36-beta-settings)": r"(report this response|thumbs[- ](up|down|rating)|rate (the|this) room)",
     "retired agent titles": r"\b(PM|Portfolio Manager|Trader|Debator|Market Analyst|News Analyst|Social Media Analyst)\b",
     "'the AI'": r"\bthe AI\b|\bAI (model|assistant)\b",
     "advice": r"\byou should (buy|sell)\b|\bguaranteed\b|\bwill (go up|profit)\b",
