@@ -57,7 +57,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "apple_audiences", "google_audiences", "league_eligible_plans",
-        "portfolio_health_plans", "cors_origins", mode="before",
+        "portfolio_health_plans", "cors_origins", "llm_provider_allowlist", mode="before",
     )
     @classmethod
     def _csv_or_json_list(cls, v):
@@ -117,6 +117,17 @@ class Settings(BaseSettings):
     # deepseek_api_key/google_ai_api_key above — an empty value means the
     # provider is simply not registered, not an error.
     dashscope_api_key: str = ""
+    # CR281 — the OpenAI-compatible slots that used to hard-code their endpoint
+    # and model in the gateway. Defaults are the former literals, so nothing
+    # changes until set; swapping the model is now an env edit, not a code edit.
+    # Base URLs follow the same convention as vllm_base_url: a trailing /v1 is
+    # accepted and stripped (the provider appends /v1/chat/completions itself).
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-chat"
+    qwen_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode"
+    qwen_model: str = "qwen-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai"
+    gemini_model: str = "gemini-2.5-flash"
 
     # On-prem vLLM (OpenAI-compatible). When `vllm_base_url` is set the
     # gateway routes every call to it instead of Anthropic/mock.
@@ -292,6 +303,21 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _llm_allowlist_is_wellformed(self) -> "Settings":
+        # CR281 — a typo must not silently allow nothing (or, after a lenient
+        # parse, everything): every name has to be a real gateway slot.
+        from app.core.llm_allowlist import KNOWN_SLOTS, normalize_allowlist, unknown_slots
+
+        self.llm_provider_allowlist = normalize_allowlist(self.llm_provider_allowlist)
+        bad = unknown_slots(self.llm_provider_allowlist)
+        if bad:
+            raise ValueError(
+                f"LLM_PROVIDER_ALLOWLIST names unknown provider slot(s) {bad}: "
+                f"valid slots are {list(KNOWN_SLOTS)}."
+            )
+        return self
+
+    @model_validator(mode="after")
     def _fallback_slot_is_complete(self) -> "Settings":
         # CR272 — CR040 degrade-loudly. A backup URL with no model boots a slot
         # that sends `"model": ""` and is rejected on the first real failover.
@@ -412,6 +438,14 @@ class Settings(BaseSettings):
     # to normal preference rather than erroring — a test env var should
     # never be able to 500 a live flow.
     llm_force_provider: str = ""
+
+    # CR281 — comma-separated gateway slot names this environment may use
+    # (vllm, vllm_fallback, glm, anthropic, kimi, deepseek, qwen, gemini, mock).
+    # Empty = no restriction (pre-CR281 behaviour). When set, a slot outside the
+    # list is never registered even if its key/URL is present; boot logs each
+    # such slot by name, and an unknown name refuses boot. See
+    # app/core/llm_allowlist.py.
+    llm_provider_allowlist: CsvList = Field(default_factory=list)
 
     # CR269 — sampling temperature for every desk-side call (Room desks, CIO/PM,
     # 1-on-1, Brief). None = send no `temperature` at all, so the request body is

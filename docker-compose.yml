@@ -301,6 +301,16 @@ services:
       GLM_API_KEY: ${GLM_API_KEY:-}
       GLM_MAX_TOKENS_FLOOR: ${GLM_MAX_TOKENS_FLOOR:-12000}
       LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
+      # CR281 — endpoint + model for the other OpenAI-compatible slots; the
+      # defaults are the values the gateway used to hard-code.
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope-intl.aliyuncs.com/compatible-mode}
+      QWEN_MODEL: ${QWEN_MODEL:-qwen-flash}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      # CR281 — comma-separated gateway slots this env may use; empty = unrestricted.
+      LLM_PROVIDER_ALLOWLIST: ${LLM_PROVIDER_ALLOWLIST:-}
       # CR269 — empty desk value = send no temperature (today's behaviour).
       LLM_DESK_TEMPERATURE: ${LLM_DESK_TEMPERATURE:-}
       LLM_JUDGE_TEMPERATURE: ${LLM_JUDGE_TEMPERATURE:-0.0}

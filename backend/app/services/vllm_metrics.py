@@ -46,6 +46,7 @@ from typing import NamedTuple, Optional
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.llm_allowlist import slot_allowed
 from app.core.logging import logger
 from app.db import get_session
 from app.db.models import VllmCacheSampleRow
@@ -164,7 +165,7 @@ def run_vllm_cache_sample_tick() -> dict[str, object]:
     hour apart are exactly what a window needs.
     """
     base_url = settings.vllm_base_url
-    if not base_url:
+    if not base_url or not slot_allowed(settings, "vllm"):
         return {"status": "disabled"}
 
     counters = fetch_counters(base_url)

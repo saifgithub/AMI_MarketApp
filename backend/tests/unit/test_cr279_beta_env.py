@@ -168,6 +168,12 @@ def test_the_unfilled_example_refuses_to_boot_on_its_empty_secret():
         ({"anthropic_api_key": "sk-ant-x"}, "ANTHROPIC_API_KEY"),
         ({"kimi_api_key": "k"}, "KIMI_API_KEY"),
         ({"google_ai_api_key": "g"}, "GOOGLE_AI_API_KEY"),
+        # CR281 — the allow-list is required on Beta and cannot admit a vendor
+        # Saiful excluded, whatever the keys say.
+        ({"llm_provider_allowlist": ""}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,vllm_fallback,anthropic"}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,kimi"}, "LLM_PROVIDER_ALLOWLIST"),
+        ({"llm_provider_allowlist": "vllm,gemini"}, "LLM_PROVIDER_ALLOWLIST"),
         ({"llm_daily_spend_ceiling_usd": None}, "LLM_DAILY_SPEND_CEILING_USD"),
         ({"onboarding_age_gate_enforced": False}, "ONBOARDING_AGE_GATE_ENFORCED"),
         ({"secret_key": "dev-secret-change-in-prod"}, "SECRET_KEY"),

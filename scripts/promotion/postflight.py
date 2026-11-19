@@ -649,6 +649,65 @@ def check_config_parity(base: str, secret: str, env_path: Path,
               f"Settings field nor are excused — {', '.join(unrecognised)}. "
               "test_config_compose_parity.py owns that direction and runs at "
               "preflight, so it is not re-failed here.")
+    problems.extend(check_llm_allowlist(base, secret, env_path, timeout, env_label))
+    return problems
+
+
+def _env_value(env_path: Path, key: str) -> str:
+    """The value of an uncommented `key=` line in `env_path`, '' if absent.
+
+    Only for non-secret settings (CR281's allow-list is a list of slot names)."""
+    if not env_path.exists():
+        return ""
+    for raw in env_path.read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        m = _ENV_LINE.match(line)
+        if m and m.group(1) == key:
+            return m.group(2).strip().strip("'\"")
+    return ""
+
+
+def check_llm_allowlist(base: str, secret: str, env_path: Path,
+                        timeout: int, env_label: str = "infra/alpha.env") -> list[str]:
+    """CR281 — when the deployed env pins `LLM_PROVIDER_ALLOWLIST`, a provider the
+    running gateway has registered outside that list fails the promotion.
+
+    Commenting a vendor key out is not a control; this is the post-deploy proof
+    that the allow-list actually held in the container. Skipped (no request)
+    when the env file sets no allow-list, so Alpha's unrestricted default is
+    unchanged. Slot names only: no secret value is read or printed.
+    """
+    raw = _env_value(env_path, "LLM_PROVIDER_ALLOWLIST")
+    allow = [n.strip().lower() for n in raw.split(",") if n.strip()]
+    if not allow:
+        return []
+    status, body = _get(f"{base}/v1/llm/status", secret, timeout)
+    if status != 200:
+        raise CannotRun(f"/v1/llm/status returned {status}")
+    if "allowlist" not in body:
+        return [f"LLM_PROVIDER_ALLOWLIST is set in {env_label} but /v1/llm/status "
+                "reports no allowlist: the container predates CR281, so the "
+                "list is not being enforced"]
+    problems: list[str] = []
+    live = sorted(set(body.get("providers_registered") or []) - {"mock"})
+    outside = [n for n in live if n not in allow]
+    if outside:
+        problems.append(
+            f"provider(s) {outside} are registered in the container but are not in "
+            f"LLM_PROVIDER_ALLOWLIST ({', '.join(allow)}) from {env_label}"
+        )
+    if sorted(body.get("allowlist") or []) != sorted(set(allow)):
+        problems.append(
+            f"the container's allowlist {body.get('allowlist')} differs from "
+            f"{env_label}'s {allow}: compose is not forwarding it, or the env "
+            "was not re-read"
+        )
+    blocked = body.get("configured_but_blocked") or []
+    if blocked:
+        print(f"      note: configured but blocked by the allow-list (inert): "
+              f"{', '.join(blocked)}")
     return problems
 
 
