@@ -140,3 +140,16 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
    `runaway_length` (`OUTPUT_GUARD_MAX_TURN_WORDS`, provisional 1500; p50/p99 and cut count NOT
    measured, no DB access). Recommendation: tune first for 1-on-1 (WP-13c), then enforce:
    `wp13b_advice_probe_2026-11-19.md`.
+
+## 2026-11-19 — deploy #7 live; AMI-DL-1 run; WP-21b, WP-36, WP-40, WP-41 done (tracker lane `lane/tracker-1119b`)
+
+1. **WP-02:** Deploy #7 `alpha-2026-11-19-5` = `dd640a6e`, postflight PASS. UAT gate override logged (ONB-043 reinstall, PLAT-005 stale from WP-36 app changes).
+2. **WP-14:** Deploy #7 is live. WP-21b (CR260, `93d2912c`) and WP-36 (CR278, `f46152a1`, backend live; app half ships in the next store build) are live with it.
+3. **WP-13:** WP-13b (`9ff95bf0`) probe run; WP-13c (`a00b2ce4`) merged after deploy #7, log mode. Probe detail is in the WP-13b entry above.
+4. **WP-28:** Daily scoring is live (`30dda2bb`, 22:30 UTC, 500 due rows per run). Acceptance waits on the first run.
+5. **WP-40 and WP-41 done.** WP-40 (`c67aec83`, research `363bb5cc`): Ling cannot run on Cloudflare; Workers AI not covered by Startups credits from Dec 1. WP-41 (CR279, `5700dc73` `5003ce68`) is the Beta env config. WP-12's budget code is present on the Beta env (ceiling $10, required by the CR279 boot check).
+6. **WP-33:** AMI-DL-1 (Android, build 117, 08:27–09:21Z): 34 cases, 18 passed, 15 blocked, 1 failed (UAT-MAND-038). DEF494–497 filed and fixed (`lane/DL1-defects`, merged). AMI-DL-2 (iPhone) waits for the phone to update to 117 via TestFlight.
+7. **In progress:** WP-37 (`b1ea98be`; CR222 slice A + toll prerequisites moved to CR280), WP-43, WP-44, WP-45 (`69aec6b2`, blocked on WP-49/S7), WP-51 (`588fb4bf`), WP-52 (`c9858a84`).
+8. **Waiting on Saiful:** the WP-29 and WP-51 website changes share one deploy go (WEBSITE_ADMIN_SECRET, api-website restart, cPanel rsync). WP-52 has open items (Singapore claim, privacy link version, 'experimental' label).
+
+Found: two users have duplicate training portfolios created 40 ms apart on 2026-09-28 (ISS001 insert race); portfolio snapshot ticks fail for them.
