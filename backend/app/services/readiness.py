@@ -100,7 +100,7 @@ def _probe_schema() -> Probe:
 def _probe_llm(env: str) -> Probe:
     """Resolution AND observed liveness — still never calls the provider.
 
-    Gating in `staging`/`prod` because of DEF059: with the LLM down the Room
+    Gating in `staging`/`beta`/`prod` because of DEF059: with the LLM down the Room
     fell through to a confident fake APPROVE. A promotion that lands a container
     whose gateway resolves to `mock` has shipped that failure mode.
 
@@ -129,7 +129,7 @@ def _probe_llm(env: str) -> Probe:
         return Probe(
             "llm",
             ok=real and state != "failed",
-            gating=env in ("staging", "prod"),
+            gating=env in ("staging", "beta", "prod"),
             detail={
                 "active_provider": status.get("active_provider"),
                 "has_real_provider": real,
@@ -139,7 +139,7 @@ def _probe_llm(env: str) -> Probe:
             },
         )
     except Exception as exc:
-        return Probe("llm", ok=False, gating=env in ("staging", "prod"),
+        return Probe("llm", ok=False, gating=env in ("staging", "beta", "prod"),
                      detail={"error": type(exc).__name__})
 
 

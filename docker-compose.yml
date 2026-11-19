@@ -645,7 +645,9 @@ services:
       PORTFOLIO_HEALTH_DAILY_CAP: ${PORTFOLIO_HEALTH_DAILY_CAP:-2}
       PORTFOLIO_HEALTH_PLANS: ${PORTFOLIO_HEALTH_PLANS:-trader,floor_manager}
       PORTFOLIO_HEALTH_CADENCE_DAYS: ${PORTFOLIO_HEALTH_CADENCE_DAYS:-30}
-      CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
+      # CR279: overridable so Beta (api-beta.agenticmarketintel.ai) is not stuck
+      # with Alpha's hostname; unset keeps Alpha's list byte-for-byte.
+      CORS_ORIGINS: '${CORS_ORIGINS:-["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]}'
       # Mount point for the bug_attachments named volume.
       BUG_ATTACHMENTS_DIR: /data/bug_attachments
       # SMTP for magic-link email (AT:R26). When SMTP_HOST is empty

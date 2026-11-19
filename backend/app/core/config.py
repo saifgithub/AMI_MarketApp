@@ -70,13 +70,16 @@ class Settings(BaseSettings):
             return [part.strip() for part in text.split(",") if part.strip()]
         return v
 
-    env: Literal["local", "dev", "staging", "prod"] = "local"
+    env: Literal["local", "dev", "staging", "beta", "prod"] = "local"
     # Env policy (post-adversarial-audit):
     #   local    — single-developer machine. Legacy unsigned tokens accepted,
     #              magic-link debug code returned in response, Apple endpoint
     #              accepts unverified JWTs (for offline testing).
     #   dev      — same as staging in security posture. Used by CI.
     #   staging  — melehost (public Cloudflare Tunnel). All bypasses off.
+    #   beta     — CR279: tester-facing host. Staging's security posture plus the
+    #              boot refusals in app/core/beta_boot.py (hosted LLMs only, no
+    #              on-prem address, no Anthropic/Kimi/Gemini key, spend ceiling on).
     #   prod     — Cloud Run. All bypasses off + strictest checks.
 
     # Database / Supabase
@@ -1634,6 +1637,20 @@ class Settings(BaseSettings):
 
     # Server
     port: int = 8000
+
+    @model_validator(mode="after")
+    def _beta_boot_guard(self) -> "Settings":
+        # CR279 (CR267 WP-41) — structural, not advisory: a Beta config that
+        # breaks a ruling fails boot, naming every offending setting.
+        if self.env == "beta":
+            from app.core.beta_boot import beta_boot_problems
+
+            problems = beta_boot_problems(self)
+            if problems:
+                raise ValueError(
+                    "ENV=beta refused to boot: " + " | ".join(problems)
+                )
+        return self
 
 
 settings = Settings()
