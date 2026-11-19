@@ -3005,3 +3005,31 @@ class RatioBaselineRow(Base):
     metric: Mapped[str] = mapped_column(String(32), nullable=False)
     observed_on: Mapped[date] = mapped_column(Date, nullable=False)
     value: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+class RoomRatingRow(Base):
+    """CR278 (WP-36) - a Beta tester's thumbs on "Did the verdict and its
+    reasons make sense?", one per Room.
+
+    No user column on purpose: the owner is `room_runs.user_id`, so the
+    ownership check has one source of truth, a merge of an anonymous account
+    needs no re-key (the Room moves, the rating follows), and account erasure
+    needs no rule of its own (the row has no free text and is removed with its
+    Room by the FK cascade). `helpful` can be changed later; `created_at` is the
+    first answer, `updated_at` the latest.
+    """
+
+    __tablename__ = "room_ratings"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    room_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("room_runs.id", ondelete="CASCADE"),
+        unique=True, nullable=False,
+    )
+    helpful: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )

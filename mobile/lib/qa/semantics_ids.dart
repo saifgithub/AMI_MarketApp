@@ -81,6 +81,18 @@ class YouIds {
   static const List<String> all = [settings, journal, insights];
 }
 
+/// CR278 (WP-36) - the Beta feedback controls on a finished Room. Not screens,
+/// so they are not in [ScreenIds]; the device UAT cases address them by these.
+class RoomFeedbackIds {
+  const RoomFeedbackIds._();
+
+  static const String ratingCard = 'ami.room.rating_card';
+  static const String thumbUp = 'ami.room.rating_up';
+  static const String thumbDown = 'ami.room.rating_down';
+  static const String ratingDismiss = 'ami.room.rating_dismiss';
+  static const String reportResponse = 'ami.room.report_response';
+}
+
 /// Modal sheets. These are the DEF075 class — interactive elements that can end
 /// up under the Android system nav bar or the iOS home indicator, which is the
 /// one usability check CR080 was built to catch.

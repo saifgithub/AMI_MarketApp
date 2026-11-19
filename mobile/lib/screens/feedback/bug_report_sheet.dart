@@ -11,6 +11,7 @@ library;
 import 'dart:io';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/models/response_report.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
@@ -40,7 +41,15 @@ String _categoryLabel(AppLocalizations l, String id) => switch (id) {
     };
 
 /// Convenience helper — call from any widget.
-Future<void> showBugReportSheet(BuildContext context, WidgetRef ref) {
+///
+/// CR278 (WP-36): pass [response] to open the sheet as "Report this response".
+/// It is the same sheet and the same `POST /v1/feedback/bug`; the category and
+/// title are pre-filled and the report's `route` names the Room and the agent.
+Future<void> showBugReportSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  ResponseReportTarget? response,
+}) {
   final route = ModalRoute.of(context)?.settings.name ?? 'unknown';
   return showModalBottomSheet<void>(
     context: context,
@@ -50,13 +59,14 @@ Future<void> showBugReportSheet(BuildContext context, WidgetRef ref) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => _BugReportSheet(route: route),
+    builder: (_) => _BugReportSheet(route: route, response: response),
   );
 }
 
 class _BugReportSheet extends ConsumerStatefulWidget {
-  const _BugReportSheet({required this.route});
+  const _BugReportSheet({required this.route, this.response});
   final String route;
+  final ResponseReportTarget? response;
 
   @override
   ConsumerState<_BugReportSheet> createState() => _BugReportSheetState();
@@ -69,6 +79,19 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
   final _formKey = GlobalKey<FormState>();
   final _picker = ImagePicker();
   XFile? _attachment;
+  bool _prefilled = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final r = widget.response;
+    if (r != null && !_prefilled) {
+      _prefilled = true;
+      _category = 'wrong_data';
+      _titleController.text =
+          AppLocalizations.of(context).reportResponseTitlePrefill(r.agentLabel);
+    }
+  }
 
   @override
   void dispose() {
@@ -148,7 +171,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
           steps: _stepsController.text.trim().isEmpty
               ? null
               : _stepsController.text.trim(),
-          route: widget.route,
+          route: widget.response?.route ?? widget.route,
           attachmentPath: _attachment?.path,
           attachmentMime: _attachment == null ? null : _mimeFor(_attachment!),
         );
@@ -218,6 +241,15 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               'v${ref.watch(appVersionProvider).valueOrNull ?? '…'} · ${widget.route}',
               style: AmiTypography.caption.copyWith(color: AmiColors.slate500),
             ),
+            if (widget.response != null) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                AppLocalizations.of(context)
+                    .reportResponseContext(widget.response!.agentLabel),
+                key: const Key('reportResponseContext'),
+                style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
+              ),
+            ],
             const SizedBox(height: AmiSpacing.m),
             // Category chips
             Wrap(
