@@ -157,6 +157,7 @@ from app.services.llm_json import ConflictingDecision, extract_json_object
 # vocabulary, why never a veto).
 from app.services.numeric_quotation import annotate_sheet_mismatches, find_sheet_mismatches
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
+from app.services.street_comparison import build_street_comparison
 from app.services.street_view_blind import is_street_view_key
 from app.services.room_prompts import (
     GAPS_ITEM_MAX_CHARS,
@@ -4313,6 +4314,10 @@ def _stamp_next_convene_basis(
         # user, stamped at the same single site so a run and its CIO retry
         # can never disagree about what was shown.
         "analyst_view": _analyst_view_from_profile(profile),
+        # CR260 / CR267 WP-21b — the Room's call against the Street rating,
+        # computed from the finished verdict and read-only on the profile.
+        # Post-verdict only: nothing here reaches an agent.
+        "street_comparison": build_street_comparison(verdict, profile),
     })
 
 

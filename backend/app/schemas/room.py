@@ -206,6 +206,51 @@ class AnalystView(BaseModel):
     tape: list[AnalystTapeItem] = Field(default_factory=list)
 
 
+class StreetComparison(BaseModel):
+    """CR260 / CR267 WP-21b — how the Room's call sits against the Street's
+    consensus rating, computed AFTER the verdict and shown to the user.
+
+    Never an input to any agent: the Room decides blind (CR275,
+    `street_view_blind`) and this block is built from the finished verdict plus
+    the fact sheet's Street fields at the single bank site
+    (`room_runner._stamp_next_convene_basis`). `tests/unit/test_cr260_street_comparison.py`
+    pins that no prompt-building module can read it.
+
+    `status` is `unavailable` whenever there is no usable Street rating on this
+    run's sheet (gated off, fetch failed, an as-of run, a rating word we do not
+    recognise, zero analysts). In that state every Street field is `None` and
+    `agreement` is `not_comparable` — never an empty or zero rating dressed up as
+    a reading (T-BACKFILL, DEF053).
+
+    `reasons_from_narrow_answers` is the WP-22 hook ("why the Room differs"): it
+    stays empty until the narrow-question judge exists. It is never filled by an
+    LLM or by prose written here.
+    """
+
+    status: Literal["available", "unavailable"]
+    # Names where the Street figures come from. Always present, including when
+    # unavailable, so the card can say which source had nothing to report.
+    source_label: str
+    unavailable_reason: str | None = None
+    # The consensus rating as the feed words it ("strong buy", "buy", "hold",
+    # "underperform", "sell") and the three-way stance it buckets into.
+    street_rating: str | None = None
+    street_stance: Literal["buy", "hold", "sell"] | None = None
+    analyst_count: int | None = None
+    target_mean: float | None = None
+    # The fact sheet's date (YYYY-MM-DD): the Street fields are read once at run
+    # start, so this is the date the rating was read, not the verdict's.
+    as_of: str | None = None
+    room_action: str
+    room_stance: Literal["approve", "decline", "no_call"]
+    agreement: Literal["agree", "differ", "not_comparable"]
+    # The one pairing the programme counts as an error: the Room approving a
+    # name the Street rates Sell/Underperform. A reasoned PASS on a Street-Buy
+    # name is NOT flagged.
+    approved_against_street_sell: bool = False
+    reasons_from_narrow_answers: list[str] = Field(default_factory=list)
+
+
 class Verdict(BaseModel):
     """The Portfolio Manager's final verdict on a Room run."""
 
@@ -379,6 +424,13 @@ class Verdict(BaseModel):
     # (suppressed, gated-off, or a failed fetch): absence, not an empty
     # block (T-BACKFILL).
     analyst_view: AnalystView | None = None
+
+    # CR260 / CR267 WP-21b — the Room's call set against the Street's consensus
+    # rating, computed after the verdict (see `StreetComparison`). Stamped at the
+    # same bank site as `analyst_view`. `None` only on runs that predate the field
+    # or have no verdict; a run with no usable Street data carries an explicit
+    # `status="unavailable"` block instead, so the card can say so.
+    street_comparison: StreetComparison | None = None
 
     # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review, when this
     # verdict was routed to one. Absent (None) on every run that predates the

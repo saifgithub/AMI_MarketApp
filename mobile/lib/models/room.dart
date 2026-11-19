@@ -42,6 +42,7 @@ class RoomVerdict {
     this.structure,
     this.decisionRecord,
     this.nextConveneDelta,
+    this.streetComparison,
   });
 
   /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
@@ -99,6 +100,12 @@ class RoomVerdict {
   /// on a run that predates the field; absence, never a "nothing changed".
   final NextConveneDelta? nextConveneDelta;
 
+  /// CR260 / CR267 WP-21b — how the Room's call sits against the Street's
+  /// consensus rating, computed by the backend AFTER the verdict. `null` on a
+  /// run that predates the field; a run with no usable Street data carries an
+  /// explicit `unavailable` block instead (see [StreetComparison.isAvailable]).
+  final StreetComparison? streetComparison;
+
   bool get isApprove => action == 'APPROVE';
 
   /// Whether this verdict is asking the user to consent to an option
@@ -144,8 +151,89 @@ class RoomVerdict {
           ? NextConveneDelta.fromJson(
               (j['next_convene_delta'] as Map).cast<String, dynamic>())
           : null,
+      streetComparison: j['street_comparison'] is Map
+          ? StreetComparison.fromJson(
+              (j['street_comparison'] as Map).cast<String, dynamic>())
+          : null,
     );
   }
+}
+
+/// CR260 / CR267 WP-21b — the Room's call against the Street's consensus
+/// rating, exactly as the backend computed it (never client-derived).
+///
+/// Mirrors `backend/app/schemas/room.py::StreetComparison`. Nothing here is
+/// defaulted into a reading: a Street rating, analyst count or mean target the
+/// server did not send stays `null`, and the card renders the
+/// "no Street rating available" state for [isAvailable] == false rather than an
+/// empty or zero rating.
+class StreetComparison {
+  const StreetComparison({
+    required this.status,
+    required this.sourceLabel,
+    required this.roomAction,
+    required this.agreement,
+    this.unavailableReason,
+    this.streetRating,
+    this.streetStance,
+    this.analystCount,
+    this.targetMean,
+    this.asOf,
+    this.approvedAgainstStreetSell = false,
+    this.reasonsFromNarrowAnswers = const [],
+  });
+
+  factory StreetComparison.fromJson(Map<String, dynamic> j) {
+    return StreetComparison(
+      status: j['status'] as String? ?? 'unavailable',
+      sourceLabel: j['source_label'] as String? ?? '',
+      unavailableReason: j['unavailable_reason'] as String?,
+      streetRating: j['street_rating'] as String?,
+      streetStance: j['street_stance'] as String?,
+      analystCount: (j['analyst_count'] as num?)?.toInt(),
+      targetMean: (j['target_mean'] as num?)?.toDouble(),
+      asOf: j['as_of'] as String?,
+      roomAction: j['room_action'] as String? ?? '',
+      agreement: j['agreement'] as String? ?? 'not_comparable',
+      approvedAgainstStreetSell:
+          (j['approved_against_street_sell'] as bool?) ?? false,
+      reasonsFromNarrowAnswers:
+          ((j['reasons_from_narrow_answers'] as List?) ?? const [])
+              .whereType<String>()
+              .toList(),
+    );
+  }
+
+  /// 'available' | 'unavailable'. Anything else is treated as unavailable.
+  final String status;
+
+  /// Names the data source; always sent, shown verbatim on the card.
+  final String sourceLabel;
+  final String? unavailableReason;
+
+  /// The feed's own rating word ("strong buy", "buy", "hold", "underperform",
+  /// "sell") and its three-way bucket: 'buy' | 'hold' | 'sell'.
+  final String? streetRating;
+  final String? streetStance;
+  final int? analystCount;
+  final double? targetMean;
+
+  /// Fact-sheet date (YYYY-MM-DD) the rating was read.
+  final String? asOf;
+  final String roomAction;
+
+  /// 'agree' | 'differ' | 'not_comparable'.
+  final String agreement;
+
+  /// The Room approved a name the Street rates Sell/Underperform.
+  final bool approvedAgainstStreetSell;
+
+  /// WP-22 hook: empty until the narrow-question judge exists.
+  final List<String> reasonsFromNarrowAnswers;
+
+  bool get isAvailable => status == 'available' && streetStance != null;
+  bool get agrees => agreement == 'agree';
+  bool get differs => agreement == 'differ';
 }
 
 /// Shared by [RoomVerdict.fromJson] and the Journal's payload mapper so the

@@ -429,3 +429,38 @@ def test_live_data_surcharge_is_disclosed_and_matches_the_debit(seed, trader_run
         assert balance(seed, trader_run.user) == 150
     else:
         assert balance(seed, trader_run.user) == 150 - (BASIC_COST + charged)
+
+
+@pytest.mark.uat("UAT-ROOM-023")
+@pytest.mark.llm
+def test_verdict_carries_the_street_comparison_after_the_decision(floor_run):
+    assert_clean_stream(floor_run)
+    run = get_run(floor_run)
+    for v in (floor_run.verdict, run["verdict"]):
+        c = v.get("street_comparison")
+        assert c, "verdict has no street_comparison block"
+        assert "Yahoo Finance" in c["source_label"] and "yfinance" in c["source_label"]
+        assert c["room_action"] == v["action"]
+        assert c["reasons_from_narrow_answers"] == []
+        if c["status"] == "available":
+            assert c["street_stance"] in {"buy", "hold", "sell"}
+            assert c["street_rating"]
+            assert c["analyst_count"] is None or c["analyst_count"] > 0
+            if c["room_stance"] == "no_call":
+                assert c["agreement"] == "not_comparable"
+            elif c["street_stance"] == "buy":
+                assert c["agreement"] == ("agree" if c["room_stance"] == "approve" else "differ")
+            else:
+                assert c["agreement"] == ("agree" if c["room_stance"] == "decline" else "differ")
+            assert c["approved_against_street_sell"] is (
+                c["room_stance"] == "approve" and c["street_stance"] == "sell"
+            )
+        else:
+            assert c["status"] == "unavailable" and c["unavailable_reason"]
+            assert c["street_rating"] is None and c["street_stance"] is None
+            assert c["analyst_count"] is None and c["target_mean"] is None
+            assert c["agreement"] == "not_comparable"
+    text = " ".join(m["content"] for m in run["transcript"])
+    assert run["verdict"]["street_comparison"]["source_label"] not in text, (
+        "a desk quoted the Street comparison's source: the Room decides blind"
+    )
