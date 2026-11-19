@@ -17,6 +17,15 @@
 #   scripts/publish_playstore.sh --no-commit    # don't auto-commit the bump
 #   scripts/publish_playstore.sh --validate      # dry run: build + validate, no publish
 #   scripts/publish_playstore.sh --internal-only # required when the RC key is a test_… key
+#   scripts/publish_playstore.sh --channel beta  # CR267 WP-45: Beta build (all refusals of
+#                                                  build_playstore.sh --channel beta apply here too)
+#   scripts/publish_playstore.sh --channel beta --dry-run   # print the resolved config, do nothing
+#
+# --channel is forwarded to build_playstore.sh AND resolved here first, so the
+# schema-parity check below runs against the URL the build will bake (the Beta
+# hostname on --channel beta) and a Beta refusal fires before anything else.
+# The fastlane lane is still `internal`; a closed-testing lane for Beta is not
+# part of WP-45.
 #
 # Track: `internal` (PLAY_TRACK overrides). A RevenueCat Test Store key (test_…)
 # is refused on any other track — simulated purchases must not reach a reviewed,
@@ -32,19 +41,42 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/release_channel.sh
+source "${PROJECT_ROOT}/scripts/lib/release_channel.sh"
 
 VALIDATE=0
+DO_GAMES=1
 BUILD_ARGS=()
-for arg in "$@"; do
+while [[ $# -gt 0 ]]; do
+  arg="$1"
   case "$arg" in
     --validate) VALIDATE=1 ;;
+    --dry-run) DRY_RUN=1 ;;      # resolved here; not forwarded (nothing is built)
+    --no-games) DO_GAMES=0; BUILD_ARGS+=("$arg") ;;
+    --channel=*) CHANNEL="${arg#--channel=}"; BUILD_ARGS+=("$arg") ;;
+    --channel)
+      if [[ $# -lt 2 ]]; then
+        echo "✗ --channel needs a value (alpha|beta)" >&2
+        exit 2
+      fi
+      shift
+      CHANNEL="$1"
+      BUILD_ARGS+=("--channel" "$CHANNEL")
+      ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
       ;;
     *) BUILD_ARGS+=("$arg") ;;   # passed through to build_playstore.sh
   esac
+  shift
 done
+
+# CR267 WP-45 — the channel decides the URL the parity gate below checks.
+: "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
+export AMI_API_URL_ALPHA
+ami_channel_setup android
+ami_channel_dry_run_exit
 
 # CR084-ALPHA — which fastlane lane (= Play track) this publishes to. Hardcoded
 # `internal` since CR048; kept as a variable so the Test Store guard below has
@@ -95,9 +127,9 @@ fi
 # Same default as build_playstore.sh, since that is the URL it will bake in.
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 export AMI_API_URL_ALPHA
-echo "▶ release schema parity vs ${AMI_API_URL_ALPHA}  (DEF195)"
+echo "▶ release schema parity vs ${CHANNEL_API_URL}  (DEF195)"
 if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
-       --base-url "${AMI_API_URL_ALPHA}"; then
+       --base-url "${CHANNEL_API_URL}"; then
   cat >&2 <<EOF
 
 ✗ PUBLISH BLOCKED — the deployed backend cannot serve this client (DEF195).
@@ -105,7 +137,7 @@ if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
   Nothing was built and no build number was spent. Promote the backend, then
   re-run:
 
-      /promote-to-alpha
+      /promote-to-${CHANNEL}
 
   A gate that could not reach the backend blocks too — that is not a skip
   (CR040).

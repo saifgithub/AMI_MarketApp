@@ -24,6 +24,24 @@
 #   scripts/build_playstore.sh --no-commit      # don't auto-commit the bump
 #   scripts/build_playstore.sh --no-billing     # deliberately ship WITHOUT in-app purchase
 #   scripts/build_playstore.sh --internal-only  # required when the RC key is a test_… Test Store key
+#   scripts/build_playstore.sh --channel beta   # CR267 WP-45: Beta build (see BETA CHANNEL below)
+#   scripts/build_playstore.sh --channel beta --dry-run   # print the resolved config, build nothing
+#
+# --channel alpha|beta (default alpha). Alpha is the pipeline exactly as it has
+# always been. --dry-run parses the arguments, applies the channel refusals,
+# prints what would be baked and exits 0 before any gate, bump or build.
+#
+# BETA CHANNEL (CR267 WP-45; logic in scripts/lib/release_channel.sh): bakes
+# https://api-beta.agenticmarketintel.ai (override AMI_API_URL_BETA), turns the
+# backend switcher OFF (no Alpha hostname in the binary), sets AMI_BETA=true
+# (CR278, English only) and AMI_ENV=beta. It REFUSES to run unless:
+#   * --no-games is passed (external testers, no hidden features);
+#   * AMI_BETA_ANDROID_APPLICATION_ID is set to the company application ID AND
+#     android/app/build.gradle.kts declares that same ID — WP-49 / gate S7
+#     supplies it, so today every beta build refuses, on purpose;
+#   * AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID is set (company Google project, WP-49);
+#   * SENTRY_DSN is set (WP-53's crash-free figure comes from Sentry). On the
+#     alpha channel SENTRY_DSN stays optional, as before.
 #
 # Required env (defaults match the production alpha setup):
 #   AMI_API_URL_ALPHA              - backend URL baked into the build
@@ -39,7 +57,8 @@
 #   GOOGLE_OAUTH_WEB_CLIENT_ID     - GCP OAuth 2.0 Web client_id for Google Sign-In
 #                                    (the same value the backend has in
 #                                     GOOGLE_AUDIENCES env var on melehost)
-#   SENTRY_DSN                     - optional; left empty if unset
+#   SENTRY_DSN                     - optional on alpha (left empty if unset);
+#                                    REQUIRED on --channel beta
 #
 # ADS (CR122-MOBILE-C, all optional — unset keeps the build 100% house fill,
 # byte-identical ad behaviour to a pre-CR122 pipeline):
@@ -81,6 +100,8 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
+# shellcheck source=lib/release_channel.sh
+source "${PROJECT_ROOT}/scripts/lib/release_channel.sh"
 
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 # CR050 — GCP OAuth 2.0 **Web** client_id (ami-trade-web). Public config: it is
@@ -127,7 +148,8 @@ DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
 DO_GAMES=1
-for arg in "$@"; do
+while [[ $# -gt 0 ]]; do
+  arg="$1"
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
     --no-commit)  DO_COMMIT=0 ;;
@@ -135,6 +157,16 @@ for arg in "$@"; do
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
     --no-games)   DO_GAMES=0 ;;
+    --dry-run)    DRY_RUN=1 ;;
+    --channel=*)  CHANNEL="${arg#--channel=}" ;;
+    --channel)
+      if [[ $# -lt 2 ]]; then
+        echo "✗ --channel needs a value (alpha|beta)" >&2
+        exit 2
+      fi
+      shift
+      CHANNEL="$1"
+      ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -144,7 +176,13 @@ for arg in "$@"; do
       exit 2
       ;;
   esac
+  shift
 done
+
+# CR267 WP-45 — resolve the release channel BEFORE any gate, so a Beta refusal
+# (or --dry-run) never depends on a keystore or any credential being present.
+ami_channel_setup android
+ami_channel_dry_run_exit
 
 # CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
 # units on, mirroring build_testflight.sh's derivation exactly. Never set
@@ -268,19 +306,19 @@ fi
 #
 # It exits 1 when it CANNOT reach the backend, on purpose (CR040): a parity
 # check that passes when it could not check reports safety it never verified.
-echo "▶ release schema parity vs ${AMI_API_URL_ALPHA}  (DEF195)"
+echo "▶ release schema parity vs ${CHANNEL_API_URL}  (DEF195)"
 if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
-       --base-url "${AMI_API_URL_ALPHA}"; then
+       --base-url "${CHANNEL_API_URL}"; then
   cat >&2 <<EOF
 
 ✗ RELEASE BLOCKED — the deployed backend cannot serve this client (DEF195).
 
   The keys listed above would be PATCHed by this build and silently dropped by
-  ${AMI_API_URL_ALPHA}. Every write would return 200 and change nothing.
+  ${CHANNEL_API_URL}. Every write would return 200 and change nothing.
 
   Backend promotes FIRST, client ships SECOND. Promote, then re-run this build:
 
-      /promote-to-alpha
+      /promote-to-${CHANNEL}
 
   If the gate could not REACH the backend, that is also a block, not a skip —
   fix the host or the URL. There is no flag to pass this; a release gate you
@@ -455,8 +493,7 @@ rm -f "${MOBILE_DIR}/android/app/src/main/java/io/flutter/plugins/GeneratedPlugi
 rm -rf "${MOBILE_DIR}/.dart_tool/flutter_build"
 
 flutter build appbundle --release \
-  --dart-define=ALLOW_BACKEND_SWITCH=true \
-  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  "${CHANNEL_DEFINES[@]}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
   --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
   --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \

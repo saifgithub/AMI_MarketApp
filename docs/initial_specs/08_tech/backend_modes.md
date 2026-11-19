@@ -235,3 +235,19 @@ flutter build ipa --release \
 # Note: ALLOW_BACKEND_SWITCH omitted (defaults to false).
 # Note: AMI_API_URL_ALPHA + AMI_API_URL_BETA omitted (stays out of binary).
 ```
+
+---
+
+## Beta channel build (CR267 WP-45)
+
+External Beta testers get a **locked** build, not the Dev / Alpha / Beta switcher flavor above. `scripts/build_testflight.sh`, `scripts/build_playstore.sh` and `scripts/publish_playstore.sh` take `--channel alpha|beta` (default `alpha`, unchanged). `--channel beta` bakes:
+
+```bash
+--dart-define=ALLOW_BACKEND_SWITCH=false          # Developer section compiled out
+--dart-define=AMI_API_URL_PROD=https://api-beta.<domain>   # locked mode is named `prod` in the app
+--dart-define=AMI_BETA=true                       # CR278: English only
+--dart-define=AMI_ENV=beta                        # Sentry environment
+--dart-define=SENTRY_DSN=...                      # required; empty DSN fails the build
+```
+
+No `AMI_API_URL_ALPHA` / `_BETA` define is passed, so the Alpha hostname is not in the binary and `BackendModeNotifier` forces the locked mode on every launch. A Beta build also refuses unless `--no-games` is passed and the company bundle / application IDs from WP-49 (gate S7) are supplied and match the project files. Logic: `scripts/lib/release_channel.sh`; `--dry-run` prints the resolved configuration without building.
