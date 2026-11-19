@@ -150,14 +150,23 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--for", dest="activity", required=True, choices=sorted(ACTIVITIES))
     ap.add_argument("--no-mark", action="store_true", help="don't move the activity's base on pass")
+    ap.add_argument("--runs-only", action="store_true",
+                    help="check only that the activity's targets are green in the ledger (step 3); "
+                         "used by /promote-to-beta, which ships an alpha-* tag already gated for "
+                         "guards and script updates. Implies --no-mark.")
     args = ap.parse_args()
+    if args.runs_only:
+        args.no_mark = True
 
     try:
         base = _base(args.activity)
-        problems = check_guards()
-        if not problems:
-            problems += check_script_updated(base)
-            problems += check_runs(args.activity)
+        if args.runs_only:
+            problems = check_runs(args.activity)
+        else:
+            problems = check_guards()
+            if not problems:
+                problems += check_script_updated(base)
+                problems += check_runs(args.activity)
     except (subprocess.CalledProcessError, catalogue.CatalogueError) as exc:
         print(f"UAT GATE: COULD NOT RUN — {exc}")
         return 2

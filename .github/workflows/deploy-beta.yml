@@ -1,3 +1,8 @@
+# PARKED (CR267, 2026-11-19) — superseded by the Beta VPS plan: Beta is one Singapore VPS
+# running the same Docker Compose stack as Alpha, promoted with /promote-to-beta
+# (.claude/commands/promote-to-beta.md), not Cloud Run. Kept, not deleted: the
+# GCP/Cloud Run route is reopened only if production moves to GCP (D-066/D-067).
+# This workflow is workflow_dispatch-only and has no credentials; do not wire it up for Beta.
 # CR126 — Beta Cloud Run deploy. First GitHub Actions workflow in this repo
 # (B10 was previously unstarted). `workflow_dispatch`-only on purpose: no
 # GCP credentials exist as repo secrets/vars yet (B1 not done), so a
