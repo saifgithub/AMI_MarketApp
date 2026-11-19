@@ -8,4 +8,4 @@ controls:
     state: "Tape pauses for 2 s and a bottom sheet opens for that symbol with price and actions"
     when: "tape has quotes"
     line: 166
-    note: "repeated (list is doubled for the seamless scroll, so each symbol appears twice); tape sits above the bottom nav on home_shell. The symbol moves continuously, so target by text, not coordinates."
+    note: "repeated (list is doubled for the seamless scroll, so each symbol appears twice); tape sits above the bottom nav on home_shell. The symbol moves continuously, so target by text, not coordinates. DEF466: the tape is excluded from the accessibility tree (its per-frame movement blanked the iPhone tree), so device automation cannot find it by label; tap it by screen position, or skip it."
