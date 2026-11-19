@@ -347,6 +347,7 @@ class BriefEngine:
             surface="brief",
             agent_id=agent_id_str,
             already_streamed=True,
+            user_message=user_message,
         )
         if guard.withhold:
             yield output_guard.retraction_notice(guard)
