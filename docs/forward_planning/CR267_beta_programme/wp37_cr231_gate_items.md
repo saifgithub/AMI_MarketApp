@@ -80,3 +80,8 @@ DEF340, DEF341, DEF342 and DEF343 are now `fixed` (the runbook lists them as kno
 
 1. "Rows closed": two of three. CR222 needs Saiful's definition of closed first.
 2. "Matrix results recorded": not yet. Packets are ready; no lab run has happened, and no result is claimed.
+
+## Rulings, 2026-11-19 (Saiful)
+
+1. CR222: "audited is enough". Closed on slices B, C, D; slice A and the toll prerequisites moved to CR280.
+2. E5 matrix for Beta: the lab phones (AMI-DL-3 Android, AMI-DL-4 iPhone, 15 cases each) plus four items Saiful does by hand: fresh-install onboarding, sign-in claim, push arrival and tap, one off-LAN cellular pass.
