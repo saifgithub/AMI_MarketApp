@@ -1,0 +1,35 @@
+---
+id: "manual_report_problem"
+title: "Report a problem"
+section: "settings"
+topic: "help"
+tags: ["report a problem", "bug", "bug report", "feedback", "something is broken", "crash", "error", "ref", "reference"]
+questions:
+  - "how do I report a problem"
+  - "how do I report a bug"
+  - "something is broken, where do I tell you"
+  - "where do I send feedback about the app"
+  - "what is the Ref code under an error"
+short_answer: "Open YOU > SETTINGS > HELP and tap Report a problem. Pick a category, describe it and tap Send report. If an error shows a Ref code, tap it to copy it and include it."
+screens:
+  - "screens/settings/settings_screen.dart"
+  - "screens/feedback/bug_report_sheet.dart"
+  - "screens/you/you_screen.dart"
+  - "widgets/trace_ref_line.dart"
+arb_keys: ["youTabUpper", "settingsTabUpper", "settingsSectionHelp", "settingsReportProblem", "bugSheetTitle", "bugSheetShortDescription", "bugSheetSteps", "bugSheetAttachPhoto", "bugSheetSend", "bugReportThanks", "traceRefLabel", "traceRefCopied"]
+literals: []
+locale_versions: ["en"]
+translation_pending: ["ar", "ms"]
+created_at: "2026-11-19"
+updated_at: "2026-11-19"
+---
+
+# Report a problem
+
+1. Open **YOU** > **SETTINGS** and scroll to **HELP**.
+2. Tap **Report a problem**. The **Report a bug** sheet opens.
+3. Pick a category, fill in **Short description**, optionally add **Steps to reproduce (optional)** and **Attach photo**, then tap **Send report**.
+
+The app confirms with "Report received — ref" and a short code. You can also long-press the version number at the bottom of SETTINGS to open the same sheet.
+
+When an error message shows a line like Ref: 3f9a1c, tap it to copy the code ("Reference copied") and paste it into your report. It lets us find the exact failed request.
