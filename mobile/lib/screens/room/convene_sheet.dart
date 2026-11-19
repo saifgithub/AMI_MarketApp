@@ -141,6 +141,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
               cost: mandate?.roomCost,
               balance: mandate?.creditBalance,
               resetsAt: mandate?.creditsResetAt,
+              liveDataSurchargeMax: mandate?.roomLiveDataSurchargeMax,
             ),
             const SizedBox(height: AmiSpacing.l),
             TextField(

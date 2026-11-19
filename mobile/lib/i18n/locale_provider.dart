@@ -97,16 +97,14 @@ class LocaleOption {
   const LocaleOption({
     required this.locale,
     required this.nativeName,
-    required this.englishName,
   });
   final Locale? locale; // null → "Follow system"
   final String nativeName;
-  final String englishName;
 }
 
 const localeOptions = <LocaleOption>[
-  LocaleOption(locale: null, nativeName: 'System', englishName: 'Follow system'),
-  LocaleOption(locale: Locale('en'), nativeName: 'English', englishName: 'English'),
-  LocaleOption(locale: Locale('ar'), nativeName: 'العربية', englishName: 'Arabic'),
-  LocaleOption(locale: Locale('ms'), nativeName: 'Bahasa Melayu', englishName: 'Malay'),
+  LocaleOption(locale: null, nativeName: 'System'),
+  LocaleOption(locale: Locale('en'), nativeName: 'English'),
+  LocaleOption(locale: Locale('ar'), nativeName: 'العربية'),
+  LocaleOption(locale: Locale('ms'), nativeName: 'Bahasa Melayu'),
 ];

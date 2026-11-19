@@ -344,7 +344,7 @@ cases:
     title: Discarding unsaved Settings edits really discards them
     layer: manual
     steps:
-      - 'Settings > PROFILE: change the display name; the SAVE button and the amber pip appear'
+      - 'Settings > PROFILE (scroll down past MANDATE, RISK LIMITS and COMPLIANCE; it sits above IDENTITY): change the "Display name" field; SAVE appears at the top right of the Settings header and the amber pip appears'
       - 'Tap JOURNAL, choose "discard changes", then tap SETTINGS again'
     expected:
       - 'The display name shows the stored value, the SAVE button and the pip are gone'
@@ -373,8 +373,11 @@ cases:
     steps:
       - 'Settings > Language: switch to Arabic, then Bahasa Melayu'
       - 'Scroll to APPEARANCE, HELP and CONNECTED ACCOUNTS; read the Alpaca row (Connected / Not connected, Connect / Disconnect / Relink) and the sign-out button'
+      - 'Also read the PROFILE rows (Plan, Display name, Horizon and the choice chips), IDENTITY, MEMBERSHIP, the STREET RATING switch, the Language list, and the HELP rows (Report a problem, Terms of Service, Privacy Policy)'
     expected:
-      - 'Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)'
+      - 'Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478, DEF494)'
+      - 'The Plan row shows the plan name (Floor Pass), never the raw id floor_pass; the Language list shows System / Follow system in the chosen language'
+      - 'Tapping a compliance label (e.g. Long-only) opens an explanation in the chosen language'
       - 'The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"'
 
   - id: UAT-MAND-039

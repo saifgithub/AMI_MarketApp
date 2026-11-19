@@ -12,6 +12,7 @@ import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
+import 'package:ami_trade/i18n/plan_names.dart';
 import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/settings/profile_fields_section.dart';
@@ -453,7 +454,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
                     ),
                     const SizedBox(height: AmiSpacing.s),
-                    _ReadOnlyRow(label: l.settingsProfilePlan, value: m.plan),
+                    _ReadOnlyRow(
+                        label: l.settingsProfilePlan,
+                        value: planDisplayName(l, m.plan)),
                     _ReadOnlyRow(
                       label: l.settingsProfileCredits,
                       value: _creditsRowValue(l, m),
@@ -750,50 +753,12 @@ class _DrawdownPicker extends StatelessWidget {
 }
 
 
-/// Plain-English explanations for each compliance flag. Surfaced by
-/// tapping the label in _ComplianceToggles (separate from flipping the
-/// switch). User-filed bug: people wanted to know what "Halal screen"
-/// actually means before turning it on.
-///
-/// CR069 Phase 1b: the `halal` entry is NOT in this map. Its copy is
-/// observance-sensitive and must be translatable, so it is resolved from the
-/// ARB in `_explanationFor` instead of hardcoded English here. The DEF084 body
-/// that used to sit here ("a curated demonstration universe, not a Sharia
-/// screen") described the 7-ticker allowlist and is now false in the other
-/// direction — the flag enforces a real sourced AAOIFI screen.
-const Map<String, _ComplianceExplanation> _complianceExplanations = {
-  // DEF339: the `esgLite` entry is NOT in this map. Its copy is localized and
-  // lives in the ARB, for the same reason halal's does — and because the copy
-  // that stood here described a screen AMI does not run: it claimed "severe
-  // governance flags" (there is no governance check anywhere in the codebase)
-  // and omitted tobacco/alcohol/gambling, which IS enforced. See
-  // `_explanationFor` below and test_def339_esg_lite_copy_matches_the_screen.py.
-  'tag': _ComplianceExplanation(
-    title: 'No tobacco / alcohol / gambling',
-    body: 'Filters out tickers whose primary revenue comes from '
-        'tobacco, alcohol, or gambling operations. Pure-play exclusions '
-        'only; diversified conglomerates with a small exposure are not '
-        'caught.',
-  ),
-  'fossil': _ComplianceExplanation(
-    title: 'No fossil fuels',
-    body: 'Filters out oil, gas, and coal producers, plus the pipelines '
-        'and services companies whose revenue depends on them. Utilities '
-        'with a transition plan are not auto-excluded.',
-  ),
-  'longOnly': _ComplianceExplanation(
-    title: 'Long-only',
-    body: 'No short selling, no inverse ETFs, no put options used as '
-        'standalone bets. You can still hedge with protective puts '
-        'against a long position you already hold.',
-  ),
-  'liquidOnly': _ComplianceExplanation(
-    title: 'Liquid-only',
-    body: 'Only tickers with sufficient average daily volume to enter '
-        'and exit cleanly. Filters out micro-caps and thinly-traded '
-        'names where a market order can move the price against you.',
-  ),
-};
+// Plain-English explanations for each compliance flag live in the ARB
+// (`settingsCompliance*Explain*`), surfaced by tapping the label in
+// _ComplianceToggles (separate from flipping the switch). User-filed bug:
+// people wanted to know what "Halal screen" actually means before turning it
+// on. DEF494: the last four were hard-coded English in a const map here, so
+// Arabic and Malay readers got English; the map is gone and so is the hole.
 
 
 /// CR122-COMPLIANCE — CCPA "Do Not Sell" toggle (`ads.md:108`) and the UMP
@@ -1006,25 +971,44 @@ class _ComplianceToggles extends StatelessWidget {
     );
   }
 
-  /// Localized override first, then the hardcoded map. `halal` (CR069 Phase 1b)
-  /// and `esgLite` (DEF339) are localized — both are values-sensitive controls
-  /// whose copy has to be able to differ per locale rather than shipping EN to
-  /// every reader.
+  /// Every explanation resolves from the ARB, so each reader gets their own
+  /// language. `halal` (CR069 Phase 1b) and `esgLite` (DEF339) are the
+  /// values-sensitive ones; the other four moved with DEF494.
   _ComplianceExplanation? _explanationFor(BuildContext context, String key) {
     final l = AppLocalizations.of(context);
-    if (key == 'halal') {
-      return _ComplianceExplanation(
-        title: l.settingsComplianceHalalExplainTitle,
-        body: l.settingsComplianceHalalExplainBody,
-      );
+    switch (key) {
+      case 'halal':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceHalalExplainTitle,
+          body: l.settingsComplianceHalalExplainBody,
+        );
+      case 'esgLite':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceEsgLiteExplainTitle,
+          body: l.settingsComplianceEsgLiteExplainBody,
+        );
+      case 'tag':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceTAG,
+          body: l.settingsComplianceTagExplainBody,
+        );
+      case 'fossil':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceFossil,
+          body: l.settingsComplianceFossilExplainBody,
+        );
+      case 'longOnly':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceLongOnly,
+          body: l.settingsComplianceLongOnlyExplainBody,
+        );
+      case 'liquidOnly':
+        return _ComplianceExplanation(
+          title: l.settingsComplianceLiquidOnly,
+          body: l.settingsComplianceLiquidOnlyExplainBody,
+        );
     }
-    if (key == 'esgLite') {
-      return _ComplianceExplanation(
-        title: l.settingsComplianceEsgLiteExplainTitle,
-        body: l.settingsComplianceEsgLiteExplainBody,
-      );
-    }
-    return _complianceExplanations[key];
+    return null;
   }
 
   void _showExplanation(BuildContext context, String key) {
@@ -1138,7 +1122,9 @@ class _MembershipSection extends ConsumerWidget {
     return _Section(
       title: l.settingsSectionMembership,
       children: [
-        _ReadOnlyRow(label: l.settingsProfilePlan, value: mandate.plan),
+        _ReadOnlyRow(
+            label: l.settingsProfilePlan,
+            value: planDisplayName(l, mandate.plan)),
         const SizedBox(height: AmiSpacing.s),
         SizedBox(
           height: 40,
@@ -1447,7 +1433,8 @@ class _LanguageSection extends ConsumerWidget {
       children: [
         for (final opt in localeOptions)
           _LanguageRow(
-            option: opt,
+            primary: _primaryName(l, opt),
+            secondary: _secondaryName(l, opt),
             selected: _matches(opt.locale, current),
             onTap: () => ref
                 .read(localeNotifierProvider.notifier)
@@ -1465,6 +1452,27 @@ class _LanguageSection extends ConsumerWidget {
     );
   }
 
+  // DEF494 — the System row and the second name come from the ARB, so the
+  // picker reads in the language it is showing; the native names (English,
+  // Arabic, Bahasa Melayu) stay in their own script on purpose.
+  String _primaryName(AppLocalizations l, LocaleOption opt) =>
+      opt.locale == null ? l.settingsLanguageSystem : opt.nativeName;
+
+  String _secondaryName(AppLocalizations l, LocaleOption opt) {
+    switch (opt.locale?.languageCode) {
+      case null:
+        return l.settingsLanguageFollowSystem;
+      case 'en':
+        return l.settingsLanguageEnglish;
+      case 'ar':
+        return l.settingsLanguageNameArabic;
+      case 'ms':
+        return l.settingsLanguageNameMalay;
+      default:
+        return opt.nativeName;
+    }
+  }
+
   bool _matches(Locale? a, Locale? b) {
     if (a == null && b == null) return true;
     if (a == null || b == null) return false;
@@ -1475,11 +1483,13 @@ class _LanguageSection extends ConsumerWidget {
 
 class _LanguageRow extends StatelessWidget {
   const _LanguageRow({
-    required this.option,
+    required this.primary,
+    required this.secondary,
     required this.selected,
     required this.onTap,
   });
-  final LocaleOption option;
+  final String primary;
+  final String secondary;
   final bool selected;
   final VoidCallback onTap;
 
@@ -1506,14 +1516,14 @@ class _LanguageRow extends StatelessWidget {
             // when there's truly no room, via a second `Flexible` with
             // `FlexFit.loose` sized last.
             Flexible(
-              child: Text(option.nativeName,
+              child: Text(primary,
                   style: AmiTypography.body, overflow: TextOverflow.ellipsis),
             ),
-            if (option.nativeName != option.englishName) ...[
+            if (primary != secondary) ...[
               const SizedBox(width: AmiSpacing.s),
               Flexible(
                 child: Text(
-                  '· ${option.englishName}',
+                  '· $secondary',
                   style: AmiTypography.caption,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1813,8 +1823,12 @@ class _HelpSection extends ConsumerWidget {
             ),
           ),
         ),
-        _LegalRow(label: 'Terms of Service', url: 'https://www.agenticmarketintel.ai/terms/'),
-        _LegalRow(label: 'Privacy Policy', url: 'https://www.agenticmarketintel.ai/privacy/'),
+        _LegalRow(
+            label: AppLocalizations.of(context).settingsTermsOfService,
+            url: 'https://www.agenticmarketintel.ai/terms/'),
+        _LegalRow(
+            label: AppLocalizations.of(context).settingsPrivacyPolicy,
+            url: 'https://www.agenticmarketintel.ai/privacy/'),
       ],
     );
   }

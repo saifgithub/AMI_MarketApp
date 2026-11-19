@@ -375,11 +375,13 @@ cases:
     layer: device
     plans: [floor_pass]
     steps:
-      - 'Portfolio > New trade; ticker NFLX; quantity 100 (about 70% of the book); SUBMIT TRADE'
+      - 'Portfolio > New trade; ticker NFLX; quantity 100 (about 60% of the book); SUBMIT TRADE'
+      - 'Close the ticket, then open Portfolio > New trade again'
     expected:
       - 'The ticket shows SAFETY FLOOR - TRADE BLOCKED with the reason (position size exceeds the single-name cap)'
       - 'Portfolio cash and holdings are unchanged'
       - 'The refusal is not overridable from the ticket'
+      - 'The fresh ticket opens clean: no SAFETY FLOOR banner above the empty ticker (DEF496)'
 
   - id: UAT-SIM-030
     title: ASK from ticker detail carries the ticker into the 1-on-1

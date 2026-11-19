@@ -1336,9 +1336,10 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM_
 2. Wait for the run to finish (up to ten minutes)
 
 **Expected**
-1. The Convene sheet states the Room price and the user's credits before anything is charged
-2. The Room opens on AAPL and streams desk by desk
-3. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
+1. The Convene sheet states the Room price and the user's credits before anything is charged, and says how much live news and social data can add ("up to +4 more ...") so the final charge is never a surprise (DEF495)
+2. The credits actually charged are the price shown, plus at most the "up to" amount
+3. The Room opens on AAPL and streams desk by desk
+4. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
 
 #### UAT-ROOM-027 — After a Room a dismissible card asks if the verdict made sense, and a response can be reported
 
@@ -2003,12 +2004,14 @@ _Device (automated, Appium) · plans: floor_pass_
 _Device (automated, Appium) · plans: floor_pass_
 
 **Steps**
-1. Portfolio > New trade; ticker NFLX; quantity 100 (about 70% of the book); SUBMIT TRADE
+1. Portfolio > New trade; ticker NFLX; quantity 100 (about 60% of the book); SUBMIT TRADE
+2. Close the ticket, then open Portfolio > New trade again
 
 **Expected**
 1. The ticket shows SAFETY FLOOR - TRADE BLOCKED with the reason (position size exceeds the single-name cap)
 2. Portfolio cash and holdings are unchanged
 3. The refusal is not overridable from the ticket
+4. The fresh ticket opens clean: no SAFETY FLOOR banner above the empty ticker (DEF496)
 
 <a id="portfolio-health"></a>
 ## Portfolio health & sector analytics
@@ -3601,7 +3604,7 @@ _Manual (iPhone checklist) · plans: any_
 _Manual (iPhone checklist) · plans: any_
 
 **Steps**
-1. Settings > PROFILE: change the display name; the SAVE button and the amber pip appear
+1. Settings > PROFILE (scroll down past MANDATE, RISK LIMITS and COMPLIANCE; it sits above IDENTITY): change the "Display name" field; SAVE appears at the top right of the Settings header and the amber pip appears
 2. Tap JOURNAL, choose "discard changes", then tap SETTINGS again
 
 **Expected**
@@ -3633,10 +3636,13 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Steps**
 1. Settings > Language: switch to Arabic, then Bahasa Melayu
 2. Scroll to APPEARANCE, HELP and CONNECTED ACCOUNTS; read the Alpaca row (Connected / Not connected, Connect / Disconnect / Relink) and the sign-out button
+3. Also read the PROFILE rows (Plan, Display name, Horizon and the choice chips), IDENTITY, MEMBERSHIP, the STREET RATING switch, the Language list, and the HELP rows (Report a problem, Terms of Service, Privacy Policy)
 
 **Expected**
-1. Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)
-2. The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"
+1. Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478, DEF494)
+2. The Plan row shows the plan name (Floor Pass), never the raw id floor_pass; the Language list shows System / Follow system in the chosen language
+3. Tapping a compliance label (e.g. Long-only) opens an explanation in the chosen language
+4. The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"
 
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 

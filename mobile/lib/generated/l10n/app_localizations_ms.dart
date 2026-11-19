@@ -103,29 +103,29 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsTabUpper => 'TETAPAN';
 
   @override
-  String get gameTabUpper => 'GAME';
+  String get gameTabUpper => 'PERMAINAN';
 
   @override
-  String get youTabUpper => 'YOU';
+  String get youTabUpper => 'ANDA';
 
   @override
-  String get youUnsavedTitle => 'UNSAVED MANDATE EDITS';
+  String get youUnsavedTitle => 'SUNTINGAN MANDAT BELUM DISIMPAN';
 
   @override
   String get youUnsavedBody =>
-      'Your mandate has changes you have not saved. Leave this segment and they are discarded.';
+      'Mandat anda mempunyai perubahan yang belum disimpan. Jika anda meninggalkan segmen ini, ia akan dibuang.';
 
   @override
-  String get youUnsavedKeep => 'keep editing';
+  String get youUnsavedKeep => 'teruskan menyunting';
 
   @override
-  String get youUnsavedDiscard => 'discard changes';
+  String get youUnsavedDiscard => 'buang perubahan';
 
   @override
   String get tradeTicketOpenMandate => 'OPEN MY MANDATE';
 
   @override
-  String get settingsReportProblem => 'Report a problem';
+  String get settingsReportProblem => 'Laporkan masalah';
 
   @override
   String get settingsSignOut => 'Log keluar';
@@ -274,7 +274,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get bugSheetRemoveTooltip => 'Buang';
 
   @override
-  String get youSegmentInsights => 'INSIGHTS';
+  String get youSegmentInsights => 'WAWASAN';
 
   @override
   String insightsWindowCapped(int count) {
@@ -1647,7 +1647,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get settingsRetroAuditFailed =>
-      'Couldn\'t check your holdings against the new limit — open Portfolio to verify.';
+      'Tidak dapat menyemak pegangan anda terhadap had baharu — buka Portfolio untuk mengesahkan.';
 
   @override
   String get settingsSectionMandate => 'MANDAT SAYA';
@@ -1702,182 +1702,178 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String settingsMaxDrawdownCustom(String value) {
-    return 'Custom ($value%)';
+    return 'Tersuai ($value%)';
   }
 
   @override
-  String get settingsSectionRiskLimits => 'RISK LIMITS';
+  String get settingsSectionRiskLimits => 'HAD RISIKO';
 
   @override
   String get settingsRiskLimitsProfileFollowing =>
-      'Following your risk profile';
+      'Mengikut profil risiko anda';
 
   @override
   String settingsRiskLimitsFollowingResolved(String value) {
-    return 'Following your risk profile — $value';
+    return 'Mengikut profil risiko anda — $value';
   }
 
   @override
   String get settingsRiskLimitsSetByYou =>
-      'Set by you — overrides your risk profile';
+      'Ditetapkan oleh anda — mengatasi profil risiko anda';
 
   @override
-  String get settingsRiskLimitsProfileCustom => 'Custom';
+  String get settingsRiskLimitsProfileCustom => 'Tersuai';
 
   @override
   String get settingsRiskPresetDayTrader => 'Day Trader';
 
   @override
   String get settingsRiskPresetDayTraderExplain =>
-      'Removes every risk limit you control. Compliance, locale and halal rules still apply.';
+      'Menghapuskan setiap had risiko yang anda kawal. Peraturan pematuhan, bahasa dan halal masih terpakai.';
 
   @override
   String get settingsRiskPresetDayTraderActive =>
-      'Day Trader — every risk limit you control is set permissive';
+      'Day Trader — setiap had risiko yang anda kawal ditetapkan longgar';
 
   @override
-  String get settingsDayTraderDisclosureTitle => 'Before you switch';
+  String get settingsDayTraderDisclosureTitle => 'Sebelum anda bertukar';
 
   @override
-  String get settingsDayTraderConfirm => 'Apply Day Trader preset';
+  String get settingsDayTraderConfirm => 'Guna pratetap Day Trader';
 
   @override
-  String get settingsDayTraderCancel => 'Keep my limits';
+  String get settingsDayTraderCancel => 'Kekalkan had saya';
 
   @override
-  String get settingsRiskLimitsExpand => 'Set my own limits';
+  String get settingsRiskLimitsExpand => 'Tetapkan had saya sendiri';
 
   @override
-  String get settingsRiskLimitsOff => 'OFF';
+  String get settingsRiskLimitsOff => 'MATI';
 
   @override
-  String get settingsRiskLimitsSectorCapLabel => 'Sector concentration cap';
+  String get settingsRiskLimitsSectorCapLabel => 'Had penumpuan sektor';
 
   @override
   String get settingsRiskLimitsSectorCapExplain =>
-      'Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.';
+      'Menyekat BELI yang menolak mana-mana sektor melebihi bahagian portfolio anda ini. Jika tidak ditetapkan, ia mengikut profil risiko anda.';
 
   @override
-  String get settingsRiskLimitsSingleNameCapLabel => 'Single-name position cap';
+  String get settingsRiskLimitsSingleNameCapLabel => 'Had posisi satu nama';
 
   @override
   String get settingsRiskLimitsSingleNameCapExplain =>
-      'Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.';
+      'Menyekat BELI yang menjadikan satu posisi melebihi bahagian portfolio anda ini. Jika tidak ditetapkan, ia mengikut profil risiko anda.';
 
   @override
-  String get settingsRiskLimitsCooldownLabel => 'Post-loss cooldown';
+  String get settingsRiskLimitsCooldownLabel => 'Tempoh bertenang selepas rugi';
 
   @override
   String get settingsRiskLimitsCooldownExplain =>
-      'Blocks new BUYs for this many hours after your last realised loss.';
+      'Menyekat BELI baharu selama beberapa jam ini selepas kerugian terealisasi terakhir anda.';
 
   @override
-  String get settingsRiskLimitsMaxOpenPositionsLabel => 'Max open positions';
+  String get settingsRiskLimitsMaxOpenPositionsLabel =>
+      'Posisi terbuka maksimum';
 
   @override
   String get settingsRiskLimitsMaxOpenPositionsExplain =>
-      'Blocks a BUY that would open a new ticker once you\'re at this many distinct positions. Adding to a position you already hold is unaffected.';
+      'Menyekat BELI yang membuka ticker baharu apabila anda sudah mencapai bilangan posisi berlainan ini. Menambah pada posisi yang sudah dipegang tidak terjejas.';
 
   @override
-  String get settingsRiskLimitsMaxTradesPerDayLabel => 'Max trades per day';
+  String get settingsRiskLimitsMaxTradesPerDayLabel =>
+      'Dagangan maksimum sehari';
 
   @override
   String get settingsRiskLimitsMaxTradesPerDayExplain =>
-      'Blocks any trade once you\'ve submitted this many today (UTC calendar day).';
+      'Menyekat sebarang dagangan selepas anda menghantar sebanyak ini hari ini (hari kalendar UTC).';
 
   @override
-  String get settingsRiskLimitsMaxTradesPerWeekLabel => 'Max trades per week';
+  String get settingsRiskLimitsMaxTradesPerWeekLabel =>
+      'Dagangan maksimum seminggu';
 
   @override
   String get settingsRiskLimitsMaxTradesPerWeekExplain =>
-      'Blocks any trade once you\'ve submitted this many this week (Monday 00:00 UTC).';
+      'Menyekat sebarang dagangan selepas anda menghantar sebanyak ini minggu ini (Isnin 00:00 UTC).';
 
   @override
-  String get settingsRiskLimitsMaxOpenRiskLabel => 'Total open-risk cap';
+  String get settingsRiskLimitsMaxOpenRiskLabel =>
+      'Had risiko terbuka keseluruhan';
 
   @override
   String get settingsRiskLimitsMaxOpenRiskExplain =>
-      'Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.';
+      'Menghadkan jumlah (saiz posisi % x jarak henti %) merentas posisi terbuka anda — jumlah modal anda yang berisiko pada henti rugi.';
 
   @override
   String get settingsRiskLimitsMaxOpenRiskPreviewNote =>
-      'Confirmed at trade submission — not shown as within-limits in the trade preview.';
+      'Disahkan semasa penghantaran dagangan — tidak dipaparkan sebagai dalam had pada pratonton dagangan.';
 
   @override
   String get settingsRiskLimitsDisclosureFollowing =>
-      'This replaces your risk-profile default with an explicit value, effective immediately.';
+      'Ini menggantikan lalai profil risiko anda dengan nilai eksplisit, berkuat kuasa serta-merta.';
 
   @override
   String get settingsRiskLimitsDisclosureLooser =>
-      'This allows more risk than your current setting.';
+      'Ini membenarkan risiko lebih tinggi daripada tetapan semasa anda.';
 
   @override
   String get settingsRiskLimitsDisclosureOff =>
-      'This removes the limit entirely — it will not block anything.';
+      'Ini menghapuskan had sepenuhnya — ia tidak akan menyekat apa-apa.';
 
   @override
   String get settingsRiskLimitsDisclosureBackToProfile =>
-      'This returns the limit to your risk-profile default, effective immediately.';
+      'Ini mengembalikan had kepada lalai profil risiko anda, berkuat kuasa serta-merta.';
 
   @override
   String get settingsRiskLimitsDisclosure100 =>
-      '100% removes any real ceiling from this limit — allowed, but it means no protection here.';
+      '100% menghapuskan sebarang siling sebenar bagi had ini — dibenarkan, tetapi bermakna tiada perlindungan di sini.';
 
   @override
   String get settingsRiskLimitsRetroTitle =>
-      'Some holdings now breach this limit';
+      'Sesetengah pegangan kini melanggar had ini';
 
   @override
   String get settingsRiskLimitsRetroBody =>
-      'Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.';
+      'Pegangan yang terjejas ditandakan di bawah. BELI baharu yang menambah pelanggaran disekat. Tiada apa dijual secara automatik.';
 
   @override
   String settingsRiskLimitsRetroTickers(String tickers) {
-    return 'Flagged: $tickers';
+    return 'Ditandakan: $tickers';
   }
 
   @override
-  String get settingsRiskLimitsRetroDismiss => 'Got it';
+  String get settingsRiskLimitsRetroDismiss => 'Faham';
 
   @override
-  String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
+  String get settingsComplianceHalal => 'Tapisan Syariah — AAOIFI';
 
   @override
   String get settingsComplianceHalalSubtitle =>
-      'AAOIFI standard, S&P 500 Sharia index';
+      'Piawaian AAOIFI, indeks Syariah S&P 500';
 
   @override
-  String get settingsComplianceHalalExplainTitle => 'Sharia screen (AAOIFI)';
+  String get settingsComplianceHalalExplainTitle => 'Tapisan Syariah (AAOIFI)';
 
   @override
   String get settingsComplianceHalalExplainBody =>
-      'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.';
+      'Menghadkan dagangan kepada syarikat yang lulus tapisan Syariah AAOIFI, seperti yang diguna pakai oleh S&P Dow Jones pada Indeks Pengecualian Industri Syariah S&P 500. AMI membaca juzuk indeks yang diterbitkan itu; ia tidak membuat hukum sendiri.\n\nLiputan ialah S&P 500. Syarikat di luarnya belum ditapis mengikut piawaian ini, jadi AMI akan memberitahu anda ia belum ditapis dan bukannya meneka. Belum ditapis bukan hukum ke mana-mana arah, dan ia tidak menghalang dagangan.\n\nPiawaian Syariah berbeza. AAOIFI, DJIM, FTSE, MSCI dan S&P menggunakan ambang dan penyebut yang berlainan, jadi syarikat yang sama boleh lulus satu dan gagal yang lain; hari ini, AAOIFI dan FTSE berbeza pada kira-kira separuh nama. Tapisan ini mengikut AAOIFI.';
 
   @override
   String get settingsComplianceEsgLiteExplainTitle =>
-      'ESG-lite (curated exclusions)';
+      'ESG-lite (pengecualian terpilih)';
 
   @override
   String get settingsComplianceEsgLiteExplainBody =>
-      'A curated exclusion screen, not a rating. It blocks three groups: fossil-fuel producers (oil, gas and coal, including pipelines and oilfield services); tobacco, alcohol and gambling; and aerospace & defence. It does NOT screen governance. Coverage is the ~503 S&P 500 names — a ticker outside that list is unscreened and permitted.';
+      'Tapisan pengecualian terpilih, bukan penarafan. Ia menyekat tiga kumpulan: pengeluar bahan api fosil (minyak, gas dan arang batu, termasuk saluran paip dan perkhidmatan medan minyak); tembakau, alkohol dan perjudian; serta aeroangkasa dan pertahanan. Ia TIDAK menapis tadbir urus. Liputan ialah kira-kira 503 nama S&P 500; ticker di luar senarai itu tidak ditapis dan dibenarkan.';
 
   @override
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -1907,10 +1903,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsComplianceFossil => 'Tiada bahan api fosil';
 
   @override
-  String get settingsComplianceLongOnly => 'Long-only';
+  String get settingsComplianceLongOnly => 'Beli sahaja';
 
   @override
-  String get settingsComplianceLiquidOnly => 'Liquid-only';
+  String get settingsComplianceLiquidOnly => 'Mudah tunai sahaja';
 
   @override
   String get settingsProfilePlan => 'Pelan';
@@ -1925,7 +1921,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsProfilePath => 'Laluan';
 
   @override
-  String get settingsProfileHorizon => 'Horizon';
+  String get settingsProfileHorizon => 'Tempoh pelaburan';
 
   @override
   String get settingsProfilePrimaryGoal => 'Matlamat utama';
@@ -1934,7 +1930,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsProfileCredits => 'Kredit';
 
   @override
-  String get settingsAccountStatus => 'Status';
+  String get settingsAccountStatus => 'Status akaun';
 
   @override
   String get settingsAccountSignedIn => 'Log masuk';
@@ -1943,7 +1939,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsAccountGuest => 'Tetamu (tanpa nama)';
 
   @override
-  String get settingsAccountHandle => 'Handle';
+  String get settingsAccountHandle => 'ID pengguna';
 
   @override
   String get settingsAccountGuestNote =>
@@ -2372,16 +2368,16 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String creditsLineCost(String cost, String balance) {
-    return 'Room: $cost credits · you have $balance';
+    return 'Room: $cost kredit · anda ada $balance';
   }
 
   @override
   String creditsLineCostWithReset(String cost, String balance, String date) {
-    return 'Room: $cost credits · you have $balance · resets $date';
+    return 'Room: $cost kredit · anda ada $balance · set semula $date';
   }
 
   @override
-  String get creditsLineInsufficient => 'not enough to convene';
+  String get creditsLineInsufficient => 'tidak cukup untuk memanggil Room';
 
   @override
   String get creditsLineUnknown => 'Checking your credits…';
@@ -2411,7 +2407,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String settingsProfileCreditsWithReset(String balance, String date) {
-    return '$balance · resets $date';
+    return '$balance · set semula $date';
   }
 
   @override
@@ -2709,11 +2705,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Dipenuhi: $side $qty $ticker @ \$$price';
   }
 
@@ -2757,11 +2749,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketNoticeRaisesStop(
-    String qty,
-    String ticker,
-    String fromStop,
-    String toStop,
-  ) {
+      String qty, String ticker, String fromStop, String toStop) {
     return 'This raises your stop on all $qty $ticker from \$$fromStop to \$$toStop.';
   }
 
@@ -2820,10 +2808,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketHintRestsStopLimit(
-    String ticker,
-    String trigger,
-    String limit,
-  ) {
+      String ticker, String trigger, String limit) {
     return 'Waits until $ticker reaches \$$trigger, then becomes a limit order at \$$limit.';
   }
 
@@ -2847,11 +2832,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String restingOrderCancelBody(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return '$side $qty $ticker at \$$price will stop waiting and will not fill.';
   }
 
@@ -3131,7 +3112,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get tourCompletionYou =>
-      'Your mandate is the one thing worth revisiting.';
+      'Mandat anda ialah satu-satunya perkara yang berbaloi disemak semula.';
 
   @override
   String get tourSettingsSectionTitle => 'PANDUAN';
@@ -3212,10 +3193,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get leagueOutcomeStay => 'Ditahan';
 
   @override
-  String get settingsSectionIdentity => 'IDENTITY';
+  String get settingsSectionIdentity => 'IDENTITI';
 
   @override
-  String get leagueHandle => 'HANDLE';
+  String get leagueHandle => 'ID PENGGUNA';
 
   @override
   String get leagueRegenerate => 'JANA SEMULA HANDLE';
@@ -4468,32 +4449,32 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get settingsOptionPremiumCapLabel => 'Option premium at risk';
+  String get settingsOptionPremiumCapLabel => 'Premium opsyen yang berisiko';
 
   @override
   String get settingsOptionPremiumCapExplain =>
-      'The most you can have paid for options at once, across every open structure. Options lose value as they age, so this caps what time alone can take.';
+      'Jumlah paling banyak yang boleh anda bayar untuk opsyen pada satu masa, merentas semua struktur terbuka. Opsyen kehilangan nilai apabila usia meningkat, jadi ini menghadkan apa yang boleh diambil oleh masa semata-mata.';
 
   @override
-  String get settingsOptionNotionalCapLabel => 'Option contract size';
+  String get settingsOptionNotionalCapLabel => 'Saiz kontrak opsyen';
 
   @override
   String get settingsOptionNotionalCapExplain =>
-      'How much stock your options control, as a share of your portfolio. One contract usually controls 100 shares, so a small premium can stand behind a very large position.';
+      'Jumlah saham yang dikawal opsyen anda, sebagai bahagian portfolio anda. Satu kontrak biasanya mengawal 100 saham, jadi premium kecil boleh menyokong posisi yang sangat besar.';
 
   @override
-  String get settingsAssignmentCapLabel => 'Assignment exposure';
+  String get settingsAssignmentCapLabel => 'Pendedahan penugasan';
 
   @override
   String get settingsAssignmentCapExplain =>
-      'The cash you would need if every option you sold were exercised against you today. It is not money set aside — it is money you could be asked for.';
+      'Tunai yang anda perlukan jika setiap opsyen yang anda jual dilaksanakan terhadap anda hari ini. Ia bukan wang yang diketepikan; ia wang yang mungkin dituntut daripada anda.';
 
   @override
-  String get settingsMinDteLabel => 'Shortest time to expiry';
+  String get settingsMinDteLabel => 'Tempoh terpendek sehingga tamat';
 
   @override
   String get settingsMinDteExplain =>
-      'AMI will not open an option expiring sooner than this. Options in their final days move fastest and leave no time to be right.';
+      'AMI tidak akan membuka opsyen yang tamat lebih awal daripada ini. Opsyen pada hari-hari terakhir bergerak paling laju dan tidak memberi masa untuk anda terbukti betul.';
 
   @override
   String get portfolioOptionsHeading => 'OPTION POSITIONS';
@@ -4512,22 +4493,13 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String optionLegLine(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-  ) {
+      String side, String contracts, String right, String strike) {
     return '$side $contracts $right \$$strike';
   }
 
   @override
-  String optionLegLineDated(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  ) {
+  String optionLegLineDated(String side, String contracts, String right,
+      String strike, String expiry) {
     return '$side $contracts $right \$$strike · $expiry';
   }
 
@@ -4607,11 +4579,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String shortClosedBracket(
-    String quantity,
-    String ticker,
-    String price,
-    String bracket,
-  ) {
+      String quantity, String ticker, String price, String bracket) {
     return '$quantity $ticker covered at \$$price — your $bracket was reached.';
   }
 
@@ -4830,69 +4798,70 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get houseAdOneOnOneHeadline =>
-      'Get unlimited 1-on-1s with Trader for \$14.99/mo';
+      'Dapatkan 1-on-1 tanpa had dengan Trader pada \$14.99/bulan';
 
   @override
   String get houseAdOneOnOneBody =>
-      'You\'ve used all 5 free 1-on-1s this month.';
+      'Anda telah menggunakan kesemua 5 1-on-1 percuma bulan ini.';
 
   @override
-  String get houseAdRoomHeadline => 'Want 9 more Rooms a month? Try Trader.';
+  String get houseAdRoomHeadline => 'Mahu 9 Room lagi sebulan? Cuba Trader.';
 
   @override
   String get houseAdRoomBody =>
-      'Your free Room is used. Trader runs 10 a month.';
+      'Kredit anda tidak cukup untuk Room sekarang. Trader memberi 10 sebulan.';
 
   @override
   String get houseAdCreditCapHeadline =>
-      'Hit your cap? Upgrade to Floor Manager for 500 credits/mo.';
+      'Capai had? Naik taraf ke Floor Manager untuk 500 kredit/bulan.';
 
   @override
   String get houseAdCreditCapBody =>
-      'You\'re close to this month\'s credit limit.';
+      'Anda hampir mencapai had kredit bulan ini.';
 
   @override
   String get houseAdHalalHeadline =>
-      'Curious about Floor Manager\'s premium AI?';
+      'Ingin tahu tentang ciri premium Floor Manager?';
 
   @override
   String get houseAdHalalBody =>
-      'See what Floor Manager adds for halal-mandated floors.';
+      'Lihat apa yang Floor Manager tambah untuk lantai bermandat halal.';
 
   @override
-  String get houseAdGenericHeadline => 'Do more with Trader — \$14.99/mo';
+  String get houseAdGenericHeadline =>
+      'Lakukan lebih dengan Trader — \$14.99/bulan';
 
   @override
   String get houseAdGenericBody =>
-      'Unlimited 1-on-1s, 10 Rooms a month, and a bigger credit allowance.';
+      '1-on-1 tanpa had, 10 Room sebulan, dan peruntukan kredit yang lebih besar.';
 
   @override
-  String get houseAdCtaTrader => 'See Trader plans';
+  String get houseAdCtaTrader => 'Lihat pelan Trader';
 
   @override
-  String get houseAdCtaFloorManager => 'See Floor Manager plans';
+  String get houseAdCtaFloorManager => 'Lihat pelan Floor Manager';
 
   @override
-  String get settingsSectionAdPrivacy => 'AD PRIVACY';
+  String get settingsSectionAdPrivacy => 'PRIVASI IKLAN';
 
   @override
   String get settingsAdsDoNotSell =>
-      'Do Not Sell or Share My Personal Information';
+      'Jangan Jual atau Kongsi Maklumat Peribadi Saya';
 
   @override
   String get settingsAdsDoNotSellSubtitle =>
-      'Ads still show, but every ad request is sent with restricted data processing.';
+      'Iklan masih dipaparkan, tetapi setiap permintaan iklan dihantar dengan pemprosesan data terhad.';
 
   @override
   String get settingsAdsDoNotSellSaveFailed =>
-      'That choice did not save. Try again.';
+      'Pilihan itu tidak disimpan. Cuba lagi.';
 
   @override
-  String get settingsAdsConsentRow => 'Manage ad consent';
+  String get settingsAdsConsentRow => 'Urus persetujuan iklan';
 
   @override
   String get settingsAdsConsentFailed =>
-      'The consent form could not be opened. Try again later.';
+      'Borang persetujuan tidak dapat dibuka. Cuba lagi kemudian.';
 
   @override
   String get optionRepriceHeading => 'THE PRICE MOVED';
@@ -4987,13 +4956,8 @@ class AppLocalizationsMs extends AppLocalizations {
   String get optionTicketLegSellWord => 'SELL';
 
   @override
-  String optionTicketLegLine(
-    String action,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  ) {
+  String optionTicketLegLine(String action, String contracts, String right,
+      String strike, String expiry) {
     return '$action $contracts × $right $strike · exp $expiry';
   }
 
@@ -5113,120 +5077,121 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get settingsProfileEditHint =>
-      'Tap a value to change it. Plan and credits are set by your subscription.';
+      'Ketik nilai untuk menukarnya. Pelan dan kredit ditetapkan oleh langganan anda.';
 
   @override
-  String get settingsProfileDisplayName => 'Display name';
+  String get settingsProfileDisplayName => 'Nama paparan';
 
   @override
-  String get settingsProfileLearningStyle => 'Learning style';
+  String get settingsProfileLearningStyle => 'Gaya pembelajaran';
 
   @override
-  String get settingsProfileDisplayNameHint => 'What the analysts call you';
+  String get settingsProfileDisplayNameHint =>
+      'Nama yang digunakan penganalisis untuk memanggil anda';
 
   @override
-  String get settingsGoalRetirement => 'Retirement';
+  String get settingsGoalRetirement => 'Persaraan';
 
   @override
-  String get settingsGoalLongTermWealth => 'Long-term wealth';
+  String get settingsGoalLongTermWealth => 'Kekayaan jangka panjang';
 
   @override
-  String get settingsGoalIncomeNow => 'Income now';
+  String get settingsGoalIncomeNow => 'Pendapatan sekarang';
 
   @override
-  String get settingsGoalSpecificGoal => 'A specific goal';
+  String get settingsGoalSpecificGoal => 'Matlamat tertentu';
 
   @override
-  String get settingsGoalLearningToTrade => 'Learning to trade';
+  String get settingsGoalLearningToTrade => 'Belajar berdagang';
 
   @override
-  String get settingsGoalExploring => 'Exploring';
+  String get settingsGoalExploring => 'Meneroka';
 
   @override
-  String get settingsHorizonShort => 'Under 1 year';
+  String get settingsHorizonShort => 'Kurang daripada 1 tahun';
 
   @override
-  String get settingsHorizonMedium => '1–3 years';
+  String get settingsHorizonMedium => '1–3 tahun';
 
   @override
-  String get settingsHorizonLong => '3–10 years';
+  String get settingsHorizonLong => '3–10 tahun';
 
   @override
-  String get settingsHorizonVeryLong => '10+ years';
+  String get settingsHorizonVeryLong => '10+ tahun';
 
   @override
-  String get settingsPathActive => 'Active trading';
+  String get settingsPathActive => 'Dagangan aktif';
 
   @override
-  String get settingsPathLongHorizon => 'Long horizon';
+  String get settingsPathLongHorizon => 'Ufuk panjang';
 
   @override
-  String get settingsPathBoth => 'Both';
+  String get settingsPathBoth => 'Kedua-duanya';
 
   @override
   String get settingsPathExplain =>
-      'What your analysts weight: short-term setups, long-term structure, or both.';
+      'Perkara yang diberi pemberat oleh penganalisis anda: peluang jangka pendek, struktur jangka panjang, atau kedua-duanya.';
 
   @override
-  String get settingsLearningQuick => 'Quick and direct';
+  String get settingsLearningQuick => 'Pantas dan terus';
 
   @override
-  String get settingsLearningStory => 'Explain with stories';
+  String get settingsLearningStory => 'Terangkan dengan cerita';
 
   @override
   String get settingsLearningVisual => 'Visual';
 
   @override
-  String get settingsLearningHandsOn => 'Hands-on';
+  String get settingsLearningHandsOn => 'Praktikal';
 
   @override
-  String get settingsSectionRiskQuotes => 'YOUR OWN WORDS';
+  String get settingsSectionRiskQuotes => 'KATA-KATA ANDA SENDIRI';
 
   @override
   String get settingsRiskQuotesExplain =>
-      'What you told the Concierge about risk. Kept as your own record — your analysts are not shown these.';
+      'Apa yang anda beritahu Concierge tentang risiko. Disimpan sebagai rekod anda sendiri — penganalisis anda tidak diberi lihat.';
 
   @override
-  String get settingsRiskQuoteDrawdown => 'On a drawdown';
+  String get settingsRiskQuoteDrawdown => 'Tentang susut nilai';
 
   @override
-  String get settingsRiskQuoteRegret => 'On regret';
+  String get settingsRiskQuoteRegret => 'Tentang penyesalan';
 
   @override
-  String get settingsRiskQuoteConcentration => 'On concentration';
+  String get settingsRiskQuoteConcentration => 'Tentang penumpuan';
 
   @override
-  String get settingsSectionTickerRules => 'TICKER RULES';
+  String get settingsSectionTickerRules => 'PERATURAN TICKER';
 
   @override
-  String get settingsTickerBlocklist => 'Never trade these';
+  String get settingsTickerBlocklist => 'Jangan sekali-kali dagang ini';
 
   @override
-  String get settingsTickerAllowlist => 'Only trade these';
+  String get settingsTickerAllowlist => 'Dagang ini sahaja';
 
   @override
-  String get settingsTickerAdd => 'Add a ticker';
+  String get settingsTickerAdd => 'Tambah ticker';
 
   @override
   String get settingsTickerAllowlistWarning =>
-      'While this list has any entry, your analysts may ONLY trade these tickers. Everything else is refused.';
+      'Selagi senarai ini ada sebarang entri, penganalisis anda HANYA boleh berdagang ticker ini. Yang lain ditolak.';
 
   @override
-  String get settingsTickerBlocklistEmpty => 'No blocked tickers.';
+  String get settingsTickerBlocklistEmpty => 'Tiada ticker disekat.';
 
   @override
   String get settingsTickerAllowlistEmpty =>
-      'No allowlist — everything else is permitted.';
+      'Tiada senarai benar — yang lain dibenarkan.';
 
   @override
   String get settingsTickerUnknown =>
-      'That ticker isn\'t in our universe, so it would never match. Check the symbol.';
+      'Ticker itu tiada dalam alam semesta kami, jadi ia tidak akan sepadan. Semak simbol.';
 
   @override
-  String get settingsTickerDuplicate => 'Already in the list.';
+  String get settingsTickerDuplicate => 'Sudah ada dalam senarai.';
 
   @override
-  String get settingsTickerRemove => 'Remove';
+  String get settingsTickerRemove => 'Buang';
 
   @override
   String get settingsTimezoneSearch => 'Search timezones';
@@ -5634,83 +5599,84 @@ class AppLocalizationsMs extends AppLocalizations {
   String get traceRefCopyTooltip => 'Copy reference';
 
   @override
-  String get settingsSectionStreetRating => 'STREET RATING';
+  String get settingsSectionStreetRating => 'PENARAFAN STREET';
 
   @override
-  String get settingsStreetRatingToggle => 'Show how the Street rates it';
+  String get settingsStreetRatingToggle =>
+      'Tunjukkan bagaimana Street menilainya';
 
   @override
   String get settingsStreetRatingToggleSubtitle =>
-      'After the Room has decided, AMI shows what Wall Street analysts rate the stock next to the Room\'s call. The Room never sees the Street rating while it decides.';
+      'Selepas Room membuat keputusan, AMI menunjukkan penarafan penganalisis Wall Street untuk saham itu di sebelah keputusan Room. Room tidak pernah melihat penarafan Street semasa membuat keputusan.';
 
   @override
-  String get roomStreetHeading => 'HOW THE STREET RATES IT';
+  String get roomStreetHeading => 'BAGAIMANA STREET MENILAINYA';
 
   @override
-  String get roomStreetRatingLabel => 'STREET RATING';
+  String get roomStreetRatingLabel => 'PENARAFAN STREET';
 
   @override
-  String get roomStreetAnalystsLabel => 'ANALYSTS';
+  String get roomStreetAnalystsLabel => 'ANALIS';
 
   @override
-  String get roomStreetMeanTargetLabel => 'MEAN TARGET';
+  String get roomStreetMeanTargetLabel => 'SASARAN PURATA';
 
   @override
-  String get roomStreetRoomCallLabel => 'THE ROOM\'S CALL';
+  String get roomStreetRoomCallLabel => 'KEPUTUSAN ROOM';
 
   @override
-  String get roomStreetRatingStrongBuy => 'Strong buy';
+  String get roomStreetRatingStrongBuy => 'Beli kuat';
 
   @override
-  String get roomStreetRatingBuy => 'Buy';
+  String get roomStreetRatingBuy => 'Beli';
 
   @override
-  String get roomStreetRatingHold => 'Hold';
+  String get roomStreetRatingHold => 'Tahan';
 
   @override
-  String get roomStreetRatingUnderperform => 'Underperform';
+  String get roomStreetRatingUnderperform => 'Prestasi lemah';
 
   @override
-  String get roomStreetRatingSell => 'Sell';
+  String get roomStreetRatingSell => 'Jual';
 
   @override
-  String get roomStreetRatingStrongSell => 'Strong sell';
+  String get roomStreetRatingStrongSell => 'Jual kuat';
 
   @override
   String get roomStreetAgree =>
-      'The Room\'s call and the Street rating point the same way.';
+      'Keputusan Room dan penarafan Street menuju arah yang sama.';
 
   @override
   String get roomStreetDifferDeclined =>
-      'The Room\'s call differs from the Street rating. Passing on a name the Street rates Buy can be a reasoned call; the Room\'s reasoning is above.';
+      'Keputusan Room berbeza daripada penarafan Street. Melepaskan saham yang Street nilai Beli boleh menjadi keputusan yang berasas; alasan Room di atas.';
 
   @override
   String get roomStreetDifferApprovedSell =>
-      'The Room approved a name the Street rates Sell. That pairing is worth checking against the Room\'s reasoning above.';
+      'Room meluluskan saham yang Street nilai Jual. Padanan ini wajar disemak dengan alasan Room di atas.';
 
   @override
   String get roomStreetDifferGeneric =>
-      'The Room\'s call differs from the Street rating.';
+      'Keputusan Room berbeza daripada penarafan Street.';
 
   @override
   String get roomStreetNotComparable =>
-      'The Room made no call on this run, so there is nothing to compare.';
+      'Room tidak membuat keputusan pada larian ini, jadi tiada apa untuk dibandingkan.';
 
   @override
   String get roomStreetUnavailable =>
-      'No Street rating available for this run.';
+      'Tiada penarafan Street untuk larian ini.';
 
   @override
   String roomStreetSource(String label) {
-    return 'Source: $label';
+    return 'Sumber: $label';
   }
 
   @override
-  String get roomStreetSourceUnknown => 'Source: not stated';
+  String get roomStreetSourceUnknown => 'Sumber: tidak dinyatakan';
 
   @override
   String roomStreetAsOf(String date) {
-    return 'Rating read on $date';
+    return 'Penarafan dibaca pada $date';
   }
 
   @override
@@ -5746,4 +5712,49 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get roomRatingDismiss => 'Dismiss';
+
+  @override
+  String get settingsTermsOfService => 'Syarat Perkhidmatan';
+
+  @override
+  String get settingsPrivacyPolicy => 'Dasar Privasi';
+
+  @override
+  String get settingsLanguageSystem => 'Sistem';
+
+  @override
+  String get settingsLanguageFollowSystem => 'Ikut bahasa peranti';
+
+  @override
+  String get settingsLanguageNameArabic => 'Arab';
+
+  @override
+  String get settingsLanguageNameMalay => 'Bahasa Melayu';
+
+  @override
+  String get planNameFloorPass => 'Floor Pass';
+
+  @override
+  String get planNameTrialTrader => 'Trader (percubaan)';
+
+  @override
+  String creditsLineLiveSurcharge(String max) {
+    return 'sehingga +$max lagi jika berita dan data sosial langsung digunakan';
+  }
+
+  @override
+  String get settingsComplianceTagExplainBody =>
+      'Menapis ticker yang hasil utamanya datang daripada operasi tembakau, alkohol atau perjudian. Hanya pengecualian syarikat tulen; konglomerat pelbagai dengan pendedahan kecil tidak ditapis.';
+
+  @override
+  String get settingsComplianceFossilExplainBody =>
+      'Menapis pengeluar minyak, gas dan arang batu, serta saluran paip dan syarikat perkhidmatan yang hasilnya bergantung kepada mereka. Syarikat utiliti yang mempunyai pelan peralihan tidak dikecualikan secara automatik.';
+
+  @override
+  String get settingsComplianceLongOnlyExplainBody =>
+      'Tiada jualan pendek, tiada ETF songsang, tiada opsyen jual (put) sebagai pertaruhan berasingan. Anda masih boleh lindung nilai dengan put pelindung terhadap posisi beli yang sudah anda pegang.';
+
+  @override
+  String get settingsComplianceLiquidOnlyExplainBody =>
+      'Hanya ticker dengan purata volum harian yang mencukupi untuk masuk dan keluar dengan bersih. Menapis saham kap mikro dan nama yang jarang didagangkan di mana pesanan pasaran boleh menggerakkan harga melawan anda.';
 }

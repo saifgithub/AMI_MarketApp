@@ -37,11 +37,16 @@ class ConveneCreditsLine extends StatelessWidget {
     required this.cost,
     required this.balance,
     this.resetsAt,
+    this.liveDataSurchargeMax,
   });
 
   final int? cost;
   final int? balance;
   final DateTime? resetsAt;
+
+  /// DEF495 — the most live News/Social data can add on top of [cost]; shown
+  /// as "up to +N" because whether a feed fires is only known during the run.
+  final int? liveDataSurchargeMax;
 
   bool get _insufficient =>
       cost != null && balance != null && balance! < cost!;
@@ -67,6 +72,9 @@ class ConveneCreditsLine extends StatelessWidget {
         style: AmiTypography.labelMono.copyWith(fontSize: 11, color: color),
         children: [
           TextSpan(text: base),
+          if ((liveDataSurchargeMax ?? 0) > 0 && cost! > 0)
+            TextSpan(
+                text: ' · ${l.creditsLineLiveSurcharge(liveDataSurchargeMax.toString())}'),
           if (_insufficient)
             TextSpan(text: ' · ${l.creditsLineInsufficient}'),
         ],

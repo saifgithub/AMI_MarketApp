@@ -6207,9 +6207,9 @@
   "@houseAdRoomHeadline": {
     "description": "CR122 — house upsell headline when a Floor Pass user has used the free Room (copy locked in ads.md house-ad table). NEW key. retranslate:[ar,ms]"
   },
-  "houseAdRoomBody": "Your free Room is used. Trader runs 10 a month.",
+  "houseAdRoomBody": "Not enough credits for a Room right now. Trader runs 10 a month.",
   "@houseAdRoomBody": {
-    "description": "CR122 — house upsell body for the used-free-Room slot. NEW key. retranslate:[ar,ms]"
+    "description": "CR122 / DEF497 — house upsell body for the Room slot. The slot fires when the credit balance is below the Room price (HouseAdSignals.usedFreeRoom), NOT only when a free Room was used — so the copy states the shortfall rather than claiming a free Room was used. ar/ms redrafted by Claude, awaiting translator review."
   },
   "houseAdCreditCapHeadline": "Hit your cap? Upgrade to Floor Manager for 500 credits/mo.",
   "@houseAdCreditCapHeadline": {
@@ -7092,5 +7092,62 @@
   "roomRatingDismiss": "Dismiss",
   "@roomRatingDismiss": {
     "description": "CR278 / WP-36 - Tooltip / accessibility label of the close button on the Room rating card. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsTermsOfService": "Terms of Service",
+  "@settingsTermsOfService": {
+    "description": "DEF494 — Settings HELP row that opens the Terms of Service page. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsPrivacyPolicy": "Privacy Policy",
+  "@settingsPrivacyPolicy": {
+    "description": "DEF494 — Settings HELP row that opens the Privacy Policy page. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsLanguageSystem": "System",
+  "@settingsLanguageSystem": {
+    "description": "DEF494 — language picker row that follows the device language (primary label). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsLanguageFollowSystem": "Follow system",
+  "@settingsLanguageFollowSystem": {
+    "description": "DEF494 — secondary label on the language picker's device-language row. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsLanguageNameArabic": "Arabic",
+  "@settingsLanguageNameArabic": {
+    "description": "DEF494 — the name of the Arabic language, in the current UI language, shown beside its native name in the language picker. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsLanguageNameMalay": "Malay",
+  "@settingsLanguageNameMalay": {
+    "description": "DEF494 — the name of the Malay language, in the current UI language, shown beside its native name in the language picker. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "planNameFloorPass": "Floor Pass",
+  "@planNameFloorPass": {
+    "description": "DEF494 — display name of the free Floor Pass plan (Settings PLAN row). Product tier name: may stay in Latin script. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "planNameTrialTrader": "Trader (trial)",
+  "@planNameTrialTrader": {
+    "description": "DEF494 — display name of the Trader trial plan (Settings PLAN row). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "creditsLineLiveSurcharge": "up to +{max} more if live news and social data are used",
+  "@creditsLineLiveSurcharge": {
+    "description": "DEF495 — appended to the Convene sheet credits line so the full price is visible before the charge. {max} is the most live News + Social data can add to the Room price (mandate.room_live_data_surcharge_max); the real surcharge is only known during the run, hence 'up to'. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsComplianceTagExplainBody": "Filters out tickers whose primary revenue comes from tobacco, alcohol, or gambling operations. Pure-play exclusions only; diversified conglomerates with a small exposure are not caught.",
+  "@settingsComplianceTagExplainBody": {
+    "description": "DEF494 — body of the explanation sheet for the 'No tobacco / alcohol / gambling' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsComplianceFossilExplainBody": "Filters out oil, gas, and coal producers, plus the pipelines and services companies whose revenue depends on them. Utilities with a transition plan are not auto-excluded.",
+  "@settingsComplianceFossilExplainBody": {
+    "description": "DEF494 — body of the explanation sheet for the 'No fossil fuels' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsComplianceLongOnlyExplainBody": "No short selling, no inverse ETFs, no put options used as standalone bets. You can still hedge with protective puts against a long position you already hold.",
+  "@settingsComplianceLongOnlyExplainBody": {
+    "description": "DEF494 — body of the explanation sheet for the 'Long-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "settingsComplianceLiquidOnlyExplainBody": "Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.",
+  "@settingsComplianceLiquidOnlyExplainBody": {
+    "description": "DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
   }
 }
