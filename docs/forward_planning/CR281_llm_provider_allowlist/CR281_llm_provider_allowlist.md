@@ -44,15 +44,7 @@ Audit result:
 
 5. **Per-slot extra request body (thinking off, and similar).** The `openai` kind sends no thinking field, so a model such as Ling-3.0-flash on DeepInfra runs with thinking ON unless the body carries `chat_template_kwargs.enable_thinking=false` (WP-10 scorecard §1b, §8; WP-10 used an overlay hook, `DEEPINFRA_EXTRA_BODY_JSON`). Each OpenAI-compatible slot now takes `<SLOT>_EXTRA_BODY_JSON` (`VLLM_`, `VLLM_FALLBACK_`, `GLM_`, `KIMI_`, `DEEPSEEK_`, `QWEN_`, `GEMINI_`): a JSON object merged into every request body sent to that slot. Empty merges nothing. Invalid JSON, a non-object, or a protected field fails boot, naming the setting. Precedence (`backend/app/core/llm_extra_body.py`): the gateway-owned fields `model`, `messages`, `stream`, `stream_options`, `max_tokens`, `temperature`, `response_format`, `structured_outputs`, `guided_*` can never come from this setting (refused at boot; also dropped defensively inside the provider); for any other top-level key the operator's value replaces the slot kind's default (e.g. `chat_template_kwargs` on a `vllm`-kind slot); the merge is shallow.
 
-Ling-3.0-flash on DeepInfra as a backup slot, thinking off (single quotes keep compose from mangling the JSON):
-
-```
-VLLM_FALLBACK_BASE_URL=https://api.deepinfra.com/v1/openai
-VLLM_FALLBACK_MODEL=<the DeepInfra id of Ling-3.0-flash>
-VLLM_FALLBACK_KIND=openai
-VLLM_FALLBACK_API_KEY=<the DeepInfra key>
-VLLM_FALLBACK_EXTRA_BODY_JSON='{"chat_template_kwargs":{"enable_thinking":false}}'
-```
+Ling-3.0-flash on DeepInfra as the Beta backup, thinking off: see the Beta lines below (single quotes keep compose from mangling the JSON).
 
 Whether DeepInfra's hosted Ling honours `chat_template_kwargs` is WP-10's finding and was not re-tested here; this setting guarantees the field reaches the request body (tested), not the server's reading of it.
 
@@ -83,10 +75,14 @@ VLLM_MODEL=deepseek-ai/DeepSeek-V4-Flash
 VLLM_KIND=openai
 VLLM_API_KEY=<the Beta DeepInfra key>
 VLLM_FALLBACK_BASE_URL=https://api.deepinfra.com/v1/openai
-VLLM_FALLBACK_MODEL=zai-org/GLM-5.3-Flash
+VLLM_FALLBACK_MODEL=inclusionAI/Ling-3.0-flash
 VLLM_FALLBACK_KIND=openai
 VLLM_FALLBACK_API_KEY=<the Beta DeepInfra key>
+VLLM_FALLBACK_EXTRA_BODY_JSON='{"chat_template_kwargs":{"enable_thinking":false}}'
+LLM_PRICES_JSON='{"deepseek-ai/DeepSeek-V4-Flash":{"in":0.09,"out":0.18},"inclusionAI/Ling-3.0-flash":{"in":0.06,"out":0.18}}'
 ```
+
+(Saiful's ruling, 2026-11-19: Beta's backup is Ling-3.0-flash on DeepInfra. The boot check refuses an unpriced served model, so the price entry is part of the change. The live swap proof below used GLM-5.3-Flash as the second model, which was Beta's backup when the proof ran.)
 
 ## Tests
 

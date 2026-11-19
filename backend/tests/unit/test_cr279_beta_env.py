@@ -12,6 +12,7 @@ Three things are guarded:
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -129,7 +130,9 @@ def test_example_pins_the_beta_rulings():
     v = {k: _unquote(x["value"]) for k, x in e.items()}
     assert v["AMI_ENV"] == "beta"
     assert v["VLLM_KIND"] == "openai" and v["VLLM_MODEL"] == "deepseek-ai/DeepSeek-V4-Flash"
-    assert v["VLLM_FALLBACK_MODEL"] == "zai-org/GLM-5.3-Flash"
+    assert v["VLLM_FALLBACK_MODEL"] == "inclusionAI/Ling-3.0-flash"
+    # CR281 — Ling on DeepInfra needs thinking turned off in the request body.
+    assert json.loads(v["VLLM_FALLBACK_EXTRA_BODY_JSON"]) == {"chat_template_kwargs": {"enable_thinking": False}}
     assert v["LLM_DAILY_SPEND_CEILING_USD"] == "10"
     assert v["ONBOARDING_AGE_GATE_ENFORCED"] == "true" and v["ACCOUNT_ERASURE_MODE"] == "delete"
     for banned in ("ANTHROPIC_API_KEY", "KIMI_API_KEY", "GOOGLE_AI_API_KEY", "GLM_BASE_URL"):
