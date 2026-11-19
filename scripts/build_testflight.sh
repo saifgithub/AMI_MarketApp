@@ -27,6 +27,23 @@
 #   scripts/build_testflight.sh --no-commit      # don't auto-commit the bump
 #   scripts/build_testflight.sh --no-billing     # deliberately ship WITHOUT in-app purchase
 #   scripts/build_testflight.sh --internal-only  # required when the RC key is a test_… Test Store key
+#   scripts/build_testflight.sh --channel beta   # CR267 WP-45: Beta build (see BETA CHANNEL below)
+#   scripts/build_testflight.sh --channel beta --dry-run   # print the resolved config, build nothing
+#
+# --channel alpha|beta (default alpha). Alpha is the pipeline exactly as it has
+# always been. --dry-run parses the arguments, applies the channel refusals,
+# prints what would be baked and exits 0 before any gate, bump, build or upload.
+#
+# BETA CHANNEL (CR267 WP-45; logic in scripts/lib/release_channel.sh): bakes
+# https://api-beta.agenticmarketintel.ai (override AMI_API_URL_BETA), turns the
+# backend switcher OFF (no Alpha hostname in the binary), sets AMI_BETA=true
+# (CR278, English only) and AMI_ENV=beta. It REFUSES to run unless:
+#   * --no-games is passed (external testers, no hidden features);
+#   * AMI_BETA_IOS_BUNDLE_ID is set to the company bundle ID AND the Xcode
+#     project declares that same ID — WP-49 / gate S7 supplies it, so today
+#     every beta build refuses, on purpose;
+#   * SENTRY_DSN is set (WP-53's crash-free figure comes from Sentry).
+# Never run --channel beta with the upload step until WP-49 has landed.
 #
 # Required env (defaults to Saiful's setup):
 #   APP_STORE_API_KEY_ID   - 10-char key ID, e.g. 44VJ5WADL2
@@ -79,6 +96,8 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
 IOS_DIR="${MOBILE_DIR}/ios"
+# shellcheck source=lib/release_channel.sh
+source "${PROJECT_ROOT}/scripts/lib/release_channel.sh"
 
 : "${ADMOB_MODE:=}"
 : "${ADMOB_INTERSTITIAL_AD_UNIT_ID:=}"
@@ -123,7 +142,8 @@ DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
 DO_GAMES=1
-for arg in "$@"; do
+while [[ $# -gt 0 ]]; do
+  arg="$1"
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
     --no-upload)  DO_UPLOAD=0 ;;
@@ -132,6 +152,16 @@ for arg in "$@"; do
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
     --no-games)   DO_GAMES=0 ;;
+    --dry-run)    DRY_RUN=1 ;;
+    --channel=*)  CHANNEL="${arg#--channel=}" ;;
+    --channel)
+      if [[ $# -lt 2 ]]; then
+        echo "✗ --channel needs a value (alpha|beta)" >&2
+        exit 2
+      fi
+      shift
+      CHANNEL="$1"
+      ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -141,7 +171,13 @@ for arg in "$@"; do
       exit 2
       ;;
   esac
+  shift
 done
+
+# CR267 WP-45 — resolve the release channel BEFORE any credential or gate, so a
+# Beta refusal (or --dry-run) never depends on the ASC key being present.
+ami_channel_setup ios
+ami_channel_dry_run_exit
 
 # CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
 # units on. Derived HERE from the same --internal-only/--production flags
@@ -311,26 +347,27 @@ fi
 #
 #     BACKEND PROMOTES FIRST, CLIENT SHIPS SECOND.
 #
-# Checked against ${AMI_API_URL_ALPHA} and nothing else, because that is the URL
+# Checked against ${CHANNEL_API_URL} and nothing else (the Alpha URL on the
+# alpha channel, the Beta URL on --channel beta), because that is the URL
 # this very build bakes in via --dart-define below. Not the gate's LAN default,
 # and not whatever `main` defines — the whole defect is that a client can be in
 # parity with `main` and still ahead of what is promoted.
 #
 # It exits 1 when it CANNOT reach the backend, on purpose (CR040): a parity
 # check that passes when it could not check reports safety it never verified.
-echo "▶ release schema parity vs ${AMI_API_URL_ALPHA}  (DEF195)"
+echo "▶ release schema parity vs ${CHANNEL_API_URL}  (DEF195)"
 if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
-       --base-url "${AMI_API_URL_ALPHA}"; then
+       --base-url "${CHANNEL_API_URL}"; then
   cat >&2 <<EOF
 
 ✗ RELEASE BLOCKED — the deployed backend cannot serve this client (DEF195).
 
   The keys listed above would be PATCHed by this build and silently dropped by
-  ${AMI_API_URL_ALPHA}. Every write would return 200 and change nothing.
+  ${CHANNEL_API_URL}. Every write would return 200 and change nothing.
 
   Backend promotes FIRST, client ships SECOND. Promote, then re-run this build:
 
-      /promote-to-alpha
+      /promote-to-${CHANNEL}
 
   If the gate could not REACH the backend, that is also a block, not a skip —
   fix the host or the URL. There is no flag to pass this; a release gate you
@@ -525,8 +562,7 @@ rm -rf "${MOBILE_DIR}/build/native_assets" \
        "${MOBILE_DIR}/.dart_tool/flutter_build"
 
 flutter build ios --release --no-codesign \
-  --dart-define=ALLOW_BACKEND_SWITCH=true \
-  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  "${CHANNEL_DEFINES[@]}" \
   --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
   --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}" \
   --dart-define=ADMOB_MODE="${ADMOB_MODE}" \

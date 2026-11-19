@@ -48,6 +48,6 @@
 
 ## Not done
 
-1. The build scripts are untouched (see the note above).
+1. ~~The build scripts are untouched~~ Done by CR267 WP-45: `--channel beta` sets `AMI_BETA=true` in all three scripts (`scripts/lib/release_channel.sh`).
 2. The account export (CR276) does not list ratings; they have no user column and no free text.
 3. The Appium scripts for the three device cases.
