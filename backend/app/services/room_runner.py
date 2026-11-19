@@ -285,6 +285,20 @@ def _backup_used_stamp() -> dict[str, Any]:
     }
 
 
+def _backup_produced_desk_turns(ctx: "_RoomContext", run: "RoomRun") -> bool:
+    """DEF505 — did the backup model answer at least one desk this Room?
+
+    `llm_backup_used` means "the backup model produced this verdict's content",
+    not "the Room was restarted onto the backup". A backup that also failed
+    leaves every desk on its scripted standing-guidance turn; stamping that
+    Room told the client the backup model ran it. The PM entry is excluded:
+    its outage narration is scripted and is not a desk the backup answered.
+    """
+    desks = [m.agent_id for m in run.transcript if m.agent_id != AgentId.PORTFOLIO_MANAGER]
+    scripted = {a for a in ctx.scripted_turns if a != AgentId.PORTFOLIO_MANAGER}
+    return any(a not in scripted for a in desks)
+
+
 class _RestartablePhases:
     """`PHASES` as an iterator the run loop can rewind to phase 0."""
 
@@ -8835,7 +8849,7 @@ class RoomRunner:
                 run.verdict = _stamp_next_convene_basis(
                     run.verdict, profile, ctx.next_convene_delta,
                 )
-                if _backup_restarted:
+                if _backup_restarted and _backup_produced_desk_turns(ctx, run):
                     run.verdict = run.verdict.model_copy(update=_backup_used_stamp())
             _persist_run(run)
             # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
