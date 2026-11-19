@@ -180,7 +180,11 @@ class _ScrollingTapeState extends ConsumerState<_ScrollingTape>
     // combination causes the analyzer to shadow TextDirection with a non-enum.
     final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
 
-    return ClipRect(
+    // DEF466 — a marquee is not content. Left in the tree, its tappable
+    // labelled items move every frame, so every screen emitted a semantics
+    // update per frame and the iPhone accessibility tree went dark under it.
+    return ExcludeSemantics(
+      child: ClipRect(
       child: RepaintBoundary(
         child: AnimatedBuilder(
           animation: _ctrl,
@@ -213,6 +217,7 @@ class _ScrollingTapeState extends ConsumerState<_ScrollingTape>
             ),
           ),
         ),
+      ),
       ),
     );
   }
