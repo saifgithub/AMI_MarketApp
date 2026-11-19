@@ -1,0 +1,10 @@
+# CR240 Ling-3.0-flash re-score (2026-11-19): the first 20 arms of cr240-wp10-main (ticker-major order) =
+# 5 tickers x R2,R4 x 2 reps. Same frozen cr265-30 profiles, same prompts (backend-default).
+name: cr240-ling30-rescore
+provider: deepinfra
+tickers: [AAPL, APD, BA, BAC, BGS]
+mandate: { risk_score: 4 }
+risk_scores: [2, 4]
+repeats: 2
+prompt_variant: backend-default
+profile_snapshot_dir: /harness/docs/tools/room_investigation_V2/benchmarks/snapshots/cr265-30
