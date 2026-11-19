@@ -429,3 +429,57 @@ def test_live_data_surcharge_is_disclosed_and_matches_the_debit(seed, trader_run
         assert balance(seed, trader_run.user) == 150
     else:
         assert balance(seed, trader_run.user) == 150 - (BASIC_COST + charged)
+
+
+@pytest.mark.uat("UAT-ROOM-023")
+@pytest.mark.llm
+def test_owner_rates_a_verdict_once_and_can_change_it(seed, api, floor_run, stranger):
+    assert_clean_stream(floor_run)
+    path = f"/v1/room/{floor_run.run_id}/rating"
+    owner = floor_run.user
+
+    first = owner.post(path, json={"helpful": True})
+    assert first.status_code == 200, first.text
+    assert first.json()["helpful"] is True and first.json()["changed"] is False
+    again = owner.post(path, json={"helpful": True})
+    assert again.status_code == 200 and again.json()["changed"] is False
+    flipped = owner.post(path, json={"helpful": False})
+    assert flipped.status_code == 200, flipped.text
+    assert flipped.json()["helpful"] is False and flipped.json()["changed"] is True
+
+    assert stranger.post(path, json={"helpful": True}).status_code == 403
+    assert owner.post(f"/v1/room/{uuid.uuid4()}/rating", json={"helpful": True}).status_code == 404
+    assert api.post(path, json={"helpful": True}).status_code == 401
+    for bad in ({}, {"helpful": "yes"}, {"helpful": 1}, {"helpful": True, "extra": 1}):
+        assert owner.post(path, json=bad).status_code == 422, bad
+
+    read = seed.admin.get("/v1/admin/room-ratings", params={"limit": 1000})
+    assert read.status_code == 200, read.text
+    body = read.json()
+    mine = [x for x in body["recent"] if x["run_id"] == floor_run.run_id]
+    assert len(mine) == 1, "one rating per Room"
+    assert mine[0]["helpful"] is False and mine[0]["ticker"] == "AAPL"
+    assert mine[0]["verdict_action"] in VERDICT_ACTIONS
+    totals = body["totals"]
+    assert totals["ratings"] == totals["helpful"] + totals["not_helpful"] >= 1
+    assert api.get("/v1/admin/room-ratings").status_code == 403
+
+
+@pytest.mark.uat("UAT-ROOM-024")
+@pytest.mark.llm
+def test_free_credits_mode_and_the_paid_wall_agree_with_the_advertised_price(seed):
+    u = fund(seed, "floor_pass", 0)
+    price = u.get(f"/v1/mandate/{u.id}").json()["room_cost"]
+    status, headers, events, body = stream_room(u, "AAPL")
+    if price == 0:
+        assert status == 200, f"free-credits host refused a Room: {status} {body}"
+        r = RoomResult(u, "floor_pass", 0, status, headers, events)
+        assert_clean_stream(r)
+        assert r.done["credit_cost"] == 0
+        assert get_run(r)["credit_cost"] == 0
+        assert balance(seed, u) == 0
+    else:
+        assert price == BASIC_COST
+        assert status == 402 and events == [], "a charging host must keep the wall"
+        assert body["detail"]["code"] == "insufficient_credits"
+        assert room_runs(u) == []

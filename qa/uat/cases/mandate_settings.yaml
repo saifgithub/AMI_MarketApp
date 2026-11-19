@@ -376,3 +376,20 @@ cases:
     expected:
       - 'Every heading, status line and button in those sections is in the chosen language; none stays English (DEF478)'
       - 'The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"'
+
+  - id: UAT-MAND-039
+    title: A Beta build is English only and shows no language switch
+    layer: device
+    status: blocked
+    blocked_on: Needs a build made with --dart-define=AMI_BETA=true on the rig, and the Appium script is not written yet (CR278 shipped the cases and the app controls)
+    plans: [any]
+    preconditions:
+      - A Beta build (made with AMI_BETA=true) on a device whose system language is Arabic or Malay
+    steps:
+      - Launch the app and read the first screen
+      - Open You > Settings and scroll the whole page
+    expected:
+      - The app is in English from the first screen, even on an Arabic or Malay device
+      - Settings has no LANGUAGE section and no English / Arabic / Bahasa Melayu rows
+      - A default (non-Beta) build still shows the LANGUAGE section, per UAT-MAND-034
+    notes: CR278 / WP-36. UAT-MAND-034 does not apply to a Beta build.

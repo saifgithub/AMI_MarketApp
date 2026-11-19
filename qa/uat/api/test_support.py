@@ -219,3 +219,23 @@ def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
             _close_out(seed.admin, resp.json()["id"])
         assert resp.status_code == 422, resp.text
         assert any("trace_ids" in str(e.get("loc")) for e in resp.json()["detail"]), resp.text
+
+
+@pytest.mark.uat("UAT-SUPP-015")
+def test_response_report_rides_the_bug_endpoint_with_its_route(seed):
+    u = seed.user(plan="floor_pass")
+    route = f"response:room:{uuid.uuid4()}:risk_officer"
+    trace = str(uuid.uuid4())
+    r = u.post("/v1/feedback/bug",
+               files=_form(**{**GOOD, "category": "wrong_data", "route": route, "trace_ids": trace}),
+               headers=exempt_headers())
+    assert r.status_code == 201, r.text
+    report_id = r.json()["id"]
+    try:
+        detail = seed.admin.get(f"/v1/admin/bugs/{report_id}")
+        assert detail.status_code == 200, detail.text
+        body = detail.json()
+        assert body["route"] == route
+        assert body["trace_ids"] == trace
+    finally:
+        _close_out(seed.admin, report_id)

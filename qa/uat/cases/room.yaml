@@ -4,6 +4,7 @@ title: Convene the Room
 order: 6
 covers:
   - backend/app/api/room.py
+  - backend/app/api/room_rating.py
   - backend/app/api/sse.py
   - mobile/lib/screens/room/**
 summary: |
@@ -303,3 +304,58 @@ cases:
       - 'Open a Room that is waiting on its next session or is out of credits; tap Review a Training session'
     expected:
       - 'The LESSONS tab opens with LESSONS highlighted in the bottom bar, not a second Lessons screen over the Floor (DEF476)'
+
+  - id: UAT-ROOM-023
+    title: The Room owner can rate a verdict thumbs up or down, once, and change it; nobody else can
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - A completed Room run (the one UAT-ROOM-001 streams)
+    steps:
+      - POST /v1/room/{run_id}/rating with helpful true as the owner, then again with helpful true, then with helpful false
+      - POST it as another user, for an unknown run id, with no bearer, and with a non-boolean helpful or an extra field
+      - Admin GET /v1/admin/room-ratings, and the same without the admin secret
+    expected:
+      - The first answer is stored (200, changed false); repeating it changes nothing; the third call returns helpful false with changed true; there is one rating per Room
+      - Another user is 403, an unknown run is 404, no bearer is 401, a non-boolean or extra field is 422; none of them changes the stored answer
+      - The admin read lists the run with its ticker, the verdict action and the final helpful value, and its totals count it once; without the admin secret it is 403
+    notes: CR278 / WP-36. The rating is the Beta tester's "did the verdict and its reasons make sense" answer; the admin read feeds the WP-53 exit report.
+
+  - id: UAT-ROOM-024
+    title: In free-credits mode a Room is not charged and still runs; in paid mode the wall holds
+    layer: api
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - Fresh Floor Pass user holding 0 credits
+    steps:
+      - GET /v1/mandate/{user_id} and read room_cost
+      - POST /v1/room/stream for AAPL and read the SSE stream to the end
+    expected:
+      - If room_cost is 0 (the host runs BETA_FREE_CREDITS=true) the Room is not refused, finishes with a verdict, done.credit_cost is 0, the persisted run's credit_cost is 0 and the balance is still 0
+      - If room_cost is 8 (the host charges, as Alpha does) the Room is refused with 402 insufficient_credits and no run, exactly as UAT-ROOM-005
+      - The advertised room_cost and the behaviour always agree; one is never free while the other charges
+    notes: CR278 / WP-36. Alpha runs BETA_FREE_CREDITS=false, so there it asserts the wall; the free branch runs on the Beta host (WP-45).
+
+  - id: UAT-ROOM-025
+    title: After a Room a dismissible card asks if the verdict made sense, and a response can be reported
+    layer: device
+    status: blocked
+    blocked_on: The Appium script for this case is not written yet (CR278 shipped the cases and the app controls; the rig script and a run on a build made with the Beta define are still to do)
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - A Room has just finished on AAPL and shows its verdict
+    steps:
+      - Scroll under the verdict; read the card "Did the verdict and its reasons make sense?"
+      - Tap the thumbs-up, then the thumbs-down
+      - Tap the X on the card
+      - Open the Room again from the Journal, or convene it again, and long-press any desk's row (or the verdict), then tap "Report this response"
+      - Read the report sheet, then close it without sending
+    expected:
+      - The card sits under the verdict and cost line; the verdict's actions above it still work without touching the card
+      - Tapping a thumb highlights it and the card says it was saved; the other thumb changes the answer
+      - The X removes the card and nothing else on the screen moves or goes missing
+      - The report sheet opens already titled "Problem with a response from <desk>", with the category set to Wrong data and a line naming the desk; closing it sends nothing
+    notes: CR278 / WP-36. Pair with UAT-ROOM-023, which proves the stored answer.

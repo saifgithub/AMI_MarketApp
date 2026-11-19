@@ -4,16 +4,16 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**289 cases** — 192 api, 17 device, 80 manual; 12 blocked.
+**295 cases** — 195 api, 20 device, 80 manual; 15 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 8 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 31 cases
 5. [Floor tab & home shell](#floor) — 10 cases
-6. [Convene the Room](#room) — 22 cases
+6. [Convene the Room](#room) — 25 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 33 cases
@@ -23,7 +23,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 10 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 7 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 14 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 16 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
@@ -988,6 +988,26 @@ _API (automated, live Alpha) · plans: trader_
 **Expected**
 1. 200 and every real field is unchanged
 
+### Device (automated, Appium)
+
+#### UAT-MAND-039 — A Beta build is English only and shows no language switch
+
+_Device (automated, Appium) · plans: any · **BLOCKED** — Needs a build made with --dart-define=AMI_BETA=true on the rig, and the Appium script is not written yet (CR278 shipped the cases and the app controls)_
+
+**Preconditions**
+1. A Beta build (made with AMI_BETA=true) on a device whose system language is Arabic or Malay
+
+**Steps**
+1. Launch the app and read the first screen
+2. Open You > Settings and scroll the whole page
+
+**Expected**
+1. The app is in English from the first screen, even on an Arabic or Malay device
+2. Settings has no LANGUAGE section and no English / Arabic / Bahasa Melayu rows
+3. A default (non-Beta) build still shows the LANGUAGE section, per UAT-MAND-034
+
+> CR278 / WP-36. UAT-MAND-034 does not apply to a Beta build.
+
 <a id="floor"></a>
 ## Floor tab & home shell
 
@@ -1247,6 +1267,43 @@ _API (automated, live Alpha) · plans: trader · uses LLM_
 1. live_data_notice.surcharge_charged is 0, 2 or 4
 2. done.credit_cost and the persisted credit_cost equal 8 plus that surcharge, and the balance drop equals it - unless the run was an outage (DEF432), in which case refunded is true and the whole charge, surcharge included, is back
 
+#### UAT-ROOM-023 — The Room owner can rate a verdict thumbs up or down, once, and change it; nobody else can
+
+_API (automated, live Alpha) · plans: floor_pass · uses LLM_
+
+**Preconditions**
+1. A completed Room run (the one UAT-ROOM-001 streams)
+
+**Steps**
+1. POST /v1/room/{run_id}/rating with helpful true as the owner, then again with helpful true, then with helpful false
+2. POST it as another user, for an unknown run id, with no bearer, and with a non-boolean helpful or an extra field
+3. Admin GET /v1/admin/room-ratings, and the same without the admin secret
+
+**Expected**
+1. The first answer is stored (200, changed false); repeating it changes nothing; the third call returns helpful false with changed true; there is one rating per Room
+2. Another user is 403, an unknown run is 404, no bearer is 401, a non-boolean or extra field is 422; none of them changes the stored answer
+3. The admin read lists the run with its ticker, the verdict action and the final helpful value, and its totals count it once; without the admin secret it is 403
+
+> CR278 / WP-36. The rating is the Beta tester's "did the verdict and its reasons make sense" answer; the admin read feeds the WP-53 exit report.
+
+#### UAT-ROOM-024 — In free-credits mode a Room is not charged and still runs; in paid mode the wall holds
+
+_API (automated, live Alpha) · plans: floor_pass · uses LLM_
+
+**Preconditions**
+1. Fresh Floor Pass user holding 0 credits
+
+**Steps**
+1. GET /v1/mandate/{user_id} and read room_cost
+2. POST /v1/room/stream for AAPL and read the SSE stream to the end
+
+**Expected**
+1. If room_cost is 0 (the host runs BETA_FREE_CREDITS=true) the Room is not refused, finishes with a verdict, done.credit_cost is 0, the persisted run's credit_cost is 0 and the balance is still 0
+2. If room_cost is 8 (the host charges, as Alpha does) the Room is refused with 402 insufficient_credits and no run, exactly as UAT-ROOM-005
+3. The advertised room_cost and the behaviour always agree; one is never free while the other charges
+
+> CR278 / WP-36. Alpha runs BETA_FREE_CREDITS=false, so there it asserts the wall; the free branch runs on the Beta host (WP-45).
+
 ### Device (automated, Appium)
 
 #### UAT-ROOM-016 — Convening the Room on AAPL streams to a CIO verdict card with a decision
@@ -1264,6 +1321,28 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM_
 1. The Convene sheet states the Room price and the user's credits before anything is charged
 2. The Room opens on AAPL and streams desk by desk
 3. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
+
+#### UAT-ROOM-025 — After a Room a dismissible card asks if the verdict made sense, and a response can be reported
+
+_Device (automated, Appium) · plans: floor_pass · uses LLM · **BLOCKED** — The Appium script for this case is not written yet (CR278 shipped the cases and the app controls; the rig script and a run on a build made with the Beta define are still to do)_
+
+**Preconditions**
+1. A Room has just finished on AAPL and shows its verdict
+
+**Steps**
+1. Scroll under the verdict; read the card "Did the verdict and its reasons make sense?"
+2. Tap the thumbs-up, then the thumbs-down
+3. Tap the X on the card
+4. Open the Room again from the Journal, or convene it again, and long-press any desk's row (or the verdict), then tap "Report this response"
+5. Read the report sheet, then close it without sending
+
+**Expected**
+1. The card sits under the verdict and cost line; the verdict's actions above it still work without touching the card
+2. Tapping a thumb highlights it and the card says it was saved; the other thumb changes the answer
+3. The X removes the card and nothing else on the screen moves or goes missing
+4. The report sheet opens already titled "Problem with a response from <desk>", with the category set to Wrong data and a line naming the desk; closing it sends nothing
+
+> CR278 / WP-36. Pair with UAT-ROOM-023, which proves the stored answer.
 
 <a id="one-on-one"></a>
 ## 1-on-1 agent chat
@@ -2755,6 +2834,20 @@ _API (automated, live Alpha) · plans: floor_pass_
 
 > CR239 / WP-38. Files one extra triage-queue report per run, closed out at once like SUPP-001/002.
 
+#### UAT-SUPP-015 — A "Report this response" report rides the ordinary bug endpoint and names the Room and the desk
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. POST /v1/feedback/bug with category wrong_data, a "[CR263 UAT - ignore]" title, route response:room:<uuid>:risk_officer and one trace id
+2. Admin GET the report
+
+**Expected**
+1. 201; the admin detail shows the same route and the trace id, so a report maps to one Room, one desk and the request log lines
+2. There is no second reporting endpoint; the report is closed out at once like SUPP-001
+
+> CR278 / WP-36. The route shape is response:<surface>:<run id or ->:<agent id>[:t<turn>]. Files one extra triage-queue report per run.
+
 ### Device (automated, Appium)
 
 #### UAT-SUPP-012 — The bug-report sheet opens from Settings and refuses an empty submission (nothing is sent)
@@ -2770,6 +2863,23 @@ _Device (automated, Appium) · plans: any_
 2. Submitting with the required fields empty shows a validation message and sends nothing
 
 > Never submits - submissions land in the real triage queue. On iOS blocked by DEF466 (the pane that holds Report a problem is below PROFILE).
+
+#### UAT-SUPP-016 — Long-pressing a Concierge reply offers "Report this response" and opens the sheet filled in
+
+_Device (automated, Appium) · plans: any · **BLOCKED** — The Appium script for this case is not written yet (CR278 shipped the cases and the app controls)_
+
+**Steps**
+1. Open the Concierge interview (a fresh install, or Settings > restart onboarding)
+2. Long-press one of AMI's replies, then tap "Report this response"
+3. Read the sheet, then close it without sending
+4. Long-press one of your own messages
+
+**Expected**
+1. A one-row sheet offers "Report this response"; tapping it opens the report sheet titled "Problem with a response from AMI" with the category set to Wrong data
+2. Closing the sheet sends nothing
+3. Long-pressing your own message offers nothing
+
+> CR278 / WP-36. The same gesture works on 1-on-1 and Brief replies and on Room desk rows.
 
 <a id="billing"></a>
 ## Billing, plans, credits & ads
