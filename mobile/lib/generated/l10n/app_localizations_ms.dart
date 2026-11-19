@@ -5591,4 +5591,84 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get traceRefCopyTooltip => 'Copy reference';
+
+  @override
+  String get settingsSectionStreetRating => 'STREET RATING';
+
+  @override
+  String get settingsStreetRatingToggle => 'Show how the Street rates it';
+
+  @override
+  String get settingsStreetRatingToggleSubtitle =>
+      'After the Room has decided, AMI shows what Wall Street analysts rate the stock next to the Room\'s call. The Room never sees the Street rating while it decides.';
+
+  @override
+  String get roomStreetHeading => 'HOW THE STREET RATES IT';
+
+  @override
+  String get roomStreetRatingLabel => 'STREET RATING';
+
+  @override
+  String get roomStreetAnalystsLabel => 'ANALYSTS';
+
+  @override
+  String get roomStreetMeanTargetLabel => 'MEAN TARGET';
+
+  @override
+  String get roomStreetRoomCallLabel => 'THE ROOM\'S CALL';
+
+  @override
+  String get roomStreetRatingStrongBuy => 'Strong buy';
+
+  @override
+  String get roomStreetRatingBuy => 'Buy';
+
+  @override
+  String get roomStreetRatingHold => 'Hold';
+
+  @override
+  String get roomStreetRatingUnderperform => 'Underperform';
+
+  @override
+  String get roomStreetRatingSell => 'Sell';
+
+  @override
+  String get roomStreetRatingStrongSell => 'Strong sell';
+
+  @override
+  String get roomStreetAgree =>
+      'The Room\'s call and the Street rating point the same way.';
+
+  @override
+  String get roomStreetDifferDeclined =>
+      'The Room\'s call differs from the Street rating. Passing on a name the Street rates Buy can be a reasoned call; the Room\'s reasoning is above.';
+
+  @override
+  String get roomStreetDifferApprovedSell =>
+      'The Room approved a name the Street rates Sell. That pairing is worth checking against the Room\'s reasoning above.';
+
+  @override
+  String get roomStreetDifferGeneric =>
+      'The Room\'s call differs from the Street rating.';
+
+  @override
+  String get roomStreetNotComparable =>
+      'The Room made no call on this run, so there is nothing to compare.';
+
+  @override
+  String get roomStreetUnavailable =>
+      'No Street rating available for this run.';
+
+  @override
+  String roomStreetSource(String label) {
+    return 'Source: $label';
+  }
+
+  @override
+  String get roomStreetSourceUnknown => 'Source: not stated';
+
+  @override
+  String roomStreetAsOf(String date) {
+    return 'Rating read on $date';
+  }
 }

@@ -9277,6 +9277,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy reference'**
   String get traceRefCopyTooltip;
+
+  /// Settings section title for the Street-comparison switch. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'STREET RATING'**
+  String get settingsSectionStreetRating;
+
+  /// Label of the Settings switch that shows or hides the Street-rating card under a Room verdict. Default ON. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Show how the Street rates it'**
+  String get settingsStreetRatingToggle;
+
+  /// Subtitle under the Street-rating switch in Settings. States that the Room decides without seeing the rating. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'After the Room has decided, AMI shows what Wall Street analysts rate the stock next to the Room\'s call. The Room never sees the Street rating while it decides.'**
+  String get settingsStreetRatingToggleSubtitle;
+
+  /// Heading of the Verdict Board card that sets the Room's call beside the sell-side analyst consensus rating. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HOW THE STREET RATES IT'**
+  String get roomStreetHeading;
+
+  /// Row label on the Street card: the consensus rating word. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'STREET RATING'**
+  String get roomStreetRatingLabel;
+
+  /// Row label on the Street card: how many analysts stand behind the consensus. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ANALYSTS'**
+  String get roomStreetAnalystsLabel;
+
+  /// Row label on the Street card: the analysts' mean price target. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MEAN TARGET'**
+  String get roomStreetMeanTargetLabel;
+
+  /// Row label on the Street card: the Room's own verdict, shown beside the Street rating. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROOM\'S CALL'**
+  String get roomStreetRoomCallLabel;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Strong buy'**
+  String get roomStreetRatingStrongBuy;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get roomStreetRatingBuy;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get roomStreetRatingHold;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Underperform'**
+  String get roomStreetRatingUnderperform;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get roomStreetRatingSell;
+
+  /// Consensus rating word on the Street card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Strong sell'**
+  String get roomStreetRatingStrongSell;
+
+  /// Status line on the Street card when the Room's call and the analyst consensus agree. Educational, not advice. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room\'s call and the Street rating point the same way.'**
+  String get roomStreetAgree;
+
+  /// Status line on the Street card when the Room declined a name the Street rates Buy. Educational, not advice. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room\'s call differs from the Street rating. Passing on a name the Street rates Buy can be a reasoned call; the Room\'s reasoning is above.'**
+  String get roomStreetDifferDeclined;
+
+  /// Status line on the Street card when the Room approved a name the Street rates Sell or Underperform. Educational, not advice. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room approved a name the Street rates Sell. That pairing is worth checking against the Room\'s reasoning above.'**
+  String get roomStreetDifferApprovedSell;
+
+  /// Status line on the Street card for any other disagreement between the Room and the Street. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room\'s call differs from the Street rating.'**
+  String get roomStreetDifferGeneric;
+
+  /// Status line on the Street card when the Room's verdict was NO_VERDICT (an outage-shaped or withheld run). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Room made no call on this run, so there is nothing to compare.'**
+  String get roomStreetNotComparable;
+
+  /// Shown on the Street card when the backend has no usable analyst consensus for the run (gated off, fetch failed, historical run, or no analysts). Never replaced by an empty or zero rating. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No Street rating available for this run.'**
+  String get roomStreetUnavailable;
+
+  /// Source line on the Street card. {label} is the data-source name sent by the backend (e.g. 'Yahoo Finance via yfinance: sell-side analyst consensus'); shown verbatim. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {label}'**
+  String roomStreetSource(String label);
+
+  /// Source line on the Street card if the backend sent no source label. The card never hides a missing label. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Source: not stated'**
+  String get roomStreetSourceUnknown;
+
+  /// Date line on the Street card. {date} is the fact-sheet date the rating was read, already formatted. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Rating read on {date}'**
+  String roomStreetAsOf(String date);
 }
 
 class _AppLocalizationsDelegate

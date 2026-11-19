@@ -60,6 +60,7 @@ RoomBoardData boardFromRoomState({
     levelProvenance: verdict?.levelProvenance,
     decisionRecord: verdict?.decisionRecord,
     nextConveneDelta: verdict?.nextConveneDelta,
+    streetComparison: verdict?.streetComparison,
     runId: state.runId,
     voices: [
       for (final agent in kCombVoices)
@@ -156,6 +157,10 @@ RoomBoardData? boardFromJournalEntry(JournalEntry entry) {
     },
     nextConveneDelta: switch (rawVerdict?['next_convene_delta']) {
       final Map m => NextConveneDelta.fromJson(m.cast<String, dynamic>()),
+      _ => null,
+    },
+    streetComparison: switch (rawVerdict?['street_comparison']) {
+      final Map m => StreetComparison.fromJson(m.cast<String, dynamic>()),
       _ => null,
     },
     isRecord: true,

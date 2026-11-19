@@ -31,10 +31,13 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
+import 'package:ami_trade/state/street_comparison_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/room/room_consensus_strip.dart';
+import 'package:ami_trade/widgets/room/room_street_card.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 // `package:intl` also exports a `TextDirection`, with `LTR`/`RTL` constants
 // that are NOT Flutter's. Hidden so the ribbon's `TextDirection.ltr` lock —
@@ -171,6 +174,26 @@ class RoomBoard extends StatelessWidget {
         ],
         const SizedBox(height: AmiSpacing.m),
         _ReasonBlock(data: data),
+        // CR260 / CR267 WP-21b — the Room's call beside the Street rating,
+        // computed by the backend after the verdict. Present only when the
+        // server sent a comparison AND the user's Street-rating setting is on.
+        // The Consumer sits behind the null check so boards without a
+        // comparison need no ProviderScope.
+        if (data.streetComparison != null)
+          Consumer(
+            builder: (context, ref, _) {
+              if (!ref.watch(streetComparisonEnabledProvider)) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: AmiSpacing.m),
+                child: RoomStreetCard(
+                  comparison: data.streetComparison!,
+                  roomCallLabel: headingForOutcome(l, data),
+                ),
+              );
+            },
+          ),
         // CR266 — "what changed since your last convene on this name". The
         // card exists only when the server sent a delta; a first convene
         // renders nothing rather than a "no changes" line (absence is not

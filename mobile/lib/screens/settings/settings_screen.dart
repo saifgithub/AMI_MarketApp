@@ -14,6 +14,7 @@ import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/account.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/settings/profile_fields_section.dart';
+import 'package:ami_trade/screens/settings/street_comparison_setting.dart';
 import 'package:ami_trade/screens/settings/ticker_rules_section.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
@@ -518,6 +519,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       quotes: _localRiskQuotes ?? m.riskQuotes,
                       onChanged: (next) => _setLocal(() => _localRiskQuotes = next),
                     ),
+                  ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  // CR260 / CR267 WP-21b — show or hide the Street-rating card
+                  // under a Room verdict.
+                  _Section(title: l.settingsSectionStreetRating, children: const [
+                    StreetComparisonSetting(),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   _MembershipSection(mandate: m),
