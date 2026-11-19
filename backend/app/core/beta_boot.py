@@ -111,6 +111,12 @@ def beta_boot_problems(s: Any) -> list[str]:
             "the 18+ confirmation (CR273)."
         )
 
+    if not s.sentry_dsn.strip():
+        problems.append(
+            "SENTRY_DSN is empty: Beta must report backend errors (CR267 WP-44). An empty "
+            "DSN makes `init_sentry` a silent no-op and every crash goes unseen."
+        )
+
     key = s.secret_key
     if key == _SECRET_KEY_DEV_DEFAULT or len(key) < _SECRET_KEY_MIN_LEN:
         problems.append(

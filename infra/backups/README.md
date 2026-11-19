@@ -5,6 +5,12 @@ Nightly `pg_dump` against the AMI Trade database, retained for
 a backup into a scratch database — run it once on install and then
 quarterly so we know the backups actually work.
 
+> **Beta (CR267 WP-44):** encrypted dumps copied to Cloudflare R2, remote
+> retention, failure alerts and `pg-restore-drill.sh` are described in
+> [`docs/forward_planning/CR267_beta_programme/wp44_backups_alerts.md`](../../docs/forward_planning/CR267_beta_programme/wp44_backups_alerts.md).
+> Use `ami-trade-backup.env.beta.example` as the env file. The manual drill
+> below predates encryption: use the script, which decrypts.
+
 ## Files
 
 | File | Installs to | Notes |

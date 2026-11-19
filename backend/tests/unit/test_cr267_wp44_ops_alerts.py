@@ -204,3 +204,28 @@ def test_cli_test_alert_exit_codes(monkeypatch, capsys):
     monkeypatch.setattr(settings, "ops_alert_webhook_url", "")
     assert ops_alerts.main(["x", "test"]) == 1
     assert ops_alerts.main(["x"]) == 2
+
+
+def test_beta_refuses_an_empty_sentry_dsn_and_alpha_does_not():
+    from pydantic import ValidationError
+
+    from app.core.beta_boot import beta_boot_problems
+
+    class _S:
+        sentry_dsn = " "
+        vllm_base_url = "https://api.deepinfra.com/v1/openai"
+        vllm_fallback_base_url = ""
+        glm_base_url = ""
+        anthropic_api_key = kimi_api_key = google_ai_api_key = ""
+        llm_daily_spend_ceiling_usd = None
+        onboarding_age_gate_enforced = True
+        secret_key = "x" * 40
+        llm_prices_json = ""
+        vllm_model = "m"
+        vllm_fallback_model = "m"
+
+    assert any("SENTRY_DSN" in p for p in beta_boot_problems(_S()))
+    _S.sentry_dsn = "https://k@o0.ingest.sentry.io/1"
+    assert not any("SENTRY_DSN" in p for p in beta_boot_problems(_S()))
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, env="beta", sentry_dsn="", secret_key="x" * 40)
