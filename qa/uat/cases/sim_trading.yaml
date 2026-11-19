@@ -433,3 +433,17 @@ cases:
       - 'The advisory title reads "NO AMI VERDICT" in English (never "NO AI VERDICT") and is translated in Arabic and Bahasa Melayu, with its Convene the Room and Proceed without buttons (DEF478)'
       - 'The destination picker, the "could not reach AMI" line and the "blocked by your mandate" fallback are translated'
       - 'With a non-paper Alpaca credential stored, the Portfolio relink prompt is translated'
+
+  - id: UAT-SIM-034
+    title: A limit order re-bases the default STOP and TARGET on the limit price
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A ticker whose market price is well above $5 (for example SCHD at about $34)'
+    steps:
+      - 'Open a new trade ticket, enter the ticker and wait for the price chip; note the STOP and TARGET that fill in'
+      - 'Tap LIMIT and enter a limit price of 5.00; do not touch STOP or TARGET'
+      - 'Type your own STOP, then change the limit price again'
+    expected:
+      - 'STOP and TARGET move to about 6% below and 13% above the limit price (4.70 and 5.65), SUBMIT stays enabled and no stop-above-entry refusal appears (DEF504)'
+      - 'Your own STOP is left exactly as typed while the untouched TARGET keeps following the limit price'
