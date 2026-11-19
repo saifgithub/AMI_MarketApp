@@ -164,4 +164,12 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 6. **AMI-DL-4 Room finding:** run `cc493ece` (MSFT) was not stuck. It completed at 14:30:19Z with a verdict and a journal entry; the 14:36Z "second run" was the 24 h dedup reattaching to it (`room_dedup_attached_completed`). One charge of 29 credits, no refund owed. The app showed nothing on reopen, which is DEF500.
 7. **WP-43** (`e2ca401d`) and **WP-44** (`13ead8d2`) merged; acceptance still needs the Beta host (S4).
 8. **Hold:** Saiful paused new work on 2026-11-19 and lifted it on 2026-11-20. Deploy #9 (CR281, DEF500–503, allow-list in alpha.env) and build 119 are next.
-9. **Saiful 2026-11-20:** on reopen with a Room still running, keep the Floor + reconnect banner (DEF500 as built); no auto-jump into the Room.
+9. **Saiful 2026-11-20:** on reopen with a Room still running, the app opens on the Floor with a reconnect banner; no auto-jump into the Room. **Correction:** I put the question to him as if DEF500 already showed that Floor banner. It does not: DEF500 shows its banner inside the Room, and a cold start reaches the run only by convening the same ticker again. DEF506 builds the Floor banner he chose.
+
+## 2026-11-20 (night) — deploy #9, build 119, WP-14 acceptance
+
+1. **Standing go (Saiful, 2026-11-20):** Alpha promotions, internal store builds, lab APK-over installs and logged UAT overrides for stale device cases no longer need a per-item ask. The hard gates still stop.
+2. **Deploy #9** `alpha-2026-11-20-1` = `83a6fb06`: suite PASS 8,761; local gate PASS; UAT gate override logged (stale device cases); postflight PASS, including the CR281 allow-list check; API UAT 67 passed, 1 xpassed, alpha-post PASS. The first suite run failed on register drift from my own half-written DEF504 row, not on the code.
+3. **Build 119** (`032b873e`): TestFlight internal and Play internal. It carries DEF500–504 and DEF466 (the ticker tape is out of the semantics tree; its per-frame updates are the proven-in-test cause of the iPhone accessibility tree going dark).
+4. **WP-14 forced-failover acceptance** (throwaway containers on melehost, $0): primary down → the Room completed on Ling-Fin, labelled `llm_backup_used`, with llm_audit showing 4 failed ami-llm calls and 16 Ling calls; both down → NO_VERDICT outage verdict, refunded, nothing tradeable stored. Both PASS. Found **DEF505**: the both-down verdict still claims `llm_backup_used=true`. Synthetic runs `9c7f02d0`, `1dec3be0` (users `c118bfd7`, `8e84ecbe`, no users-table rows; exclude them).
+5. **AMI-DL-5** (Android) and **AMI-DL-6** (iPhone) re-runs on 119 booked with NXT.
