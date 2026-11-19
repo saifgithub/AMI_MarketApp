@@ -88,12 +88,18 @@ Security: Cloudflare Turnstile on the two form POSTs (bypassed until `TURNSTILE_
 ported sliding-window rate limiter, LLM input/token caps. All settings degrade gracefully when
 their env var is unset, so the site runs locally with no secrets.
 
-`POST /waitlist` body: `{ "email": "...", "source": "marketing_site" }`
-- Validates email (regex)
-- Idempotent — duplicate returns `{ "ok": true, "new": false }`
-- Normalises email to lowercase + trimmed
+`POST /waitlist` body: `{ "email": "...", "consent": true, "name"?, "country"?, "platform"?: "ios"|"android", "source"?, "website"? }` (CR267 WP-51)
+- Validates email (regex); a bad address returns `{ "ok": false }`
+- `consent` must be true, else 422 `consent_required`; the time it was given is stored (`consent_at`)
+- `website` is the honeypot: a bot that fills it gets `{ "ok": true, "new": false }` and nothing is stored
+- Idempotent — duplicate returns `{ "ok": true, "new": false }`; email lowercased + trimmed
+- Per-IP limit 10/min
 
----
+Batch invite (header `X-Admin-Secret: $WEBSITE_ADMIN_SECRET`; unset secret => 503, wrong => 403, 10/min per IP):
+- `GET /admin/waitlist/export?limit=500` — CSV of sign-ups not yet invited, oldest first
+- `POST /admin/waitlist/mark-invited` `{ "ids": [...], "batch": "wave-1" }` — stamps `invited_at`/`invite_batch`; they leave the export
+
+Schema: this service has no alembic. `create_all` makes new tables and `_add_missing_columns` (app/db/session.py) adds new model columns to existing tables at startup (additive, idempotent), so WP-51's columns appear on the live `waitlist` table on the next container start.
 
 ## Deploying
 

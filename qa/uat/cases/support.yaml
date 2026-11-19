@@ -179,3 +179,21 @@ cases:
       - 201; the admin detail shows trace_ids as the two UUIDs, comma-separated
       - Both malformed submissions are 422 and store nothing
     notes: CR239 / WP-38. Files one extra triage-queue report per run, closed out at once like SUPP-001/002.
+
+  - id: UAT-SUPP-015
+    title: The website waitlist stores a consented sign-up, refuses the rest, and the admin export hands it over once
+    layer: api
+    status: blocked
+    blocked_on: CR267 WP-51 is not deployed to api-website yet and the suite has no WEBSITE_ADMIN_SECRET (put it in qa/uat/.uat.env as UAT_WEBSITE_ADMIN_SECRET). Flip to active after Saiful approves the deploy.
+    plans: [anon]
+    steps:
+      - POST api-website /waitlist with a unique example.invalid address, consent true and platform ios
+      - POST /waitlist for the same address again; POST one with consent false, one with the honeypot field filled, one with a malformed address
+      - GET /admin/waitlist/export with no secret, with a wrong secret, and with the secret
+      - POST /admin/waitlist/mark-invited for the new row (batch "uat"), then GET the export again
+    expected:
+      - First sign-up is 200 {ok true, new true}; the repeat is 200 {ok true, new false}
+      - Missing consent is 422 consent_required; the honeypot answers 200 but its address never reaches the export; the malformed address is 200 {ok false}
+      - The export is 403 without or with a wrong secret and CSV with the right one, listing the new address once with platform ios and a consent_at
+      - After mark-invited the address is gone from the export
+    notes: Targets the website API (UAT_WEBSITE_BASE_URL, default https://api-website.agenticmarketintel.ai), not the app backend. The test row is marked invited at once so no real invite batch ever contains it.

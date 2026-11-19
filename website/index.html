@@ -31,7 +31,7 @@
   <link rel="icon" href="data:image/svg+xml,%3csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='64' height='64' rx='12' fill='%230f172a'/%3e%3cpolygon points='32,8 56,21 56,43 32,56 8,43 8,21' fill='none' stroke='%233b82f6' stroke-width='3'/%3e%3ccircle cx='32' cy='32' r='4' fill='%233b82f6'/%3e%3cline x1='32' y1='8' x2='32' y2='24' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='56' y1='21' x2='42' y2='28' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='56' y1='43' x2='42' y2='36' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='32' y1='56' x2='32' y2='40' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='8' y1='43' x2='22' y2='36' stroke='%238b5cf6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='8' y1='21' x2='22' y2='28' stroke='%238b5cf6' stroke-width='1.5' opacity='0.6'/%3e%3c/svg%3e" type="image/svg+xml">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="/assets/css/site.css?v=cr072b">
+  <link rel="stylesheet" href="/assets/css/site.css?v=cr267wl">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -834,18 +834,37 @@
       <h2 id="waitlist-h2">Be first on the floor.</h2>
       <p>Join the Founders cohort — early access, locked-in pricing, and a direct line to shape the product before public launch. The alpha is invite-only on both platforms; we send you the TestFlight or Play internal-testing link directly.</p>
 
-      <form class="waitlist-form" id="waitlist-form" novalidate>
-        <input
-          type="email"
-          class="waitlist-input"
-          id="waitlist-email"
-          name="email"
-          placeholder="your@email.com"
-          autocomplete="email"
-          required
-          aria-label="Email address"
-        >
-        <button type="submit" class="btn btn-primary waitlist-submit">Claim My Spot</button>
+      <form class="contact-form wl-form" id="waitlist-form" novalidate>
+        <label class="contact-label" for="waitlist-email">Email</label>
+        <input type="email" class="contact-input" id="waitlist-email" name="email"
+               placeholder="your@email.com" autocomplete="email" maxlength="254" required aria-required="true">
+        <div class="contact-row">
+          <div class="wl-field">
+            <label class="contact-label" for="waitlist-name">Name (optional)</label>
+            <input type="text" class="contact-input" id="waitlist-name" name="name"
+                   autocomplete="name" maxlength="100">
+          </div>
+          <div class="wl-field">
+            <label class="contact-label" for="waitlist-country">Country (optional)</label>
+            <input type="text" class="contact-input" id="waitlist-country" name="country"
+                   autocomplete="country-name" maxlength="64">
+          </div>
+        </div>
+        <label class="contact-label" for="waitlist-platform">Phone (optional)</label>
+        <select class="contact-input wl-select" id="waitlist-platform" name="platform">
+          <option value="">Not sure yet</option>
+          <option value="ios">iPhone (iOS)</option>
+          <option value="android">Android</option>
+        </select>
+        <div class="wl-hp" aria-hidden="true">
+          <label for="waitlist-website">Leave this field empty</label>
+          <input type="text" id="waitlist-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <label class="wl-consent" for="waitlist-consent">
+          <input type="checkbox" id="waitlist-consent" name="consent" required aria-required="true">
+          <span>I agree that AMI may email me about early access to AMI Trade. Read the <a href="/privacy">Privacy Policy</a>.</span>
+        </label>
+        <button type="submit" class="btn btn-primary contact-submit waitlist-submit">Claim my spot</button>
       </form>
 
       <div class="waitlist-status" id="waitlist-status" role="status" aria-live="polite"></div>
@@ -1013,37 +1032,58 @@
   const form   = document.getElementById('waitlist-form');
   const status = document.getElementById('waitlist-status');
 
+  function waitlistMessage(kind, text) {
+    status.className = 'waitlist-status' + (kind ? ' ' + kind : '');
+    status.textContent = text;
+  }
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('waitlist-email').value.trim();
-    if (!email) return;
+    const emailEl = document.getElementById('waitlist-email');
+    const consentEl = document.getElementById('waitlist-consent');
+    const email = emailEl.value.trim();
+    if (!email) { waitlistMessage('error', 'Enter your email address.'); emailEl.focus(); return; }
+    if (!consentEl.checked) { waitlistMessage('error', 'Tick the box to agree before joining.'); consentEl.focus(); return; }
 
     const submitBtn = form.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending…';
-    status.className = 'waitlist-status';
-    status.textContent = '';
+    waitlistMessage('', '');
 
     try {
       const res = await fetch(API_BASE + '/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'marketing_site' }),
+        body: JSON.stringify({
+          email,
+          name: document.getElementById('waitlist-name').value.trim(),
+          country: document.getElementById('waitlist-country').value.trim(),
+          platform: document.getElementById('waitlist-platform').value,
+          consent: true,
+          website: document.getElementById('waitlist-website').value,
+          source: 'marketing_site',
+        }),
       });
 
-      if (res.ok) {
-        status.className = 'waitlist-status success';
-        status.textContent = "✓ You're in — we'll reach out before public launch.";
-        form.reset();
-      } else {
+      if (res.status === 429) {
+        waitlistMessage('error', 'Too many attempts — wait a minute and try again.');
+      } else if (!res.ok) {
         throw new Error('server_error');
+      } else {
+        const data = await res.json();
+        if (data.ok) {
+          waitlistMessage('success', "You're on the list — we'll email you when your invite is ready.");
+          form.reset();
+        } else {
+          waitlistMessage('error', "That email address doesn't look right — check it and try again.");
+          emailEl.focus();
+        }
       }
     } catch {
-      status.className = 'waitlist-status error';
-      status.textContent = 'Something went wrong — email support.ai@agenticmarketintel.ai if this persists.';
+      waitlistMessage('error', 'Something went wrong — email support.ai@agenticmarketintel.ai if this persists.');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Claim My Spot';
+      submitBtn.textContent = 'Claim my spot';
     }
   });
 

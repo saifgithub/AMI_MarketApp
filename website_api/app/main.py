@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.session import init_schema
+from app.routes.admin_waitlist import router as admin_waitlist_router
 from app.routes.concierge import router as concierge_router
 from app.routes.contact import router as contact_router
 from app.routes.data_request import router as data_request_router
@@ -31,6 +32,7 @@ app.add_middleware(
 init_schema()
 
 app.include_router(waitlist_router)
+app.include_router(admin_waitlist_router)
 app.include_router(concierge_router)
 app.include_router(contact_router)
 app.include_router(data_request_router)

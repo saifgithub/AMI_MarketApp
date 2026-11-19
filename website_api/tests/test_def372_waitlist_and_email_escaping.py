@@ -87,7 +87,7 @@ def test_the_waitlist_is_rate_limited(client):
     3/min because a person retrying a typo'd address should not be blocked,
     and this route sends no email."""
     codes = [
-        client.post("/waitlist", json={"email": f"a{i}@example.com"}).status_code
+        client.post("/waitlist", json={"email": f"a{i}@example.com", "consent": True}).status_code
         for i in range(15)
     ]
     assert 429 in codes, codes
@@ -102,7 +102,7 @@ def test_an_over_long_source_is_refused(client):
     """`source` was never validated at all and goes straight to a DB column."""
     r = client.post(
         "/waitlist",
-        json={"email": "ok@example.com", "source": "x" * 500},
+        json={"email": "ok@example.com", "source": "x" * 500, "consent": True},
     )
     assert r.status_code == 422, r.text
 
@@ -110,6 +110,6 @@ def test_an_over_long_source_is_refused(client):
 def test_a_normal_signup_still_works(client):
     """The cap must not break the ordinary path — the other way this goes
     wrong."""
-    r = client.post("/waitlist", json={"email": "real@example.com", "source": "web"})
+    r = client.post("/waitlist", json={"email": "real@example.com", "source": "web", "consent": True})
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True

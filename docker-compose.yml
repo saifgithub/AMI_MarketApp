@@ -809,6 +809,9 @@ services:
       # which was the behaviour DEF361 removed: a comment that tells the next
       # reader an unset secret is a soft bypass invites them to leave it unset.)
       TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      # CR267 WP-51: guards GET /admin/waitlist/export + POST /admin/waitlist/mark-invited
+      # (X-Admin-Secret header). Unset => those routes return 503, never open.
+      ADMIN_SECRET: ${WEBSITE_ADMIN_SECRET:-}
     ports:
       # CR124/C3: loopback only. Cloudflare reaches the marketing API through
       # its own tunnel/proxy, never via a LAN-published port.

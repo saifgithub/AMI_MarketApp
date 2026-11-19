@@ -91,3 +91,7 @@ data_request_rate_limit = RateLimiter(name="data_request", per_minute=3)
 # person legitimately retrying a typo'd address should not be told to wait,
 # and this one sends no email.
 waitlist_rate_limit = RateLimiter(name="waitlist", per_minute=10)
+
+# Admin routes (CR267 WP-51) are internet-reachable behind a shared secret;
+# the limiter caps brute-force guessing.
+admin_rate_limit = RateLimiter(name="admin", per_minute=10)

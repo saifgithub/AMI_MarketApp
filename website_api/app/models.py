@@ -25,8 +25,10 @@ def _due_in_30d() -> datetime:
 class WaitlistEntry(Base):
     """Marketing site email waitlist.
 
-    One row per unique email. Duplicate submissions are silently ignored
-    (the endpoint returns ok=True, new=False).
+    One row per unique email. Duplicate submissions never create a second row
+    (the endpoint returns ok=True, new=False). `consent_at` records the ticked
+    consent box (NULL on rows from before the box existed); `invited_at` /
+    `invite_batch` are set by the admin mark-invited call (CR267 WP-51).
     """
 
     __tablename__ = "waitlist"
@@ -35,6 +37,12 @@ class WaitlistEntry(Base):
     id: Mapped[str] = mapped_column(Uuid(), primary_key=True, default=lambda: str(uuid4()))
     email: Mapped[str] = mapped_column(String, index=True, nullable=False)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
+    country: Mapped[str | None] = mapped_column(String, nullable=True)
+    platform: Mapped[str | None] = mapped_column(String, nullable=True)  # ios | android
+    consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    invited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    invite_batch: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False
     )

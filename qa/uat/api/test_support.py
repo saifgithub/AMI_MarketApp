@@ -219,3 +219,47 @@ def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
             _close_out(seed.admin, resp.json()["id"])
         assert resp.status_code == 422, resp.text
         assert any("trace_ids" in str(e.get("loc")) for e in resp.json()["detail"]), resp.text
+
+
+@pytest.mark.uat("UAT-SUPP-015")
+def test_website_waitlist_signup_and_admin_export(run_id):
+    """CR267 WP-51. Targets the website API, not the app backend."""
+    import csv
+    import io
+
+    import httpx
+
+    from client import USER_AGENT, env
+
+    secret = env("UAT_WEBSITE_ADMIN_SECRET")
+    if not secret:
+        pytest.skip("UAT_WEBSITE_ADMIN_SECRET not set - website admin export cannot be checked (case is blocked until WP-51 is deployed)")
+    base = (env("UAT_WEBSITE_BASE_URL") or "https://api-website.agenticmarketintel.ai").rstrip("/")
+    mail = f"uat-{uuid.uuid4().hex[:10]}@example.invalid"
+    bot = f"uat-bot-{uuid.uuid4().hex[:10]}@example.invalid"
+    with httpx.Client(base_url=base, headers={"User-Agent": USER_AGENT}, timeout=30.0) as w:
+        ok = w.post("/waitlist", json={"email": mail, "consent": True, "platform": "ios", "source": "uat"})
+        assert ok.status_code == 200 and ok.json() == {"ok": True, "new": True}, ok.text
+        again = w.post("/waitlist", json={"email": mail.upper(), "consent": True})
+        assert again.json() == {"ok": True, "new": False}, again.text
+        nc = w.post("/waitlist", json={"email": bot, "consent": False})
+        assert nc.status_code == 422 and nc.json()["detail"] == "consent_required", nc.text
+        hp = w.post("/waitlist", json={"email": bot, "consent": True, "website": "http://spam.invalid"})
+        assert hp.status_code == 200, hp.text
+        badmail = w.post("/waitlist", json={"email": "not-an-email", "consent": True})
+        assert badmail.status_code == 200 and badmail.json()["ok"] is False
+
+        assert w.get("/admin/waitlist/export").status_code == 403
+        assert w.get("/admin/waitlist/export", headers={"X-Admin-Secret": "wrong"}).status_code == 403
+        auth = {"X-Admin-Secret": secret}
+        exp = w.get("/admin/waitlist/export", headers=auth, params={"limit": 5000})
+        assert exp.status_code == 200 and exp.headers["content-type"].startswith("text/csv"), exp.text[:200]
+        rows = list(csv.DictReader(io.StringIO(exp.text)))
+        mine = [r for r in rows if r["email"] == mail]
+        assert len(mine) == 1 and mine[0]["platform"] == "ios" and mine[0]["consent_at"]
+        assert not any(r["email"] == bot for r in rows), "refused/honeypot sign-ups must never be stored"
+
+        done = w.post("/admin/waitlist/mark-invited", headers=auth, json={"ids": [mine[0]["id"]], "batch": "uat"})
+        assert done.status_code == 200 and done.json()["marked"] == 1, done.text
+        after = w.get("/admin/waitlist/export", headers=auth, params={"limit": 5000})
+        assert mail not in after.text
