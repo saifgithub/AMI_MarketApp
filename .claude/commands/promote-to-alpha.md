@@ -264,6 +264,7 @@ or similar.
 rsync -az --delete \
   --exclude='.env' \
   --exclude='infra/alpha.env' \
+  --exclude='infra/beta.env' \
   --exclude='.venv' \
   --exclude='__pycache__' \
   --exclude='.dart_tool' \
@@ -304,6 +305,10 @@ named volumes (`bug_attachments`) live outside the rsync path and are unaffected
 exclusion. Without `--exclude='.env'`, the rsync would overwrite the
 deployed env file — see step 4 for the canonical mechanism that
 replaces this footgun.
+
+**`infra/beta.env` is excluded for the same reason (CR267 WP-43).** It holds the Beta
+credentials; it is gitignored and lives only in the main checkout, so an Alpha promotion run
+from there would otherwise copy it to melehost. Alpha and Beta credentials never share a box.
 
 **`infra/alpha.env` MUST be excluded too, and for years it was not (DEF381).**
 `--exclude='.env'` is a *filename* pattern; it does not match `infra/alpha.env`,
@@ -537,6 +542,11 @@ possible.
 python3 scripts/promotion/postflight.py \
   --expect-sha "${GIT_SHA}" --expect-tag "${ALPHA_TAG}"
 ```
+
+On a PASS it also records `<main checkout>/.deliveryos/postflight/${ALPHA_TAG}.json`
+(tag, commit, verdict). `/promote-to-beta` refuses any `alpha-*` tag without one
+(CR267 WP-43) — so an Alpha promotion whose postflight did not run to PASS cannot
+be carried to Beta.
 
 Eight checks, one exit code:
 

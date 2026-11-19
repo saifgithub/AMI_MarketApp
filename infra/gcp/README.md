@@ -1,5 +1,10 @@
 # infra/gcp/ — Beta/MVP Terraform
 
+> **PARKED (CR267, 2026-11-19).** Superseded by the Beta VPS plan: Beta is one Singapore VPS
+> running the same Docker Compose stack as Alpha, promoted with `/promote-to-beta`. This Terraform
+> is kept, not deleted, in case production moves to GCP Cloud Run (D-066/D-067 reopened, not
+> assumed). Do not apply it for Beta.
+
 CR126. Terraform for the GCP half of the Beta cutover (`project_plan.md`'s B1–B14). Ships a
 single scale-to-zero `ami-trade-api` Cloud Run service per D-067 — not `hosting.md`'s original
 always-warm 3-service (`api`/`agents`/`workers`) sample, which was sized for MVP/Growth traffic

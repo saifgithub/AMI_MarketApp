@@ -29,6 +29,15 @@ Checks, in order of what has actually gone wrong here before:
 **Never echoes a value.** `infra/alpha.env` is gitignored and stays that way:
 this reads key NAMES and the container's booleans, and prints only names.
 
+**Targets (CR267 WP-43).** `--target alpha` (the default) is the behaviour above,
+unchanged. `--target beta` checks the Singapore Beta box: host alias `ami-beta`,
+`https://api-beta.agenticmarketintel.ai`, `infra/beta.env`, `beta-*` tags. A Beta
+promotion ships an existing `alpha-*` tag, so the `suite` and `local_gate` checks
+(which describe the HEAD that was gated hours ago) are replaced by `alpha_record`:
+`--source-alpha-tag` must hold a PASS postflight record, on the same commit,
+written by an earlier `--target alpha` run. `--root` points the tree and
+migration checks at the temporary worktree the tag was checked out into.
+
 Exit codes: 0 all checks passed · 1 a check failed · 2 could not run (network,
 missing file, no admin secret) — deliberately distinct, because "the promotion
 is broken" and "I could not tell" must not look the same to whoever is reading.
@@ -37,9 +46,11 @@ is broken" and "I could not tell" must not look the same to whoever is reading.
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 import re
 import sys
+import time as _time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -52,6 +63,60 @@ _FULL_SUITE_TARGET = "backend/tests/unit/"
 _SUITE_VERDICT_MAX_AGE_H = 6
 _LOCAL_GATE_VERDICT = _REPO_ROOT / ".deliveryos" / "local_gate_verdict.json"
 _LOCAL_GATE_VERDICT_MAX_AGE_H = 6
+
+# CR267 WP-43 — one script, two deploy targets. Everything that used to be a
+# literal naming Alpha (host alias, deploy dir, public URL, env file, tag
+# prefix, command names) is a field here. `alpha` carries exactly the values
+# that were hard-coded before, so running without `--target` is unchanged.
+# Beta runs the SAME docker-compose.yml, so its service and container names are
+# Alpha's; only the box, the hostname, the env file and the tag prefix differ.
+# `ami-beta` is the SSH alias Saiful creates at gate S4 (WP-42).
+TARGETS: dict[str, dict[str, str]] = {
+    "alpha": {
+        "host": "melehost",
+        "remote": "~/ami_trade/",
+        "base": _DEFAULT_BASE,
+        "env_file": "infra/alpha.env",
+        "tag_prefix": "alpha",
+        "container": "ami_api_alpha",
+        "service": "api-alpha",
+        "promote_cmd": "/promote-to-alpha",
+        "rollback_cmd": "/rollback-alpha",
+    },
+    "beta": {
+        "host": "ami-beta",
+        "remote": "~/ami_trade/",
+        "base": "https://api-beta.agenticmarketintel.ai",
+        "env_file": "infra/beta.env",
+        "tag_prefix": "beta",
+        "container": "ami_api_alpha",
+        "service": "api-alpha",
+        "promote_cmd": "/promote-to-beta",
+        "rollback_cmd": "/rollback-beta",
+    },
+}
+DEFAULT_TARGET = "alpha"
+
+
+def resolve_target(name: str) -> dict[str, str]:
+    """The target's settings, or ValueError — never a silent fall-back to Alpha.
+
+    An unknown name reaching a deploy script must stop it: the alternative is a
+    typo'd `--target` quietly running the Alpha checks against the Alpha box
+    and reporting a green that describes the wrong environment.
+    """
+    try:
+        return TARGETS[name]
+    except KeyError:
+        raise ValueError(
+            f"unknown promotion target {name!r} — expected one of "
+            f"{', '.join(sorted(TARGETS))}") from None
+
+
+# `/promote-to-beta` and `/rollback-beta` read these to prove an alpha-* tag
+# passed postflight on Alpha. Written under the MAIN checkout's gitignored
+# `.deliveryos/` so every worktree reads and writes the same place.
+_POSTFLIGHT_RECORD_DIRNAME = "postflight"
 
 # Keys that live in the env file and are legitimately NOT `Settings` fields.
 #
@@ -148,7 +213,7 @@ def _populated_keys(env_path: Path) -> dict[str, str]:
     return out
 
 
-def _admin_secret(env_path: Path) -> str:
+def _admin_secret(env_path: Path, env_label: str = "infra/alpha.env") -> str:
     # DEF381 — a missing file is COULD-NOT-RUN, not a failed promotion. This
     # read was unguarded, so promoting from a checkout without a local
     # `infra/alpha.env` ended in an unhandled FileNotFoundError and exit 1 —
@@ -166,7 +231,7 @@ def _admin_secret(env_path: Path) -> str:
             secret = raw.split("=", 1)[1].strip().strip("'\"")
             if secret:
                 return secret
-    raise CannotRun("ADMIN_SECRET not set in infra/alpha.env — cannot authenticate")
+    raise CannotRun(f"ADMIN_SECRET not set in {env_label} — cannot authenticate")
 
 
 # Cloudflare 403s the default `Python-urllib/3.x` User-Agent at the edge, before
@@ -199,7 +264,7 @@ def _get(url: str, secret: str | None, timeout: int) -> tuple[int, dict]:
 # ── checks ────────────────────────────────────────────────────────────────────
 
 def check_identity(base: str, secret: str, expect_sha: str, expect_tag: str | None,
-                   timeout: int) -> list[str]:
+                   timeout: int, promote_cmd: str = "/promote-to-alpha") -> list[str]:
     """F2. Until this existed, no query answered "is what is running what I
     shipped?" — and every incident diagnosis began by assuming it was."""
     _status, body = _get(f"{base}/v1/ready", secret, timeout)
@@ -215,7 +280,7 @@ def check_identity(base: str, secret: str, expect_sha: str, expect_tag: str | No
     if got_sha == "unset":
         problems.append(
             "container is UNSTAMPED (git_sha=unset) — it was built without "
-            "GIT_SHA, i.e. not through /promote-to-alpha"
+            f"GIT_SHA, i.e. not through {promote_cmd}"
         )
     elif not expect_sha.startswith(got_sha) and not got_sha.startswith(expect_sha):
         problems.append(
@@ -272,7 +337,8 @@ def split_drift(stdout: str) -> tuple[list[str], int]:
     return drift, len(lines) - len(drift)
 
 
-def check_tree(host: str, remote: str, timeout: int) -> list[str]:
+def check_tree(host: str, remote: str, timeout: int,
+               root: Path | None = None) -> list[str]:
     """Does the box hold what the Mac holds? — the check the stamp cannot make.
 
     `docker-compose.yml` bind-mounts `./backend/app`, `./backend/scripts`,
@@ -315,10 +381,11 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
         # here as well as in step 3 so the tree check does not then report its
         # correct absence as drift — which is how this was found.
         "infra/alpha.env",
+        "infra/beta.env",
     ]
     cmd = ["rsync", "-az", "--delete", "--dry-run", "--itemize-changes"]
     cmd += [f"--exclude={p}" for p in excludes]
-    cmd += [f"{_REPO_ROOT}/", f"{host}:{remote}"]
+    cmd += [f"{root if root is not None else _REPO_ROOT}/", f"{host}:{remote}"]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout * 6)
     except Exception as exc:
@@ -531,7 +598,7 @@ def check_readiness(base: str, secret: str, timeout: int) -> list[str]:
 
 
 def check_config_parity(base: str, secret: str, env_path: Path,
-                        timeout: int) -> list[str]:
+                        timeout: int, env_label: str = "infra/alpha.env") -> list[str]:
     """DEF038, DEF063 — the set-diff no human reliably performs.
 
     Direction that matters: a key POPULATED on the Mac and absent in the
@@ -569,7 +636,7 @@ def check_config_parity(base: str, secret: str, env_path: Path,
             unrecognised.append(key)
         elif not container[key]:
             problems.append(
-                f"{key}: populated in infra/alpha.env, configured=false in the "
+                f"{key}: populated in {env_label}, configured=false in the "
                 f"container — add `{key}: ${{{key}}}` to docker-compose.yml's "
                 "api-alpha environment block (this is the DEF038/DEF063 bug)"
             )
@@ -595,6 +662,81 @@ def check_market_data(base: str, timeout: int) -> list[str]:
     return []
 
 
+# ── postflight records (CR267 WP-43) ──────────────────────────────────────────
+
+def record_dir() -> Path:
+    """`<main checkout>/.deliveryos/postflight/` — one place for every worktree.
+
+    A promotion runs from whichever worktree the operator is in; the Beta
+    promotion runs from a different one than the Alpha promotion it consumes.
+    Anchoring on the git common dir (the main checkout's `.git`) makes both
+    land in the same directory. Falls back to this checkout if git cannot say.
+    """
+    import subprocess
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(_REPO_ROOT), "rev-parse", "--path-format=absolute",
+             "--git-common-dir"],
+            capture_output=True, text=True, timeout=10)
+        common = proc.stdout.strip()
+        if proc.returncode == 0 and common:
+            return Path(common).parent / ".deliveryos" / _POSTFLIGHT_RECORD_DIRNAME
+    except Exception:
+        pass
+    return _REPO_ROOT / ".deliveryos" / _POSTFLIGHT_RECORD_DIRNAME
+
+
+def write_record(directory: Path, *, tag: str, sha: str, target: str,
+                 now: float | None = None) -> Path:
+    """Persist "this tag passed postflight on this target, on this commit"."""
+    directory.mkdir(parents=True, exist_ok=True)
+    at = _dt.datetime.fromtimestamp(
+        now if now is not None else _time.time(), _dt.timezone.utc)
+    rec = {"tag": tag, "sha": sha, "target": target, "verdict": "PASS",
+           "at": at.strftime("%Y-%m-%dT%H:%M:%SZ")}
+    path = directory / f"{tag}.json"
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(rec, indent=2) + "\n")
+    tmp.replace(path)
+    return path
+
+
+def check_alpha_record(directory: Path, source_tag: str, expect_sha: str,
+                       tag_prefix: str = "alpha") -> list[str]:
+    """Did `source_tag` pass postflight on Alpha, on the commit now being shipped?
+
+    Replaces the `suite` and `local_gate` checks for a Beta promotion. Those two
+    ask "did the gate run on the commit I am shipping, within 6h"; a Beta
+    promotion ships an alpha-* tag that was gated when it went to Alpha, days
+    ago, so they would fail on age or read a record for some other HEAD. The
+    question that survives is the one asked here: this exact tag already went
+    through the full Alpha promotion and its postflight returned PASS.
+    """
+    problems: list[str] = []
+    if not re.fullmatch(rf"{re.escape(tag_prefix)}-\d{{4}}-\d{{2}}-\d{{2}}-\d+", source_tag):
+        return [f"source tag {source_tag!r} is not a {tag_prefix}-YYYY-MM-DD-N tag"]
+    path = directory / f"{source_tag}.json"
+    try:
+        rec = json.loads(path.read_text())
+    except FileNotFoundError:
+        return [f"no postflight record for {source_tag} at {path} — it never "
+                "passed postflight on Alpha from this machine (or was promoted "
+                "before records existed). Re-promote it to Alpha, or ask Saiful "
+                "to confirm and re-run Alpha's postflight against it"]
+    except (OSError, ValueError) as exc:
+        return [f"postflight record {path} is unreadable: {exc}"]
+    if rec.get("verdict") != "PASS" or rec.get("target") != "alpha":
+        problems.append(f"record for {source_tag} says verdict="
+                        f"{rec.get('verdict')!r} target={rec.get('target')!r}, "
+                        "not a PASS on alpha")
+    sha = str(rec.get("sha", ""))
+    if not sha or not (sha.startswith(expect_sha) or expect_sha.startswith(sha)):
+        problems.append(f"{source_tag} passed Alpha postflight on {sha[:12] or '?'} "
+                        f"but {expect_sha[:12]} is being shipped — the shipped tree "
+                        "is not the tree Alpha verified")
+    return problems
+
+
 # ── driver ────────────────────────────────────────────────────────────────────
 
 def main() -> int:
@@ -602,11 +744,31 @@ def main() -> int:
     ap.add_argument("--expect-sha", required=True,
                     help="the commit that was promoted (git rev-parse HEAD)")
     ap.add_argument("--expect-tag", default=None,
-                    help="the alpha-* tag that was applied")
-    ap.add_argument("--base", default=_DEFAULT_BASE)
-    ap.add_argument("--env-file", default=str(_ALPHA_ENV))
-    ap.add_argument("--host", default="melehost", help="ssh alias for the box")
-    ap.add_argument("--remote", default="~/ami_trade/", help="deploy path on the box")
+                    help="the <target>-* tag that was applied")
+    ap.add_argument("--target", default=DEFAULT_TARGET, choices=sorted(TARGETS),
+                    help="which environment was promoted (default: alpha, "
+                         "unchanged from before CR267 WP-43)")
+    ap.add_argument("--base", default=None,
+                    help="public URL (default: the target's)")
+    ap.add_argument("--env-file", default=None,
+                    help="canonical env file (default: the target's, under the repo root)")
+    ap.add_argument("--host", default=None, help="ssh alias for the box (default: the target's)")
+    ap.add_argument("--remote", default=None,
+                    help="deploy path on the box (default: the target's)")
+    ap.add_argument("--root", default=None,
+                    help="tree to compare against the box and to read alembic "
+                         "versions from (default: this checkout; a Beta "
+                         "promotion passes its temporary alpha-tag worktree)")
+    ap.add_argument("--source-alpha-tag", default=None,
+                    help="beta only: the alpha-* tag being promoted; must hold a "
+                         "PASS postflight record on the same commit")
+    ap.add_argument("--pre-gate", action="store_true",
+                    help="beta only: run just the alpha_record check (no network, no "
+                         "admin secret) and exit 0/1 — the gate /promote-to-beta runs "
+                         "BEFORE it ships anything")
+    ap.add_argument("--record-dir", default=None,
+                    help="where postflight records live (default: "
+                         "<main checkout>/.deliveryos/postflight)")
     ap.add_argument("--timeout", type=int, default=20)
     ap.add_argument("--suite-verdict", default=str(_SUITE_VERDICT),
                     help="the record preflight_suite.sh writes (DEF405)")
@@ -614,31 +776,70 @@ def main() -> int:
                     help="the record preflight_local_gate.sh writes (CR235)")
     args = ap.parse_args()
 
-    env_path = Path(args.env_file)
+    tgt = resolve_target(args.target)
+    base = args.base or tgt["base"]
+    host = args.host or tgt["host"]
+    remote = args.remote or tgt["remote"]
+    root = Path(args.root) if args.root else _REPO_ROOT
+    env_label = tgt["env_file"]
+    env_path = Path(args.env_file) if args.env_file else _REPO_ROOT / env_label
+    rec_dir = Path(args.record_dir) if args.record_dir else record_dir()
+    if args.target == "beta" and not args.source_alpha_tag:
+        print("CANNOT RUN — --target beta needs --source-alpha-tag: Beta ships an "
+              "existing alpha-* tag, and this is how its Alpha postflight is proven",
+              file=sys.stderr)
+        return 2
+    if args.pre_gate:
+        if args.target != "beta":
+            print("CANNOT RUN — --pre-gate is the Beta source-tag gate; Alpha's "
+                  "pre-deploy gates are preflight_suite.sh and friends", file=sys.stderr)
+            return 2
+        problems = check_alpha_record(rec_dir, args.source_alpha_tag, args.expect_sha)
+        if problems:
+            print("  [x] alpha_record FAILED")
+            for line in problems:
+                print(f"        {line}")
+            return 1
+        print("  [v] alpha_record ok")
+        return 0
     try:
-        secret = _admin_secret(env_path)
+        secret = _admin_secret(env_path, env_label)
     except CannotRun as exc:
         print(f"CANNOT RUN — {exc}", file=sys.stderr)
         return 2
 
-    checks = [
-        # First, and local: it answers "should this promotion have happened",
-        # which the four live checks cannot.
-        ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
-        # CR235 — same question, for the tests that moved out of CI: Flutter test +
-        # the harness offline self-tests.
-        ("local_gate", lambda: check_local_gate_verdict(
-            Path(args.local_gate_verdict), args.expect_sha)),
+    if args.target == "alpha":
+        gates = [
+            # First, and local: it answers "should this promotion have happened",
+            # which the four live checks cannot.
+            ("suite", lambda: check_suite_verdict(Path(args.suite_verdict), args.expect_sha)),
+            # CR235 — same question, for the tests that moved out of CI: Flutter test +
+            # the harness offline self-tests.
+            ("local_gate", lambda: check_local_gate_verdict(
+                Path(args.local_gate_verdict), args.expect_sha)),
+        ]
+    else:
+        gates = [
+            # CR267 WP-43 — Beta ships a tag Alpha already gated; the suite and
+            # local-gate records describe some other HEAD and are hours old by
+            # design. The surviving question is "did this tag pass Alpha's
+            # postflight, on this commit".
+            ("alpha_record", lambda: check_alpha_record(
+                rec_dir, args.source_alpha_tag, args.expect_sha)),
+        ]
+    checks = gates + [
         # Also local, also "should this have happened": a migration fork only
         # exists in the merged tree, so no lane's own gate can see it (DEF406).
-        ("migrations", lambda: check_migration_heads()),
+        ("migrations", lambda: check_migration_heads(
+            root / "backend" / "alembic" / "versions")),
         ("identity", lambda: check_identity(
-            args.base, secret, args.expect_sha, args.expect_tag, args.timeout)),
-        ("tree", lambda: check_tree(args.host, args.remote, args.timeout)),
-        ("readiness", lambda: check_readiness(args.base, secret, args.timeout)),
+            base, secret, args.expect_sha, args.expect_tag, args.timeout,
+            tgt["promote_cmd"])),
+        ("tree", lambda: check_tree(host, remote, args.timeout, root)),
+        ("readiness", lambda: check_readiness(base, secret, args.timeout)),
         ("config", lambda: check_config_parity(
-            args.base, secret, env_path, args.timeout)),
-        ("market", lambda: check_market_data(args.base, args.timeout)),
+            base, secret, env_path, args.timeout, env_label)),
+        ("market", lambda: check_market_data(base, args.timeout)),
     ]
 
     failed = False
@@ -670,13 +871,22 @@ def main() -> int:
 
     if failed:
         print("\nPOSTFLIGHT FAILED — the promotion completed and something is "
-              "wrong with it. Fix forward or /rollback-alpha.")
+              f"wrong with it. Fix forward or {tgt['rollback_cmd']}.")
         return 1
     if unable:
         print("\nPOSTFLIGHT INCONCLUSIVE — at least one check could not run. "
               "This is not a pass.")
         return 2
     print("\nPOSTFLIGHT PASSED")
+    if args.expect_tag:
+        try:
+            write_record(rec_dir, tag=args.expect_tag, sha=args.expect_sha,
+                         target=args.target)
+        except OSError as exc:
+            print(f"WARNING — could not write the postflight record to {rec_dir}: "
+                  f"{exc}. The promotion passed; {tgt['tag_prefix']}-* promotion "
+                  "downstream will refuse this tag until a record exists.",
+                  file=sys.stderr)
     return 0
 
 
