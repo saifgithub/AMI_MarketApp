@@ -30,5 +30,9 @@ class Settings(BaseSettings):
     # ── Bot protection (Cloudflare Turnstile) ───────────────────────────────
     turnstile_secret: str = ""       # unset → verification bypassed (local/dev)
 
+    # ── Admin (waitlist batch-invite export, CR267 WP-51) ───────────────────
+    # Unset → the /admin/* routes refuse with 503 (fail closed, logged at ERROR).
+    admin_secret: str = ""
+
 
 settings = Settings()

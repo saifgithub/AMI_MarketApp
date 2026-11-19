@@ -24,6 +24,8 @@ def _sqlite_db(tmp_path):
     rl.concierge_rate_limit.reset()
     rl.contact_rate_limit.reset()
     rl.data_request_rate_limit.reset()
+    rl.waitlist_rate_limit.reset()
+    rl.admin_rate_limit.reset()
 
     yield
 

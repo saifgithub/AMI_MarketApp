@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**298 cases** — 196 api, 20 device, 82 manual; 15 blocked.
+**299 cases** — 197 api, 20 device, 82 manual; 16 blocked.
 
 ## Areas
 
@@ -23,7 +23,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
 14. [Decision journal, trash & the You tab](#journal) — 10 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 8 cases
-16. [Bug reports, AMI help library & telemetry](#support) — 16 cases
+16. [Bug reports, AMI help library & telemetry](#support) — 17 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
@@ -2865,6 +2865,24 @@ _API (automated, live Alpha) · plans: floor_pass_
 2. There is no second reporting endpoint; the report is closed out at once like SUPP-001
 
 > CR278 / WP-36. The route shape is response:<surface>:<run id or ->:<agent id>[:t<turn>]. Files one extra triage-queue report per run.
+
+#### UAT-SUPP-017 — The website waitlist stores a consented sign-up, refuses the rest, and the admin export hands it over once
+
+_API (automated, live Alpha) · plans: anon · **BLOCKED** — CR267 WP-51 is not deployed to api-website yet and the suite has no WEBSITE_ADMIN_SECRET (put it in qa/uat/.uat.env as UAT_WEBSITE_ADMIN_SECRET). Flip to active after Saiful approves the deploy._
+
+**Steps**
+1. POST api-website /waitlist with a unique example.invalid address, consent true and platform ios
+2. POST /waitlist for the same address again; POST one with consent false, one with the honeypot field filled, one with a malformed address
+3. GET /admin/waitlist/export with no secret, with a wrong secret, and with the secret
+4. POST /admin/waitlist/mark-invited for the new row (batch "uat"), then GET the export again
+
+**Expected**
+1. First sign-up is 200 {ok true, new true}; the repeat is 200 {ok true, new false}
+2. Missing consent is 422 consent_required; the honeypot answers 200 but its address never reaches the export; the malformed address is 200 {ok false}
+3. The export is 403 without or with a wrong secret and CSV with the right one, listing the new address once with platform ios and a consent_at
+4. After mark-invited the address is gone from the export
+
+> Targets the website API (UAT_WEBSITE_BASE_URL, default https://api-website.agenticmarketintel.ai), not the app backend. The test row is marked invited at once so no real invite batch ever contains it.
 
 ### Device (automated, Appium)
 
