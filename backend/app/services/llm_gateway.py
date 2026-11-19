@@ -1626,27 +1626,79 @@ class LLMGateway:
                 return name
         return "mock"
 
+    def _review_desk(self) -> str:
+        """The provider the CIO actually ran on: the slot a failed-over Room is
+        pinned to (CR272), else the active provider."""
+        state = _ROOM_FAILOVER.get()
+        if state is not None and state.pinned_provider in self._providers:
+            return state.pinned_provider  # type: ignore[return-value]
+        return self._active_provider_name()
+
     def pick_review_provider(self) -> str | None:
         """CR247 Phase 4 — the provider a second-pass verdict review runs on.
 
-        The review must execute on a DIFFERENT model than the CIO so a
-        model-correlated CIO error cannot silently repeat in its own audit
-        (D18). The gateway's own preference chain IS the fallback ordering —
-        on Alpha the CIO is the vLLM and the first fallback is Anthropic, the
-        provider D18 names — so the review provider is the first REGISTERED
-        provider in `_PREFERENCE` that is neither the active provider nor the
-        mock (the mock answers nothing real, so auditing against it would be
-        theater). None when no such provider exists: the caller degrades
-        loudly (warn + journal record, verdict unchanged) rather than auditing
-        on the same model or skipping silently (CR040).
+        Preferably a DIFFERENT model than the CIO, so a model-correlated CIO
+        error cannot silently repeat in its own audit (D18). Order, with
+        `anthropic` and the mock never eligible (Saiful 2026-11-19: no Anthropic
+        model anywhere in the app — enforced here, not by leaving the key unset;
+        the mock answers nothing real, so auditing against it is theater):
+
+        1. The first REGISTERED provider in `_PREFERENCE` other than the desk's
+           (today: Kimi, when keyed).
+        2. DEF493 — the CR272 backup slot (`vllm_fallback`), never in
+           `_PREFERENCE`. Offered only if its model identity differs from the
+           desk's; a backup on the same model is not an independent audit.
+        3. DEF493 — the desk's own provider. A same-model audit is still a
+           second, differently-prompted pass (on-prem Alpha has one model; a
+           hosted Beta without a backup has one), but it is NOT an independent
+           opinion: `review_is_independent` is False for it and the caller
+           records and logs that, so it is never presented as one.
+
+        A provider that tripped this Room's failover (`tripped_provider`) is
+        just-failed and is not asked to audit it: a Room restarted on the
+        backup is reviewed on the backup (step 3), not on the dead primary.
+
+        None when no real, non-Anthropic provider is registered: the caller
+        degrades loudly (error log + `skipped_reason` on the journal record,
+        verdict unchanged) rather than skipping silently (CR040).
         """
-        active = self._active_provider_name()
+        desk = self._review_desk()
+        state = _ROOM_FAILOVER.get()
+        tripped = state.tripped_provider if state is not None else None
         for name in self._PREFERENCE:
-            if name == "mock" or name == active:
+            if name in ("mock", "anthropic") or name == desk or name == tripped:
                 continue
             if name in self._providers:
                 return name
+        if (
+            desk != FALLBACK_PROVIDER_NAME
+            and FALLBACK_PROVIDER_NAME in self._providers
+            and FALLBACK_PROVIDER_NAME != tripped
+        ):
+            desk_provider = self._providers.get(desk)
+            desk_identity = (
+                desk_provider.static_model_identity() if desk_provider else None
+            )
+            backup_identity = self._providers[
+                FALLBACK_PROVIDER_NAME
+            ].static_model_identity()
+            if backup_identity and backup_identity != desk_identity:
+                return FALLBACK_PROVIDER_NAME
+        if desk not in ("mock", "anthropic") and desk in self._providers:
+            return desk
         return None
+
+    def review_is_independent(self, review_provider: str) -> bool:
+        """DEF493 — False when [review_provider] is the desk's own model (the
+        same-model review of `pick_review_provider` step 3)."""
+        desk = self._review_desk()
+        if review_provider == desk:
+            return False
+        a = self._providers.get(review_provider)
+        b = self._providers.get(desk)
+        ia = a.static_model_identity() if a else None
+        ib = b.static_model_identity() if b else None
+        return not (ia and ib and ia == ib)
 
     def status(self) -> dict[str, object]:
         """Snapshot of what the gateway will actually do at call time.

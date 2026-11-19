@@ -6470,6 +6470,18 @@ async def _run_verdict_review(
         )
         return verdict, None
     record.provider = provider_name
+    independent_fn = getattr(gateway, "review_is_independent", None)
+    if callable(independent_fn) and not independent_fn(provider_name):
+        record.same_model_review = True
+        logger.warning(
+            "room_verdict_review_same_model",
+            run_id=str(run_id), kind=kind, provider=provider_name,
+            detail=(
+                "no independent second model is configured: the review runs "
+                "on the CIO's own model — a second pass, not an independent "
+                "opinion (DEF493)"
+            ),
+        )
 
     review_meta: dict[str, Any] = {}
     try:
