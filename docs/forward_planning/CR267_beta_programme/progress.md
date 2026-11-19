@@ -111,3 +111,14 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
 8. Deploy #5 gates on `0b31a855`: suite PASS, 8,190 passed.
 9. **Deploy #5** `alpha-2026-11-19-3` (`0b31a855`): migrations `cr276a0b0c0d1`, `cr239a0b0c0d1` and the merge `m276a0cr239x276` applied; postflight 8/8; error responses carry `x-request-id`; no `HTTP Request:` lines in the log (DEF491 effective).
    - **Saiful: "do not use deepinfra. Use ami-llm".** Alpha's `VLLM_FALLBACK_*` lines are commented out in `infra/alpha.env`. Live `/v1/llm/status` shows only `vllm` (ami-llm) active, with no fallback slot. Alpha has **no backup model** until he says otherwise.
+
+## 2026-11-19 (early) — no outside LLM vendors on Alpha; deploys #5 and #6
+
+1. **Saiful: "I did not give an ok to use sonnet or any Anthropic models."** He then ruled no Anthropic in the app, and remove Kimi and Gemini too.
+   - Alpha's `ANTHROPIC_API_KEY`, `KIMI_API_KEY` and `GOOGLE_AI_API_KEY` are commented out (DeepInfra's were already). Live providers are now `vllm` (ami-llm), `glm` (self-hosted on our Tailscale host) and `mock`.
+   - **Correction to my earlier spend report:** Anthropic had 773 calls on 2026-10-27 (before this session; model not recorded, so not priced) plus 10 on 2026-11-18 (≈ $0.08). I had said 7 calls, because I counted by model name, which only exists since CR270.
+   - Kimi: 1,541 real calls since 25 Sep, mostly verdict reviews. The 141 tonight were the WP-10 harness pointing the kimi slot at on-prem ami-llm ($0).
+   - The S12 labeller is now Ling-Fin on our own host (`f859de4d`). Memory: `feedback_no_anthropic_in_app.md`.
+2. **Deploy #5's API UAT:** 116 passed, 3 failed, all WP-38: unmatched-route 404 (product bug, fixed in `615c67b7`), harness `_fake_ip` leftovers, and admin liveness "unknown" after a restart (fixed in `b0c4fe4b`).
+3. **Merged:** CR277 (`720eb935`) and DEF493 (`ddd2c999`).
+4. **Deploy #6** `alpha-2026-11-19-4` (`b0c4fe4b`): suite PASS 8,217; postflight PASS; 404 bodies now carry `request_id`.
