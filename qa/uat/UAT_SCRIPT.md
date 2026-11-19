@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**289 cases** — 192 api, 17 device, 80 manual; 12 blocked.
+**291 cases** — 193 api, 17 device, 81 manual; 12 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 30 cases
 5. [Floor tab & home shell](#floor) — 10 cases
-6. [Convene the Room](#room) — 22 cases
+6. [Convene the Room](#room) — 24 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 33 cases
@@ -1246,6 +1246,24 @@ _API (automated, live Alpha) · plans: trader · uses LLM_
 **Expected**
 1. live_data_notice.surcharge_charged is 0, 2 or 4
 2. done.credit_cost and the persisted credit_cost equal 8 plus that surcharge, and the balance drop equals it - unless the run was an outage (DEF432), in which case refunded is true and the whole charge, surcharge included, is back
+
+#### UAT-ROOM-023 — A finished Room's verdict carries the Street comparison, computed after the decision and labelled with its source
+
+_API (automated, live Alpha) · plans: floor_pass · uses LLM_
+
+**Preconditions**
+1. Fresh Floor Pass user holding exactly 8 credits (one Basic Room), as in UAT-ROOM-001
+
+**Steps**
+1. Run the Room on AAPL as in UAT-ROOM-001 and read the streamed verdict
+2. GET /v1/room/{run_id} and read verdict.street_comparison
+
+**Expected**
+1. The streamed and the persisted verdict both carry a street_comparison block whose source_label names the data source (Yahoo Finance via yfinance) and whose room_action equals the verdict action
+2. When status is available it has a recognised street_rating, a street_stance of buy / hold / sell, a positive analyst_count when one is given, and agreement consistent with the action (approve with Buy agrees; approve with Sell differs and is flagged approved_against_street_sell; a PASS on a Buy name differs and is not flagged)
+3. When status is unavailable it has an unavailable_reason and no rating, count or target - never an empty or zero rating
+4. reasons_from_narrow_answers is present and empty (the narrow-question judge, WP-22, is not built)
+5. No desk transcript line quotes the Street comparison's source label (the Room decides blind)
 
 ### Device (automated, Appium)
 
@@ -3692,6 +3710,26 @@ _Manual (iPhone checklist) · plans: floor_pass_
 
 **Expected**
 1. The LESSONS tab opens with LESSONS highlighted in the bottom bar, not a second Lessons screen over the Floor (DEF476)
+
+#### UAT-ROOM-024 — The verdict card shows how the Street rates the name, with its source, and the Settings switch hides it
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A Floor Pass account with Room credits on a build with the Street-rating card (the default setting is ON)
+
+**Steps**
+1. On the Floor tap CONVENE THE ROOM, pick AAPL, tap CONVENE and wait for the verdict card
+2. Scroll the verdict card below the reasoning
+3. Open Settings, find STREET RATING and turn the switch off; go back to the Room result (or open the same run from the Journal)
+4. Turn the switch on again and look at the same result
+
+**Expected**
+1. A card headed HOW THE STREET RATES IT shows the Street rating, the number of analysts, the mean target and THE ROOM'S CALL, plus one plain sentence saying whether the two agree
+2. A line starting Source: names Yahoo Finance via yfinance, and a Rating read on date line is shown
+3. A name with no Street data shows No Street rating available for this run. instead of a blank or zero rating, and the Source: line is still there
+4. With the switch off the card is gone and the rest of the verdict is unchanged; with it on the card is back
+5. No text on the card tells the user to buy or sell, and none says the AI
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
