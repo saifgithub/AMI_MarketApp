@@ -47,6 +47,12 @@ const _identicalOnPurpose = <String, String>{
   'upgradePlanFloorManager': 'product tier name',
   'settingsProfileCreditsUnknown': 'a dash',
   'settingsLearningVisual': 'Visual is the Malay word as well',
+  // content/i18n/sensitive_keys.json holds these to English until a human
+  // translation arrives ('unscreened' must never become 'haram'); DEF144 pins it.
+  'settingsComplianceHalal': 'Sharia-sensitive, held to English by sensitive_keys.json',
+  'settingsComplianceHalalSubtitle': 'Sharia-sensitive, held to English by sensitive_keys.json',
+  'settingsComplianceHalalExplainTitle': 'Sharia-sensitive, held to English by sensitive_keys.json',
+  'settingsComplianceHalalExplainBody': 'Sharia-sensitive, held to English by sensitive_keys.json',
 };
 
 const _surfaces = [

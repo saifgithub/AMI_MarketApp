@@ -1844,18 +1844,18 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsRiskLimitsRetroDismiss => 'Faham';
 
   @override
-  String get settingsComplianceHalal => 'Tapisan Syariah — AAOIFI';
+  String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
 
   @override
   String get settingsComplianceHalalSubtitle =>
-      'Piawaian AAOIFI, indeks Syariah S&P 500';
+      'AAOIFI standard, S&P 500 Sharia index';
 
   @override
-  String get settingsComplianceHalalExplainTitle => 'Tapisan Syariah (AAOIFI)';
+  String get settingsComplianceHalalExplainTitle => 'Sharia screen (AAOIFI)';
 
   @override
   String get settingsComplianceHalalExplainBody =>
-      'Menghadkan dagangan kepada syarikat yang lulus tapisan Syariah AAOIFI, seperti yang diguna pakai oleh S&P Dow Jones pada Indeks Pengecualian Industri Syariah S&P 500. AMI membaca juzuk indeks yang diterbitkan itu; ia tidak membuat hukum sendiri.\n\nLiputan ialah S&P 500. Syarikat di luarnya belum ditapis mengikut piawaian ini, jadi AMI akan memberitahu anda ia belum ditapis dan bukannya meneka. Belum ditapis bukan hukum ke mana-mana arah, dan ia tidak menghalang dagangan.\n\nPiawaian Syariah berbeza. AAOIFI, DJIM, FTSE, MSCI dan S&P menggunakan ambang dan penyebut yang berlainan, jadi syarikat yang sama boleh lulus satu dan gagal yang lain; hari ini, AAOIFI dan FTSE berbeza pada kira-kira separuh nama. Tapisan ini mengikut AAOIFI.';
+      'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.';
 
   @override
   String get settingsComplianceEsgLiteExplainTitle =>

@@ -63,6 +63,7 @@ _PM_TIME_CONTEXT = re.compile(r"\b\d{1,2}\s*PM\b", re.IGNORECASE)
 # which are the retired "Trader" AGENT label CR160 renamed to Execution Desk.
 _ARB_ALLOWED_TRADER_KEYS = {
     "upgradePlanTrader",
+    "planNameTrialTrader",
     "portfolioHealthUpgradeBody",
     "houseAdOneOnOneHeadline",
     "houseAdRoomHeadline",

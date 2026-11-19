@@ -1842,18 +1842,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsRiskLimitsRetroDismiss => 'فهمت';
 
   @override
-  String get settingsComplianceHalal => 'فلتر الشريعة — أيوفي';
+  String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
 
   @override
   String get settingsComplianceHalalSubtitle =>
-      'معيار أيوفي، مؤشر S&P 500 للشريعة';
+      'AAOIFI standard, S&P 500 Sharia index';
 
   @override
-  String get settingsComplianceHalalExplainTitle => 'فلتر الشريعة (أيوفي)';
+  String get settingsComplianceHalalExplainTitle => 'Sharia screen (AAOIFI)';
 
   @override
   String get settingsComplianceHalalExplainBody =>
-      'يقصر التداول على الشركات التي تجتاز فلتر الشريعة الصادر عن أيوفي (AAOIFI) كما تطبّقه S&P Dow Jones على مؤشر S&P 500 لاستبعادات الشريعة. تقرأ AMI المكوّنات المنشورة لذلك المؤشر ولا تصدر حكمًا خاصًا بها.\n\nالتغطية هي S&P 500. الشركة خارجه لم تُفحص بهذا المعيار، لذا ستخبرك AMI بأنها غير مفحوصة بدل أن تخمّن. «غير مفحوص» ليس حكمًا في أي اتجاه، ولا يمنع الصفقة.\n\nمعايير الشريعة تختلف. تطبّق AAOIFI وDJIM وFTSE وMSCI وS&P حدودًا ومقامات مختلفة، فقد تجتاز الشركة نفسها معيارًا وتفشل في آخر، واليوم تختلف AAOIFI وFTSE في نحو نصف الأسماء. هذا الفلتر يتبع AAOIFI.';
+      'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.';
 
   @override
   String get settingsComplianceEsgLiteExplainTitle =>

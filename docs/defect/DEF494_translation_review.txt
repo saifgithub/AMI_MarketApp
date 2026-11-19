@@ -4,10 +4,11 @@ Supplied by Claude in place of English copies that were sitting in app_ar.arb an
 (UAT-MAND-038, device run AMI-DL-1). They are real translations, not seeds, so they are NOT
 in @@x-ami-seeds (that map only tracks English placeholders; a changed value stops being a seed).
 The new keys also carry 'DRAFT ar/ms ... awaiting translator review' in their app_en.arb @description.
+NOT included: the four Sharia-screen keys (settingsComplianceHalal*) stay English by the sensitive_keys.json rule (DEF144) until a human translation arrives, so Arabic and Malay Settings still show the Sharia toggle in English by design. Also left as seeds (same word in the language): planNameFloorPass, settingsRiskScoreValue, and for ms settingsComplianceEsgLite, settingsLearningVisual, settingsRiskPresetDayTrader.
 Style notes: Room stays 'Room' in Malay and 'الغرفة' in Arabic, matching existing strings; product tier
 names (Floor Pass, Trader, Floor Manager) stay Latin; Street/Wall Street kept as the market term.
 
-AR keys (162):
+AR keys (153):
   gameTabUpper
   houseAdCreditCapBody
   houseAdCreditCapHeadline
@@ -49,13 +50,8 @@ AR keys (162):
   settingsAdsDoNotSellSubtitle
   settingsAssignmentCapExplain
   settingsAssignmentCapLabel
-  settingsComplianceEsgLite
   settingsComplianceEsgLiteExplainBody
   settingsComplianceEsgLiteExplainTitle
-  settingsComplianceHalal
-  settingsComplianceHalalExplainBody
-  settingsComplianceHalalExplainTitle
-  settingsComplianceHalalSubtitle
   settingsDayTraderCancel
   settingsDayTraderConfirm
   settingsDayTraderDisclosureTitle
@@ -72,7 +68,6 @@ AR keys (162):
   settingsLearningHandsOn
   settingsLearningQuick
   settingsLearningStory
-  settingsLearningVisual
   settingsMaxDrawdownCustom
   settingsMinDteExplain
   settingsMinDteLabel
@@ -121,14 +116,12 @@ AR keys (162):
   settingsRiskLimitsSetByYou
   settingsRiskLimitsSingleNameCapExplain
   settingsRiskLimitsSingleNameCapLabel
-  settingsRiskPresetDayTrader
   settingsRiskPresetDayTraderActive
   settingsRiskPresetDayTraderExplain
   settingsRiskQuoteConcentration
   settingsRiskQuoteDrawdown
   settingsRiskQuoteRegret
   settingsRiskQuotesExplain
-  settingsRiskScoreValue
   settingsSectionAdPrivacy
   settingsSectionIdentity
   settingsSectionMembership
@@ -163,7 +156,6 @@ AR keys (162):
   settingsLanguageFollowSystem
   settingsLanguageNameArabic
   settingsLanguageNameMalay
-  planNameFloorPass
   planNameTrialTrader
   creditsLineLiveSurcharge
   settingsComplianceTagExplainBody
@@ -171,7 +163,7 @@ AR keys (162):
   settingsComplianceLongOnlyExplainBody
   settingsComplianceLiquidOnlyExplainBody
 
-MS keys (166):
+MS keys (157):
   gameTabUpper
   houseAdCreditCapBody
   houseAdCreditCapHeadline
@@ -215,13 +207,8 @@ MS keys (166):
   settingsAdsDoNotSellSubtitle
   settingsAssignmentCapExplain
   settingsAssignmentCapLabel
-  settingsComplianceEsgLite
   settingsComplianceEsgLiteExplainBody
   settingsComplianceEsgLiteExplainTitle
-  settingsComplianceHalal
-  settingsComplianceHalalExplainBody
-  settingsComplianceHalalExplainTitle
-  settingsComplianceHalalSubtitle
   settingsComplianceLiquidOnly
   settingsComplianceLongOnly
   settingsDayTraderCancel
@@ -240,7 +227,6 @@ MS keys (166):
   settingsLearningHandsOn
   settingsLearningQuick
   settingsLearningStory
-  settingsLearningVisual
   settingsMaxDrawdownCustom
   settingsMinDteExplain
   settingsMinDteLabel
@@ -290,14 +276,12 @@ MS keys (166):
   settingsRiskLimitsSetByYou
   settingsRiskLimitsSingleNameCapExplain
   settingsRiskLimitsSingleNameCapLabel
-  settingsRiskPresetDayTrader
   settingsRiskPresetDayTraderActive
   settingsRiskPresetDayTraderExplain
   settingsRiskQuoteConcentration
   settingsRiskQuoteDrawdown
   settingsRiskQuoteRegret
   settingsRiskQuotesExplain
-  settingsRiskScoreValue
   settingsSectionAdPrivacy
   settingsSectionIdentity
   settingsSectionRiskLimits
@@ -331,7 +315,6 @@ MS keys (166):
   settingsLanguageFollowSystem
   settingsLanguageNameArabic
   settingsLanguageNameMalay
-  planNameFloorPass
   planNameTrialTrader
   creditsLineLiveSurcharge
   settingsComplianceTagExplainBody
