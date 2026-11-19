@@ -1,6 +1,18 @@
 # CR221 — Sourcing the Room's measured data demand
 
-**Status:** in_progress · **Owner:** coder.api · **Filed:** 2026-09-03 · **Tag:** `(AT:R75 CR221)`
+**Status:** done (2026-11-19, CR267 WP-37) · **Owner:** coder.api · **Filed:** 2026-09-03 · **Tag:** `(AT:R75 CR221)`
+
+**Closure record (2026-11-19).** Closed per CR245 §12: slots 1-5 built and audited COMPLETE
+(SLOT4 `1a3b6a6a`, SLOT2 `19dd1784`, SLOT5 `8caa0334`, RETRO-CR221-S13 for slots 1/3 `92a7c6c0`);
+§7 measured through round 5 (`0e626aeb`); Saiful's flip decision `177cc0c2`; the 5 strong flags
+(debt split, cost of debt, executive change, buyback price, debt maturity) are live on Alpha since
+2026-09-25 with ingest tallies recorded (`075a0901`). Slots 6-9 were split out to CR238 (proposed,
+not built). H1/H3 ruled "ship on FRED" 2026-09-23 (`5bb02d89`; probe of alternatives is CR229).
+H2 (Fed path) stays the one item with no free source: a declared absence, left open rather than
+bought (scope, "Paid providers"). Follow-up outside this CR: the 8-K re-scan cron, due before
+about 2027-03-24, needs Saiful's go for a melehost cron. The paragraphs below are the state at
+the last body edit; where they say a flag is OFF or an audit is awaiting, this record and the
+"Flipped" section of §7.14 supersede them.
 
 **Done at filing:** §1–§6 — the item register, the cross-check against CR219, a *verified free*
 source for every open item but one, and the §6 measurement. **Ruled 2026-09-03:** R38's route
@@ -525,6 +537,7 @@ F $141,417M / $21,919M, DE UNAVAILABLE, all to the dollar against the Mac; AAPL 
 (Americas, Europe, Greater China…) 100%, MSFT's three segments 100% and its US/Non-US
 geography 100%, NVDA's two segments 100%. PCAR is not in the 150-ticker universe, so its
 captive-only shape exists on the Mac's smoke only. **All three flags remain OFF.**
+*(As of 2026-09-11. Superseded: the five strong flags were flipped on Alpha 2026-09-25, see §7.14 "Flipped".)*
 
 ### Slot 2 built — I1 from 8-K Item 5.02 (2026-09-11, `98e1b36f`)
 
