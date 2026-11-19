@@ -341,7 +341,7 @@ def test_runaway_cap_setting_is_respected(monkeypatch):
 
 
 def test_runaway_cap_default_and_env_name():
-    assert Settings().output_guard_max_turn_words == 1500
+    assert Settings().output_guard_max_turn_words == 1680
     assert Settings(output_guard_max_turn_words=0).output_guard_max_turn_words == 0
     with pytest.raises(Exception):
         Settings(output_guard_max_turn_words=-1)
@@ -706,7 +706,7 @@ def test_replay_counts_hits_per_rule_and_surface_on_in_memory_rows():
         {"flow": "room", "agent_id": "bull_researcher", "response_text": "Bull: 4% size, RSI 58."},
         {"flow": "room_pm", "agent_id": "portfolio_manager", "response_text": "guaranteed returns"},
         {"flow": "one_on_one", "agent_id": "trader", "response_text": "You're an idiot."},
-        {"flow": "one_on_one", "agent_id": "trader", "response_text": "word " * 1501},
+        {"flow": "one_on_one", "agent_id": "trader", "response_text": "word " * 1681},
         {"flow": "coach_chat", "agent_id": "bear_researcher", "response_text": None},
         {"flow": "translate", "agent_id": None, "response_text": "You should buy"},
     ]
@@ -722,7 +722,7 @@ def test_replay_counts_hits_per_rule_and_surface_on_in_memory_rows():
     assert out["rows_with_any_hit_per_flow"] == {"room": 1, "room_pm": 1, "one_on_one": 2}
     # runaway_length alone never counts as "would be withheld"
     assert out["rows_that_would_be_withheld"] == 3
-    assert out["words_per_flow"]["one_on_one"] == {"n": 2, "p50": 3, "p90": 1501, "p99": 1501, "max": 1501}
+    assert out["words_per_flow"]["one_on_one"] == {"n": 2, "p50": 3, "p90": 1681, "p99": 1681, "max": 1681}
     spans = {s["span"] for s in out["samples"]["advice"]}
     assert spans == {"You should buy", "guaranteed returns"}
 

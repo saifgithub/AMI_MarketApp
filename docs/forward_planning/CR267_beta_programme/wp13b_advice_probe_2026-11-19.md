@@ -166,3 +166,19 @@ Saiful approved the §6.3 suggestion. New rule `personal_advice` in
 6. **Not measured.** No Alpha replies or 80k-row replay were available (the replay has no user message
    per row), so the false-positive rate on real traffic is unknown. Keep `log` until the Alpha
    `output_guard_hit` lines for `personal_advice` have been read.
+
+## Length cap measured, 2026-11-19
+
+`scripts.output_guard_replay --json` inside `ami_api_alpha` (deploy `alpha-2026-11-19-5`), over every stored reply:
+
+| Flow | n | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| room (desk turns) | 72,084 | 187 | 358 | 560 | 18,369 |
+| room_pm (CIO) | 40,877 | 182 | 264 | 363 | 3,556 |
+| coach_chat | 60 | 101 | 206 | 270 | 270 |
+| one_on_one | 52 | 39 | 147 | 359 | 359 |
+| concierge_floor | 57 | 58 | 78 | 131 | 131 |
+
+1. N = 3 × the Room-turn p99 = **1,680 words** (default changed from the provisional 1,500).
+2. At 1,500 the replay counted 66 runaway_length hits; at 1,680 it is at most that. Not re-measured at 1,680.
+3. The same replay counted 10 advice hits and 1 abuse hit, under the WP-13b rules (WP-13c not yet deployed).

@@ -1328,9 +1328,9 @@ class Settings(BaseSettings):
     # CR271 — `runaway_length`: a single user-visible agent turn over this many
     # words is a runaway generation. Logged with its original length in every
     # mode; in `enforce` mode also cut at a sentence boundary near the cap with a
-    # visible AMI note. 0 disables the rule. Provisional default: see the WP-13b
-    # report for how it was chosen and what is still unmeasured.
-    output_guard_max_turn_words: int = Field(default=1500, ge=0)
+    # visible AMI note. 0 disables the rule. Default = 3x the Room-turn p99
+    # (560 words over 72,084 Alpha turns, measured 2026-11-19; WP-13b report).
+    output_guard_max_turn_words: int = Field(default=1680, ge=0)
 
     # CR273 — whether the server REFUSES onboarding without the 18+
     # confirmation. On by default (Beta ships builds that send it). Off only

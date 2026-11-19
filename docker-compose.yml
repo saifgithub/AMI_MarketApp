@@ -571,7 +571,7 @@ services:
       # log: hits are logged, no text changes. See Settings.output_guard_mode.
       OUTPUT_GUARD_MODE: ${OUTPUT_GUARD_MODE:-log}
       # CR271 — runaway_length cap in words per user-visible agent turn (0 = off).
-      OUTPUT_GUARD_MAX_TURN_WORDS: ${OUTPUT_GUARD_MAX_TURN_WORDS:-1500}
+      OUTPUT_GUARD_MAX_TURN_WORDS: ${OUTPUT_GUARD_MAX_TURN_WORDS:-1680}
       # CR273 — refuse onboarding without the 18+ confirmation. Default true;
       # false only while testers run builds older than the age gate.
       ONBOARDING_AGE_GATE_ENFORCED: ${ONBOARDING_AGE_GATE_ENFORCED:-true}
