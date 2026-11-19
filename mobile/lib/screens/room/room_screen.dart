@@ -19,9 +19,11 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/models/room_board_mappers.dart';
+import 'package:ami_trade/models/response_report.dart';
 import 'package:ami_trade/models/room_stage.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/widgets/sim/option_verdict_cta.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
@@ -38,7 +40,9 @@ import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
+import 'package:ami_trade/widgets/report_response_sheet.dart';
 import 'package:ami_trade/widgets/room/room_briefing.dart';
+import 'package:ami_trade/widgets/room/room_rating_card.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
@@ -172,6 +176,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                           context,
                           voice: voice,
                           onReadFullDebate: () => _jumpToAgent(voice),
+                          onReport: () => showBugReportSheet(
+                            context,
+                            ref,
+                            response: _voiceTarget(state, voice),
+                          ),
                         ),
                         footer: state.verdict == null
                             ? _ConveneAgainButton(ticker: widget.ticker)
@@ -195,6 +204,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                           voices: transcriptVoicesFromRoomState(state),
                           expandedAgentId: _jumpAgentId,
                           highlightAgentId: _jumpAgentId,
+                          onReportVoice: (voice) => showReportResponseActions(
+                            context,
+                            ref,
+                            _voiceTarget(state, voice),
+                          ),
                           // A locked chair keeps its own row rather than
                           // collapsing to a bare `NOT HEARD`: CR098 D1's
                           // roster countdown says WHICH remedy applies, and
@@ -221,10 +235,18 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                         ),
                       if (settled && state.verdict != null) ...[
                         const SizedBox(height: AmiSpacing.l),
-                        _VerdictCard(
-                          verdict: state.verdict!,
-                          ticker: widget.ticker,
-                          runId: state.runId,
+                        GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onLongPress: () => showReportResponseActions(
+                            context,
+                            ref,
+                            _verdictTarget(state),
+                          ),
+                          child: _VerdictCard(
+                            verdict: state.verdict!,
+                            ticker: widget.ticker,
+                            runId: state.runId,
+                          ),
                         ),
                       ],
                       if (settled && state.verdict == null)
@@ -243,6 +265,17 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       const SizedBox(height: AmiSpacing.s),
                       _RoomResultCostRow(state: state),
                     ],
+                    // CR278 (WP-36) - Beta feedback on a finished Room. Under the
+                    // verdict, dismissible, never in the way of an action.
+                    if (settled && state.verdict != null && state.runId != null)
+                      RoomRatingCard(
+                        runId: state.runId!,
+                        onReport: () => showBugReportSheet(
+                          context,
+                          ref,
+                          response: _verdictTarget(state),
+                        ),
+                      ),
                     const SizedBox(height: AmiSpacing.xxl),
                   ],
                 ),
@@ -254,6 +287,23 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
       ),
     )));
   }
+
+  ResponseReportTarget _voiceTarget(RoomState state, RoomVoice voice) =>
+      ResponseReportTarget(
+        surface: ResponseSurface.room,
+        agentId: voice.agentId,
+        agentLabel: agentById(voice.agentId).abbreviation,
+        runId: state.runId,
+      );
+
+  /// The verdict is the CIO's (`portfolio_manager`) turn.
+  ResponseReportTarget _verdictTarget(RoomState state) =>
+      ResponseReportTarget(
+        surface: ResponseSurface.verdict,
+        agentId: 'portfolio_manager',
+        agentLabel: agentById('portfolio_manager').abbreviation,
+        runId: state.runId,
+      );
 
   Future<void> _confirmLeave() async {
     final l = AppLocalizations.of(context);

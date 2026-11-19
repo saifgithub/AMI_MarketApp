@@ -65,6 +65,10 @@ const _allowedIconsCloseFiles = {
   'lib/widgets/ads/admob_native_card.dart',
   // Floor's inline reaction card dismiss.
   'lib/widgets/floor/floor_reaction_card.dart',
+  // CR278: the Beta "did the verdict make sense?" card's own dismiss - an
+  // inline card under the verdict, not the Room page's exit (that is the
+  // header back chevron).
+  'lib/widgets/room/room_rating_card.dart',
 };
 
 /// The Material + Cupertino icon constants that read as the same X-shaped

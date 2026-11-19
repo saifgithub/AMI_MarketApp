@@ -6,6 +6,7 @@
 /// SharedPreferences so the choice survives restarts.
 library;
 
+import 'package:ami_trade/features/beta/beta_build.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,9 +25,15 @@ const _prefsKey = 'ami_locale_override';
 
 
 class LocaleNotifier extends StateNotifier<Locale?> {
-  LocaleNotifier() : super(null) {
-    _hydrate();
+  /// CR278 (WP-36) - [englishOnly] is the Beta lock: the locale is pinned to
+  /// English from the first frame, a stored override from an earlier build is
+  /// never read, and [setLocale] cannot move it.
+  LocaleNotifier({this.englishOnly = false})
+      : super(englishOnly ? const Locale('en') : null) {
+    if (!englishOnly) _hydrate();
   }
+
+  final bool englishOnly;
 
   Future<void> _hydrate() async {
     try {
@@ -45,6 +52,7 @@ class LocaleNotifier extends StateNotifier<Locale?> {
   }
 
   Future<void> setLocale(Locale? locale) async {
+    if (englishOnly) return;
     state = locale;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -62,7 +70,7 @@ class LocaleNotifier extends StateNotifier<Locale?> {
 
 final localeNotifierProvider =
     StateNotifierProvider<LocaleNotifier, Locale?>((ref) {
-  return LocaleNotifier();
+  return LocaleNotifier(englishOnly: ref.watch(betaEnglishOnlyProvider));
 });
 
 

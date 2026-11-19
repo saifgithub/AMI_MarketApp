@@ -6952,5 +6952,51 @@
   "traceRefCopyTooltip": "Copy reference",
   "@traceRefCopyTooltip": {
     "description": "WP-38 / CR239 - tooltip / accessibility label of the tap-to-copy trace reference. NEW key. retranslate:[ar,ms]"
+  },
+  "reportResponseAction": "Report this response",
+  "@reportResponseAction": {
+    "description": "CR278 / WP-36 - Action label, in the long-press sheet, the agent peek sheet and on the Room rating card, that opens the bug-report sheet about one AMI response. NEW key. retranslate:[ar,ms]"
+  },
+  "reportResponseTitlePrefill": "Problem with a response from {agent}",
+  "@reportResponseTitlePrefill": {
+    "description": "CR278 / WP-36 - Pre-filled title of the bug-report sheet opened from Report this response. {agent} is the agent's short name. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "reportResponseContext": "About a response from {agent}",
+  "@reportResponseContext": {
+    "description": "CR278 / WP-36 - Caption at the top of the bug-report sheet when it was opened from Report this response. {agent} is the agent's short name. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "roomRatingQuestion": "Did the verdict and its reasons make sense?",
+  "@roomRatingQuestion": {
+    "description": "CR278 / WP-36 - Beta feedback card under a finished Room's verdict; the thumbs-up / thumbs-down question. NEW key. retranslate:[ar,ms]"
+  },
+  "roomRatingYes": "Made sense",
+  "@roomRatingYes": {
+    "description": "CR278 / WP-36 - Label of the thumbs-up button on the Room rating card. NEW key. retranslate:[ar,ms]"
+  },
+  "roomRatingNo": "Didn't make sense",
+  "@roomRatingNo": {
+    "description": "CR278 / WP-36 - Label of the thumbs-down button on the Room rating card. NEW key. retranslate:[ar,ms]"
+  },
+  "roomRatingThanks": "Thanks. Tap the other thumb to change your answer.",
+  "@roomRatingThanks": {
+    "description": "CR278 / WP-36 - Shown on the Room rating card after an answer was saved. NEW key. retranslate:[ar,ms]"
+  },
+  "roomRatingFailed": "Couldn't save your answer. Tap a thumb to try again.",
+  "@roomRatingFailed": {
+    "description": "CR278 / WP-36 - Shown on the Room rating card when saving the answer failed; it never blocks anything. NEW key. retranslate:[ar,ms]"
+  },
+  "roomRatingDismiss": "Dismiss",
+  "@roomRatingDismiss": {
+    "description": "CR278 / WP-36 - Tooltip / accessibility label of the close button on the Room rating card. NEW key. retranslate:[ar,ms]"
   }
 }

@@ -16,6 +16,7 @@ class ChatBubble extends StatelessWidget {
     this.agentLabel,
     this.agentColor,
     this.streaming = false,
+    this.onLongPress,
   });
 
   /// The message text. If [streaming] is true, the parent is expected
@@ -30,6 +31,10 @@ class ChatBubble extends StatelessWidget {
 
   final bool streaming;
 
+  /// CR278 (WP-36): long-press on a reply opens "Report this response".
+  /// Ignored for the user's own bubbles and while a reply is still streaming.
+  final VoidCallback? onLongPress;
+
   bool get _isUser => author == ChatAuthor.user;
 
   Color get _accentColor {
@@ -40,7 +45,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final bubble = Padding(
       padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,6 +94,12 @@ class ChatBubble extends StatelessWidget {
           if (!_isUser) const Spacer(),
         ],
       ),
+    );
+    if (onLongPress == null || _isUser || streaming) return bubble;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: onLongPress,
+      child: bubble,
     );
   }
 

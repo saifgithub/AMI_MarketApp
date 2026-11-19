@@ -5586,4 +5586,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get traceRefCopyTooltip => 'Copy reference';
+
+  @override
+  String get reportResponseAction => 'Report this response';
+
+  @override
+  String reportResponseTitlePrefill(String agent) {
+    return 'Problem with a response from $agent';
+  }
+
+  @override
+  String reportResponseContext(String agent) {
+    return 'About a response from $agent';
+  }
+
+  @override
+  String get roomRatingQuestion =>
+      'Did the verdict and its reasons make sense?';
+
+  @override
+  String get roomRatingYes => 'Made sense';
+
+  @override
+  String get roomRatingNo => 'Didn\'t make sense';
+
+  @override
+  String get roomRatingThanks =>
+      'Thanks. Tap the other thumb to change your answer.';
+
+  @override
+  String get roomRatingFailed =>
+      'Couldn\'t save your answer. Tap a thumb to try again.';
+
+  @override
+  String get roomRatingDismiss => 'Dismiss';
 }

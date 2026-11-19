@@ -9277,6 +9277,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy reference'**
   String get traceRefCopyTooltip;
+
+  /// CR278 / WP-36 - Action label, in the long-press sheet, the agent peek sheet and on the Room rating card, that opens the bug-report sheet about one AMI response. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Report this response'**
+  String get reportResponseAction;
+
+  /// CR278 / WP-36 - Pre-filled title of the bug-report sheet opened from Report this response. {agent} is the agent's short name. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Problem with a response from {agent}'**
+  String reportResponseTitlePrefill(String agent);
+
+  /// CR278 / WP-36 - Caption at the top of the bug-report sheet when it was opened from Report this response. {agent} is the agent's short name. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'About a response from {agent}'**
+  String reportResponseContext(String agent);
+
+  /// CR278 / WP-36 - Beta feedback card under a finished Room's verdict; the thumbs-up / thumbs-down question. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Did the verdict and its reasons make sense?'**
+  String get roomRatingQuestion;
+
+  /// CR278 / WP-36 - Label of the thumbs-up button on the Room rating card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Made sense'**
+  String get roomRatingYes;
+
+  /// CR278 / WP-36 - Label of the thumbs-down button on the Room rating card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t make sense'**
+  String get roomRatingNo;
+
+  /// CR278 / WP-36 - Shown on the Room rating card after an answer was saved. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks. Tap the other thumb to change your answer.'**
+  String get roomRatingThanks;
+
+  /// CR278 / WP-36 - Shown on the Room rating card when saving the answer failed; it never blocks anything. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save your answer. Tap a thumb to try again.'**
+  String get roomRatingFailed;
+
+  /// CR278 / WP-36 - Tooltip / accessibility label of the close button on the Room rating card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get roomRatingDismiss;
 }
 
 class _AppLocalizationsDelegate
