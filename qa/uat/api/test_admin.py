@@ -104,7 +104,10 @@ def test_admin_read_only_views(admin):
     assert llm.status_code == 200
     lj = llm.json()
     assert lj["active_provider"] and lj["has_real_provider"] is True
-    assert lj["active_provider_liveness"]["state"] == "ok"
+    live = lj["active_provider_liveness"]
+    # "unknown" with no as_of = never probed since the container started (a
+    # fresh restart). Anything else must be "ok"; a real "down" still fails.
+    assert live["state"] == "ok" or (live["state"] == "unknown" and live["as_of"] is None), live
     cr = admin.get("/v1/llm/cache_rate")
     assert cr.status_code == 200
     cj = cr.json()

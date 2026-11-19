@@ -45,11 +45,10 @@ def test_seeding_round_trip(seed):
 
 @pytest.mark.uat("UAT-PLAT-007")
 def test_every_error_carries_a_trace_id_in_header_and_body(api):
-    import random
     import uuid
 
-    n = random.SystemRandom().randrange(1, 2**16)
-    fake_ip = {"X-Forwarded-For": f"100.64.{n >> 8}.{n & 255}"}
+    from client import exempt_headers  # DEF490: spoofed IPs are ignored since DEF464
+    fake_ip = exempt_headers()
     forged = str(uuid.uuid4())
 
     responses = [

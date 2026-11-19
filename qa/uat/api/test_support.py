@@ -198,7 +198,7 @@ def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
     u = seed.user(plan="floor_pass")
     ids = [str(uuid.uuid4()), str(uuid.uuid4())]
     r = u.post("/v1/feedback/bug", files=_form(**GOOD, trace_ids=",".join(ids)),
-               headers=_fake_ip())
+               headers=exempt_headers())
     assert r.status_code == 201, r.text
     report_id = r.json()["id"]
     try:
@@ -208,7 +208,7 @@ def test_bug_report_stores_trace_ids_and_refuses_malformed(seed):
     finally:
         _close_out(seed.admin, report_id)
 
-    ip = _fake_ip()
+    ip = exempt_headers()
     for bad in ("not-a-uuid", ",".join(str(uuid.uuid4()) for _ in range(6))):
         # Title left empty as well: even if trace_ids validation regressed,
         # nothing could enter the triage queue.
