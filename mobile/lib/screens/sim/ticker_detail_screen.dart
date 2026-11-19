@@ -164,24 +164,33 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
                 heldQuantity: isHeld ? heldHolding.quantity : null,
               ),
               const SizedBox(height: AmiSpacing.l),
+              // DEF501 — never vanishes: a date, "none scheduled" or
+              // "unavailable". Only the loading frame is blank.
               earningsAsync.when(
-                data: (e) => (!e.hasData && !e.hasDividendData)
-                    ? const SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.only(bottom: AmiSpacing.s),
-                        child: Wrap(
-                          spacing: AmiSpacing.s,
-                          runSpacing: AmiSpacing.s,
-                          children: [
-                            if (e.hasData) _EarningsPill(earnings: e),
-                            // CR100/CR030 — hidden when both dividend
-                            // fields are null (non-payer / no window).
-                            if (e.hasDividendData) _DividendChip(earnings: e),
-                          ],
+                data: (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+                  child: Wrap(
+                    spacing: AmiSpacing.s,
+                    runSpacing: AmiSpacing.s,
+                    children: [
+                      if (e.hasData)
+                        _EarningsPill(earnings: e)
+                      else
+                        _EarningsStatusPill(
+                          key: const Key('earningsStatusPill'),
+                          unavailable: e.status == 'unavailable',
                         ),
-                      ),
+                      // CR100/CR030 — hidden when both dividend
+                      // fields are null (non-payer / no window).
+                      if (e.hasDividendData) _DividendChip(earnings: e),
+                    ],
+                  ),
+                ),
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, __) => const _EarningsStatusPill(
+                  key: Key('earningsStatusPill'),
+                  unavailable: true,
+                ),
               ),
               if (isHeld)
                 _LotsSection(ticker: ticker),
@@ -634,25 +643,31 @@ class _EarningsPill extends StatelessWidget {
           const Icon(Icons.calendar_today_outlined,
               color: AmiColors.hexAmber, size: 14),
           const SizedBox(width: AmiSpacing.s),
-          Text(
-            earnings.quarter ?? '',
-            style: AmiTypography.labelMono
-                .copyWith(color: AmiColors.hexAmber, fontSize: 11),
+          // Wrap, not a bare Row: quarter + date + EPS estimate overflowed a
+          // narrow phone by 56 px.
+          Expanded(
+            child: Wrap(
+              children: [
+                Text(
+                  earnings.quarter ?? '',
+                  style: AmiTypography.labelMono
+                      .copyWith(color: AmiColors.hexAmber, fontSize: 11),
+                ),
+                if (dateStr != null)
+                  Text(
+                    ' · $dateStr',
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.textMed, fontSize: 11),
+                  ),
+                if (eps != null)
+                  Text(
+                    ' · ${l.tickerDetailNewsEpsEstimate('\$${eps.toStringAsFixed(2)}')}',
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.textLow, fontSize: 11),
+                  ),
+              ],
+            ),
           ),
-          if (dateStr != null) ...[
-            Text(
-              ' · $dateStr',
-              style: AmiTypography.labelMono
-                  .copyWith(color: AmiColors.textMed, fontSize: 11),
-            ),
-          ],
-          if (eps != null) ...[
-            Text(
-              ' · ${l.tickerDetailNewsEpsEstimate('\$${eps.toStringAsFixed(2)}')}',
-              style: AmiTypography.labelMono
-                  .copyWith(color: AmiColors.textLow, fontSize: 11),
-            ),
-          ],
         ],
       ),
     );
@@ -667,6 +682,48 @@ class _EarningsPill extends StatelessWidget {
     } catch (_) {
       return iso;
     }
+  }
+}
+
+
+/// DEF501 — the earnings pill's two empty states. "None scheduled" is a
+/// reading (the calendar holds nothing inside 90 days); "unavailable" is a
+/// failure to read it. They differ in colour and wording so a dead feed is
+/// never mistaken for a quiet calendar.
+class _EarningsStatusPill extends StatelessWidget {
+  const _EarningsStatusPill({super.key, required this.unavailable});
+
+  final bool unavailable;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final colour = unavailable ? AmiColors.textLow : AmiColors.hexAmber;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AmiSpacing.m, vertical: AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: colour.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: colour.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.calendar_today_outlined, color: colour, size: 14),
+          const SizedBox(width: AmiSpacing.s),
+          Flexible(
+            child: Text(
+              unavailable
+                  ? l.tickerDetailEarningsUnavailable
+                  : l.tickerDetailEarningsNone,
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.textMed, fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

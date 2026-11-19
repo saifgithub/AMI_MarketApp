@@ -6801,6 +6801,52 @@ _PHASE_GAP_S = 0.25
 _AGENT_LLM_TIMEOUT_S = settings.room_agent_timeout_s
 
 
+class _RunEventChannel:
+    """Replayable fan-out of one in-flight run's events (DEF500).
+
+    The run used to write into a single `asyncio.Queue` that `subscribe()`
+    drained destructively, so a client that reattached after its app was killed
+    got only the events nobody had read yet: every desk the dead connection had
+    already consumed was gone from the new stream, and the app showed those
+    desks as NO RESPONSE for the rest of the run. The channel keeps every event
+    the run has emitted and hands each subscriber its own queue, pre-filled with
+    that history, so a reattach replays the whole run so far and then continues
+    live. It lives exactly as long as the run is in `_active_queues`.
+    """
+
+    def __init__(self) -> None:
+        self._log: list[RoomEvent] = []
+        self._subscribers: list[asyncio.Queue[RoomEvent | None]] = []
+        self._closed = False
+        self._attach_count = 0
+
+    async def put(self, ev: RoomEvent | None) -> None:
+        """`None` is the end-of-run sentinel, delivered to every subscriber."""
+        if ev is None:
+            self._closed = True
+        else:
+            self._log.append(ev)
+        for q in self._subscribers:
+            q.put_nowait(ev)
+
+    def attach(self) -> tuple[asyncio.Queue[RoomEvent | None], bool]:
+        """A fresh queue holding the run so far; True when someone attached before."""
+        q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+        for ev in self._log:
+            q.put_nowait(ev)
+        if self._closed:
+            q.put_nowait(None)
+        else:
+            self._subscribers.append(q)
+        reattached = self._attach_count > 0
+        self._attach_count += 1
+        return q, reattached
+
+    def detach(self, q: asyncio.Queue[RoomEvent | None]) -> None:
+        if q in self._subscribers:
+            self._subscribers.remove(q)
+
+
 @dataclass
 class RoomEvent:
     """A single streamed event from the Room runner.
@@ -6814,7 +6860,7 @@ class RoomEvent:
     # predate CR090-MOBILE — they simply ignore it.
     # 'provider_switch' (CR272) carries the backup-restart notice in `text`; the
     # discussion streamed before it is void and restarts from the first phase.
-    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'agent_withheld' | 'provider_switch' | 'verdict' | 'error'
+    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'agent_withheld' | 'provider_switch' | 'verdict' | 'error' | 'reattached'
     phase: str | None = None
     agent_id: AgentId | None = None
     text: str | None = None
@@ -7200,7 +7246,7 @@ class RoomRunner:
         self._pump_tasks: set[asyncio.Task] = set()
         # Per-run event queues: keyed by run_id, alive while _pump() runs.
         # SSE consumers read from these; background tasks write to them.
-        self._active_queues: dict[UUID, asyncio.Queue[RoomEvent | None]] = {}
+        self._active_queues: dict[UUID, _RunEventChannel] = {}
         # In-memory dedup index: (user_id, ticker) → run_id for runs that
         # are scheduled or running. Populated before create_task; cleared in
         # _pump finally. Avoids a race where the DB INSERT hasn't fired yet
@@ -7587,7 +7633,7 @@ class RoomRunner:
             return
 
         key = (p.user_id, p.ticker.upper())
-        q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+        q = _RunEventChannel()
         self._active_queues[p.run_id] = q
         self._active_by_key[key] = p.run_id
 
@@ -7999,7 +8045,7 @@ class RoomRunner:
                 dedup_bypassed=True,
                 feeds_ablated=True,
             )
-            q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+            q = _RunEventChannel()
             self._active_queues[run_id] = q
 
             async def _pump_backtest() -> None:
@@ -8122,7 +8168,7 @@ class RoomRunner:
         )
 
         run_id = uuid4()
-        q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+        q = _RunEventChannel()
         self._active_queues[run_id] = q
         self._active_by_key[key] = run_id  # register before task starts
 
@@ -8198,14 +8244,20 @@ class RoomRunner:
         completed before the caller subscribed). In that case the caller should
         GET /v1/room/{run_id} for the persisted snapshot.
         """
-        q = self._active_queues.get(run_id)
-        if q is None:
+        channel = self._active_queues.get(run_id)
+        if channel is None:
             return
-        while True:
-            ev = await q.get()
-            if ev is None:
-                return  # sentinel — background task finished
-            yield ev
+        q, reattached = channel.attach()
+        try:
+            if reattached:
+                yield RoomEvent(kind="reattached", run_id=run_id)
+            while True:
+                ev = await q.get()
+                if ev is None:
+                    return  # sentinel — background task finished
+                yield ev
+        finally:
+            channel.detach(q)
 
     async def run(
         self,

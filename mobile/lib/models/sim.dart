@@ -953,6 +953,7 @@ class SimEarnings {
   const SimEarnings({
     required this.ticker,
     required this.source,
+    this.status = 'unavailable',
     this.earningsDate,
     this.quarter,
     this.epsEstimate,
@@ -962,6 +963,12 @@ class SimEarnings {
 
   final String ticker;
   final String source;
+
+  /// DEF501 — why the earnings fields are (not) populated: `scheduled`
+  /// (a date is announced), `none_scheduled` (calendar read, nothing inside
+  /// the 90-day window) or `unavailable` (the feed could not be read). The
+  /// pill renders all three; it never vanishes on null.
+  final String status;
   final String? earningsDate; // "YYYY-MM-DD"
   final String? quarter;      // "Q1"–"Q4"
   final double? epsEstimate;
@@ -975,15 +982,25 @@ class SimEarnings {
   /// fields is present; both null means non-payer / no announced window.
   bool get hasDividendData => exDividendDate != null || dividendRate != null;
 
-  factory SimEarnings.fromJson(Map<String, dynamic> j) => SimEarnings(
-        ticker: j['ticker'] as String,
-        source: j['source'] as String? ?? 'unknown',
-        earningsDate: j['earnings_date'] as String?,
-        quarter: j['quarter'] as String?,
-        epsEstimate: (j['eps_estimate'] as num?)?.toDouble(),
-        exDividendDate: j['ex_dividend_date'] as String?,
-        dividendRate: (j['dividend_rate'] as num?)?.toDouble(),
-      );
+  factory SimEarnings.fromJson(Map<String, dynamic> j) {
+    final source = j['source'] as String? ?? 'unknown';
+    // A backend that predates `status` cannot tell the two empty states
+    // apart: its own "unavailable" source is the only honest signal.
+    final status = j['status'] as String? ??
+        (j['earnings_date'] != null
+            ? 'scheduled'
+            : (source == 'unavailable' ? 'unavailable' : 'none_scheduled'));
+    return SimEarnings(
+      ticker: j['ticker'] as String,
+      source: source,
+      status: status,
+      earningsDate: j['earnings_date'] as String?,
+      quarter: j['quarter'] as String?,
+      epsEstimate: (j['eps_estimate'] as num?)?.toDouble(),
+      exDividendDate: j['ex_dividend_date'] as String?,
+      dividendRate: (j['dividend_rate'] as num?)?.toDouble(),
+    );
+  }
 }
 
 /// One buy lot's reconstructed FIFO cost-basis picture. Returned inside

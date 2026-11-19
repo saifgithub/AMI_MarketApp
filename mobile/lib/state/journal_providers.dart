@@ -80,12 +80,32 @@ class JournalNotifier extends StateNotifier<JournalState> {
   /// If the mandate has not loaded yet, this bails without guessing: a
   /// wrong plan is worse than a stale/empty retention read, and
   /// `MandateNotifier.refresh()` re-triggers this once the real plan lands.
+  /// Re-fetches the list. With no arguments it re-fetches what the user is
+  /// currently looking at (the active chip and search text), so the
+  /// background callers (`MandateNotifier`, the Room, trade fills) can refresh
+  /// without knowing the filter. DEF503: they used to fetch UNFILTERED while
+  /// the chip stayed highlighted.
   Future<void> refresh({
     JournalEntryType? filterType,
     String? q,
+  }) =>
+      _fetch(
+        filterType: filterType ?? state.filterType,
+        q: q ?? (state.searchQuery.isEmpty ? null : state.searchQuery),
+      );
+
+  int _fetchSeq = 0;
+
+  /// The one fetch. `filterType == null` means ALL here (callers that mean
+  /// "keep the current chip" go through [refresh]), and the state it writes
+  /// always names the filter the fetched rows were actually filtered by.
+  Future<void> _fetch({
+    required JournalEntryType? filterType,
+    required String? q,
   }) async {
     final plan = _ref.read(mandateNotifierProvider).mandate?.plan;
     if (plan == null) return;
+    final seq = ++_fetchSeq;
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -101,6 +121,9 @@ class JournalNotifier extends StateNotifier<JournalState> {
       // disposed the container. A `state =` on a disposed notifier throws
       // `Bad state: Tried to use JournalNotifier after `dispose` was called`.
       if (!mounted) return;
+      // DEF503 — a slower, older request must not overwrite the list a newer
+      // chip/search tap already asked for.
+      if (seq != _fetchSeq) return;
       state = state.copyWith(
         entries: resp.entries,
         loading: false,
@@ -108,22 +131,27 @@ class JournalNotifier extends StateNotifier<JournalState> {
         clearRetentionDays: resp.retentionDays == null,
         retentionLoaded: true,
         filterType: filterType,
+        clearFilter: filterType == null,
       );
     } catch (e) {
       if (!mounted) return;
+      if (seq != _fetchSeq) return;
       state = state.copyWith(
           loading: false,
           error: friendlyError(e, action: 'load your journal'));
     }
   }
 
-  Future<void> setFilter(JournalEntryType? type) async {
-    await refresh(filterType: type, q: state.searchQuery.isEmpty ? null : state.searchQuery);
-  }
+  /// DEF503 — `null` is the ALL chip: it must clear the previous chip, not
+  /// leave it highlighted over an unfiltered list.
+  Future<void> setFilter(JournalEntryType? type) => _fetch(
+        filterType: type,
+        q: state.searchQuery.isEmpty ? null : state.searchQuery,
+      );
 
   Future<void> search(String q) async {
     state = state.copyWith(searchQuery: q);
-    await refresh(
+    await _fetch(
       filterType: state.filterType,
       q: q.isEmpty ? null : q,
     );

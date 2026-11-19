@@ -163,7 +163,18 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       _ProviderSwitchNotice(message: state.providerSwitchNotice!),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
-                    if (state.reconnecting) const _ReconnectingBanner(),
+                    if (state.reconnecting)
+                      _ReconnectingBanner(
+                        message: AppLocalizations.of(context)
+                            .roomReconnectingBanner,
+                      ),
+                    // DEF500 — reopened onto a Room still in flight.
+                    if (state.reattached && !state.done && !state.reconnecting)
+                      _ReconnectingBanner(
+                        key: const Key('roomReattachedBanner'),
+                        message:
+                            AppLocalizations.of(context).roomReattachedBanner,
+                      ),
                     if (state.waitGaveUp)
                       _WaitGaveUpCard(ticker: widget.ticker),
                     if (showBoard)
@@ -1243,7 +1254,9 @@ class _LiveDataNoticeCard extends ConsumerWidget {
 }
 
 class _ReconnectingBanner extends StatelessWidget {
-  const _ReconnectingBanner();
+  const _ReconnectingBanner({super.key, required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -1269,7 +1282,7 @@ class _ReconnectingBanner extends StatelessWidget {
           const SizedBox(width: AmiSpacing.s),
           Expanded(
             child: Text(
-              AppLocalizations.of(context).roomReconnectingBanner,
+              message,
               style: AmiTypography.body,
             ),
           ),
