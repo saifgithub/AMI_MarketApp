@@ -53,7 +53,7 @@ never measured, which is worse than reporting nothing.
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -320,7 +320,9 @@ def bank_verdict_outcome(
 
 # ── Scorer ──────────────────────────────────────────────────────────────────
 
-def _horizon_close(ticker: str, target: date) -> tuple[float, date] | None:
+def _horizon_close(
+    ticker: str, target: date, *, max_gap_days: int | None = None,
+) -> tuple[float, date] | None:
     """The newest real stored close at or before `target`, or None.
 
     Excludes `mock_walk` rows UNCONDITIONALLY — not only in real mode. A
@@ -328,23 +330,33 @@ def _horizon_close(ticker: str, target: date) -> tuple[float, date] | None:
     measured, so a mock-only ticker yields no price and the row goes
     `unscorable` with `mock_price_source`, exactly the way
     `get_asof_daily_rows` refuses fabricated bars for a backtest.
+
+    `max_gap_days` (WP-28): when set, a bar older than `target - max_gap_days`
+    is treated as no bar. Without it a ticker whose store stops at the Room's
+    own reference date would "score" the horizon against that stale bar — a
+    forward return of ~0 that was never measured.
     """
     with get_session() as s:
-        row = s.execute(
+        q = (
             select(PriceHistoryDailyRow)
             .where(PriceHistoryDailyRow.ticker == ticker.upper().strip())
             .where(PriceHistoryDailyRow.date <= target)
             .where(PriceHistoryDailyRow.source != _MOCK_SOURCE)
-            .order_by(PriceHistoryDailyRow.date.desc())
-            .limit(1)
-        ).scalar_one_or_none()
+        )
+        if max_gap_days is not None:
+            q = q.where(PriceHistoryDailyRow.date >= target - timedelta(days=max_gap_days))
+        row = s.execute(q.order_by(PriceHistoryDailyRow.date.desc()).limit(1)).scalar_one_or_none()
         if row is None:
             return None
         return float(row.adj_close), row.date
 
 
 def _has_mock_only_history(ticker: str, target: date) -> bool:
-    """True when the store holds bars at/before `target` but ALL are mock.
+    """True when the store holds bars at/before `target` and they are mock.
+
+    Only called once `_horizon_close` has found no real bar, so any mock bar
+    here is the whole story (WP-28: with a gap guard a STALE real bar also
+    misses, so the source must be checked, not just the existence).
 
     Separates "we have no data yet" (`no_horizon_bar`, may become scorable
     later) from "everything we have is fabricated" (`mock_price_source`, never
@@ -356,19 +368,46 @@ def _has_mock_only_history(ticker: str, target: date) -> bool:
             select(func.count()).select_from(PriceHistoryDailyRow)
             .where(PriceHistoryDailyRow.ticker == ticker.upper().strip())
             .where(PriceHistoryDailyRow.date <= target)
+            .where(PriceHistoryDailyRow.source == _MOCK_SOURCE)
         ).scalar_one()
     return bool(n)
 
 
-def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str, int]:
-    """Score every `pending` row whose horizon has elapsed. Idempotent.
+def score_pending(
+    *,
+    now: datetime | None = None,
+    limit: int = 1000,
+    refresh_bars: Callable[[str], bool] | None = None,
+    max_bar_gap_days: int | None = None,
+    max_refreshes: int | None = None,
+) -> dict[str, int]:
+    """Score `pending` rows whose horizon has elapsed. Idempotent, bounded.
 
     Re-running scores nothing twice: only `status == 'pending'` rows are
     selected, and a scored row's status flips out of that set. Rows whose
     horizon has NOT elapsed are left alone — the counter reports them so a
     daily run's output shows the ledger is alive rather than silent.
 
-    Returns counts by outcome: scored / not_due / unscorable_mock /
+    `limit` bounds the DUE rows handled per call (oldest first), not the rows
+    scanned: a not-yet-due row costs nothing, and counting it against the bound
+    would let a front of long-horizon rows starve the due ones behind it. The
+    rows that need no price (excluded user, no reference price) are finalised
+    for free and do not count against it either. Whatever the bound leaves
+    behind stays `pending` and is picked up by the next call.
+
+    `refresh_bars` (WP-28, the scheduled path): called at most once per ticker
+    per call, only when the store has no usable horizon bar, to top the store up
+    from the provider. It returns False when the provider could not be reached.
+    A row whose bar is missing AND whose refresh failed is DEFERRED — left
+    `pending` and counted — never closed as `no_horizon_bar`: a feed outage must
+    not turn into permanent unscorable rows. `max_refreshes` caps how many
+    tickers one call may refresh (provider politeness); rows beyond the cap are
+    deferred the same way. With `refresh_bars=None` this is the pure store-read
+    scorer the CLI and the CR219 tests use.
+
+    `max_bar_gap_days` — see `_horizon_close`.
+
+    Returns counts by outcome: scored / not_due / deferred / unscorable_mock /
     unscorable_no_bar / unscorable_no_reference / excluded. The unscorable
     reasons are counted SEPARATELY rather than summed — "the store has no bar
     yet" is transient and may resolve on a later run, "every bar is fabricated"
@@ -378,7 +417,7 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
     """
     now = _as_utc(now) or _utcnow()
     counts = {
-        "scored": 0, "not_due": 0, "unscorable_mock": 0,
+        "scored": 0, "not_due": 0, "deferred": 0, "unscorable_mock": 0,
         "unscorable_no_bar": 0, "unscorable_no_reference": 0, "excluded": 0,
     }
     excluded = excluded_user_ids()
@@ -387,8 +426,7 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
         rows = list(s.execute(
             select(VerdictOutcomeRow)
             .where(VerdictOutcomeRow.status == STATUS_PENDING)
-            .order_by(VerdictOutcomeRow.reference_at)
-            .limit(limit)
+            .order_by(VerdictOutcomeRow.reference_at, VerdictOutcomeRow.id)
         ).scalars().all())
         pending = [
             (r.id, r.ticker, _as_utc(r.reference_at), r.horizon_days,
@@ -397,6 +435,8 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
             for r in rows
         ]
 
+    refreshed: dict[str, bool] = {}
+    handled_due = 0
     for row_id, ticker, ref_at, h_days, ref_price, user_id in pending:
         if user_id in excluded:
             _finish(row_id, STATUS_UNSCORABLE, reason=REASON_EXCLUDED_USER, now=now)
@@ -414,12 +454,27 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
             counts["not_due"] += 1
             continue
 
+        if handled_due >= limit:
+            continue
+        handled_due += 1
+
         target = due_at.date()
-        hit = _horizon_close(ticker, target)
+        hit = _horizon_close(ticker, target, max_gap_days=max_bar_gap_days)
+        refresh_ok = True
+        if hit is None and refresh_bars is not None:
+            if ticker not in refreshed:
+                if max_refreshes is not None and len(refreshed) >= max_refreshes:
+                    refreshed[ticker] = False
+                else:
+                    refreshed[ticker] = bool(refresh_bars(ticker))
+            refresh_ok = refreshed[ticker]
+            hit = _horizon_close(ticker, target, max_gap_days=max_bar_gap_days)
         if hit is None:
             if _has_mock_only_history(ticker, target):
                 _finish(row_id, STATUS_UNSCORABLE, reason=REASON_MOCK_PRICE, now=now)
                 counts["unscorable_mock"] += 1
+            elif not refresh_ok:
+                counts["deferred"] += 1
             else:
                 counts["unscorable_no_bar"] += 1
                 _finish(
@@ -437,6 +492,22 @@ def score_pending(*, now: datetime | None = None, limit: int = 1000) -> dict[str
 
     logger.info("verdict_outcomes_scored", **counts)
     return counts
+
+
+def refresh_price_bars(ticker: str, *, now: datetime | None = None) -> bool:
+    """Top the price store up for one ticker from the provider (WP-28).
+
+    The read-through `get_daily_series` fetches only when the stored tail is
+    stale and the per-ticker 6h throttle allows, so calling this for a ticker
+    the store already covers costs nothing. Returns False when the provider
+    could not be reached or served unusable bars — the caller defers the row
+    rather than concluding the bar does not exist.
+    """
+    from app.services.price_history import fetch_failed_recently, get_daily_series
+
+    key = (ticker or "").upper().strip()
+    get_daily_series([key], min_days=1, now=now)
+    return not fetch_failed_recently(key)
 
 
 def _finish(

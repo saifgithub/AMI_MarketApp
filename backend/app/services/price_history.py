@@ -589,6 +589,12 @@ def get_daily_series(
     return out
 
 
+def fetch_failed_recently(ticker: str) -> bool:
+    """True when the most recent provider attempt for `ticker` left no usable
+    history (the flag `DailySeries.fetch_failed` is derived from)."""
+    return bool(_last_fetch_failed.get((ticker or "").upper().strip()))
+
+
 def _replace_fetch_failed(series: DailySeries, ticker: str) -> DailySeries:
     if not series.dates:
         return _empty_series(ticker, fetch_failed=True)
