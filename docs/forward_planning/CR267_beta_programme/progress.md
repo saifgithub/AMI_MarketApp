@@ -122,3 +122,11 @@ Branch `beta/cr267`, worktree `.claude/worktrees/cr267-beta`, track B. Rollback 
 2. **Deploy #5's API UAT:** 116 passed, 3 failed, all WP-38: unmatched-route 404 (product bug, fixed in `615c67b7`), harness `_fake_ip` leftovers, and admin liveness "unknown" after a restart (fixed in `b0c4fe4b`).
 3. **Merged:** CR277 (`720eb935`) and DEF493 (`ddd2c999`).
 4. **Deploy #6** `alpha-2026-11-19-4` (`b0c4fe4b`): suite PASS 8,217; postflight PASS; 404 bodies now carry `request_id`.
+
+## 2026-11-19 — WP-13 guard replay done (session B1, worker lane `lane/WP13-guard-replay`)
+
+1. Replayed the CR271 guard over 80,759 stored Alpha agent texts (671 app, 79,980 harness, 108 UAT
+   non-Room). Before tuning: 13 advice hits (3 true, 10 false), 0 abuse; after: 3 advice hits, all
+   true. Two deterministic fixes ("can't lose", "guaranteed return") with 11 new test cases. Result and
+   recommendation (enforce advice + abuse; adversarial 1-on-1/Concierge pass first):
+   `wp13_guard_replay_2026-11-19.md`. `OUTPUT_GUARD_MODE` left at `log`.

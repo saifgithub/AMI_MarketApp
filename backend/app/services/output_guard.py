@@ -96,15 +96,32 @@ _ADVICE_PATTERNS = [
     # "go ahead and buy"
     rf"\bgo\s+ahead\s+and\s+{_ACT}\b",
     # promises of return
-    rf"{_NO_PRECEDING}\bguaranteed?\s+(?:returns?|profits?|gains?)\b",
-    r"\b(?:can['’]?t|cannot|can\s+not)\s+(?:possibly\s+)?lose\b"
-    r"(?!\s+(?:any\s+)?(?:more|less|sight|track|focus))",
+    # CR271 replay: "once guaranteed returns" is a past-tense verb; the
+    # regulated-utility term of art is exempted in `check` (_REGULATED_CONTEXT).
+    rf"{_NO_PRECEDING}(?<!\bonce\s)(?<!\bformerly\s)(?<!\bpreviously\s)"
+    r"\bguaranteed?\s+(?:returns?|profits?|gains?)\b",
+    # CR271 replay: "the line the uptrend cannot lose" is a price level, not a
+    # promise. A promise has a subject that is the user or the trade itself and
+    # ends the clause ("you can't lose.") or names money ("can't lose money").
+    r"\b(?:you|it|this|that|trade|bet|position|investment|stock|setup|play|name)\s+"
+    r"(?:simply\s+|literally\s+|just\s+|possibly\s+)*(?:can['’]?t|cannot|can\s+not)\s+"
+    r"(?:possibly\s+)?lose\b"
+    r"(?=\s*(?:[.,;:!)—–]|$)|\s+(?:money|anything|a\s+(?:penny|cent|dime)|at\s+all"
+    r"|on\s+(?:this|it|that)|with\s+(?:this|it|that)))",
     r"\brisk[- ]free\s+(?:profits?|gains?|money|trades?|bets?)\b",
     r"\byou(?:['’]ll|\s+will|\s+are\s+(?:going\s+to|sure\s+to|certain\s+to))\s+"
     r"(?:definitely\s+|certainly\s+|surely\s+|easily\s+|absolutely\s+)?"
     r"(?:make\s+(?:money|a\s+profit|profits|gains|a\s+killing)|profit\b|get\s+rich"
     r"|be\s+rich|double\s+your|triple\s+your)",
 ]
+
+# Rate-regulated utilities have a "guaranteed return on rate base": a term of
+# art about an allowed ROE, not a promise to the user. A `guaranteed ...` hit
+# with this vocabulary in the same sentence is skipped.
+_REGULATED_CONTEXT = re.compile(
+    r"rate[\s-]?base|allowed\s+(?:roe|return)|regulated\s+(?:utilit|asset|return)",
+    re.IGNORECASE,
+)
 
 # ── abuse ─────────────────────────────────────────────────────────────────
 
@@ -224,6 +241,16 @@ def _market_density(text: str) -> tuple[int, float]:
     return len(words), hits / len(words)
 
 
+def _is_regulated_term(text: str, m: re.Match[str]) -> bool:
+    """True when a `guaranteed ...` hit sits in the same sentence as rate-base
+    vocabulary. Same sentence only: a promise one sentence later still hits."""
+    if not m.group(0).lower().startswith("guarantee"):
+        return False
+    start = max(text.rfind(c, 0, m.start()) for c in ".!?\n") + 1
+    ends = [i for i in (text.find(c, m.end()) for c in ".!?\n") if i != -1]
+    return bool(_REGULATED_CONTEXT.search(text, start, min(ends) if ends else len(text)))
+
+
 def check(text: str | None, *, surface: str, mode: str | None = None) -> GuardResult:
     """Run the guard on one finished piece of user-visible text. Pure: no
     logging, no I/O. `mode` defaults to `Settings.output_guard_mode`; `off`
@@ -234,7 +261,13 @@ def check(text: str | None, *, surface: str, mode: str | None = None) -> GuardRe
     hits: list[Hit] = []
     for rule, patterns in _COMPILED.items():
         for pat in patterns:
-            m = pat.search(text)
+            m = next(
+                (
+                    c for c in pat.finditer(text)
+                    if not _is_regulated_term(text, c)
+                ),
+                None,
+            )
             if m:
                 hits.append(Hit(rule, m.group(0), m.start(), m.end(), True))
                 break

@@ -51,6 +51,12 @@ ADVICE_POSITIVE = [
     "You'll definitely profit from the move.",
     "You are going to get rich.",
     "You ought to invest in this stock.",
+    # CR271 replay: tuning must not loosen these.
+    "A larger position captures more of this guaranteed return before volatility hits.",
+    "This trade can't lose money.",
+    "The utility earns an allowed ROE on rate base. Separately, this is a guaranteed return for you.",
+    "The stock can't lose, trust me.",
+    "The thesis breaks (i.e., you should buy) if Q4 beats.",
 ]
 
 ADVICE_NEGATIVE = [
@@ -72,6 +78,14 @@ ADVICE_NEGATIVE = [
     "You should invest time in reading the 10-K.",
     "Your mandate caps single names at 5%.",
     "A short-term pullback does not change the thesis.",
+    # CR271 replay false positives (WP-13, 2026-11-19): price levels and the
+    # regulated-utility term of art are not promises.
+    "The 200-day average defines the line the primary uptrend cannot lose, and the stop sits there.",
+    "The narrative implies the stock can't lose that ground because buybacks support the price.",
+    "Regulated capex earns a guaranteed return on rate base over time.",
+    "Plant that enters the regulated rate base and earns a guaranteed return.",
+    "The Bull's guaranteed return on rate base argument understates regulatory lag.",
+    "The decline eroded the pricing power that once guaranteed returns.",
 ]
 
 ABUSE_POSITIVE = [
