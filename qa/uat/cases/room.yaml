@@ -226,7 +226,8 @@ cases:
       - 'On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL; tap CONVENE'
       - 'Wait for the run to finish (up to ten minutes)'
     expected:
-      - 'The Convene sheet states the Room price and the user''s credits before anything is charged'
+      - 'The Convene sheet states the Room price and the user''s credits before anything is charged, and says how much live news and social data can add ("up to +4 more ...") so the final charge is never a surprise (DEF495)'
+      - 'The credits actually charged are the price shown, plus at most the "up to" amount'
       - 'The Room opens on AAPL and streams desk by desk'
       - 'The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card'
 

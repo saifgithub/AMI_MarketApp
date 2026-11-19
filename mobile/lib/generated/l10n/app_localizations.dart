@@ -64,7 +64,7 @@ import 'app_localizations_ms.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
-    Locale('ms'),
+    Locale('ms')
   ];
 
   /// Application title. Used in MaterialApp and system places. Keep as 'AMI Trade' across all locales — it's a product name, not translatable.
@@ -3225,22 +3225,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ticker} passes the {standard} screen ({source}, as of {date}).'**
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  );
+      String ticker, String standard, String source, String date);
 
   /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.
   ///
   /// In en, this message translates to:
   /// **'{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  );
+      String ticker, String standard, String source, String date);
 
   /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.
   ///
@@ -4585,11 +4577,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filled: {side} {qty} {ticker} @ \${price}'**
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  );
+      String side, String qty, String ticker, String price);
 
   /// CR170 confirmation after placing an order that did NOT fill — it now waits for its price. Deliberately different in wording and colour from tradeTicketFilled: telling a user their order filled when it is still waiting is the failure this whole string exists to prevent. {price} is the price they named.
   ///
@@ -4644,11 +4632,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This raises your stop on all {qty} {ticker} from \${fromStop} to \${toStop}.'**
   String tradeTicketNoticeRaisesStop(
-    String qty,
-    String ticker,
-    String fromStop,
-    String toStop,
-  );
+      String qty, String ticker, String fromStop, String toStop);
 
   /// CR188 replaces the SUBMIT TRADE button label when the sell would open a short. A word on the control being pressed is structural; a sentence above it is an instruction, and this project's rule is that instructions are not controls. Uppercase, mono.
   ///
@@ -4751,10 +4735,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waits until {ticker} reaches \${trigger}, then becomes a limit order at \${limit}.'**
   String tradeTicketHintRestsStopLimit(
-    String ticker,
-    String trigger,
-    String limit,
-  );
+      String ticker, String trigger, String limit);
 
   /// CR170 portfolio section heading above orders that have not filled yet. Uppercase, mono.
   ///
@@ -4791,11 +4772,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{side} {qty} {ticker} at \${price} will stop waiting and will not fill.'**
   String restingOrderCancelBody(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  );
+      String side, String qty, String ticker, String price);
 
   /// CR170 confirm-dialog primary action. Uppercase, mono.
   ///
@@ -7442,23 +7419,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{side} {contracts} {right} \${strike}'**
   String optionLegLine(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-  );
+      String side, String contracts, String right, String strike);
 
   /// CR172 §12. Same as optionLegLine but with the leg's own expiry appended, used ONLY when a structure's legs expire on different dates (a calendar spread). Without the date those two legs would render identically. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'{side} {contracts} {right} \${strike} · {expiry}'**
-  String optionLegLineDated(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  );
+  String optionLegLineDated(String side, String contracts, String right,
+      String strike, String expiry);
 
   /// CR172 §12. How long the structure has left, on its own line under the legs. Only used for 2 or more days; today and tomorrow have their own keys because an option's last two days behave differently from every day before them. NEW key. retranslate:[ar,ms]
   ///
@@ -7573,11 +7541,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} {ticker} covered at \${price} — your {bracket} was reached.'**
   String shortClosedBracket(
-    String quantity,
-    String ticker,
-    String price,
-    String bracket,
-  );
+      String quantity, String ticker, String price, String bracket);
 
   /// CR171. Reported when the user closed the short themselves. Distinct from shortClosedMargin so 'you did this' never reads the same as 'the account did this to you'. NEW key. retranslate:[ar,ms]
   ///
@@ -7945,10 +7909,10 @@ abstract class AppLocalizations {
   /// **'Want 9 more Rooms a month? Try Trader.'**
   String get houseAdRoomHeadline;
 
-  /// CR122 — house upsell body for the used-free-Room slot. NEW key. retranslate:[ar,ms]
+  /// CR122 / DEF497 — house upsell body for the Room slot. The slot fires when the credit balance is below the Room price (HouseAdSignals.usedFreeRoom), NOT only when a free Room was used — so the copy states the shortfall rather than claiming a free Room was used. ar/ms redrafted by Claude, awaiting translator review.
   ///
   /// In en, this message translates to:
-  /// **'Your free Room is used. Trader runs 10 a month.'**
+  /// **'Not enough credits for a Room right now. Trader runs 10 a month.'**
   String get houseAdRoomBody;
 
   /// CR122 — house upsell headline when a Trader user is near the monthly credit cap (copy locked in ads.md house-ad table; keep the numbers literal). NEW key. retranslate:[ar,ms]
@@ -8171,13 +8135,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{action} {contracts} × {right} {strike} · exp {expiry}'**
-  String optionTicketLegLine(
-    String action,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  );
+  String optionTicketLegLine(String action, String contracts, String right,
+      String strike, String expiry);
 
   /// CR172 §3. Second line of an option leg. The backend quotes premium PER SHARE, not per contract, and saying which one avoids a 100× misreading. NEW key. retranslate:[ar,ms]
   ///
@@ -9510,6 +9469,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dismiss'**
   String get roomRatingDismiss;
+
+  /// DEF494 — Settings HELP row that opens the Terms of Service page. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTermsOfService;
+
+  /// DEF494 — Settings HELP row that opens the Privacy Policy page. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicy;
+
+  /// DEF494 — language picker row that follows the device language (primary label). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsLanguageSystem;
+
+  /// DEF494 — secondary label on the language picker's device-language row. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow system'**
+  String get settingsLanguageFollowSystem;
+
+  /// DEF494 — the name of the Arabic language, in the current UI language, shown beside its native name in the language picker. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get settingsLanguageNameArabic;
+
+  /// DEF494 — the name of the Malay language, in the current UI language, shown beside its native name in the language picker. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Malay'**
+  String get settingsLanguageNameMalay;
+
+  /// DEF494 — display name of the free Floor Pass plan (Settings PLAN row). Product tier name: may stay in Latin script. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor Pass'**
+  String get planNameFloorPass;
+
+  /// DEF494 — display name of the Trader trial plan (Settings PLAN row). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Trader (trial)'**
+  String get planNameTrialTrader;
+
+  /// DEF495 — appended to the Convene sheet credits line so the full price is visible before the charge. {max} is the most live News + Social data can add to the Room price (mandate.room_live_data_surcharge_max); the real surcharge is only known during the run, hence 'up to'. DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'up to +{max} more if live news and social data are used'**
+  String creditsLineLiveSurcharge(String max);
+
+  /// DEF494 — body of the explanation sheet for the 'No tobacco / alcohol / gambling' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters out tickers whose primary revenue comes from tobacco, alcohol, or gambling operations. Pure-play exclusions only; diversified conglomerates with a small exposure are not caught.'**
+  String get settingsComplianceTagExplainBody;
+
+  /// DEF494 — body of the explanation sheet for the 'No fossil fuels' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters out oil, gas, and coal producers, plus the pipelines and services companies whose revenue depends on them. Utilities with a transition plan are not auto-excluded.'**
+  String get settingsComplianceFossilExplainBody;
+
+  /// DEF494 — body of the explanation sheet for the 'Long-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'No short selling, no inverse ETFs, no put options used as standalone bets. You can still hedge with protective puts against a long position you already hold.'**
+  String get settingsComplianceLongOnlyExplainBody;
+
+  /// DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  ///
+  /// In en, this message translates to:
+  /// **'Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.'**
+  String get settingsComplianceLiquidOnlyExplainBody;
 }
 
 class _AppLocalizationsDelegate
@@ -9541,9 +9578,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

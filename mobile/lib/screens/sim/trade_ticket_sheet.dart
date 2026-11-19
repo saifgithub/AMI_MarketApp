@@ -329,6 +329,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       _validator.onTextChanged(_ticker.text);
     }
     _ticker.addListener(_onTickerChanged);
+    // DEF496 — a refusal belongs to the order that earned it. `lastSubmit`
+    // outlives the sheet in the notifier, so a fresh "New trade" ticket used
+    // to open under the previous order's SAFETY FLOOR banner with an empty
+    // ticker. Cleared after this build; a notifier mutation inside initState
+    // would be a provider write during the build phase.
+    Future.microtask(() {
+      if (mounted) ref.read(simNotifierProvider.notifier).clearLastSubmit();
+    });
   }
 
   @override

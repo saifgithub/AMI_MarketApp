@@ -340,6 +340,7 @@ class UserMandate {
     this.creditBalance,
     this.creditAllowance,
     this.roomCost,
+    this.roomLiveDataSurchargeMax,
     this.creditsResetAt,
     this.roomCooldownUntil,
     this.createdAt,
@@ -415,6 +416,9 @@ class UserMandate {
   // CR039/CR047 credit state (stamped by the mandate API from `users`).
   final int? creditAllowance;
   final int? roomCost;
+  // DEF495: ceiling on the extra credits live News/Social feeds can add to a
+  // Room (CR090), advertised so the Convene sheet shows it before the charge.
+  final int? roomLiveDataSurchargeMax;
   final DateTime? creditsResetAt;
   // CR047 "The Winzip": when set and in the future, the next Room convene is in
   // cooldown — the UI can pre-empt with the countdown card. NULL/past = clear.
@@ -485,6 +489,8 @@ class UserMandate {
       creditBalance: (j['credit_balance'] as num?)?.toInt(),
       creditAllowance: (j['credit_allowance'] as num?)?.toInt(),
       roomCost: (j['room_cost'] as num?)?.toInt(),
+      roomLiveDataSurchargeMax:
+          (j['room_live_data_surcharge_max'] as num?)?.toInt(),
       creditsResetAt: j['credits_reset_at'] != null
           ? DateTime.parse(j['credits_reset_at'] as String).toLocal()
           : null,
