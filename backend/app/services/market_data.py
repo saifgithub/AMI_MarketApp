@@ -306,7 +306,14 @@ class MarketDataProvider(Protocol):
         ...
 
     def earnings(self, ticker: str) -> EarningsInfo | None:
-        """Return upcoming earnings info within 90 days, or None if unavailable."""
+        """Upcoming earnings info within 90 days.
+
+        DEF501 — **None and an all-None `EarningsInfo` are different answers.**
+        None is "this provider could not tell you" (outage, empty calendar,
+        not wired); an `EarningsInfo` with `earnings_date=None` is a
+        measurement: the calendar was read and nothing is announced inside
+        the window. The ticker-detail pill renders the two differently.
+        """
         ...
 
     def expiries(self, underlying: str) -> list[datetime.date] | None:
@@ -1032,7 +1039,13 @@ class YfinanceProvider:
                 except Exception:
                     continue
             if target is None:
-                return None
+                # DEF501 — the calendar was read and holds no report inside
+                # the window. That is a measurement ("none scheduled"), not an
+                # outage, so it is returned as an all-None EarningsInfo and
+                # `None` stays reserved for "could not tell".
+                return EarningsInfo(
+                    earnings_date=None, quarter=None, eps_estimate=None,
+                )
             q_map = {
                 1: "Q1", 2: "Q1", 3: "Q1",
                 4: "Q2", 5: "Q2", 6: "Q2",

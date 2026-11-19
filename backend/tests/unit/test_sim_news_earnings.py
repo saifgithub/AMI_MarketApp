@@ -150,7 +150,7 @@ def test_earnings_returns_date_shape(client: TestClient) -> None:
     assert body["ticker"] == "AAPL"
     assert "source" in body
     assert set(body.keys()) == {
-        "ticker", "source", "earnings_date", "quarter", "eps_estimate",
+        "ticker", "source", "status", "earnings_date", "quarter", "eps_estimate",
         "ex_dividend_date", "dividend_rate",
     }
     assert body["earnings_date"] == "2026-07-25"

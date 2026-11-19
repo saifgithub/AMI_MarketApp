@@ -1306,11 +1306,24 @@ async def earnings(
     Public — same as /quote and /history. Response cached 6 hours
     server-side in CachingProvider. All fields are null when no
     earnings date is announced within 90 days.
+
+    DEF501 — `status` says WHY the fields are null, so the app can tell the
+    user instead of hiding the pill: "scheduled" (a date is announced),
+    "none_scheduled" (the calendar was read and nothing falls inside the
+    window) or "unavailable" (the feed could not be read — mock walk, Yahoo
+    error, empty calendar).
     """
     info, source = await asyncio.to_thread(sim.current_earnings, ticker)
+    if info is None:
+        status = "unavailable"
+    elif info.earnings_date is not None:
+        status = "scheduled"
+    else:
+        status = "none_scheduled"
     return {
         "ticker": ticker.upper(),
         "source": source,
+        "status": status,
         "earnings_date": info.earnings_date if info else None,
         "quarter": info.quarter if info else None,
         "eps_estimate": info.eps_estimate if info else None,
