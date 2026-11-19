@@ -36,7 +36,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-32 | iOS privacy manifest | WP-00 | done | 2026-11-18 | 2026-11-18 | `e807a598` | CR274. Declares no tracking; must change if personalised ads ever ship (flagged for WP-50). |
 | WP-33 | Mobile defect batch | WP-00 | in progress | 2026-11-18 | | `3c0780d9` | Part 1 merged: 14 of 15 (DEF466 open). Part 2 = device run on the Suite's phones per `device_lab_protocol.md`. |
 | WP-34 | Backend defect batch | WP-00 | done | 2026-11-18 | 2026-11-18 | `95f3b2b4` `3c5b66ba` | DEF458–463, DEF468. Filed DEF489 (fixed in WP-35). |
-| WP-35 | Security leftovers | WP-00 · S8 | blocked (gate) | 2026-11-18 | | `1d51dc50` | DEF464, DEF489, DEF104 merged. DEF178 waits on S8 (Adanos key rotation). |
+| WP-35 | Security leftovers | WP-00 · S8 ✅ | done | 2026-11-18 | 2026-11-19 | `1d51dc50` `342b9ab3` | DEF464, DEF489, DEF104 merged; DEF178 closed after the S8 rotation (the live key matches no key in history and works). A history rewrite is not needed once the old key is revoked. |
 | WP-36 | Beta build settings, report, thumbs | WP-23 | not started | | | | |
 | WP-37 | CR231 gate items | WP-00 | not started | | | | |
 | WP-38 | Trace ID on errors (CR239) | WP-00 | in progress | 2026-11-18 | | `0b31a855` `615c67b7` `b0c4fe4b` | Live since deploy #5. Deploy #5's API UAT found unmatched-route 404s without a body `request_id` (the handler was registered for FastAPI's subclass); fixed in `615c67b7` with a real-app test. Left: trace one error end to end on a device. |
@@ -62,7 +62,8 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | S0 | ✅ given | 2026-11-18 | "go, start WP-00" |
 | S1 | ✅ done | 2026-11-18 | 66 items ruled (53 asked, 13 accepted on recommendation) |
 | S2 | ✅ ruled | 2026-11-19 | Saiful: **DeepSeek-V4-Flash** for Beta (WP-10 scorecard). Alpha's backup model was switched to it; it works once DeepInfra is topped up (Saiful). |
-| S3–S8, S10 | open | | S8 (Adanos key) blocks DEF178. S4 and S7 are Saiful's actions and can be released now. |
+| S8 | ✅ done | 2026-11-19 | Adanos key rotated (Saiful). |
+| S3–S7, S10 | open | | S8 (Adanos key) blocks DEF178. S4 and S7 are Saiful's actions and can be released now. |
 | S9 | ✅ ruled | 2026-11-18 | Saiful: "Lets not set a number, but if we need to set it to 60%". WP-53 reports the satisfaction rate without a pass/fail bar; where a bar is required, it is 60% thumbs-up over 100 rated runs. |
 | S11 | ✅ approved | 2026-11-18 | Plan: `S11_llm_implementation_plan.md` (rulings §3a). Alpha stays on-prem until Beta; Ling joins WP-10. |
 | S12 | ✅ approved | 2026-11-18 | Plan `S12_jev_grader_implementation_plan.md` §0. The rule decides (shadow first on Alpha). **Analyst consensus is the reference, with no human labelling** (Saiful: "didn't we agree to use the current market analysis of the ticker?"). Jev in the test only; ask TypeSafe for terms now. Other 7 recommendations accepted ($50 cap, etc.). |
