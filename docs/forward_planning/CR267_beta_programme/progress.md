@@ -266,3 +266,19 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
    4. The tester saw NVDA disappear. A read-only check shows its stop filled on 20 Nov at 14:36Z ($141.90 stop, closed at $140.56): by design.
 2. **AMI-DL-9b** is requested for after 00:00Z on 21 Nov, covering the blocked cases plus ROOM-031. The addendum is in the tester's `steps_in/`.
 3. **AMI-DL-10** (iPhone) is granted but waits for a person to unlock the phone.
+
+## 2026-11-21: AMI-DL-10 (iPhone, build 121); deploy #14
+
+1. **AMI-DL-10** (22:31–23:24Z): 10 passed, 1 failed, 2 blocked.
+   1. Passed: PLAT-005, E5-MAND-01, SUPP-010, SUPP-012, AUTH-044 (Delete account, CANCEL only), SIM-028, LESS-010, SIM-029, SIM-022 (OPEN MY MANDATE lands on RISK LIMITS for the NFLX cap refusal and on COMPLIANCE for the JPM halal refusal), MAND-035.
+   2. Failed: UAT-MAND-031 on #4 only. Saving a 3% single-name cap while holding NFLX at about 46% showed no retro-tightening disclosure. **DEF514**: the disclosure is wired only to `max_open_positions`/`max_open_risk_pct`, behind a false comment. A worker is fixing it.
+   3. Confirmed on device by the rest of MAND-031: the DEF481 Day Trader preset sets dial 5, short horizon, active path and 100% drawdown; deselecting it keeps those; the chip copy is right.
+   4. Blocked: FLOOR-007 (no locked agent on this account) and ONB-043 (needs an uninstall).
+   5. The mandate was restored exactly (v9 → v16 over seven Saves; the final read-back equals the baseline).
+   6. DEF466 went dark on Settings again (harness side).
+   7. Observation: the trade-ticket preview has no notional or cash-available line.
+2. **Deploy #14** `alpha-2026-11-21-1` = `f0d9f99e`: DEF513 (every Room input in the bank key, including the Brief, the screening verdicts, the roster, 40 global settings and the plan tier) and the DEF308 `ensure_field` index (migration `def308a0b0c0d3`).
+   1. Suite PASS 9,073.
+   2. Local gate PASS.
+   3. UAT override logged, for device cases only.
+   4. Postflight PASS.
