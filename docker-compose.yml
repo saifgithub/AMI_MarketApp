@@ -361,7 +361,9 @@ services:
       ALPACA_CLIENT_SECRET: ${ALPACA_CLIENT_SECRET:-}
       # Room dedup windows — defaults match config.py; override in .env.
       ROOM_DEDUP_RUNNING_MINUTES: ${ROOM_DEDUP_RUNNING_MINUTES:-30}
-      ROOM_DEDUP_COMPLETED_HOURS: ${ROOM_DEDUP_COMPLETED_HOURS:-24}
+      # CR267 WP-24 — same inputs return the same Room (replaced the 24h window).
+      ROOM_BANK_ENABLED: ${ROOM_BANK_ENABLED:-true}
+      ROOM_MODEL_ROOT_TTL_S: ${ROOM_MODEL_ROOT_TTL_S:-300}
       # CR098 tenure-drip pull-back — 0 = never withheld, ships as a no-op.
       ROOM_PULLBACK_DAYS_SOCIAL: ${ROOM_PULLBACK_DAYS_SOCIAL:-0}
       ROOM_PULLBACK_DAYS_NEWS: ${ROOM_PULLBACK_DAYS_NEWS:-0}

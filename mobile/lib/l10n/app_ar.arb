@@ -2984,6 +2984,8 @@
         "roomAgentStatusSemantic": "417ac80e301b",
         "roomAgentThinking": "281640b7edfb",
         "roomAgentTruncatedMark": "6eabb0ee9230",
+        "roomBankedUnchanged": "c25322b74842",
+        "roomBankedUnchangedNoDate": "9dd7a27ca1a4",
         "roomBriefingCaption": "806b1c5aa9fc",
         "roomConsensusDissents": "14ad26468010",
         "roomConsensusHeading": "db70c277084a",
@@ -3541,5 +3543,7 @@
     "settingsRiskLimitsFromProfile": "من ملف المخاطر لديك",
     "settingsRiskLimitsFromProfileResolved": "من ملف المخاطر لديك — {value}",
     "settingsRiskLimitsUseProfile": "استخدم ملف المخاطر لدي",
-    "settingsRiskLimitsSetByYouRow": "حددتَه أنت"
+    "settingsRiskLimitsSetByYouRow": "حددتَه أنت",
+    "roomBankedUnchanged": "Inputs unchanged since your last run on {date} — showing that Room. No credits used.",
+    "roomBankedUnchangedNoDate": "Inputs unchanged since your last run — showing that Room. No credits used."
 }

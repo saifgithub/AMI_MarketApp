@@ -2333,12 +2333,12 @@ def test_is_active_false_after_completed_dedup():
     asyncio.run(_run())
 
 
-def test_completed_dedup_window_zero_disables_dedup(monkeypatch):
-    """Setting room_dedup_completed_hours=0 disables completed-run dedup so a
+def test_bank_disabled_runs_every_convene_fresh(monkeypatch):
+    """CR267 WP-24: ROOM_BANK_ENABLED=false turns the input-key return off so a
     second submit starts a fresh run. Lets ops dial the window off entirely."""
     from app.core.config import settings
 
-    monkeypatch.setattr(settings, "room_dedup_completed_hours", 0)
+    monkeypatch.setattr(settings, "room_bank_enabled", False)
 
     async def _run():
         runner = RoomRunner()

@@ -176,3 +176,7 @@ TRADE_TICKET_CANCEL = "ami.trade_ticket.cancel"
 # button. Mirrors `FloorIds` in the Dart file.
 FLOOR_REJOIN_BANNER = "ami.floor.rejoin_banner"
 FLOOR_REJOIN_CTA = "ami.floor.rejoin_cta"
+
+# CR267 (WP-24) - the "inputs unchanged since your last run" line on a Room the
+# server handed back from the bank. Mirrors `RoomBankIds` in the Dart file.
+ROOM_BANKED_LINE = "ami.room.banked_line"

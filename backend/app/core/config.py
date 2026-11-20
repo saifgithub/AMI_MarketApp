@@ -737,21 +737,24 @@ class Settings(BaseSettings):
     # that Alpha, at 175 cached tickers over its entire life, is nowhere near.
     social_cache_ttl_days: int = 7
 
-    # Room dedup windows (see app/services/room_runner.py::start_run).
+    # Room dedup (see app/services/room_runner.py::start_run).
     # Same user+ticker submitted while a run is in flight always returns the
-    # in-flight run_id, regardless of these knobs (running_minutes is just an
+    # in-flight run_id, regardless of this knob (running_minutes is just an
     # upper bound on how stale a "running" row can be before it's considered
-    # abandoned). The completed_hours window prevents accidental re-runs of an
-    # analysis whose underlying data hasn't meaningfully changed — a tap of
-    # "Convene the Room" the same day returns yesterday's verdict instead of
-    # burning another 5 minutes of LLM time.
-    #   running_minutes:    30 min  — also the startup-sweep cutoff
-    #   completed_hours:    24 h    — design doc default is 5 days; we start
-    #                                 tighter so re-runs after meaningful
-    #                                 market moves (next-day open) are not
-    #                                 blocked. Raise via env to taste.
+    # abandoned; also the startup-sweep cutoff).
     room_dedup_running_minutes: int = 30
-    room_dedup_completed_hours: int = 24
+
+    # CR267 WP-24 — a convene whose INPUTS match a finished Room returns that
+    # Room instead of running a new one, at no charge. This replaced the old
+    # "same ticker within ROOM_DEDUP_COMPLETED_HOURS" window: same ticker is not
+    # same inputs (a new mandate, a new trading day, a new prompt or a new model
+    # all make it a new Room). `room_bank_enabled=false` is the off switch: every
+    # convene runs fresh, as it did with the old window at 0.
+    room_bank_enabled: bool = True
+    # How long a model `root` read from `/v1/models` is trusted before it is read
+    # again. The root is part of the Room key, so a stale one would serve a Room
+    # produced by a model that has since been swapped out.
+    room_model_root_ttl_s: int = Field(default=300, ge=0, le=86400)
 
     # CR098 — tenure-drip analyst pull-back. Account-age day (`users.created_at`)
     # at which each withholdable Room voice goes dark for a FLOOR_PASS user.

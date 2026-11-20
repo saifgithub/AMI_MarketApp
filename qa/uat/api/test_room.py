@@ -400,16 +400,21 @@ def test_new_accounts_get_the_full_analyst_roster(floor_run, trader_run):
 def test_reconnecting_to_a_finished_run_replays_it_for_free(seed, floor_run):
     """The floor-pass user holds 0 credits now: if dedup failed this would 402."""
     assert_clean_stream(floor_run)
+    if floor_run.done["refunded"]:
+        pytest.skip("the first Room was an outage (refunded); WP-24 never banks one")
     status, headers, events, body = stream_room(floor_run.user, "AAPL")
     assert status == 200, body
     assert headers["x-room-run-id"] == floor_run.run_id
     assert headers.get("x-room-cached") == "true"
+    assert headers.get("x-room-banked") == "true"
     replay = events_of(events, "verdict")
     assert len(replay) == 1 and replay[0]["action"] == floor_run.verdict["action"]
     assert [n for n, _ in events][-1] == "done"
+    done = events_of(events, "done")[-1]
+    assert done["banked"] is True and done["credit_cost"] == 0 and done["refunded"] is False
     assert len(room_runs(floor_run.user)) == 1
-    refunded = floor_run.done["refunded"]
-    assert balance(seed, floor_run.user) == (BASIC_COST if refunded else 0)
+    assert balance(seed, floor_run.user) == 0
+
 
 
 @pytest.mark.uat("UAT-ROOM-013")
@@ -518,3 +523,39 @@ def test_free_credits_mode_and_the_paid_wall_agree_with_the_advertised_price(see
         assert status == 402 and events == [], "a charging host must keep the wall"
         assert body["detail"]["code"] == "insufficient_credits"
         assert room_runs(u) == []
+
+
+@pytest.mark.uat("UAT-ROOM-030")
+@pytest.mark.llm
+def test_a_changed_mandate_is_a_new_room_and_the_same_inputs_are_banked(seed, trader_run):
+    assert_clean_stream(trader_run)
+    if trader_run.done["refunded"]:
+        pytest.skip("the first Room was an outage (refunded); WP-24 never banks one")
+    u = trader_run.user
+    before = balance(seed, u)
+
+    status, headers, events, body = stream_room(u, "MSFT")
+    assert status == 200, body
+    assert headers["x-room-run-id"] == trader_run.run_id
+    assert headers.get("x-room-banked") == "true"
+    done = events_of(events, "done")[-1]
+    assert done["banked"] is True and done["credit_cost"] == 0
+    assert balance(seed, u) == before and len(room_runs(u)) == 1
+
+    cur = u.get(f"/v1/mandate/{u.id}").json()["max_drawdown_pct"]
+    patched = u.patch(
+        f"/v1/mandate/{u.id}", json={"max_drawdown_pct": 20 if cur != 20 else 25},
+    )
+    assert patched.status_code == 200, patched.text
+    fresh = RoomResult(u, "trader", before, *stream_room(u, "MSFT")[:3])
+    assert_clean_stream(fresh)
+    assert fresh.run_id != trader_run.run_id
+    assert "x-room-banked" not in fresh.headers
+    assert fresh.done["credit_cost"] >= BASIC_COST and len(room_runs(u)) == 2
+
+    status, headers, events, body = stream_room(u, "MSFT")
+    assert status == 200, body
+    if not fresh.done["refunded"]:
+        assert headers["x-room-run-id"] == fresh.run_id
+        assert headers.get("x-room-banked") == "true"
+
