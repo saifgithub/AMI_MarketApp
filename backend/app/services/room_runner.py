@@ -66,7 +66,7 @@ from app.db import get_session, init_schema
 from app.db.ami_claim import Collision, claim, unclaimed
 from app.db.models import BacktestRunIndexRow, RoomRunRow
 from app.services.asof_context import AsOfContext, asof_scope
-from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
+from app.schemas import TWELVE_AGENT_IDS, AgentId, AgentMessage, Mandate, agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
 from app.schemas.options import costed_structure
@@ -7974,21 +7974,29 @@ class RoomRunner:
         )
 
     @staticmethod
-    def _account_digests_blocking(user_id: UUID, ticker: str) -> tuple[str, str] | None:
-        """(portfolio digest, journal digest) of what the desks read from the
-        user's account, or None when either cannot be read: a Room whose inputs
-        cannot be proven unchanged is not banked."""
+    def _account_digests_blocking(user_id: UUID, ticker: str) -> dict[str, str] | None:
+        """The `portfolio`, `journal` and `brief` key parts: what the desks read
+        from the user's account, or None when any cannot be read: a Room whose
+        inputs cannot be proven unchanged is not banked."""
         try:
+            from app.services.overlay_store import get_overlay_store
+
             sim = get_sim_engine()
             portfolio = sim.ensure_portfolio(user_id)
             trades = sim.list_trades(user_id)
             entries, _, _ = get_journal_store().list_for_user(
                 user_id, plan=effective_plan_for_user(user_id), ticker=ticker, limit=50,
             )
-            return (
-                room_bank.portfolio_digest(portfolio, trades),
-                room_bank.journal_digest(entries),
-            )
+            overlays = get_overlay_store()
+            briefs: dict[str, str | None] = {}
+            for agent in TWELVE_AGENT_IDS:
+                active = overlays.get_active(user_id, agent)
+                briefs[agent.value] = active.content if active is not None else None
+            return {
+                "portfolio": room_bank.portfolio_digest(portfolio, trades),
+                "journal": room_bank.journal_digest(entries),
+                "brief": room_bank.brief_digest(briefs),
+            }
         except Exception as exc:  # noqa: BLE001 - degrade loudly, never bank blind
             logger.warning(
                 "room_bank_account_unreadable",
@@ -8036,6 +8044,18 @@ class RoomRunner:
             account = await asyncio.to_thread(
                 self._account_digests_blocking, user_id, ticker,
             )
+            universe: str | None = None
+            try:
+                universe = room_bank.universe_digest(
+                    await default_halal_universe_async(),
+                    await default_classification_universe_async(),
+                    ticker,
+                )
+            except Exception as exc:  # noqa: BLE001 - degrade loudly, never bank blind
+                logger.warning(
+                    "room_bank_universe_unreadable",
+                    user_id=str(user_id), ticker=ticker, error=str(exc)[:200],
+                )
             if frozen.sheet_hash is None:
                 reason = "the fact sheet could not be frozen"
             elif root is None:
@@ -8043,7 +8063,9 @@ class RoomRunner:
             elif policy is None:
                 reason = "no prompt version could be computed"
             elif account is None:
-                reason = "the user's portfolio or journal could not be read"
+                reason = "the user's portfolio, journal or Brief could not be read"
+            elif universe is None:
+                reason = "the sourced compliance universes could not be read"
             if reason is not None:
                 logger.warning(
                     "room_bank_degraded",
@@ -8055,7 +8077,9 @@ class RoomRunner:
                 user_id=user_id, ticker=ticker, mandate=mandate,
                 sheet_hash=frozen.sheet_hash, policy=policy, model_root=root,
                 trading_date=trading_date,
-                portfolio=account[0], journal=account[1], alpaca=alpaca_key,
+                portfolio=account["portfolio"], journal=account["journal"],
+                brief=account["brief"], universe=universe, alpaca=alpaca_key,
+                roster=room_bank.roster_digest(withheld),
             )
             return _BankPrep(frozen, room_bank.key_from_parts(parts), parts, None)
         except Exception as exc:
