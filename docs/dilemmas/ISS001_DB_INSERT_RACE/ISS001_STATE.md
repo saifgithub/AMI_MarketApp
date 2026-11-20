@@ -31,7 +31,9 @@ The exercise asks several agents, blind to each other, what would actually stop 
 | Implementation CR | **not minted.** Phase 0 (DEF499 migration) and Phase 1 (observe-only control) touch no frozen site; Phase 3 needs the unfreeze |
 | Phase 0 (DEF499 migration + `ensure_portfolio`) | **merged** — `435f2f24`, branch `beta/cr267` |
 | Phase 1 (the control: `ami_claim.py`, tripwire on `get_engine()`, canaries, observer, mutation harness) | **landed on branch `lane/iss001-phase1`, pending merge** (AT:B1 DEF499). `INSERT_TRIPWIRE_MODE`: `log` default, `raise` in the unit suite. No DEF308 site touched; pre-control sites ride `backend/app/db/insert_baseline.py`. P15 in `failure_patterns.md` points at it. Phase 2+ not started |
-| The DEF308 sites | **FROZEN** — Saiful's ruling, 2026-08-15. Now **9** pinned (apple/google fixed under DEF416). Verdict recommends unfreezing after Phase 1 lands (founder's call) |
+| Phase 1 item 6 (Postgres thread test) | **DONE 2026-11-20 — PASS.** 8 threads x 15 rounds on a throwaway schema in Alpha's Postgres 15.18: `or_skip` / `or_update` / `or_raise` x plain key and DEF499 NULL key (partial-index arbiter), one creator per round, losers got the winner's row, 0 IntegrityError; control (old pattern) duplicated 15/15 rounds on the NULL-key table and raised IntegrityError 15/15 on the plain key; schema dropped, 0 `iss001_test_%` left. [`phase1_evidence/pg_concurrency_2026-11-20.md`](phase1_evidence/pg_concurrency_2026-11-20.md), script `backend/scripts/iss001_pg_concurrency.py` |
+| Founder rulings 2026-11-20 | 1. **DEF308 unfreeze after this test passes** — it has passed, so Phase 3 may convert the 9 sites, one commit each, testing each, sign-in sites included. 2. **Production guard mode stays `log`** (`INSERT_TRIPWIRE_MODE`) until Phase 3 completes. |
+| The DEF308 sites | **UNFROZEN (founder, 2026-11-20, conditional on item 6 — met).** Was: **FROZEN** — Saiful's ruling, 2026-08-15. Now **9** pinned (apple/google fixed under DEF416). Verdict recommends unfreezing after Phase 1 lands (founder's call) |
 
 **Nobody has been asked to judge.** The invite deliberately never asks a contributor for a verdict —
 a contributor who ranks the others has read the others, which is the one thing the invite forbids.
@@ -124,7 +126,7 @@ migrations before the auth sites can be fixed at all.
 
 ## 6. What is frozen, and what the rules still are
 
-- **DEF308's 11 sites: do not fix by hand, do not lane.** Saiful's ruling — the real sites stay the
+- **SUPERSEDED 2026-11-20 — unfrozen after the Postgres test passed (see section 2); Phase 3 converts the 9 sites.** Original: **DEF308's 11 sites: do not fix by hand, do not lane.** Saiful's ruling — the real sites stay the
   proving ground for whatever wins. Holds until he picks a winner or reopens it.
 - **Never edit another contributor's folder.** `gemini-3.6-flash/` and `kimi-k2/` are read-only to
   the convening agent, as `opus5.0/` is to them.
