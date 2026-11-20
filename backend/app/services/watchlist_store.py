@@ -2,8 +2,8 @@
 
 Tickers are stored upper-cased and free-form (anything the configured
 market_data provider can quote). Adding the same ticker twice is a no-op:
-the unique constraint on (user_id, ticker) prevents duplicates; we catch
-the integrity error and return the existing row.
+the unique constraint on (user_id, ticker) prevents duplicates; the insert goes
+through `claim()` (ISS001) so a concurrent loser gets the winner's row.
 
 Why a dedicated store rather than a column on sim_portfolios: a watchlist
 isn't a portfolio. The user can watch names they have no intention of
@@ -17,9 +17,9 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import delete, select
-from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session, init_schema
+from app.db.ami_claim import claim
 from app.db.models import SimWatchlistRow
 from app.schemas.watchlist import WatchlistEntry
 from app.services.ticker_reference import require_ticker_exists
@@ -48,36 +48,13 @@ class WatchlistStore:
             # ValueError subclass); the route catches it specifically for a
             # structured 422 before the generic ValueError -> 400 mapping.
             require_ticker_exists(s, ticker_norm)
-            # Idempotent: if it already exists, update notes (if supplied) and return.
-            existing = s.execute(
-                select(SimWatchlistRow).where(
-                    SimWatchlistRow.user_id == user_id,
-                    SimWatchlistRow.ticker == ticker_norm,
-                )
-            ).scalar_one_or_none()
-            if existing is not None:
-                if notes is not None:
-                    existing.notes = notes
-                return _row_to_entry(existing)
-
-            row = SimWatchlistRow(
-                user_id=user_id,
-                ticker=ticker_norm,
-                notes=notes,
-                added_at=datetime.now(timezone.utc),
-            )
-            s.add(row)
-            try:
-                s.flush()
-            except IntegrityError:
-                # Race: another request inserted the same row. Re-read it.
-                s.rollback()
-                row = s.execute(
-                    select(SimWatchlistRow).where(
-                        SimWatchlistRow.user_id == user_id,
-                        SimWatchlistRow.ticker == ticker_norm,
-                    )
-                ).scalar_one()
+            # ISS001 / DEF308: the row existing is the goal; a loser that supplied notes still
+            # applies them (add() has always meant "update notes if supplied").
+            row = claim(
+                s, SimWatchlistRow,
+                key={"user_id": user_id, "ticker": ticker_norm},
+                values={"notes": notes, "added_at": datetime.now(timezone.utc)},
+            ).or_update(lambda r: setattr(r, "notes", notes) if notes is not None else None)
             return _row_to_entry(row)
 
     def remove(self, user_id: UUID, ticker: str) -> bool:

@@ -132,18 +132,28 @@ def test_every_baseline_entry_names_a_real_table_and_a_real_function():
         assert func in _function_names(path), f"{rel} has no function {func!r}: delete the baseline entry"
 
 
-def test_the_nine_def308_pinned_sites_are_all_in_the_baseline():
-    """DEF308's `_UNREVIEWED` is frozen (founder, 2026-08-15). Phase 1 touches none of them, so
-    each must be reported by the tripwire and carried here — if one is missing, either it was
-    fixed (then it must also leave the AST pin) or the tripwire cannot see it."""
+# ISS001 Phase 3 (founder unfreeze 2026-11-20): each DEF308 site leaves `_UNREVIEWED` and the
+# baseline in the SAME commit as its claim() conversion, and joins this set. One entry per commit.
+_PHASE3_CONVERTED: set[tuple[str, str, str]] = {
+    ("watchlist_store.py", "add", "SimWatchlistRow"),
+}
+
+
+def test_each_of_the_nine_def308_sites_is_pinned_or_converted_never_half():
+    """A DEF308 site is either still pinned (in `_UNREVIEWED` AND in the baseline, tagged DEF308)
+    or converted (in neither). Half-converted means the tripwire and the AST guard disagree."""
     from tests.unit.test_p15_check_then_insert_guard import _UNREVIEWED
 
-    assert len(_UNREVIEWED) == 9
-    for filename, func, model in sorted(_UNREVIEWED):
+    assert len(_UNREVIEWED) + len(_PHASE3_CONVERTED) == 9
+    assert not (_UNREVIEWED & _PHASE3_CONVERTED)
+    for filename, func, model in sorted(_UNREVIEWED | _PHASE3_CONVERTED):
         table = getattr(models, model).__table__.name
         site = f"{_module_path(filename).relative_to(_APP).as_posix()}::{func}"
-        assert (table, site) in INSERT_BASELINE, f"DEF308 site {(table, site)} is not in INSERT_BASELINE"
-        assert "DEF308" in INSERT_BASELINE[(table, site)]
+        if (filename, func, model) in _UNREVIEWED:
+            assert (table, site) in INSERT_BASELINE, f"DEF308 site {(table, site)} is not in INSERT_BASELINE"
+            assert "DEF308" in INSERT_BASELINE[(table, site)]
+        else:
+            assert (table, site) not in INSERT_BASELINE, f"converted site {(table, site)} still in INSERT_BASELINE"
 
 
 # ---- schema_truth: the unique keys that do not deduplicate what their name says ----------

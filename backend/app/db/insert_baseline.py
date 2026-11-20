@@ -80,8 +80,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('sim_portfolios', 'services/sim_engine.py::ensure_portfolio'):
         'DEF499 — race-safe since bc4fd43d (partial unique indexes + recovery) and the training key is now claim()-compatible; convert to claim().or_skip() in Phase 2',
-    ('sim_watchlists', 'services/watchlist_store.py::add'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('social_sentiment_cache', 'services/social_context.py::_cache_write'):
         'DEF220 fixed (skip outcome at site); convert to claim().or_skip() in Phase 2',
     ('streak_freezes', 'services/reputation_service.py::freeze'):

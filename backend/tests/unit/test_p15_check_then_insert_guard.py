@@ -90,7 +90,6 @@ _UNREVIEWED = {
     ("lessons_service.py", "grant_activation", "AgentActivationRow"),
     ("lessons_service.py", "mark_started", "LessonProgressRow"),
     ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
-    ("watchlist_store.py", "add", "SimWatchlistRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
 
