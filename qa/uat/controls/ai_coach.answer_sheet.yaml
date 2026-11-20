@@ -1,9 +1,18 @@
 screen: ami.screen.ai_coach.answer_sheet
 source: mobile/lib/screens/coach/ai_coach_screen.dart
-# Read-only sheet: long answer + RELATED LESSONS / RELATED AGENTS pills. The pills are plain text, not tappable.
+# Long answer + RELATED LESSONS (tappable when they resolve) / RELATED AGENTS (plain non-interactive captions, not controls: no agent profile screen exists). DEF481 2026-11-20.
 controls:
   - label: "<scrim / swipe down>"
     kind: link
     expect: back
-    line: 214
-    note: "No close button: dismissed by tapping outside or swiping down. Related-lesson and related-agent pills (lines 282, 296) are static - tapping them does nothing (by design today; arguably should deep-link, see report)."
+    line: 218
+    note: "No close button: dismissed by tapping outside or swiping down."
+  - label: "<RELATED LESSONS pill, cyan border> e.g. 'EDGE 15 · Guaranteed return scams'"
+    id: ami.coach.related_lesson
+    kind: chip
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Closes the answer sheet and pushes the lesson's reader"
+    when: "the cited lesson number resolves in the loaded lesson catalogue; otherwise the entry is a plain caption with no border or tap"
+    line: 287
+    note: "repeated; DEF481 (2026-11-20) - was a static pill that looked tappable. >=40px target, button semantics."

@@ -113,6 +113,18 @@ class LessonIds {
   static const String modeInteractive = 'ami.lesson.mode_interactive';
 }
 
+/// DEF481 — a related-lesson pill that opens its lesson. One id per surface,
+/// deliberately not numbered per pill: the set is content-authored and varies
+/// per answer / term. Pills that cannot open anything carry no id and no button
+/// role (see `widgets/lessons/related_pills.dart`).
+class RelatedIds {
+  const RelatedIds._();
+
+  static const String lessonPill = 'ami.coach.related_lesson';
+  static const String termLessonPill = 'ami.term.related_lesson';
+  static const String termRelatedTerm = 'ami.term.related_term';
+}
+
 /// CR209 — the Concierge interview, the one surface the onboarding walk must
 /// drive and the only one it had no identifier for.
 ///

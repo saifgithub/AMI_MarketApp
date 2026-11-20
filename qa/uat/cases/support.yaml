@@ -13,7 +13,7 @@ summary: |
   IP-rate-limited and refuses bad input. The resolution feed is private.
   Telemetry ingest is per-user and idempotent while the segment read is
   admin-only. The help library (ai_coach) serves static, well-formed Q&A with
-  no LLM call. Bug reports filed by this suite land in the real triage queue and
+  no LLM call. DEF481 (2026-11-20): answer-sheet RELATED LESSONS pills open the lesson; RELATED AGENTS are plain captions. Bug reports filed by this suite land in the real triage queue and
   are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
 cases:
   - id: UAT-SUPP-001
@@ -138,8 +138,10 @@ cases:
     plans: [floor_pass]
     steps:
       - Open the help / coach screen; browse a category; search for "stop loss" and for gibberish
+      - Open a scam-category answer (it cites a lesson and an agent); tap the RELATED LESSONS pill; go back and look at the RELATED AGENTS entry
     expected:
       - Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
+      - The RELATED LESSONS pill (bordered, >=40px) closes the sheet and opens that lesson's reader; RELATED AGENTS entries are plain text with no border and do nothing when tapped (DEF481)
       - No screen says "the AI" - the assistant is named AMI
 
   - id: UAT-SUPP-012

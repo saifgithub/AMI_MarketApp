@@ -8,9 +8,19 @@ controls:
     state: "Current sheet closes and the sheet for the related term opens"
     when: "entry has seeAlso terms that resolve in the registry"
     line: 180
-    note: "repeated"
+    id: ami.term.related_term
+    note: "repeated; unresolvable related terms render as plain captions (DEF481)"
   - label: "<outside the sheet / swipe down>"
     kind: button
     expect: back
     state: "Sheet dismisses back to the lesson"
     line: 87
+  - label: "<RELATED LESSONS pill, cyan border>"
+    id: ami.term.related_lesson
+    kind: chip
+    expect: navigate
+    target: ami.screen.lesson_reader
+    state: "Closes the term sheet and pushes the lesson's reader"
+    when: "the cited lesson number resolves in the loaded lesson catalogue; otherwise a plain caption with no border or tap"
+    line: 209
+    note: "repeated; DEF481 (2026-11-20) - was a static pill that looked tappable."

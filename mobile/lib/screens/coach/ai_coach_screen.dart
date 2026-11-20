@@ -15,6 +15,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
+import 'package:ami_trade/widgets/lessons/related_pills.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
@@ -221,13 +222,14 @@ void _openSheet(BuildContext context, CoachQA qa) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _AnswerSheet(qa: qa),
+    builder: (_) => AnswerSheet(qa: qa),
   );
 }
 
 
-class _AnswerSheet extends StatelessWidget {
-  const _AnswerSheet({required this.qa});
+@visibleForTesting
+class AnswerSheet extends StatelessWidget {
+  const AnswerSheet({super.key, required this.qa});
   final CoachQA qa;
 
   @override
@@ -281,7 +283,10 @@ class _AnswerSheet extends StatelessWidget {
                     spacing: 6, runSpacing: 6,
                     children: [
                       for (final lid in qa.relatedLessons)
-                        _Pill(text: lid),
+                        RelatedLessonPill(
+                          lessonRef: lid,
+                          beforeOpen: () => Navigator.of(context).pop(),
+                        ),
                     ],
                   ),
                 ],
@@ -295,7 +300,7 @@ class _AnswerSheet extends StatelessWidget {
                     spacing: 6, runSpacing: 6,
                     children: [
                       for (final aid in qa.relatedAgents)
-                        _Pill(text: aid.replaceAll('_', ' ')),
+                        RelatedLabel(text: relatedAgentLabel(aid)),
                     ],
                   ),
                 ],
@@ -308,21 +313,3 @@ class _AnswerSheet extends StatelessWidget {
   }
 }
 
-
-class _Pill extends StatelessWidget {
-  const _Pill({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.slate700),
-      ),
-      child: Text(text, style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-    );
-  }
-}
