@@ -51,7 +51,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable, Sequence
-from uuid import UUID, uuid4
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
@@ -59,6 +59,7 @@ from sqlalchemy import func, select
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session
+from app.db.ami_claim import claim
 from app.db.models import GameEntryRow, GameFieldRow, User
 from app.schemas.trade import Side
 from app.services.market_data import (
@@ -364,21 +365,21 @@ def ensure_desk_users() -> dict[str, UUID]:
     ids: dict[str, UUID] = {}
     with get_session() as s:
         for desk in DESK_ROSTER:
-            row = s.execute(
-                select(User).where(User.desk_key == desk.key)
-            ).scalar_one_or_none()
-            if row is None:
-                row = User(
-                    id=uuid4(),
-                    is_desk=True,
-                    desk_key=desk.key,
-                    display_name=desk.name,
-                    handle=desk.name,
-                    is_anonymous=False,
-                    plan="floor_pass",
-                )
-                s.add(row)
-                s.flush()
+            # ISS001 / DEF308: skip. The desk existing is the goal; a container that lost the
+            # startup race uses the winner's row. Arbiter: users.desk_key (unique, non-NULL key).
+            claimed = claim(
+                s, User,
+                key={"desk_key": desk.key},
+                values={
+                    "is_desk": True,
+                    "display_name": desk.name,
+                    "handle": desk.name,
+                    "is_anonymous": False,
+                    "plan": "floor_pass",
+                },
+            )
+            row = claimed.or_skip()
+            if claimed.created:
                 logger.info("desk_user_created", desk_key=desk.key, user_id=str(row.id))
             ids[desk.key] = row.id
     return ids

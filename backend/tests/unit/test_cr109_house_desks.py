@@ -532,3 +532,45 @@ def test_the_tick_rolls_every_cadence_not_only_weekly():
         "a monthly or quarterly field that was never created has no lock "
         "window for the desks to fill"
     )
+
+
+def test_ensure_desk_users_that_loses_the_race_uses_the_winners_row(monkeypatch):
+    """ISS001 / DEF308 (skip): another container committed Momentum Desk first."""
+    from app.services import games_desks
+    from tests.unit.iss001_race import winner_commits_first
+
+    race = winner_commits_first(
+        monkeypatch, games_desks, User,
+        winner_values={"is_desk": True, "is_anonymous": False, "display_name": "winner", "handle": "WinnerDesk"},
+    )
+    ids = desks.ensure_desk_users()
+    assert race["fired"]
+    assert race["winner_id"] in ids.values()
+    assert len(ids) == len(desks.DESK_ROSTER)
+    with get_session() as s:
+        count = len(s.execute(select(User.id).where(User.is_desk.is_(True))).scalars().all())
+    assert count == len(desks.DESK_ROSTER)
+
+
+def test_ensure_desk_users_under_concurrent_startups_mints_each_desk_once():
+    """ISS001 / DEF308: several containers start at once; every one gets the same desk ids."""
+    import threading
+
+    n = 6
+    barrier, results, errors = threading.Barrier(n), [], []
+
+    def work():
+        try:
+            barrier.wait()
+            results.append(desks.ensure_desk_users())
+        except Exception as e:  # pragma: no cover - would fail the assert below
+            errors.append(e)
+
+    ts = [threading.Thread(target=work) for _ in range(n)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert errors == []
+    assert len(results) == n and all(r == results[0] for r in results)
+    with get_session() as s:
+        count = len(s.execute(select(User.id).where(User.is_desk.is_(True))).scalars().all())
+    assert count == len(desks.DESK_ROSTER)

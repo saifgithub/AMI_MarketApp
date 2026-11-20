@@ -135,6 +135,7 @@ def test_every_baseline_entry_names_a_real_table_and_a_real_function():
 # ISS001 Phase 3 (founder unfreeze 2026-11-20): each DEF308 site leaves `_UNREVIEWED` and the
 # baseline in the SAME commit as its claim() conversion, and joins this set. One entry per commit.
 _PHASE3_CONVERTED: set[tuple[str, str, str]] = {
+    ("games_desks.py", "ensure_desk_users", "User"),
     ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
     ("lessons_service.py", "mark_started", "LessonProgressRow"),
     ("lessons_service.py", "grant_activation", "AgentActivationRow"),

@@ -92,8 +92,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'DEF416 — handled (uq_users_apple_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
     ('users', 'services/auth_service.py::sign_in_with_google'):
         'DEF416 — handled (uq_users_google_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
-    ('users', 'services/games_desks.py::ensure_desk_users'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('users', 'services/games_service.py::ensure_field'):
         'User row minted inside the DEF308-frozen ensure_field (not itself pinned by DEF308); convert with it in Phase 3',
     ('verdict_outcomes', 'services/verdict_outcomes.py::bank_verdict_outcome'):
