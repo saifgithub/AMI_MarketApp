@@ -245,7 +245,6 @@ def test_enforce_mode_withholds_and_uses_the_advice_notice():
     assert output_guard.withheld_notice(res, "reply").startswith(
         "AMI withheld this reply because it read as personal advice."
     )
-    assert "personal advice" in output_guard.retraction_notice(res)
 
 
 def test_log_event_carries_rule_surface_user_cue_and_reply_cue_not_the_text(monkeypatch):
@@ -385,11 +384,12 @@ def _drive_brief(reply, user_message):
     return asyncio.run(go())
 
 
-def test_brief_enforce_appends_the_retraction_line_for_a_personal_ask(monkeypatch):
+def test_brief_enforce_replaces_the_reply_for_a_personal_ask(monkeypatch):
     monkeypatch.setattr(settings, "output_guard_mode", "enforce")
     chunks = _drive_brief(TICKET, "Should I buy NVDA with my savings?")
-    assert "".join(chunks).startswith(TICKET)
-    assert "AMI flags the reply above" in chunks[-1] and "personal advice" in chunks[-1]
+    out = "".join(chunks)
+    assert out.startswith("AMI withheld this reply") and "personal advice" in out
+    assert TICKET not in out and len(chunks) == 1
 
 
 def test_brief_enforce_is_quiet_for_a_sim_framed_ask(monkeypatch):

@@ -31,12 +31,16 @@ from app.services.output_guard import check  # noqa: E402
 
 FLOW_TO_SURFACE = {
     "room": "room_turn",
+    "room_risk_officer": "room_turn",
     "room_pm": "room_verdict",
     "one_on_one": "one_on_one",
     "concierge_floor": "concierge",
     "coach_chat": "brief",
 }
 SAMPLES_PER_RULE = 8
+# Flows where the last message is the user's own question, so `personal_advice`
+# can pair it with the reply (WP-13c).
+USER_MESSAGE_FLOWS = frozenset({"one_on_one", "concierge_floor", "coach_chat"})
 
 
 def summarize(
@@ -61,7 +65,10 @@ def summarize(
         total += 1
         scanned[flow] += 1
         word_counts[flow].append(len((r.get("response_text") or "").split()))
-        res = check(r.get("response_text"), surface=surface, mode="enforce")
+        res = check(
+            r.get("response_text"), surface=surface, mode="enforce",
+            user_message=r.get("user_message"),
+        )
         if not res.hits:
             continue
         rows_with_hit[flow] += 1
@@ -116,7 +123,7 @@ def _from_db(url: str, since: str | None, flows: list[str]) -> Iterable[dict[str
         connect_args={"options": "-c default_transaction_read_only=on"},
     )
     sql = (
-        "SELECT flow, agent_id, response_text FROM llm_audit "
+        "SELECT flow, agent_id, response_text, (messages->-1)->>'content' FROM llm_audit "
         "WHERE flow = ANY(:flows) AND response_text IS NOT NULL"
     )
     params: dict[str, Any] = {"flows": flows}
@@ -125,7 +132,10 @@ def _from_db(url: str, since: str | None, flows: list[str]) -> Iterable[dict[str
         params["since"] = since
     with engine.connect() as conn:
         for row in conn.execution_options(stream_results=True).execute(text(sql), params):
-            yield {"flow": row[0], "agent_id": row[1], "response_text": row[2]}
+            yield {
+                "flow": row[0], "agent_id": row[1], "response_text": row[2],
+                "user_message": row[3] if row[0] in USER_MESSAGE_FLOWS else None,
+            }
 
 
 def main() -> None:

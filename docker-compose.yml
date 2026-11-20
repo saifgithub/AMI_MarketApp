@@ -152,6 +152,10 @@ services:
       # release_floor_ios_store_url_unconfigured. Set once Saiful has a
       # real join link.
       IOS_TESTFLIGHT_JOIN_URL: ${IOS_TESTFLIGHT_JOIN_URL:-}
+      # DEF511 — Play listing for the forced-update screen. Unset = the
+      # personal Alpha app (Settings default); Beta must set its own package
+      # and refuses to boot otherwise.
+      ANDROID_PLAY_STORE_URL: ${ANDROID_PLAY_STORE_URL:-https://play.google.com/store/apps/details?id=ai.agenticmarketintel.ami_trade}
       # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
       # Authorization header on POST /v1/webhooks/revenuecat; the endpoint
       # fails CLOSED (401) on mismatch and refuses LOUDLY (503 + log) when

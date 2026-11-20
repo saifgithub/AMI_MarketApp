@@ -28,12 +28,12 @@ from app.core.logging import logger
 from app.db.models import ClientReleaseFloorRow, User, UserDeviceRow
 from app.schemas.client_release_floor import ReleaseFloorResponse
 
-# Android's applicationId is a compile-time constant
-# (mobile/android/app/build.gradle.kts:38), not an operational secret — no
-# Settings field needed. iOS has no numeric App Store ID yet (no App Store
-# record exists — DEF100/CR084's provisioning gap), so its URL is
-# Settings-driven (`ios_testflight_join_url`) and falls back to the generic
-# TestFlight marketing page, loudly logged, when unset.
+# Android's Play URL is `Settings.android_play_store_url` (DEF511: Beta ships a
+# different package from the personal Alpha app); this constant is the Alpha
+# value, kept as the fallback for a blank setting. iOS has no numeric App Store
+# ID yet (no App Store record exists — DEF100/CR084's provisioning gap), so its
+# URL is Settings-driven (`ios_testflight_join_url`) and falls back to the
+# generic TestFlight marketing page, loudly logged, when unset.
 _ANDROID_PLAY_STORE_URL = (
     "https://play.google.com/store/apps/details?id=ai.agenticmarketintel.ami_trade"
 )
@@ -115,8 +115,8 @@ def resolve_store_url(platform: Optional[str]) -> str:
     # Android, or platform unspecified. Bundle IDs differ per platform
     # (ai.agenticmarketintel.amiTrade on iOS vs ai.agenticmarketintel.ami_trade
     # on Android) — nothing here derives one from the other; this branch only
-    # ever emits the Android constant above.
-    return _ANDROID_PLAY_STORE_URL
+    # ever emits the configured Android URL (DEF511).
+    return settings.android_play_store_url.strip() or _ANDROID_PLAY_STORE_URL
 
 
 def highest_observed_build(session: Session) -> int:

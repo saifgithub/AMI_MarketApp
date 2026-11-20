@@ -209,3 +209,11 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 8. **Room chain:** the on-prem baseline runs first, at $0, and WP-26 re-runs on Beta's model. WP-20 has started on Alpha.
 9. **Website:** deployed (WP-29 + WP-51). The deploy exposed **DEF510**: the website tables were still owned by `postgres` after CR124/M8, so the WP-51 column migration crash-looped api-website for about 2 minutes. Fixed by handing the tables to `ami_website`; the runbook is updated.
 10. **WP-52:** I fix the four open checks and Saiful skims. **Keys (AV/Adanos):** later. **DEF499:** a 4th ISS001 contributor, then the fix. **A17 rig:** reconnect, which needs a person at melehost. **Counsel:** I draft a narrow brief with three questions.
+
+## 2026-11-20 — WP-13 replay
+
+1. **Replay (read-only, Alpha `llm_audit`, current rules, enforce mode):** 121,116 rows on the six user-visible flows (App 907, Harness 108,377, UAT/rig 11,832). Full table in `wp13_enforce_replay_2026-11-20.md`.
+2. **Hit rate:** 10 of 121,116 rows would be withheld (0.0083%): advice 7, personal_advice 5, abuse 0; none in the 907 app-user rows. Before today's tuning it was 18; the 8 removed were all false positives (negations, a quoted mention, a conditional, "retard" as a verb, option lists and a quoted example read as tickets, "30% portfolio drawdown"). Hand-check of all 12 remaining hit instances: 10 true, 2 borderline, 0 clear false.
+3. **runaway_length:** Room turns p50 192, p95 432, p99 570, p99.9 1,488 words (harness `room`); max 18,369. The cap stays 1,680: it trims 59 turns (0.049%), none from the app cohort, about 36 of them loops.
+4. **Enforce is ready.** `OUTPUT_GUARD_MODE=enforce` in `infra/beta.env.example`, and Beta boot refuses any other value. Alpha is flipped at deploy. Brief now holds its reply in `enforce` mode, so a flagged reply never reaches the screen (before, only a retraction line could follow it).
+5. **DEF511** (same lane): the forced-update Play URL is now `ANDROID_PLAY_STORE_URL` (default = the personal Alpha app), required on Beta, refused at Beta boot if empty or still the personal package.

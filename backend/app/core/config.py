@@ -1692,6 +1692,15 @@ class Settings(BaseSettings):
     # dead link with no signal (CR040).
     ios_testflight_join_url: str = ""
 
+    # DEF511 — the Play Store listing the forced-update screen sends Android
+    # users to. Defaults to the personal-account Alpha app so Alpha is
+    # unchanged; Beta ships a different package (WP-49) and `beta_boot_problems`
+    # refuses to boot while this still names the personal one, so a Beta tester
+    # is never sent to the Alpha app.
+    android_play_store_url: str = (
+        "https://play.google.com/store/apps/details?id=ai.agenticmarketintel.ami_trade"
+    )
+
     # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
     # `Authorization` header on every webhook POST to /v1/webhooks/revenuecat;
     # the endpoint constant-time-compares it and fails CLOSED (401) on any
