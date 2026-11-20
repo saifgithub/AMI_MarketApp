@@ -2699,6 +2699,20 @@
   "@roomResultCioRetried": {
     "description": "CR237 — shown instead of roomResultRefunded when a successful 'Ask the CIO again' retry replaced a CIO-outage verdict with a real one on the same run. The run DID finish (unlike roomResultRefunded's case), so that line would read false here; this one stays truthful: the retry itself cost nothing, and the run's original charge was already given back by the DEF432 outage refund. AMI named by role (CIO), never 'the AI'. Driven by the run's own cio_retried server field, never inferred from verdict text."
   },
+  "roomBankedUnchanged": "Inputs unchanged since your last run on {date} — showing that Room. No credits used.",
+  "@roomBankedUnchanged": {
+    "description": "CR267 WP-24 — the plain line under a Room the server handed back because this convene's inputs (mandate, today's fact sheet, policy, model) match a finished Room. Shown INSTEAD of the 'This Room used N credits' line: the banked return cost nothing, so no cost figure is shown. {date} is the day that Room finished, formatted for the user's locale. States only what is true and does not suggest the verdict is still right: it says the inputs are unchanged, never that nothing has moved in the market. AMI-voiced, no apology.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "20 Nov 2026"
+      }
+    }
+  },
+  "roomBankedUnchangedNoDate": "Inputs unchanged since your last run — showing that Room. No credits used.",
+  "@roomBankedUnchangedNoDate": {
+    "description": "CR267 WP-24 — roomBankedUnchanged when the server did not say when that Room finished (the finish time could not be read). Same meaning, no date; never a guessed one."
+  },
   "roomResultCostNoBalance": "This Room used {cost} credits",
   "@roomResultCostNoBalance": {
     "description": "CR236 — roomResultCost without the balance clause, shown until the post-Room balance refresh succeeds (never the balance cached before the run). {cost} is the run's credit_cost as a plain integer string.",

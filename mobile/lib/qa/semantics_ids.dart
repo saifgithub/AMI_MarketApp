@@ -93,6 +93,14 @@ class RoomFeedbackIds {
   static const String reportResponse = 'ami.room.report_response';
 }
 
+/// CR267 (WP-24) - the plain line under a Room the server handed back because
+/// the convene's inputs match a finished one.
+class RoomBankIds {
+  const RoomBankIds._();
+
+  static const String bankedLine = 'ami.room.banked_line';
+}
+
 /// Modal sheets. These are the DEF075 class — interactive elements that can end
 /// up under the Android system nav bar or the iOS home indicator, which is the
 /// one usability check CR080 was built to catch.

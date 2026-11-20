@@ -11,6 +11,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -103,6 +104,38 @@ class OneOnOneCreditsLine extends StatelessWidget {
     return Text(
       l.oneOnOneCreditsBalance(balance.toString()),
       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+    );
+  }
+}
+
+/// CR267 (WP-24) - the line under a Room the server handed back because this
+/// convene's inputs match a finished one: "Inputs unchanged since your last run
+/// on 20 Nov 2026 - showing that Room. No credits used." Shown INSTEAD of
+/// [RoomResultCostLine]: the return cost nothing, so no cost figure appears.
+/// [bankedAt] null (the server did not say) drops the date, never guesses one.
+class RoomBankedLine extends StatelessWidget {
+  const RoomBankedLine({super.key, required this.bankedAt});
+
+  final DateTime? bankedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final at = bankedAt;
+    final text = at == null
+        ? l.roomBankedUnchangedNoDate
+        : l.roomBankedUnchanged(
+            DateFormat.yMMMd(Localizations.localeOf(context).toString())
+                .format(at),
+          );
+    return Semantics(
+      identifier: RoomBankIds.bankedLine,
+      container: true,
+      child: Text(
+        text,
+        key: const Key('roomBankedLine'),
+        style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+      ),
     );
   }
 }

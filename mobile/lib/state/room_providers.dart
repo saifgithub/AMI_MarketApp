@@ -114,6 +114,8 @@ class RoomState {
     this.waitGaveUp = false,
     this.providerSwitchNotice,
     this.reattached = false,
+    this.banked = false,
+    this.bankedAt,
   });
 
   final String? phase;
@@ -215,6 +217,15 @@ class RoomState {
   /// voids everything streamed before it; the screen renders this text as sent.
   final String? providerSwitchNotice;
 
+  /// CR267 WP-24 - true when the server handed back a finished Room because
+  /// this convene's inputs match it (nothing was charged). Read off the `done`
+  /// event only; false for a backend that predates WP-24.
+  final bool banked;
+
+  /// CR267 WP-24 - when that Room finished, if the server said. Null renders
+  /// the line without a date rather than a guessed one.
+  final DateTime? bankedAt;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -243,6 +254,8 @@ class RoomState {
     bool? waitGaveUp,
     String? providerSwitchNotice,
     bool? reattached,
+    bool? banked,
+    DateTime? bankedAt,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -270,6 +283,8 @@ class RoomState {
       retryingCio: retryingCio ?? this.retryingCio,
       waitGaveUp: waitGaveUp ?? this.waitGaveUp,
       providerSwitchNotice: providerSwitchNotice ?? this.providerSwitchNotice,
+      banked: banked ?? this.banked,
+      bankedAt: bankedAt ?? this.bankedAt,
     );
   }
 }
@@ -478,10 +493,17 @@ class RoomNotifier extends StateNotifier<RoomState> {
             // else on the payload.
             final rawCioRetryAvailable = ev['cio_retry_available'];
             final rawCioRetried = ev['cio_retried'];
+            // CR267 WP-24 - same wire-optional discipline.
+            final rawBanked = ev['banked'];
+            final rawBankedAt = ev['banked_at'];
             state = state.copyWith(
               streaming: false,
               done: true,
               runId: ev['run_id'] as String?,
+              banked: rawBanked is bool ? rawBanked : false,
+              bankedAt: rawBankedAt is String
+                  ? DateTime.tryParse(rawBankedAt)?.toLocal()
+                  : null,
               creditCost: rawCost is num ? rawCost.toInt() : null,
               refunded: rawRefunded is bool ? rawRefunded : false,
               cioRetryAvailable:

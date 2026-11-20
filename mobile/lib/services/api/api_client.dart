@@ -423,6 +423,12 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
           if (j.containsKey('cio_retry_available'))
             'cio_retry_available': j['cio_retry_available'],
           if (j.containsKey('cio_retried')) 'cio_retried': j['cio_retried'],
+          // CR267 WP-24 - the convene's inputs matched a finished Room and the
+          // server handed it back, free. Wire-optional like every field above:
+          // a backend that predates WP-24 sends neither key, which reads as
+          // "not banked", never as a guess.
+          if (j.containsKey('banked')) 'banked': j['banked'],
+          if (j.containsKey('banked_at')) 'banked_at': j['banked_at'],
         };
       case 'error':
         return {'kind': 'error', 'message': unescapeSseText(data)};

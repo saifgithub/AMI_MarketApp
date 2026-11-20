@@ -272,7 +272,13 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                     // One line for both settled surfaces (board and
                     // transcript). Gated on `creditCost` so a `done` without
                     // it (an older backend) renders nothing.
-                    if (state.done && state.creditCost != null) ...[
+                    //
+                    // CR267 (WP-24) - a Room handed back from the bank cost
+                    // nothing, so it says that instead of a cost.
+                    if (state.done && state.banked) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      RoomBankedLine(bankedAt: state.bankedAt),
+                    ] else if (state.done && state.creditCost != null) ...[
                       const SizedBox(height: AmiSpacing.s),
                       _RoomResultCostRow(state: state),
                     ],
