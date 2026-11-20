@@ -392,10 +392,16 @@ class RoomTranscriptLine {
     this.conviction,
     this.headline,
     this.stanceRecorded = false,
+    this.scripted = false,
   });
 
   final String agentId;
   final String content;
+
+  /// DEF507 — this turn is AMI's scripted standing guidance (the desk's own
+  /// call failed), not something the desk said. A server that predates the
+  /// field omits it, which reads as false.
+  final bool scripted;
 
   /// CR106 B2 — the agent's own stated position: `for` / `against` / `neutral`,
   /// or null when it stated none. Null NEVER means neutral; the comb puts it in
@@ -476,6 +482,7 @@ class RoomRunSnapshot {
                 // key at all, and "this run recorded no stances" is a
                 // different fact from "this agent stated none" (T-BACKFILL).
                 stanceRecorded: m is Map && m.containsKey('stance'),
+                scripted: m['scripted'] == true,
               ))
           .toList(),
       verdict: j['verdict'] == null

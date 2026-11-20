@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**301 cases** — 197 api, 20 device, 84 manual; 16 blocked.
+**302 cases** — 197 api, 20 device, 85 manual; 16 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 31 cases
 5. [Floor tab & home shell](#floor) — 10 cases
-6. [Convene the Room](#room) — 28 cases
+6. [Convene the Room](#room) — 29 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
@@ -3889,6 +3889,30 @@ _Manual (iPhone checklist) · plans: any · uses LLM_
 6. When the run finished while the app was closed, the Floor shows no banner and the verdict is already in the Journal
 
 > DEF506. Ruled by Saiful 2026-11-20 (open on the Floor, never auto-jump into the Room). The banner has identifiers ami.floor.rejoin_banner and ami.floor.rejoin_cta for the device rig. Pairs with UAT-ROOM-018/019, which cover a dropped connection and backing out.
+
+#### UAT-ROOM-029 — A desk that fails shows a standing-guidance label, not a live call
+
+_Manual (iPhone checklist) · plans: any · uses LLM_
+
+**Preconditions**
+1. A Room in which at least one desk's own model call fails (a provider outage window, or a Room run while the primary and backup models are both down; with every desk down the Room ends as NO RESULT)
+2. The app is a build that includes DEF507
+
+**Steps**
+1. Convene the Room on MSFT and watch the live console while the desks speak
+2. Note which desks the roster marks, then open the transcript and read the collapsed row of a failed desk, for example the Execution Desk
+3. Tap that row to expand it, then tap a comb hex for the same desk to open the peek sheet
+4. Open a desk that did answer and compare
+5. Open the same Room from the Journal and read the same desk
+
+**Expected**
+1. A failed desk's roster line reads "Standing guidance: this desk didn't respond" with an amber info mark, not a green check and not a quoted call
+2. Its collapsed transcript row reads the same label in amber; no price, stop or target from that desk is quoted on the row
+3. Expanded, and in the peek sheet, the turn sits under an amber "Standing guidance: this desk didn't respond" chip and the line "AMI filled this turn with standing guidance because the desk's own call didn't come back. It is not this desk's live read."
+4. A desk that answered shows no such label and its row quotes its own headline or bold figure as before
+5. The Journal replay shows the same label on the same desk, and a Room opened after the app was killed and reopened (rejoin) shows it too
+
+> DEF507. Alpha run 1dec3be0 (CR267 WP-14, all desks down) rendered eight scripted turns as the desks' own calls; that run predates the fix, so its turns carry no mark. The server sends scripted:true on agent_token and agent_done and stores it on the transcript entry; the backend guard is test_def507_scripted_turn_marked.py and the app guard is def507_scripted_turn_label_test.dart. The Arabic and Malay strings are English placeholders until translated.
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

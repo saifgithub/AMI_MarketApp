@@ -4084,6 +4084,23 @@
   "@roomRowNoResponse": {
     "description": "Transcript row for an agent that produced nothing. Never a blank row."
   },
+  "roomScriptedLabel": "Standing guidance: this desk didn't respond",
+  "@roomScriptedLabel": {
+    "description": "DEF507 — the label on a Room desk's row whose turn is AMI's scripted standing guidance because the desk's own call failed (not the desk's live read). Shown as the collapsed row text, as a chip above the expanded turn, and on the live roster. Keep short. retranslate:[ar,ms]"
+  },
+  "roomScriptedNote": "AMI filled this turn with standing guidance because the desk's own call didn't come back. It is not this desk's live read.",
+  "@roomScriptedNote": {
+    "description": "DEF507 — one-sentence explanation under the standing-guidance label when a scripted desk turn is expanded or peeked. Must say AMI, never 'the AI'. retranslate:[ar,ms]"
+  },
+  "roomScriptedSemantic": "{agent}: standing guidance, not a live call. This desk didn't respond.",
+  "@roomScriptedSemantic": {
+    "description": "DEF507 — accessibility label for a desk whose turn is scripted standing guidance, so a screen reader is told what the label tells sighted users. retranslate:[ar,ms]",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "roomTranscriptHint": "{count} CONTRIBUTIONS · TAP A ROW TO READ IT IN FULL",
   "@roomTranscriptHint": {
     "description": "One-line hint above the collapsed rows.",

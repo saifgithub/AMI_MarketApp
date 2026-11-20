@@ -100,6 +100,10 @@ String firstSentence(String content) {
 /// the same `NO RESPONSE` branch the copy-paste bug used to render for both.
 String collapsedLabel(AppLocalizations l, RoomVoice voice) {
   if (voice.withheld) return l.roomRowNotHeard;
+  // DEF507 — AMI's scripted standing guidance is not a gist of the desk's
+  // call: quoting its bold span or level triple here would read as the desk's
+  // own read. The row says what it is instead.
+  if (voice.scripted && voice.content.isNotEmpty) return l.roomScriptedLabel;
   final gist = gistFor(voice);
   if (gist != null) return gist;
   if (voice.content.isEmpty) return l.roomRowNoResponse;
@@ -254,6 +258,7 @@ class TranscriptRow extends StatelessWidget {
     final hasReadableText =
         !voice.withheld && (gist != null || voice.content.isNotEmpty);
     final marked = !voice.withheld && hasAmiAnnotation(voice.content);
+    final scripted = !voice.withheld && voice.scripted && voice.content.isNotEmpty;
     return AnimatedContainer(
       duration: AmiMotion.normal,
       curve: AmiMotion.easeOut,
@@ -297,15 +302,25 @@ class TranscriptRow extends StatelessWidget {
                 ),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: hasReadableText
-                        ? AmiTypography.statSmall
-                            .copyWith(color: AmiColors.textMed)
-                        : AmiTypography.labelMono
-                            .copyWith(fontSize: 9, color: AmiColors.textLow),
+                  child: Semantics(
+                    label: scripted
+                        ? l.roomScriptedSemantic(agent.displayName)
+                        : null,
+                    excludeSemantics: scripted,
+                    child: Text(
+                      label,
+                      key: scripted ? const Key('scriptedTurnLabel') : null,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: scripted
+                          ? AmiTypography.labelMono.copyWith(
+                              fontSize: 9, color: AmiColors.hexAmber)
+                          : hasReadableText
+                              ? AmiTypography.statSmall
+                                  .copyWith(color: AmiColors.textMed)
+                              : AmiTypography.labelMono.copyWith(
+                                  fontSize: 9, color: AmiColors.textLow),
+                    ),
                   ),
                 ),
                 if (marked) ...[
@@ -325,6 +340,11 @@ class TranscriptRow extends StatelessWidget {
               ],
             ),
           ),
+          if (expanded && scripted)
+            Padding(
+              padding: const EdgeInsets.only(left: 36, top: AmiSpacing.xs),
+              child: ScriptedTurnNote(agentName: agent.displayName),
+            ),
           if (expanded && voice.content.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(
@@ -454,6 +474,10 @@ Future<void> showAgentPeekSheet(
                   ],
                 ),
               ],
+              if (!voice.withheld && voice.scripted && voice.content.isNotEmpty) ...[
+                const SizedBox(height: AmiSpacing.s),
+                ScriptedTurnNote(agentName: agent.displayName),
+              ],
               const SizedBox(height: AmiSpacing.m),
               if (voice.withheld || voice.content.isEmpty)
                 Text(
@@ -524,6 +548,52 @@ String _convictionLabel(AppLocalizations l, String c) => switch (c) {
       'medium' => l.roomConvictionMedium,
       _ => l.roomConvictionLow,
     };
+
+/// DEF507 — the labelled chip + one-line note shown above a scripted desk
+/// turn, so AMI's standing guidance is never read as the desk's own live call.
+/// Amber is the AMI "read this with care" colour already used for `[AMI …]`
+/// marks; the text is muted, never a hex-red error.
+class ScriptedTurnNote extends StatelessWidget {
+  const ScriptedTurnNote({super.key, required this.agentName});
+
+  final String agentName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      label: l.roomScriptedSemantic(agentName),
+      excludeSemantics: true,
+      child: Column(
+        key: const Key('scriptedTurnNote'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AmiColors.hexAmber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AmiRadii.sm),
+              border:
+                  Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.5)),
+            ),
+            child: Text(
+              l.roomScriptedLabel,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 9, color: AmiColors.hexAmber),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.roomScriptedNote,
+            style: AmiTypography.labelMono
+                .copyWith(fontSize: 9, color: AmiColors.textLow),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _Chip extends StatelessWidget {
   const _Chip({required this.label, required this.value, required this.color});

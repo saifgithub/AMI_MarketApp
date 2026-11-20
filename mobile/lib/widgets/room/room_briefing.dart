@@ -289,7 +289,9 @@ class _SeatLine extends StatelessWidget {
     final String line;
     switch (seat.seat) {
       case RoomSeatState.responded:
-        line = stance?.recorded == true
+        line = state.scriptedAgents.contains(seat.agentId)
+            ? l.roomScriptedLabel
+            : stance?.recorded == true
             ? (stance?.headline ?? l.roomCombNotStated)
             : l.roomAgentResponded;
       case RoomSeatState.thinking:
