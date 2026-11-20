@@ -38,6 +38,7 @@ cases:
     expected:
       - The below-floor build gets action "block" and an Apple store/TestFlight URL (the generic TestFlight page until IOS_TESTFLIGHT_JOIN_URL is set — CR121)
       - The at-floor build gets action "ok" (or "nag"), and the Android store URL is a Play Store link
+      - 'The Android store URL equals the ANDROID_PLAY_STORE_URL setting: on Alpha the personal package `ai.agenticmarketintel.ami_trade`; on Beta, boot refuses that personal package (DEF511, 2026-11-20)'
 
   - id: UAT-PLAT-003
     title: UAT seeding creates a tagged anonymous user the admin API can re-plan and credit
