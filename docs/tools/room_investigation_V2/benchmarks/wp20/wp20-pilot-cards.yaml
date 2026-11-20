@@ -1,0 +1,8 @@
+# CR267 WP-20 pilot, cards ON: same 3 rooms; run with ROOM_CARDS_ENVELOPE_ENABLED=true.
+name: wp20-pilot-cards
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 3 }
+risk_scores: [3, 4, 5]
+repeats: 1
+prompt_variant: backend-default

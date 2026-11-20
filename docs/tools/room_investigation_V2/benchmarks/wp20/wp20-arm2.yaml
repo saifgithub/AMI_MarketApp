@@ -1,0 +1,8 @@
+# CR267 WP-20 arm 2 (cards ON, evidence only): same matrix as arm 1; run with ROOM_CARDS_ENVELOPE_ENABLED=true.
+name: wp20-arm2
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 3 }
+risk_scores: [1, 2, 3, 4, 5]
+repeats: 2
+prompt_variant: backend-default

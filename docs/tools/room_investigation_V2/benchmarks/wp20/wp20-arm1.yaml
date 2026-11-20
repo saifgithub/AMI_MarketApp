@@ -1,0 +1,8 @@
+# CR267 WP-20 arm 1 (cards OFF, production settings): 30 CR228 tickers x risk 1-5 x 2 reps = 300 rooms.
+name: wp20-arm1
+provider: vllm
+tickers: [AAPL, APD, BA, BAC, BGS, CAG, DE, DHR, FCEL, JPM, LEVI, MA, MO, NKE, PLD, PYPL, RIOT, RIVN, SEDG, SLB, SNAP, SO, SPCE, T, TMO, V, WFC, WU, XPEV, XRX]
+mandate: { risk_score: 3 }
+risk_scores: [1, 2, 3, 4, 5]
+repeats: 2
+prompt_variant: backend-default

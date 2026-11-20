@@ -1,0 +1,9 @@
+# CR267 WP-20 side set (spec step 3): the 5 lowest-consensus names of CR035 tickers_150 outside the 30
+# (Yahoo recommendationMean, 2026-07-17 screen). Cards OFF, 5 risk levels x 2 reps = 50 rooms.
+name: wp20-side
+provider: vllm
+tickers: [JBLU, CAR, CPB, KSS, ITW]
+mandate: { risk_score: 3 }
+risk_scores: [1, 2, 3, 4, 5]
+repeats: 2
+prompt_variant: backend-default
