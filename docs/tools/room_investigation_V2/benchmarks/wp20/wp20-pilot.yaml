@@ -1,0 +1,8 @@
+# CR267 WP-20 pilot: 3 rooms (AAPL R3/R4/R5 x 1 rep), live data, production settings, cards OFF.
+name: wp20-pilot
+provider: vllm
+tickers: [AAPL]
+mandate: { risk_score: 3 }
+risk_scores: [3, 4, 5]
+repeats: 1
+prompt_variant: backend-default
