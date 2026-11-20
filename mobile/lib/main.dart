@@ -15,6 +15,7 @@ library;
 import 'package:ami_trade/app.dart';
 import 'package:ami_trade/qa/error_sink.dart';
 import 'package:ami_trade/services/ads/ad_frequency_caps.dart';
+import 'package:ami_trade/services/diagnostics/semantics_health.dart';
 import 'package:ami_trade/services/notifications/onesignal_notification_service.dart';
 import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -56,6 +57,10 @@ const _qaSemantics =
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // DEF466 round 2: release-safe semantics health, read by the bug report.
+  // First, so every later onError handler (QaErrorSink, Sentry) chains to it.
+  SemanticsHealth.instance.install();
 
   if (_qaSemantics) {
     SemanticsBinding.instance.ensureSemantics();
