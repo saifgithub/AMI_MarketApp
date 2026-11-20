@@ -75,8 +75,12 @@ done
 # CR267 WP-45 — the channel decides the URL the parity gate below checks.
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 export AMI_API_URL_ALPHA
+AMI_CHANNEL_NEEDS_PLAY_UPLOAD=1   # Beta also needs the company service-account JSON
 ami_channel_setup android
 ami_channel_dry_run_exit
+# CR267 WP-49 (prep): Beta uses the company package name, keystore and Play
+# service account; for alpha it only clears the variables it owns.
+ami_beta_android_prepare
 
 # CR084-ALPHA — which fastlane lane (= Play track) this publishes to. Hardcoded
 # `internal` since CR048; kept as a variable so the Test Store guard below has

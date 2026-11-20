@@ -21,6 +21,9 @@ mobile/android/app/profile/
 mobile/android/app/debug/
 mobile/android/app/*.jks
 
+# CR267 WP-49: company-account values for --channel beta (template is tracked).
+mobile/beta_accounts.env
+
 # fastlane (CR048) — generated artifacts; Fastfile/Appfile/Gemfile.lock ARE tracked.
 # Service-account key lives in ~/.android-keys/, never in the repo.
 mobile/android/fastlane/report.xml

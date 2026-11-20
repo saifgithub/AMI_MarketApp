@@ -5,4 +5,5 @@
 # Setup → API access). Overridable via the SUPPLY_JSON_KEY env var. See CR048.
 
 json_key_file(ENV["SUPPLY_JSON_KEY"] || File.expand_path("~/.android-keys/play-service-account.json"))
-package_name("ai.agenticmarketintel.ami_trade")
+# CR267 WP-49 (prep): the Beta channel exports AMI_PLAY_PACKAGE_NAME; unset = the personal package, as before.
+package_name(ENV["AMI_PLAY_PACKAGE_NAME"] || "ai.agenticmarketintel.ami_trade")

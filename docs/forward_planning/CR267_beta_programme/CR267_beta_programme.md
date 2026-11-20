@@ -441,6 +441,7 @@ Recommendation: one Singapore VPS (2 vCPU / 4 GB) running the same Docker Compos
 
 1. Move the apps to the company Apple and Google accounts: bundle IDs, signing, Sign in with Apple keys, Google OAuth audiences, OneSignal. RevenueCat stays parked with payments. Plan and identity register: `docs/forward_planning/CR258_company_account_migration/`. Find out at WP-01 how much is already done (D-073's 2026-10-13 update says "executing now").
 2. Acceptance: a release build signed under the company accounts installs on the rig, signs in, and receives a push.
+3. **Prep built (2026-11-20, lane `lane/wp49-prep`).** Founder: accounts enrolled but clean, "prepare but do not release yet". Done: company IDs/signing/OneSignal/Play service account read from gitignored `mobile/beta_accounts.env` (template `mobile/beta_accounts.env.example`); the Beta build patches the Xcode project for the run and restores it; Alpha untouched. Decision (new IDs, reasons cited) and the console checklist: `docs/forward_planning/CR258_company_account_migration/wp49_prep_2026-11-20.md`. Release steps (App ID, ASC/Play records, keys, first build) wait for the founder's go.
 
 **WP-50 Store records, listing, review notes**
 
