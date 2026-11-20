@@ -190,3 +190,22 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. **AMI-DL-7** (Android, 120): 10 passed, 1 blocked (HLTH-013: this account had trial Findings left, so no cadence refusal), Part B 2 blocked (no credits). **DEF508** confirmed: all seven chips show their value in full. **DEF481** confirmed: envelope inbox, Back works on every listed screen.
 3. **AMI-DL-8** (iPhone, 120): 11 passed, 1 "failed", Part B 2 blocked. **DEF506** confirmed: reopen mid-Room lands on the Floor with "Your Room on AMZN is still running." and REJOIN; one charge. **DEF509** confirmed: "Your next reading is available on Dec 19, 2026." with no retry. The E5-MAND-01 "failure" is by design (CR129): that account has its own limits set, so the chip shows the mechanism-only label without a number. The pairing with "Set by you — overrides your risk profile" reads oddly, so it goes to Saiful as a copy question, not a defect.
 4. **DEF466 diagnosis:** the tree went dark again (Settings, PROFILE scroll). The semantics-health line in the bug report filed while dark shows Flutter healthy: semantics on, updates flowing, 33 nodes, 0 errors, the same as the post-relaunch baseline. The fault is between iOS's accessibility bridge and WebDriverAgent, not in app code. Next step is on the harness side; DEF466 stays open with that scope.
+
+## 2026-11-20 (afternoon) — Saiful's rulings on the open items
+
+1. **DEF481 product calls:**
+   1. OPEN MY MANDATE scrolls to the mandate.
+   2. A pill is tappable only where a destination exists, otherwise it is restyled. Done, merged `c113197a`: RELATED LESSONS opens the lesson, RELATED AGENTS is plain text (no agent profile screen exists), and SEE ALSO terms are tappable where they resolve.
+   3. Day Trader is high risk: highest risk tolerance and short term only, with the other settings to match.
+   4. MANAGE ACCOUNT opens the subscription tier picker.
+   5. New risk-limit chip copy is accepted.
+   6. Items 1, 3, 4 and 5 are with a worker.
+2. **Android lab account** topped up from 0 to 300 credits. Logged as a `credits_added` subscription event; Saiful: "you're testing, set your parameter".
+3. **AR/MS:** a language update pass comes later. The seeds stay flagged.
+4. **Tester exchange folder:** the 119/120 APKs and the old packets were deleted at Saiful's instruction.
+5. **S4:** Saiful wants the options, with Cloudflare among them; no pick yet. A worker is writing `beta_host_options_2026-11-20.md`.
+6. **S5:** Cloudflare for Startups Tier 3 and Alibaba AI Catalyst. The application drafts are being written.
+7. **S7:** the company accounts are enrolled and empty: "prepare but do not release yet". WP-49 prep has started; nothing is released.
+8. **Room chain:** the on-prem baseline runs first, at $0, and WP-26 re-runs on Beta's model. WP-20 has started on Alpha.
+9. **Website:** deployed (WP-29 + WP-51). The deploy exposed **DEF510**: the website tables were still owned by `postgres` after CR124/M8, so the WP-51 column migration crash-looped api-website for about 2 minutes. Fixed by handing the tables to `ami_website`; the runbook is updated.
+10. **WP-52:** I fix the four open checks and Saiful skims. **Keys (AV/Adanos):** later. **DEF499:** a 4th ISS001 contributor, then the fix. **A17 rig:** reconnect, which needs a person at melehost. **Counsel:** I draft a narrow brief with three questions.

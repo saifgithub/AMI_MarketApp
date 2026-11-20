@@ -30,7 +30,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-26 | Room acceptance run | WP-21b/23/24/25 | not started | | | | |
 | WP-27 | Room reliability defects | WP-00 | done | 2026-11-18 | 2026-11-18 | `636267ae` | DEF444/445/467/471/480/484 + CR272 backup notice. DEF471: the Room auto-starting is intended (10-20 ruling), so only a leave warning was added. |
 | WP-28 | Outcome scoring | WP-14 | in progress | 2026-11-19 | | `30dda2bb` | Daily scoring 22:30 UTC on the in-app tick, 500 due rows per run; weekly report to /backtest_results/outcome_reports. Live since deploy #7; acceptance after the first run (scored rows exist, report written). |
-| WP-29 | Copy | WP-00 | in progress | 2026-11-18 | | `6fa280ac` `7f0590b6` | Merged. The website deploy was blocked by the permission check and awaits Saiful's go. The stale Sharia line was fixed per claim register N1. WP-51 website changes also await the same deploy go. |
+| WP-29 | Copy | WP-00 | done | 2026-11-18 | 2026-11-20 | `6fa280ac` `7f0590b6` | Merged and deployed to the website 2026-11-20 (`?v=cr267wl`). The stale Sharia line was fixed per claim register N1. |
 | WP-30 | Account deletion + export | WP-00 | in progress | 2026-11-18 | | `0b31a855` `2f03b1b8` | CR276. Live on Alpha since deploy #5 (backend). Left: device check via the next app build; counsel items for S6. |
 | WP-31 | 18+ confirmation | WP-00 | done | 2026-11-18 | 2026-11-18 | `6e3e1d25` `06a69250` | CR273. Enforcement switch OFF on Alpha until the new build reaches testers. |
 | WP-32 | iOS privacy manifest | WP-00 | done | 2026-11-18 | 2026-11-18 | `e807a598` | CR274. Declares no tracking; must change if personalised ads ever ship (flagged for WP-50). |
@@ -50,7 +50,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-46 | Load test + drills | WP-43, WP-44 | not started | | | | |
 | WP-49 | Company-account migration (CR258) | WP-00 · S7 | not started | | | | Added in rev 2. ⚠️ Company accounts not enrolled yet (WP-01); long lead time. |
 | WP-50 | Store records + listing | WP-29/36/49 | not started | | | | |
-| WP-51 | Website waitlist | WP-00 | in progress | 2026-11-19 | | `588fb4bf` | Extended the existing website_api /waitlist (consent, honeypot, admin CSV export, mark-invited). Deploy awaits Saiful's go (WEBSITE_ADMIN_SECRET, api-website restart, cPanel rsync). |
+| WP-51 | Website waitlist | WP-00 | done | 2026-11-19 | 2026-11-20 | `588fb4bf` | Deployed 2026-11-20: WEBSITE_ADMIN_SECRET set in alpha.env, api-website rebuilt, cPanel rsynced. Admin export 403 without the secret, 200 with it. The deploy exposed DEF510 (table owner), fixed. |
 | WP-52 | Tester note + support inbox | WP-00 | in progress | 2026-11-19 | | `c9858a84` | Tester note + TestFlight/Play texts + 3 manual entries (CR022). Support mailbox steps for Saiful in part 4. Open: Singapore claim, privacy link version, 'experimental' label. |
 | WP-53 | Exit-criteria report | WP-36, WP-46 · S9 | not started | | | | |
 | WP-54 | Beta go-live | see plan | not started | | | | |

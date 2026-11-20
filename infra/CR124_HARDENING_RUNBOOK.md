@@ -99,6 +99,19 @@ GRANT CONNECT ON DATABASE ami_website TO ami_website;
 SQL'
 ```
 
+> **Added 2026-11-20 (DEF510): also hand over the tables that already exist.** `ALTER DATABASE … OWNER`
+> does not change the owner of tables created earlier by `postgres`. On melehost all three
+> (`waitlist`, `contact_messages`, `data_requests`) stayed owned by `postgres`, so the first
+> website_api start that needed a new column (WP-51) died in `_add_missing_columns` with
+> `must be owner of table waitlist` and the marketing API was down until this ran:
+>
+> ```bash
+> ssh melehost 'docker exec ami_postgres sh -c "psql -U \$POSTGRES_USER -d ami_website -v ON_ERROR_STOP=1 -c \"ALTER TABLE public.waitlist OWNER TO ami_website; ALTER TABLE public.contact_messages OWNER TO ami_website; ALTER TABLE public.data_requests OWNER TO ami_website;\""'
+> ```
+>
+> Check with `select tablename, tableowner from pg_tables where schemaname='public'` in `ami_website`:
+> every row must read `ami_website`. A fresh volume (Beta) does not need this: the role creates its own tables.
+
 > **Corrected (2026-08-07): verify a credential change OVER THE NETWORK, never via `docker exec`.**
 > The first attempt used shell-nested quote escaping and set the password to something other than the
 > intended value. `ALTER ROLE` reported success and a `docker exec … psql` check appeared to pass —
