@@ -24,8 +24,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'DEF220 fixed (skip outcome at site); convert to claim().or_skip() in Phase 2',
     ('career_events', 'services/career_ledger.py::post_career_event'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
-    ('client_release_floors', 'services/client_release_floor.py::create_floor_raise'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('daily_challenge_attempts', 'api/daily_challenge.py::attempt'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('game_duels', 'services/games_duels.py::pair_field'):

@@ -136,6 +136,7 @@ def test_every_baseline_entry_names_a_real_table_and_a_real_function():
 # baseline in the SAME commit as its claim() conversion, and joins this set. One entry per commit.
 _PHASE3_CONVERTED: set[tuple[str, str, str]] = {
     ("watchlist_store.py", "add", "SimWatchlistRow"),
+    ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
 }
 
 

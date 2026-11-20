@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.db.ami_claim import claim
 from app.db.models import ClientReleaseFloorRow, User, UserDeviceRow
 from app.schemas.client_release_floor import ReleaseFloorResponse
 
@@ -203,31 +204,23 @@ def create_floor_raise(
     build ever observed and `force` is False; `ReleaseFloorDuplicateError`
     when a row for this `min_build` already exists.
     """
-    from uuid import uuid4
-
     highest = highest_observed_build(session)
     if not force and min_build > highest:
         raise ReleaseFloorFootgunError(min_build, highest)
 
-    existing = session.execute(
-        select(ClientReleaseFloorRow).where(
-            ClientReleaseFloorRow.min_build == min_build
-        )
-    ).scalars().first()
-    if existing is not None:
-        raise ReleaseFloorDuplicateError(min_build)
-
-    row = ClientReleaseFloorRow(
-        id=uuid4(),
-        min_build=min_build,
-        recommended_build=recommended_build,
-        headline=headline,
-        body_en=body_en,
-        body_ar=body_ar,
-        body_ms=body_ms,
-        created_by=created_by,
-        active=True,
-    )
-    session.add(row)
-    session.flush()
+    # ISS001 / DEF308: the pre-SELECT is gone, claim() is the check. A duplicate (including the
+    # loser of a concurrent raise) is the operator's 409, never a 500.
+    row = claim(
+        session, ClientReleaseFloorRow,
+        key={"min_build": min_build},
+        values={
+            "recommended_build": recommended_build,
+            "headline": headline,
+            "body_en": body_en,
+            "body_ar": body_ar,
+            "body_ms": body_ms,
+            "created_by": created_by,
+            "active": True,
+        },
+    ).or_raise(ReleaseFloorDuplicateError(min_build))
     return row, highest
