@@ -6,6 +6,7 @@ covers:
   - backend/app/api/room.py
   - backend/app/api/room_rating.py
   - backend/app/api/sse.py
+  - backend/app/services/room_bank.py
   - mobile/lib/screens/room/**
 summary: |
   The 12-desk Room: a funded run streams every desk to a CIO verdict, is billed
@@ -18,6 +19,12 @@ summary: |
   cannot be reached with a fresh account; the roster case asserts the full desk.
   DEF481 (2026-11-20, build 120): the Room back control carries ami.nav.back and the CONVENE button carries its ami.sheet id. Accessibility identifiers only; nothing a
   user sees or does changed, so no case steps change.
+  WP-24 (2026-11-20): the old "same ticker within 24 h returns yesterday's Room"
+  window is gone. A convene is handed a finished Room only when its INPUTS match
+  (user, ticker, mandate content, the trading day's frozen fact sheet, policy
+  version, model root); that return is free. A changed mandate, a new trading
+  day, a new prompt generation or a different model is a new Room and is charged.
+  A failed, cancelled, refunded or outage Room is never handed back.
 cases:
   - id: UAT-ROOM-001
     title: A funded Room streams every desk through to a CIO verdict
@@ -164,17 +171,19 @@ cases:
     notes: Tenure pull-back (CR098) is off on Alpha (ROOM_PULLBACK_DAYS_*=0); revisit when a threshold is enabled and an aged account can be seeded.
 
   - id: UAT-ROOM-012
-    title: Reconnecting to a finished run replays it and charges nothing
+    title: Convening again with unchanged inputs returns the same Room and charges nothing
     layer: api
     plans: [floor_pass]
     llm: true
     preconditions:
-      - The Floor Pass user from UAT-ROOM-001, now holding 0 credits
+      - The Floor Pass user from UAT-ROOM-001, now holding 0 credits, whose first Room finished with a real verdict (a refunded outage Room is never banked, so this case is skipped for it)
     steps:
-      - POST /v1/room/stream again for the same ticker
+      - POST /v1/room/stream again for the same ticker, with the mandate untouched
     expected:
-      - 200 (not 402), the same run id, X-Room-Cached true, a replayed verdict equal to the original, and a done event
+      - 200 (not 402), the same run id, X-Room-Cached true and X-Room-Banked true, a replayed verdict equal to the original, and a done event
+      - done.banked is true, done.credit_cost is 0 and done.refunded is false (the return cost this convene nothing, whatever the first Room cost)
       - The user still has exactly one run and the balance is unchanged
+    notes: WP-24 (2026-11-20). Replaces the 24 h same-ticker window; the return now depends on the inputs, see UAT-ROOM-030 for the other half.
 
   - id: UAT-ROOM-013
     title: The live-data surcharge is disclosed and matches the debit
@@ -420,6 +429,41 @@ cases:
       - The banner is gone after the run finishes
       - When the run finished while the app was closed, the Floor shows no banner and the verdict is already in the Journal
     notes: DEF506. Ruled by Saiful 2026-11-20 (open on the Floor, never auto-jump into the Room). The banner has identifiers ami.floor.rejoin_banner and ami.floor.rejoin_cta for the device rig. Pairs with UAT-ROOM-018/019, which cover a dropped connection and backing out.
+
+  - id: UAT-ROOM-030
+    title: A changed mandate is a new Room and is charged; the same inputs again are the banked Room
+    layer: api
+    plans: [trader]
+    llm: true
+    preconditions:
+      - The Trader user from UAT-ROOM-003/013 who has run MSFT once with a real verdict (a refunded outage Room is not banked, so this case is skipped for it)
+    steps:
+      - POST /v1/room/stream for MSFT again with the mandate untouched
+      - PATCH the user's mandate (max_drawdown_pct to a different value) and POST /v1/room/stream for MSFT again
+      - POST /v1/room/stream for MSFT a third time, mandate untouched since the PATCH
+    expected:
+      - The first repeat returns the original run id with X-Room-Banked true, done.credit_cost 0, and the balance unchanged
+      - After the PATCH the same ticker returns a DIFFERENT run id with no X-Room-Banked header, charged at the documented price, and the user now has two runs
+      - The third convene returns the second run's id as a banked, free return
+    notes: WP-24 (2026-11-20). One extra real Room run. The key is (user, ticker, mandate content, fact-sheet hash, policy version, model root, trading day); a new trading day or a new prompt/model changes it too but cannot be forced from the API, so those are covered by backend/tests/unit/test_cr267_wp24_room_bank.py.
+
+  - id: UAT-ROOM-031
+    title: A Room handed back for unchanged inputs says so on the Room and shows no cost
+    layer: manual
+    plans: [trader]
+    llm: true
+    preconditions:
+      - A build that includes WP-24, signed in as a Trader with credits, who has already convened a Room on MSFT today and got a real verdict
+      - Note the credit balance before the second convene
+    steps:
+      - Convene the Room on MSFT again without changing the mandate
+      - Read the line under the verdict, and compare the credit balance with the one noted
+      - Open Brief Your Agent, change one setting, then convene MSFT again
+    expected:
+      - The earlier Room is shown straight away, with a plain line "Inputs unchanged since your last run on <date> — showing that Room. No credits used." in place of any "This Room used N credits" line
+      - The credit balance is the same as before the second convene
+      - After the mandate change the Room runs live (desks speak in turn), the banked line is absent, and the cost line states what that Room cost
+    notes: WP-24 (2026-11-20). The line carries identifier ami.room.banked_line for the device rig. The Arabic and Malay strings are English placeholders until translated. API half is UAT-ROOM-030.
 
   - id: UAT-ROOM-029
     title: A desk that fails shows a standing-guidance label, not a live call
