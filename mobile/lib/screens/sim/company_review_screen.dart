@@ -642,11 +642,17 @@ class _DetailSheet extends StatelessWidget {
             // app's own back affordance (CR232: a back arrow, never an X).
             Row(
               children: [
-                IconButton(
-                  key: const Key('company_review_sheet_back'),
-                  icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onPressed: () => Navigator.of(context).pop(),
+                Semantics(
+                  button: true,
+                  identifier: ExitIds.navBack,
+                  child: IconButton(
+                    key: const Key('company_review_sheet_back'),
+                    icon: const Icon(Icons.arrow_back,
+                        color: AmiColors.textHigh),
+                    tooltip:
+                        MaterialLocalizations.of(context).backButtonTooltip,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
                 ),
                 Expanded(
                   child: Text(title,

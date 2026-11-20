@@ -103,7 +103,7 @@ void main() {
       ),
     ]);
 
-    expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.mail_outline), findsOneWidget);
     expect(find.text('1'), findsNothing);
     expect(find.text('2'), findsNothing);
   });
@@ -129,14 +129,14 @@ void main() {
         type: DioExceptionType.connectionError,
       ),
     );
-    expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.mail_outline), findsOneWidget);
     expect(t.takeException(), isNull);
   });
 
   testWidgets('tapping the bell opens the inbox inside the tab navigator',
       (t) async {
     await _pumpFloor(t, inbox: [_unread('m1')]);
-    await t.tap(find.byIcon(Icons.notifications_outlined));
+    await t.tap(find.byIcon(Icons.mail_outline));
     await t.pump(const Duration(milliseconds: 500));
     expect(find.byType(InboxScreen), findsOneWidget);
   });

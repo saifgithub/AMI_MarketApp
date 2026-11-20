@@ -60,10 +60,12 @@ YOU_SEGMENT_IDS: dict[str, str] = {
 }
 
 # Modal sheets — the DEF075 class the nav-bar/bottom-inset check exists for.
-SHEET_CONVENE = "ami.sheet.convene"
 SHEET_CONVENE_CTA = "ami.sheet.convene.cta"
-SHEET_MERGE = "ami.sheet.merge"
 SHEET_MERGE_CTA = "ami.sheet.merge.cta"
+
+# DEF481 — lesson reader mode segments (were bare `lesson_mode_*`).
+LESSON_MODE_BOOK = "ami.lesson.mode_book"
+LESSON_MODE_INTERACTIVE = "ami.lesson.mode_interactive"
 
 # CR209 — the Concierge interview. See `OnboardingIds` in the Dart mirror for
 # why the chips share one identifier rather than carrying an index.

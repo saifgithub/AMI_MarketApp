@@ -1,12 +1,12 @@
 screen: "ami.screen.floor"
 source: "mobile/lib/screens/floor/floor_screen.dart"
 controls:
-  - label: "Inbox bell (notifications_outlined icon, amber unread badge)"
+  - label: "Inbox envelope (mail_outline icon, amber unread badge)"
     kind: icon
     expect: navigate
     target: "ami.screen.inbox"
     line: 424
-    note: "Semantics label 'Messages' / 'N unread messages'. Opens the Inbox (messages from the team). NOT the notification centre (that is NotificationBell, used elsewhere)."
+    note: "Semantics label 'Messages' / 'N unread messages'. Opens the Inbox (messages from the team). NOT the notification centre (that is NotificationBell, a bell icon, used elsewhere). DEF481: the icon is an envelope so the two no longer look identical."
   - label: "YOUR TEAM'S CALLS card (carousel card 2)"
     kind: list_row
     expect: navigate

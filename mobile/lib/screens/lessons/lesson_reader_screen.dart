@@ -145,10 +145,10 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
     final mode = _mode();
     return AmiSegmentBar(
       segments: [
-        AmiSegment(label: l.lessonModeBook, semanticsId: 'lesson_mode_book'),
+        AmiSegment(label: l.lessonModeBook, semanticsId: LessonIds.modeBook),
         AmiSegment(
             label: l.lessonModeInteractive,
-            semanticsId: 'lesson_mode_interactive'),
+            semanticsId: LessonIds.modeInteractive),
       ],
       selected: mode == LessonViewMode.book ? 0 : 1,
       onSelect: (i) => ref.read(lessonViewModeProvider.notifier).setMode(
@@ -267,9 +267,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
-            icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-            onPressed: () => Navigator.of(context).pop(),
+          Semantics(
+            button: true,
+            identifier: ExitIds.navBack,
+            child: IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
           ),
           Expanded(
             child: Text(title,

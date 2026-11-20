@@ -175,6 +175,7 @@ class _Header extends StatelessWidget {
         children: [
           Semantics(
             label: MaterialLocalizations.of(context).backButtonTooltip,
+            identifier: ExitIds.navBack,
             button: true,
             child: GestureDetector(
               onTap: () => Navigator.of(context).pop(),

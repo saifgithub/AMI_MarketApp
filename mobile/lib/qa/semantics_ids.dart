@@ -99,10 +99,18 @@ class RoomFeedbackIds {
 class SheetIds {
   const SheetIds._();
 
-  static const String convene = 'ami.sheet.convene';
   static const String conveneCta = 'ami.sheet.convene.cta';
-  static const String merge = 'ami.sheet.merge';
   static const String mergeCta = 'ami.sheet.merge.cta';
+}
+
+/// DEF481 — the lesson reader's mode segments (BOOK / INTERACTIVE). They were
+/// the bare strings `lesson_mode_*`, the only ids outside the `ami.` namespace
+/// the harness's catalogue filters on.
+class LessonIds {
+  const LessonIds._();
+
+  static const String modeBook = 'ami.lesson.mode_book';
+  static const String modeInteractive = 'ami.lesson.mode_interactive';
 }
 
 /// CR209 — the Concierge interview, the one surface the onboarding walk must

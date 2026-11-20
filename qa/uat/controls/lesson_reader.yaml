@@ -2,26 +2,27 @@ screen: ami.screen.lesson_reader
 source: mobile/lib/screens/lessons/lesson_reader_screen.dart
 controls:
   - label: "Back arrow"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 271
-    note: "custom _Header IconButton(Icons.arrow_back) - no tooltip, no ami.nav.back identifier"
+    line: 272
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip."
   - label: "BOOK"
-    id: lesson_mode_book
+    id: ami.lesson.mode_book
     kind: tab
     expect: state
     state: "Switches the body to the scrolling book reader (markdown blocks + inline quiz)"
     when: "lesson is in the interactive registry and not quiz-only"
-    line: 153
-    note: "AmiSegmentBar segment; persists the choice via lessonViewModeProvider. Semantics id is the bare string lesson_mode_book (no ami. prefix)."
+    line: 148
+    note: "AmiSegmentBar segment; persists the choice via lessonViewModeProvider. Semantics id ami.lesson.mode_book (DEF481, was the bare lesson_mode_book)."
   - label: "INTERACTIVE"
-    id: lesson_mode_interactive
+    id: ami.lesson.mode_interactive
     kind: tab
     expect: state
     state: "Switches the body to the swipeable beat deck (ami.screen.lesson_beat_deck)"
     when: "lesson is in the interactive registry and not quiz-only"
-    line: 153
-    note: "Semantics id is the bare string lesson_mode_interactive. Default mode may already be interactive from the mandate learning style."
+    line: 148
+    note: "Semantics id ami.lesson.mode_interactive (DEF481, was the bare lesson_mode_interactive). Default mode may already be interactive from the mandate learning style."
   - label: "<prerequisite chip> e.g. 'FND 3 · Title'"
     kind: chip
     expect: navigate

@@ -2,8 +2,9 @@ screen: "ami.screen.company_review.detail_sheet"
 source: "mobile/lib/screens/sim/company_review_screen.dart"
 controls:
   - label: "Back"
+    id: ami.nav.back
     kind: icon
     expect: back
     state: "Sheet closes; Company Review tabs show again"
     line: 647
-    note: "Back arrow at the top-left of the full-height sheet (key company_review_sheet_back). Swiping the sheet down or its drag handle also closes it."
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip. Key company_review_sheet_back. Swiping the sheet down or its drag handle also closes it."

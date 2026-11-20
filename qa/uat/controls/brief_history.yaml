@@ -2,10 +2,11 @@ screen: "ami.screen.brief_history"
 source: "mobile/lib/screens/agent/brief_history_screen.dart"
 controls:
   - label: "back (arrow_back icon)"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 164
-    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings)."
+    line: 165
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip."
   - label: "ROLLBACK TO THIS"
     kind: button
     expect: dialog

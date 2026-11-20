@@ -2,10 +2,11 @@ screen: "ami.screen.room"
 source: "mobile/lib/screens/room/room_screen.dart"
 controls:
   - label: "back (arrow_back icon)"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 323
-    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings). No confirm even while the Room is still deliberating."
+    line: 426
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip. No confirm from the arrow itself, but the screen's PopScope prompts if the Room is mid-run (maybePop, DEF471)."
   - label: "CONVENE AGAIN"
     kind: button
     expect: destructive
