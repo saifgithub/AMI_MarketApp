@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Key on the fade's `Opacity`, so a test asserts the reduced-motion rule on
 /// this specific widget rather than on whichever `Opacity` it happens to find.
@@ -31,6 +32,13 @@ Widget healthFadeIn(BuildContext context, Widget child) =>
           Opacity(key: healthFadeKey, opacity: value, child: child),
       child: child,
     );
+
+/// A calendar date in the reader's own locale and time zone (DEF509). Used for
+/// "your next reading is available on …", where a UTC date a day off from the
+/// reader's would be a false promise; the server ships UTC ISO strings.
+String healthDateLabel(BuildContext context, DateTime when) =>
+    DateFormat.yMMMd(Localizations.localeOf(context).toString())
+        .format(when.toLocal());
 
 /// A dashed rounded rect. Every state that is NOT a finished measurement wears
 /// one — the card's four non-populated states and all four Finding refusal

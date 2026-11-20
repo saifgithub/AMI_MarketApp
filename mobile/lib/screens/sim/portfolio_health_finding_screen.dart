@@ -123,6 +123,24 @@ class _FindingErrorPanel extends ConsumerWidget {
           ),
         );
 
+      case 'portfolio_health_cadence_not_elapsed':
+        // DEF509 / CR140: the refusal says WHEN. No retry tap — nothing a
+        // retry can change before that date.
+        final gate = HealthGateStatus.fromJson(
+          (detail['gate'] as Map?)?.cast<String, dynamic>() ?? const {},
+        );
+        final raw = detail['next_eligible_at'];
+        final next =
+            (raw is String ? DateTime.tryParse(raw) : null) ?? gate.nextEligibleAt;
+        return _Panel(
+          accent: AmiColors.slate700,
+          body: next == null
+              ? l.portfolioHealthCadenceNoDateBody
+              : l.portfolioHealthCadenceNote(
+                  '\u2066${healthDateLabel(context, next)}\u2069',
+                ),
+        );
+
       case 'portfolio_health_daily_cap_reached':
         // The numbers come from the server's own gate dict, not from the
         // card's copy of it — the request that was just refused is the

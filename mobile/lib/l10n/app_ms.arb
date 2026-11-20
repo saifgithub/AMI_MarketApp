@@ -979,6 +979,8 @@
     "portfolioHealthCtaFinding": "FULL FINDING",
     "portfolioHealthTrialChip": "{k} of {n} trial Findings left",
     "portfolioHealthDailyCapNote": "{used} of {cap} Findings used today. Available again tomorrow.",
+    "portfolioHealthCadenceNote": "Your next reading is available on {date}.",
+    "portfolioHealthCadenceNoDateBody": "Your next reading is not available yet.",
     "portfolioHealthUpgradeBody": "Findings are included in Trader and Floor Manager plans.",
     "portfolioHealthUpgradeCta": "SEE PLANS",
     "findingScreenTitle": "Portfolio Health",

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 import '../support/portfolio_health_fixtures.dart';
 
@@ -211,6 +212,7 @@ void main() {
         {'code': 'portfolio_health_unavailable'},
         {'code': 'portfolio_health_gate_closed'},
         {'code': 'portfolio_health_daily_cap_reached'},
+        {'code': 'portfolio_health_cadence_not_elapsed'},
         {'code': 'something_new'},
       ]) {
         await _pump(tester, error: _refusal(409, detail));
@@ -262,6 +264,43 @@ void main() {
       expect(find.text('SEE PLANS'), findsNothing,
           reason: 'a cap is not an entitlement problem — offering an upgrade '
               'here sells a subscriber something they already have');
+    });
+
+    testWidgets('429 cadence names the next-eligible date and offers no retry',
+        (tester) async {
+      const iso = '2026-12-20T09:30:00+00:00';
+      await _pump(
+        tester,
+        error: _refusal(429, {
+          'code': 'portfolio_health_cadence_not_elapsed',
+          'next_eligible_at': iso,
+          'gate': gateJson(
+            cadenceBlocked: true,
+            nextEligibleAt: iso,
+          ),
+        }),
+      );
+      final date = DateFormat.yMMMd('en_US').format(DateTime.parse(iso).toLocal());
+      expect(find.text('Your next reading is available on ${_iso(date)}.'),
+          findsOneWidget,
+          reason: 'CR140: the refusal says WHEN, in the reader\'s own format');
+      expect(find.textContaining('did not respond'), findsNothing,
+          reason: 'DEF509: a server answer is not a missing engine');
+      expect(find.textContaining('Tap to retry'), findsNothing);
+      expect(find.byType(InkWell), findsNothing,
+          reason: 'no retry can change the date');
+      expect(find.text('SEE PLANS'), findsNothing);
+    });
+
+    testWidgets('cadence 429 without a date still never claims an outage',
+        (tester) async {
+      await _pump(
+        tester,
+        error: _refusal(429, {'code': 'portfolio_health_cadence_not_elapsed'}),
+      );
+      expect(find.text('Your next reading is not available yet.'),
+          findsOneWidget);
+      expect(find.byType(InkWell), findsNothing);
     });
 
     testWidgets('anything else is a transport panel with a retry',

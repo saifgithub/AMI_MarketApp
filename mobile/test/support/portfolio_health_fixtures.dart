@@ -17,6 +17,9 @@ Map<String, dynamic> gateJson({
   int dailyUsed = 0,
   int dailyCap = 2,
   bool planHasAccess = true,
+  int cadenceDays = 30,
+  bool cadenceBlocked = false,
+  String? nextEligibleAt,
 }) =>
     {
       'mode': mode,
@@ -27,6 +30,9 @@ Map<String, dynamic> gateJson({
       'daily_used': dailyUsed,
       'daily_cap': dailyCap,
       'plan_has_access': planHasAccess,
+      'cadence_days': cadenceDays,
+      'cadence_blocked': cadenceBlocked,
+      'next_eligible_at': nextEligibleAt,
     };
 
 Map<String, dynamic> blockJson(

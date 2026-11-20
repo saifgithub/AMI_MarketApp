@@ -38,7 +38,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Which call to action the card shows. The tiles above it are NEVER gated
 /// (Rev 4) — only the written Finding is.
-enum HealthCtaState { generate, trial, dailyCap, upgrade }
+enum HealthCtaState { generate, trial, cadence, dailyCap, upgrade }
 
 /// Pure derivation from M07's eight-key gate dict.
 ///
@@ -51,6 +51,12 @@ HealthCtaState deriveHealthCta(HealthGateStatus g) {
       g.planHasAccess ||
       (g.mode == 'trial' && g.trialActive);
   if (!hasAccess) return HealthCtaState.upgrade;
+  // Server order (`enforce_gate`): cadence is checked before the daily cap and
+  // is the honest one when both fire. Only with a date — a cadence block that
+  // cannot say WHEN is left to the POST's own refusal rather than guessed at.
+  if (g.cadenceBlocked && g.nextEligibleAt != null) {
+    return HealthCtaState.cadence;
+  }
   if (g.dailyUsed >= g.dailyCap) return HealthCtaState.dailyCap;
   if (g.mode == 'trial' && g.trialActive && !g.planHasAccess) {
     return HealthCtaState.trial;
@@ -820,6 +826,33 @@ class _GateCta extends ConsumerWidget {
               l.portfolioHealthTrialChip(
                 _int(math.max(0, gate.trialFindingsBudget - gate.trialFindingsUsed)),
                 _int(gate.trialFindingsBudget),
+              ),
+              style: AmiTypography.caption,
+            ),
+          ],
+        );
+
+      case HealthCtaState.cadence:
+        // The button stays live on purpose: re-opening today's Finding is
+        // free and ungated server-side, and this card cannot tell whether the
+        // tap would be that replay or a new reading. A brand-new Finding is
+        // what the date refers to, and the Finding screen's refusal panel
+        // repeats it if the tap does turn out to be one.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: HexButton(
+                label: l.portfolioHealthCtaFinding,
+                color: AmiColors.hexBlue,
+                onPressed: () => _openFinding(context, ref),
+              ),
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.portfolioHealthCadenceNote(
+                _iso(healthDateLabel(context, gate.nextEligibleAt!)),
               ),
               style: AmiTypography.caption,
             ),

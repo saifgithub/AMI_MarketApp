@@ -3715,6 +3715,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String portfolioHealthCadenceNote(String date) {
+    return 'Your next reading is available on $date.';
+  }
+
+  @override
+  String get portfolioHealthCadenceNoDateBody =>
+      'Your next reading is not available yet.';
+
+  @override
   String get portfolioHealthUpgradeBody =>
       'Findings are included in Trader and Floor Manager plans.';
 
