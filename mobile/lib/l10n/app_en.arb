@@ -509,6 +509,20 @@
     "description": "DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]"
   },
   "floorFooter": "⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE",
+  "floorRejoinBanner": "Your Room on {ticker} is still running.",
+  "@floorRejoinBanner": {
+    "description": "DEF506 - banner at the top of the Floor when the user reopens the app while one of their Rooms is still in flight. Names the ticker. Tapping REJOIN opens that Room (it replays the desks so far, then goes live). Never charges. Keep it short, one line on a phone.",
+    "placeholders": {
+      "ticker": {
+        "type": "String",
+        "example": "MSFT"
+      }
+    }
+  },
+  "floorRejoinCta": "REJOIN",
+  "@floorRejoinCta": {
+    "description": "DEF506 - button on the Floor banner that takes the user back into their running Room. All-caps mono label like the app's other small actions; one word."
+  },
   "floorLockedHowTo": "HOW TO UNLOCK",
   "floorLockedNoLessons": "This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.",
   "floorLockedEarnByLessons": "Pass these {count} lessons to earn this agent:",

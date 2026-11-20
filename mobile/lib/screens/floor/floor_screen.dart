@@ -24,6 +24,8 @@
 /// put Settings inside YOU.
 library;
 
+import 'dart:async' show unawaited;
+
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/floor_tour.dart';
@@ -43,6 +45,7 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/active_room_provider.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -51,6 +54,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/floor/floor_carousel.dart';
 import 'package:ami_trade/widgets/floor/floor_omnibox.dart';
 import 'package:ami_trade/widgets/floor/floor_reaction_card.dart';
+import 'package:ami_trade/widgets/floor/floor_rejoin_banner.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
@@ -141,6 +145,23 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     ));
   }
 
+  /// DEF506 — REJOIN. Re-asks the server first: the banner can be minutes old,
+  /// and `RoomScreen` attaches through the same convene call the server dedups
+  /// only while the run is in flight, so a run that ended since the banner was
+  /// drawn would otherwise be convened (and charged) afresh. If the run is gone
+  /// the banner is cleared and nothing opens; the Journal already has it.
+  Future<void> _rejoin() async {
+    final notifier = ref.read(activeRoomProvider.notifier);
+    final active = await notifier.refresh();
+    if (!mounted || active == null) return;
+    notifier.clear();
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => RoomScreen(ticker: active.ticker),
+    ));
+    // Backed out with the run still going: the banner is true again.
+    if (mounted) unawaited(notifier.refresh());
+  }
+
   void _review(String ticker) {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => CompanyReviewScreen(ticker: ticker),
@@ -181,6 +202,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     });
 
     final l = AppLocalizations.of(context);
+    final activeRoom = ref.watch(activeRoomProvider);
     final unlocked = ref.watch(lessonsNotifierProvider).unlockedAgentIds;
     // CR184 — the NOT ACTIONED card collapses (is omitted, not blanked) when
     // nothing is outstanding: loading, error and empty all read as "no card",
@@ -223,6 +245,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     ],
                   ),
                   const SizedBox(height: AmiSpacing.s),
+
+                  // DEF506 — a Room of the user's is still running: say so, and
+                  // let them choose to go back (never auto-jump).
+                  if (activeRoom != null)
+                    FloorRejoinBanner(
+                        ticker: activeRoom.ticker, onRejoin: _rejoin),
 
                   // §5.12 — the interim capture path, above the fold but below
                   // the chrome, and gone for good once answered or dismissed.

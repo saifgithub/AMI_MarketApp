@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**300 cases** — 197 api, 20 device, 83 manual; 16 blocked.
+**301 cases** — 197 api, 20 device, 84 manual; 16 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 31 cases
 5. [Floor tab & home shell](#floor) — 10 cases
-6. [Convene the Room](#room) — 27 cases
+6. [Convene the Room](#room) — 28 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
@@ -3864,6 +3864,31 @@ _Manual (iPhone checklist) · plans: floor_pass_
 3. A name with no Street data shows No Street rating available for this run. instead of a blank or zero rating, and the Source: line is still there
 4. With the switch off the card is gone and the rest of the verdict is unchanged; with it on the card is back
 5. No text on the card tells the user to buy or sell, and none says the AI
+
+#### UAT-ROOM-028 — Reopening the app during a running Room shows a rejoin banner on the Floor, and REJOIN returns to the Room without a second charge
+
+_Manual (iPhone checklist) · plans: any · uses LLM_
+
+**Preconditions**
+1. A funded account; note the credit balance before starting
+
+**Steps**
+1. Convene the Room on MSFT and, once the first desks have spoken, swipe the app away (fully close it)
+2. Reopen the app within a few minutes while the Room is still running
+3. Read the Floor; do not tap anything yet
+4. Tap REJOIN on the banner
+5. Let the run finish, then go back to the Floor
+6. Separately, close the app during a run, wait for it to finish, then reopen
+
+**Expected**
+1. The app opens on the Floor, not inside the Room, and a banner at the top says "Your Room on MSFT is still running." with a REJOIN button
+2. Nothing is charged by reopening the app or by waiting on the Floor
+3. REJOIN opens the MSFT Room, shows the "Welcome back" rejoin line, replays the desks that had already spoken, then continues live to the verdict
+4. The credit balance after the run equals the balance before minus the one Room price; REJOIN did not start a second run or a second charge
+5. The banner is gone after the run finishes
+6. When the run finished while the app was closed, the Floor shows no banner and the verdict is already in the Journal
+
+> DEF506. Ruled by Saiful 2026-11-20 (open on the Floor, never auto-jump into the Room). The banner has identifiers ami.floor.rejoin_banner and ami.floor.rejoin_cta for the device rig. Pairs with UAT-ROOM-018/019, which cover a dropped connection and backing out.
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

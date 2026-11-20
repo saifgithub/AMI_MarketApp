@@ -51,6 +51,7 @@ import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/screens/you/you_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/active_room_provider.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ads/shell_banner_slot.dart';
@@ -171,6 +172,10 @@ class _HomeShellState extends ConsumerState<HomeShell>
     final was = _lastLifecycle;
     _lastLifecycle = state;
     final emitter = ref.read(telemetryProvider);
+    // DEF506 — a Room may have started, or ended, while the app was away.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(ref.read(activeRoomProvider.notifier).refresh());
+    }
     if (state == AppLifecycleState.resumed &&
         (was == AppLifecycleState.paused ||
             was == AppLifecycleState.hidden ||

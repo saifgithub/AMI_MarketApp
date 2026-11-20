@@ -174,6 +174,15 @@ class TourIds {
   static const String next = 'ami.tour.next';
 }
 
+/// DEF506 — the Floor's "your Room is still running" banner and its REJOIN
+/// button, so device automation can find them without matching rendered text.
+class FloorIds {
+  const FloorIds._();
+
+  static const String rejoinBanner = 'ami.floor.rejoin_banner';
+  static const String rejoinCta = 'ami.floor.rejoin_cta';
+}
+
 /// CR232 — the exit affordances a pushed full page carries, now that a
 /// top-right `Icons.close` is no longer how any of them exit.
 ///
