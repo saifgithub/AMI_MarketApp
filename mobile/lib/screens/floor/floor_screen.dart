@@ -427,7 +427,8 @@ class _FirmRow extends StatelessWidget {
   }
 }
 
-/// CR102 — the inbox bell in the Floor header.
+/// CR102 — the inbox button in the Floor header. DEF481: an envelope, not a
+/// bell — the bell is Notifications (`NotificationBell`), a different screen.
 ///
 /// The unread count is derived client-side from the inbox payload
 /// (`unreadInboxCountProvider`), which yields 0 while loading and on
@@ -448,7 +449,7 @@ class _InboxBell extends ConsumerWidget {
         clipBehavior: Clip.none,
         children: [
           IconButton(tooltip: AppLocalizations.of(context).inboxTitle, 
-            icon: const Icon(Icons.notifications_outlined,
+            icon: const Icon(Icons.mail_outline,
                 color: AmiColors.textLow),
             onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const InboxScreen())),

@@ -421,11 +421,16 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
-            icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-            // maybePop, not pop: the screen's PopScope owns the mid-run
-            // "leave?" prompt (DEF471) and a bare pop would bypass it.
-            onPressed: () => Navigator.of(context).maybePop(),
+          Semantics(
+            button: true,
+            identifier: ExitIds.navBack,
+            child: IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
+              // maybePop, not pop: the screen's PopScope owns the mid-run
+              // "leave?" prompt (DEF471) and a bare pop would bypass it.
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
           ),
           Expanded(
             child: Column(

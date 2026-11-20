@@ -2,10 +2,11 @@ screen: ami.screen.track_lessons
 source: mobile/lib/screens/lessons/track_lessons_screen.dart
 controls:
   - label: "Back arrow"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 176
-    note: "custom header: bare GestureDetector around Icons.arrow_back_ios_new - no tooltip, no Semantics label, no ami.nav.back identifier, tap target is the 18px icon only"
+    line: 178
+    note: "DEF481: GestureDetector wrapped in Semantics(label: Back, identifier: ami.nav.back, button). Tap target is the 18px icon only."
   - label: "<lesson tile row>"
     kind: list_row
     expect: navigate

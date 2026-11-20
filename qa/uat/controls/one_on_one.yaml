@@ -2,10 +2,11 @@ screen: "ami.screen.one_on_one"
 source: "mobile/lib/screens/agent/one_on_one_screen.dart"
 controls:
   - label: "back (arrow_back icon)"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 180
-    note: "Custom IconButton, not AmiScreenHeader -- no ami.nav.back identifier (see findings)."
+    line: 193
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip."
   - label: "Brief this agent (tune icon)"
     kind: icon
     expect: navigate

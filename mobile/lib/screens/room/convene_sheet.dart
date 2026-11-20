@@ -200,26 +200,32 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
               ],
             ),
             const SizedBox(height: AmiSpacing.l),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AmiColors.hexGreen,
-                  foregroundColor: AmiColors.slate900,
-                  padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
+            // MergeSemantics: see tour_card.dart (DEF375) — id and button on one node.
+            MergeSemantics(
+              child: Semantics(
+                identifier: SheetIds.conveneCta,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AmiColors.hexGreen,
+                      foregroundColor: AmiColors.slate900,
+                      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
+                    ),
+                    icon: _validator.checking
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AmiColors.slate900,
+                            ),
+                          )
+                        : const Icon(Icons.bolt),
+                    label: Text(l.conveneCta),
+                    onPressed: _validator.checking ? null : () => _go(_ctrl.text),
+                  ),
                 ),
-                icon: _validator.checking
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AmiColors.slate900,
-                        ),
-                      )
-                    : const Icon(Icons.bolt),
-                label: Text(l.conveneCta),
-                onPressed: _validator.checking ? null : () => _go(_ctrl.text),
               ),
             ),
           ],

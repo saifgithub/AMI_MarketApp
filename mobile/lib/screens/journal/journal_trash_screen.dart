@@ -125,9 +125,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, 
-            icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
-            onPressed: () => Navigator.of(context).pop(),
+          Semantics(
+            button: true,
+            identifier: ExitIds.navBack,
+            child: IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
           ),
           Text(
             AppLocalizations.of(context).journalTrashHeading,

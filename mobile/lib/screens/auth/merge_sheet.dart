@@ -206,26 +206,32 @@ class _MergeSheetState extends ConsumerState<_MergeSheet> {
                 ),
               )
             else ...[
-              SizedBox(
-                height: 48,
-                child: FilledButton(
-                  onPressed: _busy ? null : _confirm,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AmiColors.hexCyan,
-                    foregroundColor: AmiColors.slate900,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AmiRadii.card),
+              // MergeSemantics: see tour_card.dart (DEF375) — id and button on one node.
+              MergeSemantics(
+                child: Semantics(
+                  identifier: SheetIds.mergeCta,
+                  child: SizedBox(
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: _busy ? null : _confirm,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AmiColors.hexCyan,
+                        foregroundColor: AmiColors.slate900,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                        ),
+                      ),
+                      child: _busy
+                          ? const SizedBox(
+                              width: 18, height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Colors.black),
+                              ),
+                            )
+                          : Text(l.mergeSheetConfirm),
                     ),
                   ),
-                  child: _busy
-                      ? const SizedBox(
-                          width: 18, height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.black),
-                          ),
-                        )
-                      : Text(l.mergeSheetConfirm),
                 ),
               ),
               const SizedBox(height: AmiSpacing.s),

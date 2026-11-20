@@ -2,10 +2,11 @@ screen: ami.screen.journal_trash
 source: mobile/lib/screens/journal/journal_trash_screen.dart
 controls:
   - label: "Back arrow"
+    id: ami.nav.back
     kind: icon
     expect: back
-    line: 129
-    note: "custom _Header IconButton(Icons.arrow_back) - no tooltip, no ami.nav.back identifier"
+    line: 130
+    note: "DEF481: IconButton wrapped in Semantics(identifier: ami.nav.back), with the Back tooltip."
   - label: "RESTORE"
     kind: button
     expect: state

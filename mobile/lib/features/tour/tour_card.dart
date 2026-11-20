@@ -14,8 +14,6 @@ class TourCard extends StatelessWidget {
     required this.controller,
     required this.skipLabel,
     required this.nextLabel,
-    this.tryNowLabel,
-    this.onTryNow,
   });
 
   final String title;
@@ -23,12 +21,6 @@ class TourCard extends StatelessWidget {
   final AmiTourController controller;
   final String skipLabel;
   final String nextLabel;
-
-  /// Non-null only for the Convene step — shows a secondary "Try it now" CTA.
-  final String? tryNowLabel;
-
-  /// Called when the user taps "Try it now". The tour is closed first.
-  final VoidCallback? onTryNow;
 
   @override
   Widget build(BuildContext context) {
@@ -91,26 +83,6 @@ class TourCard extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (onTryNow != null && tryNowLabel != null) ...[
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        minimumSize: Size.zero,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () {
-                        controller.skip();
-                        onTryNow!();
-                      },
-                      child: Text(
-                        tryNowLabel!,
-                        style: AmiTypography.labelMono
-                            .copyWith(color: AmiColors.hexGreen),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
                   // DEF382: this is the control the UAT harness dismisses
                   // tours WITH. Skip cannot be used — it removes the overlay
                   // mid-animation and the iOS accessibility tree does not

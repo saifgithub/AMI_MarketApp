@@ -9,12 +9,13 @@ controls:
     line: 143
     note: "Same effect as the CONVENE button. The Room auto-convenes on open and spends a Room credit."
   - label: "CONVENE"
+    id: ami.sheet.convene.cta
     kind: button
     expect: destructive
     target: "ami.screen.room"
     when: "ticker field non-empty and not mid-validation"
-    line: 213
-    note: "Opens the Room which immediately convenes -- spends a Room credit (the credits line in the sheet shows the cost and balance). Sheet closes first. Semantics ids SheetIds.convene / conveneCta are defined but not attached here (see findings)."
+    line: 206
+    note: "Opens the Room which immediately convenes -- spends a Room credit (the credits line in the sheet shows the cost and balance). Sheet closes first. Carries ami.sheet.convene.cta (DEF481); the sheet root is ami.screen.convene_sheet."
   - label: "<suggested ticker chip: AAPL / MSFT / NVDA / GOOGL / META / TSLA / AMZN>"
     kind: chip
     expect: navigate
