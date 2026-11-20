@@ -72,6 +72,7 @@ RoomBoardData boardFromRoomState({
           headline: state.agentStances[agent.id]?.headline,
           stanceRecorded: state.agentStances[agent.id]?.recorded ?? false,
           withheld: withheldIds.contains(agent.id),
+          scripted: state.scriptedAgents.contains(agent.id),
         ),
     ],
   );
@@ -96,6 +97,7 @@ List<RoomVoice> transcriptVoicesFromRoomState(RoomState state) {
           headline: state.agentStances[agent.id]?.headline,
           stanceRecorded: state.agentStances[agent.id]?.recorded ?? false,
           withheld: withheldIds.contains(agent.id),
+          scripted: state.scriptedAgents.contains(agent.id),
         ),
   ];
 }
@@ -197,5 +199,6 @@ RoomVoice _voiceFromRow(String agentId, Map<String, dynamic>? row) {
     // Key presence, not value — a pre-B2 entry has no key at all and the comb
     // must say "not recorded" rather than "nobody had a view".
     stanceRecorded: row?.containsKey('stance') ?? false,
+    scripted: row?['scripted'] == true,
   );
 }

@@ -173,3 +173,10 @@ class AgentMessage(BaseModel):
     # non-live scripted demo) — distinct from `False`, which means it WAS asked
     # and said nothing shaped like the machine channel.
     envelope_parsed: bool | None = None
+
+    # DEF507 — True when this turn is the scripted standing-guidance text the
+    # runner substituted because the desk's own LLM call failed (CR219 R51),
+    # not a call the desk made. Structural, so a client labels it from the wire
+    # rather than from the text; absent on every run recorded before this field
+    # (reads as False — those were never marked, which is the defect).
+    scripted: bool = False

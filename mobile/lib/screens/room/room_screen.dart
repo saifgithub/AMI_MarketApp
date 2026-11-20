@@ -619,8 +619,12 @@ class _AgentStatusRow extends StatelessWidget {
             : responded
                 ? l.roomAgentResponded
                 : l.roomStandingBy;
-    final statusSemanticLabel =
-        l.roomAgentStatusSemantic(agent.displayName, statusWord);
+    // DEF507 — a desk whose turn is AMI's scripted standing guidance is not
+    // "responded": the green check would read as the desk's own call landing.
+    final scripted = responded && state.scriptedAgents.contains(agent.id);
+    final statusSemanticLabel = scripted
+        ? l.roomScriptedSemantic(agent.displayName)
+        : l.roomAgentStatusSemantic(agent.displayName, statusWord);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AmiSpacing.s),
@@ -693,6 +697,11 @@ class _AgentStatusRow extends StatelessWidget {
                             decoration: BoxDecoration(
                                 color: agent.color, shape: BoxShape.circle),
                           )
+                        : scripted
+                            ? const Icon(Icons.info_outline,
+                                key: Key('scriptedSeatMark'),
+                                color: AmiColors.hexAmber,
+                                size: 16)
                         : responded
                             ? const Icon(Icons.check,
                                 color: AmiColors.hexGreen, size: 16)
@@ -704,7 +713,18 @@ class _AgentStatusRow extends StatelessWidget {
               ),
             ],
           ),
-          if (stance != null && stance.recorded) _headline(stance),
+          if (scripted)
+            Padding(
+              padding: const EdgeInsets.only(left: 36, top: 2),
+              child: Text(
+                l.roomScriptedLabel,
+                key: const Key('scriptedSeatLabel'),
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 10, color: AmiColors.hexAmber),
+              ),
+            )
+          else if (stance != null && stance.recorded)
+            _headline(stance),
         ],
       ),
     );

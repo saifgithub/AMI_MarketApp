@@ -352,7 +352,14 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
       case 'agent_token':
         final j = jsonDecode(data) as Map<String, dynamic>;
         final text = unescapeSseText(j['text'] as String? ?? '');
-        return {'kind': 'agent_token', 'agent_id': j['agent_id'], 'text': text};
+        return {
+          'kind': 'agent_token',
+          'agent_id': j['agent_id'],
+          'text': text,
+          // DEF507 — only ever present (true) for a scripted standing-guidance
+          // turn; an older server omits it and the turn reads as live.
+          if (j['scripted'] == true) 'scripted': true,
+        };
       case 'agent_done':
         // CR106 B2 — the agent's own stated position rides its completion
         // event. `containsKey` on the decoded map is what tells the client the
@@ -365,6 +372,7 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
           if (j.containsKey('stance')) 'stance': j['stance'],
           if (j.containsKey('conviction')) 'conviction': j['conviction'],
           if (j.containsKey('headline')) 'headline': j['headline'],
+          if (j['scripted'] == true) 'scripted': true,
         };
       case 'agent_withheld':
         // CR098 — one per withheld analyst, emitted before any analyst

@@ -298,7 +298,13 @@ async def stream_room(
                 for i, msg in enumerate(persisted.transcript):
                     aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
                     safe = escape_sse_text(msg.content or "")
-                    yield sse_json("agent_token", json.dumps({'agent_id': aid, 'text': safe}))
+                    # DEF507: a stored scripted standing-guidance turn replays
+                    # marked, same as it streamed live. Key only when True, so a
+                    # live turn's payload is byte-identical to before.
+                    tok = {'agent_id': aid, 'text': safe}
+                    if msg.scripted:
+                        tok['scripted'] = True
+                    yield sse_json("agent_token", json.dumps(tok))
                     # CR106 B2: the replay carries the stances too, so a client
                     # that reconnects mid-run gets the same comb as one that
                     # watched it live rather than an all-gutter board.
@@ -315,6 +321,8 @@ async def stream_room(
                     raw = raw_transcript[i] if i < len(raw_transcript) else {}
                     stance_recorded = isinstance(raw, dict) and "stance" in raw
                     payload = {'agent_id': aid}
+                    if msg.scripted:
+                        payload['scripted'] = True
                     if stance_recorded:
                         payload['stance'] = msg.stance
                         payload['conviction'] = msg.conviction
@@ -354,17 +362,19 @@ async def stream_room(
                     yield sse_json("phase", payload)
                 elif ev.kind == "agent_token":
                     safe = escape_sse_text(ev.text or "")
-                    payload = json.dumps({
+                    tok = {
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                         "text": safe,
-                    })
-                    yield sse_json("agent_token", payload)
+                    }
+                    if ev.scripted:
+                        tok["scripted"] = True  # DEF507
+                    yield sse_json("agent_token", json.dumps(tok))
                 elif ev.kind == "agent_done":
                     # CR106 B2: the agent's own stated position, for the
                     # consensus comb. All three are null whenever the agent did
                     # not state one — the client must put that hex in the
                     # gutter, never bucket it to neutral (T-SUM11).
-                    payload = json.dumps({
+                    done = {
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                         "stance": ev.stance,
                         "conviction": ev.conviction,
@@ -373,8 +383,10 @@ async def stream_room(
                         # nine agents never asked for one. The shipped client
                         # reads only the keys it knows, so this is additive.
                         "argued_size_pct": ev.argued_size_pct,
-                    })
-                    yield sse_json("agent_done", payload)
+                    }
+                    if ev.scripted:
+                        done["scripted"] = True  # DEF507
+                    yield sse_json("agent_done", json.dumps(done))
                 elif ev.kind == "agent_withheld":
                     # CR098 — the per-analyst locked-chair + countdown surface.
                     # Modelled on live_data_notice above: structural event, no
@@ -527,20 +539,24 @@ def cio_retry(
                     yield sse_json("phase", json.dumps({"label": ev.phase}))
                 elif ev.kind == "agent_token":
                     safe = escape_sse_text(ev.text or "")
-                    payload = json.dumps({
+                    tok = {
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                         "text": safe,
-                    })
-                    yield sse_json("agent_token", payload)
+                    }
+                    if ev.scripted:
+                        tok["scripted"] = True  # DEF507
+                    yield sse_json("agent_token", json.dumps(tok))
                 elif ev.kind == "agent_done":
-                    payload = json.dumps({
+                    done = {
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                         "stance": ev.stance,
                         "conviction": ev.conviction,
                         "headline": ev.headline,
                         "argued_size_pct": ev.argued_size_pct,
-                    })
-                    yield sse_json("agent_done", payload)
+                    }
+                    if ev.scripted:
+                        done["scripted"] = True  # DEF507
+                    yield sse_json("agent_done", json.dumps(done))
                 elif ev.kind == "verdict":
                     if ev.verdict is not None:
                         yield sse_json("verdict", ev.verdict.model_dump_json())

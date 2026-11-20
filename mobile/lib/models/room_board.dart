@@ -73,10 +73,15 @@ class RoomVoice {
     this.headline,
     this.stanceRecorded = false,
     this.withheld = false,
+    this.scripted = false,
   });
 
   final String agentId;
   final String content;
+
+  /// DEF507 — [content] is AMI's scripted standing guidance, not this desk's
+  /// own call. The row labels it; it is never presented as the desk speaking.
+  final bool scripted;
 
   /// `for` / `against` / `neutral`, or null for "stated no view".
   final String? stance;

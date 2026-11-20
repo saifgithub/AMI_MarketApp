@@ -104,6 +104,7 @@ class RoomState {
     this.liveDataNotice,
     this.withheldAgents = const {},
     this.agentStances = const {},
+    this.scriptedAgents = const {},
     this.creditCost,
     this.refunded = false,
     this.balanceAfter,
@@ -153,6 +154,13 @@ class RoomState {
   /// CR106 B2: agentId -> its stated position. Absent key = that agent has not
   /// finished yet; present with a null `stance` = it finished and stated none.
   final Map<String, AgentStance> agentStances;
+
+  /// DEF507 — desks whose turn is AMI's scripted standing guidance because the
+  /// desk's own call failed. Set off the wire's `scripted` flag (on the first
+  /// token, so the label is there while the text types) and rebuilt from the
+  /// snapshot on recovery. Absent flag (an older server) leaves a desk out, i.e.
+  /// reads as live.
+  final Set<String> scriptedAgents;
 
   /// CR236 — what this run actually cost, read back off the `done` event.
   /// Null means unknown: either the run has not finished, or the backend
@@ -225,6 +233,7 @@ class RoomState {
     RoomLiveDataNotice? liveDataNotice,
     Map<String, WithheldAgentInfo>? withheldAgents,
     Map<String, AgentStance>? agentStances,
+    Set<String>? scriptedAgents,
     int? creditCost,
     bool? refunded,
     int? balanceAfter,
@@ -252,6 +261,7 @@ class RoomState {
       liveDataNotice: liveDataNotice ?? this.liveDataNotice,
       withheldAgents: withheldAgents ?? this.withheldAgents,
       agentStances: agentStances ?? this.agentStances,
+      scriptedAgents: scriptedAgents ?? this.scriptedAgents,
       creditCost: creditCost ?? this.creditCost,
       refunded: refunded ?? this.refunded,
       balanceAfter: balanceAfter ?? this.balanceAfter,
@@ -352,6 +362,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
               transcript: next,
               order: order,
               activeAgent: agentId,
+              scriptedAgents: _scriptedWith(agentId, ev['scripted'] == true),
             );
             break;
           case 'agent_done':
@@ -376,7 +387,13 @@ class RoomNotifier extends StateNotifier<RoomState> {
                 // comb needs both facts and they are not the same (T-BACKFILL).
                 recorded: ev.containsKey('stance'),
               );
-              state = state.copyWith(activeAgent: null, agentStances: stances);
+              state = state.copyWith(
+                activeAgent: null,
+                agentStances: stances,
+                scriptedAgents: ev['scripted'] == true
+                    ? _scriptedWith(doneId, true)
+                    : null,
+              );
             } else {
               state = state.copyWith(activeAgent: null);
             }
@@ -595,6 +612,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
               transcript: next,
               order: order,
               activeAgent: agentId,
+              scriptedAgents: _scriptedWith(agentId, ev['scripted'] == true),
             );
             break;
           case 'agent_done':
@@ -611,7 +629,13 @@ class RoomNotifier extends StateNotifier<RoomState> {
                 headline: rawHeadline is String ? rawHeadline : null,
                 recorded: ev.containsKey('stance'),
               );
-              state = state.copyWith(activeAgent: null, agentStances: stances);
+              state = state.copyWith(
+                activeAgent: null,
+                agentStances: stances,
+                scriptedAgents: ev['scripted'] == true
+                    ? _scriptedWith(doneId, true)
+                    : null,
+              );
             } else {
               state = state.copyWith(activeAgent: null);
             }
@@ -717,6 +741,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
             verdict: snap.verdict,
             activeAgent: null,
             agentStances: rebuilt.stances,
+            scriptedAgents: rebuilt.scripted,
             // CR237 round 2 (auditor MAJOR-3) — the `done` event never
             // arrived on this path, so its flags come from the GET payload.
             creditCost: snap.creditCost,
@@ -737,6 +762,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
             transcript: rebuilt.transcript,
             order: rebuilt.order,
             agentStances: rebuilt.stances,
+            scriptedAgents: rebuilt.scripted,
             activeAgent: null,
           );
         }
@@ -769,6 +795,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
     Map<String, String> transcript,
     List<String> order,
     Map<String, AgentStance> stances,
+    Set<String> scripted,
   }) _rebuildFromSnapshot(RoomRunSnapshot snap) {
     final transcript = <String, String>{};
     final order = <String>[];
@@ -777,8 +804,10 @@ class RoomNotifier extends StateNotifier<RoomState> {
     // a dropped socket — the same shape as the locked chairs being dropped
     // below.
     final stances = <String, AgentStance>{};
+    final scripted = <String>{};
     for (final line in snap.transcript) {
       transcript[line.agentId] = line.content;
+      if (line.scripted) scripted.add(line.agentId);
       if (!order.contains(line.agentId)) order.add(line.agentId);
       stances[line.agentId] = AgentStance(
         stance: line.stance,
@@ -799,7 +828,23 @@ class RoomNotifier extends StateNotifier<RoomState> {
     final chairs =
         state.withheldAgents.keys.where((id) => !order.contains(id)).toList();
     order.insertAll(0, chairs);
-    return (transcript: transcript, order: order, stances: stances);
+    return (
+      transcript: transcript,
+      order: order,
+      stances: stances,
+      scripted: scripted,
+    );
+  }
+
+  /// DEF507 — [state.scriptedAgents] with [agentId] added or removed, or the
+  /// same instance when nothing changes (this runs once per streamed character).
+  Set<String> _scriptedWith(String agentId, bool scripted) {
+    if (state.scriptedAgents.contains(agentId) == scripted) {
+      return state.scriptedAgents;
+    }
+    final next = Set<String>.from(state.scriptedAgents);
+    scripted ? next.add(agentId) : next.remove(agentId);
+    return next;
   }
 }
 

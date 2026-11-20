@@ -3479,6 +3479,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomRowNoResponse => 'لا رد';
 
   @override
+  String get roomScriptedLabel =>
+      'Standing guidance: this desk didn\'t respond';
+
+  @override
+  String get roomScriptedNote =>
+      'AMI filled this turn with standing guidance because the desk\'s own call didn\'t come back. It is not this desk\'s live read.';
+
+  @override
+  String roomScriptedSemantic(String agent) {
+    return '$agent: standing guidance, not a live call. This desk didn\'t respond.';
+  }
+
+  @override
   String roomTranscriptHint(int count) {
     return '$count مساهمة · اضغط على أي سطر لقراءته كاملاً';
   }

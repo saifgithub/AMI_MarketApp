@@ -5871,6 +5871,24 @@ abstract class AppLocalizations {
   /// **'NO RESPONSE'**
   String get roomRowNoResponse;
 
+  /// DEF507 — the label on a Room desk's row whose turn is AMI's scripted standing guidance because the desk's own call failed (not the desk's live read). Shown as the collapsed row text, as a chip above the expanded turn, and on the live roster. Keep short. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Standing guidance: this desk didn\'t respond'**
+  String get roomScriptedLabel;
+
+  /// DEF507 — one-sentence explanation under the standing-guidance label when a scripted desk turn is expanded or peeked. Must say AMI, never 'the AI'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI filled this turn with standing guidance because the desk\'s own call didn\'t come back. It is not this desk\'s live read.'**
+  String get roomScriptedNote;
+
+  /// DEF507 — accessibility label for a desk whose turn is scripted standing guidance, so a screen reader is told what the label tells sighted users. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{agent}: standing guidance, not a live call. This desk didn\'t respond.'**
+  String roomScriptedSemantic(String agent);
+
   /// One-line hint above the collapsed rows.
   ///
   /// In en, this message translates to:

@@ -116,6 +116,7 @@ real thing. The less the system knows, the more assured it sounds.
 | **DEF123** | yfinance lacks a field (loss-making name, no `trailingPE`) | `_profile_for_ticker` pre-filled an rng-seeded value BEFORE the live fetch; a partial `dict.update` overlay left it in place while `data_source` flipped to `"yfinance_live"` for the whole profile — 178/842 (21.1%, 36 tickers) live-declared Room prompts carried a fabricated P/E, four agents rationalised it as real | the disclosure header itself, which said LIVE |
 | **DEF135** | the background audit watcher process died | the audit queue stopped being served for ~10 h; every board still read healthy, because a dead watcher and an empty queue are byte-identical from outside — the checkpoint memo recorded "queue is EMPTY", true when written and wrong 2 h later, and every later report inherited it | none: no lane, no exit-3 timeout, no error, no non-zero status anyone saw |
 | **DEF182** | `SECRET_KEY` rotated, or `ALPACA_ENCRYPTION_KEY` changed without a rollover | `decrypt_secret` returned the **ciphertext itself** on `InvalidToken` or a missing key, so the Alpaca client sent `gAAAAA…` as an API key; and with the dedicated key unset — the default, and the state Alpha ran in — the cipher key was silently derived from `SECRET_KEY`, so one secret both signed bearer tokens and protected broker secrets | a `warning` log line, and only at the moment of failure; the app then behaved as though the user's credential were simply wrong |
+| **DEF507** | a Room desk's own LLM call fails (CR219 R51 scripted fallback; Alpha run 1dec3be0 had 8 such desks) | the scripted standing-guidance turn ("BUY MSFT at $498.3. Stop $468.4") streamed as an ordinary `agent_token` and rendered as that desk's own call; the client never read `scripted_turns` from the verdict | none: R51's disclosure lived in the verdict reason, the row itself looked live |
 
 **The invariant.** *Degrade loudly, never confidently.* A degraded path must be visible to
 whoever depends on it — the user (honest copy), the operator (a distinct signal, not a log line
@@ -170,6 +171,16 @@ in a stream nobody tails), or the caller (an explicit status).
   whenever `SECRET_KEY` is set" is mutated toward on purpose and reds
   `test_a_dedicated_key_that_is_actually_dedicated_still_works`. If you are simplifying this check,
   that test is the one telling you not to.
+
+- DEF507 → **`backend/tests/unit/test_def507_scripted_turn_marked.py`** (backend) and
+  **`mobile/test/def507_scripted_turn_label_test.dart`** (app). Second instance of "fallback content
+  rendered as the real thing" at the Room (DEF059 was the verdict; this is the per-desk turn), and
+  the reason R51's disclosure missed it is structural: it was a sentence in the verdict, not a
+  property of the turn. The flag now rides the turn itself (`scripted` on `agent_token`/`agent_done`,
+  the stored transcript entry, both replays and the Journal snapshot), derived from the same
+  `ctx.scripted_turns` the R51 count reads, so the two cannot disagree. Backend test asserts the
+  marked set equals `Verdict.scripted_agents` on every emit path; the app test asserts the row says
+  "standing guidance" and does not quote the scripted text as the desk's gist.
 
 - CR037 / CR038 → **no guard yet; both undecided.** The measurement that would enforce them
   exists: the CR035 harness transcript audit (unhedged-assertion count over a ≥30-run batch).

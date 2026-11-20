@@ -6898,6 +6898,10 @@ class RoomEvent:
     # CR197 — the RISK debators' declared size, also 'agent_done' only. None for
     # every other agent, and for a debator that did not state one.
     argued_size_pct: float | None = None
+    # DEF507 — carried on 'agent_token' and 'agent_done': this desk's turn is
+    # the scripted standing-guidance text (the desk's LLM call failed, CR219
+    # R51), not a call the desk made. The client labels it as such.
+    scripted: bool = False
 
 
 PLAN_TO_TIER: dict[Plan, str] = {
@@ -7146,6 +7150,10 @@ def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCrea
                     # CR197 — frozen alongside them so a later audit can compare
                     # what each debator endorsed against the figure it was handed.
                     "argued_size_pct": m.argued_size_pct,
+                    # DEF507 — frozen so the Journal replay labels a scripted
+                    # standing-guidance turn the way the live Room did. Absent
+                    # on an older entry, which the replay reads as not scripted.
+                    "scripted": m.scripted,
                 } for m in run.transcript
             ],
         },
@@ -8690,6 +8698,7 @@ class RoomRunner:
                                 envelope=envelope,
                                 envelope_parsed=envelope_parsed,
                                 data_gaps=data_gaps,
+                                scripted=agent_id in ctx.scripted_turns,
                             ):
                                 yield ev
                     elif (
@@ -9850,6 +9859,7 @@ async def _typewriter(
     room_cap_s: float | None = None,
     sleep: Callable[[float], Awaitable[None]] | None = None,
     clock: Callable[[], float] = time.monotonic,
+    scripted: bool = False,
 ) -> AsyncIterator[RoomEvent]:
     """Yield character-by-character agent_token events (CR277 paced).
 
@@ -9881,6 +9891,7 @@ async def _typewriter(
             run_id=run_id,
             agent_id=agent_id,
             text=ch,
+            scripted=scripted,
         )
         due += d
         await sleep(max(0.0, start + due - clock()))
@@ -10296,6 +10307,7 @@ async def _stream_agent_text(
     envelope: "_StanceEnvelope | None" = None,
     envelope_parsed: bool | None = None,
     data_gaps: list[str] | None = None,
+    scripted: bool = False,
 ) -> AsyncIterator[RoomEvent]:
     """Stream an already-computed contribution: typewriter tokens, commit it to
     `run.transcript`, then emit `agent_done`.
@@ -10320,7 +10332,9 @@ async def _stream_agent_text(
             **geom_sig,
         )
 
-    async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
+    async for ev in _typewriter(
+        run_id, agent_id, text, char_delay_min, char_delay_max, scripted=scripted
+    ):
         yield ev
 
     env = envelope or _StanceEnvelope()
@@ -10338,6 +10352,7 @@ async def _stream_agent_text(
         # CR219 R53/R57 — see the docstring above for why these stop here.
         data_gaps=data_gaps,
         envelope_parsed=envelope_parsed,
+        scripted=scripted,
     ))
     await _checkpoint_run_async(run)  # incremental snapshot, off-loop (DEF444) — narrows data-loss window to ≤1 agent
     yield RoomEvent(
@@ -10348,6 +10363,7 @@ async def _stream_agent_text(
         conviction=env.conviction,
         headline=env.headline,
         argued_size_pct=env.size_pct,
+        scripted=scripted,
     )
 
 
@@ -10398,6 +10414,7 @@ async def _speak_one_agent(
         envelope=envelope,
         envelope_parsed=envelope_parsed,
         data_gaps=data_gaps,
+        scripted=agent_id in ctx.scripted_turns,
     ):
         yield ev
 
