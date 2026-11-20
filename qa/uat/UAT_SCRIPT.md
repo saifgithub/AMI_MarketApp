@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**302 cases** — 197 api, 20 device, 85 manual; 16 blocked.
+**303 cases** — 197 api, 20 device, 86 manual; 16 blocked.
 
 ## Areas
 
