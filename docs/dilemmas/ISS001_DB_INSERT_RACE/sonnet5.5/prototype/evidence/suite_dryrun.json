@@ -1,0 +1,792 @@
+{
+ "collidable_tables": [
+  "agent_activations",
+  "backtest_run_index",
+  "backtest_universe_membership",
+  "badges",
+  "career_events",
+  "client_release_floors",
+  "daily_challenge_attempts",
+  "edgar_8k_items",
+  "edgar_facts",
+  "game_duels",
+  "game_entries",
+  "game_fields",
+  "journal_entries",
+  "league_members",
+  "lessons_progress",
+  "mandates",
+  "news_archive",
+  "notification_preferences",
+  "notifications",
+  "overlay_edit_counts",
+  "persona_events",
+  "portfolio_nav_daily",
+  "portfolio_value_snapshots",
+  "price_history_daily",
+  "ratio_baselines",
+  "reputation_events",
+  "revenuecat_events",
+  "room_ratings",
+  "sim_holdings",
+  "sim_option_trades",
+  "sim_portfolios",
+  "sim_watchlists",
+  "social_sentiment_cache",
+  "streak_freezes",
+  "ticker_reference",
+  "ticker_splits",
+  "user_devices",
+  "user_overlays",
+  "users",
+  "verdict_outcomes"
+ ],
+ "schema_truth": [
+  "journal_entries.uq_journal_dedupe: nullable `dedupe_key` \u2014 rows with dedupe_key IS NULL are not deduplicated",
+  "sim_portfolios.uq_portfolio_user_kind_run: nullable `run_id` \u2014 rows with run_id IS NULL are not deduplicated",
+  "notifications.uq_notifications_dedupe: nullable `source_ref` \u2014 rows with source_ref IS NULL are not deduplicated",
+  "portfolio_nav_daily.uq_nav_user_run_date: nullable `run_id` \u2014 rows with run_id IS NULL are not deduplicated",
+  "career_events.uq_career_event_stipend_period: nullable `period_key` \u2014 rows with period_key IS NULL are not deduplicated",
+  "news_archive.uq_news_archive_item: nullable `url` \u2014 rows with url IS NULL are not deduplicated"
+ ],
+ "tripwire": {
+  "agent_activations": {
+   "app/services/lessons_service.py:830 grant_activation": 2,
+   "<test-only>": 6,
+   "app/services/lessons_service.py:713 _check_agent_unlocks": 4
+  },
+  "backtest_run_index": {
+   "<test-only>": 3
+  },
+  "backtest_universe_membership": {
+   "<test-only>": 5
+  },
+  "badges": {
+   "<test-only>": 1,
+   "app/services/reputation_service.py:455 _award_badge": 13
+  },
+  "career_events": {
+   "<test-only>": 14,
+   "app/services/career_ledger.py:129 post_career_event": 362
+  },
+  "client_release_floors": {
+   "app/services/client_release_floor.py:232 create_floor_raise": 6,
+   "<test-only>": 23
+  },
+  "daily_challenge_attempts": {
+   "<test-only>": 2,
+   "app/api/daily_challenge.py:190 attempt": 6
+  },
+  "edgar_8k_items": {
+   "<test-only>": 8
+  },
+  "edgar_facts": {
+   "<test-only>": 35
+  },
+  "game_duels": {
+   "app/services/games_duels.py:159 pair_field": 24,
+   "<test-only>": 15
+  },
+  "game_entries": {
+   "<test-only>": 141,
+   "app/services/games_service.py:857 enter_field": 443
+  },
+  "game_fields": {
+   "<test-only>": 89,
+   "app/services/games_service.py:435 ensure_field": 303
+  },
+  "journal_entries": {
+   "app/services/journal_store.py:171 append": 244,
+   "<test-only>": 122,
+   "app/api/portfolio.py:251 portfolio_health_finding": 13
+  },
+  "league_members": {
+   "app/services/league_service.py:141 weekly_roll": 6,
+   "app/services/league_service.py:211 _assemble_week": 5,
+   "<test-only>": 6
+  },
+  "lessons_progress": {
+   "app/services/lessons_service.py:624 submit_quiz": 18,
+   "<test-only>": 28,
+   "app/services/lessons_service.py:564 mark_started": 2
+  },
+  "mandates": {
+   "app/services/mandate_store.py:156 upsert": 158,
+   "<test-only>": 16
+  },
+  "notification_preferences": {
+   "app/services/notification_service.py:474 set_preferences": 3
+  },
+  "notifications": {
+   "<test-only>": 16,
+   "app/services/notification_service.py:116 notify": 126
+  },
+  "overlay_edit_counts": {
+   "app/services/overlay_store.py:227 save_new_version": 14,
+   "<test-only>": 2
+  },
+  "persona_events": {
+   "<test-only>": 1
+  },
+  "portfolio_nav_daily": {
+   "<test-only>": 682,
+   "app/services/portfolio_nav_daily.py:392 run_game_nav_snapshot_tick": 7,
+   "app/services/portfolio_nav_daily.py:220 run_portfolio_nav_snapshot_tick": 13
+  },
+  "portfolio_value_snapshots": {
+   "<test-only>": 21,
+   "app/services/portfolio_snapshot.py:209 run_portfolio_snapshot_tick": 20
+  },
+  "price_history_daily": {
+   "app/services/price_history.py:301 upsert_daily_bars": 30,
+   "<test-only>": 115,
+   "app/services/verdict_outcomes.py:469 score_pending": 3
+  },
+  "ratio_baselines": {
+   "app/services/ratio_baselines.py:87 record_observation": 113
+  },
+  "reputation_events": {
+   "<test-only>": 8,
+   "app/services/reputation_service.py:244 award": 41
+  },
+  "revenuecat_events": {
+   "app/api/webhooks.py:305 revenuecat_webhook": 32,
+   "<test-only>": 6
+  },
+  "room_ratings": {
+   "app/services/room_rating.py:73 set_rating": 7
+  },
+  "sim_holdings": {
+   "app/services/sim_engine.py:1876 _execute_fill": 441,
+   "<test-only>": 55,
+   "app/services/sim_engine.py:4099 _apply_option_settlement": 8
+  },
+  "sim_option_trades": {
+   "<test-only>": 14,
+   "app/services/sim_options.py:222 open_structure": 43
+  },
+  "sim_portfolios": {
+   "app/services/sim_engine.py:1014 ensure_portfolio": 1222,
+   "<test-only>": 89
+  },
+  "sim_watchlists": {
+   "app/services/watchlist_store.py:71 add": 57,
+   "<test-only>": 30
+  },
+  "social_sentiment_cache": {
+   "<test-only>": 1,
+   "app/services/social_context.py:231 _cache_write": 10
+  },
+  "streak_freezes": {
+   "app/services/reputation_service.py:352 freeze": 6
+  },
+  "ticker_reference": {
+   "<test-only>": 8783,
+   "app/services/ticker_reference.py:217 upsert_reference": 3
+  },
+  "ticker_splits": {
+   "<test-only>": 13,
+   "app/services/ticker_splits.py:105 upsert_splits": 4
+  },
+  "user_devices": {
+   "<test-only>": 21,
+   "app/services/auth_service.py:128 _upsert_user_device": 12
+  },
+  "user_overlays": {
+   "app/services/overlay_store.py:193 save_new_version": 37,
+   "<test-only>": 3
+  },
+  "users": {
+   "app/services/auth_service.py:462 ensure_anonymous": 923,
+   "<test-only>": 508,
+   "app/services/auth_service.py:828 sign_in_with_google": 10,
+   "app/services/auth_service.py:914 _claim_or_create": 10,
+   "app/services/auth_service.py:674 sign_in_with_apple": 11,
+   "app/services/games_desks.py:381 ensure_desk_users": 66,
+   "app/services/games_service.py:435 ensure_field": 1
+  },
+  "verdict_outcomes": {
+   "app/services/verdict_outcomes.py:289 bank_verdict_outcome": 272,
+   "<test-only>": 8
+  }
+ },
+ "observer": [
+  {
+   "table": "agent_activations",
+   "cols": [
+    "agent_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_activation_user_agent",
+   "site": "app/services/lessons_service.py:829 grant_activation",
+   "hits": 2
+  },
+  {
+   "table": "agent_activations",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/lessons_service.py:707 _check_agent_unlocks",
+   "hits": 4
+  },
+  {
+   "table": "backtest_universe_membership",
+   "cols": [
+    "ticker",
+    "universe_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_backtest_universe",
+   "site": "?",
+   "hits": 5
+  },
+  {
+   "table": "badges",
+   "cols": [
+    "badge_key",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_badge_user_key",
+   "site": "app/services/reputation_service.py:450 _award_badge",
+   "hits": 12
+  },
+  {
+   "table": "career_events",
+   "cols": [
+    "entry_id",
+    "reason"
+   ],
+   "status": "covered",
+   "arbiter": "uq_career_event_entry_reason",
+   "site": "app/services/career_ledger.py:128 post_career_event",
+   "hits": 362
+  },
+  {
+   "table": "career_events",
+   "cols": [
+    "period_key",
+    "reason",
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/career_ledger.py:128 post_career_event",
+   "hits": 168
+  },
+  {
+   "table": "career_events",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/career_ledger.py:128 post_career_event",
+   "hits": 132
+  },
+  {
+   "table": "client_release_floors",
+   "cols": [
+    "min_build"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/client_release_floor.py:231 create_floor_raise",
+   "hits": 6
+  },
+  {
+   "table": "daily_challenge_attempts",
+   "cols": [
+    "challenge_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_challenge_attempt_user",
+   "site": "app/api/daily_challenge.py:183 attempt",
+   "hits": 6
+  },
+  {
+   "table": "edgar_8k_items",
+   "cols": [
+    "accession_no",
+    "cik"
+   ],
+   "status": "covered",
+   "arbiter": "uq_edgar_8k_item",
+   "site": "?",
+   "hits": 3
+  },
+  {
+   "table": "game_duels",
+   "cols": [
+    "cadence",
+    "state"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_duels.py:218 pair_field",
+   "hits": 19
+  },
+  {
+   "table": "game_duels",
+   "cols": [
+    "cadence",
+    "state"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_duels.py:229 pair_field",
+   "hits": 27
+  },
+  {
+   "table": "game_duels",
+   "cols": [
+    "field_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_duels.py:218 pair_field",
+   "hits": 13
+  },
+  {
+   "table": "game_duels",
+   "cols": [
+    "field_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_duels.py:229 pair_field",
+   "hits": 13
+  },
+  {
+   "table": "game_entries",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_service.py:855 enter_field",
+   "hits": 443
+  },
+  {
+   "table": "game_fields",
+   "cols": [
+    "cadence",
+    "kind"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_service.py:434 ensure_field",
+   "hits": 118
+  },
+  {
+   "table": "game_fields",
+   "cols": [
+    "cadence",
+    "kind",
+    "starts_on"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/games_service.py:434 ensure_field",
+   "hits": 303
+  },
+  {
+   "table": "league_members",
+   "cols": [
+    "rank_final"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/league_service.py:213 _assemble_week",
+   "hits": 31
+  },
+  {
+   "table": "league_members",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/league_service.py:213 _assemble_week",
+   "hits": 31
+  },
+  {
+   "table": "leagues",
+   "cols": [
+    "week"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/league_service.py:210 _assemble_week",
+   "hits": 11
+  },
+  {
+   "table": "lessons_progress",
+   "cols": [
+    "lesson_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_lessons_user_lesson",
+   "site": "app/services/lessons_service.py:561 mark_started",
+   "hits": 2
+  },
+  {
+   "table": "lessons_progress",
+   "cols": [
+    "lesson_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_lessons_user_lesson",
+   "site": "app/services/lessons_service.py:616 submit_quiz",
+   "hits": 18
+  },
+  {
+   "table": "mandates",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/mandate_store.py:148 upsert",
+   "hits": 317
+  },
+  {
+   "table": "overlay_edit_counts",
+   "cols": [
+    "agent_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_overlay_count_user_agent",
+   "site": "app/services/overlay_store.py:224 save_new_version",
+   "hits": 13
+  },
+  {
+   "table": "portfolio_value_snapshots",
+   "cols": [
+    "portfolio_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "?",
+   "hits": 147
+  },
+  {
+   "table": "price_history_daily",
+   "cols": [
+    "ticker"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/price_history.py:279 upsert_daily_bars",
+   "hits": 2770
+  },
+  {
+   "table": "reputation_events",
+   "cols": [
+    "event_type",
+    "ref_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_reputation_event_dedup",
+   "site": "app/services/reputation_service.py:221 award",
+   "hits": 51
+  },
+  {
+   "table": "reputation_events",
+   "cols": [
+    "event_type",
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/reputation_service.py:221 award",
+   "hits": 6
+  },
+  {
+   "table": "reputation_events",
+   "cols": [
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/reputation_service.py:221 award",
+   "hits": 104
+  },
+  {
+   "table": "room_ratings",
+   "cols": [
+    "room_run_id"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/room_rating.py:72 set_rating",
+   "hits": 6
+  },
+  {
+   "table": "room_runs",
+   "cols": [
+    "id"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/room_runner.py:7017 _write_run_snapshot",
+   "hits": 269
+  },
+  {
+   "table": "sim_holdings",
+   "cols": [
+    "portfolio_id",
+    "ticker"
+   ],
+   "status": "covered",
+   "arbiter": "uq_holding_portfolio_ticker",
+   "site": "?",
+   "hits": 4
+  },
+  {
+   "table": "sim_option_legs",
+   "cols": [
+    "portfolio_id",
+    "right",
+    "state",
+    "underlying"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/sim_options.py:218 open_structure",
+   "hits": 44
+  },
+  {
+   "table": "sim_option_legs",
+   "cols": [
+    "portfolio_id",
+    "state"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/sim_options.py:218 open_structure",
+   "hits": 51
+  },
+  {
+   "table": "sim_option_trades",
+   "cols": [
+    "portfolio_id",
+    "status",
+    "verdict_ref"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/sim_options.py:194 open_structure",
+   "hits": 2
+  },
+  {
+   "table": "sim_portfolios",
+   "cols": [
+    "kind",
+    "run_id",
+    "user_id"
+   ],
+   "status": "VACUOUS",
+   "arbiter": null,
+   "site": "app/services/sim_engine.py:1013 ensure_portfolio",
+   "hits": 728
+  },
+  {
+   "table": "sim_portfolios",
+   "cols": [
+    "kind",
+    "run_id",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_portfolio_user_kind_run",
+   "site": "app/services/sim_engine.py:1013 ensure_portfolio",
+   "hits": 494
+  },
+  {
+   "table": "sim_short_positions",
+   "cols": [
+    "portfolio_id",
+    "state",
+    "ticker"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/sim_shorts.py:186 open_short",
+   "hits": 35
+  },
+  {
+   "table": "sim_watchlists",
+   "cols": [
+    "ticker",
+    "user_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_watchlist_user_ticker",
+   "site": "app/services/watchlist_store.py:69 add",
+   "hits": 57
+  },
+  {
+   "table": "streak_freezes",
+   "cols": [
+    "period_key",
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/reputation_service.py:347 freeze",
+   "hits": 7
+  },
+  {
+   "table": "subscription_events",
+   "cols": [
+    "event_type",
+    "from_value",
+    "to_value"
+   ],
+   "status": "NO-ARBITER",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:161 _log_adoption_event",
+   "hits": 15
+  },
+  {
+   "table": "ticker_splits",
+   "cols": [
+    "ticker"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/ticker_splits.py:106 upsert_splits",
+   "hits": 4
+  },
+  {
+   "table": "user_devices",
+   "cols": [
+    "device_install_id"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:119 _upsert_user_device",
+   "hits": 11
+  },
+  {
+   "table": "user_overlays",
+   "cols": [
+    "agent_id",
+    "user_id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/overlay_store.py:192 save_new_version",
+   "hits": 36
+  },
+  {
+   "table": "users",
+   "cols": [
+    "apple_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_users_apple_id",
+   "site": "app/services/auth_service.py:673 sign_in_with_apple",
+   "hits": 10
+  },
+  {
+   "table": "users",
+   "cols": [
+    "desk_key"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/games_desks.py:380 ensure_desk_users",
+   "hits": 66
+  },
+  {
+   "table": "users",
+   "cols": [
+    "email"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:673 sign_in_with_apple",
+   "hits": 4
+  },
+  {
+   "table": "users",
+   "cols": [
+    "email"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:827 sign_in_with_google",
+   "hits": 7
+  },
+  {
+   "table": "users",
+   "cols": [
+    "email"
+   ],
+   "status": "covered",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:913 _claim_or_create",
+   "hits": 10
+  },
+  {
+   "table": "users",
+   "cols": [
+    "google_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_users_google_id",
+   "site": "app/services/auth_service.py:827 sign_in_with_google",
+   "hits": 9
+  },
+  {
+   "table": "users",
+   "cols": [
+    "id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:673 sign_in_with_apple",
+   "hits": 11
+  },
+  {
+   "table": "users",
+   "cols": [
+    "id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:827 sign_in_with_google",
+   "hits": 10
+  },
+  {
+   "table": "users",
+   "cols": [
+    "id"
+   ],
+   "status": "PARTIAL-KEY",
+   "arbiter": null,
+   "site": "app/services/auth_service.py:913 _claim_or_create",
+   "hits": 7
+  },
+  {
+   "table": "verdict_outcomes",
+   "cols": [
+    "room_run_id"
+   ],
+   "status": "covered",
+   "arbiter": "uq_verdict_outcomes_room_run",
+   "site": "app/services/verdict_outcomes.py:288 bank_verdict_outcome",
+   "hits": 270
+  }
+ ]
+}
