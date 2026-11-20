@@ -606,7 +606,8 @@ def test_room_backup_also_failing_ends_in_outage_state_with_refund():
     assert v.action != VerdictAction.APPROVE.value  # never a default/approving verdict
     assert run.refund_recorded is True
     assert balance_for(user_id)[0] == before  # refunded through the existing path
-    assert run.verdict.llm_backup_used is True
+    # DEF505 — the backup answered nothing, so it is not credited with the Room.
+    assert run.verdict.llm_backup_used is False
 
 
 def test_room_with_no_backup_keeps_the_scripted_fallback_behaviour():
