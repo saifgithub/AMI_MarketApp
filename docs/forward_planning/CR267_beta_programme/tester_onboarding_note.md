@@ -1,6 +1,6 @@
 # AMI Trade Beta: tester onboarding note (WP-52, CR267)
 
-Written 2026-11-19 against `beta/cr267` at `c67aec83`. Menu paths come from `mobile/lib` screens and `app_en.arb` at that commit, including WP-30 (Export my data, Delete account), WP-38 (the `Ref:` line) and WP-21b. **Report this response** and the Room thumbs rating (WP-36) are built on `lane/WP36-beta-settings` and are not merged here, so the note says "coming in the next build"; re-word it when WP-36 lands. The support address is a placeholder until Saiful confirms it. The privacy paragraph follows the BETA DRAFT clauses in `legal/policies/privacy_policy.md` (v2.2, unpublished).
+Written 2026-11-19 against `beta/cr267` at `c67aec83`. Menu paths come from `mobile/lib` screens and `app_en.arb` at that commit, including WP-30 (Export my data, Delete account), WP-38 (the `Ref:` line) and WP-21b. **Report this response** and the Room thumbs rating (WP-36) are built on `lane/WP36-beta-settings` and are not merged here, so the note says "coming in the next build"; re-word it when WP-36 lands. Four checks fixed 2026-11-20 (founder rulings, "I fix, you skim"): server location is neutral until gate S4 is decided (marked `<!-- S4 -->`); the privacy link is the live canonical page (v2.1); the experimental label follows the app disclaimer; the support address is `support.ai@agenticmarketintel.ai`, still to confirm. The privacy paragraph follows the BETA DRAFT clauses in `legal/policies/privacy_policy.md` (v2.2, unpublished), so it can say more than the live v2.1 page.
 
 Parts 1 to 3 are for testers. Part 4 is for Saiful only.
 
@@ -8,7 +8,7 @@ Parts 1 to 3 are for testers. Part 4 is for Saiful only.
 
 ## 1. Tester note
 
-Word count: 503 (this section, headings included).
+Word count: 544 (this section, headings included).
 
 ### Welcome to the AMI Trade Beta
 
@@ -16,7 +16,7 @@ AMI Trade is a place to practise making and defending trading decisions. You set
 
 ### What is simulated
 
-Everything. No real money moves, no real orders are placed, and nothing in the app is investment advice. A Room verdict is the output of a training exercise, checked against your mandate. The Room is experimental: it can be slow, wrong or inconsistent, and we want to hear when it is.
+Everything. AMI Trade is an experimental training simulator. It is simulation-only and is not investment advice. No real money moves and no real orders are placed. A Room verdict is the output of a training exercise, checked against your mandate. The Room is experimental: it can be slow, wrong or inconsistent, and we want to hear when it is.
 
 ### How to start
 
@@ -39,22 +39,22 @@ In **YOU** > **SETTINGS** > **ACCOUNT**:
 
 ### What we collect
 
-As a guest, an anonymous ID tied to what you create in the app: chats with AMI, journal entries, Room analyses and simulated trades. If you sign in, we also hold the email and name Apple or Google share and a sign-in identifier; we never see your password. Bug reports carry your text, category, the screen, app version, platform and any photo you attach. We also record device model, OS and app version, crash diagnostics, and basic request data such as your IP address. We do not collect advertising IDs, location, contacts or your photo library. Servers are in Singapore. Apple, Google, RevenueCat, Sentry, OneSignal and contracted AI infrastructure providers process data for us only to run the service. We do not sell it or use it for advertising. The full policy is at agenticmarketintel.ai/privacy.
+As a guest, an anonymous ID tied to what you create in the app: chats with AMI, journal entries, Room analyses and simulated trades. If you sign in, we also hold the email and name Apple or Google share and a sign-in identifier; we never see your password. Bug reports carry your text, category, the screen, app version, platform and any photo you attach. We also record device model, OS and app version, crash diagnostics, and basic request data such as your IP address. We do not collect advertising IDs, location, contacts or your photo library. Beta servers are in Asia; the exact location is confirmed before Beta opens. <!-- S4: replace with the chosen host location once gate S4 is decided --> Apple, Google, RevenueCat, Sentry, OneSignal and contracted AI infrastructure providers process data for us only to run the service. We do not sell it or use it for advertising. The full policy is at https://www.agenticmarketintel.ai/privacy/
 
 ### Contact
 
-`<support address — Saiful to confirm>`
+support.ai@agenticmarketintel.ai
 
 ---
 
 ## 2. TestFlight "What to Test"
 
-Character count: 1859 (limit 4000).
+Character count: 2004 (limit 4000).
 
 ```text
 AMI Trade Beta: practise making and defending trading decisions.
 
-Everything is simulated. No real money, no real orders, no investment advice. The Room, a simulated desk of AMI analysts, is experimental: it can be slow or wrong, and that is what we want to find out.
+AMI Trade is an experimental training simulator. It is simulation-only and is not investment advice. No real money, no real orders. The Room, a simulated desk of AMI analysts, is experimental: it can be slow or wrong, and that is what we want to find out.
 
 PLEASE TRY
 1. First run: tick "I am 18 or older", finish the short interview with AMI and set your mandate.
@@ -72,10 +72,10 @@ HOW TO REPORT A PROBLEM
 4. Say which ticker and which Room it was.
 
 WHAT WE COLLECT
-An anonymous ID tied to your chats, journal, Room analyses and simulated trades. If you sign in, the email and name Apple or Google share. Device model, OS and app version, crash diagnostics and basic request data. No advertising IDs, location or contacts. Not sold, not used for advertising. Delete or export your data any time from YOU > SETTINGS > ACCOUNT. Full policy: agenticmarketintel.ai/privacy
+An anonymous ID tied to your chats, journal, Room analyses and simulated trades. If you sign in, the email and name Apple or Google share. Device model, OS and app version, crash diagnostics and basic request data. No advertising IDs, location or contacts. Not sold, not used for advertising. Delete or export your data any time from YOU > SETTINGS > ACCOUNT. Beta servers are in Asia (exact location confirmed before Beta opens). <!-- S4 --> Full policy: https://www.agenticmarketintel.ai/privacy/
 
 SUPPORT
-<support address — Saiful to confirm>
+support.ai@agenticmarketintel.ai
 
 Thank you for testing.
 ```
@@ -84,10 +84,10 @@ Thank you for testing.
 
 ## 3. Play closed-testing release notes
 
-Character count: 421 (limit 500).
+Character count: 447 (limit 500).
 
 ```text
-AMI Trade Beta. Practise making and defending trading decisions with a simulated desk of AMI analysts (the Room, experimental). Everything is simulated: no real money, no real orders, no advice.
+AMI Trade Beta, an experimental training simulator. Practise making and defending trading decisions with a simulated desk of AMI analysts (the Room). Simulation-only: no real money, no real orders, not investment advice.
 
 Try: onboarding, a Room on a ticker you know, a simulated trade, a lesson, sign-in. Report problems from YOU > SETTINGS > HELP > Report a problem, and include any "Ref:" code. Export or delete your data in SETTINGS > ACCOUNT.
 ```
@@ -102,7 +102,7 @@ Nothing below has been done. Steps, in order:
 
 **A. Choose the address**
 
-1. Decide the Beta support address. Default: reuse `support.ai@agenticmarketintel.ai`, since the website already points there. Tell Claude the final address and the placeholder in this file gets replaced.
+1. Confirm the Beta support address is `support.ai@agenticmarketintel.ai`. It is the address the website footer, the support knowledge base and the Resend sender already use, so the note now uses it. If you want a different one, tell Claude and all WP-52 texts get changed together.
 
 **B. Inbound: the mailbox**
 
@@ -130,8 +130,8 @@ Nothing below has been done. Steps, in order:
 
 **E. Before the note goes to testers**
 
-1. Replace `<support address — Saiful to confirm>` in the note, the TestFlight text and (if wanted) the Play text.
-2. Confirm "Servers are in Singapore" is true on the day. Privacy draft clause 8A says the Singapore host is planned and not yet provisioned; reword the sentence if the Beta is still on melehost.
-3. The note links `agenticmarketintel.ai/privacy`. The published page is the older v2.1; the Beta wording (v2.2) is an unpublished draft, and publishing it needs counsel and the 14-day notice (clause 16). Decide whether to link the published page or hold the link.
+1. The support address is filled in (see A). Skim it once.
+2. Server location: the note says "Beta servers are in Asia; the exact location is confirmed before Beta opens". Gate S4 is open. Once S4 is picked, replace that sentence (search for `<!-- S4`) in the note and the TestFlight text.
+3. The note links the live canonical policy, `https://www.agenticmarketintel.ai/privacy/` (v2.1, effective 2026-09-25). The Beta wording (v2.2) is an unpublished draft; publishing it needs counsel and the 14-day notice (clause 16). The link stays the same when v2.2 goes live.
 4. TestFlight: App Store Connect > the app > TestFlight > Test Information > "What to Test", paste part 2. Play Console > Testing > Closed testing > the release > Release notes, paste part 3 (if the console asks for language tags, wrap it as `<en-US>` ... `</en-US>`).
 5. When WP-36 merges, tell Claude to change "Coming in the next build" to the real labels.

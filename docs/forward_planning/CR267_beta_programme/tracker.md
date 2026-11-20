@@ -51,7 +51,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-49 | Company-account migration (CR258) | WP-00 · S7 | in progress | 2026-11-20 | | | Prep only; release waits for go. Accounts enrolled but clean (founder, 2026-11-20). Config in `mobile/beta_accounts.env`; decision: new IDs; 23-step console checklist in `CR258_company_account_migration/wp49_prep_2026-11-20.md`. |
 | WP-50 | Store records + listing | WP-29/36/49 | not started | | | | |
 | WP-51 | Website waitlist | WP-00 | done | 2026-11-19 | 2026-11-20 | `588fb4bf` | Deployed 2026-11-20: WEBSITE_ADMIN_SECRET set in alpha.env, api-website rebuilt, cPanel rsynced. Admin export 403 without the secret, 200 with it. The deploy exposed DEF510 (table owner), fixed. |
-| WP-52 | Tester note + support inbox | WP-00 | in progress | 2026-11-19 | | `c9858a84` | Tester note + TestFlight/Play texts + 3 manual entries (CR022). Support mailbox steps for Saiful in part 4. Open: Singapore claim, privacy link version, 'experimental' label. |
+| WP-52 | Tester note + support inbox | WP-00 | in progress | 2026-11-19 | | `c9858a84` | Tester note + TestFlight/Play texts + 3 manual entries (CR022). Support mailbox steps for Saiful in part 4. Four checks fixed 2026-11-20; founder skims; mailbox to confirm (`support.ai@`). |
 | WP-53 | Exit-criteria report | WP-36, WP-46 · S9 | not started | | | | |
 | WP-54 | Beta go-live | see plan | not started | | | | |
 
