@@ -3560,5 +3560,7 @@
     "settingsRiskLimitsUseProfile": "Guna profil risiko saya",
     "settingsRiskLimitsSetByYouRow": "Ditetapkan oleh anda",
     "roomBankedUnchanged": "Inputs unchanged since your last run on {date} — showing that Room. No credits used.",
-    "roomBankedUnchangedNoDate": "Inputs unchanged since your last run — showing that Room. No credits used."
+    "roomBankedUnchangedNoDate": "Inputs unchanged since your last run — showing that Room. No credits used.",
+    "settingsRiskLimitsRetroSingleName": "Had satu nama {cap}%: {offenders}",
+    "settingsRiskLimitsRetroSector": "Had sektor {cap}%: {offenders}"
 }

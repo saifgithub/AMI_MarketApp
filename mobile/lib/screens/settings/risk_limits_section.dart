@@ -573,6 +573,15 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
   }
 }
 
+/// DEF514 — the risk-limit keys whose save triggers the holdings audit: the
+/// two BE2 limits and the two concentration caps.
+const Set<String> kRetroAuditedLimitKeys = {
+  'max_open_positions',
+  'max_open_risk_pct',
+  'single_name_cap_pct',
+  'sector_cap_pct',
+};
+
 /// Retro-tightening disclosure (assign §3): shown after a successful save
 /// that made `GET /v1/mandate/{id}/audit` report a new portfolio-level
 /// breach. There is no preview-the-candidate-mandate endpoint (BL12's own
@@ -582,20 +591,35 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
 /// nothing changed. Disclosed in the CR101-MOBILE bridge as a measured
 /// deviation from the assign's "before saving" wording.
 class RetroTighteningDialog extends StatelessWidget {
-  const RetroTighteningDialog({super.key, required this.tickers});
+  const RetroTighteningDialog({super.key, required this.tickers, this.audit});
 
   final List<String> tickers;
 
-  static Future<void> show(BuildContext context, List<String> tickers) {
+  /// DEF514: the audit, for the concentration-cap lines (offender, weight and
+  /// the cap it breaches). Null keeps the ticker-only disclosure.
+  final HoldingsAuditResult? audit;
+
+  static Future<void> show(
+    BuildContext context,
+    List<String> tickers, {
+    HoldingsAuditResult? audit,
+  }) {
     return showDialog<void>(
       context: context,
-      builder: (_) => RetroTighteningDialog(tickers: tickers),
+      builder: (_) => RetroTighteningDialog(tickers: tickers, audit: audit),
     );
   }
+
+  static String _pct(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final a = audit;
+    final style = AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber);
+    final singleCap = a?.singleNameCapPct;
+    final sectorCap = a?.sectorCapPct;
     return AlertDialog(
       backgroundColor: AmiColors.slate800,
       title: Text(l.settingsRiskLimitsRetroTitle, style: AmiTypography.h4),
@@ -606,9 +630,34 @@ class RetroTighteningDialog extends StatelessWidget {
           Text(l.settingsRiskLimitsRetroBody, style: AmiTypography.body),
           if (tickers.isNotEmpty) ...[
             const SizedBox(height: AmiSpacing.s),
+            Text(l.settingsRiskLimitsRetroTickers(tickers.join(', ')),
+                style: style),
+          ],
+          if (a != null && a.singleNameCapBreach && singleCap != null) ...[
+            const SizedBox(height: AmiSpacing.s),
             Text(
-              l.settingsRiskLimitsRetroTickers(tickers.join(', ')),
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
+              l.settingsRiskLimitsRetroSingleName(
+                _pct(singleCap),
+                a.singleNameBreaches
+                    .map((b) => '${b.name} ${b.weightPct.toStringAsFixed(1)}%')
+                    .join(', '),
+              ),
+              key: const Key('retroSingleNameLine'),
+              style: style,
+            ),
+          ],
+          if (a != null && a.sectorCapBreach && sectorCap != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              l.settingsRiskLimitsRetroSector(
+                _pct(sectorCap),
+                a.sectorBreaches
+                    .map((b) => '${b.name} ${b.weightPct.toStringAsFixed(1)}%'
+                        '${b.tickers.isEmpty ? '' : ' (${b.tickers.join(', ')})'}')
+                    .join(', '),
+              ),
+              key: const Key('retroSectorLine'),
+              style: style,
             ),
           ],
         ],

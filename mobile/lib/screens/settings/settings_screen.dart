@@ -348,18 +348,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Sim portfolio's compliance evaluation depends on the mandate —
     // refresh so any newly-rejectable holdings show up correctly.
     await ref.read(simNotifierProvider.notifier).refresh();
-    // CR101-MOBILE retro-tightening (assign §3): only `max_open_positions`
-    // and `max_open_risk_pct` have a portfolio-state dimension at all. No
-    // preview endpoint exists (BL12's audit reads the CURRENTLY PERSISTED
-    // mandate), so this necessarily runs immediately after the save, not
-    // before it — disclosed in the bridge.
-    final touchedRetroFields = touchedRiskLimits.keys
-        .where((k) => k == 'max_open_positions' || k == 'max_open_risk_pct');
+    // CR101-MOBILE retro-tightening (assign §3), widened by DEF514 to every
+    // limit with a portfolio-state dimension: the two BE2 limits count open
+    // positions and open risk, and the two concentration caps are measured
+    // against current holdings (the trade ticket refuses on them), so
+    // tightening one can leave holdings already over it. The trade-pace and
+    // cooldown limits have no holdings-side reading. No preview endpoint
+    // exists (BL12's audit reads the CURRENTLY PERSISTED mandate), so this
+    // necessarily runs immediately after the save, not before it — disclosed
+    // in the bridge.
+    final touchedRetroFields =
+        touchedRiskLimits.keys.where(kRetroAuditedLimitKeys.contains);
     if (touchedRetroFields.isEmpty || !mounted) return;
     try {
       final audit = await ref.read(apiClientProvider).auditMandateHoldings(m.userId);
       if (!audit.anyRetroBreach || !mounted) return;
-      await RetroTighteningDialog.show(context, audit.violationTickers);
+      // The concentration breaches carry their own offender lines; the plain
+      // ticker list stays for the two BE2 breaches it was written for.
+      final listTickers =
+          audit.maxOpenPositionsBreach || audit.maxOpenRiskPctBreach
+              ? audit.violationTickers
+              : const <String>[];
+      await RetroTighteningDialog.show(context, listTickers, audit: audit);
     } catch (_) {
       // DEF194 — the swallow itself stays (a failed audit read must not
       // block or misrepresent a save that already succeeded), but silence

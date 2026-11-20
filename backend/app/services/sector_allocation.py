@@ -240,6 +240,56 @@ def sector_cap_breach(
     return None
 
 
+@dataclass(frozen=True)
+class HeldSectorBreach:
+    """A sector the CURRENT holdings already hold over the mandate cap (DEF514)."""
+
+    sector: str
+    weight: float
+    cap: float
+    tickers: tuple[str, ...]
+
+
+def held_sector_breaches(
+    *,
+    holdings: Iterable[Any],
+    quotes: dict[str, float],
+    sector_map: Any,
+    cap: float,
+    portfolio_value: float,
+) -> list[HeldSectorBreach]:
+    """Sectors whose weight of the CURRENT portfolio is over `cap` (0.0-1.0).
+
+    The holdings-side sibling of `sector_cap_breach` (which judges a proposed BUY):
+    same resolver, same `_sector_values` aggregation, same `portfolio_value`
+    denominator, same "Other"/"Cash" never breach rule. A cap of 1.0 or more
+    permits any weight, so it never breaches (the Day Trader preset sets 100%).
+    The denominator never drops below the invested total, so a stale short
+    `portfolio_value` cannot push a weight past 100%. Largest sector first."""
+    resolver = getattr(sector_map, "sector", None)
+    if not callable(resolver) or cap >= 1.0:
+        return []
+    values = _sector_values(holdings, quotes, resolver)
+    total = max(float(portfolio_value or 0.0), sum(values.values()))
+    if total <= 0:
+        return []
+    q = {str(k).upper().strip(): v for k, v in (quotes or {}).items()}
+    members: dict[str, list[str]] = {}
+    for h in holdings or ():
+        t = _ticker_of(h)
+        if t and (q.get(t) or 0) > 0 and _qty_of(h) > 0:
+            members.setdefault(_resolve_sector(resolver, t), []).append(t)
+    out = [
+        HeldSectorBreach(
+            sector=sec, weight=val / total, cap=cap,
+            tickers=tuple(sorted(set(members.get(sec, ())))),
+        )
+        for sec, val in values.items()
+        if sec not in NON_SECTOR_BUCKETS and val / total > cap + 1e-9
+    ]
+    return sorted(out, key=lambda b: b.weight, reverse=True)
+
+
 # ── ticker → sector resolver (reads the stored snapshot, never a socket) ──────
 
 

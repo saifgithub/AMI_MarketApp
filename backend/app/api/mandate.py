@@ -44,6 +44,7 @@ from app.services.entitlements import effective_plan_for_user
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore, get_mandate_store
+from app.services.sector_allocation import default_sector_map_async
 from app.services.sharia_universe import default_halal_universe_async
 from app.services.ticker_reference import lookup_ticker
 from app.services.sim_engine import (
@@ -539,4 +540,5 @@ async def audit_holdings(
         mandate=mandate,
         halal_universe=await default_halal_universe_async(),
         existing_open_risk_pct=existing_open_risk_pct,
+        sector_map=await default_sector_map_async(),
     )

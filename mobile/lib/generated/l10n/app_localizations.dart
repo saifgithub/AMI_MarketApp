@@ -3202,7 +3202,7 @@ abstract class AppLocalizations {
   /// **'100% removes any real ceiling from this limit — allowed, but it means no protection here.'**
   String get settingsRiskLimitsDisclosure100;
 
-  /// CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — the only two of the seven fields with a portfolio-state dimension (BE2 bridge judgment call 3). retranslate:[ar,ms]
+  /// CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — max_open_positions_breach, max_open_risk_pct_breach, single_name_cap_breach or sector_cap_breach (DEF514: the two concentration caps are measured against current holdings too, so a tightened cap that holdings already breach discloses here). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'Some holdings now breach this limit'**
@@ -3219,6 +3219,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flagged: {tickers}'**
   String settingsRiskLimitsRetroTickers(String tickers);
+
+  /// DEF514 — retro-tightening dialog line naming the holdings already over the user's single-name cap. {cap} is the cap in percent without a percent sign (e.g. 3 or 3.5). {offenders} is a comma-joined list of 'TICKER weight%' pairs, e.g. 'NFLX 46.5%, AAPL 12.0%' — tickers and numbers stay verbatim. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Single-name cap {cap}%: {offenders}'**
+  String settingsRiskLimitsRetroSingleName(String cap, String offenders);
+
+  /// DEF514 — retro-tightening dialog line naming the sectors already over the user's sector cap. {cap} is the cap in percent without a percent sign. {offenders} is a comma-joined list of 'Sector weight% (TICKERS)' items, e.g. 'Communication Services 45.0% (GOOGL, NFLX)' — sector names are GICS labels, tickers and numbers stay verbatim. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sector cap {cap}%: {offenders}'**
+  String settingsRiskLimitsRetroSector(String cap, String offenders);
 
   /// CR101-MOBILE retro-tightening dialog dismiss CTA. retranslate:[ar,ms]
   ///
