@@ -98,3 +98,10 @@ ssh melehost 'cd ~/cr267_wp20 && rm -f STOP && setsid nohup bash wp20_driver.sh 
 
 Note: a resumed driver measures arm 1's wall from the resume, so the arm 2 gate then underestimates; check
 `logs/arm1.log` start and end times by hand.
+
+## Code freeze (2026-11-20 12:05Z)
+
+1. The first launch ran `docker compose run api-alpha` from `~/ami_trade`. That directory is bind-mounted into the container (`backend/app` and the `/harness` repo copy), and its image tag is rebuilt on every deploy, so any Alpha deploy during the 40 h matrix would have changed the Room mid-run. Once WP-24 shipped, rep 2 could have returned rep 1's banked Room.
+2. The run was stopped after 2 arm-1 Rooms (both on `d739d8e8`, kept; the harness resumes past them). It was then restarted on a frozen copy, `~/cr267_wp20/frozen/` (rsync of `~/ami_trade` at `d739d8e8`, minus host data dirs), using the pinned image `ami-wp20:d739d8e8` through `docker-compose.wp20.yml` (in `docs/tools/room_investigation_V2/tools/`). `wp20_run.sh` now runs compose from the frozen directory with project `ami-trade-local`, so it shares the live network and database.
+3. The driver's arm-1 wall time undercounts by the two pre-restart Rooms and one failed relaunch (the frozen `.env` was briefly mode 600). For the arm-2 estimate, read `logs/arm1.log` by hand.
+4. When WP-20 finishes, delete `~/cr267_wp20/frozen/`: it holds a copy of `.env`.

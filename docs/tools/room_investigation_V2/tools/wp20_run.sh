@@ -14,16 +14,16 @@ set -uo pipefail
 LABEL=$1; BENCH=$2; CONC=$3; CARDS=${4:-false}
 W=$HOME/cr267_wp20
 VLLM=http://192.168.20.74:8000
-cd ~/ami_trade
+cd $W/frozen
 PGPW=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
 [ -n "$PGPW" ] || { echo "POSTGRES_PASSWORD missing"; exit 1; }
 mkdir -p "$W/out/$LABEL" "$W/logs"; chmod -R a+rwx "$W/out"
 root() { curl -s -m 10 "$VLLM/v1/models" | python3 -c "import sys,json;print(','.join(sorted({m.get('root','?') for m in json.load(sys.stdin)['data']})))"; }
 ROOT0=$(root) || { echo "vLLM unreachable"; exit 1; }
-echo "=== $LABEL start $(date -u +%FT%TZ) bench=$BENCH conc=$CONC cards=$CARDS model_root=$ROOT0 git=$(docker exec ami_api_alpha printenv GIT_SHA)"
+echo "=== $LABEL start $(date -u +%FT%TZ) bench=$BENCH conc=$CONC cards=$CARDS model_root=$ROOT0 git=d739d8e8-frozen"
 echo "$ROOT0" > "$W/out/$LABEL/model_root_start.txt"
-docker compose run --rm --no-deps --name "wp20_$LABEL" --entrypoint python \
-  -v "$HOME/ami_trade:/harness:ro" -v "$W/bench:/bench:ro" -v "$W/out:/out" \
+docker compose -p ami-trade-local -f docker-compose.yml -f docker-compose.wp20.yml run --rm --no-deps --name "wp20_$LABEL" --entrypoint python \
+  -v "$W/frozen:/harness:ro" -v "$W/bench:/bench:ro" -v "$W/out:/out" \
   -e "DATABASE_URL=postgresql+psycopg2://postgres:$PGPW@postgres:5432/ami_trade" \
   -e "VLLM_BASE_URL=$VLLM" -e VLLM_MODEL=ami-llm \
   -e USE_REAL_MARKET_DATA=true \

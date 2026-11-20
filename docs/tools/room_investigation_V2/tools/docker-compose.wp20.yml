@@ -1,0 +1,5 @@
+# CR267 WP-20: pin the baseline to the deploy-#10 image (d739d8e8) so later Alpha deploys cannot change the Room mid-matrix.
+services:
+  api-alpha:
+    image: ami-wp20:d739d8e8
+    pull_policy: never
