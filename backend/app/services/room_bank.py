@@ -46,10 +46,10 @@ from typing import Any, Callable
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
+from app.db.ami_claim import claim
 from app.db.models import RoomFactSheetRow, RoomRunRow
 from app.schemas import AgentId
 from app.schemas.mandate import Mandate
@@ -162,22 +162,20 @@ def freeze_fact_sheet(
         return FrozenSheet(profile, None, trading_date, variant)
 
     sheet_hash = _sha256(canonical)
-    try:
-        with get_session() as s:
-            s.add(RoomFactSheetRow(
-                ticker=sym, trading_date=trading_date, variant=variant,
-                sheet=json.loads(canonical), sheet_hash=sheet_hash,
-            ))
-    except IntegrityError:
-        winner = _read_sheet(sym, trading_date, variant)
-        if winner is None:
-            raise
+    with get_session() as s:
+        claimed = claim(
+            s,
+            RoomFactSheetRow,
+            key={"ticker": sym, "trading_date": trading_date, "variant": variant},
+            values={"sheet": json.loads(canonical), "sheet_hash": sheet_hash},
+        )
+        stored, stored_hash = claimed.row.sheet, claimed.row.sheet_hash
+    if not claimed.created:
         logger.info(
             "room_fact_sheet_race_lost",
-            ticker=sym, trading_date=trading_date.isoformat(), outcome="re-read the winner's sheet",
+            ticker=sym, trading_date=trading_date.isoformat(), outcome="read the winner's sheet",
         )
-        return FrozenSheet(decode_profile(winner[0]), winner[1], trading_date, variant)
-    return FrozenSheet(decode_profile(json.loads(canonical)), sheet_hash, trading_date, variant)
+    return FrozenSheet(decode_profile(stored), stored_hash, trading_date, variant)
 
 
 def _read_sheet(
