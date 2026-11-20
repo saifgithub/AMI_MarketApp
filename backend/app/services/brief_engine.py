@@ -30,6 +30,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.core.config import settings
 from app.core.logging import logger
 from app.schemas import AgentId, Mandate, agent_display_name
 from app.schemas.brief import (
@@ -295,6 +296,11 @@ class BriefEngine:
         # Only swapped while nothing else has been yielded yet — mirrors
         # MINOR-2's `if not buf` semantics for a mid-stream failure below.
         buf: list[str] = []
+        # CR271 — in `enforce` mode the reply is held until the output text
+        # guard has judged it, so a withhold is real (the sentinel is the only
+        # thing the user is sent). In `log`/`off` it streams live as before.
+        hold = settings.output_guard_mode == "enforce"
+        held: list[str] = []
         had_stream_error = bool(meta and meta.get("stream_error"))
         try:
             async for chunk in self._llm.stream_chat(
@@ -315,7 +321,10 @@ class BriefEngine:
                     if not buf:
                         chunk = canned_agent_fallback(agent_id)
                 buf.append(chunk)
-                yield chunk
+                if hold:
+                    held.append(chunk)
+                else:
+                    yield chunk
         except Exception as exc:  # pragma: no cover — defensive, mirrors _stream_concierge
             logger.warn(
                 "brief_llm_failed", agent_id=agent_id_str, error=str(exc)[:200],
@@ -323,7 +332,10 @@ class BriefEngine:
             if meta is not None:
                 meta["stream_error"] = f"{type(exc).__name__}: {exc}"[:400]
             if not buf:
-                yield canned_agent_fallback(agent_id)
+                if hold:
+                    held.append(canned_agent_fallback(agent_id))
+                else:
+                    yield canned_agent_fallback(agent_id)
             else:
                 # DEF424 post-COMPLETE MINOR-2 — the provider had already
                 # streamed real content before dying mid-reply. The `if not
@@ -333,24 +345,32 @@ class BriefEngine:
                 # cut off or that the turn wasn't charged. This turn IS
                 # refunded (same `stream_error` write above, same key
                 # `brief.py` already reads) — the line below only says so.
-                yield (
+                lost = (
                     "\n\n— AMI lost the connection mid-reply; this turn "
                     "wasn't charged."
                 )
+                if hold:
+                    held.append(lost)
+                else:
+                    yield lost
 
-        # CR271 — the output text guard. Brief streams live tokens, so the
-        # reply is already on the user's screen: it cannot be withheld here,
-        # only logged (`already_streamed=true`) and, in enforce mode, retracted
-        # by a trailing AMI line. Restructuring Brief to buffer is not this CR.
+        # CR271 — the output text guard. In `enforce` mode the reply was held
+        # above, so a withhold replaces it outright and an overlong reply is
+        # trimmed. In `log` mode the tokens already reached the screen: the hit
+        # is logged `already_streamed=true` and nothing is retracted.
         guard = output_guard.inspect(
             "".join(buf),
             surface="brief",
             agent_id=agent_id_str,
-            already_streamed=True,
+            already_streamed=not hold,
             user_message=user_message,
         )
-        if guard.withhold:
-            yield output_guard.retraction_notice(guard)
+        if hold:
+            if guard.withhold:
+                yield output_guard.withheld_notice(guard, "reply")
+            else:
+                reply = "".join(held)
+                yield output_guard.trim_to_cap(reply) if guard.trim else reply
 
     # ── propose: turn conversation into structured proposal ────────────
 

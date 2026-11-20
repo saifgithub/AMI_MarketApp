@@ -38,8 +38,10 @@ emits one structured `output_guard_hit` event per hit and changes no text;
 `enforce` additionally sets `GuardResult.withhold` when an ENFORCING rule hit and
 `GuardResult.trim` when `runaway_length` hit.
 The CALLER decides what withholding means on its surface (the Room desk turn
-takes the scripted-fallback path, the verdict narrative and 1-on-1 reply become
-a labelled AMI sentinel); this module only decides and logs.
+takes the scripted-fallback path, which DEF507 labels as scripted; the verdict
+narrative and the 1-on-1, Concierge and Brief replies become a labelled AMI
+sentinel, Brief holding its reply in `enforce` mode so nothing flagged reaches
+the screen); this module only decides and logs.
 
 Logging never carries the full text: only the surface, rule, mode, agent/run ids
 and a matched span truncated to `SPAN_LOG_CHARS`.
@@ -111,6 +113,7 @@ _NO_PRECEDING = r"(?<!\bno\s)(?<!\bnot\s)(?<!\bnever\s)(?<!\bwithout\s)(?<!\bnon
 
 _ADVICE_PATTERNS = [
     # "you should buy", "you shouldn't sell", "you really must go long"
+    rf"(?<!\bif\s)(?<!\bunless\s)(?<!\bwhether\s)(?<!\bwhen\s)"
     rf"\byou\s+(?:really\s+|definitely\s+|absolutely\s+)?"
     rf"(?:should(?:n['’]t|\s+not)?|must|ought\s+to|need\s+to|have\s+to|had\s+better"
     rf"|better|['’]d\s+better)\s+(?:\w+\s+){{0,1}}?{_ACT}\b",
@@ -129,6 +132,7 @@ _ADVICE_PATTERNS = [
     # CR271 replay: "once guaranteed returns" is a past-tense verb; the
     # regulated-utility term of art is exempted in `check` (_REGULATED_CONTEXT).
     rf"{_NO_PRECEDING}(?<!\bonce\s)(?<!\bformerly\s)(?<!\bpreviously\s)"
+    r"(?<!\bnot\sa\s)(?<!\bnot\san\s)(?<!\bnot\sthe\s)(?<!\bnot\sany\s)(?<!n['’]t\sa\s)(?<!n['’]t\san\s)"
     r"\bguaranteed?\s+(?:returns?|profits?|gains?)\b",
     # WP-13b: "which stock can't lose" is the user's question quoted back, and
     # "a stock can't lose" is a generic claim; neither promises anything.
@@ -305,7 +309,8 @@ _REPLY_TICKET_PATTERNS = [
     r"\b(?:shares?|qty|quantity)\s*[:=]\s*\d",
     # percent / dollar allocation
     r"\b\d+(?:\.\d+)?\s*%\s+(?:of\s+)?(?:your\s+|the\s+|my\s+)?(?:funds?|capital|portfolio|bonus|"
-    r"savings|cash|account|money|balance|net\s+worth|equity)\b",
+    r"savings|cash|account|money|balance|net\s+worth|equity)\b"
+    r"(?!\s+(?:drawdowns?|loss(?:es)?|declines?|drops?|swings?|volatility|returns?|gains?|risk))",
     r"\b(?:buy|allocate|put|invest|deploy|sell|trim|stake)\b[^.\n]{0,30}\b\d+(?:\.\d+)?\s*%",
     r"\b(?:size|sizing|stance|allocation|weight)\s*[:=]\s*\d",
     r"\b(?:buy|invest|put|allocate|deploy|sell|spend)\s+(?:about\s+|around\s+|roughly\s+)?(?:\$|rm)\s?\d",
@@ -365,10 +370,33 @@ def _personal_user_cue(user_message: str) -> str:
     return ""
 
 
+_OPT_WORDS = r"(?:BUY|SELL|HOLD|PASS|WAIT|APPROVE|BELI|JUAL|TAHAN)"
+_OPT_JOIN = r"(?:/|,|&|\bor\b|\band\b|\batau\b|\bdan\b|أو)"
+_OPT_BEFORE = re.compile(
+    rf"(?:{_OPT_WORDS}\W{{0,4}}{_OPT_JOIN}\W{{0,4}}|\beither\W{{0,3}})\Z", re.IGNORECASE
+)
+_OPT_AFTER = re.compile(rf"\A\W{{0,4}}{_OPT_JOIN}\W{{0,4}}{_OPT_WORDS}\b", re.IGNORECASE)
+
+
+def _is_option_or_quote(text: str, m: re.Match[str]) -> bool:
+    """True when a stance word is one of a LIST of options ("BUY or HOLD",
+    "either APPROVE or PASS": the reply is describing what it could say) or sits
+    inside a double-quoted example (say "BUY" for a name): neither is a ticket."""
+    before = text[max(0, m.start() - 16):m.start()]
+    after = text[m.end():m.end() + 16]
+    if _OPT_BEFORE.search(before) or _OPT_AFTER.search(after):
+        return True
+    line_start = max(text.rfind("\n", 0, m.start()) + 1, m.start() - 200)
+    seg = text[line_start:m.start()]
+    return seg.count('"') % 2 == 1 or seg.count("“") > seg.count("”")
+
+
 def _ticket_reply_cue(text: str) -> re.Match[str] | None:
     """The first ticket/directive in the reply, or None."""
     for i, pat in enumerate(_REPLY_TICKET):
         for m in pat.finditer(text):
+            if i != 1 and _is_option_or_quote(text, m):
+                continue
             if i >= _TICKET_ALWAYS:
                 start = max(text.rfind(c, 0, m.start()) for c in ".!?\n") + 1
                 if _DISCLAIMER.search(text, start, m.start()):
@@ -396,7 +424,12 @@ _ABUSE_PATTERNS = [
     r"\bch[i1]nks?\b",
     r"\btrann(?:y|ies)\b",
     r"\bwetbacks?\b",
-    r"\bretard(?:ed|s)?\b",
+    # "retard" is also a verb ("accelerate or retard the thesis") and "retarded
+    # by" a participle. The adjective hits unless followed by "by"; the noun
+    # after an article/intensifier, or "you retard" ending the clause.
+    r"\bretarded\b(?!\s+by\b)",
+    r"\b(?:a|an|such\s+a|total|complete|utter|absolute|stupid|fucking)\s+retards?\b",
+    r"\byou\s+retards?\b(?!\s+\w)",
     # Direct insults at the user.
     r"\byou(?:['’]re|\s+are)\s+(?:a\s+|an\s+|such\s+a\s+|such\s+an\s+|so\s+|really\s+|just\s+)?"
     r"(?:stupid|dumb|idiot|moron|imbecile|worthless|pathetic|useless)\b",
@@ -474,7 +507,11 @@ def _is_quoted_mention(text: str, m: re.Match[str]) -> bool:
         m.start() > 0
         and text[m.start() - 1] in _OPEN_QUOTES
         and m.end() < len(text)
-        and text[m.end()] in _CLOSE_QUOTES
+        and (
+            text[m.end()] in _CLOSE_QUOTES
+            or (text[m.end()] in ",.;:!?" and m.end() + 1 < len(text)
+                and text[m.end() + 1] in _CLOSE_QUOTES)
+        )
     )
 
 
@@ -624,17 +661,3 @@ def withheld_notice(result: GuardResult, noun: str) -> str:
         f"AMI withheld this {noun} because it read as personal advice. AMI is a "
         "training simulator and does not give investment advice."
     )
-
-
-def retraction_notice(result: GuardResult) -> str:
-    """For a surface that streams live tokens (Brief): the text is already on
-    the user's screen and cannot be withheld, so AMI says so in a trailing line
-    instead of pretending. Same two causes as `withheld_notice`."""
-    if {h.rule for h in result.enforcing_hits} & _ADVICE_LIKE:
-        why = (
-            "it read as personal advice, which AMI does not give (AMI is a "
-            "training simulator)"
-        )
-    else:
-        why = "it contained language AMI does not allow"
-    return f"\n\n— AMI flags the reply above: {why}. Please disregard it."

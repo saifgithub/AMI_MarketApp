@@ -674,11 +674,22 @@ def test_brief_streams_live_so_hit_is_logged_already_streamed(monkeypatch):
     assert ev["surface"] == "brief" and ev["already_streamed"] is True
 
 
-def test_brief_enforce_cannot_withhold_but_appends_a_retraction(monkeypatch):
+def test_brief_enforce_holds_the_reply_and_sends_only_the_sentinel(monkeypatch):
     monkeypatch.setattr(settings, "output_guard_mode", "enforce")
-    chunks = _drive_brief(ADVICE_TEXT)
-    assert "".join(chunks).startswith(ADVICE_TEXT)
-    assert len(chunks) == 3 and "AMI flags the reply above" in chunks[-1]
+    with structlog.testing.capture_logs() as logs:
+        chunks = _drive_brief(ADVICE_TEXT)
+    out = "".join(chunks)
+    assert len(chunks) == 1 and out.startswith("AMI withheld this reply")
+    assert "You should buy" not in out
+    (ev,) = [e for e in logs if e["event"] == "output_guard_hit"]
+    assert ev["already_streamed"] is False and ev["withheld"] is True
+
+
+def test_brief_enforce_trims_a_runaway_reply_once_held(monkeypatch):
+    monkeypatch.setattr(settings, "output_guard_mode", "enforce")
+    monkeypatch.setattr(settings, "output_guard_max_turn_words", 50)
+    out = "".join(_drive_brief(" ".join(["Steady note."] * 200)))
+    assert out.endswith(output_guard.TRIM_NOTE) and len(out.split()) < 80
 
 
 def test_brief_clean_reply_gets_no_notice(monkeypatch):
