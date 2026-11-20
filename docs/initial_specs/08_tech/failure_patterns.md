@@ -2433,3 +2433,33 @@ allowlist is empty and meant to stay so), and drives the locked-agent sheet's
 GO TO LESSONS to prove it sets `activeTabProvider` rather than pushing.
 Covers LessonsScreen only; the next tab-level screen to be mis-pushed gets its
 own line in the same test, not a new pattern.
+
+---
+
+## P41 — a typed value reaches the fact sheet; the stored-sheet codec's hand-kept registry does not hear about it, and fixtures never carry real-data types
+
+**Class:** the Room's fact sheet is persisted (CIO-retry snapshot since CR237, the
+frozen daily sheet since CR267 WP-24) through a codec that refused any type it had
+not been told about. Telling it was a hand-edited registry in another file. A CR
+that put a new typed object on the sheet had to remember a second edit elsewhere,
+and the unit suite's sheets are plain dicts, so it could not notice. The write
+fails at runtime, loudly in the log and silently to the user (no retry offered; no
+Room banked).
+
+**Instances.** CR237 round 3 (U66 MAJOR-B): `LiveHeadline`, `DividendGrowth`,
+`BuybackPrice` — the snapshot write itself raised. CR247 Phase 1B: `PutCallRatio`,
+added to the registry in the same change only because its author remembered.
+DEF512 (2026-11-20): CR253's `RatioBaseline` was never registered; on Alpha every
+convene logged `room_fact_sheet_not_freezable` then `room_bank_degraded`, so no Room
+was ever banked and WP-24's "same inputs, same Room, free" never fired.
+
+**Why the first guard failed.** The codec's refusal of unknown types (CR237) was the
+right idea, but it fired only at runtime on the real sheet, and no test built a real
+sheet. "Refuse loudly" caught the bug on Alpha, not in CI.
+
+**Enforcing check:** `backend/tests/unit/test_def512_frozen_sheet_real_shape.py`
+builds the sheet through production `_profile_for_ticker` with every optional block
+populated, then asserts every value encodes and decodes to itself, and that freeze
+then thaw gives byte-identical desk prompts for all twelve desks. The codec itself no
+longer needs a registry line for an `app.` dataclass, NamedTuple or Enum; a type
+from outside `app.` (or a dict with non-string keys) still fails that test.

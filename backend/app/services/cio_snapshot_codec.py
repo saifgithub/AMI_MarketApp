@@ -16,13 +16,26 @@ bool/None) and tags the few typed values it knows how to rebuild;
 fail loudly (the run is then not offered a retry) instead of coming back as a
 different type on the retry path. Only the classes in `_RECORD_TYPES` are
 ever instantiated from stored data.
+
+DEF512 — the registry used to be the only way in, so a typed value added to the
+sheet without a registry line (CR253's `RatioBaseline`) made every freeze and
+every CIO snapshot fail on live Alpha while unit fixtures, which never carry
+real-data types, stayed green. Any dataclass or NamedTuple defined under `app.`,
+and any `Enum` defined under `app.`, now encodes under its dotted path
+(`app.services.x:Name`) and is rebuilt by importing that path. The decode side
+accepts only a class that is a dataclass, NamedTuple or Enum and whose module
+starts with `app.`: stored data can never name an arbitrary callable. Types from
+anywhere else are still refused. The four short-named records below stay
+registered so rows written before DEF512 keep decoding.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import importlib
 import json
 import math
+from enum import Enum
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -45,7 +58,55 @@ _RECORD_TYPES: dict[str, type] = {
 }
 
 
+_APP_PREFIX = "app."
+
+
+def _dotted(cls: type) -> str:
+    return f"{cls.__module__}:{cls.__qualname__}"
+
+
+def _is_namedtuple(value: Any) -> bool:
+    return isinstance(value, tuple) and hasattr(type(value), "_fields")
+
+
+def _auto_record_tag(value: Any) -> str | None:
+    """The dotted tag for an `app.` dataclass / NamedTuple / Enum instance."""
+    cls = type(value)
+    if not cls.__module__.startswith(_APP_PREFIX) or "<locals>" in cls.__qualname__:
+        return None
+    if isinstance(value, Enum) or _is_namedtuple(value):
+        return _dotted(cls)
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return _dotted(cls)
+    return None
+
+
+def _resolve_auto(tag: str) -> type:
+    module_name, _, qualname = tag.partition(":")
+    if not module_name.startswith(_APP_PREFIX) or not qualname:
+        raise ValueError(f"cio snapshot: unknown tag {tag!r}")
+    obj: Any = importlib.import_module(module_name)
+    for part in qualname.split("."):
+        obj = getattr(obj, part)
+    ok = isinstance(obj, type) and (
+        issubclass(obj, Enum)
+        or dataclasses.is_dataclass(obj)
+        or (issubclass(obj, tuple) and hasattr(obj, "_fields"))
+    )
+    if not ok or obj.__module__ != module_name:
+        raise ValueError(f"cio snapshot: tag {tag!r} is not a rebuildable record type")
+    return obj
+
+
 def _encode(value: Any, path: str) -> Any:
+    if isinstance(value, Enum):
+        tag = _auto_record_tag(value)
+        if tag is None:
+            raise TypeError(
+                f"cio snapshot: {type(value).__module__}.{type(value).__name__} at {path} "
+                "has no JSON encoding"
+            )
+        return {TAG: tag, "v": _encode(value.value, f"{path}.value")}
     if value is None or isinstance(value, (bool, str)):
         return value
     if type(value).__module__ == "numpy" and hasattr(value, "item"):
@@ -70,19 +131,31 @@ def _encode(value: Any, path: str) -> Any:
             out[k] = _encode(v, f"{path}.{k}")
         return out
     name = type(value).__name__
-    if _RECORD_TYPES.get(name) is type(value):
+    tag = name if _RECORD_TYPES.get(name) is type(value) else _auto_record_tag(value)
+    if tag is not None:
         if dataclasses.is_dataclass(value):
+            if any(not f.init for f in dataclasses.fields(value)):
+                raise TypeError(
+                    f"cio snapshot: {type(value).__module__}.{name} at {path} has "
+                    "init=False fields and cannot be rebuilt"
+                )
             fields = {f.name: getattr(value, f.name) for f in dataclasses.fields(value)}
         else:
             fields = value._asdict()
         return {
-            TAG: name,
+            TAG: tag,
             "v": {k: _encode(v, f"{path}.{k}") for k, v in fields.items()},
         }
     if isinstance(value, list):
         return [_encode(v, f"{path}[{i}]") for i, v in enumerate(value)]
     if type(value) is tuple:
         return {TAG: "tuple", "v": [_encode(v, f"{path}[{i}]") for i, v in enumerate(value)]}
+    if type(value) in (set, frozenset):
+        items = sorted(
+            (_encode(v, f"{path}{{}}") for v in value),
+            key=lambda e: json.dumps(e, sort_keys=True, separators=(",", ":")),
+        )
+        return {TAG: type(value).__name__, "v": items}
     raise TypeError(
         f"cio snapshot: {type(value).__module__}.{name} at {path} has no JSON encoding"
     )
@@ -107,9 +180,15 @@ def _decode(value: Any) -> Any:
         return date.fromisoformat(raw)
     if tag == "tuple":
         return tuple(_decode(v) for v in raw)
+    if tag == "set":
+        return {_decode(v) for v in raw}
+    if tag == "frozenset":
+        return frozenset(_decode(v) for v in raw)
     cls = _RECORD_TYPES.get(tag)
     if cls is None:
-        raise ValueError(f"cio snapshot: unknown tag {tag!r}")
+        cls = _resolve_auto(tag)
+    if issubclass(cls, Enum):
+        return cls(_decode(raw))
     return cls(**{k: _decode(v) for k, v in raw.items()})
 
 
