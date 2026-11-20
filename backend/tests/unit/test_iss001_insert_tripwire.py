@@ -195,7 +195,7 @@ def _app_sources() -> list[tuple[Path, str]]:
 
 def test_every_unclaimed_call_carries_a_reason_and_the_count_is_pinned():
     """`unclaimed()` is the one in-code escape hatch. Count the calls from the AST (a literal
-    count, not an inference), so a new one is a visible diff. Phase 1 uses none: pre-control
+    count, not an inference), so a new one is a visible diff. The one site: the NULL-bank_key room_runs insert (DEF499/WP-24); pre-control
     sites ride INSERT_BASELINE."""
     calls = []
     for path, src in _app_sources():
@@ -208,7 +208,7 @@ def test_every_unclaimed_call_carries_a_reason_and_the_count_is_pinned():
                 ok = isinstance(why, ast.Constant) and isinstance(why.value, str) and why.value.strip()
                 assert ok, f"{path.name}:{node.lineno}: unclaimed() without a literal non-empty why="
                 calls.append((path.name, node.lineno))
-    assert len(calls) == 0, f"unclaimed() count changed to {len(calls)} — update this pin deliberately: {calls}"
+    assert [c[0] for c in calls] == ["room_runner.py"], f"unclaimed() sites changed — update this pin deliberately: {calls}"
 
 
 def test_session_merge_is_banned_in_app_code():

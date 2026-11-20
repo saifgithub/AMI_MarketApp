@@ -63,6 +63,7 @@ from app.core.logging import logger
 from app.services import output_guard
 from app.core.time import now_utc, relative_day_phrase
 from app.db import get_session, init_schema
+from app.db.ami_claim import Collision, claim, unclaimed
 from app.db.models import BacktestRunIndexRow, RoomRunRow
 from app.services.asof_context import AsOfContext, asof_scope
 from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
@@ -7027,13 +7028,38 @@ def _snapshot_run(run: RoomRun) -> tuple[int, dict[str, Any]]:
     }
 
 
+def _insert_run_row(s: Any, snap: dict[str, Any]) -> None:
+    key = snap.get("bank_key")
+    if key is not None:
+        claimed = claim(
+            s,
+            RoomRunRow,
+            key={"bank_key": key},
+            values={k: v for k, v in snap.items() if k != "bank_key"},
+        )
+        if claimed.created:
+            return
+        logger.warning(
+            "room_bank_key_conflict_unbanked",
+            run_id=str(snap["id"]),
+            outcome="written without a bank key; this Room will not be handed to a later convene",
+        )
+        snap = {**snap, "bank_key": None}
+    with unclaimed(
+        RoomRunRow,
+        why="bank_key is NULL, which the unique index treats as distinct, and the id is a fresh uuid: this row cannot collide",
+    ):
+        s.add(RoomRunRow(**snap))
+        s.flush()
+
+
 def _upsert_run_row(run_id: UUID, snap: dict[str, Any]) -> None:
     with get_session() as s:
         row = s.execute(
             select(RoomRunRow).where(RoomRunRow.id == run_id)
         ).scalar_one_or_none()
         if row is None:
-            s.add(RoomRunRow(**snap))
+            _insert_run_row(s, snap)
         else:
             for key, value in snap.items():
                 if key not in ("id", "user_id", "triggered_at"):
@@ -7053,11 +7079,12 @@ def _write_run_snapshot(seq: int, snap: dict[str, Any]) -> None:
         try:
             _upsert_run_row(run_id, snap)
         except IntegrityError:
-            # CR267 WP-24 — the only unique column on this table is `bank_key`,
-            # so a collision means another Room already holds this run's key
-            # (a restart on the backup model landing on a key that is already
-            # banked). The Room is not wrong, just not bankable: write it
-            # without the key, and say so.
+            # CR267 WP-24 — only the UPDATE of a reserved row lands here (a new
+            # row's key collision is `claim()`ed in `_insert_run_row`). The only
+            # unique column is `bank_key`, so a collision means another Room
+            # already holds this run's key (a restart on the backup model
+            # landing on a key that is already banked). The Room is not wrong,
+            # just not bankable: write it without the key, and say so.
             if snap.get("bank_key") is None:
                 raise
             logger.warning(
@@ -8071,18 +8098,21 @@ class RoomRunner:
         """INSERT the running row that holds `key`, BEFORE anything is charged.
 
         The unique index on `bank_key` is what makes two concurrent identical
-        convenes one Room: the loser's INSERT fails here, with nothing spent, and
+        convenes one Room: the loser's claim() finds the winner's row, with nothing spent, and
         it is handed the winner (reattach if still running, banked if finished).
         Returns None when this call now holds the key, else `(run_id, banked)`
-        of the Room that does. If the holder vanished between the failed INSERT
+        of the Room that does. If the holder vanished between the lost claim
         and the read (it failed and released the key) the INSERT is retried
         once, then the failure is raised.
         """
         now = datetime.now(timezone.utc)
         for attempt in (1, 2):
-            try:
-                with get_session() as s:
-                    s.add(RoomRunRow(
+            with get_session() as s:
+                claimed = claim(
+                    s,
+                    RoomRunRow,
+                    key={"bank_key": key},
+                    values=dict(
                         id=run_id,
                         user_id=user_id,
                         ticker=ticker.upper(),
@@ -8095,22 +8125,22 @@ class RoomRunner:
                         verdict=None,
                         credit_cost=0,
                         status="running",
-                        bank_key=key,
                         bank_inputs=parts,
-                    ))
+                    ),
+                )
+            if claimed.created:
                 return None
-            except IntegrityError:
-                holder = self._lookup_bank(key)
-                if holder is not None:
-                    logger.info(
-                        "room_bank_key_race_lost",
-                        user_id=str(user_id), ticker=ticker,
-                        holder_run_id=str(holder[0]),
-                        outcome="banked" if holder[1] else "reattached",
-                    )
-                    return holder
-                if attempt == 2:
-                    raise
+            holder = self._lookup_bank(key)
+            if holder is not None:
+                logger.info(
+                    "room_bank_key_race_lost",
+                    user_id=str(user_id), ticker=ticker,
+                    holder_run_id=str(holder[0]),
+                    outcome="banked" if holder[1] else "reattached",
+                )
+                return holder
+            if attempt == 2:
+                raise Collision(f"room_runs bank_key {key[:12]} held by a row that vanished twice")
         return None
 
     def _finalize_reservation(

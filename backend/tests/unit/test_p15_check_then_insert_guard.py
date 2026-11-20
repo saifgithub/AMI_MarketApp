@@ -61,10 +61,6 @@ _MODELS = _BACKEND / "app" / "db" / "models.py"
 _HANDLED_AT_CALLER = {
     ("price_history.py", "upsert_daily_bars", "PriceHistoryDailyRow"),
     ("ticker_reference.py", "upsert_reference", "TickerReferenceRow"),
-    # CR267 WP-24: `room_runs.bank_key` is now UNIQUE. The caller,
-    # `_write_run_snapshot`, catches IntegrityError and rewrites the row without
-    # the key (outcome: the Room runs, unbanked, and is logged).
-    ("room_runner.py", "_upsert_run_row", "RoomRunRow"),
 }
 #
 # DEF220's original six are GONE from this set because they were fixed, each with
