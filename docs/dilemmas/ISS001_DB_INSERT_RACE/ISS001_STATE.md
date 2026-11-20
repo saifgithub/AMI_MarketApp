@@ -1,7 +1,7 @@
 # ISS001 — state of the exercise
 
-**Last updated:** 2026-08-16 · **Status:** three submissions in, **field kept open for a 4th
-contributor** · **CR185**
+**Last updated:** 2026-11-20 · **Status:** four submissions in, **judging done — see [`VERDICT.md`](VERDICT.md)**
+(winner `sonnet5.5`; implementation = new CR, DEF308 unfreeze is Saiful's call) · **CR185**
 
 This is the resume point. Read it first, then only what it points you at. It exists because ISS001
 spans sessions: contributors arrive days apart and judging happens later still.
@@ -26,9 +26,10 @@ The exercise asks several agents, blind to each other, what would actually stop 
 | Brief + invite written | ✅ `fca69ce3` |
 | Convening agent's own solution (written before anyone was invited) | ✅ `opus5.0/`, `842798eb` |
 | Contributors invited by Saiful | `gemini-3.6-flash`, `kimi-k2` |
-| Submissions landed | **3 of 3** — committed `0d5ff502` |
-| Judging | **not started — field stays open.** Saiful's call 2026-08-16: wants a 4th contributor before judging opens. No `VERDICT.md` exists |
-| The 11 DEF308 sites | **FROZEN** — Saiful's ruling, 2026-08-15 |
+| Submissions landed | **4 of 4** — three at `0d5ff502`; `sonnet5.5/` the 4th (written after DEF499, read its symptom text) |
+| Judging | **DONE 2026-11-20** by a delegated judge agent. Ranking: sonnet5.5 > kimi-k2 > opus5.0 > gemini-3.6-flash. [`VERDICT.md`](VERDICT.md) |
+| Implementation CR | **not minted.** Phase 0 (DEF499 migration) and Phase 1 (observe-only control) touch no frozen site; Phase 3 needs the unfreeze |
+| The DEF308 sites | **FROZEN** — Saiful's ruling, 2026-08-15. Now **9** pinned (apple/google fixed under DEF416). Verdict recommends unfreezing after Phase 1 lands (founder's call) |
 
 **Nobody has been asked to judge.** The invite deliberately never asks a contributor for a verdict —
 a contributor who ranks the others has read the others, which is the one thing the invite forbids.
@@ -125,7 +126,7 @@ migrations before the auth sites can be fixed at all.
   proving ground for whatever wins. Holds until he picks a winner or reopens it.
 - **Never edit another contributor's folder.** `gemini-3.6-flash/` and `kimi-k2/` are read-only to
   the convening agent, as `opus5.0/` is to them.
-- **Do not write `VERDICT.md` until Saiful says judging starts.**
+- ~~Do not write `VERDICT.md` until Saiful says judging starts.~~ Written 2026-11-20 (delegated judging).
 - The AST guard (`backend/tests/unit/test_p15_check_then_insert_guard.py`) stays exactly as-is; its
   `_UNREVIEWED` pin is what freezes the 11 sites.
 
@@ -160,3 +161,5 @@ migrations before the auth sites can be fixed at all.
 | `fca69ce3` | Dilemma protocol + ISS001 brief + invite prompt |
 | `842798eb` | `opus5.0/` solution + prototype + measurements |
 | `0d5ff502` | `kimi-k2/` and `gemini-3.6-flash/` submissions, plus the §5 correction to the brief |
+
+| (verdict) | `VERDICT.md` on branch `lane/iss001-verdict`, tag `(AT:B1 DEF499)` |
