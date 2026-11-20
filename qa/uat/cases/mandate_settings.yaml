@@ -13,6 +13,11 @@ summary: |
   writable by its owner, entitlement fields cannot be set from a PATCH, rollback is
   forward-only and restores the old values, and a compliance setting actually stops
   a non-compliant trade in the deterministic safety floor (not just in a prompt).
+  DEF481 (2026-11-20): the Day Trader preset also sets risk tolerance 5, a short-term
+  horizon, the active path and the largest drawdown, and its chip can be deselected
+  (UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
+  or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
+  tier picker (UAT-MAND-035).
 cases:
   - id: UAT-MAND-001
     title: A new user's mandate is the documented default, stamped with live plan state
@@ -25,6 +30,7 @@ cases:
       - 'plan "trader", a positive credit_balance equal to credit_allowance, room_cost and credits_reset_at set (read from the user, not the stored mandate)'
       - 'resolved carries all seven concrete limits (sector_cap_pct, single_name_cap_pct, max_open_positions, post_loss_cooldown_hours, max_trades_per_day, max_trades_per_week, max_open_risk_pct), none null'
       - 'day_trader_preset.overrides holds the seven permissive values and a non-empty disclosure'
+      - 'day_trader_preset.profile holds risk_score 5, horizon "short", path "active" and max_drawdown_pct 100 (DEF481, 2026-11-20), and none of those keys is in overrides'
       - 'No version history exists yet'
 
   - id: UAT-MAND-002
@@ -143,11 +149,13 @@ cases:
       - 'PATCH halal true'
       - 'PATCH the mandate with day_trader_preset.overrides exactly as served by GET'
       - 'GET the mandate and history'
+      - 'PATCH day_trader_preset.overrides plus day_trader_preset.profile together exactly as served by GET (what the app sends on Save, DEF481)'
       - 'PATCH the seven fields back to null'
     expected:
       - 'After the preset, resolved shows sector_cap_pct 100, single_name_cap_pct 100, post_loss_cooldown_hours 0, max_open_risk_pct 100 and max_open_positions / max_trades_per_day / max_trades_per_week 999999'
       - 'compliance.halal is still true (the preset cannot touch compliance)'
       - 'The newest history summary starts "Day Trader preset applied"'
+      - 'The combined overrides + profile PATCH is 200, is journalled the same way, and the mandate then reads risk_score 5, horizon short, path active, max_drawdown_pct 100 (DEF481, 2026-11-20)'
       - 'Setting the seven back to null returns resolved to the risk-profile values (single_name_cap_pct 3.0, sector_cap_pct 40.0 for risk 3)'
 
   - id: UAT-MAND-012
@@ -291,11 +299,16 @@ cases:
     steps:
       - 'Settings > RISK LIMITS > "Set my own limits"'
       - 'Set a tighter single-name cap than one of the current holdings and save'
-      - 'Choose the Day Trader preset'
+      - 'Choose the Day Trader preset, confirm the disclosure, then press Save'
+      - 'Tap the Day Trader chip again (it is selected), then press Save'
     expected:
-      - 'Each limit shows "Following your risk profile" with the resolved number until the user sets their own; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)'
+      - 'A limit that follows the profile shows the selected chip "From your risk profile" with the resolved number; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)'
+      - 'A limit the user set shows "Set by you" under it and its chip reads "Use my risk profile" (tapping it clears the limit); no row ever shows both "From your risk profile" and "Set by you". "Set by you - overrides your risk profile" appears once above the rows (DEF481, 2026-11-20)'
+      - 'The status line under the dial is "Following your risk profile", "Custom" or the Day Trader line, matching the rows'
       - 'Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders'
       - 'The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing'
+      - 'Confirming the preset also moves the risk dial to the highest level (5), sets Horizon to short term, Path to active and Max drawdown to 100%, all unsaved until Save (DEF481, 2026-11-20); the disclosure says so'
+      - 'Tapping the selected Day Trader chip shows no dialog and sets the seven limits back to following the risk profile; risk level, horizon, path and drawdown stay as they were. After Save the chip is no longer selected'
 
   - id: UAT-MAND-032
     title: Compliance toggles stop a trade in the app
@@ -339,6 +352,7 @@ cases:
     expected:
       - 'Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button'
       - 'Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button'
+      - 'Manage account opens the subscription tier picker (the same sheet as Membership > Upgrade; while store billing is off it shows "Upgrades aren''t available yet"), not the sign-in screen; Sign in for a guest still opens sign-in (DEF481, 2026-11-20)'
 
   - id: UAT-MAND-036
     title: Discarding unsaved Settings edits really discards them

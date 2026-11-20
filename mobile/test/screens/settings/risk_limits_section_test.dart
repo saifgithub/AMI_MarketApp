@@ -115,12 +115,12 @@ void main() {
       expect(find.text(label), findsOneWidget);
     }
     // Post-CR129 all seven follow the profile when unset — OFF never renders.
-    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(7));
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(7));
     expect(find.text(l.settingsRiskLimitsOff), findsNothing);
     // Anti-fabrication: without server-resolved data, no "— {value}" variant
     // may appear anywhere (the widget must not compute a preset itself).
     final resolvedPrefix =
-        l.settingsRiskLimitsFollowingResolved('').trim();
+        l.settingsRiskLimitsFromProfileResolved('').trim();
     expect(find.textContaining(resolvedPrefix), findsNothing);
 
     // No field is silently dropped.
@@ -150,18 +150,18 @@ void main() {
     final l = AppLocalizations.of(ctx);
 
     for (final expected in [
-      l.settingsRiskLimitsFollowingResolved('40%'),
-      l.settingsRiskLimitsFollowingResolved('3%'),
-      l.settingsRiskLimitsFollowingResolved('35'),
-      l.settingsRiskLimitsFollowingResolved('1h'),
-      l.settingsRiskLimitsFollowingResolved('4'),
-      l.settingsRiskLimitsFollowingResolved('12'),
-      l.settingsRiskLimitsFollowingResolved('10.5%'),
+      l.settingsRiskLimitsFromProfileResolved('40%'),
+      l.settingsRiskLimitsFromProfileResolved('3%'),
+      l.settingsRiskLimitsFromProfileResolved('35'),
+      l.settingsRiskLimitsFromProfileResolved('1h'),
+      l.settingsRiskLimitsFromProfileResolved('4'),
+      l.settingsRiskLimitsFromProfileResolved('12'),
+      l.settingsRiskLimitsFromProfileResolved('10.5%'),
     ]) {
       expect(find.text(expected), findsOneWidget, reason: 'missing "$expected"');
     }
     // Every row got a number — the no-number fallback should be gone.
-    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNothing);
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNothing);
     // No override anywhere — no provenance caption either.
     expect(find.text(l.settingsRiskLimitsSetByYou), findsNothing);
   });
@@ -175,9 +175,9 @@ void main() {
     final ctx = tester.element(find.byType(RiskLimitsSection));
     final l = AppLocalizations.of(ctx);
 
-    expect(find.text(l.settingsRiskLimitsFollowingResolved('40%')), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsFollowingResolved('3%')), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(5));
+    expect(find.text(l.settingsRiskLimitsFromProfileResolved('40%')), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsFromProfileResolved('3%')), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(5));
   });
 
   testWidgets(
@@ -252,7 +252,7 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull);
     final l = AppLocalizations.of(tester.element(find.byType(RiskLimitsSection)));
-    final label = find.text(l.settingsRiskLimitsFollowingResolved('3%'));
+    final label = find.text(l.settingsRiskLimitsFromProfileResolved('3%'));
     expect(label, findsOneWidget);
     final chip = find.byKey(const Key('riskLimitOff_single_name_cap_pct'));
     // The text box is laid out inside the chip, i.e. wrapped, not overflowing.
@@ -296,7 +296,11 @@ void main() {
       find.byKey(const Key('riskLimitSetByYou_max_open_positions')),
       findsOneWidget,
     );
+    // DEF481 item 4: the row says only "Set by you"; the longer "overrides
+    // your risk profile" explanation appears once for the whole section.
+    expect(find.text(l.settingsRiskLimitsSetByYouRow), findsOneWidget);
     expect(find.text(l.settingsRiskLimitsSetByYou), findsOneWidget);
+    expect(find.byKey(const Key('riskLimitsOverrideNote')), findsOneWidget);
     final rendered = tester
         .widget<TextField>(find.byKey(const Key('riskLimitField_max_open_positions')))
         .controller!
@@ -305,8 +309,11 @@ void main() {
     // The overridden row's clear-chip must NOT present the resolved echo of
     // the override as a profile default — the true preset is unknowable
     // client-side while an override is set, so it claims no number.
-    expect(find.text(l.settingsRiskLimitsFollowingResolved('22')), findsNothing);
-    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsFromProfileResolved('22')), findsNothing);
+    // ...and its chip is the way back (an action), never "From your risk
+    // profile" beside "Set by you" on the same row.
+    expect(find.text(l.settingsRiskLimitsUseProfile), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNothing);
   });
 
   testWidgets(
@@ -377,7 +384,7 @@ void main() {
     expect(l.settingsRiskLimitsDisclosureBackToProfile.contains(RegExp(r'\d')), isFalse);
     // And the chip must not present the stale resolved echo (5) as the
     // profile default the field is returning to.
-    expect(find.text(l.settingsRiskLimitsFollowingResolved('5')), findsNothing);
+    expect(find.text(l.settingsRiskLimitsFromProfileResolved('5')), findsNothing);
   });
 
   testWidgets('acceptance 4 / CR040: setting a percent field to exactly 100 discloses '

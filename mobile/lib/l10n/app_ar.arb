@@ -394,7 +394,6 @@
     "settingsMaxDrawdownExplain": "يرفض مدير المحفظة الصفقات التي قد تدفع PORTFOLIO لتجاوز هذا الحد.",
     "settingsSectionRiskLimits": "حدود المخاطر",
     "settingsRiskLimitsProfileFollowing": "يتبع ملف المخاطر لديك",
-    "settingsRiskLimitsFollowingResolved": "يتبع ملف المخاطر لديك — {value}",
     "settingsRiskLimitsSetByYou": "حدّدتَه أنت — يتجاوز ملف المخاطر لديك",
     "settingsRiskLimitsProfileCustom": "مخصص",
     "settingsRiskLimitsExpand": "حدّد حدودي بنفسي",
@@ -3538,5 +3537,9 @@
     "settingsComplianceLiquidOnlyExplainBody": "رموز ذات حجم تداول يومي متوسط كافٍ للدخول والخروج بسلاسة فقط. يستبعد الأسهم الصغيرة جدًا وقليلة التداول حيث قد يحرّك أمر السوق السعر ضدك.",
     "roomScriptedLabel": "Standing guidance: this desk didn't respond",
     "roomScriptedNote": "AMI filled this turn with standing guidance because the desk's own call didn't come back. It is not this desk's live read.",
-    "roomScriptedSemantic": "{agent}: standing guidance, not a live call. This desk didn't respond."
+    "roomScriptedSemantic": "{agent}: standing guidance, not a live call. This desk didn't respond.",
+    "settingsRiskLimitsFromProfile": "من ملف المخاطر لديك",
+    "settingsRiskLimitsFromProfileResolved": "من ملف المخاطر لديك — {value}",
+    "settingsRiskLimitsUseProfile": "استخدم ملف المخاطر لدي",
+    "settingsRiskLimitsSetByYouRow": "حددتَه أنت"
 }

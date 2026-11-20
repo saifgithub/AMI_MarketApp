@@ -1726,9 +1726,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsRiskLimitsProfileFollowing => 'يتبع ملف المخاطر لديك';
 
   @override
-  String settingsRiskLimitsFollowingResolved(String value) {
-    return 'يتبع ملف المخاطر لديك — $value';
+  String get settingsRiskLimitsFromProfile => 'من ملف المخاطر لديك';
+
+  @override
+  String settingsRiskLimitsFromProfileResolved(String value) {
+    return 'من ملف المخاطر لديك — $value';
   }
+
+  @override
+  String get settingsRiskLimitsUseProfile => 'استخدم ملف المخاطر لدي';
+
+  @override
+  String get settingsRiskLimitsSetByYouRow => 'حددتَه أنت';
 
   @override
   String get settingsRiskLimitsSetByYou =>

@@ -20,6 +20,7 @@ summary: |
   reports, never an assumed price.
   DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
   user sees or does changed, so no case steps change.
+  DEF481 (2026-11-20): the blocked-trade OPEN MY MANDATE button opens Settings scrolled to the section holding the rule that refused the order (UAT-SIM-022).
 cases:
   - id: UAT-SIM-001
     title: Single and batch quotes return a real, labelled price
@@ -298,9 +299,11 @@ cases:
       - Read the preview (fill, notional, cash available); change side to Sell with nothing held
       - Enter a halal-excluded ticker such as JPM
       - Place a valid buy and confirm
+      - On the refused order tap OPEN MY MANDATE
     expected:
       - Preview figures match the server; no cash moves until confirm
       - A refused order shows the violation sentence and cannot be placed; the app never offers a way to override it
+      - OPEN MY MANDATE opens Settings already scrolled so the section holding the blocking rule is on screen (COMPLIANCE for a halal or long-only refusal; RISK LIMITS for a cap, cooldown or trade-count refusal; TICKER RULES for an allow/block-list refusal), not at the top of the page (DEF481, 2026-11-20)
       - After a valid buy the confirmation appears and the Portfolio shows the new holding and reduced cash
 
   - id: UAT-SIM-023

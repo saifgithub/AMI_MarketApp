@@ -2052,14 +2052,26 @@
   "@settingsRiskLimitsProfileFollowing": {
     "description": "CR101-MOBILE, semantics updated by CR129. Shown under the L1 risk-profile dial when no risk limit has an explicit override, and reused inside the L2 editor as the no-number fallback chip label when the backend does not send the mandate's `resolved` object (pre-DEF193 backends). Deliberately claims no value in that state — the resolved number is server-only and never computed client-side — and deliberately does NOT say 'OFF' (a preset is still enforced). When `resolved` IS present, L2 uses settingsRiskLimitsFollowingResolved instead. retranslate:[ar,ms]"
   },
-  "settingsRiskLimitsFollowingResolved": "Following your risk profile — {value}",
-  "@settingsRiskLimitsFollowingResolved": {
-    "description": "CR129. L2 chip label for a limit with no explicit override, when the server exposes the enforced value: {value} is that number pre-formatted with its unit by the widget ('40%', '1h', '35'). The number comes verbatim from mandate GET/PATCH `resolved` — it is NEVER computed client-side (CR046 shown-equals-enforced; the preset tables exist only in the backend). retranslate:[ar,ms]",
+  "settingsRiskLimitsFromProfile": "From your risk profile",
+  "@settingsRiskLimitsFromProfile": {
+    "description": "DEF481 item 4. Selected chip label on a risk-limit row that carries no override of its own (the row follows the risk profile) and the server sent no resolved number. Replaces 'Following your risk profile' on rows so a row never shows that chip beside a 'Set by you' caption. retranslate:[ar,ms]"
+  },
+  "settingsRiskLimitsFromProfileResolved": "From your risk profile — {value}",
+  "@settingsRiskLimitsFromProfileResolved": {
+    "description": "DEF481 item 4. Selected chip label on a risk-limit row that follows the risk profile, with the server-resolved enforced value: {value} is pre-formatted with its unit ('40%', '1h', '35'), taken verbatim from mandate `resolved`, never computed client-side. retranslate:[ar,ms]",
     "placeholders": {
       "value": {
         "type": "String"
       }
     }
+  },
+  "settingsRiskLimitsUseProfile": "Use my risk profile",
+  "@settingsRiskLimitsUseProfile": {
+    "description": "DEF481 item 4. Label of the (unselected) chip on a risk-limit row that carries an explicit override: tapping it clears the override so the row goes back to following the risk profile. An action, so it cannot contradict the 'Set by you' caption on the same row. retranslate:[ar,ms]"
+  },
+  "settingsRiskLimitsSetByYouRow": "Set by you",
+  "@settingsRiskLimitsSetByYouRow": {
+    "description": "DEF481 item 4. Per-row provenance caption under a risk limit carrying an explicit override. The longer 'overrides your risk profile' explanation (settingsRiskLimitsSetByYou) is shown once above the rows instead of repeated on each. retranslate:[ar,ms]"
   },
   "settingsRiskLimitsSetByYou": "Set by you — overrides your risk profile",
   "@settingsRiskLimitsSetByYou": {

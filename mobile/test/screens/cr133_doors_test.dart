@@ -33,9 +33,11 @@ void main() {
     test('the violations block renders the OPEN MY MANDATE control', () {
       expect(source, contains('l.tradeTicketOpenMandate'),
           reason: 'the button that turns the instruction into a control');
-      expect(source, contains('SettingsScreen()'),
+      expect(source, contains('SettingsScreen('),
           reason: 'and it must actually push the mandate — a label that goes '
               'nowhere is worse than the sentence it replaced');
+      // DEF481 item 3: and it lands on the rule that blocked the order.
+      expect(source, contains('settingsAnchorForBlockedBy('));
     });
 
     test('the copy states the outcome and names no path', () {
