@@ -142,6 +142,7 @@ _PHASE3_CONVERTED: set[tuple[str, str, str]] = {
     ("lessons_service.py", "grant_activation", "AgentActivationRow"),
     ("watchlist_store.py", "add", "SimWatchlistRow"),
     ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
+    ("games_service.py", "ensure_field", "GameFieldRow"),
 }
 
 # DEF308 sites declared `unclaimed(why=...)` instead of claim(): they leave INSERT_BASELINE but stay

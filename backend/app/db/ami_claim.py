@@ -254,13 +254,20 @@ def _dialect_insert(session: Session):
     raise NotImplementedError(f"claim() has no INSERT..ON CONFLICT for dialect {name!r}")
 
 
-def claim(session: Session, model: type[T], *, key: dict[str, Any], values: dict[str, Any] | None = None) -> Claimed[T]:
+def claim(
+    session: Session, model: type[T], *, key: dict[str, Any], values: dict[str, Any] | None = None,
+    reread: Iterable[Any] = (),
+) -> Claimed[T]:
     """Insert `{**key, **values}` unless a row with `key` exists; return it either way.
 
     `key` is {column: value}. It is validated against the live metadata on EVERY call: if no
     unique arbiter deduplicates exactly this key (including its NULLs), raises NoArbiter — on the
     first, happy-path execution, not on a race that may never come. The caller must pick an
     outcome (`.or_skip()` / `.or_update(fn)` / `.or_raise(exc)`); there is no default.
+
+    `reread` is for a PARTIAL arbiter only: extra conditions (normally the index predicate) that
+    the loser's re-read must add to `key`, because the key alone also matches rows outside the
+    index (an abandoned twin, a private field) and `.first()` could hand back one of those.
     """
     table: Table = model.__table__  # type: ignore[attr-defined]
     arb = _effective_arbiter(table, key)
@@ -280,8 +287,9 @@ def claim(session: Session, model: type[T], *, key: dict[str, Any], values: dict
     if got is not None:
         return Claimed(session.get(model, tuple(got) if len(got) > 1 else got[0]), True)
 
+    extra = list(reread)
     for _ in range(2):  # the conflicting row can be deleted between conflict and re-read
-        cond = [(getattr(model, c).is_(None) if v is None else getattr(model, c) == v) for c, v in key.items()]
+        cond = [(getattr(model, c).is_(None) if v is None else getattr(model, c) == v) for c, v in key.items()] + extra
         row = session.execute(select(model).where(*cond)).scalars().first()
         if row is not None:
             return Claimed(row, False)

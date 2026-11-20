@@ -8,7 +8,7 @@ ledger") and test 11 (a `career_events` row is never written with a null
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -163,7 +163,9 @@ def test_stipend_pays_once_per_cadence_period_across_different_entries():
     user_id = uuid4()
     with get_session() as s:
         field1 = _make_field(s)
-        field2 = _make_field(s)  # a different field, SAME starts_on -> same period
+        # A different field in the SAME period (same `period_key`). Two open fields of one
+        # cadence can no longer share a `starts_on` (DEF308 unique index), so it starts a day later.
+        field2 = _make_field(s, starts_on=date(2026, 8, 11))
         entry1 = _make_entry(s, field1, user_id)
         entry2 = _make_entry(s, field2, user_id)
         period_key = "week:2026-W33"

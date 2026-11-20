@@ -36,6 +36,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
+from app.db.ami_claim import claim
 from app.db.models import (
     GameEntryRow,
     GameFieldRow,
@@ -335,6 +336,12 @@ def _resolve_state(
 # ── Field roll ───────────────────────────────────────────────────────────
 
 
+def _refresh_state(session, field: GameFieldRow, new_state: str) -> None:
+    if field.state != new_state:
+        field.state = new_state
+        session.flush()
+
+
 def ensure_field(
     session, cadence: str = WEEKLY_CADENCE, *, now: datetime | None = None,
 ) -> GameFieldRow:
@@ -407,32 +414,41 @@ def ensure_field(
     new_state = _resolve_state(now, entry_opens_at, locks_at, market_open)
     if row is None:
         rolling = cadence in _ROLLING_CADENCES
-        row = GameFieldRow(
-            cadence=cadence,
-            state=new_state,
-            # A rolling lobby accepts entries the moment it exists. The
-            # calendar `entry_opens_at` would leave a quarterly lobby
-            # `announced` — visible and unjoinable — for most of a quarter,
-            # which is the wait §6.6 exists to remove.
-            entry_opens_at=now if rolling else entry_opens_at,
-            locks_at=locks_at,
-            starts_on=target_start,
-            ends_on=ends_on,
-            # Populated only where they mean something. On a calendar
-            # cadence these two columns have no reading: a weekly field
-            # starts on Monday whoever turned up.
-            min_entrants=ROLLING_MIN_ENTRANTS if rolling else None,
-            max_wait_days=ROLLING_MAX_WAIT_DAYS if rolling else None,
-            scoring_basis=None,
-            benchmark_ticker="SPY",
-            entrant_count=0,
-            kind="open",
-            points_policy="full",
-        )
-        if rolling:
-            row.state = _resolve_state(now, row.entry_opens_at, locks_at, market_open)
-        session.add(row)
-        session.flush()
+        # A rolling lobby accepts entries the moment it exists. The calendar
+        # `entry_opens_at` would leave a quarterly lobby `announced` — visible
+        # and unjoinable — for most of a quarter, which is the wait §6.6
+        # exists to remove.
+        opens_at = now if rolling else entry_opens_at
+        # DEF308 / ISS001: `uq_game_fields_open_cadence_start` is the arbiter. A
+        # concurrent first touch of the same period loses the insert and gets
+        # the winner's row (or_update refreshes its state, as the found-row
+        # branch below always did) instead of a twin field. `reread` repeats
+        # the index predicate so the loser cannot be handed an abandoned lobby
+        # that shares the calendar start. The rolling path needs no advisory
+        # lock: `ensure_field` already treats "same (cadence, starts_on)" as the
+        # same field, and `_start_rolling_field` only moves `starts_on` on the
+        # sole candidate lobby — the index enforces what the read assumed.
+        row = claim(
+            session, GameFieldRow,
+            key={"cadence": cadence, "starts_on": target_start},
+            values=dict(
+                state=_resolve_state(now, opens_at, locks_at, market_open),
+                entry_opens_at=opens_at,
+                locks_at=locks_at,
+                ends_on=ends_on,
+                # Populated only where they mean something. On a calendar
+                # cadence these two columns have no reading: a weekly field
+                # starts on Monday whoever turned up.
+                min_entrants=ROLLING_MIN_ENTRANTS if rolling else None,
+                max_wait_days=ROLLING_MAX_WAIT_DAYS if rolling else None,
+                scoring_basis=None,
+                benchmark_ticker="SPY",
+                entrant_count=0,
+                kind="open",
+                points_policy="full",
+            ),
+            reread=(GameFieldRow.kind == "open", GameFieldRow.state != "abandoned"),
+        ).or_update(lambda f: _refresh_state(session, f, new_state))
     elif row.state != new_state:
         row.state = new_state
         session.flush()

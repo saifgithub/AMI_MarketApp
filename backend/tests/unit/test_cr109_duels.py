@@ -457,10 +457,13 @@ def test_the_margin_of_victory_does_not_change_the_payout():
     winning by 40 points pays — which is why the format is safe to run
     alongside an open-field run."""
     payouts = []
-    for margin in (0.01, 40.0):
-        field_id = _field()
+    for i, margin in enumerate((0.01, 40.0)):
+        # DEF308: one open field per (cadence, starts_on) is now a database rule, so each pass
+        # needs its own weeks rather than a twin of the previous pass's.
+        shift = timedelta(days=14 * i)
+        field_id = _field(starts_on=date(2026, 8, 10) + shift)
         a, b = _user(), _user()
-        old_field = _field(starts_on=date(2026, 8, 3))
+        old_field = _field(starts_on=date(2026, 8, 3) + shift)
         for u in (a, b):
             _finish(_enter(old_field, u), 1.0)
         run_a = _enter(field_id, a, entered_at=_NOW - timedelta(hours=5))
