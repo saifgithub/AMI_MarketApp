@@ -29,7 +29,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-25 | Flip explainer | WP-23, WP-24 | not started | | | | |
 | WP-26 | Room acceptance run | WP-21b/23/24/25 | not started | | | | |
 | WP-27 | Room reliability defects | WP-00 | done | 2026-11-18 | 2026-11-18 | `636267ae` | DEF444/445/467/471/480/484 + CR272 backup notice. DEF471: the Room auto-starting is intended (10-20 ruling), so only a leave warning was added. |
-| WP-28 | Outcome scoring | WP-14 | in progress | 2026-11-19 | | `30dda2bb` | Daily scoring 22:30 UTC on the in-app tick, 500 due rows per run; weekly report to /backtest_results/outcome_reports. Live since deploy #7; acceptance after the first run (scored rows exist, report written). |
+| WP-28 | Outcome scoring | WP-14 | done | 2026-11-19 | 2026-11-20 | `30dda2bb` | Daily scoring 22:30 UTC on the in-app tick, 500 due rows per run; weekly report to /backtest_results/outcome_reports. Live since deploy #7; acceptance after the first run (scored rows exist, report written). Acceptance met: the first run (2026-11-19 22:30Z) scored 101 of 7,560 banked rows (6,883 pending, 576 unscorable) and wrote `room_outcome_2026-11-19.json`. |
 | WP-29 | Copy | WP-00 | done | 2026-11-18 | 2026-11-20 | `6fa280ac` `7f0590b6` | Merged and deployed to the website 2026-11-20 (`?v=cr267wl`). The stale Sharia line was fixed per claim register N1. |
 | WP-30 | Account deletion + export | WP-00 | in progress | 2026-11-18 | | `0b31a855` `2f03b1b8` | CR276. Live on Alpha since deploy #5 (backend). Left: device check via the next app build; counsel items for S6. |
 | WP-31 | 18+ confirmation | WP-00 | done | 2026-11-18 | 2026-11-18 | `6e3e1d25` `06a69250` | CR273. Enforcement switch OFF on Alpha until the new build reaches testers. |
