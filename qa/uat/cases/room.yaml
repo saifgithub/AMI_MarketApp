@@ -395,3 +395,26 @@ cases:
       - The X removes the card and nothing else on the screen moves or goes missing
       - The report sheet opens already titled "Problem with a response from <desk>", with the category set to Wrong data and a line naming the desk; closing it sends nothing
     notes: CR278 / WP-36. Pair with UAT-ROOM-025, which proves the stored answer.
+
+  - id: UAT-ROOM-028
+    title: Reopening the app during a running Room shows a rejoin banner on the Floor, and REJOIN returns to the Room without a second charge
+    layer: manual
+    plans: [any]
+    llm: true
+    preconditions:
+      - A funded account; note the credit balance before starting
+    steps:
+      - Convene the Room on MSFT and, once the first desks have spoken, swipe the app away (fully close it)
+      - Reopen the app within a few minutes while the Room is still running
+      - Read the Floor; do not tap anything yet
+      - Tap REJOIN on the banner
+      - Let the run finish, then go back to the Floor
+      - Separately, close the app during a run, wait for it to finish, then reopen
+    expected:
+      - The app opens on the Floor, not inside the Room, and a banner at the top says "Your Room on MSFT is still running." with a REJOIN button
+      - Nothing is charged by reopening the app or by waiting on the Floor
+      - REJOIN opens the MSFT Room, shows the "Welcome back" rejoin line, replays the desks that had already spoken, then continues live to the verdict
+      - The credit balance after the run equals the balance before minus the one Room price; REJOIN did not start a second run or a second charge
+      - The banner is gone after the run finishes
+      - When the run finished while the app was closed, the Floor shows no banner and the verdict is already in the Journal
+    notes: DEF506. Ruled by Saiful 2026-11-20 (open on the Floor, never auto-jump into the Room). The banner has identifiers ami.floor.rejoin_banner and ami.floor.rejoin_cta for the device rig. Pairs with UAT-ROOM-018/019, which cover a dropped connection and backing out.

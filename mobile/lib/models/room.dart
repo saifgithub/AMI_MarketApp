@@ -430,6 +430,8 @@ class RoomRunSnapshot {
     this.refunded = false,
     this.cioRetryAvailable = false,
     this.cioRetried = false,
+    this.startedAt,
+    this.triggeredAt,
   });
 
   final String id;
@@ -437,6 +439,11 @@ class RoomRunSnapshot {
   final String ticker;
   final String status;
   final String modelTier;
+
+  /// DEF506 — when the run started / was queued (UTC). Read by the Floor's
+  /// rejoin banner to tell a live `running` row from a stranded one.
+  final DateTime? startedAt;
+  final DateTime? triggeredAt;
   final List<RoomTranscriptLine> transcript;
   final RoomVerdict? verdict;
   final int? creditCost;
@@ -481,6 +488,18 @@ class RoomRunSnapshot {
           ? j['cio_retry_available'] as bool
           : false,
       cioRetried: j['cio_retried'] is bool ? j['cio_retried'] as bool : false,
+      startedAt: _parseUtc(j['started_at']),
+      triggeredAt: _parseUtc(j['triggered_at']),
     );
+  }
+
+  /// The server stores UTC; an offset-less ISO string is UTC, not local.
+  static DateTime? _parseUtc(Object? raw) {
+    if (raw is! String) return null;
+    final t = DateTime.tryParse(raw);
+    if (t == null) return null;
+    if (t.isUtc) return t;
+    return DateTime.utc(t.year, t.month, t.day, t.hour, t.minute, t.second,
+        t.millisecond, t.microsecond);
   }
 }

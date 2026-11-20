@@ -164,3 +164,8 @@ SCREEN_IDS: tuple[str, ...] = (
 # Cancel (the ticket carries both). Mirrors `ExitIds` in the Dart file.
 NAV_BACK = "ami.nav.back"
 TRADE_TICKET_CANCEL = "ami.trade_ticket.cancel"
+
+# DEF506 — the Floor's "your Room is still running" banner and its REJOIN
+# button. Mirrors `FloorIds` in the Dart file.
+FLOOR_REJOIN_BANNER = "ami.floor.rejoin_banner"
+FLOOR_REJOIN_CTA = "ami.floor.rejoin_cta"

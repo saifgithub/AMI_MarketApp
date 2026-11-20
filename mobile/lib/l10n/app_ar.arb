@@ -3448,6 +3448,8 @@
     "askAboutTickerMessage": "ما رأيك في {ticker}؟",
     "roomReconnectingBanner": "انقطع الاتصال. لا تزال الغرفة تعمل — بانتظار صدور الحكم.",
     "roomReattachedBanner": "مرحبًا بعودتك. عدت إلى غرفتك الجارية؛ نعيد عرض ما قالته المكاتب حتى الآن.",
+    "floorRejoinBanner": "غرفتك على {ticker} لا تزال تعمل.",
+    "floorRejoinCta": "العودة",
     "roomWaitGaveUp": "لا يمكن لـ AMI تأكيد انتهاء هذه الغرفة. كل ما تنتجه يُحفظ في يومياتك، ويمكنك فتحه من هناك لاحقًا أو التحقق مجددًا الآن.",
     "roomCheckAgain": "تحقق مجددًا",
     "roomLeaveTitle": "مغادرة الغرفة؟",

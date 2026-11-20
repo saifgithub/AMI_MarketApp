@@ -35,3 +35,10 @@ controls:
     expect: none
     line: 254
     note: "Card-level onTap is null by design; the tap lives in the body (see floor_cards.yaml sector_watch_tap)."
+  - label: "REJOIN (amber banner at the top: 'Your Room on <TICKER> is still running.')"
+    kind: button
+    expect: navigate
+    target: "ami.screen.room"
+    when: "the user has a Room still running (newest run in flight); absent otherwise"
+    line: 249
+    note: "DEF506. Identifiers ami.floor.rejoin_banner / ami.floor.rejoin_cta. Re-checks the run first; if it has finished, nothing opens and the banner clears. Attaches to the running run (no new charge)."

@@ -452,6 +452,14 @@ class AppLocalizationsEn extends AppLocalizations {
       '⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE';
 
   @override
+  String floorRejoinBanner(String ticker) {
+    return 'Your Room on $ticker is still running.';
+  }
+
+  @override
+  String get floorRejoinCta => 'REJOIN';
+
+  @override
   String get floorLockedHowTo => 'HOW TO UNLOCK';
 
   @override
@@ -1868,13 +1876,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-      String ticker, String standard, String source, String date) {
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  ) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date) {
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  ) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -2705,7 +2721,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-      String side, String qty, String ticker, String price) {
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  ) {
     return 'Filled: $side $qty $ticker @ \$$price';
   }
 
@@ -2749,7 +2769,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketNoticeRaisesStop(
-      String qty, String ticker, String fromStop, String toStop) {
+    String qty,
+    String ticker,
+    String fromStop,
+    String toStop,
+  ) {
     return 'This raises your stop on all $qty $ticker from \$$fromStop to \$$toStop.';
   }
 
@@ -2808,7 +2832,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketHintRestsStopLimit(
-      String ticker, String trigger, String limit) {
+    String ticker,
+    String trigger,
+    String limit,
+  ) {
     return 'Waits until $ticker reaches \$$trigger, then becomes a limit order at \$$limit.';
   }
 
@@ -2832,7 +2859,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String restingOrderCancelBody(
-      String side, String qty, String ticker, String price) {
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  ) {
     return '$side $qty $ticker at \$$price will stop waiting and will not fill.';
   }
 
@@ -4492,13 +4523,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String optionLegLine(
-      String side, String contracts, String right, String strike) {
+    String side,
+    String contracts,
+    String right,
+    String strike,
+  ) {
     return '$side $contracts $right \$$strike';
   }
 
   @override
-  String optionLegLineDated(String side, String contracts, String right,
-      String strike, String expiry) {
+  String optionLegLineDated(
+    String side,
+    String contracts,
+    String right,
+    String strike,
+    String expiry,
+  ) {
     return '$side $contracts $right \$$strike · $expiry';
   }
 
@@ -4578,7 +4618,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shortClosedBracket(
-      String quantity, String ticker, String price, String bracket) {
+    String quantity,
+    String ticker,
+    String price,
+    String bracket,
+  ) {
     return '$quantity $ticker covered at \$$price — your $bracket was reached.';
   }
 
@@ -4954,8 +4998,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get optionTicketLegSellWord => 'SELL';
 
   @override
-  String optionTicketLegLine(String action, String contracts, String right,
-      String strike, String expiry) {
+  String optionTicketLegLine(
+    String action,
+    String contracts,
+    String right,
+    String strike,
+    String expiry,
+  ) {
     return '$action $contracts × $right $strike · exp $expiry';
   }
 

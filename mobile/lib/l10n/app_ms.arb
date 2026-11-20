@@ -3463,6 +3463,8 @@
     "askAboutTickerMessage": "Apakah pandangan anda tentang {ticker}?",
     "roomReconnectingBanner": "Sambungan terputus. Bilik masih berjalan — menunggu keputusan.",
     "roomReattachedBanner": "Selamat kembali. Anda menyertai semula Bilik yang sedang berjalan; mengulang semula apa yang telah dikatakan setiap meja setakat ini.",
+    "floorRejoinBanner": "Bilik anda untuk {ticker} masih berjalan.",
+    "floorRejoinCta": "SERTAI SEMULA",
     "roomWaitGaveUp": "AMI tidak dapat mengesahkan Bilik ini telah selesai. Apa sahaja hasilnya disimpan dalam Jurnal anda, jadi anda boleh membukanya di sana kemudian, atau semak semula sekarang.",
     "roomCheckAgain": "SEMAK SEMULA",
     "roomLeaveTitle": "Tinggalkan Bilik?",
