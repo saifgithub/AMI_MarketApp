@@ -253,3 +253,6 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
    4. Postflight PASS.
    5. The tripwire runs in `log` mode.
 4. **WP-20:** 75 of arm 1's 300 Rooms done in about 8 h, about 6.4 min per Room effective against the pilot's 3.6. Arm 2 will likely be skipped by the 24 h rule.
+5. **DEF512 verified live** after deploy #13: the API UAT passed (6 of 6 changed cases, both banked-Room cases included), Alpha logged 3 `room_bank_hit` events, and 0 freeze errors.
+6. **DEF308: 9 of 9.** `ensure_field` is converted on a new partial unique index, migration `def308a0b0c0d3` (merged; ships in deploy #14).
+7. **Build 0.1.0+121** (bump `45219e7e`, from `f5e9a42c`) is on TestFlight internal and Play internal, under a UAT override for stale device cases only. The APK sha256 is `e3e9f81f…cfe422b`. AMI-DL-9 (Android, 16 cases, including the WP-24 banked-Room case UAT-ROOM-031) and AMI-DL-10 (iPhone, 12 cases) are booked with the M4 testers. Each tester needs a per-build grant.
