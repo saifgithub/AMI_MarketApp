@@ -130,3 +130,17 @@ cases:
     expected:
       - 'The bottom ticker tape scrolls and the house-ad strip fits its row (its call to action shortens with an ellipsis rather than overflowing)'
       - 'No RenderFlex overflow is recorded for either (DEF482)'
+
+  - id: UAT-FLOOR-011
+    title: The Floor shows a rejoin banner only while one of the user's Rooms is still running
+    layer: manual
+    plans: [any]
+    preconditions:
+      - 'A funded account'
+    steps:
+      - 'Open the app with no Room running and read the top of the Floor'
+      - 'Run UAT-ROOM-028 (close the app mid-Room, reopen) and read the top of the Floor'
+    expected:
+      - 'With no Room running, the Floor shows no rejoin banner'
+      - 'With a Room still running, the Floor shows "Your Room on <ticker> is still running." with REJOIN, and opening the app never jumps into the Room by itself'
+    notes: 'DEF506 (Saiful 2026-11-20). The full rejoin and no-second-charge checks are UAT-ROOM-028.'

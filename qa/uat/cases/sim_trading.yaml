@@ -8,6 +8,9 @@ covers:
   - backend/app/api/tickers.py
   - mobile/lib/screens/sim/**
 summary: |
+  (The Portfolio Health finding screen lives under mobile/lib/screens/sim/ but its
+  cases are in portfolio_health.yaml as UAT-HLTH-*; DEF509's cadence refusal is
+  UAT-HLTH-013.)
   The training simulator: quotes/history/news/earnings/profile/insider, market
   and resting orders, the deterministic mandate check that refuses an order
   (not merely warns), lots and realised P&L, manual close, reset, ownership,

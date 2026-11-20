@@ -293,7 +293,7 @@ cases:
       - 'Set a tighter single-name cap than one of the current holdings and save'
       - 'Choose the Day Trader preset'
     expected:
-      - 'Each limit shows "Following your risk profile" with the resolved number until the user sets their own'
+      - 'Each limit shows "Following your risk profile" with the resolved number until the user sets their own; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)'
       - 'Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders'
       - 'The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing'
 

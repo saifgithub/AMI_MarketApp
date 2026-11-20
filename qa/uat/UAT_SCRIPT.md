@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**303 cases** — 197 api, 20 device, 86 manual; 16 blocked.
+**304 cases** — 197 api, 20 device, 87 manual; 16 blocked.
 
 ## Areas
 
@@ -12,7 +12,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 31 cases
-5. [Floor tab & home shell](#floor) — 10 cases
+5. [Floor tab & home shell](#floor) — 11 cases
 6. [Convene the Room](#room) — 29 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
@@ -1685,6 +1685,9 @@ _Device (automated, Appium) · plans: floor_pass_
 <a id="sim-trading"></a>
 ## Sim trading & market data
 
+(The Portfolio Health finding screen lives under mobile/lib/screens/sim/ but its
+cases are in portfolio_health.yaml as UAT-HLTH-*; DEF509's cadence refusal is
+UAT-HLTH-013.)
 The training simulator: quotes/history/news/earnings/profile/insider, market
 and resting orders, the deterministic mandate check that refuses an order
 (not merely warns), lots and realised P&L, manual close, reset, ownership,
@@ -3270,7 +3273,7 @@ _Device (automated, Appium) · plans: floor_pass · **BLOCKED** — CR264 Phase 
 3. No press crashes the app, adds an error-sink entry, overflows, or does nothing
 4. Every control has a catalogue entry and its observed effect matches it
 
-> WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived.
+> WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived. 2026-11-20 (build 120): catalogue gains the Floor REJOIN control (DEF506, qa/uat/controls/floor.yaml); the ticker tape is out of the accessibility tree (DEF466 round 1), so the crawler cannot find tape items by label (qa/uat/controls/ticker_tape.yaml); the risk-limit chip is a custom Row-based chip with the same key riskLimitOff_<key> (DEF508); Room desk rows gain a standing-guidance label for scripted turns (DEF507).
 
 ## Manual — iPhone checklist
 
@@ -3543,7 +3546,7 @@ _Manual (iPhone checklist) · plans: any_
 3. Choose the Day Trader preset
 
 **Expected**
-1. Each limit shows "Following your risk profile" with the resolved number until the user sets their own
+1. Each limit shows "Following your risk profile" with the resolved number until the user sets their own; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)
 2. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders
 3. The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing
 
@@ -3726,6 +3729,23 @@ _Manual (iPhone checklist) · plans: floor_pass_
 **Expected**
 1. The bottom ticker tape scrolls and the house-ad strip fits its row (its call to action shortens with an ellipsis rather than overflowing)
 2. No RenderFlex overflow is recorded for either (DEF482)
+
+#### UAT-FLOOR-011 — The Floor shows a rejoin banner only while one of the user's Rooms is still running
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. A funded account
+
+**Steps**
+1. Open the app with no Room running and read the top of the Floor
+2. Run UAT-ROOM-028 (close the app mid-Room, reopen) and read the top of the Floor
+
+**Expected**
+1. With no Room running, the Floor shows no rejoin banner
+2. With a Room still running, the Floor shows "Your Room on <ticker> is still running." with REJOIN, and opening the app never jumps into the Room by itself
+
+> DEF506 (Saiful 2026-11-20). The full rejoin and no-second-charge checks are UAT-ROOM-028.
 
 #### UAT-ROOM-014 — Convene sheet, live console, verdict card and cost line on a real iPhone
 
