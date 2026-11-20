@@ -454,3 +454,90 @@ def test_apple_creates_user_when_sub_and_email_unknown():
     assert user.id == user_id
     assert user.apple_id == "apple-sub-fresh"
     assert user.email == "fresh@example.com"
+
+
+def test_claim_or_create_that_loses_the_email_race_adopts_the_winner_and_rekeys_devices(monkeypatch):
+    """ISS001 / DEF308 (update-as-adopt): two first-time sign-ins for one email. The winner's row
+    commits between the loser's lookup and its insert. The loser is signed in AS THE WINNER —
+    no error, no second user — and its phone moves to the winner's device list."""
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import User, UserDeviceRow
+    from app.services import auth_service
+    from tests.unit.iss001_race import winner_commits_first
+
+    auth = AuthService()
+    loser_anon = uuid4()
+    email = "race-adopt@example.com"
+    with get_session() as s:
+        s.add(UserDeviceRow(user_id=loser_anon, device_install_id=uuid4()))
+
+    race = winner_commits_first(
+        monkeypatch, auth_service, User,
+        winner_values={"is_anonymous": False},
+    )
+    code = auth.start_magic_link(email=email, user_id=loser_anon)
+    result = auth.verify_magic_link(email=email, code=code, user_id=loser_anon, challenge_owner_id=loser_anon)
+
+    assert race["fired"]
+    assert result is not None
+    user, token, adopted_from = result
+    assert user.id == race["winner_id"]
+    assert user.email == email
+    assert adopted_from == loser_anon
+    assert token.startswith("scaffold:")
+    with get_session() as s:
+        assert len(s.execute(select(User).where(User.email == email)).scalars().all()) == 1
+        devices = s.execute(select(UserDeviceRow.user_id)).scalars().all()
+    assert race["winner_id"] in devices and loser_anon not in devices
+
+
+def test_claim_or_create_that_loses_the_race_to_a_closed_account_is_refused(monkeypatch):
+    """The loser takes the same closed-account gate as the email-match branch (CR276)."""
+    from datetime import datetime, timezone
+
+    from app.db.models import User
+    from app.services import account_erasure, auth_service
+    from tests.unit.iss001_race import winner_commits_first
+
+    auth = AuthService()
+    winner_commits_first(
+        monkeypatch, auth_service, User,
+        winner_values={"is_anonymous": False, "closure_requested_at": datetime.now(timezone.utc)},
+    )
+    anon = uuid4()
+    code = auth.start_magic_link(email="race-closed@example.com", user_id=anon)
+    with pytest.raises(account_erasure.AccountClosedError):
+        auth.verify_magic_link(email="race-closed@example.com", code=code, user_id=anon, challenge_owner_id=anon)
+
+
+def test_claim_or_create_under_concurrent_first_sign_ins_yields_one_user():
+    """ISS001 / DEF308: N devices race the same new email. Every one gets the SAME user row."""
+    import threading
+
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import User
+
+    n = 6
+    email = "race-threads@example.com"
+    barrier, results, errors = threading.Barrier(n), [], []
+
+    def work():
+        try:
+            with get_session() as s:
+                barrier.wait()
+                row = AuthService()._claim_or_create(s, user_id=uuid4(), email=email)
+                results.append(row.id)
+        except Exception as e:  # pragma: no cover - would fail the assert below
+            errors.append(e)
+
+    ts = [threading.Thread(target=work) for _ in range(n)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert errors == []
+    assert len(results) == n and len(set(results)) == 1
+    with get_session() as s:
+        assert len(s.execute(select(User).where(User.email == email)).scalars().all()) == 1

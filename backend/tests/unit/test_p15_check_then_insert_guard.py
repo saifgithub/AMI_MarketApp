@@ -76,7 +76,6 @@ _HANDLED_AT_CALLER = {
 # blind is precisely what DEF220 refused to do, and the refusal is why its six
 # each got a different answer.
 _UNREVIEWED = {
-    ("auth_service.py", "_claim_or_create", "User"),
     ("auth_service.py", "ensure_anonymous", "User"),
     # sign_in_with_apple / sign_in_with_google: fixed under DEF416 —
     # uq_users_apple_id / uq_users_google_id (migration def416a0oidc0uq) plus
