@@ -25,7 +25,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-21b | Street comparison after verdict | WP-21a, WP-14 | done | 2026-11-19 | 2026-11-19 | `93d2912c` | CR260. Live since deploy #7. |
 | WP-22 | Narrow-question judge + bake-off | WP-20 · **S12** | not started | | | | S12 approved 2026-11-18; waits on WP-20. |
 | WP-23 | Coded decision rule | WP-22 · S3, **S12** | not started | | | | |
-| WP-24 | Same inputs → same room | WP-20 | in progress | 2026-11-20 | | `751e507c` `560165ba` `d0e368a6` | Built on branch lane/wp24-banked-room, not merged. Banked return is free. Replaces the 24 h same-ticker dedup. Migration `cr267a24bank01`. Not keyed (spec-literal): holdings, journal. WP-20 not done; the 50-pair acceptance is met by unit test, the live 30×5 run is WP-26. |
+| WP-24 | Same inputs → same room | WP-20 | in progress | 2026-11-20 | | `751e507c` `560165ba` `d0e368a6` | Built on branch lane/wp24-banked-room, not merged. Banked return is free. Replaces the 24 h same-ticker dedup. Migration `cr267a24bank01`. Key also carries the user's portfolio, non-Room journal entries and Alpaca cash/positions (ruling 2026-11-20). WP-20 not done; the 50-pair acceptance is met by unit test, the live 30×5 run is WP-26. |
 | WP-25 | Flip explainer | WP-23, WP-24 | not started | | | | |
 | WP-26 | Room acceptance run | WP-21b/23/24/25 | not started | | | | |
 | WP-27 | Room reliability defects | WP-00 | done | 2026-11-18 | 2026-11-18 | `636267ae` | DEF444/445/467/471/480/484 + CR272 backup notice. DEF471: the Room auto-starting is intended (10-20 ruling), so only a leave warning was added. |

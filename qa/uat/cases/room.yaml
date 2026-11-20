@@ -22,8 +22,10 @@ summary: |
   WP-24 (2026-11-20): the old "same ticker within 24 h returns yesterday's Room"
   window is gone. A convene is handed a finished Room only when its INPUTS match
   (user, ticker, mandate content, the trading day's frozen fact sheet, policy
-  version, model root); that return is free. A changed mandate, a new trading
-  day, a new prompt generation or a different model is a new Room and is charged.
+  version, model root, and the user's portfolio, ticker journal entries and any
+  linked paper account); that return is free. A changed mandate, any trade, a new
+  trading day, a new prompt generation or a different model is a new Room and is
+  charged.
   A failed, cancelled, refunded or outage Room is never handed back.
 cases:
   - id: UAT-ROOM-001

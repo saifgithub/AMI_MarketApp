@@ -14,12 +14,26 @@ Two things live here, both pure of the Room runner (the runner imports this):
    handed that Room. The key is per user: sharing Rooms across users is a later
    cost optimisation, not this programme's.
 
+The key also carries what the desks read from the user's own account, so a Room
+is never served after the user's position changed (Saiful's ruling, 2026-11-20):
+
+- `portfolio`: the sim portfolio the desks' holdings block is built from: cash
+  rounded to whole dollars, holdings, short and option legs, the open lots
+  (ticker, quantity, entry, stop) and the trade history the risk-limit checks
+  read (every trade's opened/closed time and status). Any trade gives a new Room.
+- `journal`: the Decision Journal entries the Bull and Bear desks read for this
+  ticker (the latest five), as (id, title, outcome, summary, user note).
+  Room-run entries are left out: they are the Rooms' own output, so including
+  them would make a Room's key change the moment it finished and no repeat
+  convene could ever match.
+- `alpaca`: a linked paper account's cash (whole dollars) and its positions'
+  symbol and quantity.
+
 What the key deliberately does NOT contain: the credit balance, the plan, the
 mandate's version counter and timestamps (re-saving an unchanged mandate is not a
-new input), the user's holdings, and the Decision Journal. The first three change
-without changing the Room; the last two are inputs the spec leaves out, and a
-journal that gained the previous run's own entry would otherwise make every
-repeat convene a miss.
+new input). Nor anything that is only a price times a holding: portfolio value,
+drawdown, open-risk percent, unrealised P&L and the Alpaca market values move with
+every tick, and the trading day is already keyed.
 """
 
 from __future__ import annotations
@@ -179,6 +193,73 @@ def _read_sheet(
         return (row.sheet, row.sheet_hash) if row is not None else None
 
 
+def _digest(value: Any) -> str:
+    return _sha256(_canonical(value))
+
+
+def _iso(dt: datetime | None) -> str | None:
+    return dt.isoformat() if dt is not None else None
+
+
+def _side(trade: Any) -> Any:
+    side = getattr(trade, "side", None)
+    return getattr(side, "value", side)
+
+
+def portfolio_digest(portfolio: Any, trades: list[Any]) -> str:
+    """Hash of the user's sim portfolio as the Room reads it. `portfolio` is a
+    `Portfolio`, `trades` the user's full `SimTrade` history (open and closed)."""
+    def _rows(rows: list[list[Any]]) -> list[list[Any]]:
+        return sorted(rows, key=_canonical)
+
+    data = {
+        "cash": int(round(float(portfolio.current_cash))),
+        "holdings": _rows([[h.ticker, h.quantity, h.avg_cost] for h in portfolio.holdings]),
+        "shorts": _rows([[s.ticker, s.quantity, s.entry_price] for s in portfolio.shorts]),
+        "options": _rows([[o.occ_symbol, o.quantity, o.avg_premium] for o in portfolio.options]),
+        "open_lots": _rows([
+            [t.ticker, _side(t), t.quantity, t.entry_price, t.stop]
+            for t in trades if t.status == "open"
+        ]),
+        "history": _rows([
+            [_iso(t.opened_at), _side(t), t.status, _iso(t.closed_at)]
+            for t in trades
+        ]),
+    }
+    return _digest(data)
+
+
+def journal_digest(entries: list[Any], *, limit: int = 5) -> str:
+    """Hash of the Decision Journal entries the Bull/Bear desks read for a
+    ticker: the latest `limit` that are not Room-run entries. `entries` must be
+    newest-first, as `JournalStore.list_for_user` returns them."""
+    kept = [
+        e for e in entries
+        if getattr(e.entry_type, "value", e.entry_type) != "room_run"
+    ][:limit]
+    return _digest([
+        [
+            str(e.id), e.title, getattr(e.outcome, "value", e.outcome),
+            e.summary, e.user_note,
+        ]
+        for e in kept
+    ])
+
+
+def alpaca_digest(payload: Any | None) -> str:
+    """Hash of a linked Alpaca paper account as the device reported it: cash to
+    whole dollars and each position's symbol and quantity. "none" when no
+    account is linked."""
+    if payload is None:
+        return "none"
+    return _digest({
+        "cash": int(round(float(payload.cash))),
+        "positions": sorted(
+            ([p.symbol, p.qty] for p in payload.positions), key=_canonical,
+        ),
+    })
+
+
 def key_parts(
     *,
     user_id: UUID,
@@ -188,6 +269,9 @@ def key_parts(
     policy: str,
     model_root: str,
     trading_date: date,
+    portfolio: str,
+    journal: str,
+    alpaca: str,
 ) -> dict[str, str]:
     return {
         "user_id": str(user_id),
@@ -196,6 +280,9 @@ def key_parts(
         "fact_sheet": sheet_hash,
         "policy": policy,
         "model_root": model_root,
+        "portfolio": portfolio,
+        "journal": journal,
+        "alpaca": alpaca,
         # Hashed in its own right: a new trading day is a changed input even if
         # a sheet's content happened to come out identical.
         "trading_date": trading_date.isoformat(),
@@ -204,6 +291,7 @@ def key_parts(
 
 _HASHED_PARTS = (
     "user_id", "ticker", "mandate", "fact_sheet", "policy", "model_root", "trading_date",
+    "portfolio", "journal", "alpaca",
 )
 
 

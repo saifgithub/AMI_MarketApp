@@ -7946,6 +7946,29 @@ class RoomRunner:
             ),
         )
 
+    @staticmethod
+    def _account_digests_blocking(user_id: UUID, ticker: str) -> tuple[str, str] | None:
+        """(portfolio digest, journal digest) of what the desks read from the
+        user's account, or None when either cannot be read: a Room whose inputs
+        cannot be proven unchanged is not banked."""
+        try:
+            sim = get_sim_engine()
+            portfolio = sim.ensure_portfolio(user_id)
+            trades = sim.list_trades(user_id)
+            entries, _, _ = get_journal_store().list_for_user(
+                user_id, plan=effective_plan_for_user(user_id), ticker=ticker, limit=50,
+            )
+            return (
+                room_bank.portfolio_digest(portfolio, trades),
+                room_bank.journal_digest(entries),
+            )
+        except Exception as exc:  # noqa: BLE001 - degrade loudly, never bank blind
+            logger.warning(
+                "room_bank_account_unreadable",
+                user_id=str(user_id), ticker=ticker, error=str(exc)[:200],
+            )
+            return None
+
     async def _prepare_bank(
         self,
         *,
@@ -7954,6 +7977,7 @@ class RoomRunner:
         mandate: Mandate,
         roster: AnalystRoster,
         decision: "_FeedDecision",
+        alpaca_key: str = "none",
     ) -> "_BankPrep":
         """CR267 WP-24 — freeze today's fact sheet and compute the Room key.
 
@@ -7982,12 +8006,17 @@ class RoomRunner:
                 if isinstance(gateway, LLMGateway) else None
             )
             policy = await asyncio.to_thread(room_bank.policy_version)
+            account = await asyncio.to_thread(
+                self._account_digests_blocking, user_id, ticker,
+            )
             if frozen.sheet_hash is None:
                 reason = "the fact sheet could not be frozen"
             elif root is None:
                 reason = "the model root could not be read from /v1/models"
             elif policy is None:
                 reason = "no prompt version could be computed"
+            elif account is None:
+                reason = "the user's portfolio or journal could not be read"
             if reason is not None:
                 logger.warning(
                     "room_bank_degraded",
@@ -7999,6 +8028,7 @@ class RoomRunner:
                 user_id=user_id, ticker=ticker, mandate=mandate,
                 sheet_hash=frozen.sheet_hash, policy=policy, model_root=root,
                 trading_date=trading_date,
+                portfolio=account[0], journal=account[1], alpaca=alpaca_key,
             )
             return _BankPrep(frozen, room_bank.key_from_parts(parts), parts, None)
         except Exception as exc:
@@ -8302,6 +8332,7 @@ class RoomRunner:
         backtest: AsOfContext | None = None,
         alpaca_snapshot: str | None = None,
         bank_outcome: dict[str, Any] | None = None,
+        alpaca_key: str = "none",
     ) -> UUID:
         """Start a room run as a detached background task. Returns run_id immediately.
 
@@ -8458,7 +8489,7 @@ class RoomRunner:
             )
             bank_prep = await self._prepare_bank(
                 user_id=user_id, ticker=ticker, mandate=mandate,
-                roster=roster, decision=decision,
+                roster=roster, decision=decision, alpaca_key=alpaca_key,
             )
             if bank_prep.key is not None:
                 hit = await asyncio.to_thread(self._lookup_bank, bank_prep.key)

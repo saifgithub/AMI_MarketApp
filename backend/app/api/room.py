@@ -63,6 +63,7 @@ from app.api.sse import escape_sse_text, sse_json, sse_text, with_keepalive
 from app.db import get_session
 from app.db.models import RoomRunRow, User
 from app.schemas.alpaca import AlpacaSnapshotIn
+from app.services import room_bank
 from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
@@ -238,6 +239,7 @@ async def stream_room(
             on_complete=_finalise_to_journal,
             alpaca_snapshot=render_snapshot(req.alpaca),
             bank_outcome=bank_outcome,
+            alpaca_key=room_bank.alpaca_digest(req.alpaca),
         )
     except RoomAlreadyInSession as e:
         # CR270 — 409: the request is well-formed but conflicts with the user's

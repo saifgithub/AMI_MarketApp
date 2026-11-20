@@ -454,7 +454,8 @@ def test_a_backup_restart_rekeys_to_the_backup_root():
     gw = _RootGateway(root="root-A", backup_root="root-B")
     runner = RoomRunner(llm=gw)
     parts = {"user_id": "u", "ticker": "AAPL", "mandate": "m", "fact_sheet": "f",
-             "policy": "p", "model_root": "root-A", "trading_date": "2026-11-20"}
+             "policy": "p", "model_root": "root-A", "trading_date": "2026-11-20",
+             "portfolio": "pf", "journal": "jn", "alpaca": "none"}
     run = _run("running")
     run.bank_key, run.bank_inputs = room_bank.key_from_parts(parts), parts
     primary_key = run.bank_key
@@ -825,3 +826,246 @@ def test_a_users_resolved_mandate_digest_is_stable_across_reads():
     first = room_bank.mandate_digest(resolve_mandate(u, None))
     time.sleep(0.01)
     assert room_bank.mandate_digest(resolve_mandate(u, None)) == first
+
+
+# ── the user's account is keyed: any trade, note or linked-account change ──
+
+
+def _portfolio_id(u: UUID) -> UUID:
+    from app.services.sim_engine import get_sim_engine
+
+    return get_sim_engine().ensure_portfolio(u).id
+
+
+def _set_cash(u: UUID, cash: float) -> None:
+    from app.db.models import SimPortfolioRow
+
+    with get_session() as s:
+        s.get(SimPortfolioRow, _portfolio_id(u)).current_cash = cash
+
+
+def _add_holding(u: UUID, ticker="NVDA", qty=3.0) -> None:
+    from app.db.models import SimHoldingRow
+
+    with get_session() as s:
+        s.add(SimHoldingRow(
+            portfolio_id=_portfolio_id(u), ticker=ticker, quantity=qty, avg_cost=100.0,
+            opened_at=datetime.now(timezone.utc),
+        ))
+
+
+def _add_trade(u: UUID, *, status="open", side="buy", stop=90.0, ticker="NVDA",
+               qty=3.0, closed=False) -> None:
+    from app.db.models import SimTradeRow
+
+    now = datetime.now(timezone.utc)
+    if status == "open":
+        _add_holding(u, ticker, qty)  # the engine's ledger: an open buy is a holding
+    with get_session() as s:
+        s.add(SimTradeRow(
+            user_id=u, portfolio_id=_portfolio_id(u), ticker=ticker, side=side,
+            quantity=qty, entry_price=100.0, stop=stop, opened_at=now,
+            closed_at=now if closed else None, status=status,
+        ))
+
+
+def _journal(u: UUID, ticker="AAPL", *, title="note", etype="sim_trade", note=None):
+    from app.schemas.journal import EntryType, JournalEntryCreate
+    from app.services.journal_store import get_journal_store
+
+    return get_journal_store().append(JournalEntryCreate(
+        user_id=u, entry_type=EntryType(etype), title=title, ticker=ticker, user_note=note,
+    ))
+
+
+def _convene_twice(mutate, ticker="AAPL"):
+    """Run a Room, apply `mutate(user)`, convene the same inputs again."""
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        a = await _convene(runner, u, ticker, m)
+        mutate(u)
+        b = await _convene(runner, u, ticker, m)
+        return a, b
+
+    return _go(go())
+
+
+def test_unchanged_account_is_the_same_room(fast_room):
+    a, b = _convene_twice(lambda u: None)
+    assert a == b
+
+
+def test_cash_to_the_dollar_is_keyed_and_cents_are_not(fast_room):
+    a, b = _convene_twice(lambda u: _set_cash(u, 10_000.40))
+    assert a == b, "under a dollar of cash movement is the same Room"
+    a, b = _convene_twice(lambda u: _set_cash(u, 9_000.0))
+    assert a != b
+
+
+def test_a_new_holding_is_a_new_room(fast_room):
+    a, b = _convene_twice(lambda u: _add_holding(u))
+    assert a != b
+
+
+def test_a_changed_holding_quantity_is_a_new_room(fast_room):
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        _add_holding(u, qty=3.0)
+        a = await _convene(runner, u, "AAPL", m)
+        from app.db.models import SimHoldingRow
+
+        with get_session() as s:
+            row = s.execute(select(SimHoldingRow)).scalars().first()
+            row.quantity = 5.0
+        return a, await _convene(runner, u, "AAPL", m)
+
+    a, b = _go(go())
+    assert a != b
+
+
+def test_an_opened_trade_is_a_new_room(fast_room):
+    a, b = _convene_twice(lambda u: _add_trade(u))
+    assert a != b
+
+
+def test_a_changed_stop_on_an_open_lot_is_a_new_room(fast_room):
+    from app.db.models import SimTradeRow
+
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        _add_trade(u, stop=90.0)
+        a = await _convene(runner, u, "AAPL", m)
+        with get_session() as s:
+            s.execute(select(SimTradeRow)).scalars().first().stop = 95.0
+        return a, await _convene(runner, u, "AAPL", m)
+
+    a, b = _go(go())
+    assert a != b
+
+
+def test_trade_side_is_in_the_portfolio_digest():
+    from types import SimpleNamespace as NS
+
+    pf = NS(current_cash=0, holdings=[], shorts=[], options=[])
+
+    def lot(side):
+        return NS(ticker="A", side=side, quantity=1, entry_price=2.0, stop=1.0,
+                  status="open", opened_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                  closed_at=None)
+
+    assert room_bank.portfolio_digest(pf, [lot("buy")]) != room_bank.portfolio_digest(pf, [lot("sell")])
+
+
+def test_a_closed_trade_in_the_history_is_a_new_room(fast_room):
+    """The cooldown and over-trading checks read closed trades too."""
+    a, b = _convene_twice(lambda u: _add_trade(u, status="lost", closed=True))
+    assert a != b
+
+
+def test_portfolio_digest_covers_short_and_option_legs():
+    from types import SimpleNamespace as NS
+
+    base = dict(
+        current_cash=1000.2, holdings=[NS(ticker="A", quantity=1, avg_cost=2.0)],
+        shorts=[], options=[],
+    )
+    d0 = room_bank.portfolio_digest(NS(**base), [])
+    short = NS(**{**base, "shorts": [NS(ticker="B", quantity=2, entry_price=5.0)]})
+    opt = NS(**{**base, "options": [NS(occ_symbol="X1", quantity=-1, avg_premium=1.5)]})
+    assert len({d0, room_bank.portfolio_digest(short, []), room_bank.portfolio_digest(opt, [])}) == 3
+    # order of legs is not a change
+    two = NS(**{**base, "shorts": [NS(ticker="B", quantity=2, entry_price=5.0),
+                                   NS(ticker="C", quantity=1, entry_price=6.0)]})
+    rev = NS(**{**base, "shorts": list(reversed(two.shorts))})
+    assert room_bank.portfolio_digest(two, []) == room_bank.portfolio_digest(rev, [])
+
+
+def test_a_new_non_room_journal_entry_for_the_ticker_is_a_new_room(fast_room):
+    a, b = _convene_twice(lambda u: _journal(u, "AAPL", title="my thesis"))
+    assert a != b
+
+
+def test_an_edited_journal_note_is_a_new_room(fast_room):
+    from app.db.models import JournalEntryRow
+
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        _journal(u, "AAPL", title="thesis", note="first view")
+        a = await _convene(runner, u, "AAPL", m)
+        with get_session() as s:
+            s.execute(select(JournalEntryRow)).scalars().first().user_note = "changed my mind"
+        return a, await _convene(runner, u, "AAPL", m)
+
+    a, b = _go(go())
+    assert a != b
+
+
+def test_a_journal_entry_for_another_ticker_is_the_same_room(fast_room):
+    a, b = _convene_twice(lambda u: _journal(u, "MSFT", title="other name"))
+    assert a == b, "the desks read this ticker's entries only"
+
+
+def test_the_rooms_own_journal_entry_does_not_unkey_the_next_convene(fast_room):
+    """Room-run entries are the Rooms' own output: counting them would make every
+    repeat convene a miss."""
+    a, b = _convene_twice(lambda u: _journal(u, "AAPL", title="Room on AAPL", etype="room_run"))
+    assert a == b
+
+
+def test_a_linked_alpaca_account_is_keyed_by_cash_and_positions():
+    from types import SimpleNamespace as NS
+
+    def acct(cash=5000.0, positions=(("AAPL", 2.0),), mv=999.0, pl=1.0):
+        return NS(cash=cash, positions=[
+            NS(symbol=s, qty=q, market_value=mv, unrealized_pl=pl) for s, q in positions
+        ])
+
+    base = room_bank.alpaca_digest(acct())
+    assert room_bank.alpaca_digest(None) == "none" != base
+    assert room_bank.alpaca_digest(acct(mv=1500.0, pl=-40.0)) == base, "price drift is not a change"
+    assert room_bank.alpaca_digest(acct(cash=5000.4)) == base
+    assert room_bank.alpaca_digest(acct(cash=4000.0)) != base
+    assert room_bank.alpaca_digest(acct(positions=(("AAPL", 3.0),))) != base
+    assert room_bank.alpaca_digest(acct(positions=(("AAPL", 2.0), ("MSFT", 1.0)))) != base
+
+
+def test_a_changed_alpaca_digest_is_a_new_room(fast_room):
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        a = await _convene(runner, u, "AAPL", m)
+        out: dict = {}
+        b = await runner.start_run(
+            user_id=u, ticker="AAPL", mandate=m, char_delay_min=0.0, char_delay_max=0.0,
+            alpaca_key="changed", bank_outcome=out,
+        )
+        async for _ in runner.subscribe(b):
+            pass
+        for t in [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]:
+            await asyncio.gather(t, return_exceptions=True)
+        return a, b
+
+    a, b = _go(go())
+    assert a != b
+
+
+def test_an_unreadable_account_runs_unbanked(fast_room, monkeypatch):
+    monkeypatch.setattr(RoomRunner, "_account_digests_blocking", staticmethod(lambda *a: None))
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(), _mandate()
+
+    async def go():
+        a = await _convene(runner, u, "AAPL", m)
+        return a, await _convene(runner, u, "AAPL", m)
+
+    a, b = _go(go())
+    assert a != b
