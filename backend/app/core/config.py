@@ -1400,6 +1400,18 @@ class Settings(BaseSettings):
     # advice or abusive language. A Literal on purpose (the `gtm_funnel`
     # idiom): a typo'd mode must fail boot, never fall through to "off".
     output_guard_mode: Literal["off", "log", "enforce"] = "log"
+
+    # ISS001 (DEF499) — the INSERT tripwire on the app engine
+    # (`app/db/ami_claim.py`, installed in `app/db/session.py::get_engine`).
+    # `log` (the default, Alpha and Beta): an INSERT into a collidable table
+    # that no `claim()`/`unclaimed()` sanctioned is logged once per site
+    # (`unclaimed_insert`, ERROR; known pre-control sites at WARNING) and runs
+    # unchanged. `raise`: the same INSERT raises `UnclaimedInsert` — the unit
+    # suite runs this (tests/conftest.py). `off` installs nothing and is loud:
+    # boot logs `insert_tripwire_off` at ERROR, and `ENV=beta` refuses it. A
+    # Literal on purpose (the `output_guard_mode` idiom): a typo'd mode must fail
+    # boot, never fall through to "off".
+    insert_tripwire_mode: Literal["off", "log", "raise"] = "log"
     # CR271 — `runaway_length`: a single user-visible agent turn over this many
     # words is a runaway generation. Logged with its original length in every
     # mode; in `enforce` mode also cut at a sentence boundary near the cap with a

@@ -12,6 +12,7 @@ this matches the existing sync ergonomics of the in-memory stores.
 from __future__ import annotations
 
 import os
+import sys
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -76,6 +77,33 @@ def _resolve_url() -> str:
     return url
 
 
+def _install_insert_tripwire(engine: Engine, *, under_tests: bool | None = None) -> None:
+    """ISS001 — put the INSERT tripwire on THIS engine instance (never the Engine
+    class: alembic's own engine legitimately INSERTs data). Mode comes from
+    `settings.insert_tripwire_mode`; `off` is loud outside tests (CR040)."""
+    mode = settings.insert_tripwire_mode
+    if under_tests is None:
+        under_tests = "pytest" in sys.modules
+    if mode == "off":
+        if not under_tests:
+            logger.error(
+                "insert_tripwire_off",
+                hint="INSERT_TRIPWIRE_MODE=off: unsanctioned INSERTs into unique-keyed "
+                "tables are unwatched (ISS001). Use log or raise.",
+            )
+        return
+    from app.db.ami_claim import install_tripwire
+    from app.db.insert_baseline import INSERT_BASELINE
+
+    install_tripwire(
+        Base.metadata,
+        engine=engine,
+        mode=mode,
+        baseline=INSERT_BASELINE,
+        app_frames_only=under_tests,
+    )
+
+
 def get_engine() -> Engine:
     global _engine, _SessionLocal
     if _engine is None:
@@ -86,6 +114,7 @@ def get_engine() -> Engine:
             # sync deps) — sqlite needs this opt-in.
             connect_args["check_same_thread"] = False
         _engine = create_engine(url, future=True, connect_args=connect_args)
+        _install_insert_tripwire(_engine)
         _SessionLocal = sessionmaker(
             bind=_engine, autoflush=False, autocommit=False, expire_on_commit=False,
         )

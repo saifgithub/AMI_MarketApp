@@ -29,6 +29,8 @@ The exercise asks several agents, blind to each other, what would actually stop 
 | Submissions landed | **4 of 4** — three at `0d5ff502`; `sonnet5.5/` the 4th (written after DEF499, read its symptom text) |
 | Judging | **DONE 2026-11-20** by a delegated judge agent. Ranking: sonnet5.5 > kimi-k2 > opus5.0 > gemini-3.6-flash. [`VERDICT.md`](VERDICT.md) |
 | Implementation CR | **not minted.** Phase 0 (DEF499 migration) and Phase 1 (observe-only control) touch no frozen site; Phase 3 needs the unfreeze |
+| Phase 0 (DEF499 migration + `ensure_portfolio`) | **merged** — `435f2f24`, branch `beta/cr267` |
+| Phase 1 (the control: `ami_claim.py`, tripwire on `get_engine()`, canaries, observer, mutation harness) | **landed on branch `lane/iss001-phase1`, pending merge** (AT:B1 DEF499). `INSERT_TRIPWIRE_MODE`: `log` default, `raise` in the unit suite. No DEF308 site touched; pre-control sites ride `backend/app/db/insert_baseline.py`. P15 in `failure_patterns.md` points at it. Phase 2+ not started |
 | The DEF308 sites | **FROZEN** — Saiful's ruling, 2026-08-15. Now **9** pinned (apple/google fixed under DEF416). Verdict recommends unfreezing after Phase 1 lands (founder's call) |
 
 **Nobody has been asked to judge.** The invite deliberately never asks a contributor for a verdict —
