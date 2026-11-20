@@ -151,6 +151,7 @@ _ENV_KEYS_WITHOUT_SETTINGS: dict[str, str] = {
     "REVENUECAT_PUBLIC_SDK_API_KEY": "client-side SDK key — shipped in the Flutter build, never read by the backend",
     "WEBSITE_DB_PASSWORD": "the marketing site's own DB, deployed to cPanel — not this backend",
     "WEBSITE_NOTIFY_EMAIL": "the marketing site's contact-form recipient — not this backend",
+    "WEBSITE_ADMIN_SECRET": "website_api's waitlist admin export (compose api-website ADMIN_SECRET, CR267 WP-51) — not this backend",
 }
 
 
