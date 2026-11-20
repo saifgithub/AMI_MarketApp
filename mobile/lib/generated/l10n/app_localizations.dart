@@ -6273,6 +6273,18 @@ abstract class AppLocalizations {
   /// **'{used} of {cap} Findings used today. Available again tomorrow.'**
   String portfolioHealthDailyCapNote(String used, String cap);
 
+  /// DEF509/CR140 — says WHEN the next new Finding is allowed. Shown as the caption under FULL FINDING on the Portfolio Health card when the cadence gate is closed, and as the body of the Finding screen's 429 refusal panel (portfolio_health_cadence_not_elapsed, which has no retry because retrying cannot change the date). {date} is a locale-formatted calendar date in the reader's own time zone, already wrapped in directional isolates. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your next reading is available on {date}.'**
+  String portfolioHealthCadenceNote(String date);
+
+  /// DEF509 — fallback body of the cadence 429 panel if the server's refusal carries no parseable next_eligible_at (it always should). Says only what is known: not yet, no retry. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your next reading is not available yet.'**
+  String get portfolioHealthCadenceNoDateBody;
+
   /// CR136 — shown when the gate is closed for this plan. The tiles above stay free and visible; only the written Finding is gated. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

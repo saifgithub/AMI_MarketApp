@@ -79,7 +79,10 @@ const Set<String> kInsufficientCauses = {
   kCauseSparseGrid,
 };
 
-/// M07 §3.2's gate status — exactly the eight keys `GateStatus.as_dict()` ships.
+/// M07 §3.2's gate status — the keys `GateStatus.as_dict()` ships. The first
+/// eight are M07's; the cadence trio is CR140's (DEF509: the client read none
+/// of them, so a 429 `portfolio_health_cadence_not_elapsed` fell through to the
+/// "engine did not respond" panel).
 class HealthGateStatus {
   const HealthGateStatus({
     required this.mode,
@@ -90,6 +93,9 @@ class HealthGateStatus {
     required this.dailyUsed,
     required this.dailyCap,
     required this.planHasAccess,
+    this.cadenceDays = 0,
+    this.cadenceBlocked = false,
+    this.nextEligibleAt,
   });
 
   /// "open" | "trial" | "plan".
@@ -101,6 +107,18 @@ class HealthGateStatus {
   final int dailyUsed;
   final int dailyCap;
   final bool planHasAccess;
+
+  /// CR140 — minimum days between Findings; 0 = no cadence.
+  final int cadenceDays;
+
+  /// True when the server would refuse a NEW Finding on cadence. Same-day
+  /// replays of an existing Finding are not gated, so this is advisory for the
+  /// button and authoritative only for the "next reading" caption.
+  final bool cadenceBlocked;
+
+  /// When the next new Finding is allowed; null when none has been written yet
+  /// or the cadence is off. Parsed from the server's ISO string.
+  final DateTime? nextEligibleAt;
 
   /// The shape the client falls back to when the envelope carries no `gate` at
   /// all — a wire divergence, not a normal state. Deliberately the most
@@ -127,6 +145,11 @@ class HealthGateStatus {
         dailyUsed: (j['daily_used'] as num?)?.toInt() ?? 0,
         dailyCap: (j['daily_cap'] as num?)?.toInt() ?? 0,
         planHasAccess: j['plan_has_access'] as bool? ?? false,
+        cadenceDays: (j['cadence_days'] as num?)?.toInt() ?? 0,
+        cadenceBlocked: j['cadence_blocked'] as bool? ?? false,
+        nextEligibleAt: j['next_eligible_at'] is String
+            ? DateTime.tryParse(j['next_eligible_at'] as String)
+            : null,
       );
 }
 

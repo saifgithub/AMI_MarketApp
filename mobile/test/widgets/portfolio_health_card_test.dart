@@ -20,6 +20,7 @@ import 'package:ami_trade/widgets/portfolio_health/risk_money_bars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 import '../support/portfolio_health_fixtures.dart';
 
@@ -665,6 +666,49 @@ void main() {
             'Available again tomorrow.'),
         findsOneWidget,
       );
+    });
+
+    test('cadence outranks the daily cap, as the server orders them', () {
+      HealthGateStatus g(Map<String, dynamic> j) =>
+          HealthGateStatus.fromJson(j);
+      const iso = '2026-12-20T09:30:00+00:00';
+      expect(
+        deriveHealthCta(g(gateJson(
+            cadenceBlocked: true, nextEligibleAt: iso, dailyUsed: 2))),
+        HealthCtaState.cadence,
+      );
+      expect(
+        deriveHealthCta(g(gateJson(cadenceBlocked: true, planHasAccess: false))),
+        HealthCtaState.upgrade,
+        reason: 'no access is told to upgrade, not to wait',
+      );
+      expect(
+        deriveHealthCta(g(gateJson(cadenceBlocked: true))),
+        HealthCtaState.generate,
+        reason: 'a block that cannot say WHEN is left to the POST to refuse',
+      );
+      expect(
+        deriveHealthCta(g(gateJson(nextEligibleAt: iso))),
+        HealthCtaState.generate,
+        reason: 'a past/unblocked clock is not a block',
+      );
+    });
+
+    testWidgets('a closed cadence states WHEN and keeps today\'s replay open',
+        (tester) async {
+      const iso = '2026-12-20T09:30:00+00:00';
+      await _pump(
+        tester,
+        health: healthFixture(
+          gate: gateJson(cadenceBlocked: true, nextEligibleAt: iso),
+        ),
+      );
+      final date = DateFormat.yMMMd('en_US').format(DateTime.parse(iso).toLocal());
+      expect(find.text('Your next reading is available on ${_iso(date)}.'),
+          findsOneWidget);
+      final button = tester.widget<HexButton>(find.byType(HexButton));
+      expect(button.onPressed, isNotNull,
+          reason: 're-opening today\'s Finding is free and ungated');
     });
 
     testWidgets('the trial chip states Findings and never days', (tester) async {

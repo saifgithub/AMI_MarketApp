@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**301 cases** — 197 api, 20 device, 84 manual; 16 blocked.
+**302 cases** — 197 api, 20 device, 85 manual; 16 blocked.
 
 ## Areas
 
@@ -17,7 +17,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
-10. [Portfolio health & sector analytics](#portfolio-health) — 12 cases
+10. [Portfolio health & sector analytics](#portfolio-health) — 13 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
@@ -4135,6 +4135,22 @@ _Manual (iPhone checklist) · plans: trader_
 **Expected**
 1. Donut slices and legend add up to 100% including Cash; Other is shown but never flagged as a breach
 2. After lowering the cap the card shows the breach copy using the mandate's own number
+
+#### UAT-HLTH-013 — A cadence refusal says when the next reading is available, never "engine did not respond"
+
+_Manual (iPhone checklist) · plans: trader_
+
+**Preconditions**
+1. Gate mode "plan" (or any mode where the 30-day cadence applies) and a Finding already written on an earlier day, so POST finding answers 429 portfolio_health_cadence_not_elapsed (DEF509; real-device run AMI-DL-6 saw the generic engine-error panel instead)
+
+**Steps**
+1. Open the Portfolio screen and read the caption under FULL FINDING
+2. Tap FULL FINDING on a day with no Finding of its own
+
+**Expected**
+1. The card caption reads "Your next reading is available on <date>." with the date in the phone's locale and time zone
+2. The Finding screen shows the same sentence in a dashed slate panel; no "did not respond", no "Tap to retry", and no tappable retry
+3. On the day a Finding was written, FULL FINDING stays tappable and reopens it (replay is free and ungated)
 
 #### UAT-WATCH-011 — Watchlist tab add, swipe-to-remove and quotes
 
