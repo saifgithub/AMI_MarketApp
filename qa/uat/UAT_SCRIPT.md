@@ -2741,7 +2741,7 @@ Users can report a bug with or without a session; the endpoint is
 IP-rate-limited and refuses bad input. The resolution feed is private.
 Telemetry ingest is per-user and idempotent while the segment read is
 admin-only. The help library (ai_coach) serves static, well-formed Q&A with
-no LLM call. Bug reports filed by this suite land in the real triage queue and
+no LLM call. DEF481 (2026-11-20): answer-sheet RELATED LESSONS pills open the lesson; RELATED AGENTS are plain captions. Bug reports filed by this suite land in the real triage queue and
 are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
 
 ### API (automated, live Alpha)
@@ -4409,10 +4409,12 @@ _Manual (iPhone checklist) · plans: floor_pass_
 
 **Steps**
 1. Open the help / coach screen; browse a category; search for "stop loss" and for gibberish
+2. Open a scam-category answer (it cites a lesson and an agent); tap the RELATED LESSONS pill; go back and look at the RELATED AGENTS entry
 
 **Expected**
 1. Categories and answers render with correct line wrapping; search shows relevant results and an honest empty state for gibberish
-2. No screen says "the AI" - the assistant is named AMI
+2. The RELATED LESSONS pill (bordered, >=40px) closes the sheet and opens that lesson's reader; RELATED AGENTS entries are plain text with no border and do nothing when tapped (DEF481)
+3. No screen says "the AI" - the assistant is named AMI
 
 #### UAT-SUPP-013 — The bug-report sheet and the Q&A library are localised and say AMI
 

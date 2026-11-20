@@ -67,6 +67,11 @@ SHEET_MERGE_CTA = "ami.sheet.merge.cta"
 LESSON_MODE_BOOK = "ami.lesson.mode_book"
 LESSON_MODE_INTERACTIVE = "ami.lesson.mode_interactive"
 
+# DEF481 — tappable related-lesson pills (AI Coach answer sheet, glossary term sheet).
+RELATED_COACH_LESSON = "ami.coach.related_lesson"
+RELATED_TERM_LESSON = "ami.term.related_lesson"
+RELATED_TERM_CHIP = "ami.term.related_term"
+
 # CR209 — the Concierge interview. See `OnboardingIds` in the Dart mirror for
 # why the chips share one identifier rather than carrying an index.
 ONBOARDING_ANSWER_CHIP = "ami.onboarding.answer_chip"

@@ -1,7 +1,7 @@
 /// TermBlock — renders `<Term id="…"/>` inside a lesson body as a small
 /// tappable chip. Tapping opens a bottom sheet with the term and
 /// definition; related terms surface as quick links to other Term
-/// sheets, related lessons surface as labels (no nav wiring yet).
+/// sheets, related lessons open the lesson when it resolves (DEF481).
 ///
 /// Unknown ids render as plain bold text — a typo or not-yet-translated
 /// reference never crashes the reader.
@@ -10,6 +10,8 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/glossary.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
+import 'package:ami_trade/widgets/lessons/related_pills.dart';
 import 'package:ami_trade/widgets/lessons/term_registry.dart';
 import 'package:flutter/material.dart';
 
@@ -204,20 +206,10 @@ class _TermSheet extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       for (final lid in entry.relatedLessons)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AmiColors.slate800,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: AmiColors.slate700),
-                          ),
-                          child: Text(
-                            lid,
-                            style: AmiTypography.labelMono
-                                .copyWith(fontSize: 11),
-                          ),
+                        RelatedLessonPill(
+                          lessonRef: lid,
+                          identifier: RelatedIds.termLessonPill,
+                          beforeOpen: () => Navigator.of(context).pop(),
                         ),
                     ],
                   ),
@@ -247,37 +239,42 @@ class _RelatedTermChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final entry = TermRegistry.instance.get(termId, locale: locale);
     final label = entry?.term ?? TermBlock.fallbackLabel(termId);
-    final enabled = entry != null;
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(AmiRadii.card),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: AmiColors.slate800,
+    if (entry == null) return RelatedLabel(text: label);
+    return Semantics(
+      identifier: RelatedIds.termRelatedTerm,
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 40),
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(AmiRadii.card),
-          border: Border.all(
-            color: enabled ? AmiColors.hexBlue : AmiColors.slate700,
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AmiColors.slate800,
+              borderRadius: BorderRadius.circular(AmiRadii.card),
+              border: Border.all(color: AmiColors.hexBlue),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.menu_book_outlined,
+                    color: AmiColors.hexBlue, size: 12),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: AmiTypography.body.copyWith(
+                    color: AmiColors.hexBlue,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.menu_book_outlined,
-              color: enabled ? AmiColors.hexBlue : AmiColors.textMed,
-              size: 12,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: AmiTypography.body.copyWith(
-                color: enabled ? AmiColors.hexBlue : AmiColors.textMed,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ],
         ),
       ),
     );
