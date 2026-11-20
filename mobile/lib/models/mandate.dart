@@ -304,16 +304,27 @@ class ResolvedCaps {
 /// fence: "Do NOT hard-code any preset value or cap — server-sourced only").
 /// `disclosure` is the selection-time dialog body, rendered verbatim.
 class DayTraderPresetInfo {
-  const DayTraderPresetInfo({required this.overrides, required this.disclosure});
+  const DayTraderPresetInfo({
+    required this.overrides,
+    required this.disclosure,
+    this.profile = const {},
+  });
 
   final Map<String, num> overrides;
   final String disclosure;
+
+  /// DEF481 item 6 — the risk-profile half of the preset (`risk_score`,
+  /// `horizon`, `path`, `max_drawdown_pct`), staged beside [overrides] on
+  /// select. Empty from an older server, which keeps the limits-only behaviour.
+  final Map<String, Object> profile;
 
   factory DayTraderPresetInfo.fromJson(Map<String, dynamic> j) {
     return DayTraderPresetInfo(
       overrides: ((j['overrides'] as Map?) ?? const {})
           .map((k, v) => MapEntry(k as String, v as num)),
       disclosure: j['disclosure'] as String? ?? '',
+      profile: ((j['profile'] as Map?) ?? const {}).map(
+          (k, v) => MapEntry(k as String, v as Object)),
     );
   }
 }

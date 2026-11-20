@@ -29,6 +29,20 @@ DAY_TRADER_PRESET_OVERRIDES: dict[str, float | int] = {
     "max_open_risk_pct": 100.0,
 }
 
+# DEF481 item 6 — Saiful: "Day trader = high risk. increase risk tolerance to the
+# highest level. also this is short term only, so change the other setting to
+# reflect." The profile the app stages ALONGSIDE the limits above. Deliberately
+# NOT merged into DAY_TRADER_PRESET_OVERRIDES: `is_day_trader_preset()` and
+# `safety_floor._day_trader_preset_active` key off that map, and users who
+# already applied the preset must keep matching it. 100 is the largest value
+# the app's drawdown picker offers and `Mandate.max_drawdown_pct`'s `le=100`.
+DAY_TRADER_PRESET_PROFILE: dict[str, str | int] = {
+    "risk_score": 5,
+    "horizon": "short",
+    "path": "active",
+    "max_drawdown_pct": 100,
+}
+
 # Disclosed at selection time (CR040 — a silent 100% is exactly what "degrade
 # loudly" exists to stop), not a block: L3 draws no ceiling on what a user may
 # set. The two published baselines this CR is already grounded in.
@@ -56,6 +70,9 @@ DAY_TRADER_DISCLOSURE = (
     "Day Trader preset removes every risk limit you control: sector and "
     "single-name concentration caps, the post-loss cooldown, max open "
     "positions, trade-pace limits, and total open risk all go permissive. "
+    "It also sets your risk tolerance to the highest level (5), your horizon "
+    "to short term, your path to active trading, and your maximum drawdown to "
+    "100%. "
     "Compliance, locale, and halal/allow-blocklist rules still apply — this "
     "preset cannot touch them.\n\n"
     "What the evidence says happens: Barber & Odean (66,465 US households, "

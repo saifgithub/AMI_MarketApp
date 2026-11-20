@@ -144,6 +144,10 @@ class DayTraderPresetInfo(BaseModel):
 
     overrides: dict[str, float | int]
     disclosure: str
+    # DEF481: the risk-profile half of the preset (risk score, horizon, path,
+    # max drawdown) the client stages beside `overrides`. Kept out of
+    # `overrides` so `is_day_trader_preset()` still matches existing users.
+    profile: dict[str, float | int | str] = Field(default_factory=dict)
 
 
 class Compliance(BaseModel):
