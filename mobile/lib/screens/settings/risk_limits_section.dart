@@ -18,7 +18,7 @@
 /// "following your risk profile" for every field, never "OFF". The number
 /// each unset limit actually enforces arrives from the server in the
 /// mandate's `resolved` object (DEF193 + d1d4076d) and is rendered verbatim
-/// — "Following your risk profile — 40%". When `resolved` is absent (an
+/// — "From your risk profile — 40%". When `resolved` is absent (an
 /// older backend), this screen falls back to the no-number label rather
 /// than computing the preset client-side: the preset tables live in
 /// `backend/app/trading_math/risk_limits.py`/`sizing.py` and are
@@ -268,6 +268,15 @@ class RiskLimitsSection extends StatelessWidget {
             ),
           ),
         ),
+        if (expanded && isCustomProfile)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+            child: Text(
+              l.settingsRiskLimitsSetByYou,
+              key: const Key('riskLimitsOverrideNote'),
+              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            ),
+          ),
         if (expanded)
           for (final cfg in [
             ...kRiskLimitFields,
@@ -449,12 +458,17 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
     final showResolvedNumber = widget.resolvedValue != null &&
         widget.serverValue == null &&
         widget.effectiveValue == null;
+    // DEF481 item 4: a row says exactly one true thing. Following -> the
+    // selected chip reads "From your risk profile"; overridden -> the same
+    // chip is the way back, so it reads as that action, and the caption below
+    // says "Set by you". The two never describe one row at once.
     final followingLabel = showResolvedNumber
-        ? l.settingsRiskLimitsFollowingResolved(
+        ? l.settingsRiskLimitsFromProfileResolved(
             '${_formatForEdit(widget.resolvedValue)}${_unitSuffix()}')
-        : l.settingsRiskLimitsProfileFollowing;
-    final offLabel =
-        widget.config.presetLinked ? followingLabel : l.settingsRiskLimitsOff;
+        : l.settingsRiskLimitsFromProfile;
+    final offLabel = !widget.config.presetLinked
+        ? l.settingsRiskLimitsOff
+        : (isOff ? followingLabel : l.settingsRiskLimitsUseProfile);
     final disclosure = classifyLimitEdit(
       widget.config,
       oldValue: widget.serverValue,
@@ -519,7 +533,7 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
           if (!isOff) ...[
             const SizedBox(height: 4),
             Text(
-              l.settingsRiskLimitsSetByYou,
+              l.settingsRiskLimitsSetByYouRow,
               key: Key('riskLimitSetByYou_${widget.config.key}'),
               style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
             ),
@@ -614,7 +628,7 @@ class RetroTighteningDialog extends StatelessWidget {
 /// Material's `Chip` sizes the label's height with a dry layout at the chip's
 /// full width, then lays the label out narrower (minus check mark and
 /// paddings) capped at that one-line height, so a label that wraps there is
-/// clipped — the resolved value after "Following your risk profile —" was cut
+/// clipped — the resolved value after "From your risk profile —" was cut
 /// on a real 360 dp phone even with `maxLines: 2` (DEF502's attempt). This
 /// draws the same chip (outline, selected tint, check, 48 dp tap target,
 /// button + selected semantics) with a plain Row, so the height follows the

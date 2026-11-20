@@ -1726,9 +1726,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Following your risk profile';
 
   @override
-  String settingsRiskLimitsFollowingResolved(String value) {
-    return 'Following your risk profile — $value';
+  String get settingsRiskLimitsFromProfile => 'From your risk profile';
+
+  @override
+  String settingsRiskLimitsFromProfileResolved(String value) {
+    return 'From your risk profile — $value';
   }
+
+  @override
+  String get settingsRiskLimitsUseProfile => 'Use my risk profile';
+
+  @override
+  String get settingsRiskLimitsSetByYouRow => 'Set by you';
 
   @override
   String get settingsRiskLimitsSetByYou =>

@@ -710,6 +710,11 @@ edits them. Guards the goals that matter: a mandate is only ever readable and
 writable by its owner, entitlement fields cannot be set from a PATCH, rollback is
 forward-only and restores the old values, and a compliance setting actually stops
 a non-compliant trade in the deterministic safety floor (not just in a prompt).
+DEF481 (2026-11-20): the Day Trader preset also sets risk tolerance 5, a short-term
+horizon, the active path and the largest drawdown, and its chip can be deselected
+(UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
+or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
+tier picker (UAT-MAND-035).
 
 ### API (automated, live Alpha)
 
@@ -725,7 +730,8 @@ _API (automated, live Alpha) · plans: trader_
 2. plan "trader", a positive credit_balance equal to credit_allowance, room_cost and credits_reset_at set (read from the user, not the stored mandate)
 3. resolved carries all seven concrete limits (sector_cap_pct, single_name_cap_pct, max_open_positions, post_loss_cooldown_hours, max_trades_per_day, max_trades_per_week, max_open_risk_pct), none null
 4. day_trader_preset.overrides holds the seven permissive values and a non-empty disclosure
-5. No version history exists yet
+5. day_trader_preset.profile holds risk_score 5, horizon "short", path "active" and max_drawdown_pct 100 (DEF481, 2026-11-20), and none of those keys is in overrides
+6. No version history exists yet
 
 #### UAT-MAND-002 — A mandate is private to its owner
 
@@ -853,13 +859,15 @@ _API (automated, live Alpha) · plans: trader_
 1. PATCH halal true
 2. PATCH the mandate with day_trader_preset.overrides exactly as served by GET
 3. GET the mandate and history
-4. PATCH the seven fields back to null
+4. PATCH day_trader_preset.overrides plus day_trader_preset.profile together exactly as served by GET (what the app sends on Save, DEF481)
+5. PATCH the seven fields back to null
 
 **Expected**
 1. After the preset, resolved shows sector_cap_pct 100, single_name_cap_pct 100, post_loss_cooldown_hours 0, max_open_risk_pct 100 and max_open_positions / max_trades_per_day / max_trades_per_week 999999
 2. compliance.halal is still true (the preset cannot touch compliance)
 3. The newest history summary starts "Day Trader preset applied"
-4. Setting the seven back to null returns resolved to the risk-profile values (single_name_cap_pct 3.0, sector_cap_pct 40.0 for risk 3)
+4. The combined overrides + profile PATCH is 200, is journalled the same way, and the mandate then reads risk_score 5, horizon short, path active, max_drawdown_pct 100 (DEF481, 2026-11-20)
+5. Setting the seven back to null returns resolved to the risk-profile values (single_name_cap_pct 3.0, sector_cap_pct 40.0 for risk 3)
 
 #### UAT-MAND-012 — Explicit risk limits override the risk profile and null returns to it
 
@@ -1705,6 +1713,7 @@ orders still fill at it. All figures are asserted from the fill the server
 reports, never an assumed price.
 DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
 user sees or does changed, so no case steps change.
+DEF481 (2026-11-20): the blocked-trade OPEN MY MANDATE button opens Settings scrolled to the section holding the rule that refused the order (UAT-SIM-022).
 
 ### API (automated, live Alpha)
 
@@ -3557,12 +3566,17 @@ _Manual (iPhone checklist) · plans: any_
 **Steps**
 1. Settings > RISK LIMITS > "Set my own limits"
 2. Set a tighter single-name cap than one of the current holdings and save
-3. Choose the Day Trader preset
+3. Choose the Day Trader preset, confirm the disclosure, then press Save
+4. Tap the Day Trader chip again (it is selected), then press Save
 
 **Expected**
-1. Each limit shows "Following your risk profile" with the resolved number until the user sets their own; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)
-2. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders
-3. The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing
+1. A limit that follows the profile shows the selected chip "From your risk profile" with the resolved number; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)
+2. A limit the user set shows "Set by you" under it and its chip reads "Use my risk profile" (tapping it clears the limit); no row ever shows both "From your risk profile" and "Set by you". "Set by you - overrides your risk profile" appears once above the rows (DEF481, 2026-11-20)
+3. The status line under the dial is "Following your risk profile", "Custom" or the Day Trader line, matching the rows
+4. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders
+5. The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing
+6. Confirming the preset also moves the risk dial to the highest level (5), sets Horizon to short term, Path to active and Max drawdown to 100%, all unsaved until Save (DEF481, 2026-11-20); the disclosure says so
+7. Tapping the selected Day Trader chip shows no dialog and sets the seven limits back to following the risk profile; risk level, horizon, path and drawdown stay as they were. After Save the chip is no longer selected
 
 #### UAT-MAND-032 — Compliance toggles stop a trade in the app
 
@@ -3615,6 +3629,7 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. Guest shows "Guest (anonymous)" with the note that data stays on this device and a Sign in button
 2. Signed in shows "Signed in", the handle, a Manage account button and a red Sign out button
+3. Manage account opens the subscription tier picker (the same sheet as Membership > Upgrade; while store billing is off it shows "Upgrades aren't available yet"), not the sign-in screen; Sign in for a guest still opens sign-in (DEF481, 2026-11-20)
 
 #### UAT-MAND-036 — Discarding unsaved Settings edits really discards them
 
@@ -4020,11 +4035,13 @@ _Manual (iPhone checklist) · plans: trader_
 2. Read the preview (fill, notional, cash available); change side to Sell with nothing held
 3. Enter a halal-excluded ticker such as JPM
 4. Place a valid buy and confirm
+5. On the refused order tap OPEN MY MANDATE
 
 **Expected**
 1. Preview figures match the server; no cash moves until confirm
 2. A refused order shows the violation sentence and cannot be placed; the app never offers a way to override it
-3. After a valid buy the confirmation appears and the Portfolio shows the new holding and reduced cash
+3. OPEN MY MANDATE opens Settings already scrolled so the section holding the blocking rule is on screen (COMPLIANCE for a halal or long-only refusal; RISK LIMITS for a cap, cooldown or trade-count refusal; TICKER RULES for an allow/block-list refusal), not at the top of the page (DEF481, 2026-11-20)
+4. After a valid buy the confirmation appears and the Portfolio shows the new holding and reduced cash
 
 #### UAT-SIM-023 — Portfolio screen tabs and holding cards agree with the server
 

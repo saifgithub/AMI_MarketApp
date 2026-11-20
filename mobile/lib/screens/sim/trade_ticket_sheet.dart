@@ -1797,7 +1797,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                             const SizedBox(height: AmiSpacing.s),
                             Align(
                               alignment: AlignmentDirectional.centerStart,
-                              child: TextButton(
+                              child: Semantics(
+                                identifier: SettingsIds.openMandate,
+                                child: TextButton(
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 32),
@@ -1806,14 +1808,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                 ),
                                 onPressed: () => Navigator.of(context)
                                     .push(MaterialPageRoute<void>(
-                                  builder: (_) => const SettingsScreen(),
+                                  builder: (_) => SettingsScreen(
+                                    anchor: settingsAnchorForBlockedBy(
+                                        state.lastSubmit?.blockedBy),
+                                  ),
                                 )),
                                 child: Text(
                                   l.tradeTicketOpenMandate,
                                   style: AmiTypography.labelMono
                                       .copyWith(color: AmiColors.hexBlue),
                                 ),
-                              ),
+                              )),
                             ),
                           ],
                         ),

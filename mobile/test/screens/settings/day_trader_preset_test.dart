@@ -325,4 +325,134 @@ void main() {
     expect(find.text(l.settingsRiskLimitsProfileFollowing), findsWidgets);
     expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isFalse);
   });
+
+  // DEF481 item 6 — the profile half. Fixture values are unlike production
+  // (drawdown 77, not 100) so only a server round-trip can satisfy them.
+  const kProfilePreset = DayTraderPresetInfo(
+    overrides: kFixtureOverrides,
+    disclosure: kFixtureDisclosure,
+    profile: {
+      'risk_score': 5,
+      'horizon': 'short',
+      'path': 'active',
+      'max_drawdown_pct': 77,
+    },
+  );
+
+  testWidgets(
+      'DEF481 select: confirm stages the limits AND risk score, horizon, path '
+      'and drawdown from the server; Save sends them together', (tester) async {
+    final notifier = await _pump(
+      tester,
+      _mandate(dayTraderPreset: kProfilePreset),
+    );
+    final l = await _l(tester);
+
+    await tester.tap(find.byKey(_chipKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dayTraderConfirm')));
+    await tester.pumpAndSettle();
+
+    expect(notifier.patches, isEmpty);
+    expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isTrue,
+        reason: 'staging the profile must not null the staged limits');
+
+    await tester.tap(find.text(l.settingsSave));
+    await tester.pump();
+    await tester.pump();
+
+    final sent = notifier.patches.single;
+    expect(sent['risk_score'], 5);
+    expect(sent['horizon'], 'short');
+    expect(sent['path'], 'active');
+    expect(sent['max_drawdown_pct'], 77);
+    for (final entry in kFixtureOverrides.entries) {
+      expect(sent[entry.key], entry.value);
+    }
+  });
+
+  testWidgets(
+      'DEF481 select on an older server (no profile): limits only, no profile '
+      'keys sent', (tester) async {
+    final notifier = await _pump(
+      tester,
+      _mandate(dayTraderPreset: kFixturePreset),
+    );
+    final l = await _l(tester);
+
+    await tester.tap(find.byKey(_chipKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dayTraderConfirm')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l.settingsSave));
+    await tester.pump();
+    await tester.pump();
+
+    final sent = notifier.patches.single;
+    expect(sent.containsKey('risk_score'), isFalse);
+    expect(sent.containsKey('horizon'), isFalse);
+    expect(sent.containsKey('path'), isFalse);
+    expect(sent.containsKey('max_drawdown_pct'), isFalse);
+  });
+
+  testWidgets(
+      'DEF481 deselect: tapping the selected chip (no dialog) clears the seven '
+      'limits to follow the profile and keeps the staged profile fields',
+      (tester) async {
+    final notifier = await _pump(
+      tester,
+      _mandate(dayTraderPreset: kProfilePreset),
+    );
+    final l = await _l(tester);
+
+    await tester.tap(find.byKey(_chipKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dayTraderConfirm')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isTrue);
+
+    await tester.tap(find.byKey(_chipKey));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(_bodyKey), findsNothing, reason: 'no dialog on deselect');
+    expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isFalse);
+    expect(find.text(l.settingsRiskPresetDayTraderActive), findsNothing);
+    expect(notifier.patches, isEmpty, reason: 'the user still presses Save');
+
+    await tester.tap(find.text(l.settingsSave));
+    await tester.pump();
+    await tester.pump();
+
+    final sent = notifier.patches.single;
+    for (final key in kFixtureOverrides.keys) {
+      expect(sent.containsKey(key), isTrue, reason: '$key must be cleared');
+      expect(sent[key], isNull, reason: '$key back to the risk profile');
+    }
+    expect(sent['risk_score'], 5);
+    expect(sent['horizon'], 'short');
+    expect(sent['path'], 'active');
+    expect(sent['max_drawdown_pct'], 77);
+  });
+
+  testWidgets(
+      'DEF481 deselect of a SAVED Day Trader preset clears the stored limits '
+      'and leaves the profile alone', (tester) async {
+    final notifier = await _pump(tester, _mandateWithPresetApplied());
+    final l = await _l(tester);
+    expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isTrue);
+
+    await tester.tap(find.byKey(_chipKey));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(_bodyKey), findsNothing);
+    expect(tester.widget<ChoiceChip>(find.byKey(_chipKey)).selected, isFalse);
+    await tester.tap(find.text(l.settingsSave));
+    await tester.pump();
+    await tester.pump();
+    final sent = notifier.patches.single;
+    for (final key in kFixtureOverrides.keys) {
+      expect(sent[key], isNull);
+    }
+    expect(sent.containsKey('risk_score'), isFalse);
+  });
 }

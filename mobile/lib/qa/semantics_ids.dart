@@ -103,6 +103,24 @@ class SheetIds {
   static const String mergeCta = 'ami.sheet.merge.cta';
 }
 
+/// DEF481 — Settings / trade-ticket controls whose behaviour changed on
+/// 2026-11-20, so the device UAT cases can address them without rendered text.
+class SettingsIds {
+  const SettingsIds._();
+
+  /// The Day Trader preset chip: tap selects (after the disclosure), tap again
+  /// deselects.
+  static const String dayTraderPreset = 'ami.settings.day_trader_preset';
+
+  /// ACCOUNT section primary button: MANAGE ACCOUNT (opens the subscription
+  /// tier picker) when signed in, SIGN IN for a guest.
+  static const String accountPrimary = 'ami.settings.account_primary';
+
+  /// Trade ticket OPEN MY MANDATE: opens Settings scrolled to the rule that
+  /// blocked the order.
+  static const String openMandate = 'ami.sim.open_mandate';
+}
+
 /// DEF481 — the lesson reader's mode segments (BOOK / INTERACTIVE). They were
 /// the bare strings `lesson_mode_*`, the only ids outside the `ami.` namespace
 /// the harness's catalogue filters on.

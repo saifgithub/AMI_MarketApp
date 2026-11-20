@@ -40,6 +40,8 @@ from app.services.day_trader_preset import (
     DAY_TRADER_DISCLOSURE,
     DAY_TRADER_JOURNAL_MARKER,
     DAY_TRADER_PRESET_OVERRIDES,
+    DAY_TRADER_PRESET_PROFILE,
+    is_day_trader_preset,
 )
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore
@@ -77,6 +79,48 @@ def test_get_serves_the_day_trader_constants_verbatim(client: TestClient):
     assert preset is not None
     assert preset["overrides"] == dict(DAY_TRADER_PRESET_OVERRIDES)
     assert preset["disclosure"] == DAY_TRADER_DISCLOSURE
+
+
+def test_get_serves_the_day_trader_profile_and_keeps_it_out_of_overrides(
+    client: TestClient,
+):
+    """DEF481 item 6: highest risk tolerance + short-term profile is served as
+    its own `profile`, never merged into `overrides` (which
+    `is_day_trader_preset()` keys off — existing preset users must keep
+    matching)."""
+    user_id, headers = _new_user()
+    preset = client.get(f"/v1/mandate/{user_id}", headers=headers).json()[
+        "day_trader_preset"
+    ]
+    assert preset["profile"] == dict(DAY_TRADER_PRESET_PROFILE)
+    assert preset["profile"]["risk_score"] == 5
+    assert preset["profile"]["horizon"] == "short"
+    assert preset["profile"]["path"] == "active"
+    assert preset["profile"]["max_drawdown_pct"] == 100
+    assert not set(preset["profile"]) & set(preset["overrides"])
+    assert "risk tolerance" in preset["disclosure"]
+    assert "short term" in preset["disclosure"]
+
+
+def test_a_user_who_applied_only_the_limits_still_matches_the_preset():
+    """DEF481: the profile keys are not required by the recognised payload."""
+    assert is_day_trader_preset(dict(DAY_TRADER_PRESET_OVERRIDES))
+    assert is_day_trader_preset(
+        {**DAY_TRADER_PRESET_OVERRIDES, **DAY_TRADER_PRESET_PROFILE}
+    )
+
+
+def test_the_staged_profile_values_are_all_valid_mandate_patches(client: TestClient):
+    """DEF481: overrides + profile PATCHed together (what the app now sends on
+    Save) validates, round-trips, and is still journalled as the preset."""
+    user_id, headers = _new_user()
+    body = {**DAY_TRADER_PRESET_OVERRIDES, **DAY_TRADER_PRESET_PROFILE}
+    r = client.patch(f"/v1/mandate/{user_id}", json=body, headers=headers)
+    assert r.status_code == 200, r.text
+    m = r.json()
+    for k, v in DAY_TRADER_PRESET_PROFILE.items():
+        assert m[k] == v
+    assert _last_mandate_edit_summary(user_id).startswith(DAY_TRADER_JOURNAL_MARKER)
 
 
 def test_patching_the_served_overrides_verbatim_is_recognised_as_the_preset(

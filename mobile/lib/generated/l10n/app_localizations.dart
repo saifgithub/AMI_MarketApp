@@ -2998,11 +2998,29 @@ abstract class AppLocalizations {
   /// **'Following your risk profile'**
   String get settingsRiskLimitsProfileFollowing;
 
-  /// CR129. L2 chip label for a limit with no explicit override, when the server exposes the enforced value: {value} is that number pre-formatted with its unit by the widget ('40%', '1h', '35'). The number comes verbatim from mandate GET/PATCH `resolved` — it is NEVER computed client-side (CR046 shown-equals-enforced; the preset tables exist only in the backend). retranslate:[ar,ms]
+  /// DEF481 item 4. Selected chip label on a risk-limit row that carries no override of its own (the row follows the risk profile) and the server sent no resolved number. Replaces 'Following your risk profile' on rows so a row never shows that chip beside a 'Set by you' caption. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Following your risk profile — {value}'**
-  String settingsRiskLimitsFollowingResolved(String value);
+  /// **'From your risk profile'**
+  String get settingsRiskLimitsFromProfile;
+
+  /// DEF481 item 4. Selected chip label on a risk-limit row that follows the risk profile, with the server-resolved enforced value: {value} is pre-formatted with its unit ('40%', '1h', '35'), taken verbatim from mandate `resolved`, never computed client-side. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'From your risk profile — {value}'**
+  String settingsRiskLimitsFromProfileResolved(String value);
+
+  /// DEF481 item 4. Label of the (unselected) chip on a risk-limit row that carries an explicit override: tapping it clears the override so the row goes back to following the risk profile. An action, so it cannot contradict the 'Set by you' caption on the same row. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Use my risk profile'**
+  String get settingsRiskLimitsUseProfile;
+
+  /// DEF481 item 4. Per-row provenance caption under a risk limit carrying an explicit override. The longer 'overrides your risk profile' explanation (settingsRiskLimitsSetByYou) is shown once above the rows instead of repeated on each. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Set by you'**
+  String get settingsRiskLimitsSetByYouRow;
 
   /// CR129. Provenance caption under a limit carrying an explicit override — in that state the number in the text field IS the enforced value (the server's `resolved` echoes the override). retranslate:[ar,ms]
   ///

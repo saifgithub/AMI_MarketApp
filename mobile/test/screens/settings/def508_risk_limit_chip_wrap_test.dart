@@ -140,9 +140,9 @@ void main() {
       for (final k in _keys) {
         _expectFullyVisible(tester, k, '360dp x$scale $k');
       }
-      expect(find.text(l.settingsRiskLimitsFollowingResolved('40%')),
+      expect(find.text(l.settingsRiskLimitsFromProfileResolved('40%')),
           findsOneWidget);
-      expect(find.text(l.settingsRiskLimitsFollowingResolved('10.5%')),
+      expect(find.text(l.settingsRiskLimitsFromProfileResolved('10.5%')),
           findsOneWidget);
     }
   });
@@ -220,7 +220,7 @@ void main() {
     final l =
         AppLocalizations.of(tester.element(find.byType(RiskLimitsSection)));
     final data = tester.getSemantics(chip);
-    expect(data.label, contains(l.settingsRiskLimitsFollowingResolved('40%')));
+    expect(data.label, contains(l.settingsRiskLimitsFromProfileResolved('40%')));
     expect(data.flagsCollection.isSelected, Tristate.isTrue);
     expect(data.flagsCollection.isButton, isTrue);
     await tester.tap(chip);

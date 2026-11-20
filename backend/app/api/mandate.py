@@ -37,6 +37,7 @@ from app.services.day_trader_preset import (
     DAY_TRADER_DISCLOSURE,
     DAY_TRADER_JOURNAL_SUMMARY,
     DAY_TRADER_PRESET_OVERRIDES,
+    DAY_TRADER_PRESET_PROFILE,
     is_day_trader_preset,
 )
 from app.services.entitlements import effective_plan_for_user
@@ -266,6 +267,7 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         "day_trader_preset": DayTraderPresetInfo(
             overrides=dict(DAY_TRADER_PRESET_OVERRIDES),
             disclosure=DAY_TRADER_DISCLOSURE,
+            profile=dict(DAY_TRADER_PRESET_PROFILE),
         ),
     })
 

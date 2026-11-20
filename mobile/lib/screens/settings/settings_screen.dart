@@ -51,8 +51,46 @@ import 'package:ami_trade/screens/settings/legal_screen.dart';
 import 'package:ami_trade/widgets/alpaca/alpaca_badge.dart' show kAlpacaPaperLabel;
 import 'package:ami_trade/qa/semantics_ids.dart';
 
+/// DEF481 item 3 — a section a caller can ask Settings to scroll to on open.
+/// The trade ticket's OPEN MY MANDATE uses it so a blocked trade lands on the
+/// rule that blocked it instead of the top of a thirteen-section list.
+enum SettingsAnchor {
+  /// The risk-limit rows (concentration caps, cooldown, position/trade counts,
+  /// open risk).
+  riskLimits,
+
+  /// The compliance toggles (halal, long-only, liquid-only, ...).
+  compliance,
+
+  /// The ticker allow/block list.
+  tickerRules,
+}
+
+/// DEF481 item 3 — which Settings section holds the rule that blocked an
+/// order, from the server's `blocked_by` slug. Anything unrecognised
+/// (`compliance`, `long_only`, `locale`, absent) lands on the compliance
+/// toggles — the section a mandate refusal most often comes from.
+SettingsAnchor settingsAnchorForBlockedBy(String? blockedBy) {
+  switch (blockedBy) {
+    case 'allowlist':
+    case 'blocklist':
+      return SettingsAnchor.tickerRules;
+    case 'concentration':
+    case 'cooldown':
+    case 'max_open_positions':
+    case 'over_trading':
+    case 'open_risk':
+      return SettingsAnchor.riskLimits;
+    default:
+      return SettingsAnchor.compliance;
+  }
+}
+
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key, this.embedded = false});
+  const SettingsScreen({super.key, this.embedded = false, this.anchor});
+
+  /// Section to scroll into view after the first frame. Null = stay at the top.
+  final SettingsAnchor? anchor;
 
   /// Rendered as a segment of `YOU` rather than as a screen of its own
   /// (CR133 §4). Embedded, it draws no `Scaffold`, no `SafeArea` and no header:
@@ -93,6 +131,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final Map<String, dynamic> _pendingRiskLimits = {};
   bool _riskLimitsExpanded = false;
   int _discardGeneration = 0;
+
+  // DEF481 item 3 — one key per scroll target. The list is lazy, so a target
+  // far down has no context until it has been scrolled near; see
+  // `_scrollToAnchor`.
+  final ScrollController _scroll = ScrollController();
+  final Map<SettingsAnchor, GlobalKey> _anchorKeys = {
+    for (final a in SettingsAnchor.values) a: GlobalKey(),
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.anchor != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToAnchor());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollToAnchor() async {
+    final anchor = widget.anchor;
+    if (anchor == null) return;
+    final key = _anchorKeys[anchor]!;
+    // The settings list builds lazily: a section well below the fold has no
+    // element yet, so walk the list down until the target exists.
+    for (var i = 0; i < 40; i++) {
+      if (!mounted) return;
+      if (key.currentContext != null) break;
+      if (!_scroll.hasClients) return;
+      final pos = _scroll.position;
+      if (pos.pixels >= pos.maxScrollExtent) return;
+      _scroll.jumpTo((pos.pixels + 400).clamp(0.0, pos.maxScrollExtent));
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    final ctx = key.currentContext;
+    if (ctx == null || !mounted) return;
+    await Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.05,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   void _initFrom(UserMandate m) {
     _localRiskScore ??= m.riskScore;
@@ -160,12 +245,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _onDayTraderTapped(UserMandate m) async {
     final preset = m.dayTraderPreset;
     if (preset == null) return;
+    // DEF481 item 6 — tapping the chip while it is selected deselects it: the
+    // seven limits go back to "follow my risk profile" (null, as the dial
+    // does). Risk score, horizon, path and drawdown stay as they now are, and
+    // there is no dialog — this only ever tightens. The user still presses Save.
+    if (matchesDayTraderPreset(m, _pendingRiskLimits)) {
+      setState(() {
+        for (final cfg in kRiskLimitFields) {
+          _pendingRiskLimits[cfg.key] = null;
+        }
+      });
+      return;
+    }
     final ok = await DayTraderDisclosureDialog.show(context, preset.disclosure);
     if (ok != true || !mounted) return;
     setState(() {
       for (final cfg in kRiskLimitFields) {
         _pendingRiskLimits[cfg.key] = preset.overrides[cfg.key];
       }
+      // DEF481 item 6 — the profile half, staged straight into the pending
+      // fields (NOT via `_onRiskScoreChanged`, which would null the limits
+      // just staged). Values are the server's; an older server sends none.
+      final p = preset.profile;
+      final score = p['risk_score'];
+      if (score is num) _localRiskScore = score.toInt();
+      final dd = p['max_drawdown_pct'];
+      if (dd is num) _localMaxDD = dd.toInt();
+      final horizon = p['horizon'];
+      if (horizon is String) _localHorizon = horizon;
+      final path = p['path'];
+      if (path is String) _localPath = path;
+      if (p.isNotEmpty) _dirty = true;
     });
   }
 
@@ -356,6 +466,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             Expanded(
               child: ListView(
+                controller: _scroll,
                 key: ValueKey(_discardGeneration),
                 padding: const EdgeInsets.all(AmiSpacing.m),
                 children: [
@@ -372,7 +483,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(height: 4),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: ChoiceChip(
+                        child: Semantics(
+                          identifier: SettingsIds.dayTraderPreset,
+                          child: ChoiceChip(
                           key: const Key('riskPresetDayTrader'),
                           label: Text(l.settingsRiskPresetDayTrader),
                           labelStyle: AmiTypography.labelMono.copyWith(
@@ -390,7 +503,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ? AmiColors.hexAmber
                                 : AmiColors.slate700,
                           ),
-                        ),
+                        )),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -420,7 +533,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  _Section(title: l.settingsSectionRiskLimits, children: [
+                  _Section(
+                      key: _anchorKeys[SettingsAnchor.riskLimits],
+                      title: l.settingsSectionRiskLimits,
+                      children: [
                     RiskLimitsSection(
                       mandate: m,
                       pending: _pendingRiskLimits,
@@ -431,7 +547,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  _Section(title: l.settingsSectionCompliance, children: [
+                  _Section(
+                      key: _anchorKeys[SettingsAnchor.compliance],
+                      title: l.settingsSectionCompliance,
+                      children: [
                     _ComplianceToggles(
                       value: _localCompliance ?? m.compliance,
                       onChanged: (next) => setState(() {
@@ -510,7 +629,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  _Section(title: l.settingsSectionTickerRules, children: [
+                  _Section(
+                      key: _anchorKeys[SettingsAnchor.tickerRules],
+                      title: l.settingsSectionTickerRules,
+                      children: [
                     TickerRulesSection(
                       compliance: _localCompliance ?? m.compliance,
                       validate: (t) => ref.read(apiClientProvider).validateTicker(t),
@@ -585,7 +707,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
+  const _Section({super.key, required this.title, required this.children});
   final String title;
   final List<Widget> children;
 
@@ -1109,12 +1231,7 @@ class _MembershipSection extends ConsumerWidget {
   const _MembershipSection({required this.mandate});
   final UserMandate mandate;
 
-  String _resetDateStr() {
-    final r = mandate.creditsResetAt;
-    if (r == null) return 'the 1st';
-    return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
-        '${r.day.toString().padLeft(2, '0')}';
-  }
+  String _resetDateStr() => _creditsResetLabel(mandate);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1148,6 +1265,13 @@ class _MembershipSection extends ConsumerWidget {
   }
 }
 
+
+String _creditsResetLabel(UserMandate? mandate) {
+  final r = mandate?.creditsResetAt;
+  if (r == null) return 'the 1st';
+  return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
+      '${r.day.toString().padLeft(2, '0')}';
+}
 
 /// DEF479 — one confirm for every irreversible Settings action (regenerate
 /// handle, sign out, Alpaca disconnect, Alpaca relink). Cancel comes first so
@@ -1239,7 +1363,8 @@ class _HandleSection extends ConsumerWidget {
 }
 
 
-/// "ACCOUNT" — surfaces the current auth state and routes to SignInScreen.
+/// "ACCOUNT" — surfaces the current auth state; guests go to SignInScreen, a
+/// signed-in user's MANAGE ACCOUNT opens the subscription tier picker.
 class _AccountSection extends ConsumerWidget {
   const _AccountSection();
 
@@ -1266,14 +1391,31 @@ class _AccountSection extends ConsumerWidget {
         const SizedBox(height: AmiSpacing.s),
         SizedBox(
           height: 40,
-          child: OutlinedButton(
+          child: Semantics(
+            identifier: SettingsIds.accountPrimary,
+            child: OutlinedButton(
+            key: const Key('accountPrimaryButton'),
             onPressed: () {
+              // DEF481 item 7 — a signed-in user managing the account is
+              // choosing a subscription tier (Saiful: "should allow user to
+              // select the subscription tier level"), so MANAGE ACCOUNT opens
+              // the plan picker; guests still go to sign-in.
+              if (claimed) {
+                showUpgradeSheet(
+                  context,
+                  resetDateLabel: _creditsResetLabel(
+                      ref.read(mandateNotifierProvider).mandate),
+                  onPurchased: () =>
+                      ref.read(mandateNotifierProvider.notifier).refresh(),
+                );
+                return;
+              }
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const SignInScreen(),
               ));
             },
             child: Text(claimed ? l.settingsManageAccount : l.settingsSignIn),
-          ),
+          )),
         ),
         if (claimed) ...[
           const SizedBox(height: AmiSpacing.s),
