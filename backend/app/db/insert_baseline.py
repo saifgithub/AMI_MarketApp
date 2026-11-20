@@ -18,8 +18,6 @@ from __future__ import annotations
 INSERT_BASELINE: dict[tuple[str, str], str] = {
     ('agent_activations', 'services/lessons_service.py::_check_agent_unlocks'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
-    ('agent_activations', 'services/lessons_service.py::grant_activation'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('badges', 'services/reputation_service.py::_award_badge'):
         'DEF220 fixed (skip outcome at site); convert to claim().or_skip() in Phase 2',
     ('career_events', 'services/career_ledger.py::post_career_event'):

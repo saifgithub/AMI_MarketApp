@@ -487,3 +487,20 @@ def test_grant_activation_marks_skip_path(svc: LessonsService):
     assert rec.activation_method == "skip_path"
     activations = svc.list_activations(user_id)
     assert any(a.agent_id == "portfolio_manager" for a in activations)
+
+
+def test_grant_activation_that_loses_the_race_reports_the_winners_record(svc: LessonsService, monkeypatch):
+    """ISS001 / DEF308 (skip): the winner's activation is the one on record, with its own method."""
+    from app.db.models import AgentActivationRow
+    from app.services import lessons_service
+    from tests.unit.iss001_race import winner_commits_first
+
+    user_id = uuid4()
+    race = winner_commits_first(
+        monkeypatch, lessons_service, AgentActivationRow, winner_values={"activation_method": "earn_path"},
+    )
+    rec = svc.grant_activation(user_id, "portfolio_manager", method="skip_path")
+    assert race["fired"]
+    assert rec.id == race["winner_id"]
+    assert rec.activation_method == "earn_path"
+    assert len(svc.list_activations(user_id)) == 1

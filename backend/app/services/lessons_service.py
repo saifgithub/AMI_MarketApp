@@ -31,6 +31,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session, init_schema
+from app.db.ami_claim import claim
 from app.db.models import AgentActivationRow, LessonProgressRow
 from app.services.agent_gateways import AGENT_GATEWAYS, GATEWAY_SIZE
 from app.schemas.lessons import (
@@ -806,28 +807,13 @@ class LessonsService:
         method: str = "founder_grant",
     ) -> AgentActivationRecord:
         with get_session() as s:
-            existing = s.execute(
-                select(AgentActivationRow).where(
-                    AgentActivationRow.user_id == user_id,
-                    AgentActivationRow.agent_id == agent_id,
-                )
-            ).scalar_one_or_none()
-            if existing is not None:
-                return AgentActivationRecord(
-                    id=existing.id,
-                    user_id=existing.user_id,
-                    agent_id=existing.agent_id,
-                    activation_method=existing.activation_method,  # type: ignore[arg-type]
-                    activated_at=existing.activated_at,
-                    triggering_lesson_id=existing.triggering_lesson_id,
-                )
-            row = AgentActivationRow(
-                user_id=user_id,
-                agent_id=agent_id,
-                activation_method=method,
-            )
-            s.add(row)
-            s.flush()
+            # ISS001 / DEF308: skip. The activation existing IS the goal; a loser (or a repeat
+            # grant) reports the winner's record, including its original method/lesson.
+            row = claim(
+                s, AgentActivationRow,
+                key={"user_id": user_id, "agent_id": agent_id},
+                values={"activation_method": method},
+            ).or_skip()
             return AgentActivationRecord(
                 id=row.id,
                 user_id=row.user_id,
