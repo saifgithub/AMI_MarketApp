@@ -504,3 +504,31 @@ def test_grant_activation_that_loses_the_race_reports_the_winners_record(svc: Le
     assert rec.id == race["winner_id"]
     assert rec.activation_method == "earn_path"
     assert len(svc.list_activations(user_id)) == 1
+
+
+def test_mark_started_that_loses_the_race_fills_a_missing_started_at(svc: LessonsService, monkeypatch):
+    """ISS001 / DEF308 (update): the winner's row has no started_at; the loser still sets it."""
+    from app.db.models import LessonProgressRow
+    from app.services import lessons_service
+    from tests.unit.iss001_race import winner_commits_first
+
+    user_id = uuid4()
+    race = winner_commits_first(monkeypatch, lessons_service, LessonProgressRow)
+    st = svc.mark_started(user_id, LEGACY_MARKET_ORDER_LESSON)
+    assert race["fired"]
+    assert st.started_at is not None
+    assert len(svc.list_status(user_id)) == 1
+
+
+def test_mark_started_that_loses_the_race_keeps_the_winners_started_at(svc: LessonsService, monkeypatch):
+    from datetime import datetime, timezone
+
+    from app.db.models import LessonProgressRow
+    from app.services import lessons_service
+    from tests.unit.iss001_race import winner_commits_first
+
+    user_id = uuid4()
+    earlier = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    winner_commits_first(monkeypatch, lessons_service, LessonProgressRow, winner_values={"started_at": earlier})
+    st = svc.mark_started(user_id, LEGACY_MARKET_ORDER_LESSON)
+    assert st.started_at.replace(tzinfo=timezone.utc) == earlier

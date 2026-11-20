@@ -546,22 +546,14 @@ class LessonsService:
 
     def mark_started(self, user_id: UUID, lesson_id: str) -> LessonStatus:
         with get_session() as s:
-            row = s.execute(
-                select(LessonProgressRow).where(
-                    LessonProgressRow.user_id == user_id,
-                    LessonProgressRow.lesson_id == lesson_id,
-                )
-            ).scalar_one_or_none()
-            if row is not None and row.started_at is not None:
-                return self._row_to_status(row)
             now = datetime.now(timezone.utc)
-            if row is None:
-                row = LessonProgressRow(
-                    user_id=user_id, lesson_id=lesson_id, started_at=now,
-                )
-                s.add(row)
-            else:
-                row.started_at = row.started_at or now
+            # ISS001 / DEF308: update. The row may exist because a concurrent submit_quiz or an
+            # earlier call made it; a loser still owes `started_at` if the winner left it unset.
+            row = claim(
+                s, LessonProgressRow,
+                key={"user_id": user_id, "lesson_id": lesson_id},
+                values={"started_at": now},
+            ).or_update(lambda r: setattr(r, "started_at", r.started_at or now))
             s.flush()
             return self._row_to_status(row)
 

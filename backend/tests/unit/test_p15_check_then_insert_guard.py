@@ -86,7 +86,6 @@ _UNREVIEWED = {
     # or device_user_id (that's CR191's remaining scope).
     ("games_desks.py", "ensure_desk_users", "User"),
     ("games_service.py", "ensure_field", "GameFieldRow"),
-    ("lessons_service.py", "mark_started", "LessonProgressRow"),
     ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
