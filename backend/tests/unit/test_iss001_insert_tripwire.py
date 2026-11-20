@@ -132,18 +132,45 @@ def test_every_baseline_entry_names_a_real_table_and_a_real_function():
         assert func in _function_names(path), f"{rel} has no function {func!r}: delete the baseline entry"
 
 
-def test_the_nine_def308_pinned_sites_are_all_in_the_baseline():
-    """DEF308's `_UNREVIEWED` is frozen (founder, 2026-08-15). Phase 1 touches none of them, so
-    each must be reported by the tripwire and carried here — if one is missing, either it was
-    fixed (then it must also leave the AST pin) or the tripwire cannot see it."""
+# ISS001 Phase 3 (founder unfreeze 2026-11-20): each DEF308 site leaves `_UNREVIEWED` and the
+# baseline in the SAME commit as its claim() conversion, and joins this set. One entry per commit.
+_PHASE3_CONVERTED: set[tuple[str, str, str]] = {
+    ("auth_service.py", "_claim_or_create", "User"),
+    ("games_desks.py", "ensure_desk_users", "User"),
+    ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
+    ("lessons_service.py", "mark_started", "LessonProgressRow"),
+    ("lessons_service.py", "grant_activation", "AgentActivationRow"),
+    ("watchlist_store.py", "add", "SimWatchlistRow"),
+    ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
+}
+
+# DEF308 sites declared `unclaimed(why=...)` instead of claim(): they leave INSERT_BASELINE but stay
+# in the AST guard's `_UNREVIEWED` (its shape rule still sees read-User + add-User) until Phase 4
+# retires that rule.
+_PHASE3_UNCLAIMED: set[tuple[str, str, str]] = {
+    ("auth_service.py", "ensure_anonymous", "User"),
+}
+
+
+def test_each_of_the_nine_def308_sites_is_pinned_or_converted_never_half():
+    """A DEF308 site is either still pinned (in `_UNREVIEWED` AND in the baseline, tagged DEF308),
+    converted to claim() (in neither), or declared unclaimed (AST pin only). Anything else means
+    the tripwire and the AST guard disagree."""
     from tests.unit.test_p15_check_then_insert_guard import _UNREVIEWED
 
-    assert len(_UNREVIEWED) == 9
-    for filename, func, model in sorted(_UNREVIEWED):
+    assert len(_UNREVIEWED) + len(_PHASE3_CONVERTED) == 9
+    assert not (_UNREVIEWED & _PHASE3_CONVERTED)
+    for filename, func, model in sorted(_UNREVIEWED | _PHASE3_CONVERTED):
         table = getattr(models, model).__table__.name
         site = f"{_module_path(filename).relative_to(_APP).as_posix()}::{func}"
-        assert (table, site) in INSERT_BASELINE, f"DEF308 site {(table, site)} is not in INSERT_BASELINE"
-        assert "DEF308" in INSERT_BASELINE[(table, site)]
+        if (filename, func, model) in _PHASE3_UNCLAIMED:
+            assert (filename, func, model) in _UNREVIEWED, "unclaimed site must stay pinned in the AST guard"
+            assert (table, site) not in INSERT_BASELINE, f"unclaimed site {(table, site)} still in INSERT_BASELINE"
+        elif (filename, func, model) in _UNREVIEWED:
+            assert (table, site) in INSERT_BASELINE, f"DEF308 site {(table, site)} is not in INSERT_BASELINE"
+            assert "DEF308" in INSERT_BASELINE[(table, site)]
+        else:
+            assert (table, site) not in INSERT_BASELINE, f"converted site {(table, site)} still in INSERT_BASELINE"
 
 
 # ---- schema_truth: the unique keys that do not deduplicate what their name says ----------
@@ -195,8 +222,9 @@ def _app_sources() -> list[tuple[Path, str]]:
 
 def test_every_unclaimed_call_carries_a_reason_and_the_count_is_pinned():
     """`unclaimed()` is the one in-code escape hatch. Count the calls from the AST (a literal
-    count, not an inference), so a new one is a visible diff. The one site: the NULL-bank_key room_runs insert (DEF499/WP-24); pre-control
-    sites ride INSERT_BASELINE."""
+    count, not an inference), so a new one is a visible diff. Pre-control sites ride INSERT_BASELINE;
+    each declared call is pinned below by file (the NULL-bank_key room_runs insert, DEF499/WP-24; the
+    fresh-uuid anonymous mint, ISS001 Phase 3)."""
     calls = []
     for path, src in _app_sources():
         for node in ast.walk(ast.parse(src)):
@@ -208,7 +236,9 @@ def test_every_unclaimed_call_carries_a_reason_and_the_count_is_pinned():
                 ok = isinstance(why, ast.Constant) and isinstance(why.value, str) and why.value.strip()
                 assert ok, f"{path.name}:{node.lineno}: unclaimed() without a literal non-empty why="
                 calls.append((path.name, node.lineno))
-    assert [c[0] for c in calls] == ["room_runner.py"], f"unclaimed() sites changed — update this pin deliberately: {calls}"
+    assert sorted(c[0] for c in calls) == ["auth_service.py", "room_runner.py"], (
+        f"unclaimed() sites changed — update this pin deliberately: {calls}"
+    )
 
 
 def test_session_merge_is_banned_in_app_code():

@@ -31,6 +31,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session, init_schema
+from app.db.ami_claim import claim
 from app.db.models import AgentActivationRow, LessonProgressRow
 from app.services.agent_gateways import AGENT_GATEWAYS, GATEWAY_SIZE
 from app.schemas.lessons import (
@@ -545,22 +546,14 @@ class LessonsService:
 
     def mark_started(self, user_id: UUID, lesson_id: str) -> LessonStatus:
         with get_session() as s:
-            row = s.execute(
-                select(LessonProgressRow).where(
-                    LessonProgressRow.user_id == user_id,
-                    LessonProgressRow.lesson_id == lesson_id,
-                )
-            ).scalar_one_or_none()
-            if row is not None and row.started_at is not None:
-                return self._row_to_status(row)
             now = datetime.now(timezone.utc)
-            if row is None:
-                row = LessonProgressRow(
-                    user_id=user_id, lesson_id=lesson_id, started_at=now,
-                )
-                s.add(row)
-            else:
-                row.started_at = row.started_at or now
+            # ISS001 / DEF308: update. The row may exist because a concurrent submit_quiz or an
+            # earlier call made it; a loser still owes `started_at` if the winner left it unset.
+            row = claim(
+                s, LessonProgressRow,
+                key={"user_id": user_id, "lesson_id": lesson_id},
+                values={"started_at": now},
+            ).or_update(lambda r: setattr(r, "started_at", r.started_at or now))
             s.flush()
             return self._row_to_status(row)
 
@@ -596,31 +589,30 @@ class LessonsService:
         passed = score >= QUIZ_PASS_THRESHOLD
 
         with get_session() as s:
-            row = s.execute(
-                select(LessonProgressRow).where(
-                    LessonProgressRow.user_id == req.user_id,
-                    LessonProgressRow.lesson_id == req.lesson_id,
-                )
-            ).scalar_one_or_none()
             now = datetime.now(timezone.utc)
-            if row is None:
-                row = LessonProgressRow(
-                    user_id=req.user_id,
-                    lesson_id=req.lesson_id,
-                    started_at=now,
-                    quiz_attempts=1,
-                    quiz_passed=passed,
-                    last_quiz_score=score,
-                    completed_at=now if passed else None,
-                )
-                s.add(row)
-            else:
+
+            def _apply_attempt(row: LessonProgressRow) -> None:
                 row.started_at = row.started_at or now
                 row.quiz_attempts = row.quiz_attempts + 1
                 row.quiz_passed = row.quiz_passed or passed
                 row.last_quiz_score = score
                 if passed and row.completed_at is None:
                     row.completed_at = now
+
+            # ISS001 / DEF308: update. The attempt is applied to the row whoever created it, so a
+            # lost insert race still counts this attempt on the winner's row (attempts, pass,
+            # completion) instead of raising or dropping the quiz result.
+            claim(
+                s, LessonProgressRow,
+                key={"user_id": req.user_id, "lesson_id": req.lesson_id},
+                values={
+                    "started_at": now,
+                    "quiz_attempts": 1,
+                    "quiz_passed": passed,
+                    "last_quiz_score": score,
+                    "completed_at": now if passed else None,
+                },
+            ).or_update(_apply_attempt)
             s.flush()
 
         unlocked: list[str] = []
@@ -806,28 +798,13 @@ class LessonsService:
         method: str = "founder_grant",
     ) -> AgentActivationRecord:
         with get_session() as s:
-            existing = s.execute(
-                select(AgentActivationRow).where(
-                    AgentActivationRow.user_id == user_id,
-                    AgentActivationRow.agent_id == agent_id,
-                )
-            ).scalar_one_or_none()
-            if existing is not None:
-                return AgentActivationRecord(
-                    id=existing.id,
-                    user_id=existing.user_id,
-                    agent_id=existing.agent_id,
-                    activation_method=existing.activation_method,  # type: ignore[arg-type]
-                    activated_at=existing.activated_at,
-                    triggering_lesson_id=existing.triggering_lesson_id,
-                )
-            row = AgentActivationRow(
-                user_id=user_id,
-                agent_id=agent_id,
-                activation_method=method,
-            )
-            s.add(row)
-            s.flush()
+            # ISS001 / DEF308: skip. The activation existing IS the goal; a loser (or a repeat
+            # grant) reports the winner's record, including its original method/lesson.
+            row = claim(
+                s, AgentActivationRow,
+                key={"user_id": user_id, "agent_id": agent_id},
+                values={"activation_method": method},
+            ).or_skip()
             return AgentActivationRecord(
                 id=row.id,
                 user_id=row.user_id,

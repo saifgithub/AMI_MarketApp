@@ -18,14 +18,10 @@ from __future__ import annotations
 INSERT_BASELINE: dict[tuple[str, str], str] = {
     ('agent_activations', 'services/lessons_service.py::_check_agent_unlocks'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
-    ('agent_activations', 'services/lessons_service.py::grant_activation'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('badges', 'services/reputation_service.py::_award_badge'):
         'DEF220 fixed (skip outcome at site); convert to claim().or_skip() in Phase 2',
     ('career_events', 'services/career_ledger.py::post_career_event'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
-    ('client_release_floors', 'services/client_release_floor.py::create_floor_raise'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('daily_challenge_attempts', 'api/daily_challenge.py::attempt'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('game_duels', 'services/games_duels.py::pair_field'):
@@ -42,10 +38,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'found by ISS001 observers: scheduler path with no handler; not in DEF308; Phase 2',
     ('league_members', 'services/league_service.py::weekly_roll'):
         'flush point of _assemble_week (attach site); Phase 2',
-    ('lessons_progress', 'services/lessons_service.py::mark_started'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
-    ('lessons_progress', 'services/lessons_service.py::submit_quiz'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('mandates', 'services/mandate_store.py::upsert'):
         'version-sequence retry-then-raise (DEF220); expected unclaimed(why=...) in Phase 2',
     ('notification_preferences', 'services/notification_service.py::set_preferences'):
@@ -80,8 +72,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('sim_portfolios', 'services/sim_engine.py::ensure_portfolio'):
         'DEF499 — race-safe since bc4fd43d (partial unique indexes + recovery) and the training key is now claim()-compatible; convert to claim().or_skip() in Phase 2',
-    ('sim_watchlists', 'services/watchlist_store.py::add'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('social_sentiment_cache', 'services/social_context.py::_cache_write'):
         'DEF220 fixed (skip outcome at site); convert to claim().or_skip() in Phase 2',
     ('streak_freezes', 'services/reputation_service.py::freeze'):
@@ -94,16 +84,10 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'DEF220 fixed (re-read-and-update at site); convert to claim().or_update() in Phase 2',
     ('user_overlays', 'services/overlay_store.py::save_new_version'):
         'version-sequence retry-then-raise (DEF220); expected unclaimed(why=...) in Phase 2',
-    ('users', 'services/auth_service.py::_claim_or_create'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
-    ('users', 'services/auth_service.py::ensure_anonymous'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('users', 'services/auth_service.py::sign_in_with_apple'):
         'DEF416 — handled (uq_users_apple_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
     ('users', 'services/auth_service.py::sign_in_with_google'):
         'DEF416 — handled (uq_users_google_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
-    ('users', 'services/games_desks.py::ensure_desk_users'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('users', 'services/games_service.py::ensure_field'):
         'User row minted inside the DEF308-frozen ensure_field (not itself pinned by DEF308); convert with it in Phase 3',
     ('verdict_outcomes', 'services/verdict_outcomes.py::bank_verdict_outcome'):

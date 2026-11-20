@@ -43,6 +43,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
+from app.db.ami_claim import claim, unclaimed
 from app.db.models import AuthChallengeRow, SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
 from app.services import account_erasure
@@ -458,8 +459,14 @@ class AuthService:
                     os_version=os_version,
                     last_app_version=app_version,
                 )
-                s.add(row)
-                s.flush()
+                # ISS001 / DEF308: declared, not claimed. Every key on this row is a fresh uuid4
+                # (id AND device_user_id), so no concurrent caller can hold the same one; a
+                # trusted device id that already has a row never reaches this branch. Two
+                # simultaneous cold starts are two distinct anonymous users by design (is_new is
+                # True for both), which is correct, not a lost race.
+                with unclaimed(User, why="mint path: fresh uuid4 PK and device_user_id, nothing to collide on"):
+                    s.add(row)
+                    s.flush()
             else:
                 # BL1 (AT:R33): refresh device + build context on every
                 # bootstrap of an existing row. last_app_version is the most
@@ -889,30 +896,41 @@ class AuthService:
         row: User | None = None
         if email:
             row = s.execute(select(User).where(User.email == email)).scalar_one_or_none()
-            if row is not None:
-                # CR276: a closed account is never adopted silently.
-                account_erasure.gate_sign_in(row, restore=restore_account)
-        # BL2 (AT:R33): if email-lookup succeeded and the pre-claim anon row
-        # is being orphaned, move its devices to the adopted user so the
-        # new phone shows up in the existing user's device list.
-        if row is not None and user_id is not None and row.id != user_id:
-            _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
+
+        def _adopt(found: User) -> None:
+            # CR276: a closed account is never adopted silently.
+            account_erasure.gate_sign_in(found, restore=restore_account)
+            # BL2 (AT:R33): the pre-claim anon row is being orphaned, so move
+            # its devices to the adopted user so the new phone shows up in the
+            # existing user's device list.
+            if user_id is not None and found.id != user_id:
+                _rekey_devices_to(s, from_user_id=user_id, to_user_id=found.id)
+
+        if row is not None:
+            _adopt(row)
         if row is None and user_id is not None:
             row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if row is None:
             now = datetime.now(timezone.utc)
-            row = User(
-                id=user_id or uuid4(),
-                device_user_id=user_id,
-                email=email,
-                is_anonymous=False,
-                claimed_at=now,
-                trial_started_at=now,
-                trial_expires_at=now + timedelta(days=7),
+            # ISS001 / DEF308: update-as-adopt. The email is unique (users.email); two first-time
+            # sign-ins for it can both reach this insert. The loser must end up signed in as the
+            # winner's user, never an error and never a second row, so a lost claim runs the SAME
+            # adoption the email-match branch above runs (closed-account gate, device re-key).
+            claimed = claim(
+                s, User,
+                key={"email": email},
+                values={
+                    "id": user_id or uuid4(),
+                    "device_user_id": user_id,
+                    "is_anonymous": False,
+                    "claimed_at": now,
+                    "trial_started_at": now,
+                    "trial_expires_at": now + timedelta(days=7),
+                },
             )
-            s.add(row)
-            s.flush()
-            return row
+            if claimed.created:
+                return claimed.row
+            row = claimed.or_update(_adopt)
         # Only set email on rows that don't have one yet (the user_id-matched
         # anon path). An email-matched row already has the correct email and
         # we deliberately don't reassign — re-magic-link with a different

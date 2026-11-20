@@ -139,3 +139,36 @@ def test_config_check_surfaces_the_active_floor(client: TestClient) -> None:
     r1 = client.get("/v1/admin/config-check", headers=_HDR)
     assert r1.json()["client_release_floor_configured"] is True
     assert r1.json()["client_release_floor_min_build"] == 69
+
+
+def test_raise_that_loses_the_insert_race_is_a_duplicate_error_not_an_integrity_error(monkeypatch) -> None:
+    """ISS001 / DEF308: a concurrent raise of the same min_build commits after the footgun check and
+    before our insert. The loser must surface ReleaseFloorDuplicateError (the route's 409) and
+    leave the winner's row untouched."""
+    import pytest
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.ami_claim import claim
+    from app.db.models import ClientReleaseFloorRow
+    from app.services import client_release_floor as crf
+
+    real_highest = crf.highest_observed_build
+
+    def highest_then_winner_commits(session):
+        out = real_highest(session)
+        with get_session() as other:
+            claim(other, ClientReleaseFloorRow, key={"min_build": 71},
+                  values={"headline": "winner", "body_en": "w", "active": True}).or_skip()
+        return out
+
+    monkeypatch.setattr(crf, "highest_observed_build", highest_then_winner_commits)
+    with get_session() as s:
+        with pytest.raises(crf.ReleaseFloorDuplicateError):
+            crf.create_floor_raise(
+                s, min_build=71, recommended_build=None, headline="loser", body_en="l",
+                body_ar=None, body_ms=None, created_by=None, force=True,
+            )
+    with get_session() as s:
+        rows = s.execute(select(ClientReleaseFloorRow).where(ClientReleaseFloorRow.min_build == 71)).scalars().all()
+        assert [r.headline for r in rows] == ["winner"]

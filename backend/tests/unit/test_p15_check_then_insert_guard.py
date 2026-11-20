@@ -76,7 +76,6 @@ _HANDLED_AT_CALLER = {
 # blind is precisely what DEF220 refused to do, and the refusal is why its six
 # each got a different answer.
 _UNREVIEWED = {
-    ("auth_service.py", "_claim_or_create", "User"),
     ("auth_service.py", "ensure_anonymous", "User"),
     # sign_in_with_apple / sign_in_with_google: fixed under DEF416 —
     # uq_users_apple_id / uq_users_google_id (migration def416a0oidc0uq) plus
@@ -84,13 +83,7 @@ _UNREVIEWED = {
     # shape as DEF401. _claim_or_create and ensure_anonymous are unchanged
     # and still pinned — no constraint yet backs email/phone's fallback path
     # or device_user_id (that's CR191's remaining scope).
-    ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
-    ("games_desks.py", "ensure_desk_users", "User"),
     ("games_service.py", "ensure_field", "GameFieldRow"),
-    ("lessons_service.py", "grant_activation", "AgentActivationRow"),
-    ("lessons_service.py", "mark_started", "LessonProgressRow"),
-    ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
-    ("watchlist_store.py", "add", "SimWatchlistRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
 

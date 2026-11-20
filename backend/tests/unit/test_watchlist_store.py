@@ -71,3 +71,50 @@ def test_per_user_isolation():
     store.add(b, "NVDA")
     assert [e.ticker for e in store.list_for_user(a)] == ["AAPL"]
     assert [e.ticker for e in store.list_for_user(b)] == ["NVDA"]
+
+
+def test_add_that_loses_the_race_returns_the_winners_row_and_applies_notes(monkeypatch):
+    """ISS001 / DEF308: the winner commits between the ticker check and the insert. The loser must
+    get the winner's row (no IntegrityError, no second row) and its notes still apply."""
+    from app.db import get_session
+    from app.db.ami_claim import claim
+    from app.db.models import SimWatchlistRow
+    from app.services import watchlist_store
+
+    store = get_watchlist_store()
+    user_id = uuid4()
+    real_check = watchlist_store.require_ticker_exists
+
+    def check_then_winner_commits(session, ticker):
+        real_check(session, ticker)
+        with get_session() as other:
+            claim(other, SimWatchlistRow, key={"user_id": user_id, "ticker": ticker}, values={"notes": "winner"}).or_skip()
+
+    monkeypatch.setattr(watchlist_store, "require_ticker_exists", check_then_winner_commits)
+    entry = store.add(user_id, "NVDA", notes="loser")
+    monkeypatch.undo()
+    entries = store.list_for_user(user_id)
+    assert len(entries) == 1
+    assert entries[0].id == entry.id
+    assert entries[0].notes == "loser"
+
+
+def test_add_that_loses_the_race_without_notes_keeps_the_winners_notes(monkeypatch):
+    from app.db import get_session
+    from app.db.ami_claim import claim
+    from app.db.models import SimWatchlistRow
+    from app.services import watchlist_store
+
+    store = get_watchlist_store()
+    user_id = uuid4()
+    real_check = watchlist_store.require_ticker_exists
+
+    def check_then_winner_commits(session, ticker):
+        real_check(session, ticker)
+        with get_session() as other:
+            claim(other, SimWatchlistRow, key={"user_id": user_id, "ticker": ticker}, values={"notes": "winner"}).or_skip()
+
+    monkeypatch.setattr(watchlist_store, "require_ticker_exists", check_then_winner_commits)
+    store.add(user_id, "MSFT")
+    monkeypatch.undo()
+    assert [e.notes for e in store.list_for_user(user_id)] == ["winner"]
