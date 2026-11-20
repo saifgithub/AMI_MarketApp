@@ -236,3 +236,20 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
    5. Phase 1 collided with WP-24's new inserts, and a worker is converting them to `claim()`. `beta/cr267` stays unpushed until the suite is green.
 6. **WP-20.** It was restarted on a frozen copy of the `d739d8e8` tree and the pinned image `ami-wp20:d739d8e8`, so deploys cannot change the Room mid-matrix.
 7. **WP-39.** The 10-question Concierge check was routed to the "AMI AI" agent at Saiful's instruction.
+
+## 2026-11-20 (night): DEF512, ISS001 Phase 3, deploy #13
+
+1. **Deploy #12's API UAT found DEF512.** The fact-sheet freeze could not JSON-encode `RatioBaseline`, so no Room was ever banked. With the old 24 h reattach removed, a repeat convene charged again. The failure was logged at ERROR; no wrong Room was ever served.
+   1. Fix: the CIO snapshot codec now tags and rebuilds any `app.` dataclass, NamedTuple or Enum. The decoder is restricted to those kinds of class under `app.`.
+   2. Guard: a real-shape test asserts the frozen → thawed desk prompts are identical for all 12 desks.
+   3. This is the third occurrence, recorded as failure pattern P41. The structural fix removes the hand-kept registry that caused all three.
+2. **ISS001 Phase 3:** 8 of 9 DEF308 sites now go through `claim()`, one commit each, including sign-in, where the loser of a race is signed in as the winner.
+   1. `ensure_field` is pending. A read-only count on Alpha showed 0 duplicate groups for `(cadence, starts_on)` among open, non-abandoned fields, and `week` legitimately has 2 open rows at once.
+   2. WP-24's `room_runs` / `room_fact_sheets` inserts also go through `claim()`.
+3. **Deploy #13** `alpha-2026-11-20-5` = `ef6edf57`: DEF512, ISS001 Phases 1 and 3, and WP-24 on `claim()`.
+   1. Suite PASS: 8,991 passed, 0 failed.
+   2. Local gate PASS.
+   3. UAT override logged, for stale device cases only.
+   4. Postflight PASS.
+   5. The tripwire runs in `log` mode.
+4. **WP-20:** 75 of arm 1's 300 Rooms done in about 8 h, about 6.4 min per Room effective against the pilot's 3.6. Arm 2 will likely be skipped by the 24 h rule.
