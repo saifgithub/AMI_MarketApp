@@ -37,6 +37,8 @@ is never served after the user's position changed (Saiful's ruling, 2026-11-20):
   and stale flag. These are global reference data refreshed daily without a
   deploy, and they feed both the prompts and the deterministic compliance check.
 - `roster` (DEF513): which analyst desks the plan and tenure withheld.
+- `tier` (DEF513): the model tier `pick_tier` gives the plan for every desk the
+  Room runs. A plan change moves it, so an upgrade gets a new Room.
 
 The policy version (`policy_version`) hashes the prompt generation, the revision
 and every global setting that changes what a Room says or decides
@@ -45,8 +47,7 @@ container recreate with no code deploy.
 
 What the key deliberately does NOT contain: the credit balance, the plan, the
 mandate's version counter and timestamps (re-saving an unchanged mandate is not a
-new input). The plan's model tier is inert: every provider instance serves one
-model, and the served model root is keyed. The "prior convene" comparison the CIO
+new input). The "prior convene" comparison the CIO
 reads is this ticker's previous Room, i.e. the bank's own output: keying it would
 make every finished Room unkey its own repeat (the same trap as Room-run journal
 entries). `ROOM_INPUT_CLASSES` classifies every parameter the Room is built from,
@@ -70,7 +71,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.ami_claim import claim
 from app.db.models import RoomFactSheetRow, RoomRunRow
-from app.schemas import AgentId
+from app.schemas import TWELVE_AGENT_IDS, AgentId
 from app.schemas.mandate import Mandate
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.trading_math.session_calendar import last_us_session_date
@@ -219,7 +220,7 @@ ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
         "profile": "keyed:fact_sheet",
         "transcript": "excluded:the Room's own output",
         "portfolio_snapshot": "keyed:portfolio and alpaca (price-times-holding drift excluded)",
-        "plan": "keyed:journal (the lookback window); the model tier it picks is inert",
+        "plan": "keyed:journal (the lookback window) and tier (the model tier it picks)",
         "trade_proposal": "excluded:derived from the mandate and the frozen sheet's price",
         "halal_universe": "keyed:universe",
         "classification_universe": "keyed:universe",
@@ -470,6 +471,17 @@ def _iso_date(d: Any) -> str | None:
     return d.isoformat() if d is not None else None
 
 
+def tier_digest(plan: Any) -> str:
+    """The model tier `pick_tier` assigns `plan` for every desk the Room runs (the
+    twelve desks and the Risk Officer). Ruled 2026-11-21: a plan change is a changed
+    input even where a single-model provider makes the tiers equivalent."""
+    from app.services.tier_policy import pick_tier
+
+    return _digest({
+        a.value: pick_tier(plan, a) for a in (*TWELVE_AGENT_IDS, AgentId.RISK_OFFICER)
+    })
+
+
 def roster_digest(withheld: Any) -> str:
     """Which analyst desks the plan and tenure withheld from this Room."""
     return ",".join(sorted(getattr(a, "value", str(a)) for a in withheld)) or "none"
@@ -490,6 +502,7 @@ def key_parts(
     brief: str,
     universe: str,
     roster: str,
+    tier: str,
 ) -> dict[str, str]:
     return {
         "user_id": str(user_id),
@@ -504,6 +517,7 @@ def key_parts(
         "brief": brief,
         "universe": universe,
         "roster": roster,
+        "tier": tier,
         # Hashed in its own right: a new trading day is a changed input even if
         # a sheet's content happened to come out identical.
         "trading_date": trading_date.isoformat(),
@@ -512,13 +526,13 @@ def key_parts(
 
 _HASHED_PARTS = (
     "user_id", "ticker", "mandate", "fact_sheet", "policy", "model_root", "trading_date",
-    "portfolio", "journal", "alpaca", "brief", "universe", "roster",
+    "portfolio", "journal", "alpaca", "brief", "universe", "roster", "tier",
 )
 
 # Parts added after the first Rooms were banked: a Room banked before them has no
 # such entry in `bank_inputs`, and re-keying it (a backup-slot restart) must not
 # raise. Its key can then never equal a new convene's, which is the right outcome.
-_LATE_PARTS = frozenset({"brief", "universe", "roster"})
+_LATE_PARTS = frozenset({"brief", "universe", "roster", "tier"})
 
 
 def key_from_parts(parts: dict[str, str]) -> str:

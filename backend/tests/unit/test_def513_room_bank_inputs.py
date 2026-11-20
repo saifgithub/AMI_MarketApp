@@ -194,6 +194,66 @@ def test_roster_digest_ignores_order_and_names_the_withheld_set():
     assert one != room_bank.roster_digest((AgentId.NEWS_ANALYST,))
 
 
+# ── plan model tier ───────────────────────────────────────────────────────
+
+
+def _set_plan(u, plan):
+    from app.db import get_session
+    from app.db.models import User
+
+    with get_session() as s:
+        s.get(User, u).plan = plan
+
+
+def _convene_with_plan_change(first, second):
+    runner = RoomRunner(llm=_RootGateway())
+    u, m = _user(first), _mandate()
+
+    async def go():
+        a = await _convene(runner, u, "AAPL", m)
+        _set_plan(u, second)
+        return a, await _convene(runner, u, "AAPL", m)
+
+    return _go(go())
+
+
+def test_the_same_plan_is_the_same_room(fast_room):
+    a, b = _convene_with_plan_change("floor_pass", "floor_pass")
+    assert a == b
+
+
+@pytest.mark.parametrize("old,new", [
+    ("floor_pass", "trader"),
+    ("trader", "floor_manager"),
+    ("floor_manager", "floor_pass"),
+])
+def test_a_plan_change_is_a_new_room(fast_room, old, new):
+    a, b = _convene_with_plan_change(old, new)
+    assert a != b
+
+
+def test_plans_with_identical_tiers_are_the_same_room():
+    assert room_bank.tier_digest(Plan.TRADER) == room_bank.tier_digest(Plan.TRIAL_TRADER)
+    assert len({room_bank.tier_digest(p) for p in
+                (Plan.FLOOR_PASS, Plan.TRADER, Plan.FLOOR_MANAGER)}) == 3
+
+
+def test_tier_digest_covers_every_desk_the_room_runs():
+    from app.services.tier_policy import pick_tier
+
+    seen = []
+    orig = pick_tier
+
+    import app.services.tier_policy as tp
+
+    tp.pick_tier = lambda plan, agent: (seen.append(agent), orig(plan, agent))[1]
+    try:
+        room_bank.tier_digest(Plan.TRADER)
+    finally:
+        tp.pick_tier = orig
+    assert set(seen) == set(TWELVE_AGENT_IDS) | {AgentId.RISK_OFFICER}
+
+
 # ── global settings ride in the policy version ────────────────────────────
 
 
@@ -235,7 +295,7 @@ def _sample_parts() -> dict[str, str]:
     return room_bank.key_parts(
         user_id=uuid4(), ticker="A", mandate=_mandate(), sheet_hash="", policy="",
         model_root="", trading_date=date(2026, 1, 1),
-        portfolio="", journal="", alpaca="", brief="", universe="", roster="",
+        portfolio="", journal="", alpaca="", brief="", universe="", roster="", tier="",
     )
 
 
@@ -273,7 +333,7 @@ def test_every_key_part_is_hashed():
 
 def test_a_room_banked_before_the_new_parts_can_still_be_rekeyed():
     old = {k: "x" for k in room_bank._HASHED_PARTS if k not in room_bank._LATE_PARTS}
-    new = {**old, "brief": "", "universe": "", "roster": ""}
+    new = {**old, "brief": "", "universe": "", "roster": "", "tier": ""}
     assert room_bank.key_from_parts(old) == room_bank.key_from_parts(new)
     assert room_bank.key_from_parts({**old, "brief": "b"}) != room_bank.key_from_parts(old)
 

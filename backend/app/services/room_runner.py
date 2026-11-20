@@ -7996,6 +7996,7 @@ class RoomRunner:
                 "portfolio": room_bank.portfolio_digest(portfolio, trades),
                 "journal": room_bank.journal_digest(entries),
                 "brief": room_bank.brief_digest(briefs),
+                "tier": room_bank.tier_digest(effective_plan_for_user(user_id)),
             }
         except Exception as exc:  # noqa: BLE001 - degrade loudly, never bank blind
             logger.warning(
@@ -8079,7 +8080,7 @@ class RoomRunner:
                 trading_date=trading_date,
                 portfolio=account["portfolio"], journal=account["journal"],
                 brief=account["brief"], universe=universe, alpaca=alpaca_key,
-                roster=room_bank.roster_digest(withheld),
+                roster=room_bank.roster_digest(withheld), tier=account["tier"],
             )
             return _BankPrep(frozen, room_bank.key_from_parts(parts), parts, None)
         except Exception as exc:
