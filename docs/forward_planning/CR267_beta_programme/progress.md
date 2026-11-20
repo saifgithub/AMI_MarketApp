@@ -217,3 +217,22 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 3. **runaway_length:** Room turns p50 192, p95 432, p99 570, p99.9 1,488 words (harness `room`); max 18,369. The cap stays 1,680: it trims 59 turns (0.049%), none from the app cohort, about 36 of them loops.
 4. **Enforce is ready.** `OUTPUT_GUARD_MODE=enforce` in `infra/beta.env.example`, and Beta boot refuses any other value. Alpha is flipped at deploy. Brief now holds its reply in `enforce` mode, so a flagged reply never reaches the screen (before, only a retraction line could follow it).
 5. **DEF511** (same lane): the forced-update Play URL is now `ANDROID_PLAY_STORE_URL` (default = the personal Alpha app), required on Beta, refused at Beta boot if empty or still the personal package.
+
+## 2026-11-20 (evening) — deploys #11 and #12, WP-24, DEF499, ISS001
+
+1. **Deploy #11** `alpha-2026-11-20-3` = `335ff5c3`: the DEF481 backend half (the Day Trader profile). Suite PASS 8,803; local gate PASS; UAT override logged for stale device cases only; postflight PASS; API UAT PASS (124 results).
+2. **Deploy #12** `alpha-2026-11-20-4` = `d8566759`: WP-24, DEF499, DEF511, and the WP-13 guard in enforce mode.
+   1. The first suite run failed on 2 config tests: the worktree held a stale copy of `alpha.env`, and `WEBSITE_ADMIN_SECRET` was undeclared. After the fix the suite passed, 8,915 passed and 0 failed.
+   2. Postflight PASS.
+   3. Migrations `def499a0b0c0d2` and `cr267a24bank01` ran.
+   4. `OUTPUT_GUARD_MODE=enforce` is live on Alpha.
+3. **DEF499 fixed and verified live.** The migration removed 3 empty duplicate training portfolios (2 users). Each user now holds 1, and partial unique indexes close the NULL-run hole.
+4. **WP-24 live.** A repeat convene with unchanged inputs returns the banked Room at no charge. The key covers the mandate, the day's fact sheet, the policy version, the model root, the portfolio digest (holdings, legs, trades, cash to $1), the ticker's journal and the Alpaca digest. Unit acceptance: the 50-pair test.
+5. **ISS001.**
+   1. A 4th contributor (sonnet5.5) was added. The verdict ranks sonnet5.5 > kimi-k2 > opus5.0 > gemini; the judge also ran on Sonnet, so same-model bias is possible.
+   2. Phase 1 (the `claim()` helper and the insert tripwire) is merged locally. The unit suite runs in raise mode; production runs in log mode.
+   3. The real-Postgres acceptance passed: 8 threads × 15 rounds, and the read-then-insert control duplicated in 15 of 15 rounds.
+   4. Saiful's rulings: the DEF308 sites are unfrozen and Phase 3 converts them; production stays in log mode until Phase 3 completes.
+   5. Phase 1 collided with WP-24's new inserts, and a worker is converting them to `claim()`. `beta/cr267` stays unpushed until the suite is green.
+6. **WP-20.** It was restarted on a frozen copy of the `d739d8e8` tree and the pinned image `ami-wp20:d739d8e8`, so deploys cannot change the Room mid-matrix.
+7. **WP-39.** The 10-question Concierge check was routed to the "AMI AI" agent at Saiful's instruction.
