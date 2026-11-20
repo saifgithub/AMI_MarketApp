@@ -598,6 +598,11 @@ services:
       # CR271 — deterministic output text guard (off | log | enforce). Default
       # log: hits are logged, no text changes. See Settings.output_guard_mode.
       OUTPUT_GUARD_MODE: ${OUTPUT_GUARD_MODE:-log}
+      # ISS001 — INSERT tripwire on the app engine (off | log | raise). Default
+      # log: an unsanctioned INSERT into a unique-keyed table is logged, not
+      # refused. `off` logs ERROR at boot and Beta refuses it. See
+      # Settings.insert_tripwire_mode.
+      INSERT_TRIPWIRE_MODE: ${INSERT_TRIPWIRE_MODE:-log}
       # CR271 — runaway_length cap in words per user-visible agent turn (0 = off).
       OUTPUT_GUARD_MAX_TURN_WORDS: ${OUTPUT_GUARD_MAX_TURN_WORDS:-1680}
       # CR273 — refuse onboarding without the 18+ confirmation. Default true;

@@ -147,6 +147,14 @@ def beta_boot_problems(s: Any) -> list[str]:
             "(CR271 / WP-13); `log` and `off` let personal-advice text through."
         )
 
+    # ISS001 — Beta runs the INSERT tripwire. `off` would leave the next
+    # check-then-INSERT race unwatched with no signal.
+    if getattr(s, "insert_tripwire_mode", "log") == "off":
+        problems.append(
+            "INSERT_TRIPWIRE_MODE='off': Beta must run the insert tripwire (`log` or "
+            "`raise`, ISS001); `off` leaves unsanctioned INSERTs into unique-keyed tables unwatched."
+        )
+
     # DEF511 — the forced-update screen links here. The default is the personal
     # Alpha app; a Beta tester sent there installs the wrong app.
     play_url = (getattr(s, "android_play_store_url", "") or "").strip()

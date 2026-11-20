@@ -183,6 +183,8 @@ def test_the_unfilled_example_refuses_to_boot_on_its_empty_secret():
         # CR271 / WP-13 — Beta enforces the output text guard.
         ({"output_guard_mode": "log"}, "OUTPUT_GUARD_MODE"),
         ({"output_guard_mode": "off"}, "OUTPUT_GUARD_MODE"),
+        # ISS001 — Beta runs the INSERT tripwire; `off` is refused.
+        ({"insert_tripwire_mode": "off"}, "INSERT_TRIPWIRE_MODE"),
         # DEF511 — the forced-update screen must not point at the personal Alpha app.
         ({"android_play_store_url": ""}, "ANDROID_PLAY_STORE_URL"),
         (

@@ -28,6 +28,11 @@ from uuid import uuid4
 
 import pytest
 
+# ISS001 — the INSERT tripwire raises in the unit suite. Set before the first
+# `app` import so `Settings` reads it; the plugin `tests.iss001_observer` and an
+# explicit env value win (setdefault).
+os.environ.setdefault("INSERT_TRIPWIRE_MODE", "raise")
+
 from app.schemas import (
     AgentId,
     Compliance,
