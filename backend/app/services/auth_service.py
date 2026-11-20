@@ -43,7 +43,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.ami_claim import claim
+from app.db.ami_claim import claim, unclaimed
 from app.db.models import AuthChallengeRow, SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
 from app.services import account_erasure
@@ -459,8 +459,14 @@ class AuthService:
                     os_version=os_version,
                     last_app_version=app_version,
                 )
-                s.add(row)
-                s.flush()
+                # ISS001 / DEF308: declared, not claimed. Every key on this row is a fresh uuid4
+                # (id AND device_user_id), so no concurrent caller can hold the same one; a
+                # trusted device id that already has a row never reaches this branch. Two
+                # simultaneous cold starts are two distinct anonymous users by design (is_new is
+                # True for both), which is correct, not a lost race.
+                with unclaimed(User, why="mint path: fresh uuid4 PK and device_user_id, nothing to collide on"):
+                    s.add(row)
+                    s.flush()
             else:
                 # BL1 (AT:R33): refresh device + build context on every
                 # bootstrap of an existing row. last_app_version is the most

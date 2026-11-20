@@ -541,3 +541,52 @@ def test_claim_or_create_under_concurrent_first_sign_ins_yields_one_user():
     assert len(results) == n and len(set(results)) == 1
     with get_session() as s:
         assert len(s.execute(select(User).where(User.email == email)).scalars().all()) == 1
+
+
+def test_ensure_anonymous_concurrent_cold_starts_never_error_and_mint_distinct_users():
+    """ISS001 / DEF308 (unclaimed, fresh-uuid mint): simultaneous cold starts are distinct anonymous
+    users by design. Nothing raises; nothing is merged or dropped."""
+    import threading
+
+    n = 6
+    barrier, results, errors = threading.Barrier(n), [], []
+
+    def work():
+        try:
+            barrier.wait()
+            user, _token, is_new = AuthService().ensure_anonymous(device_user_id=None)
+            results.append((user.id, is_new))
+        except Exception as e:  # pragma: no cover - would fail the assert below
+            errors.append(e)
+
+    ts = [threading.Thread(target=work) for _ in range(n)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert errors == []
+    assert len({uid for uid, _ in results}) == n and all(new for _, new in results)
+
+
+def test_ensure_anonymous_concurrent_trusted_rebootstraps_all_get_the_one_existing_user():
+    """The rightful owner re-bootstrapping from several in-flight requests reuses ONE row."""
+    import threading
+
+    auth = AuthService()
+    first, _t, _n = auth.ensure_anonymous(device_user_id=None)
+    n = 6
+    barrier, results, errors = threading.Barrier(n), [], []
+
+    def work():
+        try:
+            barrier.wait()
+            user, _token, is_new = AuthService().ensure_anonymous(
+                device_user_id=first.id, authenticated_user_id=first.id,
+            )
+            results.append((user.id, is_new))
+        except Exception as e:  # pragma: no cover - would fail the assert below
+            errors.append(e)
+
+    ts = [threading.Thread(target=work) for _ in range(n)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert errors == []
+    assert results and all(uid == first.id and not new for uid, new in results)

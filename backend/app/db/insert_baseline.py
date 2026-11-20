@@ -84,8 +84,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'DEF220 fixed (re-read-and-update at site); convert to claim().or_update() in Phase 2',
     ('user_overlays', 'services/overlay_store.py::save_new_version'):
         'version-sequence retry-then-raise (DEF220); expected unclaimed(why=...) in Phase 2',
-    ('users', 'services/auth_service.py::ensure_anonymous'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('users', 'services/auth_service.py::sign_in_with_apple'):
         'DEF416 — handled (uq_users_apple_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
     ('users', 'services/auth_service.py::sign_in_with_google'):
