@@ -572,6 +572,16 @@ class SimPortfolioRow(Base):
         UniqueConstraint(
             "user_id", "kind", "run_id", name="uq_portfolio_user_kind_run",
         ),
+        # DEF499 — the constraint above never fires for the TRAINING portfolio
+        # (run_id NULL; NULLs are distinct in a unique index). This partial
+        # index is the one that does.
+        Index(
+            "uq_portfolio_user_kind_null_run",
+            "user_id", "kind",
+            unique=True,
+            postgresql_where=text("run_id IS NULL"),
+            sqlite_where=text("run_id IS NULL"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
@@ -1650,6 +1660,14 @@ class PortfolioNavDailyRow(Base):
     __table_args__ = (
         UniqueConstraint(
             "user_id", "run_id", "as_of_date", name="uq_nav_user_run_date",
+        ),
+        # DEF499 — same NULL-distinct hole for the training curve (run_id NULL).
+        Index(
+            "uq_nav_user_date_null_run",
+            "user_id", "as_of_date",
+            unique=True,
+            postgresql_where=text("run_id IS NULL"),
+            sqlite_where=text("run_id IS NULL"),
         ),
     )
 

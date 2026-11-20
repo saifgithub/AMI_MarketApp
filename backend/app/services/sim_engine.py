@@ -47,6 +47,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.agents.safety_floor import check_mandate_compliance
 from app.core.config import settings
@@ -1010,8 +1011,21 @@ class SimEngine:
                     current_cash=_STARTING_CAPITAL,
                     created_at=datetime.now(timezone.utc),
                 )
-                s.add(row)
-                s.flush()
+                try:
+                    with s.begin_nested():
+                        s.add(row)
+                        s.flush()
+                except IntegrityError:
+                    # DEF499 — a concurrent first touch won the insert
+                    # (`uq_portfolio_user_kind_null_run` for run_id NULL,
+                    # `uq_portfolio_user_kind_run` otherwise). Take the
+                    # winner's row rather than raising or forking a second one.
+                    winner = self._load_portfolio_row(
+                        s, user_id, kind=kind, run_id=run_id,
+                    )
+                    if winner is None:
+                        raise
+                    row = winner
             return _portfolio_from_row(row)
 
     def reset_portfolio(self, user_id: UUID) -> Portfolio:
