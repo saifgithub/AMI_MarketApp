@@ -256,3 +256,13 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 5. **DEF512 verified live** after deploy #13: the API UAT passed (6 of 6 changed cases, both banked-Room cases included), Alpha logged 3 `room_bank_hit` events, and 0 freeze errors.
 6. **DEF308: 9 of 9.** `ensure_field` is converted on a new partial unique index, migration `def308a0b0c0d3` (merged; ships in deploy #14).
 7. **Build 0.1.0+121** (bump `45219e7e`, from `f5e9a42c`) is on TestFlight internal and Play internal, under a UAT override for stale device cases only. The APK sha256 is `e3e9f81f…cfe422b`. AMI-DL-9 (Android, 16 cases, including the WP-24 banked-Room case UAT-ROOM-031) and AMI-DL-10 (iPhone, 12 cases) are booked with the M4 testers. Each tester needs a per-build grant.
+
+## 2026-11-21: device run AMI-DL-9 (Android, build 121)
+
+1. **AMI-DL-9** (18:06–21:33Z): one APK-over 120 → 121. The sha256 and signer were checked first, and there was no uninstall. 17 ids: 10 passed and 7 blocked, with no failures.
+   1. Passed: PLAT-005, FLOOR-007, E5-MAND-01, SUPP-010 (the related-lesson pills), SUPP-012, SIM-028, ROOM-016 (AAPL, 12 credits, about 14 min), ROOM-028 + FLOOR-011 (the rejoin banner, no second charge) and SIM-029. SIM-022 part A ran: OPEN MY MANDATE lands on RISK LIMITS.
+   2. Blocked because the tester's stakeholder did not grant them: AUTH-044, MAND-031, SIM-022 part B, MAND-035 and BILL-012. Also blocked: HLTH-013 (the server day was still 20 Nov) and ONB-043 (it needs an uninstall).
+   3. UAT-ROOM-031 (the WP-24 banked Room) was not run. My packet put it under "Pending lanes" instead of Part A. It moves to AMI-DL-9b.
+   4. The tester saw NVDA disappear. A read-only check shows its stop filled on 20 Nov at 14:36Z ($141.90 stop, closed at $140.56): by design.
+2. **AMI-DL-9b** is requested for after 00:00Z on 21 Nov, covering the blocked cases plus ROOM-031. The addendum is in the tester's `steps_in/`.
+3. **AMI-DL-10** (iPhone) is granted but waits for a person to unlock the phone.
