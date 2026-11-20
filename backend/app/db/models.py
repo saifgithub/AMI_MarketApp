@@ -1746,6 +1746,18 @@ class GameFieldRow(Base):
     """
 
     __tablename__ = "game_fields"
+    __table_args__ = (
+        # DEF308 / ISS001 — the arbiter `ensure_field`'s claim() inserts against. Abandoned
+        # lobbies are excluded so the replacement lobby may reuse the calendar start; `kind` is
+        # part of the predicate because private fields do not occupy the cadence's slot.
+        Index(
+            "uq_game_fields_open_cadence_start",
+            "cadence", "starts_on",
+            unique=True,
+            postgresql_where=text("kind = 'open' AND state <> 'abandoned'"),
+            sqlite_where=text("kind = 'open' AND state <> 'abandoned'"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     cadence: Mapped[str] = mapped_column(String, nullable=False, index=True)

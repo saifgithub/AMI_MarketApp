@@ -27,13 +27,13 @@ def winner_commits_first(
     real = module.claim
     state: dict[str, Any] = {"fired": False, "winner_id": None}
 
-    def wrapper(session, m, *, key, values=None):
+    def wrapper(session, m, *, key, values=None, **kw):
         if m is model and not state["fired"]:
             state["fired"] = True
             with get_session() as other:
                 winner = ami_claim.claim(other, model, key=dict(key), values=dict(winner_values or {})).or_skip()
                 state["winner_id"] = winner.id
-        return real(session, m, key=key, values=values)
+        return real(session, m, key=key, values=values, **kw)
 
     monkeypatch.setattr(module, "claim", wrapper)
     return state

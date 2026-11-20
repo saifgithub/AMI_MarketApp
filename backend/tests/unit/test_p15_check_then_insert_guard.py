@@ -83,7 +83,6 @@ _UNREVIEWED = {
     # shape as DEF401. _claim_or_create and ensure_anonymous are unchanged
     # and still pinned — no constraint yet backs email/phone's fallback path
     # or device_user_id (that's CR191's remaining scope).
-    ("games_service.py", "ensure_field", "GameFieldRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
 

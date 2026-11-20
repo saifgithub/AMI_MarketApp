@@ -28,8 +28,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('game_entries', 'services/games_service.py::enter_field'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
-    ('game_fields', 'services/games_service.py::ensure_field'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('journal_entries', 'api/portfolio.py::portfolio_health_finding'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
     ('journal_entries', 'services/journal_store.py::append'):
@@ -88,8 +86,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'DEF416 — handled (uq_users_apple_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
     ('users', 'services/auth_service.py::sign_in_with_google'):
         'DEF416 — handled (uq_users_google_id + begin_nested re-read); convert to claim().or_update() in Phase 3',
-    ('users', 'services/games_service.py::ensure_field'):
-        'User row minted inside the DEF308-frozen ensure_field (not itself pinned by DEF308); convert with it in Phase 3',
     ('verdict_outcomes', 'services/verdict_outcomes.py::bank_verdict_outcome'):
         'ISS001 Phase 2: unconverted pre-control site — convert to claim(...) or declare unclaimed(Model, why=...)',
 }
