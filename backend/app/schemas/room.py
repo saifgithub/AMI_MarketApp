@@ -525,6 +525,14 @@ class RoomRun(BaseModel):
     # `retry_cio_step`'s success branch, the only place this is ever set.
     cio_retried: bool = False
 
+    # CR267 WP-24 — the Room's input key and the parts it was hashed from (see
+    # `app/services/room_bank.py`). Internal: `exclude=True` keeps both out of
+    # every API payload and `model_dump`. `bank_key` here is what the run WANTS
+    # to hold; the persisted column is set only while the run is bankable
+    # (`run_is_bankable`), so a failed Room never keeps it.
+    bank_key: str | None = Field(default=None, exclude=True)
+    bank_inputs: dict | None = Field(default=None, exclude=True)
+
     # CR237 — server-computed, NEVER persisted (always False on a value read
     # straight from `_row_to_room_run`; the API routes that serve this model
     # to a client overwrite it via `cio_retry_eligible(...)` before

@@ -37,6 +37,7 @@ import asyncio
 import contextlib
 import contextvars
 import random
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -240,6 +241,13 @@ class LLMProvider:
         """CR270 — the most specific model id known WITHOUT a call, or None."""
         return None
 
+    async def read_served_root(self, ttl_s: float) -> str | None:
+        """CR267 WP-24 — the identity of the model behind this slot as the
+        server itself reports it, read fresh within `ttl_s`; None when it cannot
+        be read. A Room is banked only against a root, never against the alias
+        or the configured id."""
+        return None
+
     def resolve_model(self, meta: dict[str, Any]) -> str | None:
         """CR270 — the model that served one call, for `llm_audit.model`.
 
@@ -303,6 +311,9 @@ class MockProvider(LLMProvider):
     name = "mock"
 
     def static_model_identity(self) -> str | None:
+        return "mock"
+
+    async def read_served_root(self, ttl_s: float) -> str | None:
         return "mock"
 
     def resolve_model(self, meta: dict[str, Any]) -> str | None:
@@ -777,6 +788,9 @@ class OpenAICompatibleProvider(LLMProvider):
         # nothing); `served_id` is the entry's `id`.
         self.served_root: str | None = None
         self.served_id: str | None = None
+        # CR267 WP-24 — monotonic time of the last discovery that reached the
+        # server and found this slot's entry; None until one has.
+        self.served_at: float | None = None
         # CR281 — fields the gateway owns can never arrive via extra_body.
         self._extra_body = {
             k: v for k, v in (extra_body or {}).items() if k not in PROTECTED_BODY_FIELDS
@@ -823,13 +837,15 @@ class OpenAICompatibleProvider(LLMProvider):
                 keys.append(k)
         return keys
 
-    async def discover_served_model(self, timeout_s: float = 5.0) -> None:
+    async def discover_served_model(self, timeout_s: float = 5.0) -> bool:
         """CR270 — best-effort `GET /v1/models`; records `root`/`id` for the
         entry matching this slot's configured model (or the only entry).
 
         Never raises: this is metadata, and a slow or absent endpoint must not
         touch boot or a request. A failure is logged at WARNING and the slot
-        keeps resolving to the response-reported / configured id.
+        keeps resolving to the response-reported / configured id. Returns True
+        only when the server answered and listed this slot's model (CR267 WP-24
+        reads that to know the root is fresh).
         """
         try:
             resp = await self._client.get("/v1/models", timeout=timeout_s)
@@ -845,10 +861,11 @@ class OpenAICompatibleProvider(LLMProvider):
                     configured_model=self._model_name,
                     listed=len(entries),
                 )
-                return
+                return False
             root = match.get("root")
             self.served_root = str(root) if root else None
             self.served_id = str(match["id"]) if match.get("id") else None
+            self.served_at = time.monotonic()
             logger.info(
                 "llm_served_model",
                 provider=self.name,
@@ -856,6 +873,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 served_root=self.served_root,
                 served_id=self.served_id,
             )
+            return True
         except Exception as exc:
             logger.warning(
                 "llm_served_model_discovery_failed",
@@ -863,6 +881,39 @@ class OpenAICompatibleProvider(LLMProvider):
                 error=f"{type(exc).__name__}: {str(exc)[:200]}",
                 detail="llm_audit.model falls back to the response-reported / configured id",
             )
+            return False
+
+    async def read_served_root(self, ttl_s: float) -> str | None:
+        """CR267 WP-24 — the `/v1/models` `root`, trusted for `ttl_s` seconds.
+
+        The root names the real served model (the alias this slot is configured
+        with is reused across swaps and names nothing), so it is the only thing
+        a Room is keyed on. A cached read inside the TTL is returned as is; past
+        it the endpoint is read again. If that read fails the stale root is NOT
+        returned — the model may have been swapped, and serving a Room produced
+        by another model is exactly what the key exists to prevent.
+
+        A hosted ("openai"-kind) slot has no on-disk path, and a host may leave
+        `root` empty; its `id` is the vendor's versioned model name rather than a
+        local alias, so it stands in. A vLLM slot with no root returns None.
+        """
+        fresh = (
+            self.served_at is not None
+            and (time.monotonic() - self.served_at) < ttl_s
+        )
+        if not fresh:
+            await self.discover_served_model()
+            fresh = (
+                self.served_at is not None
+                and (time.monotonic() - self.served_at) < max(ttl_s, 1.0)
+            )
+        if not fresh:
+            return None
+        if self.served_root:
+            return self.served_root
+        if getattr(self, "kind", "vllm") == "openai" and self.served_id:
+            return self.served_id
+        return None
 
     async def stream_chat(
         self,
@@ -1708,6 +1759,25 @@ class LLMGateway:
         name = provider_name or self._active_provider_name()
         provider = self._providers.get(name)
         return provider.static_model_identity() if provider is not None else None
+
+    async def room_model_root(self, provider_name: str | None = None) -> str | None:
+        """CR267 WP-24 — the model root a Room started now would run on (the
+        active provider, or `provider_name` such as the failover slot), read from
+        `/v1/models` and cached for `room_model_root_ttl_s`. None when it cannot
+        be read: the caller then runs the Room unbanked and says so."""
+        name = provider_name or self._active_provider_name()
+        provider = self._providers.get(name)
+        if provider is None:
+            return None
+        try:
+            return await provider.read_served_root(float(settings.room_model_root_ttl_s))
+        except Exception as exc:
+            logger.warning(
+                "room_model_root_read_failed",
+                provider=name,
+                error=f"{type(exc).__name__}: {str(exc)[:200]}",
+            )
+            return None
 
     def _active_provider_name(self) -> str:
         """Which provider a call will actually hit right now.

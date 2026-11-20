@@ -225,6 +225,9 @@ async def stream_room(
     # The 402 lands here, before the StreamingResponse: once the stream is on
     # the wire the status is already sent and a refusal could only be an
     # in-band error event, which the client renders as a crash, not a wall.
+    # CR267 WP-24 — filled by start_run when this convene's inputs match a
+    # finished Room and that Room is handed back (no charge, no new run).
+    bank_outcome: dict = {}
     try:
         run_id = await runner.start_run(
             user_id=req.user_id,
@@ -234,6 +237,7 @@ async def stream_room(
             current_drawdown_pct=current_drawdown_pct,
             on_complete=_finalise_to_journal,
             alpaca_snapshot=render_snapshot(req.alpaca),
+            bank_outcome=bank_outcome,
         )
     except RoomAlreadyInSession as e:
         # CR270 — 409: the request is well-formed but conflicts with the user's
@@ -271,6 +275,8 @@ async def stream_room(
             detail["retry_after_seconds"] = max(0, int(remaining))
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, detail=detail) from e
     cached = not runner.is_active(run_id)
+    banked = bool(bank_outcome.get("banked"))
+    banked_at = bank_outcome.get("banked_at")
 
     async def event_stream():
         if cached:
@@ -438,8 +444,18 @@ async def stream_room(
         _final = runner.get_run(run_id)
         yield sse_json("done", json.dumps({
             'run_id': str(run_id),
-            'credit_cost': _final.credit_cost if _final is not None else None,
-            'refunded': run_was_refunded(_final),
+            # CR267 WP-24 — a banked return cost THIS convene nothing, whatever
+            # the original Room cost: the same "report what was charged, never a
+            # number nobody paid" rule CR236 set. `banked`/`banked_at` carry the
+            # plain "inputs unchanged since your last run" line; absent on a
+            # server that predates WP-24, which the client reads as not banked.
+            'credit_cost': (
+                0 if banked
+                else (_final.credit_cost if _final is not None else None)
+            ),
+            'banked': banked,
+            'banked_at': banked_at.isoformat() if banked_at is not None else None,
+            'refunded': False if banked else run_was_refunded(_final),
             # CR237 — same computed-flag discipline as `refunded` above: the
             # client never string-matches `verdict.reason` to decide whether
             # to show "Ask the CIO again"; this is the one source of truth.
@@ -459,6 +475,8 @@ async def stream_room(
         # Lets the client UI surface "cached analysis from earlier today"
         # if it wants to differentiate a dedup hit from a fresh run.
         headers["X-Room-Cached"] = "true"
+    if banked:
+        headers["X-Room-Banked"] = "true"
     return StreamingResponse(
         with_keepalive(event_stream()),
         media_type="text/event-stream",

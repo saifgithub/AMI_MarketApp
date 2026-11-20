@@ -21,6 +21,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.api.room import router as room_router
 from app.api.room import get_room_runner
@@ -87,6 +88,13 @@ def _seed_completed_run(user_id: UUID, ticker: str, transcript: list[dict]) -> U
 
 def _stream(client: TestClient, app: FastAPI, user_id: UUID, token: str, ticker: str) -> str:
     runner = RoomRunner()
+    # CR267 WP-24: a seeded row holds no input key, so hand the runner the
+    # seeded Room directly; the replay rendering is what is under test.
+    with get_session() as s:
+        seeded = s.execute(
+            select(RoomRunRow.id).where(RoomRunRow.user_id == user_id)
+        ).scalar_one()
+    runner._lookup_bank = lambda key: (seeded, True)  # type: ignore[method-assign]
     app.dependency_overrides[get_room_runner] = lambda: runner
     try:
         r = client.post(

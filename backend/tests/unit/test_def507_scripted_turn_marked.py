@@ -205,12 +205,23 @@ def test_live_sse_route_carries_scripted_only_when_true():
 
 
 def test_finished_run_replay_carries_the_mark():
-    """The cached-run replay (POST /v1/room/stream dedup onto a COMPLETED run)
+    """The cached-run replay (POST /v1/room/stream handed a COMPLETED run)
     rebuilds events from the stored transcript."""
     user_id, token = _user()
     runner, run_id, _events = asyncio.run(_convene(2, user_id))
     scripted = set(runner.get_run(run_id).verdict.scripted_agents)
     assert len(scripted) == 2
+    # CR267 WP-24: a Room with scripted desks is never banked, so the replay
+    # branch is reached by handing the runner this run directly.
+    # (This runner's gateway is a test double with no readable model root, so the
+    # key is supplied too.)
+    from app.services.room_runner import _BankPrep
+
+    async def _prep(**_kw):
+        return _BankPrep(None, "k", {"x": "y"}, None)
+
+    runner._prepare_bank = _prep  # type: ignore[method-assign]
+    runner._lookup_bank = lambda key: (run_id, True)  # type: ignore[method-assign]
 
     r = _client(runner).post(
         "/v1/room/stream",

@@ -50,6 +50,7 @@ from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import delete, or_, select
+from sqlalchemy.exc import IntegrityError
 
 from app.agents.safety_floor import (
     CONTEXT_NOT_SUPPLIED,
@@ -104,6 +105,7 @@ from app.services import (
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
+from app.services import room_bank
 from app.services.evidence_record import (
     EvidenceGateDecision,
     build_gate_decision,
@@ -917,6 +919,28 @@ def run_was_refunded(run: RoomRun | None) -> bool:
     if status == "failed":
         return True
     return bool(run.refund_recorded)
+
+
+def run_is_bankable(run: RoomRun) -> bool:
+    """CR267 WP-24 — may a later convene with the same inputs be handed this Room?
+
+    Running: yes (it holds the key so a concurrent identical convene reattaches
+    instead of starting a second). Completed: only a real, whole decision. A
+    failed or cancelled Room is not banked (the user is free to retry), and
+    neither is one that was refunded, ended as an outage abstain, or had any desk
+    answer with AMI's scripted standing guidance: handing that back as "same
+    inputs, same Room" would pin a transient provider failure for the rest of the
+    trading day. Not banking costs a re-run; banking a degraded Room costs the
+    user a result they cannot re-roll.
+    """
+    status = run.status if isinstance(run.status, str) else run.status.value
+    if status == "running":
+        return True
+    if status != "completed" or run.verdict is None:
+        return False
+    if run.refund_recorded or is_outage_shaped_verdict(run.verdict.model_dump()):
+        return False
+    return not any(m.scripted for m in run.transcript)
 
 
 def is_llm_outage_verdict(verdict: dict | None) -> bool:
@@ -6956,6 +6980,8 @@ def _row_to_room_run(row: RoomRunRow) -> RoomRun:
         refund_recorded=bool(row.refund_recorded),
         cio_context_snapshot=row.cio_context_snapshot,
         cio_retried=bool(row.cio_retried),
+        bank_key=row.bank_key,
+        bank_inputs=row.bank_inputs,
     )
 
 
@@ -6996,7 +7022,22 @@ def _snapshot_run(run: RoomRun) -> tuple[int, dict[str, Any]]:
         "refund_recorded": run.refund_recorded,
         "cio_context_snapshot": copy.deepcopy(run.cio_context_snapshot),
         "cio_retried": run.cio_retried,
+        "bank_key": run.bank_key if run_is_bankable(run) else None,
+        "bank_inputs": copy.deepcopy(run.bank_inputs),
     }
+
+
+def _upsert_run_row(run_id: UUID, snap: dict[str, Any]) -> None:
+    with get_session() as s:
+        row = s.execute(
+            select(RoomRunRow).where(RoomRunRow.id == run_id)
+        ).scalar_one_or_none()
+        if row is None:
+            s.add(RoomRunRow(**snap))
+        else:
+            for key, value in snap.items():
+                if key not in ("id", "user_id", "triggered_at"):
+                    setattr(row, key, value)
 
 
 def _write_run_snapshot(seq: int, snap: dict[str, Any]) -> None:
@@ -7009,16 +7050,23 @@ def _write_run_snapshot(seq: int, snap: dict[str, Any]) -> None:
     with lock:
         if seq < _persist_written.get(run_id, 0):
             return
-        with get_session() as s:
-            row = s.execute(
-                select(RoomRunRow).where(RoomRunRow.id == run_id)
-            ).scalar_one_or_none()
-            if row is None:
-                s.add(RoomRunRow(**snap))
-            else:
-                for key, value in snap.items():
-                    if key not in ("id", "user_id", "triggered_at"):
-                        setattr(row, key, value)
+        try:
+            _upsert_run_row(run_id, snap)
+        except IntegrityError:
+            # CR267 WP-24 — the only unique column on this table is `bank_key`,
+            # so a collision means another Room already holds this run's key
+            # (a restart on the backup model landing on a key that is already
+            # banked). The Room is not wrong, just not bankable: write it
+            # without the key, and say so.
+            if snap.get("bank_key") is None:
+                raise
+            logger.warning(
+                "room_bank_key_conflict_unbanked",
+                run_id=str(run_id),
+                outcome="written without a bank key; this Room will not be handed to a later convene",
+            )
+            snap = {**snap, "bank_key": None}
+            _upsert_run_row(run_id, snap)
         _persist_written.pop(run_id, None)
         _persist_written[run_id] = seq
         while len(_persist_written) > _PERSIST_WRITTEN_CAP:
@@ -7222,6 +7270,29 @@ def _build_next_convene_delta(
 
 
 ROOM_IN_SESSION_MESSAGE = "You already have a Room in session. It will finish first."
+
+
+@dataclass(frozen=True)
+class _BankPrep:
+    """CR267 WP-24 — the frozen sheet and Room key for one convene. `key` None
+    means the Room runs unbanked, for `reason`."""
+
+    frozen: "room_bank.FrozenSheet | None"
+    key: str | None
+    parts: dict[str, str] | None
+    reason: str | None
+
+
+@dataclass(frozen=True)
+class _FeedDecision:
+    """CR267 WP-24 — the outcome of `RoomRunner._decide_feeds`: what the Room
+    would be charged and which live feeds it would see, before any spend."""
+
+    base: int
+    surcharge: int
+    entitled: bool
+    news_feed: NewsFeed
+    social_feed: SocialFeed
 
 
 class RoomAlreadyInSession(Exception):
@@ -7452,6 +7523,7 @@ class RoomRunner:
                         retried += 1
                     else:
                         row.status = "failed"
+                        row.bank_key = None
                         row.error_message = (
                             f"abandoned: auto-retried {row.retry_count} time(s), gave up"
                         )
@@ -7506,6 +7578,7 @@ class RoomRunner:
                 if row is None or row.status != "running":
                     return
                 row.status = "failed"
+                row.bank_key = None
                 row.error_message = f"crashed: {exc!s}"[:500]
                 user_id, credit_cost = row.user_id, row.credit_cost
                 owes_refund = bool(credit_cost) and not row.refund_recorded
@@ -7623,6 +7696,7 @@ class RoomRunner:
                 ).scalar_one_or_none()
                 if row is not None:
                     row.status = "failed"
+                    row.bank_key = None
                     row.error_message = (
                         "respawn abandoned: could not resolve the real portfolio "
                         f"snapshot ({str(exc)[:150]}) — never re-run against a "
@@ -7805,36 +7879,252 @@ class RoomRunner:
             ).scalar_one_or_none()
             return (row.id, row.ticker) if row else None
 
-    def _find_recent_completed_run(self, user_id: UUID, ticker: str) -> UUID | None:
-        """Return run_id of a recently COMPLETED run for this user+ticker.
-
-        Implements the design-doc resubmission rule: if the same user already
-        has a successful verdict on this ticker within the configurable lookback
-        window (settings.room_dedup_completed_hours), return that verdict
-        instead of burning another 5 minutes of LLM time on essentially the
-        same analysis. The market hasn't moved enough since this morning to
-        warrant a fresh debate.
-
-        Only matches `status="completed"` runs that produced a verdict — failed
-        and cancelled runs are not deduped (the user should be free to retry).
-        """
-        if settings.room_dedup_completed_hours <= 0:
-            return None  # window disabled
-        cutoff = datetime.now(timezone.utc) - timedelta(
-            hours=settings.room_dedup_completed_hours
+    async def _rekey_for_backup(self, run: RoomRun, gateway: Any) -> None:
+        """CR267 WP-24 — a Room restarted on the backup slot is a backup-model
+        Room: it holds the key built from the BACKUP's root, never the primary's,
+        so a later convene on the primary can never be handed it (and vice
+        versa). If the backup's root cannot be read the Room is not banked."""
+        if run.bank_key is None or run.bank_inputs is None:
+            return
+        root = (
+            await gateway.room_model_root(FALLBACK_PROVIDER_NAME)
+            if isinstance(gateway, LLMGateway) else None
         )
+        if root is None:
+            logger.warning(
+                "room_bank_backup_root_unreadable",
+                run_id=str(run.id),
+                outcome="this Room ran on the backup model and is not banked",
+            )
+            run.bank_key = None
+            return
+        run.bank_key, run.bank_inputs = room_bank.with_model_root(run.bank_inputs, root)
+
+    def _bank_hit(
+        self,
+        hit: tuple[UUID, bool],
+        user_id: UUID,
+        ticker: str,
+        bank_outcome: dict[str, Any] | None,
+    ) -> UUID:
+        run_id, banked = hit
+        logger.info(
+            "room_bank_hit" if banked else "room_bank_attached_running",
+            run_id=str(run_id), user_id=str(user_id), ticker=ticker,
+        )
+        if banked and bank_outcome is not None:
+            bank_outcome["banked"] = True
+            bank_outcome["banked_at"] = self._finished_at(run_id)
+        return run_id
+
+    @staticmethod
+    def _finished_at(run_id: UUID) -> datetime | None:
         with get_session() as s:
-            row = s.execute(
-                select(RoomRunRow)
-                .where(RoomRunRow.user_id == user_id)
-                .where(RoomRunRow.ticker == ticker)
-                .where(RoomRunRow.status == "completed")
-                .where(RoomRunRow.verdict.isnot(None))
-                .where(RoomRunRow.finished_at >= cutoff)
-                .order_by(RoomRunRow.finished_at.desc())
-                .limit(1)
-            ).scalar_one_or_none()
-            return row.id if row else None
+            row = s.get(RoomRunRow, run_id)
+            if row is None or row.finished_at is None:
+                return None
+            fin = row.finished_at
+            return fin if fin.tzinfo else fin.replace(tzinfo=timezone.utc)
+
+    @staticmethod
+    def _freeze_sheet_blocking(
+        ticker: str,
+        trading_date: date,
+        variant: str,
+        decision: "_FeedDecision",
+        withheld: frozenset[AgentId],
+    ) -> "room_bank.FrozenSheet":
+        """The blocking half of `_prepare_bank` (a DB read, and on the day's
+        first convene the yfinance/EDGAR fact-sheet build), run off the loop."""
+        return room_bank.freeze_fact_sheet(
+            ticker=ticker, trading_date=trading_date, variant=variant,
+            build=lambda: _profile_for_ticker(
+                ticker,
+                news_feed=decision.news_feed,
+                social_feed=decision.social_feed,
+                withheld=withheld,
+            ),
+        )
+
+    async def _prepare_bank(
+        self,
+        *,
+        user_id: UUID,
+        ticker: str,
+        mandate: Mandate,
+        roster: AnalystRoster,
+        decision: "_FeedDecision",
+    ) -> "_BankPrep":
+        """CR267 WP-24 — freeze today's fact sheet and compute the Room key.
+
+        Never raises: a failure anywhere here must not stop a convene, but it is
+        never silent either. When a key cannot be built the Room runs unbanked
+        (on the frozen sheet if there is one) and `reason` says why, so a Room
+        that is "never banked" shows up in the log instead of looking banked.
+        """
+        try:
+            withheld = frozenset(roster.withheld)
+            trading_date = room_bank.trading_date_for(now_utc())
+            variant = room_bank.sheet_variant(
+                news_state=decision.news_feed.state.value,
+                social_state=decision.social_feed.state.value,
+                market_withheld=AgentId.MARKET_ANALYST in withheld,
+            )
+
+            frozen = await asyncio.to_thread(
+                self._freeze_sheet_blocking,
+                ticker, trading_date, variant, decision, withheld,
+            )
+            reason: str | None = None
+            gateway = self._llm or get_llm_gateway()
+            root = (
+                await gateway.room_model_root()
+                if isinstance(gateway, LLMGateway) else None
+            )
+            policy = await asyncio.to_thread(room_bank.policy_version)
+            if frozen.sheet_hash is None:
+                reason = "the fact sheet could not be frozen"
+            elif root is None:
+                reason = "the model root could not be read from /v1/models"
+            elif policy is None:
+                reason = "no prompt version could be computed"
+            if reason is not None:
+                logger.warning(
+                    "room_bank_degraded",
+                    user_id=str(user_id), ticker=ticker, reason=reason,
+                    outcome="this Room runs fresh and is not banked",
+                )
+                return _BankPrep(frozen, None, None, reason)
+            parts = room_bank.key_parts(
+                user_id=user_id, ticker=ticker, mandate=mandate,
+                sheet_hash=frozen.sheet_hash, policy=policy, model_root=root,
+                trading_date=trading_date,
+            )
+            return _BankPrep(frozen, room_bank.key_from_parts(parts), parts, None)
+        except Exception as exc:
+            logger.error(
+                "room_bank_prepare_failed",
+                user_id=str(user_id), ticker=ticker, error=str(exc)[:300],
+                outcome="this Room runs fresh and is not banked",
+                exc_info=exc,
+            )
+            return _BankPrep(None, None, None, f"prepare failed: {type(exc).__name__}")
+
+    def _lookup_bank(self, key: str) -> tuple[UUID, bool] | None:
+        """(run_id, banked) for the Room holding `key`, or None to run fresh.
+
+        `banked` is True for a finished Room (the caller returns it free) and
+        False for a live running one (the caller reattaches, as tier 1 does). A
+        dead `running` row is released rather than attached to."""
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            minutes=settings.room_dedup_running_minutes
+        )
+        holder = room_bank.find_banked_room(key, running_cutoff=cutoff)
+        if holder is None:
+            return None
+        if holder.running and not holder.live:
+            room_bank.release_key(holder.run_id)
+            return None
+        return holder.run_id, not holder.running
+
+    def _reserve_run_row(
+        self,
+        *,
+        run_id: UUID,
+        user_id: UUID,
+        ticker: str,
+        mandate: Mandate,
+        tier: str,
+        key: str,
+        parts: dict[str, str],
+    ) -> tuple[UUID, bool] | None:
+        """INSERT the running row that holds `key`, BEFORE anything is charged.
+
+        The unique index on `bank_key` is what makes two concurrent identical
+        convenes one Room: the loser's INSERT fails here, with nothing spent, and
+        it is handed the winner (reattach if still running, banked if finished).
+        Returns None when this call now holds the key, else `(run_id, banked)`
+        of the Room that does. If the holder vanished between the failed INSERT
+        and the read (it failed and released the key) the INSERT is retried
+        once, then the failure is raised.
+        """
+        now = datetime.now(timezone.utc)
+        for attempt in (1, 2):
+            try:
+                with get_session() as s:
+                    s.add(RoomRunRow(
+                        id=run_id,
+                        user_id=user_id,
+                        ticker=ticker.upper(),
+                        triggered_at=now,
+                        started_at=now,
+                        mandate_version=mandate.version,
+                        model_tier=tier,
+                        rounds=1,
+                        transcript=[],
+                        verdict=None,
+                        credit_cost=0,
+                        status="running",
+                        bank_key=key,
+                        bank_inputs=parts,
+                    ))
+                return None
+            except IntegrityError:
+                holder = self._lookup_bank(key)
+                if holder is not None:
+                    logger.info(
+                        "room_bank_key_race_lost",
+                        user_id=str(user_id), ticker=ticker,
+                        holder_run_id=str(holder[0]),
+                        outcome="banked" if holder[1] else "reattached",
+                    )
+                    return holder
+                if attempt == 2:
+                    raise
+        return None
+
+    def _finalize_reservation(
+        self,
+        run_id: UUID,
+        *,
+        credit_cost: int,
+        key: str | None,
+        parts: dict[str, str] | None,
+    ) -> None:
+        """Record what was actually charged on the reservation row and, if the
+        charge changed which feeds the Room saw (balance moved between the key
+        and the spend), the key it now holds. A key that collides is dropped:
+        the Room runs, unbanked, and the log says so."""
+        try:
+            with get_session() as s:
+                row = s.get(RoomRunRow, run_id)
+                if row is None:
+                    return
+                row.credit_cost = credit_cost
+                row.bank_key = key
+                row.bank_inputs = parts
+        except IntegrityError:
+            logger.warning(
+                "room_bank_key_conflict_unbanked",
+                run_id=str(run_id),
+                outcome="re-keyed after the charge onto a key already held; this Room is not banked",
+            )
+            with get_session() as s:
+                row = s.get(RoomRunRow, run_id)
+                if row is not None:
+                    row.credit_cost = credit_cost
+                    row.bank_key = None
+
+    def _drop_reservation(self, run_id: UUID) -> None:
+        try:
+            with get_session() as s:
+                s.execute(delete(RoomRunRow).where(RoomRunRow.id == run_id))
+        except Exception as exc:
+            logger.error(
+                "room_bank_reservation_drop_failed",
+                run_id=str(run_id), error=str(exc)[:200],
+                detail="the row stays `running` and its key is released by the stale-run check",
+            )
 
     def _room_delta_context(self, user_id: UUID, ticker: str) -> dict[str, Any] | None:
         """CR219 R60 — the raw bundle `room_prompts._room_delta_line` renders.
@@ -7892,17 +8182,11 @@ class RoomRunner:
             "sheet_state": verdict.sheet_state,
         }
 
-    def _resolve_and_charge_feeds(
+    def _decide_feeds(
         self, user_id: UUID, ticker: str, *, withheld: frozenset[AgentId] = frozenset()
-    ) -> tuple[NewsFeed, SocialFeed, int]:
-        """CR090 (D1/D2/D4/D5) — resolve the two live-data feeds ONCE, decide
-        entitlement off the credit balance, and make the single atomic charge.
-
-        Returns `(news_feed, social_feed, charged_total)` — the feeds carry the
-        final 3-state marker (LIVE / WITHHELD_PAID / UNAVAILABLE / WITHHELD_TENURE)
-        and `LIVE` ones carry their real payload; `charged_total` is exactly what
-        was debited (base, or base + surcharge). Raises `InsufficientCredits` (the
-        402 path) untouched when the balance won't even cover the base.
+    ) -> "_FeedDecision":
+        """CR090 (D1/D2/D4/D5) — resolve the two live-data feeds ONCE and decide
+        entitlement off the credit balance, WITHOUT charging.
 
         The probe runs at `entitled=True`, so `state is LIVE` means data really
         exists right now; a non-entitled turn then downgrades those to
@@ -7914,6 +8198,10 @@ class RoomRunner:
         skipped outright, banking the API cost per scope item 4) and never
         counted in `n_available`, so the surcharge naturally reflects only what
         was actually fetched (D2) without a second debit call site.
+
+        CR267 WP-24 split this out of `_resolve_and_charge_feeds` so the Room key
+        (which hashes the sheet, which depends on these states) can be computed
+        before anything is charged. Nothing here spends.
         """
         base = room_cost_for_plan(effective_plan_for_user(user_id))
         live = settings.use_real_market_data
@@ -7945,19 +8233,6 @@ class RoomRunner:
             credits_are_free() or balance_for(user_id)[0] >= base + surcharge
         )
 
-        if entitled:
-            # Explicit amount folds the surcharge into the one atomic spend (D1).
-            _, charged_total = spend(
-                user_id, base + surcharge,
-                reason=f"room:{ticker.upper()}:live+{surcharge}",
-            )
-        else:
-            # Base only, via spend(None): preserves the CR047 winzip soft-wall
-            # and the CR039 402 for a genuinely broke user (both live inside
-            # spend, keyed on amount is None). Available feeds become
-            # WITHHELD_PAID and cost nothing (D5).
-            _, charged_total = spend(user_id, None, reason=f"room:{ticker.upper()}")
-
         def _final_state(probe_state: LiveDataState) -> LiveDataState:
             if probe_state is LiveDataState.LIVE and not entitled:
                 return LiveDataState.WITHHELD_PAID
@@ -7973,7 +8248,44 @@ class RoomRunner:
             social_state,
             social_probe.sentiment if social_state is LiveDataState.LIVE else None,
         )
-        return news_feed, social_feed, charged_total
+        return _FeedDecision(
+            base=base, surcharge=surcharge, entitled=entitled,
+            news_feed=news_feed, social_feed=social_feed,
+        )
+
+    def _resolve_and_charge_feeds(
+        self,
+        user_id: UUID,
+        ticker: str,
+        *,
+        withheld: frozenset[AgentId] = frozenset(),
+        decision: "_FeedDecision | None" = None,
+    ) -> tuple[NewsFeed, SocialFeed, int]:
+        """CR090 — `_decide_feeds` plus the single atomic charge.
+
+        Returns `(news_feed, social_feed, charged_total)` — the feeds carry the
+        final 3-state marker (LIVE / WITHHELD_PAID / UNAVAILABLE / WITHHELD_TENURE)
+        and `LIVE` ones carry their real payload; `charged_total` is exactly what
+        was debited (base, or base + surcharge). Raises `InsufficientCredits` (the
+        402 path) untouched when the balance won't even cover the base.
+
+        `decision` (CR267 WP-24): the caller already decided, so the feeds the
+        Room key was computed from are the feeds that get charged for.
+        """
+        d = decision or self._decide_feeds(user_id, ticker, withheld=withheld)
+        if d.entitled:
+            # Explicit amount folds the surcharge into the one atomic spend (D1).
+            _, charged_total = spend(
+                user_id, d.base + d.surcharge,
+                reason=f"room:{ticker.upper()}:live+{d.surcharge}",
+            )
+        else:
+            # Base only, via spend(None): preserves the CR047 winzip soft-wall
+            # and the CR039 402 for a genuinely broke user (both live inside
+            # spend, keyed on amount is None). Available feeds become
+            # WITHHELD_PAID and cost nothing (D5).
+            _, charged_total = spend(user_id, None, reason=f"room:{ticker.upper()}")
+        return d.news_feed, d.social_feed, charged_total
 
     async def start_run(
         self,
@@ -7989,8 +8301,14 @@ class RoomRunner:
         on_complete: Callable[[UUID], Awaitable[None]] | None = None,
         backtest: AsOfContext | None = None,
         alpaca_snapshot: str | None = None,
+        bank_outcome: dict[str, Any] | None = None,
     ) -> UUID:
         """Start a room run as a detached background task. Returns run_id immediately.
+
+        CR267 WP-24 `bank_outcome`: an optional out-parameter. When the returned
+        run_id is a finished Room handed over because the convene's inputs match
+        it, `bank_outcome["banked"]` is set True and `["banked_at"]` carries when
+        that Room finished (None if unknown). Nothing is charged on that path.
 
         CR164 `backtest`: an as-of context puts the ENTIRE run into historical
         mode — the data layer serves only facts knowable on `backtest.as_of`
@@ -8125,19 +8443,27 @@ class RoomRunner:
             )
             return existing
 
-        # Dedup tier 2 — recently completed run with a verdict.
-        # Returns the previous verdict instead of re-analysing the same
-        # ticker before the market has meaningfully moved.
-        completed = self._find_recent_completed_run(user_id, ticker)
-        if completed is not None:
-            logger.info(
-                "room_dedup_attached_completed",
-                run_id=str(completed),
-                user_id=str(user_id),
-                ticker=ticker,
-                window_hours=settings.room_dedup_completed_hours,
+        # CR267 WP-24 — replaces the old "same ticker within 24h" tier. A finished
+        # Room is handed back only when its INPUTS match (mandate, today's frozen
+        # fact sheet, policy version, model root): same ticker is not same
+        # inputs. The roster and feed decision are made here, before anything is
+        # charged, because the fact sheet (and so the key) depends on them.
+        roster = resolve_roster_for_user(user_id)
+        decision: _FeedDecision | None = None
+        bank_prep = _BankPrep(None, None, None, None)
+        if settings.room_bank_enabled:
+            decision = await asyncio.to_thread(
+                self._decide_feeds, user_id, ticker,
+                withheld=frozenset(roster.withheld),
             )
-            return completed
+            bank_prep = await self._prepare_bank(
+                user_id=user_id, ticker=ticker, mandate=mandate,
+                roster=roster, decision=decision,
+            )
+            if bank_prep.key is not None:
+                hit = await asyncio.to_thread(self._lookup_bank, bank_prep.key)
+                if hit is not None:
+                    return self._bank_hit(hit, user_id, ticker, bank_outcome)
 
         # CR270 — one Room in flight per user, across tickers. Past both dedup
         # tiers (the same ticker has already attached above) and before the
@@ -8180,16 +8506,40 @@ class RoomRunner:
         # nothing, D5). All-or-nothing on the bundle: both live feeds or neither
         # (a partial "buy what you can afford" was rejected as unpredictable
         # pricing — a one-branch change here if ever wanted).
-        # CR098 — resolve the analyst roster BEFORE the feeds so a roster-
-        # withheld News/Social analyst's fetch is never probed (D2: money
+        # CR098 — the roster was resolved ABOVE (before the Room key) so a
+        # roster-withheld News/Social analyst's fetch is never probed (D2: money
         # moves as a deliberate consequence of the roster gate, not a side
         # effect discovered later).
-        roster = resolve_roster_for_user(user_id)
-        news_feed, social_feed, charged_total = self._resolve_and_charge_feeds(
-            user_id, ticker, withheld=frozenset(roster.withheld)
-        )
-
         run_id = uuid4()
+        # CR267 WP-24 — reserve the key BEFORE the charge. The unique index makes
+        # two concurrent identical convenes one Room, and the loser finds out
+        # here with nothing spent. A charge that then fails drops the reservation.
+        reserved = False
+        if bank_prep.key is not None and bank_prep.parts is not None:
+            tier = pick_tier(effective_plan_for_user(user_id), AgentId.PORTFOLIO_MANAGER)
+            holder = await asyncio.to_thread(
+                self._reserve_run_row,
+                run_id=run_id, user_id=user_id, ticker=ticker, mandate=mandate,
+                tier=tier, key=bank_prep.key, parts=bank_prep.parts,
+            )
+            if holder is not None:
+                return self._bank_hit(holder, user_id, ticker, bank_outcome)
+            reserved = True
+        try:
+            news_feed, social_feed, charged_total = self._resolve_and_charge_feeds(
+                user_id, ticker, withheld=frozenset(roster.withheld),
+                decision=decision,
+            )
+        except BaseException:
+            if reserved:
+                self._drop_reservation(run_id)
+            raise
+        if reserved:
+            await asyncio.to_thread(
+                self._finalize_reservation, run_id,
+                credit_cost=charged_total, key=bank_prep.key, parts=bank_prep.parts,
+            )
+
         q = _RunEventChannel()
         self._active_queues[run_id] = q
         self._active_by_key[key] = run_id  # register before task starts
@@ -8211,6 +8561,12 @@ class RoomRunner:
                     credit_cost=charged_total,
                     roster=roster,
                     alpaca_snapshot=alpaca_snapshot,
+                    frozen_profile=(
+                        bank_prep.frozen.profile if bank_prep.frozen is not None else None
+                    ),
+                    bank=(
+                        (bank_prep.key, bank_prep.parts) if reserved else None
+                    ),
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -8302,8 +8658,16 @@ class RoomRunner:
         roster: AnalystRoster | None = None,
         backtest: AsOfContext | None = None,
         alpaca_snapshot: str | None = None,
+        frozen_profile: dict[str, Any] | None = None,
+        bank: tuple[str, dict[str, str]] | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
+
+        CR267 WP-24: `frozen_profile` is the trading day's frozen fact sheet
+        (start_run built and hashed it for the Room key); when given, it is used
+        as-is instead of building a fresh one. `bank` is `(key, parts)` for the
+        row start_run already reserved. Both are None on the respawn/direct-call
+        path, which therefore builds a fresh sheet and is never banked.
 
         The function returns an async generator. Callers consume it; the
         final event is a `verdict` with the assembled Verdict, after which
@@ -8357,6 +8721,8 @@ class RoomRunner:
             verdict=None,
             credit_cost=credit_cost,
             status=RoomStatus.RUNNING,
+            bank_key=bank[0] if bank is not None else None,
+            bank_inputs=dict(bank[1]) if bank is not None else None,
         )
         _persist_run(run)
         logger.info("room_started", run_id=str(run_id), ticker=ticker, tier=tier)
@@ -8470,7 +8836,7 @@ class RoomRunner:
             )
         )
 
-        profile = await asyncio.to_thread(
+        profile = frozen_profile if frozen_profile is not None else await asyncio.to_thread(
             _profile_for_ticker,
             ticker,
             news_feed=news_feed,
@@ -8804,6 +9170,7 @@ class RoomRunner:
                         _deferred_verdict = None
                         assert _attempt_snapshot is not None
                         _restore_room_attempt_state(ctx, profile, _attempt_snapshot)
+                        await self._rekey_for_backup(run, gateway)
                         _persist_run(run)
                         yield RoomEvent(
                             kind="provider_switch",

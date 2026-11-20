@@ -738,6 +738,13 @@ class PortfolioValueSnapshotRow(Base):
 
 class RoomRunRow(Base):
     __tablename__ = "room_runs"
+    # CR267 WP-24 — at most one row may hold a given bank_key. NULL (the common
+    # case: failed, cancelled, outage, or a run whose inputs could not be keyed)
+    # never collides, which is what makes "not banked" a column value rather
+    # than a second table.
+    __table_args__ = (
+        Index("uq_room_runs_bank_key", "bank_key", unique=True),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
@@ -794,6 +801,43 @@ class RoomRunRow(Base):
     # `RoomRun.cio_retried`'s docstring.
     cio_retried: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default=text("false"),
+    )
+    # CR267 WP-24 — the Room's input key (see `app/services/room_bank.py`).
+    # Non-NULL only while the row is a Room another convene may be handed:
+    # running, or completed with a real verdict that was not refunded. Cleared
+    # the moment the run fails, is cancelled, or ends as an outage abstain.
+    bank_key: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # The components the key was hashed from (mandate digest, fact-sheet hash,
+    # policy version, model root, trading date): why two Rooms did or did not
+    # share a key, readable without recomputing anything.
+    bank_inputs: Mapped[Optional[dict]] = mapped_column(JsonB(), nullable=True)
+
+
+class RoomFactSheetRow(Base):
+    """CR267 WP-24 — a Room's fact sheet, frozen for one ticker on one trading day.
+
+    `variant` carries what legitimately differs between two users' sheets on the
+    same day (which live feeds they were entitled to, whether the Market desk is
+    withheld), so one user's sheet is never served to a user who would have seen
+    a different one. The sheet itself is the `encode_profile` form, and
+    `sheet_hash` is the SHA-256 of its canonical JSON.
+    """
+
+    __tablename__ = "room_fact_sheets"
+    __table_args__ = (
+        UniqueConstraint(
+            "ticker", "trading_date", "variant", name="uq_room_fact_sheet_day",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    trading_date: Mapped[date] = mapped_column(Date, nullable=False)
+    variant: Mapped[str] = mapped_column(String, nullable=False)
+    sheet: Mapped[dict] = mapped_column(JsonB(), nullable=False)
+    sheet_hash: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
     )
 
 
