@@ -476,20 +476,11 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
             spacing: AmiSpacing.s,
             runSpacing: 6,
             children: [
-              ChoiceChip(
+              _WrappingChoiceChip(
                 key: Key('riskLimitOff_${widget.config.key}'),
-                // DEF502 — wrap instead of fading the resolved number off the
-                // end of the chip (Chip defaults to one line, softWrap off).
-                label: Text(offLabel, softWrap: true, maxLines: 2),
-                labelStyle: AmiTypography.labelMono.copyWith(
-                  fontSize: 11,
-                  color: isOff ? AmiColors.hexAmber : AmiColors.textMed,
-                ),
+                label: offLabel,
                 selected: isOff,
-                onSelected: (_) => _setOff(),
-                selectedColor: AmiColors.hexAmber.withValues(alpha: 0.2),
-                backgroundColor: AmiColors.slate900,
-                side: BorderSide(color: isOff ? AmiColors.hexAmber : AmiColors.slate700),
+                onTap: _setOff,
               ),
               SizedBox(
                 width: 88,
@@ -614,6 +605,94 @@ class RetroTighteningDialog extends StatelessWidget {
           child: Text(l.settingsRiskLimitsRetroDismiss),
         ),
       ],
+    );
+  }
+}
+
+/// DEF508 — a ChoiceChip whose label may wrap without losing its tail.
+///
+/// Material's `Chip` sizes the label's height with a dry layout at the chip's
+/// full width, then lays the label out narrower (minus check mark and
+/// paddings) capped at that one-line height, so a label that wraps there is
+/// clipped — the resolved value after "Following your risk profile —" was cut
+/// on a real 360 dp phone even with `maxLines: 2` (DEF502's attempt). This
+/// draws the same chip (outline, selected tint, check, 48 dp tap target,
+/// button + selected semantics) with a plain Row, so the height follows the
+/// text however many lines it needs.
+class _WrappingChoiceChip extends StatelessWidget {
+  const _WrappingChoiceChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AmiColors.hexAmber : AmiColors.textMed;
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      enabled: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+          child: Align(
+            widthFactor: 1.0,
+            child: Material(
+              color: selected
+                  ? AmiColors.hexAmber.withValues(alpha: 0.2)
+                  : AmiColors.slate900,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: selected ? AmiColors.hexAmber : AmiColors.slate700,
+                ),
+              ),
+              child: InkWell(
+                customBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (selected) ...[
+                        Icon(Icons.check, size: 18, color: color),
+                        const SizedBox(width: 6),
+                      ],
+                      Flexible(
+                        child: Text(
+                          label,
+                          style: AmiTypography.labelMono.copyWith(
+                            fontSize: 11,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
