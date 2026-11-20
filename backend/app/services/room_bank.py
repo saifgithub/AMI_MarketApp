@@ -28,10 +28,30 @@ is never served after the user's position changed (Saiful's ruling, 2026-11-20):
   convene could ever match.
 - `alpaca`: a linked paper account's cash (whole dollars) and its positions'
   symbol and quantity.
+- `brief` (DEF513): the user's active Brief Your Agent overlay for each of the
+  twelve desks, as the text the prompt renders (stripped content; an empty
+  overlay is the same as none). Editing a Brief, or rolling back to different
+  text, gives a new Room; rolling back to identical text does not.
+- `universe` (DEF513): the sourced compliance verdicts for this ticker (Sharia,
+  fossil / sin / esg-lite exclusion, liquidity) with each snapshot's as-of date
+  and stale flag. These are global reference data refreshed daily without a
+  deploy, and they feed both the prompts and the deterministic compliance check.
+- `roster` (DEF513): which analyst desks the plan and tenure withheld.
+- `tier` (DEF513): the model tier `pick_tier` gives the plan for every desk the
+  Room runs. A plan change moves it, so an upgrade gets a new Room.
+
+The policy version (`policy_version`) hashes the prompt generation, the revision
+and every global setting that changes what a Room says or decides
+(`ROOM_POLICY_SETTINGS`); settings are env-driven, so they can change on a
+container recreate with no code deploy.
 
 What the key deliberately does NOT contain: the credit balance, the plan, the
 mandate's version counter and timestamps (re-saving an unchanged mandate is not a
-new input). Nor anything that is only a price times a holding: portfolio value,
+new input). The "prior convene" comparison the CIO
+reads is this ticker's previous Room, i.e. the bank's own output: keying it would
+make every finished Room unkey its own repeat (the same trap as Room-run journal
+entries). `ROOM_INPUT_CLASSES` classifies every parameter the Room is built from,
+and a test fails on an unclassified one. Nor anything that is only a price times a holding: portfolio value,
 drawdown, open-risk percent, unrealised P&L and the Alpaca market values move with
 every tick, and the trading day is already keyed.
 """
@@ -51,7 +71,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.ami_claim import claim
 from app.db.models import RoomFactSheetRow, RoomRunRow
-from app.schemas import AgentId
+from app.schemas import TWELVE_AGENT_IDS, AgentId
 from app.schemas.mandate import Mandate
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.trading_math.session_calendar import last_us_session_date
@@ -79,6 +99,147 @@ MANDATE_KEY_EXCLUDED: frozenset[str] = frozenset({
     "created_at",
     "updated_at",
 })
+
+
+# Global settings that change what a Room says or decides. Env-driven, so they can
+# change on a container recreate with no code deploy; they ride in `policy_version`.
+ROOM_POLICY_SETTINGS: frozenset[str] = frozenset({
+    "use_real_market_data",
+    "output_guard_mode",
+    "output_guard_max_turn_words",
+    "training_preregistration_required",
+    "prereg_applies_to_long_horizon",
+    "pm_self_consistency_samples",
+    "pm_option_ladder_enabled",
+    "room_max_scripted_turns",
+    "room_risk_officer_enabled",
+    "room_debate_order_seeded",
+    "room_json_constraints_enabled",
+    "room_trader_regex_enabled",
+    "room_veto_review_enabled",
+    "room_resurrection_review_enabled",
+    "room_cards_envelope_enabled",
+    "room_evidence_gate_enabled",
+    "room_evidence_gate_thresholds_json",
+    "room_evidence_contested_margin",
+    "room_debt_maturity_enabled",
+    "room_cost_of_debt_enabled",
+    "room_cashflow_bridge_enabled",
+    "room_fcf_history_enabled",
+    "room_fcf_conversion_enabled",
+    "room_roe_history_enabled",
+    "room_debt_split_enabled",
+    "room_segment_revenue_enabled",
+    "room_geographic_revenue_enabled",
+    "room_executive_change_enabled",
+    "room_recent_filings_enabled",
+    "room_dividend_growth_enabled",
+    "room_buyback_price_enabled",
+    "room_sbc_enabled",
+    "room_roic_enabled",
+    "room_put_call_enabled",
+    "room_peer_comparison_enabled",
+    "room_wacc_enabled",
+    "room_insider_ratio_enabled",
+    "room_insider_plan_tag_enabled",
+    "room_insider_cluster_enabled",
+    "room_edgar_8k_flags_enabled",
+})
+
+# Settings the Room code reads that do not change a Room's content, with why.
+ROOM_SETTINGS_NOT_KEYED: dict[str, str] = {
+    "room_agent_timeout_s": "failure-mode timing, not content",
+    "room_char_delay_min_ms": "stream pacing",
+    "room_char_delay_max_ms": "stream pacing",
+    "room_turn_pace_cap_s": "stream pacing",
+    "room_pace_cap_s": "stream pacing",
+    "room_dedup_running_minutes": "reattach window, not content",
+    "room_bank_enabled": "the bank's own off switch",
+    "room_model_root_ttl_s": "cache lifetime of the keyed model root",
+    "room_cio_retry_max_age_minutes": "retry eligibility, not content",
+    "room_pullback_days_social": "decides the roster, which is keyed as `roster`",
+    "room_pullback_days_news": "decides the roster, which is keyed as `roster`",
+    "room_pullback_days_market": "decides the roster, which is keyed as `roster`",
+    "vllm_base_url": "where the model is served; the served model root is keyed",
+    "vllm_fallback_model": "backup slot identity; its root is keyed on a failover",
+}
+
+# Every parameter the Room is built from, by entry point, and where it lands.
+# "keyed:<part>" is a key part; "excluded:<why>" is deliberately not. A test
+# fails when a parameter of these functions is missing here.
+ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
+    "RoomStartRequest": {
+        "user_id": "keyed:user_id",
+        "ticker": "keyed:ticker",
+        "mandate_override": "keyed:mandate (only read when no mandate is stored; hydrated into the mandate)",
+        "locale": "keyed:mandate (copied onto the mandate before the digest)",
+        "alpaca": "keyed:alpaca",
+    },
+    "RoomRunner.start_run": {
+        "user_id": "keyed:user_id",
+        "ticker": "keyed:ticker",
+        "mandate": "keyed:mandate",
+        "portfolio_value": "excluded:price times holding, server-computed",
+        "current_drawdown_pct": "excluded:price times holding, server-computed",
+        "char_delay_min": "excluded:stream pacing",
+        "char_delay_max": "excluded:stream pacing",
+        "agent_timeout_s": "excluded:failure-mode timing",
+        "on_complete": "excluded:callback",
+        "backtest": "excluded:backtest runs never bank",
+        "alpaca_snapshot": "keyed:alpaca (rendered from the payload alpaca_key hashes)",
+        "bank_outcome": "excluded:out-parameter",
+        "alpaca_key": "keyed:alpaca",
+    },
+    "RoomRunner.run": {
+        "run_id": "excluded:identity",
+        "user_id": "keyed:user_id",
+        "ticker": "keyed:ticker",
+        "mandate": "keyed:mandate",
+        "portfolio_value": "excluded:price times holding, server-computed",
+        "current_drawdown_pct": "excluded:price times holding, server-computed",
+        "halal_universe": "keyed:universe (injected by tests only; production fetches it)",
+        "classification_universe": "keyed:universe (injected by tests only; production fetches it)",
+        "locale_allowed_universe": "excluded:always None in production",
+        "char_delay_min": "excluded:stream pacing",
+        "char_delay_max": "excluded:stream pacing",
+        "agent_timeout_s": "excluded:failure-mode timing",
+        "news_feed": "keyed:fact_sheet (the sheet variant)",
+        "social_feed": "keyed:fact_sheet (the sheet variant)",
+        "credit_cost": "excluded:billing",
+        "roster": "keyed:roster",
+        "backtest": "excluded:backtest runs never bank",
+        "alpaca_snapshot": "keyed:alpaca",
+        "frozen_profile": "keyed:fact_sheet",
+        "bank": "excluded:the key itself",
+    },
+    "build_room_messages": {
+        "agent_id": "excluded:the desk",
+        "mandate": "keyed:mandate",
+        "user_id": "keyed:brief (the Brief overlay) and journal (Bull/Bear history)",
+        "ticker": "keyed:ticker",
+        "profile": "keyed:fact_sheet",
+        "transcript": "excluded:the Room's own output",
+        "portfolio_snapshot": "keyed:portfolio and alpaca (price-times-holding drift excluded)",
+        "plan": "keyed:journal (the lookback window) and tier (the model tier it picks)",
+        "trade_proposal": "excluded:derived from the mandate and the frozen sheet's price",
+        "halal_universe": "keyed:universe",
+        "classification_universe": "keyed:universe",
+        "locale_allowed_universe": "excluded:always None in production",
+        "portfolio_value": "excluded:price times holding",
+        "parallel_phase": "excluded:phase constant",
+        "sector_weights": "excluded:holdings times price; the holdings are keyed",
+        "agent_size_pct": "excluded:derived from the mandate",
+        "current_drawdown_pct": "excluded:price times holding",
+        "existing_open_risk_pct": "excluded:price times holding; the lots are keyed",
+        "last_loss_closed_at": "keyed:portfolio (trade history)",
+        "trade_open_timestamps": "keyed:portfolio (trade history)",
+        "option_candidates": "excluded:derived from the mandate and the frozen sheet",
+        "option_spot": "excluded:derived from the frozen sheet",
+        "prior_convene": "excluded:the previous Room is the bank's own output",
+        "cards_envelope": "keyed:policy (room_cards_envelope_enabled)",
+        "evidence_gate": "excluded:derived from the transcript and keyed policy settings",
+    },
+}
 
 
 def _canonical(value: Any) -> str:
@@ -110,7 +271,18 @@ def policy_version() -> str | None:
     versions = {a.value: prompt_version(a) for a in AgentId}
     if not any(versions.values()):
         return None
-    return _sha256(_canonical({"revision": ROOM_POLICY_REVISION, "prompts": versions}))[:16]
+    return _sha256(_canonical({
+        "revision": ROOM_POLICY_REVISION,
+        "prompts": versions,
+        "settings": policy_settings(),
+    }))[:16]
+
+
+def policy_settings() -> dict[str, Any]:
+    """The current value of every global setting that changes a Room's content."""
+    from app.core.config import settings
+
+    return {name: getattr(settings, name) for name in sorted(ROOM_POLICY_SETTINGS)}
 
 
 def sheet_variant(
@@ -258,6 +430,63 @@ def alpaca_digest(payload: Any | None) -> str:
     })
 
 
+def brief_digest(overlays: dict[str, str | None]) -> str:
+    """Hash of the Brief overlay each desk's prompt renders. `overlays` maps an
+    agent id to its active overlay content (None when it has none). Content is
+    stripped, and blank counts as none, exactly as the prompt builder treats it."""
+    return _digest({
+        agent: (text or "").strip()
+        for agent, text in sorted(overlays.items())
+        if (text or "").strip()
+    })
+
+
+def universe_digest(halal: Any, classification: Any, ticker: str) -> str:
+    """Hash of the sourced compliance verdicts the Room reads for `ticker`: the
+    Sharia verdict, each exclusion kind, liquidity (status only: the live-price
+    leg is price drift), and each snapshot's as-of date and stale flag."""
+    from app.schemas.classification import ClassificationKind
+
+    def _status(verdict: Any) -> Any:
+        return getattr(verdict.status, "value", verdict.status)
+
+    t = ticker.upper().strip()
+    return _digest({
+        "halal": [
+            _status(halal.resolve(t)), _iso_date(halal.as_of), bool(halal.stale),
+        ],
+        "classification": {
+            "kinds": {
+                kind.value: _status(classification.resolve(t, kind))
+                for kind in ClassificationKind
+            },
+            "liquidity": _status(classification.resolve_liquidity(t)),
+            "as_of": _iso_date(classification.as_of),
+            "stale": bool(classification.stale),
+        },
+    })
+
+
+def _iso_date(d: Any) -> str | None:
+    return d.isoformat() if d is not None else None
+
+
+def tier_digest(plan: Any) -> str:
+    """The model tier `pick_tier` assigns `plan` for every desk the Room runs (the
+    twelve desks and the Risk Officer). Ruled 2026-11-21: a plan change is a changed
+    input even where a single-model provider makes the tiers equivalent."""
+    from app.services.tier_policy import pick_tier
+
+    return _digest({
+        a.value: pick_tier(plan, a) for a in (*TWELVE_AGENT_IDS, AgentId.RISK_OFFICER)
+    })
+
+
+def roster_digest(withheld: Any) -> str:
+    """Which analyst desks the plan and tenure withheld from this Room."""
+    return ",".join(sorted(getattr(a, "value", str(a)) for a in withheld)) or "none"
+
+
 def key_parts(
     *,
     user_id: UUID,
@@ -270,6 +499,10 @@ def key_parts(
     portfolio: str,
     journal: str,
     alpaca: str,
+    brief: str,
+    universe: str,
+    roster: str,
+    tier: str,
 ) -> dict[str, str]:
     return {
         "user_id": str(user_id),
@@ -281,6 +514,10 @@ def key_parts(
         "portfolio": portfolio,
         "journal": journal,
         "alpaca": alpaca,
+        "brief": brief,
+        "universe": universe,
+        "roster": roster,
+        "tier": tier,
         # Hashed in its own right: a new trading day is a changed input even if
         # a sheet's content happened to come out identical.
         "trading_date": trading_date.isoformat(),
@@ -289,12 +526,19 @@ def key_parts(
 
 _HASHED_PARTS = (
     "user_id", "ticker", "mandate", "fact_sheet", "policy", "model_root", "trading_date",
-    "portfolio", "journal", "alpaca",
+    "portfolio", "journal", "alpaca", "brief", "universe", "roster", "tier",
 )
+
+# Parts added after the first Rooms were banked: a Room banked before them has no
+# such entry in `bank_inputs`, and re-keying it (a backup-slot restart) must not
+# raise. Its key can then never equal a new convene's, which is the right outcome.
+_LATE_PARTS = frozenset({"brief", "universe", "roster", "tier"})
 
 
 def key_from_parts(parts: dict[str, str]) -> str:
-    return _sha256(_canonical({k: parts[k] for k in _HASHED_PARTS}))
+    return _sha256(_canonical({
+        k: (parts.get(k, "") if k in _LATE_PARTS else parts[k]) for k in _HASHED_PARTS
+    }))
 
 
 def with_model_root(parts: dict[str, str], model_root: str) -> tuple[str, dict[str, str]]:
