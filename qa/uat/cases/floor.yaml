@@ -77,11 +77,11 @@ cases:
       - After the pass the agent shows unlocked on the Floor without a restart, with the unlock celebration shown once
 
   - id: UAT-FLOOR-006
-    title: The Floor bell opens the inbox inside the tab navigator
+    title: The Floor inbox (envelope) button opens the inbox inside the tab navigator
     layer: manual
     plans: [floor_pass]
     steps:
-      - Tap the bell on the Floor; open a message; go back
+      - Tap the envelope (inbox) button on the Floor; open a message; go back
     expected:
       - The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
 
@@ -98,11 +98,11 @@ cases:
       - 'Dismissing the sheet returns to the firm wall'
 
   - id: UAT-FLOOR-008
-    title: The Floor inbox bell opens the inbox with the bottom bar still visible
+    title: The Floor inbox (envelope) button opens the inbox with the bottom bar still visible
     layer: device
     plans: [floor_pass]
     steps:
-      - 'On the Floor tap the bell in the header'
+      - 'On the Floor tap the envelope (inbox) button in the header (an envelope since DEF481; the bell is Notifications)'
       - 'Go back'
     expected:
       - 'The MESSAGES inbox opens and the bottom bar (FLOOR / PORTFOLIO / LESSONS / YOU) is still on screen (DEF457)'

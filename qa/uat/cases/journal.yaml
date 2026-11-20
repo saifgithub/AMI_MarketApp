@@ -11,6 +11,8 @@ summary: |
   30-day window, paid plans read everything. Delete is a soft delete that
   round-trips through the trash and restore. Entries are owner-only and cannot
   be forged over HTTP (DEF371).
+  DEF481 (2026-11-20, build 120): the journal-detail and trash back controls carry ami.nav.back. Accessibility identifiers only; nothing a
+  user sees or does changed, so no case steps change.
 cases:
   - id: UAT-JRNL-001
     title: Journal list reports the plan's retention window

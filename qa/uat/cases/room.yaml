@@ -16,6 +16,8 @@ summary: |
   wall is the soft, cooldown-carrying kind. Tenure pull-back of analysts
   (CR098) is disabled on Alpha (ROOM_PULLBACK_DAYS_* = 0), so a withheld chair
   cannot be reached with a fresh account; the roster case asserts the full desk.
+  DEF481 (2026-11-20, build 120): the Room back control carries ami.nav.back and the CONVENE button carries its ami.sheet id. Accessibility identifiers only; nothing a
+  user sees or does changed, so no case steps change.
 cases:
   - id: UAT-ROOM-001
     title: A funded Room streams every desk through to a CIO verdict

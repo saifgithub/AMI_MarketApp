@@ -12,6 +12,8 @@ summary: |
   billed at the flat 1-on-1 price and a broke user is refused before any reply
   streams. A session is private to its owner. Briefing screens belong to the
   Brief area.
+  DEF481 (2026-11-20, build 120): the back control carries ami.nav.back. Accessibility identifiers only; nothing a
+  user sees or does changed, so no case steps change.
 cases:
   - id: UAT-ONE-001
     title: Floor Pass must earn agents, but the Concierge is always open

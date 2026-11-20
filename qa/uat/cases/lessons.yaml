@@ -11,6 +11,8 @@ summary: |
   pass), and passing a documented agent's five gateway lessons unlocks that
   agent on every plan, Floor Pass included. Failing never unlocks. The
   glossary is non-empty and well-formed.
+  DEF481 (2026-11-20, build 120): the lesson reader and track-lessons back controls carry ami.nav.back; the BOOK/INTERACTIVE mode toggle carries ami.lesson.mode_book / mode_interactive. Accessibility identifiers only; nothing a
+  user sees or does changed, so no case steps change.
 cases:
   - id: UAT-LESS-001
     title: Lesson catalogue is non-empty, consistent and anonymous-readable

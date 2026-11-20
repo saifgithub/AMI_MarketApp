@@ -133,6 +133,8 @@ matter: a token you do not own never yields someone else's account, a signed-out
 token cannot come back to life, and a merge only ever moves data the caller was
 recorded as adopting. Full email sign-in and merge are blocked on a test inbox;
 Apple and Google need a real device.
+DEF481 (2026-11-20, build 120): the merge sheet MERGE EVERYTHING button carries its ami.sheet id. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -1059,12 +1061,12 @@ _Device (automated, Appium) · plans: floor_pass_
 2. A locked agent opens a sheet with HOW TO UNLOCK, its five gateway lessons, GO TO LESSONS and an "N / 5 gateway lessons passed" progress line
 3. Dismissing the sheet returns to the firm wall
 
-#### UAT-FLOOR-008 — The Floor inbox bell opens the inbox with the bottom bar still visible
+#### UAT-FLOOR-008 — The Floor inbox (envelope) button opens the inbox with the bottom bar still visible
 
 _Device (automated, Appium) · plans: floor_pass_
 
 **Steps**
-1. On the Floor tap the bell in the header
+1. On the Floor tap the envelope (inbox) button in the header (an envelope since DEF481; the bell is Notifications)
 2. Go back
 
 **Expected**
@@ -1082,6 +1084,8 @@ owner alone. Alpha runs the Winzip funnel (GTM_FUNNEL=winzip), so a Floor Pass
 wall is the soft, cooldown-carrying kind. Tenure pull-back of analysts
 (CR098) is disabled on Alpha (ROOM_PULLBACK_DAYS_* = 0), so a withheld chair
 cannot be reached with a fresh account; the roster case asserts the full desk.
+DEF481 (2026-11-20, build 120): the Room back control carries ami.nav.back and the CONVENE button carries its ami.sheet id. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -1371,6 +1375,8 @@ agent (the Concierge is always open); paid plans skip the gate. Every turn is
 billed at the flat 1-on-1 price and a broke user is refused before any reply
 streams. A session is private to its owner. Briefing screens belong to the
 Brief area.
+DEF481 (2026-11-20, build 120): the back control carries ami.nav.back. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -1478,6 +1484,8 @@ mandate (always approve, leverage, drop Halal, exceed limits) must be refused
 or at least never saved. Floor Pass is capped at 3 lifetime edits per agent.
 /v1/coach/* is the deprecated alias of /v1/brief/* and must keep behaving the
 same until it is removed.
+DEF481 (2026-11-20, build 120): the Brief and Brief-history back controls carry ami.nav.back. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -1695,6 +1703,8 @@ and the options gate. Market hours do not matter: off-hours Alpha serves the
 last Yahoo close (`source: yfinance`, `market_state: CLOSED`) and market
 orders still fill at it. All figures are asserted from the fill the server
 reports, never an assumed price.
+DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -2328,6 +2338,8 @@ The curriculum is served, quizzes grade server-side (all answers right to
 pass), and passing a documented agent's five gateway lessons unlocks that
 agent on every plan, Floor Pass included. Failing never unlocks. The
 glossary is non-empty and well-formed.
+DEF481 (2026-11-20, build 120): the lesson reader and track-lessons back controls carry ami.nav.back; the BOOK/INTERACTIVE mode toggle carries ami.lesson.mode_book / mode_interactive. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -2542,6 +2554,8 @@ What the user does is captured to a private journal. Floor Pass reads a
 30-day window, paid plans read everything. Delete is a soft delete that
 round-trips through the trash and restore. Entries are owner-only and cannot
 be forged over HTTP (DEF371).
+DEF481 (2026-11-20, build 120): the journal-detail and trash back controls carry ami.nav.back. Accessibility identifiers only; nothing a
+user sees or does changed, so no case steps change.
 
 ### API (automated, live Alpha)
 
@@ -3694,12 +3708,12 @@ _Manual (iPhone checklist) · plans: floor_pass_
 1. The locked sheet lists the five gateway lessons with 4 of 5 done
 2. After the pass the agent shows unlocked on the Floor without a restart, with the unlock celebration shown once
 
-#### UAT-FLOOR-006 — The Floor bell opens the inbox inside the tab navigator
+#### UAT-FLOOR-006 — The Floor inbox (envelope) button opens the inbox inside the tab navigator
 
 _Manual (iPhone checklist) · plans: floor_pass_
 
 **Steps**
-1. Tap the bell on the Floor; open a message; go back
+1. Tap the envelope (inbox) button on the Floor; open a message; go back
 
 **Expected**
 1. The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
