@@ -180,6 +180,15 @@ def test_the_unfilled_example_refuses_to_boot_on_its_empty_secret():
         ({"llm_daily_spend_ceiling_usd": None}, "LLM_DAILY_SPEND_CEILING_USD"),
         ({"onboarding_age_gate_enforced": False}, "ONBOARDING_AGE_GATE_ENFORCED"),
         ({"secret_key": "dev-secret-change-in-prod"}, "SECRET_KEY"),
+        # CR271 / WP-13 — Beta enforces the output text guard.
+        ({"output_guard_mode": "log"}, "OUTPUT_GUARD_MODE"),
+        ({"output_guard_mode": "off"}, "OUTPUT_GUARD_MODE"),
+        # DEF511 — the forced-update screen must not point at the personal Alpha app.
+        ({"android_play_store_url": ""}, "ANDROID_PLAY_STORE_URL"),
+        (
+            {"android_play_store_url": "https://play.google.com/store/apps/details?id=ai.agenticmarketintel.ami_trade"},
+            "ANDROID_PLAY_STORE_URL",
+        ),
         ({"secret_key": "short"}, "SECRET_KEY"),
         ({"llm_prices_json": "{}"}, "VLLM_MODEL"),
         (

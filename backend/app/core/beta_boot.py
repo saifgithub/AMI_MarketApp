@@ -30,6 +30,9 @@ from app.core.llm_allowlist import BETA_FORBIDDEN_SLOTS
 _SECRET_KEY_DEV_DEFAULT = "dev-secret-change-in-prod"
 _SECRET_KEY_MIN_LEN = 32
 
+# The personal-account Alpha Play package (DEF511); Beta uses a company package.
+_PERSONAL_ANDROID_PACKAGE = "ai.agenticmarketintel.ami_trade"
+
 # Hostname suffixes that only resolve inside a private network or a tailnet.
 _PRIVATE_HOST_SUFFIXES = (".local", ".lan", ".internal", ".home", ".corp", ".ts.net")
 
@@ -134,6 +137,24 @@ def beta_boot_problems(s: Any) -> list[str]:
         problems.append(
             "SENTRY_DSN is empty: Beta must report backend errors (CR267 WP-44). An empty "
             "DSN makes `init_sentry` a silent no-op and every crash goes unseen."
+        )
+
+    # CR271 / WP-13 — Beta's text guard enforces. `log` and `off` leave
+    # personal-advice text on a tester's screen; only `enforce` replaces it.
+    if getattr(s, "output_guard_mode", "enforce") != "enforce":
+        problems.append(
+            f"OUTPUT_GUARD_MODE={s.output_guard_mode!r}: Beta must run `enforce` "
+            "(CR271 / WP-13); `log` and `off` let personal-advice text through."
+        )
+
+    # DEF511 — the forced-update screen links here. The default is the personal
+    # Alpha app; a Beta tester sent there installs the wrong app.
+    play_url = (getattr(s, "android_play_store_url", "") or "").strip()
+    if not play_url or _PERSONAL_ANDROID_PACKAGE in play_url:
+        problems.append(
+            "ANDROID_PLAY_STORE_URL is unset or still names the personal Alpha package "
+            f"({_PERSONAL_ANDROID_PACKAGE}): Beta's forced-update screen would send Android "
+            "testers to the Alpha app (DEF511). Set the Beta Play listing URL (WP-49)."
         )
 
     key = s.secret_key

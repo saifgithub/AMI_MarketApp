@@ -169,6 +169,17 @@ def test_android_store_url_is_the_play_store_constant():
     assert "ai.agenticmarketintel.ami_trade" in url
 
 
+def test_android_store_url_follows_the_setting_and_blank_falls_back(monkeypatch):
+    from app.core.config import settings
+
+    beta = "https://play.google.com/store/apps/details?id=ai.agenticmarketintel.trade"
+    monkeypatch.setattr(settings, "android_play_store_url", beta)
+    assert resolve_store_url("android") == beta
+    assert resolve_store_url(None) == beta
+    monkeypatch.setattr(settings, "android_play_store_url", "  ")
+    assert "ai.agenticmarketintel.ami_trade" in resolve_store_url("android")
+
+
 def test_ios_store_url_falls_back_and_logs_when_unconfigured(monkeypatch):
     from app.core.config import settings
 
