@@ -809,6 +809,23 @@ the guard while answering none of them.
 convention. A guard that matches on the SHAPE tests the thing you actually care about.* When both
 are cheap, write the shape one.
 
+**Enforcing check, v2 — the INSERT tripwire (ISS001 Phase 1, DEF499; branch `lane/iss001-phase1`,
+pending merge).** The AST guard above was widened three times (DEF220, DEF308) and still missed the
+21st instance: DEF499's `UNIQUE(user_id, kind, run_id)` never fired because `run_id` was NULL, so a
+handler for it would have been dead code. The invariant is *a unique key the database enforces for
+this row's actual values, and an insert that goes through it atomically* — not "handles
+`IntegrityError`". The guard is now a runtime control, [`backend/app/db/ami_claim.py`](../../../backend/app/db/ami_claim.py):
+`before_cursor_execute` on the app engine instance (`get_engine()`), so ORM, Core, text and bulk
+inserts all pass the same gate; any INSERT into a table with a unique key must go through
+`claim(...).or_skip()/.or_update()/.or_raise()` (atomic `ON CONFLICT`, refuses a key with no effective
+arbiter) or `unclaimed(Model, why=...)`. `INSERT_TRIPWIRE_MODE`: `log` on Alpha/Beta, `raise` in the
+unit suite, `off` is ERROR at boot and refused on Beta. Pre-control sites (incl. the 9 frozen DEF308
+ones) are an owned list in `app/db/insert_baseline.py`. Tests: `test_iss001_claim.py` (a canary per
+constraint kind, red if the hook is removed), `test_iss001_insert_tripwire.py` (installed on the real
+engine, baseline integrity, `schema_truth` pinned with owners, `.merge(`/`unclaimed(` greps),
+`test_iss001_observer.py`; mutation harness `backend/scripts/iss001_mutate.py`. The AST guard stays
+unchanged as a backstop until ISS001 Phase 4. Record: `docs/dilemmas/ISS001_DB_INSERT_RACE/VERDICT.md`.
+
 ---
 
 ## P16 — A prose pattern validated only against the examples that motivated it
