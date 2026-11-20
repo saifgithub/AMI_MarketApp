@@ -38,8 +38,6 @@ INSERT_BASELINE: dict[tuple[str, str], str] = {
         'found by ISS001 observers: scheduler path with no handler; not in DEF308; Phase 2',
     ('league_members', 'services/league_service.py::weekly_roll'):
         'flush point of _assemble_week (attach site); Phase 2',
-    ('lessons_progress', 'services/lessons_service.py::submit_quiz'):
-        'DEF308 frozen — founder ruling 2026-08-15 (CR191); convert in ISS001 Phase 3 after the unfreeze',
     ('mandates', 'services/mandate_store.py::upsert'):
         'version-sequence retry-then-raise (DEF220); expected unclaimed(why=...) in Phase 2',
     ('notification_preferences', 'services/notification_service.py::set_preferences'):

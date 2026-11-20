@@ -589,31 +589,30 @@ class LessonsService:
         passed = score >= QUIZ_PASS_THRESHOLD
 
         with get_session() as s:
-            row = s.execute(
-                select(LessonProgressRow).where(
-                    LessonProgressRow.user_id == req.user_id,
-                    LessonProgressRow.lesson_id == req.lesson_id,
-                )
-            ).scalar_one_or_none()
             now = datetime.now(timezone.utc)
-            if row is None:
-                row = LessonProgressRow(
-                    user_id=req.user_id,
-                    lesson_id=req.lesson_id,
-                    started_at=now,
-                    quiz_attempts=1,
-                    quiz_passed=passed,
-                    last_quiz_score=score,
-                    completed_at=now if passed else None,
-                )
-                s.add(row)
-            else:
+
+            def _apply_attempt(row: LessonProgressRow) -> None:
                 row.started_at = row.started_at or now
                 row.quiz_attempts = row.quiz_attempts + 1
                 row.quiz_passed = row.quiz_passed or passed
                 row.last_quiz_score = score
                 if passed and row.completed_at is None:
                     row.completed_at = now
+
+            # ISS001 / DEF308: update. The attempt is applied to the row whoever created it, so a
+            # lost insert race still counts this attempt on the winner's row (attempts, pass,
+            # completion) instead of raising or dropping the quiz result.
+            claim(
+                s, LessonProgressRow,
+                key={"user_id": req.user_id, "lesson_id": req.lesson_id},
+                values={
+                    "started_at": now,
+                    "quiz_attempts": 1,
+                    "quiz_passed": passed,
+                    "last_quiz_score": score,
+                    "completed_at": now if passed else None,
+                },
+            ).or_update(_apply_attempt)
             s.flush()
 
         unlocked: list[str] = []
